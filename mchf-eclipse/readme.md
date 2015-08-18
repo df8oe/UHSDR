@@ -1,4 +1,4 @@
-This project is the porting of ccbtn's CooCox firmware for mcHF
+This project is the porting of cctbcn's CooCox firmware for mcHF
 to Eclipse.
 
 Have fun!
