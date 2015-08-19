@@ -5,4 +5,8 @@ Changes:
 08/19/2015
 - added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
 - added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
+- merging Eclipse and CooCox configuration to one package so that both IDEs can be used
 
+
+
+DF8OE, Andreas
