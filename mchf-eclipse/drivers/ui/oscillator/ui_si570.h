@@ -20,11 +20,10 @@
 // -------------------------------------------------------------------------------------
 // Local Oscillator
 // ------------------
-#define SI570_ADDRESS			(0x55 << 1)			// R/W bit = LSB
 
 // The SI570 Min/Max frequencies are 4x the actual tuning frequencies
-#define SI570_MIN_FREQ			7200000		// 7.2=1.8 MHz
-#define SI570_MAX_FREQ			128000000	// 128=32 Mhz
+#define SI570_MIN_FREQ			7000000		// 7.2=1.8 MHz
+#define SI570_MAX_FREQ			160000000	// 128=32 Mhz
 //
 // These are "hard limit" frequencies below/above which the synthesizer/algorithms must not be adjusted or else the system may crash
 #define SI570_HARD_MIN_FREQ			1000000		// 1.0=0.25 MHz
@@ -41,8 +40,6 @@
 #define SI570_REG_135			135
 #define SI570_REG_137			137
 
-// Enter in the Startup frequency
-//#define FOUT_START_UP    		56.32  // MHz
 #define FACTORY_FXTAL			114.285
 
 // VCO range
