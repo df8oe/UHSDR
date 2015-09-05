@@ -47,12 +47,12 @@
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			0
 #define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			19
+#define 	TRX4M_VER_BUILD			191
 
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
-#define		ATTRIB_STRING2			"KA7OEI and the Open Source and"
-#define		ATTRIB_STRING3			"Amateur Radio communities"
+#define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
+#define		ATTRIB_STRING3			"and Amateur Radio communities"
 //
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
