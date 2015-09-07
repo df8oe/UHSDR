@@ -1587,12 +1587,12 @@ uchar UiLcdHy28_InitA(void)
       UiLcdHy28_WriteReg(0x0061,0x0003);   // Driver Output Control
       UiLcdHy28_WriteReg(0x006A,0x0000);   // Vertical Scroll Control
 
-      UiLcdHy28_WriteReg(0x0080,0x0000);   // Display Position ¨C Partial Display 1
-      UiLcdHy28_WriteReg(0x0081,0x0000);   // RAM Address Start ¨C Partial Display 1
+      UiLcdHy28_WriteReg(0x0080,0x0000);   // Display Position ï¿½C Partial Display 1
+      UiLcdHy28_WriteReg(0x0081,0x0000);   // RAM Address Start ï¿½C Partial Display 1
       UiLcdHy28_WriteReg(0x0082,0x0000);   // RAM address End - Partial Display 1
-      UiLcdHy28_WriteReg(0x0083,0x0000);   // Display Position ¨C Partial Display 2
-      UiLcdHy28_WriteReg(0x0084,0x0000);   // RAM Address Start ¨C Partial Display 2
-      UiLcdHy28_WriteReg(0x0085,0x0000);   // RAM address End ¨C Partail Display2
+      UiLcdHy28_WriteReg(0x0083,0x0000);   // Display Position ï¿½C Partial Display 2
+      UiLcdHy28_WriteReg(0x0084,0x0000);   // RAM Address Start ï¿½C Partial Display 2
+      UiLcdHy28_WriteReg(0x0085,0x0000);   // RAM address End ï¿½C Partail Display2
       UiLcdHy28_WriteReg(0x0090,0x0013);   // Frame Cycle Control
       UiLcdHy28_WriteReg(0x0092,0x0000);    // Panel Interface Control 2
       UiLcdHy28_WriteReg(0x0093,0x0003);   // Panel Interface control 3
@@ -1819,7 +1819,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    //
    // Display startup frequency of Si570, By DF8OE, 201506
    //
-   int vorkomma = (int)roundf(os.fout);
+   int vorkomma = (int)(os.fout);
    int nachkomma = (int)roundf((os.fout-vorkomma)*10000);
 
    sprintf(tx,"%s%u%s%u%s","SI570 startup frequency: ",vorkomma,".",nachkomma," MHz");

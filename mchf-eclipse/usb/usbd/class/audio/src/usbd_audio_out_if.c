@@ -271,11 +271,11 @@ static uint8_t  VolumeCtl    (uint8_t vol)
 static uint8_t  MuteCtl      (uint8_t cmd)
 {
   /* Call low layer mute setting function */  
-  if (EVAL_AUDIO_Mute(cmd) != 0)
-  {
-    AudioState = AUDIO_STATE_ERROR;
-    return AUDIO_FAIL;
-  }
+// aaaa  if (EVAL_AUDIO_Mute(cmd) != 0)
+//  {
+//    AudioState = AUDIO_STATE_ERROR;
+//    return AUDIO_FAIL;
+//  }
   
   return AUDIO_OK;
 }

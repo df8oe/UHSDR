@@ -1913,7 +1913,7 @@ void USB_OTG_ActiveRemoteWakeup(USB_OTG_CORE_HANDLE *pdev)
       dctl.d32 = 0;
       dctl.b.rmtwkupsig = 1;
       USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DCTL, 0, dctl.d32);
-      USB_OTG_BSP_mDelay(5);
+// aaaa      USB_OTG_BSP_mDelay(5);
       USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DCTL, dctl.d32, 0 );
     }
   }

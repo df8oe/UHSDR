@@ -526,7 +526,7 @@ void audio_driver_set_rx_audio_filter(void)
 	// Calculate "mu" (convergence rate) from user "Notch ConvRate" setting
 	//
 	mu_calc = (float)ts.dsp_notch_mu;		// get user setting
-	mu_calc = mu_calc;		// (0 = slowest)
+// aaaa	mu_calc = mu_calc;		// (0 = slowest)
 	mu_calc += 1;
 	mu_calc /= 1500;
 	mu_calc += 1;
