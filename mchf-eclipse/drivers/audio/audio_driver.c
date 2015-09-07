@@ -134,7 +134,7 @@ __IO	arm_fir_instance_f32	FIR_Q_TX;
 extern __IO TransceiverState 	ts;
 
 // Public paddle state
-extern __IO PaddleState			ps;
+// aaaa extern __IO PaddleState			ps;
 
 // Spectrum display public
 __IO	SpectrumDisplay			sd;
@@ -148,7 +148,7 @@ __IO	SMeter					sm;
 // Keypad driver publics
 extern __IO	KeypadState				ks;
 //
-extern __IO	FilterCoeffs		fc;
+// aaaa extern __IO	FilterCoeffs		fc;
 //
 //
 //*----------------------------------------------------------------------------
