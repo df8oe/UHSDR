@@ -9,14 +9,13 @@
 
 # Rev. 09/07/2015: compiles & linky without errors but binary is 600 bytes shorter than binary with eclipse and does not work
 
+# set these environent to your individual values
 PRJ  = mchf_219.1911
 LPRJ = mchf_a_219.1911
 PREFIX = /usr
 GCC_LIB_VERSION = 4.8
 
 # compilation options
-#CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -ffunction-sections -fdata-sections -O3 \
-# -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -D__FPU_USED -D__FPU_PRESENT -DUSE_STDPERIPH_DRIVER -D__ASSEMBLY__ -c -W -Wall
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -fdata-sections -ffunction-sections \
  -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -D__FPU_USED -D__FPU_PRESENT -DUSE_STDPERIPH_DRIVER -D__ASSEMBLY__ -c -W -Wall
 LDFLAGS := -Xlinker --gc-sections -mfloat-abi=hard
