@@ -6,8 +6,10 @@
 # make (all)  -> compile the arm-executable .bin and .elf, generate .map and .dmp
 # make clean  -> remove the executable files, map, dmp and all object files (.o)
 # make handy  -> rm all .o (but not executables, .map and .dmp)
+#
+# Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
 
-# Rev. 09/07/2015: compiles & linky without errors but binary is 600 bytes shorter than binary with eclipse and does not work
+
 
 # set these environent to your individual values
 PRJ  = mchf_219.1911
@@ -16,9 +18,9 @@ PREFIX = /usr
 GCC_LIB_VERSION = 4.8
 
 # compilation options
-CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -ffunction-sections -O0 -g \
- -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -D__FPU_USED -D__FPU_PRESENT -DUSE_STDPERIPH_DRIVER -W -Wall
-LDFLAGS := -Xlinker --gc-sections -mfloat-abi=hard -Llibs 
+CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -ffunction-sections -O0 \
+ -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER
+LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 LIBS := -Llibs -larm_cortexM4lf_math -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu \
  -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu -lm -lg -lc -lgcc
 
@@ -151,7 +153,7 @@ all: $(LPRJ).elf $(PRJ).bin
 
 # compilation
 $(LPRJ).elf: $(OBJS) $(SRC)
-	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin: $(LPRJ).elf
 	$(OC) -v -O binary $< $(PRJ).bin
