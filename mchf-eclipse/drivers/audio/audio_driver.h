@@ -81,6 +81,7 @@ typedef struct AudioDriverState
 	float					agc_rf_gain;
 	float					agc_knee;			// "knee" for AGC operation
 	float					agc_val_max;		// maximum AGC gain (at minimum signal)
+	float					am_agc;				// Signal level reading in AM demod mode
 	//
 //	float					pre_filter_gain;
 	uchar					codec_gain;
@@ -336,6 +337,7 @@ typedef struct SMeter
 //
 //
 #define	TX_AUDIO_COMPRESSION_MAX		13	// 0 = least compression, 12 = most, 13 = EEPROM values ("SV") - custom selected by user
+#define	TX_AUDIO_COMPRESSION_SV			13
 #define	TX_AUDIO_COMPRESSION_DEFAULT	2
 //
 //
@@ -402,7 +404,7 @@ typedef struct SMeter
 // "DC" IF
 //
 // The following are terms used to set the NCO frequency of the conversion in the receiver - *IF* we were to use the on-the-fly sine generation
-// (which we DON'T, since it is too processor-intensive!)
+// Which we DON'T, since it is too processor-intensive!  Instead, we use a "fixed" geometrical scheme based on a pre-generated sine wave.
 //
 // rate = 2 * Pi * (NCO Freq) / (Sample Rate)
 // CONV_NCO_SIN = sin(rate)

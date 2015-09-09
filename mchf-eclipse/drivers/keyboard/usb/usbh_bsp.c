@@ -75,7 +75,7 @@ __IO uint32_t BSP_delay = 0;
 #ifdef USE_ACCURATE_TIME 
 static void BSP_SetTime(uint8_t Unit);
 static void BSP_Delay(uint32_t nTime,uint8_t Unit);
-static void USB_OTG_BSP_TimeInit ( void );
+// static void USB_OTG_BSP_TimeInit ( void );
 #endif
 /**
   * @}

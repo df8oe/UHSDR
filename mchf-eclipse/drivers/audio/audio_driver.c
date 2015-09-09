@@ -34,12 +34,12 @@
 //#include "filters/i_tx_filter.h"
 
 // Audio filters
-#include "filters/fir_10k.h"
-#include "filters/fir_3_6k.h"
-#include "filters/fir_2_3k.h"
-#include "filters/fir_1_8k.h"
+//#include "filters/fir_10k.h"
+//#include "filters/fir_3_6k.h"
+//#include "filters/fir_2_3k.h"
+//#include "filters/fir_1_8k.h"
 //
-// 48kHz IIR lattice ARMA filters with time-reversed elements
+// IIR lattice ARMA filters with time-reversed elements
 //
 #include "filters/iir_300hz.h"
 #include "filters/iir_500hz.h"
@@ -91,7 +91,6 @@ float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
 //
 //
-//static int16_t	test_c[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Decimator
@@ -133,9 +132,6 @@ __IO	arm_fir_instance_f32	FIR_Q_TX;
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
 
-// Public paddle state
-// aaaa extern __IO PaddleState			ps;
-
 // Spectrum display public
 __IO	SpectrumDisplay			sd;
 
@@ -148,8 +144,7 @@ __IO	SMeter					sm;
 // Keypad driver publics
 extern __IO	KeypadState				ks;
 //
-// aaaa extern __IO	FilterCoeffs		fc;
-//
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_driver_config_nco
@@ -892,6 +887,79 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 		arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.i_buffer, size/2);	// difference for Q channel
 	}
 }
+
+
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : audio_rx_agc_processor
+//* Object              :
+//* Object              : Processor for receiver AGC
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void audio_rx_agc_processor(int16_t psize)
+{
+	static float		agc_calc, agc_var;
+	static ulong 		i;
+	static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
+
+	//
+	// AGC function - Look-ahead type by KA7OEI, revised September 2015 to eliminate possible low-order, low-frequency instabilities associated with steady-state signals.
+	// Note that even though it gets only one AGC value per cycle, it *does* do "psize/2" calculations to iterate out the AGC value more precisely than it would
+	// were it called once per DMA cycle.  If it is called once per DMA cycle it will tend to weakly oscillate under certain conditions and possibly overshoot/undershoot.
+	//
+	for(i = 0; i < psize/2; i++)	{
+		if(ts.agc_mode != AGC_OFF)	{
+			if(ts.dmod_mode == DEMOD_AM)		// if in AM, get the recovered DC voltage from the detected carrier
+				agc_calc = ads.am_agc * ads.agc_val;
+			else	{							// not AM - get the amplitude of the recovered audio
+				agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
+				//agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
+			}
+			//
+			if(agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
+				agc_var = ads.agc_knee - agc_calc;	// calculate difference between agc value and "knee" value
+				agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+				ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling * agc_var;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
+			}
+			else	{
+				agc_var = agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
+				agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+				ads.agc_val -= ads.agc_val * AGC_ATTACK * agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
+				if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
+					ads.agc_val = AGC_VAL_MIN;
+			}
+			if(ads.agc_val >= ads.agc_rf_gain)	{	// limit AGC to reasonable values when low/no signals present
+				ads.agc_val = ads.agc_rf_gain;
+				if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+					ads.agc_val = ads.agc_val_max;
+			}
+		}
+		else	// AGC Off - manual AGC gain
+			ads.agc_val = ads.agc_rf_gain;			// use logarithmic gain value in RF gain control
+		//
+		ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
+	}
+	//
+	// Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
+	// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
+	// decimation rate so that it is constant for all settings.
+	//
+	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
+	arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
+	// Update the in/out pointers to the AGC delay buffer
+	agc_delay_inbuf += psize/2;						// update circular de-correlation delay buffer
+	agc_delay_outbuf = agc_delay_inbuf + psize/2;
+	agc_delay_inbuf %= ads.agc_delay_buflen;
+	agc_delay_outbuf %= ads.agc_delay_buflen;
+	//
+	//
+	// Now apply pre-calculated AGC values to delayed audio
+	//
+	arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
+	//
+}
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -905,17 +973,11 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
 
 	static ulong 		i;
-	static float		max_signal, min_signal;
-	uint32_t			result_index;
-	static float		agc_calc;
-	float				am_agc;
 	//
 	int16_t				psize;		// processing size, with decimation
 	//
 	static ulong		lms1_inbuf = 0, lms1_outbuf = 0;
 	static ulong		lms2_inbuf = 0, lms2_outbuf = 0;
-	static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
-	//
 	float				post_agc_gain_scaling;
 
 
@@ -923,7 +985,6 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	audio_rx_noise_blanker(src, size);		// do noise blanker function
 	//
-	max_signal = 0;		// Init peak detector - used as part of secondary AGC loop, below
 	//
 	// ------------------------
 	// Split stereo channels
@@ -989,7 +1050,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	switch(ts.dmod_mode)	{
 		case DEMOD_LSB:
-			arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q
+			arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q - LSB
 			break;
 		case DEMOD_CW:
 			if(!ts.cw_lsb)	// is this USB RX mode?  (LSB of mode byte was zero)
@@ -1002,21 +1063,15 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.b_buffer, size/2);		// square Q - store in buffer "b"
 			arm_add_f32((float32_t *)ads.a_buffer, (float32_t *)ads.b_buffer, (float32_t *)ads.a_buffer, size/2);		// sum squares - store in buffer "a"
 			for(i = 0; i < size/2; i++)	{										// square root of contents
-				arm_sqrt_f32((float32_t)ads.a_buffer[i], (float32_t *)&ads.a_buffer[i]);				// Unroll this function for maximum MCU efficiency
-				i++;
-				arm_sqrt_f32((float32_t)ads.a_buffer[i], (float32_t *)&ads.a_buffer[i]);
-				i++;
-				arm_sqrt_f32((float32_t)ads.a_buffer[i], (float32_t *)&ads.a_buffer[i]);
-				i++;
 				arm_sqrt_f32((float32_t)ads.a_buffer[i], (float32_t *)&ads.a_buffer[i]);
 			}
-			arm_mean_f32((float32_t *)ads.a_buffer, size/2, &am_agc);	// get "average" value of "a" buffer - the recovered DC value - for the AGC
-			am_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
+			arm_mean_f32((float32_t *)ads.a_buffer, size/2, &ads.am_agc);	// get "average" value of "a" buffer - the recovered DC value - for the AGC
+			ads.am_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 			break;
 		case DEMOD_USB:
 		case DEMOD_DIGI:
 		default:
-			arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of I and Q
+			arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of I and Q - USB
 			break;
 	}
 	//
@@ -1066,66 +1121,16 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	// ------------------------
 	// Apply audio filter
-	if((!ads.af_dissabled)	&& (ts.filter_id != AUDIO_WIDE))	{	// we don't need to filter if running in 10 kHz mode (Hilbert filter does the job!)
+	if((!ads.af_dissabled)	&& (ts.filter_id != AUDIO_WIDE))	{	// we don't need to filter if running in "wide" mode (Hilbert/FIR does the job!)
 		// IIR ARMA-type lattice filter
 		arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
 	}
+
 	//
-	// find maximum signal in buffer - this saves processor time compared to taking the absolute value of every sample point and is "good enough"
+	// now process the samples and perform the receiver AGC function
 	//
-	arm_max_f32((float32_t *)ads.a_buffer, psize/2, &max_signal, &result_index);	// find maximum value (positive)
-	arm_min_f32((float32_t *)ads.a_buffer, psize/2, &min_signal, &result_index);	// find "maximum" value (negative)
-	min_signal = fabs(min_signal);		// convert negative peak to positive
-	if(min_signal > max_signal)			// pick whichever is the "strongest"
-		max_signal = min_signal;
-	//
-	// AGC function - Look-ahead type by (KA7OEI)
-	// Note that even though it gets only one AGC value per cycle, it *does* do "psize/2" calculations to iterate out the AGC value more precisely than it would
-	// were it called once per DMA cycle.  If it is called once per DMA cycle it will tend to weakly oscillate under certain conditions.
-	//
-	for(i = 0; i < psize/2; i++)	{
-		if(ts.agc_mode != AGC_OFF)	{
-			if(ts.dmod_mode == DEMOD_AM)		// if in AM, get the recovered DC voltage from the detected carrier
-				agc_calc = am_agc * ads.agc_val;
-			else								// not AM - get the amplitude of the recovered audio
-				agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
-			//
-			if(agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
-				ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
-			}
-			else	{
-				ads.agc_val -= ads.agc_val * AGC_ATTACK;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
-				if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
-					ads.agc_val = AGC_VAL_MIN;
-			}
-			if(ads.agc_val >= ads.agc_rf_gain)	// limit AGC to reasonable values when low/no signals present
-				ads.agc_val = ads.agc_rf_gain;
-				if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
-					ads.agc_val = ads.agc_val_max;
-		}
-		else	// AGC Off - manual AGC gain
-			ads.agc_val = ads.agc_rf_gain;			// use logarithmic gain value in RF gain control
-		//
-		ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
-	}
-	//
-	// Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
-	// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
-	// decimation rate so that it is constant for all settings.
-	//
-	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
-	arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
-	// Update the in/out pointers to the AGC delay buffer
-	agc_delay_inbuf += psize/2;						// update circular de-correlation delay buffer
-	agc_delay_outbuf = agc_delay_inbuf + psize/2;
-	agc_delay_inbuf %= ads.agc_delay_buflen;
-	agc_delay_outbuf %= ads.agc_delay_buflen;
-	//
-	//
-	// Now apply pre-calculated AGC values to delayed audio
-	//
-	arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
-	//
+	audio_rx_agc_processor(psize);
+
 	//
 	// DSP noise reduction using LMS (Least Mean Squared) algorithm
 	// This is the post-filter, post-AGC instance
@@ -1209,6 +1214,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 }
 
 //
+// This is a stripped-down RX signal processor - a work in progress
+//
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_dv_rx_processor
 //* Object              :
@@ -1224,7 +1231,6 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	static float		max_signal, min_signal;
 	uint32_t			result_index;
 	static float		agc_calc;
-	float				am_agc;
 	//
 	int16_t				psize;		// processing size, with decimation
 	//
@@ -1233,7 +1239,7 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	float				post_agc_gain_scaling;
 
 
-	psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
+	psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor:  This must be set to 6 for DV1300 mode!
 	//
 	//
 	max_signal = 0;		// Init peak detector - used as part of secondary AGC loop, below
@@ -1315,55 +1321,10 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
 	//
 	//
-	// find maximum signal in buffer - this saves processor time compared to taking the absolute value of every sample point and is "good enough"
 	//
-	arm_max_f32((float32_t *)ads.a_buffer, psize/2, &max_signal, &result_index);	// find maximum value (positive)
-	arm_min_f32((float32_t *)ads.a_buffer, psize/2, &min_signal, &result_index);	// find "maximum" value (negative)
-	min_signal = fabs(min_signal);		// convert negative peak to positive
-	if(min_signal > max_signal)			// pick whichever is the "strongest"
-		max_signal = min_signal;
+	// now process the samples and perform the receiver AGC function
 	//
-	// AGC function - Look-ahead type by (KA7OEI)
-	// Note that even though it gets only one AGC value per cycle, it *does* do "psize/2" calculations to iterate out the AGC value more precisely than it would
-	// were it called once per DMA cycle.  If it is called once per DMA cycle it will tend to weakly oscillate under certain conditions.
-	//
-	for(i = 0; i < psize/2; i++)	{
-		if(ts.agc_mode != AGC_OFF)	{
-			if(ts.dmod_mode == DEMOD_AM)		// if in AM, get the recovered DC voltage from the detected carrier
-				agc_calc = am_agc * ads.agc_val;
-			else								// not AM - get the amplitude of the recovered audio
-				agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
-			//
-			if(agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
-				ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
-			}
-			else	{
-				ads.agc_val -= ads.agc_val * AGC_ATTACK;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
-				if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
-					ads.agc_val = AGC_VAL_MIN;
-			}
-			if(ads.agc_val >= ads.agc_rf_gain)	// limit AGC to reasonable values when low/no signals present
-				ads.agc_val = ads.agc_rf_gain;
-				if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
-					ads.agc_val = ads.agc_val_max;
-		}
-		else	// AGC Off - manual AGC gain
-			ads.agc_val = ads.agc_rf_gain;			// use logarithmic gain value in RF gain control
-		//
-		ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
-	}
-	//
-	// Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
-	// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
-	// decimation rate so that it is constant for all settings.
-	//
-	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
-	arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
-	// Update the in/out pointers to the AGC delay buffer
-	agc_delay_inbuf += psize/2;						// update circular de-correlation delay buffer
-	agc_delay_outbuf = agc_delay_inbuf + psize/2;
-	agc_delay_inbuf %= ads.agc_delay_buflen;
-	agc_delay_outbuf %= ads.agc_delay_buflen;
+	audio_rx_agc_processor(psize);
 	//
 	//
 	// Now apply pre-calculated AGC values to delayed audio
@@ -1438,7 +1399,7 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 {
 	ulong i;
 	static ulong		alc_delay_inbuf = 0, alc_delay_outbuf = 0;
-	static float		alc_calc;
+	static float		alc_calc, alc_var;
 
 	// ------------------------
 	// Do ALC processing on audio buffer - look-ahead type by KA7OEI
@@ -1449,10 +1410,14 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 			//
 			alc_calc = fabs(ads.i_buffer[i] * ads.alc_val);	// calculate current level by scaling it with ALC value (both channels will be the same amplitude-wise)
 			if(alc_calc < ALC_KNEE)	{	// is audio below ALC "knee" value?
-				ads.alc_val += ads.alc_val*ads.alc_decay;	// (ALC DECAY) Yes - Increase gain slowly
+				alc_var = ALC_KNEE - alc_calc;	// calculate difference between ALC value and "knee" value
+				alc_var /= ALC_KNEE;			// calculate ratio of difference between knee value and this value
+				ads.alc_val += ads.alc_val * ads.alc_decay * alc_var;	// (ALC DECAY) Yes - Increase gain slowly
 			}
 			else	{
-				ads.alc_val -= ads.alc_val*ALC_ATTACK;	// Fast attack to increase gain
+				alc_var = alc_calc - ALC_KNEE;			// calculate difference between ALC value and "knee" value
+				alc_var /= ALC_KNEE;			// calculate ratio of difference between knee value and this value
+				ads.alc_val -= ads.alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
 				if(ads.alc_val <= ALC_VAL_MIN)	// Prevent zero or "negative" gain values
 					ads.alc_val = ALC_VAL_MIN;
 			}
@@ -1622,7 +1587,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		if(!ts.tune)	{	// do post-filter gain calculations if we are NOT in TUNE mode
 			// perform post-filter gain operation
 			//
-			gain_calc = (float)ts.alc_tx_postfilt_gain;		// get post-filter gain setting
+			gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
 			gain_calc /= 2;									// halve it
 			gain_calc += 0.5;								// offset it so that 2 = unity
 			arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers
@@ -1717,7 +1682,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// perform post-filter gain operation
 			//
-			gain_calc = (float)ts.alc_tx_postfilt_gain;		// get post-filter gain setting
+			gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
 			gain_calc /= 2;									// halve it
 			gain_calc += 0.5;								// offset it so that 2 = unity
 			//
@@ -1805,7 +1770,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	}
 	return;
 }
-
+//
+// This is a stripped-down TX processor - work in progress
+//
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_dv_tx_processor
 //* Object              :
@@ -1818,7 +1785,7 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
 	static ulong 		i;
 	float32_t			gain_calc, min, max;
-	int16_t				*ptr;
+//	int16_t				*ptr;
 	uint32_t			pindex;
 	int16_t				psize;		// processing size, with decimation
 	float				post_agc_gain_scaling;
@@ -1878,7 +1845,7 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	// to the transmitted audio.
 	//
 	//
-	gain_calc = (float)ts.alc_tx_postfilt_gain;		// get post-filter gain setting
+	gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
 	gain_calc /= 2;									// halve it
 	gain_calc += 0.5;								// offset it so that 2 = unity
 	arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers

@@ -1784,7 +1784,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Show first line
    sprintf(tx,"%s",DEVICE_STRING);
-   UiLcdHy28_PrintText(0,30,tx,Yellow,Black,1);		// Position with original text size:  78,40
+   UiLcdHy28_PrintText(2,30,tx,Cyan,Black,1);		// Position with original text size:  78,40
    //
 
    // Show second line
@@ -1853,7 +1853,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Additional Attrib line 3
    sprintf(tx,"%s",ATTRIB_STRING3);
-   UiLcdHy28_PrintText(60,225,tx,Grey1,Black,0);
+   UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
 
 
 

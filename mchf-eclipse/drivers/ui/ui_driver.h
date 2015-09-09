@@ -393,7 +393,9 @@ typedef struct EepromSave
 #define POS_TUNE_FREQ_Y						100
 //
 #define	POS_TUNE_SPLIT_FREQ_X				POS_TUNE_FREQ_X+72
+#define	POS_TUNE_SPLIT_MARKER_X				POS_TUNE_FREQ_X+40
 #define	POS_TUNE_SPLIT_FREQ_Y_TX			POS_TUNE_FREQ_Y+12
+
 //
 #define	SPLIT_ACTIVE_COLOUR		Yellow		// colour of "SPLIT" indicator when active
 #define	SPLIT_INACTIVE_COLOUR	Grey		// colour of "SPLIT" indicator when NOT active
@@ -520,6 +522,8 @@ typedef struct EepromSave
 #define POS_SPECTRUM_IND_X					60
 #define POS_SPECTRUM_IND_Y					150
 #define POS_SPECTRUM_IND_H					80
+#define	POS_SPECTRUM_FREQ_BAR_Y				64	// reducing value moves upwards
+#define	POS_SPECTRUM_FILTER_WIDTH_BAR_Y		61
 #define POS_SPECTRUM_IND_W					258
 #define COL_SPECTRUM_GRAD					0x40
 
@@ -593,6 +597,7 @@ void 	UiDriverShowStep(ulong step);
 void 	UiCalcTxCompLevel(void);
 void 	UiCalcNB_AGC(void);
 void 	UiCWSidebandMode(void);
+void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
 void 	UiCalcAGCVals(void);
 void 	UiCalcRFGain(void);
@@ -603,6 +608,8 @@ void	UiLCDBlankTiming(void);
 void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void uiCodecMute(uchar val);
+//
+void UiDriverSaveEepromValuesPowerDown(void);
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain

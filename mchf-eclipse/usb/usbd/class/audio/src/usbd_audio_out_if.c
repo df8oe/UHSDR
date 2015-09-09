@@ -201,6 +201,7 @@ static uint8_t  AudioCmd(uint8_t* pbuf,
     {
       return AUDIO_FAIL;
     }
+    break;
     
     /* Process the STOP command ----------------------------*/
   case AUDIO_CMD_STOP:

@@ -312,7 +312,135 @@ const uint16_t VirtAddVarTab[NB_OF_VAR] =
 		VAR_ADDR_252,
 		VAR_ADDR_253,
 		VAR_ADDR_254,
-		VAR_ADDR_255
+		VAR_ADDR_255,
+		VAR_ADDR_256,
+		VAR_ADDR_257,
+		VAR_ADDR_258,
+		VAR_ADDR_259,
+		VAR_ADDR_260,
+		VAR_ADDR_261,
+		VAR_ADDR_262,
+		VAR_ADDR_263,
+		VAR_ADDR_264,
+		VAR_ADDR_265,
+		VAR_ADDR_266,
+		VAR_ADDR_267,
+		VAR_ADDR_268,
+		VAR_ADDR_269,
+		VAR_ADDR_270,
+		VAR_ADDR_271,
+		VAR_ADDR_272,
+		VAR_ADDR_273,
+		VAR_ADDR_274,
+		VAR_ADDR_275,
+		VAR_ADDR_276,
+		VAR_ADDR_277,
+		VAR_ADDR_278,
+		VAR_ADDR_279,
+		VAR_ADDR_280,
+		VAR_ADDR_281,
+		VAR_ADDR_282,
+		VAR_ADDR_283,
+		VAR_ADDR_284,
+		VAR_ADDR_285,
+		VAR_ADDR_286,
+		VAR_ADDR_287,
+		VAR_ADDR_288,
+		VAR_ADDR_289,
+		VAR_ADDR_290,
+		VAR_ADDR_291,
+		VAR_ADDR_292,
+		VAR_ADDR_293,
+		VAR_ADDR_294,
+		VAR_ADDR_295,
+		VAR_ADDR_296,
+		VAR_ADDR_297,
+		VAR_ADDR_298,
+		VAR_ADDR_299,
+		VAR_ADDR_300,
+		VAR_ADDR_301,
+		VAR_ADDR_302,
+		VAR_ADDR_303,
+		VAR_ADDR_304,
+		VAR_ADDR_305,
+		VAR_ADDR_306,
+		VAR_ADDR_307,
+		VAR_ADDR_308,
+		VAR_ADDR_309,
+		VAR_ADDR_310,
+		VAR_ADDR_311,
+		VAR_ADDR_312,
+		VAR_ADDR_313,
+		VAR_ADDR_314,
+		VAR_ADDR_315,
+		VAR_ADDR_316,
+		VAR_ADDR_317,
+		VAR_ADDR_318,
+		VAR_ADDR_319,
+		VAR_ADDR_320,
+		VAR_ADDR_321,
+		VAR_ADDR_322,
+		VAR_ADDR_323,
+		VAR_ADDR_324,
+		VAR_ADDR_325,
+		VAR_ADDR_326,
+		VAR_ADDR_327,
+		VAR_ADDR_328,
+		VAR_ADDR_329,
+		VAR_ADDR_330,
+		VAR_ADDR_331,
+		VAR_ADDR_332,
+		VAR_ADDR_333,
+		VAR_ADDR_334,
+		VAR_ADDR_335,
+		VAR_ADDR_336,
+		VAR_ADDR_337,
+		VAR_ADDR_338,
+		VAR_ADDR_339,
+		VAR_ADDR_340,
+		VAR_ADDR_341,
+		VAR_ADDR_342,
+		VAR_ADDR_343,
+		VAR_ADDR_344,
+		VAR_ADDR_345,
+		VAR_ADDR_346,
+		VAR_ADDR_347,
+		VAR_ADDR_348,
+		VAR_ADDR_349,
+		VAR_ADDR_350,
+		VAR_ADDR_351,
+		VAR_ADDR_352,
+		VAR_ADDR_353,
+		VAR_ADDR_354,
+		VAR_ADDR_355,
+		VAR_ADDR_356,
+		VAR_ADDR_357,
+		VAR_ADDR_358,
+		VAR_ADDR_359,
+		VAR_ADDR_360,
+		VAR_ADDR_361,
+		VAR_ADDR_362,
+		VAR_ADDR_363,
+		VAR_ADDR_364,
+		VAR_ADDR_365,
+		VAR_ADDR_366,
+		VAR_ADDR_367,
+		VAR_ADDR_368,
+		VAR_ADDR_369,
+		VAR_ADDR_370,
+		VAR_ADDR_371,
+		VAR_ADDR_372,
+		VAR_ADDR_373,
+		VAR_ADDR_374,
+		VAR_ADDR_375,
+		VAR_ADDR_376,
+		VAR_ADDR_377,
+		VAR_ADDR_378,
+		VAR_ADDR_379,
+		VAR_ADDR_380,
+		VAR_ADDR_381,
+		VAR_ADDR_382,
+		VAR_ADDR_383
 };
 
 // System tick if needed
@@ -607,7 +735,7 @@ void TransceiverStateInit(void)
 	ts.tune_freq		= 0;
 	ts.tune_freq_old	= 0;
 	//
-	ts.calib_mode		= 0;						// calibrate mode
+//	ts.calib_mode		= 0;						// calibrate mode
 	ts.menu_mode		= 0;						// menu mode
 	ts.menu_item		= 0;						// menu item selection
 	ts.menu_var			= 0;						// menu item change variable
@@ -681,7 +809,9 @@ void TransceiverStateInit(void)
 	ts.tx_meter_mode	= METER_SWR;
 	//
 	ts.alc_decay		= ALC_DECAY_DEFAULT;		// ALC Decay (release) default value
+	ts.alc_decay_var	= ALC_DECAY_DEFAULT;		// ALC Decay (release) default value
 	ts.alc_tx_postfilt_gain		= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
+	ts.alc_tx_postfilt_gain_var		= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
 	ts.tx_comp_level	= 0;		// 0=Release Time/Pre-ALC gain manually adjusted, >=1:  Value calculated by this parameter
 	//
 	ts.freq_step_config		= 0;			// disabled both marker line under frequency and swapping of STEP buttons
@@ -717,6 +847,7 @@ void TransceiverStateInit(void)
 	ts.cw_offset_mode	= 0;				// CW offset mode (USB, LSB, etc.)
 	ts.cw_lsb			= 0;				// Flag that indicates CW operates in LSB mode when TRUE
 	ts.iq_freq_mode		= 0;				// used to set/configure the I/Q frequency/conversion mode
+	ts.conv_sine_flag	= 0;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
 	ts.lsb_usb_auto_select	= 0;			// holds setting of LSB/USB auto-select above/below 10 MHz
 	ts.hold_off_spectrum_scope	= 0;		// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
 	ts.lcd_blanking_time = 0;				// this holds the system time after which the LCD is blanked - if blanking is enabled
@@ -744,6 +875,9 @@ void TransceiverStateInit(void)
 	ts.tx_audio_muting_timing = 0;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
 	ts.tx_audio_muting_timer = 0;			// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 	ts.tx_audio_muting_flag = 0;			// when TRUE, audio is to be muted after PTT/keyup
+	ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;	//
+	ts.vfo_mem_flag = 0;					// when TRUE, memory mode is enabled
+	ts.mem_disp = 0;						// when TRUE, memory display is enabled
 }
 
 //*----------------------------------------------------------------------------
@@ -769,6 +903,31 @@ void MiscInit(void)
 	//printf("misc init ok\n\r");
 }
 
+static void wd_reset(void)
+{
+	// Init WD
+	if(!wd_init_enabled)
+	{
+		// Start watchdog
+		WWDG_Enable(WD_REFRESH_COUNTER);
+
+		// Reset
+		wd_init_enabled = 1;
+		TimingDelay 	= 0;
+
+		return;
+	}
+
+	// 40mS flag for WD reset
+	if(TimingDelay > 40)
+	{
+		TimingDelay = 0;
+		//GREEN_LED_PIO->ODR ^= RED_LED;
+
+		// Update WWDG counter
+		WWDG_SetCounter(WD_REFRESH_COUNTER);
+	}
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : main

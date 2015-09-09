@@ -9,8 +9,6 @@
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
-**                                                                                 **
-**  porting to eclipse by DF8OE 08/18/2015                                         **
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
@@ -47,7 +45,7 @@
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			0
 #define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			191
+#define 	TRX4M_VER_BUILD			23
 
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
@@ -455,7 +453,7 @@ typedef struct ButtonMap
 #define	BAND_SIZE_80				500*KHZ_MULT		// 500 kHz in size (Region 2)
 //
 #define	BAND_MODE_60				1
-#define	BAND_FREQ_60				5258*KHZ_MULT		//5258 kHz
+#define	BAND_FREQ_60				5258*KHZ_MULT		// 5258 kHz
 #define	BAND_SIZE_60				150*KHZ_MULT		// 150 kHz in size to allow different allocations
 //
 #define	BAND_MODE_40				2
@@ -491,14 +489,15 @@ typedef struct ButtonMap
 #define	BAND_SIZE_GEN				1*KHZ_MULT			// Dummy variable
 //
 //
-//	Frequency limits for filters, in Hz, for bandpass filter selection
+//	Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
 //
 #define	BAND_FILTER_UPPER_80		4250000				// Upper limit for 80 meter filter
 //
-#define	BAND_FILTER_UPPER_40		8000000				// Upper limit for 40 meter filter
+#define	BAND_FILTER_UPPER_40		8000000				// Upper limit for 40/60 meter filter
 //
-#define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20 meter filter
+#define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20/30 meter filter
 //
+#define	DEFAULT_FREQ_OFFSET			4000				// Amount of offset (at LO freq) when loading "default" frequency
 //
 // encoder one
 #define ENC_ONE_MODE_AUDIO_GAIN		0
@@ -568,7 +567,60 @@ enum	{
 	WIDE_FILTER_MAX
 };
 //
+//
 #define	FILTER_WIDE_DEFAULT			WIDE_FILTER_10K		// 10k selected by default
+//
+//
+// Define visual widths of audio filters for on-screen indicator in Hz
+//
+#define	FILTER_300HZ_WIDTH			300
+#define	FILTER_500HZ_WIDTH			500
+#define	FILTER_1800HZ_WIDTH			1800
+#define FILTER_2300HZ_WIDTH			2300
+#define FILTER_3600HZ_WIDTH			3600
+#define	FILTER_5000HZ_WIDTH			5000
+#define	FILTER_6000HZ_WIDTH			6000
+#define FILTER_7500HZ_WIDTH			7500
+#define	FILTER_10000HZ_WIDTH		10000
+//
+#define	FILT300_1	500
+#define	FILT300_2	550
+#define	FILT300_3	600
+#define	FILT300_4	650
+#define	FILT300_5	700
+#define	FILT300_6	750
+#define	FILT300_7	800
+#define	FILT300_8	850
+#define	FILT300_9	900
+//
+#define	FILT500_1	550
+#define	FILT500_2	650
+#define	FILT500_3	750
+#define	FILT500_4	850
+#define	FILT500_5	950
+//
+#define	FILT1800_1	1125
+#define	FILT1800_2	1275
+#define	FILT1800_3	1427
+#define	FILT1800_4	1575
+#define	FILT1800_5	1725
+//
+#define	FILT2300_1	1262
+#define	FILT2300_2	1412
+#define	FILT2300_3	1562
+#define	FILT2300_4	1712
+//
+#define	FILT3600	1800
+//
+#define	FILT5000	2500
+//
+#define	FILT6000	3000
+//
+#define	FILT7500	3750
+//
+#define	FILT10000	5000
+//
+#define	FILT_DISPLAY_WIDTH	256		// width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 //
 //
 #define CW_MODE_IAM_B				0
@@ -653,6 +705,7 @@ enum {
 #define	SPEC_COLOUR_TRACE_DEFAULT	SPEC_WHITE
 #define	SPEC_COLOUR_GRID_DEFAULT	SPEC_GREY
 #define SPEC_COLOUR_SCALE_DEFAULT	SPEC_GREY
+#define	FILTER_DISP_COLOUR_DEFAULT	SPEC_GREY
 //
 // Enumeration of transmit meter modes
 //
@@ -926,8 +979,63 @@ enum {
 #define EEPROM_FFT_WINDOW			206		// FFT Window information (lower nybble currently used - upper nybble reserved)
 #define	EEPROM_TX_PTT_AUDIO_MUTE	207		// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 #define	EEPROM_MISC_FLAGS2			208		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
+#define	EEPROM_FILTER_DISP_COLOUR	209		// This contains the color of the line under the spectrum/waterfall display
 //
-// NOTE:  EEPROM addresses up to 255 are currently defined
+// Frequency/mode (memory) storage - memories first 16
+//
+#define	EEPROM_MEM0_MODE			224
+#define	EEPROM_MEM1_MODE			225
+#define	EEPROM_MEM2_MODE			226
+#define	EEPROM_MEM3_MODE			227
+#define	EEPROM_MEM4_MODE			228
+#define	EEPROM_MEM5_MODE			229
+#define	EEPROM_MEM6_MODE			230
+#define	EEPROM_MEM7_MODE			231
+#define	EEPROM_MEM8_MODE			232
+#define	EEPROM_MEM9_MODE			233
+#define	EEPROM_MEM10_MODE			234
+#define	EEPROM_MEM11_MODE			235
+#define	EEPROM_MEM12_MODE			236
+#define	EEPROM_MEM13_MODE			237
+#define	EEPROM_MEM14_MODE			238
+#define	EEPROM_MEM15_MODE			239
+//
+#define	EEPROM_MEM0_FREQ_HIGH			240
+#define	EEPROM_MEM1_FREQ_HIGH			241
+#define	EEPROM_MEM2_FREQ_HIGH			242
+#define	EEPROM_MEM3_FREQ_HIGH			243
+#define	EEPROM_MEM4_FREQ_HIGH			244
+#define	EEPROM_MEM5_FREQ_HIGH			245
+#define	EEPROM_MEM6_FREQ_HIGH			246
+#define	EEPROM_MEM7_FREQ_HIGH			247
+#define	EEPROM_MEM8_FREQ_HIGH			248
+#define	EEPROM_MEM9_FREQ_HIGH			249
+#define	EEPROM_MEM10_FREQ_HIGH			250
+#define	EEPROM_MEM11_FREQ_HIGH			251
+#define	EEPROM_MEM12_FREQ_HIGH			252
+#define	EEPROM_MEM13_FREQ_HIGH			253
+#define	EEPROM_MEM14_FREQ_HIGH			254
+#define	EEPROM_MEM15_FREQ_HIGH			255
+//
+#define	EEPROM_MEM0_FREQ_LOW			256
+#define	EEPROM_MEM1_FREQ_LOW			257
+#define	EEPROM_MEM2_FREQ_LOW			258
+#define	EEPROM_MEM3_FREQ_LOW			259
+#define	EEPROM_MEM4_FREQ_LOW			260
+#define	EEPROM_MEM5_FREQ_LOW			261
+#define	EEPROM_MEM6_FREQ_LOW			262
+#define	EEPROM_MEM7_FREQ_LOW			263
+#define	EEPROM_MEM8_FREQ_LOW			264
+#define	EEPROM_MEM9_FREQ_LOW			265
+#define	EEPROM_MEM10_FREQ_LOW			266
+#define	EEPROM_MEM11_FREQ_LOW			267
+#define	EEPROM_MEM12_FREQ_LOW			268
+#define	EEPROM_MEM13_FREQ_LOW			269
+#define	EEPROM_MEM14_FREQ_LOW			270
+#define	EEPROM_MEM15_FREQ_LOW			271
+//
+//
+// NOTE:  EEPROM addresses up to 383 are currently defined
 //
 // *******************************************************************************************************
 //
@@ -1001,7 +1109,7 @@ typedef struct TransceiverState
 	ulong	tune_freq_old;		// used to detect change of main synthesizer frequency
 
 	// Transceiver calibration mode flag
-	uchar	calib_mode;
+	//uchar	calib_mode;
 
 	// Transceiver menu mode variables
 	uchar	menu_mode;		// TRUE if in menu mode
@@ -1146,8 +1254,10 @@ typedef struct TransceiverState
 	uchar	pwr_12m_full_adj;			// calibration adjust for 12 meters, full power
 	uchar	pwr_10m_full_adj;			// calibration adjust for 10 meters, full power
 	//
-	uchar	alc_decay;					// adjustable ALC release time
-	uchar	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering
+	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
+	ulong	alc_decay_var;				// adjustable ALC release time - working variable version
+	ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
+	ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 	//
 	uchar	freq_step_config;			// configuration of step size (line, step button reversal)
 	//
@@ -1193,7 +1303,7 @@ typedef struct TransceiverState
 										// LSB+6 = 1 if SSB TX has transmit filter DISABLED
 										// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-										// LSB = 0:  "Wide" filter is 10 kHz 1:  "Wide" filter is 6 kHz
+										// LSB = 0:  Display filter bandwidth on screen;  1 = Do not display filter bandwidth
 	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 										// is NEVER reset and is used for timing certain events.
 	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
@@ -1203,6 +1313,7 @@ typedef struct TransceiverState
 	bool	cw_lsb;						// flag used to indicate that CW is to operate in LSB when TRUE
 	uchar	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
 	uchar	lsb_usb_auto_select;		// holds setting of LSB/USB auto-select above/below 10 MHz
+	bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
 	ulong	hold_off_spectrum_scope;	// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
 	ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
 	bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
@@ -1227,7 +1338,10 @@ typedef struct TransceiverState
 	bool	dvmode;						// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
 	uchar	tx_audio_muting_timing;		// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
 	ulong	tx_audio_muting_timer;		// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+	uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
 	bool	tx_audio_muting_flag;		// when TRUE, audio is to be muted after PTT/keyup
+	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
+	bool	mem_disp;					// when TRUE, memory display is enabled
 
 } TransceiverState;
 //

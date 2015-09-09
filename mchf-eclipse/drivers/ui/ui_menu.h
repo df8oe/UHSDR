@@ -17,6 +17,7 @@
 // Exports
 //
 void UiDriverUpdateMenu(uchar mode);
+void UiDriverMemMenu(void);
 //
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
@@ -95,6 +96,7 @@ enum {
 	CONFIG_TX_AUDIO_MUTE,
 	CONFIG_LCD_AUTO_OFF_MODE,
 	CONFIG_VOLTMETER_CALIBRATION,
+	CONFIG_DISP_FILTER_BANDWIDTH,
 	CONFIG_MAX_VOLUME,
 	CONFIG_MAX_RX_GAIN,
 	CONFIG_CAT_ENABLE,

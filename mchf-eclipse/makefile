@@ -12,8 +12,8 @@
 
 
 # set these environent to your individual values
-PRJ  = mchf_219.1911
-LPRJ = mchf_a_219.1911
+PRJ  = mchf
+LPRJ = mchf
 PREFIX = /usr
 GCC_LIB_VERSION = 4.8
 

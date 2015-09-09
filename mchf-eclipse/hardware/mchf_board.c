@@ -23,6 +23,10 @@
 //
 #include "ui_driver.h"
 //
+#include "codec.h"
+//
+#include "ui_si570.h"
+//
 // Eeprom items
 #include "eeprom.h"
 extern uint16_t VirtAddVarTab[NB_OF_VAR];
@@ -569,23 +573,23 @@ static void mchf_board_band_cntr_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void mchf_board_watchdog_init(void)
-{
+//static void mchf_board_watchdog_init(void)
+//{
 	// Enable WWDG clock
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
+//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
 
 	// WWDG clock counter = (PCLK1 (42MHz)/4096)/8 = 1281 Hz (~780 us)
-	WWDG_SetPrescaler(WWDG_Prescaler_8);
+//	WWDG_SetPrescaler(WWDG_Prescaler_8);
 
 	// Set Window value to 80; WWDG counter should be refreshed only when the counter
 	//    is below 80 (and greater than 64) otherwise a reset will be generated
-	WWDG_SetWindowValue(WD_REFRESH_WINDOW);
+//	WWDG_SetWindowValue(WD_REFRESH_WINDOW);
 
 	// Enable WWDG and set counter value to 127, WWDG timeout = ~780 us * 64 = 49.92 ms
 	// In this case the refresh window is: ~780 * (127-80) = 36.6ms < refresh window < ~780 * 64 = 49.9ms
 	// -- so wd reset is every 40 mS --
 	// --WWDG_Enable(WD_REFRESH_COUNTER);
-}
+//}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_set_system_tick_value
@@ -703,7 +707,7 @@ void mchf_board_switch_tx(char mode)
 void mchf_board_power_off(void)
 {
 	ulong i;
-	uchar	tx[32];
+	char	tx[32];
 	// Power off all - high to disable main regulator
 	//
 
