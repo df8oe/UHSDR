@@ -107,4 +107,5 @@ uchar 	ui_si570_read_temp(int *temp);
 void 	ui_si570_conv_temp(uchar *temp,int *dtemp);
 void ui_si570_calc_startupfrequency(void);
 
+
 #endif

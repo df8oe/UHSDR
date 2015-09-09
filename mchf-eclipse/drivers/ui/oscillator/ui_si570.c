@@ -16,7 +16,7 @@
 #include "codec.h"
 //
 #include <math.h>
-
+#include <string.h>
 #include <stdio.h>
 
 #include "mchf_hw_i2c.h"

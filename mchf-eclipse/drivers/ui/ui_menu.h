@@ -18,6 +18,7 @@
 //
 void UiDriverUpdateMenu(uchar mode);
 void UiDriverMemMenu(void);
+void UiDriverUpdateMemLines(uchar var);
 //
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
