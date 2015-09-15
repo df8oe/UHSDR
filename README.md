@@ -1,1 +1,1 @@
-mcHF firmware with configuration files for use with Eclipse, CoIDE and makefile for use on console (stable branch). Recommended firmware. Binary for flashing in root directory.
+This branch might have new features or possible bug-fixes - but it is in BETA STAGE. It might crash or not be usable in some functions. Testing for your own risk :) Binary for flashing in root directory.
