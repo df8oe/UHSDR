@@ -381,9 +381,9 @@
 #define LCD_D10_SOURCE			GPIO_PinSource11
 #define LCD_D10_PIO      		GPIOE
 // pin 12
-#define LCD_CS 					GPIO_Pin_12
-#define LCD_CS_SOURCE			GPIO_PinSource12
-#define LCD_CS_PIO         		GPIOE
+#define LCD_D11					GPIO_Pin_12
+#define LCD_D11_SOURCE			GPIO_PinSource12
+#define LCD_D11_PIO        		GPIOE
 // pin 13
 #define LCD_D12					GPIO_Pin_13
 #define LCD_D12_SOURCE			GPIO_PinSource13

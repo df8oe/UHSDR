@@ -91,9 +91,9 @@
 
 // ----------------------------------------------------------
 // Dual purpose pins (parallel + serial)
-#define LCD_D11 				LCD_CS
-#define LCD_D11_SOURCE			LCD_CS_SOURCE
-#define LCD_D11_PIO         	LCD_CS_PIO
+#define LCD_CS 					LCD_CSA
+#define LCD_CS_SOURCE			LCD_CSA_SOURCE
+#define LCD_CS_PIO	         	LCD_CSA_PIO
 
 // ----------------------------------------------------------
 
