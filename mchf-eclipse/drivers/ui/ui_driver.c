@@ -1810,10 +1810,11 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			{
 				ts.filter_id = band_filter_mode[ts.band];
 				UiDriverChangeFilter(0);	// update display and change filter
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+//aaaa				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				audio_driver_set_rx_audio_filter();
 				audio_driver_set_rx_audio_filter();	// we have to invoke the filter change several times for some unknown reason - 'dunno why!
 			}
+			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		}
 		//
 		//
@@ -6255,7 +6256,7 @@ static void UiDriverFFTWindowFunction(char mode)
 				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
 			}
 			break;
-		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejér) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
+		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejï¿½r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
 				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
 			}
