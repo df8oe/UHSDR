@@ -1040,6 +1040,7 @@ static void UiDriverProcessKeyboard(void)
 					UiCWSidebandMode();
 					UiDriverShowMode();
 					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
+					UiDriverDisplayFilterBW();
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
 					//
@@ -1062,6 +1063,7 @@ static void UiDriverProcessKeyboard(void)
 					UiCWSidebandMode();
 					UiDriverShowMode();
 					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
+					UiDriverDisplayFilterBW();
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update display when we change bands
 					//
