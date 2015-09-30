@@ -1,0 +1,9 @@
+09/29/2015
+first release of bootloader which allows fw-upgrades via usb-stick
+connected to otg-plug (mikro-usb). You need to add 5V supply to
+connector via schottky-diode and (poly)fuse 0.5A to make
+usb-sticks work.
+
+2-be-continued
+
+DF8OE, Andreas
