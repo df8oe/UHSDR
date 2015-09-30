@@ -1,0 +1,40 @@
+DF8OEs USB-Key-Bootloader For MCHF LED Codes
+=========================================================
+
+If bootloader is running backlight is on showing blank screen.
+As long as backing up firmware to USB-Stick lasts green LED is
+constantly on and backlight also. If backlight goes dark and
+green LED stays lit backup-process finished successfully.
+
+In programming process red LED is constantly on and backlight
+also. If backlight goes dark and red LED stays lit programming-
+process finished successfully.
+
+In case of error LCD backlight blinks in an infinite loop.
+Red and green LED helps to identify kind of error:
+
+
+- all LEDs off:
+error not specified.
+
+- red LED constantly on:
+available flash in STM32F4 is too small for firmware
+
+- red and green LED blinking too:
+STM32F4 flash erase error
+
+- red and green LED blinking against to backlight:
+STM32F4 flash programming error
+
+- red LED blinking against to backlight:
+mchf.bin not found on USB-Stick
+
+- green LED constantly on:
+no space for backup firmware on USB-Stick
+
+- green LED blinking against to backlight:
+cannot write to USB-Stick (write-protected or file
+write-protected)
+
+
+Andreas, DF8OE                                      09/30/2015
