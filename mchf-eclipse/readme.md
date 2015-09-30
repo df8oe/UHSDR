@@ -1,1 +1,0 @@
-This branch might have new features or possible bug-fixes - but it is in BETA STAGE. It might crash or not be usable in some functions. Testing for your own risk :)

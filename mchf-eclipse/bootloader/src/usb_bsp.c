@@ -33,18 +33,6 @@
 #define USE_ACCURATE_TIME
 #define TIM_MSEC_DELAY       0x01
 #define TIM_USEC_DELAY       0x02
-#define HOST_OVRCURR_PORT                  GPIOD
-#define HOST_OVRCURR_LINE                  GPIO_Pin_5
-#define HOST_OVRCURR_PORT_SOURCE           GPIO_PortSourceGPIOD
-#define HOST_OVRCURR_PIN_SOURCE            GPIO_PinSourceD
-#define HOST_OVRCURR_PORT_RCC              RCC_APB2Periph_GPIOD
-#define HOST_OVRCURR_EXTI_LINE             EXTI_Line5
-#define HOST_OVRCURR_IRQn                  EXTI9_5_IRQn 
-
-
-#define HOST_POWERSW_PORT_RCC              RCC_AHB1Periph_GPIOC
-#define HOST_POWERSW_PORT                  GPIOC
-#define HOST_POWERSW_VBUS                  GPIO_Pin_0
 
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -264,11 +252,6 @@ void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 
-  /* Enable the Overcurrent Interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = HOST_OVRCURR_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
   NVIC_Init(&NVIC_InitStructure);
 }
@@ -281,28 +264,6 @@ void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
   */
 void USB_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev, uint8_t state)
 {
-  /*
-  On-chip 5 V VBUS generation is not supported. For this reason, a charge pump 
-  or, if 5 V are available on the application board, a basic power switch, must 
-  be added externally to drive the 5 V VBUS line. The external charge pump can 
-  be driven by any GPIO output. When the application decides to power on VBUS 
-  using the chosen GPIO, it must also set the port power bit in the host port 
-  control and status register (PPWR bit in OTG_FS_HPRT).
-
-  Bit 12 PPWR: Port power
-  The application uses this field to control power to this port, and the core 
-  clears this bit on an overcurrent condition.
-  */
-  if (0 == state)
-  {
-    /* DISABLE is needed on output of the Power Switch */
-    GPIO_SetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
-  }
-  else
-  {
-    /*ENABLE the Power Switch by driving the Enable LOW */
-    GPIO_ResetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
-  }
 }
 
 /**
@@ -313,20 +274,6 @@ void USB_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev, uint8_t state)
   */
 void  USB_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev)
 {
-  GPIO_InitTypeDef GPIO_InitStructure; 
- 
-  RCC_AHB1PeriphClockCmd(HOST_POWERSW_PORT_RCC , ENABLE);  
-  
-  GPIO_InitStructure.GPIO_Pin = HOST_POWERSW_VBUS;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ;
-  GPIO_Init(HOST_POWERSW_PORT,&GPIO_InitStructure);
-
-  /* By Default, DISABLE is needed on output of the Power Switch */
-  GPIO_SetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
-  
   USB_OTG_BSP_mDelay(200);   /* Delay is need for stabilising the Vbus Low 
   in Reset Condition, when Vbus=1 and Reset-button is pressed by user */
 }
