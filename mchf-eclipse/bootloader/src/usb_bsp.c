@@ -22,10 +22,6 @@
 #include "usb_bsp.h"
 #include "mchf.h"
 
-/** @addtogroup STM32F4-Discovery_FW_Upgrade
-  * @{
-  */
-
 /* External variables --------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
@@ -61,10 +57,6 @@ void BSP_Init(void)
   /* Initialize LEDs and User_Button on STM32F4-Discovery --------------------*/
   STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
   
-/*  STM_EVAL_LEDInit(LED4);
-  STM_EVAL_LEDInit(LED3);
-  STM_EVAL_LEDInit(LED5);
-  STM_EVAL_LEDInit(LED6); */
   STM_EVAL_LEDInit(LEDGREEN);
   STM_EVAL_LEDInit(LEDRED);
   STM_EVAL_LEDInit(ON);

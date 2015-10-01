@@ -23,10 +23,6 @@
 #include "flash_if.h"
 #include "command.h"
 
-/** @addtogroup STM32F4-Discovery_FW_Upgrade
-  * @{
-  */
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
 /* Private macros ------------------------------------------------------------*/

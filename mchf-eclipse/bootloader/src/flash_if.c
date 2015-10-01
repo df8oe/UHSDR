@@ -22,9 +22,6 @@
 #include "flash_if.h"
 #include "usbh_usr.h"
 
-/** @addtogroup STM32F4-Discovery_FW_Upgrade
-  * @{
-  */
 
 /* External variables --------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
