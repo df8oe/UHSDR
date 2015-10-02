@@ -141,7 +141,7 @@ void SysTick_Handler(void)
   if (UploadCondition != 0x00)
   {
     /* Check if User button Pressed */
-    if (STM_EVAL_PBGetState(BUTTON_USER) == Bit_RESET)
+    if (STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET)
     {
       if (TimingDelay != 0x00)
       { 

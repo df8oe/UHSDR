@@ -72,6 +72,7 @@ void USBH_USR_UnrecoveredError(void);
 
 
 void Fail_Handler(void);
+void Wait(char);
 void FPE_Fail_Handler(void);
 void UWP_Fail_Handler(void);
 void UNS_Fail_Handler(void);

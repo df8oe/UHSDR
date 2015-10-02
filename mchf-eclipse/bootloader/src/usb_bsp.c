@@ -54,8 +54,9 @@ ErrorStatus HSEStartUpStatus;
   */
 void BSP_Init(void)
 {
-  /* Initialize LEDs and User_Button on STM32F4-Discovery --------------------*/
-  STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+  /* Initialize LEDs and User_Button on mchf --------------------*/
+  STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+  STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
   
   STM_EVAL_LEDInit(LEDGREEN);
   STM_EVAL_LEDInit(LEDRED);
@@ -71,7 +72,7 @@ void BSP_Init(void)
   */
 void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 {
- /* Note: On STM32F4-Discovery board only USB OTG FS core is supported. */
+ /* Note: On mchf only USB OTG FS core is supported. */
 
   GPIO_InitTypeDef GPIO_InitStructure;
  #ifdef USE_USB_OTG_FS 

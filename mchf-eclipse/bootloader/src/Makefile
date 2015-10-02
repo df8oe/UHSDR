@@ -14,7 +14,7 @@ SRCS += usbh_msc_fatfs.c usbh_msc_scsi.c usbh_stdreq.c
 SRCS += fattime.c ff.c
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
-PROJ_NAME=fw_upgrade
+PROJ_NAME=mchf_upgrade
 
 #######################################################################################
 
@@ -52,7 +52,6 @@ vpath %.c $(STM_COMMON)/../cmsis_lib/source \
           $(STM_COMMON)/Libraries/stm32_usb_otg_driver/src \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Core/src \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Class/MSC/src \
-          $(STM_COMMON)/Utilities/STM32F4-Discovery \
           $(STM_COMMON)/../drivers/fat_fs/src
 
 

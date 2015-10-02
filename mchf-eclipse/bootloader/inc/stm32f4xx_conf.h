@@ -23,9 +23,9 @@
 #define __STM32F4xx_CONF_H
 
 #if defined  (HSE_VALUE)
-/* Redefine the HSE value; it's equal to 8 MHz on the STM32F4-DISCOVERY Kit */
+/* Redefine the HSE value; it's equal to 16 MHz on the mchf */
  #undef HSE_VALUE
- #define HSE_VALUE    ((uint32_t)8000000) 
+ #define HSE_VALUE    ((uint32_t)16000000) 
 #endif /* HSE_VALUE */
 
 /* Includes ------------------------------------------------------------------*/

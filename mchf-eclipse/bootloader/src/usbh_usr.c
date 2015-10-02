@@ -79,13 +79,14 @@ void USBH_USR_Init(void)
   if(startup == 0 )
   {
     startup = 1;
-    /* Initialize LEDs and Push_Button on STM32F4-Discovery**************************/
+    /* Initialize LEDs and Push_Button on mchf**************************/
     STM_EVAL_LEDInit(LEDGREEN);
     STM_EVAL_LEDInit(LEDRED);
     STM_EVAL_LEDInit(ON);
     STM_EVAL_LEDInit(BLON);
     
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+    STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+    STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
   }
   
   /* Setup SysTick Timer for 1 msec interrupts.
@@ -327,11 +328,20 @@ int USBH_USR_MSC_Application(void)
     TimingDelay = 300;
     UploadCondition = 0x01;
     
-    /* Initialize User_Button on STM32F4-Discovery in the EXTI Mode ----------*/
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+    /* Initialize User_Button on mcHF in the EXTI Mode ----------*/
+    STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_EXTI);
     
     /* Configure Button EXTI line */
-    EXTI_InitStructure.EXTI_Line = USER_BUTTON_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Line = BANDM_BUTTON_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_EXTI);
+    
+    /* Configure Button EXTI line */
+    EXTI_InitStructure.EXTI_Line = POWER_BUTTON_EXTI_LINE;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -340,8 +350,9 @@ int USBH_USR_MSC_Application(void)
       /* Reads all flash memory */
       COMMAND_UPLOAD();
     
-    /* Initialize User_Button on STM32F4-Discovery in the GPIO Mode ----------*/
-    STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+    /* Initialize User_Button on mchf in the GPIO Mode ----------*/
+    STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+    STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
     
     /* Check if User Button is already pressed */
     if ((TimingDelay == 0x00) && (UploadCondition == 0x01))
@@ -363,15 +374,15 @@ int USBH_USR_MSC_Application(void)
     UploadCondition = 0x00;
     
     /* Waiting User Button Released */
-    while ((STM_EVAL_PBGetState(BUTTON_USER) == Bit_RESET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
+    while ((STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
     {}
     
     /* Waiting User Button Pressed */
-    while ((STM_EVAL_PBGetState(BUTTON_USER) == Bit_SET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
+    while ((STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_SET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
     {}
     
     /* Waiting User Button Released */
-    while ((STM_EVAL_PBGetState(BUTTON_USER) == Bit_RESET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
+    while ((STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
     {}
     
     /* Jumps to user application code located in the internal Flash memory */
@@ -405,7 +416,7 @@ void Fail_Handler(void)
   while(1)
   {
     STM_EVAL_LEDToggle(BLON);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -419,7 +430,7 @@ void FPE_Fail_Handler(void)
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDRED);
     STM_EVAL_LEDToggle(LEDGREEN);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -431,7 +442,7 @@ void FME_Fail_Handler(void)
   {
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDRED);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -445,7 +456,7 @@ void FEE_Fail_Handler(void)
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDRED);
     STM_EVAL_LEDToggle(LEDGREEN);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -457,7 +468,7 @@ void UWP_Fail_Handler(void)
   {
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDGREEN);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -469,7 +480,7 @@ void UNS_Fail_Handler(void)
   {
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDGREEN);
-    Delay(250);
+    Wait(250);
   }
 }
 
@@ -481,9 +492,19 @@ void FNF_Fail_Handler(void)
   {
     STM_EVAL_LEDToggle(BLON);
     STM_EVAL_LEDToggle(LEDRED);
-    Delay(250);
+    Wait(250);
   }
 }
+
+void Wait(char time)
+{
+Delay(time);
+if(STM_EVAL_PBGetState(BUTTON_POWER) == Bit_RESET)
+    {
+    STM_EVAL_LEDOn(ON);
+    }
+}
+
 /**
   * @brief  Inserts a delay time.
   * @param  nTime: specifies the delay time length, in milliseconds.

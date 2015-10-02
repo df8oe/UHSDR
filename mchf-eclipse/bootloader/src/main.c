@@ -59,8 +59,8 @@ double i;
   /* Flash unlock */
   FLASH_If_FlashUnlock();
   
-  /* Test if User button on the Discovery kit is pressed */
-  if (STM_EVAL_PBGetState(BUTTON_USER) == Bit_SET)
+  /* Test if BAND- button on mchf is pressed */
+  if (STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_SET)
   {
     /* Check Vector Table: Test if user code is programmed starting from address 
        "APPLICATION_ADDRESS" */

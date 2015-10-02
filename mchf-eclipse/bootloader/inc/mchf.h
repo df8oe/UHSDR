@@ -1,5 +1,5 @@
-#ifndef __STM32F4_DISCOVERY_H
-#define __STM32F4_DISCOVERY_H
+#ifndef __MCHF_H
+#define __MCHF_H 
                                               
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
@@ -14,7 +14,8 @@ typedef enum
 
 typedef enum 
 {  
-  BUTTON_USER = 0,
+  BUTTON_BANDM = 0,
+  BUTTON_POWER = 1,
 } Button_TypeDef;
 
 typedef enum 
@@ -22,6 +23,7 @@ typedef enum
   BUTTON_MODE_GPIO = 0,
   BUTTON_MODE_EXTI = 1
 } ButtonMode_TypeDef;     
+
 #define LEDn                             4
 
 #define LEDGREEN_PIN                     GPIO_Pin_9
@@ -40,15 +42,23 @@ typedef enum
 #define BLON_GPIO_PORT                   GPIOD
 #define BLON_GPIO_CLK                    RCC_AHB1Periph_GPIOD  
 
-#define BUTTONn                          1  
+#define BUTTONn                          2  
 
-#define USER_BUTTON_PIN                GPIO_Pin_0
-#define USER_BUTTON_GPIO_PORT          GPIOB
-#define USER_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
-#define USER_BUTTON_EXTI_LINE          EXTI_Line0
-#define USER_BUTTON_EXTI_PORT_SOURCE   EXTI_PortSourceGPIOB
-#define USER_BUTTON_EXTI_PIN_SOURCE    EXTI_PinSource0
-#define USER_BUTTON_EXTI_IRQn          EXTI0_IRQn 
+#define BANDM_BUTTON_PIN                GPIO_Pin_0
+#define BANDM_BUTTON_GPIO_PORT          GPIOB
+#define BANDM_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
+#define BANDM_BUTTON_EXTI_LINE          EXTI_Line0
+#define BANDM_BUTTON_EXTI_PORT_SOURCE   EXTI_PortSourceGPIOB
+#define BANDM_BUTTON_EXTI_PIN_SOURCE    EXTI_PinSource0
+#define BANDM_BUTTON_EXTI_IRQn          EXTI0_IRQn 
+
+#define POWER_BUTTON_PIN                GPIO_Pin_13
+#define POWER_BUTTON_GPIO_PORT          GPIOC
+#define POWER_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOC
+#define POWER_BUTTON_EXTI_LINE          EXTI_Line0
+#define POWER_BUTTON_EXTI_PORT_SOURCE   EXTI_PortSourceGPIOC
+#define POWER_BUTTON_EXTI_PIN_SOURCE    EXTI_PinSource13
+#define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn 
 
 
 void STM_EVAL_LEDInit(Led_TypeDef Led);
@@ -58,4 +68,4 @@ void STM_EVAL_LEDToggle(Led_TypeDef Led);
 void STM_EVAL_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode);
 uint32_t STM_EVAL_PBGetState(Button_TypeDef Button);
 
-#endif /*  __STM32F4_DISCOVERY_H */
+#endif   /* __MCHF_H */
