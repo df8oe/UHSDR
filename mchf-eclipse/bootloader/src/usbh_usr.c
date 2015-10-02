@@ -379,7 +379,13 @@ int USBH_USR_MSC_Application(void)
     
     /* Waiting User Button Pressed */
     while ((STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_SET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))
-    {}
+    {
+    /* switch off if power button is pressed */
+    if(STM_EVAL_PBGetState(BUTTON_POWER) == Bit_RESET)
+        {
+        STM_EVAL_LEDOn(ON);
+        }
+    }
     
     /* Waiting User Button Released */
     while ((STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET) && (HCD_IsDeviceConnected(&USB_OTG_Core) == 1))

@@ -10,7 +10,8 @@ AN3990 is written for.
 10/02/2015
 minor bugfixes.
 added possibility to turn mchf off with pushing power button if it
-ends in blinking backlight (error stage).
+ends in blinking backlight (error stage) or successfully finished
+process.
 
 2-be-continued
 
