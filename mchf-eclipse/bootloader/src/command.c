@@ -26,6 +26,8 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
+#define VERSION                    "Version: 1.0"
+#define AUTHOR                     "Author: DF8OE"
 
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -62,6 +64,8 @@ void COMMAND_UPLOAD(void)
   FlagStatus readoutstatus = SET;
   uint16_t bytesWritten;
   
+  f_unlink(VERSION);
+  f_unlink(AUTHOR);
   /* green LED on command upload */
   STM_EVAL_LEDOn(LEDGREEN);
   /* Get the read out protection status */

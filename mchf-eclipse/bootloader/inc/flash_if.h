@@ -32,6 +32,8 @@
 /* Exported types ------------------------------------------------------------*/
 typedef  void (*pFunction)(void);
 /* Exported constants --------------------------------------------------------*/
+/* extern const char* version;
+extern const char* author; */
 
 /* Define the flash memory start address */
 #define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
