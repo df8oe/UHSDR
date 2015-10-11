@@ -32,6 +32,8 @@
 - added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
 - bugfix "bandwidth indicator sometimes wrong when band was changed"
 
+10/11/2015: Release of Version 219.24
+
 2-be-continued
 
 KA7OEI, Clint
