@@ -576,7 +576,8 @@ void 	UiDriverUpdateFrequencyFast(void);
 void	UiCalcRxIqGainAdj(void);
 void	UiCalcTxIqGainAdj(void);
 void 	UiDriverSetBandPowerFactor(uchar band);
-void UiDrawSpectrumScopeFrequencyBarText(void);
+void 	UiDrawSpectrumScopeFrequencyBarText(void);
+void 	UiCheckForEEPROMLoadDefaultRequest(void);
 //
 void 	UiDriverChangeBandFilter(uchar band,uchar bpf_only);
 void 	UiDriverChangeFilter(uchar ui_only_update);
@@ -607,9 +608,9 @@ void 	UiCalcAGCDecay(void);
 void	UiLCDBlankTiming(void);
 void 	UiDriverChangeTuningStep(uchar is_up);
 //
-void uiCodecMute(uchar val);
+void 	uiCodecMute(uchar val);
 //
-void UiDriverSaveEepromValuesPowerDown(void);
+void 	UiDriverSaveEepromValuesPowerDown(void);
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain

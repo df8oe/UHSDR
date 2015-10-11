@@ -45,7 +45,7 @@
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			0
 #define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			23
+#define 	TRX4M_VER_BUILD			24
 
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
@@ -1342,6 +1342,7 @@ typedef struct TransceiverState
 	bool	tx_audio_muting_flag;		// when TRUE, audio is to be muted after PTT/keyup
 	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
 	bool	mem_disp;					// when TRUE, memory display is enabled
+	bool	load_eeprom_defaults;		// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 
 } TransceiverState;
 //

@@ -145,7 +145,7 @@ static void 	UiDriverHandleLowerMeter(void);
 static void 	UiDriverHandlePowerSupply(void);
 // LO TCXO routines
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
-void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
+void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature(void);
 //static void 	UiDriverEditMode(void);
@@ -158,7 +158,7 @@ void			UiDriverUpdateMenu(uchar mode);
 void 			UiDriverUpdateMenuLines(uchar index, uchar mode);
 void			UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 void 			UiDriverSaveEepromValuesPowerDown(void);
-static void UiDriverInitMainFreqDisplay(void);
+static void 	UiDriverInitMainFreqDisplay(void);
 //
 
 // Tuning steps
@@ -1040,6 +1040,8 @@ static void UiDriverProcessKeyboard(void)
 					UiCWSidebandMode();
 					UiDriverShowMode();
 					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
+					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+					//
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
 					//
@@ -1062,6 +1064,8 @@ static void UiDriverProcessKeyboard(void)
 					UiCWSidebandMode();
 					UiDriverShowMode();
 					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
+					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+					//
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update display when we change bands
 					//
@@ -8894,9 +8898,70 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 
 //
 //*----------------------------------------------------------------------------
+//* Function Name       : UiCheckForEEPROMLoadDefaultRequest
+//* Object              : Cause default values to be loaded instead of EEPROM-stored values, show informational/warning splash screen, pause
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//* Comments            : The UI is a wreck when the radio boots up, overwriting part of this splash screen - but the user MUST make a decision at that point, anyway:  To disconnect power
+//  Comments            : preserve "old" settings or to power down using the POWER button to the new, default settings to EEPROM.
+//  Comments            : WARNING:  Do *NOT* do this (press the buttons on power-up) when first loading a new firmware version as the EEPROM will be automatically be written over at startup!!!
+//*----------------------------------------------------------------------------
+//
+void UiCheckForEEPROMLoadDefaultRequest(void)
+{
+char txt[64];
+
+	uint16_t i;
+
+	if((!UiDriverButtonCheck(BUTTON_F1_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F3_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F5_PRESSED)))	{	// Are F1, F3 and F5 being held down?
+		ts.load_eeprom_defaults = 1;						// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+		UiDriverLoadEepromValues();							// call function to load values - default instead of EEPROM
+		//
+		UiLcdHy28_LcdClear(Black);							// clear the screen
+		//													// now do all of the warnings, blah, blah...
+		sprintf(txt,"   EEPROM DEFAULTS");
+		UiLcdHy28_PrintText(2,30,txt,Red3,Black,1);
+		sprintf(txt,"      LOADED!!!");
+		UiLcdHy28_PrintText(2,60,txt,Red3,Black,1);
+		//
+		sprintf(txt,"  DISCONNECT power NOW if you do not");
+		UiLcdHy28_PrintText(2,100,txt,Cyan,Black,0);
+		//
+		sprintf(txt,"   want to lose your old settings!");
+		UiLcdHy28_PrintText(2,115,txt,Cyan,Black,0);
+		//
+		sprintf(txt,"  If you want to keep default settings");
+		UiLcdHy28_PrintText(2,145,txt,Yellow,Black,0);
+		//
+		sprintf(txt,"       use POWER button to");
+		UiLcdHy28_PrintText(2,160,txt,Yellow,Black,0);
+		//
+		sprintf(txt,"    power down and save to EEPROM");
+		UiLcdHy28_PrintText(2,175,txt,Yellow,Black,0);
+		//
+		sprintf(txt,"      when radio starts up.");
+		UiLcdHy28_PrintText(2,190,txt,Yellow,Black,0);
+
+		// On screen delay									// delay a bit...
+		for(i = 0; i < 30; i++)
+		   non_os_delay();
+
+		//
+		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
+		UiLcdHy28_PrintText(50,225,txt,Yellow,Black,0);
+
+		// On screen delay									// delay a lot more, giving time to read it!
+		for(i = 0; i < 150; i++)
+		   non_os_delay();
+	}
+}
+
+//
+//*----------------------------------------------------------------------------
 //* Function Name       : UiDriverLoadEepromValues
 //* Object              : load saved values on driver start
-//* Input Parameters    :
+//* Input Parameters    : Indirect:  If "ts.load_eeprom_defaults" is TRUE, default values will be loaded instead of EEPROM values.
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
@@ -8929,7 +8994,7 @@ void UiDriverLoadEepromValues(void)
 			ts.dmod_mode = DEMOD_LSB;			// no - set to LSB
 		//
 		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
-		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
+		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
 		//
 		//printf("-->band and mode loaded\n\r");
@@ -8943,8 +9008,8 @@ void UiDriverLoadEepromValues(void)
 
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
-		// boundary check first
-		if((saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
+		// boundary check first (also check to see if defaults should be loaded)
+		if((!ts.load_eeprom_defaults) && (saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
 		{
 			df.tune_new = saved;
 			//printf("-->frequency loaded\n\r");
@@ -8973,7 +9038,7 @@ void UiDriverLoadEepromValues(void)
 				band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
+			if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded??
 				band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -8986,9 +9051,9 @@ void UiDriverLoadEepromValues(void)
 			//
 			// We have loaded from eeprom the last used band, but can't just
 			// load saved frequency, as it could be out of band, so do a
-			// boundary check first
+			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value[i] = saved;
 				//printf("-->frequency loaded\n\r");
 			}
@@ -9012,7 +9077,7 @@ void UiDriverLoadEepromValues(void)
 				band_decod_mode_a[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode_a[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
+			if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or are defaults to be loaded?
 				band_filter_mode_a[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -9025,9 +9090,9 @@ void UiDriverLoadEepromValues(void)
 			//
 			// We have loaded from eeprom the last used band, but can't just
 			// load saved frequency, as it could be out of band, so do a
-			// boundary check first
+			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value_a[i] = saved;
 				//printf("-->frequency loaded\n\r");
 			}
@@ -9051,7 +9116,7 @@ void UiDriverLoadEepromValues(void)
 				band_decod_mode_b[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode_b[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
+			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded?
 				band_filter_mode_b[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -9064,9 +9129,9 @@ void UiDriverLoadEepromValues(void)
 			//
 			// We have loaded from eeprom the last used band, but can't just
 			// load saved frequency, as it could be out of band, so do a
-			// boundary check first
+			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value_b[i] = saved;
 				//printf("-->frequency loaded\n\r");
 			}
@@ -9082,7 +9147,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Step saved values
 	if(Read_VirtEEPROM(EEPROM_FREQ_STEP, &value) == 0)
 	{
-		if(value >= T_STEP_MAX_STEPS -1)	// did we get step size value outside the range?
+		if((value >= T_STEP_MAX_STEPS -1) || ts.load_eeprom_defaults)	// did we get step size value outside the range or default to be loaded?
 			value = 3;						// yes - set to default size of 1 kHz steps
 		//
 		df.selected_idx = value;
@@ -9094,7 +9159,10 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX Audio Source saved values
 	if(Read_VirtEEPROM(EEPROM_TX_AUDIO_SRC, &value) == 0)
 	{
-		ts.tx_audio_source = value;
+		if(ts.load_eeprom_defaults)					// default?
+			ts.tx_audio_source = TX_AUDIO_MIC;		// yes, load
+		else
+			ts.tx_audio_source = value;
 		//printf("-->TX audio source loaded\n\r");
 	}
 
@@ -9102,14 +9170,17 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TCXO saved values
 	if(Read_VirtEEPROM(EEPROM_TCXO_STATE, &value) == 0)
 	{
-		df.temp_enabled = value;
+		if(ts.load_eeprom_defaults)				// default?
+			df.temp_enabled = TCXO_ON;
+		else
+			df.temp_enabled = value;
 		//printf("-->TCXO state loaded\n\r");
 	}
 	// ------------------------------------------------------------------------------------
 	// Try to read PA BIAS saved values
 	if(Read_VirtEEPROM(EEPROM_PA_BIAS, &value) == 0)
 	{
-		if(value > MAX_PA_BIAS)	// prevent garbage value for bias
+		if((value > MAX_PA_BIAS) || ts.load_eeprom_defaults)	// prevent garbage value for bias (or load default value)
 			value = DEFAULT_PA_BIAS;
 		//
 		ts.pa_bias = value;
@@ -9129,7 +9200,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read PA BIAS saved values
 	if(Read_VirtEEPROM(EEPROM_PA_CW_BIAS, &value) == 0)
 	{
-		if(value > MAX_PA_BIAS)	// prevent garbage value for bias
+		if((value > MAX_PA_BIAS) || ts.load_eeprom_defaults)	// prevent garbage value for bias (or load default value)
 			value = DEFAULT_PA_BIAS;
 		//
 		ts.pa_cw_bias = value;
@@ -9140,7 +9211,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Audio Gain saved values
 	if(Read_VirtEEPROM(EEPROM_AUDIO_GAIN, &value) == 0)
 	{
-		if(value > MAX_AUDIO_GAIN)	// set default gain if garbage value from EEPROM
+		if((value > MAX_AUDIO_GAIN) || ts.load_eeprom_defaults)	// set default gain if garbage value from EEPROM (or load default value)
 			value = DEFAULT_AUDIO_GAIN;
 		ts.audio_gain = value;
 		//printf("-->Audio Gain loaded\n\r");
@@ -9149,7 +9220,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RF Codec Gain saved values
 	if(Read_VirtEEPROM(EEPROM_RX_CODEC_GAIN, &value) == 0)
 	{
-		if(value > MAX_RF_CODEC_GAIN_VAL)			// set default if invalid value
+		if((value > MAX_RF_CODEC_GAIN_VAL) || ts.load_eeprom_defaults)		// set default if invalid value (or load default value)
 			value = DEFAULT_RF_CODEC_GAIN_VAL;
 		//
 		ts.rf_codec_gain = value;
@@ -9160,7 +9231,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RF Codec Gain saved values
 	if(Read_VirtEEPROM(EEPROM_RX_GAIN, &value) == 0)
 	{
-		if(value > MAX_RF_GAIN)			// set default if invalid value
+		if((value > MAX_RF_GAIN) || ts.load_eeprom_defaults)			// set default if invalid value (or load default value)
 			value = DEFAULT_RF_GAIN;
 		//
 		ts.rf_gain = value;
@@ -9171,7 +9242,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Noise Blanker saved values
 	if(Read_VirtEEPROM(EEPROM_NB_SETTING, &value) == 0)
 	{
-		if(value > MAX_RF_ATTEN)	// invalid value?
+		if((value > MAX_RF_ATTEN) || ts.load_eeprom_defaults)	// invalid value?  (or load default value)
 			value = 0;				// yes - set to zero
 		//
 		ts.nb_setting = value;
@@ -9182,7 +9253,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Power level saved values
 	if(Read_VirtEEPROM(EEPROM_TX_POWER_LEVEL, &value) == 0)
 	{
-		if(value >= PA_LEVEL_MAX_ENTRY)
+		if((value >= PA_LEVEL_MAX_ENTRY) || ts.load_eeprom_defaults)  // check for valid range (or load default value)
 			value = PA_LEVEL_DEFAULT;
 		//
 		ts.power_level = value;
@@ -9193,7 +9264,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Keyer speed saved values
 	if(Read_VirtEEPROM(EEPROM_KEYER_SPEED, &value) == 0)
 	{
-		if((value < MIN_KEYER_SPEED) || value > MAX_KEYER_SPEED)	// value out of range?
+		if((value < MIN_KEYER_SPEED) || (value > MAX_KEYER_SPEED) || ts.load_eeprom_defaults)	// value out of range? (or load default value)
 			value = DEFAULT_KEYER_SPEED;
 		//
 		ts.keyer_speed = value;
@@ -9207,7 +9278,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Keyer mode saved values
 	if(Read_VirtEEPROM(EEPROM_KEYER_MODE, &value) == 0)
 	{
-		if(ts.keyer_mode >= CW_MAX_MODE)	// invalid CW mode value?
+		if((ts.keyer_mode >= CW_MAX_MODE) || ts.load_eeprom_defaults)	// invalid CW mode value? (or load default value)
 			value = CW_MODE_IAM_B;	// set default mode
 		//
 		ts.keyer_mode = value;
@@ -9222,7 +9293,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Sidetone Gain saved values
 	if(Read_VirtEEPROM(EEPROM_SIDETONE_GAIN, &value) == 0)
 	{
-		if(value > SIDETONE_MAX_GAIN)			// out of range of gain settings?
+		if((value > SIDETONE_MAX_GAIN) || ts.load_eeprom_defaults)			// out of range of gain settings? (or load default value)
 			value = DEFAULT_SIDETONE_GAIN;		// yes, use default
 		//
 		ts.st_gain = value;
@@ -9233,26 +9304,26 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Audio Gain saved values
 	if(Read_VirtEEPROM(EEPROM_AUDIO_GAIN, &value) == 0)
 	{
-		if(value > MAX_AUDIO_GAIN)			// out of range of gain settings?
+		if((value > MAX_AUDIO_GAIN) || ts.load_eeprom_defaults)			// out of range of gain settings? (or load default value)
 			value = DEFAULT_AUDIO_GAIN;		// yes, use default
 		//
 		ts.audio_gain = value;
 		//printf("-->Audio Gain loaded\n\r");
 	}
 	//
-	// ------------------------------------------------------------------------------------
-	// Try to read MIC BOOST saved values
-	if(Read_VirtEEPROM(EEPROM_MIC_BOOST, &value) == 0)
-	{
-		if(value < 2)
-			ts.mic_boost = value;
-	}
-	//
+//	// ------------------------------------------------------------------------------------
+//	// Try to read MIC BOOST saved values - DEPRICATED, functionality now built into "Codec_RX_TX()"
+//	if(Read_VirtEEPROM(EEPROM_MIC_BOOST, &value) == 0)
+//	{
+//		if(value < 2)
+//			ts.mic_boost = value;
+//	}
+//	//
 	// ------------------------------------------------------------------------------------
 	// Try to read TX LSB Phase saved values
 	if(Read_VirtEEPROM(EEPROM_TX_IQ_LSB_PHASE_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE))	// out of range
+		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
 			*int_val = 0;		// yes, use zero
 		//
 		ts.tx_iq_lsb_phase_balance = *int_val;
@@ -9262,7 +9333,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX USB Phase saved values
 	if(Read_VirtEEPROM(EEPROM_TX_IQ_USB_PHASE_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE))	// out of range
+		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
 			*int_val = 0;		// yes, use zero
 		//
 		ts.tx_iq_usb_phase_balance = *int_val;
@@ -9272,7 +9343,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX LSB Gain saved values
 	if(Read_VirtEEPROM(EEPROM_TX_IQ_LSB_GAIN_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE))	// out of range?
+		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
 			*int_val = 0;		// yes, use zero
 		//
 		ts.tx_iq_lsb_gain_balance = *int_val;
@@ -9282,7 +9353,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX USB Gain saved values
 	if(Read_VirtEEPROM(EEPROM_TX_IQ_USB_GAIN_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE))	// out of range?
+		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
 			*int_val = 0;		// yes, use zero
 		//
 		ts.tx_iq_usb_gain_balance = *int_val;
@@ -9292,7 +9363,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RX LSB Phase saved values
 	if(Read_VirtEEPROM(EEPROM_RX_IQ_LSB_PHASE_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE))	// out of range
+		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
 			*int_val = 0;		// yes - set default
 		//
 		ts.rx_iq_lsb_phase_balance = *int_val;
@@ -9302,7 +9373,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RX USB Phase saved values
 	if(Read_VirtEEPROM(EEPROM_RX_IQ_USB_PHASE_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE))	// out of range
+		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
 			*int_val = 0;		// yes - set default
 		//
 		ts.rx_iq_usb_phase_balance = *int_val;
@@ -9312,7 +9383,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RX LSB Gain saved values
 	if(Read_VirtEEPROM(EEPROM_RX_IQ_LSB_GAIN_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE))	// out of range?
+		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
 			*int_val = 0;	// yes - set default
 		//
 		ts.rx_iq_lsb_gain_balance = *int_val;
@@ -9322,7 +9393,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RX USB Gain saved values
 	if(Read_VirtEEPROM(EEPROM_RX_IQ_USB_GAIN_BALANCE, &uint_val) == 0)
 	{
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE))	// out of range?
+		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
 			*int_val = 0;	// yes - set default
 		//
 		ts.rx_iq_usb_gain_balance = *int_val;
@@ -9333,7 +9404,7 @@ void UiDriverLoadEepromValues(void)
 	if(Read_VirtEEPROM(EEPROM_RX_IQ_AM_GAIN_BALANCE, &uint_val) == 0)
 	{
 //		int_val = &uint_val;	// kludge here to preserve sign of restored value - I don't know how to prevent error as EEPROM function doesn't deal with signed variables
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE))	// out of range?
+		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
 			*int_val = 0;	// yes - set default
 		//
 		ts.rx_iq_am_gain_balance = *int_val;
@@ -9343,7 +9414,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read RX Frequency Calibration
 	if(Read_VirtEEPROM(EEPROM_FREQ_CAL, &uint_val) == 0)
 	{
-		if((*int_val < MIN_FREQ_CAL) || (*int_val > MAX_FREQ_CAL))	// out of range
+		if((*int_val < MIN_FREQ_CAL) || (*int_val > MAX_FREQ_CAL) || ts.load_eeprom_defaults)	// out of range (or load default value)
 			*int_val = 0;		// yes - set default
 		//
 		ts.freq_cal = *int_val;
@@ -9353,7 +9424,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read AGC mode saved values
 	if(Read_VirtEEPROM(EEPROM_AGC_MODE, &value) == 0)
 	{
-		if(value > AGC_MAX_MODE)				// out of range of AGC settings?
+		if((value > AGC_MAX_MODE) || ts.load_eeprom_defaults)	// out of range of AGC settings? (or load default value)
 			value = AGC_DEFAULT;				// yes, use default
 		//
 		ts.agc_mode = value;
@@ -9364,7 +9435,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read MIC gain saved values
 	if(Read_VirtEEPROM(EEPROM_MIC_GAIN, &value) == 0)
 	{
-		if((value > MIC_GAIN_MAX) || (value < MIC_GAIN_MIN))				// out of range of MIC gain settings?
+		if((value > MIC_GAIN_MAX) || (value < MIC_GAIN_MIN) || ts.load_eeprom_defaults)		// out of range of MIC gain settings? (or load default value)
 			value = MIC_GAIN_DEFAULT;				// yes, use default
 		//
 		ts.tx_mic_gain = value;
@@ -9375,7 +9446,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read LIEN gain saved values
 	if(Read_VirtEEPROM(EEPROM_LINE_GAIN, &value) == 0)
 	{
-		if((value > LINE_GAIN_MAX) || (value < LINE_GAIN_MIN))				// out of range of LINE gain settings?
+		if((value > LINE_GAIN_MAX) || (value < LINE_GAIN_MIN) || ts.load_eeprom_defaults)		// out of range of LINE gain settings? (or load default value)
 			value = LINE_GAIN_DEFAULT;				// yes, use default
 		//
 		ts.tx_line_gain = value;
@@ -9386,7 +9457,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Sidetone Frequency saved values
 	if(Read_VirtEEPROM(EEPROM_SIDETONE_FREQ, &value) == 0)
 	{
-		if((value > CW_SIDETONE_FREQ_MAX) || (value < CW_SIDETONE_FREQ_MIN))				// out of range of sidetone freq settings?
+		if((value > CW_SIDETONE_FREQ_MAX) || (value < CW_SIDETONE_FREQ_MIN) || ts.load_eeprom_defaults)		// out of range of sidetone freq settings? (or load default value)
 			value = CW_SIDETONE_FREQ_DEFAULT;				// yes, use default
 		//
 		ts.sidetone_freq = value;
@@ -9397,7 +9468,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Spectrum Scope Speed saved values
 	if(Read_VirtEEPROM(EEPROM_SPEC_SCOPE_SPEED, &value) == 0)
 	{
-		if(value > SPECTRUM_SCOPE_SPEED_MAX)	// out of range of spectrum scope speed settings?
+		if((value > SPECTRUM_SCOPE_SPEED_MAX) || ts.load_eeprom_defaults) 	// out of range of spectrum scope speed settings? (or load default value)
 			value = SPECTRUM_SCOPE_SPEED_DEFAULT;				// yes, use default
 		//
 		ts.scope_speed = value;
@@ -9408,7 +9479,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Spectrum Scope Filter Strength saved values
 	if(Read_VirtEEPROM(EEPROM_SPEC_SCOPE_FILTER, &value) == 0)
 	{
-		if((value > SPECTRUM_SCOPE_FILTER_MAX) || (value < SPECTRUM_SCOPE_FILTER_MIN))	// out of range of spectrum scope filter strength settings?
+		if((value > SPECTRUM_SCOPE_FILTER_MAX) || (value < SPECTRUM_SCOPE_FILTER_MIN) || ts.load_eeprom_defaults)	// out of range of spectrum scope filter strength settings? (or load default value)
 			value = SPECTRUM_SCOPE_FILTER_DEFAULT;				// yes, use default
 		//
 		ts.scope_filter = value;
@@ -9419,7 +9490,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Custom AGC Decay saved values
 	if(Read_VirtEEPROM(EEPROM_AGC_CUSTOM_DECAY, &value) == 0)
 	{
-		if(value > AGC_CUSTOM_MAX)	// out of range Custom AGC Decay settings?
+		if((value > AGC_CUSTOM_MAX)	|| ts.load_eeprom_defaults)	// out of range Custom AGC Decay settings? (or load default value)
 			value = AGC_CUSTOM_DEFAULT;				// yes, use default
 		//
 		ts.agc_custom_decay = value;
@@ -9430,7 +9501,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read color for spectrum scope trace saved values
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_TRACE_COLOUR, &value) == 0)
 	{
-		if(value > SPEC_MAX_COLOUR)	// out of range Spectrum Scope color settings?
+		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
 			value = SPEC_COLOUR_TRACE_DEFAULT;				// yes, use default
 		//
 		ts.scope_trace_colour = value;
@@ -9441,7 +9512,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read color for spectrum scope grid saved values
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_GRID_COLOUR, &value) == 0)
 	{
-		if(value > SPEC_MAX_COLOUR)	// out of range Spectrum Scope color settings?
+		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
 			value = SPEC_COLOUR_GRID_DEFAULT;				// yes, use default
 		//
 		ts.scope_grid_colour = value;
@@ -9452,7 +9523,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read color for spectrum scope center line grid saved values
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR, &value) == 0)
 	{
-		if(value > SPEC_MAX_COLOUR)	// out of range Spectrum Scope color settings?
+		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
 			value = SPEC_COLOUR_GRID_DEFAULT;				// yes, use default
 		//
 		ts.scope_centre_grid_colour = value;
@@ -9463,7 +9534,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read color for spectrum scope scale saved values
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_SCALE_COLOUR, &value) == 0)
 	{
-		if(value > SPEC_MAX_COLOUR)	// out of range Spectrum Scope color settings?
+		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
 			value = SPEC_COLOUR_SCALE_DEFAULT;				// yes, use default
 		//
 		ts.scope_scale_colour = value;
@@ -9474,7 +9545,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read paddle reverse saved values
 	if(Read_VirtEEPROM(EEPROM_PADDLE_REVERSE, &value) == 0)
 	{
-		if(value > 1)	// out of range paddle reverse boolean settings?
+		if((value > 1) || ts.load_eeprom_defaults)	// out of range paddle reverse boolean settings? (or load default value)
 			value = 0;				// yes, use default (off)
 		//
 		ts.paddle_reverse = value;
@@ -9485,7 +9556,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read CW TX>RX Delay saved values
 	if(Read_VirtEEPROM(EEPROM_CW_RX_DELAY, &value) == 0)
 	{
-		if(value > CW_RX_DELAY_MAX)	// out of range CW TX>RX Delay settings?
+		if((value > CW_RX_DELAY_MAX) || ts.load_eeprom_defaults)	// out of range CW TX>RX Delay settings? (or load default value)
 			value = CW_RX_DELAY_DEFAULT;	// yes, use default
 		//
 		ts.cw_rx_delay = value;
@@ -9496,7 +9567,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read maximum volume  saved values
 	if(Read_VirtEEPROM(EEPROM_MAX_VOLUME, &value) == 0)
 	{
-		if((value < MAX_VOLUME_MIN) || (value > MAX_VOLUME_MAX))	// out range of maximum volume settings?
+		if((value < MAX_VOLUME_MIN) || (value > MAX_VOLUME_MAX) || ts.load_eeprom_defaults)	// out range of maximum volume settings? (or load default value)
 			value = MAX_VOLUME_DEFAULT;	// yes, use default
 		//
 		ts.audio_max_volume = value;
@@ -9507,7 +9578,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 300 Hz filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_300HZ_SEL, &value) == 0)
 	{
-		if(value > MAX_300HZ_FILTER)	// out range of filter settings?
+		if((value > MAX_300HZ_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
 			value = FILTER_300HZ_DEFAULT;	// yes, use default
 		//
 		ts.filter_300Hz_select = value;
@@ -9518,7 +9589,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 500 Hz filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_500HZ_SEL, &value) == 0)
 	{
-		if(value > MAX_500HZ_FILTER)	// out range of filter settings?
+		if((value > MAX_500HZ_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
 			value = FILTER_500HZ_DEFAULT;	// yes, use default
 		//
 		ts.filter_500Hz_select = value;
@@ -9529,7 +9600,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 1.8 kHz filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_1K8_SEL, &value) == 0)
 	{
-		if(value > MAX_1K8_FILTER)	// out range of filter settings?
+		if((value > MAX_1K8_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
 			value = FILTER_1K8_DEFAULT;	// yes, use default
 		//
 		ts.filter_1k8_select = value;
@@ -9540,7 +9611,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 2.3 kHz filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_2K3_SEL, &value) == 0)
 	{
-		if(value > MAX_2K3_FILTER)	// out range of filter settings?
+		if((value > MAX_2K3_FILTER)	|| ts.load_eeprom_defaults) // out range of filter settings? (or load default value)
 			value = FILTER_2K3_DEFAULT;	// yes, use default
 		//
 		ts.filter_2k3_select = value;
@@ -9551,7 +9622,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 3.6 kHz filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_3K6_SEL, &value) == 0)
 	{
-		if(value > MAX_3K6_FILTER)	// out range of filter settings?
+		if((value > MAX_3K6_FILTER)	|| ts.load_eeprom_defaults) // out range of filter settings? (or load default value)
 			value = FILTER_3K6_DEFAULT;	// yes, use default
 		//
 		ts.filter_3k6_select = value;
@@ -9562,7 +9633,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read "wide" filter saved values
 	if(Read_VirtEEPROM(EEPROM_FILTER_WIDE_SEL, &value) == 0)
 	{
-		if(value >= WIDE_FILTER_MAX)	// out range of filter settings?
+		if((value >= WIDE_FILTER_MAX) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
 			value = FILTER_WIDE_DEFAULT;	// yes, use default
 		//
 		ts.filter_wide_select = value;
@@ -9573,7 +9644,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read calibration factor for forward power meter
 	if(Read_VirtEEPROM(EEPROM_SENSOR_NULL, &value) == 0)
 	{
-		if((value > SENSOR_NULL_MAX) || (value < SENSOR_NULL_MIN))	// out range of calibration factor for forward power meter settings?
+		if((value > SENSOR_NULL_MAX) || (value < SENSOR_NULL_MIN) || ts.load_eeprom_defaults)	// out range of calibration factor for forward power meter settings? (or load default value)
 			value = SENSOR_NULL_DEFAULT;	// yes, use default
 		//
 		swrm.sensor_null = value;
@@ -9590,12 +9661,12 @@ void UiDriverLoadEepromValues(void)
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first
-		if(saved <= XVERTER_OFFSET_MAX)		// is offset within allowed limits?
+		if((saved <= XVERTER_OFFSET_MAX) && (!ts.load_eeprom_defaults))		// is offset within allowed limits and not loading defaults?
 		{
 			ts.xverter_offset = saved;			// yes, use this value
 			//printf("-->frequency loaded\n\r");
 		}
-		else		// it's outside allowed limites - force to zero
+		else		// it's outside allowed limits or default to be loaded - force to zero
 		{
 			// Load default for this band
 			ts.xverter_offset = 0;
@@ -9607,7 +9678,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read transverter mode enable/disable
 	if(Read_VirtEEPROM(EEPROM_XVERTER_DISP, &value) == 0)
 	{
-		if(value > XVERTER_MULT_MAX)	// if above maximum multipler value, it was bogus
+		if((value > XVERTER_MULT_MAX) || ts.load_eeprom_defaults)	// if above maximum multipler value, it was bogus (or load default value)
 			value = 0;	// reset to "off"
 		//
 		ts.xverter_mode = value;
@@ -9619,7 +9690,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 80 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND0_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_80_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_80m_5w_adj = value;
@@ -9631,7 +9702,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 60 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND1_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_60_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_60m_5w_adj = value;
@@ -9642,7 +9713,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 40 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND2_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_40_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_40m_5w_adj = value;
@@ -9653,7 +9724,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 30 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND3_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_30_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_30m_5w_adj = value;
@@ -9664,7 +9735,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 20 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND4_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_20_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_20m_5w_adj = value;
@@ -9675,7 +9746,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 17 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND5_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_17_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_17m_5w_adj = value;
@@ -9686,7 +9757,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 15 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND6_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_15_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_15m_5w_adj = value;
@@ -9697,7 +9768,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 12 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND7_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_12_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_12m_5w_adj = value;
@@ -9708,7 +9779,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 10 meter 5 watt power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND8_5W, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_10_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_10m_5w_adj = value;
@@ -9719,7 +9790,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 80 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND0_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_80_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_80m_full_adj = value;
@@ -9730,7 +9801,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 60 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND1_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_60_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_60m_full_adj = value;
@@ -9741,7 +9812,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 40 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND2_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_40_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_40m_full_adj = value;
@@ -9752,7 +9823,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 30 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND3_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_30_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_30m_full_adj = value;
@@ -9763,7 +9834,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 20 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND4_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_20_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_20m_full_adj = value;
@@ -9774,7 +9845,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 17 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND5_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_17_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_17m_full_adj = value;
@@ -9785,7 +9856,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 15 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND6_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_15_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_15m_full_adj = value;
@@ -9796,7 +9867,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 12 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND7_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_12_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_12m_full_adj = value;
@@ -9807,7 +9878,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read 10 meter FULL power calibration setting
 	if(Read_VirtEEPROM(EEPROM_BAND8_FULL, &value) == 0)
 	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN))	// if out of range of power setting, it was bogus
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_10_DEFAULT;	// reset to default for this band
 		//
 		ts.pwr_10m_full_adj = value;
@@ -9818,7 +9889,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read spectrum scope magnify setting
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_MAGNIFY, &value) == 0)
 	{
-		if(value > 1)	// if out of range, it was bogus
+		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		sd.magnify = value;
@@ -9829,7 +9900,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read CW wide filter disable setting
 	if(Read_VirtEEPROM(EEPROM_WIDE_FILT_CW_DISABLE, &value) == 0)
 	{
-		if(value > 1)	// if out of range, it was bogus
+		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.filter_cw_wide_disable = value;
@@ -9840,7 +9911,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read SSB Narrow filter disable setting
 	if(Read_VirtEEPROM(EEPROM_NARROW_FILT_SSB_DISABLE, &value) == 0)
 	{
-		if(value > 1)	// if out of range, it was bogus
+		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.filter_ssb_narrow_disable = value;
@@ -9851,7 +9922,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read AM Mode disable setting
 	if(Read_VirtEEPROM(EEPROM_AM_MODE_DISABLE, &value) == 0)
 	{
-		if(value > 1)	// if out of range, it was bogus
+		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.am_mode_disable = value;
@@ -9862,7 +9933,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Spectrum Scope dB/Division
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_DB_DIV, &value) == 0)
 	{
-		if((value > DB_DIV_ADJUST_MAX) || (value < DB_DIV_ADJUST_MIN))	// if out of range, it was bogus
+		if((value > DB_DIV_ADJUST_MAX) || (value < DB_DIV_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DB_DIV_ADJUST_DEFAULT;	// reset to default
 		//
 		ts.spectrum_db_scale = value;
@@ -9873,7 +9944,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Spectrum Scope AGC rate
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_AGC_RATE, &value) == 0)
 	{
-		if((value > SPECTRUM_SCOPE_AGC_MAX) || (value < SPECTRUM_SCOPE_AGC_MIN))	// if out of range, it was bogus
+		if((value > SPECTRUM_SCOPE_AGC_MAX) || (value < SPECTRUM_SCOPE_AGC_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SPECTRUM_SCOPE_AGC_DEFAULT;	// reset to default
 		//
 		ts.scope_agc_rate = value;
@@ -9884,7 +9955,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read meter mode
 	if(Read_VirtEEPROM(EEPROM_METER_MODE, &value) == 0)
 	{
-		if(value >= METER_MAX)	// if out of range, it was bogus
+		if((value >= METER_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = METER_SWR;	// reset to default
 		//
 		ts.tx_meter_mode = value;
@@ -9895,7 +9966,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX audio compressor setting
 	if(Read_VirtEEPROM(EEPROM_TX_AUDIO_COMPRESS, &value) == 0)
 	{
-		if(value > TX_AUDIO_COMPRESSION_MAX)	// if out of range, it was bogus
+		if((value > TX_AUDIO_COMPRESSION_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = TX_AUDIO_COMPRESSION_DEFAULT;	// reset to default
 		//
 		ts.tx_comp_level = value;
@@ -9906,7 +9977,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read ALC release (decay) time
 	if(Read_VirtEEPROM(EEPROM_ALC_DECAY_TIME, &value) == 0)
 	{
-		if(value > ALC_DECAY_MAX)	// if out of range, it was bogus
+		if((value > ALC_DECAY_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = ALC_DECAY_DEFAULT;	// reset to default
 		//
 		ts.alc_decay = value;		// "reserve" copy of variable
@@ -9918,7 +9989,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX audio post-filter gain setting
 	if(Read_VirtEEPROM(EEPROM_ALC_POSTFILT_TX_GAIN, &value) == 0)
 	{
-		if((value > ALC_POSTFILT_GAIN_MAX) || (value < ALC_POSTFILT_GAIN_MIN))	// if out of range, it was bogus
+		if((value > ALC_POSTFILT_GAIN_MAX) || (value < ALC_POSTFILT_GAIN_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = ALC_POSTFILT_GAIN_DEFAULT;	// reset to default
 		//
 		ts.alc_tx_postfilt_gain = value;		// "reserve" copy of variable
@@ -9930,7 +10001,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Frequency step line/button configuration setting
 	if(Read_VirtEEPROM(EEPROM_STEP_SIZE_CONFIG, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default for
 		//
 		ts.freq_step_config = value;
@@ -9941,7 +10012,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP configuration setting
 	if(Read_VirtEEPROM(EEPROM_DSP_MODE, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.dsp_active = value;
@@ -9952,7 +10023,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP Noise reduction setting
 	if(Read_VirtEEPROM(EEPROM_DSP_NR_STRENGTH, &value) == 0)
 	{
-		if(value > DSP_NR_STRENGTH_MAX)	// if out of range, it was bogus
+		if((value > DSP_NR_STRENGTH_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DSP_NR_STRENGTH_DEFAULT;	// reset to default
 		//
 		ts.dsp_nr_strength = value;
@@ -9963,7 +10034,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP Noise reduction de-correlator buffer length setting
 	if(Read_VirtEEPROM(EEPROM_DSP_NR_DECOR_BUFLEN, &value) == 0)
 	{
-		if((value > DSP_NR_BUFLEN_MAX) || (value < DSP_NR_BUFLEN_MIN))	// if out of range, it was bogus
+		if((value > DSP_NR_BUFLEN_MAX) || (value < DSP_NR_BUFLEN_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DSP_NR_BUFLEN_DEFAULT;	// reset to default
 		//
 		ts.dsp_nr_delaybuf_len = value;
@@ -9974,7 +10045,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP Noise reduction FFT number of taps setting
 	if(Read_VirtEEPROM(EEPROM_DSP_NR_FFT_NUMTAPS, &value) == 0)
 	{
-		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN))	// if out of range, it was bogus
+		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DSP_NR_NUMTAPS_DEFAULT;	// reset to default
 		//
 		ts.dsp_nr_numtaps = value;
@@ -9985,7 +10056,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP Notch de-correlator buffer length setting
 	if(Read_VirtEEPROM(EEPROM_DSP_NOTCH_DECOR_BUFLEN, &value) == 0)
 	{
-		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN))	// if out of range, it was bogus
+		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DSP_NR_NUMTAPS_DEFAULT;	// reset to default
 		//
 		ts.dsp_notch_delaybuf_len = value;
@@ -9996,7 +10067,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read DSP Notch convergence rate length setting
 	if(Read_VirtEEPROM(EEPROM_DSP_NOTCH_CONV_RATE, &value) == 0)
 	{
-		if(value > DSP_NOTCH_MU_MAX)	// if out of range, it was bogus
+		if((value > DSP_NOTCH_MU_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = DSP_NOTCH_MU_DEFAULT;	// reset to default
 		//
 		ts.dsp_notch_mu = value;
@@ -10007,7 +10078,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read maximum RF gain setting
 	if(Read_VirtEEPROM(EEPROM_MAX_RX_GAIN, &value) == 0)
 	{
-		if(value > MAX_RF_GAIN_MAX)	// if out of range, it was bogus
+		if((value > MAX_RF_GAIN_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = MAX_RF_GAIN_DEFAULT;	// reset to default
 		//
 		ts.max_rf_gain = value;
@@ -10018,7 +10089,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read TX disable setting
 	if(Read_VirtEEPROM(EEPROM_TX_DISABLE, &value) == 0)
 	{
-		if(value > 1)	// if out of range, it was bogus
+		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.tx_disable = value;
@@ -10029,7 +10100,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Misc. flags 1 setting
 	if(Read_VirtEEPROM(EEPROM_MISC_FLAGS1, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.misc_flags1 = value;
@@ -10040,7 +10111,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Misc. flags 2 setting
 	if(Read_VirtEEPROM(EEPROM_MISC_FLAGS2, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.misc_flags2 = value;
@@ -10051,7 +10122,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read version (release) number
 	if(Read_VirtEEPROM(EEPROM_VERSION_NUMBER, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if(value > 255)	// if out of range, it was bogus (default loading not appropriate here!)
 			value = 0;	// reset to default
 		//
 		ts.version_number_release = value;
@@ -10062,7 +10133,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read version (build) number
 	if(Read_VirtEEPROM(EEPROM_VERSION_BUILD, &value) == 0)
 	{
-		if(value > 255)	// if out of range, it was bogus
+		if(value > 255)	// if out of range, it was bogus  (default loading not appropriate here!
 			value = 0;	// reset to default
 		//
 		ts.version_number_build = value;
@@ -10073,7 +10144,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Noise blanker AGC setting
 	if(Read_VirtEEPROM(EEPROM_NB_AGC_TIME_CONST, &value) == 0)
 	{
-		if(value > NB_MAX_AGC_SETTING)	// if out of range, it was bogus
+		if((value > NB_MAX_AGC_SETTING) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = 0;	// reset to default
 		//
 		ts.nb_agc_time_const = value;
@@ -10084,7 +10155,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read CW offset setting
 	if(Read_VirtEEPROM(EEPROM_CW_OFFSET_MODE, &value) == 0)
 	{
-		if(value > CW_OFFSET_MAX)				// if out of range, it was bogus
+		if((value > CW_OFFSET_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
 			value = CW_OFFSET_MODE_DEFAULT;		// reset to default
 		//
 		ts.cw_offset_mode = value;
@@ -10095,7 +10166,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read I/Q Freq. conversion setting
 	if(Read_VirtEEPROM(EEPROM_FREQ_CONV_MODE, &value) == 0)
 	{
-		if(value > FREQ_IQ_CONV_MODE_MAX)				// if out of range, it was bogus
+		if((value > FREQ_IQ_CONV_MODE_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
 			value = FREQ_IQ_CONV_MODE_DEFAULT;		// reset to default
 		//
 		ts.iq_freq_mode = value;
@@ -10106,7 +10177,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read auto LSB/USB select mode
 	if(Read_VirtEEPROM(EEPROM_LSB_USB_AUTO_SELECT, &value) == 0)
 	{
-		if(value > AUTO_LSB_USB_MAX)				// if out of range, it was bogus
+		if((value > AUTO_LSB_USB_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
 			value = AUTO_LSB_USB_DEFAULT;		// reset to default
 		//
 		ts.lsb_usb_auto_select = value;
@@ -10117,7 +10188,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read auto LCD backlight blanking mode
 	if(Read_VirtEEPROM(EEPROM_LCD_BLANKING_CONFIG, &value) == 0)
 	{
-		if(value > 255)				// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
 			value = 0;		// reset to OFF
 		//
 		ts.lcd_backlight_blanking = value;
@@ -10128,7 +10199,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read VFO/SPLIT/Memory mode
 	if(Read_VirtEEPROM(EEPROM_VFO_MEM_MODE, &value) == 0)
 	{
-		if(value > 255)				// if out of range, it was bogus
+		if((value > 255) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
 			value = 0;		// reset to OFF
 		//
 		ts.vfo_mem_mode = value;
@@ -10139,7 +10210,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read power sensor coupling coefficient for 80m
 	if(Read_VirtEEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, &value) == 0)
 	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN))	// if out of range, it was bogus
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SWR_COUPLING_DEFAULT;		// reset to OFF
 		//
 		swrm.coupling_80m_calc = value;
@@ -10150,7 +10221,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read power sensor coupling coefficient for 40m
 	if(Read_VirtEEPROM(EEPROM_DETECTOR_COUPLING_COEFF_40M, &value) == 0)
 	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN))	// if out of range, it was bogus
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SWR_COUPLING_DEFAULT;		// reset to OFF
 		//
 		swrm.coupling_40m_calc = value;
@@ -10161,7 +10232,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read power sensor coupling coefficient for 20m
 	if(Read_VirtEEPROM(EEPROM_DETECTOR_COUPLING_COEFF_20M, &value) == 0)
 	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN))	// if out of range, it was bogus
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SWR_COUPLING_DEFAULT;		// reset to OFF
 		//
 		swrm.coupling_20m_calc = value;
@@ -10172,7 +10243,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read power sensor coupling coefficient for 15m
 	if(Read_VirtEEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, &value) == 0)
 	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN))	// if out of range, it was bogus
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SWR_COUPLING_DEFAULT;		// reset to OFF
 		//
 		swrm.coupling_15m_calc = value;
@@ -10183,7 +10254,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read voltmeter calibration
 	if(Read_VirtEEPROM(EEPROM_VOLTMETER_CALIBRATE, &value) == 0)
 	{
-		if((value > POWER_VOLTMETER_CALIBRATE_MAX) || (value < POWER_VOLTMETER_CALIBRATE_MIN))	// if out of range, it was bogus
+		if((value > POWER_VOLTMETER_CALIBRATE_MAX) || (value < POWER_VOLTMETER_CALIBRATE_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = POWER_VOLTMETER_CALIBRATE_DEFAULT;		// reset to OFF
 		//
 		ts.voltmeter_calibrate = value;
@@ -10194,7 +10265,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read waterfall color scheme
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_COLOR_SCHEME, &value) == 0)
 	{
-		if((value > WATERFALL_COLOR_MAX) || (value < WATERFALL_COLOR_MIN))	// if out of range, it was bogus
+		if((value > WATERFALL_COLOR_MAX) || (value < WATERFALL_COLOR_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_COLOR_DEFAULT;		// reset to OFF
 		//
 		ts.waterfall_color_scheme = value;
@@ -10205,7 +10276,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read waterfall vertical step size
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_VERTICAL_STEP_SIZE, &value) == 0)
 	{
-		if((value > WATERFALL_STEP_SIZE_MAX) || (value < WATERFALL_STEP_SIZE_MIN))	// if out of range, it was bogus
+		if((value > WATERFALL_STEP_SIZE_MAX) || (value < WATERFALL_STEP_SIZE_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_STEP_SIZE_DEFAULT;		// reset to OFF
 		//
 		ts.waterfall_vert_step_size = value;
@@ -10216,7 +10287,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read waterfall amplitude offset
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_OFFSET, &value) == 0)
 	{
-		if((value > WATERFALL_OFFSET_MAX) || (value < WATERFALL_OFFSET_MIN))	// if out of range, it was bogus
+		if((value > WATERFALL_OFFSET_MAX) || (value < WATERFALL_OFFSET_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_OFFSET_DEFAULT;		// reset to OFF
 		//
 		ts.waterfall_offset = value;
@@ -10227,7 +10298,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read waterfall amplitude contrast
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_CONTRAST, &value) == 0)
 	{
-		if((value > WATERFALL_CONTRAST_MAX) || (value < WATERFALL_CONTRAST_MIN))	// if out of range, it was bogus
+		if((value > WATERFALL_CONTRAST_MAX) || (value < WATERFALL_CONTRAST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_CONTRAST_DEFAULT;		// reset to OFF
 		//
 		ts.waterfall_contrast = value;
@@ -10238,7 +10309,7 @@ void UiDriverLoadEepromValues(void)
 	// Try to read waterfall speed
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_SPEED, &value) == 0)
 	{
-		if(value > WATERFALL_SPEED_MAX)	// if out of range, it was bogus
+		if((value > WATERFALL_SPEED_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_SPEED_DEFAULT_SPI;		// reset to default
 		//
 		ts.waterfall_speed = value;
@@ -10248,7 +10319,7 @@ void UiDriverLoadEepromValues(void)
 	// ------------------------------------------------------------------------------------
 	// Try to read spectrum scope no signal auto offset
 	if(Read_VirtEEPROM(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST, &value) == 0)	{
-		if((value > SPECTRUM_SCOPE_NOSIG_ADJUST_MAX) || (value < SPECTRUM_SCOPE_NOSIG_ADJUST_MIN))	// if out of range, it was bogus
+		if((value > SPECTRUM_SCOPE_NOSIG_ADJUST_MAX) || (value < SPECTRUM_SCOPE_NOSIG_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;		// reset to default
 		//
 		ts.spectrum_scope_nosig_adjust = value;
@@ -10258,7 +10329,7 @@ void UiDriverLoadEepromValues(void)
 // ------------------------------------------------------------------------------------
 // Try to read waterfall no signal auto offset
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_NOSIG_ADJUST, &value) == 0)	{
-		if((value > WATERFALL_NOSIG_ADJUST_MAX) || (value < WATERFALL_NOSIG_ADJUST_MIN))	// if out of range, it was bogus
+		if((value > WATERFALL_NOSIG_ADJUST_MAX) || (value < WATERFALL_NOSIG_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_NOSIG_ADJUST_DEFAULT;		// reset to default
 		//
 	ts.waterfall_nosig_adjust = value;
@@ -10271,7 +10342,7 @@ void UiDriverLoadEepromValues(void)
 	// ------------------------------------------------------------------------------------
 // Try to read waterfall size and other settings
 	if(Read_VirtEEPROM(EEPROM_WATERFALL_SIZE, &value) == 0)	{
-		if(value >= WATERFALL_MAX)	// if out of range, it was bogus
+		if((value >= WATERFALL_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = WATERFALL_SIZE_DEFAULT;		// reset to default
 		//
 		ts.waterfall_size = value;
@@ -10283,7 +10354,7 @@ void UiDriverLoadEepromValues(void)
 // ------------------------------------------------------------------------------------
 // Try to read FFT Window setting
 	if(Read_VirtEEPROM(EEPROM_FFT_WINDOW, &value) == 0)	{
-		if(value >= FFT_WINDOW_MAX)	// if out of range, it was bogus
+		if((value >= FFT_WINDOW_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 			value = FFT_WINDOW_DEFAULT;		// reset to default
 		//
 		ts.fft_window_type = value;
@@ -10295,7 +10366,7 @@ void UiDriverLoadEepromValues(void)
 	// ------------------------------------------------------------------------------------
 	// Try to read TX PTT audio mute delay setting
 		if(Read_VirtEEPROM(EEPROM_TX_PTT_AUDIO_MUTE, &value) == 0)	{
-			if(value >= TX_PTT_AUDIO_MUTE_DELAY_MAX)	// if out of range, it was bogus
+			if((value >= TX_PTT_AUDIO_MUTE_DELAY_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 				value = 0;		// reset to default
 			//
 			ts.tx_audio_muting_timing = value;
@@ -10307,7 +10378,7 @@ void UiDriverLoadEepromValues(void)
 	// ------------------------------------------------------------------------------------
 	// Try to read Filter Bandwidth Display setting
 		if(Read_VirtEEPROM(EEPROM_FILTER_DISP_COLOUR, &value) == 0)	{
-			if(value > SPEC_MAX_COLOUR)	// if out of range, it was bogus
+			if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
 				value = FILTER_DISP_COLOUR_DEFAULT;	// reset to default
 			//
 			ts.filter_disp_colour = value;

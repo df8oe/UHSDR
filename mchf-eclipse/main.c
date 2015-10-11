@@ -878,6 +878,7 @@ void TransceiverStateInit(void)
 	ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;	//
 	ts.vfo_mem_flag = 0;					// when TRUE, memory mode is enabled
 	ts.mem_disp = 0;						// when TRUE, memory display is enabled
+	ts.load_eeprom_defaults = 0;					// when TRUE, defaults are loaded when "UiDriverLoadEepromValues()" is called - must be saved by user w/power-down or F1 to be permanent!
 }
 
 //*----------------------------------------------------------------------------
@@ -990,6 +991,8 @@ int main(void)
 	//
 	ts.audio_gain_change = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted
+
+	UiCheckForEEPROMLoadDefaultRequest();	// check - and act on - request for loading of EEPROM defaults, if any
 
 
 #ifdef DEBUG_BUILD

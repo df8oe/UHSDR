@@ -414,13 +414,14 @@ typedef struct SMeter
 #define	CONV_NCO_COS	0.70710678118654752440084436210485	// value for 6 kHz - funny that they are the same, huh!
 //
 //
-#define	FREQ_SHIFT_MAG	6000		// Amount of frequency shift, in Hz, when software frequency shift is enabled
+//
+#define	FREQ_SHIFT_MAG	6000		// Amount of frequency shift, in Hz, when software frequency shift is enabled (exactly 1/8th of the sample rate prior to decimation!)
 //
 #define	FREQ_IQ_CONV_MODE_OFF		0	// No frequency conversion
 #define FREQ_IQ_CONV_LO_HIGH		1	// LO is above receive frequency in RX mode
 #define	FREQ_IQ_CONV_LO_LOW			2	// LO is below receive frequency in RX mode
 //
-#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_MODE_OFF
+#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_LO_LOW		//FREQ_IQ_CONV_MODE_OFF
 #define	FREQ_IQ_CONV_MODE_MAX		2
 //
 //

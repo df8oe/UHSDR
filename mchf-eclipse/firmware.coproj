@@ -179,9 +179,9 @@
     <File name="usb/usbd/core/src/usbd_ioreq.c" path="usb/usbd/core/src/usbd_ioreq.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_usart.h" path="cmsis_lib/include/stm32f4xx_usart.h" type="1"/>
     <File name="drivers/audio/codec/i2s.c" path="drivers/audio/codec/i2s.c" type="1"/>
-    <File name="drivers/keyboard/keyb_driver.c" path="drivers/keyboard/keyb_driver.c" type="1"/>
     <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
     <File name="drivers/audio/softdds/dds_table.h" path="drivers/audio/softdds/dds_table.h" type="1"/>
+    <File name="drivers/keyboard/keyb_driver.c" path="drivers/keyboard/keyb_driver.c" type="1"/>
     <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="drivers/audio/softdds/softdds.c" path="drivers/audio/softdds/softdds.c" type="1"/>
     <File name="usb/usbh/class/hid/inc" path="" type="2"/>
