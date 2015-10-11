@@ -3,7 +3,8 @@ This branch might have new features or possible bug-fixes - but it is in BETA ST
 Since 09/30/2015 this package contains a bootloader which allows firmware-updates via USB-key instead of connection to PC and using of mchf-manager. Bootloader is compatible with all existing firmware versions (of course versions released by KA7OEI Clint, too).
 
 Binaries are located in mchf-eclipse and are named:
-- bootloader.dfumchf_binary_for_flash.bin
+- bootloader.dfu
+- mchf_binary_for_flash.bin
  
 If you only want binaries and not complete sources click on file you want to download and then on the button "Raw" right above the grey bar.
 
