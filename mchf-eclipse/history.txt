@@ -1,13 +1,12 @@
-I used mcHF Firmware Source 219.19 from Clint KA7OEI as base.
+09/05/2015 (DF8OE)
+- start: I used mcHF Firmware Source 219.19 from Clint KA7OEI as base of new mchf-firmware-community working with GITHUB
 
-Changes:
-
-08/19/2015
+08/19/2015 (DF8OE)
 - added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
 - added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
 - merging Eclipse and CooCox configuration to one package so that both IDEs can be used
 
-09/07/2015
+09/07/2015 (DF8OE)
 - created makefile (thanks to DL4SAI)
 - commented out of some curious lines which prevent building using makefile
 - building is now possible with makefile but there is one issue to find:
@@ -16,10 +15,24 @@ Changes:
 09/08/2015
 - makefile is now working
 
-09/09/2015
+09/09/2015 (DF8OE)
 - I merged Clint KA7OEI new released version 219.22. This new version now is named 219.23 and will be the base
   for all future firmware developments - I hope...
 
+09/15/2015 (DF8OE)
+- added autodetection of HY28A / HY28B in SPI mode (hardware changing needed --> see wiki on github pages
+
+09/30/2015 (DF8OE)
+- creation aof new bootloader which allows firmware updates via USB-key
+
+10/02/2015 (DF8OE)
+- minor bugfixes in bootloader
+
+10/10/2015 (KA7OEI)
+- added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
+- bugfix "bandwidth indicator sometimes wrong when band was changed"
+
 2-be-continued
 
+KA7OEI, Clint
 DF8OE, Andreas
