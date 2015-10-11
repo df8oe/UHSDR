@@ -8,6 +8,6 @@ If you only want binaries and not complete sources click on file you want to dow
 
 Have fun - Open-Source opens possibilities!
 
-M0NKA, Chris
-KA7OEI, Clint
+M0NKA, Chris<br>
+KA7OEI, Clint<br>
 DF8OE, Andreas
