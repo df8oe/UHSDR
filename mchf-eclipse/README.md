@@ -1,4 +1,8 @@
-Stable branch of mcHF firmware and bootloader - sources and binaries.
+Stable branch of mcHF firmware and bootloader - sources and binaries
+
+
+Version <219.24>
+
 
 Binaries are located in mchf-eclipse and are named:
 - bootloader.dfu
