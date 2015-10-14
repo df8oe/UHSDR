@@ -105,7 +105,7 @@ header ul {
   z-index: 1;
   right: 20px;
   top: 20px;
-  height: 38px;
+  height: 54px;
   padding: 1px 0;
   background: #5198DF;
   background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #77b9fb), color-stop(100%, #3782cd));
@@ -142,7 +142,7 @@ header ul li {
   width: 79px;
   float: left;
   border-right: 1px solid #3A7CBE;
-  height: 38px;
+  height: 54px;
 }
 header ul li.single {
   border: none;
