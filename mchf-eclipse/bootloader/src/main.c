@@ -52,7 +52,7 @@ int main(void)
   STM_EVAL_LEDOff(BLON);
 
 double i;
-    for (i = 0; i < 1000000; i++)
+    for (i = 0; i < 2000000; i++)
 	;
   STM_EVAL_LEDOn(ON);
 
