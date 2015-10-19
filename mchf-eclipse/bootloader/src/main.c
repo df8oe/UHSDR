@@ -49,12 +49,12 @@ int main(void)
 {
   /* STM32 evalboard user initialization */
   BSP_Init();
-  STM_EVAL_LEDOff(BLON);
+  STM_EVAL_LEDOn(ON);
 
 double i;
-    for (i = 0; i < 2000000; i++)
+    for (i = 0; i < 300000; i++)
 	;
-  STM_EVAL_LEDOn(ON);
+  STM_EVAL_LEDOff(ON);
 
   /* Flash unlock */
   FLASH_If_FlashUnlock();
@@ -76,7 +76,6 @@ double i;
   }
   
   /* Init upgrade mode display */
-  STM_EVAL_LEDOff(ON);
   STM_EVAL_LEDOn(BLON);
 
   USBH_Init(&USB_OTG_Core, USB_OTG_FS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
