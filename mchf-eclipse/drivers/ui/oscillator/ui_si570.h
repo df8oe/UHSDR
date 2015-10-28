@@ -22,8 +22,8 @@
 // ------------------
 
 // The SI570 Min/Max frequencies are 4x the actual tuning frequencies
-#define SI570_MIN_FREQ			1000000		// 7.2=1.8 MHz
-#define SI570_MAX_FREQ			200000000	// 128=32 Mhz
+#define SI570_MIN_FREQ			7200000		// 7.2=1.8 MHz
+#define SI570_MAX_FREQ			160000000	// 160=40 Mhz
 //
 // These are "hard limit" frequencies below/above which the synthesizer/algorithms must not be adjusted or else the system may crash
 #define SI570_HARD_MIN_FREQ			1000000		// 1.0=0.25 MHz
@@ -43,8 +43,8 @@
 #define FACTORY_FXTAL			114.285
 
 // VCO range
-#define	FDCO_MAX 				5870
-#define FDCO_MIN 	 			4650
+#define	FDCO_MAX 				5670
+#define FDCO_MIN 	 			4850
 
 #define POW_2_28          		268435456.0
 // -------------------------------------------------------------------------------------
