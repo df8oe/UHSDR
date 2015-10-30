@@ -14,7 +14,7 @@ SRCS += usbh_msc_fatfs.c usbh_msc_scsi.c usbh_stdreq.c
 SRCS += fattime.c ff.c
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
-PROJ_NAME=mchf_upgrade
+PROJ_NAME=bootloader
 
 #######################################################################################
 
@@ -65,6 +65,8 @@ $(PROJ_NAME).elf: $(SRCS)
 	$(CC) $(CFLAGS) $^ -o $@
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
+
+	../hex2dfu/hex2dfu.py bootloader.hex
 
 clean:
 	rm -f *.o

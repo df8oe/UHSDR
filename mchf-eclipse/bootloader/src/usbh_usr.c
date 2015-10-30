@@ -87,6 +87,10 @@ void USBH_USR_Init(void)
     
     STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
     STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
+    /* time for slow memory keys to wake up */
+    double i;
+    for(i=0; i<600000; i++)
+	;
   }
   
   /* Setup SysTick Timer for 1 msec interrupts.
