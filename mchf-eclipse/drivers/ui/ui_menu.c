@@ -3467,7 +3467,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			if(temp_var)	// beep is to be enabled
 				ts.misc_flags2 |= 4;		// set LSB
 			else			// beep is to be disabled
-				ts.misc_flags1 &= 0xfb;		// clear LSB
+				ts.misc_flags2 &= 0xfb;		// clear LSB
 		}
 		//
 		if(ts.misc_flags2 & 4)				// is beep enabled?

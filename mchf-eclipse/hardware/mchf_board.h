@@ -43,10 +43,9 @@
 #define 	AUTHOR_STRING   		"K Atanassov - M0NKA 2014-2015"
 //
 #define 	TRX4M_VER_MAJOR			0
-#define 	TRX4M_VER_MINOR			0
-#define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			26
-
+#define 	TRX4M_VER_MINOR			219
+#define 	TRX4M_VER_RELEASE		26
+#define 	TRX4M_VER_BUILD			1
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -994,6 +993,7 @@ enum {
 #define	EEPROM_FM_SUBAUDIBLE_TONE_DET	217		// index for storage of subaudible tone detection
 #define	EEPROM_KEYBOARD_BEEP_FREQ	218		// keyboard beep frequency (in Hz)
 #define EEPROM_BEEP_LOUDNESS		219		// loudness of beep (keyboard, sidetone test)
+#define	EEPROM_VERSION_MINOR		220		// Storage of current minor version number - used to detect change of firmware
 //
 // Frequency/mode (memory) storage - memories first 16
 //
@@ -1327,6 +1327,7 @@ typedef struct TransceiverState
 										// LSB+2 = 1 if key/button beep is enabled
 	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 										// is NEVER reset and is used for timing certain events.
+	uint16_t	version_number_minor;	// version number - minor - used to hold version number and detect change
 	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
 	uint16_t	version_number_release;	// version number - release - used to hold version number and detect change
 	uchar	nb_agc_time_const;			// used to calculate the AGC time constant

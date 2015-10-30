@@ -4523,7 +4523,7 @@ static void UiDriverTimeScheduler(void)
 	// and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
 	//
 	if((ts.sysclock > DSP_STARTUP_DELAY) && (!startup_flag))	{	// has it been long enough after startup?
-		if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE))	{	// Yes - check for new version
+		if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Yes - check for new version
 			ts.version_number_build = TRX4M_VER_BUILD;	// save new F/W version
 			ts.version_number_release = TRX4M_VER_RELEASE;
 			UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
@@ -9340,7 +9340,7 @@ char txt[64];
 
 	uint16_t i;
 
-	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE))	{	// Does the current version NOT match what was in the EEPROM?
+	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
 		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
 	}
 
@@ -10697,6 +10697,17 @@ void UiDriverLoadEepromValues(void)
 		//
 		ts.misc_flags2 = value;
 		//printf("-->Misc. flags 2 setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read "minor" version number
+	if(Read_VirtEEPROM(EEPROM_VERSION_MINOR, &value) == 0)
+	{
+		if(value > 255)	// if out of range, it was bogus (default loading not appropriate here!)
+			value = 0;	// reset to default
+		//
+		ts.version_number_minor = value;
+		//printf("-->'Minor' version number loaded\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -12420,6 +12431,20 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	{
 		Write_VirtEEPROM(EEPROM_MISC_FLAGS2, 0);
 		//printf("-->Misc. flags 2 setting value created\n\r");
+	}
+	//
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read currently-stored version number - release - update if changed
+	if(Read_VirtEEPROM(EEPROM_VERSION_MINOR, &value) == 0)
+	{
+		Write_VirtEEPROM(EEPROM_VERSION_MINOR, ts.version_number_minor);
+		//printf("-->Version number saved\n\r");
+	}
+	else	// create
+	{
+		Write_VirtEEPROM(EEPROM_VERSION_MINOR, 0);
+		//printf("-->Version number value created\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------
