@@ -51,10 +51,11 @@ int main(void)
   BSP_Init();
   STM_EVAL_LEDOn(ON);
 
-double i;
+  double i;
     for (i = 0; i < 300000; i++)
 	;
   STM_EVAL_LEDOff(ON);
+
 
   /* Flash unlock */
   FLASH_If_FlashUnlock();
