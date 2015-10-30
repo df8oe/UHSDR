@@ -298,7 +298,7 @@ void Codec_Volume(uchar vol)
 //* Function Name       : Codec_Mute
 //* Object              : new method of mute via soft mute of the DAC
 //* Object              :
-//* Input Parameters    :
+//* Input Parameters    : 0 = Unmuted  1 = Muted
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------

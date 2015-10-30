@@ -45,7 +45,7 @@
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			0
 #define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			24
+#define 	TRX4M_VER_BUILD			26
 
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
@@ -419,8 +419,9 @@ typedef struct ButtonMap
 #define DEMOD_LSB					1
 #define DEMOD_CW					2
 #define DEMOD_AM					3
-#define DEMOD_DIGI					4
-#define DEMOD_MAX_MODE				4
+#define	DEMOD_FM					4
+#define DEMOD_DIGI					5
+#define DEMOD_MAX_MODE				5
 
 #define RTC_OSC_FREQ				32768
 
@@ -503,17 +504,16 @@ typedef struct ButtonMap
 #define ENC_ONE_MODE_AUDIO_GAIN		0
 #define ENC_ONE_MODE_ST_GAIN		1
 #define ENC_ONE_MAX_MODE			1
-
+//
 // encoder two
 #define ENC_TWO_MODE_RF_GAIN		0
-#define ENC_TWO_MODE_SIG_PROC	1
+#define ENC_TWO_MODE_SIG_PROC		1
 #define ENC_TWO_MAX_MODE			2
-
+//
 // encoder three
 #define ENC_THREE_MODE_RIT			0
 #define ENC_THREE_MODE_CW_SPEED		1
 #define ENC_THREE_MAX_MODE			2
-
 //
 // Audio filter select enumeration
 //
@@ -583,6 +583,8 @@ enum	{
 #define FILTER_7500HZ_WIDTH			7500
 #define	FILTER_10000HZ_WIDTH		10000
 //
+#define	HILBERT_3600HZ_WIDTH		3800	// Approximate bandwidth of 3.6 kHz wide Hilbert - This used to depict FM detection bandwidth
+//
 #define	FILT300_1	500
 #define	FILT300_2	550
 #define	FILT300_3	600
@@ -619,6 +621,8 @@ enum	{
 #define	FILT7500	3750
 //
 #define	FILT10000	5000
+//
+#define	HILBERT3600	1900	// "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
 //
 #define	FILT_DISPLAY_WIDTH	256		// width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 //
@@ -980,6 +984,16 @@ enum {
 #define	EEPROM_TX_PTT_AUDIO_MUTE	207		// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 #define	EEPROM_MISC_FLAGS2			208		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
 #define	EEPROM_FILTER_DISP_COLOUR	209		// This contains the color of the line under the spectrum/waterfall display
+#define	EEPROM_TX_IQ_AM_GAIN_BALANCE	210	// IQ Gain balance for AM transmission
+#define	EEPROM_TX_IQ_FM_GAIN_BALANCE	211	// IQ Gain balance for FM transmission
+#define	EEPROM_FM_SUBAUDIBLE_TONE_GEN	212		// index for storage of subaudible tone generation
+#define	EEPROM_FM_TONE_BURST_MODE	213		// tone burst mode
+#define EEPROM_FM_SQUELCH_SETTING	214		// FM squelch setting
+#define EEPROM_FM_RX_BANDWIDTH		215		// bandwidth setting for FM reception
+#define	EEPROM_RX_IQ_FM_GAIN_BALANCE	216	// IQ Gain balance for AM reception
+#define	EEPROM_FM_SUBAUDIBLE_TONE_DET	217		// index for storage of subaudible tone detection
+#define	EEPROM_KEYBOARD_BEEP_FREQ	218		// keyboard beep frequency (in Hz)
+#define EEPROM_BEEP_LOUDNESS		219		// loudness of beep (keyboard, sidetone test)
 //
 // Frequency/mode (memory) storage - memories first 16
 //
@@ -1084,14 +1098,19 @@ typedef struct TransceiverState
 	//
 	int		tx_iq_lsb_phase_balance;	// setting for TX IQ phase balance
 	int		tx_iq_usb_phase_balance;	// setting for TX IQ phase balance
-
+	//
+	int		tx_iq_am_gain_balance;		// setting for TX IQ gain balance
+	int		tx_iq_fm_gain_balance;		// setting for TX IQ gain balance
+	//
 	float	tx_adj_gain_var_i;		// active variables for adjusting tx gain balance
 	float	tx_adj_gain_var_q;
 
 	int		rx_iq_lsb_gain_balance;		// setting for RX IQ gain balance
 	int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
 	//
-	int		rx_iq_am_gain_balance;		// setting for RX IQ gain balance
+	int		rx_iq_am_gain_balance;		// setting for AM RX IQ gain balance
+	int		rx_iq_fm_gain_balance;		// setting for FM RX IQ gain balance
+	//
 	//
 	int		rx_iq_lsb_phase_balance;	// setting for RX IQ phase balance
 	int		rx_iq_usb_phase_balance;	// setting for RX IQ phase balance
@@ -1303,7 +1322,9 @@ typedef struct TransceiverState
 										// LSB+6 = 1 if SSB TX has transmit filter DISABLED
 										// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-										// LSB = 0:  Display filter bandwidth on screen;  1 = Do not display filter bandwidth
+										// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
+										// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
+										// LSB+2 = 1 if key/button beep is enabled
 	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 										// is NEVER reset and is used for timing certain events.
 	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
@@ -1343,7 +1364,16 @@ typedef struct TransceiverState
 	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
 	bool	mem_disp;					// when TRUE, memory display is enabled
 	bool	load_eeprom_defaults;		// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-
+	ulong	fm_subaudible_tone_gen_select;	// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+	uchar	fm_tone_burst_mode;			// this is the setting for the tone burst generator
+	ulong	fm_tone_burst_timing;		// this is used to time/schedule the duration of a tone burst
+	uchar	fm_sql_threshold;			// squelch threshold "dial" setting
+	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
+	ulong	fm_subaudible_tone_det_select;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+	bool	beep_active;				// TRUE if beep is active
+	ulong	beep_frequency;				// beep frequency, in Hz
+	ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
+	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
 } TransceiverState;
 //
 

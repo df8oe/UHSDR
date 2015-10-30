@@ -78,7 +78,7 @@ typedef struct KeypadState
 	bool	button_processed;
 
 	// Flag to indicate that the button had been continued to be pressed during debounce
-	bool	button_still_pressed;
+	bool	button_just_pressed;
 
 	// Flag to indicate that debounce check was complete
 	bool	debounce_check_complete;
@@ -179,6 +179,8 @@ enum	{
 	WFALL_GRAY = 0,
 	WFALL_HOT_COLD,
 	WFALL_RAINBOW,
+	WFALL_BLUE,
+	WFALL_GRAY_INVERSE,
 	WFALL_MAXVAL
 };
 //
@@ -544,7 +546,7 @@ typedef struct EepromSave
 #define POS_PWRN_IND_Y						193
 #define POS_PWR_IND_X						5
 #define POS_PWR_IND_Y						(POS_PWRN_IND_Y + 15)
-#define COL_PWR_IND							Grey
+#define COL_PWR_IND							Grey2
 
 #define POS_TEMP_IND_X						0
 #define POS_TEMP_IND_Y						0
@@ -611,6 +613,13 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 void 	uiCodecMute(uchar val);
 //
 void 	UiDriverSaveEepromValuesPowerDown(void);
+void	UiCheckForPressedKey(void);
+//
+void 	UiCalcSubaudibleFreq(void);
+void 	UiLoadToneBurstMode(void);
+void	UiCalcSubaudibleGenFreq(void);		// load/set current FM subaudible tone settings for generation
+//
+void 	UiCalcSubaudibleDetFreq(void);		// load/set current FM subaudible tone settings	for detection
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain
@@ -684,7 +693,7 @@ void 	UiDriverSaveEepromValuesPowerDown(void);
 #define	AUTO_LSB_USB_ON			1
 #define	AUTO_LSB_USB_60M		2
 #define	AUTO_LSB_USB_MAX		2
-#define	AUTO_LSB_USB_DEFAULT	AUTO_LSB_USB_OFF
+#define	AUTO_LSB_USB_DEFAULT	AUTO_LSB_USB_60M
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //

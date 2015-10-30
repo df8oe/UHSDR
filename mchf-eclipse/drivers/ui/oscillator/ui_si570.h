@@ -43,8 +43,8 @@
 #define FACTORY_FXTAL			114.285
 
 // VCO range
-#define	FDCO_MAX 				5870
-#define FDCO_MIN 	 			4650
+#define FDCO_MAX 				5670//5870
+#define FDCO_MIN 	 			4850//4650
 
 #define POW_2_28          		268435456.0
 // -------------------------------------------------------------------------------------
