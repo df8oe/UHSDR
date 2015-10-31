@@ -34,6 +34,38 @@
 
 10/11/2015: Release of Version 219.24
 
+10/28/2015 Version 0.0.219.26  [KA7OEI]
+- Added "Load Defaults" obtained by holding F1, F3 AND F5 on power-up.  Once unit has
+powered up, the user would DISCONNECT power to preserve the OLD settings or PRESS-AND-HOLD the
+POWER button to save the new (default) settings to EEPROM and power down.  The unit halts on this
+screen indefinitely.  Some defaults changes to be more useful.
+- Added "button test" function where pressing-holding any button (other than power) during power-up will
+display the button being being pressed (or the one with highest precedence if multiple) and the number
+of buttons being pressed.
+- Problem in which "PREV" and "NEXT" buttons on menu could skip last screen of "Configuration"
+menu has been fixed.
+- Fixed problem in which line under screen that indicates bandwidth/settings did not change under some
+conditions (e.g. switching from one band to another where the same filter/settings were used, but
+a different sideband was used).  Added "unconditional" update of this line when changing bands.
+- Added "INVGray" and "Blue" waterfall palettes.
+- Streamlined code related to DSP NR and Notch.
+- Added keyboard beep.
+- Completely rewrote AM demodulation to reduce CPU loading.
+- Fixed problem (from 0.0.219.24) in which there were dead spots in Si570 tuning (incorrect FDCO Min/
+max values).
+- Added function where pressing-holding G3 will generate sidetone equivalent to CW offset, used for
+"Spotting", in CW/LSB/USB modes/
+- Added FM modulation/demodulation with squelch, subaudible tone encode/decode and tone burst.
+
+- The following files have been added (I hope that I have them all here!):
+
+  FILTERS:  iir_15k_hpf_fm_squelch.h   - Filter for squelch noise detection
+            iir_2k7_tx_bpf_fm.h        - Filter for FM transmit audio
+
+  AUDIO:    fm_dds_table.h             - DDS/NCO lookup table for FM/Subtone/Burst generation
+            fm_subaudible_tone_table.h - List of subaudible tones for encode/decode
+
+
 2-be-continued
 
 KA7OEI, Clint
