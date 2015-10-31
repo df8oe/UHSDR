@@ -164,6 +164,7 @@ void COMMAND_DOWNLOAD(void)
   */
 void COMMAND_JUMP(void)
 {
+*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
   /* Software reset */
   NVIC_SystemReset();
 }
