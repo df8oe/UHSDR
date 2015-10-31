@@ -51,8 +51,14 @@ int main(void)
   BSP_Init();
   STM_EVAL_LEDOn(ON);
 
-  double i;
-    for (i = 0; i < 300000; i++)
+double i,border;
+
+if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
+    border = 300000;
+else
+    border = 1000;
+    
+    for (i = 0; i < border; i++)
 	;
   STM_EVAL_LEDOff(ON);
 
