@@ -4526,12 +4526,14 @@ static void UiDriverTimeScheduler(void)
 		if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Yes - check for new version
 			ts.version_number_build = TRX4M_VER_BUILD;	// save new F/W version
 			ts.version_number_release = TRX4M_VER_RELEASE;
+			ts.version_number_minor = TRX4M_VER_MINOR;
 			UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
 			UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
 			UiLcdHy28_PrintText(110,168," Preparing EEPROM ",Cyan,Black,0);
 			UiDriverSaveEepromValuesPowerDown();	// rewrite EEPROM values
 			Write_VirtEEPROM(EEPROM_VERSION_NUMBER, ts.version_number_release);	// save version number information to EEPROM
 			Write_VirtEEPROM(EEPROM_VERSION_BUILD, ts.version_number_build);	//
+			Write_VirtEEPROM(EEPROM_VERSION_MINOR, ts.version_number_minor);	//
 			for(i = 0; i < 6; i++)			// delay so that it may be read
 				non_os_delay();
 			UiLcdHy28_PrintText(110,180,"      Done!       ",Cyan,Black,0);
