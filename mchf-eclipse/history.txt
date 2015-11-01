@@ -51,13 +51,18 @@ max values).
   AUDIO:    fm_dds_table.h             - DDS/NCO lookup table for FM/Subtone/Burst generation
             fm_subaudible_tone_table.h - List of subaudible tones for encode/decode
 
-10/29/2015 Version 0.219.26.1  [KA7OEI]
+20151029 Version 0.219.26.1  [KA7OEI]
 - Fixed problem with key beep on/off
 - Fixed TUNE in CW mode
 - Added support for change detection of "Minor" version (e.g. "219", above)
 
-10/30/2015 Version 0.219.26.2  [KA7OEI]
+20151030 Version 0.219.26.2  [KA7OEI]
 - Fixed problem with change detection of "Minor" version
+
+20151101 Version 0.219.26.3  [KA7OEI]
+- Rewrote "AGC" handler for FM mode to reduce processing overhead when in FM.  The AGC does
+not actually function in FM (there is no need for it!) but the value is calculated only to drive
+the S-meter.  (In 0.219.26.0-2 the S meter did not work in FM.)
 
 
 2-be-continued

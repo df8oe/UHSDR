@@ -224,6 +224,8 @@ void audio_driver_init(void)
 	sm.gain_calc = 0;	// gain calculation used for S-meter
 
 	ads.agc_val = 1;			// Post AF Filter gain (AGC)
+	ads.agc_var = 1;			// used in AGC processing
+	ads.agc_calc = 1;			// used in AGC processing
 	ads.agc_holder = 1;			// initialize holder for AGC value
 	for(x = 0; x < BUFF_LEN; x++)	// initialize running buffer for AGC delay
 		ads.agc_valbuf[x] = 1;
@@ -952,7 +954,6 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 //*----------------------------------------------------------------------------
 static void audio_rx_agc_processor(int16_t psize)
 {
-	static float		agc_calc, agc_var;
 	static ulong 		i;
 	static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
 
@@ -961,24 +962,26 @@ static void audio_rx_agc_processor(int16_t psize)
 	// Note that even though it gets only one AGC value per cycle, it *does* do "psize/2" calculations to iterate out the AGC value more precisely than it would
 	// were it called once per DMA cycle.  If it is called once per DMA cycle it may tend to weakly oscillate under certain conditions and possibly overshoot/undershoot.
 	//
+	// FM does not need AGC and the S-meter reading is calculated within the FM demodulation function and not here.
+	//
 	for(i = 0; i < psize/2; i++)	{
 		if(ts.agc_mode != AGC_OFF)	{
-			if((ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))		// if in AM or FM, get the recovered DC voltage from the detected carrier
-				agc_calc = ads.am_fm_agc * ads.agc_val;
+			if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
+				ads.agc_calc = ads.am_fm_agc * ads.agc_val;
 			else	{							// not AM - get the amplitude of the recovered audio
-				agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
+				ads.agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
 				//agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
 			}
 			//
-			if(agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
-				agc_var = ads.agc_knee - agc_calc;	// calculate difference between agc value and "knee" value
-				agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-				ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling * agc_var;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
+			if(ads.agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
+				ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
+				ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+				ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling * ads.agc_var;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
 			}
 			else	{
-				agc_var = agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
-				agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-				ads.agc_val -= ads.agc_val * AGC_ATTACK * agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
+				ads.agc_var = ads.agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
+				ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+				ads.agc_val -= ads.agc_val * AGC_ATTACK * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
 				if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
 					ads.agc_val = AGC_VAL_MIN;
 			}
@@ -994,27 +997,25 @@ static void audio_rx_agc_processor(int16_t psize)
 		ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
 	}
 	//
-	if(ts.dmod_mode != DEMOD_FM)	{	// Do "look-ahead" if we are NOT in FM mode.  (if we are in FM, audio passes "around" this.
-		//
-		// Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
-		// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
-		// decimation rate so that it is constant for all settings.
-		//
-		arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
-		arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
-		//
-		// Update the in/out pointers to the AGC delay buffer
-		agc_delay_inbuf += psize/2;						// update circular delay buffer
-		agc_delay_outbuf = agc_delay_inbuf + psize/2;
-		agc_delay_inbuf %= ads.agc_delay_buflen;
-		agc_delay_outbuf %= ads.agc_delay_buflen;
-		//
-		//
-		// Now apply pre-calculated AGC values to delayed audio
-		//
-		arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
-	}
+	// Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
+	// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
+	// decimation rate so that it is constant for all settings.
 	//
+	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
+	arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
+	//
+	// Update the in/out pointers to the AGC delay buffer
+	agc_delay_inbuf += psize/2;						// update circular delay buffer
+	agc_delay_outbuf = agc_delay_inbuf + psize/2;
+	agc_delay_inbuf %= ads.agc_delay_buflen;
+	agc_delay_outbuf %= ads.agc_delay_buflen;
+	//
+	//
+	// Now apply pre-calculated AGC values to delayed audio
+	//
+	arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
+	//
+//
 }
 //
 //
@@ -1032,12 +1033,15 @@ static void audio_demod_fm(int16_t size)
 	float r, s, angle, abs_y, x, y, a, b;
 	ulong i;
 	bool tone_det_enabled;
-	static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b, q0 = 0, q1 = 0, q2 = 0, r0 = 0, r1 = 0, r2 = 0, s0 = 0, s1 = 0, s2 = 0, subdet = 0;
-	static uchar	count = 0, tdet = 0;
-	static ulong	gcount = 0;
+	static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;		// used in FM detection and low/high pass processing
+	static float q0 = 0, q1 = 0, q2 = 0, r0 = 0, r1 = 0, r2 = 0, s0 = 0, s1 = 0, s2 = 0;		// Goertzel values
+	static float subdet = 0;				// used for tone detection
+	static uchar	count = 0, tdet = 0;	// used for squelch processing and debouncing tone detection, respectively
+	static ulong	gcount = 0;				// used for averaging in tone detection
 
 	if(!ts.iq_freq_mode)	// bail out if translate mode is not active
 		return;
+
 
 	if(ts.fm_subaudible_tone_det_select)		// set a quick flag for checking to see if tone detection is enabled
 		tone_det_enabled = 1;					// the tone decode value was nonzero - decoding is enabled
@@ -1101,7 +1105,31 @@ static void audio_demod_fm(int16_t size)
 		i_prev = ads.i_buffer[i];
 	}
 	//
-	ads.am_fm_agc = sqrt((q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;		// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
+	ads.am_fm_agc = sqrtf((q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;		// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
+	//
+	// Do "AGC" on FM signal:  Calculate/smooth signal level ONLY - no need for audio scaling
+	//
+	ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+	//
+	if(ads.agc_calc < ads.agc_knee)	{	// is audio below AGC "knee" value?
+		ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
+		ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+		ads.agc_val += ads.agc_val* AGC_DECAY_FM * ads.agc_var;	// Yes - Increase gain for AGC DECAY (always fast in FM)
+	}
+	else	{
+		ads.agc_var = ads.agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
+		ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+		ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
+		if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
+			ads.agc_val = AGC_VAL_MIN;
+	}
+	if(ads.agc_val >= ads.agc_rf_gain)	{	// limit AGC to reasonable values when low/no signals present
+		ads.agc_val = ads.agc_rf_gain;
+		if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+			ads.agc_val = ads.agc_val_max;
+	}
+	//
+	// *** Squelch Processing ***
 	//
 	arm_iir_lattice_f32(&IIR_Squelch_HPF, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);		// Do IIR high-pass filter on audio so we may detect squelch noise energy
 	//
@@ -1148,7 +1176,7 @@ static void audio_demod_fm(int16_t size)
 	}
 
 	//
-	// Subaudible tone detection
+	// *** Subaudible tone detection ***
 	//
 	if(tone_det_enabled)	{		// is subaudible tone detection enabled?  If so, do decoding
 		//
@@ -1159,9 +1187,13 @@ static void audio_demod_fm(int16_t size)
 		// get a ratio that is irrespective of the actual detected audio amplitude:  A ratio of 1.00 is considered "neutral" and it goes above unity with the increasing
 		// likelihood that a tone was present on the target frequency
 		//
-		// Detect at 5% above target frequency
+		// Goertzel constants for the three decoders are pre-calculated in the function "UiCalcSubaudibleDetFreq()"
 		//
-		// Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator
+		// (Yes, I know that below could be rewritten to be a bit more compact-looking, but it would not be much faster and it would be less-readable)
+		//
+		// Detect above target frequency
+		//
+		// Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator, above
 		//
 		gcount++;		// this counter is used for the accumulation of data over multiple cycles
 		//
@@ -1180,7 +1212,7 @@ static void audio_demod_fm(int16_t size)
 			r2 = 0;
 		}
 		//
-		// Detect energy at 5% below target frequency
+		// Detect energy below target frequency
 		//
 		for(i = 0; i < size/2; i++)	{
 			s0 = ads.fm_goertzel_low_r * s1 - s2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
@@ -1231,7 +1263,7 @@ static void audio_demod_fm(int16_t size)
 		}
 	}
 	else	{		// subaudible tone detection disabled
-		ads.fm_subaudible_tone_detected = 1;	// always signal that a tone is being detected to enable audio gate
+		ads.fm_subaudible_tone_detected = 1;	// always signal that a tone is being detected if detection is disabled to enable audio gate
 	}
 }
 
@@ -1258,7 +1290,7 @@ static void audio_demod_am(int16_t size)
 	}
 	//
 	// perform complex vector magnitude calculation on interleaved data in "b" to recover
-	// instantaneous carrier power:  sqrt(b[n]^2+b[n+1]^2) - put result in "a"
+	// instantaneous carrier power:  sqrtf(b[n]^2+b[n+1]^2) - put result in "a"
 	//
 	arm_cmplx_mag_f32((float32_t *)ads.b_buffer, (float32_t *)ads.a_buffer, size/2);	// use optimized (fast) ARM function
 	//

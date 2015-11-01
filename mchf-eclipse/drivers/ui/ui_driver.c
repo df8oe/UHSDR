@@ -911,33 +911,7 @@ static void UiDriverProcessKeyboard(void)
 				case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
 					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
 						UiDriverChangeDemodMode(0);
-						UiInitRxParms();
-/*
-						UiCWSidebandMode();
-						if(ts.menu_mode)	// are we in menu mode?
-							UiDriverUpdateMenu(0);	// yes, update display when we change modes
-						//
-						UiCalcTxIqGainAdj();		// update gain and phase values when changing modes
-						UiCalcTxPhaseAdj();
-						UiCalcRxPhaseAdj();
-						UiDriverChangeRfGain(1);	// update RFG/SQL on screen
-						Audio_TXFilter_Init();
-						UiDriverChangeDSPMode();	// Change DSP display setting as well
-						UiDriverChangeFilter(1);	// make certain that numerical on-screen bandwidth indicator is updated
-						audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-						UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator (graphical)
-						UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
-						//
-						if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
-							UiDriverChangeKeyerSpeed(0);		// emplace keyer speed (WPM) and
-							UiDriverChangeStGain(0);			// sidetone gain when in CW mode
-						}
-						else	{
-							UIDriverChangeAudioGain(0);			// display Line/Mic gain and
-							UiDriverChangeCmpLevel(0);			// Compression level when in voice mode
-						}
-*/
-						//
+						UiInitRxParms();				// re-init with change of mode
 					}
 					break;
 				//
@@ -973,6 +947,7 @@ static void UiDriverProcessKeyboard(void)
 						UiDriverChangeDSPMode();			// update on-screen display
 						//
 						// Update DSP/NB/RFG control display
+						//
 						if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
 							UiDriverChangeSigProc(0);
 						else
@@ -1017,13 +992,8 @@ static void UiDriverProcessKeyboard(void)
 						// Change filter
 						//
 						UiDriverChangeFilter(0);
-	UiInitRxParms();
-						/*
-						UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
-						UiDriverChangeDSPMode();	// Change DSP display setting as well
-						UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-						*/
-
+						//
+						UiInitRxParms();		// re-init for change of filter
 						//
 						if(ts.menu_mode)	// are we in menu mode?
 							UiDriverUpdateMenu(0);	// yes, update display when we change filters
@@ -1071,13 +1041,7 @@ static void UiDriverProcessKeyboard(void)
 					else
 						UiDriverChangeBand(0);	// not swapped, go down
 					//
-UiInitRxParms();
-					/*
-					UiCWSidebandMode();
-					UiDriverShowMode();
-					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
-					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-					*/
+					UiInitRxParms();	// re-init because mode/filter may have changed
 					//
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
@@ -1098,13 +1062,7 @@ UiInitRxParms();
 					else
 						UiDriverChangeBand(1);	// no, go up
 					//
-UiInitRxParms();
-/*
-					UiCWSidebandMode();
-					UiDriverShowMode();
-					UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
-					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-*/
+					UiInitRxParms();		// re-init because mode/filter may have changed
 					//
 					if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update display when we change bands
@@ -7495,7 +7453,7 @@ static void UiDriverHandleSmeter(void)
 	gcalc *= 1.5;	// codec has 1.5 dB/step
 	gcalc -= 34.5;	// offset codec setting by 34.5db (full gain = 12dB)
 	gcalc = pow10(gcalc/10);	// convert to power ratio
-	ads.codec_gain_calc = sqrt(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
+	ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
 	//
 	sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
 	sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
@@ -7688,7 +7646,7 @@ static void UiDriverHandleLowerMeter(void)
 
 	// Calculate VSWR from power readings
 
-	swrm.vswr = (1+sqrt(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrt(swrm.rev_pwr/swrm.fwd_pwr));
+	swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrt(swrm.rev_pwr/swrm.fwd_pwr));
 
 	// display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
 	if(swrm.pwr_meter_disp)	{
