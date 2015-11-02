@@ -75,6 +75,8 @@ typedef struct AudioDriverState
 	// AGC and audio related variables
 
 	float 					agc_val;			// "live" receiver AGC value
+	float					agc_var;
+	float					agc_calc;
 	float					agc_valbuf[BUFF_LEN];	// holder for "running" AGC value
 	float					agc_holder;			// used to hold AGC value during transmit and tuning
 	float					agc_decay;			// decay rate (speed) of AGC
@@ -256,6 +258,10 @@ typedef struct SMeter
 #define AGC_FAST_DECAY	0.0002	// Decay rate multiplier for "Fast" AGC
 #define AGC_MED_DECAY	0.00006	// Decay rate multiplier for "Medium" AGC
 #define AGC_SLOW_DECAY	0.00001 // Decay rate for multiplier  "Slow" AGC
+//
+#define	AGC_ATTACK_FM	0.0033	// Attack time for FM (S-meter reading only)
+#define	AGC_DECAY_FM	0.0333	// Decay time for FM (S-meter reading only)
+//
 
 #define	AGC_VAL_MIN		0.02	// Minimum AGC gain multiplier (e.g. gain reduction of 34dB)
 //#define AGC_VAL_MAX		4096//1024	// Maximum AGC gain multiplier (e.g. gain multiplication of 60dB)
