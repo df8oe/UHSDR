@@ -47,7 +47,7 @@
 #define 	TRX4M_VER_RELEASE		26
 //
 //
-#define 	TRX4M_VER_BUILD			3
+#define 	TRX4M_VER_BUILD			4
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -455,8 +455,8 @@ typedef struct ButtonMap
 #define	BAND_SIZE_80				500*KHZ_MULT		// 500 kHz in size (Region 2)
 //
 #define	BAND_MODE_60				1
-#define	BAND_FREQ_60				5258*KHZ_MULT		// 5258 kHz
-#define	BAND_SIZE_60				150*KHZ_MULT		// 150 kHz in size to allow different allocations
+#define	BAND_FREQ_60				5250*KHZ_MULT		// 5250 kHz
+#define	BAND_SIZE_60				200*KHZ_MULT		// 200 kHz in size to allow different allocations
 //
 #define	BAND_MODE_40				2
 #define	BAND_FREQ_40				7000*KHZ_MULT		// 7000 kHz
@@ -1327,6 +1327,7 @@ typedef struct TransceiverState
 										// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
 										// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
 										// LSB+2 = 1 if key/button beep is enabled
+										// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
 	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 										// is NEVER reset and is used for timing certain events.
 	uint16_t	version_number_minor;	// version number - minor - used to hold version number and detect change
@@ -1377,6 +1378,8 @@ typedef struct TransceiverState
 	ulong	beep_frequency;				// beep frequency, in Hz
 	ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
+	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
 } TransceiverState;
 //
 

@@ -892,6 +892,8 @@ void TransceiverStateInit(void)
 	ts.beep_active = 1;						// TRUE if beep is active
 	ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;	// beep frequency, in Hz
 	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
+	ts.load_freq_mode_defaults = 0;				// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	ts.boot_halt_flag = 0;					// when TRUE, boot-up is halted - used to allow various test functions
 }
 
 //*----------------------------------------------------------------------------
@@ -1015,6 +1017,8 @@ int main(void)
 	uiCodecMute(0);					// make cure codec is un-muted
 
 	UiCheckForEEPROMLoadDefaultRequest();	// check - and act on - request for loading of EEPROM defaults, if any
+	//
+	UiCheckForEEPROMLoadFreqModeDefaultRequest();	// check - and act on - request for loading frequency/mode defaults, if any
 	//
 	UiCheckForPressedKey();
 

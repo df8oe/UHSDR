@@ -78,6 +78,14 @@ max values).
 not actually function in FM (there is no need for it!) but the value is calculated only to drive
 the S-meter.  (In 0.219.26.0-2 the S meter did not work in FM.)
 
+20151103 Version 0.219.26.4  [KA7OEI]
+- Increased size of 60 meters to accommodate some EU frequency useages
+- Added function to reset frequencies/modes to default:  Press-and-hold F2 and F4 during power-up
+- Added adjustment menu item "MemFreq Lim Disable".  When "ON", there are no limits imposed on
+frequency bands that may be stored in each "band-memory" location.  WARNING:  This can cause bands to be
+stored in random order and also make it easier to put different bands in VFO-A versus VFO-B which can
+cause relay-switching/timing issues!
+
 
 2-be-continued
 
