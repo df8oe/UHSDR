@@ -613,6 +613,7 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 void 	uiCodecMute(uchar val);
 //
 void 	UiDriverSaveEepromValuesPowerDown(void);
+void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
 void	UiCheckForPressedKey(void);
 //
 void 	UiCalcSubaudibleFreq(void);

@@ -532,7 +532,7 @@ if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
 	switch(drv_state)
 	{
 		case STATE_S_METER:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 
 //		sprintf(txt, "%d ", (int)(ads.temp*100));		// scale to display power in milliwatts
 //		UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
@@ -540,40 +540,40 @@ if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
 				UiDriverHandleSmeter();
 			break;
 		case STATE_SWR_METER:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverHandleLowerMeter();
 			break;
 		case STATE_HANDLE_POWERSUPPLY:
 			UiDriverHandlePowerSupply();
 			break;
 		case STATE_LO_TEMPERATURE:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverHandleLoTemperature();
 			break;
 		case STATE_TASK_CHECK:
 			UiDriverTimeScheduler();		// Handles live update of Calibrate between TX/RX and volume control
 			break;
 		case STATE_CHECK_ENC_ONE:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverCheckEncoderOne();
 			break;
 		case STATE_CHECK_ENC_TWO:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverCheckEncoderTwo();
 			break;
 		case STATE_CHECK_ENC_THREE:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverCheckEncoderThree();
 			break;
 		case STATE_UPDATE_FREQUENCY:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverUpdateFrequency(0,0);
 			break;
 		case STATE_PROCESS_KEYBOARD:
 			UiDriverProcessKeyboard();
 			break;
 		case STATE_SWITCH_OFF_PTT:
-			if(!ts.load_eeprom_defaults)
+			if(!ts.boot_halt_flag)
 				UiDriverSwitchOffPtt();
 			break;
 		default:
@@ -1071,7 +1071,7 @@ static void UiDriverProcessKeyboard(void)
 					break;
 				//
 				case BUTTON_POWER_PRESSED:
-					if(!ts.load_eeprom_defaults)	{	// do brightness adjust ONLY if NOT in "load default" mode
+					if(!ts.boot_halt_flag)	{	// do brightness adjust ONLY if NOT in "boot halt" mode
 						ts.lcd_backlight_brightness++;
 						ts.lcd_backlight_brightness &= 3;	// limit range of brightness to 0-3
 					}
@@ -1578,7 +1578,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	if(id == BUTTON_F1_PRESSED)
 	{
 		if(!ts.mem_disp)	{			// allow only if NOT in memory display mode
-			if((!ts.menu_mode) && (!ts.load_eeprom_defaults))	{	// go into menu mode if NOT already in menu mode and not loading memory defaults
+			if((!ts.menu_mode) && (!ts.boot_halt_flag))	{	// go into menu mode if NOT already in menu mode and not to halt on startup
 				ts.menu_mode = 1;
 				is_last_menu_item = 0;	// clear last screen detect flag
 				UiDriverClearSpectrumDisplay();
@@ -4244,7 +4244,7 @@ void UiDriverChangeTuningStep(uchar is_up)
 static uchar UiDriverButtonCheck(ulong button_num)
 {
 	if(button_num < 16)	{	// buttons 0-15 are the normal keypad buttons
-		if(!ts.load_eeprom_defaults)		// are we NOT in "Load defaults" mode?
+		if(!ts.boot_halt_flag)		// are we NOT in "boot halt" mode?
 			return(GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button));		// in normal mode - return key value
 		else
 			return(1);						// we ARE in "load defaults" mode - always return "not pressed" (1) for buttons 0-15
@@ -4310,7 +4310,7 @@ static void UiDriverTimeScheduler(void)
 	//
 	if(ts.txrx_mode != TRX_MODE_TX)	{
 		was_rx = 1;			// set flag to indicate that we are in RX mode
-		if(ts.load_eeprom_defaults)	{	// are we loading defaults?
+		if(ts.boot_halt_flag)	{	// are we halting boot?
 			ts.audio_gain_active = 0;	// yes - null out audio
 			Codec_Volume(0);
 		}
@@ -4439,7 +4439,7 @@ static void UiDriverTimeScheduler(void)
 	//
 	// update the on-screen indicator of squelch/tone detection (the "FM" mode text) if there is a change of state of squelch/tone detection
 	//
-	if(!ts.load_eeprom_defaults)	{	// do this only if not in "EEPROM default" mode
+	if(!ts.boot_halt_flag)	{	// do this only if not in "boot halt" mode
 		if((old_squelch != ads.fm_squelched) || (old_tone_det != ads.fm_subaudible_tone_detected) || (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select) || ((ads.fm_tone_burst_active) != old_burst_active))	{	// did the squelch or tone detect state just change?
 			UiDriverShowMode();							// yes - update on-screen indicator to show that squelch is open/closed
 			old_squelch = ads.fm_squelched;
@@ -6654,7 +6654,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 	//
 
 	// Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
-	if((ts.txrx_mode != TRX_MODE_RX) || (ts.powering_down) || (ts.menu_mode) || (ts.mem_disp) || (ts.load_eeprom_defaults))
+	if((ts.txrx_mode != TRX_MODE_RX) || (ts.powering_down) || (ts.menu_mode) || (ts.mem_disp) || (ts.boot_halt_flag))
 		return;
 
 	if((ts.spectrum_scope_scheduler) || (!ts.scope_speed))	// is it time to update the scan, or is this scope to be disabled?
@@ -7005,7 +7005,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 	//
 
 	// Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
-	if((ts.txrx_mode != TRX_MODE_RX) || (ts.powering_down) || (ts.menu_mode) || (ts.mem_disp) || (ts.load_eeprom_defaults))
+	if((ts.txrx_mode != TRX_MODE_RX) || (ts.powering_down) || (ts.menu_mode) || (ts.mem_disp) || (ts.boot_halt_flag))
 		return;
 
 	if((ts.spectrum_scope_scheduler) || (!ts.waterfall_speed))	// is it time to update the scan, or is this scope to be disabled?
@@ -7348,7 +7348,7 @@ static ulong UiDriverGetScopeTraceColour(void)
 //
 static void UiInitSpectrumScopeWaterfall(void)
 {
-	if(ts.load_eeprom_defaults)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
+	if(ts.boot_halt_flag)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
 		return;
 
 	UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
@@ -7787,7 +7787,7 @@ static void UiDriverHandlePowerSupply(void)
 		}
 	}
 
-	if(ts.load_eeprom_defaults)		// bail out now if we are in "load defaults" mode
+	if(ts.boot_halt_flag)		// bail out now if we are in "boot halt" mode
 		return;
 
 	pwmt.skip++;
@@ -9306,6 +9306,7 @@ char txt[64];
 
 	if((!UiDriverButtonCheck(BUTTON_F1_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F3_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F5_PRESSED)))	{	// Are F1, F3 and F5 being held down?
 		ts.load_eeprom_defaults = 1;						// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+		ts.boot_halt_flag = 1;								// set flag to halt boot-up
 		UiDriverLoadEepromValues();							// call function to load values - default instead of EEPROM
 		//
 		UiLcdHy28_LcdClear(Red);							// clear the screen
@@ -9339,6 +9340,68 @@ char txt[64];
 
 		sprintf(txt,"               [Radio startup halted]");
 		UiLcdHy28_PrintText(2,225,txt,White,Red,4);
+	}
+}
+//
+
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiCheckForEEPROMLoadFreqModeDefaultRequest
+//* Object              : Cause default values to be loaded for frequency/mode instead of EEPROM-stored values, show informational/warning splash screen, pause
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//* Comments            : The user MUST make a decision at that point, anyway:  To disconnect power
+//  Comments            : preserve "old" settings or to power down using the POWER button to the new, default settings to EEPROM.
+//  Comments            : WARNING:  Do *NOT* do this (press the buttons on power-up) when first loading a new firmware version as the EEPROM will be automatically be written over at startup!!!  [KA7OEI October, 2015]
+//*----------------------------------------------------------------------------
+//
+void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
+{
+char txt[64];
+
+	uint16_t i;
+
+	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
+		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
+	}
+
+	if((!UiDriverButtonCheck(BUTTON_F2_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F4_PRESSED)))	{	// Are F2, F4 being held down?
+		ts.load_freq_mode_defaults = 1;						// yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
+		ts.boot_halt_flag = 1;								// set flag to halt boot-up
+		UiDriverLoadEepromValues();							// call function to load values - default instead of EEPROM
+		//
+		UiLcdHy28_LcdClear(Yellow);							// clear the screen
+		//													// now do all of the warnings, blah, blah...
+		sprintf(txt,"   FREQUENCY/MODE");
+		UiLcdHy28_PrintText(2,05,txt,Black,Yellow,1);
+		sprintf(txt," DEFAULTS LOADED!!!");
+		UiLcdHy28_PrintText(2,35,txt,Black,Yellow,1);
+		//
+		sprintf(txt,"  DISCONNECT power NOW if you do NOT");
+		UiLcdHy28_PrintText(2,70,txt,Black,Yellow,0);
+		//
+		sprintf(txt,"want to lose your current frequencies!");
+		UiLcdHy28_PrintText(2,85,txt,Black,Yellow,0);
+		//
+		sprintf(txt,"If you want to save default frequencies");
+		UiLcdHy28_PrintText(2,120,txt,Black,Yellow,0);
+		//
+		sprintf(txt,"  press and hold POWER button to power");
+		UiLcdHy28_PrintText(2,135,txt,Black,Yellow,0);
+		//
+		sprintf(txt,"   down and save settings to EEPROM.");
+		UiLcdHy28_PrintText(2,150,txt,Black,Yellow,0);
+		//
+		// On screen delay									// delay a bit...
+		for(i = 0; i < 10; i++)
+		   non_os_delay();
+		//
+		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
+		UiLcdHy28_PrintText(50,195,txt,Black,Yellow,0);
+
+		sprintf(txt,"               [Radio startup halted]");
+		UiLcdHy28_PrintText(2,225,txt,Black,Yellow,4);
 	}
 }
 //
@@ -9487,11 +9550,11 @@ void UiDriverLoadEepromValues(void)
 			ts.band = BAND_MODE_80;		//	yes - set to 80 meters
 		//
 		ts.dmod_mode = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-		if(ts.dmod_mode > DEMOD_MAX_MODE)		// valid mode value from EEPROM?
+		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 			ts.dmod_mode = DEMOD_LSB;			// no - set to LSB
 		//
 		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
-		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded?
+		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
 		//
 		//printf("-->band and mode loaded\n\r");
@@ -9506,10 +9569,14 @@ void UiDriverLoadEepromValues(void)
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first (also check to see if defaults should be loaded)
-		if((!ts.load_eeprom_defaults) && (saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
 		{
 			df.tune_new = saved;
 			//printf("-->frequency loaded\n\r");
+		}
+		else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+			df.tune_new = saved;
+			//printf("-->frequency loaded (relaxed)\n\r");
 		}
 		else
 		{
@@ -9531,11 +9598,11 @@ void UiDriverLoadEepromValues(void)
 			// Note that ts.band will, by definition, be equal to index "i"
 			//
 			band_decod_mode[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-			if(band_decod_mode[i] > DEMOD_MAX_MODE)		// valid mode value from EEPROM?
+			if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 				band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded??
+			if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
 				band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -9550,9 +9617,13 @@ void UiDriverLoadEepromValues(void)
 			// load saved frequency, as it could be out of band, so do a
 			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value[i] = saved;
 				//printf("-->frequency loaded\n\r");
+			}
+			else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+				band_dial_value[i] = saved;
+				//printf("-->frequency loaded (relaxed)\n\r");
 			}
 			else	{
 				// Load default for this band
@@ -9570,11 +9641,11 @@ void UiDriverLoadEepromValues(void)
 			// Note that ts.band will, by definition, be equal to index "i"
 			//
 			band_decod_mode_a[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-			if(band_decod_mode_a[i] > DEMOD_MAX_MODE)		// valid mode value from EEPROM?
+			if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 				band_decod_mode_a[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode_a[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or are defaults to be loaded?
+			if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or are defaults to be loaded?
 				band_filter_mode_a[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -9589,9 +9660,13 @@ void UiDriverLoadEepromValues(void)
 			// load saved frequency, as it could be out of band, so do a
 			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value_a[i] = saved;
 				//printf("-->frequency loaded\n\r");
+			}
+			else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+				band_dial_value_a[i] = saved;
+				//printf("-->frequency loaded (relaxed)\n\r");
 			}
 			else	{
 				// Load default for this band
@@ -9609,11 +9684,11 @@ void UiDriverLoadEepromValues(void)
 			// Note that ts.band will, by definition, be equal to index "i"
 			//
 			band_decod_mode_b[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-			if(band_decod_mode_b[i] > DEMOD_MAX_MODE)		// valid mode value from EEPROM?
+			if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 				band_decod_mode_b[i] = DEMOD_LSB;			// no - set to LSB
 			//
 			band_filter_mode_b[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults)		// audio filter invalid or defaults to be loaded?
+			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
 				band_filter_mode_b[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
 			//
 			//printf("-->band, mode and filter setting loaded\n\r");
@@ -9628,9 +9703,13 @@ void UiDriverLoadEepromValues(void)
 			// load saved frequency, as it could be out of band, so do a
 			// boundary check first (also check to see if defaults should be loaded)
 			//
-			if((!ts.load_eeprom_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
+			if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
 				band_dial_value_b[i] = saved;
 				//printf("-->frequency loaded\n\r");
+			}
+			else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+				band_dial_value_b[i] = saved;
+				//printf("-->frequency loaded (relaxed)\n\r");
 			}
 			else	{
 				// Load default for this band
