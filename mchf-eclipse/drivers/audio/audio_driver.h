@@ -58,7 +58,7 @@ typedef struct AudioDriverState
 	float32_t					i_buffer[IQ_BUFSZ+1];
 	float32_t 					q_buffer[IQ_BUFSZ+1];
 	float32_t 					a_buffer[IQ_BUFSZ+1];
-	float32_t 					b_buffer[IQ_BUFSZ+1];
+	float32_t 					b_buffer[(IQ_BUFSZ*2)+1];	// this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
 	float32_t					c_buffer[IQ_BUFSZ+1];
 	float32_t					d_buffer[IQ_BUFSZ+1];
 	float32_t					e_buffer[IQ_BUFSZ+1];
@@ -68,22 +68,25 @@ typedef struct AudioDriverState
 	float32_t					Osc_Q_buffer[IQ_BUFSZ+1];
 	//
 	// Lock audio filter flag
-	uchar					af_dissabled;
-
-	uchar					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
+	//
+	bool					af_dissabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
+	bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
 
 	// AGC and audio related variables
 
 	float 					agc_val;			// "live" receiver AGC value
+	float					agc_var;
+	float					agc_calc;
 	float					agc_valbuf[BUFF_LEN];	// holder for "running" AGC value
 	float					agc_holder;			// used to hold AGC value during transmit and tuning
 	float					agc_decay;			// decay rate (speed) of AGC
-	float					agc_rf_gain;
+	float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
 	float					agc_knee;			// "knee" for AGC operation
 	float					agc_val_max;		// maximum AGC gain (at minimum signal)
-	float					am_agc;				// Signal level reading in AM demod mode
+	float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
+	float					fm_sql_avg;			// averaged squelch level (for FM)
+	bool					fm_squelched;		// TRUE if FM receiver audio is to be squelched
 	//
-//	float					pre_filter_gain;
 	uchar					codec_gain;
 	float					codec_gain_calc;
 	bool					adc_clip;
@@ -94,7 +97,7 @@ typedef struct AudioDriverState
 	float					alc_val;			// "live" transmitter ALC value
 	float					alc_decay;			// decay rate (speed) of ALC
 	float					post_agc_gain;		// post AGC gain scaling
-
+	//
 	uchar					decimation_rate;		// current decimation/interpolation rate
 	ulong					agc_delay_buflen;		// AGC delay buffer length
 	float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
@@ -104,13 +107,47 @@ typedef struct AudioDriverState
 	ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
 	float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
 	//
-	float					Osc_Cos;
-	float					Osc_Sin;
-	float					Osc_Vect_Q;
-	float					Osc_Vect_I;
-	float					Osc_Q;
-	float					Osc_I;
-	float					Osc_Gain;
+	float					fm_subaudible_tone_gen_freq;	// frequency, in Hz, of currently-selected subaudible tone for generation
+	ulong					fm_subaudible_tone_word;	// actively-used variable in producing the tone
+	//
+	ulong					fm_tone_burst_word;			// this is the actively-used DDS tone word in the frequency generator
+	bool					fm_tone_burst_active;		// this is TRUE if the tone burst is actively being generated
+	//
+	float					fm_subaudible_tone_det_freq;	// frequency, in Hz, of currently-selected subaudible tone for detection
+	bool					fm_subaudible_tone_detected;	// TRUE if subaudible tone has been detected
+	//
+	ulong					beep_word;				// this is the actively-used DDS tone word for the radio's beep generator
+	float					beep_loudness_factor;	// this is used to set the beep loudness
+	//
+	// The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
+	//
+	float					fm_goertzel_high_a;
+	float					fm_goertzel_high_b;
+	float					fm_goertzel_high_sin;
+	float					fm_goertzel_high_cos;
+	float					fm_goertzel_high_r;
+	//
+	float					fm_goertzel_low_a;
+	float					fm_goertzel_low_b;
+	float					fm_goertzel_low_sin;
+	float					fm_goertzel_low_cos;
+	float					fm_goertzel_low_r;
+	//
+	float					fm_goertzel_ctr_a;
+	float					fm_goertzel_ctr_b;
+	float					fm_goertzel_ctr_sin;
+	float					fm_goertzel_ctr_cos;
+	float					fm_goertzel_ctr_r;
+	//
+	ulong					fm_goertzel_size;
+	//
+//	float					Osc_Cos;
+//	float					Osc_Sin;
+//	float					Osc_Vect_Q;
+//	float					Osc_Vect_I;
+//	float					Osc_Q;
+//	float					Osc_I;
+//	float					Osc_Gain;
 
 } AudioDriverState;
 
@@ -132,11 +169,8 @@ typedef struct SpectrumDisplay
 	float32_t	FFT_Windat[FFT_IQ_BUFF_LEN];
 	float32_t	FFT_MagData[FFT_IQ_BUFF_LEN/2];
 	q15_t	FFT_BkpData[FFT_IQ_BUFF_LEN];
-	//q15_t	FFT_BkpData[FFT_IQ_BUFF_LEN/2];
 	q15_t	FFT_DspData[FFT_IQ_BUFF_LEN];		// Rescaled and de-linearized display data
-	//q15_t	FFT_DspData[FFT_IQ_BUFF_LEN/2];		// Rescaled and de-linearized display data
 	q15_t   FFT_TempData[FFT_IQ_BUFF_LEN];
-	//q15_t   FFT_TempData[FFT_IQ_BUFF_LEN/2];
 	float32_t	FFT_AVGData[FFT_IQ_BUFF_LEN/2];		// IIR low-pass filtered FFT buffer data
 
 	// Current data ptr
@@ -224,6 +258,10 @@ typedef struct SMeter
 #define AGC_FAST_DECAY	0.0002	// Decay rate multiplier for "Fast" AGC
 #define AGC_MED_DECAY	0.00006	// Decay rate multiplier for "Medium" AGC
 #define AGC_SLOW_DECAY	0.00001 // Decay rate for multiplier  "Slow" AGC
+//
+#define	AGC_ATTACK_FM	0.0033	// Attack time for FM (S-meter reading only)
+#define	AGC_DECAY_FM	0.0333	// Decay time for FM (S-meter reading only)
+//
 
 #define	AGC_VAL_MIN		0.02	// Minimum AGC gain multiplier (e.g. gain reduction of 34dB)
 //#define AGC_VAL_MAX		4096//1024	// Maximum AGC gain multiplier (e.g. gain multiplication of 60dB)
@@ -335,14 +373,109 @@ typedef struct SMeter
 // DO NOT change the above unless you know *EXACTLY* what you are doing!  If you screw with these numbers, you WILL wreck the
 // AM modulation!!!  (No, I'm not kidding!)
 //
+// FM Demodulator parameters
+//
+#define	FM_DEMOD_COEFF1		PI/4			// Factors used in arctan approximation used in FM demodulator
+#define	FM_DEMOD_COEFF2		PI*0.75
+//
+#define	FM_RX_SCALING_2K5		33800			// Amplitude scaling factor of demodulated FM audio (normalized for +/- 2.5 kHz deviation at 1 kHZ)
+#define FM_RX_SCALING_5K	(FM_RX_SCALING_2K5/2)	// Amplitude scaling factor of demodulated FM audio (normalized for +/- 5 kHz deviation at 1 kHz)
+//
+#define FM_AGC_SCALING		2				// Scaling factor for AGC result when in FM (AGC used only for S-meter)
+//
+#define FM_RX_LPF_ALPHA		0.05			// For FM demodulator:  "Alpha" (low-pass) factor to result in -6dB "knee" at approx. 270 Hz
+//
+#define FM_RX_HPF_ALPHA		0.96			// For FM demodulator:  "Alpha" (high-pass) factor to result in -6dB "knee" at approx. 180 Hz
+//
+#define FM_RX_SQL_SMOOTHING	0.005			// Smoothing factor for IIR squelch noise averaging
+#define	FM_SQUELCH_HYSTERESIS	3			// Hysteresis for FM squelch
+#define FM_SQUELCH_PROC_DECIMATION	50		// Number of times we go through the FM demod algorithm before we do a squelch calculation
+#define	FM_SQUELCH_MAX		20				// maximum setting for FM squelch
+#define	FM_SQUELCH_DEFAULT	12				// default setting for FM squelch
+//
+// FM Modulator parameters
+//
+#define FM_TX_HPF_ALPHA		0.05			// For FM modulator:  "Alpha" (high-pass) factor to pre-emphasis
+//
+// NOTE:  FM_MOD_SCALING_2K5 is rescaled (doubled) for 5 kHz deviation, as are modulation factors for subaudible tones and tone burst
+//
+#define	FM_MOD_SCALING_2K5		16				// For FM modulator:  Scaling factor for NCO, after all processing, to achieve 2.5 kHz with a 1 kHz tone
+//
+#define FM_MOD_SCALING	FM_MOD_SCALING_2K5		// For FM modulator - system deviation
+#define	FM_MOD_AMPLITUDE_SCALING	0.875		// For FM modulator:  Scaling factor for output of modulator to set proper output power
+#define	FM_FREQ_MOD_WORD			8192		// FM frequency modulator word for modulation DDS/NCO at 6 kHz (6 kHz = 1/8th sample rate, 1/8th of 65536 = 8192)
+//
+#define	FM_ALC_GAIN_CORRECTION	0.95
+//
+// For subaudible and burst:  FM Tone word calculation:  freq / (sample rate/2^24) => freq / (48000/16777216) => freq * 349.52533333
+//
+#define FM_TONE_AMPLITUDE_SCALING	0.00045	// Scaling factor for subaudible tone modulation - not pre-emphasized -to produce approx +/- 300 Hz deviation in 2.5kHz mode
+#define FM_TONE_DDS_ACC_SHIFT	14			// number of left-shift bits to obtain lookup word
+//
+#define	NUM_SUBAUDIBLE_TONES 56
+//
+#define FM_SUBAUDIBLE_TONE_OFF	0
+//
+#define	FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR	(16777216/48000)	// scaling factor for calculating "tone word" for subaudible tone generator
+//
+#define	FM_TONE_BURST_OFF	0
+#define	FM_TONE_BURST_1750_MODE	1
+#define	FM_TONE_BURST_2135_MODE	2
+#define	FM_TONE_BURST_MAX	2
+//
+#define	FM_BURST_TONE_WORD_CALC_FACTOR	(16777216/48000)	// scaling factor for calculating "tone word" for the tone burst generator
+//
+#define FM_TONE_BURST_1750	(1750 * FM_BURST_TONE_WORD_CALC_FACTOR)
+#define FM_TONE_BURST_2135	(2135 * FM_BURST_TONE_WORD_CALC_FACTOR)
+#define	FM_TONE_BURST_MOD_SCALING 	4266	// scale tone modulation (which is NOT pre-emphasized) for approx. 2/3rds of system modulation
+//
+#define FM_TONE_BURST_DURATION	100			// duration, in 100ths of a second, of the tone burst
+//
+// FM RX bandwidth settings
+//
+enum	{
+	FM_RX_BANDWIDTH_7K2 = 0,
+	FM_RX_BANDWIDTH_10K,
+	FM_RX_BANDWIDTH_12K,
+//	FM_RX_BANDWIDTH_15K,		// 15K bandwidth has too much distortion with a "translation" frequency of + or - 6 kHz, likely due to the "Zero Hz Hole"
+	FM_RX_BANDWIDTH_MAX
+};
+//
+#define	FM_BANDWIDTH_DEFAULT	FM_RX_BANDWIDTH_10K		// We will use the second-to-narrowest bandwidth as the "Default" FM RX bandwidth to be safe!
+//
+#define	FM_SUBAUDIBLE_GOERTZEL_WINDOW	400				// this sets the overall number of samples involved in the Goertzel decode windows (this value * "size/2")
+#define	FM_TONE_DETECT_ALPHA	0.9						// setting for IIR filtering of ratiometric result from frequency-differential tone detection
+//
+#define FM_SUBAUDIBLE_TONE_DET_THRESHOLD	1.75		// threshold of "smoothed" output of Goertzel, above which a tone is considered to be "provisionally" detected pending debounce
+#define FM_SUBAUDIBLE_DEBOUNCE_MAX			5			// maximum "detect" count in debounce
+#define FM_SUBAUDIBLE_TONE_DEBOUNCE_THRESHOLD	2		// number of debounce counts at/above which a tone detection is considered valid
+//
+#define	FM_GOERTZEL_HIGH	1.04		// ratio of "high" detect frequency with respect to center
+#define	FM_GOERTZEL_LOW		0.95		// ratio of "low" detect frequency with respect to center
+//
+#define	BEEP_SCALING	20				// audio scaling of keyboard beep
+#define	BEEP_TONE_WORD_FACTOR			(65536/48000)	// scaling factor for beep frequency calculation
+//
+#define	MIN_BEEP_FREQUENCY	200			// minimum beep frequency in Hz
+#define	MAX_BEEP_FREQUENCY	3000		// maximum beep frequency in Hz
+#define	DEFAULT_BEEP_FREQUENCY	1000	// default beep frequency in Hz
+#define	BEEP_DURATION		2			// duration of beep in 100ths of a second
+#define	SIDETONE_REF_BEEP_DURATION	50	// duration of "Sidetone Reference Beep" (press-and-hold) in 100ths of a second
+//
+#define MAX_BEEP_LOUDNESS		20		// maximum setting for beep loudness
+#define DEFAULT_BEEP_LOUDNESS	10		// default loudness for the keyboard/CW sidetone test beep
+//
+// Factors used in audio compressor adjustment limits
 //
 #define	TX_AUDIO_COMPRESSION_MAX		13	// 0 = least compression, 12 = most, 13 = EEPROM values ("SV") - custom selected by user
 #define	TX_AUDIO_COMPRESSION_SV			13
 #define	TX_AUDIO_COMPRESSION_DEFAULT	2
 //
 //
-#define	RX_DECIMATION_RATE_12KHZ		4		// Decimation/Interpolation rate in receive function for 12 kHz rates
-#define	RX_DECIMATION_RATE_24KHZ		2		// Decimation/Interpolation rate in receive function for 24 kHz rates
+#define RX_DECIMATION_RATE_8KHZ			6		// Decimation/Interpolation rate in receive function for 8 kHz sample rate
+#define	RX_DECIMATION_RATE_12KHZ		4		// Decimation/Interpolation rate in receive function for 12 kHz sample rate
+#define	RX_DECIMATION_RATE_24KHZ		2		// Decimation/Interpolation rate in receive function for 24 kHz sample rate
+#define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
 //
 // ************
 // DSP system parameters
@@ -430,6 +563,7 @@ void audio_driver_init(void);
 void audio_driver_stop(void);
 void audio_driver_set_rx_audio_filter(void);
 void audio_driver_thread(void);
+void Audio_TXFilter_Init(void);
 //uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS

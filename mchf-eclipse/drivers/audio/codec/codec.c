@@ -137,9 +137,14 @@ void Codec_RX_TX(void)
 		// Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
 		Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0012);
 
-		// Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
-		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);
-
+		// Reg 06: Power Down Control (Clk off, Osc off, Mic Off if LINE IN, Mic On if MIC IN)
+		//
+		// COMMENT:  It would be tempting to set bit 1 "MICPD" of "W8731_POWER_DOWN_CTR" to zero to disable mic power down
+		// and maintain microphone bias during receive, but this seems to cause problems on receive (e.g. deafness) even
+		// if the microphone is muted and "mic boost" is disabled.  (KA7OEI 20151030)
+		//
+		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);	// turn off mic bias, etc.
+		//
 		// --------------------------------------------------------------
 		// Test - route mic to headphones
 		// Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
@@ -298,7 +303,7 @@ void Codec_Volume(uchar vol)
 //* Function Name       : Codec_Mute
 //* Object              : new method of mute via soft mute of the DAC
 //* Object              :
-//* Input Parameters    :
+//* Input Parameters    : 0 = Unmuted  1 = Muted
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------

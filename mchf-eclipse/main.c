@@ -601,7 +601,7 @@ void EXTI0_IRQHandler(void)
 		}
 		//
 		// PTT activate
-		else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM))
+		else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
 		{
 			if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	{	// was PTT line low?
 				ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
@@ -731,6 +731,10 @@ void TransceiverStateInit(void)
 	ts.rx_iq_usb_gain_balance = 0;
 	ts.rx_iq_lsb_phase_balance = 0;
 	ts.rx_iq_usb_phase_balance = 0;
+	ts.rx_iq_am_gain_balance = 0;
+	ts.rx_iq_fm_gain_balance = 0;
+	ts.tx_iq_am_gain_balance = 0;
+	ts.tx_iq_fm_gain_balance = 0;
 	//
 	ts.tune_freq		= 0;
 	ts.tune_freq_old	= 0;
@@ -811,7 +815,7 @@ void TransceiverStateInit(void)
 	ts.alc_decay		= ALC_DECAY_DEFAULT;		// ALC Decay (release) default value
 	ts.alc_decay_var	= ALC_DECAY_DEFAULT;		// ALC Decay (release) default value
 	ts.alc_tx_postfilt_gain		= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
-	ts.alc_tx_postfilt_gain_var		= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
+	ts.alc_tx_postfilt_gain_var	= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
 	ts.tx_comp_level	= 0;		// 0=Release Time/Pre-ALC gain manually adjusted, >=1:  Value calculated by this parameter
 	//
 	ts.freq_step_config		= 0;			// disabled both marker line under frequency and swapping of STEP buttons
@@ -878,7 +882,18 @@ void TransceiverStateInit(void)
 	ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;	//
 	ts.vfo_mem_flag = 0;					// when TRUE, memory mode is enabled
 	ts.mem_disp = 0;						// when TRUE, memory display is enabled
-	ts.load_eeprom_defaults = 0;					// when TRUE, defaults are loaded when "UiDriverLoadEepromValues()" is called - must be saved by user w/power-down or F1 to be permanent!
+	ts.load_eeprom_defaults = 0;			// when TRUE, defaults are loaded when "UiDriverLoadEepromValues()" is called - must be saved by user w/power-down to be permanent!
+	ts.fm_subaudible_tone_gen_select = 0;		// lookup ("tone number") used to index the table generation (0 corresponds to "tone disabled")
+	ts.fm_tone_burst_mode = 0;				// this is the setting for the tone burst generator
+	ts.fm_tone_burst_timing = 0;			// used to time the duration of the tone burst
+	ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;	// squelch threshold
+	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;	// bandwidth setting for FM reception
+	ts.fm_subaudible_tone_det_select = 0;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
+	ts.beep_active = 1;						// TRUE if beep is active
+	ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;	// beep frequency, in Hz
+	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
+	ts.load_freq_mode_defaults = 0;				// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	ts.boot_halt_flag = 0;					// when TRUE, boot-up is halted - used to allow various test functions
 }
 
 //*----------------------------------------------------------------------------
@@ -989,10 +1004,23 @@ int main(void)
 	// Audio HW init - again, using EEPROM-loaded values
 	audio_driver_init();
 	//
+	//
+	UiCalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
+	//
+	UiCalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
+	//
+	UiLoadToneBurstMode();	// load/set tone burst frequency
+	//
+	UiLoadBeepFreq();		// load/set beep frequency
+	//
 	ts.audio_gain_change = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted
 
 	UiCheckForEEPROMLoadDefaultRequest();	// check - and act on - request for loading of EEPROM defaults, if any
+	//
+	UiCheckForEEPROMLoadFreqModeDefaultRequest();	// check - and act on - request for loading frequency/mode defaults, if any
+	//
+	UiCheckForPressedKey();
 
 
 #ifdef DEBUG_BUILD

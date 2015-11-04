@@ -3,7 +3,7 @@
 /* for FatFs R0.07d  (C)ChaN, 2009                                        */
 /*------------------------------------------------------------------------*/
 
-#include <windows.h>	// Win32
+//#include <windows.h>	// Win32
 //#include <ucos_ii.h>	// uC/OS-II
 
 #include "../ff.h"
