@@ -84,6 +84,7 @@ enum {
 	MENU_SCOPE_NOSIG_ADJUST,
 	MENU_WFALL_NOSIG_ADJUST,
 	MENU_WFALL_SIZE,
+	MENU_HARDWARE_INFO,
 	MENU_CONFIG_ENABLE,
 	//
 	MAX_MENU_ITEM	// Number of menu items - This must ALWAYS remain as the LAST item!

@@ -87,6 +87,8 @@ typedef struct OscillatorState
 
 	float			fout;		// contains startup frequency info of Si570
 
+	unsigned short si570_address;
+
 #ifdef LOWER_PRECISION
 	uchar 			init_n1;
 	uchar			init_hsdiv;

@@ -59,6 +59,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
 
+extern __IO OscillatorState os;
 // ------------------------------------------------
 // Frequency public
 __IO DialFrequency 				df;
@@ -123,7 +124,41 @@ void UiDriverUpdateMenu(uchar mode)
 	c_clr = Cyan;
 
 	update_vars = 0;
-
+    if(mode == 9)
+	{
+	char out[32];
+	char* outs;
+	m_clr = White;
+	int vorkomma = (int)(os.fout);
+	int nachkomma = (int) roundf((os.fout-vorkomma)*10000);
+	if(sd.use_spi)
+	    {
+	    if(sd.use_spi == 1)
+		outs = "HY28A SPI Mode  ";
+	    else
+		outs = "HY28B SPI Mode  ";
+	    }
+	else
+	    outs = "HY28A/B parallel";
+	sprintf(out,"%s%s","LCD Display  : ",outs);
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
+	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma," MHz");
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
+	outs = "n/a             ";
+	sprintf(out,"%s%s","Serial EEPROM: ",outs);
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
+	outs = "n/a             ";
+	sprintf(out,"%s%s","Touchscreen  : ",outs);
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
+	outs = "n/a             ";
+	sprintf(out,"%s%s","RF Bands Mod : ",outs);
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,out,m_clr,Black,0);
+	outs = "n/a             ";
+	sprintf(out,"%s%s","VHF/UHF Mod  : ",outs);
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
+	}
+    else
+    {
 	if(ts.menu_item < 6)	{	// display first screen of items
 		if(screen_disp != 1)	// redraw if this screen wasn't already displayed
 			UiDriverClearSpectrumDisplay();
@@ -237,9 +272,12 @@ void UiDriverUpdateMenu(uchar mode)
 			UiDriverClearSpectrumDisplay();
 		screen_disp = 10;
 		update_vars = 1;
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"116-Wfall NoSig Adj.",m_clr,Black,0);
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"117-Wfall Size",m_clr,Black,0);
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"00-Adjustment Menu",c_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"116-Wfall NoSig Adj.             ",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"117-Wfall Size                  ",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"                                ",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"                                ",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"199-Hardware Info               ",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"00-Adjustment Menu              ",c_clr,Black,0);
 	}
 	//
 	// ****************   Radio Calibration Menu  ***************
@@ -518,6 +556,7 @@ void UiDriverUpdateMenu(uchar mode)
 		else												// "adjustment" menu item
 			UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM,3);
 	}
+    }
 }
 //
 //
@@ -2877,6 +2916,17 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 			//
 			opt_pos = MENU_WFALL_SIZE % MENUSIZE;	// Y position of this menu item
+			break;
+	case MENU_HARDWARE_INFO:
+			strcpy(options, "SHOW");
+			clr = White;
+			opt_pos = 4 % MENUSIZE;	// Y position of this menu item
+			if(var>=1)
+			    {
+			    strcpy(options, "    ");
+			    clr = White;
+			    UiDriverUpdateMenu(9);
+			    }
 			break;
 			//
 //

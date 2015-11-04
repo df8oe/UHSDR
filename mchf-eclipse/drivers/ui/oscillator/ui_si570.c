@@ -26,7 +26,7 @@ const uchar 	hs_div[6]	= {11, 9, 7, 6, 5, 4};
 const float 	fdco_max 	= FDCO_MAX;
 const float 	fdco_min 	= FDCO_MIN;
 
-unsigned short si570_address;
+// unsigned short si570_address;
 
 // All publics as struct, so eventually could be malloc-ed and in CCM for faster access!!
 __IO OscillatorState os;
@@ -58,14 +58,14 @@ static uchar ui_si570_verify_frequency(void)
 	// Read all regs
 	for(i = 0; i < 6; i++)
 	{
-		res = mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + i) ,&regs[i]);
+		res = mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + i) ,&regs[i]);
 		if(res != 0)
 			return(0);
 	}
 
 	// Not working - need fix
 	//memset(regs,0,6);
-	//trx4m_hw_i2c_ReadData(si570_address,7,regs,5);
+	//trx4m_hw_i2c_ReadData(os.si570_address,7,regs,5);
 
 	//printf("-----------------------------------\n\r");
 	//printf("write %02x %02x %02x %02x %02x %02x\n\r",os.regs[0],os.regs[1],os.regs[2],os.regs[3],os.regs[4],os.regs[5]);
@@ -92,17 +92,17 @@ static uchar ui_si570_small_frequency_change(void)
 	//printf("small\n\r");
 
 	// Read current
-	ret = mchf_hw_i2c_ReadRegister(si570_address,SI570_REG_135,&reg_135);
+	ret = mchf_hw_i2c_ReadRegister(os.si570_address,SI570_REG_135,&reg_135);
 	if(ret)
 		goto critical;
 
 	// Write to freeze M bit
-	ret = mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_135,(reg_135|SI570_FREEZE_M));
+	ret = mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_135,(reg_135|SI570_FREEZE_M));
 	if(ret)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(si570_address,SI570_REG_7,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,SI570_REG_7,os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -118,13 +118,13 @@ static uchar ui_si570_small_frequency_change(void)
 	}
 
 	// Write to unfreeze M
-	mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_135,(reg_135 & ~SI570_FREEZE_M));
+	mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_135,(reg_135 & ~SI570_FREEZE_M));
 
 	return 0;
 
 critical:
 	//CriticalError(100);
-	if(unfreeze) mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_135,(reg_135 & ~SI570_FREEZE_M));
+	if(unfreeze) mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_135,(reg_135 & ~SI570_FREEZE_M));
 	return 1;
 }
 
@@ -143,17 +143,17 @@ static uchar ui_si570_large_frequency_change(void)
 	//printf("large\n\r");
 
 	// Read the current state of Register 137
-	ret = mchf_hw_i2c_ReadRegister(si570_address,SI570_REG_137,&reg_137);
+	ret = mchf_hw_i2c_ReadRegister(os.si570_address,SI570_REG_137,&reg_137);
 	if(ret)
 		goto critical;
 
 	// Set the Freeze DCO bit
-	ret = mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_137, (reg_137|SI570_FREEZE_DCO));
+	ret = mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_137, (reg_137|SI570_FREEZE_DCO));
 	if(ret)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(si570_address,SI570_REG_7,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,SI570_REG_7,os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -169,17 +169,17 @@ static uchar ui_si570_large_frequency_change(void)
 	}
 
 	// Clear the Freeze DCO bit
-	ret = mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_137,(reg_137 & ~SI570_FREEZE_DCO));
+	ret = mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_137,(reg_137 & ~SI570_FREEZE_DCO));
 	if(ret)
 		goto critical;
 
 	// Read current
-	ret = mchf_hw_i2c_ReadRegister(si570_address,SI570_REG_135,&reg_135);
+	ret = mchf_hw_i2c_ReadRegister(os.si570_address,SI570_REG_135,&reg_135);
 	if(ret)
 		goto critical;
 
 	// Set the NewFreq bit
-	ret = mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_135,(reg_135|SI570_NEW_FREQ));
+	ret = mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_135,(reg_135|SI570_NEW_FREQ));
 	if(ret)
 		goto critical;
 
@@ -187,7 +187,7 @@ static uchar ui_si570_large_frequency_change(void)
 	reg_135 = SI570_NEW_FREQ;
 	while(reg_135 & SI570_NEW_FREQ)
 	{
-		ret = mchf_hw_i2c_ReadRegister(si570_address,SI570_REG_135,&reg_135);
+		ret = mchf_hw_i2c_ReadRegister(os.si570_address,SI570_REG_135,&reg_135);
 		if(ret)
 			goto critical;
 	}
@@ -196,7 +196,7 @@ static uchar ui_si570_large_frequency_change(void)
 
 critical:
 	//CriticalError(101);
-	if(unfreeze) mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_137,(reg_137 & ~SI570_FREEZE_DCO));
+	if(unfreeze) mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_137,(reg_137 & ~SI570_FREEZE_DCO));
 	return 1;
 }
 
@@ -249,7 +249,7 @@ uchar ui_si570_get_configuration(void)
    	os.rfreq_old 	= 0.0;
    	os.fxtal 		= FACTORY_FXTAL;
 
-   	res = mchf_hw_i2c_WriteRegister(si570_address,SI570_REG_135,SI570_RECALL);
+   	res = mchf_hw_i2c_WriteRegister(os.si570_address,SI570_REG_135,SI570_RECALL);
    	if(res != 0)
    	{
    		//printf("cmd1 err: %d\n\r",res);
@@ -260,7 +260,7 @@ uchar ui_si570_get_configuration(void)
 	i = 0;
 	while(ret & SI570_RECALL)
 	{
-		res = mchf_hw_i2c_ReadRegister(si570_address,SI570_REG_135,&ret);
+		res = mchf_hw_i2c_ReadRegister(os.si570_address,SI570_REG_135,&ret);
 		if(res != 0)
 		{
 			//printf("read1 err: %d\n\r",res);
@@ -277,7 +277,7 @@ uchar ui_si570_get_configuration(void)
 
    	for(i = 0; i < 6; i++)
    	{   		
-   		res = mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + i) ,&(os.regs[i]));
+   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + i) ,&(os.regs[i]));
    		if(res != 0)
    		{
 			//printf("read2 err: %d, i = %d\n\r",res,i);
@@ -326,7 +326,7 @@ uchar ui_si570_get_configuration(void)
   	// Read signature
   	/*for(i = 0; i < 6; i++)
   	{
-   		res = mchf_hw_i2c_ReadRegister(si570_address,(i + 13) ,&sig[i]);
+   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(i + 13) ,&sig[i]);
    		if(res != 0)
    		{
 			printf("read sig err: %d, i = %d\n\r",res,i);
@@ -650,20 +650,20 @@ if (os.fout < 5)
 	float rsfreq;
 
 	// test for hardware address of SI570
-	si570_address = (0x50 << 1);
-	if( mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7) ,&si_regs[0]) != 0)
+	os.si570_address = (0x50 << 1);
+	if( mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]) != 0)
 	{
-		si570_address = (0x55 << 1);
+		os.si570_address = (0x55 << 1);
 		mchf_hw_i2c_reset();
 	}
 
 	// read configuration
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7) ,&si_regs[0]);
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + 1) ,&si_regs[1]);
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + 2) ,&si_regs[2]);
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + 3) ,&si_regs[3]);
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + 4) ,&si_regs[4]);
-	mchf_hw_i2c_ReadRegister(si570_address,(SI570_REG_7 + 5) ,&si_regs[5]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 1) ,&si_regs[1]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 2) ,&si_regs[2]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 3) ,&si_regs[3]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 4) ,&si_regs[4]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 5) ,&si_regs[5]);
 
 	// calculate startup frequency
 	rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
