@@ -23,7 +23,7 @@
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define CODEC_I2C                      	I2C2
-#define I2C2_CLK                  		RCC_APB1Periph_I2C2
+#define I2C2_CLK                  	RCC_APB1Periph_I2C2
 #define CODEC_I2C_GPIO_AF              	GPIO_AF_I2C2
 
 __IO uint32_t  I2C2_Timeout = I2C2_LONG_TIMEOUT;
@@ -59,11 +59,11 @@ void mchf_hw_i2c2_init(void)
 
 	// CODEC_I2C peripheral configuration
 	I2C_DeInit(CODEC_I2C);
-	I2C_InitStructure.I2C_Mode 					= I2C_Mode_I2C;
+	I2C_InitStructure.I2C_Mode 				= I2C_Mode_I2C;
 	I2C_InitStructure.I2C_DutyCycle 			= I2C_DutyCycle_2;
 	I2C_InitStructure.I2C_OwnAddress1 			= 0x33;
-	I2C_InitStructure.I2C_Ack 					= I2C_Ack_Enable;
-	I2C_InitStructure.I2C_AcknowledgedAddress 	= I2C_AcknowledgedAddress_7bit;
+	I2C_InitStructure.I2C_Ack 				= I2C_Ack_Enable;
+	I2C_InitStructure.I2C_AcknowledgedAddress 		= I2C_AcknowledgedAddress_7bit;
 	I2C_InitStructure.I2C_ClockSpeed 			= I2C2_SPEED;
 
 	// Enable the I2C peripheral
@@ -148,4 +148,221 @@ uchar mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar Registe
 
 	//printf("i2c write ok\n\r");
 	return 0;
+}
+
+// serial eeprom functions by DF8OE
+
+void Delay(__IO uint32_t nCount) {
+  while(nCount--) {
+  }
+}
+
+
+uint8_t Write_24Cxx(uint32_t Addr, uint8_t Data, uint8_t Mem_Type)
+{
+
+uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
+uint32_t timeout = I2C2_LONG_TIMEOUT;
+uint8_t upper_addr,lower_addr;
+
+if(Addr > 0xFFFF)
+    {
+    memwa = memwa + 8;			// set B0 - paged EEPROM
+    Addr = Addr - 0x10000;
+    }
+lower_addr = (uint8_t)((0x00FF)&Addr);
+
+if(Mem_Type == 16)
+    {
+    Addr = Addr>>8;
+    upper_addr = (uint8_t)((0x00FF)&Addr);
+    }
+/* Generate the Start Condition */
+I2C_GenerateSTART(CODEC_I2C, ENABLE);
+
+/* Test on I2C2 EV5, Start transmitted successfully and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFF;	
+    }
+ 
+/* Send Memory device slave Address for write */
+I2C_Send7bitAddress(CODEC_I2C, memwa, I2C_Direction_Transmitter);
+
+/* Test on I2C2 EV6 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFF;
+    }
+
+if(Mem_Type == 16)
+    {
+    /* Send I2C2 location address LSB */
+    I2C_SendData(CODEC_I2C, upper_addr);
+    /* Test on I2C2 EV8 and clear it */
+    timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+	{
+	/* If the timeout delay is exeeded, exit with error code */
+	if ((timeout--) == 0) return 0xFF;
+	}
+    }
+/* Send I2C2 location address LSB */
+I2C_SendData(CODEC_I2C, lower_addr);
+
+/* Test on I2C2 EV8 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFF;
+    }
+
+/* Send Data */
+I2C_SendData(CODEC_I2C, Data);
+
+/* Test on I2C2 EV8 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFF;
+    }  
+
+/* Send I2C2 STOP Condition */
+I2C_GenerateSTOP(CODEC_I2C, ENABLE);
+
+	// zu orig stop bit flag
+	timeout = I2C2_FLAG_TIMEOUT;
+	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_STOPF))
+	{
+		if((timeout--) == 0)
+			return 0xFF;
+	}
+
+/* If operation is OK, return 0 */
+return 0;
+}
+
+
+
+uint8_t Read_24Cxx(uint32_t Addr, uint8_t Mem_Type)
+{
+uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
+uint8_t memra = MEM_DEVICE_READ_ADDR;
+uint32_t timeout = I2C2_LONG_TIMEOUT;
+uint8_t Data = 0;
+uint8_t upper_addr,lower_addr;
+
+if(Addr > 0xFFFF)
+    {
+    memra = memra + 8;			// set B0 - paged EEPROM
+    memwa = memwa + 8;			// set B0 - paged EEPROM
+    Addr = Addr - 0x10000;
+    }
+
+lower_addr = (uint8_t)((0x00FF)&Addr);
+if(Mem_Type == 16)
+    {
+    Addr = Addr>>8;
+    upper_addr = (uint8_t)((0x00FF)&Addr);
+    }
+/* Generate the Start Condition */
+I2C_GenerateSTART(CODEC_I2C, ENABLE);
+
+/* Test on I2C2 EV5 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xF8;
+    } 
+
+/* Send DCMI selcted device slave Address for read */
+I2C_Send7bitAddress(CODEC_I2C, memwa, I2C_Direction_Transmitter);
+ 
+/* Test on I2C2 EV6 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) 
+	{
+	/* Prepare Stop after receiving data */
+	I2C_GenerateSTOP(CODEC_I2C, ENABLE);
+	return 0xFE;
+	}
+    } 
+
+if(Mem_Type == 16)
+    {
+    /* Send I2C2 location address LSB */
+    I2C_SendData(CODEC_I2C,upper_addr);
+
+    /* Test on I2C2 EV8 and clear it */
+    timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+	{
+	/* If the timeout delay is exeeded, exit with error code */
+	if ((timeout--) == 0) return 0xFD;
+	}
+    }
+
+ /* Send I2C2 location address LSB */
+I2C_SendData(CODEC_I2C, lower_addr);
+
+/* Test on I2C2 EV8 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFC;
+    } 
+
+/* Generate the Start Condition */
+I2C_GenerateSTART(CODEC_I2C, ENABLE);
+
+/* Test on I2C2 EV6 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
+     {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFB;
+    } 
+
+/* Send DCMI selcted device slave Address for read */
+I2C_Send7bitAddress(CODEC_I2C, memra, I2C_Direction_Receiver);
+ 
+/* Test on I2C2 EV6 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xFA;
+    }
+
+/* Prepare an NACK for the next data received */
+I2C_AcknowledgeConfig(CODEC_I2C, DISABLE);  
+
+/* Test on I2C2 EV7 and clear it */
+timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_RECEIVED))
+    {
+    /* If the timeout delay is exeeded, exit with error code */
+    if ((timeout--) == 0) return 0xF9;
+    }
+
+
+/* Prepare Stop after receiving data */
+ I2C_GenerateSTOP(CODEC_I2C, ENABLE);
+
+/* Receive the Data */
+Data = I2C_ReceiveData(CODEC_I2C);
+
+/* return the read data */
+return Data;
 }

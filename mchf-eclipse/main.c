@@ -972,7 +972,61 @@ int main(void)
 	// Set default transceiver state
 	TransceiverStateInit();
 
-	// Virtual Eeprom init
+	// Eeprom init
+	uint8_t test1, test2;
+
+	if(Read_24Cxx(0,8) == 0xFE)
+	    ts.ser_eeprom_type = 0;				// no EEPROM availbale
+	else
+	    {
+	    if(Read_24Cxx(0,16) != 0xFF)
+		ts.ser_eeprom_type = Read_24Cxx(0,16);
+	    else 
+		{
+		if(Read_24Cxx(0x10000,16) != 0xFE)
+		    {
+		    ts.ser_eeprom_type = 17;			// paged mode 128KB
+		    Write_24Cxx(0,17,16);
+		    }
+		else
+		    {
+		    Write_24Cxx(0,0x66,16);			// write testsignature 1
+		    Write_24Cxx(0x100,0x77,16);			// write testsignature 2
+		    if(Read_24Cxx(0,16) == 0x66 && Read_24Cxx(0x100,16) == 0x77)
+			{					// 16 bit addressing
+			ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
+			if(Read_24Cxx(0x200,16) != 0x66)
+			    ts.ser_eeprom_type = 10;
+			if(Read_24Cxx(0x400,16) != 0x66)
+			    ts.ser_eeprom_type = 11;
+			if(Read_24Cxx(0x800,16) != 0x66)
+			    ts.ser_eeprom_type = 12;
+			if(Read_24Cxx(0x1000,16) != 0x66)
+			    ts.ser_eeprom_type = 13;
+			if(Read_24Cxx(0x2000,16) != 0x66)
+			    ts.ser_eeprom_type = 14;
+			if(Read_24Cxx(0x4000,16) != 0x66)
+			    ts.ser_eeprom_type = 15;
+			if(Read_24Cxx(0x8000,16) != 0x66)
+			    ts.ser_eeprom_type = 16;
+			Write_24Cxx(0,ts.ser_eeprom_type,16);
+			}
+		    else
+			{					// 8 bit addressing
+		    	Write_24Cxx(0,0x99,8);			// write testsignature
+			ts.ser_eeprom_type = 7;			// smallest possible 8 bit EEPROM
+			if(Read_24Cxx(0x80,8) != 0x99)
+			    ts.ser_eeprom_type = 8;
+			Write_24Cxx(0,ts.ser_eeprom_type,8);
+			}
+		    }
+		}
+	    }
+
+	    
+//	ts.ser_eeprom_type = Write_24Cxx(0xAA,77,15);
+//	ts.ser_eeprom_type = Read_24Cxx(0,15);		// read first byte from smallest possible serial EEPROM
+
 	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
 
 	// Show logo

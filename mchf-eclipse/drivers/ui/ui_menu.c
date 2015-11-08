@@ -144,10 +144,51 @@ void UiDriverUpdateMenu(uchar mode)
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
 	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma," MHz");
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
-	outs = "n/a             ";
+	switch (ts.ser_eeprom_type){
+	    case 0:
+	    outs = "n/a             ";
+	    break;
+	    case 7:
+	    outs = "128Byte         ";
+	    break;
+	    case 8:
+	    outs = "256Byte         ";
+	    break;
+	    case 9:
+	    outs = "512Byte         ";
+	    break;
+	    case 10:
+	    outs = "1KByte          ";
+	    break;
+	    case 11:
+	    outs = "2KByte          ";
+	    break;
+	    case 12:
+	    outs = "4KByte          ";
+	    break;
+	    case 13:
+	    outs = "8KByte          ";
+	    break;
+	    case 14:
+	    outs = "16KByte         ";
+	    break;
+	    case 15:
+	    outs = "32KByte         ";
+	    break;
+	    case 16:
+	    outs = "64KByte         ";
+	    break;
+	    case 17:
+	    outs = "128KByte        ";
+	    break;
+	    default:
+	    outs = "unknown         ";
+	    break;
+	    }
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
-	outs = "n/a             ";
+//	outs = "n/a             ";
+	outs = "XPT2046         ";
 	sprintf(out,"%s%s","Touchscreen  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
 	outs = "n/a             ";

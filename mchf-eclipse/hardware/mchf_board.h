@@ -1380,6 +1380,7 @@ typedef struct TransceiverState
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
 	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
+	uchar	ser_eeprom_type;		// capacity of serial eeprom = 2^ser_eeprom_type
 } TransceiverState;
 //
 
