@@ -1820,7 +1820,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
 
    //
-   Read_VirtEEPROM(EEPROM_FREQ_CONV_MODE, &i);	// get setting of frequency translation mode
+   Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);	// get setting of frequency translation mode
 
    if(!(i & 0xff))	{
 	   sprintf(tx,"WARNING:  Freq. Translation is OFF!!!");

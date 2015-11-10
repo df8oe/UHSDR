@@ -972,18 +972,24 @@ int main(void)
 	// Set default transceiver state
 	TransceiverStateInit();
 
-	// Eeprom init
-	uint8_t test1, test2;
+	// virtual Eeprom init
+	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
 
-	if(Read_24Cxx(0,8) == 0xFE)
-	    ts.ser_eeprom_type = 0;				// no EEPROM availbale
+	ts.ser_eeprom_in_use = 0xFF;				// serial EEPROM not in use yet
+
+	// serial EEPROM init
+	if(Read_24Cxx(0,8) == 0xFE00)
+	    ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
 	else
 	    {
 	    if(Read_24Cxx(0,16) != 0xFF)
+		{
 		ts.ser_eeprom_type = Read_24Cxx(0,16);
+		ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type); //disable if EEPROM not in use
+		}
 	    else 
 		{
-		if(Read_24Cxx(0x10000,16) != 0xFE)
+		if(Read_24Cxx(0x10000,16) != 0xFE00)
 		    {
 		    ts.ser_eeprom_type = 17;			// paged mode 128KB
 		    Write_24Cxx(0,17,16);
@@ -1021,14 +1027,32 @@ int main(void)
 			}
 		    }
 		}
+	    if(ts.ser_eeprom_in_use == 0xFF)
+		{
+		copy_virt2ser();				// copy data from virtual to serial EEPROM
+		ts.ser_eeprom_in_use = 0;			// serial EEPROM in use now
+		Write_24Cxx(1,ts.ser_eeprom_in_use,ts.ser_eeprom_type);
+		verify_servirt();
+		}
+//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
+/*	int i;
+	for(i=0;i<100;i++)
+	    {
+	    int t;
+	    for (t=0;t<100;t++);
+	    Write_24Cxx(0x2000+i,0xFF,16);
+	    } */
 	    }
-
-	    
-//	ts.ser_eeprom_type = Write_24Cxx(0xAA,77,15);
-//	ts.ser_eeprom_type = Read_24Cxx(0,15);		// read first byte from smallest possible serial EEPROM
-
-	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
-
+/*
+unsigned char *p = malloc(128);
+if(p == NULL)
+    ts.ser_eeprom_in_use=5;
+else
+    {
+    Write_24Cxxseq(0x1000,p,128);
+    free(p);
+    }
+*/
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
 

@@ -25,9 +25,8 @@ uchar 	mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar Regist
 void Delay(__IO uint32_t);
 
 uint8_t Write_24Cxx(uint32_t, uint8_t, uint8_t);
-
-uint8_t Read_24Cxx(uint32_t, uint8_t);
-
-
+uint16_t Read_24Cxx(uint32_t, uint8_t);
+uint8_t Write_24Cxxseq(uint16_t, unsigned char*, uint16_t, uint8_t);
+uint8_t Read_24Cxxseq(uint16_t, unsigned char*, uint16_t, uint8_t);
 
 #endif

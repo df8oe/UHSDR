@@ -862,37 +862,164 @@ void mchf_board_post_init(void)
 }
 
 
-
 //
 // Interface for virtual EEPROM functions and our code
 //
-uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value)	{		// reference to virtual EEPROM read function
+//uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value)	{		// reference to virtual EEPROM read function
 
-	return(EE_ReadVariable(VirtAddVarTab[addr], value));
-}
+//	return(EE_ReadVariable(VirtAddVarTab[addr], value));
+//}
 
-uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value)	{		// reference to virtual EEPROM write function, writing unsigned 16 bit
-	uint16_t	retvar;
+//uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value)	{		// reference to virtual EEPROM write function, writing unsigned 16 bit
+//	uint16_t	retvar;
 //	char	temp[32];
 
-	retvar = (EE_WriteVariable(VirtAddVarTab[addr], value));
+//	retvar = (EE_WriteVariable(VirtAddVarTab[addr], value));
 
 //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
 //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
 
-	return retvar;
-}
+//	return retvar;
+//}
 
-uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value)	{		// reference to virtual EEPROM write function, writing signed integer
-	uint16_t	*u_var;
-	uint16_t	retvar;
+//uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value)	{		// reference to virtual EEPROM write function, writing signed integer
+//	uint16_t	*u_var;
+//	uint16_t	retvar;
 //	char	temp[32];
 
-	u_var = (uint16_t *)&value;
-	retvar = (EE_WriteVariable(VirtAddVarTab[addr], *u_var));
+//	u_var = (uint16_t *)&value;
+//	retvar = (EE_WriteVariable(VirtAddVarTab[addr], *u_var));
 
 //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
 //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
 
-	return retvar;
+//	return retvar;
+//}
+
+//
+// selecting EEPROM for read/write
+//
+uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
+{
+if(ts.ser_eeprom_in_use == 0xFF)
+    return(EE_ReadVariable(VirtAddVarTab[addr], value));
+else
+    return Read_SerEEPROM(addr, value);
+}
+
+uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
+{
+if(ts.ser_eeprom_in_use == 0xFF)
+    {
+    uint16_t retvar;
+
+    retvar = (EE_WriteVariable(VirtAddVarTab[addr], value));
+    //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
+    //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
+    return retvar;
+    }
+else
+    {
+    FLASH_Status status = FLASH_COMPLETE;
+    Write_SerEEPROM(addr, value);
+    return status;
+    }
+}
+
+uint16_t Write_EEPROM_Signed(uint16_t addr, int value)
+{
+if(ts.ser_eeprom_in_use == 0xFF)
+    {
+    uint16_t *u_var;
+    uint16_t retvar;
+
+    u_var = (uint16_t *)&value;
+    retvar = (EE_WriteVariable(VirtAddVarTab[addr], *u_var));
+    //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
+    //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
+    return retvar;
+    }
+else
+    {
+    FLASH_Status status = FLASH_COMPLETE;
+    Write_SerEEPROM_Signed(addr, value);
+    return status;
+    }
+}
+
+//
+// Interface for serial EEPROM functions and our code
+//
+uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value)		// reference to serial EEPROM read function
+{
+uint16_t data;
+
+data = (uint16_t)(Read_24Cxx((VirtAddVarTab[addr]-0xaa01)*2, ts.ser_eeprom_type)<<8);
+data = data + (uint8_t)(Read_24Cxx((VirtAddVarTab[addr]-0xaa01)*2+1, ts.ser_eeprom_type));
+*value = data;
+
+return 0;
+}
+
+uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value)		// reference to serial EEPROM write function, writing unsigned 16 bit
+{
+uint8_t lowbyte, highbyte;
+
+lowbyte = value&(0x00FF);
+highbyte = (value&(0xFF00))>>8;
+
+Write_24Cxx(addr*2,highbyte,ts.ser_eeprom_type);
+Write_24Cxx(addr*2+1, lowbyte, ts.ser_eeprom_type);
+
+return 0;
+}
+
+uint16_t Write_SerEEPROM_Signed(uint16_t addr, int value)	// reference to serial EEPROM write function, writing signed integer
+{
+Write_SerEEPROM(addr, value);
+return 0;
+}
+
+// copy data from virtual to serial EEPROM
+uint8_t copy_virt2ser(void)
+{
+int count;
+uint16_t data;
+
+for(count=1; count < 512; count++);
+    {
+    EE_ReadVariable(VirtAddVarTab[count], &data);
+    Write_SerEEPROM(count, data);
+    }
+return 0;
+}
+
+// copy data from serial to virtual EEPROM
+uint8_t copy_ser2virt(void)
+{
+int count;
+uint16_t data;
+
+for(count=1; count < 512; count++);
+    {
+    Read_SerEEPROM(count, &data);
+    Write_VirtEEPROM(VirtAddVarTab[count], data);
+    }
+    return 0;
+}
+
+// verify data serial / virtual EEPROM
+void verify_servirt(void)
+{
+int count;
+uint16_t data1, data2;
+
+for(count=1; count < 512; count++);
+    {
+    Read_SerEEPROM(count, &data1);
+    EE_ReadVariable(VirtAddVarTab[count], &data2);
+    if(data1 != data2)
+	ts.ser_eeprom_in_use = 5;
+    }
+    return 0;
 }

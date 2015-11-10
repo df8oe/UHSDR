@@ -3,11 +3,7 @@ Delvel branch of mcHF firmware and bootloader - sources and binaries
 Version <219.26.x>
 
 
-Binaries are located in mchf-eclipse and are named:
-- bootloader_devel.dfu
-- mchf_binary_for_flash_devel.bin
-
-If you only want binaries and not complete sources click on file you want to download and then on the button "Raw" right above the grey bar.
+Binaries are NOT INCLUDED and must be built from the scratch.
 
 Have fun - Open-Source opens possibilities!
 

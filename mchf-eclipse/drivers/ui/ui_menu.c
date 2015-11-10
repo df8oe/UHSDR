@@ -186,7 +186,20 @@ void UiDriverUpdateMenu(uchar mode)
 	    break;
 	    }
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
+	if(ts.ser_eeprom_in_use == 0xFF)
+	    {
+	    if(ts.ser_eeprom_type < 10)
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
+	    else
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
+	    }
+	else
+	    {
+	    if(ts.ser_eeprom_in_use == 0)
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
+	    else
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Blue,Black,0);
+	    }
 //	outs = "n/a             ";
 	outs = "XPT2046         ";
 	sprintf(out,"%s%s","Touchscreen  : ",outs);

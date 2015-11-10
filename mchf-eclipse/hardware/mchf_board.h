@@ -1381,6 +1381,7 @@ typedef struct TransceiverState
 	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
 	uchar	ser_eeprom_type;		// capacity of serial eeprom = 2^ser_eeprom_type
+	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
 } TransceiverState;
 //
 
@@ -1418,9 +1419,19 @@ void mchf_board_post_init(void);
 
 void mchf_board_power_button_input_init(void);
 
-uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value);
-uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value);
-uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value);
+//uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value);
+//uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value);
+//uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value);
+
+uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
+uint16_t Write_EEPROM(uint16_t addr, uint16_t value);
+uint16_t Write_EEPROM_Signed(uint16_t addr, int value);
+uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
+uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
+uint16_t Write_SerEEPROM_Signed(uint16_t addr, int value);
+uint8_t copy_virt2ser(void);
+uint8_t copy_ser2virt(void);
+void verify_servirt(void);
 
 // in main.c
 void CriticalError(ulong error);
