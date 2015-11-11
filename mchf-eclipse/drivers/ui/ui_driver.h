@@ -621,6 +621,8 @@ void 	UiLoadToneBurstMode(void);
 void	UiCalcSubaudibleGenFreq(void);		// load/set current FM subaudible tone settings for generation
 //
 void 	UiCalcSubaudibleDetFreq(void);		// load/set current FM subaudible tone settings	for detection
+void    UiKeyBeep(void);
+void	UiLoadBeepFreq(void);
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain
