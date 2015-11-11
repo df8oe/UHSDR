@@ -1,17 +1,16 @@
-Stable branch of mcHF firmware and bootloader - sources and binaries
+<H3>This is the GitHub Repo related to firmware and bootloader for SDR-QRP-transceiver mcHF.</H3>
 
+Explanation of different branches:
 
-Version <219.24>
+<b>master</b>: latest STABLE version
+<b>testing</b>: latest upcoming version in testing stage, containing changes from actual work of every developer
+<b>devel-ABCDEF-0.0.xxx.yyy.z</b>: devel version of specific developer.
 
+Master and testing include binaries to use for end-users. It is recommended only to use these two branches as end-user!
 
-Binaries are located in mchf-eclipse and are named:
-- bootloader.dfu
-- mchf_binary_for_flash.bin
+All other branches may or may not.include binaries. Use is "for your own risk". Code maybe non-functional or instable.
 
-If you only want binaries and not complete sources click on file you want to download and then on the button "Raw" right above the grey bar.
+If you want to take part in development use testing-branch as base for creatin your own branch named as "devels" above. Testing branch is the most up-to-date branch containing pre-release versions of their work.
 
-Have fun - Open-Source opens possibilities!
-
-M0NKA, Chris<br>
-KA7OEI, Clint<br>
-DF8OE, Andreas
+vy 73 de
+DF8OE
