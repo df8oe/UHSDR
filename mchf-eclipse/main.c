@@ -1034,7 +1034,7 @@ int main(void)
 		Write_24Cxx(1,ts.ser_eeprom_in_use,ts.ser_eeprom_type);
 		verify_servirt();
 		}
-//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
+	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
 /*	int i;
 	for(i=0;i<100;i++)
 	    {
