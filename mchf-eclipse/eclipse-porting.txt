@@ -1,7 +1,0 @@
- Porting from CooCox to eclipse by Andreas Richter. DF8OE 08/18/2015
-
-Base for this was the 219.22 made by Clint KA7OEI and the first
-official release is called 219.23
-
-It contains minor bugfixes and addition of SI570 autodetect
-hardware-addresses 50h / 55h
