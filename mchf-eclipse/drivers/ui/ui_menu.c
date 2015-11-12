@@ -188,7 +188,7 @@ void UiDriverUpdateMenu(uchar mode)
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
 	if(ts.ser_eeprom_in_use == 0xFF)
 	    {
-	    if(ts.ser_eeprom_type < 10)
+	    if(ts.ser_eeprom_type < 10 && ts.ser_eeprom_type != 0)
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	    else
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
