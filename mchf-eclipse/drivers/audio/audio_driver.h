@@ -40,11 +40,6 @@
 #define BUFF_LEN 			128
 //
 //
-#define	AGC_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
-											// This is divided by the decimation rate so that the time delay is constant.
-//
-#define	ALC_DELAY_BUFSIZE		(BUFF_LEN/2)*5		// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
-//
 // -----------------------------
 // Half of total buffer
 #define	IQ_BUFSZ 	(BUFF_LEN/2)
@@ -83,7 +78,6 @@ typedef struct AudioDriverState
 	float					agc_var;
 	float					agc_calc;
 	float					agc_valbuf[BUFF_LEN];	// holder for "running" AGC value
-	float					agc_delay[AGC_DELAY_BUFSIZE+16];	// audio for AGC look-ahead buffer;  Also used for ALC!
 	float					agc_holder;			// used to hold AGC value during transmit and tuning
 	float					agc_decay;			// decay rate (speed) of AGC
 	float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
@@ -528,6 +522,11 @@ enum	{
 //
 #define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
 #define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
+//
+#define	AGC_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
+											// This is divided by the decimation rate so that the time delay is constant.
+//
+#define	ALC_DELAY_BUFSIZE		(BUFF_LEN/2)*5		// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 //
 //
 #define CLOCKS_PER_DMA_CYCLE	10656			// Number of 16 MHz clock cycles per DMA cycle

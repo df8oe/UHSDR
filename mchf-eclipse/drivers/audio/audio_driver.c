@@ -83,7 +83,7 @@ arm_lms_instance_f32	lms1_instance;
 float32_t	lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 float32_t	lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 //
-//static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
+static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
 //
 arm_lms_norm_instance_f32	lms2Norm_instance;
 arm_lms_instance_f32	lms2_instance;
@@ -92,19 +92,18 @@ float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 //
 float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + 16];
 //
-//static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
-//float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
+float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
 //
 //
-// The following is a necessary placeholder!
 static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
 __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 //
-//static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
@@ -202,9 +201,9 @@ void audio_driver_init(void)
 	// "use" the temporary variables to keep the compiler from "optimizing" them out of existence
 	//
 
-	test_a[0] = 0;
+//	test_a[0] = 0;
 //	test_b[0] = 0;
-	test_c[0] = 0;
+//	test_c[0] = 0;
 //	test_d[0] = 0;
 //	test_e[0] = 0;
 //	test_f[0] = 0;
@@ -532,7 +531,7 @@ void audio_driver_set_rx_audio_filter(void)
 //	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,txt,0xFFFF,0,0);
 //
 //
-	for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX; i++)	{		// clear LMS delay buffers
+	for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)	{		// clear LMS delay buffers
 		lms1_nr_delay[i] = 0;
 	}
 	//
@@ -571,7 +570,7 @@ void audio_driver_set_rx_audio_filter(void)
 	arm_lms_norm_init_f32(&lms2Norm_instance, calc_taps, &lms2NormCoeff_f32[0], &lms2StateF32[0], (float32_t)mu_calc, 64);
 
 	//
-	for(i = 0; i < LMS_NOTCH_DELAYBUF_SIZE_MAX; i++)		// clear LMS delay buffer
+	for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
 		lms2_nr_delay[i] = 0;
 	//
 	for(i = 0; i < DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN; i++)	{		// clear LMS state and coefficient buffers
@@ -1002,8 +1001,8 @@ static void audio_rx_agc_processor(int16_t psize)
 	// This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
 	// decimation rate so that it is constant for all settings.
 	//
-	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&ads.agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
-	arm_copy_f32((float32_t *)&ads.agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
+	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
+	arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
 	//
 	// Update the in/out pointers to the AGC delay buffer
 	agc_delay_inbuf += psize/2;						// update circular delay buffer
@@ -1791,8 +1790,8 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 	// This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
 	// decimation rate so that it is constant for all settings.
 	//
-	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&ads.agc_delay[alc_delay_inbuf], size/2);	// put new data into the delay buffer
-	arm_copy_f32((float32_t *)&ads.agc_delay[alc_delay_outbuf], (float32_t *)ads.a_buffer, size/2);	// take old data out of the delay buffer
+	arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[alc_delay_inbuf], size/2);	// put new data into the delay buffer
+	arm_copy_f32((float32_t *)&agc_delay[alc_delay_outbuf], (float32_t *)ads.a_buffer, size/2);	// take old data out of the delay buffer
 	//
 	// Update the in/out pointers to the ALC delay buffer
 	//

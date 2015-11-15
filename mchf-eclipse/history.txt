@@ -86,14 +86,21 @@ frequency bands that may be stored in each "band-memory" location.  WARNING:  Th
 stored in random order and also make it easier to put different bands in VFO-A versus VFO-B which can
 cause relay-switching/timing issues!
 
+##################
 20151111 Version 0.219.26.5  [KA7OEI]
 - Fixed problem with 2.3k filter adjustment not being possible except in FM.
 - Code cleanup to fix some warnings/function definitions.
+##################
+Comment DF8OE: 
+I reverted this because of some heavy problems
 
 20151111 [DF8OE]
 - added menu "190" hardware-info
 - beginning of EEPROM including (it is detected if present but not used in this version)
 
+
+20151115 [DF8OE]
+- I named this back-rolled version for continuity to 0.219.26.6
 
 2-be-continued
 

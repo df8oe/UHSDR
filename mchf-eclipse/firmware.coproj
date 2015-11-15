@@ -4,7 +4,7 @@
     <Device manufacturerId="9" manufacturerName="ST" chipId="344" chipName="STM32F407VG" boardId="" boardName=""/>
     <BuildOption>
       <Compile>
-        <Option name="OptimizationLevel" value="4"/>
+        <Option name="OptimizationLevel" value="0"/>
         <Option name="UseFPU" value="0"/>
         <Option name="UserEditCompiler" value=""/>
         <Option name="FPU" value="2"/>
@@ -390,9 +390,9 @@
     <File name="drivers/keyboard/keyb_driver.h" path="drivers/keyboard/keyb_driver.h" type="1"/>
     <File name="usb/usbd/class/cdc/src" path="" type="2"/>
     <File name="drivers/audio/filters/i_rx_filter_10kHz.h" path="drivers/audio/filters/i_rx_filter_10kHz.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_am_5kHz.h" path="drivers/audio/filters/iq_rx_filter_am_5kHz.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_si570.c" path="drivers/ui/oscillator/ui_si570.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_dma.h" path="cmsis_lib/include/stm32f4xx_dma.h" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_5kHz.h" path="drivers/audio/filters/iq_rx_filter_am_5kHz.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_tim.c" path="cmsis_lib/source/stm32f4xx_tim.c" type="1"/>
     <File name="drivers/audio/fm_subaudible_tone_table.h" path="drivers/audio/fm_subaudible_tone_table.h" type="1"/>
     <File name="syscalls" path="" type="2"/>

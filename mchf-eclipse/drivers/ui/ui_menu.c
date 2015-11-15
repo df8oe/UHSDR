@@ -890,7 +890,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		opt_pos = MENU_1K8_SEL % MENUSIZE;
 		break;
 	case MENU_2k3_SEL: // 2.3 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
+		if(ts.dmod_mode == DEMOD_FM)	{
 			if(var >= 1)	{	// did the selection increase?
 				fchange = 1;
 				ts.menu_var_changed = 1;	// indicate that a change has occurred
@@ -3619,7 +3619,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", (int)ts.beep_frequency);
+		sprintf(options, "   %d  ", ts.beep_frequency);
 		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//
