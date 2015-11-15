@@ -163,7 +163,6 @@ void 			UiDriverUpdateMenuLines(uchar index, uchar mode);
 void			UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 void 			UiDriverSaveEepromValuesPowerDown(void);
 static void 	UiDriverInitMainFreqDisplay(void);
-static void		UiInitRxParms(void);
 //
 //
 //
@@ -290,8 +289,7 @@ __IO ulong band_dial_value_b[MAX_BANDS+1];
 __IO ulong band_decod_mode_b[MAX_BANDS+1];
 __IO ulong band_filter_mode_b[MAX_BANDS+1];
 //
-//static int16_t test_ui_a[250];		// dummy variable - space holder
-
+static int16_t test_ui_a[250];		// dummy variable - space holder
 //
 // ------------------------------------------------
 // Transceiver state public structure
@@ -1409,7 +1407,7 @@ static void UiDriverProcessKeyboard(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiInitRxParms(void)
+UiInitRxParms(void)
 {
 	UiCWSidebandMode();
 	if(ts.menu_mode)	// are we in menu mode?
@@ -8993,6 +8991,7 @@ void UiCalcRxPhaseAdj(void)
 void UiCalcTxCompLevel(void)
 {
 	float tcalc;
+	ushort	value;
 
 	switch(ts.tx_comp_level)	{				// get the speech compressor setting
 		case 0:		// minimum compression
@@ -9422,6 +9421,7 @@ char txt[64];
 void UiCheckForPressedKey(void)
 {
 	ushort i, j, k;
+	uchar	b;
 	bool stat = 1;
 	char txt[32];
 
