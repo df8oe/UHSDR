@@ -43,6 +43,13 @@ boot either by pulling USB-key or pushing BAND- again.
 If process ends in error (==backlight blinking) you can turn off
 mchf by pressing power button.
 
+If backlight is flashing and everything seems to be ok, your USB key
+is incompatible. This is very rare with older keys (manufactured
+before 2012). Newer keys and keys with larger amount of memory
+(> 8GB) do have more problems.
+If you have problems try another key. Keys which are manufactured
+by "SanDisk" are widely distributed and easy to purchase.
+
 2-be-continued
 
 DF8OE, Andreas						10/02/2015
