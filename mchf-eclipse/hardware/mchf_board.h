@@ -47,7 +47,7 @@
 #define 	TRX4M_VER_RELEASE		26
 //
 //
-#define 	TRX4M_VER_BUILD			6
+#define 	TRX4M_VER_BUILD			56
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -724,6 +724,8 @@ enum {
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
 #define MIN_LCD_BLANK_DELAY_TIME	5			// minimum number of seconds for backlight "on" time
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
+
+#define MAX_VAR_ADDR 383
 //
 // *************************************************************************************************************************
 //
@@ -1382,6 +1384,8 @@ typedef struct TransceiverState
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
 	uchar	ser_eeprom_type;		// capacity of serial eeprom = 2^ser_eeprom_type
 	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
+	uint8_t* eeprombuf;
+	uint16_t	df8oe_test;
 } TransceiverState;
 //
 
@@ -1429,8 +1433,8 @@ uint16_t Write_EEPROM_Signed(uint16_t addr, int value);
 uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
 uint16_t Write_SerEEPROM_Signed(uint16_t addr, int value);
-uint8_t copy_virt2ser(void);
-uint8_t copy_ser2virt(void);
+void copy_virt2ser(void);
+void copy_ser2virt(void);
 void verify_servirt(void);
 
 // in main.c

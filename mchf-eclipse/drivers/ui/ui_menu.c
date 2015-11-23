@@ -58,7 +58,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 // ------------------------------------------------
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
-
+extern uint16_t VirtAddVarTab[NB_OF_VAR];
 extern __IO OscillatorState os;
 // ------------------------------------------------
 // Frequency public
@@ -186,20 +186,31 @@ void UiDriverUpdateMenu(uchar mode)
 	    break;
 	    }
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
-	if(ts.ser_eeprom_in_use == 0xFF)
-	    {
-	    if(ts.ser_eeprom_type < 10 && ts.ser_eeprom_type != 0)
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-	    else
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
-	    }
-	else
-	    {
-	    if(ts.ser_eeprom_in_use == 0)
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
-	    else
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Blue,Black,0);
-	    }
+/*	uint16_t var, data, data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11;
+	var = 8;
+	Read_SerEEPROM(var, &data);
+	EE_ReadVariable(VirtAddVarTab[var], &data1);
+	Read_SerEEPROM(var+1, &data2);
+	EE_ReadVariable(VirtAddVarTab[var+1], &data3);
+	Read_SerEEPROM(var+2, &data4);
+	EE_ReadVariable(VirtAddVarTab[var+2], &data5);
+	Read_SerEEPROM(var+3, &data6);
+	EE_ReadVariable(VirtAddVarTab[var+3], &data7);
+	Read_SerEEPROM(var+4, &data8);
+	EE_ReadVariable(VirtAddVarTab[var+4], &data9);
+	Read_SerEEPROM(var+5, &data10);
+	EE_ReadVariable(VirtAddVarTab[var+5], &data11);
+	sprintf(out,"%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x", data,"/", data1,"-", data2,"/", data3,"-", data4,"/", data5,"-", data6,"/", data7,"-", data8,"/", data9,"-", data10,"/", data11); 
+//	sprintf(out,"%s%x%s",">>",ts.df8oe_test,"<<");
+	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0); */ 
+	if(ts.ser_eeprom_in_use == 0)		// in use & data ok
+	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
+	if(ts.ser_eeprom_in_use == 0xFF)	// not in use
+	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
+	if(ts.ser_eeprom_in_use == 0x5)		// data not ok
+	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
+	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
+	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Blue,Black,0);
 //	outs = "n/a             ";
 	outs = "XPT2046         ";
 	sprintf(out,"%s%s","Touchscreen  : ",outs);

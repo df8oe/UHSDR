@@ -56,6 +56,9 @@ __IO TransceiverState ts;
 //uint16_t tmpCC4[2] = {0, 0};
 //
 // If more EEPROM variables are added, make sure that you add to this table - and the index to it in "eeprom.h"
+// and correct MAX_VAR_ADDR in mchf_board.h
+
+
 const uint16_t VirtAddVarTab[NB_OF_VAR] =
 {
 		VAR_ADDR_1,
@@ -978,6 +981,7 @@ int main(void)
 	ts.ser_eeprom_in_use = 0xFF;				// serial EEPROM not in use yet
 
 	// serial EEPROM init
+//	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM
 	if(Read_24Cxx(0,8) == 0xFE00)
 	    ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
 	else
@@ -1027,32 +1031,24 @@ int main(void)
 			}
 		    }
 		}
+	    if(ts.ser_eeprom_type < 10)				// cap < 1K
+		ts.ser_eeprom_in_use = 0x10;			// serial EEPROM too small
+//	    ts.ser_eeprom_in_use = 0xFF;			// new copyvirt2ser forced
+
+/*	    int t;
+	    for(t=2; t<MAX_VAR_ADDR*2;t++)
+		Write_24Cxx(t, 0xaa, ts.ser_eeprom_type);
+*/
 	    if(ts.ser_eeprom_in_use == 0xFF)
 		{
 		copy_virt2ser();				// copy data from virtual to serial EEPROM
-		ts.ser_eeprom_in_use = 0;			// serial EEPROM in use now
-		Write_24Cxx(1,ts.ser_eeprom_in_use,ts.ser_eeprom_type);
-		verify_servirt();
+//		verify_servirt();
+		Write_24Cxx(1, 0, ts.ser_eeprom_type);
 		}
-	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
-/*	int i;
-	for(i=0;i<100;i++)
-	    {
-	    int t;
-	    for (t=0;t<100;t++);
-	    Write_24Cxx(0x2000+i,0xFF,16);
-	    } */
-	    }
-/*
-unsigned char *p = malloc(128);
-if(p == NULL)
-    ts.ser_eeprom_in_use=5;
-else
-    {
-    Write_24Cxxseq(0x1000,p,128);
-    free(p);
-    }
-*/
+//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
+	}
+
+
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
 

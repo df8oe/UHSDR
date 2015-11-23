@@ -102,6 +102,9 @@ I reverted this because of some heavy problems
 20151115 [DF8OE]
 - I named this back-rolled version for continuity to 0.219.26.6
 
+20151123 [DF8OE]
+- further working on serial EEPROM suport
+
 2-be-continued
 
 KA7OEI, Clint
