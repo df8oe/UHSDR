@@ -47,7 +47,7 @@
 #define 	TRX4M_VER_RELEASE		26
 //
 //
-#define 	TRX4M_VER_BUILD			56
+#define 	TRX4M_VER_BUILD			6
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -1423,16 +1423,10 @@ void mchf_board_post_init(void);
 
 void mchf_board_power_button_input_init(void);
 
-//uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value);
-//uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value);
-//uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value);
-
 uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value);
-uint16_t Write_EEPROM_Signed(uint16_t addr, int value);
 uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
-uint16_t Write_SerEEPROM_Signed(uint16_t addr, int value);
 void copy_virt2ser(void);
 void copy_ser2virt(void);
 void verify_servirt(void);

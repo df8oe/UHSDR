@@ -11167,7 +11167,7 @@ if(ts.ser_eeprom_in_use == 0)
 	}
     ts.ser_eeprom_in_use = 0xAA;
     }
-
+if(0 == 0){
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
 	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
@@ -12912,10 +12912,10 @@ if(ts.ser_eeprom_in_use == 0)
 	//
 	//
 	// Next setting...
-
+}
 if(ts.ser_eeprom_in_use == 0xAA)
     {
-//    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
+    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
     ts.ser_eeprom_in_use = 0;
     }
 }

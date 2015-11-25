@@ -885,11 +885,12 @@ if(ts.ser_eeprom_in_use == 0xAA)
     uint8_t highbyte;
     uint16_t data;
 
-    highbyte = ts.eeprombuf[addr];
-    lowbyte = ts.eeprombuf[addr+1];
+    highbyte = ts.eeprombuf[addr*2];
+    lowbyte = ts.eeprombuf[addr*2+1];
     data = lowbyte + highbyte<<8;
     *value = data;
     }
+return 0;
 }
 
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
@@ -918,40 +919,10 @@ if(ts.ser_eeprom_in_use == 0xAA)
     lowbyte = (uint8_t)((0x00FF)&value);
     value = value>>8;
     highbyte = (uint8_t)((0x00FF)&value);
-    ts.eeprombuf[addr] = highbyte;
-    ts.eeprombuf[addr+1] = lowbyte;
-    }
-}
-
-uint16_t Write_EEPROM_Signed(uint16_t addr, int value)
-{
-if(ts.ser_eeprom_in_use == 0)
-    {
+    ts.eeprombuf[addr*2] = highbyte;
+    ts.eeprombuf[addr*2+1] = lowbyte;
     FLASH_Status status = FLASH_COMPLETE;
-    Write_SerEEPROM_Signed(addr, value);
     return status;
-    }
-if(ts.ser_eeprom_in_use == 0xFF)
-    {
-    uint16_t *u_var;
-    uint16_t retvar;
-
-    u_var = (uint16_t *)&value;
-    retvar = (EE_WriteVariable(VirtAddVarTab[addr], *u_var));
-    //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
-    //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
-    return retvar;
-    }
-if(ts.ser_eeprom_in_use == 0xAA)
-    {
-    uint8_t lowbyte;
-    uint8_t highbyte;
-
-    lowbyte = (uint8_t)((0x00FF)&value);
-    value = value>>8;
-    highbyte = (uint8_t)((0x00FF)&value);
-    ts.eeprombuf[addr] = highbyte;
-    ts.eeprombuf[addr+1] = lowbyte;
     }
 }
 
@@ -979,12 +950,6 @@ highbyte = (value&(0xFF00))>>8;
 Write_24Cxx(addr*2, highbyte, ts.ser_eeprom_type);
 Write_24Cxx(addr*2+1, lowbyte, ts.ser_eeprom_type);
 
-return 0;
-}
-
-uint16_t Write_SerEEPROM_Signed(uint16_t addr, int value)	// reference to serial EEPROM write function, writing signed integer
-{
-Write_SerEEPROM(addr, value);
 return 0;
 }
 
@@ -1052,7 +1017,7 @@ uint16_t data1, data2;
 
 for(count=1; count < MAX_VAR_ADDR; count++)
     {
-    ts.df8oe_test = 0;
+//    ts.df8oe_test = 0;
     Read_SerEEPROM(count, &data1);
 //    Read_SerEEPROM(count, &data2);
 //    EE_ReadVariable(VirtAddVarTab[count], &data1);
@@ -1061,7 +1026,7 @@ for(count=1; count < MAX_VAR_ADDR; count++)
     if(data1 != data2)
 	{
 	ts.ser_eeprom_in_use = 0x05;
-	ts.df8oe_test = count;
+//	ts.df8oe_test = count;
 	count = MAX_VAR_ADDR;
 	}
 	ts.ser_eeprom_in_use = 0x05;

@@ -979,9 +979,9 @@ int main(void)
 	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
 
 	ts.ser_eeprom_in_use = 0xFF;				// serial EEPROM not in use yet
-
+	
 	// serial EEPROM init
-//	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM
+//	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM and force new copyvirt2ser
 	if(Read_24Cxx(0,8) == 0xFE00)
 	    ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
 	else
@@ -1033,19 +1033,14 @@ int main(void)
 		}
 	    if(ts.ser_eeprom_type < 10)				// cap < 1K
 		ts.ser_eeprom_in_use = 0x10;			// serial EEPROM too small
-//	    ts.ser_eeprom_in_use = 0xFF;			// new copyvirt2ser forced
 
-/*	    int t;
-	    for(t=2; t<MAX_VAR_ADDR*2;t++)
-		Write_24Cxx(t, 0xaa, ts.ser_eeprom_type);
-*/
 	    if(ts.ser_eeprom_in_use == 0xFF)
 		{
 		copy_virt2ser();				// copy data from virtual to serial EEPROM
-//		verify_servirt();
+//		verify_servirt();				// just 4 debug purposes
 		Write_24Cxx(1, 0, ts.ser_eeprom_type);
 		}
-//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM disable
+//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
 
 
