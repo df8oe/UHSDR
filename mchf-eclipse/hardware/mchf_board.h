@@ -1384,8 +1384,8 @@ typedef struct TransceiverState
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
 	uchar	ser_eeprom_type;		// capacity of serial eeprom = 2^ser_eeprom_type
 	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
-	uint8_t* eeprombuf;
-	uint16_t	df8oe_test;
+	uint8_t* eeprombuf;			// pointer to copy of config in RAM
+//	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //
 

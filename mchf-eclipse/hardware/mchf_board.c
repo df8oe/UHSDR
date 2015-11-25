@@ -880,7 +880,16 @@ if(ts.ser_eeprom_in_use == 0)
 if(ts.ser_eeprom_in_use == 0xFF)
     return(EE_ReadVariable(VirtAddVarTab[addr], value));
 if(ts.ser_eeprom_in_use == 0xAA)
-    ;
+    {
+    uint8_t lowbyte;
+    uint8_t highbyte;
+    uint16_t data;
+
+    highbyte = ts.eeprombuf[addr];
+    lowbyte = ts.eeprombuf[addr+1];
+    data = lowbyte + highbyte<<8;
+    *value = data;
+    }
 }
 
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
@@ -902,7 +911,16 @@ if(ts.ser_eeprom_in_use == 0xFF)
     return retvar;
     }
 if(ts.ser_eeprom_in_use == 0xAA)
-    ;
+    {
+    uint8_t lowbyte;
+    uint8_t highbyte;
+
+    lowbyte = (uint8_t)((0x00FF)&value);
+    value = value>>8;
+    highbyte = (uint8_t)((0x00FF)&value);
+    ts.eeprombuf[addr] = highbyte;
+    ts.eeprombuf[addr+1] = lowbyte;
+    }
 }
 
 uint16_t Write_EEPROM_Signed(uint16_t addr, int value)
@@ -925,7 +943,16 @@ if(ts.ser_eeprom_in_use == 0xFF)
     return retvar;
     }
 if(ts.ser_eeprom_in_use == 0xAA)
-    ;
+    {
+    uint8_t lowbyte;
+    uint8_t highbyte;
+
+    lowbyte = (uint8_t)((0x00FF)&value);
+    value = value>>8;
+    highbyte = (uint8_t)((0x00FF)&value);
+    ts.eeprombuf[addr] = highbyte;
+    ts.eeprombuf[addr+1] = lowbyte;
+    }
 }
 
 //
