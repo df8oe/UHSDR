@@ -979,7 +979,7 @@ int main(void)
 	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
 
 	ts.ser_eeprom_in_use = 0xFF;				// serial EEPROM not in use yet
-	
+
 	// serial EEPROM init
 //	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM and force new copyvirt2ser
 	if(Read_24Cxx(0,8) == 0xFE00)
@@ -989,7 +989,12 @@ int main(void)
 	    if(Read_24Cxx(0,16) != 0xFF)
 		{
 		ts.ser_eeprom_type = Read_24Cxx(0,16);
-		ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type); //disable if EEPROM not in use
+		ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
+		if(ts.ser_eeprom_type == 0)
+		    {
+		    ts.ser_eeprom_type = Read_24Cxx(0,8);
+		    ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
+		    }
 		}
 	    else 
 		{

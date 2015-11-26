@@ -730,7 +730,7 @@ void mchf_board_power_off(void)
 	   sprintf(tx,"                           ");
 	   UiLcdHy28_PrintText(80,168,tx,Blue2,Black,0);
 
-if(ts.ser_eeprom_in_use == 0xFF)
+if(ts.ser_eeprom_in_use != 0x00)
 	    {
 	   sprintf(tx," Saving settings to EEPROM ");
 	   UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
@@ -741,7 +741,7 @@ else
 	   UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
 	   }
 
-if(ts.ser_eeprom_in_use == 0xFF)
+if(ts.ser_eeprom_in_use != 0x00)
     {
 	   sprintf(tx,"            2              ");
 	   UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
@@ -877,7 +877,7 @@ uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
 {
 if(ts.ser_eeprom_in_use == 0)
     return Read_SerEEPROM(addr, value);
-if(ts.ser_eeprom_in_use == 0xFF)
+if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
     return(EE_ReadVariable(VirtAddVarTab[addr], value));
 if(ts.ser_eeprom_in_use == 0xAA)
     {
@@ -897,12 +897,11 @@ uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
 {
 if(ts.ser_eeprom_in_use == 0)
     {
-    ts.eeprombuf[11] = 0xdd;
     FLASH_Status status = FLASH_COMPLETE;
     Write_SerEEPROM(addr, value);
     return status;
     }
-if(ts.ser_eeprom_in_use == 0xFF)
+if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
     {
     uint16_t retvar;
 
@@ -944,8 +943,8 @@ uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value)		// reference to serial 
 {
 uint8_t lowbyte, highbyte;
 
-lowbyte = value&(0x00FF);
-highbyte = (value&(0xFF00))>>8;
+lowbyte = (uint8_t)(value&(0x00FF));
+highbyte = (uint8_t)((value&(0xFF00))>>8);
 
 Write_24Cxx(addr*2, highbyte, ts.ser_eeprom_type);
 Write_24Cxx(addr*2+1, lowbyte, ts.ser_eeprom_type);

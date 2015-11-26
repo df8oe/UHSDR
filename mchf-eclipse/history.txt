@@ -102,8 +102,16 @@ I reverted this because of some heavy problems
 20151115 [DF8OE]
 - I named this back-rolled version for continuity to 0.219.26.6
 
-20151123 [DF8OE]
-- further working on serial EEPROM suport
+20151126 [DF8OE]
+- completed serial EEPROM support of 24LC1025
+You have to add connection between pin8 and pin3 of 24LC1025
+!!! 24LC01/02/04 are too small and config data cannot fit so that they are UNSUPPORTED !!!
+At first start with fitted serial EEPROM and this (or newer) firmware serial EEPROM is
+autodetected and then (if memory is big enough) virtual EEPROM is copied to serial
+EEPROM. From now on all write functions are done with serial EEPROM and no longer
+to virtual EEPROM. You can see if at menu item #199 serial EEPROM is written in
+green letters. If so, it is in use. If it is in red letters, fitted serial EEPROM do
+not have enough memory for storing settings.
 
 2-be-continued
 
