@@ -197,15 +197,6 @@ if(Mem_Type > 8)
     Addr = Addr>>8;
     upper_addr = (uint8_t)((0x00FF)&Addr);
     }
-/* damit wird es gähnend langsam
-	// While the bus is busy from Clint
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 1;
-	}
-*/
 // Generate the Start Condition
 I2C_GenerateSTART(CODEC_I2C, ENABLE);
 
@@ -261,28 +252,18 @@ while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TT
     // If the timeout delay is exeeded, exit with error code
     if ((timeout--) == 0) return 0xFF;
     }
-/*
-	// Wait till all data have been physically transferred on the bus
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(!I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BTF))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 0xFF;
-	}
-*/
 // Send I2C2 STOP Condition
 I2C_GenerateSTOP(CODEC_I2C, ENABLE);
 
-	// zu orig stop bit flag
-	timeout = I2C2_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_STOPF))
-	{
-		if((timeout--) == 0)
-			return 0xFF;
-	}
+timeout = I2C2_FLAG_TIMEOUT;
+while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_STOPF))
+    {
+	if((timeout--) == 0)
+	    return 0xFF;
+    }
 
-Read_24Cxx(0,16);
-/* If operation is OK, return 0 */
+Read_24Cxx(0, Mem_Type);
+// If operation is OK, return 0
 return 0;
 }
 
@@ -309,15 +290,6 @@ if(Mem_Type > 8)
     Addr = Addr>>8;
     upper_addr = (uint8_t)((0x00FF)&Addr);
     }
-/*	damit wird es gähnend langsam
-	// While the bus is busy from Clint
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 1;
-	}
-*/
 /* Generate the Start Condition */
 I2C_GenerateSTART(CODEC_I2C, ENABLE);
 
@@ -415,84 +387,63 @@ return Data;
 }
 
 
-uint8_t Read_24Cxxseq(uint16_t start, unsigned char *buffer, uint16_t length, uint8_t Mem_Type)
+uint8_t Read_24Cxxseq(uint32_t start, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
 }
 
-uint8_t Write_24Cxxseq(uint16_t start, unsigned char *buffer, uint16_t length, uint8_t Mem_Type)
+uint8_t Write_24Cxxseq(uint32_t address, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
 uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t upper_addr,lower_addr;
+uint16_t start, i, count;
+count = 0;
 
-if(Mem_Type > 8 && start > 0xFFFF)
+if(Mem_Type > 8 && address > 0xFFFF)
     {
     memwa = memwa + 8;			// set B0 - paged EEPROM
-    start = start - 0x10000;
+    address = address - 0x10000;
     }
-lower_addr = (uint8_t)((0x00FF)&start);
+    
 
-if(Mem_Type > 8)
+while(count <= length)
     {
-    start = start>>8;
-    upper_addr = (uint8_t)((0x00FF)&start);
-    }
+    start = (uint16_t)address + count;
+    lower_addr = (uint8_t)((0x00FF)&start);
 
-// Generate the Start Condition
-I2C_GenerateSTART(CODEC_I2C, ENABLE);
+    if(Mem_Type > 8)
+	{
+	start = start>>8;
+	upper_addr = (uint8_t)((0x00FF)&start);
+	}
 
-// Test on I2C2 EV5, Start transmitted successfully and clear it
-timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
-while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-    {
-    // If the timeout delay is exeeded, exit with error code
-    if ((timeout--) == 0) return 0xFF;	
-    }
+    // Generate the Start Condition
+    I2C_GenerateSTART(CODEC_I2C, ENABLE);
 
-// Send Memory device slave Address for write
-I2C_Send7bitAddress(CODEC_I2C, memwa, I2C_Direction_Transmitter);
-
-// Test on I2C2 EV6 and clear it
-timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
-while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-    {
-    // If the timeout delay is exeeded, exit with error code
-    if ((timeout--) == 0) return 0xFF;
-    }
-
-if(Mem_Type > 8)
-    {
-    // Send I2C2 location address LSB
-    I2C_SendData(CODEC_I2C, upper_addr);
-    // Test on I2C2 EV8 and clear it
+    // Test on I2C2 EV5, Start transmitted successfully and clear it
     timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
-    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
+    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
+	{
+	// If the timeout delay is exeeded, exit with error code
+	if ((timeout--) == 0) return 0xFF;	
+	}
+
+    // Send Memory device slave Address for write
+    I2C_Send7bitAddress(CODEC_I2C, memwa, I2C_Direction_Transmitter);
+
+    // Test on I2C2 EV6 and clear it
+    timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
+    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
 	{
 	// If the timeout delay is exeeded, exit with error code
 	if ((timeout--) == 0) return 0xFF;
 	}
-    }
-// Send I2C2 location address LSB
-I2C_SendData(CODEC_I2C, lower_addr);
 
-// Test on I2C2 EV8 and clear it
-timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
-while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
-    {
-    /* If the timeout delay is exeeded, exit with error code */
-    if ((timeout--) == 0) return 0xFF;
-    }
-
-uint16_t i, count;
-count=0;
-while(count<length)
-    {
-    for(i=0; i<128;i++)
+    if(Mem_Type > 8)
 	{
-	// Send Data
-	I2C_SendData(CODEC_I2C, buffer[start+i]);
-	count++;
-	// Test on I2C2 EV8 and clear it 
+	// Send I2C2 location address LSB
+	I2C_SendData(CODEC_I2C, upper_addr);
+	// Test on I2C2 EV8 and clear it
 	timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
 	while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
 	    {
@@ -500,27 +451,42 @@ while(count<length)
 	    if ((timeout--) == 0) return 0xFF;
 	    }
 	}
-    }
-/*
-	// Wait till all data have been physically transferred on the bus
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(!I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BTF))
+    // Send I2C2 location address LSB
+    I2C_SendData(CODEC_I2C, lower_addr);
+
+    // Test on I2C2 EV8 and clear it
+    timeout = I2C2_LONG_TIMEOUT; /* Initialize timeout value */
+    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
+	{
+	/* If the timeout delay is exeeded, exit with error code */
+	if ((timeout--) == 0) return 0xFF;
+	}
+
+	for(i=0; i<128;i++)
+	    {
+	    // Send Data
+	    I2C_SendData(CODEC_I2C, buffer[count]);
+	    count++;
+	    if(count > length)
+		i = 130;
+	    // Test on I2C2 EV8 and clear it 
+	    timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
+	    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
+		{
+		// If the timeout delay is exeeded, exit with error code
+		if ((timeout--) == 0) return 0xFF;
+		}
+	    }
+    // Wait till all data have been physically transferred on the bus
+    I2C2_Timeout = I2C2_LONG_TIMEOUT;
+    while(!I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BTF))
 	{
 		if((I2C2_Timeout--) == 0)
 			return 0xFF;
 	}
-*/
-// Send I2C2 STOP Condition
-I2C_GenerateSTOP(CODEC_I2C, ENABLE);
-
-	// zu orig stop bit flag
-	timeout = I2C2_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_STOPF))
-	{
-		if((timeout--) == 0)
-			return 0xFF;
-	}
-
-/* If operation is OK, return 0 */
+    I2C_GenerateSTOP(CODEC_I2C, ENABLE);
+    Read_24Cxx(0, Mem_Type);
+    }
+// If operation is OK, return 0
 return 0;
 }

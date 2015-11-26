@@ -11150,6 +11150,23 @@ void UiDriverSaveEepromValuesPowerDown(void)
 
 	//printf("eeprom save activate\n\r");
 
+if(ts.ser_eeprom_in_use == 0)
+    {
+    static uint8_t p[MAX_VAR_ADDR*2+2];
+    ts.eeprombuf = p;
+    uint16_t i, data;
+    
+    ts.eeprombuf[0] = Read_24Cxx(0,ts.ser_eeprom_type);
+    ts.eeprombuf[1] = Read_24Cxx(1,ts.ser_eeprom_in_use);
+    for(i=1; i<=MAX_VAR_ADDR; i++)
+	{
+	Read_SerEEPROM(i, &data);
+	ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
+	data = data>>8;
+	ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+	}
+    ts.ser_eeprom_in_use = 0xAA;
+    }
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
 	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
@@ -12894,4 +12911,9 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//
 	//
 	// Next setting...
+if(ts.ser_eeprom_in_use == 0xAA)
+    {
+    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+    ts.ser_eeprom_in_use = 0;
+    }
 }
