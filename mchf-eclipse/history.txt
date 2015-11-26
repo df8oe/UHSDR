@@ -112,6 +112,8 @@ EEPROM. From now on all write functions are done with serial EEPROM and no longe
 to virtual EEPROM. You can see if at menu item #199 serial EEPROM is written in
 green letters. If so, it is in use. If it is in red letters, fitted serial EEPROM do
 not have enough memory for storing settings.
+It is important that EEPRM is brand-new or if not it is written 0xFF to all
+cells before you solder it. Autodetection depends on a completely "empty" device!
 
 2-be-continued
 
