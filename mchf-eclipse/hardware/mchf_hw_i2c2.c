@@ -396,8 +396,18 @@ uint8_t Write_24Cxxseq(uint32_t address, uint8_t *buffer, uint16_t length, uint8
 uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t upper_addr,lower_addr;
-uint16_t start, i, count;
+uint16_t start, i, page, count;
 count = 0;
+
+if(Mem_Type == 12)
+    page = 64;
+if(Mem_Type == 13)
+    page = 32;
+if(Mem_Type == 14 || Mem_Type == 15)
+    page = 64;
+if(Mem_Type == 16 || Mem_Type == 17)
+    page = 128;
+
 
 if(Mem_Type > 8 && address > 0xFFFF)
     {
@@ -462,7 +472,7 @@ while(count <= length)
 	if ((timeout--) == 0) return 0xFF;
 	}
 
-	for(i=0; i<128;i++)
+	for(i=0; i<page;i++)
 	    {
 	    // Send Data
 	    I2C_SendData(CODEC_I2C, buffer[count]);

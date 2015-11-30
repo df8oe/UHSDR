@@ -115,6 +115,9 @@ not have enough memory for storing settings.
 It is important that EEPRM is brand-new or if not it is written 0xFF to all
 cells before you solder it. Autodetection depends on a completely "empty" device!
 
+20151130 [DF8OE]
+- added detection of unsopported EEPROMs
+
 2-be-continued
 
 KA7OEI, Clint
