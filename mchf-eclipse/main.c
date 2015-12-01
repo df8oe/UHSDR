@@ -897,6 +897,9 @@ void TransceiverStateInit(void)
 	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
 	ts.load_freq_mode_defaults = 0;				// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	ts.boot_halt_flag = 0;					// when TRUE, boot-up is halted - used to allow various test functions
+	ts.ser_eeprom_type = 0;					// serial eeprom not present
+	ts.ser_eeprom_in_use = 0xFF;				// serial eeprom not in use
+	ts.eeprombuf = 0x00;					// pointer to RAM - dynamically loaded
 }
 
 //*----------------------------------------------------------------------------
