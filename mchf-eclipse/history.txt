@@ -118,6 +118,11 @@ cells before you solder it. Autodetection depends on a completely "empty" device
 20151130 [DF8OE]
 - added detection of unsopported EEPROMs
 
+20151201 [DF8OE]
+- added support for 24LC512 (64kb), 24LC1026 (128kb) and AT24CM02 (256kb). All these
+can be be fitted to board without any additional changings (no wire between pin8 and
+pin3 needed). Only if 24LC1025 is used this wire must be added.
+
 2-be-continued
 
 KA7OEI, Clint

@@ -897,6 +897,9 @@ void TransceiverStateInit(void)
 	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
 	ts.load_freq_mode_defaults = 0;				// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	ts.boot_halt_flag = 0;					// when TRUE, boot-up is halted - used to allow various test functions
+	ts.ser_eeprom_type = 0;					// serial eeprom not present
+	ts.ser_eeprom_in_use = 0xFF;				// serial eeprom not in use
+	ts.eeprombuf = 0x00;					// pointer to RAM - dynamically loaded
 }
 
 //*----------------------------------------------------------------------------
@@ -1014,12 +1017,22 @@ int main(void)
 			}
 		    else
 			{						// 16 bit addressing
-			if(Read_24Cxx(0x10000,16) != 0xFE00)
+			if(Read_24Cxx(0x10000,17) != 0xFE00)
 			    {
-			    ts.ser_eeprom_type = 17;			// paged mode 128KB
+			    ts.ser_eeprom_type = 17;			// 24LC1025
 			    Write_24Cxx(0,17,16);
 			    }
-			else
+			if(Read_24Cxx(0x10000,18) != 0xFE00)
+			    {
+			    ts.ser_eeprom_type = 18;			// 24LC1026
+			    Write_24Cxx(0,18,16);
+			    }
+			if(Read_24Cxx(0x10000,19) != 0xFE00)
+			    {
+			    ts.ser_eeprom_type = 19;			// 24CM02
+			    Write_24Cxx(0,19,16);
+			    }
+			if(ts.ser_eeprom_type < 17)
 			    {
 			    Write_24Cxx(3,0x66,16);			// write testsignature 1
 			    Write_24Cxx(0x103,0x77,16);			// write testsignature 2

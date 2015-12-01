@@ -46,7 +46,7 @@
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		26
 //
-#define 	TRX4M_VER_BUILD			8
+#define 	TRX4M_VER_BUILD			9
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -1381,7 +1381,7 @@ typedef struct TransceiverState
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
 	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
-	uchar	ser_eeprom_type;		// capacity of serial eeprom = 2^ser_eeprom_type
+	uchar	ser_eeprom_type;		// serial eeprom type
 	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
 	uint8_t* eeprombuf;			// pointer to copy of config in RAM
 //	uint16_t df8oe_test;			// only debugging use
