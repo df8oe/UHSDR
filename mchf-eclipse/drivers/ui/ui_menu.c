@@ -148,33 +148,8 @@ void UiDriverUpdateMenu(uchar mode)
 	    case 0:
 	    outs = "n/a             ";
 	    break;
-	    case 7: case 8: case 9: case 10: case 11:
+	    case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
 	    outs = "incompatible    ";
-	    break;
-/*	    case 8:
-	    outs = "256Byte         ";
-	    break;
-	    case 9:
-	    outs = "512Byte         ";
-	    break;
-	    case 10:
-	    outs = "1KByte          ";
-	    break;
-	    case 11:
-	    outs = "2KByte          ";
-	    break;
-*/
-	    case 12:
-	    outs = "4KByte          ";
-	    break;
-	    case 13:
-	    outs = "8KByte          ";
-	    break;
-	    case 14:
-	    outs = "16KByte         ";
-	    break;
-	    case 15:
-	    outs = "32KByte         ";
 	    break;
 	    case 16:
 	    outs = "64KByte         ";
