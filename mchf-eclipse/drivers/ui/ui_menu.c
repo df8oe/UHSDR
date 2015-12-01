@@ -154,8 +154,11 @@ void UiDriverUpdateMenu(uchar mode)
 	    case 16:
 	    outs = "64KByte         ";
 	    break;
-	    case 17:
+	    case 17: case 18:
 	    outs = "128KByte        ";
+	    break;
+	    case 19:
+	    outs = "256KByte        ";
 	    break;
 	    default:
 	    outs = "unknown         ";

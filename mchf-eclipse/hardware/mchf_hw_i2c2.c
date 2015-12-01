@@ -185,10 +185,33 @@ uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t upper_addr,lower_addr;
 
-if(Mem_Type > 8 && Addr > 0xFFFF)
+if(Mem_Type == 17 && Addr > 0xFFFF)
     {
-    memwa = memwa + 8;			// set B0 - paged EEPROM
+    memwa = memwa + 8;			// 24LC1025
     Addr = Addr - 0x10000;
+    }
+if(Mem_Type == 18 && Addr > 0xFFFF)
+    {
+    memwa = memwa + 2;			// 24LC1026
+    Addr = Addr - 0x10000;
+    }
+if(Mem_Type == 19)
+    {
+    if(Addr > 0xFFFF && Addr < 0x20000)
+	{
+	memwa = memwa + 4;			// 24CM02
+	Addr = Addr - 0x10000;
+	}
+    if(Addr > 0x1FFFF && Addr < 0x30000)
+	{
+	memwa = memwa + 2;			// 24CM02
+	Addr = Addr - 0x20000;
+	}
+    if(Addr > 0x2FFFF && Addr < 0x40000)
+	{
+	memwa = memwa + 3;			// 24CM02
+	Addr = Addr - 0x30000;
+	}
     }
 lower_addr = (uint8_t)((0x00FF)&Addr);
 
@@ -277,11 +300,38 @@ uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t Data = 0;
 uint8_t upper_addr,lower_addr;
 
-if(Mem_Type > 8 && Addr > 0xFFFF)
+if(Mem_Type == 17 && Addr > 0xFFFF)
     {
-    memra = memra + 8;			// set B0 - paged EEPROM
-    memwa = memwa + 8;			// set B0 - paged EEPROM
+    memra = memra + 8;			// 24LC1025
+    memwa = memwa + 8;			// 24LC1025
     Addr = Addr - 0x10000;
+    }
+if(Mem_Type == 18 && Addr > 0xFFFF)
+    {
+    memra = memra + 2;			// 24LC1026
+    memwa = memwa + 2;			// 24LC1026
+    Addr = Addr - 0x10000;
+    }
+if(Mem_Type == 19)
+    {
+    if(Addr > 0xFFFF && Addr < 0x20000)
+	{
+	memwa = memwa + 4;			// 24CM02
+	memra = memra + 4;			// 24CM02
+	Addr = Addr - 0x10000;
+	}
+    if(Addr > 0x1FFFF && Addr < 0x30000)
+	{
+	memwa = memwa + 2;			// 24CM02
+	memra = memra + 2;			// 24CM02
+	Addr = Addr - 0x20000;
+	}
+    if(Addr > 0x2FFFF && Addr < 0x40000)
+	{
+	memwa = memwa + 3;			// 24CM02
+	memra = memra + 3;			// 24CM02
+	Addr = Addr - 0x30000;
+	}
     }
 
 lower_addr = (uint8_t)((0x00FF)&Addr);
@@ -405,16 +455,40 @@ if(Mem_Type == 13)
     page = 32;
 if(Mem_Type == 14 || Mem_Type == 15)
     page = 64;
-if(Mem_Type == 16 || Mem_Type == 17)
+if(Mem_Type > 15 && Mem_Type < 19)
     page = 128;
+if(Mem_Type == 19)
+    page = 256;
 
 
-if(Mem_Type > 8 && address > 0xFFFF)
+if(Mem_Type == 17 && address > 0xFFFF)
     {
-    memwa = memwa + 8;			// set B0 - paged EEPROM
+    memwa = memwa + 8;			// 24LC1025
     address = address - 0x10000;
     }
-    
+if(Mem_Type == 18 && address > 0xFFFF)
+    {
+    memwa = memwa + 2;			// 24LC1026
+    address = address - 0x10000;
+    }
+if(Mem_Type == 19)
+    {
+    if(address > 0xFFFF && address < 0x20000)
+	{
+	memwa = memwa + 4;			// 24CM02
+	address = address - 0x10000;
+	}
+    if(address > 0x1FFFF && address < 0x30000)
+	{
+	memwa = memwa + 2;			// 24CM02
+	address = address - 0x20000;
+	}
+    if(address > 0x2FFFF && address < 0x40000)
+	{
+	memwa = memwa + 3;			// 24CM02
+	address = address - 0x30000;
+	}
+    }
 
 while(count <= length)
     {

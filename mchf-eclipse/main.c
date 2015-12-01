@@ -1014,12 +1014,22 @@ int main(void)
 			}
 		    else
 			{						// 16 bit addressing
-			if(Read_24Cxx(0x10000,16) != 0xFE00)
+			if(Read_24Cxx(0x10000,17) != 0xFE00)
 			    {
-			    ts.ser_eeprom_type = 17;			// paged mode 128KB
+			    ts.ser_eeprom_type = 17;			// 24LC1025
 			    Write_24Cxx(0,17,16);
 			    }
-			else
+			if(Read_24Cxx(0x10000,18) != 0xFE00)
+			    {
+			    ts.ser_eeprom_type = 18;			// 24LC1026
+			    Write_24Cxx(0,18,16);
+			    }
+			if(Read_24Cxx(0x10000,19) != 0xFE00)
+			    {
+			    ts.ser_eeprom_type = 19;			// 24CM02
+			    Write_24Cxx(0,19,16);
+			    }
+			if(ts.ser_eeprom_type < 17)
 			    {
 			    Write_24Cxx(3,0x66,16);			// write testsignature 1
 			    Write_24Cxx(0x103,0x77,16);			// write testsignature 2
