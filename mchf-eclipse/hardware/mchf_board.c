@@ -958,16 +958,6 @@ void copy_virt2ser(void)
 
 bool seq = true;
 
-/*    uint16_t count;
-    uint16_t data;
-
-    for(count=1; count < MAX_VAR_ADDR; count++)
-	{
-	EE_ReadVariable(VirtAddVarTab[count], &data);
-	Write_SerEEPROM(count, data);
-	}
-*/
-
 uint16_t data;
 //uint8_t *p = malloc(MAX_VAR_ADDR*2+2);
 

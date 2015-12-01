@@ -1004,16 +1004,16 @@ int main(void)
 		    {
 		    Write_24Cxx(10,0xdd,8);
 		    if(Read_24Cxx(10,8) == 0xdd)
-			{
-		    	Write_24Cxx(3,0x99,8);			// write testsignature
-			ts.ser_eeprom_type = 7;			// smallest possible 8 bit EEPROM
+			{						// 8 bit addressing
+		    	Write_24Cxx(3,0x99,8);				// write testsignature
+			ts.ser_eeprom_type = 7;				// smallest possible 8 bit EEPROM
 			if(Read_24Cxx(0x83,8) != 0x99)
 			    ts.ser_eeprom_type = 8;
 			Write_24Cxx(0,ts.ser_eeprom_type,8);
 			Write_24Cxx(1,0x10,8);
 			}
 		    else
-			{
+			{						// 16 bit addressing
 			if(Read_24Cxx(0x10000,16) != 0xFE00)
 			    {
 			    ts.ser_eeprom_type = 17;			// paged mode 128KB
@@ -1026,10 +1026,10 @@ int main(void)
 			    if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
 				{					// 16 bit addressing
 				ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
-				if(Read_24Cxx(0x203,16) != 0x66)
-				    ts.ser_eeprom_type = 10;
-				if(Read_24Cxx(0x403,16) != 0x66)
-				    ts.ser_eeprom_type = 11;
+//				if(Read_24Cxx(0x203,16) != 0x66)
+//				    ts.ser_eeprom_type = 10;
+//				if(Read_24Cxx(0x403,16) != 0x66)
+//				    ts.ser_eeprom_type = 11;
 				if(Read_24Cxx(0x803,16) != 0x66)
 				    ts.ser_eeprom_type = 12;
 				if(Read_24Cxx(0x1003,16) != 0x66)
@@ -1046,7 +1046,7 @@ int main(void)
 			}
 		    }
 		}
-	    if(ts.ser_eeprom_type < 10)				// cap < 1K
+	    if(ts.ser_eeprom_type < 16)				// incompatible EEPROMs
 		ts.ser_eeprom_in_use = 0x10;			// serial EEPROM too small
 
 	    if(ts.ser_eeprom_in_use == 0xFF)
