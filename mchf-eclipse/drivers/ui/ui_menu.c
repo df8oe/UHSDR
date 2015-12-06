@@ -124,6 +124,9 @@ void UiDriverUpdateMenu(uchar mode)
 	c_clr = Cyan;
 
 	update_vars = 0;
+
+if(mode > 3)
+    {
     if(mode == 9)
 	{
 	char out[32];
@@ -152,13 +155,16 @@ void UiDriverUpdateMenu(uchar mode)
 	    outs = "incompatible    ";
 	    break;
 	    case 16:
-	    outs = "64KByte         ";
+	    outs = "24xx512     64KB";
 	    break;
-	    case 17: case 18:
-	    outs = "128KByte        ";
+	    case 17:
+	    outs = "24xx1025   128KB";
+	    break;
+	    case 18:
+	    outs = "24xx1026   128KB";
 	    break;
 	    case 19:
-	    outs = "256KByte        ";
+	    outs = "24CM02     256KB";
 	    break;
 	    default:
 	    outs = "unknown         ";
@@ -201,6 +207,7 @@ void UiDriverUpdateMenu(uchar mode)
 	sprintf(out,"%s%s","VHF/UHF Mod  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
 	}
+    }
     else
     {
 	if(ts.menu_item < 6)	{	// display first screen of items
@@ -318,8 +325,11 @@ void UiDriverUpdateMenu(uchar mode)
 		update_vars = 1;
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"116-Wfall NoSig Adj.             ",m_clr,Black,0);
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"117-Wfall Size                  ",m_clr,Black,0);
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"                                ",m_clr,Black,0);
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"                                ",m_clr,Black,0);
+		if(ts.ser_eeprom_in_use == 0)
+		    {
+		    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"197-Backup Config               ",m_clr,Black,0);
+		    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"198-Restore Config              ",m_clr,Black,0);
+		    }
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"199-Hardware Info               ",m_clr,Black,0);
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"00-Adjustment Menu              ",c_clr,Black,0);
 	}
@@ -2961,6 +2971,38 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			//
 			opt_pos = MENU_WFALL_SIZE % MENUSIZE;	// Y position of this menu item
 			break;
+	case MENU_BACKUP_CONFIG:
+			if(ts.ser_eeprom_in_use == 0)
+			    {
+			    strcpy(options, "Do it! ");
+			    clr = White;
+			    opt_pos = 2 % MENUSIZE;	// Y position of this menu item
+			    if(var>=1)
+				{
+				copy_ser2virt();
+				strcpy(options, "Done...");
+				clr = Green;
+				UiDriverUpdateMenu(2);
+				}
+			    break;
+			    }
+			select = MENU_HARDWARE_INFO;
+	case MENU_RESTORE_CONFIG:
+			if(ts.ser_eeprom_in_use == 0)
+			    {
+			    strcpy(options, "Do it! ");
+			    clr = White;
+			    opt_pos = 3 % MENUSIZE;	// Y position of this menu item
+			    if(var>=1)
+				{
+				copy_virt2ser();
+				ui_si570_get_configuration();		// restore SI570 to factory default
+				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+				NVIC_SystemReset();			// restart mcHF
+				}
+			    break;
+			    }
+			select = MENU_WFALL_SIZE;
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;

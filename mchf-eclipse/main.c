@@ -877,29 +877,29 @@ void TransceiverStateInit(void)
 	ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
 	ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;		// Adjustment for no signal adjustment conditions for waterfall
 	ts.waterfall_size	= WATERFALL_SIZE_DEFAULT;		// adjustment for waterfall size
-	ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
-	ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
+	ts.fft_window_type = FFT_WINDOW_DEFAULT;		// FFT Windowing type
+	ts.dvmode = 0;						// disable "DV" mode RX/TX functions by default
 	ts.tx_audio_muting_timing = 0;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
 	ts.tx_audio_muting_timer = 0;			// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 	ts.tx_audio_muting_flag = 0;			// when TRUE, audio is to be muted after PTT/keyup
 	ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;	//
-	ts.vfo_mem_flag = 0;					// when TRUE, memory mode is enabled
-	ts.mem_disp = 0;						// when TRUE, memory display is enabled
+	ts.vfo_mem_flag = 0;				// when TRUE, memory mode is enabled
+	ts.mem_disp = 0;					// when TRUE, memory display is enabled
 	ts.load_eeprom_defaults = 0;			// when TRUE, defaults are loaded when "UiDriverLoadEepromValues()" is called - must be saved by user w/power-down to be permanent!
 	ts.fm_subaudible_tone_gen_select = 0;		// lookup ("tone number") used to index the table generation (0 corresponds to "tone disabled")
-	ts.fm_tone_burst_mode = 0;				// this is the setting for the tone burst generator
+	ts.fm_tone_burst_mode = 0;			// this is the setting for the tone burst generator
 	ts.fm_tone_burst_timing = 0;			// used to time the duration of the tone burst
 	ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;	// squelch threshold
 	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;	// bandwidth setting for FM reception
-	ts.fm_subaudible_tone_det_select = 0;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
-	ts.beep_active = 1;						// TRUE if beep is active
+	ts.fm_subaudible_tone_det_select = 0;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
+	ts.beep_active = 1;				// TRUE if beep is active
 	ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;	// beep frequency, in Hz
 	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
-	ts.load_freq_mode_defaults = 0;				// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-	ts.boot_halt_flag = 0;					// when TRUE, boot-up is halted - used to allow various test functions
-	ts.ser_eeprom_type = 0;					// serial eeprom not present
-	ts.ser_eeprom_in_use = 0xFF;				// serial eeprom not in use
-	ts.eeprombuf = 0x00;					// pointer to RAM - dynamically loaded
+	ts.load_freq_mode_defaults = 0;			// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	ts.boot_halt_flag = 0;				// when TRUE, boot-up is halted - used to allow various test functions
+	ts.ser_eeprom_type = 0;				// serial eeprom not present
+	ts.ser_eeprom_in_use = 0xFF;			// serial eeprom not in use
+	ts.eeprombuf = 0x00;				// pointer to RAM - dynamically loaded
 }
 
 //*----------------------------------------------------------------------------
