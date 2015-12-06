@@ -123,6 +123,13 @@ cells before you solder it. Autodetection depends on a completely "empty" device
 can be be fitted to board without any additional changings (no wire between pin8 and
 pin3 needed). Only if 24LC1025 is used this wire must be added.
 
+20151206 [DF8OE]
+- added menu item #197 "Backup Config to virtual EEPROM"
+- added menu item #198 "Restore backup config to serial EEPROM"
+Both items are only available i serial EEPROM is fitted. Now you can restore to
+"working coniguration" if you have destroyed the acive one insteade of only
+loading default values.
+
 2-be-continued
 
 KA7OEI, Clint
