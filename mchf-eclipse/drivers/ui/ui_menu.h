@@ -167,6 +167,7 @@ enum {
 	CONFIG_AM_TX_FILTER_ENABLE,
 	CONFIG_SSB_TX_FILTER_ENABLE,
 	CONFIG_FFT_WINDOW_TYPE,
+	CONFIG_RESET_SER_EEPROM,
 	//
 	MAX_RADIO_CONFIG_ITEMS	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };

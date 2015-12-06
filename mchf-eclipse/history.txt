@@ -130,6 +130,9 @@ Both items are only available i serial EEPROM is fitted. Now you can restore to
 "working coniguration" if you have destroyed the acive one insteade of only
 loading default values.
 
+20151206 [DF8OE]
+- added adjustment menu item #341 "Reset Ser EEPROM" to clean up misidentified EEPROM
+
 2-be-continued
 
 KA7OEI, Clint
