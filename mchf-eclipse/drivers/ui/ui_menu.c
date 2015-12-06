@@ -478,8 +478,7 @@ if(mode > 3)
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"330-AM TX Audio Filter",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"331-SSB TX Audio Filter",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"340-FFT Windowing",c_clr,Black,0);
-//			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"320-NB AGC T/C (<=Slow)",c_clr,Black,0);
-//			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"330-AM TX Audio Filter",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"341-Reset Ser EEPROM",c_clr,Black,0);
 		}
 	}
 
@@ -5673,6 +5672,29 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			opt_pos = CONFIG_FFT_WINDOW_TYPE % MENUSIZE;	// Y position of this menu item
 			break;
 				//
+	case CONFIG_RESET_SER_EEPROM:
+			if(Read_24Cxx(0,8) == 0xFE00)
+			    {
+			    strcpy(options, "n/a    ");
+			    clr = Red;
+			    }
+			else
+			    {
+			    strcpy(options, "Do it! ");
+			    clr = White;
+			    opt_pos = 4 % MENUSIZE;	// Y position of this menu item
+			    if(var>=1)
+				{
+				// clear EEPROM
+				Write_24Cxx(0,0xFF,16);
+				Write_24Cxx(1,0xFF,16);
+				ui_si570_get_configuration();	// restore SI570 to factory default
+				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+				NVIC_SystemReset();			// restart mcHF
+				}
+			    }
+			    break;
+			    //
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");
 		opt_pos = 5;
