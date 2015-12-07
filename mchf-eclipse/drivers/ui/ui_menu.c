@@ -2978,6 +2978,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    opt_pos = 2 % MENUSIZE;	// Y position of this menu item
 			    if(var>=1)
 				{
+				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+24,"Working",Red,Black,0);
 				copy_ser2virt();
 				strcpy(options, "Done...");
 				clr = Green;
@@ -2994,6 +2995,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    opt_pos = 3 % MENUSIZE;	// Y position of this menu item
 			    if(var>=1)
 				{
+				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+36,"Working",Red,Black,0);
 				copy_virt2ser();
 				ui_si570_get_configuration();		// restore SI570 to factory default
 				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
