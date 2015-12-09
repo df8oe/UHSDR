@@ -5684,13 +5684,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, "Do it! ");
 			    clr = White;
-			    opt_pos = 4 % MENUSIZE;	// Y position of this menu item
+			    opt_pos = 4 % MENUSIZE;			// Y position of this menu item
 			    if(var>=1)
 				{
 				// clear EEPROM
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
-				ui_si570_get_configuration();	// restore SI570 to factory default
+				ui_si570_get_configuration();		// restore SI570 to factory default
 				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
 				NVIC_SystemReset();			// restart mcHF
 				}

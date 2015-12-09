@@ -871,8 +871,11 @@ void mchf_board_post_init(void)
 
 
 //
-// Interface for all EEPROM functions and our code
+// Interface for all EEPROM (ser/virt) functions and our code
 //
+// if ser_eeprom_in_use == 0 write/read to serial EEPROM,
+// if its 0xAA use data in buffer
+// otherwise use virtual EEPROM
 uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
 {
 if(ts.ser_eeprom_in_use == 0)

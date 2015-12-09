@@ -961,7 +961,7 @@ static void wd_reset(void)
 //*----------------------------------------------------------------------------
 int main(void)
 {
-//	uchar i;
+*(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
 	// Set unbuffered mode for stdout (newlib)
 	//setvbuf( stdout, 0, _IONBF, 0 );
@@ -1066,7 +1066,7 @@ int main(void)
 		{
 		copy_virt2ser();				// copy data from virtual to serial EEPROM
 //		verify_servirt();				// just 4 debug purposes
-		Write_24Cxx(1, 0, ts.ser_eeprom_type);
+		Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
 		}
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
