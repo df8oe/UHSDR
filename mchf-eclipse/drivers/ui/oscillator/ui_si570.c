@@ -652,10 +652,10 @@ if (os.fout < 5)
 	// test for hardware address of SI570
 	os.si570_address = (0x50 << 1);
 	if( mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]) != 0)
-	{
-		os.si570_address = (0x55 << 1);
-		mchf_hw_i2c_reset();
-	}
+	    {
+	    os.si570_address = (0x55 << 1);
+	    mchf_hw_i2c_reset();
+	    }
 
 	// read configuration
 	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]);
@@ -679,16 +679,15 @@ if (os.fout < 5)
 
 	// test if startup frequency is known
 	for (i = 0; suf_table[i] != 0; i++)
-	{
-		float test = os.fout - suf_table[i];
-		if( test < 0)
-			test = -test;
-		if(test < 0.2)
+	    {
+	    float test = os.fout - suf_table[i];
+	    if( test < 0)
+		test = -test;
+	    if(test < 0.2)
 		{
-			os.fout = suf_table[i];
-			break;
+		os.fout = suf_table[i];
+		break;
 		}
-	}
+	    }
 	}
 }
-

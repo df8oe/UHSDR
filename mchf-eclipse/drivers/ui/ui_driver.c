@@ -11166,6 +11166,10 @@ if(ts.ser_eeprom_in_use == 0)
 	ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
 	}
     ts.ser_eeprom_in_use = 0xAA;
+    // If serial EEPROM is in use copy all data first to memory
+    // do there all compares and additions and after finishing that
+    // process write complete block to serial EEPROM. Flag for this is
+    // ser_eeprom_in_use == 0xAA
     }
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
@@ -12911,6 +12915,8 @@ if(ts.ser_eeprom_in_use == 0)
 	//
 	//
 	// Next setting...
+
+// if serial eeprom is in use write blocks to it and switch block write flag back
 if(ts.ser_eeprom_in_use == 0xAA)
     {
     Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
