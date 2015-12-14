@@ -565,6 +565,26 @@ static void mchf_board_band_cntr_init(void)
 	BAND2_PIO->BSRRL = BAND2;
 }
 
+static void mchf_board_touchscreen_init(void)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_2MHz;
+
+	GPIO_InitStructure.GPIO_Pin = TP_IRQ;
+	GPIO_Init(TP_IRQ_PIO, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
+
+	GPIO_InitStructure.GPIO_Pin = TP_CS;
+	GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+
+	GPIO_SetBits(TP_CS_PIO,TP_CS);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_watchdog_init
 //* Object              :
@@ -813,6 +833,9 @@ void mchf_board_init(void)
 	// Init keypad hw
 	mchf_board_keypad_init();
 
+	// Touchscreen Init
+	mchf_board_touchscreen_init();
+
 	// I2C init
 	mchf_hw_i2c_init();
 
@@ -833,7 +856,7 @@ void mchf_board_init(void)
 	UiRotaryEncoderThreeInit();
 
 	// Init DACs
-	mchf_board_dac0_init();
+//	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
 	mchf_board_dac1_init();
 
 	// Enable all ADCs

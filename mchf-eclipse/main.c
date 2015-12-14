@@ -900,6 +900,10 @@ void TransceiverStateInit(void)
 	ts.ser_eeprom_type = 0;				// serial eeprom not present
 	ts.ser_eeprom_in_use = 0xFF;			// serial eeprom not in use
 	ts.eeprombuf = 0x00;				// pointer to RAM - dynamically loaded
+	ts.tp_present = 0;				// default no touchscreen
+	ts.tp_x = 0xFF;					// invalid position
+	ts.tp_y = 0xFF;					// invalid position
+	ts.show_tp_coordinates = 0;			// dont show coordinates on LCD
 }
 
 //*----------------------------------------------------------------------------
@@ -1071,6 +1075,12 @@ int main(void)
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
 
+	// test if touchscreen is present
+	get_touchscreen_coordinates();				// initial reading of XPT2046
+	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
+	    ts.tp_present = 1;					// yes - touchscreen present!
+	else
+	    ts.tp_x = ts.tp_y = 0xff;
 
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);

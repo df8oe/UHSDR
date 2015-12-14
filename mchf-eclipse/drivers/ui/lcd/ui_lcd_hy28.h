@@ -109,6 +109,7 @@ void 	UiLcdHy28_DrawFullRect (ushort Xpos, ushort Ypos, ushort Height, ushort Wi
 void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
 void 	UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height);
 void 	UiLcdHy28_SendByteSpi(uint8_t byte);
+uint8_t UiLcdHy28_ReadByteSpi(void);
 void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
 void 	UiLcdHy28_BulkWrite(ushort Color);
@@ -121,5 +122,7 @@ void 	UiLcdHy28_Test(void);
 uchar 	UiLcdHy28_Init(void);
 
 void 	UiLcdHy28_ShowStartUpScreen(ulong hold_time);
+
+void 	get_touchscreen_coordinates(void);
 
 #endif

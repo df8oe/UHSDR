@@ -353,7 +353,7 @@ void UiLcdHy28_SendByteSpi(uint8_t byte)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static uint8_t UiLcdHy28_ReadByteSpi(void)
+uint8_t UiLcdHy28_ReadByteSpi(void)
 {
    ulong timeout;
    uchar byte = 0;
@@ -486,11 +486,14 @@ unsigned short UiLcdHy28_ReadDataSpi(void)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
+   if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)	// touchscreen pressed -> read data
+	get_touchscreen_coordinates();
+
    if(sd.use_spi)
-   {
-      UiLcdHy28_WriteIndexSpi(LCD_Reg);
-      UiLcdHy28_WriteDataSpi(LCD_RegValue);
-   }
+    {
+     UiLcdHy28_WriteIndexSpi(LCD_Reg);
+     UiLcdHy28_WriteDataSpi(LCD_RegValue);
+    }
    else
    {
       LCD_REG = LCD_Reg;
@@ -1772,7 +1775,10 @@ uchar UiLcdHy28_Init(void)
       return 0;         // success, SPI found
 
    // SPI disable
-   UiLcdHy28_SpiDeInit();
+//   UiLcdHy28_SpiDeInit();
+
+    // SPI enable
+//   UiLcdHy28_SpiInit();
 
    // Select parallel
    sd.use_spi = 0;
@@ -1894,4 +1900,15 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    // On screen delay - decrease if drivers init takes longer
    for(i = 0; i < hold_time; i++)
       non_os_delay();
+}
+
+
+void get_touchscreen_coordinates(void)
+{
+GPIO_ResetBits(TP_CS_PIO, TP_CS);
+UiLcdHy28_SendByteSpi(144);
+ts.tp_x = UiLcdHy28_ReadByteSpi();
+UiLcdHy28_SendByteSpi(208);
+ts.tp_y = UiLcdHy28_ReadByteSpi();
+GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
