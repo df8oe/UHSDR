@@ -196,8 +196,10 @@ if(mode > 3)
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-	outs = "n/a             ";
-//	outs = "XPT2046         ";
+	if(ts.tp_present == 0)
+	    outs = "n/a             ";
+	else
+	    outs = "XPT2046         ";
 	sprintf(out,"%s%s","Touchscreen  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
 	outs = "n/a             ";
@@ -300,7 +302,7 @@ if(mode > 3)
 		screen_disp = 8;
 		update_vars = 1;
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"104-Spec/Wfall ScaleClr",m_clr,Black,0);
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"105-Spec. 2x Magnify",m_clr,Black,0);
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"105-Spec/Wfall 2x Magn",m_clr,Black,0);
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"106-Spec/Wfall AGC Adj.",m_clr,Black,0);
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"107-Spec Scope Ampl.",m_clr,Black,0);
 		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"108-Spec/Wfall Line",m_clr,Black,0);

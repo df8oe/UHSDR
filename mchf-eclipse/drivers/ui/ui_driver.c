@@ -908,6 +908,61 @@ static void UiDriverProcessKeyboard(void)
 			switch(ks.button_id)
 			{
 				//
+				case TOUCHSCREEN_ACTIVE: ;
+					if (ts.show_tp_coordinates)			// show coordinates for coding purposes
+					    {
+					    char text[10];
+					    sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
+					    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+					    }
+					if(!ts.menu_mode)		// normal operational screen
+					    {
+					    if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
+						{
+						if(ts.misc_flags1 & 128)
+						    {		// is the waterfall mode active?
+						    ts.misc_flags1 &=  0x7f;	// yes, turn it off
+						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						    }
+						else
+						    {	// waterfall mode was turned off
+						    ts.misc_flags1 |=  128;	// turn it on
+						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						    }
+						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+						}
+					    if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
+						{
+						sd.magnify = !sd.magnify;
+						ts.menu_var_changed = 1;
+						UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+					    if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d))	// wf/scope frequency dial
+						{
+						df.tune_new = round((df.tune_new + 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x))/2000) * 2000;
+						ts.refresh_freq_disp = 1;			// update ALL digits
+						if(ts.vfo_mem_mode & 0x80)
+						    {						// SPLIT mode
+						    UiDriverUpdateFrequency(1,3);
+						    UiDriverUpdateFrequency(1,2);
+						    }
+						else
+						    UiDriverUpdateFrequency(1,0);		// no SPLIT mode
+						ts.refresh_freq_disp = 0;			// update ALL digits
+						} 
+					    }
+					else				// standard menu screen
+					    {
+					    if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+						{
+						ts.show_tp_coordinates = !ts.show_tp_coordinates;
+						if(ts.show_tp_coordinates)
+						    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"enabled",Green,Black,0);
+						else
+						    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"       ",White,Black,0);
+						}
+					    }
+					break;
 				case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
 					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
 						UiDriverChangeDemodMode(0);
@@ -4243,14 +4298,17 @@ void UiDriverChangeTuningStep(uchar is_up)
 //
 static uchar UiDriverButtonCheck(ulong button_num)
 {
-	if(button_num < 16)	{	// buttons 0-15 are the normal keypad buttons
-		if(!ts.boot_halt_flag)		// are we NOT in "boot halt" mode?
-			return(GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button));		// in normal mode - return key value
-		else
-			return(1);						// we ARE in "load defaults" mode - always return "not pressed" (1) for buttons 0-15
-	}
-	else					// button 16 is the power button
-		return(GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13));
+	if(button_num < 16)
+	    {				// buttons 0-15 are the normal keypad buttons
+	    if(!ts.boot_halt_flag)		// are we NOT in "boot halt" mode?
+		return(GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button));		// in normal mode - return key value
+	    else
+		return(1);						// we ARE in "load defaults" mode - always return "not pressed" (1) for buttons 0-15
+	    }
+	if(button_num == 16)					// button 16 is the power button
+	    return(GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13));
+	if(button_num == 17)					// 17 used for touchscreen
+	    return(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ));
 }
 //
 //*----------------------------------------------------------------------------
@@ -4538,7 +4596,7 @@ static void UiDriverTimeScheduler(void)
 	// State machine - click or release(debounce filter)
 	if(!ks.button_pressed)	{
 		// Scan inputs - 16 buttons in total, but on different ports
-		for(i = 0; i < 17; i++)	{		// button "16" is power button
+		for(i = 0; i < 18; i++)	{		// button "17" is touchscreen
 			// Read each pin of the port, based on the declared pin map
 			if(!UiDriverButtonCheck(i))	{
 				// Change state to clicked
@@ -9425,7 +9483,7 @@ void UiCheckForPressedKey(void)
 	bool stat = 1;
 	char txt[32];
 
-	for(i = 0; i <= 15; i++)	{			// scan all buttons
+	for(i = 0; i <= 17; i++)	{			// scan all buttons
 		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
 			stat = 0;						// yes - clear flag
 		}
@@ -9447,16 +9505,20 @@ void UiCheckForPressedKey(void)
 		j = 99;		// load with flag value
 		k = 0;
 		//
-		for(i = 0; i <= 16; i++)	{				// scan all buttons
-			if(!UiDriverButtonCheck(i))	{		// is this button pressed?
-				k++;
-				if(j == 99)						// is this the first button pressed?
-					j = i;						// save button number
-
+		for(i = 0; i <= 17; i++)
+		    {				// scan all buttons
+		    if(!UiDriverButtonCheck(i))
+			{		// is this button pressed?
+			k++;
+			if(j == 99)						// is this the first button pressed?
+			j = i;						// save button number
 			}
-		}
+		    }
 		//
 		switch(j)	{							// decode button to text
+			case	BUTTON_POWER_PRESSED:
+				strcpy(txt, "POWER ");
+				break;
 			case	BUTTON_M1_PRESSED:
 				strcpy(txt, "  M1  ");
 				break;
@@ -9505,8 +9567,11 @@ void UiCheckForPressedKey(void)
 			case	BUTTON_STEPP_PRESSED:
 				strcpy(txt, "STEPP ");
 				break;
-			case	BUTTON_POWER_PRESSED:
-				strcpy(txt, "POWER ");
+			case	TOUCHSCREEN_ACTIVE: ;
+				char out[32];
+				get_touchscreen_coordinates();
+				sprintf(out,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+				strcpy(txt, out);
 				break;
 			default:
 				strcpy(txt, "<Null>");		// no button pressed
@@ -9515,6 +9580,7 @@ void UiCheckForPressedKey(void)
 		UiLcdHy28_PrintText(120,120,txt,White,Blue,1);		// identify button on screen
 		sprintf(txt, "# of buttons pressed: %d  ", (int)k);
 		UiLcdHy28_PrintText(75,160,txt,White,Blue,0);		// show number of buttons pressed on screen
+
 	}
 }
 //
@@ -12922,4 +12988,14 @@ if(ts.ser_eeprom_in_use == 0xAA)
     Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
     ts.ser_eeprom_in_use = 0;
     }
+}
+
+
+// check if touched point is within rectange of valid action
+bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
+{
+if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
+    return true;
+else
+    return false;
 }

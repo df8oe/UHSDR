@@ -133,6 +133,39 @@ loading default values.
 20151206 [DF8OE]
 - added adjustment menu item #341 "Reset Ser EEPROM" to clean up misidentified EEPROM
 
+20151214 [DF8OE]
+- added touchscreen support. You have to do the following modifications:
+
+if LCD is in parallel mode:
+remove R30, R31, R32
+put connections between:
+R30/R33 (PC2) to TP_SDO of LCD
+R31/R34 (PC3) to TP_SDI of LCD
+R32/R35 (PB13) to TP_SCK of LCD
+Header Pin7 (PA4) to TP_IRQ of LCD
+P8 Pin1 (PA9) to TP_CS of LCD
+
+if LCD is in SPI mode:
+same as above, but do not remove R30, R31, R32 (or wires if you use HY28B in SPI mode)
+
+You can see signal names on back side of LCD. If you have soldered and cannot remove,
+ask google for a picture of backside of HY28B - there are many.
+
+With this mod you loose DAC which was former used for rf attenuator. This signal is
+unused now and I supose it never will be used in future. Intermodulation while receiving
+very strong signals can be removed by modifying rf preamp for better IP3.
+
+After modifying and applying firmware newer/equal 0.219.26.13 in hardware menu #199
+touchscreen is listed. When you enter BUTTON TEST MODE coordinates are shown if
+you touch LCD screen. If this test is successful, you can use touchfunctions.
+
+At the moment the following functions are supported:
+- tapping right hand waterfall/scope bar: toggling wf/scope
+- tapping left hand waterfall/scope bar: toggling wf/scope magnifying x 2
+- tapping at a frequency/peak shown in wf/spectrum (lower part of the wf/scope) will tune to the tapped frequency
+
+In future much more touch-functions will be added.
+
 2-be-continued
 
 KA7OEI, Clint
