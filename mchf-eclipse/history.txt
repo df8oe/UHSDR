@@ -173,6 +173,7 @@ In future much more touch-functions will be added.
 
 20151215 [DF8OE]
 - improved data accquisition of touchscreen, now hopefully more accurate
+- solved "2.3khz filter issue"
 
 2-be-continued
 
