@@ -956,19 +956,19 @@ static void UiDriverProcessKeyboard(void)
 						    {
 						    }
 						}
+					    else				// standard menu screen
+						{
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+						    {
+						    ts.show_tp_coordinates = !ts.show_tp_coordinates;
+						    if(ts.show_tp_coordinates)
+							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"enabled",Green,Black,0);
+						    else
+							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"       ",White,Black,0);
+						    }
+					    }
 					ts.tp_x = 0xff;						// mark data as invalid
 					}
-					else				// standard menu screen
-					    {
-					    if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
-						{
-						ts.show_tp_coordinates = !ts.show_tp_coordinates;
-						if(ts.show_tp_coordinates)
-						    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"enabled",Green,Black,0);
-						else
-						    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"       ",White,Black,0);
-						}
-					    }
 					break;
 				case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
 					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
