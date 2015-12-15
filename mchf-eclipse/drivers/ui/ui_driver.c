@@ -908,49 +908,56 @@ static void UiDriverProcessKeyboard(void)
 			switch(ks.button_id)
 			{
 				//
-				case TOUCHSCREEN_ACTIVE: ;
-					if (ts.show_tp_coordinates)			// show coordinates for coding purposes
+				case TOUCHSCREEN_ACTIVE:				// touchscreen functions
+					if(ts.tp_x != 0xff)
 					    {
-					    char text[10];
-					    sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
-					    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-					    }
-					if(!ts.menu_mode)		// normal operational screen
-					    {
-					    if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
+					    if (ts.show_tp_coordinates)			// show coordinates for coding purposes
 						{
-						if(ts.misc_flags1 & 128)
-						    {		// is the waterfall mode active?
-						    ts.misc_flags1 &=  0x7f;	// yes, turn it off
+						char text[10];
+						sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
+						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+						}
+					    if(!ts.menu_mode)		// normal operational screen
+						{
+						if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
+						    {
+						    if(ts.misc_flags1 & 128)
+							{		// is the waterfall mode active?
+							ts.misc_flags1 &=  0x7f;	// yes, turn it off
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+							}
+						    else
+							{	// waterfall mode was turned off
+							ts.misc_flags1 |=  128;	// turn it on
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+							}
+						    UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+						    }
+						if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
+						    {
+						    sd.magnify = !sd.magnify;
+						    ts.menu_var_changed = 1;
 						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
 						    }
-						else
-						    {	// waterfall mode was turned off
-						    ts.misc_flags1 |=  128;	// turn it on
-						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d))	// wf/scope frequency dial
+						    {
+						    df.tune_new = round((df.tune_new + 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x))/2000) * 2000;
+						    ts.refresh_freq_disp = 1;			// update ALL digits
+						    if(ts.vfo_mem_mode & 0x80)
+							{						// SPLIT mode
+							UiDriverUpdateFrequency(1,3);
+							UiDriverUpdateFrequency(1,2);
+							}
+						    else
+							UiDriverUpdateFrequency(1,0);		// no SPLIT mode
+						    ts.refresh_freq_disp = 0;			// update ALL digits
+						    } 
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+						    {
 						    }
-						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 						}
-					    if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
-						{
-						sd.magnify = !sd.magnify;
-						ts.menu_var_changed = 1;
-						UiInitSpectrumScopeWaterfall();			// init spectrum scope
-						}
-					    if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d))	// wf/scope frequency dial
-						{
-						df.tune_new = round((df.tune_new + 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x))/2000) * 2000;
-						ts.refresh_freq_disp = 1;			// update ALL digits
-						if(ts.vfo_mem_mode & 0x80)
-						    {						// SPLIT mode
-						    UiDriverUpdateFrequency(1,3);
-						    UiDriverUpdateFrequency(1,2);
-						    }
-						else
-						    UiDriverUpdateFrequency(1,0);		// no SPLIT mode
-						ts.refresh_freq_disp = 0;			// update ALL digits
-						} 
-					    }
+					ts.tp_x = 0xff;						// mark data as invalid
+					}
 					else				// standard menu screen
 					    {
 					    if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
@@ -1351,13 +1358,17 @@ static void UiDriverProcessKeyboard(void)
 					if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
 						if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
 							ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
-						else if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
+						else 
+						    {
+						    if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
 							ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
-					}
-					else	{	// ONLY the POWER button was pressed
-						if(ts.txrx_mode == TRX_MODE_RX)		// only allow power-off in RX mode
-							mchf_board_power_off();
-					}
+						    }
+					    }
+					else
+					    {	// ONLY the POWER button was pressed
+					    if(ts.txrx_mode == TRX_MODE_RX)		// only allow power-off in RX mode
+						mchf_board_power_off();
+					    }
 					break;
 				case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
 					if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
@@ -1393,6 +1404,10 @@ static void UiDriverProcessKeyboard(void)
 							}
 							UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 						}
+					}
+					if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
+					    ts.ser_eeprom_in_use = 0x20;			// power down without saving settings
+					    mchf_board_power_off();
 					}
 					break;
 				case BUTTON_STEPM_PRESSED:
@@ -9478,9 +9493,12 @@ char txt[64];
 //
 void UiCheckForPressedKey(void)
 {
-	ushort i, j, k;
+	ushort i, j, k, p_o_state, rb_state, new_state;
+	uint32_t poweroffcount, rbcount;
 	uchar	b;
 	bool stat = 1;
+	poweroffcount = rbcount = 0;
+	p_o_state = rb_state = new_state = 0;
 	char txt[32];
 
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
@@ -9498,13 +9516,15 @@ void UiCheckForPressedKey(void)
 	sprintf(txt,"  Button Test  ");
 	UiLcdHy28_PrintText(40,35,txt,White,Blue,1);
 	//
-	sprintf(txt,"    Disconnect power to exit.");
-	UiLcdHy28_PrintText(32,70,txt,White,Blue,0);
+	sprintf(txt,"press & hold POWER-button to poweroff");
+	UiLcdHy28_PrintText(15,70,txt,White,Blue,0);
+	sprintf(txt,"press & hold BANDM-button to reboot");
+	UiLcdHy28_PrintText(20,90,txt,White,Blue,0);
 	//
-	for(;;)	{		// get stuck here forever!
+	for(;;)	{		// get stuck here for test duration
 		j = 99;		// load with flag value
 		k = 0;
-		//
+
 		for(i = 0; i <= 17; i++)
 		    {				// scan all buttons
 		    if(!UiDriverButtonCheck(i))
@@ -9514,10 +9534,22 @@ void UiCheckForPressedKey(void)
 			j = i;						// save button number
 			}
 		    }
-		//
+
+		    if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
+			{
+			rbcount = 0;
+			new_state = 1;
+			}
+
 		switch(j)	{							// decode button to text
 			case	BUTTON_POWER_PRESSED:
 				strcpy(txt, "POWER ");
+				if(poweroffcount > 75)
+				    {
+				    strcpy(txt, "powering off");
+				    p_o_state = 1;
+				    }
+				poweroffcount++;
 				break;
 			case	BUTTON_M1_PRESSED:
 				strcpy(txt, "  M1  ");
@@ -9551,12 +9583,19 @@ void UiCheckForPressedKey(void)
 				break;
 			case	BUTTON_F4_PRESSED:
 				strcpy(txt, "  F4  ");
+				poweroffcount = 0;
 				break;
 			case	BUTTON_F5_PRESSED:
 				strcpy(txt, "  F5  ");
 				break;
 			case	BUTTON_BNDM_PRESSED:
 				strcpy(txt, " BNDM ");
+				if(rbcount > 75)
+				    {
+				    strcpy(txt, "rebooting");
+				    rb_state = 1;
+				    }
+				rbcount++;
 				break;
 			case	BUTTON_BNDP_PRESSED:
 				strcpy(txt, " BNDP ");
@@ -9575,12 +9614,28 @@ void UiCheckForPressedKey(void)
 				break;
 			default:
 				strcpy(txt, "<Null>");		// no button pressed
+				poweroffcount = 0;
+				rbcount = 0;
 		}
 		//
 		UiLcdHy28_PrintText(120,120,txt,White,Blue,1);		// identify button on screen
 		sprintf(txt, "# of buttons pressed: %d  ", (int)k);
 		UiLcdHy28_PrintText(75,160,txt,White,Blue,0);		// show number of buttons pressed on screen
 
+		if(p_o_state == 1)
+		    {
+		    GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
+		    while (1 == 1) ;
+		    }
+		if(rb_state == 1)
+		    {
+		    if(j != BUTTON_BNDM_PRESSED)
+			{
+			ui_si570_get_configuration();			// restore SI570 to factory default
+			*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+			NVIC_SystemReset();
+			}
+		    }
 	}
 }
 //

@@ -166,6 +166,14 @@ At the moment the following functions are supported:
 
 In future much more touch-functions will be added.
 
+
+20151214 [DF8OE]
+- added "power off without saving settings" by pushing BAND+ and POWER simultanusly
+- added possibility of power-off and reboot in button test mode
+
+20151215 [DF8OE]
+- improved data accquisition of touchscreen, now hopefully more accurate
+
 2-be-continued
 
 KA7OEI, Clint
