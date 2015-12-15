@@ -729,15 +729,8 @@ void mchf_board_power_off(void)
 	ulong i;
 	char	tx[32];
 	// Power off all - high to disable main regulator
-	//
 
-//	Write_VirtEEPROM(EEPROM_FREQ_HIGH,(df.tune_new >> 16));						// Save frequency
-//	Write_VirtEEPROM(EEPROM_FREQ_LOW,(df.tune_new & 0xFFFF));					//
-//
 	UiDriverClearSpectrumDisplay();	// clear display under spectrum scope
-
-//	for(i = 0; i < 2; i++)	// Slight delay before we invoke EEPROM write
-//		non_os_delay();
 
 	Codec_Mute(1);	// mute audio when powering down
 
@@ -750,18 +743,25 @@ void mchf_board_power_off(void)
 	   sprintf(tx,"                           ");
 	   UiLcdHy28_PrintText(80,168,tx,Blue2,Black,0);
 
-if(ts.ser_eeprom_in_use != 0x00)
+if(ts.ser_eeprom_in_use == 0xff)
 	    {
-	   sprintf(tx," Saving settings to EEPROM ");
-	   UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
-	   }
-else
+	    sprintf(tx,"Saving settings to virt. EEPROM ");
+	    UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
+	    }
+if(ts.ser_eeprom_in_use == 0x0)
 	    {
-	   sprintf(tx,"Saving settings to serial EEPROM");
-	   UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
-	   }
+	    sprintf(tx,"Saving settings to serial EEPROM");
+	    UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
+	    }
+if(ts.ser_eeprom_in_use == 0x20)
+	    {
+	    sprintf(tx," ...without saving settings...  ");
+	    UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
+	    for(i = 0; i < 20; i++)
+		non_os_delay();
+	    }
 
-if(ts.ser_eeprom_in_use != 0x00)
+if(ts.ser_eeprom_in_use == 0xff)
     {
 	   sprintf(tx,"            2              ");
 	   UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
@@ -791,7 +791,8 @@ if(ts.ser_eeprom_in_use != 0x00)
     }
 	ts.powering_down = 1;	// indicate that we should be powering down
 
-	UiDriverSaveEepromValuesPowerDown();		// save EEPROM values again - to make sure...
+	if(ts.ser_eeprom_in_use != 0x20)
+	    UiDriverSaveEepromValuesPowerDown();		// save EEPROM values again - to make sure...
 
 	//
 	// Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
