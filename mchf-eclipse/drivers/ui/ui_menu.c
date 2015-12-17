@@ -5690,6 +5690,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			    if(var>=1)
 				{
 				// clear EEPROM
+				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+48,"Working",Red,Black,0);
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
 				ui_si570_get_configuration();		// restore SI570 to factory default

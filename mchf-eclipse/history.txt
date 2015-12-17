@@ -175,6 +175,9 @@ In future much more touch-functions will be added.
 - improved data accquisition of touchscreen, now hopefully more accurate
 - solved "2.3khz filter issue"
 
+20151217 [DF8OE]
+- added "working" state display for #341
+
 2-be-continued
 
 KA7OEI, Clint
