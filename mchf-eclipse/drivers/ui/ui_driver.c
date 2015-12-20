@@ -189,7 +189,10 @@ const ulong tune_bands[MAX_BANDS] = { BAND_FREQ_80,
 									  BAND_FREQ_17,
 									  BAND_FREQ_15,
 									  BAND_FREQ_12,
-									  BAND_FREQ_10};//,
+									  BAND_FREQ_10,
+									  BAND_FREQ_6,
+									  BAND_FREQ_4,
+									  BAND_FREQ_160};//,
 //									  BAND_FREQ_GEN};
 
 // Band definitions - band frequency size
@@ -201,7 +204,10 @@ const ulong size_bands[MAX_BANDS] = { BAND_SIZE_80,
 									  BAND_SIZE_17,
 									  BAND_SIZE_15,
 									  BAND_SIZE_12,
-									  BAND_SIZE_10};//,
+									  BAND_SIZE_10,
+									  BAND_SIZE_6,
+									  BAND_SIZE_4,
+									  BAND_SIZE_160};//,
 //									  BAND_SIZE_GEN};
 
 // -------------------------------------------------------
@@ -2145,6 +2151,10 @@ static void UiDriverShowBand(uchar band)
 	// Create Band value
 	switch(band)
 	{
+		case BAND_MODE_160:
+			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"160m",Orange,Black,0);
+			break;
+
 		case BAND_MODE_80:
 			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"80m",Orange,Black,0);
 			break;
@@ -2181,6 +2191,14 @@ static void UiDriverShowBand(uchar band)
 			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"10m",Orange,Black,0);
 			break;
 
+		case BAND_MODE_6:
+			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"6m",Orange,Black,0);
+			break;
+
+		case BAND_MODE_4:
+			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"4m",Orange,Black,0);
+			break;
+
 		case BAND_MODE_GEN:
 			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"Gen",Orange,Black,0);
 			break;
@@ -2211,6 +2229,7 @@ void UiDriverChangeBandFilter(uchar band,uchar bpf_only)
 	// state change via two pulses on BAND2 line, then idle
 	switch(band)
 	{
+		case BAND_MODE_160:
 		case BAND_MODE_80:
 		{
 			// Internal group - Set(High/Low)
@@ -2286,6 +2305,8 @@ void UiDriverChangeBandFilter(uchar band,uchar bpf_only)
 		case BAND_MODE_15:
 		case BAND_MODE_12:
 		case BAND_MODE_10:
+		case BAND_MODE_6:
+		case BAND_MODE_4:
 		{
 			// Internal group - Reset(Low/Low)
 			BAND0_PIO->BSRRH = BAND0;
@@ -2320,6 +2341,7 @@ do_bpf:
 	// always last - after LPF change
 	switch(band)
 	{
+		case BAND_MODE_160:
 		case BAND_MODE_80:
 		{
 			BAND0_PIO->BSRRL = BAND0;
@@ -2347,6 +2369,8 @@ do_bpf:
 		case BAND_MODE_15:
 		case BAND_MODE_12:
 		case BAND_MODE_10:
+		case BAND_MODE_6:
+		case BAND_MODE_4:
 		{
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
@@ -8512,6 +8536,9 @@ void UiDriverSetBandPowerFactor(uchar band)
 	//
 	if(ts.power_level == PA_LEVEL_FULL)	{
 		switch(band)	{		// get pre-loaded power output scaling factor for band
+			case BAND_MODE_160:
+				pf_temp = (float)ts.pwr_160m_full_adj;		// load full power level for 160m
+				break;
 			case BAND_MODE_80:
 				pf_temp = (float)ts.pwr_80m_full_adj;		// load full power level for 80m
 				break;
@@ -8539,6 +8566,12 @@ void UiDriverSetBandPowerFactor(uchar band)
 			case BAND_MODE_10:
 				pf_temp = (float)ts.pwr_10m_full_adj;		// load full power level for 10m
 				break;
+			case BAND_MODE_6:
+				pf_temp = (float)ts.pwr_6m_full_adj;		// load full power level for 6m
+				break;
+			case BAND_MODE_4:
+				pf_temp = (float)ts.pwr_4m_full_adj;		// load full power level for 4m
+				break;
 			default:
 				pf_temp = 50;
 				break;
@@ -8546,8 +8579,11 @@ void UiDriverSetBandPowerFactor(uchar band)
 	}
 	else	{					// OTHER than FULL power!
 		switch(band)	{		// get pre-loaded power output scaling factor for band
+			case BAND_MODE_160:
+				pf_temp = (float)ts.pwr_160m_5w_adj;		// load 5 watt power level for 80m
+				break;
 			case BAND_MODE_80:
-				pf_temp = (float)ts.pwr_80m_5w_adj;		// load 5 watt power level for 80m
+				pf_temp = (float)ts.pwr_80m_5w_adj;		// load 5 watt power level for 160m
 				break;
 			case BAND_MODE_60:
 				pf_temp = (float)ts.pwr_60m_5w_adj;		// load 5 watt power level for 60m
@@ -8572,6 +8608,12 @@ void UiDriverSetBandPowerFactor(uchar band)
 				break;
 			case BAND_MODE_10:
 				pf_temp = (float)ts.pwr_10m_5w_adj;		// load 5 watt power level for 10m
+				break;
+			case BAND_MODE_6:
+				pf_temp = (float)ts.pwr_6m_5w_adj;		// load 5 watt power level for 6m
+				break;
+			case BAND_MODE_4:
+				pf_temp = (float)ts.pwr_4m_5w_adj;		// load 5 watt power level for 4m
 				break;
 			default:
 				pf_temp = 50;
@@ -10517,6 +10559,39 @@ void UiDriverLoadEepromValues(void)
 	}
 	//
 	// ------------------------------------------------------------------------------------
+	// Try to read 6 meter 5 watt power calibration setting
+	if(Read_EEPROM(EEPROM_BAND9_5W, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_6_DEFAULT;	// reset to default for this band
+		//
+		ts.pwr_6m_5w_adj = value;
+		//printf("-->6 meter 5 watt power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 4 meter 5 watt power calibration setting
+	if(Read_EEPROM(EEPROM_BAND10_5W, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_4_DEFAULT;	// reset to default for this band
+		//
+		ts.pwr_4m_5w_adj = value;
+		//printf("-->4 meter 5 watt power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 160 meter 5 watt power calibration setting
+	if(Read_EEPROM(EEPROM_BAND11_5W, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_160_DEFAULT;	// reset to default for this band
+		//
+		ts.pwr_160m_5w_adj = value;
+		//printf("-->160 meter 5 watt power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
 	// Try to read 80 meter FULL power calibration setting
 	if(Read_EEPROM(EEPROM_BAND0_FULL, &value) == 0)
 	{
@@ -10613,6 +10688,39 @@ void UiDriverLoadEepromValues(void)
 		//
 		ts.pwr_10m_full_adj = value;
 		//printf("-->10 meter FULL power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 6 meter FULL power calibration setting
+	if(Read_EEPROM(EEPROM_BAND9_FULL, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_6_DEFAULT;	// reset to default for this band
+		//
+		ts.pwr_6m_full_adj = value;
+		//printf("-->6 meter FULL power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 4 meter FULL power calibration setting
+	if(Read_EEPROM(EEPROM_BAND10_FULL, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_4_DEFAULT;	// reset to default for this band
+		//
+		ts.pwr_4m_full_adj = value;
+		//printf("-->4 meter FULL power calibration setting loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 160 meter FULL power calibration setting
+	if(Read_EEPROM(EEPROM_BAND11_FULL, &value) == 0)
+	{
+		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
+			value = TX_POWER_FACTOR_160_DEFAULT;	// reset to default for this band
+		value = 70;		// aaaaa
+		ts.pwr_160m_full_adj = value;
+		//printf("-->12 meter FULL power calibration setting loaded\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -11337,10 +11445,12 @@ if(ts.ser_eeprom_in_use == 0)
 	//
 	// Save stored band/mode/frequency memory from RAM
 	//
+	
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
-		if(Read_EEPROM(EEPROM_BAND0_MODE + i, &value) == 0)
+
+		if(Read_EEPROM(EEPROM_BAND0_MODE + i , &value) == 0)
 		{
 			ushort new;
 			new 	= 0;
@@ -11349,26 +11459,26 @@ if(ts.ser_eeprom_in_use == 0)
 			//
 			new	   |= (band_decod_mode[i] << 8);
 			new	   |= (band_filter_mode[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE + i, new);
+			Write_EEPROM(EEPROM_BAND0_MODE + i , new);
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_MODE + i,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));
+			Write_EEPROM(EEPROM_BAND0_MODE + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));
 			//printf("-->band and mode var created\n\r");
 		}
 		//
 		// Try to read Freq saved values - update if changed
 		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW + i, &value1) == 0))	{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i,(band_dial_value[i] >> 16));
+		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW + i , &value1) == 0))	{
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i ,(band_dial_value[i] >> 16));
 			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i,(band_dial_value[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i ,(band_dial_value[i] & 0xFFFF));
 			//printf("-->freq low saved\n\r");
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i,(band_dial_value[i] >> 16));
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i,(band_dial_value[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i ,(band_dial_value[i] >> 16));
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i ,(band_dial_value[i] & 0xFFFF));
 			//printf("-->freq vars created\n\r");
 		}
 	}
@@ -11378,7 +11488,7 @@ if(ts.ser_eeprom_in_use == 0)
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
-		if(Read_EEPROM(EEPROM_BAND0_MODE_A + i, &value) == 0)
+		if(Read_EEPROM(EEPROM_BAND0_MODE_A + i , &value) == 0)
 		{
 			ushort new;
 			new 	= 0;
@@ -11387,27 +11497,27 @@ if(ts.ser_eeprom_in_use == 0)
 			//
 			new	   |= (band_decod_mode_a[i] << 8);
 			new	   |= (band_filter_mode_a[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE_A + i, new);
+			Write_EEPROM(EEPROM_BAND0_MODE_A + i , new);
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_MODE_A + i,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
+			Write_EEPROM(EEPROM_BAND0_MODE_A + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
 			//printf("-->band and mode var created\n\r");
 		}
 		//
 		// Try to read Freq saved values - update if changed
 		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i, &value1) == 0))	{
+		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i , &value1) == 0))	{
 			//
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i,(band_dial_value_a[i] >> 16));
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i ,(band_dial_value_a[i] >> 16));
 			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i,(band_dial_value_a[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i ,(band_dial_value_a[i] & 0xFFFF));
 			//printf("-->freq low saved\n\r");
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i,(band_dial_value[i] >> 16));		// use generic band value when creating
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i,(band_dial_value[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i ,(band_dial_value[i] >> 16));		// use generic band value when creating
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i ,(band_dial_value[i] & 0xFFFF));
 			//printf("-->freq vars created\n\r");
 		}
 	}
@@ -11417,7 +11527,7 @@ if(ts.ser_eeprom_in_use == 0)
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
-		if(Read_EEPROM(EEPROM_BAND0_MODE_B + i, &value) == 0)
+		if(Read_EEPROM(EEPROM_BAND0_MODE_B + i , &value) == 0)
 		{
 			ushort new;
 			new 	= 0;
@@ -11426,27 +11536,27 @@ if(ts.ser_eeprom_in_use == 0)
 			//
 			new	   |= (band_decod_mode_b[i] << 8);
 			new	   |= (band_filter_mode_b[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE_B + i, new);
+			Write_EEPROM(EEPROM_BAND0_MODE_B + i , new);
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_MODE_B + i,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
+			Write_EEPROM(EEPROM_BAND0_MODE_B + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
 			//printf("-->band and mode var created\n\r");
 		}
 		//
 		// Try to read Freq saved values - update if changed
 		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i, &value1) == 0))	{
+		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i , &value1) == 0))	{
 			//
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i,(band_dial_value_b[i] >> 16));
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i ,(band_dial_value_b[i] >> 16));
 			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i,(band_dial_value_b[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i ,(band_dial_value_b[i] & 0xFFFF));
 			//printf("-->freq low saved\n\r");
 		}
 		else	// create
 		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i,(band_dial_value[i] >> 16));		// use generic band value when creating
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i,(band_dial_value[i] & 0xFFFF));
+			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i ,(band_dial_value[i] >> 16));		// use generic band value when creating
+			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i ,(band_dial_value[i] & 0xFFFF));
 			//printf("-->freq vars created\n\r");
 		}
 	}
@@ -12208,6 +12318,45 @@ if(ts.ser_eeprom_in_use == 0)
 	}
 	//
 	// ------------------------------------------------------------------------------------
+	// Try to read 6m 5 watt power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND9_5W, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND9_5W, ts.pwr_6m_5w_adj);
+		//printf("-->6m 5 watt power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND9_5W,TX_POWER_FACTOR_6_DEFAULT);
+		//printf("-->6m 5 watt power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 4m 5 watt power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND10_5W, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND10_5W, ts.pwr_4m_5w_adj);
+		//printf("-->4m 5 watt power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND10_5W,TX_POWER_FACTOR_4_DEFAULT);
+		//printf("-->4m 5 watt power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 160m 5 watt power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND11_5W, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND11_5W, ts.pwr_160m_5w_adj);
+		//printf("-->12m 5 watt power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND11_5W,TX_POWER_FACTOR_160_DEFAULT);
+		//printf("-->12m 5 watt power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
 	// Try to read 80m FULL power setting - update if changed
 	if(Read_EEPROM(EEPROM_BAND0_FULL, &value) == 0)
 	{
@@ -12322,6 +12471,45 @@ if(ts.ser_eeprom_in_use == 0)
 	{
 		Write_EEPROM(EEPROM_BAND8_FULL,TX_POWER_FACTOR_10_DEFAULT);
 		//printf("-->10m FULL power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 6m FULL power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND9_FULL, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND9_FULL, ts.pwr_6m_full_adj);
+		//printf("-->6m FULL power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND9_FULL,TX_POWER_FACTOR_6_DEFAULT);
+		//printf("-->6m FULL power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 4m FULL power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND10_FULL, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND10_FULL, ts.pwr_4m_full_adj);
+		//printf("-->4m FULL power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND10_FULL,TX_POWER_FACTOR_4_DEFAULT);
+		//printf("-->4m FULL power setting value created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read 160m FULL power setting - update if changed
+	if(Read_EEPROM(EEPROM_BAND11_FULL, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_BAND11_FULL, ts.pwr_160m_full_adj);
+		//printf("-->160m FULL power setting value saved\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_BAND11_FULL,TX_POWER_FACTOR_160_DEFAULT);
+		//printf("-->160m FULL power setting value created\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------

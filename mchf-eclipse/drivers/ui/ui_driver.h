@@ -274,69 +274,69 @@ typedef struct SWRMeter
 
 } SWRMeter;
 
-#define	SWR_CAL_MIN		75
-#define	SWR_CAL_MAX		150
-#define	SWR_CAL_DEFAULT	100
+#define	SWR_CAL_MIN					75
+#define	SWR_CAL_MAX					150
+#define	SWR_CAL_DEFAULT					100
 //
-#define	SENSOR_NULL_MIN	75
-#define	SENSOR_NULL_MAX	125
-#define	SENSOR_NULL_DEFAULT	100
+#define	SENSOR_NULL_MIN					75
+#define	SENSOR_NULL_MAX					125
+#define	SENSOR_NULL_DEFAULT				100
 //
-#define	FILTER_BAND_80	1
-#define	FILTER_BAND_40	2
-#define	FILTER_BAND_20	3
-#define FILTER_BAND_15	4
+#define	FILTER_BAND_80					1
+#define	FILTER_BAND_40					2
+#define	FILTER_BAND_20					3
+#define FILTER_BAND_15					4
 //
 // Location of numerical FWD/REV power indicator
 //
-#define	POS_PWR_NUM_IND_X	1
-#define	POS_PWR_NUM_IND_Y	80
+#define	POS_PWR_NUM_IND_X				1
+#define	POS_PWR_NUM_IND_Y				80
 //
-#define	PWR_DAMPENING_FACTOR	0.10		// dampening/averaging factor (e.g. amount of "new" reading each time) - for numerical power reading ONLY
+#define	PWR_DAMPENING_FACTOR				0.10		// dampening/averaging factor (e.g. amount of "new" reading each time) - for numerical power reading ONLY
 //
 // Coupling adjustment limits
 //
-#define	SWR_COUPLING_MIN		50
-#define	SWR_COUPLING_MAX		150
-#define	SWR_COUPLING_DEFAULT	100
+#define	SWR_COUPLING_MIN				50
+#define	SWR_COUPLING_MAX				150
+#define	SWR_COUPLING_DEFAULT				100
 //
-#define	SWR_ADC_FULL_SCALE		4095	// full scale of A/D converter (4095 = 10 bits)
-#define	SWR_ADC_VOLT_REFERENCE	3.3		// NOMINAL A/D reference voltage.  The PRECISE value is calibrated by a menu item!  (Probably "FWD/REV ADC Cal.")
+#define	SWR_ADC_FULL_SCALE				4095	// full scale of A/D converter (4095 = 10 bits)
+#define	SWR_ADC_VOLT_REFERENCE				3.3		// NOMINAL A/D reference voltage.  The PRECISE value is calibrated by a menu item!  (Probably "FWD/REV ADC Cal.")
 //
 // coefficients for very low power (<75 milliwatt) power levels.  Do NOT use this above approx. 0.07 volts input!
 //
-#define	LOW_RF_PWR_COEFF_A	-0.0338205168744131		// constant (offset)
-#define	LOW_RF_PWR_COEFF_B	5.02584652062682		// "b" coefficient (for x)
-#define LOW_RF_PWR_COEFF_C	-106.610490958242		// "c" coefficient (for x^2)
-#define	LOW_RF_PWR_COEFF_D	853.156505329744		// "d" coefficient (for x^3)
+#define	LOW_RF_PWR_COEFF_A				-0.0338205168744131		// constant (offset)
+#define	LOW_RF_PWR_COEFF_B				5.02584652062682		// "b" coefficient (for x)
+#define LOW_RF_PWR_COEFF_C				-106.610490958242		// "c" coefficient (for x^2)
+#define	LOW_RF_PWR_COEFF_D				853.156505329744		// "d" coefficient (for x^3)
 //
 // coefficients for higher power levels (>50 milliwatts).  This is actually good down to 25 milliwatts or so.
 //
-#define	HIGH_RF_PWR_COEFF_A	0.01209	//0.0120972709513557		// constant (offset)
-#define HIGH_RF_PWR_COEFF_B	0.8334	//0.833438917330908		// "b" coefficient (for x)
-#define HIGH_RF_PWR_COEFF_C 1.569	//1.56930042559198		// "c" coefficient (for x^2)
+#define	HIGH_RF_PWR_COEFF_A				0.01209	//0.0120972709513557		// constant (offset)
+#define HIGH_RF_PWR_COEFF_B				0.8334	//0.833438917330908		// "b" coefficient (for x)
+#define HIGH_RF_PWR_COEFF_C 				1.569	//1.56930042559198		// "c" coefficient (for x^2)
 //
 //
-#define	SWR_MIN_CALC_POWER		0.25	// Minimum forward power required for SWR calculation
+#define	SWR_MIN_CALC_POWER				0.25	// Minimum forward power required for SWR calculation
 //
-#define	LOW_POWER_CALC_THRESHOLD	0.05	// voltage from sensor below which we use the "low power" calculations, above
+#define	LOW_POWER_CALC_THRESHOLD			0.05	// voltage from sensor below which we use the "low power" calculations, above
 //
-#define	VSWR_DAMPENING_FACTOR	0.25		// dampening/averaging factor (e.g. amount of "new" reading each time) - for VSWR meter indication ONLY
+#define	VSWR_DAMPENING_FACTOR				0.25		// dampening/averaging factor (e.g. amount of "new" reading each time) - for VSWR meter indication ONLY
 //
-#define MAX_VSWR_MOD_VALUE	75				// Maximum A/D value from FWD/REV power sensors before warning is displayed about not having done resistor modification
+#define MAX_VSWR_MOD_VALUE				75				// Maximum A/D value from FWD/REV power sensors before warning is displayed about not having done resistor modification
 //
 // Volt (DC power) meter
 //
-#define POWER_SAMPLES_SKP					10	//1500
-#define POWER_SAMPLES_CNT					32
+#define POWER_SAMPLES_SKP				10	//1500
+#define POWER_SAMPLES_CNT				32
 //
 // used to limit the voltmeter calibration parameters
 //
-#define	POWER_VOLTMETER_CALIBRATE_DEFAULT	100
-#define	POWER_VOLTMETER_CALIBRATE_MIN		00
-#define	POWER_VOLTMETER_CALIBRATE_MAX		200
+#define	POWER_VOLTMETER_CALIBRATE_DEFAULT		100
+#define	POWER_VOLTMETER_CALIBRATE_MIN			00
+#define	POWER_VOLTMETER_CALIBRATE_MAX			200
 //
-#define	VOLTMETER_ADC_FULL_SCALE	4095
+#define	VOLTMETER_ADC_FULL_SCALE		4095
 //
 //
 // Power supply
@@ -354,7 +354,7 @@ typedef struct PowerMeter
 
 } PowerMeter;
 
-#define LO_COMP_SKP							50		//50000
+#define LO_COMP_SKP					50		//50000
 
 // LO temperature compensation
 typedef struct LoTcxo
@@ -375,7 +375,7 @@ typedef struct LoTcxo
 } LoTcxo;
 
 // Once every 25s - 0xFFFFF
-#define EEPROM_SAVE_SKP						0xFFFFF
+#define EEPROM_SAVE_SKP					0xFFFFF
 
 // Eeprom saving routine
 typedef struct EepromSave
@@ -387,12 +387,12 @@ typedef struct EepromSave
 // --------------------------------------------------------------------------
 // Controls positions and some related colours
 // --------------------
-#define SMALL_FONT_WIDTH					8
-#define LARGE_FONT_WIDTH					16
+#define SMALL_FONT_WIDTH				8
+#define LARGE_FONT_WIDTH				16
 
 // Frequency display control
-#define POS_TUNE_FREQ_X						116
-#define POS_TUNE_FREQ_Y						100
+#define POS_TUNE_FREQ_X					116
+#define POS_TUNE_FREQ_Y					100
 //
 #define	POS_TUNE_SPLIT_FREQ_X				POS_TUNE_FREQ_X+72
 #define	POS_TUNE_SPLIT_MARKER_X				POS_TUNE_FREQ_X+40
@@ -403,12 +403,12 @@ typedef struct EepromSave
 #define	SPLIT_INACTIVE_COLOUR	Grey		// colour of "SPLIT" indicator when NOT active
 
 // Second frequency display control
-#define POS_TUNE_SFREQ_X					(POS_TUNE_FREQ_X + 120)
-#define POS_TUNE_SFREQ_Y					(POS_TUNE_FREQ_Y - 20)
+#define POS_TUNE_SFREQ_X				(POS_TUNE_FREQ_X + 120)
+#define POS_TUNE_SFREQ_Y				(POS_TUNE_FREQ_Y - 20)
 
 // Band selection control
-#define POS_BAND_MODE_X						(POS_TUNE_FREQ_X + 175)
-#define POS_BAND_MODE_Y						(POS_TUNE_FREQ_Y + 7)
+#define POS_BAND_MODE_X					(POS_TUNE_FREQ_X + 170)
+#define POS_BAND_MODE_Y					(POS_TUNE_FREQ_Y + 7)
 #define POS_BAND_MODE_MASK_X				(POS_BAND_MODE_X - 1)
 #define POS_BAND_MODE_MASK_Y				(POS_BAND_MODE_Y - 1)
 #define POS_BAND_MODE_MASK_H				13

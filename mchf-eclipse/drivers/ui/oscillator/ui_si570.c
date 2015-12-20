@@ -365,7 +365,7 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 
    	divider_max = (ushort)floorf(fdco_max / new_freq);
    	curr_div 	= (ushort)ceilf (fdco_min / new_freq);
-   	//printf("%d-%d -> ",curr_div,divider_max);
+  	//printf("%d-%d -> ",curr_div,divider_max);
 
    	while (curr_div <= divider_max)
 	{
