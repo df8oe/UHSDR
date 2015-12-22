@@ -1069,7 +1069,7 @@ int main(void)
 	    if(ts.ser_eeprom_in_use == 0xFF)
 		{
 		copy_virt2ser();				// copy data from virtual to serial EEPROM
-//		verify_servirt();				// just 4 debug purposes
+		verify_servirt();				// test if copy is corrupt
 		Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
 		}
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug

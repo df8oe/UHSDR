@@ -991,7 +991,7 @@ static uint8_t p[MAX_VAR_ADDR*2+2];
 
 uint16_t i,j;
 // copy virtual EEPROM to RAM
-for(i=1; i <= MAX_VAR_ADDR; i++)
+for(i=1; i <= MAX_VAR_ADDR+1; i++)
     {
     EE_ReadVariable(VirtAddVarTab[i], &data);
     p[i*2+1] = (uint8_t)((0x00FF)&data);
@@ -1003,11 +1003,11 @@ p[1] = Read_24Cxx(1,16);
 // write RAM to serial EEPROM
 if(seq == false)
     {
-    for(i=0; i<MAX_VAR_ADDR*2;i++)
+    for(i=0; i <= MAX_VAR_ADDR*2+2;i++)
 	Write_24Cxx(i, p[i], ts.ser_eeprom_type);
     }
 else
-    Write_24Cxxseq(0, p, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
+    Write_24Cxxseq(0, p, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
 ts.ser_eeprom_in_use = 0;		// serial EEPROM in use now
 }
 
@@ -1017,7 +1017,7 @@ void copy_ser2virt(void)
 uint16_t count;
 uint16_t data;
 
-for(count=1; count < MAX_VAR_ADDR; count++)
+for(count=1; count <= MAX_VAR_ADDR+1; count++)
     {
     Read_SerEEPROM(count, &data);
     EE_WriteVariable(VirtAddVarTab[count], data);
@@ -1030,20 +1030,11 @@ void verify_servirt(void)
 uint16_t count;
 uint16_t data1, data2;
 
-for(count=1; count < MAX_VAR_ADDR; count++)
+for(count=1; count <= MAX_VAR_ADDR; count++)
     {
-//    ts.df8oe_test = 0;
     Read_SerEEPROM(count, &data1);
-//    Read_SerEEPROM(count, &data2);
-//    EE_ReadVariable(VirtAddVarTab[count], &data1);
     EE_ReadVariable(VirtAddVarTab[count], &data2);
-//    data2 = 0x4455;
     if(data1 != data2)
-	{
-	ts.ser_eeprom_in_use = 0x05;
-//	ts.df8oe_test = count;
-	count = MAX_VAR_ADDR;
-	}
-	ts.ser_eeprom_in_use = 0x05;
+	ts.ser_eeprom_in_use = 0x05;	// mark data copy as faulty
     }
 }

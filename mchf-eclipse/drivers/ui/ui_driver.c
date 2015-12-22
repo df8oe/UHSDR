@@ -11277,9 +11277,9 @@ if(ts.ser_eeprom_in_use == 0)
     ts.eeprombuf = p;
     uint16_t i, data;
     
-    ts.eeprombuf[0] = Read_24Cxx(0,ts.ser_eeprom_type);
-    ts.eeprombuf[1] = Read_24Cxx(1,ts.ser_eeprom_in_use);
-    for(i=1; i<=MAX_VAR_ADDR; i++)
+    ts.eeprombuf[0] = ts.ser_eeprom_type;
+    ts.eeprombuf[1] = ts.ser_eeprom_in_use;
+    for(i=1; i <= MAX_VAR_ADDR; i++)
 	{
 	Read_SerEEPROM(i, &data);
 	ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
