@@ -521,8 +521,12 @@ uchar ui_si570_set_frequency(ulong freq,int calib,int temp_factor, uchar test)
 
 	//printf("set si750 freq to: %d\n\r",freq);
 
+// DF8OE disabler of mistuning when used without modification boards
+if(si_freq > 160)
+    si_freq = 160;
+else
+    	return ui_si570_change_frequency(si_freq, test);
 
-	return ui_si570_change_frequency(si_freq, test);
 }
 
 //*----------------------------------------------------------------------------

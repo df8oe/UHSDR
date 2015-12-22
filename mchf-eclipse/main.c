@@ -907,6 +907,8 @@ void TransceiverStateInit(void)
 	ts.tp_x = 0xFF;					// invalid position
 	ts.tp_y = 0xFF;					// invalid position
 	ts.show_tp_coordinates = 0;			// dont show coordinates on LCD
+	ts.rfmod_present = 1;				// rfmod not present
+	ts.vhfuhfmod_present = 1;			// VHF/UHF mod not present
 }
 
 //*----------------------------------------------------------------------------
@@ -1072,7 +1074,7 @@ int main(void)
 	    if(ts.ser_eeprom_in_use == 0xFF)
 		{
 		copy_virt2ser();				// copy data from virtual to serial EEPROM
-//		verify_servirt();				// just 4 debug purposes
+		verify_servirt();				// just 4 debug purposes
 		Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
 		}
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
@@ -1087,6 +1089,7 @@ int main(void)
 
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
+//	verify_servirt();				// just 4 debug purposes
 
 	// Extra init
 	MiscInit();

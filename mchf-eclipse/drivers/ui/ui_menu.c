@@ -196,16 +196,27 @@ if(mode > 3)
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
+	if(ts.ser_eeprom_in_use != 0x0 && ts.ser_eeprom_in_use != 0x10 && ts.ser_eeprom_in_use != 0x5 && ts.ser_eeprom_in_use != 0xff )	// ???
+	    {
+	    sprintf(out,"%02x",ts.ser_eeprom_in_use);
+	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Yellow,Black,0);
+	    }
 	if(ts.tp_present == 0)
 	    outs = "n/a             ";
 	else
 	    outs = "XPT2046         ";
 	sprintf(out,"%s%s","Touchscreen  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
-	outs = "n/a             ";
+	if(ts.rfmod_present == 0)
+	    outs = "n/a             ";
+	else
+	    outs = "present         ";
 	sprintf(out,"%s%s","RF Bands Mod : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,out,m_clr,Black,0);
-	outs = "n/a             ";
+	if(ts.vhfuhfmod_present == 0)
+	    outs = "n/a             ";
+	else
+	    outs = "present         ";
 	sprintf(out,"%s%s","VHF/UHF Mod  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
 	}

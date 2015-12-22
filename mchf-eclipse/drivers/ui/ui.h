@@ -40,7 +40,13 @@ const ulong size_bands[MAX_BANDS] = { BAND_SIZE_80,
 									  BAND_SIZE_17,
 									  BAND_SIZE_15,
 									  BAND_SIZE_12,
-									  BAND_SIZE_10};//,
+									  BAND_SIZE_10,
+									  BAND_SIZE_6,
+									  BAND_SIZE_4,
+									  BAND_SIZE_2,
+									  BAND_SIZE_70,
+									  BAND_SIZE_23,
+									  BAND_SIZE_160};//,
 //									  BAND_SIZE_GEN};
 
 									  
@@ -53,6 +59,12 @@ const ulong tune_bands[MAX_BANDS] = { BAND_FREQ_80,
 									  BAND_FREQ_17,
 									  BAND_FREQ_15,
 									  BAND_FREQ_12,
-									  BAND_FREQ_10};//,
+									  BAND_FREQ_10,
+									  BAND_FREQ_6,
+									  BAND_FREQ_4,
+									  BAND_FREQ_2,
+									  BAND_FREQ_70,
+									  BAND_FREQ_23,
+									  BAND_FREQ_160};//,
 //									  BAND_FREQ_GEN};
 

@@ -13,7 +13,7 @@
 
 // Common
 #include "mchf_board.h"
-
+#include "ui_lcd_hy28.h"
 #include "mchf_hw_i2c2.h"
 
 #define I2C2_FLAG_TIMEOUT          		((uint32_t)0x500)
@@ -446,7 +446,7 @@ uint8_t Write_24Cxxseq(uint32_t address, uint8_t *buffer, uint16_t length, uint8
 uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t upper_addr,lower_addr;
-uint16_t start, i, page, count;
+uint32_t start, i, page, count;
 count = 0;
 
 if(Mem_Type == 12)
@@ -490,9 +490,9 @@ if(Mem_Type == 19)
 	}
     }
 
-while(count <= length)
+while(count < length)
     {
-    start = (uint16_t)address + count;
+    start = address + count;
     lower_addr = (uint8_t)((0x00FF)&start);
 
     if(Mem_Type > 8)
@@ -546,13 +546,11 @@ while(count <= length)
 	if ((timeout--) == 0) return 0xFF;
 	}
 
-	for(i=0; i<page;i++)
+	for(i=0; i<page && count < length;i++)
 	    {
 	    // Send Data
 	    I2C_SendData(CODEC_I2C, buffer[count]);
 	    count++;
-	    if(count > length)
-		i = 130;
 	    // Test on I2C2 EV8 and clear it 
 	    timeout = I2C2_LONG_TIMEOUT; // Initialize timeout value
 	    while(!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) // was ..TTED
