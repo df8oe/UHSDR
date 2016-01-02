@@ -58,7 +58,7 @@ static uchar ui_si570_verify_frequency(void)
 	// Read all regs
 	for(i = 0; i < 6; i++)
 	{
-		res = mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + i) ,&regs[i]);
+		res = mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + i) ,&regs[i]);
 		if(res != 0)
 			return(0);
 	}
@@ -102,7 +102,7 @@ static uchar ui_si570_small_frequency_change(void)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(os.si570_address,SI570_REG_7,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -153,7 +153,7 @@ static uchar ui_si570_large_frequency_change(void)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(os.si570_address,SI570_REG_7,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -277,7 +277,7 @@ uchar ui_si570_get_configuration(void)
 
    	for(i = 0; i < 6; i++)
    	{   		
-   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + i) ,&(os.regs[i]));
+   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + i) ,&(os.regs[i]));
    		if(res != 0)
    		{
 			//printf("read2 err: %d, i = %d\n\r",res,i);
@@ -365,7 +365,7 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 
    	divider_max = (ushort)floorf(fdco_max / new_freq);
    	curr_div 	= (ushort)ceilf (fdco_min / new_freq);
-   	//printf("%d-%d -> ",curr_div,divider_max);
+  	//printf("%d-%d -> ",curr_div,divider_max);
 
    	while (curr_div <= divider_max)
 	{
@@ -521,8 +521,12 @@ uchar ui_si570_set_frequency(ulong freq,int calib,int temp_factor, uchar test)
 
 	//printf("set si750 freq to: %d\n\r",freq);
 
+// DF8OE disabler of mistuning when used without modification boards
+if(si_freq > 160)
+    si_freq = 160;
+else
+    	return ui_si570_change_frequency(si_freq, test);
 
-	return ui_si570_change_frequency(si_freq, test);
 }
 
 //*----------------------------------------------------------------------------
@@ -644,38 +648,26 @@ void ui_si570_calc_startupfrequency(void)
 {
 if (os.fout < 5)
 	{
-	uchar si_regs[7];
-	int hs_div;
-	int n1;
-	float rsfreq;
+	os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
+	uchar dummy;
 
 	// test for hardware address of SI570
 	os.si570_address = (0x50 << 1);
-	if( mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]) != 0)
+	if( mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg) ,&dummy) != 0)
 	    {
 	    os.si570_address = (0x55 << 1);
 	    mchf_hw_i2c_reset();
 	    }
 
-	// read configuration
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7) ,&si_regs[0]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 1) ,&si_regs[1]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 2) ,&si_regs[2]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 3) ,&si_regs[3]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 4) ,&si_regs[4]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(SI570_REG_7 + 5) ,&si_regs[5]);
-
-	// calculate startup frequency
-	rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
-	hs_div = (si_regs[0] & 0xE0) / 32 + 4;
-	n1 = (si_regs[1] & 0xC0) / 64 + (si_regs[0] & 0x1F) *4 + 1;
-	if (n1 %2 != 0 && n1 != 1)
-		n1++;
-	os.fout = roundf((1142850 * rsfreq) / (hs_div * n1)) / 10000;
-
+	calc_suf_sub();
+	if(os.fout > 39.2 && os.fout < 39.3)
+	    {			// its a 20 or 50 ppm device, use regs 7+
+	    os.base_reg = 7;
+	    calc_suf_sub();
+	    }
 	int i;
 	// all known startup frequencies
-	float suf_table[] = {10,10.356,14.05,14.1,15,16.0915,22.5792,34.285,56.32,63,76.8,100,125,156.25,0};
+	float suf_table[] = {10,10.356,14.05,14.1,15,16.0915,22.5792,34.285,56.32,63,76.8,100,122,125,156.25,0};
 
 	// test if startup frequency is known
 	for (i = 0; suf_table[i] != 0; i++)
@@ -690,4 +682,28 @@ if (os.fout < 5)
 		}
 	    }
 	}
+}
+
+// startupfrequency-subroutine
+void calc_suf_sub(void)
+{
+	uchar si_regs[7];
+	int hs_div;
+	int n1;
+	float rsfreq;
+	// read configuration
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg) ,&si_regs[0]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 1) ,&si_regs[1]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 2) ,&si_regs[2]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 3) ,&si_regs[3]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 4) ,&si_regs[4]);
+	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 5) ,&si_regs[5]);
+
+	// calculate startup frequency
+	rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
+	hs_div = (si_regs[0] & 0xE0) / 32 + 4;
+	n1 = (si_regs[1] & 0xC0) / 64 + (si_regs[0] & 0x1F) *4 + 1;
+	if (n1 %2 != 0 && n1 != 1)
+		n1++;
+	os.fout = roundf((1142850 * rsfreq) / (hs_div * n1)) / 10000;
 }
