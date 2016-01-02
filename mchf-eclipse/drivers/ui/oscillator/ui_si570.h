@@ -29,22 +29,21 @@
 #define SI570_HARD_MIN_FREQ		1000000		// 1.0=0.25 MHz
 #define SI570_HARD_MAX_FREQ		800000000	// 800=200 MHz
 
-#define	LARGE_STEP_HYSTERESIS	10000//0.01		// size, in MHz, of hysteresis in large tuning step at output frequency (4x tuning freq)
+#define	LARGE_STEP_HYSTERESIS		10000//0.01	// size, in MHz, of hysteresis in large tuning step at output frequency (4x tuning freq)
 
 #define SI570_RECALL			(1<<0)
 #define SI570_FREEZE_DCO		(1<<4)
 #define SI570_FREEZE_M			(1<<5)
 #define SI570_NEW_FREQ			(1<<6)
 
-#define SI570_REG_7				7
 #define SI570_REG_135			135
 #define SI570_REG_137			137
 
 #define FACTORY_FXTAL			114.285
 
 // VCO range
-#define	FDCO_MAX 				5670
-#define FDCO_MIN 	 			4850
+#define	FDCO_MAX 			5670
+#define FDCO_MIN 			4850
 
 #define POW_2_28          		268435456.0
 // -------------------------------------------------------------------------------------
@@ -78,21 +77,23 @@
 
 typedef struct OscillatorState
 {
-	long double		rfreq;
-	long double 	rfreq_old;
+	long double			rfreq;
+	long double 			rfreq_old;
 
-	float 			fxtal;
+	float 				fxtal;
 
-	uchar			regs[6];
+	uchar				regs[6];
 
-	float			fout;		// contains startup frequency info of Si570
+	float				fout;		// contains startup frequency info of Si570
 
-	unsigned short si570_address;
+	unsigned short			si570_address;
+	
+	uchar				base_reg;
 
 #ifdef LOWER_PRECISION
-	uchar 			init_n1;
-	uchar			init_hsdiv;
-	ulong 			init_rfreq;
+	uchar 				init_n1;
+	uchar				init_hsdiv;
+	ulong 				init_rfreq;
 #endif
 
 } OscillatorState;
@@ -107,7 +108,7 @@ uchar 	ui_si570_set_frequency(ulong freq,int calib,int temp_factor, uchar test);
 uchar 	ui_si570_init_temp_sensor(void);
 uchar 	ui_si570_read_temp(int *temp);
 void 	ui_si570_conv_temp(uchar *temp,int *dtemp);
-void ui_si570_calc_startupfrequency(void);
-
+void 	ui_si570_calc_startupfrequency(void);
+void 	calc_suf_sub(void);
 
 #endif
