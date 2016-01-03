@@ -964,11 +964,11 @@ static void UiDriverProcessKeyboard(void)
 							UiDriverUpdateFrequency(1,0);		// no SPLIT mode
 						    ts.refresh_freq_disp = 0;			// update ALL digits
 						    } 
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action
 						    {
 						    }
 						}
-					    else				// standard menu screen
+					    else						// menu screen functions
 						{
 						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
 						    {
@@ -978,7 +978,25 @@ static void UiDriverProcessKeyboard(void)
 						    else
 							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"       ",White,Black,0);
 						    }
-					    }
+						if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
+						    {
+						    ts.rfmod_present = !ts.rfmod_present;
+						    if(ts.rfmod_present)
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,"present         ",White,Black,0);
+						    else
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,"n/a             ",White,Black,0);
+						    ts.menu_var_changed = 1;
+						    }
+						if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
+						    {
+						    ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
+						    if(ts.vhfuhfmod_present)
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,"present         ",White,Black,0);
+						    else
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,"n/a             ",White,Black,0);
+						    ts.menu_var_changed = 1;
+						    }
+						}
 					ts.tp_x = 0xff;						// mark data as invalid
 					}
 					break;
@@ -3550,11 +3568,9 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 			{
 			band_scan++;	// scan the next band qqqqq
 			if(ts.rfmod_present == 0 && band_scan == 9)
-				band_scan = 11;
-			if(ts.vhfuhfmod_present == 0 && ts.rfmod_present == 1 && band_scan == 11)
-				band_scan = 14;
-			if(ts.vhfuhfmod_present == 0 && ts.rfmod_present == 0 && band_scan == 11)
-				band_scan = 15;
+				band_scan = 11;		// exclude 6m/4m
+			if(ts.vhfuhfmod_present == 0 && band_scan == 11)
+				band_scan = 14;		// exclude 2m/70cm/23cm
 			}
 	}
 	//
@@ -4865,27 +4881,17 @@ static void UiDriverChangeBand(uchar is_up)
 			new_band_freq  = tune_bands[curr_band_index + 1];
 			new_band_index = curr_band_index + 1;
 			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
-			    {
-			    new_band_freq = tune_bands[MIN_BANDS];
-			    new_band_index = MIN_BANDS;
+			    {						// jump 10m --> 160m
+			    new_band_freq = tune_bands[MAX_BANDS-1];
+			    new_band_index = MAX_BANDS-1;
 			    }
 			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 8)
-			    {
+			    {						// jump 10m --> 2m
 			    new_band_freq = tune_bands[11];
 			    new_band_index = 11;
 			    }
-			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 13)
-			    {
-			    new_band_freq = tune_bands[MIN_BANDS];
-			    new_band_index = MIN_BANDS;
-			    }
-			if(ts.vhfuhfmod_present == 0 && curr_band_index == 10)
-			    {
-			    new_band_freq = tune_bands[MIN_BANDS];
-			    new_band_index = MIN_BANDS;
-			    }
-			if(ts.vhfuhfmod_present == 0 && ts.rfmod_present == 1 && curr_band_index == 10)
-			    {
+			if(ts.rfmod_present == 1 && ts.vhfuhfmod_present == 0 && curr_band_index == 10)
+			    {						// jump 4m --> 160m
 			    new_band_freq = tune_bands[MAX_BANDS-1];
 			    new_band_index = MAX_BANDS-1;
 			    }
@@ -4905,36 +4911,20 @@ static void UiDriverChangeBand(uchar is_up)
 		    new_band_freq  = tune_bands[curr_band_index - 1];
 		    new_band_index = curr_band_index - 1;
 		    if(ts.vhfuhfmod_present == 0 && curr_band_index == MAX_BANDS-1)
-			{
+			{		// jump 160m --> 6m
 			new_band_freq  = tune_bands[10];
 			new_band_index = 10;
 			}
-		    if(ts.vhfuhfmod_present == 1 && ts.rfmod_present == 0 & new_band_index == 10)
-			{
-			new_band_freq  = tune_bands[18];
+		    if(ts.rfmod_present == 0 & new_band_index == 10)
+			{		// jump 2m --> 10m
+			new_band_freq  = tune_bands[8];
 			new_band_index = 8;
 			}
 		    }
 		else
 		    {	// wrap around to the highest band
-		    new_band_freq = tune_bands[MAX_BANDS - 1];
-		    new_band_index = MAX_BANDS - 1;
-
-		    if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0)
-			{
-			new_band_freq = tune_bands[8];
-			new_band_index = 8;
-			}
-		    if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1)
-			{
-			new_band_freq = tune_bands[MAX_BANDS-2];
-			new_band_index = MAX_BANDS-2;
-			}
-//		    if(ts.vhfuhfmod_present == 0)
-//			{
-//			new_band_freq = tune_bands[10];
-//			new_band_index = 10;
-//			}
+		    new_band_freq = tune_bands[MAX_BANDS-1];
+		    new_band_index = MAX_BANDS-1;
 		    }
 	}
 	//printf("new band index: %d and freq: %d\n\r",new_band_index,new_band_freq);
