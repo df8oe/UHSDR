@@ -872,10 +872,12 @@ static void UiDriverPublicsInit(void)
 	swrm.rev_dbm			= 0;
 	swrm.vswr			 	= 0;
 	swrm.sensor_null		= SENSOR_NULL_DEFAULT;
+	swrm.coupling_160m_calc		= SWR_COUPLING_DEFAULT;
 	swrm.coupling_80m_calc		= SWR_COUPLING_DEFAULT;
 	swrm.coupling_40m_calc		= SWR_COUPLING_DEFAULT;
 	swrm.coupling_20m_calc		= SWR_COUPLING_DEFAULT;
 	swrm.coupling_15m_calc		= SWR_COUPLING_DEFAULT;
+	swrm.coupling_6m_calc		= SWR_COUPLING_DEFAULT;
 	swrm.pwr_meter_disp		= 0;	// Display of numerical FWD/REV power metering off by default
 	swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
 
@@ -3512,8 +3514,13 @@ static void UiDriverInitFrequency(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCheckFilter(ulong freq)
 {
-
-	if(freq < BAND_FILTER_UPPER_80)	{	// are we low enough if frequency for the 80 meter filter?
+	if(freq < BAND_FILTER_UPPER_160)	{	// are we low enough if frequency for the 160 meter filter?
+		if(ts.filter_band != FILTER_BAND_160)	{
+			UiDriverChangeBandFilter(BAND_MODE_160, 0);	// yes - set to 80 meters
+			ts.filter_band = FILTER_BAND_160;
+		}
+	}
+	else if(freq < BAND_FILTER_UPPER_80)	{	// are we low enough if frequency for the 80 meter filter?
 		if(ts.filter_band != FILTER_BAND_80)	{
 			UiDriverChangeBandFilter(BAND_MODE_80, 0);	// yes - set to 80 meters
 			ts.filter_band = FILTER_BAND_80;
@@ -3535,6 +3542,18 @@ static void UiDriverCheckFilter(ulong freq)
 		if(ts.filter_band != FILTER_BAND_15)	{
 			UiDriverChangeBandFilter(BAND_MODE_10, 0);	// yes - set to 10 meters
 			ts.filter_band = FILTER_BAND_15;
+		}
+	}
+	else if(freq < BAND_FILTER_UPPER_6)	{
+		if(ts.filter_band != FILTER_BAND_6)	{
+			UiDriverChangeBandFilter(BAND_MODE_6, 0);	// yes - set to 20 meters
+			ts.filter_band = FILTER_BAND_6;
+		}
+	}
+	else if(freq < BAND_FILTER_UPPER_4)	{
+		if(ts.filter_band != FILTER_BAND_4)	{
+			UiDriverChangeBandFilter(BAND_MODE_4, 0);	// yes - set to 20 meters
+			ts.filter_band = FILTER_BAND_4;
 		}
 	}
 }
@@ -7779,8 +7798,14 @@ static void UiDriverHandleLowerMeter(void)
 
 	// obtain and calculate power meter coupling coefficients
 	switch(ts.filter_band)	{
+		case	FILTER_BAND_160:
+			coupling_calc = (float)swrm.coupling_160m_calc;	// get coupling coefficient calibration for 160 meters
+			break;
 		case	FILTER_BAND_80:
 			coupling_calc = (float)swrm.coupling_80m_calc;	// get coupling coefficient calibration for 80 meters
+			break;
+		case	FILTER_BAND_6:
+			coupling_calc = (float)swrm.coupling_6m_calc;	// get coupling coefficient calibration for 6 meters
 			break;
 		case	FILTER_BAND_20:
 			coupling_calc = (float)swrm.coupling_20m_calc;	// get coupling coefficient calibration for 30/20 meters
@@ -10870,7 +10895,6 @@ void UiDriverLoadEepromValues(void)
 	{
 		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
 			value = TX_POWER_FACTOR_160_DEFAULT;	// reset to default for this band
-		value = 70;		// aaaaa
 		ts.pwr_160m_full_adj = value;
 		//printf("-->12 meter FULL power calibration setting loaded\n\r");
 	}
@@ -11219,6 +11243,17 @@ void UiDriverLoadEepromValues(void)
 	}
 	//
 	// ------------------------------------------------------------------------------------
+	// Try to read power sensor coupling coefficient for 160m
+	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, &value) == 0)
+	{
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
+			value = SWR_COUPLING_DEFAULT;		// reset to OFF
+		//
+		swrm.coupling_160m_calc = value;
+		//printf("-->Power sensor coupling coefficient for 160m loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
 	// Try to read power sensor coupling coefficient for 80m
 	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, &value) == 0)
 	{
@@ -11260,6 +11295,17 @@ void UiDriverLoadEepromValues(void)
 		//
 		swrm.coupling_15m_calc = value;
 		//printf("-->Power sensor coupling coefficient for 15m loaded\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read power sensor coupling coefficient for 6m
+	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, &value) == 0)
+	{
+		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
+			value = SWR_COUPLING_DEFAULT;		// reset to OFF
+		//
+		swrm.coupling_6m_calc = value;
+		//printf("-->Power sensor coupling coefficient for 6m loaded\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -13152,6 +13198,19 @@ if(ts.ser_eeprom_in_use == 0)
 	}
 	//
 	// ------------------------------------------------------------------------------------
+	// Try to read power sensor coupling coefficient for 160m - update if changed
+	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, swrm.coupling_160m_calc);
+		//printf("-->Power sensor coupling 160m coefficient configuration written\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, SWR_COUPLING_DEFAULT);
+		//printf("-->Power sensor couplingn 160m coefficient configuration created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
 	// Try to read power sensor coupling coefficient for 80m - update if changed
 	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, &value) == 0)
 	{
@@ -13201,6 +13260,19 @@ if(ts.ser_eeprom_in_use == 0)
 	{
 		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, SWR_COUPLING_DEFAULT);
 		//printf("-->Power sensor couplingn 15m coefficient configuration created\n\r");
+	}
+	//
+	// ------------------------------------------------------------------------------------
+	// Try to read power sensor coupling coefficient for 6m - update if changed
+	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, &value) == 0)
+	{
+		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, swrm.coupling_6m_calc);
+		//printf("-->Power sensor coupling 6m coefficient configuration written\n\r");
+	}
+	else	// create
+	{
+		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, SWR_COUPLING_DEFAULT);
+		//printf("-->Power sensor couplingn 6m coefficient configuration created\n\r");
 	}
 	//
 	// ------------------------------------------------------------------------------------

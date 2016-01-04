@@ -420,24 +420,36 @@ if(mode > 3)
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"261-PA Bias",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"270-Disp. Pwr (mW)",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"271-Pwr. Det. Null",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"272-80m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"   -160m Coupling Adj.",c_clr,Black,0);
 		}
 		else if((ts.menu_item - MAX_MENU_ITEM) < 42)	{	// yes - display the seventh screen
 			if(screen_disp != 57)
 				UiDriverClearSpectrumDisplay();
 			screen_disp = 57;
 			update_vars = 1;
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"273-40m Coupling Adj.",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"274-20m Coupling Adj.",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"275-15m Coupling Adj.",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"276-FWD/REV ADC Swap.",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"280-XVTR Offs/Mult",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"281-XVTR Offset (Hz)",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"272-80m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"273-40m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"274-20m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"275-15m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"   -6m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"   -2m Coupling Adj.",c_clr,Black,0);
 		}
 		else if((ts.menu_item - MAX_MENU_ITEM) < 48)	{	// yes - display the eighth screen
 			if(screen_disp != 58)
 				UiDriverClearSpectrumDisplay();
 			screen_disp = 58;
+			update_vars = 1;
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"   -70cm Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"   -23m Coupling Adj.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"276-FWD/REV ADC Swap.",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"280-XVTR Offs/Mult",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"281-XVTR Offset (Hz)",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"   -160m 5W PWR Adjust",c_clr,Black,0);
+		}
+		else if((ts.menu_item - MAX_MENU_ITEM) < 54)	{	// yes - display the ninth screen
+			if(screen_disp != 59)
+				UiDriverClearSpectrumDisplay();
+			screen_disp = 59;
 			update_vars = 1;
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"290-80m 5W PWR Adjust",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"291-60m 5W PWR Adjust",c_clr,Black,0);
@@ -446,22 +458,34 @@ if(mode > 3)
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"294-20m 5W PWR Adjust",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"295-17m 5W PWR Adjust",c_clr,Black,0);
 		}
-		else if((ts.menu_item - MAX_MENU_ITEM) < 54)	{	// yes - display the ninth screen
-			if(screen_disp != 59)
-				UiDriverClearSpectrumDisplay();
-			screen_disp = 59;
-			update_vars = 1;
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"296-15m 5W PWR Adjust",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"297-12m 5W PWR Adjust",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"298-10m 5W PWR Adjust",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"300-80m Full PWR Adjust",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"301-60m Full PWR Adjust",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"302-40m Full PWR Adjust",c_clr,Black,0);
-		}
 		else if((ts.menu_item - MAX_MENU_ITEM) < 60)	{	// yes - display the tenth screen
 			if(screen_disp != 60)
 				UiDriverClearSpectrumDisplay();
 			screen_disp = 60;
+			update_vars = 1;
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"296-15m 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"297-12m 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"298-10m 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"   -6m 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"   -4m 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"   -2m 5W PWR Adjust",c_clr,Black,0);
+		}
+		else if((ts.menu_item - MAX_MENU_ITEM) < 66)	{	// yes - display the eleventh screen
+			if(screen_disp != 61)
+				UiDriverClearSpectrumDisplay();
+			screen_disp = 61;
+			update_vars = 1;
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"   -70cm 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"   -23cm 5W PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"   -160m Ful PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"300-80m Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"301-60m Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"302-40m Full PWR Adjust",c_clr,Black,0);
+		}
+		else if((ts.menu_item - MAX_MENU_ITEM) < 72)	{	// yes - display the twelfth screen
+			if(screen_disp != 62)
+				UiDriverClearSpectrumDisplay();
+			screen_disp = 62;
 			update_vars = 1;
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"303-30m Full PWR Adjust",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"304-20m Full PWR Adjust",c_clr,Black,0);
@@ -470,28 +494,39 @@ if(mode > 3)
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"307-12m Full PWR Adjust",c_clr,Black,0);
 			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"308-10m Full PWR Adjust",c_clr,Black,0);
 		}
-		else if((ts.menu_item - MAX_MENU_ITEM) < 66)	{	// yes - display the eleventh screen
-			if(screen_disp != 66)
+		else if((ts.menu_item - MAX_MENU_ITEM) < 78)	{	// yes - display the thirteenth screen
+			if(screen_disp != 63)
 				UiDriverClearSpectrumDisplay();
-			screen_disp = 66;
+			screen_disp = 63;
 			update_vars = 1;
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"310-DSP NR BufLen",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"311-DSP NR Post-AGC",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"312-DSP NR FFT NumTaps",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"313-DSP Notch ConvRate",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"314-DSP Notch BufLen",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"315-DSP Notch FFTNumTap",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"  -6m Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"  -4m Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"  -2m Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"  -70cm Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"  -23cm Full PWR Adjust",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"310-DSP NR BufLen",c_clr,Black,0);
 		}
-		else if((ts.menu_item - MAX_MENU_ITEM) < 72)	{	// yes - display the twelfth screen
-			if(screen_disp != 72)
+		else if((ts.menu_item - MAX_MENU_ITEM) < 84)	{	// yes - display the fourteenth screen
+			if(screen_disp != 64)
 				UiDriverClearSpectrumDisplay();
-			screen_disp = 72;
+			screen_disp = 64;
 			update_vars = 1;
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"320-NB AGC T/C (<=Slow)",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"330-AM TX Audio Filter",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"331-SSB TX Audio Filter",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"340-FFT Windowing",c_clr,Black,0);
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"341-Reset Ser EEPROM",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"311-DSP NR Post-AGC",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"312-DSP NR FFT NumTaps",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"313-DSP Notch ConvRate",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"314-DSP Notch BufLen",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,"315-DSP Notch FFTNumTap",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,"320-NB AGC T/C (<=Slow)",c_clr,Black,0);
+		}
+		else if((ts.menu_item - MAX_MENU_ITEM) < 90)	{	// yes - display the fifteenth screen
+			if(screen_disp != 65)
+				UiDriverClearSpectrumDisplay();
+			screen_disp = 65;
+			update_vars = 1;
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,"330-AM TX Audio Filter",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,"331-SSB TX Audio Filter",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,"340-FFT Windowing",c_clr,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,"341-Reset Ser EEPROM",c_clr,Black,0);
 		}
 	}
 
@@ -601,8 +636,17 @@ if(mode > 3)
 			else if(ts.menu_item < MAX_MENU_ITEM + 66)
 				for(var = MAX_MENU_ITEM + 60; var < (MAX_MENU_ITEM + 66); var++)	// eleventh screen of configuration items
 					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+			else if(ts.menu_item < MAX_MENU_ITEM + 72)
+				for(var = MAX_MENU_ITEM + 66; var < (MAX_MENU_ITEM + 72); var++)	// twelth screen of configuration items
+					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+			else if(ts.menu_item < MAX_MENU_ITEM + 78)
+				for(var = MAX_MENU_ITEM + 72; var < (MAX_MENU_ITEM + 78); var++)	// thirteenth screen of configuration items
+					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+			else if(ts.menu_item < MAX_MENU_ITEM + 84)
+				for(var = MAX_MENU_ITEM + 78; var < (MAX_MENU_ITEM + 84); var++)	// fourteenth screen of configuration items
+					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
 			else if(ts.menu_item < MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)
-				for(var = MAX_MENU_ITEM + 66; var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++)	// twelfth screen of configuration items
+				for(var = MAX_MENU_ITEM + 84; var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++)	// fifteenth screen of configuration items
 					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
 		}
 	}
@@ -4396,6 +4440,38 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		opt_pos = CONFIG_RF_FWD_PWR_NULL % MENUSIZE;
 		break;
 		//
+	case CONFIG_FWD_REV_COUPLING_160M_ADJ:		// RF power sensor coupling adjust (160m)
+		if(ts.filter_band == FILTER_BAND_160)	{	// is this band selected?
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_160m_calc++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_160m_calc--;
+				tchange = 1;
+			}
+			//
+			if(swrm.coupling_160m_calc > SWR_COUPLING_MAX)
+				swrm.coupling_160m_calc  = SWR_COUPLING_MAX;
+			else if(swrm.coupling_160m_calc < SWR_COUPLING_MIN)
+				swrm.coupling_160m_calc  = SWR_COUPLING_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_160m_calc = SWR_COUPLING_DEFAULT;
+				tchange = 1;
+			}
+		}
+		//
+		if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != FILTER_BAND_160))	// Orange if not in TX mode or NOT on this band
+				clr = Orange;
+			//
+		sprintf(options, "  %u ", swrm.coupling_160m_calc);
+		opt_pos = CONFIG_FWD_REV_COUPLING_160M_ADJ % MENUSIZE;
+		break;
+		//
 	case CONFIG_FWD_REV_COUPLING_80M_ADJ:		// RF power sensor coupling adjust (80m)
 		if(ts.filter_band == FILTER_BAND_80)	{	// is this band selected?
 			if(var >= 1)	{	// setting increase?
@@ -4524,6 +4600,134 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		opt_pos = CONFIG_FWD_REV_COUPLING_15M_ADJ % MENUSIZE;
 		break;
 		//
+	case CONFIG_FWD_REV_COUPLING_6M_ADJ:		// RF power sensor coupling adjust (6m)
+		if(ts.filter_band == FILTER_BAND_6)	{	// is this band selected?
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_6m_calc++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_6m_calc--;
+				tchange = 1;
+			}
+			//
+			if(swrm.coupling_6m_calc > SWR_COUPLING_MAX)
+				swrm.coupling_6m_calc  = SWR_COUPLING_MAX;
+			else if(swrm.coupling_6m_calc < SWR_COUPLING_MIN)
+				swrm.coupling_6m_calc  = SWR_COUPLING_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_6m_calc = SWR_COUPLING_DEFAULT;
+				tchange = 1;
+			}
+		}
+		//
+		if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != FILTER_BAND_6))	// Orange if not in TX mode or NOT on this band
+				clr = Orange;
+			//
+		sprintf(options, "  %u ", swrm.coupling_6m_calc);
+		opt_pos = CONFIG_FWD_REV_COUPLING_6M_ADJ % MENUSIZE;
+		break;
+		//
+	case CONFIG_FWD_REV_COUPLING_2M_ADJ:		// RF power sensor coupling adjust (2m)
+		if(ts.filter_band == FILTER_BAND_2)	{	// is this band selected?
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_2m_calc++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_2m_calc--;
+				tchange = 1;
+			}
+			//
+			if(swrm.coupling_2m_calc > SWR_COUPLING_MAX)
+				swrm.coupling_2m_calc  = SWR_COUPLING_MAX;
+			else if(swrm.coupling_2m_calc < SWR_COUPLING_MIN)
+				swrm.coupling_2m_calc  = SWR_COUPLING_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_2m_calc = SWR_COUPLING_DEFAULT;
+				tchange = 1;
+			}
+		}
+		//
+		if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != FILTER_BAND_2))	// Orange if not in TX mode or NOT on this band
+				clr = Orange;
+			//
+		sprintf(options, "  %u ", swrm.coupling_2m_calc);
+		opt_pos = CONFIG_FWD_REV_COUPLING_2M_ADJ % MENUSIZE;
+		break;
+		//
+	case CONFIG_FWD_REV_COUPLING_70CM_ADJ:		// RF power sensor coupling adjust (70cm)
+		if(ts.filter_band == FILTER_BAND_70)	{	// is this band selected?
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_70cm_calc++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_70cm_calc--;
+				tchange = 1;
+			}
+			//
+			if(swrm.coupling_70cm_calc > SWR_COUPLING_MAX)
+				swrm.coupling_70cm_calc  = SWR_COUPLING_MAX;
+			else if(swrm.coupling_70cm_calc < SWR_COUPLING_MIN)
+				swrm.coupling_70cm_calc  = SWR_COUPLING_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_70cm_calc = SWR_COUPLING_DEFAULT;
+				tchange = 1;
+			}
+		}
+		//
+		if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != FILTER_BAND_70))	// Orange if not in TX mode or NOT on this band
+				clr = Orange;
+			//
+		sprintf(options, "  %u ", swrm.coupling_70cm_calc);
+		opt_pos = CONFIG_FWD_REV_COUPLING_70CM_ADJ % MENUSIZE;
+		break;
+		//
+	case CONFIG_FWD_REV_COUPLING_23CM_ADJ:		// RF power sensor coupling adjust (23cm)
+		if(ts.filter_band == FILTER_BAND_23)	{	// is this band selected?
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_23cm_calc++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_23cm_calc--;
+				tchange = 1;
+			}
+			//
+			if(swrm.coupling_23cm_calc > SWR_COUPLING_MAX)
+				swrm.coupling_23cm_calc  = SWR_COUPLING_MAX;
+			else if(swrm.coupling_23cm_calc < SWR_COUPLING_MIN)
+				swrm.coupling_23cm_calc  = SWR_COUPLING_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				swrm.coupling_23cm_calc = SWR_COUPLING_DEFAULT;
+				tchange = 1;
+			}
+		}
+		//
+		if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != FILTER_BAND_23))	// Orange if not in TX mode or NOT on this band
+				clr = Orange;
+			//
+		sprintf(options, "  %u ", swrm.coupling_23cm_calc);
+		opt_pos = CONFIG_FWD_REV_COUPLING_23CM_ADJ % MENUSIZE;
+		break;
+		//
 	case CONFIG_FWD_REV_SENSE_SWAP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
 		temp_var = ts.misc_flags1 & 16;
 		if(var >= 1)	{	// setting increase?
@@ -4646,6 +4850,43 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		sprintf(options, " %09u", (uint)ts.xverter_offset);	// print with nine digits
 		//
 		opt_pos = CONFIG_XVTR_FREQUENCY_OFFSET % MENUSIZE;
+		break;
+		//
+	case CONFIG_160M_5W_ADJUST:		// 160m 5 watt adjust
+		if((ts.band == BAND_MODE_160) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_160m_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_160m_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_160m_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_160m_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_5w_adj = TX_POWER_FACTOR_160_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_160m_5w_adj);
+		opt_pos = CONFIG_160M_5W_ADJUST % MENUSIZE;
 		break;
 		//
 	case CONFIG_80M_5W_ADJUST:		// 80m 5 watt adjust
@@ -4972,6 +5213,228 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		opt_pos = CONFIG_10M_5W_ADJUST % MENUSIZE;
 		break;
 		//
+	case CONFIG_6M_5W_ADJUST:		// 6m 5 watt adjust
+		if((ts.band == BAND_MODE_6) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_6m_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_6m_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_6m_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_6m_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_5w_adj = TX_POWER_FACTOR_6_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_6m_5w_adj);
+		opt_pos = CONFIG_6M_5W_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_4M_5W_ADJUST:		// 4m 5 watt adjust
+		if((ts.band == BAND_MODE_4) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_4m_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_4m_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_4m_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_4m_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_5w_adj = TX_POWER_FACTOR_4_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_4m_5w_adj);
+		opt_pos = CONFIG_4M_5W_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_2M_5W_ADJUST:		// 2m 5 watt adjust
+		if((ts.band == BAND_MODE_2) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_2m_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_2m_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_2m_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_2m_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_5w_adj = TX_POWER_FACTOR_2_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_2m_5w_adj);
+		opt_pos = CONFIG_2M_5W_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_70CM_5W_ADJUST:		// 70cm 5 watt adjust
+		if((ts.band == BAND_MODE_70) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_70cm_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_70cm_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_70cm_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_70cm_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_5w_adj = TX_POWER_FACTOR_70_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_70cm_5w_adj);
+		opt_pos = CONFIG_70CM_5W_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_23CM_5W_ADJUST:		// 23cm 5 watt adjust
+		if((ts.band == BAND_MODE_23) && (ts.power_level == PA_LEVEL_5W))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_5w_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_5w_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_23cm_5w_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_23cm_5w_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_23cm_5w_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_23cm_5w_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_5w_adj = TX_POWER_FACTOR_23_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_23cm_5w_adj);
+		opt_pos = CONFIG_23CM_5W_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_160M_FULL_POWER_ADJUST:		// 160m full power adjust
+		if((ts.band == BAND_MODE_160) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_160m_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_160m_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_160m_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_160m_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_160m_full_adj = TX_POWER_FACTOR_160_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_160m_full_adj);
+		opt_pos = CONFIG_160M_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
 	case CONFIG_80M_FULL_POWER_ADJUST:		// 80m full power adjust
 		if((ts.band == BAND_MODE_80) && (ts.power_level == PA_LEVEL_FULL))	{
 			if(var >= 1)	{	// setting increase?
@@ -5295,6 +5758,191 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 		sprintf(options, "  %u ", ts.pwr_10m_full_adj);
 		opt_pos = CONFIG_10M_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_6M_FULL_POWER_ADJUST:		// 6m full power adjust
+		if((ts.band == BAND_MODE_6) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_6m_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_6m_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_6m_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_6m_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_6m_full_adj = TX_POWER_FACTOR_6_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_6m_full_adj);
+		opt_pos = CONFIG_6M_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_4M_FULL_POWER_ADJUST:		// 4m full power adjust
+		if((ts.band == BAND_MODE_4) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_4m_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_4m_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_4m_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_4m_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_4m_full_adj = TX_POWER_FACTOR_4_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_4m_full_adj);
+		opt_pos = CONFIG_4M_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_2M_FULL_POWER_ADJUST:		// 2m full power adjust
+		if((ts.band == BAND_MODE_2) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_2m_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_2m_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_2m_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_2m_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_2m_full_adj = TX_POWER_FACTOR_2_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_2m_full_adj);
+		opt_pos = CONFIG_2M_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_70CM_FULL_POWER_ADJUST:		// 70cm full power adjust
+		if((ts.band == BAND_MODE_70) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_70cm_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_70cm_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_70cm_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_70cm_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_70cm_full_adj = TX_POWER_FACTOR_70_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_70cm_full_adj);
+		opt_pos = CONFIG_70CM_FULL_POWER_ADJUST % MENUSIZE;
+		break;
+		//
+	case CONFIG_23CM_FULL_POWER_ADJUST:		// 23Cm full power adjust
+		if((ts.band == BAND_MODE_23) && (ts.power_level == PA_LEVEL_FULL))	{
+			if(var >= 1)	{	// setting increase?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_full_adj++;
+				tchange = 1;
+			}
+			else if(var <= -1)	{	// setting decrease?
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_full_adj--;
+				tchange = 1;
+			}
+			//
+			if(ts.pwr_23cm_full_adj > TX_POWER_FACTOR_MAX)
+				ts.pwr_23cm_full_adj  = TX_POWER_FACTOR_MAX;
+			else if(ts.pwr_23cm_full_adj < TX_POWER_FACTOR_MIN)
+				ts.pwr_23cm_full_adj = TX_POWER_FACTOR_MIN;
+			//
+			if(mode == 3)	{
+				ts.menu_var_changed = 1;	// indicate that a change has occurred
+				ts.pwr_23cm_full_adj = TX_POWER_FACTOR_80_DEFAULT;
+				tchange = 1;
+			}
+			//
+			if(tchange)	{		// did something change?
+				UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+				if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+					Codec_SidetoneSetgain();				// adjust the sidetone gain
+			}
+		}
+		else	// not enabled
+			clr = Orange;
+		//
+		sprintf(options, "  %u ", ts.pwr_23cm_full_adj);
+		opt_pos = CONFIG_23CM_FULL_POWER_ADJUST % MENUSIZE;
 		break;
 		//
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
@@ -5697,7 +6345,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, "Do it! ");
 			    clr = White;
-			    opt_pos = 4 % MENUSIZE;			// Y position of this menu item
+			    opt_pos =  CONFIG_RESET_SER_EEPROM % MENUSIZE;			// Y position of this menu item
 			    if(var>=1)
 				{
 				// clear EEPROM

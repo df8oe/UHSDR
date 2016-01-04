@@ -267,10 +267,15 @@ typedef struct SWRMeter
 	bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
 	uchar	p_curr;			// count used to update power meter
 	uchar	sensor_null;	// used to null out the sensor offset voltage
+	uchar	coupling_160m_calc;	// coupling coefficient for forward and reverse couplers for 160 meters
 	uchar	coupling_80m_calc;	// coupling coefficient for forward and reverse couplers for 80 meters
 	uchar	coupling_40m_calc;	// coupling coefficient for forward and reverse couplers for 40/60 meters
 	uchar	coupling_20m_calc;	// coupling coefficient for forward and reverse couplers for 30/20 meters
 	uchar	coupling_15m_calc;	// coupling coefficient for forward and reverse couplers for 17/15/12/10 meters
+	uchar	coupling_6m_calc;	// coupling coefficient for forward and reverse couplers for 6 meters
+	uchar	coupling_2m_calc;	// coupling coefficient for forward and reverse couplers for 2 meters
+	uchar	coupling_70cm_calc;	// coupling coefficient for forward and reverse couplers for 70 centimeters
+	uchar	coupling_23cm_calc;	// coupling coefficient for forward and reverse couplers for 23 centimeters
 
 } SWRMeter;
 
@@ -282,10 +287,16 @@ typedef struct SWRMeter
 #define	SENSOR_NULL_MAX					125
 #define	SENSOR_NULL_DEFAULT				100
 //
+#define	FILTER_BAND_160					5
 #define	FILTER_BAND_80					1
 #define	FILTER_BAND_40					2
 #define	FILTER_BAND_20					3
 #define FILTER_BAND_15					4
+#define	FILTER_BAND_6					6
+#define	FILTER_BAND_4					7
+#define	FILTER_BAND_2					8
+#define	FILTER_BAND_70					9
+#define	FILTER_BAND_23					10
 //
 // Location of numerical FWD/REV power indicator
 //
