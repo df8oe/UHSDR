@@ -267,6 +267,8 @@ typedef struct SWRMeter
 	bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
 	uchar	p_curr;			// count used to update power meter
 	uchar	sensor_null;	// used to null out the sensor offset voltage
+	uchar	coupling_2200m_calc;	// coupling coefficient for forward and reverse couplers for 2200 meters
+	uchar	coupling_630m_calc;	// coupling coefficient for forward and reverse couplers for 630 meters
 	uchar	coupling_160m_calc;	// coupling coefficient for forward and reverse couplers for 160 meters
 	uchar	coupling_80m_calc;	// coupling coefficient for forward and reverse couplers for 80 meters
 	uchar	coupling_40m_calc;	// coupling coefficient for forward and reverse couplers for 40/60 meters
@@ -287,6 +289,8 @@ typedef struct SWRMeter
 #define	SENSOR_NULL_MAX					125
 #define	SENSOR_NULL_DEFAULT				100
 //
+#define	FILTER_BAND_2200				11
+#define	FILTER_BAND_630					12
 #define	FILTER_BAND_160					5
 #define	FILTER_BAND_80					1
 #define	FILTER_BAND_40					2
@@ -418,7 +422,7 @@ typedef struct EepromSave
 #define POS_TUNE_SFREQ_Y				(POS_TUNE_FREQ_Y - 20)
 
 // Band selection control
-#define POS_BAND_MODE_X					(POS_TUNE_FREQ_X + 170)
+#define POS_BAND_MODE_X					(POS_TUNE_FREQ_X + 160)
 #define POS_BAND_MODE_Y					(POS_TUNE_FREQ_Y + 7)
 #define POS_BAND_MODE_MASK_X				(POS_BAND_MODE_X - 1)
 #define POS_BAND_MODE_MASK_Y				(POS_BAND_MODE_Y - 1)

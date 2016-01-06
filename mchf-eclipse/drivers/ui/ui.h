@@ -46,6 +46,8 @@ const ulong size_bands[MAX_BANDS] = { BAND_SIZE_80,
 									  BAND_SIZE_2,
 									  BAND_SIZE_70,
 									  BAND_SIZE_23,
+									  BAND_SIZE_2200,
+									  BAND_SIZE_630,
 									  BAND_SIZE_160};//,
 //									  BAND_SIZE_GEN};
 
@@ -65,6 +67,8 @@ const ulong tune_bands[MAX_BANDS] = { BAND_FREQ_80,
 									  BAND_FREQ_2,
 									  BAND_FREQ_70,
 									  BAND_FREQ_23,
+									  BAND_FREQ_2200,
+									  BAND_FREQ_630,
 									  BAND_FREQ_160};//,
 //									  BAND_FREQ_GEN};
 

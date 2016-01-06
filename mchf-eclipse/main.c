@@ -799,6 +799,8 @@ void TransceiverStateInit(void)
 	ts.refresh_freq_disp	= 1;					// TRUE if frequency/color display is to be refreshed when next called - NORMALLY LEFT AT 0 (FALSE)!!!
 													// This is NOT reset by the LCD function, but must be enabled/disabled externally
 	//
+	ts.pwr_2200m_5w_adj	= 1;
+	ts.pwr_630m_5w_adj	= 1;
 	ts.pwr_160m_5w_adj	= 1;
 	ts.pwr_80m_5w_adj	= 1;
 	ts.pwr_60m_5w_adj	= 1;
