@@ -3687,26 +3687,6 @@ skip_check:
 			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
 	}
 
-	if(mode != 3)	{		// do not bother checking frequency limits if updating ONLY the TX frequency
-		// Frequency range check, moved from si570 routine here
-		if(!(ts.misc_flags1 & 32))	{	// is frequency tuning limit disabled?
-			if((ts.tune_freq > SI570_MAX_FREQ) || (ts.tune_freq < SI570_MIN_FREQ))	// no - enforce limit
-			{
-				//printf("out of freq err: %d\n\r",tune_freq);
-				df.tune_new = df.tune_old;						// reload old value
-				return;
-			}
-		}
-		else	{ 	// Tuning limits disabled - enforce "hard" limits on frequency tuning range to prevent crashing of system
-			if((ts.tune_freq > SI570_HARD_MAX_FREQ) || (ts.tune_freq < SI570_HARD_MIN_FREQ))	// no - enforce limit
-			{
-				//printf("out of freq err: %d\n\r",tune_freq);
-				df.tune_new = df.tune_old;						// reload old value
-				return;
-			}
-		}
-	}
-
 	if(mode != 3)	{		// updating ONLY the TX frequency display?
 
 		// Extra tuning actions
@@ -3740,8 +3720,11 @@ skip_check:
 		// Set frequency
 		if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
 		{
-			if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))	// Try again if it didn't work the first time
-				col = Red;	// Color in red if there was a problem setting frequency
+		char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+			if(test == 1)
+			    col = Red;	// Color in red if there was a problem setting frequency
+			if(test == 2)
+			    col = Yellow;	// Color in yellow if there was a problem setting frequency
 		}
 		//
 		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
@@ -9887,7 +9870,7 @@ void UiDriverLoadEepromValues(void)
 			df.tune_new = saved;
 			//printf("-->frequency loaded\n\r");
 		}
-		else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
 			df.tune_new = saved;
 			//printf("-->frequency loaded (relaxed)\n\r");
 		}
@@ -9939,8 +9922,8 @@ void UiDriverLoadEepromValues(void)
 		    band_dial_value[i] = saved;
 		    //printf("-->frequency loaded\n\r");
 		    }
-		else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// relax memory-save frequency restrictions and is it within the allowed range?
+		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
 		    band_dial_value[i] = saved;
 		    //printf("-->frequency loaded (relaxed)\n\r");
 		    }
@@ -9988,8 +9971,8 @@ void UiDriverLoadEepromValues(void)
 		    band_dial_value_a[i] = saved;
 		    //printf("-->frequency loaded\n\r");
 		    }
-		else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// relax memory-save frequency restrictions and is it within the allowed range?
+		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
 		    band_dial_value_a[i] = saved;
 		    //printf("-->frequency loaded (relaxed)\n\r");
 		    }
@@ -10033,7 +10016,7 @@ void UiDriverLoadEepromValues(void)
 				band_dial_value_b[i] = saved;
 				//printf("-->frequency loaded\n\r");
 			}
-			else if((ts.misc_flags2 & 16) && (saved >= SI570_MIN_FREQ) && (saved <= SI570_MAX_FREQ) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// relax memory-save frequency restrictions and is it within the allowed range?
+			else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
 				band_dial_value_b[i] = saved;
 				//printf("-->frequency loaded (relaxed)\n\r");
 			}

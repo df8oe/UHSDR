@@ -522,11 +522,21 @@ uchar ui_si570_set_frequency(ulong freq,int calib,int temp_factor, uchar test)
 	//printf("set si750 freq to: %d\n\r",freq);
 
 // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
-if(si_freq > 160 || si_freq < 1)
-    si_freq = 160;
+if(si_freq <= SI570_MAX_FREQ / 1000000 && si_freq >= SI570_MIN_FREQ / 1000000)			// tuning inside specs, tuning ok, color white
+    return ui_si570_change_frequency(si_freq, test);
+else if(si_freq <= SI570_HARD_MAX_FREQ / 1000000 && si_freq >= SI570_HARD_MIN_FREQ / 1000000)	// tuning outside specs, inside hard limits --> tuning with gaps, color yellow
+    {
+    ui_si570_change_frequency(si_freq, test);
+    return(2);
+    }
 else
-    	return ui_si570_change_frequency(si_freq, test);
-
+    {												// tuning outside hard limits, tuning bad, color red
+    if(si_freq > SI570_MAX_FREQ / 1000000)
+	si_freq = SI570_MAX_FREQ / 1000000;
+    if(si_freq < SI570_MIN_FREQ / 1000000)
+	si_freq = SI570_MIN_FREQ / 1000000;
+    return(1);
+    }
 }
 
 //*----------------------------------------------------------------------------
