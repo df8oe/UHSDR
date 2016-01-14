@@ -1301,14 +1301,19 @@ static void UiDriverProcessKeyboard(void)
 					}
 					break;
 				case BUTTON_F5_PRESSED:			// Button F5 was pressed-and-held - Toggle TX Disable
-					if(ts.tx_disable)	{
+					if(ts.txrx_mode == TRX_MODE_RX)	// do NOT allow mode change in TUNE mode or transmit mode
+					    {
+					    if(ts.tx_disable)
+						{
 						ts.tx_disable = 0;		// Enable TX
 						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);	// Make TUNE button White
-					}
-					else	{
+						}
+					    else
+						{
 						ts.tx_disable = 1;		// Disable TX
 						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
-					}
+						}
+					    }
 					break;
 				case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
 					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
