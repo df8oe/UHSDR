@@ -211,7 +211,7 @@ typedef struct SpectrumDisplay
 	ushort	wfall_line_update;	// used to set the number of lines per update on the waterfall
 	float	wfall_contrast;	// used to adjust the contrast of the waterfall display
 
-	ushort	waterfall_colours[NUMBER_WATERFALL_COLOURS];	// palette of colors for waterfall data
+	ushort	waterfall_colours[NUMBER_WATERFALL_COLOURS+1];	// palette of colors for waterfall data
 	float32_t	wfall_temp[FFT_IQ_BUFF_LEN/2];					// temporary holder for rescaling screen
 	ushort	waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][FFT_IQ_BUFF_LEN/2];	// circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
 

@@ -630,6 +630,7 @@ void 	uiCodecMute(uchar val);
 void 	UiDriverSaveEepromValuesPowerDown(void);
 void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
 void	UiCheckForPressedKey(void);
+void 	UiKeyBeep(void);
 //
 void 	UiCalcSubaudibleFreq(void);
 void 	UiLoadToneBurstMode(void);
