@@ -544,7 +544,7 @@ static uint8_t  usbd_cdc_Setup (void  *pdev,
     	  //
     	  // add on - send wValue instead of NULL buffer
     	  //
-        APP_FOPS.pIf_Ctrl(req->bRequest, &(req->wValue), 0);
+        APP_FOPS.pIf_Ctrl(req->bRequest, (uint8_t*)&(req->wValue), 0);
       }
       
       return USBD_OK;
