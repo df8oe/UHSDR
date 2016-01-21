@@ -29,16 +29,6 @@
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-//#include "filters/q_rx_filter.h"
-//#include "filters/i_rx_filter.h"
-//#include "filters/q_tx_filter.h"
-//#include "filters/i_tx_filter.h"
-
-// Audio filters
-//#include "filters/fir_10k.h"
-//#include "filters/fir_3_6k.h"
-//#include "filters/fir_2_3k.h"
-//#include "filters/fir_1_8k.h"
 //
 // IIR lattice ARMA filters with time-reversed elements
 //
@@ -46,6 +36,7 @@
 #include "filters/iir_500hz.h"
 #include "filters/iir_1_8k.h"
 #include "filters/iir_2_3k.h"
+//#include "filters/iir_3k.h"
 #include "filters/iir_3_6k.h"
 #include "filters/iir_10k.h"
 
@@ -449,9 +440,12 @@ void audio_driver_set_rx_audio_filter(void)
 		    }
 			break;
 		case AUDIO_3P6KHZ:
-		    IIR_PreFilter.numStages = IIR_3k6_numStages;		// number of stages
+		    	IIR_PreFilter.numStages = IIR_3k6_numStages;		// number of stages
 			IIR_PreFilter.pkCoeffs = (float *)IIR_3k6_pkCoeffs;	// point to reflection coefficients
 			IIR_PreFilter.pvCoeffs = (float *)IIR_3k6_pvCoeffs;	// point to ladder coefficients
+//			IIR_PreFilter.numStages = IIR_3k_numStages;		// number of stages
+//			IIR_PreFilter.pkCoeffs = (float *)IIR_3k_pkCoeffs;	// point to reflection coefficients
+//			IIR_PreFilter.pvCoeffs = (float *)IIR_3k_pvCoeffs;	// point to ladder coefficients
 			break;
 		case AUDIO_WIDE:
 		    IIR_PreFilter.numStages = IIR_10k_numStages;		// number of stages
