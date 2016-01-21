@@ -437,11 +437,9 @@ return Data;
 }
 
 
-/*
 uint8_t Read_24Cxxseq(uint32_t start, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
 }
-*/
 
 uint8_t Write_24Cxxseq(uint32_t address, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
