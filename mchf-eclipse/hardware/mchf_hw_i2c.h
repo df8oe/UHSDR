@@ -18,8 +18,8 @@ void 	mchf_hw_i2c_init(void);
 void 	mchf_hw_i2c_reset(void);
 
 uchar 	mchf_hw_i2c_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
-uchar 	mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr,volatile uchar *data,ulong size);
-uchar 	mchf_hw_i2c_ReadRegister (uchar I2CAddr,uchar RegisterAddr, volatile uchar *RegisterValue);
+uchar 	mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data,ulong size);
+uchar 	mchf_hw_i2c_ReadRegister (uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue);
 uchar 	mchf_hw_i2c_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size);
 
 #endif
