@@ -367,7 +367,8 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
    	curr_div 	= (ushort)ceilf (fdco_min / new_freq);
   	//printf("%d-%d -> ",curr_div,divider_max);
 
-   	while (curr_div <= divider_max)
+   	bool found;
+   	for (found = false;(curr_div <= divider_max) && !found; curr_div++)
 	{
     	for(i = 0; i < 6; i++)
       	{
@@ -381,11 +382,12 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
         	{
          		n1 = (uchar)curr_n1;
 				if((n1 == 1) || ((n1 & 1) == 0))
-					goto found;
+				{
+					found = true;
+					break;
+				}
          	}
       	}
-
-      	curr_div++;
    	}
 
    	CriticalError(102);
