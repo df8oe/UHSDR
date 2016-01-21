@@ -20,6 +20,7 @@ void UiDriverUpdateMenu(uchar mode);
 void UiDriverMemMenu(void);
 void UiDriverUpdateMemLines(uchar var);
 //
+void UiLoadBeepFreq(void);
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
 //
