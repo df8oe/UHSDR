@@ -10,7 +10,6 @@
 **  Last Modified:                                                                 **
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
-
 // Common
 #include "mchf_board.h"
 
@@ -59,7 +58,7 @@ __IO int16_t		rx_buffer[BUFF_LEN+1];
 
 static int16_t	test_a[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
-float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+16];
+float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
 //
 //
 //static int16_t	test_j[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
@@ -81,7 +80,7 @@ arm_lms_instance_f32	lms2_instance;
 float32_t	lms2StateF32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 //
-float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + 16];
+float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
 //
 static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
