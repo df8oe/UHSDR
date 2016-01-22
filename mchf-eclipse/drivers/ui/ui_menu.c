@@ -27,6 +27,9 @@
 // LCD
 #include "ui_lcd_hy28.h"
 
+// serial EEPROM driver
+#include "mchf_hw_i2c2.h"
+
 // Encoders
 #include "ui_rotary.h"
 //

@@ -359,7 +359,7 @@ void  USBH_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev)
   * @param  None
   * @retval None
   */
-void USBH_OTG_BSP_TimeInit ( void )
+void USBH_OTG_BSP_TimeInit(void)
 {
 #ifdef USE_ACCURATE_TIME   
   NVIC_InitTypeDef NVIC_InitStructure;

@@ -16,6 +16,9 @@
 
 #include <stdio.h>
 
+// serial EEPROM driver
+#include "mchf_hw_i2c2.h"
+
 // Audio Driver
 #include "audio_driver.h"
 #include "cw_gen.h"
@@ -940,6 +943,7 @@ void MiscInit(void)
 	//printf("misc init ok\n\r");
 }
 
+/*
 static void wd_reset(void)
 {
 	// Init WD
@@ -965,7 +969,7 @@ static void wd_reset(void)
 		WWDG_SetCounter(WD_REFRESH_COUNTER);
 	}
 }
-
+*/
 //*----------------------------------------------------------------------------
 //* Function Name       : main
 //* Object              :

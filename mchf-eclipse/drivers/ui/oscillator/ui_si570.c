@@ -71,7 +71,7 @@ static uchar ui_si570_verify_frequency(void)
 	//printf("write %02x %02x %02x %02x %02x %02x\n\r",os.regs[0],os.regs[1],os.regs[2],os.regs[3],os.regs[4],os.regs[5]);
 	//printf("read  %02x %02x %02x %02x %02x %02x\n\r",regs[0],regs[1],regs[2],regs[3],regs[4],regs[5]);
 
-	if(memcmp(regs,os.regs,6) != 0)
+	if(memcmp(regs,(uchar*)os.regs,6) != 0)
 		return 1;
 
 	return 0;
@@ -102,7 +102,7 @@ static uchar ui_si570_small_frequency_change(void)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,(uchar*)os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -153,7 +153,7 @@ static uchar ui_si570_large_frequency_change(void)
 		goto critical;
 
 	// Write as block, registers 7-12
-	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,os.regs,6);
+	ret = mchf_hw_i2c_WriteBlock(os.si570_address,os.base_reg,(uchar*)os.regs,6);
 	if(ret)
 	{
 		unfreeze = 1;
@@ -277,7 +277,7 @@ uchar ui_si570_get_configuration(void)
 
    	for(i = 0; i < 6; i++)
    	{   		
-   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + i) ,&(os.regs[i]));
+   		res = mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + i) ,(uchar*)&(os.regs[i]));
    		if(res != 0)
    		{
 			//printf("read2 err: %d, i = %d\n\r",res,i);

@@ -25,6 +25,9 @@
 // LCD
 #include "ui_lcd_hy28.h"
 
+// serial EEPROM driver
+#include "mchf_hw_i2c2.h"
+
 // Encoders
 #include "ui_rotary.h"
 
@@ -1518,7 +1521,7 @@ static void UiDriverProcessKeyboard(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-UiInitRxParms(void)
+void UiInitRxParms(void)
 {
 	UiCWSidebandMode();
 	if(ts.menu_mode)	// are we in menu mode?

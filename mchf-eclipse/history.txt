@@ -12,7 +12,13 @@
 
 
 
-
+20160122 [DF8OE]
+- fixed bug "60m 5W power adjust"
+- fixed many compiler warnings (cleanup - thanks to hogthrop!
+- removed tuning borders, now colour of digits indicate:
+  white == within official tuning range and tuned
+  yellow == outside specs, but often works
+  red == completely outside specs or no I2C communication to SI570 possible
 
 
 20160103 [DF8OE]
