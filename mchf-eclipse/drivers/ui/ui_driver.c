@@ -19,6 +19,7 @@
 #include "math.h"
 #include "codec.h"
 #include "ui_menu.h"
+#include "mchf_hw_i2c2.h"
 #include "waterfall_colours.h"
 //
 //
@@ -2162,10 +2163,11 @@ void UiDriverShowStep(ulong step)
 			line_loc = 3;
 			break;
 		default:
+			line_loc = 0; // default for unknown tuning step modes, disables the frequency marker display
 			break;
 	}
 	//
-	if(ts.freq_step_config & 0x0f)	{		// is frequency step marker line enabled?
+	if((ts.freq_step_config & 0x0f) && line_loc > 0)	{		// is frequency step marker line enabled?
 		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 25),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		step_line = 1;	// indicate that a line under the step size had been drawn
@@ -4411,6 +4413,8 @@ static uchar UiDriverButtonCheck(ulong button_num)
 	    return(GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13));
 	if(button_num == 17)					// 17 used for touchscreen
 	    return(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ));
+
+	return 1; // always return "not pressed" (1) for buttons which do not exist
 }
 //
 //*----------------------------------------------------------------------------
@@ -4946,7 +4950,7 @@ static void UiDriverChangeBand(uchar is_up)
 			new_band_freq  = tune_bands[10];
 			new_band_index = 10;
 			}
-		    if(ts.rfmod_present == 0 & new_band_index == 10)
+		    if(ts.rfmod_present == 0 && new_band_index == 10)
 			{		// jump 2m --> 10m
 			new_band_freq  = tune_bands[8];
 			new_band_index = 8;
@@ -6388,6 +6392,7 @@ void UiDriverDisplayFilterBW(void)
 		return;
 
 
+
 	// Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 	//
 	switch(ts.filter_id)	{
@@ -6528,6 +6533,9 @@ void UiDriverDisplayFilterBW(void)
 			}
 			break;
 		default:
+			// in case of call with not yet covered parameters we set the widest filter as default
+			offset = FILT10000;
+			width = FILTER_10000HZ_WIDTH;
 			break;
 	}
 	//
@@ -6572,12 +6580,13 @@ void UiDriverDisplayFilterBW(void)
 	//
 	if(!sd.magnify)	{	// is magnify mode on?
 		calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
-		if(!ts.iq_freq_mode)					// frequency translate mode is off
-			lpos = 130;							// line is in center
-		else if(ts.iq_freq_mode == 1)			// line is to left if in "RX LO HIGH" mode
+		if(ts.iq_freq_mode == 1)			// line is to left if in "RX LO HIGH" mode
 			lpos = 98;
 		else if(ts.iq_freq_mode == 2)			// line is to right if in "RX LO LOW" mode
 			lpos = 162;
+		else					// frequency translate mode is off
+			lpos = 130;			// line is in center
+
 	}
 	else	{	// magnify mode is on
 		calc = 24000/FILT_DISPLAY_WIDTH;		// magnify mode is on
@@ -9247,7 +9256,6 @@ void UiCalcRxPhaseAdj(void)
 void UiCalcTxCompLevel(void)
 {
 	float tcalc;
-	ushort	value;
 
 	switch(ts.tx_comp_level)	{				// get the speech compressor setting
 		case 0:		// minimum compression
@@ -9678,7 +9686,6 @@ void UiCheckForPressedKey(void)
 {
 	ushort i, j, k, p_o_state, rb_state, new_state;
 	uint32_t poweroffcount, rbcount;
-	uchar	b;
 	bool stat = 1;
 	poweroffcount = rbcount = 0;
 	p_o_state = rb_state = new_state = 0;
@@ -9837,8 +9844,8 @@ void UiDriverLoadEepromValues(void)
 	int16_t	*int_val;	// Note:  This "signed" variable pointer actually points to an unsigned variable ("uint_val" as the EEPROM save function only "knows" about
 						// unsigned variables.
 	//
-	int_val = &uint_val;	// Copy the memory location of the unsigned integer value to a "signed" pointer to allow us to reliabily read signed values from EEPROM to memory.
-							// This results in a warning that I haven't been able to suppress (KA7OEI)
+	int_val = (int16_t*)&uint_val;	// Copy the memory location of the unsigned integer value to a "signed" pointer to allow us to reliabily read signed values from EEPROM to memory.
+
 
 	// Do a sample reads to "prime the pump" before we start...
 	// This is to make the function work reliabily after boot-up
