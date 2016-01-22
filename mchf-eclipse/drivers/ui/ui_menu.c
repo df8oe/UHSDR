@@ -52,6 +52,9 @@
 // CW generation
 #include "cw_gen.h"
 //
+#include "mchf_hw_i2c2.h"
+
+
 static void UiDriverUpdateMenuLines(uchar index, uchar mode);
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 //
@@ -3173,7 +3176,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	int var;
 	bool tchange = 0;		// used to indicate a parameter change
 	bool disp_shift = 0;	// used to cause display to be shifted to the left for large amounts of data (e.g. frequency displays)
-	float ftemp;
+	opt_pos = 5;		// default in case of use with wrong index/mode values
+	// float ftemp;
 
 	clr = White;		// color used it display of adjusted options
 
@@ -3727,7 +3731,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.beep_frequency);
+		sprintf(options, "   %ld  ", ts.beep_frequency);
 		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//
@@ -6588,7 +6592,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				NVIC_SystemReset();			// restart mcHF
 				}
 			    }
-			    break;
+			opt_pos = CONFIG_RESET_SER_EEPROM % MENUSIZE;
+			break;
+
 			    //
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");
@@ -6643,72 +6649,16 @@ void UiDriverMemMenu(void)
 	if(update_vars)	{						// change detected?
 		update_vars = 0;					// yes, reset flag
 		change_detect = ts.menu_item;
-		//
-		if(ts.menu_item < 6)	{	// first screen of items
-			menu_num = 0;
-			if(menu_num != old_menu_num)	{
+
+		// each menu is composed of a fixed number of entries
+		// identified by an incrementing index number, so we can
+		// derive menu_num from  menu_item number of interest
+		menu_num = ts.menu_item / MENUSIZE;
+		if(menu_num != old_menu_num)	{
 				old_menu_num = menu_num;
-				for(var = 0; var < 6; var++)
-					UiDriverUpdateMemLines(var);
-			}
+				for(var = menu_num * MENUSIZE; var < ((menu_num+1) * MENUSIZE); var++)
+							UiDriverUpdateMemLines(var);
 		}
-		else if(ts.menu_item < 12)	{	// second screen of items
-			menu_num = 1;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 6; var < 12; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 18)	{	// third screen of items
-			menu_num = 2;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 12; var < 18; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 24)	{	// fourth screen of items
-			menu_num = 3;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 18; var < 24; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 30)	{	// fifth screen of items
-			menu_num = 4;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 24; var < 30; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 36)	{	// sixth screen of items
-			menu_num = 5;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 30; var < 36; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 42)	{	// seventh screen of items
-			menu_num = 6;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 36; var < 42; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		else if(ts.menu_item < 48)	{	// eighth screen of items
-			menu_num = 7;
-			if(menu_num != old_menu_num)	{
-				old_menu_num = menu_num;
-				for(var = 42; var < 48; var++)
-					UiDriverUpdateMemLines(var);
-			}
-		}
-		UiDriverUpdateMemLines(var);
 	}
 }
 
@@ -6725,8 +6675,8 @@ void UiDriverUpdateMemLines(uchar var)
 {
 	ulong opt_pos;					// y position of option
 	static ulong opt_oldpos = 999;	// y position of option
-	ulong	mem_mode, mem_freq_high, mem_freq_low;		// holders to store the memory that has been read
-	char s[64];						// holder to build frequency information
+	// ulong	mem_mode, mem_freq_high, mem_freq_low;		// holders to store the memory that has been read
+	// char s[64];						// holder to build frequency information
 
 	opt_pos = (ulong)var;
 
