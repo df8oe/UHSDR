@@ -56,7 +56,7 @@ static void Audio_Init(void);
 __IO int16_t 	tx_buffer[BUFF_LEN+1];
 __IO int16_t		rx_buffer[BUFF_LEN+1];
 
-static int16_t	test_a[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_a[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
 //
@@ -73,7 +73,7 @@ arm_lms_instance_f32	lms1_instance;
 float32_t	lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 float32_t	lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 //
-static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
+//static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
 //
 arm_lms_norm_instance_f32	lms2Norm_instance;
 arm_lms_instance_f32	lms2_instance;
@@ -82,18 +82,18 @@ float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 //
 float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
 //
-static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
 //
 //
-static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
 __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 //
-static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
