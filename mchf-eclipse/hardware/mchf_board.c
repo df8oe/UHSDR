@@ -298,6 +298,11 @@ static void mchf_board_power_button_irq_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#if 0
+// this function is commented out because it is static (i.e. local only) and not used
+// just remove #if 0 if function needs to be used. Reason is to include only used code
+// if possible
+
 static void mchf_board_dac0_init(void)
 {
 	 GPIO_InitTypeDef GPIO_InitStructure;
@@ -325,6 +330,7 @@ static void mchf_board_dac0_init(void)
 	 // Set DAC Channel1 DHR12L register - JFET attenuator off (0V)
 	 DAC_SetChannel1Data(DAC_Align_8b_R, 0x00);
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_dac1_init
@@ -914,28 +920,34 @@ if(ts.ser_eeprom_in_use == 0xAA)
 
     highbyte = ts.eeprombuf[addr*2];
     lowbyte = ts.eeprombuf[addr*2+1];
-    data = lowbyte + highbyte<<8;
+    data = lowbyte + (highbyte<<8);
     *value = data;
     }
 return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : Write_EEPROM
+//* Object              :
+//* Object              :
+//* Input Parameters    : addr to write to, 16 bit value as data
+//* Output Parameters   : returns FLASH_COMPLETE if OK, otherwise various error codes.
+//*                       FLASH_ERROR_OPERATION is also returned if eeprom_in_use contains bogus values.
+//* Functions called    :
+//*----------------------------------------------------------------------------
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
 {
+FLASH_Status status = FLASH_ERROR_OPERATION;
 if(ts.ser_eeprom_in_use == 0)
     {
-    FLASH_Status status = FLASH_COMPLETE;
     Write_SerEEPROM(addr, value);
-    return status;
+    status = FLASH_COMPLETE;
     }
-if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
+else if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
     {
-    uint16_t retvar;
-
-    retvar = (EE_WriteVariable(VirtAddVarTab[addr], value));
-    return retvar;
+        status = (EE_WriteVariable(VirtAddVarTab[addr], value));
     }
-if(ts.ser_eeprom_in_use == 0xAA)
+else if(ts.ser_eeprom_in_use == 0xAA)
     {
     uint8_t lowbyte;
     uint8_t highbyte;
@@ -945,9 +957,9 @@ if(ts.ser_eeprom_in_use == 0xAA)
     highbyte = (uint8_t)((0x00FF)&value);
     ts.eeprombuf[addr*2] = highbyte;
     ts.eeprombuf[addr*2+1] = lowbyte;
-    FLASH_Status status = FLASH_COMPLETE;
-    return status;
+    status = FLASH_COMPLETE;
     }
+	return status;
 }
 
 //
@@ -988,7 +1000,7 @@ uint16_t data;
 
 static uint8_t p[MAX_VAR_ADDR*2+2];
 
-uint16_t i,j;
+uint16_t i;
 // copy virtual EEPROM to RAM
 for(i=1; i <= MAX_VAR_ADDR+1; i++)
     {
@@ -1029,7 +1041,7 @@ for(count=1; count <= MAX_VAR_ADDR+1; count++)
 // verify data serial / virtual EEPROM
 void verify_servirt(void)
 {
-uint16_t count,i;
+uint16_t count;
 uint16_t data1, data2;
 
 for(count=1; count <= MAX_VAR_ADDR; count++)
