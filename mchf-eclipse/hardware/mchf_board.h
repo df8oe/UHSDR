@@ -1460,7 +1460,7 @@ typedef struct TransceiverState
 	ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
 	ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 	//
-	uchar	freq_step_config;			// configuration of step size (line, step button reversal)
+	uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 	//
 	bool	nb_disable;					// TRUE if noise blanker is to be disabled
 	//

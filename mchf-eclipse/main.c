@@ -24,6 +24,7 @@
 #include "ui_driver.h"
 #include "ui_rotary.h"
 #include "ui_lcd_hy28.h"
+#include "ui_menu.h"
 
 // Keyboard Driver
 #include "keyb_driver.h"
