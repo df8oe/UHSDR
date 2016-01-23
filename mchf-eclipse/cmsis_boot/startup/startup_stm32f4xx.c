@@ -19,7 +19,6 @@
   ******************************************************************************
   */
     
-
 /*----------Stack Configuration-----------------------------------------------*/
 #define STACK_SIZE       0x00000400      /*!< Stack size (in Words)           */
 __attribute__ ((section(".co_stack")))
@@ -266,6 +265,8 @@ void (* const g_pfnVectors[])(void) =
   */
 void Default_Reset_Handler(void)
 {
+   __asm volatile ("MSR msp, %0\n" : : "r" ((void (*)(void))((unsigned long)pulStack + sizeof(pulStack))) );
+
   /* Initialize data and bss */
   unsigned long *pulSrc, *pulDest;
 
