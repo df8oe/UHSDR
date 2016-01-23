@@ -1184,17 +1184,28 @@ static void audio_demod_fm(int16_t size)
 		//
 		// (Yes, I know that below could be rewritten to be a bit more compact-looking, but it would not be much faster and it would be less-readable)
 		//
-		// Detect above target frequency
-		//
 		// Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator, above
 		//
 		gcount++;		// this counter is used for the accumulation of data over multiple cycles
 		//
 		for(i = 0; i < size/2; i++)	{
+
+			// Detect above target frequency
 			r0 = ads.fm_goertzel_high_r * r1 - r2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
 			r2 = r1;
 			r1 = r0;
+
+			// Detect energy below target frequency
+			s0 = ads.fm_goertzel_low_r * s1 - s2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+			s2 = s1;
+			s1 = s0;
+
+			// Detect on-frequency energy
+			q0 = ads.fm_goertzel_ctr_r * q1 - q2 + ads.c_buffer[i];
+			q2 = q1;
+			q1 = q0;
 		}
+
 		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
 			a = (r1-(r2 * ads.fm_goertzel_high_cos));								// yes - calculate energy at frequency above center and reset detection
 			b = (r2 * ads.fm_goertzel_high_sin);
@@ -1203,16 +1214,7 @@ static void audio_demod_fm(int16_t size)
 			r0 = 0;
 			r1 = 0;
 			r2 = 0;
-		}
-		//
-		// Detect energy below target frequency
-		//
-		for(i = 0; i < size/2; i++)	{
-			s0 = ads.fm_goertzel_low_r * s1 - s2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-			s2 = s1;
-			s1 = s0;
-		}
-		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
+
 			a = (s1-(s2 * ads.fm_goertzel_low_cos));								// yes - calculate energy at frequency below center and reset detection
 			b = (s2 * ads.fm_goertzel_low_sin);
 			r = sqrtf(a*a + b*b);
@@ -1220,16 +1222,7 @@ static void audio_demod_fm(int16_t size)
 			s0 = 0;
 			s1 = 0;
 			s2 = 0;
-		}
-		//
-		// Detect on-frequency energy
-		//
-		for(i = 0; i < size/2; i++)	{
-			q0 = ads.fm_goertzel_ctr_r * q1 - q2 + ads.c_buffer[i];
-			q2 = q1;
-			q1 = q0;
-		}
-		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
+
 			a = (q1-(q2 * ads.fm_goertzel_ctr_cos));								// yes - calculate on-frequency energy and reset detection
 			b = (q2 * ads.fm_goertzel_ctr_sin);
 			r = sqrtf(a*a + b*b);							// r contains "on-frequency" energy
