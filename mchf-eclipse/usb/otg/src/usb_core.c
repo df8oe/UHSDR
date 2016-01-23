@@ -555,8 +555,10 @@ uint32_t USB_OTG_ReadOtgItr (USB_OTG_CORE_HANDLE *pdev)
 USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
 {
   USB_OTG_STS                     status = USB_OTG_OK;
+#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   USB_OTG_FSIZ_TypeDef            nptxfifosize;
   USB_OTG_FSIZ_TypeDef            ptxfifosize;  
+#endif
   USB_OTG_HCFG_TypeDef            hcfg;
   
 #ifdef USE_OTG_MODE
@@ -564,9 +566,11 @@ USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
 #endif
   
   uint32_t                        i = 0;
-  
+
+#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   nptxfifosize.d32 = 0;  
   ptxfifosize.d32 = 0;
+#endif
 #ifdef USE_OTG_MODE
   gotgctl.d32 = 0;
 #endif
@@ -1140,15 +1144,19 @@ USB_OTG_STS USB_OTG_CoreInitDev (USB_OTG_CORE_HANDLE *pdev)
   USB_OTG_DEPCTL_TypeDef  depctl;
   uint32_t i;
   USB_OTG_DCFG_TypeDef    dcfg;
+#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   USB_OTG_FSIZ_TypeDef    nptxfifosize;
   USB_OTG_FSIZ_TypeDef    txfifosize;
+#endif
   USB_OTG_DIEPMSK_TypeDef msk;
   USB_OTG_DTHRCTL_TypeDef dthrctl;  
   
   depctl.d32 = 0;
   dcfg.d32 = 0;
+#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   nptxfifosize.d32 = 0;
   txfifosize.d32 = 0;
+#endif
   msk.d32 = 0;
   
   /* Restart the Phy Clock */
