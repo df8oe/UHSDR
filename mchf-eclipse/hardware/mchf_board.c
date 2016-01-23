@@ -999,29 +999,37 @@ uint16_t data;
 //uint8_t *p = malloc(MAX_VAR_ADDR*2+2);
 
 static uint8_t p[MAX_VAR_ADDR*2+2];
+// length of array is 383*2 + 2 = 768
+// to allow for the 2 eeprom signature bytes
+// stored at index 0/1
+
 
 uint16_t i;
-// copy virtual EEPROM to RAM
-for(i=1; i <= MAX_VAR_ADDR+1; i++)
-    {
-    EE_ReadVariable(VirtAddVarTab[i], &data);
-    p[i*2+1] = (uint8_t)((0x00FF)&data);
-    data = data>>8;
-    p[i*2] = (uint8_t)((0x00FF)&data);
-    }
+// copy virtual EEPROM to RAM, this reads out 383 values and stores them in  2 bytes
+for(i=1; i <= MAX_VAR_ADDR; i++)
+{
+	EE_ReadVariable(VirtAddVarTab[i], &data);
+	p[i*2+1] = (uint8_t)((0x00FF)&data);
+	data = data>>8;
+	p[i*2] = (uint8_t)((0x00FF)&data);
+}
 p[0] = Read_24Cxx(0,16);
 p[1] = Read_24Cxx(1,16);
 // write RAM to serial EEPROM
 if(seq == false)
-    {
-    for(i=0; i <= MAX_VAR_ADDR*2+2;i++)
-	Write_24Cxx(i, p[i], ts.ser_eeprom_type);
-    }
+{
+	for(i=0; i < MAX_VAR_ADDR*2+2;i++)
+	{
+		// this will write  out 768 bytes (2 signature  and 383*2 data)
+		Write_24Cxx(i, p[i], ts.ser_eeprom_type);
+	}
+}
 else
-    {
-    Write_24Cxxseq(0, p, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-    Write_24Cxx(0x180, p[0x180], ts.ser_eeprom_type);
-    }
+{
+	// this will write  out 768 bytes (2 signature  and 383*2 data)
+	Write_24Cxxseq(0, p, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+	Write_24Cxx(0x180, p[0x180], ts.ser_eeprom_type);
+}
 ts.ser_eeprom_in_use = 0;		// serial EEPROM in use now
 }
 
