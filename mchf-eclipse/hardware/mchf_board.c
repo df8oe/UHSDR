@@ -1018,7 +1018,7 @@ p[1] = Read_24Cxx(1,16);
 // write RAM to serial EEPROM
 if(seq == false)
 {
-	for(i=0; i < MAX_VAR_ADDR*2+2;i++)
+	for(i=0; i <= MAX_VAR_ADDR*2;i++)
 	{
 		// this will write  out 768 bytes (2 signature  and 383*2 data)
 		Write_24Cxx(i, p[i], ts.ser_eeprom_type);
@@ -1027,7 +1027,7 @@ if(seq == false)
 else
 {
 	// this will write  out 768 bytes (2 signature  and 383*2 data)
-	Write_24Cxxseq(0, p, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+	Write_24Cxxseq(0, p, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
 	Write_24Cxx(0x180, p[0x180], ts.ser_eeprom_type);
 }
 ts.ser_eeprom_in_use = 0;		// serial EEPROM in use now
@@ -1039,7 +1039,7 @@ void copy_ser2virt(void)
 uint16_t count;
 uint16_t data;
 
-for(count=1; count <= MAX_VAR_ADDR+1; count++)
+for(count=1; count <= MAX_VAR_ADDR; count++)
     {
     Read_SerEEPROM(count, &data);
     EE_WriteVariable(VirtAddVarTab[count], data);

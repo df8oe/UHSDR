@@ -1058,10 +1058,6 @@ int main(void)
 			    if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
 				{					// 16 bit addressing
 				ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
-//				if(Read_24Cxx(0x203,16) != 0x66)
-//				    ts.ser_eeprom_type = 10;
-//				if(Read_24Cxx(0x403,16) != 0x66)
-//				    ts.ser_eeprom_type = 11;
 				if(Read_24Cxx(0x803,16) != 0x66)
 				    ts.ser_eeprom_type = 12;
 				if(Read_24Cxx(0x1003,16) != 0x66)
@@ -1099,7 +1095,6 @@ int main(void)
 
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
-//	verify_servirt();				// just 4 debug purposes
 
 	// Extra init
 	MiscInit();
