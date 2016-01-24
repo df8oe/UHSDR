@@ -12,6 +12,9 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
 // Common
 //
 #include "mchf_board.h"
@@ -3731,7 +3734,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
 		//
-		sprintf(options, "   %u  ", ts.beep_frequency);
+		sprintf(options, "   %u  ", (uint)ts.beep_frequency);
 		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//

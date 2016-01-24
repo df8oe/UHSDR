@@ -26,6 +26,10 @@
   ******************************************************************************
   */ 
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
+
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_bsp.h"
 #include "usbd_conf.h"

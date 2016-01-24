@@ -11,6 +11,9 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
 // Common
 #include "mchf_board.h"
 
@@ -307,7 +310,7 @@ __IO ulong band_dial_value_b[MAX_BANDS+1];
 __IO ulong band_decod_mode_b[MAX_BANDS+1];
 __IO ulong band_filter_mode_b[MAX_BANDS+1];
 //
-static int16_t test_ui_a[250];		// dummy variable - space holder
+// static int16_t test_ui_a[250];		// dummy variable - space holder for what ever used...
 //
 // ------------------------------------------------
 // Transceiver state public structure
