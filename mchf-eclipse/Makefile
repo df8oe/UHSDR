@@ -128,8 +128,9 @@ stdio/printf.c
 
 INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
 
-CC = ${PREFIX}/bin/arm-none-eabi-gcc
-OC = ${PREFIX}/bin/arm-none-eabi-objcopy
+CC = @${PREFIX}/bin/arm-none-eabi-gcc
+OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+ECHO = @echo
 
 ifdef SystemRoot # case WINxx:
    RM = del /Q
@@ -145,6 +146,7 @@ endif
 OBJS  :=
 OBJS  += $(SRC:.c=.o)
 .c.o:
+	$(ECHO) "  [CC] $@" 
 	$(CC) $(CFLAGS) -c ${INC_DIRS} $< -o $@
 
 .PHONY: all clean
@@ -153,9 +155,11 @@ all: $(LPRJ).elf $(PRJ).bin
 
 # compilation
 $(LPRJ).elf: $(OBJS) $(SRC)
+	$(ECHO) "  [LD] $@" 
 	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin: $(LPRJ).elf
+	$(ECHO) "  [OBJC] $@" 
 	$(OC) -v -O binary $< $(PRJ).bin
 
 # cleaning rule
