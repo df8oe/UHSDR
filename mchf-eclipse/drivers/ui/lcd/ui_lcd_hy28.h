@@ -114,6 +114,7 @@ void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
 void 	UiLcdHy28_BulkWrite(ushort Color);
 void 	UiLcdHy28_CloseBulkWrite(void);
+void	UiLcdHy28_WriteRAM_Prepare(void);
 
 void 	UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift);
 void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new,ushort shift);

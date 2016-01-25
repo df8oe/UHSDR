@@ -3734,7 +3734,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
 		//
-		sprintf(options, "   %u  ", (uint32_t)ts.beep_frequency);
+		sprintf(options, "   %u  ", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
 		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//
