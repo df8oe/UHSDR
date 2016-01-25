@@ -19,7 +19,7 @@ GCC_LIB_VERSION = 4.8
 
 # compilation options
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -ffunction-sections -O0 \
- -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER
+ -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER -Wall $(EXTRACFLAGS)
 LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 LIBS := -Llibs -larm_cortexM4lf_math -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu \
  -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu -lm -lg -lc -lgcc
@@ -128,10 +128,16 @@ stdio/printf.c
 
 INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
 
-CC = @${PREFIX}/bin/arm-none-eabi-gcc
-OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+ifdef SystemRoot
+	CC = arm-none-eabi-gcc
+	OC = arm-none-eabi-objcopy
+	OS = arm-none-eabi-size
+else
+	CC = @${PREFIX}/bin/arm-none-eabi-gcc
+	OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+	OS = @${PREFIX}/bin/arm-none-eabi-size
+endif
 ECHO = @echo
-
 ifdef SystemRoot # case WINxx:
    RM = del /Q
    FixPath = $(subst /,\,$1)
@@ -146,7 +152,7 @@ endif
 OBJS  :=
 OBJS  += $(SRC:.c=.o)
 .c.o:
-	$(ECHO) "  [CC] $@" 
+	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -c ${INC_DIRS} $< -o $@
 
 .PHONY: all clean
@@ -155,11 +161,12 @@ all: $(LPRJ).elf $(PRJ).bin
 
 # compilation
 $(LPRJ).elf: $(OBJS) $(SRC)
-	$(ECHO) "  [LD] $@" 
+	$(ECHO) "  [LD] $@"
 	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin: $(LPRJ).elf
-	$(ECHO) "  [OBJC] $@" 
+	$(ECHO) "  [OBJC] $@"
+	$(OS) $<
 	$(OC) -v -O binary $< $(PRJ).bin
 
 # cleaning rule
