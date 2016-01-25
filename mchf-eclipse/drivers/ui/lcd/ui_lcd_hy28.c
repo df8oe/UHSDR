@@ -11,8 +11,8 @@
 **  Licence:      For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
-// Optimization enable for this file
-//#pragma GCC optimize "O3"
+// Optimization disable for this file
+#pragma GCC optimize "O0"
 
 
 // Common

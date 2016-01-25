@@ -133,10 +133,11 @@ ifdef SystemRoot
 	OC = arm-none-eabi-objcopy
 	OS = arm-none-eabi-size
 else
-	CC = ${PREFIX}/bin/arm-none-eabi-gcc
-	OC = ${PREFIX}/bin/arm-none-eabi-objcopy
-	OS = ${PREFIX}/bin/arm-none-eabi-size
+	CC = @${PREFIX}/bin/arm-none-eabi-gcc
+	OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+	OS = @${PREFIX}/bin/arm-none-eabi-size
 endif
+ECHO = @echo
 ifdef SystemRoot # case WINxx:
    RM = del /Q
    FixPath = $(subst /,\,$1)
@@ -151,6 +152,7 @@ endif
 OBJS  :=
 OBJS  += $(SRC:.c=.o)
 .c.o:
+	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -c ${INC_DIRS} $< -o $@
 
 .PHONY: all clean
@@ -159,9 +161,11 @@ all: $(LPRJ).elf $(PRJ).bin
 
 # compilation
 $(LPRJ).elf: $(OBJS) $(SRC)
+	$(ECHO) "  [LD] $@"
 	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin: $(LPRJ).elf
+	$(ECHO) "  [OBJC] $@"
 	$(OS) $<
 	$(OC) -v -O binary $< $(PRJ).bin
 
