@@ -3877,6 +3877,8 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 
 	char		digit[2];
 
+	ts.refresh_freq_disp = true; //because of coloured digits...
+	    
 	if(ts.xverter_mode)	{	// transverter mode active?
 		dial_freq *= (ulong)ts.xverter_mode;	// yes - scale by LO multiplier
 		dial_freq += ts.xverter_offset;	// add transverter frequency offset
