@@ -104,6 +104,73 @@ extern __IO	SpectrumDisplay		sd;
 
 // Public Audio
 extern __IO		AudioDriverState	ads;
+
+
+
+// returns true if the value was changed in its value!
+bool UiDriverMenuItemChangeUInt8(int var, uint8_t mode, volatile uint8_t* val_ptr,uint8_t val_min,uint8_t val_max, uint8_t val_default, uint8_t increment) {
+	uint8_t old_val = *val_ptr;
+
+	if(var >= 1)	{	// setting increase?
+		ts.menu_var_changed = 1;	// indicate that a change has occurred
+		if (*val_ptr < val_max) {
+			(*val_ptr)+= increment;
+		}
+	}
+	else if(var <= -1)	{	// setting decrease?
+		ts.menu_var_changed = 1;
+		if (*val_ptr > val_min) {
+			(*val_ptr)-= increment;
+		}
+
+	}
+	if(*val_ptr < val_min) {
+		ts.menu_var_changed = 1;
+		*val_ptr = val_min;
+	}
+	if(*val_ptr > val_max) {
+		ts.menu_var_changed = 1;
+		*val_ptr = val_max;
+	}
+	if(mode == 3)	{
+		ts.menu_var_changed = 1;
+		*val_ptr = val_default;
+	}
+
+	return old_val != *val_ptr;
+}
+
+bool UiDriverMenuItemChangeUInt32(int var, uint32_t mode, volatile uint32_t* val_ptr,uint32_t val_min,uint32_t val_max, uint32_t val_default, uint32_t increment) {
+	uint32_t old_val = *val_ptr;
+	if(var >= 1)	{	// setting increase?
+		ts.menu_var_changed = 1;	// indicate that a change has occurred
+		if (*val_ptr < val_max) {
+			(*val_ptr)+= increment;
+		}
+	}
+	else if(var <= -1)	{	// setting decrease?
+		ts.menu_var_changed = 1;
+		if (*val_ptr > val_min) {
+			(*val_ptr)-= increment;
+		}
+
+	}
+	if(*val_ptr < val_min) {
+		ts.menu_var_changed = 1;
+		*val_ptr = val_min;
+	}
+	if(*val_ptr > val_max) {
+		ts.menu_var_changed = 1;
+		*val_ptr = val_max;
+	}
+	if(mode == 3)	{
+		ts.menu_var_changed = 1;
+		*val_ptr = val_default;
+	}
+	return old_val != *val_ptr;
+}
+
+
 //
 //
 //
@@ -577,98 +644,21 @@ if(mode > 3)
 		// but minimize updates if the LCD is using an SPI interface
 	if((mode == 0) || update_vars)	{
 		update_vars = 0;
-		if(ts.menu_item < 6)	{	// first screen of items
-			for(var = 0; var < 6; var++)
+		uint32_t menu_num = ts.menu_item / MENUSIZE;
+		// calculate screen number simply by dividing by MENUSIZE
+		// then loop over the correct function to display the items
+		if (ts.menu_item < MAX_MENU_ITEM) {
+			for(var = menu_num * MENUSIZE; (var < ((menu_num+1) * MENUSIZE)) && var < MAX_MENU_ITEM; var++) {
 				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 12)	{	// second screen of items
-			for(var = 6; var < 12; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 18)	{	// third screen of items
-			for(var = 12; var < 18; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 24)	{	// fourth screen of items
-			for(var = 18; var < 24; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 30)	{	// fifth screen of items
-			for(var = 24; var < 30; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 36)	{	// sixth screen of items
-			for(var = 30; var < 36; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 42)	{	// seventh screen of items
-			for(var = 36; var < 42; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 48)	{	// eighth screen of items
-			for(var = 42; var < 48; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < 54)	{	// ninth screen of items
-			for(var = 48; var < 54; var++)
-				UiDriverUpdateMenuLines(var, 0);
-		}
-		else if(ts.menu_item < MAX_MENU_ITEM)	{	// tenth screen of items
-			for(var = 54; var < MAX_MENU_ITEM; var++)
-				UiDriverUpdateMenuLines(var, 0);
+			}
 		}
 		//
 		// *** ADJUSTMENT MENU ***
 		//
-		else if(ts.menu_item >= MAX_MENU_ITEM)	{	// Is this one of the radio configuration items?
-			if(ts.menu_item < MAX_MENU_ITEM + 6)
-				for(var = MAX_MENU_ITEM; var < (MAX_MENU_ITEM + 6); var++)			// first screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 12)
-				for(var = MAX_MENU_ITEM + 6; var < (MAX_MENU_ITEM + 12); var++)		// second screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 18)
-				for(var = MAX_MENU_ITEM + 12; var < (MAX_MENU_ITEM + 18); var++)		// third screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 24)
-				for(var = MAX_MENU_ITEM + 18; var < (MAX_MENU_ITEM + 24); var++)		// fourth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 30)
-				for(var = MAX_MENU_ITEM + 24; var < (MAX_MENU_ITEM + 30); var++)		// fifth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 36)
-				for(var = MAX_MENU_ITEM + 30; var < (MAX_MENU_ITEM + 36); var++)	// sixth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 42)
-				for(var = MAX_MENU_ITEM + 36; var < (MAX_MENU_ITEM + 42); var++)	// seventh screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 48)
-				for(var = MAX_MENU_ITEM + 42; var < (MAX_MENU_ITEM + 48); var++)	// eighth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 54)
-				for(var = MAX_MENU_ITEM + 48; var < (MAX_MENU_ITEM + 54); var++)	// ninth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 60)
-				for(var = MAX_MENU_ITEM + 54; var < (MAX_MENU_ITEM + 60); var++)	// tenth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 66)
-				for(var = MAX_MENU_ITEM + 60; var < (MAX_MENU_ITEM + 66); var++)	// eleventh screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 72)
-				for(var = MAX_MENU_ITEM + 66; var < (MAX_MENU_ITEM + 72); var++)	// twelth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 78)
-				for(var = MAX_MENU_ITEM + 72; var < (MAX_MENU_ITEM + 78); var++)	// thirteenth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 84)
-				for(var = MAX_MENU_ITEM + 78; var < (MAX_MENU_ITEM + 84); var++)	// fourteenth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + 90)
-				for(var = MAX_MENU_ITEM + 84; var < (MAX_MENU_ITEM + 90); var++)	// fifteenth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			else if(ts.menu_item < MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)
-				for(var = MAX_MENU_ITEM + 90; var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++)	// sixteenth screen of configuration items
-					UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+		else {	// Is this one of the radio configuration items?
+			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++) {
+				UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+			}
 		}
 	}
 
@@ -726,30 +716,18 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	}
 	strcpy(options, "ERROR");	// pre-load to catch error condition
 	//
+	opt_pos = select % MENUSIZE; // calculate position from menu item number
 	switch(select)	{		//  DSP_NR_STRENGTH_MAX
 	case MENU_DSP_NR_STRENGTH:	// DSP Noise reduction strength
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_strength++;
-			fchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			fchange = 1;
-			if(ts.dsp_nr_strength)
-				ts.dsp_nr_strength--;
-		}
-		//
-		if(ts.dsp_nr_strength > DSP_NR_STRENGTH_MAX)
-			ts.dsp_nr_strength = DSP_NR_STRENGTH_MAX;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_strength = DSP_NR_STRENGTH_DEFAULT;
-			fchange = 1;
-		}
-		//
-		if(fchange)	{		// did it change?
+
+		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
+				0,
+				DSP_NR_STRENGTH_MAX,
+				DSP_NR_STRENGTH_DEFAULT,
+				1
+				);
+		if(fchange)
+		{		// did it change?
 			if(ts.dsp_active & 1)	// only change if DSP active
 				audio_driver_set_rx_audio_filter();
 		}
@@ -766,7 +744,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.dsp_nr_strength);
-		opt_pos = MENU_DSP_NR_STRENGTH % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_300HZ_SEL:	// 300 Hz filter select
@@ -840,8 +817,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 			}
 		}
-		//
-		opt_pos = MENU_300HZ_SEL % MENUSIZE;
 		break;
 	case MENU_500HZ_SEL:	// 500 Hz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -901,8 +876,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UiDriverChangeFilter(0);
 			}
 		}
-		//
-		opt_pos = MENU_500HZ_SEL % MENUSIZE;
 		break;
 	case MENU_1K8_SEL:	// 1.8 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -963,8 +936,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 			}
 		}
-		//
-		opt_pos = MENU_1K8_SEL % MENUSIZE;
 		break;
 	case MENU_2k3_SEL: // 2.3 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1014,8 +985,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))		// set filter if changed
 			audio_driver_set_rx_audio_filter();
-		//
-		opt_pos = MENU_2k3_SEL % MENUSIZE;
 		break;
 	case MENU_3K6_SEL: // 3.6 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1055,7 +1024,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		}
 		//
-		opt_pos = MENU_3K6_SEL % MENUSIZE;
 		break;
 	case MENU_WIDE_SEL: // Wide filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1122,7 +1090,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		disp_shift = 1;		// move the options to the left slightly
-		opt_pos = MENU_WIDE_SEL % MENUSIZE;
 		break;
 	case MENU_CW_WIDE_FILT: // CW mode wide filter enable/disable
 		if(var >= 1)	{	// setting increase?
@@ -1149,7 +1116,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		if(ts.dmod_mode != DEMOD_CW)	// if not in CW mode, make orange
 			clr = Orange;
 		//
-		opt_pos = MENU_CW_WIDE_FILT % MENUSIZE;
 		break;
 		//
 	case MENU_SSB_NARROW_FILT: // SSW mode narrow filter enable/disable
@@ -1177,8 +1143,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if(ts.dmod_mode == DEMOD_CW)	// if in voice mode, make orange
 			clr = Orange;
-		//
-		opt_pos = MENU_SSB_NARROW_FILT % MENUSIZE;
 		break;
 		//
 	case MENU_AM_DISABLE: // AM mode enable/disable
@@ -1202,8 +1166,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else
 			strcpy(options, " OFF");
-		//
-		opt_pos = MENU_AM_DISABLE % MENUSIZE;
 		break;
 		//
 	case MENU_SSB_AUTO_MODE_SELECT:		// Enable/Disable auto LSB/USB select
@@ -1234,8 +1196,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			strcpy(options, "USB 60M");		// yes
 		else
 			strcpy(options, "  OFF  ");		// no (obviously!)
-		//
-		opt_pos = MENU_SSB_AUTO_MODE_SELECT % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_FM_MODE_ENABLE:	// Enable/Disable FM
@@ -1274,10 +1234,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			strcpy(options, "  OFF");		// Say that it is OFF!
 			clr = Red;
 		}
-		//
-		opt_pos = MENU_FM_MODE_ENABLE % MENUSIZE;	// Y position of this menu item
 		break;
-		//
+	//
 	case MENU_FM_GEN_SUBAUDIBLE_TONE:	// Selection of subaudible tone for FM transmission
 		if(var >= 1)	{	// did the selection increase?
 			ts.fm_subaudible_tone_gen_select++;		// yes - increase
@@ -1323,8 +1281,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Orange;
 		else if(ads.fm_subaudible_tone_det_freq > 200)		// yellow for tones above 200 Hz as they are more audible
 			clr = Yellow;
-		//
-		opt_pos = MENU_FM_GEN_SUBAUDIBLE_TONE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_FM_DET_SUBAUDIBLE_TONE:	// Selection of subaudible tone for FM reception
@@ -1372,8 +1328,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Orange;
 		else if(ads.fm_subaudible_tone_det_freq > 200)		// yellow for tones above 200 Hz as they are more audible
 			clr = Yellow;
-		//
-		opt_pos = MENU_FM_DET_SUBAUDIBLE_TONE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_FM_TONE_BURST_MODE:
@@ -1417,8 +1371,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if(ts.dmod_mode != DEMOD_FM)	// make orange if we are NOT in FM
 			clr = Orange;
-		//
-		opt_pos =  MENU_FM_TONE_BURST_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_FM_RX_BANDWIDTH:
@@ -1464,8 +1416,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if(ts.dmod_mode != DEMOD_FM)	// make orange if we are NOT in FM
 			clr = Orange;
-		//
-		opt_pos =  MENU_FM_RX_BANDWIDTH % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_FM_DEV_MODE:	// Select +/- 2.5 or 5 kHz deviation on RX and TX
@@ -1506,8 +1456,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		disp_shift = 1;
-		//
-		opt_pos = MENU_FM_DEV_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_AGC_MODE:	// AGC mode
@@ -1552,8 +1500,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if(ts.txrx_mode == TRX_MODE_TX)	// Orange if in TX mode
 			clr = Orange;
-		//
-		opt_pos = MENU_AGC_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_RF_GAIN_ADJ:		// RF gain control adjust
@@ -1597,7 +1543,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverChangeRfGain(0);	// yes, change on-screen RF gain setting
 		//
 		sprintf(options, " %d ", ts.rf_gain);
-		opt_pos = MENU_RF_GAIN_ADJ % MENUSIZE;
 		break;
 		// RX Codec gain adjust
 	case MENU_CUSTOM_AGC:		// Custom AGC adjust
@@ -1639,7 +1584,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Red;
 		//
 		sprintf(options, " %d ", ts.agc_custom_decay);
-		opt_pos = MENU_CUSTOM_AGC % MENUSIZE;
 		break;
 	// A/D Codec Gain/Mode setting/adjust
 	case MENU_CODEC_GAIN_MODE:
@@ -1667,7 +1611,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options,"> %u <", ts.rf_codec_gain);
 			clr = Red;
 		}
-		opt_pos = MENU_CODEC_GAIN_MODE % MENUSIZE;
 		break;
 		//
 	case MENU_NOISE_BLANKER_SETTING:
@@ -1701,7 +1644,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		sprintf(options," %u  ", ts.nb_setting);
 		//
-		opt_pos = MENU_NOISE_BLANKER_SETTING % MENUSIZE;
 		break;
 	//
 	case MENU_RX_FREQ_CONV:		// Enable/Disable receive frequency conversion
@@ -1743,7 +1685,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
-		opt_pos = MENU_RX_FREQ_CONV % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_MIC_LINE_MODE:	// Mic/Line mode
@@ -1779,8 +1720,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			else
 				UIDriverChangeAudioGain(0);
 		}
-		///
-		opt_pos = MENU_MIC_LINE_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_MIC_GAIN:	// Mic Gain setting
@@ -1834,7 +1773,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Orange;
 		//
 		sprintf(options, " %u  ", ts.tx_mic_gain);
-		opt_pos = MENU_MIC_GAIN % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
@@ -1878,7 +1816,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Orange;
 		//
 		sprintf(options, " %u ", ts.tx_line_gain);
-		opt_pos = MENU_LINE_GAIN % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_ALC_RELEASE:		// ALC Release adjust
@@ -1915,7 +1852,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			ts.alc_decay = ts.alc_decay_var;	// yes, save new value
 		//
 		sprintf(options, " %d ", (int)ts.alc_decay_var);
-		opt_pos = MENU_ALC_RELEASE % MENUSIZE;
 		break;
 	//
 	case MENU_ALC_POSTFILT_GAIN:		// ALC TX Post-filter gain (Compressor level)
@@ -1955,7 +1891,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			ts.alc_tx_postfilt_gain = ts.alc_tx_postfilt_gain_var;	// yes, save new value
 		//
 		sprintf(options, " %d ", (int)ts.alc_tx_postfilt_gain_var);
-		opt_pos = MENU_ALC_POSTFILT_GAIN % MENUSIZE;
 		break;
 	case MENU_TX_COMPRESSION_LEVEL:		// ALC TX Post-filter gain (Compressor level)
 		if(var >= 1)	{	// setting increase?
@@ -1990,8 +1925,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options," %d ",ts.tx_comp_level);
 		else					// show "SV" (Stored Value) for highest value
 			strcpy(options, " SV");
-		//
-		opt_pos = MENU_TX_COMPRESSION_LEVEL % MENUSIZE;
 		break;
 		//
 	case MENU_KEYER_MODE:	// Keyer mode
@@ -2019,7 +1952,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			strcpy(options, "IAM_A");
 		else if(ts.keyer_mode == CW_MODE_STRAIGHT)
 			strcpy(options, "STR_K");
-		opt_pos = MENU_KEYER_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_KEYER_SPEED:	// keyer speed
@@ -2054,7 +1986,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.keyer_speed);
-		opt_pos = MENU_KEYER_SPEED % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_SIDETONE_GAIN:	// sidetone gain
@@ -2088,7 +2019,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.st_gain);
-		opt_pos = MENU_SIDETONE_GAIN % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_SIDETONE_FREQUENCY:	// sidetone frequency
@@ -2124,7 +2054,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", (uint)ts.sidetone_freq);
-		opt_pos = MENU_SIDETONE_FREQUENCY % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_PADDLE_REVERSE:	// CW Paddle reverse
@@ -2147,7 +2076,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else
 			strcpy(options, "OFF");
 		//
-		opt_pos = MENU_PADDLE_REVERSE % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_CW_TX_RX_DELAY:	// CW TX->RX delay
@@ -2170,7 +2098,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.cw_rx_delay);
-		opt_pos = MENU_CW_TX_RX_DELAY % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_CW_OFFSET_MODE:	// CW offset mode (e.g. USB, LSB, etc.)
@@ -2235,7 +2162,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		disp_shift = 1;	// shift left to allow more room
 		//
-		opt_pos = MENU_CW_OFFSET_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_TCXO_MODE:	// TCXO On/Off
@@ -2284,8 +2210,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			if(fchange)
 				UiDriverCreateTemperatureDisplay(0,1);
 		}
-		//
-		opt_pos = MENU_TCXO_MODE % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_TCXO_C_F:	// TCXO display C/F mode
@@ -2339,8 +2263,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else if(temp_sel == 1)	{
 			strcpy(options, " F ");
 		}
-		//
-		opt_pos = MENU_TCXO_C_F % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SPEC_SCOPE_SPEED:	// spectrum scope speed
@@ -2366,8 +2288,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options, " %u ", ts.scope_speed);
 		else
 			strcpy(options, "Off");
-		//
-		opt_pos = MENU_SPEC_SCOPE_SPEED % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SCOPE_FILTER_STRENGTH:	// spectrum filter strength
@@ -2393,7 +2313,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.scope_filter);
-		opt_pos = MENU_SCOPE_FILTER_STRENGTH % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_SCOPE_TRACE_COLOUR:	// spectrum scope trace colour
@@ -2452,7 +2371,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = White;
 			strcpy(options, "Wht");
 		}
-		opt_pos = MENU_SCOPE_TRACE_COLOUR % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SCOPE_GRID_COLOUR:	// spectrum scope grid colour
@@ -2514,7 +2432,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Grey;
 			strcpy(options, "Gry ");
 		}
-		opt_pos = MENU_SCOPE_GRID_COLOUR % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SCOPE_SCALE_COLOUR:	// spectrum scope/waterfall  scale colour
@@ -2580,7 +2497,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Grey;
 			strcpy(options, " Gry");
 		}
-		opt_pos = MENU_SCOPE_SCALE_COLOUR % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
@@ -2610,7 +2526,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else
 			strcpy(options, "OFF");
 
-		opt_pos = MENU_SCOPE_MAGNIFY % MENUSIZE;	// Y position of this menu item
 		break;
 		//
 	case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
@@ -2641,8 +2556,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		sprintf(options, " %u ", ts.scope_agc_rate);
-		//
-		opt_pos = MENU_SCOPE_AGC_ADJUST % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	case MENU_SCOPE_DB_DIVISION:	// Adjustment of dB/division of spectrum scope
@@ -2694,8 +2607,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				strcpy(options, " 10dB  ");
 				break;
 		}
-		//
-		opt_pos = MENU_SCOPE_DB_DIVISION % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 		case MENU_SCOPE_CENTER_LINE_COLOUR:	// spectrum scope grid center line colour
@@ -2761,7 +2672,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				clr = Grey;
 				strcpy(options, "Gry ");
 			}
-			opt_pos = MENU_SCOPE_CENTER_LINE_COLOUR % MENUSIZE;	// Y position of this menu item
 			break;
 			//
 		case MENU_SCOPE_MODE:	// Spectrum 2x magnify mode on/off
@@ -2784,31 +2694,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			else
 				strcpy(options, "SCOPE");		// no, scope mode
 
-			opt_pos = MENU_SCOPE_MODE % MENUSIZE;	// Y position of this menu item
 			break;
 			//
 		case MENU_WFALL_COLOR_SCHEME:	// Adjustment of dB/division of spectrum scope
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_color_scheme++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_color_scheme)
-					ts.waterfall_color_scheme--;
-			}
-			//
-			if(ts.waterfall_color_scheme <= WATERFALL_COLOR_MIN)
-				ts.waterfall_color_scheme = WATERFALL_COLOR_MIN;
-			//
-			if(ts.waterfall_color_scheme >= WATERFALL_COLOR_MAX)
-				ts.waterfall_color_scheme = WATERFALL_COLOR_MAX -1;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;
-			}
-			//
+			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_color_scheme,
+					WATERFALL_COLOR_MIN,
+					WATERFALL_COLOR_MAX,
+					WATERFALL_COLOR_DEFAULT,
+					1
+					);
 			switch(ts.waterfall_color_scheme)	{	// convert variable to setting
 				case WFALL_HOT_COLD:
 					strcpy(options, "HotCold");
@@ -2828,112 +2722,46 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 					break;
 			}
 			//
-			opt_pos = MENU_WFALL_COLOR_SCHEME % MENUSIZE;	// Y position of this menu item
 			break;
 		//
 		//
 		case MENU_WFALL_STEP_SIZE:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_vert_step_size++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_vert_step_size)
-					ts.waterfall_vert_step_size--;
-			}
-			//
-			if(ts.waterfall_vert_step_size <= WATERFALL_STEP_SIZE_MIN)
-				ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_MIN;
-			//
-			if(ts.waterfall_vert_step_size > WATERFALL_STEP_SIZE_MAX)
-				ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;
-			}
-			//
+			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,
+					WATERFALL_STEP_SIZE_MIN,
+					WATERFALL_STEP_SIZE_MAX,
+					WATERFALL_STEP_SIZE_DEFAULT,
+					1
+					);
 			sprintf(options, " %u ", ts.waterfall_vert_step_size);
-			//
-			opt_pos = MENU_WFALL_STEP_SIZE % MENUSIZE;	// Y position of this menu item
 			break;
 			//
 		case MENU_WFALL_OFFSET:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_offset++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_offset)
-					ts.waterfall_offset--;
-			}
-			//
-			if(ts.waterfall_offset <= WATERFALL_OFFSET_MIN)
-				ts.waterfall_offset = WATERFALL_OFFSET_MIN;
-			//
-			if(ts.waterfall_offset > WATERFALL_OFFSET_MAX)
-				ts.waterfall_offset = WATERFALL_OFFSET_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_offset = WATERFALL_OFFSET_DEFAULT;
-			}
-			//
+			UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall_offset,
+					WATERFALL_OFFSET_MIN,
+					WATERFALL_OFFSET_MAX,
+					WATERFALL_OFFSET_DEFAULT,
+					1
+					);
 			sprintf(options, " %u ", (unsigned int)ts.waterfall_offset);
-			//
-			opt_pos = MENU_WFALL_OFFSET % MENUSIZE;	// Y position of this menu item
 			break;
 			//
 		case MENU_WFALL_CONTRAST:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_contrast+= 2;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_contrast)
-					ts.waterfall_contrast-= 2;
-			}
-			//
-			if(ts.waterfall_contrast <= WATERFALL_CONTRAST_MIN)
-				ts.waterfall_contrast = WATERFALL_CONTRAST_MIN;
-			//
-			if(ts.waterfall_contrast > WATERFALL_CONTRAST_MAX)
-				ts.waterfall_contrast = WATERFALL_CONTRAST_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_contrast = WATERFALL_CONTRAST_DEFAULT;
-			}
-			//
+			UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall_contrast,
+					WATERFALL_CONTRAST_MIN,
+					WATERFALL_CONTRAST_MAX,
+					WATERFALL_CONTRAST_DEFAULT,
+					2
+					);
 			sprintf(options, " %u ", (unsigned int)ts.waterfall_contrast);
-			//
-			opt_pos = MENU_WFALL_CONTRAST % MENUSIZE;	// Y position of this menu item
 			break;
-			//
+		//
 		case MENU_WFALL_SPEED:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_speed++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_speed)
-					ts.waterfall_speed--;
-			}
-			//
-			if(ts.waterfall_speed > WATERFALL_SPEED_MAX)
-				ts.waterfall_speed = WATERFALL_SPEED_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(sd.use_spi)
-					ts.waterfall_speed = WATERFALL_SPEED_DEFAULT_SPI;
-				else
-					ts.waterfall_speed = WATERFALL_SPEED_DEFAULT_PARALLEL;
-			}
+			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_speed,
+					WATERFALL_SPEED_MIN,
+					WATERFALL_SPEED_MAX,
+					sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
+					1
+					);
 			//
 			if(sd.use_spi)	{
 				if(ts.waterfall_speed <= WATERFALL_SPEED_WARN_SPI)
@@ -2948,73 +2776,27 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 					clr = Yellow;
 			}
 
-			//
-			if(ts.waterfall_speed)
-				sprintf(options, " %u ", ts.waterfall_speed);
-			else
-				strcpy(options, "Off");
-			//
-			opt_pos = MENU_WFALL_SPEED % MENUSIZE;	// Y position of this menu item
+			sprintf(options, " %u ", ts.waterfall_speed);
 			break;
-			//
+		//
 		case MENU_SCOPE_NOSIG_ADJUST:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.spectrum_scope_nosig_adjust++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.spectrum_scope_nosig_adjust)
-				ts.spectrum_scope_nosig_adjust--;
-			}
-			//
-			if(ts.spectrum_scope_nosig_adjust < SPECTRUM_SCOPE_NOSIG_ADJUST_MIN)
-				ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_MIN;
-			//
-			if(ts.spectrum_scope_nosig_adjust > SPECTRUM_SCOPE_NOSIG_ADJUST_MAX)
-				ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;
-			}
-			//
-			if(ts.spectrum_scope_nosig_adjust)
-				sprintf(options, " %u ", ts.spectrum_scope_nosig_adjust);
-			else
-				strcpy(options, "Off");
-			//
-			opt_pos = MENU_SCOPE_NOSIG_ADJUST % MENUSIZE;	// Y position of this menu item
+			UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_scope_nosig_adjust,
+					SPECTRUM_SCOPE_NOSIG_ADJUST_MIN,
+					SPECTRUM_SCOPE_NOSIG_ADJUST_MAX,
+					SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT,
+					1
+					);
+			sprintf(options, " %u ", ts.spectrum_scope_nosig_adjust);
 			break;
 			//
 		case MENU_WFALL_NOSIG_ADJUST:	// set step size of of waterfall display?
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_nosig_adjust++;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.waterfall_nosig_adjust)
-					ts.waterfall_nosig_adjust--;
-			}
-			//
-			if(ts.waterfall_nosig_adjust < WATERFALL_NOSIG_ADJUST_MIN)
-				ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_MIN;
-			//
-			if(ts.waterfall_nosig_adjust > WATERFALL_NOSIG_ADJUST_MAX)
-				ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_MAX;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;
-			}
-			//
-			if(ts.waterfall_nosig_adjust)
-				sprintf(options, " %u ", ts.waterfall_nosig_adjust);
-			else
-				strcpy(options, "Off");
-			//
-			opt_pos = MENU_WFALL_NOSIG_ADJUST % MENUSIZE;	// Y position of this menu item
+			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_nosig_adjust,
+					WATERFALL_NOSIG_ADJUST_MIN,
+					WATERFALL_NOSIG_ADJUST_MAX,
+					WATERFALL_NOSIG_ADJUST_DEFAULT,
+					1
+					);
+			sprintf(options, " %u ", ts.waterfall_nosig_adjust);
 			break;
 		//
 		case MENU_WFALL_SIZE:	// set step size of of waterfall display?
@@ -3045,15 +2827,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 					strcpy(options, "Normal");
 					break;
 			}
-			//
-			opt_pos = MENU_WFALL_SIZE % MENUSIZE;	// Y position of this menu item
 			break;
 	case MENU_BACKUP_CONFIG:
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, "Do it! ");
 			    clr = White;
-			    opt_pos = 2 % MENUSIZE;	// Y position of this menu item
+			    opt_pos = 2;	// Y position of this menu item
 			    if(var>=1)
 				{
 				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+24,"Working",Red,Black,0);
@@ -3070,7 +2850,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, "Do it! ");
 			    clr = White;
-			    opt_pos = 3 % MENUSIZE;	// Y position of this menu item
+			    opt_pos = 3;	// Y position of this menu item
 			    if(var>=1)
 				{
 				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+36,"Working",Red,Black,0);
@@ -3085,7 +2865,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;
-			opt_pos = 4 % MENUSIZE;	// Y position of this menu item
+			opt_pos = 4;	// Y position of this menu item
 			if(var>=1)
 			    {
 			    strcpy(options, "    ");
