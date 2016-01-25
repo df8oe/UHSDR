@@ -10,7 +10,9 @@
 #########################################################################
 
 
-
+20160125 [DF8OE]
+- many bugfixes
+- now it is possible to build with compiler optimization
 
 20160122 [DF8OE]
 - fixed bug "60m 5W power adjust"
