@@ -112,7 +112,7 @@ void 	UiLcdHy28_SendByteSpi(uint8_t byte);
 uint8_t UiLcdHy28_ReadByteSpi(void);
 void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
-void 	UiLcdHy28_BulkWrite(ushort Color);
+void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
 void	UiLcdHy28_WriteRAM_Prepare(void);
 

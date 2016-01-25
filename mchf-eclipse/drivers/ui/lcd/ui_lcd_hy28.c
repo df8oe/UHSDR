@@ -398,9 +398,9 @@ void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
 
-   UiLcdHy28_SendByteSpi(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
-   UiLcdHy28_SendByteSpi(0);
-   UiLcdHy28_SendByteSpi(index);
+   UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+   UiLcdHy28_SendByteSpiFast(0);
+   UiLcdHy28_SendByteSpiFast(index);
 
    UiLcdHy28_FinishSpiTransfer();
 }
@@ -416,9 +416,9 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 {
    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
 
-   UiLcdHy28_SendByteSpi(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
-   UiLcdHy28_SendByteSpi((data >>   8));                    /* Write D8..D15                */
-   UiLcdHy28_SendByteSpi((data & 0xFF));                    /* Write D0..D7                 */
+   UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+   UiLcdHy28_SendByteSpiFast((data >>   8));                    /* Write D8..D15                */
+   UiLcdHy28_SendByteSpiFast((data & 0xFF));                    /* Write D0..D7                 */
 
    UiLcdHy28_FinishSpiTransfer();
 }
@@ -432,7 +432,7 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteDataSpiStart(void)
 {
-   UiLcdHy28_SendByteSpi(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+   UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
 
 //*----------------------------------------------------------------------------
@@ -443,16 +443,6 @@ void UiLcdHy28_WriteDataSpiStart(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteDataOnly( unsigned short data)
-{
-   if(sd.use_spi)
-   {
-      UiLcdHy28_SendByteSpi((data >>   8));      /* Write D8..D15                */
-      UiLcdHy28_SendByteSpi((data & 0xFF));      /* Write D0..D7                 */
-   }
-   else
-      LCD_RAM = data;
-}
-void UiLcdHy28_WriteDataOnlyFast( unsigned short data)
 {
    if(sd.use_spi)
    {
@@ -834,9 +824,12 @@ void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_BulkWrite(ushort Color)
+void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
-	   UiLcdHy28_WriteDataOnly(Color);
+		uint32_t i = len;
+		for (; i; i--) {
+			UiLcdHy28_WriteDataOnly(*(pixel++));
+		}
 }
 
 
