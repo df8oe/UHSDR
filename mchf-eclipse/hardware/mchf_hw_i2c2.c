@@ -11,10 +11,6 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
-// Optimization enable for this file
-#pragma GCC optimize "O3"
-
-
 // Common
 #include "mchf_board.h"
 #include "ui_lcd_hy28.h"
@@ -187,7 +183,7 @@ uint8_t Write_24Cxx(uint32_t Addr, uint8_t Data, uint8_t Mem_Type)
 {
 uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
-uint8_t upper_addr,lower_addr;
+uint8_t upper_addr = 0,lower_addr;
 
 if(Mem_Type == 17 && Addr > 0xFFFF)
     {
@@ -302,7 +298,7 @@ uint8_t memwa = MEM_DEVICE_WRITE_ADDR;
 uint8_t memra = MEM_DEVICE_READ_ADDR;
 uint32_t timeout = I2C2_LONG_TIMEOUT;
 uint8_t Data = 0;
-uint8_t upper_addr,lower_addr;
+uint8_t upper_addr = 0,lower_addr;
 
 if(Mem_Type == 17 && Addr > 0xFFFF)
     {

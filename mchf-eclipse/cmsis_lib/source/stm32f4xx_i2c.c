@@ -83,6 +83,10 @@
   ******************************************************************************  
   */ 
 
+// Optimization disable for this file
+#pragma GCC optimize "O0"
+
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_i2c.h"
 #include "stm32f4xx_rcc.h"
