@@ -25,10 +25,6 @@
   ******************************************************************************
   */ 
 
-// Optimization enable for this file
-#pragma GCC optimize "O3"
-
-
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_core.h"
 #include "usbd_desc.h"
