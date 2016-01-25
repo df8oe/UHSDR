@@ -7490,13 +7490,15 @@ static void UiDriverReDrawWaterfallDisplay(void)
 				//
 				UiLcdHy28_OpenBulkWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
 				//
+				ushort spectrumLine[SPECTRUM_WIDTH];
+
 				while(lcnt < sd.wfall_size)	{				// set up counter for number of lines defining height of waterfall
-					for(i = 0; i < (SPECTRUM_WIDTH); i+=4)	{	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
-						UiLcdHy28_BulkWrite(sd.waterfall_colours[sd.waterfall[lptr][i]]);	// write to memory using waterfall color from palette
-						UiLcdHy28_BulkWrite(sd.waterfall_colours[sd.waterfall[lptr][i+1]]);	// write to memory using waterfall color from palette
-						UiLcdHy28_BulkWrite(sd.waterfall_colours[sd.waterfall[lptr][i+2]]);	// write to memory using waterfall color from palette
-						UiLcdHy28_BulkWrite(sd.waterfall_colours[sd.waterfall[lptr][i+3]]);	// write to memory using waterfall color from palette
+					for(i = 0; i < (SPECTRUM_WIDTH); i++)	{	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
+						spectrumLine[i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
 					}
+
+					UiLcdHy28_BulkWrite(spectrumLine,SPECTRUM_WIDTH);
+
 					lcnt++;									// update count of lines we have done
 					lptr++;									// point to next line in circular display buffer
 					lptr %= sd.wfall_size;				// clip to display height
