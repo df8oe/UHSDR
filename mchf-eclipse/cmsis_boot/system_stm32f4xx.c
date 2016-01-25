@@ -122,6 +122,10 @@
   * @{
   */
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
+
 #include "stm32f4xx.h"
 
 /**

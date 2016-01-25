@@ -5,6 +5,10 @@
  *           binary when using those methods, compared to the libc implementation.
  ********************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
+
 // Common
 #include "mchf_board.h"
 
