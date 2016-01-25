@@ -11,6 +11,10 @@
 **  Licence:      For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
+// Optimization disable for this file
+#pragma GCC optimize "O0"
+
+
 // Common
 #include "mchf_board.h"
 

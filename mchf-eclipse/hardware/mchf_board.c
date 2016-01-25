@@ -11,8 +11,12 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
-#include "mchf_board.h"
+// Optimization enable for this file
+#pragma GCC optimize "O3"
 
+
+#include "mchf_board.h"
+#include "ui_lcd_hy28.h"
 #include <stdio.h>
 
 #include "mchf_hw_i2c.h"
@@ -298,6 +302,11 @@ static void mchf_board_power_button_irq_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#if 0
+// this function is commented out because it is static (i.e. local only) and not used
+// just remove #if 0 if function needs to be used. Reason is to include only used code
+// if possible
+
 static void mchf_board_dac0_init(void)
 {
 	 GPIO_InitTypeDef GPIO_InitStructure;
@@ -325,6 +334,7 @@ static void mchf_board_dac0_init(void)
 	 // Set DAC Channel1 DHR12L register - JFET attenuator off (0V)
 	 DAC_SetChannel1Data(DAC_Align_8b_R, 0x00);
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_dac1_init
@@ -729,15 +739,8 @@ void mchf_board_power_off(void)
 	ulong i;
 	char	tx[32];
 	// Power off all - high to disable main regulator
-	//
 
-//	Write_VirtEEPROM(EEPROM_FREQ_HIGH,(df.tune_new >> 16));						// Save frequency
-//	Write_VirtEEPROM(EEPROM_FREQ_LOW,(df.tune_new & 0xFFFF));					//
-//
 	UiDriverClearSpectrumDisplay();	// clear display under spectrum scope
-
-//	for(i = 0; i < 2; i++)	// Slight delay before we invoke EEPROM write
-//		non_os_delay();
 
 	Codec_Mute(1);	// mute audio when powering down
 
@@ -750,18 +753,25 @@ void mchf_board_power_off(void)
 	   sprintf(tx,"                           ");
 	   UiLcdHy28_PrintText(80,168,tx,Blue2,Black,0);
 
-if(ts.ser_eeprom_in_use != 0x00)
+if(ts.ser_eeprom_in_use == 0xff)
 	    {
-	   sprintf(tx," Saving settings to EEPROM ");
-	   UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
-	   }
-else
+	    sprintf(tx,"Saving settings to virt. EEPROM ");
+	    UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
+	    }
+if(ts.ser_eeprom_in_use == 0x0)
 	    {
-	   sprintf(tx,"Saving settings to serial EEPROM");
-	   UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
-	   }
+	    sprintf(tx,"Saving settings to serial EEPROM");
+	    UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
+	    }
+if(ts.ser_eeprom_in_use == 0x20)
+	    {
+	    sprintf(tx," ...without saving settings...  ");
+	    UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
+	    for(i = 0; i < 20; i++)
+		non_os_delay();
+	    }
 
-if(ts.ser_eeprom_in_use != 0x00)
+if(ts.ser_eeprom_in_use == 0xff)
     {
 	   sprintf(tx,"            2              ");
 	   UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
@@ -791,7 +801,8 @@ if(ts.ser_eeprom_in_use != 0x00)
     }
 	ts.powering_down = 1;	// indicate that we should be powering down
 
-	UiDriverSaveEepromValuesPowerDown();		// save EEPROM values again - to make sure...
+	if(ts.ser_eeprom_in_use != 0x20)
+	    UiDriverSaveEepromValuesPowerDown();		// save EEPROM values again - to make sure...
 
 	//
 	// Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
@@ -913,30 +924,34 @@ if(ts.ser_eeprom_in_use == 0xAA)
 
     highbyte = ts.eeprombuf[addr*2];
     lowbyte = ts.eeprombuf[addr*2+1];
-    data = lowbyte + highbyte<<8;
+    data = lowbyte + (highbyte<<8);
     *value = data;
     }
 return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : Write_EEPROM
+//* Object              :
+//* Object              :
+//* Input Parameters    : addr to write to, 16 bit value as data
+//* Output Parameters   : returns FLASH_COMPLETE if OK, otherwise various error codes.
+//*                       FLASH_ERROR_OPERATION is also returned if eeprom_in_use contains bogus values.
+//* Functions called    :
+//*----------------------------------------------------------------------------
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
 {
+FLASH_Status status = FLASH_ERROR_OPERATION;
 if(ts.ser_eeprom_in_use == 0)
     {
-    FLASH_Status status = FLASH_COMPLETE;
     Write_SerEEPROM(addr, value);
-    return status;
+    status = FLASH_COMPLETE;
     }
-if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
+else if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
     {
-    uint16_t retvar;
-
-    retvar = (EE_WriteVariable(VirtAddVarTab[addr], value));
-    //	sprintf(temp, "Wstat=%d ", retvar);		// Debug indication of write status
-    //	UiLcdHy28_PrintText((POS_PB_IND_X + 32),(POS_PB_IND_Y + 1), temp,White,Black,0);
-    return retvar;
+        status = (EE_WriteVariable(VirtAddVarTab[addr], value));
     }
-if(ts.ser_eeprom_in_use == 0xAA)
+else if(ts.ser_eeprom_in_use == 0xAA)
     {
     uint8_t lowbyte;
     uint8_t highbyte;
@@ -946,9 +961,9 @@ if(ts.ser_eeprom_in_use == 0xAA)
     highbyte = (uint8_t)((0x00FF)&value);
     ts.eeprombuf[addr*2] = highbyte;
     ts.eeprombuf[addr*2+1] = lowbyte;
-    FLASH_Status status = FLASH_COMPLETE;
-    return status;
+    status = FLASH_COMPLETE;
     }
+	return status;
 }
 
 //
@@ -988,26 +1003,37 @@ uint16_t data;
 //uint8_t *p = malloc(MAX_VAR_ADDR*2+2);
 
 static uint8_t p[MAX_VAR_ADDR*2+2];
+// length of array is 383*2 + 2 = 768
+// to allow for the 2 eeprom signature bytes
+// stored at index 0/1
 
-uint16_t i,j;
-// copy virtual EEPROM to RAM
-for(i=1; i <= MAX_VAR_ADDR+1; i++)
-    {
-    EE_ReadVariable(VirtAddVarTab[i], &data);
-    p[i*2+1] = (uint8_t)((0x00FF)&data);
-    data = data>>8;
-    p[i*2] = (uint8_t)((0x00FF)&data);
-    }
+
+uint16_t i;
+// copy virtual EEPROM to RAM, this reads out 383 values and stores them in  2 bytes
+for(i=1; i <= MAX_VAR_ADDR; i++)
+{
+	EE_ReadVariable(VirtAddVarTab[i], &data);
+	p[i*2+1] = (uint8_t)((0x00FF)&data);
+	data = data>>8;
+	p[i*2] = (uint8_t)((0x00FF)&data);
+}
 p[0] = Read_24Cxx(0,16);
 p[1] = Read_24Cxx(1,16);
 // write RAM to serial EEPROM
 if(seq == false)
-    {
-    for(i=0; i <= MAX_VAR_ADDR*2+2;i++)
-	Write_24Cxx(i, p[i], ts.ser_eeprom_type);
-    }
+{
+	for(i=0; i <= MAX_VAR_ADDR*2;i++)
+	{
+		// this will write  out 768 bytes (2 signature  and 383*2 data)
+		Write_24Cxx(i, p[i], ts.ser_eeprom_type);
+	}
+}
 else
-    Write_24Cxxseq(0, p, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+{
+	// this will write  out 768 bytes (2 signature  and 383*2 data)
+	Write_24Cxxseq(0, p, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
+	Write_24Cxx(0x180, p[0x180], ts.ser_eeprom_type);
+}
 ts.ser_eeprom_in_use = 0;		// serial EEPROM in use now
 }
 
@@ -1017,7 +1043,7 @@ void copy_ser2virt(void)
 uint16_t count;
 uint16_t data;
 
-for(count=1; count <= MAX_VAR_ADDR+1; count++)
+for(count=1; count <= MAX_VAR_ADDR; count++)
     {
     Read_SerEEPROM(count, &data);
     EE_WriteVariable(VirtAddVarTab[count], data);

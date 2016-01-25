@@ -22,12 +22,12 @@
 // ------------------
 
 // The SI570 Min/Max frequencies are 4x the actual tuning frequencies
-#define SI570_MIN_FREQ			7200000		// 7.2=1.8 MHz
-#define SI570_MAX_FREQ			5200000000	// 160=40 Mhz
+#define SI570_MIN_FREQ			10000000	// 10=2.5 MHz
+#define SI570_MAX_FREQ			160000000	// 160=40 Mhz
 //
 // These are "hard limit" frequencies below/above which the synthesizer/algorithms must not be adjusted or else the system may crash
 #define SI570_HARD_MIN_FREQ		1000000		// 1.0=0.25 MHz
-#define SI570_HARD_MAX_FREQ		800000000	// 800=200 MHz
+#define SI570_HARD_MAX_FREQ		220000000	// 220=55 MHz
 
 #define	LARGE_STEP_HYSTERESIS		10000//0.01	// size, in MHz, of hysteresis in large tuning step at output frequency (4x tuning freq)
 

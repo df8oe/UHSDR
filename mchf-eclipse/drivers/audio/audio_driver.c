@@ -11,6 +11,9 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
 // Common
 #include "mchf_board.h"
 
@@ -29,16 +32,6 @@
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-//#include "filters/q_rx_filter.h"
-//#include "filters/i_rx_filter.h"
-//#include "filters/q_tx_filter.h"
-//#include "filters/i_tx_filter.h"
-
-// Audio filters
-//#include "filters/fir_10k.h"
-//#include "filters/fir_3_6k.h"
-//#include "filters/fir_2_3k.h"
-//#include "filters/fir_1_8k.h"
 //
 // IIR lattice ARMA filters with time-reversed elements
 //
@@ -46,6 +39,7 @@
 #include "filters/iir_500hz.h"
 #include "filters/iir_1_8k.h"
 #include "filters/iir_2_3k.h"
+//#include "filters/iir_3k.h"
 #include "filters/iir_3_6k.h"
 #include "filters/iir_10k.h"
 
@@ -66,9 +60,9 @@ static void Audio_Init(void);
 __IO int16_t 	tx_buffer[BUFF_LEN+1];
 __IO int16_t		rx_buffer[BUFF_LEN+1];
 
-static int16_t	test_a[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_a[5000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
-float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+16];
+float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
 //
 //
 //static int16_t	test_j[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
@@ -83,27 +77,27 @@ arm_lms_instance_f32	lms1_instance;
 float32_t	lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 float32_t	lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
 //
-static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
+//static int16_t	test_b[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around)
 //
 arm_lms_norm_instance_f32	lms2Norm_instance;
 arm_lms_instance_f32	lms2_instance;
 float32_t	lms2StateF32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
 //
-float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + 16];
+float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
 //
-static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_f[500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
 //
 //
-static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_c[2500];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
 __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 //
-static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
+//static int16_t	test_d[1000];	// grab a large chunk of RAM - for testing, and to prevent "memory leak" anomalies (kludgy work-around - problem to be solved!)
 //
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
@@ -449,9 +443,12 @@ void audio_driver_set_rx_audio_filter(void)
 		    }
 			break;
 		case AUDIO_3P6KHZ:
-		    IIR_PreFilter.numStages = IIR_3k6_numStages;		// number of stages
+		    	IIR_PreFilter.numStages = IIR_3k6_numStages;		// number of stages
 			IIR_PreFilter.pkCoeffs = (float *)IIR_3k6_pkCoeffs;	// point to reflection coefficients
 			IIR_PreFilter.pvCoeffs = (float *)IIR_3k6_pvCoeffs;	// point to ladder coefficients
+//			IIR_PreFilter.numStages = IIR_3k_numStages;		// number of stages
+//			IIR_PreFilter.pkCoeffs = (float *)IIR_3k_pkCoeffs;	// point to reflection coefficients
+//			IIR_PreFilter.pvCoeffs = (float *)IIR_3k_pvCoeffs;	// point to ladder coefficients
 			break;
 		case AUDIO_WIDE:
 		    IIR_PreFilter.numStages = IIR_10k_numStages;		// number of stages
@@ -1191,17 +1188,28 @@ static void audio_demod_fm(int16_t size)
 		//
 		// (Yes, I know that below could be rewritten to be a bit more compact-looking, but it would not be much faster and it would be less-readable)
 		//
-		// Detect above target frequency
-		//
 		// Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator, above
 		//
 		gcount++;		// this counter is used for the accumulation of data over multiple cycles
 		//
 		for(i = 0; i < size/2; i++)	{
+
+			// Detect above target frequency
 			r0 = ads.fm_goertzel_high_r * r1 - r2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
 			r2 = r1;
 			r1 = r0;
+
+			// Detect energy below target frequency
+			s0 = ads.fm_goertzel_low_r * s1 - s2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+			s2 = s1;
+			s1 = s0;
+
+			// Detect on-frequency energy
+			q0 = ads.fm_goertzel_ctr_r * q1 - q2 + ads.c_buffer[i];
+			q2 = q1;
+			q1 = q0;
 		}
+
 		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
 			a = (r1-(r2 * ads.fm_goertzel_high_cos));								// yes - calculate energy at frequency above center and reset detection
 			b = (r2 * ads.fm_goertzel_high_sin);
@@ -1210,16 +1218,7 @@ static void audio_demod_fm(int16_t size)
 			r0 = 0;
 			r1 = 0;
 			r2 = 0;
-		}
-		//
-		// Detect energy below target frequency
-		//
-		for(i = 0; i < size/2; i++)	{
-			s0 = ads.fm_goertzel_low_r * s1 - s2 + ads.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-			s2 = s1;
-			s1 = s0;
-		}
-		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
+
 			a = (s1-(s2 * ads.fm_goertzel_low_cos));								// yes - calculate energy at frequency below center and reset detection
 			b = (s2 * ads.fm_goertzel_low_sin);
 			r = sqrtf(a*a + b*b);
@@ -1227,16 +1226,7 @@ static void audio_demod_fm(int16_t size)
 			s0 = 0;
 			s1 = 0;
 			s2 = 0;
-		}
-		//
-		// Detect on-frequency energy
-		//
-		for(i = 0; i < size/2; i++)	{
-			q0 = ads.fm_goertzel_ctr_r * q1 - q2 + ads.c_buffer[i];
-			q2 = q1;
-			q1 = q0;
-		}
-		if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	{		// have we accumulated enough samples to do the final energy calculation?
+
 			a = (q1-(q2 * ads.fm_goertzel_ctr_cos));								// yes - calculate on-frequency energy and reset detection
 			b = (q2 * ads.fm_goertzel_ctr_sin);
 			r = sqrtf(a*a + b*b);							// r contains "on-frequency" energy

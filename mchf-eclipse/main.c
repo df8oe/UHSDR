@@ -11,10 +11,16 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
 // Common
 #include "mchf_board.h"
 
 #include <stdio.h>
+
+// serial EEPROM driver
+#include "mchf_hw_i2c2.h"
 
 // Audio Driver
 #include "audio_driver.h"
@@ -24,6 +30,7 @@
 #include "ui_driver.h"
 #include "ui_rotary.h"
 #include "ui_lcd_hy28.h"
+#include "ui_menu.h"
 
 // Keyboard Driver
 #include "keyb_driver.h"
@@ -799,6 +806,9 @@ void TransceiverStateInit(void)
 	ts.refresh_freq_disp	= 1;					// TRUE if frequency/color display is to be refreshed when next called - NORMALLY LEFT AT 0 (FALSE)!!!
 													// This is NOT reset by the LCD function, but must be enabled/disabled externally
 	//
+	ts.pwr_2200m_5w_adj	= 1;
+	ts.pwr_630m_5w_adj	= 1;
+	ts.pwr_160m_5w_adj	= 1;
 	ts.pwr_80m_5w_adj	= 1;
 	ts.pwr_60m_5w_adj	= 1;
 	ts.pwr_40m_5w_adj	= 1;
@@ -808,6 +818,11 @@ void TransceiverStateInit(void)
 	ts.pwr_15m_5w_adj	= 1;
 	ts.pwr_12m_5w_adj	= 1;
 	ts.pwr_10m_5w_adj	= 1;
+	ts.pwr_6m_5w_adj	= 1;
+	ts.pwr_4m_5w_adj	= 1;
+	ts.pwr_2m_5w_adj	= 1;
+	ts.pwr_70cm_5w_adj	= 1;
+	ts.pwr_23cm_5w_adj	= 1;
 	//
 	ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
 	ts.filter_ssb_narrow_disable	= 0;			// TRUE if narrow (CW) filters are to be disabled in SSB mdoe
@@ -904,6 +919,8 @@ void TransceiverStateInit(void)
 	ts.tp_x = 0xFF;					// invalid position
 	ts.tp_y = 0xFF;					// invalid position
 	ts.show_tp_coordinates = 0;			// dont show coordinates on LCD
+	ts.rfmod_present = 0;				// rfmod not present
+	ts.vhfuhfmod_present = 0;			// VHF/UHF mod not present
 }
 
 //*----------------------------------------------------------------------------
@@ -929,6 +946,7 @@ void MiscInit(void)
 	//printf("misc init ok\n\r");
 }
 
+/*
 static void wd_reset(void)
 {
 	// Init WD
@@ -954,7 +972,7 @@ static void wd_reset(void)
 		WWDG_SetCounter(WD_REFRESH_COUNTER);
 	}
 }
-
+*/
 //*----------------------------------------------------------------------------
 //* Function Name       : main
 //* Object              :
@@ -1043,10 +1061,6 @@ int main(void)
 			    if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
 				{					// 16 bit addressing
 				ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
-//				if(Read_24Cxx(0x203,16) != 0x66)
-//				    ts.ser_eeprom_type = 10;
-//				if(Read_24Cxx(0x403,16) != 0x66)
-//				    ts.ser_eeprom_type = 11;
 				if(Read_24Cxx(0x803,16) != 0x66)
 				    ts.ser_eeprom_type = 12;
 				if(Read_24Cxx(0x1003,16) != 0x66)

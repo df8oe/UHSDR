@@ -1,11 +1,57 @@
 #########################################################################
 #########################################################################
+##                                                                     ##
 ##  This file contains very short release information, newest up!      ##
 ##                                                                     ##
 ##  KA7OEI, Clint                                                      ##
 ##  DF8OE, Andreas                                                     ##
+##                                                                     ##
 #########################################################################
 #########################################################################
+
+
+20160125 [DF8OE]
+- many bugfixes
+- now it is possible to build with compiler optimization. Binary is much smaller
+  than before, it needs less horse-power (~10...30%) and is running much faster
+  (some functions 6x faster than before!)
+
+20160122 [DF8OE]
+- fixed bug "60m 5W power adjust"
+- fixed many compiler warnings (cleanup - thanks to hogthrop!
+- removed tuning borders, now colour of digits indicate:
+  white == within official tuning range and tuned
+  yellow == outside specs, but often works
+  red == completely outside specs or no I2C communication to SI570 possible
+
+
+20160103 [DF8OE]
+- first release which supports future expansion pcbs for adding
+1) RX 12KHz...80MHz, TX 160m, 6m and 4m
+2) RX 80MHz...2000MHz, TX 2m, 70cm and 23cm
+160m TX and RX is rudimentary supported without expansion board.
+Filters for 80m are used. It works (not perfect at all) and you have
+some small gaps at 160m where LO does not work. But a nice preview at all...
+Of course will work much better with fitted expansion pcb ( I hope it will
+be finished in the first 6 months of 2016)!!!
+You can ge a preview how it looks if mcHF selects new bands if you touch
+":" on touchscreen in menu #199 at recent lines (touching toggles pcb present
+or not "hard-coded"). Of course frequency display is RED on any band < 160m or
+> 10m because LO does not work out-of-the-box without needed expansion board(s)...
+
+################## IMPORTANT INFORMATION ##################
+Because of EEPROM addressing for band specific storage *must* be continuously
+EEPROM structure (regardless virtual/serial) is broken with the adding of new
+bands!!! If you try this version YOUR CONFIGURATON SETTINGS WILL BE LOST!!!
+Please write down your actually configuration settings and add them again
+after upgrade!
+
+Good news at all:
+If you try this new version and somedays pcbs are available there is no more
+changing in EEPROM structure. Storage is organized for all possible new
+bands regardless if they are active or not. This only consumpts ~40 Bytes of
+virtual/serial EEPROM space and does not affect anything else.
+############################################################
 
 20160102 [DF8OE]
 - added autodetection of 7ppm SI570 devices using regs 13+
