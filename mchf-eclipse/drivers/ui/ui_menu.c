@@ -492,8 +492,8 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"331-SSB TX Audio Filter",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
-		"",
-		""
+		"                    ",
+		"                    "
 }
 
 };
