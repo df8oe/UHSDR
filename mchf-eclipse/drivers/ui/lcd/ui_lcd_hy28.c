@@ -1002,6 +1002,57 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushor
     } while ( *str != 0 );
 }
 
+
+uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
+
+	const sFONT   *cf;
+	uint16_t Xpos = 0;
+
+	switch(font)
+	{
+	case 1:
+		cf = &GL_Font16x24;
+		break;
+	case 2:
+		cf = &GL_Font12x12;
+		break;
+	case 3:
+		cf = &GL_Font8x12;
+		break;
+	case 4:
+		cf = &GL_Font8x8;
+		break;
+	default:
+		cf = &GL_Font8x12_bold;
+		break;
+	}
+
+	do{
+		Xpos+=cf->Width;
+		if(font == 4)
+		{
+			if(*str > 0x39)
+				Xpos -= 1;
+			else
+				Xpos -= 2;
+		}
+	} while ( *++str != 0 );
+
+	return Xpos;
+}
+
+void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+{
+
+	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
+	if (Xpos < Xwidth ) {
+		 Xpos = 0; // TODO: Overflow is not handled too good, just start at beginning of line and draw over the end.
+	} else {
+		Xpos -= Xwidth;
+	}
+	UiLcdHy28_PrintText(Xpos, Ypos, str, Color, bkColor, font);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawSpectrum
 //* Object              : repaint spectrum scope control

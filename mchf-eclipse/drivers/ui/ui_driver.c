@@ -456,8 +456,8 @@ void ui_driver_init(void)
 	UiCalcTxIqGainAdj();		// Init TX IQ gain
 	//
 	// Init spectrum display
-	UiDriverInitSpectrumDisplay();
-	UiInitSpectrumScopeWaterfall();
+	// UiDriverInitSpectrumDisplay();
+	// UiInitSpectrumScopeWaterfall();
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
 	// Temp sensor setup
