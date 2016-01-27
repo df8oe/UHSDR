@@ -639,7 +639,7 @@ if(mode > 3)
 	if(ts.menu_item < MAX_MENU_ITEM)	{	// display first screen of items
 		int i;
 		for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ ) {
-			bool show = !(ts.ser_eeprom_in_use == 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
+			bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
 			// this takes care of the removing 2 items if serial eeprom is not fitted
 			if (show) {
 				UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
