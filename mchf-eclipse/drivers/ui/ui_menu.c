@@ -2234,23 +2234,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	//
 	case CONFIG_FREQ_STEP_MARKER_LINE:	// Frequency step marker line on/off
 		temp_var = ts.freq_step_config & 0x0f;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;		// step size marker line on
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;	// step size marker line off
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{		// something changed?
 			if(temp_var)		// yes, is line to be enabled?
 				ts.freq_step_config |= 0x0f;	// yes, set lower nybble
@@ -2259,187 +2243,58 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			//
 			UiDriverShowStep(df.tuning_step);	// update screen
 		}
-		//
-		if(ts.freq_step_config & 0x0f)	{	// marker line enabled?
-			strcpy(options, "  ON ");		// yes!
-		}
-		else
-			strcpy(options, "  OFF");
-
-		opt_pos = CONFIG_FREQ_STEP_MARKER_LINE % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_STEP_SIZE_BUTTON_SWAP:	// Step size button swap on/off
 		temp_var = ts.freq_step_config & 0xf0;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;		// step button swap on
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;	// step button swap off
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// is button to be swapped?
 				ts.freq_step_config |= 0xf0;	// set upper nybble
 			else			// line disabled?
 				ts.freq_step_config &= 0x0f;	// clear upper nybble
 		}
-		//
-		if(ts.freq_step_config & 0xf0)	{	// STEP button swap enabled?
-			strcpy(options, "  ON ");		// yes
-		}
-		else
-			strcpy(options, "  OFF");
-		//
-		opt_pos = CONFIG_STEP_SIZE_BUTTON_SWAP % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_BAND_BUTTON_SWAP:	// Swap position of Band+ and Band- buttons
 		temp_var = ts.misc_flags1 & 2;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// band up/down swap to be enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// band up/down swap is to be disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// turn it off by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// band up/down swap is to be enabled
 				ts.misc_flags1 |= 2;		// set LSB
 			else			// band up/down swap is to be disabled
 				ts.misc_flags1 &= 0xfd;		// clear LSB
 		}
-		//
-		if(ts.misc_flags1 & 2)				// band up/down swap enabled?
-			strcpy(options, "  ON ");		// yes
-		else
-			strcpy(options, "  OFF");		// no (obviously!)
-		//
-		opt_pos = CONFIG_BAND_BUTTON_SWAP % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_TX_DISABLE:	// Step size button swap on/off
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.tx_disable = 1;
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.tx_disable = 0;
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			ts.tx_disable = 0;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.tx_disable,0,options,&clr);
 		if(ts.tx_disable)	{			// Transmit disabled?
-			strcpy(options, "  ON ");		// yes
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
 		}
 		else	{
-			strcpy(options, "  OFF");
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);	// Make TUNE button White
 		}
-		//
-		opt_pos = CONFIG_TX_DISABLE % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
 		temp_var = ts.misc_flags1 & 1;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// change-on-tx is to be disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// change-on-tx is to be enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// turn it on by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// change-on-tx is to be disabled
 				ts.misc_flags1 |= 1;		// set LSB
 			else			// change-on-tx is to be enabled
 				ts.misc_flags1 &= 0xfe;		// clear LSB
 		}
-		//
-		if(ts.misc_flags1 & 1)				// change-on-TX status
-			strcpy(options, "  OFF");
-		else
-			strcpy(options, "  ON ");
-		//
-		opt_pos = CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_MUTE_LINE_OUT_TX:	// Enable/disable MUTE of TX audio on LINE OUT
 		temp_var = ts.misc_flags1 & 4;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// MUTE of TX audio on LINE OUT is enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// MUTE of TX audio on LINE OUT is disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// turn it off by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if((tchange) && (!ts.iq_freq_mode))		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// Yes - MUTE of TX audio on LINE OUT is enabled
 				ts.misc_flags1 |= 4;		// set LSB
 			else			// MUTE of TX audio on LINE OUT is disabled
 				ts.misc_flags1 &= 0xfb;		// clear LSB
 		}
-		//
-		if(ts.misc_flags1 & 4)				// MUTE of TX audio on LINE OUT disabled
-			strcpy(options, "  ON ");
-		else
-			strcpy(options, "  OFF");
-		//
 		if(ts.iq_freq_mode)	// Mark RED if translate mode is active
 			clr = Red;
-		//
-		opt_pos = CONFIG_MUTE_LINE_OUT_TX % MENUSIZE;	// Y position of this menu item
 		break;
-		//
-		// CONFIG_TX_AUDIO_MUTE - "TX Mute Delay"
-		//
 	case CONFIG_TX_AUDIO_MUTE:	// maximum RX gain setting
 		UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_muting_timing,
 				0,
@@ -2452,29 +2307,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	case CONFIG_LCD_AUTO_OFF_MODE:	// LCD auto-off mode control
 		temp_var = ts.lcd_backlight_blanking;		// get control variable
 		temp_var &= 0x0f;							// mask off upper nybble
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;		// indicate that a change has occurred
-			tchange = 1;					// indicate change of parameter
-			if(temp_var < 0xf)				// is it within the range of the lower nybble?
-				temp_var++;					// yes increment
-			if(temp_var < MIN_LCD_BLANK_DELAY_TIME)		// is lower than the minimum value?
-				temp_var = MIN_LCD_BLANK_DELAY_TIME;	// yes - set to minimum value
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;		// indicate that a change has occurred
-			tchange = 1;					// indicate change of parameter
-			if(temp_var)					// is it nonzero?
-				temp_var--;					// yes - decrement
-				if(temp_var < MIN_LCD_BLANK_DELAY_TIME)	// did we go below the minimum time?
-					temp_var = 0;			// yes - force to zero
-		}
-		//
-		if(mode == 3)	{					// turn off auto-blanking by default
-			ts.lcd_backlight_blanking = BACKLIGHT_BLANK_TIMING_DEFAULT;		// set initial time (MSB is off, so it is disabled)
-			ts.menu_var_changed = 1;		// indicate that a change has occurred
-			tchange = 1;					// indicate change of parameter
-		}
-		else if(tchange)			{					// timing has been changed manually
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
+				MIN_LCD_BLANK_DELAY_TIME,
+				0x0f,
+				BACKLIGHT_BLANK_TIMING_DEFAULT,
+				1
+				);
+		if(tchange)			{					// timing has been changed manually
 			if(temp_var)	{				// is the time non-zero?
 				ts.lcd_backlight_blanking = temp_var;	// yes, copy current value into variable
 				ts.lcd_backlight_blanking |= 0x80;		// set MSB to enable auto-blanking
@@ -2482,19 +2321,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			else {
 				ts.lcd_backlight_blanking = 0;			// zero out variable
 			}
-		}
-		//
-		if(tchange)					// if anything changed...
 			UiLCDBlankTiming();		// update the LCD timing parameters
+		}
 		//
 		if(ts.lcd_backlight_blanking & 0x80)			// timed auto-blanking enabled?
 			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & 0x0f);	// yes - Update screen indicator with number of seconds
 		else
-			sprintf(options,"  Off ");						// Or if turned off
-		//
-		opt_pos = CONFIG_LCD_AUTO_OFF_MODE % MENUSIZE;	// Y position of this menu item
+			sprintf(options,"   Off");						// Or if turned off
 		break;
-		//
 	case CONFIG_VOLTMETER_CALIBRATION:		// Voltmeter calibration
 		tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.voltmeter_calibrate,
 				POWER_VOLTMETER_CALIBRATE_MIN,
@@ -2505,92 +2339,22 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		sprintf(options, "  %u ", (unsigned int)ts.voltmeter_calibrate);
 		break;
 	case CONFIG_DISP_FILTER_BANDWIDTH: // Display filter bandwidth
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.filter_disp_colour++;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			if(ts.filter_disp_colour)
-				ts.filter_disp_colour--;
-		}
-		//
-		if(ts.filter_disp_colour > SPEC_BLACK)		// Limit maximum color, excluding "Grey2"
-			ts.filter_disp_colour = SPEC_BLACK;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.filter_disp_colour = SPEC_COLOUR_GRID_DEFAULT;
-		}
-		//
-		if(ts.filter_disp_colour == SPEC_WHITE)	{
-			clr = White;
-			strcpy(options, "  Wht");
-		}
-		else if(ts.filter_disp_colour == SPEC_BLUE)	{
-			clr = Blue;
-			strcpy(options, "  Blu");
-		}
-		else if(ts.filter_disp_colour == SPEC_RED)	{
-			clr = Red;
-			strcpy(options, "  Red");
-		}
-		else if(ts.filter_disp_colour == SPEC_MAGENTA)	{
-			clr = Magenta;
-			strcpy(options, "  Mag");
-		}
-		else if(ts.filter_disp_colour == SPEC_GREEN)	{
-			clr = Green;
-			strcpy(options, "  Grn");
-		}
-		else if(ts.filter_disp_colour == SPEC_CYAN)	{
-			clr = Cyan;
-			strcpy(options, "  Cyn");
-		}
-		else if(ts.filter_disp_colour == SPEC_YELLOW)	{
-			clr = Yellow;
-			strcpy(options, "  Yel");
-		}
-		else if(ts.filter_disp_colour == SPEC_BLACK)	{
-			clr = Grid;
-			strcpy(options, "  Blk");
-		}
-		else if(ts.filter_disp_colour == SPEC_ORANGE)	{
-			clr = Orange;
-			strcpy(options, "  Org");
-		}
-		else	{
-			clr = Grey;
-			strcpy(options, "  Gry");
-		}
-		//
-		opt_pos = CONFIG_DISP_FILTER_BANDWIDTH % MENUSIZE;
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_disp_colour,
+				0,
+				SPEC_BLACK,
+				SPEC_COLOUR_GRID_DEFAULT,
+				1
+				);
+		UiDriverMenuMapColors(ts.filter_disp_colour,options,&clr);
 		break;
 		//
 	case CONFIG_MAX_VOLUME:	// maximum audio volume
-		if(var >= 1)	{	// did the selection increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.audio_max_volume++;	// yes - increase
-		}
-		else if(var <= -1)	{		// did the setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-
-			if(ts.audio_max_volume)		// yes, reduce the setting if not at minimum
-				ts.audio_max_volume--;
-		}
-		//
-		if(mode == 3)	{		// load default setting
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.audio_max_volume = MAX_VOLUME_DEFAULT;
-
-		}
-		//
-		if(ts.audio_max_volume > MAX_VOLUME_MAX)		// limit selection ranges for this mode
-			ts.audio_max_volume = MAX_VOLUME_MAX;
-		//
-		if(ts.audio_max_volume < MAX_VOLUME_MIN)		// limit selection ranges for this mode
-			ts.audio_max_volume = MAX_VOLUME_MIN;
-		//
+		UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_disp_colour,
+						MAX_VOLUME_MIN,
+						MAX_VOLUME_MAX,
+						MAX_VOLUME_DEFAULT,
+						1
+						);
 		if(ts.audio_gain > ts.audio_max_volume)	{			// is the volume currently higher than the new setting?
 			ts.audio_gain = ts.audio_max_volume;		// yes - force the volume to the new value
 			//
@@ -2603,76 +2367,29 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;
 		else if(ts.audio_max_volume <= MAX_VOLT_YELLOW_THRESH)
 			clr = Orange;
-		//
-		opt_pos = CONFIG_MAX_VOLUME % MENUSIZE;	// Y position of this menu item
 		break;
-	//
 	case CONFIG_MAX_RX_GAIN:	// maximum RX gain setting
-		if(var >= 1)	{	// did the selection increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.max_rf_gain++;	// yes - increase
-			tchange = 1;
-		}
-		else if(var <= -1)	{		// did the setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;
-			if(ts.max_rf_gain)		// yes, reduce the setting if not at minimum
-				ts.max_rf_gain--;
-		}
-		//
-		if(mode == 3)	{		// load default setting
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.max_rf_gain = MAX_RF_GAIN_DEFAULT;
-			tchange = 1;
-		}
-		//
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.max_rf_gain,
+						0,
+						MAX_RF_GAIN_MAX,
+						MAX_RF_GAIN_DEFAULT,
+						1
+						);
 		if(tchange)	{
 			UiCalcAGCVals();	// calculate new internal AGC values from user settings
 		}
-		//
-		if(ts.max_rf_gain > MAX_RF_GAIN_MAX)		// limit selection ranges for this mode
-			ts.max_rf_gain = MAX_RF_GAIN_MAX;
-		//
 		sprintf(options, "    %u ", ts.max_rf_gain);
-		//
-		opt_pos = CONFIG_MAX_RX_GAIN % MENUSIZE;	// Y position of this menu item
 		break;
-	//
-	case CONFIG_BEEP_ENABLE:	// Swap position of Band+ and Band- buttons
+	case CONFIG_BEEP_ENABLE:	//
 		temp_var = ts.misc_flags2 & 4;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// beep to be enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// beep is to be disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// turn it off by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// beep is to be enabled
 				ts.misc_flags2 |= 4;		// set LSB+2
 			else			// beep is to be disabled
 				ts.misc_flags2 &= 0xfb;		// clear LSB+2
 		}
-		//
-		if(ts.misc_flags2 & 4)				// is beep enabled?
-			strcpy(options, "  ON ");		// yes
-		else
-			strcpy(options, "  OFF");		// no (obviously!)
-		//
-		opt_pos = CONFIG_BEEP_ENABLE % MENUSIZE;	// Y position of this menu item
 		break;
-		//
-	//
 	case CONFIG_BEEP_FREQ:		// Beep frequency
 		if(ts.misc_flags2 | 4)	{	// is beep enabled?
 			if(var >= 1)	{	// yes, allow adjustment.  Setting increase?
@@ -2753,31 +2470,16 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	// This needs to be investigated!
 	//
 	case CONFIG_CAT_ENABLE:	// CAT mode	 - not saved in EEPROM, does not trigger "save" indicator
-		if(var >= 1)	{	// setting increase?
-			ts.cat_mode_active = 1;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.cat_mode_active = 0;
-			tchange = 1;
-		}
-		//
-		if(mode == 3)
-			ts.cat_mode_active = 0;
-		//
-		if(ts.cat_mode_active)	{
-			strcpy(options, "  ON ");
-			if(tchange)
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cat_mode_active,0,options,&clr);
+		if (tchange) {
+			if(ts.cat_mode_active)	{
 				cat_driver_init();
-		}
-		else	{
-			strcpy(options, "  OFF");
-			if(tchange)
+			}
+			else	{
 				cat_driver_stop();
+			}
 		}
-		opt_pos = CONFIG_CAT_ENABLE % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_FREQUENCY_CALIBRATE:		// Frequency Calibration
 		if(var >= 1)	{	// setting increase?
 			ts.menu_var_changed = 1;	// indicate that a change has occurred
@@ -2810,72 +2512,29 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 	case CONFIG_FREQ_LIMIT_RELAX:	// Enable/disable Frequency tuning limits
 		temp_var = ts.misc_flags1 & 32;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// Disable frequency tuning limit
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// Enable frequency tuning lmiit
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// enable by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// tuning limit is disabled
 				ts.misc_flags1 |= 32;		// set bit
 			else			// tuning limit is enabled
 				ts.misc_flags1 &= 0xdf;		// clear bit
 		}
-		//
 		if(ts.misc_flags1 & 32)	{			// tuning limit is disabled
-			strcpy(options, "  ON ");
 			clr = Orange;					// warn user!
 		}
-		else
-			strcpy(options, "  OFF ");
-		//
-		opt_pos = CONFIG_FREQ_LIMIT_RELAX % MENUSIZE;	// Y position of this menu item
 		break;
-		//
 	case CONFIG_FREQ_MEM_LIMIT_RELAX:	// Enable/disable Frequency memory limits
 		temp_var = ts.misc_flags2 & 16;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// Disable frequency memory limit
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// Enable frequency memory limit
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// enable by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change?
 			if(temp_var)	// freq/mem limit is disabled
 				ts.misc_flags2 |= 16;		// set bit
 			else			// freq/mem limit is enabled
 				ts.misc_flags2 &= 0xef;		// clear bit
 		}
-		//
 		if(ts.misc_flags2 & 16)	{			// frequency/memory limit is disabled
-			strcpy(options, "  ON ");
 			clr = Orange;					// warn user!
 		}
-		else
-			strcpy(options, "  OFF ");
 		break;
 	case CONFIG_LSB_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX)) 	{	// only allow adjustment if in LSB mode
@@ -3446,38 +3105,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_FWD_REV_SENSE_SWAP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
 		temp_var = ts.misc_flags1 & 16;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// Swapping of of FWD/REV is enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// Swapping of FWD/REV is disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// enable by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// swapping of FWD/REV is enabled
 				ts.misc_flags1 |= 16;		// set bit
 			else			// swapping of FWD/REV bit is disabled
 				ts.misc_flags1 &= 0xef;		// clear bit
 		}
-		//
 		if(ts.misc_flags1 & 16)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON ");
 			clr = Orange;					// warn user swapping is on!
 		}
-		else
-			strcpy(options, "  OFF ");
 		break;
-		//
 	case CONFIG_XVTR_OFFSET_MULT:	// Transverter Frequency Display Offset/Multiplier Mode On/Off
 		if(var >= 1)	{	// setting increase?
 			tchange = 1;
@@ -3910,69 +3548,29 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_AM_TX_FILTER_ENABLE:	// Enable/disable AM TX audio filter
 		temp_var = ts.misc_flags1 & 8;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// AM TX audio filter is disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// AM TX audio filter is enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// enable by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(!temp_var)	// AM TX audio filter is disabled
 				ts.misc_flags1 |= 8;		// set LSB
 			else			// AM TX audio filter is enabled
 				ts.misc_flags1 &= 0xf7;		// clear LSB
 		}
-		//
 		if(ts.misc_flags1 & 8)	{			// Display status of TX audio filter
-			strcpy(options, "  OFF");
 			clr = Orange;					// warn user that filter is off!
 		}
-		else
-			strcpy(options, "  ON  ");
 		break;
 	case CONFIG_SSB_TX_FILTER_ENABLE:	// Enable/disable SSB TX audio filter
 		temp_var = ts.misc_flags1 & 64;
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var = 1;				// SSB TX audio filter is disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			temp_var =  0;				// SSB TX audio filter is enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			temp_var = 0;				// enable by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(!temp_var)	// SSB TX audio filter is disabled
 				ts.misc_flags1 |= 64;		// set bit
 			else			// SSB TX audio filter is enabled
 				ts.misc_flags1 &= 0xbf;		// clear bit
 		}
-		//
 		if(ts.misc_flags1 & 64)	{			// Display status of TX audio filter
-			strcpy(options, "  OFF");
 			clr = Red;					// warn user that filter is off!
 		}
-		else
-			strcpy(options, "  ON  ");
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		if(var >= 1)	{	// setting increase?
