@@ -392,62 +392,62 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"261-PA Bias",
 		"270-Disp. Pwr (mW)",
 		"271-Pwr. Det. Null",
-		"   -2200m Coupling Adj."
+		"C01-2200m Coupling Adj."
 } , { // 7
-		"   -630m Coupling Adj.",
-		"   -160m Coupling Adj.",
-		"272-80m Coupling Adj.",
-		"273-40m Coupling Adj.",
-		"274-20m Coupling Adj.",
-		"275-15m Coupling Adj."
+		"C02-630m Coupling Adj.",
+		"C03-160m Coupling Adj.",
+		"C04-80m Coupling Adj.",
+		"C05-40m Coupling Adj.",
+		"C06-20m Coupling Adj.",
+		"C07-15m Coupling Adj."
 } , {	// 8
-		"   -6m Coupling Adj.",
-		"   -2m Coupling Adj.",
-		"   -70cm Coupling Adj.",
-		"   -23m Coupling Adj.",
+		"C08-6m Coupling Adj.",
+		"C09-2m Coupling Adj.",
+		"C10-70cm Coupling Adj.",
+		"C11-23m Coupling Adj.",
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
 } , { // 9
 		"281-XVTR Offset (Hz)",
-		"   -2200m 5W PWR Adjust",
-		"   -630m 5W PWR Adjust",
-		"   -160m 5W PWR Adjust",
-		"290-80m 5W PWR Adjust",
-		"291-60m 5W PWR Adjust"
+		"P01-2200m 5W PWR Adjust",
+		"P02-630m 5W PWR Adjust",
+		"P03-160m 5W PWR Adjust",
+		"P04-80m 5W PWR Adjust",
+		"P05-60m 5W PWR Adjust"
 } , { // 10
-		"292-40m 5W PWR Adjust",
-		"293-30m 5W PWR Adjust",
-		"294-20m 5W PWR Adjust",
-		"295-17m 5W PWR Adjust",
-		"296-15m 5W PWR Adjust",
-		"297-12m 5W PWR Adjust"
+		"P06-40m 5W PWR Adjust",
+		"P07-30m 5W PWR Adjust",
+		"P08-20m 5W PWR Adjust",
+		"P09-17m 5W PWR Adjust",
+		"P10-15m 5W PWR Adjust",
+		"P11-12m 5W PWR Adjust"
 } , { // 11
-		"298-10m 5W PWR Adjust",
-		"   -6m 5W PWR Adjust",
-		"   -4m 5W PWR Adjust",
-		"   -2m 5W PWR Adjust",
-		"   -70cm 5W PWR Adjust",
-		"   -23cm 5W PWR Adjust"
+		"P12-10m 5W PWR Adjust",
+		"P13-6m 5W PWR Adjust",
+		"P14-4m 5W PWR Adjust",
+		"P15-2m 5W PWR Adjust",
+		"P16-70cm 5W PWR Adjust",
+		"P17-23cm 5W PWR Adjust"
 } , { // 12
-		"   -2200m Fu PWR Adjust",
-		"   -630m Ful PWR Adjust",
-		"   -160m Ful PWR Adjust",
-		"300-80m Full PWR Adjust",
-		"301-60m Full PWR Adjust",
-		"302-40m Full PWR Adjust"
+		"O01-2200m Fu PWR Adjust",
+		"O02-630m Ful PWR Adjust",
+		"O03-160m Ful PWR Adjust",
+		"O04-80m Full PWR Adjust",
+		"O05-60m Full PWR Adjust",
+		"O06-40m Full PWR Adjust"
 } , { // 13
-		"303-30m Full PWR Adjust",
-		"304-20m Full PWR Adjust",
-		"305-17m Full PWR Adjust",
-		"306-15m Full PWR Adjust",
-		"307-12m Full PWR Adjust",
-		"308-10m Full PWR Adjust"
+		"O07-30m Full PWR Adjust",
+		"O08-20m Full PWR Adjust",
+		"O09-17m Full PWR Adjust",
+		"O10-15m Full PWR Adjust",
+		"O11-12m Full PWR Adjust",
+		"O12-10m Full PWR Adjust"
 } , { // 14
-		"  -6m Full PWR Adjust",
-		"  -4m Full PWR Adjust",
-		"  -2m Full PWR Adjust",
-		"  -70cm Full PWR Adjust",
-		"  -23cm Full PWR Adjust",
+		"O13-6m Full PWR Adjust",
+		"O14-4m Full PWR Adjust",
+		"O15-2m Full PWR Adjust",
+		"O16-70cm Full PWR Adjust",
+		"O17-23cm Full PWR Adjust",
 		"310-DSP NR BufLen"
 } , { // 15
 		"311-DSP NR Post-AGC",
