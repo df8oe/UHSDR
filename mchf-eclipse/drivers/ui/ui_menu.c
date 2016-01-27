@@ -307,7 +307,7 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 
 
 
-static char* base_screens[10][MENUSIZE] = { {
+static char* base_screens[10][MENUSIZE] = { { //1
 		"10-DSP NR Strength",
 		"20-300Hz Center Freq.",
 		"21-500HZ Center Freq.",
@@ -315,21 +315,21 @@ static char* base_screens[10][MENUSIZE] = { {
 		"23-2.3k Center Freq.",
 		"24-3.6k Filter"
 
-}, {
+}, { // 2
 		"25-Wide Filt. Sel.",
 		"26-Wide Filt in CW mode",
 		"27-CW Filt in SSB mode",
 		"28-AM mode disable",
 		"29-LSB/USB Auto Select",
 		"40-FM Mode Enable"
-}, {
+}, { // 3
 		"41-FM Sub Tone Gen",
 		"42-FM Sub Tone Det",
 		"43-FM Tone Burst",
 		"44-FM RX Bandwidth",
 		"45-FM Deviation",
 		"50-AGC Mode"
-}, {
+}, { // 4
 		"51-RF Gain",
 		"52-Cust AGC (+=Slower)",
 		"53-RX Codec Gain",
@@ -639,7 +639,7 @@ if(mode > 3)
 	if(ts.menu_item < MAX_MENU_ITEM)	{	// display first screen of items
 		int i;
 		for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ ) {
-			bool show = !(ts.ser_eeprom_in_use == 0 && (screen_disp == 10) && (ts.menu_item % MENUSIZE == 2 || ts.menu_item % MENUSIZE == 3));
+			bool show = !(ts.ser_eeprom_in_use == 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
 			// this takes care of the removing 2 items if serial eeprom is not fitted
 			if (show) {
 				UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
@@ -1823,10 +1823,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						1
 						);
 		UiDriverMenuMapColors(ts.scope_scale_colour,options,&clr);
+		disp_shift = 1;
 		break;
 		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
 		UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
+		disp_shift = 1;
 		break;
 	case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
