@@ -2277,7 +2277,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		temp_var = ts.lcd_backlight_blanking;		// get control variable
 		temp_var &= 0x0f;							// mask off upper nybble
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
-				MIN_LCD_BLANK_DELAY_TIME,
+				0,
 				0x0f,
 				BACKLIGHT_BLANK_TIMING_DEFAULT,
 				1
@@ -2318,7 +2318,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 		//
 	case CONFIG_MAX_VOLUME:	// maximum audio volume
-		UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_disp_colour,
+		UiDriverMenuItemChangeUInt8(var, mode, &ts.audio_max_volume,
 						MAX_VOLUME_MIN,
 						MAX_VOLUME_MAX,
 						MAX_VOLUME_DEFAULT,
