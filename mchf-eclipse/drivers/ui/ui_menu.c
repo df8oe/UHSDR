@@ -2069,7 +2069,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_BACKUP_CONFIG:
 			if(ts.ser_eeprom_in_use == 0)
 			    {
-			    strcpy(options, "Do it! ");
+			    strcpy(options, "Do it!");
 			    clr = White;
 			    opt_pos = 2;	// Y position of this menu item
 			    if(var>=1)
@@ -2086,7 +2086,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_RESTORE_CONFIG:
 			if(ts.ser_eeprom_in_use == 0)
 			    {
-			    strcpy(options, "Do it! ");
+			    strcpy(options, "Do it!");
 			    clr = White;
 			    opt_pos = 3;	// Y position of this menu item
 			    if(var>=1)
@@ -2296,7 +2296,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.freq_step_config & 0xf0)	{	// STEP button swap enabled?
-			strcpy(options, "  ON ");		// yes
+			strcpy(options, "  ON");		// yes
 		}
 		else
 			strcpy(options, "  OFF");
@@ -2331,7 +2331,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 2)				// band up/down swap enabled?
-			strcpy(options, "  ON ");		// yes
+			strcpy(options, "  ON");		// yes
 		else
 			strcpy(options, "  OFF");		// no (obviously!)
 		//
@@ -2356,7 +2356,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.tx_disable)	{			// Transmit disabled?
-			strcpy(options, "  ON ");		// yes
+			strcpy(options, "  ON");		// yes
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
 		}
 		else	{
@@ -2396,7 +2396,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.misc_flags1 & 1)				// change-on-TX status
 			strcpy(options, "  OFF");
 		else
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 		//
 		opt_pos = CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2428,7 +2428,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 4)				// MUTE of TX audio on LINE OUT disabled
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 		else
 			strcpy(options, "  OFF");
 		//
@@ -2490,7 +2490,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.lcd_backlight_blanking & 0x80)			// timed auto-blanking enabled?
 			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & 0x0f);	// yes - Update screen indicator with number of seconds
 		else
-			sprintf(options,"  Off ");						// Or if turned off
+			sprintf(options,"  Off");						// Or if turned off
 		//
 		opt_pos = CONFIG_LCD_AUTO_OFF_MODE % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2665,7 +2665,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags2 & 4)				// is beep enabled?
-			strcpy(options, "  ON ");		// yes
+			strcpy(options, "  ON");		// yes
 		else
 			strcpy(options, "  OFF");		// no (obviously!)
 		//
@@ -2766,7 +2766,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			ts.cat_mode_active = 0;
 		//
 		if(ts.cat_mode_active)	{
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 			if(tchange)
 				cat_driver_init();
 		}
@@ -2835,11 +2835,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 32)	{			// tuning limit is disabled
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 			clr = Orange;					// warn user!
 		}
 		else
-			strcpy(options, "  OFF ");
+			strcpy(options, "  OFF");
 		//
 		opt_pos = CONFIG_FREQ_LIMIT_RELAX % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2871,11 +2871,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags2 & 16)	{			// frequency/memory limit is disabled
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 			clr = Orange;					// warn user!
 		}
 		else
-			strcpy(options, "  OFF ");
+			strcpy(options, "  OFF");
 		break;
 	case CONFIG_LSB_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX)) 	{	// only allow adjustment if in LSB mode
@@ -3370,11 +3370,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 		//
 		if(swrm.pwr_meter_disp)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 			clr = Red;					// warn user that metering is on
 		}
 		else
-			strcpy(options, "  OFF ");
+			strcpy(options, "  OFF");
 		//
 		opt_pos = CONFIG_FWD_REV_PWR_DISP % MENUSIZE;	// Y position of this menu item
 		break;
@@ -3471,11 +3471,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 16)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON ");
+			strcpy(options, "  ON");
 			clr = Orange;					// warn user swapping is on!
 		}
 		else
-			strcpy(options, "  OFF ");
+			strcpy(options, "  OFF");
 		break;
 		//
 	case CONFIG_XVTR_OFFSET_MULT:	// Transverter Frequency Display Offset/Multiplier Mode On/Off
@@ -3516,7 +3516,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;
 		}
 		else
-			strcpy(options, "  OFF   ");
+			strcpy(options, "  OFF");
 		break;
 	case CONFIG_XVTR_FREQUENCY_OFFSET:		// Adjust transverter Frequency offset
 		if(var >= 1)	{	// setting increase?
@@ -3939,7 +3939,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Orange;					// warn user that filter is off!
 		}
 		else
-			strcpy(options, "  ON  ");
+			strcpy(options, "  ON");
 		break;
 	case CONFIG_SSB_TX_FILTER_ENABLE:	// Enable/disable SSB TX audio filter
 		temp_var = ts.misc_flags1 & 64;
@@ -3972,7 +3972,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;					// warn user that filter is off!
 		}
 		else
-			strcpy(options, "  ON  ");
+			strcpy(options, "  ON");
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		if(var >= 1)	{	// setting increase?
@@ -4000,37 +4000,37 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			strcpy(options, "Rectangular");
 			break;
 		case FFT_WINDOW_COSINE:
-			strcpy(options, "  Cosine   ");
+			strcpy(options, "     Cosine");
 			break;
 		case FFT_WINDOW_BARTLETT:
-			strcpy(options, " Bartlett  ");
+			strcpy(options, "   Bartlett");
 			break;
 		case FFT_WINDOW_WELCH:
-			strcpy(options, "   Welch   ");
+			strcpy(options, "      Welch");
 			break;
 		case FFT_WINDOW_HANN:
-			strcpy(options, "   Hann    ");
+			strcpy(options, "       Hann");
 			break;
 		case FFT_WINDOW_HAMMING:
-			strcpy(options, "  Hamming  ");
+			strcpy(options, "    Hamming");
 			break;
 		case FFT_WINDOW_BLACKMAN:
-			strcpy(options, " Blackman  ");
+			strcpy(options, "   Blackman");
 			break;
 		case FFT_WINDOW_NUTTALL:
-			strcpy(options, "  Nuttall  ");
+			strcpy(options, "    Nuttall");
 			break;
 		}
 		break;
 	case CONFIG_RESET_SER_EEPROM:
 		if(Read_24Cxx(0,8) == 0xFE00)
 		{
-			strcpy(options, "n/a    ");
+			strcpy(options, "n/a");
 			clr = Red;
 		}
 		else
 		{
-			strcpy(options, "Do it! ");
+			strcpy(options, "Do it!");
 			clr = White;
 			opt_pos =  CONFIG_RESET_SER_EEPROM % MENUSIZE;			// Y position of this menu item
 			if(var>=1)

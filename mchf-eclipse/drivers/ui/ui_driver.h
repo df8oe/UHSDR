@@ -577,7 +577,7 @@ typedef struct EepromSave
 // Exports
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
-void 	ui_driver_irq(void);
+//void 	ui_driver_irq(void);
 void 	ui_driver_toggle_tx(void);
 void 	UiCalcRxPhaseAdj(void);
 void 	UiCalcTxPhaseAdj(void);

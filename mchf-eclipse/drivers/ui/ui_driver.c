@@ -620,7 +620,7 @@ if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void ui_driver_irq(void)
+/*void ui_driver_irq(void)
 {
 
 	// Do not run the state machine
@@ -630,13 +630,12 @@ void ui_driver_irq(void)
 
 	switch(drv_state)
 	{
-/*		case STATE_SPECTRUM_DISPLAY:
-			if(ts.misc_flags1 & 128)		// is waterfall mode to be used?  call it instead
-				UiDriverReDrawWaterfallDisplay();
-			else
-				UiDriverReDrawSpectrumDisplay();
-			break;
-*/
+//		case STATE_SPECTRUM_DISPLAY:
+//			if(ts.misc_flags1 & 128)		// is waterfall mode to be used?  call it instead
+//				UiDriverReDrawWaterfallDisplay();
+//			else
+//				UiDriverReDrawSpectrumDisplay();
+//			break;
 		case STATE_S_METER:
 			UiDriverHandleSmeter();
 			break;
@@ -679,7 +678,7 @@ void ui_driver_irq(void)
 	}
 	drv_state++;
 }
-
+*/
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_toggle_tx
 //* Object              :
@@ -11688,12 +11687,16 @@ void UiDriverLoadEepromValues(void)
 //
 void UiDriverSaveEepromValuesPowerDown(void)
 {
-	uint16_t value,value1, i;
+uint16_t value,value1, i;
+uchar dspmode;
+if(ts.txrx_mode != TRX_MODE_RX)
+    return;
 
-	if(ts.txrx_mode != TRX_MODE_RX)
-		return;
+//printf("eeprom save activate\n\r");
 
-	//printf("eeprom save activate\n\r");
+// disable DSP during write because it decreases speed tremendous
+dspmode = ts.dsp_active;
+ts.dsp_active &= 0xfa;	// turn off DSP
 
 if(ts.ser_eeprom_in_use == 0)
     {
@@ -13097,7 +13100,7 @@ if(ts.ser_eeprom_in_use == 0)
 	// Try to read DSP mode setting - update if changed
 	if(Read_EEPROM(EEPROM_DSP_MODE, &value) == 0)
 	{
-		Write_EEPROM(EEPROM_DSP_MODE, ts.dsp_active);
+		Write_EEPROM(EEPROM_DSP_MODE, dspmode);
 		//printf("-->DSP mode setting saved\n\r");
 	}
 	else	// create
@@ -13730,6 +13733,8 @@ if(ts.ser_eeprom_in_use == 0xAA)
     Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
     ts.ser_eeprom_in_use = 0;
     }
+
+ts.dsp_active = dspmode;	// restore DSP mode
 }
 
 
