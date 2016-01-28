@@ -5911,7 +5911,7 @@ static void UiDriverChangeAfGain(uchar enabled)
 		UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1),"AFG",Grey1,Grey,0);
 
 	sprintf(temp,"%02d",ts.audio_gain);
-	UiLcdHy28_PrintText    ((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_PrintTextRight    ((POS_AG_IND_X + 55),(POS_AG_IND_Y + 1), temp,color,Black,0);
 }
 
 //*----------------------------------------------------------------------------
@@ -6177,7 +6177,7 @@ void UiDriverChangeRfGain(uchar enabled)
 
 		sprintf(temp," %02d",(int)ts.fm_sql_threshold);
 	}
-		UiLcdHy28_PrintText    ((POS_RF_IND_X + 32),(POS_RF_IND_Y + 1), temp,color,Black,0);
+		UiLcdHy28_PrintTextRight    ((POS_RF_IND_X + 55),(POS_RF_IND_Y + 1), temp,color,Black,0);
 
 }
 
@@ -6273,8 +6273,8 @@ static void UiDriverChangeRit(uchar enabled)
 	else
 		sprintf(temp,"%i", ts.rit_value);
 
-	UiLcdHy28_PrintText((POS_RIT_IND_X + 30),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
-	UiLcdHy28_PrintText((POS_RIT_IND_X + 30),(POS_RIT_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
+	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1), temp,color,Black,0);
 }
 
 
