@@ -247,7 +247,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, uint8_t mod
 // always sets 1 or 0 as result, no matter what is passed as "true" value. Only 0 is recognized as false/
 bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr) {
 	bool res = UiDriverMenuItemChangeOnOff(var, mode, val_ptr, val_default);
-	strcpy(options, *val_ptr?"OFF":"ON");
+	strcpy(options, *val_ptr?"OFF":" ON");
 	if (*val_ptr) { *clr_ptr = Orange; }
 
 	return res;
@@ -255,7 +255,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, uint
 
 bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr) {
 	bool res = UiDriverMenuItemChangeOnOff(var, mode, val_ptr, val_default);
-	strcpy(options, *val_ptr?"ON":"OFF");
+	strcpy(options, *val_ptr?" ON":"OFF");
 	if (!*val_ptr) { *clr_ptr = Orange; }
 
 	return res;
@@ -268,7 +268,7 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 	case SPEC_WHITE: 	*clr_ptr = White;	clr_str = " Wht"; 	break;
 	case SPEC_BLUE:  	*clr_ptr = Blue; 	clr_str = " Blu"; 	break;
 	case SPEC_RED: 		*clr_ptr = Red; 	clr_str = " Red"; 	break;
-	case SPEC_MAGENTA: 	*clr_ptr = Magenta; clr_str = " Mag"; 	break;
+	case SPEC_MAGENTA: 	*clr_ptr = Magenta; 	clr_str = " Mag"; 	break;
 	case SPEC_GREEN: 	*clr_ptr = Green; 	clr_str = " Grn"; 	break;
 	case SPEC_CYAN: 	*clr_ptr = Cyan; 	clr_str = " Cyn"; 	break;
 	case SPEC_YELLOW: 	*clr_ptr = Yellow; 	clr_str = " Yel"; 	break;
