@@ -11689,6 +11689,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 {
 uint16_t value,value1, i;
 uchar dspmode;
+uchar demodmode;
 if(ts.txrx_mode != TRX_MODE_RX)
     return;
 
@@ -11697,6 +11698,11 @@ if(ts.txrx_mode != TRX_MODE_RX)
 // disable DSP during write because it decreases speed tremendous
 dspmode = ts.dsp_active;
 ts.dsp_active &= 0xfa;	// turn off DSP
+
+// switch to SSB during write because it decreases speed tremendous
+demodmode = ts.dmod_mode;
+ts.dmod_mode = DEMOD_USB;	// switch to USB during write
+
 
 if(ts.ser_eeprom_in_use == 0)
     {
@@ -11735,7 +11741,7 @@ if(ts.ser_eeprom_in_use == 0)
 	}
 	else	// create
 	{
-		Write_EEPROM(EEPROM_BAND_MODE,(ts.band |(ts.dmod_mode & 0x0f << 8) | (ts.filter_id << 12) ));
+		Write_EEPROM(EEPROM_BAND_MODE,(ts.band |(demodmode & 0x0f << 8) | (ts.filter_id << 12) ));
 		//printf("-->band and mode var created\n\r");
 	}
 	//
@@ -13735,6 +13741,7 @@ if(ts.ser_eeprom_in_use == 0xAA)
     }
 
 ts.dsp_active = dspmode;	// restore DSP mode
+ts.dmod_mode = demodmode;	// restore active mode
 }
 
 
