@@ -341,12 +341,12 @@ static char* base_screens[10][MENUSIZE] = { { //1
 		"114-Wfall 1/Speed",
 		"115-Scope NoSig Adj."
 }, {	// 10
-		"116-Wfall NoSig Adj.",
-		"117-Wfall Size",
-		"197-Backup Config",
-		"198-Restore Config",
-		"199-Hardware Info",
-		"00-Adjustment Menu"
+		"116-Wfall NoSig Adj.        ",
+		"117-Wfall Size              ",
+		"197-Backup Config           ",
+		"198-Restore Config          ",
+		"199-Hardware Info           ",
+		"00-Adjustment Menu          "
 
 }
 
@@ -582,7 +582,7 @@ if(mode > 3)
 	    outs = "HY28A/B parallel";
 	sprintf(out,"%s%s","LCD Display  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
-	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma," MHz");
+	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma,"MHz");
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
 	switch (ts.ser_eeprom_type){
 	    case 0:
