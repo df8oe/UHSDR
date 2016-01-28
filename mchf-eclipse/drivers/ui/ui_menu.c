@@ -2069,14 +2069,14 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_BACKUP_CONFIG:
 			if(ts.ser_eeprom_in_use == 0)
 			    {
-			    strcpy(options, "Do it!");
+			    strcpy(options, " Do it!");
 			    clr = White;
 			    opt_pos = 2;	// Y position of this menu item
 			    if(var>=1)
 				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+24,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+24,"Working",Red,Black,0);
 				copy_ser2virt();
-				strcpy(options, "Done...");
+				strcpy(options, " Done...");
 				clr = Green;
 				UiDriverUpdateMenu(2);
 				}
@@ -2091,7 +2091,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    opt_pos = 3;	// Y position of this menu item
 			    if(var>=1)
 				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+36,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+36,"Working",Red,Black,0);
 				copy_virt2ser();
 				ui_si570_get_configuration();		// restore SI570 to factory default
 				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
@@ -4036,7 +4036,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			if(var>=1)
 			{
 				// clear EEPROM
-				UiLcdHy28_PrintText(POS_MENU_IND_X+184, POS_MENU_IND_Y+48,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+48,"Working",Red,Black,0);
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
 				ui_si570_get_configuration();		// restore SI570 to factory default
