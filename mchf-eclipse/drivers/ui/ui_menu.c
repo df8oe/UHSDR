@@ -787,7 +787,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	float tcalc;
 	bool	fchange = 0;
 	uchar	temp_sel;		// used as temporary holder during selection
-	bool	disp_shift = 0;	// TRUE if option display is to be shifted to the left to allow more options
+	// bool	disp_shift = 0;	// TRUE if option display is to be shifted to the left to allow more options
 
 	clr = White;		// color used it display of adjusted options
 
@@ -1080,7 +1080,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		}
 		//
-		disp_shift = 1;		// move the options to the left slightly
+		// disp_shift = 1;		// move the options to the left slightly
 		break;
 	case MENU_CW_WIDE_FILT: // CW mode wide filter enable/disable
 		UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.filter_cw_wide_disable,0,options,&clr);
@@ -1276,7 +1276,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Red;
 		}
 		//
-		disp_shift = 1;
+		// disp_shift = 1;
 		break;
 	//
 	case MENU_AGC_MODE:	// AGC mode
@@ -1406,7 +1406,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						FREQ_IQ_CONV_MODE_DEFAULT,
 						1
 						);
-		disp_shift = 1;
+		// disp_shift = 1;
 		if(!ts.iq_freq_mode)	{
 			sprintf(options,">> OFF! <<");
 			clr = Red3;
@@ -1702,7 +1702,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
-		disp_shift = 1;	// shift left to allow more room
+		// disp_shift = 1;	// shift left to allow more room
 		//
 		break;
 	//
@@ -1830,12 +1830,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						1
 						);
 		UiDriverMenuMapColors(ts.scope_scale_colour,options,&clr);
-		disp_shift = 1;
+		// disp_shift = 1;
 		break;
 		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
 		UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
-		disp_shift = 1;
+		// disp_shift = 1;
 		break;
 	case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
@@ -2159,7 +2159,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	uchar	temp_var;
 	int var;
 	bool tchange = 0;		// used to indicate a parameter change
-	bool disp_shift = 0;	// used to cause display to be shifted to the left for large amounts of data (e.g. frequency displays)
+	// bool disp_shift = 0;	// used to cause display to be shifted to the left for large amounts of data (e.g. frequency displays)
 	opt_pos = 5;		// default in case of use with wrong index/mode values
 	// float ftemp;
 
@@ -2431,7 +2431,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		if(tchange)
 			UiDriverUpdateFrequency(2,0);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
-		disp_shift = 1;
+		// disp_shift = 1;
 		sprintf(options, "   %d    ", ts.freq_cal);
 		break;
 		//
@@ -2815,7 +2815,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.xverter_mode)	// transvert mode active?
 			clr = Red;		// make number red to alert user of this!
 		//
-		disp_shift = 1;		// cause display to be shifted to the left so that it will fit
+		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
 		sprintf(options, " %09u", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
@@ -3073,7 +3073,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				FFT_WINDOW_DEFAULT,
 				1);
 
-		disp_shift = 1;
+		// disp_shift = 1;
 		switch(ts.fft_window_type)	{
 		case FFT_WINDOW_RECTANGULAR:
 			strcpy(options, "Rectangular");
