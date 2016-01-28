@@ -1257,7 +1257,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_FM_DEV_MODE:	// Select +/- 2.5 or 5 kHz deviation on RX and TX
 		if(ts.iq_freq_mode)	{
 			temp_var = ts.misc_flags2 & 2;
-			UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)	{
 				if(temp_var)	// band up/down swap is to be enabled
 					ts.misc_flags2 |= 2;		// set 5 kHz mode
