@@ -2277,18 +2277,18 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		temp_var = ts.lcd_backlight_blanking;		// get control variable
 		temp_var &= 0x0f;							// mask off upper nybble
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
-				MIN_LCD_BLANK_DELAY_TIME,
+				MIN_LCD_BLANK_DELAY_TIME - 1,
 				0x0f,
 				BACKLIGHT_BLANK_TIMING_DEFAULT,
 				1
 				);
 		if(tchange)			{					// timing has been changed manually
-			if(temp_var)	{				// is the time non-zero?
+			if(temp_var >= MIN_LCD_BLANK_DELAY_TIME)	{				// is the time non-zero?
 				ts.lcd_backlight_blanking = temp_var;	// yes, copy current value into variable
 				ts.lcd_backlight_blanking |= 0x80;		// set MSB to enable auto-blanking
 			}
 			else {
-				ts.lcd_backlight_blanking = 0;			// zero out variable
+				ts.lcd_backlight_blanking = MIN_LCD_BLANK_DELAY_TIME - 1;			// zero out variable
 			}
 			UiLCDBlankTiming();		// update the LCD timing parameters
 		}
@@ -2318,7 +2318,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 		//
 	case CONFIG_MAX_VOLUME:	// maximum audio volume
-		UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_disp_colour,
+		UiDriverMenuItemChangeUInt8(var, mode, &ts.audio_max_volume,
 						MAX_VOLUME_MIN,
 						MAX_VOLUME_MAX,
 						MAX_VOLUME_DEFAULT,
