@@ -780,7 +780,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	ulong opt_pos;					// y position of option cursor
 	static ulong opt_oldpos = 999;	// y position of option cursor, previous
 	uchar select;
-	ulong	clr, temp_var;
+	ulong	clr;
+	uchar temp_var;
 	int	a, b;
 	int var;
 	float tcalc;
