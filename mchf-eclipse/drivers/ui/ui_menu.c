@@ -2261,7 +2261,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.freq_step_config & 0x0f)	{	// marker line enabled?
-			strcpy(options, "  ON ");		// yes!
+			strcpy(options, "   ON");		// yes!
 		}
 		else
 			strcpy(options, "  OFF");
@@ -2296,7 +2296,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.freq_step_config & 0xf0)	{	// STEP button swap enabled?
-			strcpy(options, "  ON");		// yes
+			strcpy(options, "   ON");		// yes
 		}
 		else
 			strcpy(options, "  OFF");
@@ -2331,7 +2331,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 2)				// band up/down swap enabled?
-			strcpy(options, "  ON");		// yes
+			strcpy(options, "   ON");		// yes
 		else
 			strcpy(options, "  OFF");		// no (obviously!)
 		//
@@ -2356,7 +2356,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.tx_disable)	{			// Transmit disabled?
-			strcpy(options, "  ON");		// yes
+			strcpy(options, "   ON");		// yes
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
 		}
 		else	{
@@ -2396,7 +2396,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.misc_flags1 & 1)				// change-on-TX status
 			strcpy(options, "  OFF");
 		else
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 		//
 		opt_pos = CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2428,7 +2428,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 4)				// MUTE of TX audio on LINE OUT disabled
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 		else
 			strcpy(options, "  OFF");
 		//
@@ -2447,7 +2447,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				0,
 				1
 				);
-		sprintf(options, "    %u ", ts.tx_audio_muting_timing);
+		sprintf(options, "    %u", ts.tx_audio_muting_timing);
 		break;
 	case CONFIG_LCD_AUTO_OFF_MODE:	// LCD auto-off mode control
 		temp_var = ts.lcd_backlight_blanking;		// get control variable
@@ -2490,7 +2490,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.lcd_backlight_blanking & 0x80)			// timed auto-blanking enabled?
 			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & 0x0f);	// yes - Update screen indicator with number of seconds
 		else
-			sprintf(options,"  Off");						// Or if turned off
+			sprintf(options,"     Off");						// Or if turned off
 		//
 		opt_pos = CONFIG_LCD_AUTO_OFF_MODE % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2502,7 +2502,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				POWER_VOLTMETER_CALIBRATE_DEFAULT,
 				1
 				);
-		sprintf(options, "  %u ", (unsigned int)ts.voltmeter_calibrate);
+		sprintf(options, "  %u", (unsigned int)ts.voltmeter_calibrate);
 		break;
 	case CONFIG_DISP_FILTER_BANDWIDTH: // Display filter bandwidth
 		if(var >= 1)	{	// setting increase?
@@ -2597,7 +2597,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			sprintf(temp,"%02d",ts.audio_gain);			// Update screen indicator
 			UiLcdHy28_PrintText((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,White,Black,0);
 		}
-		sprintf(options, "    %u ", ts.audio_max_volume);
+		sprintf(options, "    %u", ts.audio_max_volume);
 		//
 		if(ts.audio_max_volume <= MAX_VOL_RED_THRESH)			// Indicate that gain has been reduced by changing color
 			clr = Red;
@@ -2633,7 +2633,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.max_rf_gain > MAX_RF_GAIN_MAX)		// limit selection ranges for this mode
 			ts.max_rf_gain = MAX_RF_GAIN_MAX;
 		//
-		sprintf(options, "    %u ", ts.max_rf_gain);
+		sprintf(options, "    %u", ts.max_rf_gain);
 		//
 		opt_pos = CONFIG_MAX_RX_GAIN % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2665,7 +2665,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags2 & 4)				// is beep enabled?
-			strcpy(options, "  ON");		// yes
+			strcpy(options, "   ON");		// yes
 		else
 			strcpy(options, "  OFF");		// no (obviously!)
 		//
@@ -2710,7 +2710,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
 		//
-		sprintf(options, "   %u  ", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
+		sprintf(options, "   %u", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
 		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//
@@ -2742,7 +2742,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		//
-		sprintf(options, "    %u ", ts.beep_loudness);
+		sprintf(options, "    %u", ts.beep_loudness);
 		//
 		opt_pos = CONFIG_BEEP_LOUDNESS % MENUSIZE;	// Y position of this menu item
 		break;
@@ -2766,7 +2766,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			ts.cat_mode_active = 0;
 		//
 		if(ts.cat_mode_active)	{
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 			if(tchange)
 				cat_driver_init();
 		}
@@ -2804,7 +2804,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
 		//
 		disp_shift = 1;
-		sprintf(options, "   %d    ", ts.freq_cal);
+		sprintf(options, "   %d", ts.freq_cal);
 		opt_pos = CONFIG_FREQUENCY_CALIBRATE % MENUSIZE;
 		break;
 		//
@@ -2835,7 +2835,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 32)	{			// tuning limit is disabled
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 			clr = Orange;					// warn user!
 		}
 		else
@@ -2871,7 +2871,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags2 & 16)	{			// frequency/memory limit is disabled
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 			clr = Orange;					// warn user!
 		}
 		else
@@ -2905,7 +2905,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_lsb_gain_balance);
+		sprintf(options, "   %d", ts.rx_iq_lsb_gain_balance);
 		break;
 	case CONFIG_LSB_RX_IQ_PHASE_BAL:		// LSB RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX))	{
@@ -2936,7 +2936,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_lsb_phase_balance);
+		sprintf(options, "   %d", ts.rx_iq_lsb_phase_balance);
 		break;
 	case CONFIG_USB_RX_IQ_GAIN_BAL:		// USB/CW RX IQ Gain balance
 		if(((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW))  && (ts.txrx_mode == TRX_MODE_RX))	{
@@ -2965,7 +2965,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_usb_gain_balance);
+		sprintf(options, "   %d", ts.rx_iq_usb_gain_balance);
 		break;
 	case CONFIG_USB_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_USB)  && (ts.txrx_mode == TRX_MODE_RX))	{
@@ -2995,7 +2995,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_usb_phase_balance);
+		sprintf(options, "   %d", ts.rx_iq_usb_phase_balance);
 		break;
 	case 	CONFIG_AM_RX_GAIN_BAL:		// AM RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_AM)  && (ts.txrx_mode == TRX_MODE_RX))	{
@@ -3025,7 +3025,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_am_gain_balance);
+		sprintf(options, "   %d", ts.rx_iq_am_gain_balance);
 		break;
 	case 	CONFIG_FM_RX_GAIN_BAL:		// FM RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_RX))	{
@@ -3055,7 +3055,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.rx_iq_fm_gain_balance);
+		sprintf(options, "   %d", ts.rx_iq_fm_gain_balance);
 		break;
 	case CONFIG_LSB_TX_IQ_GAIN_BAL:		// LSB TX IQ Gain balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
@@ -3086,7 +3086,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
-		sprintf(options, "   %d  ", ts.tx_iq_lsb_gain_balance);
+		sprintf(options, "   %d", ts.tx_iq_lsb_gain_balance);
 		break;
 	case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
@@ -3118,7 +3118,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.tx_iq_lsb_phase_balance);
+		sprintf(options, "   %d", ts.tx_iq_lsb_phase_balance);
 		opt_pos = CONFIG_LSB_TX_IQ_PHASE_BAL % MENUSIZE;
 		break;
 		//
@@ -3152,7 +3152,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.tx_iq_usb_gain_balance);
+		sprintf(options, "   %d", ts.tx_iq_usb_gain_balance);
 		opt_pos = CONFIG_USB_TX_IQ_GAIN_BAL % MENUSIZE;
 		break;
 		//
@@ -3186,7 +3186,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.tx_iq_usb_phase_balance);
+		sprintf(options, "   %d", ts.tx_iq_usb_phase_balance);
 		opt_pos = CONFIG_USB_TX_IQ_PHASE_BAL % MENUSIZE;
 		break;
 		//
@@ -3220,7 +3220,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.tx_iq_am_gain_balance);
+		sprintf(options, "   %d", ts.tx_iq_am_gain_balance);
 		opt_pos = 	CONFIG_AM_TX_GAIN_BAL % MENUSIZE;
 		break;
 		//
@@ -3254,7 +3254,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
 		//
-		sprintf(options, "   %d  ", ts.tx_iq_fm_gain_balance);
+		sprintf(options, "   %d", ts.tx_iq_fm_gain_balance);
 		opt_pos = 	CONFIG_FM_TX_GAIN_BAL % MENUSIZE;
 		break;
 		//
@@ -3303,7 +3303,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TUNE or TX mode
 			clr = Orange;
 		//
-		sprintf(options, "  %u  ", ts.pa_cw_bias);
+		sprintf(options, "  %u", ts.pa_cw_bias);
 		opt_pos = CONFIG_CW_PA_BIAS % MENUSIZE;
 		break;
 		//
@@ -3346,7 +3346,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else		// Orange if not in TUNE or TX mode
 			clr = Orange;
 		//
-		sprintf(options, "  %u  ", ts.pa_bias);
+		sprintf(options, "  %u", ts.pa_bias);
 		opt_pos = CONFIG_PA_BIAS % MENUSIZE;
 		break;
 		//
@@ -3370,7 +3370,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 		//
 		if(swrm.pwr_meter_disp)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 			clr = Red;					// warn user that metering is on
 		}
 		else
@@ -3409,7 +3409,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		else	// numerical display NOT active
 			clr = Orange;		// make it red to indicate that adjustment is NOT available
 		//
-		sprintf(options, "  %u ", swrm.sensor_null);
+		sprintf(options, "  %u", swrm.sensor_null);
 		break;
 	case CONFIG_FWD_REV_COUPLING_2200M_ADJ:		// RF power sensor coupling adjust (2200m)
 		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_2200, &swrm.coupling_2200m_calc, options, &clr);
@@ -3471,7 +3471,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.misc_flags1 & 16)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 			clr = Orange;					// warn user swapping is on!
 		}
 		else
@@ -3699,7 +3699,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 		if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
-		sprintf(options, "  %u ", (uint)ts.dsp_nr_delaybuf_len);
+		sprintf(options, "  %u", (uint)ts.dsp_nr_delaybuf_len);
 		break;
 		//
 	case CONFIG_DSP_NR_FFT_NUMTAPS:		// Adjustment of DSP noise reduction de-correlation delay buffer length
@@ -3739,7 +3739,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
 		//
-		sprintf(options, "  %u ", ts.dsp_nr_numtaps);
+		sprintf(options, "  %u", ts.dsp_nr_numtaps);
 		break;
 	case CONFIG_DSP_NR_POST_AGC_SELECT:		// selection of location of DSP noise reduction - pre audio filter/AGC or post AGC/filter
 		if(var >= 1)	{		// setting increase?
@@ -3770,7 +3770,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.dsp_active & 2)	// Is it on?
 			sprintf(options, "  YES");
 		else
-			sprintf(options, "  NO ");
+			sprintf(options, "   NO");
 		break;
 	case CONFIG_DSP_NOTCH_CONVERGE_RATE:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		if(var >= 1)	{	// setting increase?
@@ -3803,7 +3803,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(!(ts.dsp_active & 4))	// mark orange if Notch DSP not active
 			clr = Orange;
 		//
-		sprintf(options, "  %u ", ts.dsp_notch_mu);
+		sprintf(options, "  %u", ts.dsp_notch_mu);
 		break;
 	case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		if(var >= 1)	{	// setting increase?
@@ -3838,7 +3838,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)
 			clr = Red;
 		//
-		sprintf(options, "  %u ", (uint)ts.dsp_notch_delaybuf_len);
+		sprintf(options, "  %u", (uint)ts.dsp_notch_delaybuf_len);
 		break;
 	case CONFIG_DSP_NOTCH_FFT_NUMTAPS:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		if(var >= 1)	{	// setting increase?
@@ -3877,7 +3877,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
 		//
-		sprintf(options, "  %u ", ts.dsp_notch_numtaps);
+		sprintf(options, "  %u", ts.dsp_notch_numtaps);
 		break;
 	case CONFIG_AGC_TIME_CONSTANT:		// Adjustment of Noise Blanker AGC Time Constant
 		if(var >= 1)	{	// setting increase?
@@ -3906,7 +3906,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			UiCalcNB_AGC();	// yes - recalculate new values for Noise Blanker AGC
 		}
 		//
-		sprintf(options, "  %u ", ts.nb_agc_time_const);
+		sprintf(options, "  %u", ts.nb_agc_time_const);
 		break;
 	case CONFIG_AM_TX_FILTER_ENABLE:	// Enable/disable AM TX audio filter
 		temp_var = ts.misc_flags1 & 8;
@@ -3939,7 +3939,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Orange;					// warn user that filter is off!
 		}
 		else
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 		break;
 	case CONFIG_SSB_TX_FILTER_ENABLE:	// Enable/disable SSB TX audio filter
 		temp_var = ts.misc_flags1 & 64;
@@ -3972,7 +3972,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;					// warn user that filter is off!
 		}
 		else
-			strcpy(options, "  ON");
+			strcpy(options, "   ON");
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		if(var >= 1)	{	// setting increase?
