@@ -374,7 +374,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"212-Key Beep",
 		"213-Beep Frequency (Hz)",
 		"214-Beep Volume",
-		"220-CAT mode",
+		"220-CAT Mode",
 		"230-Freq. Calibrate",
 		"231-Freq. Limit Disable"
 } , { // 4
