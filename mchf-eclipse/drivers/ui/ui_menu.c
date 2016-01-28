@@ -450,8 +450,8 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"O17-23cm Full PWR Adjust",
 		"310-DSP NR BufLen"
 } , { // 15
-		"311-DSP NR Post-AGC",
-		"312-DSP NR FFT NumTaps",
+		"311-DSP NR FFT NumTaps",
+		"312-DSP NR Post-AGC",
 		"313-DSP Notch ConvRate",
 		"314-DSP Notch BufLen",
 		"315-DSP Notch FFTNumTap",
