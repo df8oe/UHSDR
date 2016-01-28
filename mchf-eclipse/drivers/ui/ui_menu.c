@@ -230,6 +230,11 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt16(int var, uint32_t mo
 }
 
 bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default) {
+	// we have to align the values to true and false, since sometimes other values are passed for true (use of temp_var)
+	// but this does not work properly.
+
+	*val_ptr = (*val_ptr)?1:0;
+
 	return UiDriverMenuItemChangeUInt8(var, mode, val_ptr,
 				0,
 				1,
@@ -239,6 +244,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, uint8_t mod
 
 }
 
+// always sets 1 or 0 as result, no matter what is passed as "true" value. Only 0 is recognized as false/
 bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr) {
 	bool res = UiDriverMenuItemChangeOnOff(var, mode, val_ptr, val_default);
 	strcpy(options, *val_ptr?"OFF":"ON");
@@ -1112,41 +1118,20 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_FM_MODE_ENABLE:	// Enable/Disable FM
 		if(ts.iq_freq_mode)	{
 			temp_var = ts.misc_flags2 & 1;
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				temp_var = 1;				// band FM is to be enabled
-				fchange = 1;				// indicate change of parameter
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				temp_var =  0;				// band FM is to be disabled
-				fchange = 1;				// indicate change of parameter
-			}
-			//
-			if(mode == 3)	{
-				temp_var = 0;				// turn FM off by default
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				fchange = 1;				// indicate change of parameter
-			}
-			//
+			UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)	{
 				if(temp_var)	// band up/down swap is to be enabled
 					ts.misc_flags2 |= 1;		// FM is enabled
 				else			// band up/down swap is to be disabled
 					ts.misc_flags2 &= 0xfe;		// FM is disabled
 			}
-			//
-			if(ts.misc_flags2 & 1)				// band up/down swap enabled?
-				strcpy(options, " ON");		// yes
-			else
-				strcpy(options, "OFF");		// no (obviously!)
+
 		}
 		else	{	// translate mode is off - NO FM!!!
 			strcpy(options, "OFF");		// Say that it is OFF!
 			clr = Red;
 		}
 		break;
-	//
 	case MENU_FM_GEN_SUBAUDIBLE_TONE:	// Selection of subaudible tone for FM transmission
 		UiDriverMenuItemChangeUInt32(var, mode, &ts.fm_subaudible_tone_gen_select,
 				0,
@@ -1272,23 +1257,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_FM_DEV_MODE:	// Select +/- 2.5 or 5 kHz deviation on RX and TX
 		if(ts.iq_freq_mode)	{
 			temp_var = ts.misc_flags2 & 2;
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				temp_var = 1;				// 5 kHz deviation mode
-				fchange = 1;				// indicate change of parameter
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				temp_var =  0;				// 2.5 kHz deviation mode
-				fchange = 1;				// indicate change of parameter
-			}
-			//
-			if(mode == 3)	{
-				temp_var = 0;				// 2.5 kHz deviation by default
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				fchange = 1;				// indicate change of parameter
-			}
-			//
+			UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)	{
 				if(temp_var)	// band up/down swap is to be enabled
 					ts.misc_flags2 |= 2;		// set 5 kHz mode
@@ -2392,76 +2361,32 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
 		if(ts.misc_flags2 | 4)	{	// is beep enabled?
-			if(var >= 1)	{	// yes, allow adjustment.  Setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.beep_frequency+=25;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.beep_frequency >= 25)
-					ts.beep_frequency-= 25;
-				else if(ts.beep_frequency < 25)
-					ts.beep_frequency = 0;
-				//
-				tchange = 1;
-			}
-			//
-			if(ts.beep_frequency < MIN_BEEP_FREQUENCY)
-				ts.beep_frequency  = MIN_BEEP_FREQUENCY;
-			else if(ts.beep_frequency > MAX_BEEP_FREQUENCY)
-				ts.beep_frequency  = MIN_BEEP_FREQUENCY;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.beep_frequency,
+								MIN_BEEP_FREQUENCY,
+								MAX_BEEP_FREQUENCY,
+								DEFAULT_BEEP_FREQUENCY,
+								25);
 			if(tchange)		{
 				UiLoadBeepFreq();
 				UiKeyBeep();		// make beep to demonstrate frequency
 			}
-			//
 		}
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
-		//
 		sprintf(options, "   %u  ", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
-		opt_pos = CONFIG_BEEP_FREQ % MENUSIZE;
 		break;
 	//
 	case CONFIG_BEEP_LOUDNESS:	// beep loudness
-		if(var >= 1)	{	// did the selection increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.beep_loudness++;	// yes - increase
-			tchange = 1;
-		}
-		else if(var <= -1)	{		// did the setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;
-			if(ts.beep_loudness)		// yes, reduce the setting if not at minimum
-				ts.beep_loudness--;
-		}
-		//
-		if(mode == 3)	{		// load default setting
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;
-			tchange = 1;
-		}
-
-		if(ts.beep_loudness > MAX_BEEP_LOUDNESS)		// limit range for loudness
-			ts.beep_loudness = MAX_BEEP_LOUDNESS;
-		//
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.beep_loudness,
+							0,
+							MAX_BEEP_LOUDNESS,
+							DEFAULT_BEEP_LOUDNESS,
+							1);
 		if(tchange)	{
 			UiLoadBeepFreq();	// calculate new beep loudness values
 			UiKeyBeep();		// make beep to demonstrate loudness
 		}
-		//
-		//
 		sprintf(options, "    %u ", ts.beep_loudness);
-		//
-		opt_pos = CONFIG_BEEP_LOUDNESS % MENUSIZE;	// Y position of this menu item
 		break;
 	//
 	//
@@ -2470,7 +2395,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	// This needs to be investigated!
 	//
 	case CONFIG_CAT_ENABLE:	// CAT mode	 - not saved in EEPROM, does not trigger "save" indicator
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cat_mode_active,0,options,&clr);
+		temp_var = ts.cat_mode_active;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		ts.cat_mode_active = temp_var;
 		if (tchange) {
 			if(ts.cat_mode_active)	{
 				cat_driver_init();
@@ -2501,13 +2428,10 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			ts.freq_cal = 0;
 			tchange = 1;
 		}
-		//
 		if(tchange)
 			UiDriverUpdateFrequency(2,0);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
-		//
 		disp_shift = 1;
 		sprintf(options, "   %d    ", ts.freq_cal);
-		opt_pos = CONFIG_FREQUENCY_CALIBRATE % MENUSIZE;
 		break;
 		//
 	case CONFIG_FREQ_LIMIT_RELAX:	// Enable/disable Frequency tuning limits
@@ -2538,27 +2462,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_LSB_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX)) 	{	// only allow adjustment if in LSB mode
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_lsb_gain_balance < MIN_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_lsb_gain_balance  = MIN_RX_IQ_GAIN_BALANCE;
-			else if(ts.rx_iq_lsb_gain_balance > MAX_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_lsb_gain_balance  = MAX_RX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_gain_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_gain_balance,
+								MIN_RX_IQ_GAIN_BALANCE,
+								MAX_RX_IQ_GAIN_BALANCE,
+								0,
+								1);
 			if(tchange)
 				UiCalcRxIqGainAdj();
 		}
@@ -2568,28 +2476,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_LSB_RX_IQ_PHASE_BAL:		// LSB RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_phase_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_phase_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_lsb_phase_balance < MIN_RX_IQ_PHASE_BALANCE)
-				ts.rx_iq_lsb_phase_balance  = MIN_RX_IQ_PHASE_BALANCE;
-			//
-			if(ts.rx_iq_lsb_phase_balance > MAX_RX_IQ_PHASE_BALANCE)
-				ts.rx_iq_lsb_phase_balance  = MAX_RX_IQ_PHASE_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_lsb_phase_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_phase_balance,
+								MIN_RX_IQ_PHASE_BALANCE,
+								MAX_RX_IQ_PHASE_BALANCE,
+								0,
+								1);
 			if(tchange)
 				UiCalcRxPhaseAdj();
 		}
@@ -2599,26 +2490,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_USB_RX_IQ_GAIN_BAL:		// USB/CW RX IQ Gain balance
 		if(((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW))  && (ts.txrx_mode == TRX_MODE_RX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_usb_gain_balance < MIN_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_usb_gain_balance  = MIN_RX_IQ_GAIN_BALANCE;
-			else if(ts.rx_iq_usb_gain_balance > MAX_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_usb_gain_balance  = MAX_RX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_gain_balance = 0;
-				tchange = 1;
-			}
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_gain_balance,
+								MIN_RX_IQ_GAIN_BALANCE,
+								MAX_RX_IQ_GAIN_BALANCE,
+								0,
+								1);
 			if(tchange)
 				UiCalcRxIqGainAdj();
 		}
@@ -2628,28 +2504,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_USB_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_USB)  && (ts.txrx_mode == TRX_MODE_RX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_phase_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_phase_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_usb_phase_balance < MIN_RX_IQ_PHASE_BALANCE)
-				ts.rx_iq_usb_phase_balance  = MIN_RX_IQ_PHASE_BALANCE;
-			//
-			if(ts.rx_iq_usb_phase_balance > MAX_RX_IQ_PHASE_BALANCE)
-				ts.rx_iq_usb_phase_balance  = MAX_RX_IQ_PHASE_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_usb_phase_balance = 0;
-				tchange = 1;
-			}
-			if(tchange)
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_phase_balance,
+											MIN_RX_IQ_PHASE_BALANCE,
+											MAX_RX_IQ_PHASE_BALANCE,
+											0,
+											1);if(tchange)
 				UiCalcRxPhaseAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
@@ -2658,27 +2517,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case 	CONFIG_AM_RX_GAIN_BAL:		// AM RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_AM)  && (ts.txrx_mode == TRX_MODE_RX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_am_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_am_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_am_gain_balance < MIN_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_am_gain_balance  = MIN_RX_IQ_GAIN_BALANCE;
-			//
-			if(ts.rx_iq_am_gain_balance > MAX_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_am_gain_balance  = MAX_RX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_am_gain_balance = 0;
-				tchange = 1;
-			}
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_am_gain_balance,
+											MIN_RX_IQ_GAIN_BALANCE,
+											MAX_RX_IQ_GAIN_BALANCE,
+											0,
+											1);
 			if(tchange)
 				UiCalcRxIqGainAdj();
 		}
@@ -2688,28 +2531,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case 	CONFIG_FM_RX_GAIN_BAL:		// FM RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_RX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_fm_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_fm_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.rx_iq_fm_gain_balance < MIN_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_fm_gain_balance  = MIN_RX_IQ_GAIN_BALANCE;
-			//
-			if(ts.rx_iq_fm_gain_balance > MAX_RX_IQ_GAIN_BALANCE)
-				ts.rx_iq_fm_gain_balance  = MAX_RX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.rx_iq_fm_gain_balance = 0;
-				tchange = 1;
-			}
-			if(tchange)
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_fm_gain_balance,
+													MIN_RX_IQ_GAIN_BALANCE,
+													MAX_RX_IQ_GAIN_BALANCE,
+													0,
+													1);if(tchange)
 				UiCalcRxIqGainAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
@@ -2718,28 +2544,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_LSB_TX_IQ_GAIN_BAL:		// LSB TX IQ Gain balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_lsb_gain_balance < MIN_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_lsb_gain_balance  = MIN_TX_IQ_GAIN_BALANCE;
-			//
-			if(ts.tx_iq_lsb_gain_balance > MAX_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_lsb_gain_balance  = MAX_TX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_gain_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_gain_balance,
+													MIN_TX_IQ_GAIN_BALANCE,
+													MAX_TX_IQ_GAIN_BALANCE,
+													0,
+													1);
 			if(tchange)
 				UiCalcTxIqGainAdj();
 		}
@@ -2749,96 +2558,39 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 	case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_phase_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_phase_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_lsb_phase_balance < MIN_TX_IQ_PHASE_BALANCE)
-				ts.tx_iq_lsb_phase_balance  = MIN_TX_IQ_PHASE_BALANCE;
-			//
-			if(ts.tx_iq_lsb_phase_balance > MAX_TX_IQ_PHASE_BALANCE)
-				ts.tx_iq_lsb_phase_balance  = MAX_TX_IQ_PHASE_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_lsb_phase_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_phase_balance,
+					MIN_TX_IQ_PHASE_BALANCE,
+					MAX_TX_IQ_PHASE_BALANCE,
+					0,
+					1);
 			if(tchange)
 				UiCalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
-		//
 		sprintf(options, "   %d  ", ts.tx_iq_lsb_phase_balance);
-		opt_pos = CONFIG_LSB_TX_IQ_PHASE_BAL % MENUSIZE;
 		break;
-		//
 	case CONFIG_USB_TX_IQ_GAIN_BAL:		// USB/CW TX IQ Gain balance
 		if(((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_usb_gain_balance < MIN_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_usb_gain_balance  = MIN_TX_IQ_GAIN_BALANCE;
-			//
-			if(ts.tx_iq_usb_gain_balance > MAX_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_usb_gain_balance  = MAX_TX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_gain_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_gain_balance,
+													MIN_TX_IQ_GAIN_BALANCE,
+													MAX_TX_IQ_GAIN_BALANCE,
+													0,
+													1);
 			if(tchange)
 				UiCalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
-		//
 		sprintf(options, "   %d  ", ts.tx_iq_usb_gain_balance);
-		opt_pos = CONFIG_USB_TX_IQ_GAIN_BAL % MENUSIZE;
 		break;
-		//
 	case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_phase_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_phase_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_usb_phase_balance < MIN_TX_IQ_PHASE_BALANCE)
-				ts.tx_iq_usb_phase_balance  = MIN_TX_IQ_PHASE_BALANCE;
-			//
-			if(ts.tx_iq_usb_phase_balance > MAX_TX_IQ_PHASE_BALANCE)
-				ts.tx_iq_usb_phase_balance  = MAX_TX_IQ_PHASE_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_usb_phase_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_phase_balance,
+					MIN_TX_IQ_PHASE_BALANCE,
+					MAX_TX_IQ_PHASE_BALANCE,
+					0,
+					1);
 			if(tchange)
 				UiCalcTxPhaseAdj();
 		}
@@ -2851,109 +2603,54 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		//
 	case 	CONFIG_AM_TX_GAIN_BAL:		// AM TX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_AM) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_am_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_am_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_am_gain_balance < MIN_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_am_gain_balance  = MIN_TX_IQ_GAIN_BALANCE;
-			//
-			if(ts.tx_iq_am_gain_balance > MAX_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_am_gain_balance  = MAX_TX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_am_gain_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_am_gain_balance,
+					MIN_TX_IQ_GAIN_BALANCE,
+					MAX_TX_IQ_GAIN_BALANCE,
+					0,
+					1);
 			if(tchange)
 				UiCalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
-		//
 		sprintf(options, "   %d  ", ts.tx_iq_am_gain_balance);
-		opt_pos = 	CONFIG_AM_TX_GAIN_BAL % MENUSIZE;
 		break;
-		//
 	case 	CONFIG_FM_TX_GAIN_BAL:		// FM TX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_fm_gain_balance++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_fm_gain_balance--;
-				tchange = 1;
-			}
-			if(ts.tx_iq_fm_gain_balance < MIN_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_fm_gain_balance  = MIN_TX_IQ_GAIN_BALANCE;
-			//
-			if(ts.tx_iq_fm_gain_balance > MAX_TX_IQ_GAIN_BALANCE)
-				ts.tx_iq_fm_gain_balance  = MAX_TX_IQ_GAIN_BALANCE;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.tx_iq_fm_gain_balance = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_fm_gain_balance,
+					MIN_TX_IQ_GAIN_BALANCE,
+					MAX_TX_IQ_GAIN_BALANCE,
+					0,
+					1);
 			if(tchange)
 				UiCalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
-		//
 		sprintf(options, "   %d  ", ts.tx_iq_fm_gain_balance);
-		opt_pos = 	CONFIG_FM_TX_GAIN_BAL % MENUSIZE;
 		break;
-		//
 	case CONFIG_CW_PA_BIAS:		// CW PA Bias adjust
 		if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))	{	// enable only in TUNE mode
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.pa_cw_bias++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.pa_cw_bias)
-					ts.pa_cw_bias--;
-				tchange = 1;
-			}
-			//
-			if(ts.pa_bias > MAX_PA_BIAS)
-				ts.pa_cw_bias  = MAX_PA_BIAS;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.pa_cw_bias = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.pa_cw_bias,
+					0,
+					MAX_PA_BIAS,
+					0,
+					1);
+
 			if(tchange)	{
 				if((ts.dmod_mode == DEMOD_CW) && (ts.pa_cw_bias))	{	// in CW mode and bias NONZERO?
 					calc_var = BIAS_OFFSET + (ts.pa_cw_bias * 2);
 					if(calc_var > 255)
 						calc_var = 255;
 					//
-							DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
+					DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
 				}
 				else	{
 					calc_var = BIAS_OFFSET + (ts.pa_bias * 2);	// if it is zero, use the "other" value
 					if(calc_var > 255)
 						calc_var = 255;
 					//
-							DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
+					DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
 				}
 			}
 			if(ts.pa_cw_bias < MIN_BIAS_SETTING)
@@ -2961,34 +2658,16 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in TUNE or TX mode
 			clr = Orange;
-		//
 		sprintf(options, "  %u  ", ts.pa_cw_bias);
-		opt_pos = CONFIG_CW_PA_BIAS % MENUSIZE;
 		break;
-		//
 	case CONFIG_PA_BIAS:		// PA Bias adjust (Including CW if CW bias == 0)
 		if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))	{	// enable only in TUNE mode
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.pa_bias++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				if(ts.pa_bias)
-					ts.pa_bias--;
-				tchange = 1;
-			}
-			//
-			if(ts.pa_bias > MAX_PA_BIAS)
-				ts.pa_bias  = MAX_PA_BIAS;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				ts.pa_bias = 0;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.pa_bias,
+					0,
+					MAX_PA_BIAS,
+					0,
+					1);
+
 			if(tchange)	{
 				if((ts.dmod_mode != DEMOD_CW) || ((ts.dmod_mode == DEMOD_CW) && !ts.pa_cw_bias))	{	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
 					calc_var = BIAS_OFFSET + (ts.pa_bias * 2);
@@ -3004,70 +2683,25 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else		// Orange if not in TUNE or TX mode
 			clr = Orange;
-		//
 		sprintf(options, "  %u  ", ts.pa_bias);
-		opt_pos = CONFIG_PA_BIAS % MENUSIZE;
 		break;
-		//
 	case CONFIG_FWD_REV_PWR_DISP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			swrm.pwr_meter_disp = 1;		// Display of fwd/rev power in milliwatts is enabled
-			tchange = 1;				// indicate change of parameter
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			swrm.pwr_meter_disp = 0;		// Display of fwd/rev power in milliwatts is disabled
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		if(mode == 3)	{
-			swrm.pwr_meter_disp = 0;		// Display of fwd/rev power in milliwatts is disabled by default
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			tchange = 1;				// indicate change of parameter
-		}
-		//
-		//
-		if(swrm.pwr_meter_disp)	{			// Display status FWD/REV swapping
-			strcpy(options, "  ON ");
-			clr = Red;					// warn user that metering is on
-		}
-		else
-			strcpy(options, "  OFF ");
-		//
-		opt_pos = CONFIG_FWD_REV_PWR_DISP % MENUSIZE;	// Y position of this menu item
+		temp_var = swrm.pwr_meter_disp;
+		UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		swrm.pwr_meter_disp = temp_var;
 		break;
-		//
 	case CONFIG_RF_FWD_PWR_NULL:		// RF power FWD power meter calibrate
 		if(swrm.pwr_meter_disp)	{
-			if(var >= 1)	{	// setting increase?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				swrm.sensor_null++;
-				tchange = 1;
-			}
-			else if(var <= -1)	{	// setting decrease?
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				swrm.sensor_null--;
-				tchange = 1;
-			}
-			//
-			if(swrm.sensor_null > SWR_CAL_MAX)
-				swrm.sensor_null  = SWR_CAL_MAX;
-			else if(swrm.sensor_null < SWR_CAL_MIN)
-				swrm.sensor_null  = SWR_CAL_MIN;
-			//
-			if(mode == 3)	{
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-				swrm.sensor_null = SWR_CAL_DEFAULT;
-				tchange = 1;
-			}
-			//
+			tchange = UiDriverMenuItemChangeUInt8(var, mode, &swrm.sensor_null,
+					SWR_CAL_MIN,
+					SWR_CAL_MAX,
+					SWR_CAL_DEFAULT,
+					1);
 			if(ts.txrx_mode != TRX_MODE_TX)	// Orange if not in TX mode
-				clr = Orange;
+					clr = Orange;
 		}
 		else	// numerical display NOT active
 			clr = Orange;		// make it red to indicate that adjustment is NOT available
-		//
 		sprintf(options, "  %u ", swrm.sensor_null);
 		break;
 	case CONFIG_FWD_REV_COUPLING_2200M_ADJ:		// RF power sensor coupling adjust (2200m)
@@ -3117,27 +2751,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_XVTR_OFFSET_MULT:	// Transverter Frequency Display Offset/Multiplier Mode On/Off
-		if(var >= 1)	{	// setting increase?
-			tchange = 1;
-			ts.xverter_mode++;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-		}
-		else if(var <= -1)	{	// setting decrease?
-			tchange = 1;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			if(ts.xverter_mode)
-				ts.xverter_mode--;
-		}
-		//
-		if(ts.xverter_mode > XVERTER_MULT_MAX)
-			ts.xverter_mode = XVERTER_MULT_MAX;
-		//
-		if(mode == 3)	{
-			tchange = 1;
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.xverter_mode = 0;
-		}
-		//
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.xverter_mode,
+				0,
+				XVERTER_MULT_MAX,
+				0,
+				1);
 		if(tchange)	{		// change?
 			ts.refresh_freq_disp = 1;	// cause frequency display to be completely refreshed
 			if(ts.vfo_mem_mode & 128)	{	// in SPLIT mode?
@@ -3302,244 +2920,119 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, &ts.pwr_23cm_full_adj, options, &clr);
 		break;
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_delaybuf_len+= 16;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_delaybuf_len-= 16;
-			tchange = 1;
-		}
-		//
 		ts.dsp_nr_delaybuf_len &= 0xfff0;	// mask bottom nybble to enforce 16-count boundary
-		//
-		if(ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX)		// enforce maximum buffer length
-			ts.dsp_nr_delaybuf_len  = DSP_NR_BUFLEN_MAX;
-		else if(ts.dsp_nr_delaybuf_len <= ts.dsp_nr_numtaps)	// is buffer smaller/equal to number of taps?
+		tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp_nr_delaybuf_len,
+				DSP_NR_BUFLEN_MIN,
+				DSP_NR_BUFLEN_MAX,
+				DSP_NR_BUFLEN_DEFAULT,
+				16);
+
+		if(ts.dsp_nr_delaybuf_len <= ts.dsp_nr_numtaps)	// is buffer smaller/equal to number of taps?
 			ts.dsp_nr_delaybuf_len = ts.dsp_nr_numtaps + 16;	// yes - it must always be larger than number of taps!
-		else if(ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN)		// enforce minimum size
-			ts.dsp_nr_delaybuf_len  = DSP_NR_BUFLEN_MIN;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
-			tchange = 1;
-		}
+
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 1)	// only update if DSP NR active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
 		if(!(ts.dsp_active & 1))	// mark orange if DSP NR not active
 			clr = Orange;
-		//
 		if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
 		sprintf(options, "  %u ", (uint)ts.dsp_nr_delaybuf_len);
 		break;
-		//
 	case CONFIG_DSP_NR_FFT_NUMTAPS:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_numtaps+= 16;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_numtaps-= 16;
-			tchange = 1;
-		}
-		//
 		ts.dsp_nr_numtaps &= 0xf0;	// mask bottom nybble to enforce 16-count boundary
-		//
-		if(ts.dsp_nr_numtaps > DSP_NR_NUMTAPS_MAX)		// limit maximum number of taps
-			ts.dsp_nr_numtaps  = DSP_NR_NUMTAPS_MAX;
-		else if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// is number of taps equal or greater than buffer length?
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_numtaps,
+				DSP_NR_NUMTAPS_MIN,
+				DSP_NR_NUMTAPS_MAX,
+				DSP_NR_NUMTAPS_DEFAULT,
+				16);
+		if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// is number of taps equal or greater than buffer length?
 			ts.dsp_nr_delaybuf_len = ts.dsp_nr_numtaps + 16;	// yes - make buffer larger
-		else if(ts.dsp_nr_numtaps < DSP_NR_NUMTAPS_MIN)
-			ts.dsp_nr_numtaps  = DSP_NR_NUMTAPS_MIN;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_nr_numtaps = DSP_NR_NUMTAPS_DEFAULT;
-			tchange = 1;
-		}
+
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 1)	// only update if DSP NR active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
+
 		if(!(ts.dsp_active & 1))	// mark orange if DSP NR not active
 			clr = Orange;
-		//
 		if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
-		//
 		sprintf(options, "  %u ", ts.dsp_nr_numtaps);
 		break;
 	case CONFIG_DSP_NR_POST_AGC_SELECT:		// selection of location of DSP noise reduction - pre audio filter/AGC or post AGC/filter
-		if(var >= 1)	{		// setting increase?
-			ts.dsp_active |= 2;				// it is on - set LSB+1 active - DSP noise reduction is AFTER AGC
-			tchange = 1;
-			ts.menu_var_changed = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.dsp_active &= 0xfd;		// clear LSB+1	 - DSP noise reduction is BEFORE filtering/AGC
-			tchange = 1;
-			ts.menu_var_changed = 1;
-		}
-		//
-		if(mode == 3)	{		// Default mode is to
-			ts.dsp_active &= 0xfd;		// clear LSB+1	- DSP noise reduction is BEFORE filtering/AGC
-			tchange = 1;
-			ts.menu_var_changed = 1;
-		}
-		//
+		temp_var = ts.dsp_active & 0x02;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(!(ts.dsp_active & 1))	// mark orange if DSP NR not active
 			clr = Orange;
-		//
+
+		if (temp_var) { ts.dsp_active |= 0x02; } else { ts.dsp_active &= 0xfd; }
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 1)	// only update if DSP NR active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
-		if(ts.dsp_active & 2)	// Is it on?
-			sprintf(options, "  YES");
-		else
-			sprintf(options, "  NO ");
 		break;
 	case CONFIG_DSP_NOTCH_CONVERGE_RATE:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_mu++;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			if(ts.dsp_notch_mu)
-				ts.dsp_notch_mu--;
-			tchange = 1;
-		}
-		//
-		ts.dsp_nr_numtaps &= 0xf0;	// mask bottom nybble to enforce 16-count boundary
-		//
-		if(ts.dsp_notch_mu > DSP_NOTCH_MU_MAX)
-			ts.dsp_notch_mu  = DSP_NOTCH_MU_MAX;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_mu = DSP_NOTCH_MU_DEFAULT;
-			tchange = 1;
-		}
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+				0,
+				DSP_NOTCH_MU_MAX,
+				DSP_NOTCH_MU_DEFAULT,
+				1);
+
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 4)	// only update if Notch DSP is active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
 		if(!(ts.dsp_active & 4))	// mark orange if Notch DSP not active
 			clr = Orange;
-		//
 		sprintf(options, "  %u ", ts.dsp_notch_mu);
 		break;
 	case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_delaybuf_len += 8;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_delaybuf_len -= 8;
-			tchange = 1;
-		}
-		//
-		if(ts.dsp_notch_delaybuf_len > DSP_NOTCH_BUFLEN_MAX)
-			ts.dsp_notch_delaybuf_len  = DSP_NOTCH_BUFLEN_MAX;
-		else if(ts.dsp_notch_delaybuf_len <= ts.dsp_notch_numtaps) 		// did we try to decrease it smaller than FFT size?
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+				DSP_NOTCH_BUFLEN_MIN,
+				DSP_NOTCH_BUFLEN_MAX,
+				DSP_NOTCH_DELAYBUF_DEFAULT,
+				8);
+
+
+		if(ts.dsp_notch_delaybuf_len <= ts.dsp_notch_numtaps) 		// did we try to decrease it smaller than FFT size?
 			ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;						// yes - limit it to previous size
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
-			tchange = 1;
-		}
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 4)	// only update if DSP Notch active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
 		if(!(ts.dsp_active & 4))	// mark orange if DSP Notch not active
 			clr = Orange;
-		//
 		if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)
 			clr = Red;
-		//
 		sprintf(options, "  %u ", (uint)ts.dsp_notch_delaybuf_len);
 		break;
 	case CONFIG_DSP_NOTCH_FFT_NUMTAPS:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_numtaps+= 16;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_numtaps-= 16;
-			tchange = 1;
-		}
-		//
 		ts.dsp_notch_numtaps &= 0xf0;	// mask bottom nybble to enforce 16-count boundary
-		//
-		if(ts.dsp_notch_numtaps > DSP_NOTCH_NUMTAPS_MAX)			// limit maximum
-			ts.dsp_notch_numtaps  = DSP_NOTCH_NUMTAPS_MAX;
-		else if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)	// force buffer size to always be larger than number of taps
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_numtaps,
+				0,
+				DSP_NOTCH_NUMTAPS_MAX,
+				DSP_NOTCH_NUMTAPS_DEFAULT,
+				16);
+		if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)	// force buffer size to always be larger than number of taps
 			ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
-		else if(ts.dsp_notch_numtaps <= DSP_NOTCH_NUMTAPS_MIN)		// enforce minimum number of taps
-			ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_MIN;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;
-			tchange = 1;
-		}
 		if(tchange)	{	// did something change?
 			if(ts.dsp_active & 4)	// only update if DSP NR active
 				audio_driver_set_rx_audio_filter();
 		}
-		//
 		if(!(ts.dsp_active & 4))	// mark orange if DSP NR not active
 			clr = Orange;
-		//
 		if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)	// Warn if number of taps greater than/equal buffer length!
 			clr = Red;
-		//
 		sprintf(options, "  %u ", ts.dsp_notch_numtaps);
 		break;
 	case CONFIG_AGC_TIME_CONSTANT:		// Adjustment of Noise Blanker AGC Time Constant
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.nb_agc_time_const++;
-			tchange = 1;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			if(ts.nb_agc_time_const)	{
-				ts.nb_agc_time_const--;
-				tchange = 1;
-				ts.menu_var_changed = 1;	// indicate that a change has occurred
-			}
-		}
-		//
-		if(ts.nb_agc_time_const > NB_MAX_AGC_SETTING)
-			ts.nb_agc_time_const  = NB_MAX_AGC_SETTING;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.nb_agc_time_const = NB_AGC_DEFAULT;
-			tchange = 1;
-		}
-		//
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.nb_agc_time_const,
+				0,
+				NB_MAX_AGC_SETTING,
+				NB_AGC_DEFAULT,
+				1);
 		if(tchange)	{				// parameter changed?
 			UiCalcNB_AGC();	// yes - recalculate new values for Noise Blanker AGC
 		}
@@ -3573,62 +3066,49 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
-		if(var >= 1)	{	// setting increase?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.fft_window_type++;
-		}
-		else if(var <= -1)	{	// setting decrease?
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			if(ts.fft_window_type)
-				ts.fft_window_type--;
-		}
-		//
-		if(ts.fft_window_type >= FFT_WINDOW_MAX)
-			ts.fft_window_type = FFT_WINDOW_MAX-1;
-		//
-		if(mode == 3)	{
-			ts.menu_var_changed = 1;	// indicate that a change has occurred
-			ts.fft_window_type = FFT_WINDOW_DEFAULT;
-		}
-		//
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
+				0,
+				FFT_WINDOW_MAX,
+				FFT_WINDOW_DEFAULT,
+				1);
+
 		disp_shift = 1;
-		//
 		switch(ts.fft_window_type)	{
 		case FFT_WINDOW_RECTANGULAR:
 			strcpy(options, "Rectangular");
 			break;
 		case FFT_WINDOW_COSINE:
-			strcpy(options, "  Cosine   ");
+			strcpy(options, "     Cosine");
 			break;
 		case FFT_WINDOW_BARTLETT:
-			strcpy(options, " Bartlett  ");
+			strcpy(options, "   Bartlett");
 			break;
 		case FFT_WINDOW_WELCH:
-			strcpy(options, "   Welch   ");
+			strcpy(options, "      Welch");
 			break;
 		case FFT_WINDOW_HANN:
-			strcpy(options, "   Hann    ");
+			strcpy(options, "       Hann");
 			break;
 		case FFT_WINDOW_HAMMING:
-			strcpy(options, "  Hamming  ");
+			strcpy(options, "    Hamming");
 			break;
 		case FFT_WINDOW_BLACKMAN:
-			strcpy(options, " Blackman  ");
+			strcpy(options, "   Blackman");
 			break;
 		case FFT_WINDOW_NUTTALL:
-			strcpy(options, "  Nuttall  ");
+			strcpy(options, "    Nuttall");
 			break;
 		}
 		break;
 	case CONFIG_RESET_SER_EEPROM:
 		if(Read_24Cxx(0,8) == 0xFE00)
 		{
-			strcpy(options, "n/a    ");
+			strcpy(options, "   n/a");
 			clr = Red;
 		}
 		else
 		{
-			strcpy(options, "Do it! ");
+			strcpy(options, "Do it!");
 			clr = White;
 			opt_pos =  CONFIG_RESET_SER_EEPROM % MENUSIZE;			// Y position of this menu item
 			if(var>=1)
