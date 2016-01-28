@@ -277,51 +277,51 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 
 
 static char* base_screens[10][MENUSIZE] = { { //1
-		"10-DSP NR Strength",
-		"20-300Hz Center Freq.",
-		"21-500HZ Center Freq.",
-		"22-1.8k Center Freq.",
-		"23-2.3k Center Freq.",
-		"24-3.6k Filter"
+		"010-DSP NR Strength",
+		"020-300Hz Center Freq.",
+		"021-500HZ Center Freq.",
+		"022-1.8k Center Freq.",
+		"023-2.3k Center Freq.",
+		"024-3.6k Filter"
 
 }, { // 2
-		"25-Wide Filt. Sel.",
-		"26-Wide Filt in CW Mode",
-		"27-CW Filt in SSB Mode",
-		"28-AM Mode",
-		"29-LSB/USB Auto Select",
-		"40-FM Mode"
+		"025-Wide Filt. Sel.",
+		"026-Wide Filt in CW Mode",
+		"027-CW Filt in SSB Mode",
+		"028-AM Mode",
+		"029-LSB/USB Auto Select",
+		"040-FM Mode"
 }, { // 3
-		"41-FM Sub Tone Gen",
-		"42-FM Sub Tone Det",
-		"43-FM Tone Burst",
-		"44-FM RX Bandwidth",
-		"45-FM Deviation",
-		"50-AGC Mode"
+		"041-FM Sub Tone Gen",
+		"042-FM Sub Tone Det",
+		"043-FM Tone Burst",
+		"044-FM RX Bandwidth",
+		"045-FM Deviation",
+		"050-AGC Mode"
 }, { // 4
-		"51-RF Gain",
-		"52-Cust AGC (+=Slower)",
-		"53-RX Codec Gain",
-		"54-RX NB Setting",
-		"55-RX/TX Freq Xlate",
-		"60-Mic/Line Select"
+		"051-RF Gain",
+		"052-Cust AGC (+=Slower)",
+		"053-RX Codec Gain",
+		"054-RX NB Setting",
+		"055-RX/TX Freq Xlate",
+		"060-Mic/Line Select"
 }, {	// 5
-		"61-Mic Input Gain",
-		"62-Line Input Gain",
-		"63-ALC Release Time",
-		"64-TX PRE ALC Gain",
-		"65-TX Audio Compress",
-		"70-CW Keyer Mode",
+		"061-Mic Input Gain",
+		"062-Line Input Gain",
+		"063-ALC Release Time",
+		"064-TX PRE ALC Gain",
+		"065-TX Audio Compress",
+		"070-CW Keyer Mode",
 }, {	// 6
-		"71-CW Keyer Speed",
-		"72-CW Sidetone Gain",
-		"73-CW Side/Off Freq",
-		"74-CW Paddle Reverse",
-		"75-CW TX->RX Delay",
-		"76-CW Freq. Offset",
+		"071-CW Keyer Speed",
+		"072-CW Sidetone Gain",
+		"073-CW Side/Off Freq",
+		"074-CW Paddle Reverse",
+		"075-CW TX->RX Delay",
+		"076-CW Freq. Offset",
 }, {	// 7
-		"90-TCXO Off/On/Stop",
-		"91-TCXO Temp. (C/F)",
+		"090-TCXO Off/On/Stop",
+		"091-TCXO Temp. (C/F)",
 		"100-Spec Scope 1/Speed",
 		"101-Spec/Wfall Filter",
 		"102-Spec. Trace Colour",
@@ -346,7 +346,7 @@ static char* base_screens[10][MENUSIZE] = { { //1
 		"197-Backup Config           ",
 		"198-Restore Config          ",
 		"199-Hardware Info           ",
-		"00-Adjustment Menu          "
+		"000-Adjustment Menu          "
 
 }
 
