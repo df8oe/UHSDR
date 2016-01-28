@@ -848,7 +848,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		switch(ts.filter_300Hz_select)	{
 		case 0:
-			strcpy(options, "  Off");
+			strcpy(options, "  OFF");
 			clr = Red;
 			break;
 		case 1:
@@ -906,7 +906,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		switch(ts.filter_500Hz_select)	{
 		case 0:
-			strcpy(options, "  Off");
+			strcpy(options, "  OFF");
 			clr = Red;
 			break;
 		case 1:
@@ -950,7 +950,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		switch(ts.filter_1k8_select)	{
 		case 0:
-			strcpy(options, "Off   ");
+			strcpy(options, "OFF   ");
 			clr = Red;
 			break;
 		case 1:
@@ -1154,7 +1154,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				sprintf(options, "  %d.%dHz", a, b);
 		}
 		else	{							// tone is off
-			sprintf(options, "     Off");		// make it dislay "off"
+			sprintf(options, "     OFF");		// make it dislay "off"
 			ads.fm_subaudible_tone_word = 0;	// set word to 0 to turn it off
 		}
 		//
@@ -1186,7 +1186,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				sprintf(options, "  %d.%dHz", a, b);
 		}
 		else	{							// tone is off
-			sprintf(options, "     Off");		// make it dislay "off"
+			sprintf(options, "     OFF");		// make it dislay "off"
 			ads.fm_subaudible_tone_word = 0;	// set word to 0 to turn it off
 		}
 		//
@@ -1215,7 +1215,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			ads.fm_tone_burst_word = FM_TONE_BURST_2135;
 		}
 		else	{												// anything else, turn it off
-			strcpy(options, "    Off");
+			strcpy(options, "    OFF");
 			ads.fm_tone_burst_word = FM_TONE_BURST_OFF;
 			ads.fm_tone_burst_active = 0;
 		}
@@ -1788,7 +1788,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		if(ts.scope_speed)
 			sprintf(options, "  %u", ts.scope_speed);
 		else
-			strcpy(options, "Off");
+			strcpy(options, "OFF");
 		break;
 		//
 	case MENU_SCOPE_FILTER_STRENGTH:	// spectrum filter strength
@@ -2296,7 +2296,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.lcd_backlight_blanking & 0x80)			// timed auto-blanking enabled?
 			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & 0x0f);	// yes - Update screen indicator with number of seconds
 		else
-			sprintf(options,"   Off");						// Or if turned off
+			sprintf(options,"   OFF");						// Or if turned off
 		break;
 	case CONFIG_VOLTMETER_CALIBRATION:		// Voltmeter calibration
 		tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.voltmeter_calibrate,
