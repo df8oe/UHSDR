@@ -286,11 +286,11 @@ static char* base_screens[10][MENUSIZE] = { { //1
 
 }, { // 2
 		"25-Wide Filt. Sel.",
-		"26-Wide Filt in CW mode",
-		"27-CW Filt in SSB mode",
-		"28-AM mode disable",
+		"26-Wide Filt in CW Mode",
+		"27-CW Filt in SSB Mode",
+		"28-AM Mode",
 		"29-LSB/USB Auto Select",
-		"40-FM Mode Enable"
+		"40-FM Mode"
 }, { // 3
 		"41-FM Sub Tone Gen",
 		"42-FM Sub Tone Det",
@@ -305,42 +305,42 @@ static char* base_screens[10][MENUSIZE] = { { //1
 		"54-RX NB Setting",
 		"55-RX/TX Freq Xlate",
 		"60-Mic/Line Select"
-}, {	// display fifth screen of items
+}, {	// 5
 		"61-Mic Input Gain",
 		"62-Line Input Gain",
 		"63-ALC Release Time",
 		"64-TX PRE ALC Gain",
 		"65-TX Audio Compress",
 		"70-CW Keyer Mode",
-}, {	// display sixth screen of items
+}, {	// 6
 		"71-CW Keyer Speed",
 		"72-CW Sidetone Gain",
 		"73-CW Side/Off Freq",
 		"74-CW Paddle Reverse",
 		"75-CW TX->RX Delay",
 		"76-CW Freq. Offset",
-}, {	// display seventh screen of items
+}, {	// 7
 		"90-TCXO Off/On/Stop",
 		"91-TCXO Temp. (C/F)",
 		"100-Spec Scope 1/Speed",
 		"101-Spec/Wfall Filter",
 		"102-Spec. Trace Colour",
 		"103-Spec. Grid Colour"
-}, {	// display eighth screen of items
+}, {	// 8
 		"104-Spec/Wfall ScaleClr",
 		"105-Spec/Wfall 2x Magn",
 		"106-Spec/Wfall AGC Adj.",
 		"107-Spec Scope Ampl.",
 		"108-Spec/Wfall Line",
 		"109-Scope/Waterfall"
-}, {	// display ninth screen of items
+}, {	// 9
 		"110-Wfall Colours",
 		"111-Wfall Step Size",
 		"112-Wfall Brightness",
 		"113-Wfall Contrast",
 		"114-Wfall 1/Speed",
 		"115-Scope NoSig Adj."
-}, { // display tenth screen of items
+}, {	// 10
 		"116-Wfall NoSig Adj.",
 		"117-Wfall Size",
 		"197-Backup Config",
@@ -396,58 +396,58 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 } , { // 7
 		"C02-630m Coupling Adj.",
 		"C03-160m Coupling Adj.",
-		"C04-80m Coupling Adj.",
-		"C05-40m Coupling Adj.",
-		"C06-20m Coupling Adj.",
-		"C07-15m Coupling Adj."
+		"C04-80m  Coupling Adj.",
+		"C05-40m  Coupling Adj.",
+		"C06-20m  Coupling Adj.",
+		"C07-15m  Coupling Adj."
 } , {	// 8
-		"C08-6m Coupling Adj.",
-		"C09-2m Coupling Adj.",
+		"C08-6m   Coupling Adj.",
+		"C09-2m   Coupling Adj.",
 		"C10-70cm Coupling Adj.",
-		"C11-23m Coupling Adj.",
+		"C11-23m  Coupling Adj.",
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
 } , { // 9
 		"281-XVTR Offset (Hz)",
 		"P01-2200m 5W PWR Adjust",
-		"P02-630m 5W PWR Adjust",
-		"P03-160m 5W PWR Adjust",
-		"P04-80m 5W PWR Adjust",
-		"P05-60m 5W PWR Adjust"
+		"P02-630m  5W PWR Adjust",
+		"P03-160m  5W PWR Adjust",
+		"P04-80m   5W PWR Adjust",
+		"P05-60m   5W PWR Adjust"
 } , { // 10
-		"P06-40m 5W PWR Adjust",
-		"P07-30m 5W PWR Adjust",
-		"P08-20m 5W PWR Adjust",
-		"P09-17m 5W PWR Adjust",
-		"P10-15m 5W PWR Adjust",
-		"P11-12m 5W PWR Adjust"
+		"P06-40m   5W PWR Adjust",
+		"P07-30m   5W PWR Adjust",
+		"P08-20m   5W PWR Adjust",
+		"P09-17m   5W PWR Adjust",
+		"P10-15m   5W PWR Adjust",
+		"P11-12m   5W PWR Adjust"
 } , { // 11
-		"P12-10m 5W PWR Adjust",
-		"P13-6m 5W PWR Adjust",
-		"P14-4m 5W PWR Adjust",
-		"P15-2m 5W PWR Adjust",
-		"P16-70cm 5W PWR Adjust",
-		"P17-23cm 5W PWR Adjust"
+		"P12-10m   5W PWR Adjust",
+		"P13-6m    5W PWR Adjust",
+		"P14-4m    5W PWR Adjust",
+		"P15-2m    5W PWR Adjust",
+		"P16-70cm  5W PWR Adjust",
+		"P17-23cm  5W PWR Adjust"
 } , { // 12
-		"O01-2200m Fu PWR Adjust",
-		"O02-630m Ful PWR Adjust",
-		"O03-160m Ful PWR Adjust",
-		"O04-80m Full PWR Adjust",
-		"O05-60m Full PWR Adjust",
-		"O06-40m Full PWR Adjust"
+		"O01-2200m Full PWR Adjust",
+		"O02-630m  Full PWR Adjust",
+		"O03-160m  Full PWR Adjust",
+		"O04-80m   Full PWR Adjust",
+		"O05-60m   Full PWR Adjust",
+		"O06-40m   Full PWR Adjust"
 } , { // 13
-		"O07-30m Full PWR Adjust",
-		"O08-20m Full PWR Adjust",
-		"O09-17m Full PWR Adjust",
-		"O10-15m Full PWR Adjust",
-		"O11-12m Full PWR Adjust",
-		"O12-10m Full PWR Adjust"
+		"O07-30m   Full PWR Adjust",
+		"O08-20m   Full PWR Adjust",
+		"O09-17m   Full PWR Adjust",
+		"O10-15m   Full PWR Adjust",
+		"O11-12m   Full PWR Adjust",
+		"O12-10m   Full PWR Adjust"
 } , { // 14
-		"O13-6m Full PWR Adjust",
-		"O14-4m Full PWR Adjust",
-		"O15-2m Full PWR Adjust",
-		"O16-70cm Full PWR Adjust",
-		"O17-23cm Full PWR Adjust",
+		"O13-6m    Full PWR Adjust",
+		"O14-4m    Full PWR Adjust",
+		"O15-2m    Full PWR Adjust",
+		"O16-70cm  Full PWR Adjust",
+		"O17-23cm  Full PWR Adjust",
 		"310-DSP NR BufLen"
 } , { // 15
 		"311-DSP NR FFT NumTaps",
