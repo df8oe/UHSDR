@@ -11233,7 +11233,7 @@ void UiDriverLoadEepromValues(void)
 	if(Read_EEPROM(EEPROM_MISC_FLAGS2, &value) == 0)
 	{
 		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
+			value = 1;	// reset to default (FM enabled)
 		//
 		ts.misc_flags2 = value;
 		//printf("-->Misc. flags 2 setting loaded\n\r");
@@ -11727,7 +11727,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	dspmode = ts.dsp_active;
 	ts.dsp_active &= 0xfa;	// turn off DSP
 
-	// switch to SSB during write because it decreases speed tremendous
+	// switch to SSB during write when in FM because it decreases speed tremendous
 	demodmode = ts.dmod_mode;
 	if(ts.dmod_mode == DEMOD_FM)
 	    ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
