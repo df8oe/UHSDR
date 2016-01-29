@@ -9923,6 +9923,7 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
+<<<<<<< HEAD
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low) {
 	uint32_t value32;
 	uint16_t value16;
@@ -10176,7 +10177,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NR_STRENGTH,&ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX);
 	UiReadSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NR_FFT_NUMTAPS,&ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT, DSP_NR_NUMTAPS_MIN, DSP_NOTCH_NUMTAPS_MAX);
-	UiReadSettingEEPROM_UInt32_16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,(uint32_t*)&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MIN);
 	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_MAX_RX_GAIN,&ts.max_rf_gain,MAX_RF_GAIN_DEFAULT,0,MAX_RF_GAIN_MAX);
