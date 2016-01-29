@@ -11729,7 +11729,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 
 	// switch to SSB during write because it decreases speed tremendous
 	demodmode = ts.dmod_mode;
-	ts.dmod_mode = DEMOD_USB;	// switch to USB during write
+	if(ts.dmod_mode == DEMOD_FM)
+	    ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
 
 
 	if(ts.ser_eeprom_in_use == 0)

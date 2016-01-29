@@ -383,16 +383,16 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"241-LSB RX IQ Phase",
 		"242-USB RX IQ Bal.",
 		"243-USB RX IQ Phase",
-		"244-AM RX IQ Bal."
+		"244-AM  RX IQ Bal."
 } , { // 5
-		"245-FM RX IQ Bal.",
+		"245-FM  RX IQ Bal.",
 		"250-LSB TX IQ Bal.",
 		"251-LSB TX IQ Phase",
 		"252-USB TX IQ Bal.",
 		"253-USB TX IQ Phase",
-		"254-AM TX IQ Bal."
+		"254-AM  TX IQ Bal."
 } , { // 6
-		"255-FM TX IQ Bal.",
+		"255-FM  TX IQ Bal.",
 		"260-CW PA Bias (If >0 )",
 		"261-PA Bias",
 		"270-Disp. Pwr (mW)",
@@ -460,9 +460,9 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"313-DSP Notch ConvRate",
 		"314-DSP Notch BufLen",
 		"315-DSP Notch FFTNumTap",
-		"320-NB AGC T/C (<=Slow)"
+		"320-NB  AGC T/C (<=Slow)"
 } , { // 16
-		"330-AM TX Audio Filter",
+		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
@@ -2815,7 +2815,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;		// make number red to alert user of this!
 		//
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
-		sprintf(options, " %09u", (uint)ts.xverter_offset);	// print with nine digits
+		sprintf(options, " %u", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);
