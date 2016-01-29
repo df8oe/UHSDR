@@ -5911,7 +5911,7 @@ static void UiDriverChangeAfGain(uchar enabled)
 		UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1),"AFG",Grey1,Grey,0);
 
 	sprintf(temp,"%02d",ts.audio_gain);
-	UiLcdHy28_PrintText    ((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_PrintTextRight    ((POS_AG_IND_X + 55),(POS_AG_IND_Y + 1), temp,color,Black,0);
 }
 
 //*----------------------------------------------------------------------------
@@ -6177,7 +6177,7 @@ void UiDriverChangeRfGain(uchar enabled)
 
 		sprintf(temp," %02d",(int)ts.fm_sql_threshold);
 	}
-		UiLcdHy28_PrintText    ((POS_RF_IND_X + 32),(POS_RF_IND_Y + 1), temp,color,Black,0);
+		UiLcdHy28_PrintTextRight    ((POS_RF_IND_X + 55),(POS_RF_IND_Y + 1), temp,color,Black,0);
 
 }
 
@@ -6273,8 +6273,8 @@ static void UiDriverChangeRit(uchar enabled)
 	else
 		sprintf(temp,"%i", ts.rit_value);
 
-	UiLcdHy28_PrintText((POS_RIT_IND_X + 30),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
-	UiLcdHy28_PrintText((POS_RIT_IND_X + 30),(POS_RIT_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
+	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1), temp,color,Black,0);
 }
 
 
@@ -9549,6 +9549,7 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 	}
 }
 
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCheckForEEPROMLoadDefaultRequest
@@ -11685,81 +11686,83 @@ void UiDriverLoadEepromValues(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
+
+static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		Write_EEPROM(addr, set_val);
+	}
+	else	// create
+	{
+		Write_EEPROM(addr, default_val);
+	}
+}
+
+static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addrH, &value) == 0 && Read_EEPROM(addrL, &value) == 0)
+	{
+		Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
+		Write_EEPROM(addrL, (uint16_t)(set_val));
+	}
+	else	// create
+	{
+		Write_EEPROM(addrH, (uint16_t)(default_val >> 16));
+		Write_EEPROM(addrL, (uint16_t)(default_val));
+	}
+}
+
 void UiDriverSaveEepromValuesPowerDown(void)
 {
-uint16_t value,value1, i;
-uchar dspmode;
-uchar demodmode;
-if(ts.txrx_mode != TRX_MODE_RX)
-    return;
+	uint16_t value,value1, i;
+	uchar dspmode;
+	uchar demodmode;
+	if(ts.txrx_mode != TRX_MODE_RX)
+		return;
 
-//printf("eeprom save activate\n\r");
+	//printf("eeprom save activate\n\r");
 
-// disable DSP during write because it decreases speed tremendous
-dspmode = ts.dsp_active;
-ts.dsp_active &= 0xfa;	// turn off DSP
+	// disable DSP during write because it decreases speed tremendous
+	dspmode = ts.dsp_active;
+	ts.dsp_active &= 0xfa;	// turn off DSP
 
-// switch to SSB during write because it decreases speed tremendous
-demodmode = ts.dmod_mode;
-ts.dmod_mode = DEMOD_USB;	// switch to USB during write
+	// switch to SSB during write because it decreases speed tremendous
+	demodmode = ts.dmod_mode;
+	ts.dmod_mode = DEMOD_USB;	// switch to USB during write
 
 
-if(ts.ser_eeprom_in_use == 0)
-    {
-    static uint8_t p[MAX_VAR_ADDR*2+2];
-    ts.eeprombuf = p;
-
-    uint16_t i, data;
-
-    ts.eeprombuf[0] = ts.ser_eeprom_type;
-    ts.eeprombuf[1] = ts.ser_eeprom_in_use;
-    for(i=1; i <= MAX_VAR_ADDR; i++)
+	if(ts.ser_eeprom_in_use == 0)
 	{
-	Read_SerEEPROM(i, &data);
-	ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
-	data = data>>8;
-	ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+		static uint8_t p[MAX_VAR_ADDR*2+2];
+		ts.eeprombuf = p;
+
+		uint16_t i, data;
+
+		ts.eeprombuf[0] = ts.ser_eeprom_type;
+		ts.eeprombuf[1] = ts.ser_eeprom_in_use;
+		for(i=1; i <= MAX_VAR_ADDR; i++)
+		{
+			Read_SerEEPROM(i, &data);
+			ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
+			data = data>>8;
+			ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+		}
+		ts.ser_eeprom_in_use = 0xAA;
+		// If serial EEPROM is in use copy all data first to memory
+		// do there all compares and additions and after finishing that
+		// process write complete block to serial EEPROM. Flag for this is
+		// ser_eeprom_in_use == 0xAA
 	}
-    ts.ser_eeprom_in_use = 0xAA;
-    // If serial EEPROM is in use copy all data first to memory
-    // do there all compares and additions and after finishing that
-    // process write complete block to serial EEPROM. Flag for this is
-    // ser_eeprom_in_use == 0xAA
-    }
 	// ------------------------------------------------------------------------------------
+
 	// Read Band and Mode saved values - update if changed
-	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
-	{
-		ushort new;
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
+			ts.band| (ts.dmod_mode << 8) | (ts.filter_id << 12),
+			(ts.band |(demodmode & 0x0f << 8) | (ts.filter_id << 12) )
+	);
 
-		new 	= 0;
-		new 	= ts.band;
-		new	   |= (ts.dmod_mode << 8);
-		new	   |= (ts.filter_id << 12);
-		Write_EEPROM(EEPROM_BAND_MODE, new);
-		//printf("-->band and mode saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND_MODE,(ts.band |(demodmode & 0x0f << 8) | (ts.filter_id << 12) ));
-		//printf("-->band and mode var created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Freq saved values - update if changed
-	if(	(Read_EEPROM(EEPROM_FREQ_HIGH, &value) == 0) && (Read_EEPROM(EEPROM_FREQ_LOW, &value1) == 0)) {
-		Write_EEPROM(EEPROM_FREQ_HIGH,(df.tune_new >> 16));
-		//printf("-->freq high saved\n\r");
-		Write_EEPROM(EEPROM_FREQ_LOW,(df.tune_new & 0xFFFF));
-		//printf("-->freq low saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FREQ_HIGH,(df.tune_new >> 16));
-		Write_EEPROM(EEPROM_FREQ_LOW,(df.tune_new & 0xFFFF));
-		//printf("-->freq vars created\n\r");
-	}
-	//
+	UiReadWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 	// save current band/frequency/mode settings
 	//
 	// save frequency
@@ -11775,716 +11778,79 @@ if(ts.ser_eeprom_in_use == 0)
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
-
-		if(Read_EEPROM(EEPROM_BAND0_MODE + i , &value) == 0)
-		{
-			ushort new;
-			new 	= 0;
-
-			// We do NOT check the band stored in the bottom byte as we have, by definition, saved that band at this index.
-			//
-			new	   |= (band_decod_mode[i] << 8);
-			new	   |= (band_filter_mode[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE + i , new);
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_MODE + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));
-			//printf("-->band and mode var created\n\r");
-		}
-		//
+		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE + i,
+				(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
+				((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
+		);
 		// Try to read Freq saved values - update if changed
+		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH+i,EEPROM_BAND0_FREQ_LOW+i, band_dial_value[i], band_dial_value[i]);
 		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW + i , &value1) == 0))	{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i ,(band_dial_value[i] >> 16));
-			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i ,(band_dial_value[i] & 0xFFFF));
-			//printf("-->freq low saved\n\r");
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH + i ,(band_dial_value[i] >> 16));
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW + i ,(band_dial_value[i] & 0xFFFF));
-			//printf("-->freq vars created\n\r");
-		}
-	}
-	//
-	// Save data for VFO A
-	//
-	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
+		// Save data for VFO A
+		//
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
-		if(Read_EEPROM(EEPROM_BAND0_MODE_A + i , &value) == 0)
-		{
-			ushort new;
-			new 	= 0;
-
-			// We do NOT check the band stored in the bottom byte as we have, by definition, saved that band at this index.
-			//
-			new	   |= (band_decod_mode_a[i] << 8);
-			new	   |= (band_filter_mode_a[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE_A + i , new);
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_MODE_A + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
-			//printf("-->band and mode var created\n\r");
-		}
-		//
+		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_A + i,
+				(band_decod_mode_a[i] << 8)|(band_filter_mode_a[i] << 12),
+				((band_decod_mode_a[i] & 0x0f) << 8) | (band_filter_mode_a[i] << 12)
+		);
 		// Try to read Freq saved values - update if changed
+		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_A+i,EEPROM_BAND0_FREQ_LOW_A+i, band_dial_value_a[i], band_dial_value_a[i]);
 		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i , &value1) == 0))	{
-			//
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i ,(band_dial_value_a[i] >> 16));
-			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i ,(band_dial_value_a[i] & 0xFFFF));
-			//printf("-->freq low saved\n\r");
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i ,(band_dial_value[i] >> 16));		// use generic band value when creating
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i ,(band_dial_value[i] & 0xFFFF));
-			//printf("-->freq vars created\n\r");
-		}
-	}
-	//
-	// Save data for VFO B
-	//
-	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
-		// ------------------------------------------------------------------------------------
-		// Read Band and Mode saved values - update if changed
-		if(Read_EEPROM(EEPROM_BAND0_MODE_B + i , &value) == 0)
-		{
-			ushort new;
-			new 	= 0;
-
-			// We do NOT check the band stored in the bottom byte as we have, by definition, saved that band at this index.
-			//
-			new	   |= (band_decod_mode_b[i] << 8);
-			new	   |= (band_filter_mode_b[i] << 12);
-			Write_EEPROM(EEPROM_BAND0_MODE_B + i , new);
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_MODE_B + i ,(((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12) ));	// use generic band value when creating
-			//printf("-->band and mode var created\n\r");
-		}
+		// Save data for VFO B
 		//
+		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_B + i,
+				(band_decod_mode_b[i] << 8)|(band_filter_mode_b[i] << 12),
+				((band_decod_mode_b[i] & 0x0f) << 8) | (band_filter_mode_b[i] << 12)
+		);
 		// Try to read Freq saved values - update if changed
-		//
-		if((Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i , &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i , &value1) == 0))	{
-			//
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i ,(band_dial_value_b[i] >> 16));
-			//printf("-->freq high saved\n\r");
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i ,(band_dial_value_b[i] & 0xFFFF));
-			//printf("-->freq low saved\n\r");
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i ,(band_dial_value[i] >> 16));		// use generic band value when creating
-			Write_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i ,(band_dial_value[i] & 0xFFFF));
-			//printf("-->freq vars created\n\r");
-		}
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Step saved values - update if changed
-	if(Read_EEPROM(EEPROM_FREQ_STEP, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FREQ_STEP,df.selected_idx);
-		//printf("-->freq step saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FREQ_STEP,3);
-		//printf("-->freq step created\n\r");
-	}
+		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_B+i,EEPROM_BAND0_FREQ_LOW_B+i, band_dial_value_b[i], band_dial_value_b[i]);
 
-	// ------------------------------------------------------------------------------------
-	// Try to read TX Audio Source saved values - update if changed
-	if(Read_EEPROM(EEPROM_TX_AUDIO_SRC, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source);
-		//printf("-->TX audio source saved\n\r");
 	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_AUDIO_SRC,0);
-		//printf("-->TX audio source created\n\r");
-	}
-
-	// ------------------------------------------------------------------------------------
-	// Try to read TCXO saved values - update if changed
-	if(Read_EEPROM(EEPROM_TCXO_STATE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TCXO_STATE,df.temp_enabled);
-		//printf("-->TCXO state saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TCXO_STATE,0);
-		//printf("-->TCXO state created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Audio Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_AUDIO_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_AUDIO_GAIN,ts.audio_gain);
-		//printf("-->Audio Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_AUDIO_GAIN,DEFAULT_AUDIO_GAIN);
-		//printf("-->Audio Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RF Codec Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_RX_CODEC_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_CODEC_GAIN,ts.rf_codec_gain);
-		//printf("-->RF Codec Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_CODEC_GAIN,DEFAULT_RF_CODEC_GAIN_VAL);
-		//printf("-->RF Codec Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RF Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_RX_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_GAIN,ts.rf_gain);
-		//printf("-->RF Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_GAIN,DEFAULT_RF_GAIN);
-		//printf("-->RF Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Noise Blanker saved values - update if changed
-	if(Read_EEPROM(EEPROM_NB_SETTING, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_NB_SETTING,ts.nb_setting);
-		//printf("-->Attenuator saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_NB_SETTING,0);
-		//printf("-->Attenuator created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power level saved values - update if changed
-	if(Read_EEPROM(EEPROM_TX_POWER_LEVEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_POWER_LEVEL,ts.power_level);
-		//printf("-->power level saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_POWER_LEVEL,PA_LEVEL_DEFAULT);
-		//printf("-->power level created\n\r");
-	}
-
-	// ------------------------------------------------------------------------------------
-	// Try to read Keyer speed saved values - update if changed
-	if(Read_EEPROM(EEPROM_KEYER_SPEED, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_KEYER_SPEED,ts.keyer_speed);
-		//printf("-->Keyer speed saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_KEYER_SPEED,DEFAULT_KEYER_SPEED);
-		//printf("-->Keyer speed created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Keyer mode saved values - update if changed
-	if(Read_EEPROM(EEPROM_KEYER_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_KEYER_MODE,ts.keyer_mode);
-		//printf("-->Keyer mode saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_KEYER_MODE,CW_MODE_IAM_B);
-		//printf("-->Keyer mode created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Sidetone Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_SIDETONE_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SIDETONE_GAIN,ts.st_gain);
-		//printf("-->Sidetone Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SIDETONE_GAIN,DEFAULT_SIDETONE_GAIN);
-		//printf("-->Sidetone Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Frequency Calibration saved values - update if changed
-	if(Read_EEPROM(EEPROM_FREQ_CAL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FREQ_CAL,ts.freq_cal);
-		//printf("-->Frequency Calibration saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FREQ_CAL,0);
-		//printf("-->Frequency Calibration\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read AGC Mode saved values - update if changed
-	if(Read_EEPROM(EEPROM_AGC_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_AGC_MODE,ts.agc_mode);
-		//printf("-->AGC mode saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_AGC_MODE,AGC_DEFAULT);
-		//printf("-->AGC mode created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Microphone Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_MIC_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_MIC_GAIN,ts.tx_mic_gain);
-		//printf("-->Microphone Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_MIC_GAIN,MIC_GAIN_DEFAULT);
-		//printf("-->Microphone Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Line Gain saved values - update if changed
-	if(Read_EEPROM(EEPROM_LINE_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_LINE_GAIN,ts.tx_line_gain);
-		//printf("-->Line Gain saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_LINE_GAIN,LINE_GAIN_DEFAULT);
-		//printf("-->Line Gain created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Sidetone Frequency saved values - update if changed
-	if(Read_EEPROM(EEPROM_SIDETONE_FREQ, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SIDETONE_FREQ,ts.sidetone_freq);
-		//printf("-->Sidetone Freq saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SIDETONE_FREQ,CW_SIDETONE_FREQ_DEFAULT);
-		//printf("-->Sidetone Freq created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope Speed saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPEC_SCOPE_SPEED, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPEC_SCOPE_SPEED,ts.scope_speed);
-		//printf("-->Spectrum Scope Speed saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPEC_SCOPE_SPEED,SPECTRUM_SCOPE_SPEED_DEFAULT);
-		//printf("-->Spectrum Scope Speed created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope Filter Strength saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPEC_SCOPE_FILTER, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter);
-		//printf("-->Spectrum Scope Filter saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPEC_SCOPE_FILTER,SPECTRUM_SCOPE_FILTER_DEFAULT);
-		//printf("-->Spectrum Scope Speed created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read AGC Custom Decay saved values - update if changed
-	if(Read_EEPROM(EEPROM_AGC_CUSTOM_DECAY, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_AGC_CUSTOM_DECAY,ts.agc_custom_decay);
-		//printf("-->AGC Custom Decay value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_AGC_CUSTOM_DECAY,AGC_CUSTOM_DEFAULT);
-		//printf("-->AGC Custom Decay value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Scope trace color saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_TRACE_COLOUR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_TRACE_COLOUR,ts.scope_trace_colour);
-		//printf("-->Scope Trace Color value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_TRACE_COLOUR,SPEC_COLOUR_TRACE_DEFAULT);
-		//printf("-->Scope Trace Color value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Scope grid color saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_GRID_COLOUR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_GRID_COLOUR,ts.scope_grid_colour);
-		//printf("-->Scope Grid Color value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_GRID_COLOUR,SPEC_COLOUR_GRID_DEFAULT);
-		//printf("-->Scope Grid Color value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Scope centre line grid color saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,ts.scope_centre_grid_colour);
-		//printf("-->Scope Grid Center Line Color value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,SPEC_COLOUR_GRID_DEFAULT);
-		//printf("-->Scope Grid Center Line Color value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Scope scale color saved values - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_SCALE_COLOUR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour);
-		//printf("-->Scope Scale Color value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_SCALE_COLOUR,SPEC_COLOUR_SCALE_DEFAULT);
-		//printf("-->Scope Scale Color value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Paddle Reversal saved values - update if changed
-	if(Read_EEPROM(EEPROM_PADDLE_REVERSE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_PADDLE_REVERSE,ts.paddle_reverse);
-		//printf("-->Scope Paddle Reverse value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_PADDLE_REVERSE,0);
-		//printf("-->Paddle Reverse value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read CW TX>RX Delay saved values - update if changed
-	if(Read_EEPROM(EEPROM_CW_RX_DELAY, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_CW_RX_DELAY,ts.cw_rx_delay);
-		//printf("-->CW TX>RX Delay value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_CW_RX_DELAY,CW_RX_DELAY_DEFAULT);
-		//printf("-->CW TX>RX Delay value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Max. volume saved values - update if changed
-	if(Read_EEPROM(EEPROM_MAX_VOLUME, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_MAX_VOLUME,ts.audio_max_volume);
-		//printf("-->Max. volume value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_MAX_VOLUME,MAX_VOLUME_DEFAULT);
-		//printf("-->Max. volume value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 300 Hz filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_300HZ_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_300HZ_SEL,ts.filter_300Hz_select);
-		//printf("-->300 Hz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_300HZ_SEL,FILTER_300HZ_DEFAULT);
-		//printf("-->300 Hz filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 500 Hz filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_500HZ_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_500HZ_SEL,ts.filter_500Hz_select);
-		//printf("-->500 Hz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_500HZ_SEL,FILTER_500HZ_DEFAULT);
-		//printf("-->500 Hz filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 1.8 kHz filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_1K8_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_1K8_SEL,ts.filter_1k8_select);
-		//printf("-->1.8 kHz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_1K8_SEL,FILTER_1K8_DEFAULT);
-		//printf("-->1.8 kHz filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2.3 kHz filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_2K3_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_2K3_SEL,ts.filter_2k3_select);
-		//printf("-->2.3 kHz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_2K3_SEL,FILTER_2K3_DEFAULT);
-		//printf("-->2.3 kHz filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 3.6 kHz filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_3K6_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_3K6_SEL,ts.filter_3k6_select);
-		//printf("-->3.6 kHz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_3K6_SEL,FILTER_3K6_DEFAULT);
-		//printf("-->3.6 kHz filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Wide filter values - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_WIDE_SEL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select);
-		//printf("-->10 kHz filter value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_WIDE_SEL,FILTER_WIDE_DEFAULT);
-		//printf("-->Wide filter value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read PA Bias values - update if changed
-	if(Read_EEPROM(EEPROM_PA_BIAS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_PA_BIAS,ts.pa_bias);
-		//printf("-->PA Bias value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_PA_BIAS,DEFAULT_PA_BIAS);
-		//printf("-->PA Bias value created\n\r");
-	}
-	//
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read PA CW Bias values - update if changed
-	if(Read_EEPROM(EEPROM_PA_CW_BIAS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_PA_CW_BIAS,ts.pa_cw_bias);
-		//printf("-->PA CW Bias value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_PA_CW_BIAS,0);
-		//printf("-->PA CW Bias value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ LSB Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_LSB_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_LSB_GAIN_BALANCE, ts.tx_iq_lsb_gain_balance);
-		//printf("-->TX IQ LSB Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_LSB_GAIN_BALANCE,0);
-		//printf("-->TX IQ LSB Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ USB Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_USB_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_USB_GAIN_BALANCE, ts.tx_iq_usb_gain_balance);
-		//printf("-->TX IQ USB Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_USB_GAIN_BALANCE,0);
-		//printf("-->TX IQ USB Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ LSB Phase Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_LSB_PHASE_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_LSB_PHASE_BALANCE, ts.tx_iq_lsb_phase_balance);
-		//printf("-->TX IQ LSB Phase balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_LSB_PHASE_BALANCE,0);
-		//printf("-->TX IQ LSB Phase balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ USB Phase Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_USB_PHASE_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_USB_PHASE_BALANCE, ts.tx_iq_usb_phase_balance);
-		//printf("-->TX IQ USB Phase balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_USB_PHASE_BALANCE,0);
-		//printf("-->TX IQ USB Phase balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ LSB Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_LSB_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_LSB_GAIN_BALANCE, ts.rx_iq_lsb_gain_balance);
-		//printf("-->RX IQ LSB Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_LSB_GAIN_BALANCE,0);
-		//printf("-->RX IQ LSB Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ USB Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_USB_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_USB_GAIN_BALANCE, ts.rx_iq_usb_gain_balance);
-		//printf("-->RX IQ USB Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_USB_GAIN_BALANCE,0);
-		//printf("-->RX IQ USB Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ LSB Phase Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_LSB_PHASE_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_LSB_PHASE_BALANCE, ts.rx_iq_lsb_phase_balance);
-		//printf("-->RX IQ LSB Phase balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_LSB_PHASE_BALANCE,0);
-		//printf("-->RX IQ LSB Phase balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ USB Phase Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_USB_PHASE_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_USB_PHASE_BALANCE, ts.rx_iq_usb_phase_balance);
-		//printf("-->RX IQ USB Phase balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_USB_PHASE_BALANCE,0);
-		//printf("-->RX IQ USB Phase balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ AM Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_AM_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_AM_GAIN_BALANCE, ts.rx_iq_am_gain_balance);
-		//printf("-->RX IQ AM Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_AM_GAIN_BALANCE,0);
-		//printf("-->RX IQ AM Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX IQ FM Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_RX_IQ_FM_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_RX_IQ_FM_GAIN_BALANCE, ts.rx_iq_fm_gain_balance);
-		//printf("-->RX IQ FM Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_RX_IQ_FM_GAIN_BALANCE,0);
-		//printf("-->RX IQ FM Gain balance value created\n\r");
-	}
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ AM Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_AM_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_AM_GAIN_BALANCE, ts.tx_iq_am_gain_balance);
-		//printf("-->TX IQ AM Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_AM_GAIN_BALANCE,0);
-		//printf("-->RX IQ AM Gain balance value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX IQ FM Gain Balance values - update if changed
-	if(Read_EEPROM(EEPROM_TX_IQ_FM_GAIN_BALANCE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_IQ_FM_GAIN_BALANCE, ts.tx_iq_fm_gain_balance);
-		//printf("-->TX IQ FM Gain balance saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_IQ_FM_GAIN_BALANCE,0);
-		//printf("-->RX IQ FM Gain balance value created\n\r");
-	}
-	//
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_STEP,df.selected_idx,3);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_AUDIO_GAIN,ts.audio_gain,DEFAULT_AUDIO_GAIN);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_CODEC_GAIN,ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_GAIN,ts.rf_gain,DEFAULT_RF_GAIN);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_SETTING,ts.nb_setting,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_POWER_LEVEL,ts.power_level,PA_LEVEL_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_speed,DEFAULT_KEYER_SPEED);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_mode,CW_MODE_IAM_B);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_GAIN,ts.st_gain,DEFAULT_SIDETONE_GAIN);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_CAL,ts.freq_cal,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_MODE,ts.agc_mode,AGC_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MIC_GAIN,ts.tx_mic_gain,MIC_GAIN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_LINE_GAIN,ts.tx_line_gain,LINE_GAIN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_FREQ,ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_SPEED,ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_CUSTOM_DECAY,ts.agc_custom_decay,AGC_CUSTOM_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_TRACE_COLOUR,ts.scope_trace_colour,SPEC_COLOUR_TRACE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,ts.scope_centre_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_PADDLE_REVERSE,ts.paddle_reverse,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_RX_DELAY,ts.cw_rx_delay,CW_RX_DELAY_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.audio_max_volume,MAX_VOLUME_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_300Hz_select,FILTER_300HZ_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_500Hz_select,FILTER_500HZ_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_1k8_select,FILTER_1K8_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_2k3_select,FILTER_2K3_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_3k6_select,FILTER_3K6_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select,FILTER_WIDE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_CW_BIAS,ts.pa_cw_bias,DEFAULT_PA_BIAS);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_LSB_GAIN_BALANCE,ts.tx_iq_lsb_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_USB_GAIN_BALANCE,ts.tx_iq_usb_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_LSB_PHASE_BALANCE,ts.tx_iq_lsb_phase_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_USB_PHASE_BALANCE,ts.tx_iq_usb_phase_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_LSB_GAIN_BALANCE,ts.rx_iq_lsb_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_USB_GAIN_BALANCE,ts.rx_iq_usb_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_LSB_PHASE_BALANCE,ts.rx_iq_lsb_phase_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_USB_PHASE_BALANCE,ts.rx_iq_usb_phase_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_AM_GAIN_BALANCE,ts.rx_iq_am_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_FM_GAIN_BALANCE,ts.rx_iq_fm_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_AM_GAIN_BALANCE,ts.tx_iq_am_gain_balance,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_FM_GAIN_BALANCE,ts.tx_iq_fm_gain_balance,0);
 	// ------------------------------------------------------------------------------------
 	// Try to read SWR Forward power meter calibration value - update if changed
 	if(Read_EEPROM(EEPROM_SENSOR_NULL, &value) == 0)
