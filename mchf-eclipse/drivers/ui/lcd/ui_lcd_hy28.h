@@ -99,6 +99,8 @@
 
 void 	UiLcdHy28_LcdClear(ushort Color);
 void 	UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
+void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
+uint16_t 	UiLcdHy28_TextWidth(char *str, uchar font);
 
 void 	UiLcdHy28_DrawStraightLine(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
 void 	UiLcdHy28_DrawHorizLineWithGrad(ushort Xpos, ushort Ypos, ushort Length,ushort gradient_start);
@@ -112,7 +114,7 @@ void 	UiLcdHy28_SendByteSpi(uint8_t byte);
 uint8_t UiLcdHy28_ReadByteSpi(void);
 void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
-void 	UiLcdHy28_BulkWrite(ushort Color);
+void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
 void	UiLcdHy28_WriteRAM_Prepare(void);
 

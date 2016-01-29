@@ -9,16 +9,24 @@
 #########################################################################
 #########################################################################
 
+20160130 [DF8OE]
+- huge reworking in menue / text formatting
+- reworking in configuration save and read functions
+- reworking for improving speed, saving code space and better readability
+- reworking of SPI LCD code for improving speed
+- FM now enabled by default (it is stable)
+
 
 20160125 [DF8OE]
-- many bugfixes
-- now it is possible to build with compiler optimization. Binary is much smaller
-  than before, it needs less horse-power (~10...30%) and is running much faster
-  (some functions 6x faster than before!)
+- many bugfixes in audio functions (out of boundary errors)
+- removing all code errors which causes compiler warnings
+- now it is possible to build with compiler optimization
+- rework of Makefile
 
 20160122 [DF8OE]
 - fixed bug "60m 5W power adjust"
-- fixed many compiler warnings (cleanup - thanks to hogthrop!
+- fixed bug "long press TUNE in TX disables tune toggle"
+- fixed many compiler warnings (cleanup - thanks to hogthrob!
 - removed tuning borders, now colour of digits indicate:
   white == within official tuning range and tuned
   yellow == outside specs, but often works
@@ -42,30 +50,43 @@ or not "hard-coded"). Of course frequency display is RED on any band < 160m or
 ################## IMPORTANT INFORMATION ##################
 Because of EEPROM addressing for band specific storage *must* be continuously
 EEPROM structure (regardless virtual/serial) is broken with the adding of new
-bands!!! If you try this version YOUR CONFIGURATON SETTINGS WILL BE LOST!!!
-Please write down your actually configuration settings and add them again
-after upgrade!
+bands!!! If you take this version YOUR CONFIGURATON SETTINGS WILL BE LOST!!!
+Please write down your actual configuration settings.
+
+If this is the first firmware you install you have to do nothing special - only
+upgrading from older versions are affected.
+
+At first start after upgrading from older firmware version than
+0.219.26.15 you must first reset all settings to default by press & hold
+MENU-SPLIT-TUNE simultaneously while powering up and release after warning
+screen appears. Then power down via power button  After startup enter all
+configuration data you wrote down.
 
 Good news at all:
-If you try this new version and somedays pcbs are available there is no more
+If you take this new version and somedays pcbs are available there is no more
 changing in EEPROM structure. Storage is organized for all possible new
 bands regardless if they are active or not. This only consumpts ~40 Bytes of
 virtual/serial EEPROM space and does not affect anything else.
 ############################################################
 
+
 20160102 [DF8OE]
 - added autodetection of 7ppm SI570 devices using regs 13+
 
+
 20151217 [DF8OE]
 - added "working" state display for #341
+
 
 20151215 [DF8OE]
 - improved data accquisition of touchscreen, now hopefully more accurate
 - solved "2.3khz filter issue"
 
+
 20151214 [DF8OE]
 - added "power off without saving settings" by pushing BAND+ and POWER simultanusly
 - added possibility of power-off and reboot in button test mode
+
 
 20151214 [DF8OE]
 - added touchscreen support. You have to do the following modifications:
@@ -100,8 +121,10 @@ At the moment the following functions are supported:
 
 In future much more touch-functions will be added.
 
+
 20151206 [DF8OE]
 - added adjustment menu item #341 "Reset Ser EEPROM" to clean up misidentified EEPROM
+
 
 20151206 [DF8OE]
 - added menu item #197 "Backup Config to virtual EEPROM"
@@ -110,13 +133,16 @@ Both items are only available i serial EEPROM is fitted. Now you can restore to
 "working coniguration" if you have destroyed the acive one insteade of only
 loading default values.
 
+
 20151201 [DF8OE]
 - added support for 24LC512 (64kb), 24LC1026 (128kb) and AT24CM02 (256kb). All these
 can be be fitted to board without any additional changings (no wire between pin8 and
 pin3 needed). Only if 24LC1025 is used this wire must be added.
 
+
 20151130 [DF8OE]
 - added detection of unsopported EEPROMs
+
 
 20151126 [DF8OE]
 - completed serial EEPROM support of 24LC1025
@@ -131,8 +157,10 @@ not have enough memory for storing settings.
 It is important that EEPRM is brand-new or if not it is written 0xFF to all
 cells before you solder it. Autodetection depends on a completely "empty" device!
 
+
 20151115 [DF8OE]
 - I named this back-rolled version for continuity to 0.219.26.6
+
 
 20151111 [DF8OE]
 - added menu "190" hardware-info
@@ -146,6 +174,7 @@ cells before you solder it. Autodetection depends on a completely "empty" device
 Comment DF8OE: 
 I reverted this because of some heavy problems
 
+
 20151103 Version 0.219.26.4  [KA7OEI]
 - Increased size of 60 meters to accommodate some EU frequency useages
 - Added function to reset frequencies/modes to default:  Press-and-hold F2 and F4 during power-up
@@ -154,18 +183,22 @@ frequency bands that may be stored in each "band-memory" location.  WARNING:  Th
 stored in random order and also make it easier to put different bands in VFO-A versus VFO-B which can
 cause relay-switching/timing issues!
 
+
 20151101 Version 0.219.26.3  [KA7OEI]
 - Rewrote "AGC" handler for FM mode to reduce processing overhead when in FM.  The AGC does
 not actually function in FM (there is no need for it!) but the value is calculated only to drive
 the S-meter.  (In 0.219.26.0-2 the S meter did not work in FM.)
 
+
 20151030 Version 0.219.26.2  [KA7OEI]
 - Fixed problem with change detection of "Minor" version
+
 
 20151029 Version 0.219.26.1  [KA7OEI]
 - Fixed problem with key beep on/off
 - Fixed TUNE in CW mode
 - Added support for change detection of "Minor" version (e.g. "219", above)
+
 
 10/28/2015 Version 0.0.219.26  [KA7OEI]
 - Added "Load Defaults" obtained by holding F1, F3 AND F5 on power-up.  Once unit has
@@ -198,20 +231,26 @@ max values).
   AUDIO:    fm_dds_table.h             - DDS/NCO lookup table for FM/Subtone/Burst generation
             fm_subaudible_tone_table.h - List of subaudible tones for encode/decode
 
+
 10/11/2015: Release of Version 219.24
+
 
 10/10/2015 (KA7OEI)
 - added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
 - bugfix "bandwidth indicator sometimes wrong when band was changed"
 
+
 10/02/2015 (DF8OE)
 - minor bugfixes in bootloader
+
 
 09/30/2015 (DF8OE)
 - creation aof new bootloader which allows firmware updates via USB-key
 
+
 09/15/2015 (DF8OE)
 - added autodetection of HY28A / HY28B in SPI mode (hardware changing needed --> see wiki on github pages
+
 
 09/07/2015 (DF8OE)
 - created makefile (thanks to DL4SAI)
@@ -219,18 +258,21 @@ max values).
 - building is now possible with makefile but there is one issue to find:
   firmware binary is 600 bytes shorter than binary generated by eclipse and does only show splashscreen, then ends
 
+
 08/19/2015 (DF8OE)
 - added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
 - added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
 - merging Eclipse and CooCox configuration to one package so that both IDEs can be used
 
+
 09/09/2015 (DF8OE)
 - I merged Clint KA7OEI new released version 219.22. This new version now is named 219.23 and will be the base
 for all future firmware developments - I hope...
 
+
 09/08/2015 (DF8OE)
 - makefile is now working
 
+
 09/05/2015 (DF8OE)
 - start: I used mcHF Firmware Source 219.19 from Clint KA7OEI as base of new mchf-firmware-community working with GITHUB
-
