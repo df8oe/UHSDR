@@ -2989,7 +2989,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		sprintf(options, "  %u", ts.dsp_notch_mu);
 		break;
 	case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
-		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_delaybuf_len,
 				DSP_NOTCH_BUFLEN_MIN,
 				DSP_NOTCH_BUFLEN_MAX,
 				DSP_NOTCH_DELAYBUF_DEFAULT,
