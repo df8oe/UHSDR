@@ -773,7 +773,6 @@ enum {
 };
 //
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
-#define MIN_LCD_BLANK_DELAY_TIME	5			// minimum number of seconds for backlight "on" time
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
 
 #define MAX_VAR_ADDR 383
