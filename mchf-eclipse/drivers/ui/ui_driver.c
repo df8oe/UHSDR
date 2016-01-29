@@ -11715,7 +11715,7 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 
 void UiDriverSaveEepromValuesPowerDown(void)
 {
-	uint16_t value,value1, i;
+	uint16_t i;
 	uchar dspmode;
 	uchar demodmode;
 	if(ts.txrx_mode != TRX_MODE_RX)
@@ -11730,7 +11730,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	// switch to SSB during write when in FM because it decreases speed tremendous
 	demodmode = ts.dmod_mode;
 	if(ts.dmod_mode == DEMOD_FM)
-	    ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
+		ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
 
 
 	if(ts.ser_eeprom_in_use == 0)
@@ -11775,7 +11775,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//
 	// Save stored band/mode/frequency memory from RAM
 	//
-	
+
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
 		// ------------------------------------------------------------------------------------
 		// Read Band and Mode saved values - update if changed
@@ -11852,1263 +11852,126 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_IQ_FM_GAIN_BALANCE,ts.rx_iq_fm_gain_balance,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_AM_GAIN_BALANCE,ts.tx_iq_am_gain_balance,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_IQ_FM_GAIN_BALANCE,ts.tx_iq_fm_gain_balance,0);
-	// ------------------------------------------------------------------------------------
-	// Try to read SWR Forward power meter calibration value - update if changed
-	if(Read_EEPROM(EEPROM_SENSOR_NULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SENSOR_NULL, swrm.sensor_null);
-		//printf("-->SWR Forward power meter calibration value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SENSOR_NULL, SENSOR_NULL_DEFAULT);
-		//printf("-->SWR Forward power meter calibration value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Transverter frequency offset saved values - update if changed
-	if(	(Read_EEPROM(EEPROM_XVERTER_OFFSET_HIGH, &value) == 0) && (Read_EEPROM(EEPROM_XVERTER_OFFSET_LOW, &value1) == 0)) {
-		Write_EEPROM(EEPROM_XVERTER_OFFSET_HIGH,(ts.xverter_offset >> 16));
-		//printf("-->freq high saved\n\r");
-		Write_EEPROM(EEPROM_XVERTER_OFFSET_LOW,(ts.xverter_offset & 0xFFFF));
-		//printf("-->freq low saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_XVERTER_OFFSET_HIGH,(ts.xverter_offset >> 16));
-		Write_EEPROM(EEPROM_XVERTER_OFFSET_LOW,(ts.xverter_offset & 0xFFFF));
-		//printf("-->Transverter offset frequency created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Transverter display offset mode enable - update if changed
-	if(Read_EEPROM(EEPROM_XVERTER_DISP, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_XVERTER_DISP, ts.xverter_mode);
-		//printf("-->Transverter display offset mode enable value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_XVERTER_DISP,0);
-		//printf("-->Transverter display offset mode enable value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 80m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND0_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND0_5W, ts.pwr_80m_5w_adj);
-		//printf("-->80m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND0_5W,TX_POWER_FACTOR_80_DEFAULT);
-		//printf("-->80m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 60m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND1_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND1_5W, ts.pwr_60m_5w_adj);
-		//printf("-->60m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND1_5W,TX_POWER_FACTOR_60_DEFAULT);
-		//printf("-->60m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 40m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND2_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND2_5W, ts.pwr_40m_5w_adj);
-		//printf("-->40m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND2_5W,TX_POWER_FACTOR_40_DEFAULT);
-		//printf("-->40m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 30m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND3_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND3_5W, ts.pwr_30m_5w_adj);
-		//printf("-->80m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND3_5W,TX_POWER_FACTOR_30_DEFAULT);
-		//printf("-->30m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 20m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND4_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND4_5W, ts.pwr_20m_5w_adj);
-		//printf("-->20m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND4_5W,TX_POWER_FACTOR_20_DEFAULT);
-		//printf("-->20m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 17m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND5_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND5_5W, ts.pwr_17m_5w_adj);
-		//printf("-->17m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND5_5W,TX_POWER_FACTOR_17_DEFAULT);
-		//printf("-->17m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 15m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND6_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND6_5W, ts.pwr_15m_5w_adj);
-		//printf("-->15m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND6_5W,TX_POWER_FACTOR_15_DEFAULT);
-		//printf("-->15m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 12m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND7_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND7_5W, ts.pwr_12m_5w_adj);
-		//printf("-->12m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND7_5W,TX_POWER_FACTOR_12_DEFAULT);
-		//printf("-->12m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 10m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND8_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND8_5W, ts.pwr_10m_5w_adj);
-		//printf("-->10m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND8_5W,TX_POWER_FACTOR_10_DEFAULT);
-		//printf("-->10m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 6m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND9_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND9_5W, ts.pwr_6m_5w_adj);
-		//printf("-->6m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND9_5W,TX_POWER_FACTOR_6_DEFAULT);
-		//printf("-->6m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 4m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND10_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND10_5W, ts.pwr_4m_5w_adj);
-		//printf("-->4m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND10_5W,TX_POWER_FACTOR_4_DEFAULT);
-		//printf("-->4m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND11_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND11_5W, ts.pwr_2m_5w_adj);
-		//printf("-->2m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND11_5W,TX_POWER_FACTOR_2_DEFAULT);
-		//printf("-->2m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 70cm 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND12_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND12_5W, ts.pwr_70cm_5w_adj);
-		//printf("-->70cm 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND12_5W,TX_POWER_FACTOR_70_DEFAULT);
-		//printf("-->70cm 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 23cm 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND13_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND13_5W, ts.pwr_23cm_5w_adj);
-		//printf("-->23cm 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND13_5W,TX_POWER_FACTOR_23_DEFAULT);
-		//printf("-->23cm 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2200m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND14_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND14_5W, ts.pwr_2200m_5w_adj);
-		//printf("-->2200m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND14_5W,TX_POWER_FACTOR_2200_DEFAULT);
-		//printf("-->2200m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 630m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND15_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND15_5W, ts.pwr_630m_5w_adj);
-		//printf("-->630m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND15_5W,TX_POWER_FACTOR_630_DEFAULT);
-		//printf("-->630m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 160m 5 watt power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND16_5W, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND16_5W, ts.pwr_160m_5w_adj);
-		//printf("-->160m 5 watt power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND16_5W,TX_POWER_FACTOR_160_DEFAULT);
-		//printf("-->160m 5 watt power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 80m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND0_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND0_FULL, ts.pwr_80m_full_adj);
-		//printf("-->80m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND0_FULL,TX_POWER_FACTOR_80_DEFAULT);
-		//printf("-->80m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 60m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND1_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND1_FULL, ts.pwr_60m_full_adj);
-		//printf("-->60m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND1_FULL,TX_POWER_FACTOR_60_DEFAULT);
-		//printf("-->60m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 40m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND2_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND2_FULL, ts.pwr_40m_full_adj);
-		//printf("-->40m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND2_FULL,TX_POWER_FACTOR_40_DEFAULT);
-		//printf("-->40m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 30m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND3_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND3_FULL, ts.pwr_30m_full_adj);
-		//printf("-->80m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND3_FULL,TX_POWER_FACTOR_30_DEFAULT);
-		//printf("-->30m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 20m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND4_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND4_FULL, ts.pwr_20m_full_adj);
-		//printf("-->20m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND4_FULL,TX_POWER_FACTOR_20_DEFAULT);
-		//printf("-->20m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 17m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND5_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND5_FULL, ts.pwr_17m_full_adj);
-		//printf("-->17m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND5_FULL,TX_POWER_FACTOR_17_DEFAULT);
-		//printf("-->17m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 15m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND6_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND6_FULL, ts.pwr_15m_full_adj);
-		//printf("-->15m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND6_FULL,TX_POWER_FACTOR_15_DEFAULT);
-		//printf("-->15m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 12m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND7_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND7_FULL, ts.pwr_12m_full_adj);
-		//printf("-->12m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND7_FULL,TX_POWER_FACTOR_12_DEFAULT);
-		//printf("-->12m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 10m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND8_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND8_FULL, ts.pwr_10m_full_adj);
-		//printf("-->10m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND8_FULL,TX_POWER_FACTOR_10_DEFAULT);
-		//printf("-->10m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 6m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND9_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND9_FULL, ts.pwr_6m_full_adj);
-		//printf("-->6m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND9_FULL,TX_POWER_FACTOR_6_DEFAULT);
-		//printf("-->6m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 4m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND10_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND10_FULL, ts.pwr_4m_full_adj);
-		//printf("-->4m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND10_FULL,TX_POWER_FACTOR_4_DEFAULT);
-		//printf("-->4m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND11_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND11_FULL, ts.pwr_2m_full_adj);
-		//printf("-->2m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND11_FULL,TX_POWER_FACTOR_2_DEFAULT);
-		//printf("-->2m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 70cm FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND12_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND12_FULL, ts.pwr_70cm_full_adj);
-		//printf("-->70cm FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND12_FULL,TX_POWER_FACTOR_70_DEFAULT);
-		//printf("-->70cm FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 23cm FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND13_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND13_FULL, ts.pwr_23cm_full_adj);
-		//printf("-->23cm FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND13_FULL,TX_POWER_FACTOR_23_DEFAULT);
-		//printf("-->23cm FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2200m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND14_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND14_FULL, ts.pwr_2200m_full_adj);
-		//printf("-->2200m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND14_FULL,TX_POWER_FACTOR_2200_DEFAULT);
-		//printf("-->2200m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 630m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND15_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND15_FULL, ts.pwr_630m_full_adj);
-		//printf("-->630m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND15_FULL,TX_POWER_FACTOR_630_DEFAULT);
-		//printf("-->630m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 160m FULL power setting - update if changed
-	if(Read_EEPROM(EEPROM_BAND16_FULL, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BAND16_FULL, ts.pwr_160m_full_adj);
-		//printf("-->160m FULL power setting value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BAND16_FULL,TX_POWER_FACTOR_160_DEFAULT);
-		//printf("-->160m FULL power setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read spectrum scope magnify mode - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_MAGNIFY, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_MAGNIFY, sd.magnify);
-		//printf("-->spectrum scope magnify mode value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_MAGNIFY,0);
-		//printf("-->spectrum scope magnify mode value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read wide filter in CW mode disable - update if changed
-	if(Read_EEPROM(EEPROM_WIDE_FILT_CW_DISABLE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WIDE_FILT_CW_DISABLE, ts.filter_cw_wide_disable);
-		//printf("-->wide filter in CW mode disable value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WIDE_FILT_CW_DISABLE,1);	// wide filters disabled in CW mode by default
-		//printf("-->wide filter in CW mode disable value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read narrow filter in SSB mode disable - update if changed
-	if(Read_EEPROM(EEPROM_NARROW_FILT_SSB_DISABLE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_NARROW_FILT_SSB_DISABLE, ts.filter_ssb_narrow_disable);
-		//printf("-->narrow filter in SSB mode disable value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_NARROW_FILT_SSB_DISABLE,1);		// CW filters disabled by default in SSB mode
-		//printf("-->narrow filter in SSB mode disable value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read AM mode disable - update if changed
-	if(Read_EEPROM(EEPROM_AM_MODE_DISABLE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_AM_MODE_DISABLE, ts.am_mode_disable);
-		//printf("-->narrow filter in SSB mode disable value saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_AM_MODE_DISABLE,1);		// AM mode disabled by default
-		//printf("-->narrow filter in SSB mode disable value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope dB/Division - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_DB_DIV, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_DB_DIV, ts.spectrum_db_scale);
-		//printf("-->Spectrum scope rescale rate saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_DB_DIV,DB_DIV_ADJUST_DEFAULT);
-		//printf("-->Spectrum scope rescale rate value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum scope AGC - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_AGC_RATE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_AGC_RATE, ts.scope_agc_rate);
-		//printf("-->Spectrum scope AGC saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_AGC_RATE,SPECTRUM_SCOPE_AGC_DEFAULT);
-		//printf("-->Spectrum scope AGC value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read meter mode - update if changed
-	if(Read_EEPROM(EEPROM_METER_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_METER_MODE, ts.tx_meter_mode);
-		//printf("-->METER MODE saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_METER_MODE,METER_SWR);
-		//printf("-->METER MODE value created\n\r");
-	}
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SENSOR_NULL,swrm.sensor_null,SENSOR_NULL_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_XVERTER_DISP,ts.xverter_mode,0);
+
+#define UI_RW_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_5W,ts.pwr_##bandName1##bandName2##_5w_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT)
+
+	UI_RW_EEPROM_BAND_5W_PF(0,80,m);
+	UI_RW_EEPROM_BAND_5W_PF(1,60,m);
+	UI_RW_EEPROM_BAND_5W_PF(2,40,m);
+	UI_RW_EEPROM_BAND_5W_PF(3,30,m);
+	UI_RW_EEPROM_BAND_5W_PF(4,20,m);
+	UI_RW_EEPROM_BAND_5W_PF(5,17,m);
+	UI_RW_EEPROM_BAND_5W_PF(6,15,m);
+	UI_RW_EEPROM_BAND_5W_PF(7,12,m);
+	UI_RW_EEPROM_BAND_5W_PF(8,10,m);
+	UI_RW_EEPROM_BAND_5W_PF(9,6,m);
+	UI_RW_EEPROM_BAND_5W_PF(10,4,m);
+	UI_RW_EEPROM_BAND_5W_PF(11,2,m);
+	UI_RW_EEPROM_BAND_5W_PF(12,70,cm);
+	UI_RW_EEPROM_BAND_5W_PF(13,23,cm);
+	UI_RW_EEPROM_BAND_5W_PF(14,2200,m);
+	UI_RW_EEPROM_BAND_5W_PF(15,630,m);
+	UI_RW_EEPROM_BAND_5W_PF(16,160,m);
+
+#define UI_RW_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_FULL,ts.pwr_##bandName1##bandName2##_full_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT)
+
+	UI_RW_EEPROM_BAND_FULL_PF(0,80,m);
+	UI_RW_EEPROM_BAND_FULL_PF(1,60,m);
+	UI_RW_EEPROM_BAND_FULL_PF(2,40,m);
+	UI_RW_EEPROM_BAND_FULL_PF(3,30,m);
+	UI_RW_EEPROM_BAND_FULL_PF(4,20,m);
+	UI_RW_EEPROM_BAND_FULL_PF(5,17,m);
+	UI_RW_EEPROM_BAND_FULL_PF(6,15,m);
+	UI_RW_EEPROM_BAND_FULL_PF(7,12,m);
+	UI_RW_EEPROM_BAND_FULL_PF(8,10,m);
+	UI_RW_EEPROM_BAND_FULL_PF(9,6,m);
+	UI_RW_EEPROM_BAND_FULL_PF(10,4,m);
+	UI_RW_EEPROM_BAND_FULL_PF(11,2,m);
+	UI_RW_EEPROM_BAND_FULL_PF(12,70,cm);
+	UI_RW_EEPROM_BAND_FULL_PF(13,23,cm);
+	UI_RW_EEPROM_BAND_FULL_PF(14,2200,m);
+	UI_RW_EEPROM_BAND_FULL_PF(15,630,m);
+	UI_RW_EEPROM_BAND_FULL_PF(16,160,m);
+
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_MAGNIFY,sd.magnify,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WIDE_FILT_CW_DISABLE,ts.filter_cw_wide_disable,1);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_NARROW_FILT_SSB_DISABLE,ts.filter_ssb_narrow_disable,1);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_AM_MODE_DISABLE,ts.am_mode_disable,1);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_DB_DIV,ts.spectrum_db_scale,DB_DIV_ADJUST_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_AGC_RATE,ts.scope_agc_rate,SPECTRUM_SCOPE_AGC_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_METER_MODE,ts.tx_meter_mode,METER_SWR);
 	//
 	// is the TX compressor enabled?  If so, do NOT overwrite the currently-saved values for ALC release time or post-filter TX gain
 	//
 	//if(!ts.tx_comp_level)	{
-		// ------------------------------------------------------------------------------------
-		// Try to read ALC release (decay) time - update if changed
-		if(Read_EEPROM(EEPROM_ALC_DECAY_TIME, &value) == 0)
-		{
-			Write_EEPROM(EEPROM_ALC_DECAY_TIME, ts.alc_decay);
-			//printf("-->ALC release time saved\n\r");
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_ALC_DECAY_TIME,ALC_DECAY_DEFAULT);
-			//printf("-->ALC Release time value created\n\r");
-		}
-		//
-		// ------------------------------------------------------------------------------------
-		// Try to read TX audio post-filter gain setting - update if changed
-		if(Read_EEPROM(EEPROM_ALC_POSTFILT_TX_GAIN, &value) == 0)
-		{
-			Write_EEPROM(EEPROM_ALC_POSTFILT_TX_GAIN, ts.alc_tx_postfilt_gain);
-			//printf("-->TX audio post-filter gain setting saved\n\r");
-		}
-		else	// create
-		{
-			Write_EEPROM(EEPROM_ALC_POSTFILT_TX_GAIN,ALC_POSTFILT_GAIN_DEFAULT);
-			//printf("-->TX audio post-filter gain setting value created\n\r");
-		}
-//	}
-	//
 	// ------------------------------------------------------------------------------------
-	// Try to read step size marker line setting - update if changed
-	if(Read_EEPROM(EEPROM_STEP_SIZE_CONFIG, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_STEP_SIZE_CONFIG, ts.freq_step_config);
-		//printf("-->step size marker line setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_STEP_SIZE_CONFIG,0);
-		//printf("-->step size marker line setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP mode setting - update if changed
-	if(Read_EEPROM(EEPROM_DSP_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_MODE, dspmode);
-		//printf("-->DSP mode setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_MODE,0);
-		//printf("-->DSP mode setting setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP noise reduction strength - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NR_STRENGTH, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NR_STRENGTH, ts.dsp_nr_strength);
-		//printf("-->DSP noise reduction strength saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NR_STRENGTH,DSP_NR_STRENGTH_DEFAULT);
-		//printf("-->DSP noise reduction strength value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP noise reduction de-correlator buffer length - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NR_DECOR_BUFLEN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NR_DECOR_BUFLEN, ts.dsp_nr_delaybuf_len);
-		//printf("-->DSP noise reduction de-correlator buffer length saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NR_DECOR_BUFLEN, DSP_NR_BUFLEN_DEFAULT);
-		//printf("-->DSP noise reduction de-correlator buffer length value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP noise reduction FFT length - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NR_FFT_NUMTAPS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NR_FFT_NUMTAPS, ts.dsp_nr_numtaps);
-		//printf("-->DSP noise reduction FFT length saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NR_FFT_NUMTAPS, DSP_NR_NUMTAPS_DEFAULT);
-		//printf("-->DSP noise reduction FFT length value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP notch de-correlator buffer length - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_DECOR_BUFLEN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_DECOR_BUFLEN, ts.dsp_notch_delaybuf_len);
-		//printf("-->DSP notch de-correlator buffer length saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_DECOR_BUFLEN, DSP_NOTCH_DELAYBUF_DEFAULT);
-		//printf("-->DSP notch de-correlator buffer length value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP notch number of taps - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_FFT_NUMTAPS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_FFT_NUMTAPS, ts.dsp_notch_numtaps);
-		//printf("-->DSP notch de-correlator buffer length saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_FFT_NUMTAPS, DSP_NOTCH_DELAYBUF_DEFAULT);
-		//printf("-->DSP notch number of taps created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Notch convergence rate setting - update if changed
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_CONV_RATE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_CONV_RATE, ts.dsp_notch_mu);
-		//printf("-->DSP Note convergence rate setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DSP_NOTCH_CONV_RATE, DSP_NOTCH_MU_DEFAULT);
-		//printf("-->DSP Note convergence rate setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read maximum RF gain setting - update if changed
-	if(Read_EEPROM(EEPROM_MAX_RX_GAIN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_MAX_RX_GAIN, ts.max_rf_gain);
-		//printf("-->maximum RF gain setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_MAX_RX_GAIN, MAX_RF_GAIN_DEFAULT);
-		//printf("-->maximum RF gain setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX compression setting - update if changed
-	if(Read_EEPROM(EEPROM_TX_AUDIO_COMPRESS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_AUDIO_COMPRESS, ts.tx_comp_level);
-		//printf("-->TX compression setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_AUDIO_COMPRESS, TX_AUDIO_COMPRESSION_DEFAULT);
-		//printf("-->TX compression setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX disable setting - update if changed
-	if(Read_EEPROM(EEPROM_TX_DISABLE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_DISABLE, ts.tx_disable);
-		//printf("-->TX disable setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_DISABLE, 0);
-		//printf("-->TX disable setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Misc. flags 1 setting - update if changed
-	if(Read_EEPROM(EEPROM_MISC_FLAGS1, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_MISC_FLAGS1, ts.misc_flags1);
-		//printf("-->Misc. flags 1 setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_MISC_FLAGS1, 0);
-		//printf("-->Misc. flags 1 setting value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Misc. flags 2 setting - update if changed
-	if(Read_EEPROM(EEPROM_MISC_FLAGS2, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_MISC_FLAGS2, ts.misc_flags2);
-		//printf("-->Misc. flags 2 setting saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_MISC_FLAGS2, 0);
-		//printf("-->Misc. flags 2 setting value created\n\r");
-	}
-	//
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read currently-stored version number - release - update if changed
-	if(Read_EEPROM(EEPROM_VERSION_MINOR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_VERSION_MINOR, ts.version_number_minor);
-		//printf("-->Version number saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_VERSION_MINOR, 0);
-		//printf("-->Version number value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read currently-stored version number - release - update if changed
-	if(Read_EEPROM(EEPROM_VERSION_NUMBER, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_VERSION_NUMBER, ts.version_number_release);
-		//printf("-->Version number saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_VERSION_NUMBER, 0);
-		//printf("-->Version number value created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read currently-stored version - build number - update if changed
-	if(Read_EEPROM(EEPROM_VERSION_BUILD, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_VERSION_BUILD, ts.version_number_build);
-		//printf("-->Version number saved\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_VERSION_BUILD, 0);
-		//printf("-->Version number value (build) created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read noise blanker time constant - update if changed
-	if(Read_EEPROM(EEPROM_NB_AGC_TIME_CONST, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_NB_AGC_TIME_CONST, ts.nb_agc_time_const);
-		//printf("-->Noise blanker time constant\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_NB_AGC_TIME_CONST, NB_AGC_DEFAULT);
-		//printf("-->Noise blanker time constant\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read CW offset mode - update if changed
-	if(Read_EEPROM(EEPROM_CW_OFFSET_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_CW_OFFSET_MODE, ts.cw_offset_mode);
-		//printf("-->CW offset mode\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_CW_OFFSET_MODE, CW_OFFSET_MODE_DEFAULT);
-		//printf("-->CW offset mode\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read I/Q Freq. conversion mode - update if changed
-	if(Read_EEPROM(EEPROM_FREQ_CONV_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FREQ_CONV_MODE, ts.iq_freq_mode);
-		//printf("-->I/Q Freq. conversion mode\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FREQ_CONV_MODE, FREQ_IQ_CONV_MODE_DEFAULT);
-		//printf("-->I/Q Freq. conversion mode\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read LSB/USB auto select mode - update if changed
-	if(Read_EEPROM(EEPROM_LSB_USB_AUTO_SELECT, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_LSB_USB_AUTO_SELECT, ts.lsb_usb_auto_select);
-		//printf("-->LSB/USB auto select mode\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_LSB_USB_AUTO_SELECT, AUTO_LSB_USB_DEFAULT);
-		//printf("-->LSB/USB auto select mode\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read LCD blanking configuration - update if changed
-	if(Read_EEPROM(EEPROM_LCD_BLANKING_CONFIG, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_LCD_BLANKING_CONFIG, ts.lcd_backlight_blanking);
-		//printf("-->LCD blanking configuration\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_LCD_BLANKING_CONFIG, 0);
-		//printf("-->LCD blanking configuration\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read VFO/Split/Memory configuration - update if changed
-	if(Read_EEPROM(EEPROM_VFO_MEM_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_VFO_MEM_MODE, ts.vfo_mem_mode);
-		//printf("-->VFO/Split/Memory configuration\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_VFO_MEM_MODE, 0);
-		//printf("-->VFO/Split/Memory configuration\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 2200m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_2200M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_2200M, swrm.coupling_2200m_calc);
-		//printf("-->Power sensor coupling 2200m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_2200M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 2200m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 630m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_630M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_630M, swrm.coupling_630m_calc);
-		//printf("-->Power sensor coupling 630m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_630M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 630m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 160m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, swrm.coupling_160m_calc);
-		//printf("-->Power sensor coupling 160m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 160m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 80m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, swrm.coupling_80m_calc);
-		//printf("-->Power sensor coupling 80m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 80m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 40m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_40M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_40M, swrm.coupling_40m_calc);
-		//printf("-->Power sensor coupling 40m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_40M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 40m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 20m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_20M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_20M, swrm.coupling_20m_calc);
-		//printf("-->Power sensor coupling 20m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_20M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 20m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 15m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, swrm.coupling_15m_calc);
-		//printf("-->Power sensor coupling 15m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 15m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 6m - update if changed
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, swrm.coupling_6m_calc);
-		//printf("-->Power sensor coupling 6m coefficient configuration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, SWR_COUPLING_DEFAULT);
-		//printf("-->Power sensor couplingn 6m coefficient configuration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the voltmeter calibration - update if changed
-	if(Read_EEPROM(EEPROM_VOLTMETER_CALIBRATE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_VOLTMETER_CALIBRATE, ts.voltmeter_calibrate);
-		//printf("-->Voltmeter calibration written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_VOLTMETER_CALIBRATE, POWER_VOLTMETER_CALIBRATE_DEFAULT);
-		//printf("-->Voltmeter calibration created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall color scheme - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_COLOR_SCHEME, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_COLOR_SCHEME, ts.waterfall_color_scheme);
-		//printf("-->waterfall color scheme written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_COLOR_SCHEME, WATERFALL_COLOR_DEFAULT);
-		//printf("-->waterfall color scheme created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall vertical step size - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_VERTICAL_STEP_SIZE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_VERTICAL_STEP_SIZE, ts.waterfall_vert_step_size);
-		//printf("-->waterfall vertical step size written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_VERTICAL_STEP_SIZE, WATERFALL_STEP_SIZE_DEFAULT);
-		//printf("-->waterfall vertical step size created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall 'amplitude' offset - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_OFFSET, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_OFFSET, ts.waterfall_offset);
-		//printf("-->waterfall 'amplitude' offset written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_OFFSET, WATERFALL_OFFSET_DEFAULT);
-		//printf("-->waterfall 'amplitude' offset created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall contrast setting - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_CONTRAST, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_CONTRAST, ts.waterfall_contrast);
-		//printf("-->waterfall contrast setting written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_CONTRAST, WATERFALL_CONTRAST_DEFAULT);
-		//printf("-->waterfall contrast setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall speed setting - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_SPEED, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_SPEED, ts.waterfall_speed);
-		//printf("-->waterfall speed setting written\n\r");
-	}
-	else	// create
-	{
-		if(sd.use_spi)	// use different default if SPI interface is used
-			Write_EEPROM(EEPROM_WATERFALL_SPEED, WATERFALL_SPEED_DEFAULT_SPI);
-		else
-			Write_EEPROM(EEPROM_WATERFALL_SPEED, WATERFALL_SPEED_DEFAULT_PARALLEL);
-		//printf("-->waterfall speed setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the spectrum scope auto offset setting - update if changed
-	if(Read_EEPROM(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST, ts.spectrum_scope_nosig_adjust);
-		//printf("-->spectrum scope auto offset setting written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST, SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
-		//printf("-->spectrum scope auto offset setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall auto offset setting - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_NOSIG_ADJUST, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_NOSIG_ADJUST, ts.waterfall_nosig_adjust);
-		//printf("-->waterfall auto offset setting written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_NOSIG_ADJUST, SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
-		//printf("-->waterfall auto offset setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the waterfall size and other settings - update if changed
-	if(Read_EEPROM(EEPROM_WATERFALL_SIZE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_WATERFALL_SIZE, ts.waterfall_size);
-		//printf("-->waterfall size and other settings written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_WATERFALL_SIZE, WATERFALL_SIZE_DEFAULT);
-		//printf("-->waterfall size and other settings created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FFT window settings - update if changed
-	if(Read_EEPROM(EEPROM_FFT_WINDOW, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FFT_WINDOW, ts.fft_window_type);
-		//printf("-->FFT window settings written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FFT_WINDOW, FFT_WINDOW_DEFAULT);
-		//printf("-->FFT window settings created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the TX audio mute delay setting - update if changed
-	if(Read_EEPROM(EEPROM_TX_PTT_AUDIO_MUTE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_TX_PTT_AUDIO_MUTE, ts.tx_audio_muting_timing);
-		//printf("-->TX audio mute delay setting written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_TX_PTT_AUDIO_MUTE, 0);		// Default value is zero (off)
-		//printf("-->TX audio mute delay setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the Filter Display indicator - update if changed
-	if(Read_EEPROM(EEPROM_FILTER_DISP_COLOUR, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FILTER_DISP_COLOUR, ts.filter_disp_colour);
-		//printf("-->Filter Display indicator setting written\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FILTER_DISP_COLOUR, 0);		// Default value is zero (off)
-		//printf("-->Filter Display indicator setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FM Subaudible tone generate index - update if changed
-	if(Read_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_GEN, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_GEN, ts.fm_subaudible_tone_gen_select);
-		//printf("-->FM Subaudible tone generate index setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_GEN, 0);		// Default value is zero (off)
-		//printf("-->FM Subaudible tone generate index setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FM tone burst mode - update if changed
-	if(Read_EEPROM(EEPROM_FM_TONE_BURST_MODE, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FM_TONE_BURST_MODE, ts.fm_tone_burst_mode);
-		//printf("-->FM Tone burst setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FM_TONE_BURST_MODE, 0);		// Default value is zero (off)
-		//printf("-->FM Tone burst setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FM squelch setting - update if changed
-	if(Read_EEPROM(EEPROM_FM_SQUELCH_SETTING, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FM_SQUELCH_SETTING, ts.fm_sql_threshold);
-		//printf("-->FM squelch setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FM_SQUELCH_SETTING, FM_SQUELCH_DEFAULT);	// Set default value
-		//printf("-->FM squelch setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FM RX bandwidth setting - update if changed
-	if(Read_EEPROM(EEPROM_FM_RX_BANDWIDTH, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FM_RX_BANDWIDTH, ts.fm_rx_bandwidth);
-		//printf("-->FM RX bandwidth setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FM_RX_BANDWIDTH, FM_BANDWIDTH_DEFAULT);		// Set default value
-		//printf("-->FM RX bandwidth setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the FM Subaudible tone detect index - update if changed
-	if(Read_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_DET, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_DET, ts.fm_subaudible_tone_det_select);
-		//printf("-->FM Subaudible tone detect index setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_DET, 0);		// Default value is zero (off)
-		//printf("-->FM Subaudible tone detect index setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the Keyboard beep frequency - update if changed
-	if(Read_EEPROM(EEPROM_KEYBOARD_BEEP_FREQ, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_KEYBOARD_BEEP_FREQ, ts.beep_frequency);
-		//printf("-->Keyboard beep frequency setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_KEYBOARD_BEEP_FREQ, 0);		// Default value is zero (off)
-		//printf("-->Keyboard beep frequency setting created\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read the Beep loudness - update if changed
-	if(Read_EEPROM(EEPROM_BEEP_LOUDNESS, &value) == 0)
-	{
-		Write_EEPROM(EEPROM_BEEP_LOUDNESS, ts.beep_loudness);
-		//printf("-->Beep loudness setting\n\r");
-	}
-	else	// create
-	{
-		Write_EEPROM(EEPROM_BEEP_LOUDNESS, 0);		// Default value is zero (off)
-		//printf("-->Beep loudness setting created\n\r");
-	}
-	//
-	//
-	// Next setting...
+	// Try to read ALC release (decay) time - update if changed
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_ALC_DECAY_TIME,ts.alc_decay,ALC_DECAY_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_ALC_POSTFILT_TX_GAIN,ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT);
+	//	}
 
-// if serial eeprom is in use write blocks to it and switch block write flag back
-if(ts.ser_eeprom_in_use == 0xAA)
-    {
-    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-    ts.ser_eeprom_in_use = 0;
-    }
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_STEP_SIZE_CONFIG,ts.freq_step_config,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,dspmode,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_STRENGTH,ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_FFT_NUMTAPS,ts.dsp_notch_numtaps,DSP_NOTCH_DELAYBUF_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_CONV_RATE,ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_RX_GAIN,ts.max_rf_gain,MAX_RF_GAIN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_COMPRESS,ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_DISABLE,ts.tx_disable,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS1,ts.misc_flags1,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS2,ts.misc_flags2,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_MINOR,ts.version_number_minor,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_NUMBER,ts.version_number_release,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_BUILD,ts.version_number_build,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_AGC_TIME_CONST,ts.nb_agc_time_const,NB_AGC_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_OFFSET_MODE,ts.cw_offset_mode,CW_OFFSET_MODE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_CONV_MODE,ts.iq_freq_mode,FREQ_IQ_CONV_MODE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_LSB_USB_AUTO_SELECT,ts.lsb_usb_auto_select,AUTO_LSB_USB_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_LCD_BLANKING_CONFIG,ts.lcd_backlight_blanking,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_VFO_MEM_MODE,ts.vfo_mem_mode,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_2200M,swrm.coupling_2200m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_630M,swrm.coupling_630m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_160M,swrm.coupling_160m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_80M,swrm.coupling_80m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_40M,swrm.coupling_40m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_20M,swrm.coupling_20m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_15M,swrm.coupling_15m_calc,SWR_COUPLING_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_6M,swrm.coupling_6m_calc,SWR_COUPLING_DEFAULT);
 
-ts.dsp_active = dspmode;	// restore DSP mode
-ts.dmod_mode = demodmode;	// restore active mode
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_VOLTMETER_CALIBRATE,ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_COLOR_SCHEME,ts.waterfall_color_scheme,WATERFALL_COLOR_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_VERTICAL_STEP_SIZE,ts.waterfall_vert_step_size,WATERFALL_STEP_SIZE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_OFFSET,ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_CONTRAST,ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_NOSIG_ADJUST,ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FFT_WINDOW,ts.fft_window_type,FFT_WINDOW_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_PTT_AUDIO_MUTE,ts.tx_audio_muting_timing,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_DISP_COLOUR,ts.filter_disp_colour,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_SUBAUDIBLE_TONE_GEN,ts.fm_subaudible_tone_gen_select,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_SUBAUDIBLE_TONE_DET,ts.fm_subaudible_tone_det_select,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_TONE_BURST_MODE,ts.fm_tone_burst_mode,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_SQUELCH_SETTING,ts.fm_sql_threshold,FM_SQUELCH_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_RX_BANDWIDTH,ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYBOARD_BEEP_FREQ,ts.beep_frequency,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
+
+	// if serial eeprom is in use write blocks to it and switch block write flag back
+	if(ts.ser_eeprom_in_use == 0xAA)
+	{
+		Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+		ts.ser_eeprom_in_use = 0;
+	}
+
+	ts.dsp_active = dspmode;	// restore DSP mode
+	ts.dmod_mode = demodmode;	// restore active mode
 }
 
 
