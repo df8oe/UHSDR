@@ -10025,6 +10025,10 @@ void UiDriverLoadEepromValues(void)
 	// Try to read Freq saved values
 	UiReadSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW,&value32,0,0,0xffffffff);
 	{
+
+		// We have loaded from eeprom the last used band, but can't just
+		// load saved frequency, as it could be out of band, so do a
+		// boundary check first (also check to see if defaults should be loaded)
 		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[ts.band]) && (value32 <= (tune_bands[ts.band] + size_bands[ts.band])))
 		{
 			df.tune_new = value32;
