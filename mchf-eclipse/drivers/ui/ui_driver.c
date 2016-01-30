@@ -9923,7 +9923,6 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
-<<<<<<< HEAD
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low) {
 	uint32_t value32;
 	uint16_t value16;
