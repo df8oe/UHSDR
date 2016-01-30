@@ -9890,8 +9890,8 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32(uint16_t addrH
 		*val_ptr |= valueL;
 
 		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
-					*val_ptr = default_val;
-				}
+			*val_ptr = default_val;
+		}
 	}
 }
 
@@ -9923,6 +9923,67 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low) {
+	uint32_t value32;
+	uint16_t value16;
+
+	UiReadSettingEEPROM_UInt16(band_mode + i,&value16,0,0,0xffff);
+	{
+		// Note that ts.band will, by definition, be equal to index "i"
+		//
+		band_decod_mode[i] = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
+		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
+			band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
+		//
+		band_filter_mode[i] = (value16 >> 12) & 0x0F;	// get filter setting
+		if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
+			band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
+		//
+		//printf("-->band, mode and filter setting loaded\n\r");
+	}
+
+	// ------------------------------------------------------------------------------------
+	// Try to read Freq saved values
+	UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,tune_bands[i] + DEFAULT_FREQ_OFFSET,0,0xffffffff);
+	{
+		//
+		// We have loaded from eeprom the last used band, but can't just
+		// load saved frequency, as it could be out of band, so do a
+		// boundary check first (also check to see if defaults should be loaded)
+		//
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[i]) && (value32 <= (tune_bands[i] + size_bands[i])))
+		{
+			band_dial_value[i] = value32;
+			//printf("-->frequency loaded\n\r");
+		}
+		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+		{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
+			band_dial_value[i] = value32;
+			//printf("-->frequency loaded (relaxed)\n\r");
+		}
+		else
+		{
+			// Load default for this band
+			band_dial_value[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
+			//printf("-->base frequency loaded\n\r");
+		}
+	}
+
+}
+
+static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low) {
+
+	// ------------------------------------------------------------------------------------
+	// Read Band and Mode saved values - update if changed
+	UiReadWriteSettingEEPROM_UInt16(band_mode + i,
+			(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
+			((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
+	);
+	// Try to read Freq saved values - update if changed
+	UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, band_dial_value[i], band_dial_value[i]);
+}
+
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverLoadEepromValues
@@ -9934,26 +9995,27 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 //
 void UiDriverLoadEepromValues(void)
 {
-	ushort value,value1;
-
+	uint16_t value16;
+	uint32_t value32;
 	// Do a sample reads to "prime the pump" before we start...
 	// This is to make the function work reliabily after boot-up
 	//
-	Read_EEPROM(EEPROM_ZERO_LOC_UNRELIABLE, &value);	// Let's use location zero - which may not work reliably, anyway!
+	UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
+	// Let's use location zero - which may not work reliably, anyway!
 	//
 	// ------------------------------------------------------------------------------------
 	// Try to read Band and Mode saved values
-	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
+	UiReadSettingEEPROM_UInt16(EEPROM_BAND_MODE,&value16,0,0,0xffff);
 	{
-		ts.band = value & 0x00FF;
+		ts.band = value16 & 0x00FF;
 		if(ts.band > MAX_BANDS-1)			// did we get an insane value from EEPROM?
 			ts.band = BAND_MODE_80;		//	yes - set to 80 meters
 		//
-		ts.dmod_mode = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
+		ts.dmod_mode = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
 		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 			ts.dmod_mode = DEMOD_LSB;			// no - set to LSB
 		//
-		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
+		ts.filter_id = (value16 >> 12) & 0x0F;	// get filter setting
 		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
 		//
@@ -9961,21 +10023,19 @@ void UiDriverLoadEepromValues(void)
 	}
 	// ------------------------------------------------------------------------------------
 	// Try to read Freq saved values
-	if(	(Read_EEPROM(EEPROM_FREQ_HIGH, &value) == 0) &&
-		(Read_EEPROM(EEPROM_FREQ_LOW, &value1) == 0))
+	UiReadSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW,&value32,0,0,0xffffffff);
 	{
-		ulong saved = (value << 16) | (value1);
 
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first (also check to see if defaults should be loaded)
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[ts.band]) && (value32 <= (tune_bands[ts.band] + size_bands[ts.band])))
 		{
-			df.tune_new = saved;
+			df.tune_new = value32;
 			//printf("-->frequency loaded\n\r");
 		}
 		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-			df.tune_new = saved;
+			df.tune_new = value32;
 			//printf("-->frequency loaded (relaxed)\n\r");
 		}
 		else
@@ -9988,148 +10048,13 @@ void UiDriverLoadEepromValues(void)
 	//
 	// Try to read saved per-band values for frequency, mode and filter
 	//
-	ulong saved;
-	uchar i;
+	uint8_t i;
 	//
 	for(i = 0; i < MAX_BANDS; i++)
-	    {		// read from stored bands
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Band and Mode saved values
-	    //
-	    if(Read_EEPROM(EEPROM_BAND0_MODE + i, &value) == 0)
-		{
-		// Note that ts.band will, by definition, be equal to index "i"
-		//
-		band_decod_mode[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-		    band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
-		//
-		band_filter_mode[i] = (value >> 12) & 0x0F;	// get filter setting
-		if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
-		    band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Freq saved values
-	    if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW + i, &value1) == 0))
-	        {
-	        saved = (value << 16) | (value1);
-	        //
-	        // We have loaded from eeprom the last used band, but can't just
-	        // load saved frequency, as it could be out of band, so do a
-	        // boundary check first (also check to see if defaults should be loaded)
-	        //
-	        if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))
-		    {
-		    band_dial_value[i] = saved;
-		    //printf("-->frequency loaded\n\r");
-		    }
-		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-		    band_dial_value[i] = saved;
-		    //printf("-->frequency loaded (relaxed)\n\r");
-		    }
-		else
-		    {
-		    // Load default for this band
-		    band_dial_value[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-		    //printf("-->base frequency loaded\n\r");
-		    }
-		}
-	    }
-	//
-	for(i = 0; i < MAX_BANDS; i++)
-	    {		// read from stored bands for VFO A   qqqqq
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Band and Mode saved values for VFO A
-	    //
-	    if(Read_EEPROM(EEPROM_BAND0_MODE_A + i, &value) == 0)
-		{
-		// Note that ts.band will, by definition, be equal to index "i"
-		//
-		band_decod_mode_a[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-		    band_decod_mode_a[i] = DEMOD_LSB;			// no - set to LSB
-		//
-		band_filter_mode_a[i] = (value >> 12) & 0x0F;	// get filter setting
-		if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or are defaults to be loaded?
-		    band_filter_mode_a[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Freq saved values
-	    if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i, &value1) == 0))
-		{
-		saved = (value << 16) | (value1);
-		//
-		// We have loaded from eeprom the last used band, but can't just
-		// load saved frequency, as it could be out of band, so do a
-		// boundary check first (also check to see if defaults should be loaded)
-		//
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))
-		    {
-		    band_dial_value_a[i] = saved;
-		    //printf("-->frequency loaded\n\r");
-		    }
-		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-		    band_dial_value_a[i] = saved;
-		    //printf("-->frequency loaded (relaxed)\n\r");
-		    }
-		else
-		    {
-		    // Load default for this band
-		    band_dial_value_a[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-		    //printf("-->base frequency loaded\n\r");
-		    }
-		}
-	    }
-	//
-	for(i = 0; i < MAX_BANDS; i++)	{		// read from stored bands for VFO B
-		// ------------------------------------------------------------------------------------
-		// Try to read Band and Mode saved values for VFO B
-		//
-		if(Read_EEPROM(EEPROM_BAND0_MODE_A + i, &value) == 0)			{
-			// Note that ts.band will, by definition, be equal to index "i"
-			//
-			band_decod_mode_b[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-			if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-				band_decod_mode_b[i] = DEMOD_LSB;			// no - set to LSB
-			//
-			band_filter_mode_b[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
-				band_filter_mode_b[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-			//
-			//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-		// ------------------------------------------------------------------------------------
-		// Try to read Freq saved values
-		if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i, &value1) == 0))	{
-			saved = (value << 16) | (value1);
-			//
-			// We have loaded from eeprom the last used band, but can't just
-			// load saved frequency, as it could be out of band, so do a
-			// boundary check first (also check to see if defaults should be loaded)
-			//
-			if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
-				band_dial_value_b[i] = saved;
-				//printf("-->frequency loaded\n\r");
-			}
-			else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-				band_dial_value_b[i] = saved;
-				//printf("-->frequency loaded (relaxed)\n\r");
-			}
-			else	{
-				// Load default for this band
-				band_dial_value_b[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-				//printf("-->base frequency loaded\n\r");
-			}
-		}
+	{	// read from stored bands
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -10399,36 +10324,11 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//
 
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
-		// ------------------------------------------------------------------------------------
-		// Read Band and Mode saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE + i,
-				(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
-				((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH+i,EEPROM_BAND0_FREQ_LOW+i, band_dial_value[i], band_dial_value[i]);
-		//
-		// Save data for VFO A
-		//
-		// ------------------------------------------------------------------------------------
-		// Read Band and Mode saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_A + i,
-				(band_decod_mode_a[i] << 8)|(band_filter_mode_a[i] << 12),
-				((band_decod_mode_a[i] & 0x0f) << 8) | (band_filter_mode_a[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_A+i,EEPROM_BAND0_FREQ_LOW_A+i, band_dial_value_a[i], band_dial_value_a[i]);
-		//
-		// Save data for VFO B
-		//
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_B + i,
-				(band_decod_mode_b[i] << 8)|(band_filter_mode_b[i] << 12),
-				((band_decod_mode_b[i] & 0x0f) << 8) | (band_filter_mode_b[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_B+i,EEPROM_BAND0_FREQ_LOW_B+i, band_dial_value_b[i], band_dial_value_b[i]);
-
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
 	}
+
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_STEP,df.selected_idx,3);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
@@ -10602,8 +10502,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 // check if touched point is within rectange of valid action
 bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
 {
-if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
-    return true;
-else
-    return false;
+	if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
+		return true;
+	else
+		return false;
 }
