@@ -1,7 +1,7 @@
 Devel branch of mcHF firmware and bootloader - sources
 
 
-Version <219.26.x>
+Version <219.27.x>
 
 DEVEL branch does not contain binaries. DEVEL version may be instable,
 functions are not working as inspected and you may loose settings.
