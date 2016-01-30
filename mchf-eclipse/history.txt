@@ -9,12 +9,14 @@
 #########################################################################
 #########################################################################
 
+
 20160130 [DF8OE]
 - huge reworking in menue / text formatting
 - reworking in configuration save and read functions
 - reworking for improving speed, saving code space and better readability
 - reworking of SPI LCD code for improving speed
 - FM now enabled by default (it is stable)
+- minor bugfixes which came up after rework
 
 
 20160125 [DF8OE]
