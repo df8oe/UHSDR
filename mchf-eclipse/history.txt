@@ -1,10 +1,261 @@
-09/05/2015 (DF8OE)
-- start: I used mcHF Firmware Source 219.19 from Clint KA7OEI as base of new mchf-firmware-community working with GITHUB
+#########################################################################
+#########################################################################
+##                                                                     ##
+##  This file contains very short release information, newest up!      ##
+##                                                                     ##
+##  KA7OEI, Clint                                                      ##
+##  DF8OE, Andreas                                                     ##
+##                                                                     ##
+#########################################################################
+#########################################################################
 
-08/19/2015 (DF8OE)
-- added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
-- added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
-- merging Eclipse and CooCox configuration to one package so that both IDEs can be used
+
+
+20160130 [DF8OE]
+- huge reworking in menue / text formatting
+- reworking in configuration save and read functions
+- reworking for improving speed, saving code space and better readability
+- reworking of SPI LCD code for improving speed
+- FM now enabled by default (it is stable)
+- minor bugfixes which came up after rework
+- released this as new STABLE 219.27.0
+
+
+20160125 [DF8OE]
+- many bugfixes in audio functions (out of boundary errors)
+- removing all code errors which causes compiler warnings
+- now it is possible to build with compiler optimization
+- rework of Makefile
+
+
+20160122 [DF8OE]
+- fixed bug "60m 5W power adjust"
+- fixed bug "long press TUNE in TX disables tune toggle"
+- fixed many compiler warnings (cleanup - thanks to hogthrob!
+- removed tuning borders, now colour of digits indicate:
+  white == within official tuning range and tuned
+  yellow == outside specs, but often works
+  red == completely outside specs or no I2C communication to SI570 possible
+
+
+20160103 [DF8OE]
+- first release which supports future expansion pcbs for adding
+1) RX 12KHz...80MHz, TX 160m, 6m and 4m
+2) RX 80MHz...2000MHz, TX 2m, 70cm and 23cm
+160m TX and RX is rudimentary supported without expansion board.
+Filters for 80m are used. It works (not perfect at all) and you have
+some small gaps at 160m where LO does not work. But a nice preview at all...
+Of course will work much better with fitted expansion pcb ( I hope it will
+be finished in the first 6 months of 2016)!!!
+You can ge a preview how it looks if mcHF selects new bands if you touch
+":" on touchscreen in menu #199 at recent lines (touching toggles pcb present
+or not "hard-coded"). Of course frequency display is RED on any band < 160m or
+> 10m because LO does not work out-of-the-box without needed expansion board(s)...
+
+################## IMPORTANT INFORMATION ##################
+Because of EEPROM addressing for band specific storage *must* be continuously
+EEPROM structure (regardless virtual/serial) is broken with the adding of new
+bands!!! If you take this version YOUR CONFIGURATON SETTINGS WILL BE LOST!!!
+Please write down your actual configuration settings.
+
+If this is the first firmware you install you have to do nothing special - only
+upgrading from older versions are affected.
+
+At first start after upgrading from older firmware version than
+0.219.26.15 you must first reset all settings to default by press & hold
+MENU-SPLIT-TUNE simultaneously while powering up and release after warning
+screen appears. Then power down via power button  After startup enter all
+configuration data you wrote down.
+
+Good news at all:
+If you take this new version and somedays pcbs are available there is no more
+changing in EEPROM structure. Storage is organized for all possible new
+bands regardless if they are active or not. This only consumpts ~40 Bytes of
+virtual/serial EEPROM space and does not affect anything else.
+############################################################
+
+
+20160102 [DF8OE]
+- added autodetection of 7ppm SI570 devices using regs 13+
+
+
+20151217 [DF8OE]
+- added "working" state display for #341
+
+
+20151215 [DF8OE]
+- improved data accquisition of touchscreen, now hopefully more accurate
+- solved "2.3khz filter issue"
+
+
+20151214 [DF8OE]
+- added "power off without saving settings" by pushing BAND+ and POWER simultanusly
+- added possibility of power-off and reboot in button test mode
+
+
+20151214 [DF8OE]
+- added touchscreen support. You have to do the following modifications:
+
+if LCD is in parallel mode:
+remove R30, R31, R32
+put connections between:
+R30/R33 (PC2) to TP_SDO of LCD
+R31/R34 (PC3) to TP_SDI of LCD
+R32/R35 (PB13) to TP_SCK of LCD
+Header Pin7 (PA4) to TP_IRQ of LCD
+P8 Pin1 (PA9) to TP_CS of LCD
+
+if LCD is in SPI mode:
+same as above, but do not remove R30, R31, R32 (or wires if you use HY28B in SPI mode)
+
+You can see signal names on back side of LCD. If you have soldered and cannot remove,
+ask google for a picture of backside of HY28B - there are many.
+
+With this mod you loose DAC which was former used for rf attenuator. This signal is
+unused now and I supose it never will be used in future. Intermodulation while receiving
+very strong signals can be removed by modifying rf preamp for better IP3.
+
+After modifying and applying firmware newer/equal 0.219.26.13 in hardware menu #199
+touchscreen is listed. When you enter BUTTON TEST MODE coordinates are shown if
+you touch LCD screen. If this test is successful, you can use touchfunctions.
+
+At the moment the following functions are supported:
+- tapping right hand waterfall/scope bar: toggling wf/scope
+- tapping left hand waterfall/scope bar: toggling wf/scope magnifying x 2
+- tapping at a frequency/peak shown in wf/spectrum (lower part of the wf/scope) will tune to the tapped frequency
+
+In future much more touch-functions will be added.
+
+
+20151206 [DF8OE]
+- added adjustment menu item #341 "Reset Ser EEPROM" to clean up misidentified EEPROM
+
+
+20151206 [DF8OE]
+- added menu item #197 "Backup Config to virtual EEPROM"
+- added menu item #198 "Restore backup config to serial EEPROM"
+Both items are only available i serial EEPROM is fitted. Now you can restore to
+"working coniguration" if you have destroyed the acive one insteade of only
+loading default values.
+
+
+20151201 [DF8OE]
+- added support for 24LC512 (64kb), 24LC1026 (128kb) and AT24CM02 (256kb). All these
+can be be fitted to board without any additional changings (no wire between pin8 and
+pin3 needed). Only if 24LC1025 is used this wire must be added.
+
+
+20151130 [DF8OE]
+- added detection of unsopported EEPROMs
+
+
+20151126 [DF8OE]
+- completed serial EEPROM support of 24LC1025
+You have to add connection between pin8 and pin3 of 24LC1025
+!!! 24LC01/02/04 are too small and config data cannot fit so that they are UNSUPPORTED !!!
+At first start with fitted serial EEPROM and this (or newer) firmware serial EEPROM is
+autodetected and then (if memory is big enough) virtual EEPROM is copied to serial
+EEPROM. From now on all write functions are done with serial EEPROM and no longer
+to virtual EEPROM. You can see if at menu item #199 serial EEPROM is written in
+green letters. If so, it is in use. If it is in red letters, fitted serial EEPROM do
+not have enough memory for storing settings.
+It is important that EEPRM is brand-new or if not it is written 0xFF to all
+cells before you solder it. Autodetection depends on a completely "empty" device!
+
+
+20151115 [DF8OE]
+- I named this back-rolled version for continuity to 0.219.26.6
+
+
+20151111 [DF8OE]
+- added menu "190" hardware-info
+- beginning of EEPROM including (it is detected if present but not used in this version)
+
+##################
+20151111 Version 0.219.26.5  [KA7OEI]
+- Fixed problem with 2.3k filter adjustment not being possible except in FM.
+- Code cleanup to fix some warnings/function definitions.
+##################
+Comment DF8OE: 
+I reverted this because of some heavy problems
+
+
+20151103 Version 0.219.26.4  [KA7OEI]
+- Increased size of 60 meters to accommodate some EU frequency useages
+- Added function to reset frequencies/modes to default:  Press-and-hold F2 and F4 during power-up
+- Added adjustment menu item "MemFreq Lim Disable".  When "ON", there are no limits imposed on
+frequency bands that may be stored in each "band-memory" location.  WARNING:  This can cause bands to be
+stored in random order and also make it easier to put different bands in VFO-A versus VFO-B which can
+cause relay-switching/timing issues!
+
+
+20151101 Version 0.219.26.3  [KA7OEI]
+- Rewrote "AGC" handler for FM mode to reduce processing overhead when in FM.  The AGC does
+not actually function in FM (there is no need for it!) but the value is calculated only to drive
+the S-meter.  (In 0.219.26.0-2 the S meter did not work in FM.)
+
+
+20151030 Version 0.219.26.2  [KA7OEI]
+- Fixed problem with change detection of "Minor" version
+
+
+20151029 Version 0.219.26.1  [KA7OEI]
+- Fixed problem with key beep on/off
+- Fixed TUNE in CW mode
+- Added support for change detection of "Minor" version (e.g. "219", above)
+
+
+10/28/2015 Version 0.0.219.26  [KA7OEI]
+- Added "Load Defaults" obtained by holding F1, F3 AND F5 on power-up.  Once unit has
+powered up, the user would DISCONNECT power to preserve the OLD settings or PRESS-AND-HOLD the
+POWER button to save the new (default) settings to EEPROM and power down.  The unit halts on this
+screen indefinitely.  Some defaults changes to be more useful.
+- Added "button test" function where pressing-holding any button (other than power) during power-up will
+display the button being being pressed (or the one with highest precedence if multiple) and the number
+of buttons being pressed.
+- Problem in which "PREV" and "NEXT" buttons on menu could skip last screen of "Configuration"
+menu has been fixed.
+- Fixed problem in which line under screen that indicates bandwidth/settings did not change under some
+conditions (e.g. switching from one band to another where the same filter/settings were used, but
+a different sideband was used).  Added "unconditional" update of this line when changing bands.
+- Added "INVGray" and "Blue" waterfall palettes.
+- Streamlined code related to DSP NR and Notch.
+- Added keyboard beep.
+- Completely rewrote AM demodulation to reduce CPU loading.
+- Fixed problem (from 0.0.219.24) in which there were dead spots in Si570 tuning (incorrect FDCO Min/
+max values).
+- Added function where pressing-holding G3 will generate sidetone equivalent to CW offset, used for
+"Spotting", in CW/LSB/USB modes/
+- Added FM modulation/demodulation with squelch, subaudible tone encode/decode and tone burst.
+
+- The following files have been added (I hope that I have them all here!):
+
+  FILTERS:  iir_15k_hpf_fm_squelch.h   - Filter for squelch noise detection
+            iir_2k7_tx_bpf_fm.h        - Filter for FM transmit audio
+
+  AUDIO:    fm_dds_table.h             - DDS/NCO lookup table for FM/Subtone/Burst generation
+            fm_subaudible_tone_table.h - List of subaudible tones for encode/decode
+
+
+10/11/2015: Release of Version 219.24
+
+
+10/10/2015 (KA7OEI)
+- added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
+- bugfix "bandwidth indicator sometimes wrong when band was changed"
+
+
+10/02/2015 (DF8OE)
+- minor bugfixes in bootloader
+
+
+09/30/2015 (DF8OE)
+- creation aof new bootloader which allows firmware updates via USB-key
+
+
+09/15/2015 (DF8OE)
+- added autodetection of HY28A / HY28B in SPI mode (hardware changing needed --> see wiki on github pages
+
 
 09/07/2015 (DF8OE)
 - created makefile (thanks to DL4SAI)
@@ -12,29 +263,21 @@
 - building is now possible with makefile but there is one issue to find:
   firmware binary is 600 bytes shorter than binary generated by eclipse and does only show splashscreen, then ends
 
-09/08/2015 (DF8OE)
-- makefile is now working
+
+08/19/2015 (DF8OE)
+- added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
+- added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
+- merging Eclipse and CooCox configuration to one package so that both IDEs can be used
+
 
 09/09/2015 (DF8OE)
 - I merged Clint KA7OEI new released version 219.22. This new version now is named 219.23 and will be the base
-  for all future firmware developments - I hope...
+for all future firmware developments - I hope...
 
-09/15/2015 (DF8OE)
-- added autodetection of HY28A / HY28B in SPI mode (hardware changing needed --> see wiki on github pages
 
-09/30/2015 (DF8OE)
-- creation aof new bootloader which allows firmware updates via USB-key
+09/08/2015 (DF8OE)
+- makefile is now working
 
-10/02/2015 (DF8OE)
-- minor bugfixes in bootloader
 
-10/10/2015 (KA7OEI)
-- added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
-- bugfix "bandwidth indicator sometimes wrong when band was changed"
-
-10/11/2015: Release of Version 219.24
-
-2-be-continued
-
-KA7OEI, Clint
-DF8OE, Andreas
+09/05/2015 (DF8OE)
+- start: I used mcHF Firmware Source 219.19 from Clint KA7OEI as base of new mchf-firmware-community working with GITHUB

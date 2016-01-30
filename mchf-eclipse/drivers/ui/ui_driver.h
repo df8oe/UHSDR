@@ -78,7 +78,7 @@ typedef struct KeypadState
 	bool	button_processed;
 
 	// Flag to indicate that the button had been continued to be pressed during debounce
-	bool	button_still_pressed;
+	bool	button_just_pressed;
 
 	// Flag to indicate that debounce check was complete
 	bool	debounce_check_complete;
@@ -179,6 +179,8 @@ enum	{
 	WFALL_GRAY = 0,
 	WFALL_HOT_COLD,
 	WFALL_RAINBOW,
+	WFALL_BLUE,
+	WFALL_GRAY_INVERSE,
 	WFALL_MAXVAL
 };
 //
@@ -265,76 +267,91 @@ typedef struct SWRMeter
 	bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
 	uchar	p_curr;			// count used to update power meter
 	uchar	sensor_null;	// used to null out the sensor offset voltage
+	uchar	coupling_2200m_calc;	// coupling coefficient for forward and reverse couplers for 2200 meters
+	uchar	coupling_630m_calc;	// coupling coefficient for forward and reverse couplers for 630 meters
+	uchar	coupling_160m_calc;	// coupling coefficient for forward and reverse couplers for 160 meters
 	uchar	coupling_80m_calc;	// coupling coefficient for forward and reverse couplers for 80 meters
 	uchar	coupling_40m_calc;	// coupling coefficient for forward and reverse couplers for 40/60 meters
 	uchar	coupling_20m_calc;	// coupling coefficient for forward and reverse couplers for 30/20 meters
 	uchar	coupling_15m_calc;	// coupling coefficient for forward and reverse couplers for 17/15/12/10 meters
+	uchar	coupling_6m_calc;	// coupling coefficient for forward and reverse couplers for 6 meters
+	uchar	coupling_2m_calc;	// coupling coefficient for forward and reverse couplers for 2 meters
+	uchar	coupling_70cm_calc;	// coupling coefficient for forward and reverse couplers for 70 centimeters
+	uchar	coupling_23cm_calc;	// coupling coefficient for forward and reverse couplers for 23 centimeters
 
 } SWRMeter;
 
-#define	SWR_CAL_MIN		75
-#define	SWR_CAL_MAX		150
-#define	SWR_CAL_DEFAULT	100
+#define	SWR_CAL_MIN					75
+#define	SWR_CAL_MAX					150
+#define	SWR_CAL_DEFAULT					100
 //
-#define	SENSOR_NULL_MIN	75
-#define	SENSOR_NULL_MAX	125
-#define	SENSOR_NULL_DEFAULT	100
+#define	SENSOR_NULL_MIN					75
+#define	SENSOR_NULL_MAX					125
+#define	SENSOR_NULL_DEFAULT				100
 //
-#define	FILTER_BAND_80	1
-#define	FILTER_BAND_40	2
-#define	FILTER_BAND_20	3
-#define FILTER_BAND_15	4
+#define	FILTER_BAND_2200				11
+#define	FILTER_BAND_630					12
+#define	FILTER_BAND_160					5
+#define	FILTER_BAND_80					1
+#define	FILTER_BAND_40					2
+#define	FILTER_BAND_20					3
+#define FILTER_BAND_15					4
+#define	FILTER_BAND_6					6
+#define	FILTER_BAND_4					7
+#define	FILTER_BAND_2					8
+#define	FILTER_BAND_70					9
+#define	FILTER_BAND_23					10
 //
 // Location of numerical FWD/REV power indicator
 //
-#define	POS_PWR_NUM_IND_X	1
-#define	POS_PWR_NUM_IND_Y	80
+#define	POS_PWR_NUM_IND_X				1
+#define	POS_PWR_NUM_IND_Y				80
 //
-#define	PWR_DAMPENING_FACTOR	0.10		// dampening/averaging factor (e.g. amount of "new" reading each time) - for numerical power reading ONLY
+#define	PWR_DAMPENING_FACTOR				0.10		// dampening/averaging factor (e.g. amount of "new" reading each time) - for numerical power reading ONLY
 //
 // Coupling adjustment limits
 //
-#define	SWR_COUPLING_MIN		50
-#define	SWR_COUPLING_MAX		150
-#define	SWR_COUPLING_DEFAULT	100
+#define	SWR_COUPLING_MIN				50
+#define	SWR_COUPLING_MAX				150
+#define	SWR_COUPLING_DEFAULT				100
 //
-#define	SWR_ADC_FULL_SCALE		4095	// full scale of A/D converter (4095 = 10 bits)
-#define	SWR_ADC_VOLT_REFERENCE	3.3		// NOMINAL A/D reference voltage.  The PRECISE value is calibrated by a menu item!  (Probably "FWD/REV ADC Cal.")
+#define	SWR_ADC_FULL_SCALE				4095	// full scale of A/D converter (4095 = 10 bits)
+#define	SWR_ADC_VOLT_REFERENCE				3.3		// NOMINAL A/D reference voltage.  The PRECISE value is calibrated by a menu item!  (Probably "FWD/REV ADC Cal.")
 //
 // coefficients for very low power (<75 milliwatt) power levels.  Do NOT use this above approx. 0.07 volts input!
 //
-#define	LOW_RF_PWR_COEFF_A	-0.0338205168744131		// constant (offset)
-#define	LOW_RF_PWR_COEFF_B	5.02584652062682		// "b" coefficient (for x)
-#define LOW_RF_PWR_COEFF_C	-106.610490958242		// "c" coefficient (for x^2)
-#define	LOW_RF_PWR_COEFF_D	853.156505329744		// "d" coefficient (for x^3)
+#define	LOW_RF_PWR_COEFF_A				-0.0338205168744131		// constant (offset)
+#define	LOW_RF_PWR_COEFF_B				5.02584652062682		// "b" coefficient (for x)
+#define LOW_RF_PWR_COEFF_C				-106.610490958242		// "c" coefficient (for x^2)
+#define	LOW_RF_PWR_COEFF_D				853.156505329744		// "d" coefficient (for x^3)
 //
 // coefficients for higher power levels (>50 milliwatts).  This is actually good down to 25 milliwatts or so.
 //
-#define	HIGH_RF_PWR_COEFF_A	0.01209	//0.0120972709513557		// constant (offset)
-#define HIGH_RF_PWR_COEFF_B	0.8334	//0.833438917330908		// "b" coefficient (for x)
-#define HIGH_RF_PWR_COEFF_C 1.569	//1.56930042559198		// "c" coefficient (for x^2)
+#define	HIGH_RF_PWR_COEFF_A				0.01209	//0.0120972709513557		// constant (offset)
+#define HIGH_RF_PWR_COEFF_B				0.8334	//0.833438917330908		// "b" coefficient (for x)
+#define HIGH_RF_PWR_COEFF_C 				1.569	//1.56930042559198		// "c" coefficient (for x^2)
 //
 //
-#define	SWR_MIN_CALC_POWER		0.25	// Minimum forward power required for SWR calculation
+#define	SWR_MIN_CALC_POWER				0.25	// Minimum forward power required for SWR calculation
 //
-#define	LOW_POWER_CALC_THRESHOLD	0.05	// voltage from sensor below which we use the "low power" calculations, above
+#define	LOW_POWER_CALC_THRESHOLD			0.05	// voltage from sensor below which we use the "low power" calculations, above
 //
-#define	VSWR_DAMPENING_FACTOR	0.25		// dampening/averaging factor (e.g. amount of "new" reading each time) - for VSWR meter indication ONLY
+#define	VSWR_DAMPENING_FACTOR				0.25		// dampening/averaging factor (e.g. amount of "new" reading each time) - for VSWR meter indication ONLY
 //
-#define MAX_VSWR_MOD_VALUE	75				// Maximum A/D value from FWD/REV power sensors before warning is displayed about not having done resistor modification
+#define MAX_VSWR_MOD_VALUE				75				// Maximum A/D value from FWD/REV power sensors before warning is displayed about not having done resistor modification
 //
 // Volt (DC power) meter
 //
-#define POWER_SAMPLES_SKP					10	//1500
-#define POWER_SAMPLES_CNT					32
+#define POWER_SAMPLES_SKP				10	//1500
+#define POWER_SAMPLES_CNT				32
 //
 // used to limit the voltmeter calibration parameters
 //
-#define	POWER_VOLTMETER_CALIBRATE_DEFAULT	100
-#define	POWER_VOLTMETER_CALIBRATE_MIN		00
-#define	POWER_VOLTMETER_CALIBRATE_MAX		200
+#define	POWER_VOLTMETER_CALIBRATE_DEFAULT		100
+#define	POWER_VOLTMETER_CALIBRATE_MIN			00
+#define	POWER_VOLTMETER_CALIBRATE_MAX			200
 //
-#define	VOLTMETER_ADC_FULL_SCALE	4095
+#define	VOLTMETER_ADC_FULL_SCALE		4095
 //
 //
 // Power supply
@@ -352,7 +369,7 @@ typedef struct PowerMeter
 
 } PowerMeter;
 
-#define LO_COMP_SKP							50		//50000
+#define LO_COMP_SKP					50		//50000
 
 // LO temperature compensation
 typedef struct LoTcxo
@@ -373,7 +390,7 @@ typedef struct LoTcxo
 } LoTcxo;
 
 // Once every 25s - 0xFFFFF
-#define EEPROM_SAVE_SKP						0xFFFFF
+#define EEPROM_SAVE_SKP					0xFFFFF
 
 // Eeprom saving routine
 typedef struct EepromSave
@@ -385,12 +402,12 @@ typedef struct EepromSave
 // --------------------------------------------------------------------------
 // Controls positions and some related colours
 // --------------------
-#define SMALL_FONT_WIDTH					8
-#define LARGE_FONT_WIDTH					16
+#define SMALL_FONT_WIDTH				8
+#define LARGE_FONT_WIDTH				16
 
 // Frequency display control
-#define POS_TUNE_FREQ_X						116
-#define POS_TUNE_FREQ_Y						100
+#define POS_TUNE_FREQ_X					116
+#define POS_TUNE_FREQ_Y					100
 //
 #define	POS_TUNE_SPLIT_FREQ_X				POS_TUNE_FREQ_X+72
 #define	POS_TUNE_SPLIT_MARKER_X				POS_TUNE_FREQ_X+40
@@ -401,12 +418,12 @@ typedef struct EepromSave
 #define	SPLIT_INACTIVE_COLOUR	Grey		// colour of "SPLIT" indicator when NOT active
 
 // Second frequency display control
-#define POS_TUNE_SFREQ_X					(POS_TUNE_FREQ_X + 120)
-#define POS_TUNE_SFREQ_Y					(POS_TUNE_FREQ_Y - 20)
+#define POS_TUNE_SFREQ_X				(POS_TUNE_FREQ_X + 120)
+#define POS_TUNE_SFREQ_Y				(POS_TUNE_FREQ_Y - 20)
 
 // Band selection control
-#define POS_BAND_MODE_X						(POS_TUNE_FREQ_X + 175)
-#define POS_BAND_MODE_Y						(POS_TUNE_FREQ_Y + 7)
+#define POS_BAND_MODE_X					(POS_TUNE_FREQ_X + 160)
+#define POS_BAND_MODE_Y					(POS_TUNE_FREQ_Y + 7)
 #define POS_BAND_MODE_MASK_X				(POS_BAND_MODE_X - 1)
 #define POS_BAND_MODE_MASK_Y				(POS_BAND_MODE_Y - 1)
 #define POS_BAND_MODE_MASK_H				13
@@ -544,7 +561,7 @@ typedef struct EepromSave
 #define POS_PWRN_IND_Y						193
 #define POS_PWR_IND_X						5
 #define POS_PWR_IND_Y						(POS_PWRN_IND_Y + 15)
-#define COL_PWR_IND							Grey
+#define COL_PWR_IND							Grey2
 
 #define POS_TEMP_IND_X						0
 #define POS_TEMP_IND_Y						0
@@ -560,7 +577,7 @@ typedef struct EepromSave
 // Exports
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
-void 	ui_driver_irq(void);
+//void 	ui_driver_irq(void);
 void 	ui_driver_toggle_tx(void);
 void 	UiCalcRxPhaseAdj(void);
 void 	UiCalcTxPhaseAdj(void);
@@ -611,6 +628,17 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 void 	uiCodecMute(uchar val);
 //
 void 	UiDriverSaveEepromValuesPowerDown(void);
+void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
+void	UiCheckForPressedKey(void);
+void 	UiKeyBeep(void);
+void	UiInitRxParms(void);
+//
+void 	UiCalcSubaudibleFreq(void);
+void 	UiLoadToneBurstMode(void);
+void	UiCalcSubaudibleGenFreq(void);		// load/set current FM subaudible tone settings for generation
+//
+void 	UiCalcSubaudibleDetFreq(void);		// load/set current FM subaudible tone settings	for detection
+bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain
@@ -684,7 +712,7 @@ void 	UiDriverSaveEepromValuesPowerDown(void);
 #define	AUTO_LSB_USB_ON			1
 #define	AUTO_LSB_USB_60M		2
 #define	AUTO_LSB_USB_MAX		2
-#define	AUTO_LSB_USB_DEFAULT	AUTO_LSB_USB_OFF
+#define	AUTO_LSB_USB_DEFAULT	AUTO_LSB_USB_60M
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
@@ -704,22 +732,23 @@ void 	UiDriverSaveEepromValuesPowerDown(void);
 //
 enum {
 BUTTON_M2_PRESSED = 0,	// 0
-BUTTON_G3_PRESSED,		// 1
-BUTTON_G2_PRESSED,		// 2
+BUTTON_G3_PRESSED,	// 1
+BUTTON_G2_PRESSED,	// 2
 BUTTON_BNDM_PRESSED,	// 3
-BUTTON_G4_PRESSED,		// 4
-BUTTON_M3_PRESSED,		// 5
+BUTTON_G4_PRESSED,	// 4
+BUTTON_M3_PRESSED,	// 5
 BUTTON_STEPM_PRESSED,	// 6
 BUTTON_STEPP_PRESSED,	// 7
-BUTTON_M1_PRESSED,		// 8
-BUTTON_F3_PRESSED,		// 9 - Press and release handled in UiDriverProcessFunctionKeyClick()
-BUTTON_F1_PRESSED,		// 10 - Press and release handled in UiDriverProcessFunctionKeyClick()
-BUTTON_F2_PRESSED,		// 11 - Press and release handled in UiDriverProcessFunctionKeyClick()
-BUTTON_F4_PRESSED,		// 12 - Press and release handled in UiDriverProcessFunctionKeyClick()
+BUTTON_M1_PRESSED,	// 8
+BUTTON_F3_PRESSED,	// 9 - Press and release handled in UiDriverProcessFunctionKeyClick()
+BUTTON_F1_PRESSED,	// 10 - Press and release handled in UiDriverProcessFunctionKeyClick()
+BUTTON_F2_PRESSED,	// 11 - Press and release handled in UiDriverProcessFunctionKeyClick()
+BUTTON_F4_PRESSED,	// 12 - Press and release handled in UiDriverProcessFunctionKeyClick()
 BUTTON_BNDP_PRESSED,	// 13
-BUTTON_F5_PRESSED,		// 14 - Press and release handled in UiDriverProcessFunctionKeyClick()
-BUTTON_G1_PRESSED,		// 15
-BUTTON_POWER_PRESSED	// 16 - Used for press and release
+BUTTON_F5_PRESSED,	// 14 - Press and release handled in UiDriverProcessFunctionKeyClick()
+BUTTON_G1_PRESSED,	// 15
+BUTTON_POWER_PRESSED,	// 16 - Used for press and release
+TOUCHSCREEN_ACTIVE	// 17 - Touchscreen touched
 };
 //
 // UI Driver State machine definitions

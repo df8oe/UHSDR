@@ -43,10 +43,10 @@
 #define 	AUTHOR_STRING   		"K Atanassov - M0NKA 2014-2015"
 //
 #define 	TRX4M_VER_MAJOR			0
-#define 	TRX4M_VER_MINOR			0
-#define 	TRX4M_VER_RELEASE		219
-#define 	TRX4M_VER_BUILD			24
-
+#define 	TRX4M_VER_MINOR			219
+#define 	TRX4M_VER_RELEASE		27
+//
+#define 	TRX4M_VER_BUILD			0
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
@@ -65,49 +65,55 @@
 // ---- 						PORT A										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define ENC_THREE_CH1 			GPIO_Pin_0
+#define ENC_THREE_CH1 		GPIO_Pin_0
 #define ENC_THREE_CH1_SOURCE	GPIO_PinSource0
 #define ENC_THREE_CH1_PIO       GPIOA
 // pin 1
-#define ENC_THREE_CH2 			GPIO_Pin_1
+#define ENC_THREE_CH2 		GPIO_Pin_1
 #define ENC_THREE_CH2_SOURCE	GPIO_PinSource1
 #define ENC_THREE_CH2_PIO       GPIOA
 // pin 2
-#define ADC3_FWD				GPIO_Pin_2
-#define ADC3_FWD_SOURCE			GPIO_PinSource2
-#define ADC3_FWD_PIO       		GPIOA
+#define ADC3_FWD		GPIO_Pin_2
+#define ADC3_FWD_SOURCE		GPIO_PinSource2
+#define ADC3_FWD_PIO       	GPIOA
 // pin 3
-#define ADC2_RET				GPIO_Pin_3
-#define ADC2_RET_SOURCE			GPIO_PinSource3
-#define ADC2_RET_PIO       		GPIOA
+#define ADC2_RET		GPIO_Pin_3
+#define ADC2_RET_SOURCE		GPIO_PinSource3
+#define ADC2_RET_PIO       	GPIOA
 // pin 4
-#define DAC0 					GPIO_Pin_4
-#define DAC0_SOURCE				GPIO_PinSource4
-#define DAC0_PIO       			GPIOA
+#define TP_IRQ			GPIO_Pin_4
+#define TP_IRQ_SOURCE		GPIO_PinSource4
+#define TP_IRQ_PIO		GPIOA
+#define DAC0 			GPIO_Pin_4
+#define DAC0_SOURCE		GPIO_PinSource4
+#define DAC0_PIO       		GPIOA
 // pin 5
-#define DAC1 					GPIO_Pin_5
-#define DAC1_SOURCE				GPIO_PinSource5
-#define DAC1_PIO       			GPIOA
+#define DAC1 			GPIO_Pin_5
+#define DAC1_SOURCE		GPIO_PinSource5
+#define DAC1_PIO       		GPIOA
 // pin 6
-#define ADC1_PWR				GPIO_Pin_6
-#define ADC1_PWR_SOURCE			GPIO_PinSource6
-#define ADC1_PWR_PIO       		GPIOA
+#define ADC1_PWR		GPIO_Pin_6
+#define ADC1_PWR_SOURCE		GPIO_PinSource6
+#define ADC1_PWR_PIO       	GPIOA
 // pin 7
-#define BAND0		 			GPIO_Pin_7
-#define BAND0_SOURCE			GPIO_PinSource7
-#define BAND0_PIO       		GPIOA
+#define BAND0		 	GPIO_Pin_7
+#define BAND0_SOURCE		GPIO_PinSource7
+#define BAND0_PIO       	GPIOA
 // pin 8
-#define BAND1		 			GPIO_Pin_8
-#define BAND1_SOURCE			GPIO_PinSource8
-#define BAND1_PIO       		GPIOA
+#define BAND1		 	GPIO_Pin_8
+#define BAND1_SOURCE		GPIO_PinSource8
+#define BAND1_PIO       	GPIOA
 // pin 9
-#define DEBUG_PRINT	 			GPIO_Pin_9
-#define DEBUG_PRINT_SOURCE		GPIO_PinSource9
-#define DEBUG_PRINT_PIO    		GPIOA
+#define DEBUG_PRINT	 	GPIO_Pin_9
+#define DEBUG_PRINT_SOURCE	GPIO_PinSource9
+#define DEBUG_PRINT_PIO    	GPIOA
+#define TP_CS			GPIO_Pin_9
+#define TP_CS_SOURCE		GPIO_PinSource9
+#define TP_CS_PIO		GPIOA
 // pin 10
-#define BAND2 					GPIO_Pin_10
-#define BAND2_SOURCE			GPIO_PinSource10
-#define BAND2_PIO       		GPIOA
+#define BAND2 			GPIO_Pin_10
+#define BAND2_SOURCE		GPIO_PinSource10
+#define BAND2_PIO       	GPIOA
 // pin 11
 // USB DFU
 //
@@ -117,42 +123,41 @@
 //
 // pin 13
 // SWDIO
-//
 // pin 14
 // SWCLK
 //
 //
 // pin 15
-#define CODEC_I2S_WS			GPIO_Pin_15
-#define CODEC_I2S_WS_SOURCE		GPIO_PinSource15
-#define CODEC_I2S_WS_PIO  		GPIOA
+#define CODEC_I2S_WS		GPIO_Pin_15
+#define CODEC_I2S_WS_SOURCE	GPIO_PinSource15
+#define CODEC_I2S_WS_PIO  	GPIOA
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT B										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define BUTTON_BNDM				GPIO_Pin_0
-#define BUTTON_BNDM_SOURCE		GPIO_PinSource0
+#define BUTTON_BNDM		GPIO_Pin_0
+#define BUTTON_BNDM_SOURCE	GPIO_PinSource0
 #define BUTTON_BNDM_PIO       	GPIOB
 // pin 1
-#define PTT_CNTR 				GPIO_Pin_1
-#define PTT_CNTR_SOURCE			GPIO_PinSource1
-#define PTT_CNTR_PIO       		GPIOB
+#define PTT_CNTR 		GPIO_Pin_1
+#define PTT_CNTR_SOURCE		GPIO_PinSource1
+#define PTT_CNTR_PIO       	GPIOB
 // pin 2
-#define BUTTON_BNDP 			GPIO_Pin_2
-#define BUTTON_BNDP_SOURCE		GPIO_PinSource2
+#define BUTTON_BNDP 		GPIO_Pin_2
+#define BUTTON_BNDP_SOURCE	GPIO_PinSource2
 #define BUTTON_BNDP_PIO       	GPIOB
 // pin 3
-#define BUTTON_M2 				GPIO_Pin_3
-#define BUTTON_M2_SOURCE		GPIO_PinSource3
+#define BUTTON_M2 		GPIO_Pin_3
+#define BUTTON_M2_SOURCE	GPIO_PinSource3
 #define BUTTON_M2_PIO       	GPIOB
 // pin 4
-#define ENC_ONE_CH1 			GPIO_Pin_4
-#define ENC_ONE_CH1_SOURCE		GPIO_PinSource4
+#define ENC_ONE_CH1 		GPIO_Pin_4
+#define ENC_ONE_CH1_SOURCE	GPIO_PinSource4
 #define ENC_ONE_CH1_PIO       	GPIOB
 // pin 5
-#define ENC_ONE_CH2 			GPIO_Pin_5
-#define ENC_ONE_CH2_SOURCE		GPIO_PinSource5
+#define ENC_ONE_CH2 		GPIO_Pin_5
+#define ENC_ONE_CH2_SOURCE	GPIO_PinSource5
 #define ENC_ONE_CH2_PIO       	GPIOB
 // pin 6
 #define I2C1_SCL_PIN            GPIO_Pin_6
@@ -163,12 +168,12 @@
 #define I2C1_SDA_PINSRC         GPIO_PinSource7
 #define I2C1_SDA_GPIO           GPIOB
 // pin 8
-#define BUTTON_G3 				GPIO_Pin_8
-#define BUTTON_G3_SOURCE		GPIO_PinSource8
+#define BUTTON_G3 		GPIO_Pin_8
+#define BUTTON_G3_SOURCE	GPIO_PinSource8
 #define BUTTON_G3_PIO       	GPIOB
 // pin 9
-#define GREEN_LED 				GPIO_Pin_9
-#define GREEN_LED_SOURCE		GPIO_PinSource9
+#define GREEN_LED 		GPIO_Pin_9
+#define GREEN_LED_SOURCE	GPIO_PinSource9
 #define GREEN_LED_PIO       	GPIOB
 // pin 10
 #define I2C2_SCL_PIN            GPIO_Pin_10
@@ -179,12 +184,12 @@
 #define I2C2_SDA_PINSRC         GPIO_PinSource11
 #define I2C2_SDA_GPIO           GPIOB
 // pin 12
-#define RED_LED 				GPIO_Pin_12
-#define RED_LED_SOURCE			GPIO_PinSource12
-#define RED_LED_PIO       		GPIOB
+#define RED_LED 		GPIO_Pin_12
+#define RED_LED_SOURCE		GPIO_PinSource12
+#define RED_LED_PIO       	GPIOB
 // pin 13
-#define LCD_SCK 				GPIO_Pin_13
-#define LCD_SCK_SOURCE			GPIO_PinSource13
+#define LCD_SCK 		GPIO_Pin_13
+#define LCD_SCK_SOURCE		GPIO_PinSource13
 #define LCD_SCK_PIO         	GPIOB
 // pin 14
 // USB HOST
@@ -197,205 +202,205 @@
 // ---- 						PORT C										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define BUTTON_G4 				GPIO_Pin_0
-#define BUTTON_G4_SOURCE		GPIO_PinSource0
+#define BUTTON_G4 		GPIO_Pin_0
+#define BUTTON_G4_SOURCE	GPIO_PinSource0
 #define BUTTON_G4_PIO       	GPIOC
 // pin 1
-#define BUTTON_M3 				GPIO_Pin_1
-#define BUTTON_M3_SOURCE		GPIO_PinSource1
+#define BUTTON_M3 		GPIO_Pin_1
+#define BUTTON_M3_SOURCE	GPIO_PinSource1
 #define BUTTON_M3_PIO       	GPIOC
 // pin 2
-#define LCD_MISO 				GPIO_Pin_2
-#define LCD_MISO_SOURCE			GPIO_PinSource2
+#define LCD_MISO 		GPIO_Pin_2
+#define LCD_MISO_SOURCE		GPIO_PinSource2
 #define LCD_MISO_PIO         	GPIOC
 // pin 3
-#define LCD_MOSI 				GPIO_Pin_3
-#define LCD_MOSI_SOURCE			GPIO_PinSource3
+#define LCD_MOSI 		GPIO_Pin_3
+#define LCD_MOSI_SOURCE		GPIO_PinSource3
 #define LCD_MOSI_PIO         	GPIOC
 // pin 4
-#define BUTTON_STEPM			GPIO_Pin_4
-#define BUTTON_STEPM_SOURCE		GPIO_PinSource4
+#define BUTTON_STEPM		GPIO_Pin_4
+#define BUTTON_STEPM_SOURCE	GPIO_PinSource4
 #define BUTTON_STEPM_PIO       	GPIOC
 // pin 5
-#define BUTTON_STEPP			GPIO_Pin_5
-#define BUTTON_STEPP_SOURCE		GPIO_PinSource5
+#define BUTTON_STEPP		GPIO_Pin_5
+#define BUTTON_STEPP_SOURCE	GPIO_PinSource5
 #define BUTTON_STEPP_PIO       	GPIOC
 // pin 6
-#define FREQ_ENC_CH1 			GPIO_Pin_6
-#define FREQ_ENC_CH1_SOURCE		GPIO_PinSource6
+#define FREQ_ENC_CH1 		GPIO_Pin_6
+#define FREQ_ENC_CH1_SOURCE	GPIO_PinSource6
 #define FREQ_ENC_CH1_PIO        GPIOC
 // pin 7
-#define FREQ_ENC_CH2 			GPIO_Pin_7
-#define FREQ_ENC_CH2_SOURCE		GPIO_PinSource7
+#define FREQ_ENC_CH2 		GPIO_Pin_7
+#define FREQ_ENC_CH2_SOURCE	GPIO_PinSource7
 #define FREQ_ENC_CH2_PIO        GPIOC
 // pin 8
-#define POWER_DOWN 				GPIO_Pin_8
-#define POWER_DOWN_SOURCE		GPIO_PinSource8
+#define POWER_DOWN 		GPIO_Pin_8
+#define POWER_DOWN_SOURCE	GPIO_PinSource8
 #define POWER_DOWN_PIO         	GPIOC
 // pin 9
-#define CODEC_CLOCK 			GPIO_Pin_9
-#define CODEC_CLOCK_SOURCE		GPIO_PinSource9
+#define CODEC_CLOCK 		GPIO_Pin_9
+#define CODEC_CLOCK_SOURCE	GPIO_PinSource9
 #define CODEC_CLOCK_PIO         GPIOC
 // pin 10
-#define CODEC_I2S_SCK 			GPIO_Pin_10
+#define CODEC_I2S_SCK 		GPIO_Pin_10
 #define CODEC_I2S_SCK_SOURCE	GPIO_PinSource10
 #define CODEC_I2S_SCK_PIO       GPIOC
 // pin 11
-#define CODEC_I2S_SDI 			GPIO_Pin_11
+#define CODEC_I2S_SDI 		GPIO_Pin_11
 #define CODEC_I2S_SDI_SOURCE	GPIO_PinSource11
 #define CODEC_I2S_SDI_PIO       GPIOC
 // pin 12
-#define CODEC_I2S_SDO 			GPIO_Pin_12
+#define CODEC_I2S_SDO 		GPIO_Pin_12
 #define CODEC_I2S_SDO_SOURCE	GPIO_PinSource12
 #define CODEC_I2S_SDO_PIO       GPIOC
 // pin 13
-#define BUTTON_PWR				GPIO_Pin_13
-#define BUTTON_PWR_SOURCE		GPIO_PinSource13
+#define BUTTON_PWR		GPIO_Pin_13
+#define BUTTON_PWR_SOURCE	GPIO_PinSource13
 #define BUTTON_PWR_PIO       	GPIOC
 // pin 14
-#define BUTTON_M1				GPIO_Pin_14
-#define BUTTON_M1_SOURCE		GPIO_PinSource14
+#define BUTTON_M1		GPIO_Pin_14
+#define BUTTON_M1_SOURCE	GPIO_PinSource14
 #define BUTTON_M1_PIO       	GPIOC
 // pin 15
-#define BUTTON_F3				GPIO_Pin_15
-#define BUTTON_F3_SOURCE		GPIO_PinSource15
+#define BUTTON_F3		GPIO_Pin_15
+#define BUTTON_F3_SOURCE	GPIO_PinSource15
 #define BUTTON_F3_PIO       	GPIOC
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT D										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define LCD_D2					GPIO_Pin_0
-#define LCD_D2_SOURCE			GPIO_PinSource0
-#define LCD_D2_PIO      		GPIOD
+#define LCD_D2			GPIO_Pin_0
+#define LCD_D2_SOURCE		GPIO_PinSource0
+#define LCD_D2_PIO      	GPIOD
 // pin 1
-#define LCD_D3					GPIO_Pin_1
-#define LCD_D3_SOURCE			GPIO_PinSource1
-#define LCD_D3_PIO      		GPIOD
+#define LCD_D3			GPIO_Pin_1
+#define LCD_D3_SOURCE		GPIO_PinSource1
+#define LCD_D3_PIO      	GPIOD
 // pin 2
-#define LCD_BACKLIGHT			GPIO_Pin_2
+#define LCD_BACKLIGHT		GPIO_Pin_2
 #define LCD_BACKLIGHT_SOURCE	GPIO_PinSource2
 #define LCD_BACKLIGHT_PIO      	GPIOD
 // pin 3
-#define LCD_RESET				GPIO_Pin_3
-#define LCD_RESET_SOURCE		GPIO_PinSource3
-#define LCD_RESET_PIO      		GPIOD
+#define LCD_RESET		GPIO_Pin_3
+#define LCD_RESET_SOURCE	GPIO_PinSource3
+#define LCD_RESET_PIO      	GPIOD
 // pin 4
-#define LCD_RD					GPIO_Pin_4
-#define LCD_RD_SOURCE			GPIO_PinSource4
-#define LCD_RD_PIO      		GPIOD
+#define LCD_RD			GPIO_Pin_4
+#define LCD_RD_SOURCE		GPIO_PinSource4
+#define LCD_RD_PIO      	GPIOD
 // pin 5
-#define LCD_WR					GPIO_Pin_5
-#define LCD_WR_SOURCE			GPIO_PinSource5
-#define LCD_WR_PIO      		GPIOD
+#define LCD_WR			GPIO_Pin_5
+#define LCD_WR_SOURCE		GPIO_PinSource5
+#define LCD_WR_PIO      	GPIOD
 // pin 6
-#define BUTTON_F1				GPIO_Pin_6
-#define BUTTON_F1_SOURCE		GPIO_PinSource6
+#define BUTTON_F1		GPIO_Pin_6
+#define BUTTON_F1_SOURCE	GPIO_PinSource6
 #define BUTTON_F1_PIO       	GPIOD
 // pin 7
-#define LCD_CSA					GPIO_Pin_7
-#define LCD_CSA_SOURCE			GPIO_PinSource7
-#define LCD_CSA_PIO      		GPIOD
+#define LCD_CSA			GPIO_Pin_7
+#define LCD_CSA_SOURCE		GPIO_PinSource7
+#define LCD_CSA_PIO      	GPIOD
 // pin 8
-#define LCD_D15					GPIO_Pin_8
-#define LCD_D15_SOURCE			GPIO_PinSource8
-#define LCD_D15_PIO      		GPIOD
+#define LCD_D15			GPIO_Pin_8
+#define LCD_D15_SOURCE		GPIO_PinSource8
+#define LCD_D15_PIO      	GPIOD
 // pin 9
-#define LCD_D16					GPIO_Pin_9
-#define LCD_D16_SOURCE			GPIO_PinSource9
-#define LCD_D16_PIO      		GPIOD
+#define LCD_D16			GPIO_Pin_9
+#define LCD_D16_SOURCE		GPIO_PinSource9
+#define LCD_D16_PIO      	GPIOD
 // pin 10
-#define LCD_D17					GPIO_Pin_10
-#define LCD_D17_SOURCE			GPIO_PinSource10
-#define LCD_D17_PIO      		GPIOD
+#define LCD_D17			GPIO_Pin_10
+#define LCD_D17_SOURCE		GPIO_PinSource10
+#define LCD_D17_PIO      	GPIOD
 // pin 11
-#define LCD_RS					GPIO_Pin_11
-#define LCD_RS_SOURCE			GPIO_PinSource11
-#define LCD_RS_PIO      		GPIOD
+#define LCD_RS			GPIO_Pin_11
+#define LCD_RS_SOURCE		GPIO_PinSource11
+#define LCD_RS_PIO      	GPIOD
 // pin 12
-#define ENC_TWO_CH1 			GPIO_Pin_12
-#define ENC_TWO_CH1_SOURCE		GPIO_PinSource12
+#define ENC_TWO_CH1 		GPIO_Pin_12
+#define ENC_TWO_CH1_SOURCE	GPIO_PinSource12
 #define ENC_TWO_CH1_PIO         GPIOD
 // pin 13
-#define ENC_TWO_CH2 			GPIO_Pin_13
-#define ENC_TWO_CH2_SOURCE		GPIO_PinSource13
+#define ENC_TWO_CH2 		GPIO_Pin_13
+#define ENC_TWO_CH2_SOURCE	GPIO_PinSource13
 #define ENC_TWO_CH2_PIO         GPIOD
 // pin 14
-#define LCD_D0					GPIO_Pin_14
-#define LCD_D0_SOURCE			GPIO_PinSource14
-#define LCD_D0_PIO      		GPIOD
+#define LCD_D0			GPIO_Pin_14
+#define LCD_D0_SOURCE		GPIO_PinSource14
+#define LCD_D0_PIO      	GPIOD
 // pin 15
-#define LCD_D1					GPIO_Pin_15
-#define LCD_D1_SOURCE			GPIO_PinSource15
-#define LCD_D1_PIO      		GPIOD
+#define LCD_D1			GPIO_Pin_15
+#define LCD_D1_SOURCE		GPIO_PinSource15
+#define LCD_D1_PIO      	GPIOD
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT E										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define PADDLE_DAH				GPIO_Pin_0
-#define PADDLE_DAH_SOURCE		GPIO_PinSource0
+#define PADDLE_DAH		GPIO_Pin_0
+#define PADDLE_DAH_SOURCE	GPIO_PinSource0
 #define PADDLE_DAH_PIO       	GPIOE
 // pin 1
-#define PADDLE_DIT				GPIO_Pin_1
-#define PADDLE_DIT_SOURCE		GPIO_PinSource1
+#define PADDLE_DIT		GPIO_Pin_1
+#define PADDLE_DIT_SOURCE	GPIO_PinSource1
 #define PADDLE_DIT_PIO       	GPIOE
 // pin 2
-#define BUTTON_F2				GPIO_Pin_2
-#define BUTTON_F2_SOURCE		GPIO_PinSource2
+#define BUTTON_F2		GPIO_Pin_2
+#define BUTTON_F2_SOURCE	GPIO_PinSource2
 #define BUTTON_F2_PIO       	GPIOE
 // pin 3
-#define BUTTON_F4				GPIO_Pin_3
-#define BUTTON_F4_SOURCE		GPIO_PinSource3
+#define BUTTON_F4		GPIO_Pin_3
+#define BUTTON_F4_SOURCE	GPIO_PinSource3
 #define BUTTON_F4_PIO       	GPIOE
 // pin 4
-#define BUTTON_G2				GPIO_Pin_4
-#define BUTTON_G2_SOURCE		GPIO_PinSource4
+#define BUTTON_G2		GPIO_Pin_4
+#define BUTTON_G2_SOURCE	GPIO_PinSource4
 #define BUTTON_G2_PIO       	GPIOE
 // pin 5
-#define BUTTON_F5				GPIO_Pin_5
-#define BUTTON_F5_SOURCE		GPIO_PinSource5
+#define BUTTON_F5		GPIO_Pin_5
+#define BUTTON_F5_SOURCE	GPIO_PinSource5
 #define BUTTON_F5_PIO       	GPIOE
 // pin 6
-#define BUTTON_G1				GPIO_Pin_6
-#define BUTTON_G1_SOURCE		GPIO_PinSource6
+#define BUTTON_G1		GPIO_Pin_6
+#define BUTTON_G1_SOURCE	GPIO_PinSource6
 #define BUTTON_G1_PIO       	GPIOE
 // pin 7
-#define LCD_D4					GPIO_Pin_7
-#define LCD_D4_SOURCE			GPIO_PinSource7
-#define LCD_D4_PIO      		GPIOE
+#define LCD_D4			GPIO_Pin_7
+#define LCD_D4_SOURCE		GPIO_PinSource7
+#define LCD_D4_PIO      	GPIOE
 // pin 8
-#define LCD_D5					GPIO_Pin_8
-#define LCD_D5_SOURCE			GPIO_PinSource8
-#define LCD_D5_PIO      		GPIOE
+#define LCD_D5			GPIO_Pin_8
+#define LCD_D5_SOURCE		GPIO_PinSource8
+#define LCD_D5_PIO      	GPIOE
 // pin 9
-#define LCD_D6					GPIO_Pin_9
-#define LCD_D6_SOURCE			GPIO_PinSource9
-#define LCD_D6_PIO      		GPIOE
+#define LCD_D6			GPIO_Pin_9
+#define LCD_D6_SOURCE		GPIO_PinSource9
+#define LCD_D6_PIO      	GPIOE
 // pin 10
-#define LCD_D7					GPIO_Pin_10
-#define LCD_D7_SOURCE			GPIO_PinSource10
-#define LCD_D7_PIO      		GPIOE
+#define LCD_D7			GPIO_Pin_10
+#define LCD_D7_SOURCE		GPIO_PinSource10
+#define LCD_D7_PIO      	GPIOE
 // pin 11
-#define LCD_D10					GPIO_Pin_11
-#define LCD_D10_SOURCE			GPIO_PinSource11
-#define LCD_D10_PIO      		GPIOE
+#define LCD_D10			GPIO_Pin_11
+#define LCD_D10_SOURCE		GPIO_PinSource11
+#define LCD_D10_PIO      	GPIOE
 // pin 12
-#define LCD_D11					GPIO_Pin_12
-#define LCD_D11_SOURCE			GPIO_PinSource12
-#define LCD_D11_PIO        		GPIOE
+#define LCD_D11			GPIO_Pin_12
+#define LCD_D11_SOURCE		GPIO_PinSource12
+#define LCD_D11_PIO        	GPIOE
 // pin 13
-#define LCD_D12					GPIO_Pin_13
-#define LCD_D12_SOURCE			GPIO_PinSource13
-#define LCD_D12_PIO      		GPIOE
+#define LCD_D12			GPIO_Pin_13
+#define LCD_D12_SOURCE		GPIO_PinSource13
+#define LCD_D12_PIO      	GPIOE
 // pin 14
-#define LCD_D13					GPIO_Pin_14
-#define LCD_D13_SOURCE			GPIO_PinSource14
-#define LCD_D13_PIO      		GPIOE
+#define LCD_D13			GPIO_Pin_14
+#define LCD_D13_SOURCE		GPIO_PinSource14
+#define LCD_D13_PIO      	GPIOE
 // pin 15
-#define LCD_D14					GPIO_Pin_15
-#define LCD_D14_SOURCE			GPIO_PinSource15
-#define LCD_D14_PIO      		GPIOE
+#define LCD_D14			GPIO_Pin_15
+#define LCD_D14_SOURCE		GPIO_PinSource15
+#define LCD_D14_PIO      	GPIOE
 //
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -412,84 +417,120 @@ typedef struct ButtonMap
 
 #define POWER_BUTTON_HOLD_TIME		1000000
 
-#define TRX_MODE_RX					0
-#define TRX_MODE_TX					1
+#define TRX_MODE_RX			0
+#define TRX_MODE_TX			1
 
-#define DEMOD_USB					0
-#define DEMOD_LSB					1
-#define DEMOD_CW					2
-#define DEMOD_AM					3
-#define DEMOD_DIGI					4
-#define DEMOD_MAX_MODE				4
+#define DEMOD_USB			0
+#define DEMOD_LSB			1
+#define DEMOD_CW			2
+#define DEMOD_AM			3
+#define	DEMOD_FM			4
+#define DEMOD_DIGI			5
+#define DEMOD_MAX_MODE			5
 
-#define RTC_OSC_FREQ				32768
+#define RTC_OSC_FREQ			32768
 
-#define	TCXO_OFF					0		// TXCO temperature compensation off
-#define	TCXO_ON						1		// TCXO temperature compensation on
-#define	TCXO_STOP					2		// Stop reading of temperature sensor
-#define	TCXO_TEMP_STATE_MAX			2		// Maximum setting for TCXO setting state
+#define	TCXO_OFF			0		// TXCO temperature compensation off
+#define	TCXO_ON				1		// TCXO temperature compensation on
+#define	TCXO_STOP			2		// Stop reading of temperature sensor
+#define	TCXO_TEMP_STATE_MAX		2		// Maximum setting for TCXO setting state
 
 // Transverter oscillator adds shift
-#define		TRANSVT_FREQ_A	 		42000000
+#define		TRANSVT_FREQ_A	 	42000000
 
 //
-#define		MIN_FREQ_CAL			-9999		// Minimum and maximum range of frequency calibration in Hz (referenced to 14.000 MHz)
-#define		MAX_FREQ_CAL			9999
+#define		MIN_FREQ_CAL		-9999		// Minimum and maximum range of frequency calibration in Hz (referenced to 14.000 MHz)
+#define		MAX_FREQ_CAL		9999
 //
 // Total bands supported
 //
-#define	MIN_BANDS					0		// lowest band number
-#define	MAX_BANDS					9		// Highest band number:  9 = General coverage (RX only) band
+#define	MIN_BANDS			0		// lowest band number
+#define	MAX_BANDS			17		// Highest band number:  17 = General coverage (RX only) band
 
-#define	KHZ_MULT					4000	// multiplier to convert oscillator frequency or band size to display kHz, used below
+#define	KHZ_MULT			4000	// multiplier to convert oscillator frequency or band size to display kHz, used below
 //
 // Bands definition
 // - ID
 // - SI570 startup freq
 // - size in Hz
 //
-#define	BAND_MODE_80				0
-#define	BAND_FREQ_80				3500*KHZ_MULT		// 3500 kHz
-#define	BAND_SIZE_80				500*KHZ_MULT		// 500 kHz in size (Region 2)
+#define	BAND_MODE_80			0
+#define	BAND_FREQ_80			3500*KHZ_MULT		// 3500 kHz
+#define	BAND_SIZE_80			500*KHZ_MULT		// 500 kHz in size (Region 2)
 //
-#define	BAND_MODE_60				1
-#define	BAND_FREQ_60				5258*KHZ_MULT		// 5258 kHz
-#define	BAND_SIZE_60				150*KHZ_MULT		// 150 kHz in size to allow different allocations
+#define	BAND_MODE_60			1
+#define	BAND_FREQ_60			5250*KHZ_MULT		// 5250 kHz
+#define	BAND_SIZE_60			200*KHZ_MULT		// 200 kHz in size to allow different allocations
 //
-#define	BAND_MODE_40				2
-#define	BAND_FREQ_40				7000*KHZ_MULT		// 7000 kHz
-#define	BAND_SIZE_40				300*KHZ_MULT		// 300 kHz in size (Region 2)
+#define	BAND_MODE_40			2
+#define	BAND_FREQ_40			7000*KHZ_MULT		// 7000 kHz
+#define	BAND_SIZE_40			300*KHZ_MULT		// 300 kHz in size (Region 2)
 //
-#define	BAND_MODE_30				3
-#define	BAND_FREQ_30				10100*KHZ_MULT		// 10100 kHz
-#define	BAND_SIZE_30				50*KHZ_MULT			// 50 kHz in size
+#define	BAND_MODE_30			3
+#define	BAND_FREQ_30			10100*KHZ_MULT		// 10100 kHz
+#define	BAND_SIZE_30			50*KHZ_MULT		// 50 kHz in size
 //
-#define	BAND_MODE_20				4
-#define	BAND_FREQ_20				14000*KHZ_MULT		// 14000 kHz
-#define	BAND_SIZE_20				350*KHZ_MULT		// 350 kHz in size
+#define	BAND_MODE_20			4
+#define	BAND_FREQ_20			14000*KHZ_MULT		// 14000 kHz
+#define	BAND_SIZE_20			350*KHZ_MULT		// 350 kHz in size
 //
-#define	BAND_MODE_17				5
-#define	BAND_FREQ_17				18068*KHZ_MULT		// 18068 kHz
-#define	BAND_SIZE_17				100*KHZ_MULT		// 100 kHz in size
+#define	BAND_MODE_17			5
+#define	BAND_FREQ_17			18068*KHZ_MULT		// 18068 kHz
+#define	BAND_SIZE_17			100*KHZ_MULT		// 100 kHz in size
 //
-#define	BAND_MODE_15				6
-#define	BAND_FREQ_15				21000*KHZ_MULT		// 21000 kHz
-#define	BAND_SIZE_15				450*KHZ_MULT		// 450 kHz in size
+#define	BAND_MODE_15			6
+#define	BAND_FREQ_15			21000*KHZ_MULT		// 21000 kHz
+#define	BAND_SIZE_15			450*KHZ_MULT		// 450 kHz in size
 //
-#define	BAND_MODE_12				7
-#define	BAND_FREQ_12				24890*KHZ_MULT		// 24890 kHz
-#define	BAND_SIZE_12				100*KHZ_MULT		// 100 kHz in size
+#define	BAND_MODE_12			7
+#define	BAND_FREQ_12			24890*KHZ_MULT		// 24890 kHz
+#define	BAND_SIZE_12			100*KHZ_MULT		// 100 kHz in size
 //
-#define	BAND_MODE_10				8
-#define	BAND_FREQ_10				28000*KHZ_MULT		// 28000 kHz
-#define	BAND_SIZE_10				1700*KHZ_MULT		// 1700 kHz in size
+#define	BAND_MODE_10			8
+#define	BAND_FREQ_10			28000*KHZ_MULT		// 28000 kHz
+#define	BAND_SIZE_10			1700*KHZ_MULT		// 1700 kHz in size
 //
-#define	BAND_MODE_GEN				9					// General Coverage
-#define	BAND_FREQ_GEN				10000*KHZ_MULT		// 10000 kHz
-#define	BAND_SIZE_GEN				1*KHZ_MULT			// Dummy variable
+#define	BAND_MODE_6			9
+#define	BAND_FREQ_6			50000*KHZ_MULT		// 50000 kHz
+#define	BAND_SIZE_6			2000*KHZ_MULT		// 2000 kHz in size (Region 2)
+//
+#define	BAND_MODE_4			10
+#define	BAND_FREQ_4			70000*KHZ_MULT		// 70000 kHz
+#define	BAND_SIZE_4			500*KHZ_MULT		// 500 kHz in size (Region 2)
+//
+#define	BAND_MODE_2			11
+#define	BAND_FREQ_2			144000*KHZ_MULT		// 144000 kHz
+#define	BAND_SIZE_2			2000*KHZ_MULT		// 2000 kHz in size (Region 1)
+//
+#define	BAND_MODE_70			12
+#define	BAND_FREQ_70			430000*KHZ_MULT		// 430000 kHz
+#define	BAND_SIZE_70			10000*KHZ_MULT		// 10000 kHz in size (Region 1)
+//
+#define	BAND_MODE_23			13
+#define	BAND_FREQ_23			450000*KHZ_MULT		// 1240000 kHz
+#define	BAND_SIZE_23			10000*KHZ_MULT		// 60000 kHz in size (Region 1)
+//
+#define	BAND_MODE_2200			14
+#define	BAND_FREQ_2200			135.7*KHZ_MULT		// 135.7 kHz
+#define	BAND_SIZE_2200			2.1*KHZ_MULT		// 2.1 kHz in size (Region 1)
+//
+#define	BAND_MODE_630			15
+#define	BAND_FREQ_630			472*KHZ_MULT		// 472 kHz
+#define	BAND_SIZE_630			7*KHZ_MULT		// 7 kHz in size (Region 1)
+//
+#define	BAND_MODE_160			16
+#define	BAND_FREQ_160			1800*KHZ_MULT		// 1810 kHz
+#define	BAND_SIZE_160			190*KHZ_MULT		// 190 kHz in size (Region 1)
+//
+#define	BAND_MODE_GEN			17			// General Coverage
+#define	BAND_FREQ_GEN			10000*KHZ_MULT		// 10000 kHz
+#define	BAND_SIZE_GEN			1*KHZ_MULT		// Dummy variable
+//
 //
 //
 //	Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
+//
+#define	BAND_FILTER_UPPER_160		2500000				// Upper limit for 160 meter filter
 //
 #define	BAND_FILTER_UPPER_80		4250000				// Upper limit for 80 meter filter
 //
@@ -497,23 +538,26 @@ typedef struct ButtonMap
 //
 #define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20/30 meter filter
 //
-#define	DEFAULT_FREQ_OFFSET			4000				// Amount of offset (at LO freq) when loading "default" frequency
+#define	BAND_FILTER_UPPER_6		4000000				// Upper limit for 4/6 meter filter
+//
+#define	BAND_FILTER_UPPER_4		7000000				// Upper limit for 4/6 meter filter
+//
+#define	DEFAULT_FREQ_OFFSET		4000				// Amount of offset (at LO freq) when loading "default" frequency
 //
 // encoder one
 #define ENC_ONE_MODE_AUDIO_GAIN		0
 #define ENC_ONE_MODE_ST_GAIN		1
-#define ENC_ONE_MAX_MODE			1
-
+#define ENC_ONE_MAX_MODE		1
+//
 // encoder two
 #define ENC_TWO_MODE_RF_GAIN		0
-#define ENC_TWO_MODE_SIG_PROC	1
-#define ENC_TWO_MAX_MODE			2
-
+#define ENC_TWO_MODE_SIG_PROC		1
+#define ENC_TWO_MAX_MODE		2
+//
 // encoder three
-#define ENC_THREE_MODE_RIT			0
+#define ENC_THREE_MODE_RIT		0
 #define ENC_THREE_MODE_CW_SPEED		1
-#define ENC_THREE_MAX_MODE			2
-
+#define ENC_THREE_MAX_MODE		2
 //
 // Audio filter select enumeration
 //
@@ -531,29 +575,29 @@ enum	{
 //
 // use below to define the lowest-used filter number
 //
-#define AUDIO_MIN_FILTER			0
+#define AUDIO_MIN_FILTER		0
 //
 // use below to define the highest-used filter number-1
 //
-#define AUDIO_MAX_FILTER			6
+#define AUDIO_MAX_FILTER		6
 //
 //
 #define MIN_FILTER_SELECT_VAL		1		// Minimum value for selection of sub-filter
 //
-#define	MAX_300HZ_FILTER			9		// Highest number selection of 500 Hz filter
+#define	MAX_300HZ_FILTER		9		// Highest number selection of 500 Hz filter
 #define	FILTER_300HZ_DEFAULT		6		// Center frequency of 750 Hz
 //
-#define	MAX_500HZ_FILTER			5
+#define	MAX_500HZ_FILTER		5
 #define	FILTER_500HZ_DEFAULT		3		// Center frequency of 750 Hz
 //
-#define	MAX_1K8_FILTER				5
-#define	FILTER_1K8_DEFAULT			3		// Center frequency of 1425 Hz
+#define	MAX_1K8_FILTER			5
+#define	FILTER_1K8_DEFAULT		3		// Center frequency of 1425 Hz
 //
-#define	MAX_2K3_FILTER				4
-#define	FILTER_2K3_DEFAULT			2		// Center frequency of 1412 Hz
+#define	MAX_2K3_FILTER			4
+#define	FILTER_2K3_DEFAULT		2		// Center frequency of 1412 Hz
 //
-#define	FILTER_3K6_DEFAULT			1		// 1 = Enabled
-#define	MAX_3K6_FILTER				1		// only on/off
+#define	FILTER_3K6_DEFAULT		1		// 1 = Enabled
+#define	MAX_3K6_FILTER			1		// only on/off
 //
 enum	{
 	WIDE_FILTER_10K_AM = 0,
@@ -568,65 +612,69 @@ enum	{
 };
 //
 //
-#define	FILTER_WIDE_DEFAULT			WIDE_FILTER_10K		// 10k selected by default
+#define	FILTER_WIDE_DEFAULT		WIDE_FILTER_10K		// 10k selected by default
 //
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //
-#define	FILTER_300HZ_WIDTH			300
-#define	FILTER_500HZ_WIDTH			500
-#define	FILTER_1800HZ_WIDTH			1800
-#define FILTER_2300HZ_WIDTH			2300
-#define FILTER_3600HZ_WIDTH			3600
-#define	FILTER_5000HZ_WIDTH			5000
-#define	FILTER_6000HZ_WIDTH			6000
-#define FILTER_7500HZ_WIDTH			7500
+#define	FILTER_300HZ_WIDTH		300
+#define	FILTER_500HZ_WIDTH		500
+#define	FILTER_1800HZ_WIDTH		1800
+#define FILTER_2300HZ_WIDTH		2300
+#define FILTER_3600HZ_WIDTH		3600
+#define	FILTER_5000HZ_WIDTH		5000
+#define	FILTER_6000HZ_WIDTH		6000
+#define FILTER_7500HZ_WIDTH		7500
 #define	FILTER_10000HZ_WIDTH		10000
 //
-#define	FILT300_1	500
-#define	FILT300_2	550
-#define	FILT300_3	600
-#define	FILT300_4	650
-#define	FILT300_5	700
-#define	FILT300_6	750
-#define	FILT300_7	800
-#define	FILT300_8	850
-#define	FILT300_9	900
+#define	HILBERT_3600HZ_WIDTH		3800	// Approximate bandwidth of 3.6 kHz wide Hilbert - This used to depict FM detection bandwidth
 //
-#define	FILT500_1	550
-#define	FILT500_2	650
-#define	FILT500_3	750
-#define	FILT500_4	850
-#define	FILT500_5	950
+#define	FILT300_1			500
+#define	FILT300_2			550
+#define	FILT300_3			600
+#define	FILT300_4			650
+#define	FILT300_5			700
+#define	FILT300_6			750
+#define	FILT300_7			800
+#define	FILT300_8			850
+#define	FILT300_9			900
 //
-#define	FILT1800_1	1125
-#define	FILT1800_2	1275
-#define	FILT1800_3	1427
-#define	FILT1800_4	1575
-#define	FILT1800_5	1725
+#define	FILT500_1			550
+#define	FILT500_2			650
+#define	FILT500_3			750
+#define	FILT500_4			850
+#define	FILT500_5			950
 //
-#define	FILT2300_1	1262
-#define	FILT2300_2	1412
-#define	FILT2300_3	1562
-#define	FILT2300_4	1712
+#define	FILT1800_1			1125
+#define	FILT1800_2			1275
+#define	FILT1800_3			1427
+#define	FILT1800_4			1575
+#define	FILT1800_5			1725
 //
-#define	FILT3600	1800
+#define	FILT2300_1			1262
+#define	FILT2300_2			1412
+#define	FILT2300_3			1562
+#define	FILT2300_4			1712
 //
-#define	FILT5000	2500
+#define	FILT3600			1800
 //
-#define	FILT6000	3000
+#define	FILT5000			2500
 //
-#define	FILT7500	3750
+#define	FILT6000			3000
 //
-#define	FILT10000	5000
+#define	FILT7500			3750
 //
-#define	FILT_DISPLAY_WIDTH	256		// width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
+#define	FILT10000			5000
+//
+#define	HILBERT3600			1900	// "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
+//
+#define	FILT_DISPLAY_WIDTH		256		// width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 //
 //
-#define CW_MODE_IAM_B				0
-#define CW_MODE_IAM_A				1
-#define CW_MODE_STRAIGHT			2
-#define CW_MAX_MODE					3
+#define CW_MODE_IAM_B			0
+#define CW_MODE_IAM_A			1
+#define CW_MODE_STRAIGHT		2
+#define CW_MAX_MODE			3
 
 // PA power level setting enumeration
 enum {
@@ -638,45 +686,45 @@ enum {
 	PA_LEVEL_MAX_ENTRY
 };
 //
-#define	PA_LEVEL_DEFAULT	PA_LEVEL_2W		// Default power level
+#define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
 
-#define	US_DELAY					15  // 15 gives 1 uS delay in loop without optimization(O0)
+#define	US_DELAY			15  // 15 gives 1 uS delay in loop without optimization(O0)
 
 #define	CW_SIDETONE_FREQ_DEFAULT	750	// Default CW Audio Sidetone and TX offset frequency
 //
 #define	CW_SIDETONE_FREQ_MIN		400
 #define	CW_SIDETONE_FREQ_MAX		1000
 //
-#define	SSB_TUNE_FREQ				750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
+#define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
-#define SSB_RX_DELAY				450	// Delay for switching when going from TX to RX
+#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX
 //
-#define	CW_RX_DELAY_MAX				50	// Maximum TX to RX turnaround setting
-#define	CW_RX_DELAY_DEFAULT			8
+#define	CW_RX_DELAY_MAX			50	// Maximum TX to RX turnaround setting
+#define	CW_RX_DELAY_DEFAULT		8
 //
 
 // Audio sources for TX modulation
-#define TX_AUDIO_MIC				0
-#define TX_AUDIO_LINEIN				1
-#define TX_AUDIO_MAX_ITEMS			2
+#define TX_AUDIO_MIC			0
+#define TX_AUDIO_LINEIN			1
+#define TX_AUDIO_MAX_ITEMS		2
 //
-#define	LINE_GAIN_MIN				3
-#define	LINE_GAIN_MAX				31
-#define	LINE_GAIN_DEFAULT			12		// Original fixed gain setting
+#define	LINE_GAIN_MIN			3
+#define	LINE_GAIN_MAX			31
+#define	LINE_GAIN_DEFAULT		12		// Original fixed gain setting
 //
-#define	MIC_GAIN_MIN				2
-#define	MIC_GAIN_MAX				99
-#define	MIC_GAIN_DEFAULT			15		// Default value - close to original fixed setting
+#define	MIC_GAIN_MIN			2
+#define	MIC_GAIN_MAX			99
+#define	MIC_GAIN_DEFAULT		15		// Default value - close to original fixed setting
 //
 //
-#define	TX_POWER_FACTOR_MIN			3		// Minimum power factor setting (3 = 0.03)
-#define	TX_POWER_FACTOR_MAX			85		// Maximum power factor setting (75 = 0.75)
+#define	TX_POWER_FACTOR_MIN		3		// Minimum power factor setting (3 = 0.03)
+#define	TX_POWER_FACTOR_MAX		85		// Maximum power factor setting (75 = 0.75)
 //
 // Default power factors for 5 watt and FULL settings in percent
 // These power factors are based on the original fixed values
 //
-#define TX_POWER_FACTOR_80_DEFAULT	8
-#define	TX_POWER_FACTOR_60_DEFAULT	10
+#define TX_POWER_FACTOR_80_DEFAULT	50
+#define	TX_POWER_FACTOR_60_DEFAULT	20
 #define	TX_POWER_FACTOR_40_DEFAULT	10
 #define	TX_POWER_FACTOR_30_DEFAULT	13
 #define	TX_POWER_FACTOR_20_DEFAULT	30
@@ -684,6 +732,14 @@ enum {
 #define	TX_POWER_FACTOR_15_DEFAULT	50
 #define	TX_POWER_FACTOR_12_DEFAULT	75
 #define	TX_POWER_FACTOR_10_DEFAULT	75
+#define TX_POWER_FACTOR_6_DEFAULT	75
+#define TX_POWER_FACTOR_4_DEFAULT	75
+#define TX_POWER_FACTOR_2_DEFAULT	75
+#define TX_POWER_FACTOR_70_DEFAULT	75
+#define TX_POWER_FACTOR_23_DEFAULT	75
+#define TX_POWER_FACTOR_2200_DEFAULT	50
+#define TX_POWER_FACTOR_630_DEFAULT	50
+#define TX_POWER_FACTOR_160_DEFAULT	50
 //
 // Enumeration of colours used in spectrum scope display
 //
@@ -717,8 +773,9 @@ enum {
 };
 //
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
-#define MIN_LCD_BLANK_DELAY_TIME	5			// minimum number of seconds for backlight "on" time
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
+
+#define MAX_VAR_ADDR 383
 //
 // *************************************************************************************************************************
 //
@@ -729,310 +786,432 @@ enum {
 // list to maintain compatibility with older versions and the settings!
 //
 #define EEPROM_ZERO_LOC_UNRELIABLE	0		// DO NOT USE LOCATION ZERO AS IT MAY BE UNRELIABLE!!!!
-#define EEPROM_BAND_MODE			1
-#define EEPROM_FREQ_HIGH			2
-#define EEPROM_FREQ_LOW				3
-#define EEPROM_FREQ_STEP			4
-#define EEPROM_TX_AUDIO_SRC			5
-#define EEPROM_TCXO_STATE			6
-#define EEPROM_PA_BIAS				7
-#define EEPROM_AUDIO_GAIN			8
+#define EEPROM_BAND_MODE		1
+#define EEPROM_FREQ_HIGH		2
+#define EEPROM_FREQ_LOW			3
+#define EEPROM_FREQ_STEP		4
+#define EEPROM_TX_AUDIO_SRC		5
+#define EEPROM_TCXO_STATE		6
+#define EEPROM_PA_BIAS			7
+#define EEPROM_AUDIO_GAIN		8
 #define EEPROM_RX_CODEC_GAIN		9
-#define EEPROM_MAX_VOLUME			10
-#define EEPROM_POWER_STATE			11
+#define EEPROM_MAX_VOLUME		10
+#define EEPROM_POWER_STATE		11
 #define EEPROM_TX_POWER_LEVEL		12
-#define EEPROM_KEYER_SPEED			13
-#define EEPROM_KEYER_MODE			14
+#define EEPROM_KEYER_SPEED		13
+#define EEPROM_KEYER_MODE		14
 #define EEPROM_SIDETONE_GAIN		15
-#define EEPROM_MIC_BOOST			16
-#define	EEPROM_TX_IQ_LSB_GAIN_BALANCE		17	// TX gain balance
-#define	EEPROM_TX_IQ_LSB_PHASE_BALANCE		18	// TX phase balance
+#define EEPROM_MIC_BOOST		16
+#define	EEPROM_TX_IQ_LSB_GAIN_BALANCE	17		// TX gain balance
+#define	EEPROM_TX_IQ_LSB_PHASE_BALANCE	18		// TX phase balance
 #define	EEPROM_RX_IQ_LSB_GAIN_BALANCE	19
 #define	EEPROM_RX_IQ_LSB_PHASE_BALANCE	20
 //
-#define	EEPROM_BAND0_MODE			21		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE			22
-#define	EEPROM_BAND2_MODE			23
-#define	EEPROM_BAND3_MODE			24
-#define	EEPROM_BAND4_MODE			25
-#define	EEPROM_BAND5_MODE			26
-#define	EEPROM_BAND6_MODE			27
-#define	EEPROM_BAND7_MODE			28
-#define	EEPROM_BAND8_MODE			29
-#define	EEPROM_BAND9_MODE			30		// "Floating" General coverage band
+#define	EEPROM_BAND0_MODE		21		// Band/mode/filter memory per-band - bands indexed from here
+#define	EEPROM_BAND1_MODE		22
+#define	EEPROM_BAND2_MODE		23
+#define	EEPROM_BAND3_MODE		24
+#define	EEPROM_BAND4_MODE		25
+#define	EEPROM_BAND5_MODE		26
+#define	EEPROM_BAND6_MODE		27
+#define	EEPROM_BAND7_MODE		28
+#define	EEPROM_BAND8_MODE		29
+#define	EEPROM_BAND9_MODE		30
+#define	EEPROM_BAND10_MODE		31
+#define	EEPROM_BAND11_MODE		32
+#define	EEPROM_BAND12_MODE		33
+#define	EEPROM_BAND13_MODE		34
+#define	EEPROM_BAND14_MODE		35
+#define	EEPROM_BAND15_MODE		36
+#define	EEPROM_BAND16_MODE		37
+#define	EEPROM_BAND17_MODE		38		// "Floating" General coverage band
 //
 //
-#define	EEPROM_BAND0_FREQ_HIGH		31		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH		32
-#define	EEPROM_BAND2_FREQ_HIGH		33
-#define	EEPROM_BAND3_FREQ_HIGH		34
-#define	EEPROM_BAND4_FREQ_HIGH		35
-#define	EEPROM_BAND5_FREQ_HIGH		36
-#define	EEPROM_BAND6_FREQ_HIGH		37
-#define	EEPROM_BAND7_FREQ_HIGH		38
-#define	EEPROM_BAND8_FREQ_HIGH		39
-#define	EEPROM_BAND9_FREQ_HIGH		40		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_HIGH		39		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_HIGH		40
+#define	EEPROM_BAND2_FREQ_HIGH		41
+#define	EEPROM_BAND3_FREQ_HIGH		42
+#define	EEPROM_BAND4_FREQ_HIGH		43
+#define	EEPROM_BAND5_FREQ_HIGH		44
+#define	EEPROM_BAND6_FREQ_HIGH		45
+#define	EEPROM_BAND7_FREQ_HIGH		46
+#define	EEPROM_BAND8_FREQ_HIGH		47
+#define	EEPROM_BAND9_FREQ_HIGH		48
+#define	EEPROM_BAND10_FREQ_HIGH		49
+#define	EEPROM_BAND11_FREQ_HIGH		50
+#define	EEPROM_BAND12_FREQ_HIGH		51
+#define	EEPROM_BAND13_FREQ_HIGH		52
+#define	EEPROM_BAND14_FREQ_HIGH		53
+#define	EEPROM_BAND15_FREQ_HIGH		54
+#define	EEPROM_BAND16_FREQ_HIGH		55
+#define	EEPROM_BAND17_FREQ_HIGH		56		// "Floating" General coverage band
 //
 //
-#define	EEPROM_BAND0_FREQ_LOW		41		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW		42
-#define	EEPROM_BAND2_FREQ_LOW		43
-#define	EEPROM_BAND3_FREQ_LOW		44
-#define	EEPROM_BAND4_FREQ_LOW		45
-#define	EEPROM_BAND5_FREQ_LOW		46
-#define	EEPROM_BAND6_FREQ_LOW		47
-#define	EEPROM_BAND7_FREQ_LOW		48
-#define	EEPROM_BAND8_FREQ_LOW		49
-#define	EEPROM_BAND9_FREQ_LOW		50		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_LOW		57		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_LOW		58
+#define	EEPROM_BAND2_FREQ_LOW		59
+#define	EEPROM_BAND3_FREQ_LOW		60
+#define	EEPROM_BAND4_FREQ_LOW		61
+#define	EEPROM_BAND5_FREQ_LOW		62
+#define	EEPROM_BAND6_FREQ_LOW		63
+#define	EEPROM_BAND7_FREQ_LOW		64
+#define	EEPROM_BAND8_FREQ_LOW		65
+#define	EEPROM_BAND9_FREQ_LOW		66
+#define	EEPROM_BAND10_FREQ_LOW		67
+#define	EEPROM_BAND11_FREQ_LOW		68
+#define	EEPROM_BAND12_FREQ_LOW		69
+#define	EEPROM_BAND13_FREQ_LOW		70
+#define	EEPROM_BAND14_FREQ_LOW		71
+#define	EEPROM_BAND15_FREQ_LOW		72
+#define	EEPROM_BAND16_FREQ_LOW		73
+#define	EEPROM_BAND17_FREQ_LOW		74		// "Floating" General coverage band
 //
 //
-#define	EEPROM_FREQ_CAL				51		// Frequency calibration
-#define	EEPROM_NB_SETTING			52		// Noise Blanker Setting
-#define	EEPROM_AGC_MODE				53		// AGC setting
-#define	EEPROM_MIC_GAIN				54		// Mic gain setting
-#define	EEPROM_LINE_GAIN			55		// Line gain setting
-#define	EEPROM_SIDETONE_FREQ		56		// Sidetone frequency (Hz)
-#define	EEPROM_SPEC_SCOPE_SPEED		57		// Spectrum Scope Speed
-#define	EEPROM_SPEC_SCOPE_FILTER	58		// Spectrum Scope filter strength
-#define	EEPROM_RX_GAIN				59		// RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
-#define	EEPROM_AGC_CUSTOM_DECAY		60		// Custom setting for AGC decay rate
-#define	EEPROM_SPECTRUM_TRACE_COLOUR	61	// Custom setting for spectrum scope trace colour
-#define	EEPROM_SPECTRUM_GRID_COLOUR	62		// Custom setting for spectrum scope grid colour
-#define	EEPROM_SPECTRUM_SCALE_COLOUR	63	// Custom setting for spectrum scope frequency scale colour
-#define	EEPROM_PADDLE_REVERSE		64		// TRUE if paddle is to be reversed
-#define	EEPROM_CW_RX_DELAY			65		// Delay after last CW element before returning to receive
-#define	EEPROM_SPECTRUM_CENTRE_GRID_COLOUR	66		// Custom setting for spectrum scope grid center marker colour
+#define	EEPROM_FREQ_CAL			75		// Frequency calibration
+#define	EEPROM_NB_SETTING		76		// Noise Blanker Setting
+#define	EEPROM_AGC_MODE			77		// AGC setting
+#define	EEPROM_MIC_GAIN			78		// Mic gain setting
+#define	EEPROM_LINE_GAIN		79		// Line gain setting
+#define	EEPROM_SIDETONE_FREQ		80		// Sidetone frequency (Hz)
+#define	EEPROM_SPEC_SCOPE_SPEED		81		// Spectrum Scope Speed
+#define	EEPROM_SPEC_SCOPE_FILTER	82		// Spectrum Scope filter strength
+#define	EEPROM_RX_GAIN			83		// RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
+#define	EEPROM_AGC_CUSTOM_DECAY		84		// Custom setting for AGC decay rate
+#define	EEPROM_SPECTRUM_TRACE_COLOUR	85		// Custom setting for spectrum scope trace colour
+#define	EEPROM_SPECTRUM_GRID_COLOUR	86		// Custom setting for spectrum scope grid colour
+#define	EEPROM_SPECTRUM_SCALE_COLOUR	87		// Custom setting for spectrum scope frequency scale colour
+#define	EEPROM_PADDLE_REVERSE		88		// TRUE if paddle is to be reversed
+#define	EEPROM_CW_RX_DELAY		89		// Delay after last CW element before returning to receive
+#define	EEPROM_SPECTRUM_CENTRE_GRID_COLOUR	90	// Custom setting for spectrum scope grid center marker colour
 //
-#define	EEPROM_DETECTOR_COUPLING_COEFF_80M	67	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_40M	68	// Calibration coupling coefficient for FWD/REV power sensor for 60/40 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_20M	69	// Calibration coupling coefficient for FWD/REV power sensor for 30/20/17 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_15M	70	// Calibration coupling coefficient for FWD/REV power sensor for 15/12/10 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_2200M	91	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_630M	92	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_80M	93	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_40M	94	// Calibration coupling coefficient for FWD/REV power sensor for 60/40 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_20M	95	// Calibration coupling coefficient for FWD/REV power sensor for 30/20/17 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_15M	96	// Calibration coupling coefficient for FWD/REV power sensor for 15/12/10 meters
 //
 // The following are the coefficients used to set the RF output power settings
 //
-#define	EEPROM_BAND0_5W				71		// 5 watt power setting, 80m
-#define	EEPROM_BAND1_5W				72		// 5 watt power setting, 60m
-#define	EEPROM_BAND2_5W				73		// 5 watt power setting, 40m
-#define	EEPROM_BAND3_5W				74		// 5 watt power setting, 30m
-#define	EEPROM_BAND4_5W				75		// 5 watt power setting, 20m
-#define	EEPROM_BAND5_5W				76		// 5 watt power setting, 17m
-#define	EEPROM_BAND6_5W				77		// 5 watt power setting, 15m
-#define	EEPROM_BAND7_5W				78		// 5 watt power setting, 12m
-#define	EEPROM_BAND8_5W				79		// 5 watt power setting, 10m
-#define	EEPROM_BAND9_5W				80		// reserved
+#define	EEPROM_BAND0_5W			97		// 5 watt power setting, 80m
+#define	EEPROM_BAND1_5W			98		// 5 watt power setting, 60m
+#define	EEPROM_BAND2_5W			99		// 5 watt power setting, 40m
+#define	EEPROM_BAND3_5W			100		// 5 watt power setting, 30m
+#define	EEPROM_BAND4_5W			101		// 5 watt power setting, 20m
+#define	EEPROM_BAND5_5W			102		// 5 watt power setting, 17m
+#define	EEPROM_BAND6_5W			103		// 5 watt power setting, 15m
+#define	EEPROM_BAND7_5W			104		// 5 watt power setting, 12m
+#define	EEPROM_BAND8_5W			105		// 5 watt power setting, 10m
+#define	EEPROM_BAND9_5W			106		// 5 watt power setting, 6m
+#define	EEPROM_BAND10_5W		107		// 5 watt power setting, 4m
+#define	EEPROM_BAND11_5W		108		// 5 watt power setting, 2m
+#define	EEPROM_BAND12_5W		109		// 5 watt power setting, 70cm
+#define	EEPROM_BAND13_5W		110		// 5 watt power setting, 23cm
+#define	EEPROM_BAND14_5W		111		// 5 watt power setting, 2200m
+#define	EEPROM_BAND15_5W		112		// 5 watt power setting, 630m
+#define	EEPROM_BAND16_5W		113		// 5 watt power setting, 160m
+#define	EEPROM_BAND17_5W		114		// reserved
 //
-#define	EEPROM_BAND0_FULL			81		// "FULL" power setting, 80m
-#define	EEPROM_BAND1_FULL			82		// "FULL" power setting, 60m
-#define	EEPROM_BAND2_FULL			83		// "FULL" power setting, 40m
-#define	EEPROM_BAND3_FULL			84		// "FULL" power setting, 30m
-#define	EEPROM_BAND4_FULL			85		// "FULL" power setting, 20m
-#define	EEPROM_BAND5_FULL			86		// "FULL" power setting, 17m
-#define	EEPROM_BAND6_FULL			87		// "FULL" power setting, 15m
-#define	EEPROM_BAND7_FULL			88		// "FULL" power setting, 12m
-#define	EEPROM_BAND8_FULL			89		// "FULL" power setting, 10m
-#define	EEPROM_BAND9_FULL			90		// reserved
+#define	EEPROM_BAND0_FULL		115		// "FULL" power setting, 80m
+#define	EEPROM_BAND1_FULL		116		// "FULL" power setting, 60m
+#define	EEPROM_BAND2_FULL		117		// "FULL" power setting, 40m
+#define	EEPROM_BAND3_FULL		118		// "FULL" power setting, 30m
+#define	EEPROM_BAND4_FULL		119		// "FULL" power setting, 20m
+#define	EEPROM_BAND5_FULL		120		// "FULL" power setting, 17m
+#define	EEPROM_BAND6_FULL		121		// "FULL" power setting, 15m
+#define	EEPROM_BAND7_FULL		122		// "FULL" power setting, 12m
+#define	EEPROM_BAND8_FULL		123		// "FULL" power setting, 10m
+#define	EEPROM_BAND9_FULL		124		// "FULL" power setting, 6m
+#define	EEPROM_BAND10_FULL		125		// "FULL" power setting, 4m
+#define	EEPROM_BAND11_FULL		126		// "FULL" power setting, 2m
+#define	EEPROM_BAND12_FULL		127		// "FULL" power setting, 70cm
+#define	EEPROM_BAND13_FULL		128		// "FULL" power setting, 23cm
+#define	EEPROM_BAND14_FULL		129		// "FULL" power setting, 2200m
+#define	EEPROM_BAND15_FULL		130		// "FULL" power setting, 630m
+#define	EEPROM_BAND16_FULL		131		// "FULL" power setting, 160m
+#define	EEPROM_BAND17_FULL		132		// reserved
 //
-#define	EEPROM_FILTER_300HZ_SEL		91		// Selection of 300 Hz filter
-#define EEPROM_FILTER_500HZ_SEL		92		// Selection of 500 Hz filter
-#define	EEPROM_FILTER_1K8_SEL		93		// Selection of 1.8 kHz filter
-#define	EEPROM_FILTER_2K3_SEL		94		// Selection of 2.3 kHz filter
-#define EEPROM_FILTER_3K6_SEL		95		// Selection of 3.6 kHz filter
-#define	EEPROM_FILTER_WIDE_SEL		96		// Selection of "Wide" filter (>3.6kHz)
+#define	EEPROM_FILTER_300HZ_SEL		133		// Selection of 300 Hz filter
+#define EEPROM_FILTER_500HZ_SEL		134		// Selection of 500 Hz filter
+#define	EEPROM_FILTER_1K8_SEL		135		// Selection of 1.8 kHz filter
+#define	EEPROM_FILTER_2K3_SEL		136		// Selection of 2.3 kHz filter
+#define EEPROM_FILTER_3K6_SEL		137		// Selection of 3.6 kHz filter
+#define	EEPROM_FILTER_WIDE_SEL		138		// Selection of "Wide" filter (>3.6kHz)
 //
-#define	EEPROM_TX_IQ_USB_GAIN_BALANCE		97	// TX gain balance
-#define	EEPROM_TX_IQ_USB_PHASE_BALANCE		98	// TX phase balance
-#define	EEPROM_RX_IQ_USB_GAIN_BALANCE	99
-#define	EEPROM_RX_IQ_USB_PHASE_BALANCE	100
-#define	EEPROM_SENSOR_NULL			101		// Power meter sensor null calibrate
-//#define	EEPROM_REV_PWR_CAL			102		// REV power meter calibrate
+#define	EEPROM_TX_IQ_USB_GAIN_BALANCE	139		// TX gain balance
+#define	EEPROM_TX_IQ_USB_PHASE_BALANCE	140		// TX phase balance
+#define	EEPROM_RX_IQ_USB_GAIN_BALANCE	141
+#define	EEPROM_RX_IQ_USB_PHASE_BALANCE	142
+#define	EEPROM_SENSOR_NULL		143		// Power meter sensor null calibrate
+//#define	EEPROM_REV_PWR_CAL	144		// REV power meter calibrate
 //
-#define	EEPROM_XVERTER_DISP			103		// TRUE if display is offset with transverter frequency offset
-#define	EEPROM_XVERTER_OFFSET_HIGH	104		// Frequency by which the display is offset for transverter use, high byte
+#define	EEPROM_XVERTER_DISP		145		// TRUE if display is offset with transverter frequency offset
+#define	EEPROM_XVERTER_OFFSET_HIGH	146		// Frequency by which the display is offset for transverter use, high byte
 //
-#define	EEPROM_VFO_MEM_MODE			105		// settings of VFO/SPLIT/Memory configuration bits - see variable "vfo_mem_mode" for information.
+#define	EEPROM_VFO_MEM_MODE		147		// settings of VFO/SPLIT/Memory configuration bits - see variable "vfo_mem_mode" for information.
 //
-#define	EEPROM_XVERTER_OFFSET_LOW	106		// Low byte of above
+#define	EEPROM_XVERTER_OFFSET_LOW	148		// Low byte of above
 //
-#define EEPROM_SPECTRUM_MAGNIFY		107		// TRUE if spectrum scope is to be magnified
+#define EEPROM_SPECTRUM_MAGNIFY		149		// TRUE if spectrum scope is to be magnified
 //
-#define	EEPROM_WIDE_FILT_CW_DISABLE	108		// TRUE if wide filters are to be disabled in CW mode
-#define	EEPROM_NARROW_FILT_SSB_DISABLE	109	// TRUE if narrow filters are to be disabled in SSB mode
+#define	EEPROM_WIDE_FILT_CW_DISABLE	150		// TRUE if wide filters are to be disabled in CW mode
+#define	EEPROM_NARROW_FILT_SSB_DISABLE	151		// TRUE if narrow filters are to be disabled in SSB mode
 //
-#define	EEPROM_AM_MODE_DISABLE		110		// TRUE if AM mode is to be disabled
+#define	EEPROM_AM_MODE_DISABLE		152		// TRUE if AM mode is to be disabled
 //
-#define EEPROM_PA_CW_BIAS			111		// If non-zero, this is the PA bias setting when in CW mode
+#define EEPROM_PA_CW_BIAS		153		// If non-zero, this is the PA bias setting when in CW mode
 //
-#define	EEPROM_SPECTRUM_DB_DIV		112		// Spectrum Scope dB/Division
-#define	EEPROM_SPECTRUM_AGC_RATE	113		// AGC setting for spectrum scope
+#define	EEPROM_SPECTRUM_DB_DIV		154		// Spectrum Scope dB/Division
+#define	EEPROM_SPECTRUM_AGC_RATE	155		// AGC setting for spectrum scope
 //
-#define	EEPROM_METER_MODE			114		// Stored setting of meter mode
+#define	EEPROM_METER_MODE		156		// Stored setting of meter mode
 //
-#define	EEPROM_ALC_DECAY_TIME		115		// ALC Decay time
-#define	EEPROM_ALC_POSTFILT_TX_GAIN	116		// ALC post-filter TX audio gain
+#define	EEPROM_ALC_DECAY_TIME		157		// ALC Decay time
+#define	EEPROM_ALC_POSTFILT_TX_GAIN	158		// ALC post-filter TX audio gain
 //
-#define	EEPROM_STEP_SIZE_CONFIG		117		// TRUE if there is to be a line under the frequency digit indicating step size
+#define	EEPROM_STEP_SIZE_CONFIG		159		// TRUE if there is to be a line under the frequency digit indicating step size
 //
-#define	EEPROM_DSP_MODE				118		// Stores the DSP operational mode
-#define	EEPROM_DSP_NR_STRENGTH		119		// Stores the DSP Noise Reduction operational strength
-#define	EEPROM_DSP_NR_DECOR_BUFLEN	120		// DSP Noise Reduction De-correlator buffer length
-#define EEPROM_DSP_NR_FFT_NUMTAPS	121		// DSP Noise Reduction FFT number of taps
-#define	EEPROM_DSP_NOTCH_DECOR_BUFLEN	122	// DSP Notch De-correlator buffer length
-#define	EEPROM_DSP_NOTCH_CONV_RATE	123		// DSP Notch convergence rate
+#define	EEPROM_DSP_MODE			160		// Stores the DSP operational mode
+#define	EEPROM_DSP_NR_STRENGTH		161		// Stores the DSP Noise Reduction operational strength
+#define	EEPROM_DSP_NR_DECOR_BUFLEN	162		// DSP Noise Reduction De-correlator buffer length
+#define EEPROM_DSP_NR_FFT_NUMTAPS	163		// DSP Noise Reduction FFT number of taps
+#define	EEPROM_DSP_NOTCH_DECOR_BUFLEN	164		// DSP Notch De-correlator buffer length
+#define	EEPROM_DSP_NOTCH_CONV_RATE	165		// DSP Notch convergence rate
 //
-#define EEPROM_MAX_RX_GAIN			124		// Maximum RX gain - adjusts maximum allowed AGC gain in S-units
-#define	EEPROM_TX_AUDIO_COMPRESS	125		// TX audio compressor setting, used to calculate other values
+#define EEPROM_MAX_RX_GAIN		166		// Maximum RX gain - adjusts maximum allowed AGC gain in S-units
+#define	EEPROM_TX_AUDIO_COMPRESS	167		// TX audio compressor setting, used to calculate other values
 //
-#define	EEPROM_RX_IQ_AM_GAIN_BALANCE	126	// IQ Gain balance for AM reception
+#define	EEPROM_RX_IQ_AM_GAIN_BALANCE	168		// IQ Gain balance for AM reception
 //
-#define	EEPROM_TX_DISABLE			127		// TRUE of transmit is to be disabled
-#define	EEPROM_MISC_FLAGS1			128		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags1"
-#define	EEPROM_VERSION_NUMBER		129		// Storage of current version release - used to detect change of firmware
-#define	EEPROM_NB_AGC_TIME_CONST	130		// Noise blanker AGC time constant setting
-#define	EEPROM_CW_OFFSET_MODE		131		// CW Offset mode
-#define	EEPROM_FREQ_CONV_MODE		132		// Frequency Conversion Mode (e.g. I/Q frequency conversion done in receive/transmit to offset from zero)
-#define	EEPROM_LSB_USB_AUTO_SELECT	133		// Auto selection of LSB/USB above/below 10 MHz (including 60 meters)
-#define	EEPROM_VERSION_BUILD		134		// Storage of current version build number - used to detect change of firmware
-#define	EEPROM_LCD_BLANKING_CONFIG	135		// Configuration of automatic LCD blanking mode settings
-#define	EEPROM_VOLTMETER_CALIBRATE	136		// Holder for calibration of the on-screen voltmeter
-#define	EEPROM_WATERFALL_COLOR_SCHEME	137	// Color scheme for waterfall display
-#define	EEPROM_WATERFALL_VERTICAL_STEP_SIZE	138	// Number of vertical steps of waterfall per iteration
-#define	EEPROM_WATERFALL_OFFSET		139		// Palette offset for waterfall
-#define	EEPROM_WATERFALL_CONTRAST	140		// Palette contrast multiplier for waterfall
+#define	EEPROM_TX_DISABLE		169		// TRUE of transmit is to be disabled
+#define	EEPROM_MISC_FLAGS1		170		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags1"
+#define	EEPROM_VERSION_NUMBER		171		// Storage of current version release - used to detect change of firmware
+#define	EEPROM_NB_AGC_TIME_CONST	172		// Noise blanker AGC time constant setting
+#define	EEPROM_CW_OFFSET_MODE		173		// CW Offset mode
+#define	EEPROM_FREQ_CONV_MODE		174		// Frequency Conversion Mode (e.g. I/Q frequency conversion done in receive/transmit to offset from zero)
+#define	EEPROM_LSB_USB_AUTO_SELECT	175		// Auto selection of LSB/USB above/below 10 MHz (including 60 meters)
+#define	EEPROM_VERSION_BUILD		176		// Storage of current version build number - used to detect change of firmware
+#define	EEPROM_LCD_BLANKING_CONFIG	177		// Configuration of automatic LCD blanking mode settings
+#define	EEPROM_VOLTMETER_CALIBRATE	178		// Holder for calibration of the on-screen voltmeter
+#define	EEPROM_WATERFALL_COLOR_SCHEME	179		// Color scheme for waterfall display
+#define	EEPROM_WATERFALL_VERTICAL_STEP_SIZE	180	// Number of vertical steps of waterfall per iteration
+#define	EEPROM_WATERFALL_OFFSET		181		// Palette offset for waterfall
+#define	EEPROM_WATERFALL_CONTRAST	182		// Palette contrast multiplier for waterfall
 //
 // VFO A storage
 //
-#define	EEPROM_BAND0_MODE_A			141		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE_A			142
-#define	EEPROM_BAND2_MODE_A			143
-#define	EEPROM_BAND3_MODE_A			144
-#define	EEPROM_BAND4_MODE_A			145
-#define	EEPROM_BAND5_MODE_A			146
-#define	EEPROM_BAND6_MODE_A			147
-#define	EEPROM_BAND7_MODE_A			148
-#define	EEPROM_BAND8_MODE_A			149
-#define	EEPROM_BAND9_MODE_A			150		// "Floating" General coverage band
+#define	EEPROM_BAND0_MODE_A		183		// Band/mode/filter memory per-band - bands indexed from here
+#define	EEPROM_BAND1_MODE_A		184
+#define	EEPROM_BAND2_MODE_A		185
+#define	EEPROM_BAND3_MODE_A		186
+#define	EEPROM_BAND4_MODE_A		187
+#define	EEPROM_BAND5_MODE_A		188
+#define	EEPROM_BAND6_MODE_A		189
+#define	EEPROM_BAND7_MODE_A		190
+#define	EEPROM_BAND8_MODE_A		191
+#define	EEPROM_BAND9_MODE_A		192
+#define	EEPROM_BAND10_MODE_A		193
+#define	EEPROM_BAND11_MODE_A		194
+#define	EEPROM_BAND12_MODE_A		195
+#define	EEPROM_BAND13_MODE_A		196
+#define	EEPROM_BAND14_MODE_A		197
+#define	EEPROM_BAND15_MODE_A		198
+#define	EEPROM_BAND16_MODE_A		199
+#define	EEPROM_BAND17_MODE_A		200		// "Floating" General coverage band
 //
-#define	EEPROM_BAND0_FREQ_HIGH_A	151		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH_A	152
-#define	EEPROM_BAND2_FREQ_HIGH_A	153
-#define	EEPROM_BAND3_FREQ_HIGH_A	154
-#define	EEPROM_BAND4_FREQ_HIGH_A	155
-#define	EEPROM_BAND5_FREQ_HIGH_A	156
-#define	EEPROM_BAND6_FREQ_HIGH_A	157
-#define	EEPROM_BAND7_FREQ_HIGH_A	158
-#define	EEPROM_BAND8_FREQ_HIGH_A	159
-#define	EEPROM_BAND9_FREQ_HIGH_A	160		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_HIGH_A	201		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_HIGH_A	202
+#define	EEPROM_BAND2_FREQ_HIGH_A	203
+#define	EEPROM_BAND3_FREQ_HIGH_A	204
+#define	EEPROM_BAND4_FREQ_HIGH_A	205
+#define	EEPROM_BAND5_FREQ_HIGH_A	206
+#define	EEPROM_BAND6_FREQ_HIGH_A	207
+#define	EEPROM_BAND7_FREQ_HIGH_A	208
+#define	EEPROM_BAND8_FREQ_HIGH_A	209
+#define	EEPROM_BAND9_FREQ_HIGH_A	210
+#define	EEPROM_BAND10_FREQ_HIGH_A	211
+#define	EEPROM_BAND11_FREQ_HIGH_A	212
+#define	EEPROM_BAND12_FREQ_HIGH_A	213
+#define	EEPROM_BAND13_FREQ_HIGH_A	214
+#define	EEPROM_BAND14_FREQ_HIGH_A	215
+#define	EEPROM_BAND15_FREQ_HIGH_A	216
+#define	EEPROM_BAND16_FREQ_HIGH_A	217
+#define	EEPROM_BAND17_FREQ_HIGH_A	218		// "Floating" General coverage band
 //
-#define	EEPROM_BAND0_FREQ_LOW_A		161		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW_A		162
-#define	EEPROM_BAND2_FREQ_LOW_A		163
-#define	EEPROM_BAND3_FREQ_LOW_A		164
-#define	EEPROM_BAND4_FREQ_LOW_A		165
-#define	EEPROM_BAND5_FREQ_LOW_A		166
-#define	EEPROM_BAND6_FREQ_LOW_A		167
-#define	EEPROM_BAND7_FREQ_LOW_A		168
-#define	EEPROM_BAND8_FREQ_LOW_A		169
-#define	EEPROM_BAND9_FREQ_LOW_A		170		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_LOW_A		219		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_LOW_A		220
+#define	EEPROM_BAND2_FREQ_LOW_A		221
+#define	EEPROM_BAND3_FREQ_LOW_A		222
+#define	EEPROM_BAND4_FREQ_LOW_A		223
+#define	EEPROM_BAND5_FREQ_LOW_A		224
+#define	EEPROM_BAND6_FREQ_LOW_A		225
+#define	EEPROM_BAND7_FREQ_LOW_A		226
+#define	EEPROM_BAND8_FREQ_LOW_A		227
+#define	EEPROM_BAND9_FREQ_LOW_A		228
+#define	EEPROM_BAND10_FREQ_LOW_A	229
+#define	EEPROM_BAND11_FREQ_LOW_A	230
+#define	EEPROM_BAND12_FREQ_LOW_A	231
+#define	EEPROM_BAND13_FREQ_LOW_A	232
+#define	EEPROM_BAND14_FREQ_LOW_A	233
+#define	EEPROM_BAND15_FREQ_LOW_A	234
+#define	EEPROM_BAND16_FREQ_LOW_A	235
+#define	EEPROM_BAND17_FREQ_LOW_A	236		// "Floating" General coverage band
 //
 // VFO B storage
 //
-#define	EEPROM_BAND0_MODE_B			171		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE_B			172
-#define	EEPROM_BAND2_MODE_B			173
-#define	EEPROM_BAND3_MODE_B			174
-#define	EEPROM_BAND4_MODE_B			175
-#define	EEPROM_BAND5_MODE_B			176
-#define	EEPROM_BAND6_MODE_B			177
-#define	EEPROM_BAND7_MODE_B			178
-#define	EEPROM_BAND8_MODE_B			179
-#define	EEPROM_BAND9_MODE_B			180		// "Floating" General coverage band
+#define	EEPROM_BAND0_MODE_B		237		// Band/mode/filter memory per-band - bands indexed from here
+#define	EEPROM_BAND1_MODE_B		238
+#define	EEPROM_BAND2_MODE_B		239
+#define	EEPROM_BAND3_MODE_B		240
+#define	EEPROM_BAND4_MODE_B		241
+#define	EEPROM_BAND5_MODE_B		242
+#define	EEPROM_BAND6_MODE_B		243
+#define	EEPROM_BAND7_MODE_B		244
+#define	EEPROM_BAND8_MODE_B		245
+#define	EEPROM_BAND9_MODE_B		246
+#define	EEPROM_BAND10_MODE_B		247
+#define	EEPROM_BAND11_MODE_B		248
+#define	EEPROM_BAND12_MODE_B		249
+#define	EEPROM_BAND13_MODE_B		250
+#define	EEPROM_BAND14_MODE_B		251
+#define	EEPROM_BAND15_MODE_B		252
+#define	EEPROM_BAND16_MODE_B		253
+#define	EEPROM_BAND17_MODE_B		254		// "Floating" General coverage band
 //
 //
-#define	EEPROM_BAND0_FREQ_HIGH_B	181		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH_B	182
-#define	EEPROM_BAND2_FREQ_HIGH_B	183
-#define	EEPROM_BAND3_FREQ_HIGH_B	184
-#define	EEPROM_BAND4_FREQ_HIGH_B	185
-#define	EEPROM_BAND5_FREQ_HIGH_B	186
-#define	EEPROM_BAND6_FREQ_HIGH_B	187
-#define	EEPROM_BAND7_FREQ_HIGH_B	188
-#define	EEPROM_BAND8_FREQ_HIGH_B	189
-#define	EEPROM_BAND9_FREQ_HIGH_B	190		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_HIGH_B	255		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_HIGH_B	256
+#define	EEPROM_BAND2_FREQ_HIGH_B	257
+#define	EEPROM_BAND3_FREQ_HIGH_B	258
+#define	EEPROM_BAND4_FREQ_HIGH_B	259
+#define	EEPROM_BAND5_FREQ_HIGH_B	260
+#define	EEPROM_BAND6_FREQ_HIGH_B	261
+#define	EEPROM_BAND7_FREQ_HIGH_B	262
+#define	EEPROM_BAND8_FREQ_HIGH_B	263
+#define	EEPROM_BAND9_FREQ_HIGH_B	264
+#define	EEPROM_BAND10_FREQ_HIGH_B	265
+#define	EEPROM_BAND11_FREQ_HIGH_B	266
+#define	EEPROM_BAND12_FREQ_HIGH_B	267
+#define	EEPROM_BAND13_FREQ_HIGH_B	268
+#define	EEPROM_BAND14_FREQ_HIGH_B	269
+#define	EEPROM_BAND15_FREQ_HIGH_B	270
+#define	EEPROM_BAND16_FREQ_HIGH_B	271
+#define	EEPROM_BAND17_FREQ_HIGH_B	272		// "Floating" General coverage band
 //
 //
-#define	EEPROM_BAND0_FREQ_LOW_B		191		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW_B		192
-#define	EEPROM_BAND2_FREQ_LOW_B		193
-#define	EEPROM_BAND3_FREQ_LOW_B		194
-#define	EEPROM_BAND4_FREQ_LOW_B		195
-#define	EEPROM_BAND5_FREQ_LOW_B		196
-#define	EEPROM_BAND6_FREQ_LOW_B		197
-#define	EEPROM_BAND7_FREQ_LOW_B		198
-#define	EEPROM_BAND8_FREQ_LOW_B		199
-#define	EEPROM_BAND9_FREQ_LOW_B		200		// "Floating" General coverage band
+#define	EEPROM_BAND0_FREQ_LOW_B		273		// Per-band frequency, high word - bands indexed from here
+#define	EEPROM_BAND1_FREQ_LOW_B		274
+#define	EEPROM_BAND2_FREQ_LOW_B		275
+#define	EEPROM_BAND3_FREQ_LOW_B		276
+#define	EEPROM_BAND4_FREQ_LOW_B		277
+#define	EEPROM_BAND5_FREQ_LOW_B		278
+#define	EEPROM_BAND6_FREQ_LOW_B		279
+#define	EEPROM_BAND7_FREQ_LOW_B		280
+#define	EEPROM_BAND8_FREQ_LOW_B		281
+#define	EEPROM_BAND9_FREQ_LOW_B		282
+#define	EEPROM_BAND10_FREQ_LOW_B	283
+#define	EEPROM_BAND11_FREQ_LOW_B	284
+#define	EEPROM_BAND12_FREQ_LOW_B	285
+#define	EEPROM_BAND13_FREQ_LOW_B	286
+#define	EEPROM_BAND14_FREQ_LOW_B	287
+#define	EEPROM_BAND15_FREQ_LOW_B	288
+#define	EEPROM_BAND16_FREQ_LOW_B	289
+#define	EEPROM_BAND17_FREQ_LOW_B	290		// "Floating" General coverage band
 //
-#define	EEPROM_WATERFALL_SPEED		201		// Spectrum Scope Speed
-#define	EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST	202	// adjustment for no-signal conditions of spectrum scope
-#define	EEPROM_WATERFALL_NOSIG_ADJUST	203	// adjustment for no-signal conditions of waterfall
-#define EEPROM_DSP_NOTCH_FFT_NUMTAPS	204		// DSP Notch FFT number of taps
-#define	EEPROM_WATERFALL_SIZE		205		// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
-#define EEPROM_FFT_WINDOW			206		// FFT Window information (lower nybble currently used - upper nybble reserved)
-#define	EEPROM_TX_PTT_AUDIO_MUTE	207		// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
-#define	EEPROM_MISC_FLAGS2			208		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
-#define	EEPROM_FILTER_DISP_COLOUR	209		// This contains the color of the line under the spectrum/waterfall display
+#define	EEPROM_WATERFALL_SPEED		291		// Spectrum Scope Speed
+#define	EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST	292	// adjustment for no-signal conditions of spectrum scope
+#define	EEPROM_WATERFALL_NOSIG_ADJUST	293		// adjustment for no-signal conditions of waterfall
+#define EEPROM_DSP_NOTCH_FFT_NUMTAPS	294		// DSP Notch FFT number of taps
+#define	EEPROM_WATERFALL_SIZE		295		// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
+#define EEPROM_FFT_WINDOW		296		// FFT Window information (lower nybble currently used - upper nybble reserved)
+#define	EEPROM_TX_PTT_AUDIO_MUTE	297		// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
+#define	EEPROM_MISC_FLAGS2		298		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
+#define	EEPROM_FILTER_DISP_COLOUR	299		// This contains the color of the line under the spectrum/waterfall display
+#define	EEPROM_TX_IQ_AM_GAIN_BALANCE	300		// IQ Gain balance for AM transmission
+#define	EEPROM_TX_IQ_FM_GAIN_BALANCE	301		// IQ Gain balance for FM transmission
+#define	EEPROM_FM_SUBAUDIBLE_TONE_GEN	302		// index for storage of subaudible tone generation
+#define	EEPROM_FM_TONE_BURST_MODE	303		// tone burst mode
+#define EEPROM_FM_SQUELCH_SETTING	304		// FM squelch setting
+#define EEPROM_FM_RX_BANDWIDTH		305		// bandwidth setting for FM reception
+#define	EEPROM_RX_IQ_FM_GAIN_BALANCE	306		// IQ Gain balance for AM reception
+#define	EEPROM_FM_SUBAUDIBLE_TONE_DET	307		// index for storage of subaudible tone detection
+#define	EEPROM_KEYBOARD_BEEP_FREQ	308		// keyboard beep frequency (in Hz)
+#define EEPROM_BEEP_LOUDNESS		309		// loudness of beep (keyboard, sidetone test)
+#define	EEPROM_VERSION_MINOR		310		// Storage of current minor version number - used to detect change of firmware
+
+#define	EEPROM_DETECTOR_COUPLING_COEFF_160M	311	// Calibration coupling coefficient for FWD/REV power sensor for 160 meters
+#define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
 //
 // Frequency/mode (memory) storage - memories first 16
 //
-#define	EEPROM_MEM0_MODE			224
-#define	EEPROM_MEM1_MODE			225
-#define	EEPROM_MEM2_MODE			226
-#define	EEPROM_MEM3_MODE			227
-#define	EEPROM_MEM4_MODE			228
-#define	EEPROM_MEM5_MODE			229
-#define	EEPROM_MEM6_MODE			230
-#define	EEPROM_MEM7_MODE			231
-#define	EEPROM_MEM8_MODE			232
-#define	EEPROM_MEM9_MODE			233
-#define	EEPROM_MEM10_MODE			234
-#define	EEPROM_MEM11_MODE			235
-#define	EEPROM_MEM12_MODE			236
-#define	EEPROM_MEM13_MODE			237
-#define	EEPROM_MEM14_MODE			238
-#define	EEPROM_MEM15_MODE			239
+#define	EEPROM_MEM0_MODE		313
+#define	EEPROM_MEM1_MODE		314
+#define	EEPROM_MEM2_MODE		315
+#define	EEPROM_MEM3_MODE		316
+#define	EEPROM_MEM4_MODE		317
+#define	EEPROM_MEM5_MODE		318
+#define	EEPROM_MEM6_MODE		319
+#define	EEPROM_MEM7_MODE		320
+#define	EEPROM_MEM8_MODE		321
+#define	EEPROM_MEM9_MODE		322
+#define	EEPROM_MEM10_MODE		323
+#define	EEPROM_MEM11_MODE		324
+#define	EEPROM_MEM12_MODE		325
+#define	EEPROM_MEM13_MODE		326
+#define	EEPROM_MEM14_MODE		327
+#define	EEPROM_MEM15_MODE		328
+#define	EEPROM_MEM16_MODE		329
+#define	EEPROM_MEM17_MODE		330
+#define	EEPROM_MEM18_MODE		331
+#define	EEPROM_MEM19_MODE		332
+#define	EEPROM_MEM20_MODE		333
+#define	EEPROM_MEM21_MODE		334
 //
-#define	EEPROM_MEM0_FREQ_HIGH			240
-#define	EEPROM_MEM1_FREQ_HIGH			241
-#define	EEPROM_MEM2_FREQ_HIGH			242
-#define	EEPROM_MEM3_FREQ_HIGH			243
-#define	EEPROM_MEM4_FREQ_HIGH			244
-#define	EEPROM_MEM5_FREQ_HIGH			245
-#define	EEPROM_MEM6_FREQ_HIGH			246
-#define	EEPROM_MEM7_FREQ_HIGH			247
-#define	EEPROM_MEM8_FREQ_HIGH			248
-#define	EEPROM_MEM9_FREQ_HIGH			249
-#define	EEPROM_MEM10_FREQ_HIGH			250
-#define	EEPROM_MEM11_FREQ_HIGH			251
-#define	EEPROM_MEM12_FREQ_HIGH			252
-#define	EEPROM_MEM13_FREQ_HIGH			253
-#define	EEPROM_MEM14_FREQ_HIGH			254
-#define	EEPROM_MEM15_FREQ_HIGH			255
+#define	EEPROM_MEM0_FREQ_HIGH		335
+#define	EEPROM_MEM1_FREQ_HIGH		336
+#define	EEPROM_MEM2_FREQ_HIGH		337
+#define	EEPROM_MEM3_FREQ_HIGH		338
+#define	EEPROM_MEM4_FREQ_HIGH		339
+#define	EEPROM_MEM5_FREQ_HIGH		340
+#define	EEPROM_MEM6_FREQ_HIGH		341
+#define	EEPROM_MEM7_FREQ_HIGH		342
+#define	EEPROM_MEM8_FREQ_HIGH		343
+#define	EEPROM_MEM9_FREQ_HIGH		344
+#define	EEPROM_MEM10_FREQ_HIGH		345
+#define	EEPROM_MEM11_FREQ_HIGH		346
+#define	EEPROM_MEM12_FREQ_HIGH		347
+#define	EEPROM_MEM13_FREQ_HIGH		348
+#define	EEPROM_MEM14_FREQ_HIGH		349
+#define	EEPROM_MEM15_FREQ_HIGH		350
+#define	EEPROM_MEM16_FREQ_HIGH		351
+#define	EEPROM_MEM17_FREQ_HIGH		352
+#define	EEPROM_MEM18_FREQ_HIGH		353
+#define	EEPROM_MEM19_FREQ_HIGH		354
+#define	EEPROM_MEM20_FREQ_HIGH		355
+#define	EEPROM_MEM21_FREQ_HIGH		356
 //
-#define	EEPROM_MEM0_FREQ_LOW			256
-#define	EEPROM_MEM1_FREQ_LOW			257
-#define	EEPROM_MEM2_FREQ_LOW			258
-#define	EEPROM_MEM3_FREQ_LOW			259
-#define	EEPROM_MEM4_FREQ_LOW			260
-#define	EEPROM_MEM5_FREQ_LOW			261
-#define	EEPROM_MEM6_FREQ_LOW			262
-#define	EEPROM_MEM7_FREQ_LOW			263
-#define	EEPROM_MEM8_FREQ_LOW			264
-#define	EEPROM_MEM9_FREQ_LOW			265
-#define	EEPROM_MEM10_FREQ_LOW			266
-#define	EEPROM_MEM11_FREQ_LOW			267
-#define	EEPROM_MEM12_FREQ_LOW			268
-#define	EEPROM_MEM13_FREQ_LOW			269
-#define	EEPROM_MEM14_FREQ_LOW			270
-#define	EEPROM_MEM15_FREQ_LOW			271
+#define	EEPROM_MEM0_FREQ_LOW		357
+#define	EEPROM_MEM1_FREQ_LOW		358
+#define	EEPROM_MEM2_FREQ_LOW		359
+#define	EEPROM_MEM3_FREQ_LOW		360
+#define	EEPROM_MEM4_FREQ_LOW		361
+#define	EEPROM_MEM5_FREQ_LOW		362
+#define	EEPROM_MEM6_FREQ_LOW		363
+#define	EEPROM_MEM7_FREQ_LOW		364
+#define	EEPROM_MEM8_FREQ_LOW		365
+#define	EEPROM_MEM9_FREQ_LOW		366
+#define	EEPROM_MEM10_FREQ_LOW		367
+#define	EEPROM_MEM11_FREQ_LOW		368
+#define	EEPROM_MEM12_FREQ_LOW		369
+#define	EEPROM_MEM13_FREQ_LOW		370
+#define	EEPROM_MEM14_FREQ_LOW		371
+#define	EEPROM_MEM15_FREQ_LOW		372
+#define	EEPROM_MEM16_FREQ_LOW		373
+#define	EEPROM_MEM17_FREQ_LOW		374
+#define	EEPROM_MEM18_FREQ_LOW		375
+#define	EEPROM_MEM19_FREQ_LOW		376
+#define	EEPROM_MEM20_FREQ_LOW		377
+#define	EEPROM_MEM21_FREQ_LOW		378
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1084,14 +1263,19 @@ typedef struct TransceiverState
 	//
 	int		tx_iq_lsb_phase_balance;	// setting for TX IQ phase balance
 	int		tx_iq_usb_phase_balance;	// setting for TX IQ phase balance
-
+	//
+	int		tx_iq_am_gain_balance;		// setting for TX IQ gain balance
+	int		tx_iq_fm_gain_balance;		// setting for TX IQ gain balance
+	//
 	float	tx_adj_gain_var_i;		// active variables for adjusting tx gain balance
 	float	tx_adj_gain_var_q;
 
 	int		rx_iq_lsb_gain_balance;		// setting for RX IQ gain balance
 	int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
 	//
-	int		rx_iq_am_gain_balance;		// setting for RX IQ gain balance
+	int		rx_iq_am_gain_balance;		// setting for AM RX IQ gain balance
+	int		rx_iq_fm_gain_balance;		// setting for FM RX IQ gain balance
+	//
 	//
 	int		rx_iq_lsb_phase_balance;	// setting for RX IQ phase balance
 	int		rx_iq_usb_phase_balance;	// setting for RX IQ phase balance
@@ -1243,6 +1427,14 @@ typedef struct TransceiverState
 	uchar	pwr_15m_5w_adj;			// calibration adjust for 15 meters, 5 watts
 	uchar	pwr_12m_5w_adj;			// calibration adjust for 12 meters, 5 watts
 	uchar	pwr_10m_5w_adj;			// calibration adjust for 10 meters, 5 watts
+	uchar	pwr_6m_5w_adj;			// calibration adjust for 6 meters, 5 watts
+	uchar	pwr_4m_5w_adj;			// calibration adjust for 4 meters, 5 watts
+	uchar	pwr_2m_5w_adj;			// calibration adjust for 2 meters, 5 watts
+	uchar	pwr_70cm_5w_adj;		// calibration adjust for 70 centimeters, 5 watts
+	uchar	pwr_23cm_5w_adj;		// calibration adjust for 23 centimeters, 5 watts
+	uchar	pwr_2200m_5w_adj;		// calibration adjust for 2200 meters, 5 watts
+	uchar	pwr_630m_5w_adj;		// calibration adjust for 630 meters, 5 watts
+	uchar	pwr_160m_5w_adj;		// calibration adjust for 160 meters, 5 watts
 	//
 	uchar	pwr_80m_full_adj;			// calibration adjust for 80 meters, full power
 	uchar	pwr_60m_full_adj;			// calibration adjust for 60 meters, full power
@@ -1253,13 +1445,21 @@ typedef struct TransceiverState
 	uchar	pwr_15m_full_adj;			// calibration adjust for 15 meters, full power
 	uchar	pwr_12m_full_adj;			// calibration adjust for 12 meters, full power
 	uchar	pwr_10m_full_adj;			// calibration adjust for 10 meters, full power
+	uchar	pwr_6m_full_adj;			// calibration adjust for 6 meters, full power
+	uchar	pwr_4m_full_adj;			// calibration adjust for 4 meters, full power
+	uchar	pwr_2m_full_adj;			// calibration adjust for 2 meters, full power
+	uchar	pwr_70cm_full_adj;			// calibration adjust for 70 centimeters, full power
+	uchar	pwr_23cm_full_adj;			// calibration adjust for 23 centimeters, full power
+	uchar	pwr_2200m_full_adj;			// calibration adjust for 2200 meters, full power
+	uchar	pwr_630m_full_adj;			// calibration adjust for 630 meters, full power
+	uchar	pwr_160m_full_adj;			// calibration adjust for 160 meters, full power
 	//
 	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
 	ulong	alc_decay_var;				// adjustable ALC release time - working variable version
 	ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
 	ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 	//
-	uchar	freq_step_config;			// configuration of step size (line, step button reversal)
+	uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 	//
 	bool	nb_disable;					// TRUE if noise blanker is to be disabled
 	//
@@ -1275,7 +1475,7 @@ typedef struct TransceiverState
 	uchar	dsp_nr_numtaps;				// Number of FFT taps on the DSP Noise reduction
 	uchar	dsp_notch_numtaps;
 	uchar	dsp_notch_mu;				// mu adjust of notch DSP LMS
-	ulong	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
+	uint8_t	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
 	bool	dsp_inhibit;				// if TRUE, DSP (NR, Notch) functions are inhibited.  Used during power-up
 	bool	dsp_inhibit_mute;			// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
 	bool	dsp_timed_mute;				// TRUE if DSP is to be muted for a timed amount
@@ -1303,9 +1503,13 @@ typedef struct TransceiverState
 										// LSB+6 = 1 if SSB TX has transmit filter DISABLED
 										// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-										// LSB = 0:  Display filter bandwidth on screen;  1 = Do not display filter bandwidth
+										// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
+										// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
+										// LSB+2 = 1 if key/button beep is enabled
+										// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
 	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 										// is NEVER reset and is used for timing certain events.
+	uint16_t	version_number_minor;	// version number - minor - used to hold version number and detect change
 	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
 	uint16_t	version_number_release;	// version number - release - used to hold version number and detect change
 	uchar	nb_agc_time_const;			// used to calculate the AGC time constant
@@ -1343,7 +1547,28 @@ typedef struct TransceiverState
 	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
 	bool	mem_disp;					// when TRUE, memory display is enabled
 	bool	load_eeprom_defaults;		// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-
+	ulong	fm_subaudible_tone_gen_select;	// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+	uchar	fm_tone_burst_mode;			// this is the setting for the tone burst generator
+	ulong	fm_tone_burst_timing;		// this is used to time/schedule the duration of a tone burst
+	uchar	fm_sql_threshold;			// squelch threshold "dial" setting
+	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
+	ulong	fm_subaudible_tone_det_select;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+	bool	beep_active;				// TRUE if beep is active
+	ulong	beep_frequency;				// beep frequency, in Hz
+	ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
+	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
+	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
+	uchar	ser_eeprom_type;		// serial eeprom type
+	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
+	uint8_t* eeprombuf;			// pointer to copy of config in RAM
+	uchar 	tp_present;			// touchscreen present = 1, absent = 0
+	uint8_t tp_x;				// touchscreen x coordinate
+	uint8_t tp_y;				// touchscreen y coordinate
+	bool	show_tp_coordinates;		// show coordinates on LCD
+	uchar	rfmod_present;			// 0 = not present
+	uchar	vhfuhfmod_present;		// 0 = not present
+//	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //
 
@@ -1381,9 +1606,13 @@ void mchf_board_post_init(void);
 
 void mchf_board_power_button_input_init(void);
 
-uint16_t Read_VirtEEPROM(uint16_t addr, uint16_t *value);
-uint16_t Write_VirtEEPROM(uint16_t addr, uint16_t value);
-uint16_t Write_VirtEEPROM_Signed(uint16_t addr, int value);
+uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
+uint16_t Write_EEPROM(uint16_t addr, uint16_t value);
+uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
+uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
+void copy_virt2ser(void);
+void copy_ser2virt(void);
+void verify_servirt(void);
 
 // in main.c
 void CriticalError(ulong error);

@@ -7,26 +7,73 @@
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+**  Last Modified:	Created October 2015, KA7OEI                               **
+**  Licence:	For radio amateurs experimentation, non-commercial use only!   	   **
 ************************************************************************************/
 
-#ifndef __MCHF_HW_I2C2_H
-#define __MCHF_HW_I2C2_H
+#ifndef __SUBAUDIBLE_TONE_TABLE
+#define __SUBAUDIBLE_TONE_TABLE
 
-void 	mchf_hw_i2c2_init(void);
-uchar 	mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
 
-// serial eeprom definitions by DF8OE
-
-#define MEM_DEVICE_WRITE_ADDR 0xA0
-#define MEM_DEVICE_READ_ADDR 0xA1
-
-void Delay(__IO uint32_t);
-
-uint8_t Write_24Cxx(uint32_t, uint8_t, uint8_t);
-uint16_t Read_24Cxx(uint32_t, uint8_t);
-uint8_t Write_24Cxxseq(uint32_t, uint8_t*, uint16_t, uint8_t);
-uint8_t Read_24Cxxseq(uint32_t, uint8_t*, uint16_t, uint8_t);
+const float fm_subaudible_tone_table[] =
+{
+	0,
+	67.0,
+	69.3,
+	71.9,
+	74.4,
+	77.0,
+	79.7,
+	82.5,
+	85.4,
+	88.5,
+	91.5,
+	94.8,
+	97.4,
+	100.0,
+	103.5,
+	107.2,
+	110.9,
+	114.8,
+	118.8,
+	123.0,
+	127.3,
+	131.8,
+	136.5,
+	141.3,
+	146.2,
+	150.0,
+	151.4,
+	156.7,
+	159.8,
+	162.2,
+	165.5,
+	167.9,
+	171.3,
+	173.8,
+	177.3,
+	179.9,
+	183.5,
+	186.2,
+	189.9,
+	192.8,
+	196.6,
+	199.5,
+	203.5,
+	206.5,
+	210.7,
+	213.8,
+	218.1,
+	221.3,
+	225.7,
+	229.1,
+	233.6,
+	237.1,
+	241.8,
+	245.5,
+	250.3,
+	254.1,
+	0
+};
 
 #endif

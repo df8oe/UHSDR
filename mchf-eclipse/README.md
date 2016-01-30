@@ -1,7 +1,7 @@
 Stable branch of mcHF firmware and bootloader - sources and binaries
 
 
-Version <219.24>
+Version <219.27.0>
 
 
 Binaries are located in mchf-eclipse and are named:

@@ -122,6 +122,10 @@
   * @{
   */
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
+
 #include "stm32f4xx.h"
 
 /**
@@ -301,38 +305,39 @@ void SystemInit(void)
   * @param  None
   * @retval None
   */
+/*
 void SystemCoreClockUpdate(void)
 {
 	uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
 	uint32_t SystemCoreClock = 168000000;
   
-  /* Get SYSCLK source -------------------------------------------------------*/
+  // Get SYSCLK source -------------------------------------------------------
   tmp = RCC->CFGR & RCC_CFGR_SWS;
 
   switch (tmp)
   {
-    case 0x00:  /* HSI used as system clock source */
+    case 0x00:  // HSI used as system clock source
       SystemCoreClock = HSI_VALUE;
       break;
-    case 0x04:  /* HSE used as system clock source */
+    case 0x04:  // HSE used as system clock source
       SystemCoreClock = HSE_VALUE;
       break;
-    case 0x08:  /* PLL used as system clock source */
+    case 0x08:  // PLL used as system clock source
 
-      /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
-         SYSCLK = PLL_VCO / PLL_P
-         */    
+      // PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
+      // SYSCLK = PLL_VCO / PLL_P
+
       pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
       pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
       
       if (pllsource != 0)
       {
-        /* HSE used as PLL clock source */
+        // HSE used as PLL clock source
         pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
       }
       else
       {
-        /* HSI used as PLL clock source */
+        // HSI used as PLL clock source
         pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);      
       }
 
@@ -344,14 +349,14 @@ void SystemCoreClockUpdate(void)
       break;
   }
 
-  	  /* Compute HCLK frequency --------------------------------------------------*/
-  	  /* Get HCLK prescaler */
+  	  // Compute HCLK frequency --------------------------------------------------
+  	  // Get HCLK prescaler
   	  //tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
 
-  	  /* HCLK frequency */
+  	  // HCLK frequency
   	  //SystemCoreClock >>= tmp;
 }
-
+*/
 /**
   * @brief  Configures the System clock source, PLL Multiplier and Divider factors, 
   *         AHB/APBx prescalers and Flash settings

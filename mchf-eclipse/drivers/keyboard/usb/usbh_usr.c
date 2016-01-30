@@ -109,8 +109,8 @@ void USBH_USR_Device_DescAvailable(void *DeviceDesc)
   USBH_DevDesc_TypeDef *hs;
   hs = DeviceDesc;  
   
-  printf("VID : %04Xh\n\r" , (uint32_t)(*hs).idVendor);
-  printf("PID : %04Xh\n\r" , (uint32_t)(*hs).idProduct);
+  printf("VID : %04lXh\n\r" , (uint32_t)(*hs).idVendor);
+  printf("PID : %04lXh\n\r" , (uint32_t)(*hs).idProduct);
 }
 
 void USBH_USR_DeviceAddressAssigned(void)

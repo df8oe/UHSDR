@@ -3,6 +3,10 @@
  * @brief    Implementation of newlib syscall
  ********************************************************************************/
 
+// Optimization enable for this file
+#pragma GCC optimize "O3"
+
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <sys/types.h>

@@ -65,6 +65,7 @@ static uint32_t WaitLineIdle(void)
 		if (!(TimeOut--))
 			return 1;
 	}
+	return 0;
 }
 
 //*----------------------------------------------------------------------------
@@ -217,7 +218,7 @@ uchar mchf_hw_i2c_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar Register
 	return 0;
 }
 
-uchar mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data,ulong size)
+uchar mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
 	ulong i;
 

@@ -63,7 +63,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/ui/lcd}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/ui/lcd/fonts}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/ui/misc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/drivers/fat_fs/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/ui/oscillator}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/hardware}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/misc/v_eprom}&quot;"/>

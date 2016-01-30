@@ -165,27 +165,27 @@ static uint8_t  AudioCmd(uint8_t* pbuf,
 {
   /* Check the current state */
   if ((AudioState == AUDIO_STATE_INACTIVE) || (AudioState == AUDIO_STATE_ERROR))
-  {
+    {
     AudioState = AUDIO_STATE_ERROR;
     return AUDIO_FAIL;
-  }
+    }
   
   switch (cmd)
-  {
+    {
     /* Process the PLAY command ----------------------------*/
   case AUDIO_CMD_PLAY:
     /* If current state is Active or Stopped */
     if ((AudioState == AUDIO_STATE_ACTIVE) || \
        (AudioState == AUDIO_STATE_STOPPED) || \
        (AudioState == AUDIO_STATE_PLAYING))
-    {
+	{
 //      Audio_MAL_Play((uint32_t)pbuf, (size/2));
-      AudioState = AUDIO_STATE_PLAYING;
-      return AUDIO_OK;
-    }
+        AudioState = AUDIO_STATE_PLAYING;
+        return AUDIO_OK;
+	}
     /* If current state is Paused */
     else if (AudioState == AUDIO_STATE_PAUSED)
-    {
+	{
  //     if (EVAL_AUDIO_PauseResume(AUDIO_RESUME, (uint32_t)pbuf, (size/2)) != 0)
  //     {
  //       AudioState = AUDIO_STATE_ERROR;
@@ -196,53 +196,54 @@ static uint8_t  AudioCmd(uint8_t* pbuf,
 //        AudioState = AUDIO_STATE_PLAYING;
 //        return AUDIO_OK;
  //     }
-    } 
+	} 
     else /* Not allowed command */
-    {
+	{
       return AUDIO_FAIL;
-    }
+	}
     break;
     
     /* Process the STOP command ----------------------------*/
   case AUDIO_CMD_STOP:
     if (AudioState != AUDIO_STATE_PLAYING)
-    {
+	{
       /* Unsupported command */
       return AUDIO_FAIL;
-    }
+	}
  //   else if (EVAL_AUDIO_Stop(CODEC_PDWN_SW) != 0)
  //   {
  //     AudioState = AUDIO_STATE_ERROR;
  //     return AUDIO_FAIL;
  //   }
     else
-    {
-      AudioState = AUDIO_STATE_STOPPED;
-      return AUDIO_OK;
-    }
+	{
+        AudioState = AUDIO_STATE_STOPPED;
+        return AUDIO_OK;
+	}
   
     /* Process the PAUSE command ---------------------------*/
   case AUDIO_CMD_PAUSE:
     if (AudioState != AUDIO_STATE_PLAYING)
-    {
-      /* Unsupported command */
-      return AUDIO_FAIL;
-    }
+	{
+        /* Unsupported command */
+        return AUDIO_FAIL;
+	}
 //    else if (EVAL_AUDIO_PauseResume(AUDIO_PAUSE, (uint32_t)pbuf, (size/2)) != 0)
 //    {
  //     AudioState = AUDIO_STATE_ERROR;
  //     return AUDIO_FAIL;
  //   }
     else
-    {
-      AudioState = AUDIO_STATE_PAUSED;
-      return AUDIO_OK;
-    } 
+	{
+        AudioState = AUDIO_STATE_PAUSED;
+        return AUDIO_OK;
+	} 
     
     /* Unsupported command ---------------------------------*/
   default:
     return AUDIO_FAIL;
   }  
+return AUDIO_OK;
 }
 
 /**

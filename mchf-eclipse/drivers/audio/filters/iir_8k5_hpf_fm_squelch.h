@@ -11,22 +11,44 @@
 **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
 ************************************************************************************/
 
-#ifndef __MCHF_HW_I2C2_H
-#define __MCHF_HW_I2C2_H
+#ifndef __IIR_HPF_8K5
+#define __IIR_HPF_8K5
+//
+// Filter designed 20151022 by C. Turner, KA7OEI using MatLAB fdatools
+//
+// NOTE:
+//	- IIR structure is Lattice Autoregressive Moving-Average (ARMA)
+//	- ARM FIR/IIR algorithms require time reverse-order coefficients!!!
+//
+//	6th order Elliptic highpass filter
+//	
+//	
+//	-6dB point:  8.4 kHz
+//	-20dB point:  8.0 kHz
+//	-40dB point:  7.4 kHz
+//	-60dB point:  <7.0 kHz
+//
+//#define NCoef 8
+const uint16_t IIR_8k5_hpf_numStages = 6;
+const float IIR_8k5_hpf_pkCoeffs[] =
+{
+		0.3267431914313,
+		 0.2827426748037,
+		 0.6792677220421,
+		 -0.08412750477612,
+		 0.9796815399487,
+		-0.3939883111528
+};
 
-void 	mchf_hw_i2c2_init(void);
-uchar 	mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
-
-// serial eeprom definitions by DF8OE
-
-#define MEM_DEVICE_WRITE_ADDR 0xA0
-#define MEM_DEVICE_READ_ADDR 0xA1
-
-void Delay(__IO uint32_t);
-
-uint8_t Write_24Cxx(uint32_t, uint8_t, uint8_t);
-uint16_t Read_24Cxx(uint32_t, uint8_t);
-uint8_t Write_24Cxxseq(uint32_t, uint8_t*, uint16_t, uint8_t);
-uint8_t Read_24Cxxseq(uint32_t, uint8_t*, uint16_t, uint8_t);
+const float IIR_8k5_hpf_pvCoeffs[] =
+{
+		0.07735072858385,
+		 -0.306940854114,
+		 0.4145882522999,
+		 -0.09894434429254,
+		 -0.1687647954502,
+		 0.01867899629887,
+		0.02161688514499
+};
 
 #endif

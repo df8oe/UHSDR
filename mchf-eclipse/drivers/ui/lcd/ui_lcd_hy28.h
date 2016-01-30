@@ -99,6 +99,8 @@
 
 void 	UiLcdHy28_LcdClear(ushort Color);
 void 	UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
+void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
+uint16_t 	UiLcdHy28_TextWidth(char *str, uchar font);
 
 void 	UiLcdHy28_DrawStraightLine(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
 void 	UiLcdHy28_DrawHorizLineWithGrad(ushort Xpos, ushort Ypos, ushort Length,ushort gradient_start);
@@ -109,10 +111,12 @@ void 	UiLcdHy28_DrawFullRect (ushort Xpos, ushort Ypos, ushort Height, ushort Wi
 void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
 void 	UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height);
 void 	UiLcdHy28_SendByteSpi(uint8_t byte);
+uint8_t UiLcdHy28_ReadByteSpi(void);
 void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
-void 	UiLcdHy28_BulkWrite(ushort Color);
+void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
+void	UiLcdHy28_WriteRAM_Prepare(void);
 
 void 	UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift);
 void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new,ushort shift);
@@ -121,5 +125,7 @@ void 	UiLcdHy28_Test(void);
 uchar 	UiLcdHy28_Init(void);
 
 void 	UiLcdHy28_ShowStartUpScreen(ulong hold_time);
+
+void 	get_touchscreen_coordinates(void);
 
 #endif
