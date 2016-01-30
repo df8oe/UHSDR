@@ -9832,6 +9832,158 @@ void UiCheckForPressedKey(void)
 		    }
 	}
 }
+
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		*val_ptr = value;
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		*val_ptr = value;
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+
+
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t addr, volatile uint32_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		*val_ptr = value;
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int(uint16_t addr, volatile int* val_ptr, int default_val, int min_val, int max_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		*val_ptr = (int)value;
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+
+
+
+
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile uint32_t* val_ptr, uint32_t default_val, uint32_t min_val, uint32_t max_val) {
+	uint16_t valueH,valueL;
+	if(Read_EEPROM(addrH, &valueH) == 0 && Read_EEPROM(addrL, &valueL) == 0)
+	{
+
+		*val_ptr = valueH;
+		*val_ptr <<=16;
+		*val_ptr |= valueL;
+
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+
+
+
+static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		Write_EEPROM(addr, set_val);
+	}
+	else	// create
+	{
+		Write_EEPROM(addr, default_val);
+	}
+}
+
+static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addrH, &value) == 0 && Read_EEPROM(addrL, &value) == 0)
+	{
+		Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
+		Write_EEPROM(addrL, (uint16_t)(set_val));
+	}
+	else	// create
+	{
+		Write_EEPROM(addrH, (uint16_t)(default_val >> 16));
+		Write_EEPROM(addrL, (uint16_t)(default_val));
+	}
+}
+
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low) {
+	uint32_t value32;
+	uint16_t value16;
+
+	UiReadSettingEEPROM_UInt16(band_mode + i,&value16,0,0,0xffff);
+	{
+		// Note that ts.band will, by definition, be equal to index "i"
+		//
+		band_decod_mode[i] = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
+		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
+			band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
+		//
+		band_filter_mode[i] = (value16 >> 12) & 0x0F;	// get filter setting
+		if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
+			band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
+		//
+		//printf("-->band, mode and filter setting loaded\n\r");
+	}
+
+	// ------------------------------------------------------------------------------------
+	// Try to read Freq saved values
+	UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,tune_bands[i] + DEFAULT_FREQ_OFFSET,0,0xffffffff);
+	{
+		//
+		// We have loaded from eeprom the last used band, but can't just
+		// load saved frequency, as it could be out of band, so do a
+		// boundary check first (also check to see if defaults should be loaded)
+		//
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[i]) && (value32 <= (tune_bands[i] + size_bands[i])))
+		{
+			band_dial_value[i] = value32;
+			//printf("-->frequency loaded\n\r");
+		}
+		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+		{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
+			band_dial_value[i] = value32;
+			//printf("-->frequency loaded (relaxed)\n\r");
+		}
+		else
+		{
+			// Load default for this band
+			band_dial_value[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
+			//printf("-->base frequency loaded\n\r");
+		}
+	}
+
+}
+
+static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low) {
+
+	// ------------------------------------------------------------------------------------
+	// Read Band and Mode saved values - update if changed
+	UiReadWriteSettingEEPROM_UInt16(band_mode + i,
+			(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
+			((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
+	);
+	// Try to read Freq saved values - update if changed
+	UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, band_dial_value[i], band_dial_value[i]);
+}
+
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverLoadEepromValues
@@ -9843,32 +9995,27 @@ void UiCheckForPressedKey(void)
 //
 void UiDriverLoadEepromValues(void)
 {
-	ushort value,value1;
-	uint16_t uint_val;
-	int16_t	*int_val;	// Note:  This "signed" variable pointer actually points to an unsigned variable ("uint_val" as the EEPROM save function only "knows" about
-						// unsigned variables.
-	//
-	int_val = (int16_t*)&uint_val;	// Copy the memory location of the unsigned integer value to a "signed" pointer to allow us to reliabily read signed values from EEPROM to memory.
-
-
+	uint16_t value16;
+	uint32_t value32;
 	// Do a sample reads to "prime the pump" before we start...
 	// This is to make the function work reliabily after boot-up
 	//
-	Read_EEPROM(EEPROM_ZERO_LOC_UNRELIABLE, &value);	// Let's use location zero - which may not work reliably, anyway!
+	UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
+	// Let's use location zero - which may not work reliably, anyway!
 	//
 	// ------------------------------------------------------------------------------------
 	// Try to read Band and Mode saved values
-	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
+	UiReadSettingEEPROM_UInt16(EEPROM_BAND_MODE,&value16,0,0,0xffff);
 	{
-		ts.band = value & 0x00FF;
+		ts.band = value16 & 0x00FF;
 		if(ts.band > MAX_BANDS-1)			// did we get an insane value from EEPROM?
 			ts.band = BAND_MODE_80;		//	yes - set to 80 meters
 		//
-		ts.dmod_mode = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
+		ts.dmod_mode = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
 		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
 			ts.dmod_mode = DEMOD_LSB;			// no - set to LSB
 		//
-		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
+		ts.filter_id = (value16 >> 12) & 0x0F;	// get filter setting
 		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
 		//
@@ -9876,21 +10023,19 @@ void UiDriverLoadEepromValues(void)
 	}
 	// ------------------------------------------------------------------------------------
 	// Try to read Freq saved values
-	if(	(Read_EEPROM(EEPROM_FREQ_HIGH, &value) == 0) &&
-		(Read_EEPROM(EEPROM_FREQ_LOW, &value1) == 0))
+	UiReadSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW,&value32,0,0,0xffffffff);
 	{
-		ulong saved = (value << 16) | (value1);
 
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first (also check to see if defaults should be loaded)
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[ts.band]) && (saved <= (tune_bands[ts.band] + size_bands[ts.band])))
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[ts.band]) && (value32 <= (tune_bands[ts.band] + size_bands[ts.band])))
 		{
-			df.tune_new = saved;
+			df.tune_new = value32;
 			//printf("-->frequency loaded\n\r");
 		}
 		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-			df.tune_new = saved;
+			df.tune_new = value32;
 			//printf("-->frequency loaded (relaxed)\n\r");
 		}
 		else
@@ -9903,194 +10048,53 @@ void UiDriverLoadEepromValues(void)
 	//
 	// Try to read saved per-band values for frequency, mode and filter
 	//
-	ulong saved;
-	uchar i;
+	uint8_t i;
 	//
 	for(i = 0; i < MAX_BANDS; i++)
-	    {		// read from stored bands
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Band and Mode saved values
-	    //
-	    if(Read_EEPROM(EEPROM_BAND0_MODE + i, &value) == 0)
-		{
-		// Note that ts.band will, by definition, be equal to index "i"
-		//
-		band_decod_mode[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-		    band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
-		//
-		band_filter_mode[i] = (value >> 12) & 0x0F;	// get filter setting
-		if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
-		    band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Freq saved values
-	    if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW + i, &value1) == 0))
-	        {
-	        saved = (value << 16) | (value1);
-	        //
-	        // We have loaded from eeprom the last used band, but can't just
-	        // load saved frequency, as it could be out of band, so do a
-	        // boundary check first (also check to see if defaults should be loaded)
-	        //
-	        if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))
-		    {
-		    band_dial_value[i] = saved;
-		    //printf("-->frequency loaded\n\r");
-		    }
-		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-		    band_dial_value[i] = saved;
-		    //printf("-->frequency loaded (relaxed)\n\r");
-		    }
-		else
-		    {
-		    // Load default for this band
-		    band_dial_value[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-		    //printf("-->base frequency loaded\n\r");
-		    }
-		}
-	    }
-	//
-	for(i = 0; i < MAX_BANDS; i++)
-	    {		// read from stored bands for VFO A   qqqqq
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Band and Mode saved values for VFO A
-	    //
-	    if(Read_EEPROM(EEPROM_BAND0_MODE_A + i, &value) == 0)
-		{
-		// Note that ts.band will, by definition, be equal to index "i"
-		//
-		band_decod_mode_a[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-		    band_decod_mode_a[i] = DEMOD_LSB;			// no - set to LSB
-		//
-		band_filter_mode_a[i] = (value >> 12) & 0x0F;	// get filter setting
-		if((band_filter_mode_a[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or are defaults to be loaded?
-		    band_filter_mode_a[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-	    // ------------------------------------------------------------------------------------
-	    // Try to read Freq saved values
-	    if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_A + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_A + i, &value1) == 0))
-		{
-		saved = (value << 16) | (value1);
-		//
-		// We have loaded from eeprom the last used band, but can't just
-		// load saved frequency, as it could be out of band, so do a
-		// boundary check first (also check to see if defaults should be loaded)
-		//
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))
-		    {
-		    band_dial_value_a[i] = saved;
-		    //printf("-->frequency loaded\n\r");
-		    }
-		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-		    {	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-		    band_dial_value_a[i] = saved;
-		    //printf("-->frequency loaded (relaxed)\n\r");
-		    }
-		else
-		    {
-		    // Load default for this band
-		    band_dial_value_a[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-		    //printf("-->base frequency loaded\n\r");
-		    }
-		}
-	    }
-	//
-	for(i = 0; i < MAX_BANDS; i++)	{		// read from stored bands for VFO B
-		// ------------------------------------------------------------------------------------
-		// Try to read Band and Mode saved values for VFO B
-		//
-		if(Read_EEPROM(EEPROM_BAND0_MODE_A + i, &value) == 0)			{
-			// Note that ts.band will, by definition, be equal to index "i"
-			//
-			band_decod_mode_b[i] = (value >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
-			if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-				band_decod_mode_b[i] = DEMOD_LSB;			// no - set to LSB
-			//
-			band_filter_mode_b[i] = (value >> 12) & 0x0F;	// get filter setting
-			if((band_filter_mode_b[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded?
-				band_filter_mode_b[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-			//
-			//printf("-->band, mode and filter setting loaded\n\r");
-		}
-
-		// ------------------------------------------------------------------------------------
-		// Try to read Freq saved values
-		if(	(Read_EEPROM(EEPROM_BAND0_FREQ_HIGH_B + i, &value) == 0) && (Read_EEPROM(EEPROM_BAND0_FREQ_LOW_B + i, &value1) == 0))	{
-			saved = (value << 16) | (value1);
-			//
-			// We have loaded from eeprom the last used band, but can't just
-			// load saved frequency, as it could be out of band, so do a
-			// boundary check first (also check to see if defaults should be loaded)
-			//
-			if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (saved >= tune_bands[i]) && (saved <= (tune_bands[i] + size_bands[i])))	{
-				band_dial_value_b[i] = saved;
-				//printf("-->frequency loaded\n\r");
-			}
-			else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))	{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-				band_dial_value_b[i] = saved;
-				//printf("-->frequency loaded (relaxed)\n\r");
-			}
-			else	{
-				// Load default for this band
-				band_dial_value_b[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
-				//printf("-->base frequency loaded\n\r");
-			}
-		}
+	{	// read from stored bands
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
 	}
 	//
 	// ------------------------------------------------------------------------------------
-	// Try to read Step saved values
-	if(Read_EEPROM(EEPROM_FREQ_STEP, &value) == 0)
-	{
-		if((value >= T_STEP_MAX_STEPS -1) || ts.load_eeprom_defaults)	// did we get step size value outside the range or default to be loaded?
-			value = 3;						// yes - set to default size of 1 kHz steps
-		//
-		df.selected_idx = value;
-		df.tuning_step	= tune_steps[df.selected_idx];
-		//printf("-->freq step loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX Audio Source saved values
-	if(Read_EEPROM(EEPROM_TX_AUDIO_SRC, &value) == 0)
-	{
-		if(ts.load_eeprom_defaults)					// default?
-			ts.tx_audio_source = TX_AUDIO_MIC;		// yes, load
-		else
-			ts.tx_audio_source = value;
-		//printf("-->TX audio source loaded\n\r");
-	}
+	UiReadSettingEEPROM_UInt32_16(EEPROM_FREQ_STEP,&df.selected_idx,3,0,T_STEP_MAX_STEPS-2);
+	df.tuning_step	= tune_steps[df.selected_idx];
 
-	// ------------------------------------------------------------------------------------
-	// Try to read TCXO saved values
-	if(Read_EEPROM(EEPROM_TCXO_STATE, &value) == 0)
+	UiReadSettingEEPROM_UInt8(EEPROM_TX_AUDIO_SRC,&ts.tx_audio_source,0,0,TX_AUDIO_MAX_ITEMS);
+	UiReadSettingEEPROM_UInt8(EEPROM_TCXO_STATE,&df.temp_enabled,TCXO_ON,0,TCXO_TEMP_STATE_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_AUDIO_GAIN,&ts.audio_gain,DEFAULT_AUDIO_GAIN,0,MAX_AUDIO_GAIN);
+	UiReadSettingEEPROM_UInt8(EEPROM_RX_CODEC_GAIN,&ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL,0,MAX_RF_CODEC_GAIN_VAL);
+	UiReadSettingEEPROM_Int(EEPROM_RX_GAIN,&ts.rf_gain,DEFAULT_RF_GAIN,0,MAX_RF_GAIN);
+	UiReadSettingEEPROM_UInt8(EEPROM_NB_SETTING,&ts.nb_setting,0,0,MAX_RF_ATTEN);
+	UiReadSettingEEPROM_UInt8(EEPROM_TX_POWER_LEVEL,&ts.power_level,PA_LEVEL_DEFAULT,0,PA_LEVEL_MAX_ENTRY);
+	UiReadSettingEEPROM_UInt8(EEPROM_KEYER_SPEED,&ts.keyer_speed,DEFAULT_KEYER_SPEED,MIN_KEYER_SPEED, MAX_KEYER_SPEED);
+	UiReadSettingEEPROM_UInt8(EEPROM_KEYER_SPEED,&ts.keyer_mode,CW_MODE_IAM_B, 0, CW_MAX_MODE);
+	UiReadSettingEEPROM_UInt8(EEPROM_SIDETONE_GAIN,&ts.st_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN);
+	UiReadSettingEEPROM_Int(EEPROM_FREQ_CAL,&ts.freq_cal,0,0,MAX_FREQ_CAL);
+	UiReadSettingEEPROM_UInt8(EEPROM_AGC_MODE,&ts.agc_mode,AGC_DEFAULT,0,AGC_MAX_MODE);
+	UiReadSettingEEPROM_UInt8(EEPROM_MIC_GAIN,&ts.tx_mic_gain,MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_LINE_GAIN,&ts.tx_line_gain,LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_SIDETONE_FREQ,&ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPEC_SCOPE_FILTER,&ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT,SPECTRUM_SCOPE_FILTER_MIN,SPECTRUM_SCOPE_FILTER_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_AGC_CUSTOM_DECAY,&ts.agc_custom_decay,AGC_CUSTOM_DEFAULT,0,AGC_CUSTOM_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_TRACE_COLOUR,&ts.scope_trace_colour,SPEC_COLOUR_TRACE_DEFAULT, 0, SPEC_MAX_COLOUR);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_GRID_COLOUR,&ts.scope_grid_colour,SPEC_COLOUR_GRID_DEFAULT, 0, SPEC_MAX_COLOUR);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,&ts.scope_centre_grid_colour,SPEC_COLOUR_GRID_DEFAULT, 0, SPEC_MAX_COLOUR);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_SCALE_COLOUR,&ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT, 0, SPEC_MAX_COLOUR);
+	UiReadSettingEEPROM_UInt8(EEPROM_PADDLE_REVERSE,&ts.paddle_reverse,0,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_MAX_VOLUME,&ts.audio_max_volume,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_300HZ_SEL,&ts.filter_300Hz_select,FILTER_300HZ_DEFAULT,0,MAX_300HZ_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_500HZ_SEL,&ts.filter_500Hz_select,FILTER_500HZ_DEFAULT,0,MAX_500HZ_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K8_SEL,&ts.filter_1k8_select,FILTER_1K8_DEFAULT,0,MAX_1K8_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K3_SEL,&ts.filter_2k3_select,FILTER_2K3_DEFAULT,0,MAX_2K3_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K6_SEL,&ts.filter_3k6_select,FILTER_3K6_DEFAULT,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_WIDE_SEL,&ts.filter_wide_select,FILTER_WIDE_DEFAULT,0,WIDE_FILTER_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_PA_BIAS,&ts.pa_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS);
 	{
-		if(ts.load_eeprom_defaults)				// default?
-			df.temp_enabled = TCXO_ON;
-		else
-			df.temp_enabled = value;
-		//printf("-->TCXO state loaded\n\r");
-	}
-	// ------------------------------------------------------------------------------------
-	// Try to read PA BIAS saved values
-	if(Read_EEPROM(EEPROM_PA_BIAS, &value) == 0)
-	{
-		if((value > MAX_PA_BIAS) || ts.load_eeprom_defaults)	// prevent garbage value for bias (or load default value)
-			value = DEFAULT_PA_BIAS;
-		//
-		ts.pa_bias = value;
-		//
 		ulong bias_val;
-
 		bias_val = BIAS_OFFSET + (ts.pa_bias * 2);
 		if(bias_val > 255)
 			bias_val = 255;
@@ -10099,1555 +10103,124 @@ void UiDriverLoadEepromValues(void)
 		DAC_SetChannel2Data(DAC_Align_8b_R,bias_val);
 		//printf("-->PA BIAS loaded: %d\n\r",ts.pa_bias);
 	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read PA BIAS saved values
-	if(Read_EEPROM(EEPROM_PA_CW_BIAS, &value) == 0)
-	{
-		if((value > MAX_PA_BIAS) || ts.load_eeprom_defaults)	// prevent garbage value for bias (or load default value)
-			value = DEFAULT_PA_BIAS;
-		//
-		ts.pa_cw_bias = value;
-		//
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Audio Gain saved values
-	if(Read_EEPROM(EEPROM_AUDIO_GAIN, &value) == 0)
-	{
-		if((value > MAX_AUDIO_GAIN) || ts.load_eeprom_defaults)	// set default gain if garbage value from EEPROM (or load default value)
-			value = DEFAULT_AUDIO_GAIN;
-		ts.audio_gain = value;
-		//printf("-->Audio Gain loaded\n\r");
-	}
-	// ------------------------------------------------------------------------------------
-	// Try to read RF Codec Gain saved values
-	if(Read_EEPROM(EEPROM_RX_CODEC_GAIN, &value) == 0)
-	{
-		if((value > MAX_RF_CODEC_GAIN_VAL) || ts.load_eeprom_defaults)		// set default if invalid value (or load default value)
-			value = DEFAULT_RF_CODEC_GAIN_VAL;
-		//
-		ts.rf_codec_gain = value;
-		//printf("-->RF Codec Gain loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RF Codec Gain saved values
-	if(Read_EEPROM(EEPROM_RX_GAIN, &value) == 0)
-	{
-		if((value > MAX_RF_GAIN) || ts.load_eeprom_defaults)			// set default if invalid value (or load default value)
-			value = DEFAULT_RF_GAIN;
-		//
-		ts.rf_gain = value;
-		//printf("-->RF Gain loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Noise Blanker saved values
-	if(Read_EEPROM(EEPROM_NB_SETTING, &value) == 0)
-	{
-		if((value > MAX_RF_ATTEN) || ts.load_eeprom_defaults)	// invalid value?  (or load default value)
-			value = 0;				// yes - set to zero
-		//
-		ts.nb_setting = value;
-		//printf("-->Noise Blanker value loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Power level saved values
-	if(Read_EEPROM(EEPROM_TX_POWER_LEVEL, &value) == 0)
-	{
-		if((value >= PA_LEVEL_MAX_ENTRY) || ts.load_eeprom_defaults)  // check for valid range (or load default value)
-			value = PA_LEVEL_DEFAULT;
-		//
-		ts.power_level = value;
-		//printf("-->Power level loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Keyer speed saved values
-	if(Read_EEPROM(EEPROM_KEYER_SPEED, &value) == 0)
-	{
-		if((value < MIN_KEYER_SPEED) || (value > MAX_KEYER_SPEED) || ts.load_eeprom_defaults)	// value out of range? (or load default value)
-			value = DEFAULT_KEYER_SPEED;
-		//
-		ts.keyer_speed = value;
-		//printf("-->Keyer speed loaded\n\r");
+	UiReadSettingEEPROM_UInt8(EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_LSB_GAIN_BALANCE,&ts.tx_iq_lsb_gain_balance,0, 0, MAX_TX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_USB_GAIN_BALANCE,&ts.tx_iq_usb_gain_balance,0, 0, MAX_TX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_LSB_PHASE_BALANCE,&ts.tx_iq_lsb_phase_balance,0, 0, MAX_TX_IQ_PHASE_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_USB_PHASE_BALANCE,&ts.tx_iq_usb_phase_balance,0, 0, MAX_TX_IQ_PHASE_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_LSB_GAIN_BALANCE,&ts.rx_iq_lsb_gain_balance,0, 0, MAX_RX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_USB_GAIN_BALANCE,&ts.rx_iq_usb_gain_balance,0,  0, MAX_RX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_LSB_PHASE_BALANCE,&ts.rx_iq_lsb_phase_balance,0,  0, MAX_RX_IQ_PHASE_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_USB_PHASE_BALANCE,&ts.rx_iq_usb_phase_balance,0,  0, MAX_RX_IQ_PHASE_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_AM_GAIN_BALANCE,&ts.rx_iq_am_gain_balance,0,  0, MAX_RX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_RX_IQ_FM_GAIN_BALANCE,&ts.rx_iq_fm_gain_balance,0,  0, MAX_RX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_AM_GAIN_BALANCE,&ts.tx_iq_am_gain_balance,0, 0, MAX_TX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_Int(EEPROM_TX_IQ_FM_GAIN_BALANCE,&ts.tx_iq_fm_gain_balance,0, 0, MAX_TX_IQ_GAIN_BALANCE);
+	UiReadSettingEEPROM_UInt8(EEPROM_SENSOR_NULL,&swrm.sensor_null,SENSOR_NULL_DEFAULT,SENSOR_NULL_MIN,SENSOR_NULL_MAX);
+	UiReadSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX);
 
-		// Note - init will be done below, when Keyer Mode is loaded
+#define UI_R_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_5W,&ts.pwr_##bandName1##bandName2##_5w_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
 
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Keyer mode saved values
-	if(Read_EEPROM(EEPROM_KEYER_MODE, &value) == 0)
-	{
-		if((ts.keyer_mode >= CW_MAX_MODE) || ts.load_eeprom_defaults)	// invalid CW mode value? (or load default value)
-			value = CW_MODE_IAM_B;	// set default mode
-		//
-		ts.keyer_mode = value;
-		//printf("-->Keyer mode loaded\n\r");
+	UI_R_EEPROM_BAND_5W_PF(0,80,m);
+	UI_R_EEPROM_BAND_5W_PF(1,60,m);
+	UI_R_EEPROM_BAND_5W_PF(2,40,m);
+	UI_R_EEPROM_BAND_5W_PF(3,30,m);
+	UI_R_EEPROM_BAND_5W_PF(4,20,m);
+	UI_R_EEPROM_BAND_5W_PF(5,17,m);
+	UI_R_EEPROM_BAND_5W_PF(6,15,m);
+	UI_R_EEPROM_BAND_5W_PF(7,12,m);
+	UI_R_EEPROM_BAND_5W_PF(8,10,m);
+	UI_R_EEPROM_BAND_5W_PF(9,6,m);
+	UI_R_EEPROM_BAND_5W_PF(10,4,m);
+	UI_R_EEPROM_BAND_5W_PF(11,2,m);
+	UI_R_EEPROM_BAND_5W_PF(12,70,cm);
+	UI_R_EEPROM_BAND_5W_PF(13,23,cm);
+	UI_R_EEPROM_BAND_5W_PF(14,2200,m);
+	UI_R_EEPROM_BAND_5W_PF(15,630,m);
+	UI_R_EEPROM_BAND_5W_PF(16,160,m);
 
-		// Extra init needed
-		cw_gen_init();
+#define UI_R_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_FULL,&ts.pwr_##bandName1##bandName2##_full_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
 
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Sidetone Gain saved values
-	if(Read_EEPROM(EEPROM_SIDETONE_GAIN, &value) == 0)
-	{
-		if((value > SIDETONE_MAX_GAIN) || ts.load_eeprom_defaults)			// out of range of gain settings? (or load default value)
-			value = DEFAULT_SIDETONE_GAIN;		// yes, use default
-		//
-		ts.st_gain = value;
-		//printf("-->Sidetone Gain loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Audio Gain saved values
-	if(Read_EEPROM(EEPROM_AUDIO_GAIN, &value) == 0)
-	{
-		if((value > MAX_AUDIO_GAIN) || ts.load_eeprom_defaults)			// out of range of gain settings? (or load default value)
-			value = DEFAULT_AUDIO_GAIN;		// yes, use default
-		//
-		ts.audio_gain = value;
-		//printf("-->Audio Gain loaded\n\r");
-	}
-	//
-//	// ------------------------------------------------------------------------------------
-//	// Try to read MIC BOOST saved values - DEPRICATED, functionality now built into "Codec_RX_TX()"
-//	if(Read_EEPROM(EEPROM_MIC_BOOST, &value) == 0)
-//	{
-//		if(value < 2)
-//			ts.mic_boost = value;
-//	}
-//	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX LSB Phase saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_LSB_PHASE_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
-			*int_val = 0;		// yes, use zero
-		//
-		ts.tx_iq_lsb_phase_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX USB Phase saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_USB_PHASE_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_TX_IQ_PHASE_BALANCE) || (*int_val > MAX_TX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
-			*int_val = 0;		// yes, use zero
-		//
-		ts.tx_iq_usb_phase_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX LSB Gain saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_LSB_GAIN_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;		// yes, use zero
-		//
-		ts.tx_iq_lsb_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX USB Gain saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_USB_GAIN_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;		// yes, use zero
-		//
-		ts.tx_iq_usb_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX LSB Phase saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_LSB_PHASE_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
-			*int_val = 0;		// yes - set default
-		//
-		ts.rx_iq_lsb_phase_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX USB Phase saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_USB_PHASE_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_RX_IQ_PHASE_BALANCE) || (*int_val > MAX_RX_IQ_PHASE_BALANCE) || ts.load_eeprom_defaults)	// out of range (or load default value)
-			*int_val = 0;		// yes - set default
-		//
-		ts.rx_iq_usb_phase_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX LSB Gain saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_LSB_GAIN_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.rx_iq_lsb_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX USB Gain saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_USB_GAIN_BALANCE, &uint_val) == 0)
-	{
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.rx_iq_usb_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX AM Gain saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_AM_GAIN_BALANCE, &uint_val) == 0)
-	{
-//		int_val = &uint_val;	// kludge here to preserve sign of restored value - I don't know how to prevent error as EEPROM function doesn't deal with signed variables
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.rx_iq_am_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX AM Gain saved values
-	if(Read_EEPROM(EEPROM_RX_IQ_FM_GAIN_BALANCE, &uint_val) == 0)
-	{
-//		int_val = &uint_val;	// kludge here to preserve sign of restored value - I don't know how to prevent error as EEPROM function doesn't deal with signed variables
-		if((*int_val < MIN_RX_IQ_GAIN_BALANCE) || (*int_val > MAX_RX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.rx_iq_fm_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX AM Gain saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_AM_GAIN_BALANCE, &uint_val) == 0)
-	{
-//		int_val = &uint_val;	// kludge here to preserve sign of restored value - I don't know how to prevent error as EEPROM function doesn't deal with signed variables
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.tx_iq_am_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX FM Gain saved values
-	if(Read_EEPROM(EEPROM_TX_IQ_FM_GAIN_BALANCE, &uint_val) == 0)
-	{
-//		int_val = &uint_val;	// kludge here to preserve sign of restored value - I don't know how to prevent error as EEPROM function doesn't deal with signed variables
-		if((*int_val < MIN_TX_IQ_GAIN_BALANCE) || (*int_val > MAX_TX_IQ_GAIN_BALANCE) || ts.load_eeprom_defaults)	// out of range? (or load default value)
-			*int_val = 0;	// yes - set default
-		//
-		ts.tx_iq_fm_gain_balance = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read RX Frequency Calibration
-	if(Read_EEPROM(EEPROM_FREQ_CAL, &uint_val) == 0)
-	{
-		if((*int_val < MIN_FREQ_CAL) || (*int_val > MAX_FREQ_CAL) || ts.load_eeprom_defaults)	// out of range (or load default value)
-			*int_val = 0;		// yes - set default
-		//
-		ts.freq_cal = *int_val;
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read AGC mode saved values
-	if(Read_EEPROM(EEPROM_AGC_MODE, &value) == 0)
-	{
-		if((value > AGC_MAX_MODE) || ts.load_eeprom_defaults)	// out of range of AGC settings? (or load default value)
-			value = AGC_DEFAULT;				// yes, use default
-		//
-		ts.agc_mode = value;
-		//printf("-->AGC mode loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read MIC gain saved values
-	if(Read_EEPROM(EEPROM_MIC_GAIN, &value) == 0)
-	{
-		if((value > MIC_GAIN_MAX) || (value < MIC_GAIN_MIN) || ts.load_eeprom_defaults)		// out of range of MIC gain settings? (or load default value)
-			value = MIC_GAIN_DEFAULT;				// yes, use default
-		//
-		ts.tx_mic_gain = value;
-		//printf("-->MIC gain loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read LIEN gain saved values
-	if(Read_EEPROM(EEPROM_LINE_GAIN, &value) == 0)
-	{
-		if((value > LINE_GAIN_MAX) || (value < LINE_GAIN_MIN) || ts.load_eeprom_defaults)		// out of range of LINE gain settings? (or load default value)
-			value = LINE_GAIN_DEFAULT;				// yes, use default
-		//
-		ts.tx_line_gain = value;
-		//printf("-->LINE gain loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Sidetone Frequency saved values
-	if(Read_EEPROM(EEPROM_SIDETONE_FREQ, &value) == 0)
-	{
-		if((value > CW_SIDETONE_FREQ_MAX) || (value < CW_SIDETONE_FREQ_MIN) || ts.load_eeprom_defaults)		// out of range of sidetone freq settings? (or load default value)
-			value = CW_SIDETONE_FREQ_DEFAULT;				// yes, use default
-		//
-		ts.sidetone_freq = value;
-		//printf("-->Sidetone freq. loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope Speed saved values
-	if(Read_EEPROM(EEPROM_SPEC_SCOPE_SPEED, &value) == 0)
-	{
-		if((value > SPECTRUM_SCOPE_SPEED_MAX) || ts.load_eeprom_defaults) 	// out of range of spectrum scope speed settings? (or load default value)
-			value = SPECTRUM_SCOPE_SPEED_DEFAULT;				// yes, use default
-		//
-		ts.scope_speed = value;
-		//printf("-->Spectrum scope speed loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope Filter Strength saved values
-	if(Read_EEPROM(EEPROM_SPEC_SCOPE_FILTER, &value) == 0)
-	{
-		if((value > SPECTRUM_SCOPE_FILTER_MAX) || (value < SPECTRUM_SCOPE_FILTER_MIN) || ts.load_eeprom_defaults)	// out of range of spectrum scope filter strength settings? (or load default value)
-			value = SPECTRUM_SCOPE_FILTER_DEFAULT;				// yes, use default
-		//
-		ts.scope_filter = value;
-		//printf("-->Spectrum scope filter strength loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Custom AGC Decay saved values
-	if(Read_EEPROM(EEPROM_AGC_CUSTOM_DECAY, &value) == 0)
-	{
-		if((value > AGC_CUSTOM_MAX)	|| ts.load_eeprom_defaults)	// out of range Custom AGC Decay settings? (or load default value)
-			value = AGC_CUSTOM_DEFAULT;				// yes, use default
-		//
-		ts.agc_custom_decay = value;
-		//printf("-->Custom AGC Decay setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read color for spectrum scope trace saved values
-	if(Read_EEPROM(EEPROM_SPECTRUM_TRACE_COLOUR, &value) == 0)
-	{
-		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
-			value = SPEC_COLOUR_TRACE_DEFAULT;				// yes, use default
-		//
-		ts.scope_trace_colour = value;
-		//printf("-->Spectrum Scope trace color loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read color for spectrum scope grid saved values
-	if(Read_EEPROM(EEPROM_SPECTRUM_GRID_COLOUR, &value) == 0)
-	{
-		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
-			value = SPEC_COLOUR_GRID_DEFAULT;				// yes, use default
-		//
-		ts.scope_grid_colour = value;
-		//printf("-->Spectrum Scope grid color loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read color for spectrum scope center line grid saved values
-	if(Read_EEPROM(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR, &value) == 0)
-	{
-		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
-			value = SPEC_COLOUR_GRID_DEFAULT;				// yes, use default
-		//
-		ts.scope_centre_grid_colour = value;
-		//printf("-->Spectrum Scope centre grid line color loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read color for spectrum scope scale saved values
-	if(Read_EEPROM(EEPROM_SPECTRUM_SCALE_COLOUR, &value) == 0)
-	{
-		if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// out of range Spectrum Scope color settings? (or load default value)
-			value = SPEC_COLOUR_SCALE_DEFAULT;				// yes, use default
-		//
-		ts.scope_scale_colour = value;
-		//printf("-->Spectrum Scope scale color loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read paddle reverse saved values
-	if(Read_EEPROM(EEPROM_PADDLE_REVERSE, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// out of range paddle reverse boolean settings? (or load default value)
-			value = 0;				// yes, use default (off)
-		//
-		ts.paddle_reverse = value;
-		//printf("-->Paddle Reverse setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read CW TX>RX Delay saved values
-	if(Read_EEPROM(EEPROM_CW_RX_DELAY, &value) == 0)
-	{
-		if((value > CW_RX_DELAY_MAX) || ts.load_eeprom_defaults)	// out of range CW TX>RX Delay settings? (or load default value)
-			value = CW_RX_DELAY_DEFAULT;	// yes, use default
-		//
-		ts.cw_rx_delay = value;
-		//printf("-->CW TX>RX Delay setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read maximum volume  saved values
-	if(Read_EEPROM(EEPROM_MAX_VOLUME, &value) == 0)
-	{
-		if((value < MAX_VOLUME_MIN) || (value > MAX_VOLUME_MAX) || ts.load_eeprom_defaults)	// out range of maximum volume settings? (or load default value)
-			value = MAX_VOLUME_DEFAULT;	// yes, use default
-		//
-		ts.audio_max_volume = value;
-		//printf("-->maximum volume setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 300 Hz filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_300HZ_SEL, &value) == 0)
-	{
-		if((value > MAX_300HZ_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
-			value = FILTER_300HZ_DEFAULT;	// yes, use default
-		//
-		ts.filter_300Hz_select = value;
-		//printf("-->300 Hz filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 500 Hz filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_500HZ_SEL, &value) == 0)
-	{
-		if((value > MAX_500HZ_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
-			value = FILTER_500HZ_DEFAULT;	// yes, use default
-		//
-		ts.filter_500Hz_select = value;
-		//printf("-->500 Hz filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 1.8 kHz filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_1K8_SEL, &value) == 0)
-	{
-		if((value > MAX_1K8_FILTER) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
-			value = FILTER_1K8_DEFAULT;	// yes, use default
-		//
-		ts.filter_1k8_select = value;
-		//printf("-->1.8 kHz filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2.3 kHz filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_2K3_SEL, &value) == 0)
-	{
-		if((value > MAX_2K3_FILTER)	|| ts.load_eeprom_defaults) // out range of filter settings? (or load default value)
-			value = FILTER_2K3_DEFAULT;	// yes, use default
-		//
-		ts.filter_2k3_select = value;
-		//printf("-->2.3 kHz filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 3.6 kHz filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_3K6_SEL, &value) == 0)
-	{
-		if((value > MAX_3K6_FILTER)	|| ts.load_eeprom_defaults) // out range of filter settings? (or load default value)
-			value = FILTER_3K6_DEFAULT;	// yes, use default
-		//
-		ts.filter_3k6_select = value;
-		//printf("-->3.6 kHz filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read "wide" filter saved values
-	if(Read_EEPROM(EEPROM_FILTER_WIDE_SEL, &value) == 0)
-	{
-		if((value >= WIDE_FILTER_MAX) || ts.load_eeprom_defaults)	// out range of filter settings? (or load default value)
-			value = FILTER_WIDE_DEFAULT;	// yes, use default
-		//
-		ts.filter_wide_select = value;
-		//printf("-->Wide filter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read calibration factor for forward power meter
-	if(Read_EEPROM(EEPROM_SENSOR_NULL, &value) == 0)
-	{
-		if((value > SENSOR_NULL_MAX) || (value < SENSOR_NULL_MIN) || ts.load_eeprom_defaults)	// out range of calibration factor for forward power meter settings? (or load default value)
-			value = SENSOR_NULL_DEFAULT;	// yes, use default
-		//
-		swrm.sensor_null = value;
-		//printf("-->calibration factor for forward power meter setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Transverter Offset Freq saved values
-	if(	(Read_EEPROM(EEPROM_XVERTER_OFFSET_HIGH, &value) == 0) &&
-		(Read_EEPROM(EEPROM_XVERTER_OFFSET_LOW, &value1) == 0))
-	{
-		ulong saved = (value << 16) | (value1);
+	UI_R_EEPROM_BAND_FULL_PF(0,80,m);
+	UI_R_EEPROM_BAND_FULL_PF(1,60,m);
+	UI_R_EEPROM_BAND_FULL_PF(2,40,m);
+	UI_R_EEPROM_BAND_FULL_PF(3,30,m);
+	UI_R_EEPROM_BAND_FULL_PF(4,20,m);
+	UI_R_EEPROM_BAND_FULL_PF(5,17,m);
+	UI_R_EEPROM_BAND_FULL_PF(6,15,m);
+	UI_R_EEPROM_BAND_FULL_PF(7,12,m);
+	UI_R_EEPROM_BAND_FULL_PF(8,10,m);
+	UI_R_EEPROM_BAND_FULL_PF(9,6,m);
+	UI_R_EEPROM_BAND_FULL_PF(10,4,m);
+	UI_R_EEPROM_BAND_FULL_PF(11,2,m);
+	UI_R_EEPROM_BAND_FULL_PF(12,70,cm);
+	UI_R_EEPROM_BAND_FULL_PF(13,23,cm);
+	UI_R_EEPROM_BAND_FULL_PF(14,2200,m);
+	UI_R_EEPROM_BAND_FULL_PF(15,630,m);
+	UI_R_EEPROM_BAND_FULL_PF(16,160,m);
 
-		// We have loaded from eeprom the last used band, but can't just
-		// load saved frequency, as it could be out of band, so do a
-		// boundary check first
-		if((saved <= XVERTER_OFFSET_MAX) && (!ts.load_eeprom_defaults))		// is offset within allowed limits and not loading defaults?
-		{
-			ts.xverter_offset = saved;			// yes, use this value
-			//printf("-->frequency loaded\n\r");
-		}
-		else		// it's outside allowed limits or default to be loaded - force to zero
-		{
-			// Load default for this band
-			ts.xverter_offset = 0;
-			//printf("-->base frequency loaded\n\r");
-		}
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read transverter mode enable/disable
-	if(Read_EEPROM(EEPROM_XVERTER_DISP, &value) == 0)
-	{
-		if((value > XVERTER_MULT_MAX) || ts.load_eeprom_defaults)	// if above maximum multipler value, it was bogus (or load default value)
-			value = 0;	// reset to "off"
-		//
-		ts.xverter_mode = value;
-		//printf("-->transverter mode enable/disable setting loaded\n\r");
-	}
-	//
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 80 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND0_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_80_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_80m_5w_adj = value;
-		//printf("-->80 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 60 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND1_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_60_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_60m_5w_adj = value;
-		//printf("-->60 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 40 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND2_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_40_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_40m_5w_adj = value;
-		//printf("-->40 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 30 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND3_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_30_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_30m_5w_adj = value;
-		//printf("-->30 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 20 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND4_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_20_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_20m_5w_adj = value;
-		//printf("-->20 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 17 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND5_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_17_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_17m_5w_adj = value;
-		//printf("-->17 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 15 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND6_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_15_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_15m_5w_adj = value;
-		//printf("-->15 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 12 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND7_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_12_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_12m_5w_adj = value;
-		//printf("-->12 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 10 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND8_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_10_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_10m_5w_adj = value;
-		//printf("-->10 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 6 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND9_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_6_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_6m_5w_adj = value;
-		//printf("-->6 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 4 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND10_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_4_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_4m_5w_adj = value;
-		//printf("-->4 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND11_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_2_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_2m_5w_adj = value;
-		//printf("-->2 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 70 centimeter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND12_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_70_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_70cm_5w_adj = value;
-		//printf("-->70 centimeter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 23 centimeter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND13_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_23_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_23cm_5w_adj = value;
-		//printf("-->23 centimeter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2200 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND14_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_2200_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_2200m_5w_adj = value;
-		//printf("-->2200 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 630 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND15_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_630_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_630m_5w_adj = value;
-		//printf("-->630 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 160 meter 5 watt power calibration setting
-	if(Read_EEPROM(EEPROM_BAND16_5W, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_160_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_160m_5w_adj = value;
-		//printf("-->160 meter 5 watt power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 80 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND0_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_80_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_80m_full_adj = value;
-		//printf("-->80 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 60 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND1_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_60_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_60m_full_adj = value;
-		//printf("-->60 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 40 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND2_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_40_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_40m_full_adj = value;
-		//printf("-->40 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 30 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND3_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_30_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_30m_full_adj = value;
-		//printf("-->30 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 20 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND4_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_20_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_20m_full_adj = value;
-		//printf("-->20 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 17 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND5_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_17_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_17m_full_adj = value;
-		//printf("-->17 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 15 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND6_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_15_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_15m_full_adj = value;
-		//printf("-->15 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 12 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND7_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_12_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_12m_full_adj = value;
-		//printf("-->12 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 10 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND8_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_10_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_10m_full_adj = value;
-		//printf("-->10 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 6 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND9_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_6_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_6m_full_adj = value;
-		//printf("-->6 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 4 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND10_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_4_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_4m_full_adj = value;
-		//printf("-->4 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND11_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_2_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_2m_full_adj = value;
-		//printf("-->2 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 70 centimeter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND12_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_70_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_70cm_full_adj = value;
-		//printf("-->70 centimeter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 23 centimeter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND13_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_23_DEFAULT;	// reset to default for this band
-		//
-		ts.pwr_23cm_full_adj = value;
-		//printf("-->23 centimeter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 2200 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND14_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_2200_DEFAULT;	// reset to default for this band
-		ts.pwr_2200m_full_adj = value;
-		//printf("-->2200 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 630 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND15_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_630_DEFAULT;	// reset to default for this band
-		ts.pwr_630m_full_adj = value;
-		//printf("-->630 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read 160 meter FULL power calibration setting
-	if(Read_EEPROM(EEPROM_BAND16_FULL, &value) == 0)
-	{
-		if((value > TX_POWER_FACTOR_MAX) || (value < TX_POWER_FACTOR_MIN) || ts.load_eeprom_defaults)	// if out of range of power setting, it was bogus (or load default value)
-			value = TX_POWER_FACTOR_160_DEFAULT;	// reset to default for this band
-		ts.pwr_160m_full_adj = value;
-		//printf("-->160 meter FULL power calibration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read spectrum scope magnify setting
-	if(Read_EEPROM(EEPROM_SPECTRUM_MAGNIFY, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		sd.magnify = value;
-		//printf("-->spectrum scope magnify setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read CW wide filter disable setting
-	if(Read_EEPROM(EEPROM_WIDE_FILT_CW_DISABLE, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.filter_cw_wide_disable = value;
-		//printf("-->CW wide filter disable setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read SSB Narrow filter disable setting
-	if(Read_EEPROM(EEPROM_NARROW_FILT_SSB_DISABLE, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.filter_ssb_narrow_disable = value;
-		//printf("-->SSB Narrow disable setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read AM Mode disable setting
-	if(Read_EEPROM(EEPROM_AM_MODE_DISABLE, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.am_mode_disable = value;
-		//printf("-->SSB Narrow disable setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope dB/Division
-	if(Read_EEPROM(EEPROM_SPECTRUM_DB_DIV, &value) == 0)
-	{
-		if((value > DB_DIV_ADJUST_MAX) || (value < DB_DIV_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DB_DIV_ADJUST_DEFAULT;	// reset to default
-		//
-		ts.spectrum_db_scale = value;
-		//printf("-->Spectrum Scope dB/Division loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Spectrum Scope AGC rate
-	if(Read_EEPROM(EEPROM_SPECTRUM_AGC_RATE, &value) == 0)
-	{
-		if((value > SPECTRUM_SCOPE_AGC_MAX) || (value < SPECTRUM_SCOPE_AGC_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SPECTRUM_SCOPE_AGC_DEFAULT;	// reset to default
-		//
-		ts.scope_agc_rate = value;
-		//printf("-->Spectrum Scope AGC rate loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read meter mode
-	if(Read_EEPROM(EEPROM_METER_MODE, &value) == 0)
-	{
-		if((value >= METER_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = METER_SWR;	// reset to default
-		//
-		ts.tx_meter_mode = value;
-		//printf("-->Meter mode loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX audio compressor setting
-	if(Read_EEPROM(EEPROM_TX_AUDIO_COMPRESS, &value) == 0)
-	{
-		if((value > TX_AUDIO_COMPRESSION_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = TX_AUDIO_COMPRESSION_DEFAULT;	// reset to default
-		//
-		ts.tx_comp_level = value;
-		//printf("-->TX audio compressor setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read ALC release (decay) time
-	if(Read_EEPROM(EEPROM_ALC_DECAY_TIME, &value) == 0)
-	{
-		if((value > ALC_DECAY_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = ALC_DECAY_DEFAULT;	// reset to default
-		//
-		ts.alc_decay = value;		// "reserve" copy of variable
-		ts.alc_decay_var = value;	// "working" copy of variable
-		//printf("-->ALC release (decay) time loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX audio post-filter gain setting
-	if(Read_EEPROM(EEPROM_ALC_POSTFILT_TX_GAIN, &value) == 0)
-	{
-		if((value > ALC_POSTFILT_GAIN_MAX) || (value < ALC_POSTFILT_GAIN_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = ALC_POSTFILT_GAIN_DEFAULT;	// reset to default
-		//
-		ts.alc_tx_postfilt_gain = value;		// "reserve" copy of variable
-		ts.alc_tx_postfilt_gain_var = value;	// "working" copy of variable
-		//printf("-->TX audio post-filter gain setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Frequency step line/button configuration setting
-	if(Read_EEPROM(EEPROM_STEP_SIZE_CONFIG, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default for
-		//
-		ts.freq_step_config = value;
-		//printf("-->Frequency step marker line setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP configuration setting
-	if(Read_EEPROM(EEPROM_DSP_MODE, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.dsp_active = value;
-		//printf("-->DSP configuration setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Noise reduction setting
-	if(Read_EEPROM(EEPROM_DSP_NR_STRENGTH, &value) == 0)
-	{
-		if((value > DSP_NR_STRENGTH_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NR_STRENGTH_DEFAULT;	// reset to default
-		//
-		ts.dsp_nr_strength = value;
-		//printf("-->DSP Noise reduction setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Noise reduction de-correlator buffer length setting
-	if(Read_EEPROM(EEPROM_DSP_NR_DECOR_BUFLEN, &value) == 0)
-	{
-		if((value > DSP_NR_BUFLEN_MAX) || (value < DSP_NR_BUFLEN_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NR_BUFLEN_DEFAULT;	// reset to default
-		//
-		ts.dsp_nr_delaybuf_len = value;
-		//printf("-->DSP Noise reduction de-correlator buffer length setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Noise reduction FFT number of taps setting
-	if(Read_EEPROM(EEPROM_DSP_NR_FFT_NUMTAPS, &value) == 0)
-	{
-		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NR_NUMTAPS_DEFAULT;	// reset to default
-		//
-		ts.dsp_nr_numtaps = value;
-		//printf("-->DSP Noise reduction FFT number of taps setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Notch de-correlator buffer length setting
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_DECOR_BUFLEN, &value) == 0)
-	{
-		if((value > DSP_NOTCH_BUFLEN_MAX) || (value < DSP_NOTCH_BUFLEN_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NOTCH_DELAYBUF_DEFAULT;	// reset to default
-		//
-		ts.dsp_notch_delaybuf_len = value;
-		//printf("-->DSP Notch de-correlator buffer setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Notch number of taps setting
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_FFT_NUMTAPS, &value) == 0)
-	{
-		if((value > DSP_NR_NUMTAPS_MAX) || (value < DSP_NR_NUMTAPS_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NR_NUMTAPS_DEFAULT;	// reset to default
-		//
-		ts.dsp_notch_numtaps = value;
-		//printf("-->DSP Notch number of taps setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read DSP Notch convergence rate length setting
-	if(Read_EEPROM(EEPROM_DSP_NOTCH_CONV_RATE, &value) == 0)
-	{
-		if((value > DSP_NOTCH_MU_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = DSP_NOTCH_MU_DEFAULT;	// reset to default
-		//
-		ts.dsp_notch_mu = value;
-		//printf("-->DSP Notch convergence rate setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read maximum RF gain setting
-	if(Read_EEPROM(EEPROM_MAX_RX_GAIN, &value) == 0)
-	{
-		if((value > MAX_RF_GAIN_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = MAX_RF_GAIN_DEFAULT;	// reset to default
-		//
-		ts.max_rf_gain = value;
-		//printf("-->maximum RF gain setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX disable setting
-	if(Read_EEPROM(EEPROM_TX_DISABLE, &value) == 0)
-	{
-		if((value > 1) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.tx_disable = value;
-		//printf("-->TX disable setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Misc. flags 1 setting
-	if(Read_EEPROM(EEPROM_MISC_FLAGS1, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 32;	// reset to default (Freq. Limit Disable ON)
-		//
-		ts.misc_flags1 = value;
-		//printf("-->Misc. flags 1 setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Misc. flags 2 setting
-	if(Read_EEPROM(EEPROM_MISC_FLAGS2, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 1;	// reset to default (FM enabled)
-		//
-		ts.misc_flags2 = value;
-		//printf("-->Misc. flags 2 setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read "minor" version number
-	if(Read_EEPROM(EEPROM_VERSION_MINOR, &value) == 0)
-	{
-		if(value > 255)	// if out of range, it was bogus (default loading not appropriate here!)
-			value = 0;	// reset to default
-		//
-		ts.version_number_minor = value;
-		//printf("-->'Minor' version number loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read version (release) number
-	if(Read_EEPROM(EEPROM_VERSION_NUMBER, &value) == 0)
-	{
-		if(value > 255)	// if out of range, it was bogus (default loading not appropriate here!)
-			value = 0;	// reset to default
-		//
-		ts.version_number_release = value;
-		//printf("-->Version (release) number loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read version (build) number
-	if(Read_EEPROM(EEPROM_VERSION_BUILD, &value) == 0)
-	{
-		if(value > 255)	// if out of range, it was bogus  (default loading not appropriate here!
-			value = 0;	// reset to default
-		//
-		ts.version_number_build = value;
-		//printf("-->Version (build) number loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Noise blanker AGC setting
-	if(Read_EEPROM(EEPROM_NB_AGC_TIME_CONST, &value) == 0)
-	{
-		if((value > NB_MAX_AGC_SETTING) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = 0;	// reset to default
-		//
-		ts.nb_agc_time_const = value;
-		//printf("-->Noise blanker AGC setting loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read CW offset setting
-	if(Read_EEPROM(EEPROM_CW_OFFSET_MODE, &value) == 0)
-	{
-		if((value > CW_OFFSET_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
-			value = CW_OFFSET_MODE_DEFAULT;		// reset to default
-		//
-		ts.cw_offset_mode = value;
-		//printf("-->CW offset loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read I/Q Freq. conversion setting
-	if(Read_EEPROM(EEPROM_FREQ_CONV_MODE, &value) == 0)
-	{
-		if((value > FREQ_IQ_CONV_MODE_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
-			value = FREQ_IQ_CONV_MODE_DEFAULT;		// reset to default
-		//
-		ts.iq_freq_mode = value;
-		//printf("-->I/Q Freq. conversion loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read auto LSB/USB select mode
-	if(Read_EEPROM(EEPROM_LSB_USB_AUTO_SELECT, &value) == 0)
-	{
-		if((value > AUTO_LSB_USB_MAX) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
-			value = AUTO_LSB_USB_DEFAULT;		// reset to default
-		//
-		ts.lsb_usb_auto_select = value;
-		//printf("-->LSB/USB select mode loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read auto LCD backlight blanking mode
-	if(Read_EEPROM(EEPROM_LCD_BLANKING_CONFIG, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
-			value = 0;		// reset to OFF
-		//
-		ts.lcd_backlight_blanking = value;
-		//printf("-->auto LCD backlight blanking mode loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read VFO/SPLIT/Memory mode
-	if(Read_EEPROM(EEPROM_VFO_MEM_MODE, &value) == 0)
-	{
-		if((value > 255) || ts.load_eeprom_defaults)				// if out of range, it was bogus (or load default value)
-			value = 0;		// reset to OFF
-		//
-		ts.vfo_mem_mode = value;
-		//printf("-->VFO/SPLIT/Memory mode loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 2200m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_2200M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_2200m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 2200m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 630m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_630M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_630m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 630m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 160m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_160M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_160m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 160m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 80m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_80M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_80m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 80m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 40m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_40M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_40m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 40m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 20m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_20M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_20m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 20m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 15m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_15M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_15m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 15m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read power sensor coupling coefficient for 6m
-	if(Read_EEPROM(EEPROM_DETECTOR_COUPLING_COEFF_6M, &value) == 0)
-	{
-		if((value > SWR_COUPLING_MAX) || (value < SWR_COUPLING_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SWR_COUPLING_DEFAULT;		// reset to OFF
-		//
-		swrm.coupling_6m_calc = value;
-		//printf("-->Power sensor coupling coefficient for 6m loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read voltmeter calibration
-	if(Read_EEPROM(EEPROM_VOLTMETER_CALIBRATE, &value) == 0)
-	{
-		if((value > POWER_VOLTMETER_CALIBRATE_MAX) || (value < POWER_VOLTMETER_CALIBRATE_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = POWER_VOLTMETER_CALIBRATE_DEFAULT;		// reset to OFF
-		//
-		ts.voltmeter_calibrate = value;
-		//printf("-->Voltmeter calibration loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read waterfall color scheme
-	if(Read_EEPROM(EEPROM_WATERFALL_COLOR_SCHEME, &value) == 0)
-	{
-		if((value > WATERFALL_COLOR_MAX) || (value < WATERFALL_COLOR_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_COLOR_DEFAULT;		// reset to OFF
-		//
-		ts.waterfall_color_scheme = value;
-		//printf("-->waterfall color scheme loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read waterfall vertical step size
-	if(Read_EEPROM(EEPROM_WATERFALL_VERTICAL_STEP_SIZE, &value) == 0)
-	{
-		if((value > WATERFALL_STEP_SIZE_MAX) || (value < WATERFALL_STEP_SIZE_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_STEP_SIZE_DEFAULT;		// reset to OFF
-		//
-		ts.waterfall_vert_step_size = value;
-		//printf("-->waterfall vertical step size loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read waterfall amplitude offset
-	if(Read_EEPROM(EEPROM_WATERFALL_OFFSET, &value) == 0)
-	{
-		if((value > WATERFALL_OFFSET_MAX) || (value < WATERFALL_OFFSET_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_OFFSET_DEFAULT;		// reset to OFF
-		//
-		ts.waterfall_offset = value;
-		//printf("-->waterfall amplitude offset loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read waterfall amplitude contrast
-	if(Read_EEPROM(EEPROM_WATERFALL_CONTRAST, &value) == 0)
-	{
-		if((value > WATERFALL_CONTRAST_MAX) || (value < WATERFALL_CONTRAST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_CONTRAST_DEFAULT;		// reset to OFF
-		//
-		ts.waterfall_contrast = value;
-		//printf("-->waterfall amplitude contrast loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read waterfall speed
-	if(Read_EEPROM(EEPROM_WATERFALL_SPEED, &value) == 0)
-	{
-		if((value > WATERFALL_SPEED_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_SPEED_DEFAULT_SPI;		// reset to default
-		//
-		ts.waterfall_speed = value;
-		//printf("-->waterfall speed loaded\n\r");
-	}
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read spectrum scope no signal auto offset
-	if(Read_EEPROM(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST, &value) == 0)	{
-		if((value > SPECTRUM_SCOPE_NOSIG_ADJUST_MAX) || (value < SPECTRUM_SCOPE_NOSIG_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;		// reset to default
-		//
-		ts.spectrum_scope_nosig_adjust = value;
-		//printf("-->spectrum scope no signal auto offset loaded\n\r");
-	}
-//
-// ------------------------------------------------------------------------------------
-// Try to read waterfall no signal auto offset
-	if(Read_EEPROM(EEPROM_WATERFALL_NOSIG_ADJUST, &value) == 0)	{
-		if((value > WATERFALL_NOSIG_ADJUST_MAX) || (value < WATERFALL_NOSIG_ADJUST_MIN) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_NOSIG_ADJUST_DEFAULT;		// reset to default
-		//
-	ts.waterfall_nosig_adjust = value;
-	//printf("-->waterfall no signal auto offset loaded\n\r");
-	//
-	// Next setting...
-	}
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_MAGNIFY,&sd.magnify,0,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_WIDE_FILT_CW_DISABLE,&ts.filter_cw_wide_disable,1,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_NARROW_FILT_SSB_DISABLE,&ts.filter_ssb_narrow_disable,1,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_AM_MODE_DISABLE,&ts.am_mode_disable,1,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_DB_DIV,&ts.spectrum_db_scale,DB_DIV_ADJUST_DEFAULT,DB_DIV_ADJUST_MIN, DB_DIV_ADJUST_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_AGC_RATE,&ts.scope_agc_rate,SPECTRUM_SCOPE_AGC_DEFAULT,SPECTRUM_SCOPE_AGC_MIN, SPECTRUM_SCOPE_AGC_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_METER_MODE,&ts.tx_meter_mode,METER_SWR,0,METER_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_ALC_DECAY_TIME,&ts.alc_decay,ALC_DECAY_DEFAULT,0,ALC_DECAY_MAX );
+	ts.alc_decay_var = ts.alc_decay;
+	UiReadSettingEEPROM_UInt32_16(EEPROM_ALC_POSTFILT_TX_GAIN,&ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT, ALC_POSTFILT_GAIN_MIN, ALC_POSTFILT_GAIN_MAX);
+	ts.alc_tx_postfilt_gain_var =  ts.alc_tx_postfilt_gain; // "working" copy of variable
+	UiReadSettingEEPROM_UInt8(EEPROM_STEP_SIZE_CONFIG,&ts.freq_step_config,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_DSP_MODE,&ts.dsp_active,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NR_STRENGTH,&ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NR_FFT_NUMTAPS,&ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT, DSP_NR_NUMTAPS_MIN, DSP_NOTCH_NUMTAPS_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MIN);
+	UiReadSettingEEPROM_UInt8(EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_MAX_RX_GAIN,&ts.max_rf_gain,MAX_RF_GAIN_DEFAULT,0,MAX_RF_GAIN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,0,TX_AUDIO_COMPRESSION_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_TX_DISABLE,&ts.tx_disable,0,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS1,&ts.misc_flags1,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255);
+	UiReadSettingEEPROM_UInt16(EEPROM_VERSION_MINOR,&ts.version_number_minor,0,0,255);
+	UiReadSettingEEPROM_UInt16(EEPROM_VERSION_NUMBER,&ts.version_number_release,0,0,255);
+	UiReadSettingEEPROM_UInt16(EEPROM_VERSION_BUILD,&ts.version_number_build,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_NB_AGC_TIME_CONST,&ts.nb_agc_time_const,NB_AGC_DEFAULT,0,NB_MAX_AGC_SETTING);
+	UiReadSettingEEPROM_UInt8(EEPROM_CW_OFFSET_MODE,&ts.cw_offset_mode,CW_OFFSET_MODE_DEFAULT,0,CW_OFFSET_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FREQ_CONV_MODE,&ts.iq_freq_mode,FREQ_IQ_CONV_MODE_DEFAULT,0,FREQ_IQ_CONV_MODE_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_LSB_USB_AUTO_SELECT,&ts.lsb_usb_auto_select,AUTO_LSB_USB_DEFAULT,0,AUTO_LSB_USB_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_LCD_BLANKING_CONFIG,&ts.lcd_backlight_blanking,0,0,255);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_VFO_MEM_MODE,&ts.vfo_mem_mode,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_2200M,&swrm.coupling_2200m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_630M,&swrm.coupling_630m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_160M,&swrm.coupling_160m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_80M,&swrm.coupling_80m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_40M,&swrm.coupling_40m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_20M,&swrm.coupling_20m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_15M,&swrm.coupling_15m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_DETECTOR_COUPLING_COEFF_6M,&swrm.coupling_6m_calc,SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_VOLTMETER_CALIBRATE,&ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT,POWER_VOLTMETER_CALIBRATE_MIN,POWER_VOLTMETER_CALIBRATE_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_COLOR_SCHEME,&ts.waterfall_color_scheme,WATERFALL_COLOR_DEFAULT,WATERFALL_COLOR_MIN,WATERFALL_COLOR_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_VERTICAL_STEP_SIZE,&ts.waterfall_vert_step_size,WATERFALL_STEP_SIZE_DEFAULT,WATERFALL_STEP_SIZE_MIN,WATERFALL_STEP_SIZE_MIN);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_WATERFALL_OFFSET,&ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT,WATERFALL_OFFSET_MIN,WATERFALL_OFFSET_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_SIZE,&ts.waterfall_size,WATERFALL_SIZE_DEFAULT,0,WATERFALL_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_WATERFALL_CONTRAST,&ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT,WATERFALL_CONTRAST_MIN,WATERFALL_CONTRAST_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_SPEED,&ts.waterfall_speed,sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,0,WATERFALL_SPEED_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,&ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT,SPECTRUM_SCOPE_NOSIG_ADJUST_MIN,SPECTRUM_SCOPE_NOSIG_ADJUST_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_NOSIG_ADJUST,&ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT,WATERFALL_NOSIG_ADJUST_MIN,WATERFALL_NOSIG_ADJUST_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FFT_WINDOW,&ts.fft_window_type,FFT_WINDOW_DEFAULT,0,FFT_WINDOW_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_TX_PTT_AUDIO_MUTE,&ts.tx_audio_muting_timing,0,0,TX_PTT_AUDIO_MUTE_DELAY_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_DISP_COLOUR,&ts.filter_disp_colour,0,0,SPEC_MAX_COLOUR);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_GEN,&ts.fm_subaudible_tone_gen_select,FM_SUBAUDIBLE_TONE_OFF,0,NUM_SUBAUDIBLE_TONES);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_DET,&ts.fm_subaudible_tone_det_select,FM_SUBAUDIBLE_TONE_OFF,0,NUM_SUBAUDIBLE_TONES);
+	UiReadSettingEEPROM_UInt8(EEPROM_FM_TONE_BURST_MODE,&ts.fm_tone_burst_mode,FM_TONE_BURST_OFF,0,FM_TONE_BURST_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FM_SQUELCH_SETTING,&ts.fm_sql_threshold,FM_SQUELCH_DEFAULT,0,FM_SQUELCH_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FM_RX_BANDWIDTH,&ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT,0,FM_RX_BANDWIDTH_MAX);
+	UiReadSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,&ts.beep_frequency,DEFAULT_BEEP_FREQUENCY,MIN_BEEP_FREQUENCY,MAX_BEEP_FREQUENCY);
+	UiReadSettingEEPROM_UInt8(EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS);
 
-	//
-	// ------------------------------------------------------------------------------------
-// Try to read waterfall size and other settings
-	if(Read_EEPROM(EEPROM_WATERFALL_SIZE, &value) == 0)	{
-		if((value >= WATERFALL_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = WATERFALL_SIZE_DEFAULT;		// reset to default
-		//
-		ts.waterfall_size = value;
-	//printf("--waterfall size and other settings loaded\n\r");
-	//
-	// Next setting...
-	}
-//
-// ------------------------------------------------------------------------------------
-// Try to read FFT Window setting
-	if(Read_EEPROM(EEPROM_FFT_WINDOW, &value) == 0)	{
-		if((value >= FFT_WINDOW_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-			value = FFT_WINDOW_DEFAULT;		// reset to default
-		//
-		ts.fft_window_type = value;
-	//printf("--FFT Window setting loaded\n\r");
-	//
-	}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read TX PTT audio mute delay setting
-		if(Read_EEPROM(EEPROM_TX_PTT_AUDIO_MUTE, &value) == 0)	{
-			if((value >= TX_PTT_AUDIO_MUTE_DELAY_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = 0;		// reset to default
-			//
-			ts.tx_audio_muting_timing = value;
-		//printf("--TX PTT audio mute delay setting loaded\n\r");
-		//
-		}
-	// Next setting...
-//
-	// ------------------------------------------------------------------------------------
-	// Try to read Filter Bandwidth Display setting
-		if(Read_EEPROM(EEPROM_FILTER_DISP_COLOUR, &value) == 0)	{
-			if((value > SPEC_MAX_COLOUR) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FILTER_DISP_COLOUR_DEFAULT;	// reset to default
-			//
-			ts.filter_disp_colour = value;
-		//printf("--Filter Bandwidth Display setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read FM Subaudible Tone generate setting
-		if(Read_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_GEN, &value) == 0)	{
-			if((value >= NUM_SUBAUDIBLE_TONES) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FM_SUBAUDIBLE_TONE_OFF;	// reset to default
-			//
-			ts.fm_subaudible_tone_gen_select = value;
-		//printf("--FM Subaudible Tone generate setting loaded\n\r");
-		//
-		}
-	// Next setting...
-		//
-		// ------------------------------------------------------------------------------------
-	// Try to read FM Subaudible Tone detect setting
-		if(Read_EEPROM(EEPROM_FM_SUBAUDIBLE_TONE_DET, &value) == 0)	{
-			if((value >= NUM_SUBAUDIBLE_TONES) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FM_SUBAUDIBLE_TONE_OFF;	// reset to default
-			//
-			ts.fm_subaudible_tone_det_select = value;
-		//printf("--FM Subaudible Tone detect setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read FM Tone burst setting
-		if(Read_EEPROM(EEPROM_FM_TONE_BURST_MODE, &value) == 0)	{
-			if((value > FM_TONE_BURST_MAX)	|| ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FM_TONE_BURST_OFF;	// reset to default
-			//
-			ts.fm_tone_burst_mode = value;
-		//printf("--FM Tone burst setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read FM Squelch Threshold setting
-		if(Read_EEPROM(EEPROM_FM_SQUELCH_SETTING, &value) == 0)	{
-			if((value > FM_SQUELCH_MAX)	|| ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FM_SQUELCH_DEFAULT;	// reset to default
-			//
-			ts.fm_sql_threshold = value;
-		//printf("--FM Squelch Threshold setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read FM RX bandwidth setting
-		if(Read_EEPROM(EEPROM_FM_RX_BANDWIDTH, &value) == 0)	{
-			if((value > FM_RX_BANDWIDTH_MAX) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = FM_BANDWIDTH_DEFAULT;	// reset to default
-			//
-			ts.fm_rx_bandwidth = value;
-		//printf("--FM RX bandwidth setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Keyboard beep frequency setting
-		if(Read_EEPROM(EEPROM_KEYBOARD_BEEP_FREQ, &value) == 0)	{
-			if((value > MAX_BEEP_FREQUENCY) || (value < MIN_BEEP_FREQUENCY) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = DEFAULT_BEEP_FREQUENCY;	// reset to default
-			//
-			ts.beep_frequency = value;
-		//printf("--Keyboard beep frequency setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
-	//
-	// ------------------------------------------------------------------------------------
-	// Try to read Beep loudness setting
-		if(Read_EEPROM(EEPROM_BEEP_LOUDNESS, &value) == 0)	{
-			if((value > MAX_BEEP_LOUDNESS) || ts.load_eeprom_defaults)	// if out of range, it was bogus (or load default value)
-				value = DEFAULT_BEEP_LOUDNESS;	// reset to default
-			//
-			ts.beep_loudness = value;
-		//printf("--Beep loudness setting loaded\n\r");
-		//
-		}
-	// Next setting...
-	//
 }
 
 //
@@ -11686,32 +10259,6 @@ void UiDriverLoadEepromValues(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-
-static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
-	uint16_t value;
-	if(Read_EEPROM(addr, &value) == 0)
-	{
-		Write_EEPROM(addr, set_val);
-	}
-	else	// create
-	{
-		Write_EEPROM(addr, default_val);
-	}
-}
-
-static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val ) {
-	uint16_t value;
-	if(Read_EEPROM(addrH, &value) == 0 && Read_EEPROM(addrL, &value) == 0)
-	{
-		Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
-		Write_EEPROM(addrL, (uint16_t)(set_val));
-	}
-	else	// create
-	{
-		Write_EEPROM(addrH, (uint16_t)(default_val >> 16));
-		Write_EEPROM(addrL, (uint16_t)(default_val));
-	}
-}
 
 void UiDriverSaveEepromValuesPowerDown(void)
 {
@@ -11777,36 +10324,11 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//
 
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
-		// ------------------------------------------------------------------------------------
-		// Read Band and Mode saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE + i,
-				(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
-				((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH+i,EEPROM_BAND0_FREQ_LOW+i, band_dial_value[i], band_dial_value[i]);
-		//
-		// Save data for VFO A
-		//
-		// ------------------------------------------------------------------------------------
-		// Read Band and Mode saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_A + i,
-				(band_decod_mode_a[i] << 8)|(band_filter_mode_a[i] << 12),
-				((band_decod_mode_a[i] & 0x0f) << 8) | (band_filter_mode_a[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_A+i,EEPROM_BAND0_FREQ_LOW_A+i, band_dial_value_a[i], band_dial_value_a[i]);
-		//
-		// Save data for VFO B
-		//
-		UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND0_MODE_B + i,
-				(band_decod_mode_b[i] << 8)|(band_filter_mode_b[i] << 12),
-				((band_decod_mode_b[i] & 0x0f) << 8) | (band_filter_mode_b[i] << 12)
-		);
-		// Try to read Freq saved values - update if changed
-		UiReadWriteSettingEEPROM_UInt32(EEPROM_BAND0_FREQ_HIGH_B+i,EEPROM_BAND0_FREQ_LOW_B+i, band_dial_value_b[i], band_dial_value_b[i]);
-
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
 	}
+
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_STEP,df.selected_idx,3);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
@@ -11827,6 +10349,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_CUSTOM_DECAY,ts.agc_custom_decay,AGC_CUSTOM_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_TRACE_COLOUR,ts.scope_trace_colour,SPEC_COLOUR_TRACE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_GRID_COLOUR,ts.scope_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,ts.scope_centre_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_PADDLE_REVERSE,ts.paddle_reverse,0);
@@ -11919,7 +10442,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_FFT_NUMTAPS,ts.dsp_notch_numtaps,DSP_NOTCH_DELAYBUF_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_FFT_NUMTAPS,ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_CONV_RATE,ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_RX_GAIN,ts.max_rf_gain,MAX_RF_GAIN_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_COMPRESS,ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT);
@@ -11948,6 +10471,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_COLOR_SCHEME,ts.waterfall_color_scheme,WATERFALL_COLOR_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_VERTICAL_STEP_SIZE,ts.waterfall_vert_step_size,WATERFALL_STEP_SIZE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_OFFSET,ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SIZE,ts.waterfall_size,WATERFALL_SIZE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_CONTRAST,ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
@@ -11978,8 +10502,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 // check if touched point is within rectange of valid action
 bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
 {
-if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
-    return true;
-else
-    return false;
+	if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
+		return true;
+	else
+		return false;
 }
