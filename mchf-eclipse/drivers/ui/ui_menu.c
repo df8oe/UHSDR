@@ -950,7 +950,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		switch(ts.filter_1k8_select)	{
 		case 0:
-			strcpy(options, "OFF   ");
+			strcpy(options, "   OFF");
 			clr = Red;
 			break;
 		case 1:
@@ -996,6 +996,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Red;
 		//
 		switch(ts.filter_2k3_select)	{
+		case 0:
+			strcpy(options, "   OFF");
+			clr = Red;
+			break;
 		case 1:
 			strcpy(options, "1262Hz");
 			break;

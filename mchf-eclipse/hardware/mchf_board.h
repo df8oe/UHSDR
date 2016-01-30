@@ -1475,7 +1475,7 @@ typedef struct TransceiverState
 	uchar	dsp_nr_numtaps;				// Number of FFT taps on the DSP Noise reduction
 	uchar	dsp_notch_numtaps;
 	uchar	dsp_notch_mu;				// mu adjust of notch DSP LMS
-	ulong	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
+	uint8_t	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
 	bool	dsp_inhibit;				// if TRUE, DSP (NR, Notch) functions are inhibited.  Used during power-up
 	bool	dsp_inhibit_mute;			// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
 	bool	dsp_timed_mute;				// TRUE if DSP is to be muted for a timed amount
