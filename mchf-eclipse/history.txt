@@ -10,6 +10,7 @@
 #########################################################################
 
 
+
 20160130 [DF8OE]
 - huge reworking in menue / text formatting
 - reworking in configuration save and read functions
@@ -17,6 +18,7 @@
 - reworking of SPI LCD code for improving speed
 - FM now enabled by default (it is stable)
 - minor bugfixes which came up after rework
+- released this as new STABLE 219.27.0
 
 
 20160125 [DF8OE]
@@ -24,6 +26,7 @@
 - removing all code errors which causes compiler warnings
 - now it is possible to build with compiler optimization
 - rework of Makefile
+
 
 20160122 [DF8OE]
 - fixed bug "60m 5W power adjust"
