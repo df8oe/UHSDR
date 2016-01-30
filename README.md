@@ -1,7 +1,7 @@
 Testing branch of mcHF firmware and bootloader - sources and binaries
 
 
-Version <219.26.x>
+Version <219.27.x>
 
 
 Binaries are located in mchf-eclipse and are named:
@@ -12,5 +12,6 @@ If you only want binaries and not complete sources click on file you want to dow
 
 Have fun - Open-Source opens possibilities!
 
-KA7OEI, Clint<br>
+KA7OEI, Clint
+
 DF8OE, Andreas
