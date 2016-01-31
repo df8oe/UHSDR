@@ -838,6 +838,7 @@ void TransceiverStateInit(void)
 	ts.nb_disable		= 0;				// TRUE if noise blanker is to be disabled
 	//
 	ts.dsp_active		= 0;				// TRUE if DSP noise reduction is to be enabled
+	ts.digital_mode		= 0;				// digital modes OFF by default
 	ts.dsp_active_toggle	= 0xff;			// used to hold the button G2 "toggle" setting.
 	ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
 	ts.dsp_nr_strength	= 0;				// "Strength" of DSP noise reduction (0 = weak)

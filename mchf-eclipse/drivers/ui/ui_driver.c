@@ -137,6 +137,7 @@ static void 	UiDriverChangeRit(uchar enabled);
 //static void 	UiDriverChangeFilter(uchar ui_only_update);
 static void 	UiDriverProcessActiveFilterScan(void);
 static void 	UiDriverChangeDSPMode(void);
+static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
 //static void 	UiDrawSpectrumScopeFrequencyBarText(void);
 static void 	UiDriverFFTWindowFunction(char mode);
@@ -1533,6 +1534,7 @@ void UiInitRxParms(void)
 	UiDriverChangeRfGain(1);	// update RFG/SQL on screen
 	Audio_TXFilter_Init();
 	UiDriverChangeDSPMode();	// Change DSP display setting as well
+	UiDriverChangeDigitalMode();	// Change Dgital display setting as well
 	UiDriverChangeFilter(1);	// make certain that numerical on-screen bandwidth indicator is updated
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
 	UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator (graphical)
@@ -2563,6 +2565,9 @@ static void UiDriverCreateDesktop(void)
 
 	// DSP mode change
 	UiDriverChangeDSPMode();
+
+	// Digital mode change
+	UiDriverChangeDigitalMode();
 
 	// Power level
 	UiDriverChangePowerLevel();
@@ -5984,22 +5989,59 @@ static void UiDriverChangeDSPMode(void)
 {
 	ushort color = White;
 	char txt[32];
-	ulong	x_off = 0;
 
-	// Draw line for upper box
-	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
-	// Draw line for lower box
+	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
 	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
 		color = White;
 	else	// DSP not active
 		color = Grey2;
-	//
-	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),"  DSP  ",White,Orange,0);
-	//
+
 	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
-		sprintf(txt, "  OFF ");
+		sprintf(txt, "DSP-OFF");
+		color = Grey2;
+	}
+	else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
+		sprintf(txt, "NR+NOTC");
+	}
+	else if(ts.dsp_active & 1)	{
+		sprintf(txt, "   NR  ");
+	}
+	else if(ts.dsp_active & 4)	{
+		sprintf(txt, " NOTCH ");
+		if(ts.dmod_mode == DEMOD_CW)
+			color = Grey2;
+	}
+	else
+		sprintf(txt, "DSP-OFF");
+
+	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
+}
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverChangeDigitalMode
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void UiDriverChangeDigitalMode(void)
+{
+	ushort color = White;
+	char txt[32];
+//	ulong	x_off = 0;
+
+	// Draw line for box
+	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+	//
+/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
+		color = White;
+	else	// DSP not active
+		color = Grey2;
+
+	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
+		sprintf(txt, "DIGITAL");
 		color = Grey2;
 	}
 	else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
@@ -6012,15 +6054,13 @@ static void UiDriverChangeDSPMode(void)
 	}
 	else if(ts.dsp_active & 4)	{
 		sprintf(txt, " NOTCH");
-		if(ts.dmod_mode == DEMOD_CW)
+		if(ts.dmod_mode == DEMOD_CW) */
 			color = Grey2;
-	}
-	else
-		sprintf(txt, "  OFF");
-	//
-	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPL_IND_Y),"       ",White,Blue,0);
-	UiLcdHy28_PrintText((POS_DSPL_IND_X+x_off),(POS_DSPL_IND_Y),txt,color,Blue,0);
+//	}
+//	else
+		sprintf(txt, "DIGITAL");
 
+	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel
