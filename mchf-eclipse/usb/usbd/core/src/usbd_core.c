@@ -138,22 +138,23 @@ void USBD_Init(USB_OTG_CORE_HANDLE *pdev,
                USBD_Usr_cb_TypeDef *usr_cb)
 {
   /* Hardware Init */
-  USBD_OTG_BSP_Init(pdev);
-
+  USB_OTG_BSP_Init(pdev);  
+  
+  USBD_DeInit(pdev);
+  
   /*Register class and user callbacks */
   pdev->dev.class_cb = class_cb;
-  pdev->dev.usr_cb = usr_cb;
-  pdev->dev.usr_device = pDevice;
+  pdev->dev.usr_cb = usr_cb;  
+  pdev->dev.usr_device = pDevice;    
   
   /* set USB OTG core params */
-  DCD_Init(pdev,coreID);
+  DCD_Init(pdev , coreID);
   
-  // Upon Init call usr callback
-  // causes hard fault and crash
-  //pdev->dev.usr_cb->Init();
+  /* Upon Init call usr callback */
+  pdev->dev.usr_cb->Init();
   
   /* Enable Interrupts */
-  USBD_OTG_BSP_EnableInterrupt(pdev);
+  USB_OTG_BSP_EnableInterrupt(pdev);
 }
 
 /**
@@ -164,12 +165,8 @@ void USBD_Init(USB_OTG_CORE_HANDLE *pdev,
 */
 USBD_Status USBD_DeInit(USB_OTG_CORE_HANDLE *pdev)
 {
-  // Interrupts disable
-  DCD_DeInit(pdev);
+  /* Software Init */
   
-  // Stop pins
-  USBD_OTG_BSP_DeInit(pdev);
-
   return USBD_OK;
 }
 

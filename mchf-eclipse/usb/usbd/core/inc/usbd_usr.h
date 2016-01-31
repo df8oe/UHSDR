@@ -32,7 +32,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_core.h"
 
-
 /** @addtogroup USBD_USER
   * @{
   */
@@ -108,6 +107,8 @@ void     USBD_USR_HS_DeviceResumed(void);
 
 void     USBD_USR_HS_DeviceConnected(void);
 void     USBD_USR_HS_DeviceDisconnected(void);  
+
+extern int USBD_User_GetStatus(void);
 
 /**
   * @}
