@@ -3047,7 +3047,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		temp_var = ts.misc_flags1 & 8;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
-			if(!temp_var)	// AM TX audio filter is disabled
+			if(temp_var)	// AM TX audio filter is disabled
 				ts.misc_flags1 |= 8;		// set LSB
 			else			// AM TX audio filter is enabled
 				ts.misc_flags1 &= 0xf7;		// clear LSB
@@ -3060,7 +3060,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		temp_var = ts.misc_flags1 & 64;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
-			if(!temp_var)	// SSB TX audio filter is disabled
+			if(temp_var)	// SSB TX audio filter is disabled
 				ts.misc_flags1 |= 64;		// set bit
 			else			// SSB TX audio filter is enabled
 				ts.misc_flags1 &= 0xbf;		// clear bit
