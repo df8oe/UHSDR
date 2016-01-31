@@ -974,7 +974,15 @@ static void UiDriverProcessKeyboard(void)
 							UiDriverUpdateFrequency(1,0);		// no SPLIT mode
 						    ts.refresh_freq_disp = 0;			// update ALL digits
 						    } 
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action
+						if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
+						    {
+						    if(ts.digital_mode < 7)
+							ts.digital_mode += 1;
+						    else
+							ts.digital_mode = 0;
+						    UiDriverChangeDigitalMode();
+						    }
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action (left_x,right_x,down_y,up_y)
 						    {
 						    }
 						}
@@ -6035,6 +6043,44 @@ static void UiDriverChangeDigitalMode(void)
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
+	switch(ts.digital_mode){
+	    case 0:
+		sprintf(txt, "DIGITAL");
+		color = Grey2;
+		break;
+	    case 1:
+		sprintf(txt, "FREEDV1");
+		color = White;
+		break;
+	    case 2:
+		sprintf(txt, "FREEDV2");
+		color = White;
+		break;
+	    case 3:
+		sprintf(txt, "BPSK 31");
+		color = White;
+		break;
+	    case 4:
+		sprintf(txt, "  RTTY ");
+		color = White;
+		break;
+	    case 5:
+		sprintf(txt, "  SSTV ");
+		color = White;
+		break;
+	    case 6:
+		sprintf(txt, "WSPR  A");
+		color = White;
+		break;
+	    case 7:
+		sprintf(txt, "WSPR  P");
+		color = White;
+		break;
+	    default:
+		break;
+		}
+
+
 /*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
 		color = White;
 	else	// DSP not active
@@ -6054,11 +6100,11 @@ static void UiDriverChangeDigitalMode(void)
 	}
 	else if(ts.dsp_active & 4)	{
 		sprintf(txt, " NOTCH");
-		if(ts.dmod_mode == DEMOD_CW) */
+		if(ts.dmod_mode == DEMOD_CW)
 			color = Grey2;
-//	}
-//	else
-		sprintf(txt, "DIGITAL");
+	}
+	else
+		sprintf(txt, "DIGITAL"); */
 
 	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),txt,color,Blue,0);
 }
