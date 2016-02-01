@@ -40,7 +40,7 @@
 //
 //
 //
-
+#include "cat_driver.h"
 // Transceiver state public structure
 __IO TransceiverState ts;
 
@@ -1151,7 +1151,13 @@ int main(void)
 	{
 		// UI events processing
 		ui_driver_thread();
-
+		{
+			uint8_t bufc;
+			while (cat_driver_get_data(&bufc,1))
+			{
+				cat_driver_put_data("A",1);
+			}
+		}
 		// Audio driver processing
 		//audio_driver_thread();
 

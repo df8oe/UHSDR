@@ -297,15 +297,15 @@ typedef struct USB_OTG_handle
 {
   USB_OTG_CORE_CFGS    cfg;
   USB_OTG_CORE_REGS    regs;
-//#ifdef USE_DEVICE_MODE
+#ifdef USE_DEVICE_MODE
   DCD_DEV     dev;
-//#endif
-//#ifdef USE_HOST_MODE
+#endif
+#ifdef USE_HOST_MODE
   HCD_DEV     host;
-//#endif
-//#ifdef USE_OTG_MODE
+#endif
+#ifdef USE_OTG_MODE
   OTG_DEV     otg;
-//#endif
+#endif
 }
 USB_OTG_CORE_HANDLE , *PUSB_OTG_CORE_HANDLE;
 
@@ -359,7 +359,6 @@ USB_OTG_STS  USB_OTG_SetCurrentMode  (USB_OTG_CORE_HANDLE *pdev,
     uint8_t mode);
 
 /*********************** HOST APIs ********************************************/
-//#define USE_HOST_MODE
 #ifdef USE_HOST_MODE
 USB_OTG_STS  USB_OTG_CoreInitHost    (USB_OTG_CORE_HANDLE *pdev);
 USB_OTG_STS  USB_OTG_EnableHostInt   (USB_OTG_CORE_HANDLE *pdev);
@@ -376,7 +375,6 @@ uint8_t      USB_OTG_IsEvenFrame     (USB_OTG_CORE_HANDLE *pdev) ;
 void         USB_OTG_StopHost        (USB_OTG_CORE_HANDLE *pdev);
 #endif
 /********************* DEVICE APIs ********************************************/
-//#define USE_DEVICE_MODE
 #ifdef USE_DEVICE_MODE
 USB_OTG_STS  USB_OTG_CoreInitDev         (USB_OTG_CORE_HANDLE *pdev);
 USB_OTG_STS  USB_OTG_EnableDevInt        (USB_OTG_CORE_HANDLE *pdev);

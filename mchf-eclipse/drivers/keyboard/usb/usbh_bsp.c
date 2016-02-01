@@ -335,18 +335,19 @@ void  USBH_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev)
 #else
   #ifdef USE_USB_OTG_FS  
   RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOH , ENABLE);  
-  
+#if 0
   GPIO_InitStructure.GPIO_Pin = HOST_POWERSW_VBUS;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ;
   GPIO_Init(HOST_POWERSW_PORT,&GPIO_InitStructure);
+#endif
   #endif  
 #endif
 
   /* By Default, DISABLE is needed on output of the Power Switch */
-  GPIO_SetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
+  // GPIO_SetBits(HOST_POWERSW_PORT, HOST_POWERSW_VBUS);
   
   USB_OTG_BSP_mDelay(200);   /* Delay is need for stabilising the Vbus Low 
   in Reset Condition, when Vbus=1 and Reset-button is pressed by user */

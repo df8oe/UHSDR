@@ -30,15 +30,12 @@
 #define __USBD_CDC_VCP_H
 
 /* Includes ------------------------------------------------------------------*/
-#ifdef STM32F2XX
- #include "stm32f2xx.h"
-#elif defined(STM32F10X_CL)
- #include "stm32f10x.h"
-#endif /* STM32F2XX */
 
 #include "usbd_cdc_core.h"
 #include "usbd_conf.h"
 
+uint16_t VCP_DataTx   (uint8_t* Buf, uint32_t Len);
+uint16_t VCP_DataRx   (uint8_t* Buf, uint32_t Len);
 
 /* Exported typef ------------------------------------------------------------*/
 /* The following structures groups all needed parameters to be configured for the 
@@ -50,17 +47,8 @@ typedef struct
   uint8_t  format;
   uint8_t  paritytype;
   uint8_t  datatype;
+	uint8_t changed;
 }LINE_CODING;
-
-/* Exported constants --------------------------------------------------------*/
-/* The following define is used to route the USART IRQ handler to be used.
-   The IRQ handler function is implemented in the usbd_cdc_vcp.c file. */
-          
-#ifdef USE_STM3210C_EVAL
- #define EVAL_COM_IRQHandler            USART2_IRQHandler
-#else
- #define EVAL_COM_IRQHandler            USART3_IRQHandler  
-#endif /* USE_STM322xG_EVAL */
 
 
 #define DEFAULT_CONFIG                  0
