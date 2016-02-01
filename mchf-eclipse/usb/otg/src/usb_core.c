@@ -29,6 +29,63 @@
 #include "usb_core.h"
 #include "usbd_bsp.h"
 
+
+/** @addtogroup USB_OTG_DRIVER
+* @{
+*/
+
+/** @defgroup USB_CORE 
+* @brief This file includes the USB-OTG Core Layer
+* @{
+*/
+
+
+/** @defgroup USB_CORE_Private_Defines
+* @{
+*/ 
+
+/**
+* @}
+*/ 
+
+
+/** @defgroup USB_CORE_Private_TypesDefinitions
+* @{
+*/ 
+/**
+* @}
+*/ 
+
+
+
+/** @defgroup USB_CORE_Private_Macros
+* @{
+*/ 
+/**
+* @}
+*/ 
+
+
+/** @defgroup USB_CORE_Private_Variables
+* @{
+*/ 
+/**
+* @}
+*/ 
+
+
+/** @defgroup USB_CORE_Private_FunctionPrototypes
+* @{
+*/ 
+/**
+* @}
+*/ 
+
+
+/** @defgroup USB_CORE_Private_Functions
+* @{
+*/ 
+
 /**
 * @brief  USB_OTG_EnableCommonInt
 *         Initializes the commmon interrupts, used in both device and modes
@@ -73,7 +130,7 @@ static USB_OTG_STS USB_OTG_CoreReset(USB_OTG_CORE_HANDLE *pdev)
   /* Wait for AHB master IDLE state. */
   do
   {
-    USBD_OTG_BSP_uDelay(3);
+    USB_OTG_BSP_uDelay(3);
     greset.d32 = USB_OTG_READ_REG32(&pdev->regs.GREGS->GRSTCTL);
     if (++count > 200000)
     {
@@ -95,7 +152,7 @@ static USB_OTG_STS USB_OTG_CoreReset(USB_OTG_CORE_HANDLE *pdev)
   }
   while (greset.b.csftrst == 1);
   /* Wait for 3 PHY Clocks*/
-  USBD_OTG_BSP_uDelay(3);
+  USB_OTG_BSP_uDelay(3);
   return status;
 }
 
@@ -341,7 +398,7 @@ USB_OTG_STS USB_OTG_CoreInit(USB_OTG_CORE_HANDLE *pdev)
     }
     
     USB_OTG_WRITE_REG32 (&pdev->regs.GREGS->GCCFG, gccfg.d32);
-    USBD_OTG_BSP_mDelay(20);
+    USB_OTG_BSP_mDelay(20);
   }
   /* case the HS core is working in FS mode */
   if(pdev->cfg.dma_enable == 1)
@@ -424,7 +481,7 @@ USB_OTG_STS USB_OTG_FlushTxFifo (USB_OTG_CORE_HANDLE *pdev , uint32_t num )
   }
   while (greset.b.txfflsh == 1);
   /* Wait for 3 PHY Clocks*/
-  USBD_OTG_BSP_uDelay(3);
+  USB_OTG_BSP_uDelay(3);
   return status;
 }
 
@@ -453,7 +510,7 @@ USB_OTG_STS USB_OTG_FlushRxFifo( USB_OTG_CORE_HANDLE *pdev )
   }
   while (greset.b.rxfflsh == 1);
   /* Wait for 3 PHY Clocks*/
-  USBD_OTG_BSP_uDelay(3);
+  USB_OTG_BSP_uDelay(3);
   return status;
 }
 
@@ -484,7 +541,7 @@ USB_OTG_STS USB_OTG_SetCurrentMode(USB_OTG_CORE_HANDLE *pdev , uint8_t mode)
   }
   
   USB_OTG_WRITE_REG32(&pdev->regs.GREGS->GUSBCFG, usbcfg.d32);
-  USBD_OTG_BSP_mDelay(50);
+  USB_OTG_BSP_mDelay(50);
   return status;
 }
 
@@ -555,10 +612,8 @@ uint32_t USB_OTG_ReadOtgItr (USB_OTG_CORE_HANDLE *pdev)
 USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
 {
   USB_OTG_STS                     status = USB_OTG_OK;
-#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   USB_OTG_FSIZ_TypeDef            nptxfifosize;
   USB_OTG_FSIZ_TypeDef            ptxfifosize;  
-#endif
   USB_OTG_HCFG_TypeDef            hcfg;
   
 #ifdef USE_OTG_MODE
@@ -566,11 +621,9 @@ USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
 #endif
   
   uint32_t                        i = 0;
-
-#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
+  
   nptxfifosize.d32 = 0;  
   ptxfifosize.d32 = 0;
-#endif
 #ifdef USE_OTG_MODE
   gotgctl.d32 = 0;
 #endif
@@ -578,7 +631,7 @@ USB_OTG_STS USB_OTG_CoreInitHost(USB_OTG_CORE_HANDLE *pdev)
   
   
   /* configure charge pump IO */
-  USBD_OTG_BSP_ConfigVBUS(pdev);
+  USB_OTG_BSP_ConfigVBUS(pdev);
   
   /* Restart the Phy Clock */
   USB_OTG_WRITE_REG32(pdev->regs.PCGCCTL, 0);
@@ -678,7 +731,7 @@ void USB_OTG_DriveVbus (USB_OTG_CORE_HANDLE *pdev, uint8_t state)
   hprt0.d32 = 0;
   
   /* enable disable the external charge pump */
-  USBD_OTG_BSP_DriveVBUS(pdev, state);
+  USB_OTG_BSP_DriveVBUS(pdev, state);
   
   /* Turn on the Host port power. */
   hprt0.d32 = USB_OTG_ReadHPRT0(pdev);
@@ -693,7 +746,7 @@ void USB_OTG_DriveVbus (USB_OTG_CORE_HANDLE *pdev, uint8_t state)
     USB_OTG_WRITE_REG32(pdev->regs.HPRT0, hprt0.d32);
   }
   
-  USBD_OTG_BSP_mDelay(200);
+  USB_OTG_BSP_mDelay(200);
 }
 /**
 * @brief  USB_OTG_EnableHostInt: Enables the Host mode interrupts
@@ -787,10 +840,10 @@ uint32_t USB_OTG_ResetPort(USB_OTG_CORE_HANDLE *pdev)
   hprt0.d32 = USB_OTG_ReadHPRT0(pdev);
   hprt0.b.prtrst = 1;
   USB_OTG_WRITE_REG32(pdev->regs.HPRT0, hprt0.d32);
-  USBD_OTG_BSP_mDelay (10);                                /* See Note #1 */
+  USB_OTG_BSP_mDelay (10);                                /* See Note #1 */
   hprt0.b.prtrst = 0;
   USB_OTG_WRITE_REG32(pdev->regs.HPRT0, hprt0.d32);
-  USBD_OTG_BSP_mDelay (20);
+  USB_OTG_BSP_mDelay (20);   
   return 1;
 }
 
@@ -1144,19 +1197,15 @@ USB_OTG_STS USB_OTG_CoreInitDev (USB_OTG_CORE_HANDLE *pdev)
   USB_OTG_DEPCTL_TypeDef  depctl;
   uint32_t i;
   USB_OTG_DCFG_TypeDef    dcfg;
-#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   USB_OTG_FSIZ_TypeDef    nptxfifosize;
   USB_OTG_FSIZ_TypeDef    txfifosize;
-#endif
   USB_OTG_DIEPMSK_TypeDef msk;
   USB_OTG_DTHRCTL_TypeDef dthrctl;  
   
   depctl.d32 = 0;
   dcfg.d32 = 0;
-#if defined ( USB_OTG_FS_CORE ) || defined ( USB_OTG_HS_CORE )
   nptxfifosize.d32 = 0;
   txfifosize.d32 = 0;
-#endif
   msk.d32 = 0;
   
   /* Restart the Phy Clock */
@@ -1912,7 +1961,7 @@ void USB_OTG_ActiveRemoteWakeup(USB_OTG_CORE_HANDLE *pdev)
       if(pdev->cfg.low_power)
       {
         /* un-gate USB Core clock */
-        power.d32 = USB_OTG_READ_REG32(pdev->regs.PCGCCTL);
+        power.d32 = USB_OTG_READ_REG32(&pdev->regs.PCGCCTL);
         power.b.gatehclk = 0;
         power.b.stoppclk = 0;
         USB_OTG_WRITE_REG32(pdev->regs.PCGCCTL, power.d32);
@@ -1921,7 +1970,7 @@ void USB_OTG_ActiveRemoteWakeup(USB_OTG_CORE_HANDLE *pdev)
       dctl.d32 = 0;
       dctl.b.rmtwkupsig = 1;
       USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DCTL, 0, dctl.d32);
-// aaaa      USB_OTG_BSP_mDelay(5);
+      USB_OTG_BSP_mDelay(5);
       USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DCTL, dctl.d32, 0 );
     }
   }
@@ -1946,7 +1995,7 @@ void USB_OTG_UngateClock(USB_OTG_CORE_HANDLE *pdev)
     if(dsts.b.suspsts == 1)
     {
       /* un-gate USB Core clock */
-      power.d32 = USB_OTG_READ_REG32(pdev->regs.PCGCCTL);
+      power.d32 = USB_OTG_READ_REG32(&pdev->regs.PCGCCTL);
       power.b.gatehclk = 0;
       power.b.stoppclk = 0;
       USB_OTG_WRITE_REG32(pdev->regs.PCGCCTL, power.d32);

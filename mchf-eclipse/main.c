@@ -40,7 +40,7 @@
 //
 //
 //
-
+#include "cat_driver.h"
 // Transceiver state public structure
 __IO TransceiverState ts;
 
@@ -838,6 +838,7 @@ void TransceiverStateInit(void)
 	ts.nb_disable		= 0;				// TRUE if noise blanker is to be disabled
 	//
 	ts.dsp_active		= 0;				// TRUE if DSP noise reduction is to be enabled
+	ts.digital_mode		= 0;				// digital modes OFF by default
 	ts.dsp_active_toggle	= 0xff;			// used to hold the button G2 "toggle" setting.
 	ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
 	ts.dsp_nr_strength	= 0;				// "Strength" of DSP noise reduction (0 = weak)
@@ -909,6 +910,7 @@ void TransceiverStateInit(void)
 	ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;	// loudness of keyboard/CW sidetone test beep
 	ts.load_freq_mode_defaults = 0;			// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	ts.boot_halt_flag = 0;				// when TRUE, boot-up is halted - used to allow various test functions
+	ts.mic_bias = 0;				// mic bias off
 	ts.ser_eeprom_type = 0;				// serial eeprom not present
 	ts.ser_eeprom_in_use = 0xFF;			// serial eeprom not in use
 	ts.eeprombuf = 0x00;				// pointer to RAM - dynamically loaded
@@ -1150,7 +1152,13 @@ int main(void)
 	{
 		// UI events processing
 		ui_driver_thread();
-
+		{
+			uint8_t bufc;
+			while (cat_driver_get_data(&bufc,1))
+			{
+				cat_driver_put_data("A",1);
+			}
+		}
 		// Audio driver processing
 		//audio_driver_thread();
 

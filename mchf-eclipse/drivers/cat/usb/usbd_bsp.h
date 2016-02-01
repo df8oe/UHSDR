@@ -26,25 +26,66 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBD_BSP__H__
-#define __USBD_BSP__H__
+#ifndef __USB_BSP__H__
+#define __USB_BSP__H__
 
 /* Includes ------------------------------------------------------------------*/
 #include "usb_core.h"
 #include "usb_conf.h"
 
+/** @addtogroup USB_OTG_DRIVER
+  * @{
+  */
+  
+/** @defgroup USB_BSP
+  * @brief This file is the 
+  * @{
+  */ 
 
-//void BSP_Init(void);
 
-void USBD_OTG_BSP_Init (USB_OTG_CORE_HANDLE *pdev);
-void USBD_OTG_BSP_DeInit(USB_OTG_CORE_HANDLE *pdev);
-void USBD_OTG_BSP_uDelay (const uint32_t usec);
-void USBD_OTG_BSP_mDelay (const uint32_t msec);
-void USBD_OTG_BSP_EnableInterrupt (USB_OTG_CORE_HANDLE *pdev);
-//#ifdef USE_HOST_MODE
-void USBD_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev);
-void USBD_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev,uint8_t state);
-//#endif
+/** @defgroup USB_BSP_Exported_Defines
+  * @{
+  */ 
+/**
+  * @}
+  */ 
+
+
+/** @defgroup USB_BSP_Exported_Types
+  * @{
+  */ 
+/**
+  * @}
+  */ 
+
+
+/** @defgroup USB_BSP_Exported_Macros
+  * @{
+  */ 
+/**
+  * @}
+  */ 
+
+/** @defgroup USB_BSP_Exported_Variables
+  * @{
+  */ 
+/**
+  * @}
+  */ 
+
+/** @defgroup USB_BSP_Exported_FunctionsPrototype
+  * @{
+  */ 
+void BSP_Init(void);
+
+void USB_OTG_BSP_Init (USB_OTG_CORE_HANDLE *pdev);
+void USB_OTG_BSP_uDelay (const uint32_t usec);
+void USB_OTG_BSP_mDelay (const uint32_t msec);
+void USB_OTG_BSP_EnableInterrupt (USB_OTG_CORE_HANDLE *pdev);
+#ifdef USE_HOST_MODE
+void USB_OTG_BSP_ConfigVBUS(USB_OTG_CORE_HANDLE *pdev);
+void USB_OTG_BSP_DriveVBUS(USB_OTG_CORE_HANDLE *pdev,uint8_t state);
+#endif
 /**
   * @}
   */ 

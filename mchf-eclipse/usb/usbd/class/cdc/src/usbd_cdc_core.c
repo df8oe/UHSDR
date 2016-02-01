@@ -541,10 +541,7 @@ static uint8_t  usbd_cdc_Setup (void  *pdev,
       else /* No Data request */
       {
         /* Transfer the command to the interface layer */
-    	  //
-    	  // add on - send wValue instead of NULL buffer
-    	  //
-        APP_FOPS.pIf_Ctrl(req->bRequest, (uint8_t*)&(req->wValue), 0);
+        APP_FOPS.pIf_Ctrl(req->bRequest, NULL, 0);
       }
       
       return USBD_OK;
@@ -563,7 +560,7 @@ static uint8_t  usbd_cdc_Setup (void  *pdev,
       if( (req->wValue >> 8) == CDC_DESCRIPTOR_TYPE)
       {
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
-        pbuf = usbd_cdc_Desc;
+        pbuf = usbd_cdc_Desc;   
 #else
         pbuf = usbd_cdc_CfgDesc + 9 + (9 * USBD_ITF_MAX_NUM);
 #endif 

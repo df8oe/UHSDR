@@ -464,9 +464,9 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 } , { // 16
 		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
+		"332-Mic Bias enable",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
-		"                    ",
 		"                    "
 }
 
@@ -3068,6 +3068,20 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.misc_flags1 & 64)	{			// Display status of TX audio filter
 			clr = Red;					// warn user that filter is off!
 		}
+		break;
+	case CONFIG_MIC_BIAS_ENABLE:		// Enable/disable mic bias
+		temp_var = ts.mic_bias;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)		{
+			if(temp_var)
+				ts.mic_bias = 1;
+			else
+				ts.mic_bias = 0;
+		}
+		if(ts.mic_bias)
+			clr = Red;
+		else
+			clr = White;
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
