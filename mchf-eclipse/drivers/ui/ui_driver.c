@@ -10009,7 +10009,7 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
-void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low) {
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
 	uint32_t value32;
 	uint16_t value16;
 
@@ -10057,7 +10057,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 
 }
 
-static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low) {
+static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
 
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
@@ -10138,9 +10138,9 @@ void UiDriverLoadEepromValues(void)
 	//
 	for(i = 0; i < MAX_BANDS; i++)
 	{	// read from stored bands
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, band_dial_value, band_decod_mode, band_filter_mode);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_b, band_filter_mode_a);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -10410,9 +10410,9 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//
 
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW);
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A);
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  band_dial_value, band_decod_mode, band_filter_mode);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_a, band_filter_mode_a);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
 	}
 
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_STEP,df.selected_idx,3);

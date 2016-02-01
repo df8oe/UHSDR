@@ -108,8 +108,6 @@ EXPORTED FUNCTION FROM THE USB-OTG LAYER
 void       DCD_Init(USB_OTG_CORE_HANDLE *pdev ,
                     USB_OTG_CORE_ID_TypeDef coreID);
 
-void 		DCD_DeInit(USB_OTG_CORE_HANDLE *pdev);
-
 void        DCD_DevConnect (USB_OTG_CORE_HANDLE *pdev);
 void        DCD_DevDisconnect (USB_OTG_CORE_HANDLE *pdev);
 void        DCD_EP_SetAddress (USB_OTG_CORE_HANDLE *pdev,
