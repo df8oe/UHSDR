@@ -202,7 +202,10 @@ void Codec_RX_TX(void)
 				//
 				// Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
 				// Reg 06: Power Down Control (Clk off, Osc off, Mic On)
-				Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);
+				if(ts.mic_bias)
+				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
+				else
+				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);	// turn off mic bias
 			}
 			else
 				Codec_Line_Gain_Adj(ts.tx_line_gain);	// set LINE input gain if in LINE in mode

@@ -1141,77 +1141,78 @@ enum {
 
 #define	EEPROM_DETECTOR_COUPLING_COEFF_160M	311	// Calibration coupling coefficient for FWD/REV power sensor for 160 meters
 #define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
+#define EEPROM_MIC_BIAS_ENABLE		313
 //
 // Frequency/mode (memory) storage - memories first 16
 //
-#define	EEPROM_MEM0_MODE		313
+#define	EEPROM_MEM0_MODE		314
 #define	EEPROM_MEM1_MODE		314
-#define	EEPROM_MEM2_MODE		315
-#define	EEPROM_MEM3_MODE		316
-#define	EEPROM_MEM4_MODE		317
-#define	EEPROM_MEM5_MODE		318
-#define	EEPROM_MEM6_MODE		319
-#define	EEPROM_MEM7_MODE		320
-#define	EEPROM_MEM8_MODE		321
-#define	EEPROM_MEM9_MODE		322
-#define	EEPROM_MEM10_MODE		323
-#define	EEPROM_MEM11_MODE		324
-#define	EEPROM_MEM12_MODE		325
-#define	EEPROM_MEM13_MODE		326
-#define	EEPROM_MEM14_MODE		327
-#define	EEPROM_MEM15_MODE		328
-#define	EEPROM_MEM16_MODE		329
-#define	EEPROM_MEM17_MODE		330
-#define	EEPROM_MEM18_MODE		331
-#define	EEPROM_MEM19_MODE		332
-#define	EEPROM_MEM20_MODE		333
-#define	EEPROM_MEM21_MODE		334
+#define	EEPROM_MEM2_MODE		316
+#define	EEPROM_MEM3_MODE		317
+#define	EEPROM_MEM4_MODE		318
+#define	EEPROM_MEM5_MODE		319
+#define	EEPROM_MEM6_MODE		320
+#define	EEPROM_MEM7_MODE		321
+#define	EEPROM_MEM8_MODE		322
+#define	EEPROM_MEM9_MODE		323
+#define	EEPROM_MEM10_MODE		324
+#define	EEPROM_MEM11_MODE		325
+#define	EEPROM_MEM12_MODE		326
+#define	EEPROM_MEM13_MODE		327
+#define	EEPROM_MEM14_MODE		328
+#define	EEPROM_MEM15_MODE		329
+#define	EEPROM_MEM16_MODE		330
+#define	EEPROM_MEM17_MODE		331
+#define	EEPROM_MEM18_MODE		332
+#define	EEPROM_MEM19_MODE		333
+#define	EEPROM_MEM20_MODE		334
+#define	EEPROM_MEM21_MODE		335
 //
-#define	EEPROM_MEM0_FREQ_HIGH		335
-#define	EEPROM_MEM1_FREQ_HIGH		336
-#define	EEPROM_MEM2_FREQ_HIGH		337
-#define	EEPROM_MEM3_FREQ_HIGH		338
-#define	EEPROM_MEM4_FREQ_HIGH		339
-#define	EEPROM_MEM5_FREQ_HIGH		340
-#define	EEPROM_MEM6_FREQ_HIGH		341
-#define	EEPROM_MEM7_FREQ_HIGH		342
-#define	EEPROM_MEM8_FREQ_HIGH		343
-#define	EEPROM_MEM9_FREQ_HIGH		344
-#define	EEPROM_MEM10_FREQ_HIGH		345
-#define	EEPROM_MEM11_FREQ_HIGH		346
-#define	EEPROM_MEM12_FREQ_HIGH		347
-#define	EEPROM_MEM13_FREQ_HIGH		348
-#define	EEPROM_MEM14_FREQ_HIGH		349
-#define	EEPROM_MEM15_FREQ_HIGH		350
-#define	EEPROM_MEM16_FREQ_HIGH		351
-#define	EEPROM_MEM17_FREQ_HIGH		352
-#define	EEPROM_MEM18_FREQ_HIGH		353
-#define	EEPROM_MEM19_FREQ_HIGH		354
-#define	EEPROM_MEM20_FREQ_HIGH		355
-#define	EEPROM_MEM21_FREQ_HIGH		356
+#define	EEPROM_MEM0_FREQ_HIGH		336
+#define	EEPROM_MEM1_FREQ_HIGH		337
+#define	EEPROM_MEM2_FREQ_HIGH		338
+#define	EEPROM_MEM3_FREQ_HIGH		339
+#define	EEPROM_MEM4_FREQ_HIGH		340
+#define	EEPROM_MEM5_FREQ_HIGH		341
+#define	EEPROM_MEM6_FREQ_HIGH		342
+#define	EEPROM_MEM7_FREQ_HIGH		343
+#define	EEPROM_MEM8_FREQ_HIGH		344
+#define	EEPROM_MEM9_FREQ_HIGH		345
+#define	EEPROM_MEM10_FREQ_HIGH		346
+#define	EEPROM_MEM11_FREQ_HIGH		347
+#define	EEPROM_MEM12_FREQ_HIGH		348
+#define	EEPROM_MEM13_FREQ_HIGH		349
+#define	EEPROM_MEM14_FREQ_HIGH		350
+#define	EEPROM_MEM15_FREQ_HIGH		351
+#define	EEPROM_MEM16_FREQ_HIGH		352
+#define	EEPROM_MEM17_FREQ_HIGH		353
+#define	EEPROM_MEM18_FREQ_HIGH		354
+#define	EEPROM_MEM19_FREQ_HIGH		355
+#define	EEPROM_MEM20_FREQ_HIGH		356
+#define	EEPROM_MEM21_FREQ_HIGH		357
 //
-#define	EEPROM_MEM0_FREQ_LOW		357
-#define	EEPROM_MEM1_FREQ_LOW		358
-#define	EEPROM_MEM2_FREQ_LOW		359
-#define	EEPROM_MEM3_FREQ_LOW		360
-#define	EEPROM_MEM4_FREQ_LOW		361
-#define	EEPROM_MEM5_FREQ_LOW		362
-#define	EEPROM_MEM6_FREQ_LOW		363
-#define	EEPROM_MEM7_FREQ_LOW		364
-#define	EEPROM_MEM8_FREQ_LOW		365
-#define	EEPROM_MEM9_FREQ_LOW		366
-#define	EEPROM_MEM10_FREQ_LOW		367
-#define	EEPROM_MEM11_FREQ_LOW		368
-#define	EEPROM_MEM12_FREQ_LOW		369
-#define	EEPROM_MEM13_FREQ_LOW		370
-#define	EEPROM_MEM14_FREQ_LOW		371
-#define	EEPROM_MEM15_FREQ_LOW		372
-#define	EEPROM_MEM16_FREQ_LOW		373
-#define	EEPROM_MEM17_FREQ_LOW		374
-#define	EEPROM_MEM18_FREQ_LOW		375
-#define	EEPROM_MEM19_FREQ_LOW		376
-#define	EEPROM_MEM20_FREQ_LOW		377
-#define	EEPROM_MEM21_FREQ_LOW		378
+#define	EEPROM_MEM0_FREQ_LOW		358
+#define	EEPROM_MEM1_FREQ_LOW		359
+#define	EEPROM_MEM2_FREQ_LOW		360
+#define	EEPROM_MEM3_FREQ_LOW		361
+#define	EEPROM_MEM4_FREQ_LOW		362
+#define	EEPROM_MEM5_FREQ_LOW		363
+#define	EEPROM_MEM6_FREQ_LOW		364
+#define	EEPROM_MEM7_FREQ_LOW		365
+#define	EEPROM_MEM8_FREQ_LOW		366
+#define	EEPROM_MEM9_FREQ_LOW		367
+#define	EEPROM_MEM10_FREQ_LOW		368
+#define	EEPROM_MEM11_FREQ_LOW		369
+#define	EEPROM_MEM12_FREQ_LOW		370
+#define	EEPROM_MEM13_FREQ_LOW		371
+#define	EEPROM_MEM14_FREQ_LOW		372
+#define	EEPROM_MEM15_FREQ_LOW		373
+#define	EEPROM_MEM16_FREQ_LOW		374
+#define	EEPROM_MEM17_FREQ_LOW		375
+#define	EEPROM_MEM18_FREQ_LOW		376
+#define	EEPROM_MEM19_FREQ_LOW		377
+#define	EEPROM_MEM20_FREQ_LOW		378
+#define	EEPROM_MEM21_FREQ_LOW		379
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1560,6 +1561,7 @@ typedef struct TransceiverState
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
 	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
+	bool	mic_bias;			// TRUE = mic bias on
 	uchar	ser_eeprom_type;		// serial eeprom type
 	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
 	uint8_t* eeprombuf;			// pointer to copy of config in RAM
