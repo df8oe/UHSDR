@@ -6070,11 +6070,11 @@ static void UiDriverChangeDigitalMode(void)
 		break;
 	    case 6:
 		sprintf(txt, "WSPR  A");
-		color = White;
+		color = Grey2;
 		break;
 	    case 7:
 		sprintf(txt, "WSPR  P");
-		color = White;
+		color = Grey2;
 		break;
 	    default:
 		break;
