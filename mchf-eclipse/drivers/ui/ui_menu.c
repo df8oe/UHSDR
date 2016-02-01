@@ -409,7 +409,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"C08-6m   Coupling Adj.",
 		"C09-2m   Coupling Adj.",
 		"C10-70cm Coupling Adj.",
-		"C11-23m  Coupling Adj.",
+		"C11-23cm Coupling Adj.",
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
 } , { // 9
@@ -1581,7 +1581,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_KEYER_MODE:	// Keyer mode
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_mode,
 						0,
-						CW_MAX_MODE,
+						CW_MODE_STRAIGHT,
 						CW_MODE_IAM_B,
 						1
 						);
@@ -2819,7 +2819,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;		// make number red to alert user of this!
 		//
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
-		sprintf(options, " %u", (uint)ts.xverter_offset);	// print with nine digits
+		sprintf(options, " %9u", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);
