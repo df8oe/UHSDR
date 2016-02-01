@@ -11816,7 +11816,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_SETTING,ts.nb_setting,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_POWER_LEVEL,ts.power_level,PA_LEVEL_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_speed,DEFAULT_KEYER_SPEED);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_mode,CW_MODE_IAM_B);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_MODE,ts.keyer_mode,CW_MODE_IAM_B);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_GAIN,ts.st_gain,DEFAULT_SIDETONE_GAIN);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_CAL,ts.freq_cal,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_MODE,ts.agc_mode,AGC_DEFAULT);
