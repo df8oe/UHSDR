@@ -34,6 +34,10 @@
 
 #include "usbd_cdc_core.h"
 
+// TODO: create proper header file
+extern int cat_buffer_add(uint8_t c);
+
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -219,11 +223,8 @@ uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len) {
 uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len) {
 	uint32_t i;
 
-	VCP_DataTx(Buf,Len);
 	for (i = 0; i < Len; i++) {
-		/* Add data to internal buffer */
-
+		cat_buffer_add(Buf[i]);
 	}
-	
 	return USBD_OK;
 }
