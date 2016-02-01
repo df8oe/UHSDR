@@ -6050,23 +6050,23 @@ static void UiDriverChangeDigitalMode(void)
 		break;
 	    case 1:
 		sprintf(txt, "FREEDV1");
-		color = White;
+		color = Grey2;
 		break;
 	    case 2:
 		sprintf(txt, "FREEDV2");
-		color = White;
+		color = Grey2;
 		break;
 	    case 3:
 		sprintf(txt, "BPSK 31");
-		color = White;
+		color = Grey2;
 		break;
 	    case 4:
 		sprintf(txt, "  RTTY ");
-		color = White;
+		color = Grey2;
 		break;
 	    case 5:
 		sprintf(txt, "  SSTV ");
-		color = White;
+		color = Grey2;
 		break;
 	    case 6:
 		sprintf(txt, "WSPR  A");
