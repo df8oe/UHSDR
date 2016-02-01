@@ -70,7 +70,6 @@ usb/otg/src/usb_core.c \
 usb/otg/src/usb_hcd_int.c \
 usb/otg/src/usb_dcd.c \
 usb/otg/src/usb_dcd_int.c \
-usb/otg/src/usb_otg.c \
 usb/otg/src/usb_hcd.c \
 usb/usbd/core/src/usbd_core.c \
 usb/usbd/core/src/usbd_ioreq.c \

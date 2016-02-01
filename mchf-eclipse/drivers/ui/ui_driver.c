@@ -10009,7 +10009,7 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
-void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, uint16_t* band_dial_value, uint16_t* band_decod_mode, uint16_t* band_filter_mode) {
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
 	uint32_t value32;
 	uint16_t value16;
 
@@ -10057,7 +10057,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 
 }
 
-static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low,uint16_t* band_dial_value, uint16_t* band_decod_mode, uint16_t* band_filter_mode) {
+static void UiReadWriteSettingsBandMode(const uint8_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
 
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
