@@ -1761,7 +1761,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    // Show fourth line
 //   sprintf(tx,"DF8OE-GitHub-Version %s",$Id$);
    sprintf(tx,"DF8OE-GitHub-Version %s","0.12.rt.4");
-   UiLcdHy28_PrintText(60,100,tx,Yellow,Black,0);
+   UiLcdHy28_PrintText(60,100,tx,Yellow,Black,0); //
 
    //
    Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);	// get setting of frequency translation mode
