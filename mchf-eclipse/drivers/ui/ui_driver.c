@@ -4776,6 +4776,43 @@ static void UiDriverTimeScheduler(void)
 	}
 }
 
+
+// RF API
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverSetDemodMode
+//* Object              : change demodulator mode
+//* Input Parameters    : new_mode contains the new mode
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+void UiDriverSetDemodMode(uint32_t new_mode)
+{
+
+	// Finally update public flag
+	ts.dmod_mode = new_mode;
+
+	// Set SoftDDS in CW mode
+	if(ts.dmod_mode == DEMOD_CW)
+		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
+	else
+		softdds_setfreq(0.0,ts.samp_rate,0);
+
+
+	// Update Decode Mode (USB/LSB/AM/FM/CW)
+
+	UiDriverShowMode();
+
+	UiCalcRxPhaseAdj();		// set gain and phase values according to mode
+	UiCalcRxIqGainAdj();
+	//
+	UiCalcTxPhaseAdj();
+	UiCalcTxIqGainAdj();
+
+	// Change function buttons caption
+	//UiDriverCreateFunctionButtons(false);
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeDemodMode
 //* Object              : change demodulator mode
@@ -4838,30 +4875,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 			}
 		}
 	}
-
-
-	// Finally update public flag
-	ts.dmod_mode = loc_mode;
-
-	// Set SoftDDS in CW mode
-	if(ts.dmod_mode == DEMOD_CW)
-		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-	else
-		softdds_setfreq(0.0,ts.samp_rate,0);
-
-
-	// Update Decode Mode (USB/LSB/AM/FM/CW)
-
-	UiDriverShowMode();
-
-	UiCalcRxPhaseAdj();		// set gain and phase values according to mode
-	UiCalcRxIqGainAdj();
-	//
-	UiCalcTxPhaseAdj();
-	UiCalcTxIqGainAdj();
-
-	// Change function buttons caption
-	//UiDriverCreateFunctionButtons(false);
+	UiDriverSetDemodMode(loc_mode);
 }
 
 //*----------------------------------------------------------------------------
