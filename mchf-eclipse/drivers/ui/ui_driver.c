@@ -9933,6 +9933,17 @@ void UiCheckForPressedKey(void)
 	}
 }
 
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, volatile bool* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+	uint16_t value;
+	if(Read_EEPROM(addr, &value) == 0)
+	{
+		*val_ptr = value;
+		if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+			*val_ptr = default_val;
+		}
+	}
+}
+
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
 	uint16_t value;
 	if(Read_EEPROM(addr, &value) == 0)
@@ -10320,7 +10331,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_FM_RX_BANDWIDTH,&ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT,0,FM_RX_BANDWIDTH_MAX);
 	UiReadSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,&ts.beep_frequency,DEFAULT_BEEP_FREQUENCY,MIN_BEEP_FREQUENCY,MAX_BEEP_FREQUENCY);
 	UiReadSettingEEPROM_UInt8(EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS);
-	UiReadSettingEEPROM_UInt8(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
+	UiReadSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
 
 }
 

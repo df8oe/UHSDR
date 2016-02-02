@@ -43,4 +43,7 @@ CatInterfaceState cat_driver_state();
 uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_has_data();
+
+void CatDriverFT817CheckAndExecute();
+
 #endif
