@@ -22,6 +22,7 @@
 #include "usbd_desc.h"
 #include "usbd_cdc_vcp.h"
 #include "cat_driver.h"
+#include "ui_driver.h"
 
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 

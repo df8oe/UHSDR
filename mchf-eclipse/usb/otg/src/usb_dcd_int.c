@@ -352,7 +352,7 @@ static uint32_t DCD_HandleResume_ISR(USB_OTG_CORE_HANDLE *pdev)
   if(pdev->cfg.low_power)
   {
     /* un-gate USB Core clock */
-    power.d32 = USB_OTG_READ_REG32(&pdev->regs.PCGCCTL);
+    power.d32 = USB_OTG_READ_REG32(pdev->regs.PCGCCTL);
     power.b.gatehclk = 0;
     power.b.stoppclk = 0;
     USB_OTG_WRITE_REG32(pdev->regs.PCGCCTL, power.d32);
@@ -361,7 +361,7 @@ static uint32_t DCD_HandleResume_ISR(USB_OTG_CORE_HANDLE *pdev)
   /* Clear the Remote Wake-up Signaling */
   devctl.d32 = 0;
   devctl.b.rmtwkupsig = 1;
-  USB_OTG_MODIFY_REG32(&pdev->regs.DREGS->DCTL, devctl.d32, 0);
+  USB_OTG_MODIFY_REG32(pdev->regs.DREGS->DCTL, devctl.d32, 0);
   
   /* Inform upper layer by the Resume Event */
   USBD_DCD_INT_fops->Resume (pdev);
