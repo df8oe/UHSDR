@@ -1758,6 +1758,17 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    sprintf(tx,"v %d.%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD);
    UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
 
+   // Show fourth line
+   #define GITHUB_IDENT "$Id$"
+   char ty[8];
+   for(i=5;i<12;i++)
+    ty[i-5] = GITHUB_IDENT[i];
+   ty[7] = 0;
+   sprintf(tx,"DF8OE-Github-Commit %s",ty);
+
+//   sprintf(tx,"DF8OE-GitHub-Version %s","0.12.rt.4");
+   UiLcdHy28_PrintText(45,100,tx,Yellow,Black,0);
+
    //
    Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);	// get setting of frequency translation mode
 
