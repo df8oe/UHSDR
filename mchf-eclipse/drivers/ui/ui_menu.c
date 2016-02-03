@@ -1435,12 +1435,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						TX_AUDIO_MIC,
 						1
 						);
-		//
 		if(ts.tx_audio_source == TX_AUDIO_MIC)
-			strcpy(options, " MIC");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN)
-			strcpy(options, "LINE");
-		//
+			strcpy(options, "   MIC");
+		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L)
+			strcpy(options, "LINE-L");
+		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)
+			strcpy(options, "LINE-R");
+
 		if(fchange)	{		// if there was a change, do update of on-screen information
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
@@ -1487,7 +1488,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)	{	// Allow adjustment only if in line-in mode
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L && ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
@@ -1507,7 +1508,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_LINEIN)	// Orange if not in LINE-IN mode
+		if(ts.tx_audio_source != TX_AUDIO_LINEIN_L && ts.tx_audio_source != TX_AUDIO_LINEIN_R)	// Orange if not in LINE-IN mode
 			clr = Orange;
 		//
 		sprintf(options, "  %u", ts.tx_line_gain);

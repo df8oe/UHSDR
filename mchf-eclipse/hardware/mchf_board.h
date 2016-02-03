@@ -705,8 +705,9 @@ enum {
 
 // Audio sources for TX modulation
 #define TX_AUDIO_MIC			0
-#define TX_AUDIO_LINEIN			1
-#define TX_AUDIO_MAX_ITEMS		2
+#define TX_AUDIO_LINEIN_L		1
+#define TX_AUDIO_LINEIN_R		2
+#define TX_AUDIO_MAX_ITEMS		3
 //
 #define	LINE_GAIN_MIN			3
 #define	LINE_GAIN_MAX			31
@@ -1305,6 +1306,7 @@ typedef struct TransceiverState
 	uchar	power_level;
 
 	uchar 	tx_audio_source;
+	uchar   tx_line_channel;  // 1 LEFT 2 RIGHT
 	uchar	tx_mic_gain;
 	ulong	tx_mic_gain_mult;
 	ulong	tx_mic_gain_mult_temp;	// used to temporarily hold the mic gain when going from RX to TX

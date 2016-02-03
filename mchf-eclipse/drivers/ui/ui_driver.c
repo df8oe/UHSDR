@@ -1397,7 +1397,9 @@ static void UiDriverProcessKeyboard(void)
 				case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
 					if(ts.dmod_mode != DEMOD_CW)	{
 						if(ts.tx_audio_source == TX_AUDIO_MIC)
-							ts.tx_audio_source = TX_AUDIO_LINEIN;
+							ts.tx_audio_source = TX_AUDIO_LINEIN_L;
+						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
+							ts.tx_audio_source = TX_AUDIO_LINEIN_R;
 						else
 							ts.tx_audio_source = TX_AUDIO_MIC;
 						//
@@ -6187,8 +6189,10 @@ void UIDriverChangeAudioGain(uchar enabled)
 
 	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Microphone gain
 		strcpy(temp, "MIC");
-	else										// Line gain
+	else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)										// Line gain
 		strcpy(temp, "LIN");
+	else
+		strcpy(temp, "L-R");
 
 	if(enabled)
 		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,Black,Grey,0);
