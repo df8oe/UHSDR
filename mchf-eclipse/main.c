@@ -1142,7 +1142,7 @@ int main(void)
 	//
 	UiCheckForPressedKey();
 
-	// cat_driver_init();
+	if (ts.cat_mode_active) cat_driver_init();
 
 #ifdef DEBUG_BUILD
 	printf("== main loop starting ==\n\r");
