@@ -5370,30 +5370,6 @@ static void UiDriverCheckEncoderTwo(void)
 		//
 		goto skip_update;
 	}
-	else if(ts.mem_disp)	{
-		if(pot_diff < 0)	{
-			if(ts.menu_item)	{
-				ts.menu_item--;		// decrement selected item
-			}
-		}
-		else	{
-			if(ts.menu_item > 31)	{
-				ts.menu_item = 31;
-			}
-			else	{
-				ts.menu_item++;		// increment selected item
-			}
-		}	//
-		UiDriverMemMenu();		// perform update of selected item
-		//
-		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-		//
-		if(sd.use_spi)
-			ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
-		//
-		goto skip_update;
-	}
-	//
 	if(ts.txrx_mode == TRX_MODE_RX)	{
 		//
 		// Take appropriate action
