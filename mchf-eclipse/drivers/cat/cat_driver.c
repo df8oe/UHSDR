@@ -126,9 +126,15 @@ uint8_t cat_driver_has_data() {
 	return len < 0?len+CAT_BUFFER_SIZE:len;
 }
 
+// #define DEBUG_FT817
+
 struct FT817 {
 	uint8_t req[5];
-
+#ifdef DEBUG_FT817
+#define FT817_MAX_CMD 100
+	uint8_t reqs[FT817_MAX_CMD*5];
+	uint32_t cmd_cntr;
+#endif
 };
 
 #include "ui_rotary.h"
@@ -180,6 +186,7 @@ static const yaesu_cmd_set_t ncmd[] = {
 }
 #endif
 
+
 struct FT817 ft817;
 
 void CatDriverFT817CheckAndExecute() {
@@ -187,6 +194,14 @@ void CatDriverFT817CheckAndExecute() {
 	uint8_t resp[32];
 	while (cat_driver_get_data(ft817.req,5))
 	{
+#ifdef DEBUG_FT817
+		int debug_idx;
+		for (debug_idx = 0; debug_idx < 5 && ft817.cmd_cntr < FT817_MAX_CMD; debug_idx++ ) {
+			ft817.reqs[ft817.cmd_cntr*5+debug_idx] = ft817.req[debug_idx];
+		}
+		ft817.cmd_cntr++;
+#endif
+
 		switch(ft817.req[4]) {
 		case 1: /* SET FREQ */
 		{
