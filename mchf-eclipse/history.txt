@@ -9,6 +9,14 @@
 #########################################################################
 #########################################################################
 
+20160203 [DF8OE]
+- CAT implementation finished using small USB plug (FT817 protocol)
+  Linux recognizes serial device out of the box, Windows needs drivers from STM:
+  http://www.st.com/web/en/catalog/tools/PF257938
+- minor bugfixes in reworks
+- started displaying GitHub-versioning in splashscreen for better firmware identifying
+
+
 20160201 [DF8OE]
 - beginning CAT implementation
 - beginning DIGI-modes implementation
