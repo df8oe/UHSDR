@@ -639,6 +639,8 @@ void	UiCalcSubaudibleGenFreq(void);		// load/set current FM subaudible tone sett
 //
 void 	UiCalcSubaudibleDetFreq(void);		// load/set current FM subaudible tone settings	for detection
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
+
+void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
 //
 //
 #define	SIDETONE_MAX_GAIN	10		// Maximum sidetone gain

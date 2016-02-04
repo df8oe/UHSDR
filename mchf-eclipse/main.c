@@ -30,7 +30,7 @@
 #include "ui_menu.h"
 
 // Keyboard Driver
-#include "keyb_driver.h"
+// #include "keyb_driver.h"
 
 // Misc
 #include "softdds.h"
@@ -1142,6 +1142,7 @@ int main(void)
 	//
 	UiCheckForPressedKey();
 
+	if (ts.cat_mode_active) cat_driver_init();
 
 #ifdef DEBUG_BUILD
 	printf("== main loop starting ==\n\r");
@@ -1152,13 +1153,7 @@ int main(void)
 	{
 		// UI events processing
 		ui_driver_thread();
-		{
-			uint8_t bufc;
-			while (cat_driver_get_data(&bufc,1))
-			{
-				cat_driver_put_data("A",1);
-			}
-		}
+		CatDriverFT817CheckAndExecute();
 		// Audio driver processing
 		//audio_driver_thread();
 
