@@ -1878,6 +1878,10 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			softdds_runf((float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer,size/2);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
 		}
 		else	{		// Not tune mode - use audio from CODEC
+				if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+					src++;
+					// use right channel data
+				}
 			// Fill I and Q buffers with left channel(same as right)
 			for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 				ads.a_buffer[i] = (float)*src;
@@ -1885,7 +1889,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			}
 		}
 		//
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+		if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 			gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 		else	{
 			gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -1980,13 +1984,17 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	else if((ts.dmod_mode == DEMOD_AM) && (!ts.tune))	{	//	Is it in AM mode *AND* is frequency translation active?
 		if(ts.iq_freq_mode)	{				// is translation active?
+			if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+				src++;
+				// use right channel data
+			}
 			// Translation is active - Fill I and Q buffers with left channel(same as right)
 			for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 				ads.a_buffer[i] = (float)*src;
 				src += 2;								// Next sample
 			}
 			//
-			if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+			if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 				gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 			else	{
 				gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2126,12 +2134,16 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		else
 			fm_mod_mult = 1;	// not in 5 kHz mode - used default (2.5 kHz) modulation factors
 		//
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+			src++;
+			// use right channel data
+		}
 		for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 			ads.a_buffer[i] = (float)*src;
 			src += 2;								// Next sample
 		}
 		//
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+		if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 			gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 		else	{
 			gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2262,12 +2274,17 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	// Not tune mode - use audio from CODEC
 	// Fill I and Q buffers with left channel(same as right)
+	if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+		src++;
+		// use right channel data
+	}
 	for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 		ads.a_buffer[i] = (float)*src;
 		src += 2;								// Next sample
 	}
+
 	//
-	if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+	if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 		gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 	else	{
 		gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
