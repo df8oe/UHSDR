@@ -6190,9 +6190,9 @@ void UIDriverChangeAudioGain(uchar enabled)
 	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Microphone gain
 		strcpy(temp, "MIC");
 	else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)										// Line gain
-		strcpy(temp, "LIN");
+		strcpy(temp, "L>L");
 	else
-		strcpy(temp, "L-R");
+		strcpy(temp, "L>R");
 
 	if(enabled)
 		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,Black,Grey,0);

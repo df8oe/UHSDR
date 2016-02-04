@@ -1431,7 +1431,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_MIC_LINE_MODE:	// Mic/Line mode
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_source,
 						0,
-						TX_AUDIO_MAX_ITEMS,
+						TX_AUDIO_LINEIN_R,
 						TX_AUDIO_MIC,
 						1
 						);
