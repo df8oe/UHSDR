@@ -399,6 +399,10 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_1P8KHZ:
 		    IIR_PreFilter.numStages = IIR_1k8_numStages;		// number of stages
+		    if(ts.filter_1k8_select == 0)	{
+				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_LPF_pkCoeffs;	// point to reflection coefficients
+				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_LPF_pvCoeffs;	// point to ladder coefficients
+		    }
 		    if(ts.filter_1k8_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_1k125_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_1k125_pvCoeffs;	// point to ladder coefficients
@@ -422,6 +426,10 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_2P3KHZ:
 		    IIR_PreFilter.numStages = IIR_2k3_numStages;		// number of stages
+		    if(ts.filter_2k3_select == 0)	{
+				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_LPF_pkCoeffs;	// point to reflection coefficients
+				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_LPF_pvCoeffs;	// point to ladder coefficients
+		    }
 		    if(ts.filter_2k3_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_1k275_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_1k275_pvCoeffs;	// point to ladder coefficients
@@ -564,7 +572,7 @@ void audio_driver_set_rx_audio_filter(void)
 	arm_lms_norm_init_f32(&lms2Norm_instance, calc_taps, &lms2NormCoeff_f32[0], &lms2StateF32[0], (float32_t)mu_calc, 64);
 
 	//
-	for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
+	for(i = 0; i < LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
 		lms2_nr_delay[i] = 0;
 	//
 	for(i = 0; i < DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN; i++)	{		// clear LMS state and coefficient buffers

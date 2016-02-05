@@ -177,6 +177,7 @@ T_STEP_1HZ,
 T_STEP_10HZ,
 T_STEP_100HZ,
 T_STEP_1KHZ,
+T_STEP_5KHZ,
 T_STEP_10KHZ,
 T_STEP_100KHZ,
 T_STEP_1MHZ,
@@ -2155,6 +2156,10 @@ void UiDriverShowStep(ulong step)
 			break;
 		case T_STEP_1KHZ:
 			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"1kHz",color,Black,0);
+			line_loc = 5;
+			break;
+		case T_STEP_5KHZ:
+			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"5kHz",color,Black,0);
 			line_loc = 5;
 			break;
 		case T_STEP_10KHZ:
@@ -6539,6 +6544,9 @@ void UiDriverDisplayFilterBW(void)
 			break;
 		case AUDIO_1P8KHZ:		// 1.8 kHz wide filter
 			switch(ts.filter_1k8_select)	{
+				case 0:
+					offset = FILT1800_0;
+					break;
 				case 1:
 					offset = FILT1800_1;
 					break;
@@ -6563,6 +6571,9 @@ void UiDriverDisplayFilterBW(void)
 			break;
 		case AUDIO_2P3KHZ:		// 2.3 kHz wide filter
 			switch(ts.filter_2k3_select)	{
+				case 0:
+					offset = FILT2300_0;
+					break;
 				case 1:
 					offset = FILT2300_1;
 					break;

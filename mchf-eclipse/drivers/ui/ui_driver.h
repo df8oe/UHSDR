@@ -25,6 +25,7 @@
 #define 	T_STEP_10HZ						10
 #define 	T_STEP_100HZ					100
 #define 	T_STEP_1KHZ						1000
+#define 	T_STEP_5KHZ						5000
 #define 	T_STEP_10KHZ					10000
 #define 	T_STEP_100KHZ					100000
 #define		T_STEP_1MHZ						1000000		// Used for transverter offset adjust
@@ -35,6 +36,7 @@ enum {
 	T_STEP_10HZ_IDX,
 	T_STEP_100HZ_IDX,
 	T_STEP_1KHZ_IDX,
+	T_STEP_5KHZ_IDX,
 	T_STEP_10KHZ_IDX,
 	T_STEP_100KHZ_IDX,
 	T_STEP_1MHZ_IDX,
