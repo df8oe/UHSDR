@@ -399,11 +399,11 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_1P8KHZ:
 		    IIR_PreFilter.numStages = IIR_1k8_numStages;		// number of stages
-		    if(ts.filter_1k8_select == 0)	{
+		    if(ts.filter_1k8_select == 6)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_LPF_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_LPF_pvCoeffs;	// point to ladder coefficients
 		    }
-		    if(ts.filter_1k8_select == 1)	{
+		    else if(ts.filter_1k8_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_1k125_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_1k125_pvCoeffs;	// point to ladder coefficients
 		    }
@@ -426,11 +426,11 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_2P3KHZ:
 		    IIR_PreFilter.numStages = IIR_2k3_numStages;		// number of stages
-		    if(ts.filter_2k3_select == 0)	{
+		    if(ts.filter_2k3_select == 5)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_LPF_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_LPF_pvCoeffs;	// point to ladder coefficients
 		    }
-		    if(ts.filter_2k3_select == 1)	{
+		    else if(ts.filter_2k3_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_1k275_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_1k275_pvCoeffs;	// point to ladder coefficients
 		    }

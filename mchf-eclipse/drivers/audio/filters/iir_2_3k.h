@@ -157,7 +157,7 @@ const float IIR_2k3_1k712_pvCoeffs[] =
 		0.0006829825631745
 };
 
-/*
+
 //
 // low pass version
 // DD4WH 2016-02-03
@@ -190,6 +190,6 @@ const float IIR_2k3_LPF_pvCoeffs[] =
 		-2.39931441286178e-05,
 		5.02684297614079e-05
 };
-*/
+
 
 #endif

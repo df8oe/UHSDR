@@ -590,10 +590,10 @@ enum	{
 #define	MAX_500HZ_FILTER		5
 #define	FILTER_500HZ_DEFAULT		3		// Center frequency of 750 Hz
 //
-#define	MAX_1K8_FILTER			5
+#define	MAX_1K8_FILTER			6
 #define	FILTER_1K8_DEFAULT		3		// Center frequency of 1425 Hz
 //
-#define	MAX_2K3_FILTER			4
+#define	MAX_2K3_FILTER			5
 #define	FILTER_2K3_DEFAULT		2		// Center frequency of 1412 Hz
 //
 #define	FILTER_3K6_DEFAULT		1		// 1 = Enabled
@@ -645,17 +645,21 @@ enum	{
 #define	FILT500_4			850
 #define	FILT500_5			950
 //
+#define	FILT1800_0			 900
 #define	FILT1800_1			1125
 #define	FILT1800_2			1275
 #define	FILT1800_3			1427
 #define	FILT1800_4			1575
 #define	FILT1800_5			1725
 //
+#define	FILT2300_0			1150
 #define	FILT2300_1			1262
 #define	FILT2300_2			1412
 #define	FILT2300_3			1562
 #define	FILT2300_4			1712
 //
+#define FILT3600_1			1800
+#define	FILT3600_2			1800
 #define	FILT3600			1800
 //
 #define	FILT5000			2500
