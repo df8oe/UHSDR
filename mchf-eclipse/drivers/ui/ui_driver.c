@@ -6544,9 +6544,6 @@ void UiDriverDisplayFilterBW(void)
 			break;
 		case AUDIO_1P8KHZ:		// 1.8 kHz wide filter
 			switch(ts.filter_1k8_select)	{
-				case 0:
-					offset = FILT1800_0;
-					break;
 				case 1:
 					offset = FILT1800_1;
 					break;
@@ -6574,9 +6571,6 @@ void UiDriverDisplayFilterBW(void)
 			break;
 		case AUDIO_2P3KHZ:		// 2.3 kHz wide filter
 			switch(ts.filter_2k3_select)	{
-				case 0:
-					offset = FILT2300_0;
-					break;
 				case 1:
 					offset = FILT2300_1;
 					break;

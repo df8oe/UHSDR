@@ -645,7 +645,6 @@ enum	{
 #define	FILT500_4			850
 #define	FILT500_5			950
 //
-#define	FILT1800_0			 900
 #define	FILT1800_1			1125
 #define	FILT1800_2			1275
 #define	FILT1800_3			1427
@@ -653,7 +652,6 @@ enum	{
 #define	FILT1800_5			1725
 #define	FILT1800_6			 900
 //
-#define	FILT2300_0			1150
 #define	FILT2300_1			1262
 #define	FILT2300_2			1412
 #define	FILT2300_3			1562
