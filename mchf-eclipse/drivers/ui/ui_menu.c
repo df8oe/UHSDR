@@ -968,6 +968,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		case 5:
 			strcpy(options, "1725Hz");
 			break;
+		case 6:
+			strcpy(options, "   LPF");
+			break;
+
 		}
 		//
 		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{	// set filter if changed
@@ -1011,6 +1015,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			break;
 		case 4:
 			strcpy(options, "1712Hz");
+			break;
+		case 5:
+			strcpy(options, "   LPF");
 			break;
 		}
 		//
@@ -2057,6 +2064,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    break;
 			    }
 			select = MENU_HARDWARE_INFO;
+			break;
 	case MENU_RESTORE_CONFIG:
 			if(ts.ser_eeprom_in_use == 0)
 			    {
@@ -2074,6 +2082,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    break;
 			    }
 			select = MENU_WFALL_SIZE;
+			break;
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;
