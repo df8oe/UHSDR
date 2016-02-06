@@ -2390,7 +2390,11 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#ifdef USE_24_BITS
+void I2S_RX_CallBack(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
+#else
 void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
+#endif
 {
 	static bool to_rx = 0;	// used as a flag to clear the RX buffer
 	static bool to_tx = 0;	// used as a flag to clear the TX buffer
