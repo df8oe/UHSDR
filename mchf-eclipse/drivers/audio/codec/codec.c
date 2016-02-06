@@ -205,7 +205,7 @@ void Codec_RX_TX(void)
 				if(ts.mic_bias)
 				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
 				else
-				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);	// turn off mic bias
+				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
 			}
 			else
 				Codec_Line_Gain_Adj(ts.tx_line_gain);	// set LINE input gain if in LINE in mode
