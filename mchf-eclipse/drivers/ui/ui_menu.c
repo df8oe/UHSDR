@@ -1422,10 +1422,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Red3;
 		}
 		else if(ts.iq_freq_mode == 1)	{
-			sprintf(options,"RX LO HIGH");
+			sprintf(options,"RX  +6KHZ");
 		}
 		else if(ts.iq_freq_mode == 2)	{
-			sprintf(options," RX LO LOW");
+			sprintf(options,"RX  -6KHZ");
+		}
+		else if(ts.iq_freq_mode == 3)	{
+			sprintf(options,"RX +12KHZ");
+		}
+		else if(ts.iq_freq_mode == 4)	{
+			sprintf(options,"RX -12KHZ");
 		}
 		//
 		//

@@ -551,11 +551,13 @@ enum	{
 #define	FREQ_SHIFT_MAG	6000		// Amount of frequency shift, in Hz, when software frequency shift is enabled (exactly 1/8th of the sample rate prior to decimation!)
 //
 #define	FREQ_IQ_CONV_MODE_OFF		0	// No frequency conversion
-#define FREQ_IQ_CONV_LO_HIGH		1	// LO is above receive frequency in RX mode
-#define	FREQ_IQ_CONV_LO_LOW			2	// LO is below receive frequency in RX mode
+#define FREQ_IQ_CONV_P6KHZ		1	// LO is 6KHz above receive frequency in RX mode
+#define	FREQ_IQ_CONV_M6KHZ		2	// LO is 6KHz below receive frequency in RX mode
+#define FREQ_IQ_CONV_P12KHZ		3	// LO is 12KHz above receive frequency in RX mode
+#define	FREQ_IQ_CONV_M12KHZ		4	// LO is 12KHz below receive frequency in RX mode
 //
-#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_LO_LOW		//FREQ_IQ_CONV_MODE_OFF
-#define	FREQ_IQ_CONV_MODE_MAX		2
+#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M6KHZ		//FREQ_IQ_CONV_MODE_OFF
+#define	FREQ_IQ_CONV_MODE_MAX		4
 //
 //
 // Exports
