@@ -3442,16 +3442,7 @@ void UiDriverCreateSpectrumScope(void)
 //*----------------------------------------------------------------------------
 void UiDriverClearSpectrumDisplay(void)
 {
-	ulong i;
-
-	if(sd.use_spi)	{
-		UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-	}
-	else	{
-		for(i = 0; i < 8; i++)	{
-			UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22) + (i* 12), "                                 ", Black, Black, 0);
-		}
-	}
+	UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 //
 //*----------------------------------------------------------------------------
