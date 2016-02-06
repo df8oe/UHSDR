@@ -868,74 +868,35 @@ void UiLcdHy28_CloseBulkWrite(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+#define PIXELBUFFERSIZE 256
+static uint16_t   pixelbuffer[PIXELBUFFERSIZE];
+
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
-   ulong       i,j;
-   ushort     x_addr = x;
-   ushort      a,b;
-   uchar      fw = cf->Width;
-   const short   *ch = (const short *)(&cf->table[(symb - 32) * cf->Height]);
+	ulong       i,j;
+	ushort      a,b;
+	const uchar      fw = cf->Width;
+	uint16_t pixelcount = 0;
+	const short   *ch = (const short *)(&cf->table[(symb - 32) * cf->Height]);
 
-   UiLcdHy28_SetCursorA(x_addr,y);	// set starting position of character
-
-   if(sd.use_spi)	{		// SPI enabled?
-	   UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and turn on cursor auto-increment
-	   // Establish CGRAM window for THIS character
-	   UiLcdHy28_WriteReg(0x50, y);    // Vertical GRAM Start Address
-	   UiLcdHy28_WriteReg(0x51, y+(cf->Height)-1);    // Vertical GRAM End Address	-1
-	   UiLcdHy28_WriteReg(0x52, x);    // Horizontal GRAM Start Address
-	   UiLcdHy28_WriteReg(0x53, x_addr+(cf->Width)-1);    // Horizontal GRAM End Address  -1
-	   //
-	   UiLcdHy28_WriteRAM_Prepare();					// prepare for bulk-write to character window
-	   //
-	   for(i = 0; i < cf->Height; i++)	{
-		   // Draw line
-		   for(j = 0; j < cf->Width; j++)	{
-			   a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
-			   b = ((ch[i] &  (0x01 << j)));
-			   //
-			   if((!a && (fw <= 12)) || (!b && (fw > 12)))	{	// background color
-				   UiLcdHy28_WriteDataOnly(bkColor);
-			   }
-			   else	{	// foreground color
-				   UiLcdHy28_WriteDataOnly(Color);
-			   }
-		   }
-	   }
-	   GPIO_SetBits(lcd_cs_pio, lcd_cs);	// bulk-write complete!
-	   //
-	   UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-	   UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-	   UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-	   UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-	   //
-	   UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
-   }
-
-   else	{	// NOT SPI mode
-	   for(i = 0; i < cf->Height; i++)	{
-		   // Draw line
-		   for(j = 0; j < cf->Width; j++)	{
-			   UiLcdHy28_WriteRAM_Prepare();
-			   a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
-			   b = ((ch[i] &  (0x01 << j)));
-
-			   if((!a && (fw <= 12)) || (!b && (fw > 12)))
-				   UiLcdHy28_WriteDataOnly(bkColor);
-			   else
-				   UiLcdHy28_WriteDataOnly(Color);
-
-			   x_addr++;
-			   UiLcdHy28_SetCursorA(x_addr,y);
-		   }
-
-		   y++;
-		   x_addr = x;
-		   UiLcdHy28_SetCursorA(x_addr,y);
-	   }
-   }
-
-
+	UiLcdHy28_OpenBulkWrite(x,cf->Width,y,cf->Height);
+	for(i = 0; i < cf->Height; i++)	{
+		// Draw line
+		for(j = 0; j < cf->Width; j++)	{
+			a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
+			b = ((ch[i] &  (0x01 << j)));
+			//
+			pixelbuffer[pixelcount++] = ((!a && (fw <= 12)) || (!b && (fw > 12)))?bkColor:Color;
+			if (pixelcount == PIXELBUFFERSIZE) {
+				UiLcdHy28_BulkWrite(pixelbuffer,pixelcount);
+				pixelcount = 0;
+			}
+		}
+	}
+	UiLcdHy28_BulkWrite(pixelbuffer,pixelcount);
+	// flush all not yet  transferred pixel to display.
+	UiLcdHy28_CloseBulkWrite();
 }
 
 //*----------------------------------------------------------------------------
