@@ -905,7 +905,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	//
 	// Pre-calculate quadrature sine wave(s) ONCE for the conversion
 	//
-	uchar multi;
+	uchar multi = 1;
 	if((ts.iq_freq_mode == 1 || ts.iq_freq_mode == 2) && multi != 4)
 	    {
 	    multi = 4; 		//(4 = 6 kHz offset)

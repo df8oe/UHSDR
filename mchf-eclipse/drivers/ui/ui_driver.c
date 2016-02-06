@@ -7288,21 +7288,21 @@ static void UiDriverReDrawSpectrumDisplay(void)
 			if(sd.magnify)	{	// is magnify mode on?
 				if(!ts.iq_freq_mode)	{	// yes - frequency translate mode is off
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > FFT_IQ_BUFF_LEN/4)	{
+						if(i > FFT_IQ_BUFF_LEN/4)	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = 128..128 + FFT_IQ_BUFF_LEN/8 */
 							ptr = (i/2)+128;
 							if(ptr < FFT_IQ_BUFF_LEN/2)
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
 						}
-						else	{
+						else	{	/* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = 0..FFT_IQ_BUFF_LEN/8  */
 							ptr = (i/2);						// process upper half
 							if(ptr < FFT_IQ_BUFF_LEN/2)
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
+								sd.FFT_DspData[i] = sd.FFT_TempData[ptr]; /* each entry from fft is used twice */
 						}
 					}
 				}
 				else if(ts.iq_freq_mode == 1)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{
+						if(i > (FFT_IQ_BUFF_LEN/4))	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = (128 - 32) ..(128 - 32) + FFT_IQ_BUFF_LEN/8 */
 							ptr = (i/2)+96;
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
@@ -7310,7 +7310,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 						else	{
 							ptr = (i/2);					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{ /* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = (0 -32)..(0 -32) + FFT_IQ_BUFF_LEN/8  */
 								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+224)%256];
 							}
 						}
@@ -7335,7 +7335,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 				else if(ts.iq_freq_mode == 3)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
-							ptr = (i/2)+96;
+							ptr = (i/2)+64;
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
 							}
@@ -7343,7 +7343,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						else	{
 							ptr = (i/2);					// process upper half
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+224)%256];
+								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
 							}
 						}
 					}
@@ -7353,11 +7353,11 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
 							ptr = (i/2);
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+160)%256];
+								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
 							}
 						}
 						else	{
-							ptr = (i/2) + 32;					// process upper half
+							ptr = (i/2) + 64;					// process upper half
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
 							}
