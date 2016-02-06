@@ -1438,7 +1438,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_MIC_LINE_MODE:	// Mic/Line mode
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_source,
 						0,
-						TX_AUDIO_LINEIN_R,
+						TX_AUDIO_MAX_ITEMS,
 						TX_AUDIO_MIC,
 						1
 						);
@@ -2048,6 +2048,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 			break;
 	case MENU_BACKUP_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, " Do it!");
@@ -2066,6 +2067,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			select = MENU_HARDWARE_INFO;
 			break;
 	case MENU_RESTORE_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, "Do it!");
