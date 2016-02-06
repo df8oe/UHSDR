@@ -19,7 +19,7 @@
 #include "ui_driver.h"
 
 #define MAX_X  320
-#define MAX_Y  320
+#define MAX_Y  240
 
 #define SPI_START   (0x70)              /* Start byte for SPI transfer        */
 #define SPI_RD      (0x01)              /* WR bit 1 within start              */
@@ -115,8 +115,11 @@ uint8_t UiLcdHy28_ReadByteSpi(void);
 void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
 void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
+void 	UiLcdHy28_BulkWriteColor(uint16_t color, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
+
 void	UiLcdHy28_WriteRAM_Prepare(void);
+void	UiLcdHy28_WriteRAM_Finish(void);
 
 void 	UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift);
 void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new,ushort shift);
