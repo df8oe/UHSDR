@@ -964,7 +964,16 @@ static void UiDriverProcessKeyboard(void)
 						    }
 						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d))	// wf/scope frequency dial
 						    {
-						    df.tune_new = round((df.tune_new + 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x))/2000) * 2000;
+						    ulong diff = 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x);
+						    if(ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
+							diff = diff + 24000;
+						    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+							diff = diff - 24000;
+						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
+							diff = diff + 48000;
+						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
+							diff = diff + 72000;
+						    df.tune_new = round((df.tune_new + diff)/2000) * 2000;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
 							{						// SPLIT mode
