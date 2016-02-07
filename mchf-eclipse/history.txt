@@ -16,6 +16,7 @@
 - added possibility to use filters as LPF (not with center frequency)
 - rework of display code for speed up
 - further code reworking
+- FM only allowed on 10m when #029-LSB/USB Auto Select is ON
 
 
 20160203 [DF8OE]

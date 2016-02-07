@@ -4861,7 +4861,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 				loc_mode++;				// yes - go to next mode
 		}
 		if(loc_mode == DEMOD_FM)	{	// is this FM mode?
-			if(!(ts.misc_flags2 & 1))	// is FM to be disabled?
+			if((!(ts.misc_flags2 & 1)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
 				loc_mode++;				// yes - go to next mode
 		}
 	}
@@ -4877,7 +4877,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 
 	if((ts.lsb_usb_auto_select) && (!noskip))	{	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
 		if((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB))	{	// is this a voice mode, subject to "auto" LSB/USB select?
-			if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((df.tune_new < USB_FREQ_THRESHOLD) && (ts.band != 1)))	{	// are we <10 MHz and NOT on 60 meters?
+			if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((df.tune_new < USB_FREQ_THRESHOLD) && (ts.band != BAND_MODE_60)))	{	// are we <10 MHz and NOT on 60 meters?
 				if(loc_mode == DEMOD_USB)	{		// are we in USB mode?
 					loc_mode++;					// yes - bump to the next mode
 				}

@@ -40,7 +40,7 @@
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K Atanassov - M0NKA 2014-2016"
+#define 	AUTHOR_STRING   		"K. Atanassov - M0NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			219
@@ -50,7 +50,7 @@
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
-#define		ATTRIB_STRING3			"and Amateur Radio communities"
+#define		ATTRIB_STRING3			"and Amateur Radio Communities"
 //
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
