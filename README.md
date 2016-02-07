@@ -7,6 +7,7 @@ This branch may be temporarily incomplete and can e unusable. Because of this th
 
 Have fun - Open-Source opens possibilities!
 
-KA7OEI, Clint
-
+<br><br>
+The Open Source mcHF Community<br>
+KA7OEI, Clint<br>
 DF8OE, Andreas

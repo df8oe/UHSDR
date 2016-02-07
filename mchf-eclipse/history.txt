@@ -9,6 +9,15 @@
 #########################################################################
 #########################################################################
 
+
+20160206 [DF8OE]
+- adding new translate modes +/- 12KHz
+- added 5KHz tuning steps
+- added possibility to use filters as LPF (not with center frequency)
+- rework of display code for speed up
+- further code reworking
+
+
 20160203 [DF8OE]
 - CAT implementation finished using small USB plug (FT817 protocol)
   Linux recognizes serial device out of the box, Windows needs drivers from STM:
@@ -20,7 +29,6 @@
 20160201 [DF8OE]
 - beginning CAT implementation
 - beginning DIGI-modes implementation
-- added menu #332 mic-bias enable/disable
 
 
 20160130 [DF8OE]
