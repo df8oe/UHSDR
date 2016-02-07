@@ -1088,6 +1088,12 @@ int main(void)
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
 
+	if(ts.ser_eeprom_in_use == 0x00)
+	    {
+	    uint8_t serbuf[MAX_VAR_ADDR*2+200];		// mirror of serial eeprom in RAM
+	    ts.eeprombuf = serbuf;
+	    }
+
 	// test if touchscreen is present
 	get_touchscreen_coordinates();				// initial reading of XPT2046
 	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?

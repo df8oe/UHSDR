@@ -1214,7 +1214,10 @@ static void UiDriverProcessKeyboard(void)
 					if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
 						if(!ts.menu_mode)	{						// not in menu mode
 							UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
-							UiLcdHy28_PrintText(80,160," Saving settings to EEPROM ",Cyan,Black,0);
+							if(ts.ser_eeprom_in_use == 0xFF)
+							    UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
+							if(ts.ser_eeprom_in_use == 0x00)
+							    UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
 							UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
 							for(temp = 0; temp < 6; temp++)			// delay so that it may be read
 								non_os_delay();
@@ -10553,8 +10556,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 
 	if(ts.ser_eeprom_in_use == 0)
 	{
-		static uint8_t p[MAX_VAR_ADDR*2+2];
-		ts.eeprombuf = p;
+//		static uint8_t p[MAX_VAR_ADDR*2+2];
+//		ts.eeprombuf = p;
 
 		uint16_t i, data;
 
