@@ -905,13 +905,13 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	//
 	// Pre-calculate quadrature sine wave(s) ONCE for the conversion
 	//
-	uchar multi = 1;
-	if((ts.iq_freq_mode == 1 || ts.iq_freq_mode == 2) && multi != 4)
+	uchar multi;
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ))
 	    {
 	    multi = 4; 		//(4 = 6 kHz offset)
 	    flag = 0;
 	    }
-	if((ts.iq_freq_mode == 3 || ts.iq_freq_mode == 4) && multi != 8)
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ))
 	    {
 	    multi = 8; 		// (8 = 12 kHz offset)
 	    flag = 0;
@@ -1441,7 +1441,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	//
 	if(ts.iq_freq_mode)	{		// is receive frequency conversion to be done?
-		if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// Yes - "RX LO LOW" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
 			audio_rx_freq_conv(size, 1);
 		else								// it is in "RX LO LOW" mode
 			audio_rx_freq_conv(size, 0);
@@ -1652,7 +1652,7 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	//
 	if(ts.iq_freq_mode)	{		// is receive frequency conversion to be done?
-		if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)		// Yes - "RX LO LOW" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// Yes - "RX LO LOW" mode
 			audio_rx_freq_conv(size, 1);
 		else								// it is in "RX LO LOW" mod
 			audio_rx_freq_conv(size, 0);
@@ -1965,13 +1965,13 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 			if(ts.dmod_mode == DEMOD_LSB)	{		// Is it LSB?
-				if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// yes - is it "RX LO HIGH" mode?
+				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
 			else								// it is in "RX LO LOW" mode
 					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 			}
 			else	{								// It is USB!
-				if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// yes - is it "RX LO HIGH" mode?
+				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 			else								// it is in "RX LO LOW" mode
 					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
@@ -2078,7 +2078,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// check and apply correct translate mode
 			//
-			if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set "RX LO IS HIGH" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
@@ -2111,7 +2111,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// check and apply correct translate mode
 			//
-			if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set "LO IS HIGH" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
@@ -2250,7 +2250,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// ------------------------
 		// Output I and Q as stereo data
-		if(ts.iq_freq_mode == 2 || ts.iq_freq_mode == 4)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
 			for(i = 0; i < size/2; i++)	{
 				// Prepare data for DAC
 				*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
@@ -2357,13 +2357,13 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 		if(ts.dmod_mode == DEMOD_LSB)	{		// Is it LSB?
-			if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// yes - is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 		}
 		else	{								// It is USB!
-			if(ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3)			// yes - is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode

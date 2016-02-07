@@ -1421,16 +1421,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options,">> OFF! <<");
 			clr = Red3;
 		}
-		else if(ts.iq_freq_mode == 1)	{
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{
 			sprintf(options,"RX  +6KHZ");
 		}
-		else if(ts.iq_freq_mode == 2)	{
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{
 			sprintf(options,"RX  -6KHZ");
 		}
-		else if(ts.iq_freq_mode == 3)	{
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{
 			sprintf(options,"RX +12KHZ");
 		}
-		else if(ts.iq_freq_mode == 4)	{
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{
 			sprintf(options,"RX -12KHZ");
 		}
 		//

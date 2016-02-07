@@ -1138,9 +1138,13 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
                x   = sd.vert_grid_id[k];
                if((sd.magnify) && (k == 3))
            	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == 2 || ts.iq_freq_mode == 4) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
+               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
            		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3) && (k == 2) && (!sd.magnify))
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
            	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
@@ -1214,9 +1218,15 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
                x   = sd.vert_grid_id[k];
                if((sd.magnify) && (k == 3))
            	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == 2 || ts.iq_freq_mode == 4) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
+               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
            		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3) && (k == 2) && (!sd.magnify))
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 2) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
            	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;

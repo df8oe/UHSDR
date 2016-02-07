@@ -3112,20 +3112,20 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
 
 	if(!sd.magnify)	{		// if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
-		if(ts.iq_freq_mode == 1)			// Is "RX LO HIGH" translate mode active?
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// Is "RX LO HIGH" translate mode active?
 			freq_calc += FREQ_SHIFT_MAG;	// Yes, shift receive frequency to left of center
-		else if(ts.iq_freq_mode == 2)		// it is "RX LO LOW" in translate mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)		// it is "RX LO LOW" in translate mode
 			freq_calc -= FREQ_SHIFT_MAG;	// shift receive frequency to right of center
-		else if(ts.iq_freq_mode == 3)		// it is "RX LO LOW" in translate mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// it is "RX LO LOW" in translate mode
 			freq_calc += FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
-		else if(ts.iq_freq_mode == 4)		// it is "RX LO LOW" in translate mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)		// it is "RX LO LOW" in translate mode
 			freq_calc -= FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
 	}
 	freq_calc = (freq_calc + 500)/1000;	// round graticule frequency to the nearest kHz
 
 	//
 
-	if((ts.iq_freq_mode == 0) || (sd.magnify))	{	// Translate mode is OFF or magnify is on
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || (sd.magnify))	{	// Translate mode is OFF or magnify is on
 		sprintf(txt, "  %u  ", (unsigned)freq_calc);	// build string for center frequency
 		i = 130-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3139,7 +3139,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
 	}
-	else if((ts.iq_freq_mode == 1 || ts.iq_freq_mode == 3) && (!sd.magnify))	{	// Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
+	else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
 		sprintf(txt, "  %u  ", (unsigned)freq_calc-(unsigned)grat);	// build string for center frequency
 		i = 94-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3152,7 +3152,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
 	}
-	else if((ts.iq_freq_mode == 2 || ts.iq_freq_mode == 4) && (!sd.magnify))	{	// Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
+	else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
 		sprintf(txt, "  %u  ", (unsigned)freq_calc+(unsigned)grat);	// build string for center frequency
 		i = 160-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3386,13 +3386,13 @@ void UiDriverCreateSpectrumScope(void)
 
 		// determine if we are drawing the "center" line on the spectrum  display
 		if(!sd.magnify)	{
-			if((ts.iq_freq_mode == 2) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
+			if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
 				clr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == 1) && (i == 3))		// shift left of center if RF HIGH translate mode
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (i == 3))		// shift left of center if RF HIGH translate mode
 				clr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == 3) && (i == 2))		// shift left of center if RF HIGH translate mode
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (i == 2))		// shift left of center if RF HIGH translate mode
 				clr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == 4) && (i == 6))		// shift right of center if RF HIGH translate mode
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (i == 6))		// shift right of center if RF HIGH translate mode
 				clr = ts.scope_centre_grid_colour_active;
 			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (i == 4))	// center if translate mode not active
 				clr = ts.scope_centre_grid_colour_active;
@@ -3620,13 +3620,13 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	band_scan = 0;
 	flag = 0;
 	//
-	if(ts.iq_freq_mode == 1)	// is frequency translate active and in "RX LO HIGH" mode?
+	if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	// is frequency translate active and in "RX LO HIGH" mode?
 		freq -= FREQ_SHIFT_MAG * 4;	// yes - subtract offset amount
-	else if(ts.iq_freq_mode == 2)	// is frequency translate active and in "RX LO LOW" mode?
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	// is frequency translate active and in "RX LO LOW" mode?
 		freq += FREQ_SHIFT_MAG * 4;	// yes - add offset amount
-	else if(ts.iq_freq_mode == 3)	// is frequency translate active and in "RX LO LOW" mode?
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
 		freq -= FREQ_SHIFT_MAG * 8;	// yes - add offset amount
-	else if(ts.iq_freq_mode == 4)	// is frequency translate active and in "RX LO LOW" mode?
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
 		freq += FREQ_SHIFT_MAG * 8;	// yes - add offset amount
 
 
@@ -3714,13 +3714,13 @@ skip_check:
 	// Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == 1)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
-		else if(ts.iq_freq_mode == 2)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == 3)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 8;
-		else if(ts.iq_freq_mode == 4)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
 	}
 
@@ -3843,13 +3843,13 @@ void UiDriverUpdateFrequencyFast(void)
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == 1)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == 2)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == 3)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 8;
-		else if(ts.iq_freq_mode == 4)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
 	}
 
@@ -6684,13 +6684,13 @@ void UiDriverDisplayFilterBW(void)
 	//
 	if(!sd.magnify)	{	// is magnify mode on?
 		calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
-		if(ts.iq_freq_mode == 1)			// line is to left if in "RX LO HIGH" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
 			lpos = 98;
-		else if(ts.iq_freq_mode == 2)			// line is to right if in "RX LO LOW" mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// line is to right if in "RX LO LOW" mode
 			lpos = 162;
-		else if(ts.iq_freq_mode == 3)			// line is to left if in "RX LO LOW" mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// line is to left if in "RX LO LOW" mode
 			lpos = 66;
-		else if(ts.iq_freq_mode == 4)			// line is to right if in "RX LO LOW" mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// line is to right if in "RX LO LOW" mode
 			lpos = 194;
 		else					// frequency translate mode is off
 			lpos = 130;			// line is in center
@@ -7106,7 +7106,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(min2 < min1)
 						min1 = min2;
 				}
-				else if(ts.iq_freq_mode == 1)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[160], 64, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[160], 64, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[160], 64, &mean1);				// find mean value in center portion
@@ -7137,7 +7137,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(mean3 > mean1)
 						mean1 = mean3;
 				}
-				else if(ts.iq_freq_mode == 2)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[224], 32, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[224], 32, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[224], 32, &mean1);				// find mean value in center portion
@@ -7168,7 +7168,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(mean3 > mean1)
 						mean1 = mean3;
 				}
-				else if(ts.iq_freq_mode == 3)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaa
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaa
 					arm_max_q15((q15_t *)&sd.FFT_TempData[128], 64, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[128], 64, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[128], 64, &mean1);				// find mean value in center portion
@@ -7199,7 +7199,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(mean3 > mean1)
 						mean1 = mean3;
 				}
-				else if(ts.iq_freq_mode == 4)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean1);				// find mean value in center portion
@@ -7291,7 +7291,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 1)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = (128 - 32) ..(128 - 32) + FFT_IQ_BUFF_LEN/8 */
 							ptr = (i/2)+96;
@@ -7307,7 +7307,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 2)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
 							ptr = (i/2);
@@ -7323,7 +7323,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 3)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
 							ptr = (i/2)+64;
@@ -7339,7 +7339,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 4)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
 							ptr = (i/2);
@@ -7539,22 +7539,22 @@ static void UiDriverReDrawWaterfallDisplay(void)
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 1)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 2)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 3)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 4)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &mean);				// find mean value in center portion
@@ -7628,7 +7628,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 1)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2)+32;
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
@@ -7636,7 +7636,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 2)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2)+96;
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
@@ -7644,7 +7644,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 3)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen       aaaaaaaaaaaaaaaaaaaaaa
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen       aaaaaaaaaaaaaaaaaaaaaa
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2);
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
@@ -7652,7 +7652,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 4)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2)+128;
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
@@ -7680,13 +7680,13 @@ static void UiDriverReDrawWaterfallDisplay(void)
 			}
 			else if(!ts.iq_freq_mode)	// is frequency translate off OR magnification mode on
 				sd.waterfall[sd.wfall_line][128] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
-			else if(ts.iq_freq_mode == 1)			// LO HIGH - set graticule below center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// LO HIGH - set graticule below center
 				sd.waterfall[sd.wfall_line][96] = NUMBER_WATERFALL_COLOURS;
-			else if(ts.iq_freq_mode == 2)			// LO LOW - set graticule above center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// LO LOW - set graticule above center
 				sd.waterfall[sd.wfall_line][160] = NUMBER_WATERFALL_COLOURS;
-			else if(ts.iq_freq_mode == 3)			// LO HIGH - set graticule below center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// LO HIGH - set graticule below center
 				sd.waterfall[sd.wfall_line][64] = NUMBER_WATERFALL_COLOURS;
-			else if(ts.iq_freq_mode == 4)			// LO LOW - set graticule above center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// LO LOW - set graticule above center
 				sd.waterfall[sd.wfall_line][192] = NUMBER_WATERFALL_COLOURS;
 
 			//
