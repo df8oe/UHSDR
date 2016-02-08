@@ -964,21 +964,31 @@ static void UiDriverProcessKeyboard(void)
 						    }
 						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
 						    {
-						    int step = 2000;
-						    ulong diff = 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x);
+						    int step = 2000;				// adjust to 500Hz
 						    if(ts.dmod_mode == DEMOD_AM)
-							step = 20000;
-						    if(ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
-							diff = diff + 24000/(sd.magnify+1) - sd.magnify*20000;
-						    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
-							diff = diff - 24000/(sd.magnify+1);
-						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
-							diff = diff + 48000/(sd.magnify+1) - sd.magnify*24000;
-						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-							diff = diff + 72000/(sd.magnify+1) - sd.magnify*40000;
-						    if(diff < 0 && ts.dmod_mode == DEMOD_AM)
-							diff += 20000*(sd.magnify+1);
-						    df.tune_new = round((df.tune_new + diff)/step) * step;
+							step = 20000;				// adjust to 5KHz
+						    uchar line = 0x40;				// x-position of rx frequency in middle position
+						    if(!sd.magnify)				// xposition differs in translated modes not magnified
+							{
+							switch(ts.iq_freq_mode){
+							    case FREQ_IQ_CONV_P6KHZ:
+								line = 0x46;
+								break;
+							    case FREQ_IQ_CONV_M6KHZ:
+								line = 0x32;
+								break;
+							    case FREQ_IQ_CONV_P12KHZ:
+								line = 0x54;
+								break;
+							    case FREQ_IQ_CONV_M12KHZ:
+								line = 0x25;
+								break;
+							    default:
+								line = 0x40;
+							    }
+							}
+						    ulong tunediff = 48000/(0x66-0x0f)/(sd.magnify+1)*(line-ts.tp_x)*4;
+						    df.tune_new = round((df.tune_new + tunediff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
 							{						// SPLIT mode
