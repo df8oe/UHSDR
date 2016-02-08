@@ -1090,7 +1090,7 @@ int main(void)
 
 	if(ts.ser_eeprom_in_use == 0x00)
 	    {
-	    uint8_t serbuf[MAX_VAR_ADDR*2+200];		// mirror of serial eeprom in RAM
+	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
 	    ts.eeprombuf = serbuf;
 	    }
 
