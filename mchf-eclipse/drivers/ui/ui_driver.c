@@ -988,7 +988,7 @@ static void UiDriverProcessKeyboard(void)
 							    }
 							}
 						    ulong tunediff = 48000/(0x66-0x0f)/(sd.magnify+1)*(line-ts.tp_x)*4;
-						    df.tune_new = round((df.tune_new + tunediff)/step) * step;
+						    df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
 							{						// SPLIT mode
