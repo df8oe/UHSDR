@@ -987,7 +987,11 @@ static void UiDriverProcessKeyboard(void)
 								line = 0x40;
 							    }
 							}
-						    ulong tunediff = 48000/(0x66-0x0f)/(sd.magnify+1)*(line-ts.tp_x)*4;
+						    uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
+//						char text[30];
+//						sprintf(text,"%d",tunediff);
+//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
+//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
 						    df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
