@@ -967,15 +967,17 @@ static void UiDriverProcessKeyboard(void)
 						    int step = 2000;
 						    ulong diff = 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x);
 						    if(ts.dmod_mode == DEMOD_AM)
-							step = 5000;
+							step = 20000;
 						    if(ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
-							diff = diff + 24000;
+							diff = diff + 24000/(sd.magnify+1) - sd.magnify*20000;
 						    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
-							diff = diff - 24000;
+							diff = diff - 24000/(sd.magnify+1);
 						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
-							diff = diff + 48000;
+							diff = diff + 48000/(sd.magnify+1) - sd.magnify*24000;
 						    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-							diff = diff + 72000;
+							diff = diff + 72000/(sd.magnify+1) - sd.magnify*40000;
+						    if(diff < 0 && ts.dmod_mode == DEMOD_AM)
+							diff += 20000*(sd.magnify+1);
 						    df.tune_new = round((df.tune_new + diff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
