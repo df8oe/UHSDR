@@ -1088,11 +1088,11 @@ int main(void)
 //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
 
-	if(ts.ser_eeprom_in_use == 0x00)
-	    {
-	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
-	    ts.eeprombuf = serbuf;
-	    }
+//	if(ts.ser_eeprom_in_use == 0x00)
+//	    {
+//	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
+//	    ts.eeprombuf = serbuf;
+//	    }
 
 	// test if touchscreen is present
 	get_touchscreen_coordinates();				// initial reading of XPT2046

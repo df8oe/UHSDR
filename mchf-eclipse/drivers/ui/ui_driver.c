@@ -15,6 +15,7 @@
 #include "mchf_board.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
@@ -10573,11 +10574,10 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	if(ts.dmod_mode == DEMOD_FM)
 		ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
 
-
 	if(ts.ser_eeprom_in_use == 0)
 	{
-//		static uint8_t p[MAX_VAR_ADDR*2+2];
-//		ts.eeprombuf = p;
+		static uint8_t p[MAX_VAR_ADDR*2+2];
+		ts.eeprombuf = p;
 
 		uint16_t i, data;
 
@@ -10595,14 +10595,15 @@ void UiDriverSaveEepromValuesPowerDown(void)
 		// do there all compares and additions and after finishing that
 		// process write complete block to serial EEPROM. Flag for this is
 		// ser_eeprom_in_use == 0xAA
+		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"             ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	}
-	// ------------------------------------------------------------------------------------
 
+
+	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
 			(uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8) | ((uint16_t)ts.filter_id << 12)),
-			(uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) | ((uint16_t)ts.filter_id << 12) )
-	);
+			(uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) | ((uint16_t)ts.filter_id << 12) ));
 
 	UiReadWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 	// save current band/frequency/mode settings
@@ -10782,14 +10783,14 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,ts.mic_bias,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
-
+	
+	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"             ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back
 	if(ts.ser_eeprom_in_use == 0xAA)
 	{
 		Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
 		ts.ser_eeprom_in_use = 0;
 	}
-
 	ts.dsp_active = dspmode;	// restore DSP mode
 	ts.dmod_mode = demodmode;	// restore active mode
 }
