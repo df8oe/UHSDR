@@ -10511,6 +10511,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_FM_RX_BANDWIDTH,&ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT,0,FM_RX_BANDWIDTH_MAX);
 	UiReadSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,&ts.beep_frequency,DEFAULT_BEEP_FREQUENCY,MIN_BEEP_FREQUENCY,MAX_BEEP_FREQUENCY);
 	UiReadSettingEEPROM_UInt8(EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS);
+	UiReadSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
 	UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
 
 }
@@ -10779,6 +10780,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_RX_BANDWIDTH,ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,ts.beep_frequency,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
+	UiReadWriteSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,ts.mic_bias,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
 
 	// if serial eeprom is in use write blocks to it and switch block write flag back
