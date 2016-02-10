@@ -361,7 +361,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"201-Step Button Swap",
 		"202-Band+/- Button Swap",
 		"203-Transmit Disable",
-		"204-O/S Menu SW on TX",
+		"204-Menu SW on TX disable",
 		"205-Mute Line Out TX"
 } , {	// 2
 		"206-TX Mute Delay",
@@ -372,7 +372,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"211-Max RX Gain (0=Max)"
 } , { // 3
 		"212-Key Beep",
-		"213-Beep Frequency (Hz)",
+		"213-Beep Frequency",
 		"214-Beep Volume",
 		"220-CAT Mode",
 		"230-Freq. Calibrate",
@@ -413,7 +413,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
 } , { // 9
-		"281-XVTR Offset (Hz)",
+		"281-XVTR Offset",
 		"P01-2200m 5W PWR Adjust",
 		"P02-630m  5W PWR Adjust",
 		"P03-160m  5W PWR Adjust",
@@ -1422,16 +1422,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Red3;
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{
-			sprintf(options,"RX  +6KHZ");
+			sprintf(options,"RX  +6kHz");
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{
-			sprintf(options,"RX  -6KHZ");
+			sprintf(options,"RX  -6kHz");
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{
-			sprintf(options,"RX +12KHZ");
+			sprintf(options,"RX +12kHz");
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{
-			sprintf(options,"RX -12KHZ");
+			sprintf(options,"RX -12kHz");
 		}
 		//
 		//
@@ -1655,7 +1655,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
-		sprintf(options, "  %u", (uint)ts.sidetone_freq);
+		sprintf(options, "  %uHz", (uint)ts.sidetone_freq);
 		break;
 	//
 	case MENU_PADDLE_REVERSE:	// CW Paddle reverse
@@ -2395,7 +2395,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
-		sprintf(options, "   %u", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
+		sprintf(options, "   %uHz", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
 		break;
 	//
 	case CONFIG_BEEP_LOUDNESS:	// beep loudness
@@ -2837,7 +2837,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;		// make number red to alert user of this!
 		//
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
-		sprintf(options, " %9u", (uint)ts.xverter_offset);	// print with nine digits
+		sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);

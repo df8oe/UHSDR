@@ -10576,6 +10576,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 
 	if(ts.ser_eeprom_in_use == 0)
 	{
+//		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
+
 		static uint8_t p[MAX_VAR_ADDR*2+2];
 		ts.eeprombuf = p;
 
@@ -10595,7 +10597,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 		// do there all compares and additions and after finishing that
 		// process write complete block to serial EEPROM. Flag for this is
 		// ser_eeprom_in_use == 0xAA
-		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"             ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
+//		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	}
 
 
@@ -10784,7 +10786,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,ts.mic_bias,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
 	
-	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"             ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
+//	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back
 	if(ts.ser_eeprom_in_use == 0xAA)
 	{
