@@ -10789,10 +10789,27 @@ void UiDriverSaveEepromValuesPowerDown(void)
 //	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back
 	if(ts.ser_eeprom_in_use == 0xAA)
-	{
-		Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-		ts.ser_eeprom_in_use = 0;
-	}
+	    {
+	    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+	    ts.ser_eeprom_in_use = 0;
+	    
+/*	    uint16_t count;
+	    uint16_t data1, data2;
+	    for(count=0; count <= MAX_VAR_ADDR; count++)
+		{
+		Read_SerEEPROM(count, &data1);
+		data2 = ts.eeprombuf[count*2]*256 + ts.eeprombuf[count*2+1];
+		if(data1 != data2)
+		    {
+		    char text[80];
+		    sprintf(text,"%u:%u/%u *ALERT*", count, data1, data2);
+		    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,Red,Black,0);
+//		    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"  *ALERT* written data is wrong! *ALERT*",Red,Black,0);
+		    do {;} while(1 == 1);
+		    }
+		} */
+	    }
+
 	ts.dsp_active = dspmode;	// restore DSP mode
 	ts.dmod_mode = demodmode;	// restore active mode
 }
