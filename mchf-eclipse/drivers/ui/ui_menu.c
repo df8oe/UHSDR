@@ -1675,7 +1675,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_CW_OFFSET_MODE:	// CW offset mode (e.g. USB, LSB, etc.)
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_offset_mode,
 						0,
-						CW_OFFSET_AUTO_RX,
+						CW_OFFSET_MAX,
 						CW_OFFSET_MODE_DEFAULT,
 						1
 						);
