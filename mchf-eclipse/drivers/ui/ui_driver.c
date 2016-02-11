@@ -10287,6 +10287,9 @@ static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mod
 //
 void UiDriverLoadEepromValues(void)
 {
+	bool dspmode = ts.dsp_inhibit;
+	ts.dsp_inhibit = 1;		// disable dsp while loading EEPROM data
+	
 	uint16_t value16;
 	uint32_t value32;
 	// Do a sample reads to "prime the pump" before we start...
@@ -10515,6 +10518,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
 	UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
 
+	ts.dsp_inhibit = dspmode;		// restore setting
 }
 
 //
@@ -10558,7 +10562,7 @@ void UiDriverLoadEepromValues(void)
 void UiDriverSaveEepromValuesPowerDown(void)
 {
 	uint16_t i;
-	uchar dspmode;
+	bool dspmode;
 	uchar demodmode;
 	if(ts.txrx_mode != TRX_MODE_RX)
 		return;
@@ -10566,8 +10570,9 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//printf("eeprom save activate\n\r");
 
 	// disable DSP during write because it decreases speed tremendous
-	dspmode = ts.dsp_active;
-	ts.dsp_active &= 0xfa;	// turn off DSP
+	dspmode = ts.dsp_inhibit;
+	ts.dsp_inhibit = 1;
+//	ts.dsp_active &= 0xfa;	// turn off DSP
 
 	// switch to SSB during write when in FM because it decreases speed tremendous
 	demodmode = ts.dmod_mode;
@@ -10734,7 +10739,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//	}
 
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_STEP_SIZE_CONFIG,ts.freq_step_config,0);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,dspmode,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,ts.dsp_active,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_STRENGTH,ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
@@ -10810,7 +10815,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 		} */
 	    }
 
-	ts.dsp_active = dspmode;	// restore DSP mode
+	ts.dsp_inhibit = dspmode;	// restore DSP mode
 	ts.dmod_mode = demodmode;	// restore active mode
 }
 
