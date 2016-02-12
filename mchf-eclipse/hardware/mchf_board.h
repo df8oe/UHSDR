@@ -1507,6 +1507,7 @@ typedef struct TransceiverState
 	bool	show_tp_coordinates;		// show coordinates on LCD
 	uchar	rfmod_present;			// 0 = not present
 	uchar	vhfuhfmod_present;		// 0 = not present
+	uchar	multi;				// actual translate factor
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //

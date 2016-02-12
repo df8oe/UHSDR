@@ -920,6 +920,7 @@ void TransceiverStateInit(void)
 	ts.show_tp_coordinates = 0;			// dont show coordinates on LCD
 	ts.rfmod_present = 0;				// rfmod not present
 	ts.vhfuhfmod_present = 0;			// VHF/UHF mod not present
+	ts.multi = 0;					// non-translate
 }
 
 //*----------------------------------------------------------------------------

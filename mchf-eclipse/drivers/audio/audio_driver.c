@@ -869,7 +869,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	ulong 		i;
 	float32_t	rad_calc;
 //	static float32_t	q_temp, i_temp;
-	static bool flag = 0;
+	static bool flag = 1;
 	//
 	// Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
 	// frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
@@ -905,15 +905,14 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	//
 	// Pre-calculate quadrature sine wave(s) ONCE for the conversion
 	//
-	uchar multi;
-	if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ))
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && ts.multi != 4)
 	    {
-	    multi = 4; 		//(4 = 6 kHz offset)
+	    ts.multi = 4; 		//(4 = 6 kHz offset)
 	    flag = 0;
 	    }
-	if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ))
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && ts.multi != 8)
 	    {
-	    multi = 8; 		// (8 = 12 kHz offset)
+	    ts.multi = 8; 		// (8 = 12 kHz offset)
 	    flag = 0;
 	    }
 	if(!flag)	{		// have we already calculated the sine wave?
@@ -921,7 +920,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 			rad_calc = (float32_t)i;		// convert to float the current position within the buffer
 			rad_calc /= (size/2);			// make this a fraction
 			rad_calc *= (PI * 2);			// convert to radians
-			rad_calc *= multi;			// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
+			rad_calc *= ts.multi;			// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
 			//
 			sincosf(rad_calc, (float *)&ads.Osc_I_buffer[i], (float *)&ads.Osc_Q_buffer[i]);
 //			ads.Osc_Q_buffer[i] = cos(rad_calc);	// get sine and cosine values and store in pre-calculated array
