@@ -10348,7 +10348,7 @@ void UiDriverLoadEepromValues(void)
 	for(i = 0; i < MAX_BANDS; i++)
 	{	// read from stored bands
 		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, band_dial_value, band_decod_mode, band_filter_mode);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_b, band_filter_mode_a);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_a, band_filter_mode_a);
 		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
 	}
 	//
