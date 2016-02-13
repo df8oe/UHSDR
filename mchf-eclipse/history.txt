@@ -10,7 +10,7 @@
 #########################################################################
 
 
-20160206 [DF8OE]
+20160213 [DF8OE]
 - adding new translate modes +/- 12KHz
 - added 5KHz tuning steps
 - added possibility to use filters as LPF (not with center frequency)
@@ -20,6 +20,7 @@
 - touchscreen tuning disabled when frequency lock set
 - touchscreen steps 5KHz in AM mode
 - bugfix in EEPROM routines
+
 
 20160203 [DF8OE]
 - CAT implementation finished using small USB plug (FT817 protocol)
