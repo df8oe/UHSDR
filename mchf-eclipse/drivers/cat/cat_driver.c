@@ -50,7 +50,7 @@ void cat_driver_init(void)
 	USBD_Init(	&USB_OTG_dev,
 			USB_OTG_FS_CORE_ID,
 			&USR_desc,
-			/* &USBD_CDC_cb*/ &AUDIO_cb,
+			&USBD_CDC_cb,
 			&USR_cb);
 
 	printf("cat driver started\n\r");
