@@ -167,7 +167,7 @@ static void 	UiDriverLoadEepromValues(void);
 void			UiDriverUpdateMenu(uchar mode);
 void 			UiDriverUpdateMenuLines(uchar index, uchar mode);
 void			UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
-void 			UiDriverSaveEepromValuesPowerDown(void);
+uint16_t 			UiDriverSaveEepromValuesPowerDown(void);
 static void 	UiDriverInitMainFreqDisplay(void);
 //
 //
@@ -10559,13 +10559,14 @@ void UiDriverLoadEepromValues(void)
 //
 #pragma GCC diagnostic warning "-Wconversion"
 
-void UiDriverSaveEepromValuesPowerDown(void)
+uint16_t UiDriverSaveEepromValuesPowerDown(void)
 {
-	uint16_t i;
+	uint16_t i, retVal = 0x0;
 	bool dspmode;
 	uchar demodmode;
+
 	if(ts.txrx_mode != TRX_MODE_RX)
-		return;
+		return 0xFF00;
 
 	//printf("eeprom save activate\n\r");
 
@@ -10795,7 +10796,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	// if serial eeprom is in use write blocks to it and switch block write flag back
 	if(ts.ser_eeprom_in_use == 0xAA)
 	    {
-	    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+		retVal = Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
 	    ts.ser_eeprom_in_use = 0;
 	    
 /*	    uint16_t count;
@@ -10817,6 +10818,8 @@ void UiDriverSaveEepromValuesPowerDown(void)
 
 	ts.dsp_inhibit = dspmode;	// restore DSP mode
 	ts.dmod_mode = demodmode;	// restore active mode
+
+	return retVal;
 }
 
 
