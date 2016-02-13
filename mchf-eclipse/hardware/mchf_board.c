@@ -751,8 +751,8 @@ void mchf_board_power_off(void)
 
 if(ts.ser_eeprom_in_use == 0xff)
 	    {
-	    sprintf(tx,"Saving settings to virt. EEPROM ");
-	    UiLcdHy28_PrintText(80,176,tx,Blue,Black,0);
+	    sprintf(tx,"Saving settings to virt. EEPROM");
+	    UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
 	    }
 if(ts.ser_eeprom_in_use == 0x0)
 	    {

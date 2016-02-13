@@ -15,6 +15,7 @@
 #include "mchf_board.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
@@ -177,6 +178,7 @@ T_STEP_1HZ,
 T_STEP_10HZ,
 T_STEP_100HZ,
 T_STEP_1KHZ,
+T_STEP_5KHZ,
 T_STEP_10KHZ,
 T_STEP_100KHZ,
 T_STEP_1MHZ,
@@ -961,9 +963,37 @@ static void UiDriverProcessKeyboard(void)
 						    ts.menu_var_changed = 1;
 						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
 						    }
-						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d))	// wf/scope frequency dial
+						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
 						    {
-						    df.tune_new = round((df.tune_new + 2264/(sd.magnify+1)*(0x32+0x0e*sd.magnify-ts.tp_x))/2000) * 2000;
+						    int step = 2000;				// adjust to 500Hz
+						    if(ts.dmod_mode == DEMOD_AM)
+							step = 20000;				// adjust to 5KHz
+						    uchar line = 0x40;				// x-position of rx frequency in middle position
+						    if(!sd.magnify)				// xposition differs in translated modes not magnified
+							{
+							switch(ts.iq_freq_mode){
+							    case FREQ_IQ_CONV_P6KHZ:
+								line = 0x46;
+								break;
+							    case FREQ_IQ_CONV_M6KHZ:
+								line = 0x32;
+								break;
+							    case FREQ_IQ_CONV_P12KHZ:
+								line = 0x54;
+								break;
+							    case FREQ_IQ_CONV_M12KHZ:
+								line = 0x25;
+								break;
+							    default:
+								line = 0x40;
+							    }
+							}
+						    uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
+//						char text[30];
+//						sprintf(text,"%d",tunediff);
+//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
+//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+						    df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
 						    if(ts.vfo_mem_mode & 0x80)
 							{						// SPLIT mode
@@ -1204,7 +1234,10 @@ static void UiDriverProcessKeyboard(void)
 					if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
 						if(!ts.menu_mode)	{						// not in menu mode
 							UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
-							UiLcdHy28_PrintText(80,160," Saving settings to EEPROM ",Cyan,Black,0);
+							if(ts.ser_eeprom_in_use == 0xFF)
+							    UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
+							if(ts.ser_eeprom_in_use == 0x00)
+							    UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
 							UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
 							for(temp = 0; temp < 6; temp++)			// delay so that it may be read
 								non_os_delay();
@@ -1397,7 +1430,9 @@ static void UiDriverProcessKeyboard(void)
 				case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
 					if(ts.dmod_mode != DEMOD_CW)	{
 						if(ts.tx_audio_source == TX_AUDIO_MIC)
-							ts.tx_audio_source = TX_AUDIO_LINEIN;
+							ts.tx_audio_source = TX_AUDIO_LINEIN_L;
+						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
+							ts.tx_audio_source = TX_AUDIO_LINEIN_R;
 						else
 							ts.tx_audio_source = TX_AUDIO_MIC;
 						//
@@ -2153,6 +2188,10 @@ void UiDriverShowStep(ulong step)
 			break;
 		case T_STEP_1KHZ:
 			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"1kHz",color,Black,0);
+			line_loc = 5;
+			break;
+		case T_STEP_5KHZ:
+			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"5kHz",color,Black,0);
 			line_loc = 5;
 			break;
 		case T_STEP_10KHZ:
@@ -3105,16 +3144,20 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
 
 	if(!sd.magnify)	{		// if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
-		if(ts.iq_freq_mode == 1)			// Is "RX LO HIGH" translate mode active?
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// Is "RX LO HIGH" translate mode active?
 			freq_calc += FREQ_SHIFT_MAG;	// Yes, shift receive frequency to left of center
-		else if(ts.iq_freq_mode == 2)		// it is "RX LO LOW" in translate mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)		// it is "RX LO LOW" in translate mode
 			freq_calc -= FREQ_SHIFT_MAG;	// shift receive frequency to right of center
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// it is "RX LO LOW" in translate mode
+			freq_calc += FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)		// it is "RX LO LOW" in translate mode
+			freq_calc -= FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
 	}
 	freq_calc = (freq_calc + 500)/1000;	// round graticule frequency to the nearest kHz
 
 	//
 
-	if((ts.iq_freq_mode == 0) || (sd.magnify))	{	// Translate mode is OFF or magnify is on
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || (sd.magnify))	{	// Translate mode is OFF or magnify is on
 		sprintf(txt, "  %u  ", (unsigned)freq_calc);	// build string for center frequency
 		i = 130-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3128,7 +3171,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
 	}
-	else if((ts.iq_freq_mode == 1) && (!sd.magnify))	{	// Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
+	else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
 		sprintf(txt, "  %u  ", (unsigned)freq_calc-(unsigned)grat);	// build string for center frequency
 		i = 94-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3141,7 +3184,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
 	}
-	else if((ts.iq_freq_mode == 2) && (!sd.magnify))	{	// Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
+	else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
 		sprintf(txt, "  %u  ", (unsigned)freq_calc+(unsigned)grat);	// build string for center frequency
 		i = 160-((strlen(txt)-2)*4);	// calculate position of center frequency text
 		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
@@ -3375,9 +3418,13 @@ void UiDriverCreateSpectrumScope(void)
 
 		// determine if we are drawing the "center" line on the spectrum  display
 		if(!sd.magnify)	{
-			if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_LOW) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
+			if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
 				clr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_HIGH) && (i == 3))		// shift left of center if RF HIGH translate mode
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (i == 3))		// shift left of center if RF HIGH translate mode
+				clr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (i == 2))		// shift left of center if RF HIGH translate mode
+				clr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (i == 6))		// shift right of center if RF HIGH translate mode
 				clr = ts.scope_centre_grid_colour_active;
 			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (i == 4))	// center if translate mode not active
 				clr = ts.scope_centre_grid_colour_active;
@@ -3387,6 +3434,7 @@ void UiDriverCreateSpectrumScope(void)
 		else if(i == 4)
 			clr = ts.scope_centre_grid_colour_active;
         else
+        
      	   clr = ts.scope_grid_colour_active;								// normal color if other lines
 
 		// Save x position for repaint
@@ -3435,16 +3483,7 @@ void UiDriverCreateSpectrumScope(void)
 //*----------------------------------------------------------------------------
 void UiDriverClearSpectrumDisplay(void)
 {
-	ulong i;
-
-	if(sd.use_spi)	{
-		UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-	}
-	else	{
-		for(i = 0; i < 8; i++)	{
-			UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22) + (i* 12), "                                 ", Black, Black, 0);
-		}
-	}
+	UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 //
 //*----------------------------------------------------------------------------
@@ -3613,10 +3652,14 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	band_scan = 0;
 	flag = 0;
 	//
-	if(ts.iq_freq_mode == 1)	// is frequency translate active and in "RX LO HIGH" mode?
+	if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	// is frequency translate active and in "RX LO HIGH" mode?
 		freq -= FREQ_SHIFT_MAG * 4;	// yes - subtract offset amount
-	else if(ts.iq_freq_mode == 2)	// is frequency translate active and in "RX LO LOW" mode?
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	// is frequency translate active and in "RX LO LOW" mode?
 		freq += FREQ_SHIFT_MAG * 4;	// yes - add offset amount
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
+		freq -= FREQ_SHIFT_MAG * 8;	// yes - add offset amount
+	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
+		freq += FREQ_SHIFT_MAG * 8;	// yes - add offset amount
 
 
 	while((!flag) && (band_scan < MAX_BANDS))	{
@@ -3703,10 +3746,14 @@ skip_check:
 	// Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == 1)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
-		else if(ts.iq_freq_mode == 2)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
+			ts.tune_freq += FREQ_SHIFT_MAG * 8;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
 	}
 
 	if(mode != 3)	{		// updating ONLY the TX frequency display?
@@ -3828,10 +3875,14 @@ void UiDriverUpdateFrequencyFast(void)
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == 1)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
 			ts.tune_freq += FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == 2)
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
 			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
+			ts.tune_freq += FREQ_SHIFT_MAG * 8;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
 	}
 
 	// Extra tuning actions
@@ -4842,7 +4893,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 				loc_mode++;				// yes - go to next mode
 		}
 		if(loc_mode == DEMOD_FM)	{	// is this FM mode?
-			if(!(ts.misc_flags2 & 1))	// is FM to be disabled?
+			if((!(ts.misc_flags2 & 1)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
 				loc_mode++;				// yes - go to next mode
 		}
 	}
@@ -4858,7 +4909,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 
 	if((ts.lsb_usb_auto_select) && (!noskip))	{	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
 		if((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB))	{	// is this a voice mode, subject to "auto" LSB/USB select?
-			if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((df.tune_new < USB_FREQ_THRESHOLD) && (ts.band != 1)))	{	// are we <10 MHz and NOT on 60 meters?
+			if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((df.tune_new < USB_FREQ_THRESHOLD) && (ts.band != BAND_MODE_60)))	{	// are we <10 MHz and NOT on 60 meters?
 				if(loc_mode == DEMOD_USB)	{		// are we in USB mode?
 					loc_mode++;					// yes - bump to the next mode
 				}
@@ -6187,8 +6238,10 @@ void UIDriverChangeAudioGain(uchar enabled)
 
 	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Microphone gain
 		strcpy(temp, "MIC");
-	else										// Line gain
-		strcpy(temp, "LIN");
+	else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)										// Line gain
+		strcpy(temp, "L>L");
+	else
+		strcpy(temp, "L>R");
 
 	if(enabled)
 		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,Black,Grey,0);
@@ -6550,6 +6603,9 @@ void UiDriverDisplayFilterBW(void)
 				case 5:
 					offset = FILT1800_5;
 					break;
+				case 6:
+					offset = FILT1800_6;
+					break;
 				default:
 					offset = FILT1800_3;
 					break;
@@ -6570,6 +6626,9 @@ void UiDriverDisplayFilterBW(void)
 					break;
 				case 4:
 					offset = FILT2300_4;
+					break;
+				case 5:
+					offset = FILT2300_5;
 					break;
 				default:
 					offset = FILT2300_2;
@@ -6657,10 +6716,14 @@ void UiDriverDisplayFilterBW(void)
 	//
 	if(!sd.magnify)	{	// is magnify mode on?
 		calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
-		if(ts.iq_freq_mode == 1)			// line is to left if in "RX LO HIGH" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
 			lpos = 98;
-		else if(ts.iq_freq_mode == 2)			// line is to right if in "RX LO LOW" mode
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// line is to right if in "RX LO LOW" mode
 			lpos = 162;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// line is to left if in "RX LO LOW" mode
+			lpos = 66;
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// line is to right if in "RX LO LOW" mode
+			lpos = 194;
 		else					// frequency translate mode is off
 			lpos = 130;			// line is in center
 
@@ -7075,7 +7138,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(min2 < min1)
 						min1 = min2;
 				}
-				else if(ts.iq_freq_mode == 1)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[160], 64, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[160], 64, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[160], 64, &mean1);				// find mean value in center portion
@@ -7106,7 +7169,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					if(mean3 > mean1)
 						mean1 = mean3;
 				}
-				else if(ts.iq_freq_mode == 2)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[224], 32, &max1, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[224], 32, &min1, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[224], 32, &mean1);				// find mean value in center portion
@@ -7127,6 +7190,68 @@ static void UiDriverReDrawSpectrumDisplay(void)
 					arm_max_q15((q15_t *)&sd.FFT_TempData[32], 64, &max3, &max_ptr);		// find maximum element in center portion
 					arm_min_q15((q15_t *)&sd.FFT_TempData[32], 64, &min3, &max_ptr);		// find minimum element in center portion
 					arm_mean_q15((q15_t *)&sd.FFT_TempData[32], 64, &mean3);				// find mean value in center portion
+					//
+					if(max3 > max1)
+						max1 = max3;
+					//
+					if(min2 < min1)
+						min1 = min2;
+					//
+					if(mean3 > mean1)
+						mean1 = mean3;
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaa
+					arm_max_q15((q15_t *)&sd.FFT_TempData[128], 64, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[128], 64, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[128], 64, &mean1);				// find mean value in center portion
+					//
+					arm_max_q15((q15_t *)&sd.FFT_TempData[192], 32, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[192], 32, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[192], 32, &mean2);				// find mean value in center portion
+					//
+					if(max2 > max1)
+						max1 = max2;
+					//
+					if(min2 < min1)
+						min1 = min2;
+					//
+					if(mean2 > mean1)
+						mean1 = mean2;
+					//
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean3);				// find mean value in center portion
+					//
+					if(max3 > max1)
+						max1 = max3;
+					//
+					if(min3 < min1)
+						min1 = min3;
+					//
+					if(mean3 > mean1)
+						mean1 = mean3;
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean1);				// find mean value in center portion
+					//
+					arm_max_q15((q15_t *)&sd.FFT_TempData[32], 32, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[32], 32, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[32], 32, &mean2);				// find mean value in center portion
+					//
+					if(max2 > max1)
+						max1 = max2;
+					//
+					if(min2 < min1)
+						min1 = min2;
+					//
+					if(mean2 > mean1)
+						mean1 = mean2;
+					//
+					arm_max_q15((q15_t *)&sd.FFT_TempData[64], 64, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[64], 64, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[64], 64, &mean3);				// find mean value in center portion
 					//
 					if(max3 > max1)
 						max1 = max3;
@@ -7186,21 +7311,21 @@ static void UiDriverReDrawSpectrumDisplay(void)
 			if(sd.magnify)	{	// is magnify mode on?
 				if(!ts.iq_freq_mode)	{	// yes - frequency translate mode is off
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > FFT_IQ_BUFF_LEN/4)	{
+						if(i > FFT_IQ_BUFF_LEN/4)	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = 128..128 + FFT_IQ_BUFF_LEN/8 */
 							ptr = (i/2)+128;
 							if(ptr < FFT_IQ_BUFF_LEN/2)
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
 						}
-						else	{
+						else	{	/* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = 0..FFT_IQ_BUFF_LEN/8  */
 							ptr = (i/2);						// process upper half
 							if(ptr < FFT_IQ_BUFF_LEN/2)
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
+								sd.FFT_DspData[i] = sd.FFT_TempData[ptr]; /* each entry from fft is used twice */
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 1)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{
+						if(i > (FFT_IQ_BUFF_LEN/4))	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = (128 - 32) ..(128 - 32) + FFT_IQ_BUFF_LEN/8 */
 							ptr = (i/2)+96;
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
@@ -7208,13 +7333,13 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 						else	{
 							ptr = (i/2);					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{ /* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = (0 -32)..(0 -32) + FFT_IQ_BUFF_LEN/8  */
 								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+224)%256];
 							}
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 2)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						if(i > (FFT_IQ_BUFF_LEN/4))	{
 							ptr = (i/2);
@@ -7224,6 +7349,38 @@ static void UiDriverReDrawSpectrumDisplay(void)
 						}
 						else	{
 							ptr = (i/2) + 32;					// process upper half
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
+							}
+						}
+					}
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
+						if(i > (FFT_IQ_BUFF_LEN/4))	{
+							ptr = (i/2)+64;
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
+							}
+						}
+						else	{
+							ptr = (i/2);					// process upper half
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
+							}
+						}
+					}
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
+						if(i > (FFT_IQ_BUFF_LEN/4))	{
+							ptr = (i/2);
+							if(ptr < FFT_IQ_BUFF_LEN/2)	{
+								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
+							}
+						}
+						else	{
+							ptr = (i/2) + 64;					// process upper half
 							if(ptr < FFT_IQ_BUFF_LEN/2)	{
 								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
 							}
@@ -7414,15 +7571,25 @@ static void UiDriverReDrawWaterfallDisplay(void)
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 1)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &mean);				// find mean value in center portion
 				}
-				else if(ts.iq_freq_mode == 2)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
 					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
 					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &mean);				// find mean value in center portion
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
+					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &mean);				// find mean value in center portion
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &mean);				// find mean value in center portion
 				}
 			}
 			else	{
@@ -7493,7 +7660,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 1)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2)+32;
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
@@ -7501,9 +7668,25 @@ static void UiDriverReDrawWaterfallDisplay(void)
 						}
 					}
 				}
-				else if(ts.iq_freq_mode == 2)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
 						ptr = (i/2)+96;
+						if(ptr < FFT_IQ_BUFF_LEN/2)	{
+							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
+						}
+					}
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen       aaaaaaaaaaaaaaaaaaaaaa
+					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
+						ptr = (i/2);
+						if(ptr < FFT_IQ_BUFF_LEN/2)	{
+							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
+						}
+					}
+				}
+				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
+					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
+						ptr = (i/2)+128;
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
 							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
 						}
@@ -7529,10 +7712,14 @@ static void UiDriverReDrawWaterfallDisplay(void)
 			}
 			else if(!ts.iq_freq_mode)	// is frequency translate off OR magnification mode on
 				sd.waterfall[sd.wfall_line][128] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
-			else if(ts.iq_freq_mode == 1)			// LO HIGH - set graticule below center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// LO HIGH - set graticule below center
 				sd.waterfall[sd.wfall_line][96] = NUMBER_WATERFALL_COLOURS;
-			else if(ts.iq_freq_mode == 2)			// LO LOW - set graticule above center
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// LO LOW - set graticule above center
 				sd.waterfall[sd.wfall_line][160] = NUMBER_WATERFALL_COLOURS;
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// LO HIGH - set graticule below center
+				sd.waterfall[sd.wfall_line][64] = NUMBER_WATERFALL_COLOURS;
+			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// LO LOW - set graticule above center
+				sd.waterfall[sd.wfall_line][192] = NUMBER_WATERFALL_COLOURS;
 
 			//
 			sd.wfall_line++;		// bump to the next line in the circular buffer for next go-around
@@ -10100,6 +10287,9 @@ static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mod
 //
 void UiDriverLoadEepromValues(void)
 {
+	bool dspmode = ts.dsp_inhibit;
+	ts.dsp_inhibit = 1;		// disable dsp while loading EEPROM data
+	
 	uint16_t value16;
 	uint32_t value32;
 	// Do a sample reads to "prime the pump" before we start...
@@ -10158,7 +10348,7 @@ void UiDriverLoadEepromValues(void)
 	for(i = 0; i < MAX_BANDS; i++)
 	{	// read from stored bands
 		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, band_dial_value, band_decod_mode, band_filter_mode);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_b, band_filter_mode_a);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_a, band_filter_mode_a);
 		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
 	}
 	//
@@ -10328,6 +10518,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
 	UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
 
+	ts.dsp_inhibit = dspmode;		// restore setting
 }
 
 //
@@ -10371,7 +10562,7 @@ void UiDriverLoadEepromValues(void)
 void UiDriverSaveEepromValuesPowerDown(void)
 {
 	uint16_t i;
-	uchar dspmode;
+	bool dspmode;
 	uchar demodmode;
 	if(ts.txrx_mode != TRX_MODE_RX)
 		return;
@@ -10379,17 +10570,19 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//printf("eeprom save activate\n\r");
 
 	// disable DSP during write because it decreases speed tremendous
-	dspmode = ts.dsp_active;
-	ts.dsp_active &= 0xfa;	// turn off DSP
+	dspmode = ts.dsp_inhibit;
+	ts.dsp_inhibit = 1;
+//	ts.dsp_active &= 0xfa;	// turn off DSP
 
 	// switch to SSB during write when in FM because it decreases speed tremendous
 	demodmode = ts.dmod_mode;
 	if(ts.dmod_mode == DEMOD_FM)
 		ts.dmod_mode = DEMOD_USB;	// if FM switch to USB during write
 
-
 	if(ts.ser_eeprom_in_use == 0)
 	{
+//		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
+
 		static uint8_t p[MAX_VAR_ADDR*2+2];
 		ts.eeprombuf = p;
 
@@ -10409,14 +10602,15 @@ void UiDriverSaveEepromValuesPowerDown(void)
 		// do there all compares and additions and after finishing that
 		// process write complete block to serial EEPROM. Flag for this is
 		// ser_eeprom_in_use == 0xAA
+//		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	}
-	// ------------------------------------------------------------------------------------
 
+
+	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
 			(uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8) | ((uint16_t)ts.filter_id << 12)),
-			(uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) | ((uint16_t)ts.filter_id << 12) )
-	);
+			(uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) | ((uint16_t)ts.filter_id << 12) ));
 
 	UiReadWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 	// save current band/frequency/mode settings
@@ -10545,7 +10739,7 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	//	}
 
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_STEP_SIZE_CONFIG,ts.freq_step_config,0);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,dspmode,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,ts.dsp_active,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_STRENGTH,ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
@@ -10596,15 +10790,32 @@ void UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,ts.mic_bias,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
-
+	
+//	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back
 	if(ts.ser_eeprom_in_use == 0xAA)
-	{
-		Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-		ts.ser_eeprom_in_use = 0;
-	}
+	    {
+	    Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+	    ts.ser_eeprom_in_use = 0;
+	    
+/*	    uint16_t count;
+	    uint16_t data1, data2;
+	    for(count=0; count <= MAX_VAR_ADDR; count++)
+		{
+		Read_SerEEPROM(count, &data1);
+		data2 = ts.eeprombuf[count*2]*256 + ts.eeprombuf[count*2+1];
+		if(data1 != data2)
+		    {
+		    char text[80];
+		    sprintf(text,"%u:%u/%u *ALERT*", count, data1, data2);
+		    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,Red,Black,0);
+//		    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"  *ALERT* written data is wrong! *ALERT*",Red,Black,0);
+		    do {;} while(1 == 1);
+		    }
+		} */
+	    }
 
-	ts.dsp_active = dspmode;	// restore DSP mode
+	ts.dsp_inhibit = dspmode;	// restore DSP mode
 	ts.dmod_mode = demodmode;	// restore active mode
 }
 

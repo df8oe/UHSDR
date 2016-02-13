@@ -175,7 +175,6 @@
   <Files>
     <File name="drivers/ui/lcd/ui_lcd_hy28_fonts.c" path="drivers/ui/lcd/ui_lcd_hy28_fonts.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_usart.c" path="cmsis_lib/source/stm32f4xx_usart.c" type="1"/>
-    <File name="usb/otg/src/usb_otg.c" path="usb/otg/src/usb_otg.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_dac.h" path="cmsis_lib/include/stm32f4xx_dac.h" type="1"/>
     <File name="usb/usbd/core/src/usbd_ioreq.c" path="usb/usbd/core/src/usbd_ioreq.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_usart.h" path="cmsis_lib/include/stm32f4xx_usart.h" type="1"/>

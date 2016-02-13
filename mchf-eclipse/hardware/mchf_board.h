@@ -40,17 +40,17 @@
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K Atanassov - M0NKA 2014-2016"
+#define 	AUTHOR_STRING   		"K. Atanassov - M0NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		27
 //
-#define 	TRX4M_VER_BUILD			2
+#define 	TRX4M_VER_BUILD			3
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
-#define		ATTRIB_STRING3			"and Amateur Radio communities"
+#define		ATTRIB_STRING3			"and Amateur Radio Communities"
 //
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
@@ -590,10 +590,10 @@ enum	{
 #define	MAX_500HZ_FILTER		5
 #define	FILTER_500HZ_DEFAULT		3		// Center frequency of 750 Hz
 //
-#define	MAX_1K8_FILTER			5
+#define	MAX_1K8_FILTER			6
 #define	FILTER_1K8_DEFAULT		3		// Center frequency of 1425 Hz
 //
-#define	MAX_2K3_FILTER			4
+#define	MAX_2K3_FILTER			5
 #define	FILTER_2K3_DEFAULT		2		// Center frequency of 1412 Hz
 //
 #define	FILTER_3K6_DEFAULT		1		// 1 = Enabled
@@ -650,12 +650,16 @@ enum	{
 #define	FILT1800_3			1427
 #define	FILT1800_4			1575
 #define	FILT1800_5			1725
+#define	FILT1800_6			 900
 //
 #define	FILT2300_1			1262
 #define	FILT2300_2			1412
 #define	FILT2300_3			1562
 #define	FILT2300_4			1712
+#define	FILT2300_5			1150
 //
+#define FILT3600_1			1800
+#define	FILT3600_2			1800
 #define	FILT3600			1800
 //
 #define	FILT5000			2500
@@ -705,7 +709,8 @@ enum {
 
 // Audio sources for TX modulation
 #define TX_AUDIO_MIC			0
-#define TX_AUDIO_LINEIN			1
+#define TX_AUDIO_LINEIN_L		1
+#define TX_AUDIO_LINEIN_R		2
 #define TX_AUDIO_MAX_ITEMS		2
 //
 #define	LINE_GAIN_MIN			3
@@ -1305,6 +1310,7 @@ typedef struct TransceiverState
 	uchar	power_level;
 
 	uchar 	tx_audio_source;
+	uchar   tx_line_channel;  // 1 LEFT 2 RIGHT
 	uchar	tx_mic_gain;
 	ulong	tx_mic_gain_mult;
 	ulong	tx_mic_gain_mult_temp;	// used to temporarily hold the mic gain when going from RX to TX
@@ -1501,6 +1507,7 @@ typedef struct TransceiverState
 	bool	show_tp_coordinates;		// show coordinates on LCD
 	uchar	rfmod_present;			// 0 = not present
 	uchar	vhfuhfmod_present;		// 0 = not present
+	uchar	multi;				// actual translate factor
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //

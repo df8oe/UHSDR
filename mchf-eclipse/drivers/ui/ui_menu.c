@@ -361,7 +361,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"201-Step Button Swap",
 		"202-Band+/- Button Swap",
 		"203-Transmit Disable",
-		"204-O/S Menu SW on TX",
+		"204-Menu SW on TX disable",
 		"205-Mute Line Out TX"
 } , {	// 2
 		"206-TX Mute Delay",
@@ -372,7 +372,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"211-Max RX Gain (0=Max)"
 } , { // 3
 		"212-Key Beep",
-		"213-Beep Frequency (Hz)",
+		"213-Beep Frequency",
 		"214-Beep Volume",
 		"220-CAT Mode",
 		"230-Freq. Calibrate",
@@ -413,7 +413,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
 } , { // 9
-		"281-XVTR Offset (Hz)",
+		"281-XVTR Offset",
 		"P01-2200m 5W PWR Adjust",
 		"P02-630m  5W PWR Adjust",
 		"P03-160m  5W PWR Adjust",
@@ -464,9 +464,9 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 } , { // 16
 		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
-		"332-Mic Bias enable",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
+		"                    ",
 		"                    "
 }
 
@@ -968,6 +968,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		case 5:
 			strcpy(options, "1725Hz");
 			break;
+		case 6:
+			strcpy(options, "   LPF");
+			break;
+
 		}
 		//
 		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{	// set filter if changed
@@ -1011,6 +1015,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			break;
 		case 4:
 			strcpy(options, "1712Hz");
+			break;
+		case 5:
+			strcpy(options, "   LPF");
 			break;
 		}
 		//
@@ -1414,11 +1421,17 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options,">> OFF! <<");
 			clr = Red3;
 		}
-		else if(ts.iq_freq_mode == 1)	{
-			sprintf(options,"RX LO HIGH");
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{
+			sprintf(options,"RX  +6kHz");
 		}
-		else if(ts.iq_freq_mode == 2)	{
-			sprintf(options," RX LO LOW");
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{
+			sprintf(options,"RX  -6kHz");
+		}
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{
+			sprintf(options,"RX +12kHz");
+		}
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{
+			sprintf(options,"RX -12kHz");
 		}
 		//
 		//
@@ -1435,12 +1448,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						TX_AUDIO_MIC,
 						1
 						);
-		//
 		if(ts.tx_audio_source == TX_AUDIO_MIC)
-			strcpy(options, " MIC");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN)
-			strcpy(options, "LINE");
-		//
+			strcpy(options, "   MIC");
+		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L)
+			strcpy(options, "LINE-L");
+		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)
+			strcpy(options, "LINE-R");
+
 		if(fchange)	{		// if there was a change, do update of on-screen information
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
@@ -1487,7 +1501,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)	{	// Allow adjustment only if in line-in mode
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L && ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
@@ -1507,7 +1521,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_LINEIN)	// Orange if not in LINE-IN mode
+		if(ts.tx_audio_source != TX_AUDIO_LINEIN_L && ts.tx_audio_source != TX_AUDIO_LINEIN_R)	// Orange if not in LINE-IN mode
 			clr = Orange;
 		//
 		sprintf(options, "  %u", ts.tx_line_gain);
@@ -1641,7 +1655,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
-		sprintf(options, "  %u", (uint)ts.sidetone_freq);
+		sprintf(options, "  %uHz", (uint)ts.sidetone_freq);
 		break;
 	//
 	case MENU_PADDLE_REVERSE:	// CW Paddle reverse
@@ -1661,7 +1675,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_CW_OFFSET_MODE:	// CW offset mode (e.g. USB, LSB, etc.)
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_offset_mode,
 						0,
-						CW_OFFSET_AUTO_RX,
+						CW_OFFSET_MAX,
 						CW_OFFSET_MODE_DEFAULT,
 						1
 						);
@@ -2040,6 +2054,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 			break;
 	case MENU_BACKUP_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, " Do it!");
@@ -2056,7 +2071,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    break;
 			    }
 			select = MENU_HARDWARE_INFO;
+			break;
 	case MENU_RESTORE_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, "Do it!");
@@ -2073,6 +2090,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    break;
 			    }
 			select = MENU_WFALL_SIZE;
+			break;
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;
@@ -2377,7 +2395,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
-		sprintf(options, "   %u", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
+		sprintf(options, "   %uHz", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
 		break;
 	//
 	case CONFIG_BEEP_LOUDNESS:	// beep loudness
@@ -2819,7 +2837,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;		// make number red to alert user of this!
 		//
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
-		sprintf(options, " %9u", (uint)ts.xverter_offset);	// print with nine digits
+		sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);
@@ -3068,20 +3086,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		if(ts.misc_flags1 & 64)	{			// Display status of TX audio filter
 			clr = Red;					// warn user that filter is off!
 		}
-		break;
-	case CONFIG_MIC_BIAS_ENABLE:		// Enable/disable mic bias
-		temp_var = ts.mic_bias;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)		{
-			if(temp_var)
-				ts.mic_bias = 1;
-			else
-				ts.mic_bias = 0;
-		}
-		if(ts.mic_bias)
-			clr = Red;
-		else
-			clr = White;
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,

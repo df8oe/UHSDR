@@ -399,7 +399,11 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_1P8KHZ:
 		    IIR_PreFilter.numStages = IIR_1k8_numStages;		// number of stages
-		    if(ts.filter_1k8_select == 1)	{
+		    if(ts.filter_1k8_select == 6)	{
+				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_LPF_pkCoeffs;	// point to reflection coefficients
+				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_LPF_pvCoeffs;	// point to ladder coefficients
+		    }
+		    else if(ts.filter_1k8_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_1k8_1k125_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_1k8_1k125_pvCoeffs;	// point to ladder coefficients
 		    }
@@ -422,7 +426,11 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		case AUDIO_2P3KHZ:
 		    IIR_PreFilter.numStages = IIR_2k3_numStages;		// number of stages
-		    if(ts.filter_2k3_select == 1)	{
+		    if(ts.filter_2k3_select == 5)	{
+				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_LPF_pkCoeffs;	// point to reflection coefficients
+				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_LPF_pvCoeffs;	// point to ladder coefficients
+		    }
+		    else if(ts.filter_2k3_select == 1)	{
 				IIR_PreFilter.pkCoeffs = (float *)IIR_2k3_1k275_pkCoeffs;	// point to reflection coefficients
 				IIR_PreFilter.pvCoeffs = (float *)IIR_2k3_1k275_pvCoeffs;	// point to ladder coefficients
 		    }
@@ -564,7 +572,7 @@ void audio_driver_set_rx_audio_filter(void)
 	arm_lms_norm_init_f32(&lms2Norm_instance, calc_taps, &lms2NormCoeff_f32[0], &lms2StateF32[0], (float32_t)mu_calc, 64);
 
 	//
-	for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
+	for(i = 0; i < LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
 		lms2_nr_delay[i] = 0;
 	//
 	for(i = 0; i < DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN; i++)	{		// clear LMS state and coefficient buffers
@@ -861,7 +869,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	ulong 		i;
 	float32_t	rad_calc;
 //	static float32_t	q_temp, i_temp;
-	static bool flag = 0;
+	static bool flag = 1;
 	//
 	// Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
 	// frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
@@ -897,12 +905,22 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 	//
 	// Pre-calculate quadrature sine wave(s) ONCE for the conversion
 	//
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && ts.multi != 4)
+	    {
+	    ts.multi = 4; 		//(4 = 6 kHz offset)
+	    flag = 0;
+	    }
+	if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && ts.multi != 8)
+	    {
+	    ts.multi = 8; 		// (8 = 12 kHz offset)
+	    flag = 0;
+	    }
 	if(!flag)	{		// have we already calculated the sine wave?
 		for(i = 0; i < size/2; i++)	{		// No, let's do it!
 			rad_calc = (float32_t)i;		// convert to float the current position within the buffer
 			rad_calc /= (size/2);			// make this a fraction
 			rad_calc *= (PI * 2);			// convert to radians
-			rad_calc *= 4;					// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
+			rad_calc *= ts.multi;			// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
 			//
 			sincosf(rad_calc, (float *)&ads.Osc_I_buffer[i], (float *)&ads.Osc_Q_buffer[i]);
 //			ads.Osc_Q_buffer[i] = cos(rad_calc);	// get sine and cosine values and store in pre-calculated array
@@ -1422,9 +1440,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	//
 	if(ts.iq_freq_mode)	{		// is receive frequency conversion to be done?
-		if(ts.iq_freq_mode == 1)			// Yes - "RX LO LOW" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
 			audio_rx_freq_conv(size, 1);
-		else								// "RX LO HIGH" mode
+		else								// it is in "RX LO LOW" mode
 			audio_rx_freq_conv(size, 0);
 	}
 	//
@@ -1633,9 +1651,9 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	//
 	if(ts.iq_freq_mode)	{		// is receive frequency conversion to be done?
-		if(ts.iq_freq_mode == 1)			// Yes - "RX LO LOW" mode
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// Yes - "RX LO LOW" mode
 			audio_rx_freq_conv(size, 1);
-		else								// "RX LO HIGH" mode
+		else								// it is in "RX LO LOW" mod
 			audio_rx_freq_conv(size, 0);
 	}
 	//
@@ -1878,6 +1896,10 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			softdds_runf((float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer,size/2);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
 		}
 		else	{		// Not tune mode - use audio from CODEC
+				if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+					src++;
+					// use right channel data
+				}
 			// Fill I and Q buffers with left channel(same as right)
 			for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 				ads.a_buffer[i] = (float)*src;
@@ -1885,7 +1907,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			}
 		}
 		//
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+		if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 			gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 		else	{
 			gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -1942,15 +1964,15 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 			if(ts.dmod_mode == DEMOD_LSB)	{		// Is it LSB?
-				if(ts.iq_freq_mode == 1)			// yes - is it "RX LO HIGH" mode?
+				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
-				else								// it is in "RX LO LOW" mode
+			else								// it is in "RX LO LOW" mode
 					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 			}
 			else	{								// It is USB!
-				if(ts.iq_freq_mode == 1)			// yes - is it "RX LO HIGH" mode?
+				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
-				else								// it is in "RX LO LOW" mode
+			else								// it is in "RX LO LOW" mode
 					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
 			}
 		}
@@ -1980,13 +2002,17 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	else if((ts.dmod_mode == DEMOD_AM) && (!ts.tune))	{	//	Is it in AM mode *AND* is frequency translation active?
 		if(ts.iq_freq_mode)	{				// is translation active?
+			if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+				src++;
+				// use right channel data
+			}
 			// Translation is active - Fill I and Q buffers with left channel(same as right)
 			for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 				ads.a_buffer[i] = (float)*src;
 				src += 2;								// Next sample
 			}
 			//
-			if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+			if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 				gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 			else	{
 				gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2051,9 +2077,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// check and apply correct translate mode
 			//
-			if(ts.iq_freq_mode == FREQ_IQ_CONV_LO_HIGH)			// is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set "RX LO IS HIGH" mode
-			else								// It must be "RX LO LOW" mode
+			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
 			//
 			//
@@ -2084,9 +2110,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// check and apply correct translate mode
 			//
-			if(ts.iq_freq_mode == FREQ_IQ_CONV_LO_HIGH)			// is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set "LO IS HIGH" mode
-			else								// It must be "RX LO LOW" mode
+			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
 			//
 			// Equalize based on band and simultaneously apply I/Q gain adjustments
@@ -2126,12 +2152,16 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		else
 			fm_mod_mult = 1;	// not in 5 kHz mode - used default (2.5 kHz) modulation factors
 		//
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+			src++;
+			// use right channel data
+		}
 		for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 			ads.a_buffer[i] = (float)*src;
 			src += 2;								// Next sample
 		}
 		//
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+		if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 			gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 		else	{
 			gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2219,7 +2249,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// ------------------------
 		// Output I and Q as stereo data
-		if(ts.iq_freq_mode == FREQ_IQ_CONV_LO_LOW)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
+		if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
 			for(i = 0; i < size/2; i++)	{
 				// Prepare data for DAC
 				*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
@@ -2262,12 +2292,17 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	// Not tune mode - use audio from CODEC
 	// Fill I and Q buffers with left channel(same as right)
+	if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {	 	// Are we in LINE IN mode?
+		src++;
+		// use right channel data
+	}
 	for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 		ads.a_buffer[i] = (float)*src;
 		src += 2;								// Next sample
 	}
+
 	//
-	if(ts.tx_audio_source == TX_AUDIO_LINEIN)		// Are we in LINE IN mode?
+	if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
 		gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
 	else	{
 		gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2321,13 +2356,13 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 		if(ts.dmod_mode == DEMOD_LSB)	{		// Is it LSB?
-			if(ts.iq_freq_mode == 1)			// yes - is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 		}
 		else	{								// It is USB!
-			if(ts.iq_freq_mode == 1)			// yes - is it "RX LO HIGH" mode?
+			if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
 				audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
 			else								// it is in "RX LO LOW" mode
 				audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
@@ -2365,7 +2400,11 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#ifdef USE_24_BITS
+void I2S_RX_CallBack(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
+#else
 void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
+#endif
 {
 	static bool to_rx = 0;	// used as a flag to clear the RX buffer
 	static bool to_tx = 0;	// used as a flag to clear the TX buffer
