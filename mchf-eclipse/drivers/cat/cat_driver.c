@@ -199,7 +199,7 @@ void CatDriverFT817CheckAndExecute() {
 	uint8_t bc = 0;
 	uint8_t resp[32];
 
-	if (cat_driver_state() == 0) {
+	if (cat_driver_state() == 0xFF) {
 		cat_buffer_reset();
 	} else {
 
