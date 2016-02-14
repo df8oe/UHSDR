@@ -5,3 +5,11 @@ firmware_Target_Flash/
 *.o
 *.d
 *~
+*.pyc
+bootloader.bin
+bootloader.dfu
+bootloader.elf
+bootloader.hex
+mchf.bin
+mchf.elf
+mchf.map
