@@ -1079,9 +1079,18 @@ void ConfigurationStorage_Init() {
 //	    }
 }
 
+void CheckIsTouchscreenPresent(void)
+{
+	get_touchscreen_coordinates();				// initial reading of XPT2046
+	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
+	    ts.tp_present = 1;					// yes - touchscreen present!
+	else
+	    ts.tp_x = ts.tp_y = 0xff;
+}
+
 int main(void)
 {
-*(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
+	*(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
 	// Set unbuffered mode for stdout (newlib)
 	//setvbuf( stdout, 0, _IONBF, 0 );
@@ -1101,11 +1110,7 @@ int main(void)
 	ConfigurationStorage_Init();
 
 	// test if touchscreen is present
-	get_touchscreen_coordinates();				// initial reading of XPT2046
-	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
-	    ts.tp_present = 1;					// yes - touchscreen present!
-	else
-	    ts.tp_x = ts.tp_y = 0xff;
+	CheckIsTouchscreenPresent();
 
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
@@ -1154,7 +1159,8 @@ int main(void)
 	//
 	UiCheckForPressedKey();
 
-	if (ts.cat_mode_active) cat_driver_init();
+	if (ts.cat_mode_active)
+		cat_driver_init();
 
 #ifdef DEBUG_BUILD
 	printf("== main loop starting ==\n\r");
