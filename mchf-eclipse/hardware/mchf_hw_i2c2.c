@@ -14,6 +14,7 @@
 // Common
 #include "mchf_board.h"
 #include "ui_lcd_hy28.h"
+#include "mchf_hw_i2c.h"
 #include "mchf_hw_i2c2.h"
 
 #define I2C2_FLAG_TIMEOUT          		((uint32_t)0x500)
@@ -71,6 +72,16 @@ void mchf_hw_i2c2_init(void)
 	I2C_Init(CODEC_I2C, &I2C_InitStructure);
 }
 
+#define I2C2_FlagStatusOrReturn(FLAG, RETURN) { \
+		uint32_t timeout = I2C2_FLAG_TIMEOUT;\
+		while(I2C_GetFlagStatus(CODEC_I2C, (FLAG)))\
+		{ if ((timeout--) == 0) { return (RETURN); } } }
+
+#define I2C2_EventCompleteOrReturn(EVENT, RETURN) { \
+		uint32_t timeout = I2C2_LONG_TIMEOUT;\
+		while(!I2C_CheckEvent(CODEC_I2C, (EVENT)))\
+		{ if ((timeout--) == 0) { return (RETURN); } } }
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_hw_i2c2_reset
@@ -104,92 +115,15 @@ void mchf_hw_i2c2_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-uchar mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue)
+uint16_t mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue)
 {
-	//printf("i2c write 0x%02x\n\r",I2CAddr);
-
-	// While the bus is busy
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(CODEC_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C2_Timeout = I2C2_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(CODEC_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C2_Timeout = I2C2_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(CODEC_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C2_Timeout = I2C2_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(CODEC_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTING))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 4;
-	}
-
-	// Prepare the register value to be sent
-	I2C_SendData(CODEC_I2C, RegisterValue);
-
-	// Wait till all data have been physically transferred on the bus
-	I2C2_Timeout = I2C2_LONG_TIMEOUT;
-	while(!I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_BTF))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 5;
-	}
-
-	// End the configuration sequence
-	I2C_GenerateSTOP(CODEC_I2C, ENABLE);
-
-	// stop bit flag
-	I2C2_Timeout = I2C2_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(CODEC_I2C, I2C_FLAG_STOPF))
-	{
-		if((I2C2_Timeout--) == 0)
-			return 6;
-	}
-
-	//printf("i2c write ok\n\r");
-	return 0;
+	return MCHF_I2C_WriteRegister(CODEC_I2C, I2CAddr, &RegisterAddr, 1, RegisterValue);
 }
-
-
 
 // serial eeprom functions by DF8OE
 
-#define I2C2_FlagStatusOrReturn(FLAG, RETURN) { \
-		uint32_t timeout = I2C2_FLAG_TIMEOUT;\
-		while(I2C_GetFlagStatus(CODEC_I2C, (FLAG)))\
-		{ if ((timeout--) == 0) { return (RETURN); } } }
 
-#define I2C2_EventCompleteOrReturn(EVENT, RETURN) { \
-		uint32_t timeout = I2C2_LONG_TIMEOUT;\
-		while(!I2C_CheckEvent(CODEC_I2C, (EVENT)))\
-		{ if ((timeout--) == 0) { return (RETURN); } } }
-
-void EEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* devaddr_ptr, uint32_t* Addr_ptr) {
+static void EEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* devaddr_ptr, uint32_t* Addr_ptr) {
 
 	*devaddr_ptr = MEM_DEVICE_WRITE_ADDR;
 
@@ -224,7 +158,7 @@ void EEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* devaddr_ptr, uint
 }
 
 
-uint16_t EEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Type)
+static uint16_t EEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Type)
 {
 	uint8_t devaddr;
 
@@ -240,7 +174,7 @@ uint16_t EEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Type)
 
 	return 0;
 }
-uint16_t EEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
+static uint16_t EEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 {
 	int i = 10;
 	uint16_t retVal;
@@ -252,55 +186,47 @@ uint16_t EEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 	}
 	return retVal;
 }
-uint16_t EEPROM_24Cxx_StartTransfer(uint32_t Addr, uint8_t Mem_Type, bool isWrite)
-{
+struct _EEPROM_24CXX_Descriptor {
 	uint8_t devaddr;
-	uint8_t lower_addr, upper_addr;
-	EEPROM_24Cxx_AdjustAddrs(Mem_Type,&devaddr,&Addr);
+	uint8_t addr[2]; // 0 -> upper or single, 1 -> lower, second;
+	uint16_t addr_size;
+};
+typedef struct _EEPROM_24CXX_Descriptor EEPROM_24CXX_Descriptor;
 
-	lower_addr = (uint8_t)((0x00FF)&Addr);
+EEPROM_24CXX_Descriptor eeprom_desc;
+// THIS CAN BE USED ONLY WITH SINGLE EEPROM AND SINGLE THREAD
+// NOT THREAD SAFE, USE local variable instead then
 
-	if(Mem_Type > 8)
-	{
-		Addr = Addr>>8;
-		upper_addr = (uint8_t)((0x00FF)&Addr);
+
+static void EEPROM_24Cxx_StartTransfer_Prep(uint32_t Addr, uint8_t Mem_Type, EEPROM_24CXX_Descriptor* eeprom_desc_ptr)
+{
+	EEPROM_24Cxx_AdjustAddrs(Mem_Type,&eeprom_desc_ptr->devaddr,&Addr);
+
+	if (Mem_Type > 8) {
+		eeprom_desc_ptr->addr[1] = (uint8_t)((0x00FF)&(Addr));
+		eeprom_desc_ptr->addr[0] = (uint8_t)((0x00FF)&((Addr)>>8));
+		eeprom_desc_ptr->addr_size = 2;
 	}
-	// Generate the Start Condition
-	I2C_GenerateSTART(CODEC_I2C, ENABLE);
-	I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_MODE_SELECT, 0xFF00);
-	// Test on I2C2 EV5, Start transmitted successfully and clear it
-	// Send Memory device slave Address for write
-	I2C_Send7bitAddress(CODEC_I2C, devaddr, I2C_Direction_Transmitter);
-	// Test on I2C2 EV6 and clear it
-	I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED, 0xFD00)
-
-	if(Mem_Type > 8)
+	else
 	{
-		// Send I2C2 location address LSB
-		I2C_SendData(CODEC_I2C, upper_addr);
-		// Test on I2C2 EV8 and clear it
-		I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00)
+		eeprom_desc_ptr->addr[0] = (uint8_t)((0x00FF)&Addr);
+		eeprom_desc_ptr->addr_size = 1;
 	}
-	I2C_SendData(CODEC_I2C, lower_addr);
-	// Test on I2C2 EV8 and clear it
-	I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00)
-	// After transmission of addr, we may have to switch to read mode
-	if (isWrite == false)
-	{
-		I2C_GenerateSTART(CODEC_I2C, ENABLE);
-
-		I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_MODE_SELECT, 0xFB00);
-		// Test on I2C2 EV5, Start transmitted successfully and clear it
-		// Send Memory device slave Address for read
-		I2C_Send7bitAddress(CODEC_I2C, devaddr+1, I2C_Direction_Receiver);
-		I2C_AcknowledgeConfig(CODEC_I2C, DISABLE);
-		I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED, 0xFA00);
-	}
-	return 0;
 }
+
+#if 0
+static uint16_t EEPROM_24Cxx_StartTransfer(uint32_t Addr, uint8_t Mem_Type, bool isWrite)
+{
+	EEPROM_24Cxx_StartTransfer_Prep(Addr, Mem_Type,&eeprom_desc);
+	return MCHF_I2C_StartTransfer(CODEC_I2C,eeprom_desc.devaddr,eeprom_desc.addr,eeprom_desc.addr_size,isWrite,true);
+}
+#endif
 
 uint16_t Write_24Cxx(uint32_t Addr, uint8_t Data, uint8_t Mem_Type)
 {
+	EEPROM_24Cxx_StartTransfer_Prep(Addr, Mem_Type,&eeprom_desc);
+	uint16_t retVal = MCHF_I2C_WriteRegister(CODEC_I2C,eeprom_desc.devaddr,&eeprom_desc.addr[0],eeprom_desc.addr_size,Data);
+#if 0
 	uint16_t retVal = EEPROM_24Cxx_StartTransfer(Addr,Mem_Type,true);
 	if (!retVal) {
 		// Send Data
@@ -310,29 +236,21 @@ uint16_t Write_24Cxx(uint32_t Addr, uint8_t Data, uint8_t Mem_Type)
 		// Send I2C2 STOP Condition
 		I2C_GenerateSTOP(CODEC_I2C, ENABLE);
 		I2C2_FlagStatusOrReturn(I2C_FLAG_STOPF, 0xF000)
-
-		retVal = EEPROM_24Cxx_ackPolling(Addr,Mem_Type);
 	}
+#endif
+
+	if (!retVal) { retVal = EEPROM_24Cxx_ackPolling(Addr,Mem_Type); }
+
 	return retVal;
 }
 
 
 uint16_t Read_24Cxx(uint32_t Addr, uint8_t Mem_Type)
 {
-	uint8_t Data = 0;
-
-	uint16_t retVal = EEPROM_24Cxx_StartTransfer(Addr,Mem_Type,false);
-	if (!retVal) {
-		/* Prepare an NACK for the next data received */
-		I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_BYTE_RECEIVED, 0xF900);
-		/* Prepare Stop after receiving data */
-		I2C_GenerateSTOP(CODEC_I2C, ENABLE);
-		I2C2_FlagStatusOrReturn(I2C_FLAG_STOPF, 0xF000)
-		/* Receive the Data */
-		Data = I2C_ReceiveData(CODEC_I2C);
-		/* return the read data */
-		return Data;
-	}
+	uint8_t value;
+	EEPROM_24Cxx_StartTransfer_Prep(Addr, Mem_Type,&eeprom_desc);
+	uint16_t retVal = MCHF_I2C_ReadRegister(CODEC_I2C,eeprom_desc.devaddr,&eeprom_desc.addr[0],eeprom_desc.addr_size,&value);
+	if (!retVal) { retVal = value;}
 	return retVal;
 }
 
@@ -343,7 +261,7 @@ uint16_t Read_24Cxxseq(uint32_t start, uint8_t *buffer, uint16_t length, uint8_t
 
 uint16_t Write_24Cxxseq(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
-	uint32_t i, page, count;
+	uint32_t page, count;
 	uint16_t retVal = 0xFFFF;
 	count = 0;
 
@@ -361,23 +279,10 @@ uint16_t Write_24Cxxseq(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t
 
 	while(count < length)
 	{
-		retVal = EEPROM_24Cxx_StartTransfer(Addr + count,Mem_Type,true);
-		if (!retVal) {
-			for(i=0; i<page && count < length;i++)
-			{
-				// Send Data
-				I2C_SendData(CODEC_I2C, buffer[count]);
-				count++;
-				// Test on I2C2 EV8 and clear it
-				I2C2_EventCompleteOrReturn(I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00)
-			}
-			I2C_GenerateSTOP(CODEC_I2C, ENABLE);
-			I2C2_FlagStatusOrReturn(I2C_FLAG_STOPF, 0xF000)
-		} else
-		{
-			break; // leave while loop NOW, no point in continuing in case of error
-		}
-
+		EEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&eeprom_desc);
+		retVal = MCHF_I2C_WriteBlock(CODEC_I2C,eeprom_desc.devaddr,&eeprom_desc.addr[0],eeprom_desc.addr_size,&buffer[count],page);
+		count+=page;
+		if (retVal) { break; }
 		retVal = EEPROM_24Cxx_ackPolling(Addr,Mem_Type);
 	}
 	return retVal;

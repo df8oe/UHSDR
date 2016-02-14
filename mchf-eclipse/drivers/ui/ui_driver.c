@@ -434,13 +434,10 @@ void ui_driver_init(void)
 	// Driver publics init
 	UiDriverPublicsInit();
 
-	// Load stored data from eeprom - some are needed for initialization
-	UiDriverLoadEepromValues();
-
 	// Init frequency publics
 	UiDriverInitFrequency();
 
-	// Load stored data from eeprom - again - as some of the values above would have been overwritten from the above
+	// Load stored data from eeprom
 	UiDriverLoadEepromValues();
 	//
 	UiCalcTxCompLevel();		// calculate current settings for TX speech compressor
@@ -458,9 +455,6 @@ void ui_driver_init(void)
 	//
 	UiCalcTxIqGainAdj();		// Init TX IQ gain
 	//
-	// Init spectrum display
-	// UiDriverInitSpectrumDisplay();
-	// UiInitSpectrumScopeWaterfall();
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
 	// Temp sensor setup

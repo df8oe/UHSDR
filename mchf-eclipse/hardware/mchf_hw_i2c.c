@@ -30,43 +30,141 @@
 
 __IO uint32_t  I2C1_Timeout = I2C1_LONG_TIMEOUT;
 
-/*static void i2c_delay(void)
-{
-	__asm("nop\n");
-	__asm("nop\n");
-	__asm("nop\n");
-	__asm("nop\n");
-}*/
 
-//Wait till the specified SR1 Bits are set
-//More than 1 Flag can be "or"ed. This routine reads only SR1.
-static uint32_t WaitSR1FlagsSet (uint32_t Flags)
-{
-	uint32_t TimeOut = HSI_VALUE;
+#define I2C_FlagStatusOrReturn(BUS, FLAG, RETURN) { \
+		uint32_t timeout = I2C1_FLAG_TIMEOUT;\
+		while(I2C_GetFlagStatus((BUS), (FLAG)))\
+		{ if ((timeout--) == 0) { return (RETURN); } } }
 
-	while(((SI570_I2C->SR1) & Flags) != Flags)
+#define I2C_EventCompleteOrReturn(BUS,EVENT, RETURN) { \
+		uint32_t timeout = I2C1_LONG_TIMEOUT;\
+		while(!I2C_CheckEvent((BUS), (EVENT)))\
+		{ if ((timeout--) == 0) { return (RETURN); } } }
+
+
+uint16_t MCHF_I2C_StartTransfer(I2C_TypeDef* bus, uint8_t devaddr, uint8_t* data_ptr, uint16_t data_size, bool isWrite, bool isSingleByteRead)
+{
+	int data_idx;
+
+	// Generate the Start Condition
+	I2C_GenerateSTART(bus, ENABLE);
+	I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_MODE_SELECT, 0xFF00);
+	// Test on I2C2 EV5, Start transmitted successfully and clear it
+	// Send Memory device slave Address for write
+	I2C_Send7bitAddress(bus, devaddr, I2C_Direction_Transmitter);
+	// Test on I2C2 EV6 and clear it
+	I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED, 0xFD00);
+
+	for(data_idx = 0; data_idx < data_size; data_idx++)
 	{
-		if (!(TimeOut--))
-			return 1;
+		I2C_SendData(bus, data_ptr[data_idx]);
+		// Test on I2C2 EV8 and clear it
+		I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00);
+		// After transmission of addr, we may have to switch to read mode
 	}
+	if (isWrite == false)
+	{
+		I2C_GenerateSTART(bus, ENABLE);
 
+		I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_MODE_SELECT, 0xFB00);
+		// Test on I2C2 EV5, Start transmitted successfully and clear it
+		// Send Memory device slave Address for read
+		I2C_Send7bitAddress(bus, devaddr+1, I2C_Direction_Receiver);
+		if  (isSingleByteRead) {
+			I2C_AcknowledgeConfig(bus, DISABLE);
+		} else {
+			I2C_AcknowledgeConfig(bus, ENABLE);
+		}
+		I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED, 0xFA00);
+	}
 	return 0;
 }
 
-//Check to see if the Line is busy
-//This bit is set automatically when a start condition is broadcasted on the line (even from another master)
-//and is reset when stop condition is detected.
-static uint32_t WaitLineIdle(void)
+uint16_t MCHF_I2C_WriteRegister(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr,uint16_t addr_size, uchar RegisterValue)
 {
-	uint32_t TimeOut = HSI_VALUE;
+	uint16_t retVal = MCHF_I2C_StartTransfer(bus,I2CAddr,addr_ptr,addr_size,true,false);
+	// is write only, is not a single byte READ
 
-	while((SI570_I2C->SR2) & (I2C_SR2_BUSY))
-	{
-		if (!(TimeOut--))
-			return 1;
+	if (!retVal) {
+		// Prepare the register value to be sent
+		I2C_SendData(bus, RegisterValue);
+
+		I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00);
+		// End the configuration sequence
+		I2C_GenerateSTOP(bus, ENABLE);
+		I2C_FlagStatusOrReturn(bus,I2C_FLAG_STOPF, 0xF000);
 	}
-	return 0;
+	return retVal;
 }
+
+uint16_t MCHF_I2C_WriteBlock(I2C_TypeDef* bus, uchar I2CAddr, uint8_t* addr_ptr, uint16_t addr_size, uint8_t* data, uint32_t size)
+{
+	ulong i;
+
+	//printf("i2c write 0x%02x 0x%02x 0x%02x\n\r",I2CAddr,RegisterAddr,RegisterValue);
+	uint16_t retVal = MCHF_I2C_StartTransfer(bus,I2CAddr,addr_ptr,addr_size,true,false);
+	// is write only, is not a single byte READ
+
+	if (!retVal) {
+		for(i = 0; i < size; i++)
+		{
+			// Prepare the register value to be sent
+			I2C_SendData(bus, data[i]);
+			I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_BYTE_TRANSMITTED, 0xFC00);
+		}
+		// End the configuration sequence
+		I2C_GenerateSTOP(bus, ENABLE);
+		I2C_FlagStatusOrReturn(bus,I2C_FLAG_STOPF, 0xF000);
+	}
+	return retVal;
+}
+
+uint16_t MCHF_I2C_ReadRegister(I2C_TypeDef* bus, uchar I2CAddr, uint8_t* addr_ptr, uint16_t addr_size, uint8_t *RegisterValue)
+{
+	//printf("i2c read\n\r");
+	uint16_t retVal = MCHF_I2C_StartTransfer(bus,I2CAddr,addr_ptr,addr_size,false,true);
+	// is read, IS a SINGLE byte READ
+
+	if (!retVal) {
+		I2C_EventCompleteOrReturn(bus,I2C_EVENT_MASTER_BYTE_RECEIVED, 0xF900);
+		/* Prepare Stop after receiving data */
+		I2C_GenerateSTOP(bus, ENABLE);
+		I2C_FlagStatusOrReturn(bus,I2C_FLAG_STOPF, 0xF000);
+		/* Receive the Data */
+		*RegisterValue = I2C_ReceiveData(bus);
+	}
+	return retVal;
+}
+
+uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, uint16_t addr_size, uint8_t *data, uint32_t size)
+{
+	if (size == 0) return 0xFFFF; // invalid size
+
+	uint16_t retVal = MCHF_I2C_StartTransfer(bus,I2CAddr,addr_ptr,addr_size,false,size == 1);
+	// is read, is a not single byte READ unless size == 1
+
+	if (!retVal) {
+		int idx;
+		for (idx = 0; idx < size - 1; idx++) {
+			I2C_EventCompleteOrReturn(bus, I2C_EVENT_MASTER_BYTE_RECEIVED, 0xF900);
+			data[idx] = I2C_ReceiveData(bus);
+		}
+		// we have just read the second last byte, now prepare for landing :-)
+		if (size > 1) { I2C_AcknowledgeConfig(bus, DISABLE); }
+		// in case of a single byte read, this has been done already in the start transfer
+		I2C_EventCompleteOrReturn(bus, I2C_EVENT_MASTER_BYTE_RECEIVED, 0xF900);
+		I2C_GenerateSTOP(bus, ENABLE);
+		I2C_FlagStatusOrReturn(bus, I2C_FLAG_STOPF, 0xF000);
+		data[size-1] = I2C_ReceiveData(bus);
+	}
+
+	//printf("read done\n\r");
+	return retVal;
+}
+
+
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       :
@@ -140,625 +238,25 @@ void mchf_hw_i2c_reset(void)
 	mchf_hw_i2c_init();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       :
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-uchar mchf_hw_i2c_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue)
+
+
+uint16_t mchf_hw_i2c_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
 {
-	//printf("i2c write 0x%02x 0x%02x 0x%02x\n\r",I2CAddr,RegisterAddr,RegisterValue);
-
-	// While the bus is busy
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(SI570_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTING))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 4;
-	}
-
-	// Prepare the register value to be sent
-	I2C_SendData(SI570_I2C, RegisterValue);
-
-	// Wait till all data have been physically transferred on the bus
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(!I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BTF))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 5;
-	}
-
-	// End the configuration sequence
-	I2C_GenerateSTOP(SI570_I2C, ENABLE);
-
-	// stop bit flag
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_STOPF))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 6;
-	}
-
-	return 0;
+	return MCHF_I2C_WriteRegister(SI570_I2C, I2CAddr, &RegisterAddr, 1, RegisterValue);
 }
 
-uchar mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
+uint16_t mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-	ulong i;
-
-	//printf("i2c write 0x%02x 0x%02x 0x%02x\n\r",I2CAddr,RegisterAddr,RegisterValue);
-
-	// While the bus is busy
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(SI570_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTING))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 4;
-	}
-
-	for(i = 0; i < size; i++)
-	{
-		// Prepare the register value to be sent
-		I2C_SendData(SI570_I2C, *data++);
-
-		// Wait till all data have been physically transferred on the bus
-		I2C1_Timeout = I2C1_LONG_TIMEOUT;
-		while(!I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BTF))
-		{
-			if((I2C1_Timeout--) == 0)
-				return 5;
-		}
-	}
-
-	// End the configuration sequence
-	I2C_GenerateSTOP(SI570_I2C, ENABLE);
-
-	// stop bit flag
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_STOPF))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 6;
-	}
-
-	return 0;
+	return MCHF_I2C_WriteBlock(SI570_I2C, I2CAddr,&RegisterAddr, 1, data, size);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : trx4m_hw_i2c_ReadRegister
-//* Object              : ver1 - working (but stalls next write sometimes)
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-/*uchar trx4m_hw_i2c_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
+uint16_t mchf_hw_i2c_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
 {
-	//trx4m_i2c_switch_pins(I2CAddr);
-
-	printf("i2c read\n\r");
-
-	//  While the bus is busy
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(SI570_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTING))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 4;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 6;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Receiver);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 7;
-	}
-
-	// Enable NACK bit on next read and read final register
-	I2C_NACKPositionConfig(SI570_I2C, I2C_NACKPosition_Current);
-	I2C_AcknowledgeConfig(SI570_I2C, DISABLE);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_BYTE_RECEIVED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 8;
-	}
-
-	// Read data
-	*RegisterValue = I2C_ReceiveData(SI570_I2C);
-
-	// End the configuration sequence
-	I2C_GenerateSTOP(SI570_I2C, ENABLE);
-
-	// stop bit flag
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_STOPF));
-	{
-		if((I2C1_Timeout--) == 0)
-		{
-			I2C_AcknowledgeConfig(SI570_I2C, ENABLE);
-			return 9;
-		}
-	}
-
-	// Re-enable ACK bit incase it was disabled last cal
-	I2C_AcknowledgeConfig(SI570_I2C, ENABLE);
-
-	printf(" %d ",*RegisterValue);
-
-	printf("read done\n\r");
-	return 0;
-}*/
-
-//*----------------------------------------------------------------------------
-//* Function Name       : trx4m_hw_i2c_ReadRegister
-//* Object              : ver2 - under test
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-uchar mchf_hw_i2c_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
-{
-	//printf("i2c read\n\r");
-
-	//  While the bus is busy
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(SI570_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BTF) == RESET)
-	{
-		if((I2C1_Timeout--) == 0)
-			return 4;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 6;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Receiver);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_ADDR) == RESET)
-	{
-		if((I2C1_Timeout--) == 0)
-			return 7;
-	}
-
-	// Dissable acknoledgment
-	I2C_AcknowledgeConfig(SI570_I2C, DISABLE);
-
-	// Clear ADDR register by reading SR1 then SR2 register (SR1 has already been read)
-	(void)SI570_I2C->SR2;
-
-	// < Send STOP Condition
-	I2C_GenerateSTOP(SI570_I2C, ENABLE);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_RXNE) == RESET)
-	{
-		if((I2C1_Timeout--) == 0)
-			return 8;
-	}
-
-	// Read data
-	*RegisterValue = I2C_ReceiveData(SI570_I2C);
-
-	// stop bit flag
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(SI570_I2C->CR1 & I2C_CR1_STOP)
-	{
-		if((I2C1_Timeout--) == 0)
-		{
-			I2C_AcknowledgeConfig(SI570_I2C, ENABLE);
-			return 9;
-		}
-	}
-
-	// Re-enable ACK bit incase it was disabled last cal
-	I2C_AcknowledgeConfig(SI570_I2C, ENABLE);
-
-	// Clear AF flag for next communication
-	I2C_ClearFlag(SI570_I2C, I2C_FLAG_AF);
-
-	//printf(" %d ",*RegisterValue);
-
-	//printf("read done\n\r");
-	return 0;
+	return MCHF_I2C_ReadRegister(SI570_I2C, I2CAddr,&RegisterAddr, 1, RegisterValue);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : trx4m_hw_i2c_ReadData
-//* Object              : read more than one byte
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-uchar mchf_hw_i2c_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
+uint16_t mchf_hw_i2c_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-	//printf("i2c read block\n\r");
-
-	//  While the bus is busy
-	I2C1_Timeout = I2C1_LONG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BUSY))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 1;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 2;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Transmitter);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 3;
-	}
-
-	// Transmit the first address for write operation
-	I2C_SendData(SI570_I2C, RegisterAddr);
-
-	// Test on EV8 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_BTF) == RESET)
-	{
-		if((I2C1_Timeout--) == 0)
-			return 4;
-	}
-
-	// Start the config sequence
-	I2C_GenerateSTART(SI570_I2C, ENABLE);
-
-	// Test on EV5 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while (!I2C_CheckEvent(SI570_I2C, I2C_EVENT_MASTER_MODE_SELECT))
-	{
-		if((I2C1_Timeout--) == 0)
-			return 6;
-	}
-
-	// Transmit the slave address and enable writing operation
-	I2C_Send7bitAddress(SI570_I2C, I2CAddr, I2C_Direction_Receiver);
-
-	// Test on EV6 and clear it
-	I2C1_Timeout = I2C1_FLAG_TIMEOUT;
-	while(I2C_GetFlagStatus(SI570_I2C, I2C_FLAG_ADDR) == RESET)
-	{
-		if((I2C1_Timeout--) == 0)
-			return 7;
-	}
-
-	// Handle different block sizes
-	switch(size)
-	{
-		// Read one byte
-		case 1:
-		{
-			// Before Clearing Addr bit by reading SR2, we have to cancel ack.
-			SI570_I2C->CR1 &= (uint16_t)~((uint16_t)I2C_CR1_ACK);
-
-			//Now Read the SR2 to clear ADDR
-			(void)SI570_I2C->SR2;
-
-			// Order a STOP condition
-			// Note: Spec_p583 says this should be done just after clearing ADDR
-			// If it is done before ADDR is set, a STOP is generated immediately
-			// as the clock is being streched
-			SI570_I2C->CR1 |= I2C_CR1_STOP;
-
-			// Be carefull that till the stop condition is actually transmitted
-			// the clock will stay active even if a NACK is generated after the next received byte.
-
-			// Read data
-			*data = I2C_ReceiveData(SI570_I2C);
-
-			// Make Sure Stop bit is cleared and Line is now Idle
-			WaitLineIdle();
-
-			// Enable the Acknowledgement again
-			SI570_I2C->CR1 |= ((uint16_t)I2C_CR1_ACK);
-
-			break;
-		}
-
-		// Read two bytes
-		case 2:
-		{
-			// Before Clearing Addr, reset ACK, set POS
-			SI570_I2C->CR1 &= (uint16_t)~((uint16_t)I2C_CR1_ACK);
-			SI570_I2C->CR1 |= I2C_CR1_POS;
-
-			// Clear ADDR register by reading SR1 then SR2 register (SR1 has already been read)
-			(void)SI570_I2C->SR2;
-
-			// Wait for the next 2 bytes to be received (1st in the DR, 2nd in the shift register)
-			WaitSR1FlagsSet(I2C_SR1_BTF);
-
-			// Order a stop condition (as the clock is being strecthed, the stop condition is generated immediately)
-			SI570_I2C->CR1 |= I2C_CR1_STOP;
-
-			// Read data
-			while(size)
-			{
-				*data++ = I2C_ReceiveData(SI570_I2C);
-				size--;
-			}
-
-			// Make Sure Stop bit is cleared and Line is now Iddle
-			WaitLineIdle();
-
-			//Enable the ack and reset Pos
-			SI570_I2C->CR1 |= ((uint16_t)I2C_CR1_ACK);
-			SI570_I2C->CR1 &= (uint16_t)~((uint16_t)I2C_CR1_POS);
-
-			break;
-		}
-
-		// Read more
-		default:
-		{
-			// -----------------------------------------------------------------------------------
-			// Suppose to be correct version - not working on SI570
-			// Read the SR2 to clear ADDR
-			/*(void)SI570_I2C->SR2;
-
-			while((size--) > 3)
-			{
-				// Read till the last 3 bytes
-				*data++ = I2C_ReceiveData(SI570_I2C);
-			}
-
-			// 3 more bytes to read. Wait till the next to is actually received
-			WaitSR1FlagsSet(I2C_SR1_BTF);
-			// Here the clock is strecthed. One more to read.
-
-			// Reset Ack
-			SI570_I2C->CR1 &= (uint16_t)~((uint16_t)I2C_CR1_ACK);
-
-			// Read N-2
-			*data++ = I2C_ReceiveData(SI570_I2C);
-			// Once we read this, N is going to be read to the shift register and NACK is generated
-
-			// Wait for the BTF
-			WaitSR1FlagsSet(I2C_SR1_BTF); //N-1 is in DR, N is in shift register
-			// Here the clock is stretched
-
-			// Generate a stop condition
-			SI570_I2C->CR1 |= I2C_CR1_STOP;
-
-			// Read the last two bytes (N-1 and N)
-			// Read the next two bytes
-			*data++ = I2C_ReceiveData(SI570_I2C);
-			*data   = I2C_ReceiveData(SI570_I2C);
-
-			// Make Sure Stop bit is cleared and Line is now Iddle
-			WaitLineIdle();
-
-			// Enable the ack
-			SI570_I2C->CR1 |= ((uint16_t)I2C_CR1_ACK);*/
-			// -----------------------------------------------------------------------------------
-
-
-			// NOT working - to fix on si570....
-
-			// Read the SR2 to clear ADDR
-			(void)SI570_I2C->SR2;
-
-			while((size--) > 3)
-			{
-				// Read till the last 3 bytes
-				*data++ = I2C_ReceiveData(SI570_I2C);
-
-				WaitSR1FlagsSet(I2C_SR1_BTF);
-			}
-
-			// 3 more bytes to read. Wait till the next to is actually received
-			//WaitSR1FlagsSet(I2C_SR1_BTF);
-			// Here the clock is strecthed. One more to read.
-
-			// Reset Ack
-			SI570_I2C->CR1 &= (uint16_t)~((uint16_t)I2C_CR1_ACK);
-
-			// Read N-2
-			*data++ = I2C_ReceiveData(SI570_I2C);
-			// Once we read this, N is going to be read to the shift register and NACK is generated
-
-			// Wait for the BTF
-			WaitSR1FlagsSet(I2C_SR1_BTF); //N-1 is in DR, N is in shift register
-			// Here the clock is stretched
-
-			// Generate a stop condition
-			SI570_I2C->CR1 |= I2C_CR1_STOP;
-
-			// Read the last two bytes (N-1 and N)
-			// Read the next two bytes
-			*data++ = I2C_ReceiveData(SI570_I2C);
-			*data   = I2C_ReceiveData(SI570_I2C);
-
-			// Make Sure Stop bit is cleared and Line is now Iddle
-			WaitLineIdle();
-
-			// Enable the ack
-			SI570_I2C->CR1 |= ((uint16_t)I2C_CR1_ACK);
-
-			break;
-		}
-	}
-
-	//printf("read done\n\r");
-	return 0;
+	return MCHF_I2C_ReadBlock(SI570_I2C, I2CAddr, &RegisterAddr, 1, data, size);
 }
 
