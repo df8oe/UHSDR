@@ -356,7 +356,6 @@
     <File name="usb/usbh/core/src/usbh_hcs.c" path="usb/usbh/core/src/usbh_hcs.c" type="1"/>
     <File name="usb/usbh/class/hid/src/usbh_hid_mouse.c" path="usb/usbh/class/HID/src/usbh_hid_mouse.c" type="1"/>
     <File name="drivers/audio/filters/i_rx_filter_7kHz5.h" path="drivers/audio/filters/i_rx_filter_7kHz5.h" type="1"/>
-    <File name="drivers/ui/misc/hamm_wnd.h" path="drivers/ui/misc/hamm_wnd.h" type="1"/>
     <File name="misc/v_eprom/eeprom.h" path="misc/v_eprom/eeprom.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_si570.h" path="drivers/ui/oscillator/ui_si570.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_syscfg.h" path="cmsis_lib/include/stm32f4xx_syscfg.h" type="1"/>
