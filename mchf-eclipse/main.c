@@ -989,94 +989,94 @@ void ConfigurationStorage_Init() {
 	ts.ser_eeprom_in_use = 0xFF;				// serial EEPROM not in use yet
 
 	// serial EEPROM init
-//	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM and force new copyvirt2ser
+	//	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM and force new copyvirt2ser
 	if(Read_24Cxx(0,8) > 0xFF)  // Issue with Ser EEPROM, either not available or other problems
-	    ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
+		ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
 	else
-	    {
-	    if(Read_24Cxx(0,16) != 0xFF)
+	{
+		if(Read_24Cxx(0,16) != 0xFF)
 		{
-		if(Read_24Cxx(0,8) > 6 && Read_24Cxx(0,8) < 9 && Read_24Cxx(1,8) == 0x10)
-		    {
-		    ts.ser_eeprom_type = Read_24Cxx(0,8);
-		    ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
-		    }
+			if(Read_24Cxx(0,8) > 6 && Read_24Cxx(0,8) < 9 && Read_24Cxx(1,8) == 0x10)
+			{
+				ts.ser_eeprom_type = Read_24Cxx(0,8);
+				ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
+			}
+			else
+			{
+				ts.ser_eeprom_type = Read_24Cxx(0,16);
+				ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
+			}
+		}
 		else
-		    {
-		    ts.ser_eeprom_type = Read_24Cxx(0,16);
-		    ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
-		    }
-		}
-	    else 
 		{
-		    {
-		    Write_24Cxx(10,0xdd,8);
-		    if(Read_24Cxx(10,8) == 0xdd)
-			{						// 8 bit addressing
-		    	Write_24Cxx(3,0x99,8);				// write testsignature
-			ts.ser_eeprom_type = 7;				// smallest possible 8 bit EEPROM
-			if(Read_24Cxx(0x83,8) != 0x99)
-			    ts.ser_eeprom_type = 8;
-			Write_24Cxx(0,ts.ser_eeprom_type,8);
-			Write_24Cxx(1,0x10,8);
-			}
-		    else
-			{						// 16 bit addressing
-			if(Read_24Cxx(0x10000,17) != 0xFE00)
-			    {
-			    ts.ser_eeprom_type = 17;			// 24LC1025
-			    Write_24Cxx(0,17,16);
-			    }
-			if(Read_24Cxx(0x10000,18) != 0xFE00)
-			    {
-			    ts.ser_eeprom_type = 18;			// 24LC1026
-			    Write_24Cxx(0,18,16);
-			    }
-			if(Read_24Cxx(0x10000,19) != 0xFE00)
-			    {
-			    ts.ser_eeprom_type = 19;			// 24CM02
-			    Write_24Cxx(0,19,16);
-			    }
-			if(ts.ser_eeprom_type < 17)
-			    {
-			    Write_24Cxx(3,0x66,16);			// write testsignature 1
-			    Write_24Cxx(0x103,0x77,16);			// write testsignature 2
-			    if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
-				{					// 16 bit addressing
-				ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
-				if(Read_24Cxx(0x803,16) != 0x66)
-				    ts.ser_eeprom_type = 12;
-				if(Read_24Cxx(0x1003,16) != 0x66)
-				    ts.ser_eeprom_type = 13;
-				if(Read_24Cxx(0x2003,16) != 0x66)
-				    ts.ser_eeprom_type = 14;
-				if(Read_24Cxx(0x4003,16) != 0x66)
-				    ts.ser_eeprom_type = 15;
-				if(Read_24Cxx(0x8003,16) != 0x66)
-				    ts.ser_eeprom_type = 16;
-				Write_24Cxx(0,ts.ser_eeprom_type,16);
+			{
+				Write_24Cxx(10,0xdd,8);
+				if(Read_24Cxx(10,8) == 0xdd)
+				{						// 8 bit addressing
+					Write_24Cxx(3,0x99,8);				// write testsignature
+					ts.ser_eeprom_type = 7;				// smallest possible 8 bit EEPROM
+					if(Read_24Cxx(0x83,8) != 0x99)
+						ts.ser_eeprom_type = 8;
+					Write_24Cxx(0,ts.ser_eeprom_type,8);
+					Write_24Cxx(1,0x10,8);
 				}
-			    }
+				else
+				{						// 16 bit addressing
+					if(Read_24Cxx(0x10000,17) < 0x100)
+					{
+						ts.ser_eeprom_type = 17;			// 24LC1025
+						Write_24Cxx(0,17,16);
+					}
+					if(Read_24Cxx(0x10000,18) < 0x100)
+					{
+						ts.ser_eeprom_type = 18;			// 24LC1026
+						Write_24Cxx(0,18,16);
+					}
+					if(Read_24Cxx(0x10000,19) < 0x100)
+					{
+						ts.ser_eeprom_type = 19;			// 24CM02
+						Write_24Cxx(0,19,16);
+					}
+					if(ts.ser_eeprom_type < 17)
+					{
+						Write_24Cxx(3,0x66,16);			// write testsignature 1
+						Write_24Cxx(0x103,0x77,16);			// write testsignature 2
+						if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
+						{					// 16 bit addressing
+							ts.ser_eeprom_type = 9;			// smallest possible 16 bit EEPROM
+							if(Read_24Cxx(0x803,16) != 0x66)
+								ts.ser_eeprom_type = 12;
+							if(Read_24Cxx(0x1003,16) != 0x66)
+								ts.ser_eeprom_type = 13;
+							if(Read_24Cxx(0x2003,16) != 0x66)
+								ts.ser_eeprom_type = 14;
+							if(Read_24Cxx(0x4003,16) != 0x66)
+								ts.ser_eeprom_type = 15;
+							if(Read_24Cxx(0x8003,16) != 0x66)
+								ts.ser_eeprom_type = 16;
+							Write_24Cxx(0,ts.ser_eeprom_type,16);
+						}
+					}
+				}
 			}
-		    }
 		}
-	    if(ts.ser_eeprom_type < 16)				// incompatible EEPROMs
-		ts.ser_eeprom_in_use = 0x10;			// serial EEPROM too small
+		if(ts.ser_eeprom_type < 16)				// incompatible EEPROMs
+			ts.ser_eeprom_in_use = 0x10;			// serial EEPROM too small
 
-	    if(ts.ser_eeprom_in_use == 0xFF)
+		if(ts.ser_eeprom_in_use == 0xFF)
 		{
-		copy_virt2ser();				// copy data from virtual to serial EEPROM
-		verify_servirt();				// just 4 debug purposes
-		Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
+			copy_virt2ser();				// copy data from virtual to serial EEPROM
+			verify_servirt();				// just 4 debug purposes
+			Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
 		}
-//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
+		//	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
 	}
 
-//	if(ts.ser_eeprom_in_use == 0x00)
-//	    {
-//	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
-//	    ts.eeprombuf = serbuf;
-//	    }
+	//	if(ts.ser_eeprom_in_use == 0x00)
+	//	    {
+	//	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
+	//	    ts.eeprombuf = serbuf;
+	//	    }
 }
 
 int main(void)
