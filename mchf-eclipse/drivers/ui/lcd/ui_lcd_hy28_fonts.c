@@ -1154,4 +1154,3 @@ const sFONT GL_Font8x8 =
     8, /* Width */
     8, /* Height */
 };
-
