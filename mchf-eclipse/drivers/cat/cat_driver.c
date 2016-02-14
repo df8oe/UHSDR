@@ -286,6 +286,7 @@ void CatDriverFT817CheckAndExecute() {
 				}
 				if  (new_mode != ts.dmod_mode) {
 					UiDriverSetDemodMode(new_mode);
+					UiDriverDisplayFilterBW();
 				}
 			}
 			break;
