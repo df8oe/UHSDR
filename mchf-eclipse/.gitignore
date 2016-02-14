@@ -5,3 +5,6 @@ firmware_Target_Flash/
 *.o
 *.d
 *~
+mchf.bin
+mchf.elf
+mchf.map
