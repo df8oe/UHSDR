@@ -844,7 +844,7 @@ void mchf_board_init(void)
 	mchf_hw_i2c_init();
 
 	// Get startup frequency of Si570, by DF8OE, 201506
-	ui_si570_calc_startupfrequency();
+	ui_si570_calculate_startup_frequency();
 
 
 	// Codec control interface
