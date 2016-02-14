@@ -99,8 +99,7 @@ static void 	UiDriverCreateFunctionButtons(bool full_repaint);
 //
 static void UiDriverDeleteSMeter(void);
 static void 	UiDriverCreateSMeter(void);
-static void 	UiDriverDrawWhiteSMeter(void);
-static void 	UiDriverDrawRedSMeter(void);
+static void 	UiDriverDrawSMeter(ushort color);
 //
 static void 	UiDriverUpdateTopMeterA(uchar val,uchar old);
 static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
@@ -2708,68 +2707,32 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,cap5,clr,Black,0);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDrawWhiteSMeter
-//* Object              : draw the white part of the S meter to clear the red S-meter (below)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverDrawWhiteSMeter(void)
-{
-	uchar 	i,v_s;
-
-// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,White);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,White);
-
-	// Draw s markers on top white line
-	for(i = 0; i < 10; i++)
-	{
-		// Draw s text, only odd numbers
-		if(i%2)
-		{
-			v_s = 5;
-		}
-		else
-			v_s = 3;
-
-		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-	}
-}
 //
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDrawRedSMeter
-//* Object              : draw the part of the S meter in red to indicate A/D overload
-//* Input Parameters    :
+//* Function Name       : UiDriverDrawSMeter
+//* Object              : draw the part of the S meter
+//* Input Parameters    : uchar color
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverDrawRedSMeter(void)
+static void UiDriverDrawSMeter(ushort color)
 {
 	uchar 	i,v_s;
 
-// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,Red);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,Red);
-
+	// Draw top line
+	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,color);
+	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,color);
 	// Draw s markers on top white line
 	for(i = 0; i < 10; i++)
 	{
-
 		// Draw s text, only odd numbers
 		if(i%2)
-		{
 			v_s = 5;
-		}
 		else
 			v_s = 3;
-
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,Red);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,Red);
+		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
+		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
 	}
 }
 //
@@ -7893,14 +7856,14 @@ static void UiDriverHandleSmeter(void)
 	//
 	if(ads.adc_clip)	{		// did clipping occur?
 		if(!clip_indicate)	{	// have we seen it clip before?
-			UiDriverDrawRedSMeter();		// No, make the first portion of the S-meter red
+			UiDriverDrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
 			clip_indicate = 1;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
 		}
 		ads.adc_clip = 0;		// reset clip detect flag
 	}
 	else	{		// clipping NOT occur?
 		if(clip_indicate)	{	// had clipping occurred since we last visited this code?
-			UiDriverDrawWhiteSMeter();					// yes - restore the S meter to a white condition
+			UiDriverDrawSMeter(White);					// yes - restore the S meter to a white condition
 			clip_indicate = 0;							// clear the flag that indicated that clipping had occurred
 		}
 	}
