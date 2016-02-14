@@ -86,7 +86,8 @@ static uchar ui_si570_verify_frequency(void)
 //*----------------------------------------------------------------------------
 static uchar ui_si570_small_frequency_change(void)
 {
-	uchar ret,reg_135;
+	uint16_t ret;
+	uchar reg_135;
 	uchar unfreeze = 0;
 
 	//printf("small\n\r");
@@ -705,14 +706,7 @@ void calc_suf_sub(void)
 	int hs_div;
 	int n1;
 	float rsfreq;
-	// read configuration
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg) ,&si_regs[0]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 1) ,&si_regs[1]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 2) ,&si_regs[2]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 3) ,&si_regs[3]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 4) ,&si_regs[4]);
-	mchf_hw_i2c_ReadRegister(os.si570_address,(os.base_reg + 5) ,&si_regs[5]);
-
+	mchf_hw_i2c_ReadData(os.si570_address,(os.base_reg) ,si_regs,6);
 	// calculate startup frequency
 	rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
 	hs_div = (si_regs[0] & 0xE0) / 32 + 4;

@@ -981,25 +981,8 @@ static void wd_reset(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-int main(void)
-{
-*(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
-	// Set unbuffered mode for stdout (newlib)
-	//setvbuf( stdout, 0, _IONBF, 0 );
-
-//	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
-
-	// HW init
-	mchf_board_init();
-
-
-	// Power on
-	mchf_board_green_led(1);
-
-	// Set default transceiver state
-	TransceiverStateInit();
-
+void ConfigurationStorage_Init() {
 	// virtual Eeprom init
 	ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
 
@@ -1007,7 +990,7 @@ int main(void)
 
 	// serial EEPROM init
 //	Write_24Cxx(0,0xFF,16);		//enable to reset EEPROM and force new copyvirt2ser
-	if(Read_24Cxx(0,8) == 0xFE00)
+	if(Read_24Cxx(0,8) > 0xFF)  // Issue with Ser EEPROM, either not available or other problems
 	    ts.ser_eeprom_type = 0;				// no serial EEPROM availbale
 	else
 	    {
@@ -1094,6 +1077,28 @@ int main(void)
 //	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
 //	    ts.eeprombuf = serbuf;
 //	    }
+}
+
+int main(void)
+{
+*(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
+
+	// Set unbuffered mode for stdout (newlib)
+	//setvbuf( stdout, 0, _IONBF, 0 );
+
+//	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
+
+	// HW init
+	mchf_board_init();
+
+
+	// Power on
+	mchf_board_green_led(1);
+
+	// Set default transceiver state
+	TransceiverStateInit();
+
+	ConfigurationStorage_Init();
 
 	// test if touchscreen is present
 	get_touchscreen_coordinates();				// initial reading of XPT2046
@@ -1120,7 +1125,7 @@ int main(void)
 	UiDriverLoadFilterValue();	// Get filter value so we can init audio with it
 
 	// Audio HW init
-	audio_driver_init();
+	// audio_driver_init();
 
 	// Usb Host driver init
 	//keyb_driver_init();

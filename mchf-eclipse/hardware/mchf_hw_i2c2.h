@@ -14,8 +14,8 @@
 #ifndef __MCHF_HW_I2C2_H
 #define __MCHF_HW_I2C2_H
 
-void 	mchf_hw_i2c2_init(void);
-uchar 	mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
+void 		mchf_hw_i2c2_init(void);
+uint16_t 	mchf_hw_i2c2_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
 
 // serial eeprom definitions by DF8OE
 
