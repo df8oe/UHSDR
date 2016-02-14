@@ -140,13 +140,13 @@ static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
 //static void 	UiDrawSpectrumScopeFrequencyBarText(void);
+static void	setActiveColor(uchar color, volatile ushort * dest);
 static void 	UiDriverFFTWindowFunction(char mode);
 static void 	UiInitSpectrumScopeWaterfall();			// init spectrum scope FFT variables, clear screen, start up all-in-one
 static void 	UiDriverInitSpectrumDisplay(void);
 //static void 	UiDriverClearSpectrumDisplay(void);
 static void 	UiDriverReDrawSpectrumDisplay(void);
 static void 	UiDriverReDrawWaterfallDisplay(void);
-static ulong 	UiDriverGetScopeTraceColour(void);
 //static void 	UiDriverUpdateEthernetStatus(void);
 //static void 	UiDriverUpdateUsbKeyboardStatus(void);
 static void 	UiDriverHandleSmeter(void);
@@ -3058,8 +3058,8 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 //*----------------------------------------------------------------------------
 void UiDrawSpectrumScopeFrequencyBarText(void)
 {
-	ulong	freq_calc;
-	ulong	i, clr;
+	ulong	freq_calc, i;
+	ushort	clr;
 	char	txt[16], *c;
 	ulong	grat;
 
@@ -3077,26 +3077,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	//
 	// get color for frequency scale
 	//
-	if(ts.scope_scale_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.scope_scale_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.scope_scale_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.scope_scale_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.scope_scale_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.scope_scale_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.scope_scale_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.scope_scale_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.scope_scale_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+	setActiveColor(ts.scope_scale_colour, &clr);
 
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
 
@@ -3188,6 +3169,44 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 
 }
 
+
+static void setActiveColor(uchar color, volatile ushort * dest)
+{
+	switch(color) {
+		case SPEC_GREY:
+			*dest = Grid;
+			break;
+		case SPEC_BLUE:
+			*dest = Blue;
+			break;
+		case SPEC_RED:
+			*dest = Red;
+			break;
+		case SPEC_MAGENTA:
+			*dest = Magenta;
+			break;
+		case SPEC_GREEN:
+			*dest = Green;
+			break;
+		case SPEC_CYAN:
+			*dest = Cyan;
+			break;
+		case SPEC_YELLOW:
+			*dest = Yellow;
+			break;
+		case SPEC_BLACK:
+			*dest = Black;
+			break;
+		case SPEC_ORANGE:
+			*dest = Orange;
+			break;
+		case SPEC_GREY2:
+			*dest = Grey;
+			break;
+		default:
+			*dest = White;
+	}
+}
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCreateSpectrumScope
@@ -3202,58 +3221,10 @@ void UiDriverCreateSpectrumScope(void)
 	char s[32];
 	ulong slen;
 
-	//
 	// get grid colour of all but center line
-	//
-	if(ts.scope_grid_colour == SPEC_GREY)
-		ts.scope_grid_colour_active = Grid;
-	else if(ts.scope_grid_colour == SPEC_BLUE)
-		ts.scope_grid_colour_active = Blue;
-	else if(ts.scope_grid_colour == SPEC_RED)
-		ts.scope_grid_colour_active = Red;
-	else if(ts.scope_grid_colour == SPEC_MAGENTA)
-		ts.scope_grid_colour_active = Magenta;
-	else if(ts.scope_grid_colour == SPEC_GREEN)
-		ts.scope_grid_colour_active = Green;
-	else if(ts.scope_grid_colour == SPEC_CYAN)
-		ts.scope_grid_colour_active = Cyan;
-	else if(ts.scope_grid_colour == SPEC_YELLOW)
-		ts.scope_grid_colour_active = Yellow;
-	else if(ts.scope_grid_colour == SPEC_BLACK)
-		ts.scope_grid_colour_active = Black;
-	else if(ts.scope_grid_colour == SPEC_ORANGE)
-		ts.scope_grid_colour_active = Orange;
-	else if(ts.scope_grid_colour == SPEC_GREY2)
-		ts.scope_grid_colour_active = Grey;
-	else
-		ts.scope_grid_colour_active = White;
-	//
-	//
+	setActiveColor(ts.scope_grid_colour, &ts.scope_grid_colour_active);
 	// Get color of center vertical line of spectrum scope
-	//
-	if(ts.scope_centre_grid_colour == SPEC_GREY)
-		ts.scope_centre_grid_colour_active = Grid;
-	else if(ts.scope_centre_grid_colour == SPEC_BLUE)
-		ts.scope_centre_grid_colour_active = Blue;
-	else if(ts.scope_centre_grid_colour == SPEC_RED)
-		ts.scope_centre_grid_colour_active = Red;
-	else if(ts.scope_centre_grid_colour == SPEC_MAGENTA)
-		ts.scope_centre_grid_colour_active = Magenta;
-	else if(ts.scope_centre_grid_colour == SPEC_GREEN)
-		ts.scope_centre_grid_colour_active = Green;
-	else if(ts.scope_centre_grid_colour == SPEC_CYAN)
-		ts.scope_centre_grid_colour_active = Cyan;
-	else if(ts.scope_centre_grid_colour == SPEC_YELLOW)
-		ts.scope_centre_grid_colour_active = Yellow;
-	else if(ts.scope_centre_grid_colour == SPEC_BLACK)
-		ts.scope_centre_grid_colour_active = Black;
-	else if(ts.scope_centre_grid_colour == SPEC_ORANGE)
-		ts.scope_centre_grid_colour_active = Orange;
-	else if(ts.scope_centre_grid_colour == SPEC_GREY2)
-		ts.scope_centre_grid_colour_active = Grey;
-	else
-		ts.scope_centre_grid_colour_active = White;
-
+	setActiveColor(ts.scope_centre_grid_colour, &ts.scope_centre_grid_colour_active);
 
 	// Clear screen where frequency information will be under graticule
 	//
@@ -6711,26 +6682,8 @@ void UiDriverDisplayFilterBW(void)
 	//
 	// get color for line
 	//
-	if(ts.filter_disp_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.filter_disp_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.filter_disp_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.filter_disp_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.filter_disp_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.filter_disp_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.filter_disp_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.filter_disp_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.filter_disp_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+	setActiveColor(ts.filter_disp_colour, &clr);
+
 	//
 	// draw line
 	//
@@ -7365,8 +7318,8 @@ static void UiDriverReDrawSpectrumDisplay(void)
 		//
 		case 5:
 		{
-		ulong	clr;
-        clr = UiDriverGetScopeTraceColour();
+		ushort clr;
+		setActiveColor(ts.scope_trace_colour, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiLcdHy28_DrawSpectrum_Interleaved((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update)
@@ -7732,37 +7685,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 			break;
 	}
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverGetScopeTraceColour
-//* Object              : Gets setting from trace color variable
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-static ulong UiDriverGetScopeTraceColour(void)
-{
-	if(ts.scope_trace_colour == SPEC_GREY)
-		return Grey;
-	else if(ts.scope_trace_colour == SPEC_BLUE)
-		return Blue;
-	else if(ts.scope_trace_colour == SPEC_RED)
-		return Red;
-	else if(ts.scope_trace_colour == SPEC_MAGENTA)
-			return Magenta;
-	else if(ts.scope_trace_colour == SPEC_GREEN)
-		return Green;
-	else if(ts.scope_trace_colour == SPEC_CYAN)
-		return Cyan;
-	else if(ts.scope_trace_colour == SPEC_YELLOW)
-		return Yellow;
-	else if(ts.scope_trace_colour == SPEC_ORANGE)
-		return Orange;
-	else
-		return White;
-}
+
 //
 //
 //*----------------------------------------------------------------------------
