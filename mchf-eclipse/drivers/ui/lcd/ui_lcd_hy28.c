@@ -1692,15 +1692,17 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Display the mode of the display interface
    //
-   if(sd.use_spi)
-   {
-	   if(sd.use_spi == 1)
-		   sprintf(tx,"LCD: HY28A SPI Mode");
-	   else
-		   sprintf(tx,"LCD: HY28B SPI Mode");
+   switch(sd.use_spi) {
+      case 0:
+         sprintf(tx,"LCD: Parallel Mode");
+         break;
+      case 1:
+         sprintf(tx,"LCD: HY28A SPI Mode");
+         break;
+      default:
+         sprintf(tx,"LCD: HY28B SPI Mode");
    }
-   else
-	   sprintf(tx,"LCD: Parallel Mode");
+
    //
    UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
 
@@ -1730,7 +1732,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 	   }
    }
 
-
    // Additional Attrib line 1
    sprintf(tx,"%s",ATTRIB_STRING1);
    UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
@@ -1743,8 +1744,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    sprintf(tx,"%s",ATTRIB_STRING3);
    UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
 
-
-
    // Backlight on
    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
 
@@ -1756,12 +1755,12 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
 void get_touchscreen_coordinates(void)
 {
-GPIO_ResetBits(TP_CS_PIO, TP_CS);
-UiLcdHy28_SendByteSpi(144);
-ts.tp_x = UiLcdHy28_ReadByteSpi();
-UiLcdHy28_SendByteSpi(208);
-ts.tp_y = UiLcdHy28_ReadByteSpi();
-GPIO_SetBits(TP_CS_PIO, TP_CS);
+   GPIO_ResetBits(TP_CS_PIO, TP_CS);
+   UiLcdHy28_SendByteSpi(144);
+   ts.tp_x = UiLcdHy28_ReadByteSpi();
+   UiLcdHy28_SendByteSpi(208);
+   ts.tp_y = UiLcdHy28_ReadByteSpi();
+   GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
 #pragma GCC optimize("O0")
