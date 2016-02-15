@@ -6410,10 +6410,9 @@ static void UiDriverChangeRit(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeFilter(uchar ui_only_update)
 {
-	ushort fcolor = Grey;
+	ushort fcolor = White;
 	char txt[16];
 
-	fcolor = White;
 	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       " FILT  ",	White, 	Orange, 0);
 
 	// Do a filter re-load
