@@ -341,11 +341,9 @@ void UiLcdHy28_SendByteSpi(uint8_t byte)
 }
 void UiLcdHy28_SendByteSpiFast(uint8_t byte)
 {
-
    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET);
    SPI2->DR = byte;
    while ((SPI2->SR & (SPI_I2S_FLAG_RXNE)) == (uint16_t)RESET);
-   byte = SPI2->DR;
 }
 static void UiLcdHy28_FinishSpiTransfer()
 {
