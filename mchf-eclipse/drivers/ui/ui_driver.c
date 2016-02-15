@@ -9834,7 +9834,7 @@ void UiCheckForPressedKey(void)
 	bool stat = 1;
 	poweroffcount = rbcount = 0;
 	p_o_state = rb_state = new_state = 0;
-	char txt[32];
+	char txt[40];
 
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
 		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
