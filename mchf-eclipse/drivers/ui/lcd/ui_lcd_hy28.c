@@ -341,11 +341,9 @@ void UiLcdHy28_SendByteSpi(uint8_t byte)
 }
 void UiLcdHy28_SendByteSpiFast(uint8_t byte)
 {
-
    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET);
    SPI2->DR = byte;
    while ((SPI2->SR & (SPI_I2S_FLAG_RXNE)) == (uint16_t)RESET);
-   byte = SPI2->DR;
 }
 static void UiLcdHy28_FinishSpiTransfer()
 {
@@ -1692,23 +1690,25 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Display the mode of the display interface
    //
-   if(sd.use_spi)
-   {
-	   if(sd.use_spi == 1)
-		   sprintf(tx,"LCD: HY28A SPI Mode");
-	   else
-		   sprintf(tx,"LCD: HY28B SPI Mode");
+   switch(sd.use_spi) {
+      case 0:
+         sprintf(tx,"LCD: Parallel Mode");
+         break;
+      case 1:
+         sprintf(tx,"LCD: HY28A SPI Mode");
+         break;
+      default:
+         sprintf(tx,"LCD: HY28B SPI Mode");
    }
-   else
-	   sprintf(tx,"LCD: Parallel Mode");
+
    //
    UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
 
    //
    // Display startup frequency of Si570, By DF8OE, 201506
    //
-   int vorkomma = (int)(os.fout);
-   int nachkomma = (int)roundf((os.fout-vorkomma)*10000);
+   unsigned int vorkomma = (unsigned int)(os.fout);
+   unsigned int nachkomma = (unsigned int)roundf((os.fout-vorkomma)*10000);
 
    sprintf(tx,"%s%u%s%u%s","SI570 startup frequency: ",vorkomma,".",nachkomma," MHz");
    UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
@@ -1730,7 +1730,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 	   }
    }
 
-
    // Additional Attrib line 1
    sprintf(tx,"%s",ATTRIB_STRING1);
    UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
@@ -1743,8 +1742,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    sprintf(tx,"%s",ATTRIB_STRING3);
    UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
 
-
-
    // Backlight on
    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
 
@@ -1756,12 +1753,12 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
 void get_touchscreen_coordinates(void)
 {
-GPIO_ResetBits(TP_CS_PIO, TP_CS);
-UiLcdHy28_SendByteSpi(144);
-ts.tp_x = UiLcdHy28_ReadByteSpi();
-UiLcdHy28_SendByteSpi(208);
-ts.tp_y = UiLcdHy28_ReadByteSpi();
-GPIO_SetBits(TP_CS_PIO, TP_CS);
+   GPIO_ResetBits(TP_CS_PIO, TP_CS);
+   UiLcdHy28_SendByteSpi(144);
+   ts.tp_x = UiLcdHy28_ReadByteSpi();
+   UiLcdHy28_SendByteSpi(208);
+   ts.tp_y = UiLcdHy28_ReadByteSpi();
+   GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
 #pragma GCC optimize("O0")

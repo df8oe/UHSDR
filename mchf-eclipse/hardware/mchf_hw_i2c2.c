@@ -174,18 +174,21 @@ static uint16_t EEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Typ
 
 	return 0;
 }
+
 static uint16_t EEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 {
-	int i = 10;
 	uint16_t retVal;
 
-	for (;i;i--) {
-		if ((retVal = EEPROM_24Cxx_ackPollingSinglePoll(Addr, Mem_Type)) != 0xFD00) {
+	for (int i = 10; i > 0; i--)
+	{
+		if ((retVal = EEPROM_24Cxx_ackPollingSinglePoll(Addr, Mem_Type)) != 0xFD00)
+		{
 			break;
 		}
 	}
 	return retVal;
 }
+
 struct _EEPROM_24CXX_Descriptor {
 	uint8_t devaddr;
 	uint8_t addr[2]; // 0 -> upper or single, 1 -> lower, second;
@@ -265,24 +268,29 @@ uint16_t Write_24Cxxseq(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t
 	uint16_t retVal = 0xFFFF;
 	count = 0;
 
-	if(Mem_Type == 12)
-		page = 64;
-	if(Mem_Type == 13)
-		page = 32;
-	if(Mem_Type == 14 || Mem_Type == 15)
-		page = 64;
-	if(Mem_Type > 15 && Mem_Type < 19)
-		page = 128;
-	if(Mem_Type == 19)
-		page = 256;
-
+	switch(Mem_Type){
+		case 12:
+		case 14:
+		case 15:
+			page = 64;
+			break;
+		case 13:
+			page = 32;
+			break;
+		case 19:
+			page = 256;
+			break;
+		default:
+			page = 128;
+	}
 
 	while(count < length)
 	{
 		EEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&eeprom_desc);
 		retVal = MCHF_I2C_WriteBlock(CODEC_I2C,eeprom_desc.devaddr,&eeprom_desc.addr[0],eeprom_desc.addr_size,&buffer[count],page);
 		count+=page;
-		if (retVal) { break; }
+		if (retVal)
+			break;
 		retVal = EEPROM_24Cxx_ackPolling(Addr,Mem_Type);
 	}
 	return retVal;

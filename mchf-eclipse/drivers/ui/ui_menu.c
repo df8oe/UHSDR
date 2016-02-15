@@ -2382,7 +2382,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
-		if(ts.misc_flags2 | 4)	{	// is beep enabled?
+		if(ts.misc_flags2 & 4)	{	// is beep enabled?
 			tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.beep_frequency,
 								MIN_BEEP_FREQUENCY,
 								MAX_BEEP_FREQUENCY,
@@ -2691,7 +2691,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					1);
 
 			if(tchange)	{
-				if((ts.dmod_mode != DEMOD_CW) || ((ts.dmod_mode == DEMOD_CW) && !ts.pa_cw_bias))	{	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
+				if(ts.dmod_mode != DEMOD_CW || ts.pa_cw_bias == 0)	{	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
 					calc_var = BIAS_OFFSET + (ts.pa_bias * 2);
 					if(calc_var > 255)
 						calc_var = 255;

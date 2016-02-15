@@ -280,6 +280,7 @@ void CatDriverFT817CheckAndExecute() {
 					break;
 				case 0x0a: // DIG - SSB, side band controlled by some menu configuration in ft817, we use USB here
 					new_mode = DEMOD_USB;
+					break;
 				case 0x0c: // PKT - FM, 9k6
 					new_mode = DEMOD_FM;
 					break;
@@ -330,9 +331,11 @@ void CatDriverFT817CheckAndExecute() {
 			case 188: /* BC Write EEPROM */
 				resp[0] = 0;
 				bc = 1;
+				break;
 			case 189: /* BD Read TX Status */
 				resp[0] = 0;
 				bc = 1;
+				break;
 			case 231: /* E7 */
 				resp[0] = 0x09; // S9 signal;
 				bc = 1;

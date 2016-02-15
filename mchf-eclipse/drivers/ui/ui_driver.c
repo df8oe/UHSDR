@@ -42,7 +42,6 @@
 #include "softdds.h"
 
 #include "audio_driver.h"
-#include "hamm_wnd.h"
 #include "ui_driver.h"
 //#include "usbh_usr.h"
 
@@ -100,8 +99,7 @@ static void 	UiDriverCreateFunctionButtons(bool full_repaint);
 //
 static void UiDriverDeleteSMeter(void);
 static void 	UiDriverCreateSMeter(void);
-static void 	UiDriverDrawWhiteSMeter(void);
-static void 	UiDriverDrawRedSMeter(void);
+static void 	UiDriverDrawSMeter(ushort color);
 //
 static void 	UiDriverUpdateTopMeterA(uchar val,uchar old);
 static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
@@ -141,13 +139,13 @@ static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
 //static void 	UiDrawSpectrumScopeFrequencyBarText(void);
+static void	setActiveColor(uchar color, volatile ushort * dest);
 static void 	UiDriverFFTWindowFunction(char mode);
 static void 	UiInitSpectrumScopeWaterfall();			// init spectrum scope FFT variables, clear screen, start up all-in-one
 static void 	UiDriverInitSpectrumDisplay(void);
 //static void 	UiDriverClearSpectrumDisplay(void);
 static void 	UiDriverReDrawSpectrumDisplay(void);
 static void 	UiDriverReDrawWaterfallDisplay(void);
-static ulong 	UiDriverGetScopeTraceColour(void);
 //static void 	UiDriverUpdateEthernetStatus(void);
 //static void 	UiDriverUpdateUsbKeyboardStatus(void);
 static void 	UiDriverHandleSmeter(void);
@@ -2709,68 +2707,32 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,cap5,clr,Black,0);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDrawWhiteSMeter
-//* Object              : draw the white part of the S meter to clear the red S-meter (below)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverDrawWhiteSMeter(void)
-{
-	uchar 	i,v_s;
-
-// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,White);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,White);
-
-	// Draw s markers on top white line
-	for(i = 0; i < 10; i++)
-	{
-		// Draw s text, only odd numbers
-		if(i%2)
-		{
-			v_s = 5;
-		}
-		else
-			v_s = 3;
-
-		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-	}
-}
 //
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDrawRedSMeter
-//* Object              : draw the part of the S meter in red to indicate A/D overload
-//* Input Parameters    :
+//* Function Name       : UiDriverDrawSMeter
+//* Object              : draw the part of the S meter
+//* Input Parameters    : uchar color
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverDrawRedSMeter(void)
+static void UiDriverDrawSMeter(ushort color)
 {
 	uchar 	i,v_s;
 
-// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,Red);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,Red);
-
+	// Draw top line
+	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,color);
+	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,color);
 	// Draw s markers on top white line
 	for(i = 0; i < 10; i++)
 	{
-
 		// Draw s text, only odd numbers
 		if(i%2)
-		{
 			v_s = 5;
-		}
 		else
 			v_s = 3;
-
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,Red);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,Red);
+		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
+		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
 	}
 }
 //
@@ -3095,8 +3057,8 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 //*----------------------------------------------------------------------------
 void UiDrawSpectrumScopeFrequencyBarText(void)
 {
-	ulong	freq_calc;
-	ulong	i, clr;
+	ulong	freq_calc, i;
+	ushort	clr;
 	char	txt[16], *c;
 	ulong	grat;
 
@@ -3114,26 +3076,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	//
 	// get color for frequency scale
 	//
-	if(ts.scope_scale_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.scope_scale_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.scope_scale_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.scope_scale_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.scope_scale_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.scope_scale_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.scope_scale_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.scope_scale_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.scope_scale_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+	setActiveColor(ts.scope_scale_colour, &clr);
 
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
 
@@ -3225,6 +3168,44 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 
 }
 
+
+static void setActiveColor(uchar color, volatile ushort * dest)
+{
+	switch(color) {
+		case SPEC_GREY:
+			*dest = Grid;
+			break;
+		case SPEC_BLUE:
+			*dest = Blue;
+			break;
+		case SPEC_RED:
+			*dest = Red;
+			break;
+		case SPEC_MAGENTA:
+			*dest = Magenta;
+			break;
+		case SPEC_GREEN:
+			*dest = Green;
+			break;
+		case SPEC_CYAN:
+			*dest = Cyan;
+			break;
+		case SPEC_YELLOW:
+			*dest = Yellow;
+			break;
+		case SPEC_BLACK:
+			*dest = Black;
+			break;
+		case SPEC_ORANGE:
+			*dest = Orange;
+			break;
+		case SPEC_GREY2:
+			*dest = Grey;
+			break;
+		default:
+			*dest = White;
+	}
+}
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCreateSpectrumScope
@@ -3239,58 +3220,10 @@ void UiDriverCreateSpectrumScope(void)
 	char s[32];
 	ulong slen;
 
-	//
 	// get grid colour of all but center line
-	//
-	if(ts.scope_grid_colour == SPEC_GREY)
-		ts.scope_grid_colour_active = Grid;
-	else if(ts.scope_grid_colour == SPEC_BLUE)
-		ts.scope_grid_colour_active = Blue;
-	else if(ts.scope_grid_colour == SPEC_RED)
-		ts.scope_grid_colour_active = Red;
-	else if(ts.scope_grid_colour == SPEC_MAGENTA)
-		ts.scope_grid_colour_active = Magenta;
-	else if(ts.scope_grid_colour == SPEC_GREEN)
-		ts.scope_grid_colour_active = Green;
-	else if(ts.scope_grid_colour == SPEC_CYAN)
-		ts.scope_grid_colour_active = Cyan;
-	else if(ts.scope_grid_colour == SPEC_YELLOW)
-		ts.scope_grid_colour_active = Yellow;
-	else if(ts.scope_grid_colour == SPEC_BLACK)
-		ts.scope_grid_colour_active = Black;
-	else if(ts.scope_grid_colour == SPEC_ORANGE)
-		ts.scope_grid_colour_active = Orange;
-	else if(ts.scope_grid_colour == SPEC_GREY2)
-		ts.scope_grid_colour_active = Grey;
-	else
-		ts.scope_grid_colour_active = White;
-	//
-	//
+	setActiveColor(ts.scope_grid_colour, &ts.scope_grid_colour_active);
 	// Get color of center vertical line of spectrum scope
-	//
-	if(ts.scope_centre_grid_colour == SPEC_GREY)
-		ts.scope_centre_grid_colour_active = Grid;
-	else if(ts.scope_centre_grid_colour == SPEC_BLUE)
-		ts.scope_centre_grid_colour_active = Blue;
-	else if(ts.scope_centre_grid_colour == SPEC_RED)
-		ts.scope_centre_grid_colour_active = Red;
-	else if(ts.scope_centre_grid_colour == SPEC_MAGENTA)
-		ts.scope_centre_grid_colour_active = Magenta;
-	else if(ts.scope_centre_grid_colour == SPEC_GREEN)
-		ts.scope_centre_grid_colour_active = Green;
-	else if(ts.scope_centre_grid_colour == SPEC_CYAN)
-		ts.scope_centre_grid_colour_active = Cyan;
-	else if(ts.scope_centre_grid_colour == SPEC_YELLOW)
-		ts.scope_centre_grid_colour_active = Yellow;
-	else if(ts.scope_centre_grid_colour == SPEC_BLACK)
-		ts.scope_centre_grid_colour_active = Black;
-	else if(ts.scope_centre_grid_colour == SPEC_ORANGE)
-		ts.scope_centre_grid_colour_active = Orange;
-	else if(ts.scope_centre_grid_colour == SPEC_GREY2)
-		ts.scope_centre_grid_colour_active = Grey;
-	else
-		ts.scope_centre_grid_colour_active = White;
-
+	setActiveColor(ts.scope_centre_grid_colour, &ts.scope_centre_grid_colour_active);
 
 	// Clear screen where frequency information will be under graticule
 	//
@@ -6410,10 +6343,9 @@ static void UiDriverChangeRit(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeFilter(uchar ui_only_update)
 {
-	ushort fcolor = Grey;
+	ushort fcolor = White;
 	char txt[16];
 
-	fcolor = White;
 	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       " FILT  ",	White, 	Orange, 0);
 
 	// Do a filter re-load
@@ -6749,26 +6681,8 @@ void UiDriverDisplayFilterBW(void)
 	//
 	// get color for line
 	//
-	if(ts.filter_disp_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.filter_disp_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.filter_disp_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.filter_disp_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.filter_disp_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.filter_disp_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.filter_disp_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.filter_disp_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.filter_disp_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+	setActiveColor(ts.filter_disp_colour, &clr);
+
 	//
 	// draw line
 	//
@@ -7403,8 +7317,8 @@ static void UiDriverReDrawSpectrumDisplay(void)
 		//
 		case 5:
 		{
-		ulong	clr;
-        clr = UiDriverGetScopeTraceColour();
+		ushort clr;
+		setActiveColor(ts.scope_trace_colour, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiLcdHy28_DrawSpectrum_Interleaved((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update)
@@ -7770,37 +7684,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 			break;
 	}
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverGetScopeTraceColour
-//* Object              : Gets setting from trace color variable
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-static ulong UiDriverGetScopeTraceColour(void)
-{
-	if(ts.scope_trace_colour == SPEC_GREY)
-		return Grey;
-	else if(ts.scope_trace_colour == SPEC_BLUE)
-		return Blue;
-	else if(ts.scope_trace_colour == SPEC_RED)
-		return Red;
-	else if(ts.scope_trace_colour == SPEC_MAGENTA)
-			return Magenta;
-	else if(ts.scope_trace_colour == SPEC_GREEN)
-		return Green;
-	else if(ts.scope_trace_colour == SPEC_CYAN)
-		return Cyan;
-	else if(ts.scope_trace_colour == SPEC_YELLOW)
-		return Yellow;
-	else if(ts.scope_trace_colour == SPEC_ORANGE)
-		return Orange;
-	else
-		return White;
-}
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -7971,14 +7855,14 @@ static void UiDriverHandleSmeter(void)
 	//
 	if(ads.adc_clip)	{		// did clipping occur?
 		if(!clip_indicate)	{	// have we seen it clip before?
-			UiDriverDrawRedSMeter();		// No, make the first portion of the S-meter red
+			UiDriverDrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
 			clip_indicate = 1;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
 		}
 		ads.adc_clip = 0;		// reset clip detect flag
 	}
 	else	{		// clipping NOT occur?
 		if(clip_indicate)	{	// had clipping occurred since we last visited this code?
-			UiDriverDrawWhiteSMeter();					// yes - restore the S meter to a white condition
+			UiDriverDrawSMeter(White);					// yes - restore the S meter to a white condition
 			clip_indicate = 0;							// clear the flag that indicated that clipping had occurred
 		}
 	}
@@ -9950,7 +9834,7 @@ void UiCheckForPressedKey(void)
 	bool stat = 1;
 	poweroffcount = rbcount = 0;
 	p_o_state = rb_state = new_state = 0;
-	char txt[32];
+	char txt[40];
 
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
 		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
