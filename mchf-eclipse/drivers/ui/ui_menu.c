@@ -2382,7 +2382,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
-		if(ts.misc_flags2 | 4)	{	// is beep enabled?
+		if(ts.misc_flags2 & 4)	{	// is beep enabled?
 			tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.beep_frequency,
 								MIN_BEEP_FREQUENCY,
 								MAX_BEEP_FREQUENCY,
