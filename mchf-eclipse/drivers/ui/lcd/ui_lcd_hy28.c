@@ -1707,8 +1707,8 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    //
    // Display startup frequency of Si570, By DF8OE, 201506
    //
-   int vorkomma = (int)(os.fout);
-   int nachkomma = (int)roundf((os.fout-vorkomma)*10000);
+   unsigned int vorkomma = (unsigned int)(os.fout);
+   unsigned int nachkomma = (unsigned int)roundf((os.fout-vorkomma)*10000);
 
    sprintf(tx,"%s%u%s%u%s","SI570 startup frequency: ",vorkomma,".",nachkomma," MHz");
    UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
