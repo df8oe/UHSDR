@@ -733,7 +733,7 @@ void mchf_board_switch_tx(char mode)
 void mchf_board_power_off(void)
 {
 	ulong i;
-	char	tx[32];
+	char	tx[40];
 	// Power off all - high to disable main regulator
 
 	UiDriverClearSpectrumDisplay();	// clear display under spectrum scope
