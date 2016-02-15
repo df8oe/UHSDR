@@ -546,6 +546,7 @@ uchar ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test)
 			si_freq = SI570_MAX_FREQ / 1000000;
 		if (si_freq < SI570_MIN_FREQ / 1000000)
 			si_freq = SI570_MIN_FREQ / 1000000;
+		ui_si570_change_frequency(si_freq, test);
 		return(1);
 	}
 }
