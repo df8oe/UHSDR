@@ -55,6 +55,9 @@
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
 
+// #define USB_AUDIO_SUPPORT // uncomment this to get experimental USB AUDIO Support
+
+
 #define		WD_REFRESH_WINDOW		80
 #define		WD_REFRESH_COUNTER		127
 

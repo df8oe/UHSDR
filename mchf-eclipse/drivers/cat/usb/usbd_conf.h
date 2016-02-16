@@ -49,6 +49,11 @@
 #define CDC_OUT_EP                      0x01  /* EP1 for data OUT */
 #define CDC_CMD_EP                      0x82  /* EP2 for CDC commands */
 
+#define AUDIO_TOTAL_IF_NUM 0x03
+
+#define AUDIO_OUT_EP 0x01
+#define AUDIO_IN_EP 0x81
+
 /* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
 #ifdef USE_USB_OTG_HS
  #define CDC_DATA_MAX_PACKET_SIZE       64  /* Endpoint IN & OUT Packet size */
