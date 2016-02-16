@@ -1,0 +1,110 @@
+#Tue Feb 16 09:39:10 CET 2016
+@org.eclipse.debug.ui=3.11.100.v20150731-1137
+@org.eclipse.ui.ide=3.11.0.v20150825-2158
+/instance/org.eclipse.cdt.core/indexer/skipMacroReferences=false
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.server.doStart=true
+@org.eclipse.cdt.ui=5.11.0.201509131935
+/instance/org.eclipse.debug.core//org.eclipse.debug.core.PREFERRED_DELEGATES/org.eclipse.cdt.launch.remoteApplicationLaunchType=org.eclipse.rse.remotecdt.dsf.debug,debug,;
+/instance/org.eclipse.cdt.mylyn.ui/org.eclipse.mylyn.cdt.ui.run.count.3_3_0=1
+/instance/org.eclipse.cdt.core/indexer/skipTypeReferences=false
+/instance/org.eclipse.ui.ide/PROBLEMS_FILTERS_MIGRATE=true
+/instance/org.eclipse.ui.editors/overviewRuler_migration=migrated_3.1
+/instance/org.eclipse.core.resources/version=1
+/instance/org.eclipse.core.runtime/line.separator=\n
+@org.eclipse.core.resources=3.10.1.v20150725-1910
+/instance/org.eclipse.ui/showIntro=false
+/instance/org.eclipse.ui.workbench/UIActivities.org.eclipse.cdt.debug.dsfgdbActivity=true
+@org.eclipse.rse.ui=3.3.100.201503112018
+/instance/org.eclipse.rse.ui/org.eclipse.rse.preferences.order.connections=pcb.Local
+@ilg.gnuarmeclipse.debug.gdbjtag.openocd=3.2.1.201602101653
+@org.eclipse.debug.core=3.10.0.v20150303-1130
+/instance/org.eclipse.mylyn.tasks.ui/org.eclipse.mylyn.tasks.ui.filters.nonmatching.encouraged=true
+@org.eclipse.oomph.workingsets=1.2.0.v20150915-0926
+/configuration/org.eclipse.ui.ide/MAX_RECENT_WORKSPACES=5
+@org.eclipse.ui.workbench=3.107.0.v20150825-2206
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.client.commands=set mem inaccessible-by-default off
+file_export_version=3.0
+@org.eclipse.cdt.core=5.11.0.201509131935
+@org.eclipse.rse.core=3.3.100.201407181907
+/instance/org.eclipse.core.net/org.eclipse.core.net.hasMigrated=true
+/instance/org.eclipse.team.ui/org.eclipse.team.ui.first_time=false
+/instance/org.eclipse.mylyn.tasks.ui/migrated.task.repositories.secure.store=true
+/instance/org.eclipse.debug.core//org.eclipse.debug.core.PREFERRED_DELEGATES/org.eclipse.cdt.debug.gdbjtag.launchConfigurationType=org.eclipse.cdt.debug.gdbjtag.core.dsfLaunchDelegate,debug,;
+/instance/org.eclipse.cdt.core.prj-mchf-eclipse/indexer/preferenceScope=0
+/instance/org.eclipse.cdt.core/indexer/indexOnOpen=false
+/instance/org.eclipse.ui.ide/platformState=1455563484884
+/instance/org.eclipse.cdt.core/indexer/skipIncludedFilesLargerThanMB=16
+@org.eclipse.core.net=1.2.300.v20141118-1725
+/instance/org.eclipse.cdt.core/indexer/skipReferences=false
+/instance/org.eclipse.core.resources/encoding=UTF-8
+/instance/org.eclipse.cdt.managedbuilder.core/properties/mchf-eclipse.ilg.gnuarmeclipse.managedbuild.cross.target.elf.760754411/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.563472857=ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1357867660\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.release.1668167853\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.833539941\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.printsize.1146300300\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.createflash.873251154\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.443738704\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1268992358\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.629732904\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.606680054\=rebuildState\\\=true\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.archiver.98451563\=rebuildState\\\=true\\r\\n\r\n
+/instance/org.eclipse.debug.core//org.eclipse.debug.core.PREFERRED_DELEGATES/org.eclipse.cdt.launch.postmortemLaunchType=org.eclipse.cdt.dsf.gdb.launch.coreCLaunch,debug,;
+/instance/org.eclipse.mylyn.monitor.ui/org.eclipse.mylyn.monitor.activity.tracking.enabled.checked=true
+\!/=
+@org.eclipse.cdt.debug.core=7.7.0.201509131935
+@org.eclipse.mylyn.monitor.ui=3.17.0.v20150828-2041
+/instance/org.eclipse.core.resources/description.autobuilding=false
+@org.eclipse.cdt.dsf.ui=2.5.0.201509131935
+/instance/org.eclipse.cdt.core/indexer/useHeuristicIncludeResolution=true
+/instance/org.eclipse.debug.ui/org.eclipse.debug.ui.MemoryView.RenderingViewPane.1=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<persistedMemoryRenderings>\r\n<memoryRendering memoryBlock\="1574521638" renderingId\="ilg.gnuarmeclipse.debug.gdbjtag.memoryRendering"/>\r\n</persistedMemoryRenderings>\r\n
+@org.eclipse.ui.editors=3.9.0.v20150213-1939
+@org.eclipse.core.variables=3.2.800.v20130819-1716
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.doDebugInRam=false
+/instance/org.eclipse.cdt.core/indexer/skipFilesLargerThanMB=8
+/instance/org.eclipse.cdt.ui/useQuickDiffPrefPage=true
+/configuration/org.eclipse.ui.ide/RECENT_WORKSPACES=
+/instance/org.eclipse.debug.core//org.eclipse.debug.core.PREFERRED_DELEGATES/org.eclipse.cdt.launch.attachLaunchType=org.eclipse.cdt.dsf.gdb.launch.attachCLaunch,debug,;
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.server.other=-f support/MCHF.cfg
+/instance/org.eclipse.ui.ide/quickStart=false
+/instance/org.eclipse.cdt.core/indexer/skipImplicitReferences=false
+/instance/org.eclipse.oomph.workingsets/working.set.group=<?xml version\="1.0" encoding\="UTF-8"?>\n<workingsets\:WorkingSetGroup xmi\:version\="2.0" xmlns\:xmi\="http\://www.omg.org/XMI" xmlns\:workingsets\="http\://www.eclipse.org/oomph/workingsets/1.0"/>\n
+/instance/org.eclipse.debug.ui/org.eclipse.debug.ui.PREF_LAUNCH_PERSPECTIVES=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<launchPerspectives/>\r\n
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.doPreRunReset=true
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.client.other=
+/instance/org.eclipse.mylyn.context.core/mylyn.attention.migrated=true
+@org.eclipse.mylyn.context.core=3.17.0.v20150625-2044
+/instance/org.eclipse.debug.ui/org.eclipse.debug.ui.UseContextualLaunch=false
+/instance/org.eclipse.cdt.managedbuilder.core/properties/mchf-eclipse.ilg.gnuarmeclipse.managedbuild.cross.target.elf.760754411/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838=ilg.gnuarmeclipse.managedbuild.cross.tool.createlisting.1315515641\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1301137147\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.createflash.1618780674\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.431714468\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838\=rcState\\\=0\\r\\nrebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1708414410\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.archiver.426523710\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug.680557654\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.printsize.693017885\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.255939792\=rebuildState\\\=false\\r\\n\r\nilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1298670015\=rebuildState\\\=false\\r\\n\r\n
+@org.eclipse.core.runtime=3.11.1.v20150903-1804
+@org.eclipse.cdt.mylyn.ui=3.17.0.v20150625-2044
+/instance/org.eclipse.debug.ui/preferredDetailPanes=DefaultDetailPane\:DefaultDetailPane|
+/instance/org.eclipse.ui.ide/tipsAndTricks=true
+/instance/org.eclipse.cdt.core/indexer/indexerId=org.eclipse.cdt.core.fastIndexer
+/instance/org.eclipse.cdt.ui/spelling_locale_initialized=true
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.client.executable=${cross_prefix}gdb${cross_suffix}
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.enableSemihosting=false
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.preRunReset.type=halt
+/instance/org.eclipse.debug.ui/org.eclipse.debug.ui.user_view_bindings=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<viewBindings>\r\n<view id\="org.eclipse.debug.ui.MemoryView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.debug.ui.RegisterView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.debug.ui.ModuleView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="ilg.gnuarmeclipse.debug.gdbjtag.ui.views.PeripheralsView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.debug.ui.VariableView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.debug.ui.DebugView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.debug.ui.BreakpointView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n<view id\="org.eclipse.ui.console.ConsoleView">\r\n<perspective id\="org.eclipse.debug.ui.DebugPerspective" userAction\="closed"/>\r\n</view>\r\n</viewBindings>\r\n
+/instance/org.eclipse.cdt.ui/useAnnotationsPrefPage=true
+/instance/org.eclipse.cdt.core/indexer/indexAllFiles=true
+@org.eclipse.team.ui=3.7.200.v20150203-1452
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.doInitialReset=true
+/instance/org.eclipse.mylyn.tasks.ui/org.eclipse.mylyn.tasks.ui.filters.nonmatching=true
+@org.eclipse.mylyn.tasks.ui=3.17.0.v20150909-1822
+@org.eclipse.egit.core=4.0.3.201509231615-r
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.server.executable=${openocd_path}/${openocd_executable}
+/instance/org.eclipse.debug.core//org.eclipse.debug.core.PREFERRED_DELEGATES/org.eclipse.cdt.launch.applicationLaunchType=org.eclipse.cdt.dsf.gdb.launch.localCLaunch,debug,;org.eclipse.cdt.cdi.launch.localCLaunch,run,;
+/instance/org.eclipse.ui.ide/SAVE_ALL_BEFORE_BUILD=true
+/instance/org.eclipse.core.variables/org.eclipse.core.variables.valueVariables=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<valueVariables>\r\n<valueVariable description\="Name of the QEMU executable" name\="qemu_executable" readOnly\="false" value\="qemu-system-gnuarmeclipse.exe"/>\r\n<valueVariable description\="Path to J-Link installation folder" name\="jlink_path" readOnly\="false" value\=""/>\r\n<valueVariable description\="Name of the OpenOCD executable" name\="openocd_executable" readOnly\="false" value\="openocd.exe"/>\r\n<valueVariable description\="Name of the J-Link executable" name\="jlink_gdbserver" readOnly\="false" value\="JLinkGDBServerCL.exe"/>\r\n<valueVariable description\="Path to the QEMU installation folder" name\="qemu_path" readOnly\="false" value\=""/>\r\n<valueVariable description\="Path to the OpenOCD installation folder" name\="openocd_path" readOnly\="false" value\="C\:/Program Files/GNU ARM Eclipse/OpenOCD/bin"/>\r\n</valueVariables>\r\n
+/configuration/org.eclipse.ui.ide/RECENT_WORKSPACES_PROTOCOL=3
+/configuration/org.eclipse.core.net/org.eclipse.core.net.hasMigrated=true
+/instance/org.eclipse.cdt.ui/content_assist_disabled_computers=org.eclipse.cdt.ui.parserProposalCategory\u0000org.eclipse.cdt.ui.textProposalCategory\u0000
+/instance/org.eclipse.cdt.core/indexer/indexUnusedHeadersWithDefaultLang=true
+/instance/org.eclipse.cdt.dsf.ui/useAnnotationsPrefPage=true
+/instance/org.eclipse.egit.core/GitRepositoriesView.GitDirectories=E\:\\Hacking\\ham\\MCHF\\my-sw\\mchf-github\\.git;
+/instance/org.eclipse.debug.ui/preferredTargets=org.eclipse.cdt.debug.ui.toggleCBreakpointTarget,org.eclipse.cdt.debug.ui.toggleCDynamicPrintfTarget\:org.eclipse.cdt.debug.ui.toggleCBreakpointTarget|
+/instance/org.eclipse.ui.ide/EXIT_PROMPT_ON_CLOSE_LAST_WINDOW=false
+/instance/org.eclipse.cdt.core/indexer/updatePolicy=0
+/instance/org.eclipse.debug.ui/org.eclipse.debug.ui.MemoryView.orientation=0
+/instance/org.eclipse.cdt.debug.core/org.eclipse.cdt.debug.core.cDebug.default_source_containers=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<sourceLookupDirector>\r\n<sourceContainers duplicates\="false">\r\n<container memento\="AbsolutePath" typeId\="org.eclipse.cdt.debug.core.containerType.absolutePath"/>\r\n<container memento\="programRelativePath" typeId\="org.eclipse.cdt.debug.core.containerType.programRelativePath"/>\r\n<container memento\="&lt;?xml version\=&quot;1.0&quot; encoding\=&quot;UTF-8&quot; standalone\=&quot;no&quot;?&gt;&\#13;&\#10;&lt;project referencedProjects\=&quot;true&quot;/&gt;&\#13;&\#10;" typeId\="org.eclipse.cdt.debug.core.containerType.project"/>\r\n</sourceContainers>\r\n</sourceLookupDirector>\r\n
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.preRun.other=
+/instance/org.eclipse.cdt.core/indexer/indexAllHeaderVersions=false
+@org.eclipse.ui=3.107.0.v20150507-1945
+/instance/org.eclipse.debug.ui/pref_state_memento.org.eclipse.debug.ui.DebugVieworg.eclipse.debug.ui.DebugView=<?xml version\="1.0" encoding\="UTF-8"?>\r\n<DebugViewMemento org.eclipse.debug.ui.BREADCRUMB_DROPDOWN_AUTO_EXPAND\="false"/>
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.initialReset.type=init
+@org.eclipse.cdt.managedbuilder.core=8.3.0.201509131935
+/instance/org.eclipse.ui.workbench//org.eclipse.ui.commands/state/org.eclipse.ui.navigator.resources.nested.changeProjectPresentation/org.eclipse.ui.commands.radioState=false
+/instance/ilg.gnuarmeclipse.debug.gdbjtag.openocd/gdb.openocd.init.other=
+/instance/org.eclipse.debug.ui/pref_state_memento.ilg.gnuarmeclipse.debug.gdbjtag.ui.views.PeripheralsView=<?xml version\="1.0" encoding\="UTF-8"?>\r\n<VariablesViewMemento org.eclipse.debug.ui.SASH_DETAILS_PART\="315" org.eclipse.debug.ui.SASH_VIEW_PART\="684">\r\n<PRESENTATION_CONTEXT_PROPERTIES IMemento.internal.id\="PeripheralsView">\r\n<BOOLEAN BOOLEAN\="true" IMemento.internal.id\="org.eclipse.debug.ui.check"/>\r\n</PRESENTATION_CONTEXT_PROPERTIES>\r\n</VariablesViewMemento>
+/instance/org.eclipse.cdt.core/indexer/indexAllVersionsSpecificHeaders=
+/configuration/org.eclipse.ui.ide/SHOW_WORKSPACE_SELECTION_DIALOG=false
