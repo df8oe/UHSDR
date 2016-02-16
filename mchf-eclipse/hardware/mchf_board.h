@@ -1146,7 +1146,7 @@ enum {
 
 #define	EEPROM_DETECTOR_COUPLING_COEFF_160M	311	// Calibration coupling coefficient for FWD/REV power sensor for 160 meters
 #define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
-#define EEPROM_MIC_BIAS_ENABLE		313
+#define EEPROM_TUNE_POWER_LEVEL		313
 #define EEPROM_CAT_MODE_ACTIVE		314
 //
 //
@@ -1508,6 +1508,8 @@ typedef struct TransceiverState
 	uchar	rfmod_present;			// 0 = not present
 	uchar	vhfuhfmod_present;		// 0 = not present
 	uchar	multi;				// actual translate factor
+	uchar	tune_power_level;		// TX power in antenna tuning function
+	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //

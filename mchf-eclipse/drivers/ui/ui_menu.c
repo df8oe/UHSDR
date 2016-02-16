@@ -464,9 +464,9 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 } , { // 16
 		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
+		"335-Tune Power Level",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
-		"                    ",
 		"                    "
 }
 
@@ -3085,6 +3085,35 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		if(ts.misc_flags1 & 64)	{			// Display status of TX audio filter
 			clr = Red;					// warn user that filter is off!
+		}
+		break;
+	case CONFIG_TUNE_POWER_LEVEL:	// set power for antenne tuning
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tune_power_level,
+				0,
+				PA_LEVEL_MAX_ENTRY,
+				PA_LEVEL_FULL,
+				1);
+
+		// disp_shift = 1;
+		switch(ts.tune_power_level)	{
+		case PA_LEVEL_FULL:
+			strcpy(options, "FULL POWER");
+			break;
+		case PA_LEVEL_5W:
+			strcpy(options, "        5W");
+			break;
+		case PA_LEVEL_2W:
+			strcpy(options, "        2W");
+			break;
+		case PA_LEVEL_1W:
+			strcpy(options, "        1W");
+			break;
+		case PA_LEVEL_0_5W:
+			strcpy(options, "      0.5W");
+			break;
+		case PA_LEVEL_MAX_ENTRY:
+			strcpy(options, " as TX PWR");
+			break;
 		}
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?

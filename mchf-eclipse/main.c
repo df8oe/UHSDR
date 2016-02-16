@@ -921,6 +921,7 @@ void TransceiverStateInit(void)
 	ts.rfmod_present = 0;				// rfmod not present
 	ts.vhfuhfmod_present = 0;			// VHF/UHF mod not present
 	ts.multi = 0;					// non-translate
+	ts.tune_power_level = 0;			// Tune with FULL POWER
 }
 
 //*----------------------------------------------------------------------------

@@ -11,6 +11,10 @@
 
 
 20160213 [DF8OE]
+- added #335 Tune Power Level for antenna tuning with specific power
+
+
+20160213 [DF8OE]
 - adding new translate modes +/- 12KHz
 - added 5KHz tuning steps
 - added possibility to use filters as LPF (not with center frequency)

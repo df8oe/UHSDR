@@ -2049,6 +2049,12 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			// Change button color
 			if(ts.tune)
 			{
+				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+				    {
+				    ts.power_temp = ts.power_level;				//store tx level and set tune level
+				    ts.power_level = ts.tune_power_level;
+				    UiDriverChangePowerLevel();
+				    }
 				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
 					softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);		// generate tone for setting TX IQ phase
 				// DDS on
@@ -2064,6 +2070,11 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			}
 			else
 			{
+				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+				    {
+				    ts.power_level = ts.power_temp;					// restore tx level
+				    UiDriverChangePowerLevel();
+				    }
 				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	// DDS off if voice mode
 					softdds_setfreq(0.0,ts.samp_rate,0);
 				else if(ts.dmod_mode == DEMOD_CW)	{	// DDS reset to proper sidetone freq. if CW mode
@@ -6375,7 +6386,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	ushort fcolor = White;
 	char txt[16];
 
-	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       " FILT  ",	White, 	Orange, 0);
+	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ",	White, 	Orange, 0);
 
 	// Do a filter re-load
 	if(!ui_only_update)
@@ -10470,8 +10481,8 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_FM_RX_BANDWIDTH,&ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT,0,FM_RX_BANDWIDTH_MAX);
 	UiReadSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,&ts.beep_frequency,DEFAULT_BEEP_FREQUENCY,MIN_BEEP_FREQUENCY,MAX_BEEP_FREQUENCY);
 	UiReadSettingEEPROM_UInt8(EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS);
-	UiReadSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,&ts.mic_bias,1,0,1);
 	UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
+	UiReadSettingEEPROM_UInt8(EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_FULL,PA_LEVEL_FULL,PA_LEVEL_MAX_ENTRY);
 
 	ts.dsp_inhibit = dspmode;		// restore setting
 }
@@ -10744,8 +10755,8 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_RX_BANDWIDTH,ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,ts.beep_frequency,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
-	UiReadWriteSettingEEPROM_Bool(EEPROM_MIC_BIAS_ENABLE,ts.mic_bias,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_TUNE_POWER_LEVEL,ts.tune_power_level,PA_LEVEL_FULL);
 	
 //	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back
