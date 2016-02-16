@@ -26,6 +26,7 @@
 #include "audio_driver.h"
 #include "fm_dds_table.h"
 #include "ui_driver.h"
+#include "usbd_audio_core.h"
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
@@ -1577,7 +1578,12 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			beep_accum = 0;
 		//
 		*dst++ = (int16_t)ads.b_buffer[i];		// Speaker channel (variable level)
+		// HACK: we have 16 khz sample frequency
+		if (i%3==0) {
+			audio_in_put_buffer(ads.a_buffer[i]);
+		}
 		*dst++ = (int16_t)ads.a_buffer[i++];		// LINE OUT (constant level)
+
 	}
 	//
 }
