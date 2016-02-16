@@ -255,12 +255,12 @@ return AUDIO_OK;
 static uint8_t  VolumeCtl    (uint8_t vol)
 {
   /* Call low layer volume setting function */  
-//  if (EVAL_AUDIO_VolumeCtl(vol) != 0)
+/* if (EVAL_AUDIO_VolumeCtl(vol) != 0)
   {
     AudioState = AUDIO_STATE_ERROR;
     return AUDIO_FAIL;
   }
-  
+*/
   return AUDIO_OK;
 }
 
