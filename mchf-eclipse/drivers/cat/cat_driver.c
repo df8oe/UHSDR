@@ -53,7 +53,7 @@ void cat_driver_init(void)
 #ifndef USB_AUDIO_SUPPORT
 			&USBD_CDC_cb,
 #else
-			&USBD_AUDIO_cb,
+			&AUDIO_cb,
 #endif
 			&USR_cb);
 

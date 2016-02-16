@@ -1084,7 +1084,7 @@ void CheckIsTouchscreenPresent(void)
 {
 	get_touchscreen_coordinates();				// initial reading of XPT2046
 	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
-	    ts.tp_present = 1;					// yes - touchscreen present!
+	    ts.tp_present = 1;						// yes - touchscreen present!
 	else
 	    ts.tp_x = ts.tp_y = 0xff;
 }
