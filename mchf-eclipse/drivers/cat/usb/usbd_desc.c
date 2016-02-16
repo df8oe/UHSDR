@@ -33,8 +33,11 @@
 #include "usb_regs.h"
 
 #define USBD_VID                        0x0483
-#define USBD_PID                        0x5740
-
+#ifndef USB_AUDIO_SUPPORT
+	#define USBD_PID                        0x5740
+#else
+	#define USBD_PID                        0x5730
+#endif
 /** @defgroup USB_String_Descriptors
   * @{
   */ 
@@ -44,7 +47,11 @@
 #define USBD_PRODUCT_HS_STRING          (uint8_t*)"STM32 Virtual ComPort in HS mode"
 #define USBD_SERIALNUMBER_HS_STRING     (uint8_t*)"00000000050B"
 
-#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
+#ifndef USB_AUDIO_SUPPORT
+	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
+#else
+	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 AUDIO in FS Mode"
+#endif
 #define USBD_SERIALNUMBER_FS_STRING     (uint8_t*)"00000000050C"
 
 #define USBD_CONFIGURATION_HS_STRING    (uint8_t*)"VCP Config"
