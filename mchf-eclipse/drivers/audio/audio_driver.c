@@ -1386,6 +1386,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
 
 	static ulong 		i, beep_idx = 0, beep_accum = 0;
+	static uint16_t modulus = 0;
 	//
 	int16_t				psize;		// processing size, with decimation
 	//
@@ -1578,13 +1579,15 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			beep_accum = 0;
 		//
 		*dst++ = (int16_t)ads.b_buffer[i];		// Speaker channel (variable level)
-		// HACK: we have 16 khz sample frequency
-		if (i%3==0) {
+		// HACK: we have 48 khz sample frequency
+		if (i%3 == modulus) {
 			audio_in_put_buffer(ads.a_buffer[i]);
 		}
 		*dst++ = (int16_t)ads.a_buffer[i++];		// LINE OUT (constant level)
 
 	}
+	modulus++;
+	modulus%=3;
 	//
 }
 

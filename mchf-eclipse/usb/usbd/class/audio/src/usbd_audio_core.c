@@ -149,7 +149,7 @@ static uint8_t  *USBD_audio_GetCfgDesc (uint8_t speed, uint16_t *length);
   uint8_t* IsocOutWrPtr = IsocOutBuff;
   uint8_t* IsocOutRdPtr = IsocOutBuff;
 
-#define USB_AUDIO_NUM_BUF 4
+#define USB_AUDIO_NUM_BUF 16
 #define USB_AUDIO_PKT_SIZE   (AUDIO_IN_PACKET/2)
 #define USB_AUDIO_BUF_SIZE (USB_AUDIO_NUM_BUF * USB_AUDIO_PKT_SIZE)
 
@@ -170,7 +170,7 @@ void audio_in_put_buffer(int16_t sample) {
 		buffer_overflow++;
 	}
 }
-int16_t* audio_in_buffer_next_pkt() {
+volatile int16_t* audio_in_buffer_next_pkt() {
 	uint16_t room;
 	uint16_t temp_head = buffer_head;
 	room = ((((temp_head < buffer_tail)?USB_AUDIO_BUF_SIZE:0) + temp_head) - buffer_tail);
@@ -178,6 +178,7 @@ int16_t* audio_in_buffer_next_pkt() {
 		return &RecBuf[buffer_tail];
 	} else
 	{
+
 		return NULL;
 	}
 }
@@ -191,10 +192,15 @@ void audio_in_buffer_pop_pkt(int16_t* ptr) {
 
 static void audio_in_fill_ep_fifo(void *pdev) {
 	uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
-	if (pkt) {
+	static uint16_t fill_buffer = (USB_AUDIO_NUM_BUF/2) + 1;
+	if (fill_buffer == 0 && pkt) {
 		DCD_EP_Tx (pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
 		audio_in_buffer_pop_pkt((int16_t*)pkt);
 	} else {
+		if (pkt == NULL) {
+			fill_buffer = USB_AUDIO_NUM_BUF/2 + 1;
+		}
+		fill_buffer--;
 		// transmit something if we do not have enough in buffer
 		DCD_EP_Tx (pdev,AUDIO_IN_EP, (uint8_t*)Silence, AUDIO_IN_PACKET);
 	}
