@@ -149,8 +149,62 @@ static uint8_t  *USBD_audio_GetCfgDesc (uint8_t speed, uint16_t *length);
   uint8_t* IsocOutWrPtr = IsocOutBuff;
   uint8_t* IsocOutRdPtr = IsocOutBuff;
 
-int16_t RecBuf[2][AUDIO_IN_PACKET/2]; //buffer for filtered PCM data from Recv.
-uint8_t buffer_ready;
+#define USB_AUDIO_NUM_BUF 16
+#define USB_AUDIO_PKT_SIZE   (AUDIO_IN_PACKET/2)
+#define USB_AUDIO_BUF_SIZE (USB_AUDIO_NUM_BUF * USB_AUDIO_PKT_SIZE)
+
+static volatile int16_t RecBuf[USB_AUDIO_BUF_SIZE]; //buffer for filtered PCM data from Recv.
+static int16_t Silence[USB_AUDIO_PKT_SIZE];
+static volatile uint16_t buffer_tail;
+static volatile uint16_t buffer_head;
+static volatile uint16_t buffer_overflow;
+
+
+void audio_in_put_buffer(int16_t sample) {
+	RecBuf[buffer_head] = sample;
+	buffer_head=  (buffer_head + 1) %USB_AUDIO_BUF_SIZE;
+	// now test buffer full
+	if (buffer_head == buffer_tail) {
+		// ok. We loose data now, should never ever happen, but so what
+		// will cause minor distortion if only a few bytes.
+		buffer_overflow++;
+	}
+}
+volatile int16_t* audio_in_buffer_next_pkt() {
+	uint16_t room;
+	uint16_t temp_head = buffer_head;
+	room = ((((temp_head < buffer_tail)?USB_AUDIO_BUF_SIZE:0) + temp_head) - buffer_tail);
+	if (room >= USB_AUDIO_PKT_SIZE) {
+		return &RecBuf[buffer_tail];
+	} else
+	{
+
+		return NULL;
+	}
+}
+void audio_in_buffer_pop_pkt(int16_t* ptr) {
+	if (ptr) {
+		// there was data and pkt has been used
+		// free  the space
+		buffer_tail = (buffer_tail+USB_AUDIO_PKT_SIZE)%USB_AUDIO_BUF_SIZE;
+	}
+}
+
+static void audio_in_fill_ep_fifo(void *pdev) {
+	uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
+	static uint16_t fill_buffer = (USB_AUDIO_NUM_BUF/2) + 1;
+	if (fill_buffer == 0 && pkt) {
+		DCD_EP_Tx (pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
+		audio_in_buffer_pop_pkt((int16_t*)pkt);
+	} else {
+		if (pkt == NULL) {
+			fill_buffer = USB_AUDIO_NUM_BUF/2 + 1;
+		}
+		fill_buffer--;
+		// transmit something if we do not have enough in buffer
+		DCD_EP_Tx (pdev,AUDIO_IN_EP, (uint8_t*)Silence, AUDIO_IN_PACKET);
+	}
+}
 
 
 /* Main Buffer for Audio Control Rrequests transfers and its relative variables */
@@ -436,7 +490,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   0x00,                       // Unused. (bRefresh)
   0x00,                       // Unused. (bSynchAddress)
 
-  /* USB Microphone Class-specific Isoc. Audio Data Endpoint Descriptor (CODE == 7) OK - подтверждено документацией*/
+  /* USB Microphone Class-specific Isoc. Audio Data Endpoint Descriptor (CODE == 7) OK - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ*/
   0x07,                       // Size of the descriptor, in bytes (bLength)
   AUDIO_ENDPOINT_DESCRIPTOR_TYPE,    // CS_ENDPOINT Descriptor Type (bDescriptorType) 0x25
   AUDIO_ENDPOINT_GENERAL,            // GENERAL subtype. (bDescriptorSubtype) 0x01
@@ -466,12 +520,6 @@ static uint8_t  usbd_audio_Init (void  *pdev,
 {  
 
 #ifdef AUDIO_IN
-
-	int i;
-for (i = 0;i < AUDIO_IN_PACKET/2; i++) {
-	RecBuf[0][i] = sin(((float)i)/((float)AUDIO_IN_PACKET/2)*3.141592)*1000;
-	RecBuf[1][i] = sin((((float)i)/((float)AUDIO_IN_PACKET/2)+1)*3.141592)*1000;
-}
 
 DCD_EP_Open(pdev,
 				  AUDIO_IN_EP,
@@ -645,12 +693,12 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
   * @param  epnum: endpoint number
   * @retval status
   */
+
+
 static uint8_t  usbd_audio_DataIn (void *pdev, uint8_t epnum)
 {
 	DCD_EP_Flush(pdev,AUDIO_IN_EP);//very important!!!
-
-	DCD_EP_Tx (pdev,AUDIO_IN_EP, (uint8_t*)(RecBuf[buffer_ready++]), AUDIO_IN_PACKET);
-	buffer_ready %= 2;
+	audio_in_fill_ep_fifo(pdev);
   return USBD_OK;
 }
 
@@ -710,7 +758,7 @@ static uint8_t  usbd_audio_SOF (void *pdev)
     The play operation must be executed as soon as possible after the SOF detection. */
 	if (PlayFlag == 1) {
 		DCD_EP_Flush(pdev,AUDIO_IN_EP);//very important!!!
-		DCD_EP_Tx (pdev,AUDIO_IN_EP, (uint8_t*)RecBuf[0], AUDIO_IN_PACKET);
+		audio_in_fill_ep_fifo(pdev);
 		PlayFlag = 2;
 	}
 	return USBD_OK;
