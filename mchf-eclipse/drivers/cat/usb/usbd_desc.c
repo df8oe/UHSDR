@@ -36,7 +36,7 @@
 #ifndef USB_AUDIO_SUPPORT
 	#define USBD_PID                        0x5740
 #else
-	#define USBD_PID                        0x5730
+	#define USBD_PID                        0x5731
 #endif
 /** @defgroup USB_String_Descriptors
   * @{
