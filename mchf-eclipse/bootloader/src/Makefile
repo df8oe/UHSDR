@@ -30,8 +30,8 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -I../inc
 
 # Choose fullspeed or highspeed (?)
-CFLAGS += -DUSE_OTG_FS_CORE -DUSE_USB_OTG_FS
-#CFLAGS += -DUSE_OTG_HS_CORE -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY -DUSB_VCP_DISABLE_VBUS -DUSB_VCP_DISABLE_ID
+CFLAGS += -DUSE_USB_OTG_FS
+#CFLAGS += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY
 
 # Include files from STM libraries
 CFLAGS += -I$(STM_COMMON)/../drivers/fat_fs/inc
