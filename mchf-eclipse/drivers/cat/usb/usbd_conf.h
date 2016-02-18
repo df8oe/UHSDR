@@ -36,7 +36,8 @@
   * @{
   */ 
 #define USBD_CFG_MAX_NUM                1
-#define USBD_ITF_MAX_NUM                1
+#define USBD_ITF_MAX_NUM                2
+// in case of audio in and out we have 2 interfaces, with CDC 3
 
 #define USBD_SELF_POWERED               
 
