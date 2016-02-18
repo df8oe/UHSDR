@@ -67,7 +67,7 @@
 #define OUT_PACKET_NUM                                   4
 /* Total size of the audio transfer buffer */
 #define TOTAL_OUT_BUF_SIZE                           ((uint32_t)(AUDIO_OUT_PACKET * OUT_PACKET_NUM))
-#define AUDIO_OUT
+#define AUDIO_BOTH
 #if  defined(AUDIO_BOTH)
 	#define AUDIO_IN
 	#define AUDIO_OUT
