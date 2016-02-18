@@ -238,6 +238,10 @@ USBD_Class_cb_TypeDef  AUDIO_cb =
 };
 
 /* USB AUDIO device Configuration Descriptor */
+// https://www.lpcware.com/content/forum/trying-combined-usb-audio-and-out-lpc1857
+// Tsuneos Post has perfect instructions how to join the the IN and OUT Interface descriptors into
+// one.
+
 static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 {
   /* Configuration 1 */
@@ -245,10 +249,10 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   USB_CONFIGURATION_DESCRIPTOR_TYPE,    /* bDescriptorType */
   LOBYTE(AUDIO_CONFIG_DESC_SIZE),       /* wTotalLength  109 bytes*/
   HIBYTE(AUDIO_CONFIG_DESC_SIZE),      
-#if defined(AUDIO_BOTH)
+#ifdef AUDIO_IN
   0x03,                                 /* bNumInterfaces */
 #else
-  0x02,
+  0x02,                                 /* bNumInterfaces */
 #endif
   0x01,                                 /* bConfigurationValue */
   0x00,                                 /* iConfiguration */
@@ -256,8 +260,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   0x32,                                 /* bMaxPower = 100 mA*/
   /* 09 byte*/
 
-#ifdef AUDIO_OUT
-  /* USB Speaker Standard interface descriptor */
+  /* USB Sound Standard interface descriptor */
   AUDIO_INTERFACE_DESC_SIZE,            /* bLength */
   USB_INTERFACE_DESCRIPTOR_TYPE,        /* bDescriptorType */
   0x00,                                 /* bInterfaceNumber */
@@ -267,20 +270,34 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   AUDIO_SUBCLASS_AUDIOCONTROL,          /* bInterfaceSubClass */
   AUDIO_PROTOCOL_UNDEFINED,             /* bInterfaceProtocol */
   0x00,                                 /* iInterface */
+
   /* 09 byte*/
 // Begin AudioControl Descriptors
   /* USB Speaker Class-specific AC Interface Descriptor */
+#ifdef AUDIO_IN
+  AUDIO_INTERFACE_DESC_SIZE + 1,            /* bLength */
+#else
   AUDIO_INTERFACE_DESC_SIZE,            /* bLength */
+#endif
   AUDIO_INTERFACE_DESCRIPTOR_TYPE,      /* bDescriptorType */
   AUDIO_CONTROL_HEADER,                 /* bDescriptorSubtype */
   0x00,          /* 1.00 */             /* bcdADC */
   0x01,
-  (0x27),
+#ifdef AUDIO_IN
+  61,
+#else
+  39,
+#endif
   0x00,
+#ifdef AUDIO_IN
+  0x02,                                 /* bInCollection */
+  0x01,                                 /* baInterfaceNr */
+  0x02,        							/* baInterfaceNr */
+#else
   0x01,                                 /* bInCollection */
   0x01,                                 /* baInterfaceNr */
+#endif
   /* 09 byte*/
-
   /* USB Speaker Input Terminal Descriptor */
   AUDIO_INPUT_TERMINAL_DESC_SIZE,       /* bLength */
   AUDIO_INTERFACE_DESCRIPTOR_TYPE,      /* bDescriptorType */
@@ -319,35 +336,12 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   0x02,                                 /* bSourceID */
   0x00,                                 /* iTerminal */
   /* 09 byte*/
-#endif
 #ifdef AUDIO_IN
-  /* USB Microphone Standard AC Interface Descriptor  */
-  0x09,//sizeof(USB_INTF_DSC),   // Size of this descriptor in bytes
-  USB_INTERFACE_DESCRIPTOR_TYPE, // INTERFACE descriptor type
-  0x00,    // Interface Number
-  0x00,                          // Alternate Setting Number
-  0x00,                          // Number of endpoints in this intf
-  USB_DEVICE_CLASS_AUDIO,        // Class code
-  AUDIO_SUBCLASS_AUDIOCONTROL,   // Subclass code
-  0x00,                          // Protocol code
-  0x00,                          // Interface string index
-
-  /* USB Microphone Class-specific AC Interface Descriptor  (CODE == 9)*/
-   0x09,                         // Size of this descriptor, in bytes.
-   AUDIO_INTERFACE_DESCRIPTOR_TYPE, // CS_INTERFACE Descriptor Type 0x24
-   AUDIO_CONTROL_HEADER,         // HEADER descriptor subtype 0x01
-   0x00,0x01,                    // Audio Device compliant to the USB Audio specification version 1.00
-   0x1E,0x00,                    // Total number of bytes returned for the class-specific AudioControl interface descriptor.
-                                 // Includes the combined length of this descriptor header and all Unit and Terminal descriptors.
-   0x01,                         // The number of AudioStreaming interfaces in the Audio Interface Collection to which this AudioControl interface belongs
-   0x01,                         // AudioStreaming interface 1 belongs to this AudioControl interface.
-
-
-   /*USB Microphone Input Terminal Descriptor */
+  /*USB Microphone Input Terminal Descriptor */
    0x0C,                         // Size of the descriptor, in bytes
    AUDIO_INTERFACE_DESCRIPTOR_TYPE, // CS_INTERFACE Descriptor Type
    AUDIO_CONTROL_INPUT_TERMINAL,    // INPUT_TERMINAL descriptor subtype
-   0x01,                         // ID of this Terminal.
+   0x04,                         // ID of this Terminal.
    0x01,0x02,                    // Terminal is Microphone (0x01,0x02)
    0x00,                         // No association
    0x01,                         // One channel
@@ -359,14 +353,12 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
    0x09,                            // Size of the descriptor, in bytes (bLength)
    AUDIO_INTERFACE_DESCRIPTOR_TYPE, // CS_INTERFACE Descriptor Type (bDescriptorType)
    AUDIO_CONTROL_OUTPUT_TERMINAL,   // OUTPUT_TERMINAL descriptor subtype (bDescriptorSubtype)
-   0x02,                            // ID of this Terminal. (bTerminalID)
+   0x05,                            // ID of this Terminal. (bTerminalID)
    0x01, 0x01,                      // USB Streaming. (wTerminalType
    0x00,                            // unused         (bAssocTerminal)
-   0x01,                            // From Input Terminal.(bSourceID)
+   0x04,                            // From Input Terminal.(bSourceID)
    0x00,                            // unused  (iTerminal)
-
 #endif
-#ifdef AUDIO_OUT
   // ========================================== END AudioControl
   /* USB Speaker Standard AS Interface Descriptor - Audio Streaming Zero Bandwith */
   /* Interface 1, Alternate Setting 0                                             */
@@ -436,13 +428,13 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   0x00,                                 /* wLockDelay */
   0x00,
   /* 07 byte*/
-#endif
+
 #ifdef AUDIO_IN
-/* From Here is the Microphone */
+  /* From Here is the Microphone */
   /* USB Microphone Standard AS Interface Descriptor (Alt. Set. 0) (CODE == 3)*/ //zero-bandwidth interface
   0x09,                         // Size of the descriptor, in bytes (bLength)
   USB_INTERFACE_DESCRIPTOR_TYPE,    // INTERFACE descriptor type (bDescriptorType) 0x04
-  0x01, // Index of this interface. (bInterfaceNumber) ?????????? (3<) (1<<) (1<M)
+  0x02, // Index of this interface. (bInterfaceNumber) ?????????? (3<) (1<<) (1<M)
   0x00,                         // Index of this alternate setting. (bAlternateSetting)
   0x00,                         // 0 endpoints.   (bNumEndpoints)
   USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
@@ -453,7 +445,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   /* USB Microphone Standard AS Interface Descriptor (Alt. Set. 1) (CODE == 4)*/
   0x09,                         // Size of the descriptor, in bytes (bLength)
   USB_INTERFACE_DESCRIPTOR_TYPE,     // INTERFACE descriptor type (bDescriptorType)
-  0x01, // Index of this interface. (bInterfaceNumber)
+  0x02, // Index of this interface. (bInterfaceNumber)
   0x01,                         // Index of this alternate setting. (bAlternateSetting)
   0x01,                         // 1 endpoint (bNumEndpoints)
   USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
@@ -465,7 +457,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
   0x07,                         // Size of the descriptor, in bytes (bLength)
   AUDIO_INTERFACE_DESCRIPTOR_TYPE, // CS_INTERFACE Descriptor Type (bDescriptorType) 0x24
   AUDIO_STREAMING_GENERAL,         // GENERAL subtype (bDescriptorSubtype) 0x01
-  0x02,             // Unit ID of the Output Terminal.(bTerminalLink)
+  0x05,             // Unit ID of the Output Terminal.(bTerminalLink)
   0x01,                         // Interface delay. (bDelay)
   0x01,0x00,                    // PCM Format (wFormatTag)
 
@@ -568,9 +560,6 @@ static uint8_t  usbd_audio_DeInit (void  *pdev,
   {
     return USBD_FAIL;
   }
-
-#endif
-#ifdef AUDIO_OUT
   DCD_EP_Close (pdev , AUDIO_IN_EP);
 #endif
   return USBD_OK;
@@ -639,6 +628,7 @@ static uint8_t  usbd_audio_Setup (void  *pdev,
  if ((uint8_t)(req->wValue) < AUDIO_TOTAL_IF_NUM)
       {
         usbd_audio_AltSet = (uint8_t)(req->wValue);
+#ifdef AUDIO_IN
         if (usbd_audio_AltSet == 1)
     		{
         		if (!PlayFlag) {  PlayFlag = 1; }
@@ -648,6 +638,8 @@ static uint8_t  usbd_audio_Setup (void  *pdev,
             	PlayFlag = 0;
             	DCD_EP_Flush (pdev,AUDIO_IN_EP);
             }
+#endif
+
       }
       else
       {
@@ -697,8 +689,10 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 
 static uint8_t  usbd_audio_DataIn (void *pdev, uint8_t epnum)
 {
+#ifdef AUDIO_IN
 	DCD_EP_Flush(pdev,AUDIO_IN_EP);//very important!!!
 	audio_in_fill_ep_fifo(pdev);
+#endif
   return USBD_OK;
 }
 
@@ -756,44 +750,44 @@ static uint8_t  usbd_audio_SOF (void *pdev)
 	/* Check if there are available data in stream buffer.
     In this function, a single variable (PlayFlag) is used to avoid software delays.
     The play operation must be executed as soon as possible after the SOF detection. */
+#ifdef AUDIO_IN
 	if (PlayFlag == 1) {
 		DCD_EP_Flush(pdev,AUDIO_IN_EP);//very important!!!
 		audio_in_fill_ep_fifo(pdev);
 		PlayFlag = 2;
 	}
-	return USBD_OK;
+#endif
 	if (PlayFlag)
 	{
 
 		/* Start playing received packet */
-		//!    AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutRdPtr),  /* Samples buffer pointer */
-		//                            AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
-		//                            AUDIO_CMD_PLAY);           /* Command to be processed */
+		AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutRdPtr),  /* Samples buffer pointer */
+				AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
+				AUDIO_CMD_PLAY);           /* Command to be processed */
 
 		/* Increment the Buffer pointer or roll it back when all buffers all full */
-		//!    if (IsocOutRdPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
+		if (IsocOutRdPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
 		{/* Roll back to the start of buffer */
-			//!      IsocOutRdPtr = IsocOutBuff;
+			IsocOutRdPtr = IsocOutBuff;
 		}
-		//!    else
 		{/* Increment to the next sub-buffer */
-			//!      IsocOutRdPtr += AUDIO_OUT_PACKET;
+			IsocOutRdPtr += AUDIO_OUT_PACKET;
 		}
 
 		/* If all available buffers have been consumed, stop playing */
-		//!    if (IsocOutRdPtr == IsocOutWrPtr)
+		if (IsocOutRdPtr == IsocOutWrPtr)
 		{
 			/* Pause the audio stream */
-			//!      AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutBuff),   /* Samples buffer pointer */
-			//                              AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
-			//                              AUDIO_CMD_PAUSE);          /* Command to be processed */
+			AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutBuff),   /* Samples buffer pointer */
+					AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
+					AUDIO_CMD_PAUSE);          /* Command to be processed */
 
 			/* Stop entering play loop */
 			PlayFlag = 0;
 
 			/* Reset buffer pointers */
-			//!      IsocOutRdPtr = IsocOutBuff;
-			//!      IsocOutWrPtr = IsocOutBuff;
+			IsocOutRdPtr = IsocOutBuff;
+			IsocOutWrPtr = IsocOutBuff;
 		}
 	}
 
