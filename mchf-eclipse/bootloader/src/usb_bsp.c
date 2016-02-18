@@ -325,6 +325,14 @@ static void BSP_SetTime(uint8_t unit)
 }
 #endif
 
+
+/*
+void OTG_HS_IRQHandler(void)
+{
+    USBD_OTG_ISR_Handler(&USB_OTG_dev);
+}
+*/
+
 /**
 * @}
 */
