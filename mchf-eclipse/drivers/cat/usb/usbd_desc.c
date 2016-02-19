@@ -36,7 +36,7 @@
 #ifndef USB_AUDIO_SUPPORT
 	#define USBD_PID                        0x5740
 #else
-	#define USBD_PID                        0x5731
+	#define USBD_PID                        0x5732
 #endif
 /** @defgroup USB_String_Descriptors
   * @{
@@ -60,6 +60,7 @@
 #define USBD_CONFIGURATION_FS_STRING    (uint8_t*)"VCP Config"
 #define USBD_INTERFACE_FS_STRING        (uint8_t*)"VCP Interface"
 
+#define USBD_CDC_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
 
 USBD_DEVICE USR_desc =
 {
