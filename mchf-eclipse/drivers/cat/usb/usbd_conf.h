@@ -36,8 +36,8 @@
   * @{
   */ 
 #define USBD_CFG_MAX_NUM                1
-#define USBD_ITF_MAX_NUM                2
-// in case of audio in and out we have 2 interfaces, with CDC 3
+#define USBD_ITF_MAX_NUM                5
+// in case of audio in and out we have 3 interfaces, with CDC +2
 
 #define USBD_SELF_POWERED               
 
@@ -46,14 +46,20 @@
 /** @defgroup USB_VCP_Class_Layer_Parameter
   * @{
   */ 
-#define CDC_IN_EP                       0x81  /* EP1 for data IN */
-#define CDC_OUT_EP                      0x01  /* EP1 for data OUT */
-#define CDC_CMD_EP                      0x82  /* EP2 for CDC commands */
-
-#define AUDIO_TOTAL_IF_NUM 0x03
+#define CDC_IN_EP                       0x82  /* EP1 for data IN */
+#define CDC_OUT_EP                      0x02  /* EP1 for data OUT */
+#define CDC_CMD_EP                      0x83  /* EP2 for CDC commands */
+#define CDC_CTRL_IF					0x03
+#define CDC_DATA_IF					0x04
+#define CDC_TOTAL_IF_NUM 0x02
 
 #define AUDIO_OUT_EP 0x01
 #define AUDIO_IN_EP 0x81
+#define AUDIO_CTRL_IF				0x00
+#define AUDIO_OUT_IF				0x01
+#define AUDIO_IN_IF					0x02
+#define AUDIO_TOTAL_IF_NUM 0x03
+
 
 /* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
 #ifdef USE_USB_OTG_HS

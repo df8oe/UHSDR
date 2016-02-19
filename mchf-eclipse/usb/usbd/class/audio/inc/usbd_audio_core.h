@@ -71,9 +71,9 @@
 #if  defined(AUDIO_BOTH)
 	#define AUDIO_IN
 	#define AUDIO_OUT
-	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73)
+	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8)
 #elif defined(AUDIO_OUT)
-	#define AUDIO_CONFIG_DESC_SIZE                        (109)
+	#define AUDIO_CONFIG_DESC_SIZE                        (109 + 8)
 #endif
 #define AUDIO_INTERFACE_DESC_SIZE                     9
 #define USB_AUDIO_DESC_SIZ                            0x09

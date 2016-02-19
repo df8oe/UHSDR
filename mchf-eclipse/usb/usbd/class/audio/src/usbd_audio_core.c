@@ -215,10 +215,11 @@ uint8_t  AudioCtlCmd = 0;
 uint32_t AudioCtlLen = 0;
 uint8_t  AudioCtlUnit = 0;
 
+extern USBD_Class_cb_TypeDef  USBD_CDC_cb;
 static uint32_t PlayFlag = 0;
 static uint32_t SendFlag = 0;
 
-static __IO uint32_t  usbd_audio_AltSet[AUDIO_TOTAL_IF_NUM];
+static __IO uint32_t  usbd_audio_AltSet[USBD_ITF_MAX_NUM];
 // each interface could potentially be audio and have alternate setting, EP0 gets "unused" entry
 
 
@@ -266,10 +267,19 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x32,                                 /* bMaxPower = 100 mA*/
 		/* 09 byte*/
 
+		USB_INTERFACE_ASSOCIATION_DESC_SIZE,
+		USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE,
+		AUDIO_CTRL_IF,						  /* first interface */
+		AUDIO_TOTAL_IF_NUM,					  /* bNumInterfaces */
+		USB_DEVICE_CLASS_AUDIO,               /* bInterfaceClass */
+		AUDIO_SUBCLASS_AUDIOCONTROL,          /* bInterfaceSubClass */
+		AUDIO_PROTOCOL_UNDEFINED,             /* bInterfaceProtocol */
+		0x00,								  /* String Index */
+
 		/* USB Sound Standard interface descriptor */
 		AUDIO_INTERFACE_DESC_SIZE,            /* bLength */
 		USB_INTERFACE_DESCRIPTOR_TYPE,        /* bDescriptorType */
-		0x00,                                 /* bInterfaceNumber */
+		AUDIO_CTRL_IF,                                 /* bInterfaceNumber */
 		0x00,                                 /* bAlternateSetting */
 		0x00,                                 /* bNumEndpoints */
 		USB_DEVICE_CLASS_AUDIO,               /* bInterfaceClass */
@@ -297,8 +307,8 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x00,
 #ifdef AUDIO_IN
 		0x02,                                 /* bInCollection */
-		0x01,                                 /* baInterfaceNr */
-		0x02,        							/* baInterfaceNr */
+		AUDIO_OUT_IF,                                 /* baInterfaceNr */
+		AUDIO_IN_IF,        							/* baInterfaceNr */
 #else
 		0x01,                                 /* bInCollection */
 		0x01,                                 /* baInterfaceNr */
@@ -370,7 +380,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		/* Interface 1, Alternate Setting 0                                             */
 		AUDIO_INTERFACE_DESC_SIZE,  /* bLength */
 		USB_INTERFACE_DESCRIPTOR_TYPE,        /* bDescriptorType */
-		0x01,                                 /* bInterfaceNumber */
+		AUDIO_OUT_IF,                                 /* bInterfaceNumber */
 		0x00,                                 /* bAlternateSetting */
 		0x00,                                 /* bNumEndpoints */
 		USB_DEVICE_CLASS_AUDIO,               /* bInterfaceClass */
@@ -383,7 +393,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		/* Interface 1, Alternate Setting 1                                           */
 		AUDIO_INTERFACE_DESC_SIZE,  /* bLength */
 		USB_INTERFACE_DESCRIPTOR_TYPE,        /* bDescriptorType */
-		0x01,                                 /* bInterfaceNumber */
+		AUDIO_OUT_IF,                                 /* bInterfaceNumber */
 		0x01,                                 /* bAlternateSetting */
 		0x01,                                 /* bNumEndpoints */
 		USB_DEVICE_CLASS_AUDIO,               /* bInterfaceClass */
@@ -440,7 +450,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		/* USB Microphone Standard AS Interface Descriptor (Alt. Set. 0) (CODE == 3)*/ //zero-bandwidth interface
 		0x09,                         // Size of the descriptor, in bytes (bLength)
 		USB_INTERFACE_DESCRIPTOR_TYPE,    // INTERFACE descriptor type (bDescriptorType) 0x04
-		0x02, // Index of this interface. (bInterfaceNumber) ?????????? (3<) (1<<) (1<M)
+		AUDIO_IN_IF, // Index of this interface. (bInterfaceNumber) ?????????? (3<) (1<<) (1<M)
 		0x00,                         // Index of this alternate setting. (bAlternateSetting)
 		0x00,                         // 0 endpoints.   (bNumEndpoints)
 		USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
@@ -451,7 +461,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		/* USB Microphone Standard AS Interface Descriptor (Alt. Set. 1) (CODE == 4)*/
 		0x09,                         // Size of the descriptor, in bytes (bLength)
 		USB_INTERFACE_DESCRIPTOR_TYPE,     // INTERFACE descriptor type (bDescriptorType)
-		0x02, // Index of this interface. (bInterfaceNumber)
+		AUDIO_IN_IF, // Index of this interface. (bInterfaceNumber)
 		0x01,                         // Index of this alternate setting. (bAlternateSetting)
 		0x01,                         // 1 endpoint (bNumEndpoints)
 		USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
@@ -545,7 +555,8 @@ static uint8_t  usbd_audio_Init (void  *pdev,
 			(uint8_t*)IsocOutBuff,
 			AUDIO_OUT_PACKET);
 #endif
-return USBD_OK;
+	// return USBD_OK;
+	return USBD_CDC_cb.Init(pdev,cfgidx);
 }
 
 /**
@@ -570,7 +581,8 @@ static uint8_t  usbd_audio_DeInit (void  *pdev,
 		return USBD_FAIL;
 	}
 
-	return USBD_OK;
+	// return USBD_OK;
+	return USBD_CDC_cb.Init(pdev,cfgidx);
 }
 
 /**
@@ -590,19 +602,23 @@ static uint8_t  usbd_audio_Setup (void  *pdev,
 	{
 	/* AUDIO Class Requests -------------------------------*/
 	case USB_REQ_TYPE_CLASS :
-		switch (req->bRequest)
-		{
-		case AUDIO_REQ_GET_CUR:
-			AUDIO_Req_GetCurrent(pdev, req);
-			break;
+		if (req->wIndex == CDC_CTRL_IF) {
+			return USBD_CDC_cb.Setup(pdev,req);
+		} else {
+			switch (req->bRequest)
+			{
+			case AUDIO_REQ_GET_CUR:
+				AUDIO_Req_GetCurrent(pdev, req);
+				break;
 
-		case AUDIO_REQ_SET_CUR:
-			AUDIO_Req_SetCurrent(pdev, req);
-			break;
+			case AUDIO_REQ_SET_CUR:
+				AUDIO_Req_SetCurrent(pdev, req);
+				break;
 
-		default:
-			USBD_CtlError (pdev, req);
-			return USBD_FAIL;
+			default:
+				USBD_CtlError (pdev, req);
+				return USBD_FAIL;
+			}
 		}
 		break;
 
@@ -634,12 +650,12 @@ static uint8_t  usbd_audio_Setup (void  *pdev,
 				break;
 
 			case USB_REQ_SET_INTERFACE :
-				if ((uint8_t)(req->wValue) < AUDIO_TOTAL_IF_NUM)
+				if ((uint8_t)(req->wValue) < USBD_ITF_MAX_NUM)
 				{
 					usbd_audio_AltSet[req->wIndex] = (uint8_t)(req->wValue);
 #ifdef AUDIO_IN
 // interface 2 is AUDIO_IN
-					if (usbd_audio_AltSet[2] == 1)
+					if (usbd_audio_AltSet[AUDIO_IN_IF] == 1)
 					{
 						if (!SendFlag) {  SendFlag = 1; }
 					}
@@ -684,8 +700,7 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 			AudioCtlLen = 0;
 		}
 	}
-
-	return USBD_OK;
+	return USBD_CDC_cb.EP0_RxReady(pdev);
 }
 
 /**
@@ -706,6 +721,9 @@ static uint8_t  usbd_audio_DataIn (void *pdev, uint8_t epnum)
 		audio_in_fill_ep_fifo(pdev);
 	}
 #endif
+	if (epnum == (CDC_IN_EP & 0x7f)) {
+		return USBD_CDC_cb.DataIn(pdev,epnum);
+	}
 	return USBD_OK;
 }
 
@@ -746,6 +764,9 @@ static uint8_t  usbd_audio_DataOut (void *pdev, uint8_t epnum)
 			/* Enable start of Streaming */
 			PlayFlag = 1;
 		}
+	}
+	if (epnum == (CDC_OUT_EP & 0x7f)) {
+		return USBD_CDC_cb.DataOut(pdev,epnum);
 	}
 
 	return USBD_OK;
@@ -804,7 +825,7 @@ static uint8_t  usbd_audio_SOF (void *pdev)
 		}
 	}
 
-	return USBD_OK;
+	return USBD_CDC_cb.SOF(pdev);
 }
 
 /**
