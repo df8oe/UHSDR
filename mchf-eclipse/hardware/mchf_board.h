@@ -1516,6 +1516,7 @@ typedef struct TransceiverState
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //
+extern __IO TransceiverState ts;
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 

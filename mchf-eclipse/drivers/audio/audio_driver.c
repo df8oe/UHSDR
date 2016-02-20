@@ -2441,8 +2441,13 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 			arm_fill_q15(0, src, size);
 		}
 		else	{
-			if(!ts.dvmode)
+			if(!ts.dvmode) {
+				// TODO: HACK: simply overwrite input buffer with USB data instead of using data from I2S bus
+				// I2S just delivers the "timing".
+				// needs to be used only if USB digital line in is selected.
+				audio_out_fill_tx_buffer(src,size/2);
 				audio_tx_processor(src,dst,size);
+			}
 			else
 				audio_dv_tx_processor(src,dst,size);
 		}

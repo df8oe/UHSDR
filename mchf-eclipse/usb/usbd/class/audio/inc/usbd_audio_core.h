@@ -148,7 +148,7 @@ typedef struct _Audio_Fops
 #define SAMPLE_FREQ(frq)               (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
 
 extern void audio_in_put_buffer(int16_t sample);
-
+extern void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len);
 /**
   * @}
   */ 
