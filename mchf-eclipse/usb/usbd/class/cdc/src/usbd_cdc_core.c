@@ -449,10 +449,10 @@ static uint8_t  usbd_cdc_Init (void  *pdev,
               CDC_CMD_PACKET_SZE,
               USB_OTG_EP_INT);
   
-  pbuf = (uint8_t *)USBD_DeviceDesc;
+/*  pbuf = (uint8_t *)USBD_DeviceDesc;
   pbuf[4] = DEVICE_CLASS_CDC;
   pbuf[5] = DEVICE_SUBCLASS_CDC;
-  
+*/
   /* Initialize the Interface physical components */
   APP_FOPS.pIf_Init();
 
