@@ -1,7 +1,4 @@
 
-# Put your stlink folder here so make burn will work.
-STLINK=~/stlink.git
-
 SRCS=main.c command.c flash_if.c stm32f4xx_it.c system_stm32f4xx.c usb_bsp.c usbh_usr.c
 
 # Library modules
