@@ -53,6 +53,10 @@
 #define USB_SIZ_DEVICE_DESC                     18
 #define USB_SIZ_STRING_LANGID                   4
 
+#define USB_INTERFACE_ASSOCIATION_DESCRIPTOR_TYPE 0x0B
+#define USB_INTERFACE_ASSOCIATION_DESC_SIZE 0x08
+
+#define USB_DEVICE_CLASS_MISCELLANEOUS 0xEF
 /**
   * @}
   */ 
