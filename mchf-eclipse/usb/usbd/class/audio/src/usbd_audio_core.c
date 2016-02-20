@@ -150,33 +150,33 @@ uint8_t  IsocOutBuff [TOTAL_OUT_BUF_SIZE * 2];
 uint8_t* IsocOutWrPtr = IsocOutBuff;
 uint8_t* IsocOutRdPtr = IsocOutBuff;
 
-#define USB_AUDIO_NUM_BUF 16
-#define USB_AUDIO_PKT_SIZE   (AUDIO_IN_PACKET/2)
-#define USB_AUDIO_BUF_SIZE (USB_AUDIO_NUM_BUF * USB_AUDIO_PKT_SIZE)
+#define USB_AUDIO_OUT_NUM_BUF 8
+#define USB_AUDIO_IN_PKT_SIZE   (AUDIO_IN_PACKET/2)
+#define USB_AUDIO_IN_BUF_SIZE (USB_AUDIO_OUT_NUM_BUF * USB_AUDIO_IN_PKT_SIZE)
 
-static volatile int16_t RecBuf[USB_AUDIO_BUF_SIZE]; //buffer for filtered PCM data from Recv.
-static int16_t Silence[USB_AUDIO_PKT_SIZE];
-static volatile uint16_t buffer_tail;
-static volatile uint16_t buffer_head;
-static volatile uint16_t buffer_overflow;
+static volatile int16_t in_buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
+static int16_t Silence[USB_AUDIO_IN_PKT_SIZE];
+static volatile uint16_t in_buffer_tail;
+static volatile uint16_t in_buffer_head;
+static volatile uint16_t in_buffer_overflow;
 
 
 void audio_in_put_buffer(int16_t sample) {
-	RecBuf[buffer_head] = sample;
-	buffer_head=  (buffer_head + 1) %USB_AUDIO_BUF_SIZE;
+	in_buffer[in_buffer_head] = sample;
+	in_buffer_head=  (in_buffer_head + 1) %USB_AUDIO_IN_BUF_SIZE;
 	// now test buffer full
-	if (buffer_head == buffer_tail) {
+	if (in_buffer_head == in_buffer_tail) {
 		// ok. We loose data now, should never ever happen, but so what
 		// will cause minor distortion if only a few bytes.
-		buffer_overflow++;
+		in_buffer_overflow++;
 	}
 }
 volatile int16_t* audio_in_buffer_next_pkt() {
 	uint16_t room;
-	uint16_t temp_head = buffer_head;
-	room = ((((temp_head < buffer_tail)?USB_AUDIO_BUF_SIZE:0) + temp_head) - buffer_tail);
-	if (room >= USB_AUDIO_PKT_SIZE) {
-		return &RecBuf[buffer_tail];
+	uint16_t temp_head = in_buffer_head;
+	room = ((((temp_head < in_buffer_tail)?USB_AUDIO_IN_BUF_SIZE:0) + temp_head) - in_buffer_tail);
+	if (room >= USB_AUDIO_IN_PKT_SIZE) {
+		return &in_buffer[in_buffer_tail];
 	} else
 	{
 
@@ -187,21 +187,19 @@ void audio_in_buffer_pop_pkt(int16_t* ptr) {
 	if (ptr) {
 		// there was data and pkt has been used
 		// free  the space
-		buffer_tail = (buffer_tail+USB_AUDIO_PKT_SIZE)%USB_AUDIO_BUF_SIZE;
+		in_buffer_tail = (in_buffer_tail+USB_AUDIO_IN_PKT_SIZE)%USB_AUDIO_IN_BUF_SIZE;
 	}
 }
 
-uint32_t count_fifo;
 static void audio_in_fill_ep_fifo(void *pdev) {
-	count_fifo++;
 	uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
-	static uint16_t fill_buffer = (USB_AUDIO_NUM_BUF/2) + 1;
+	static uint16_t fill_buffer = (USB_AUDIO_OUT_NUM_BUF/2) + 1;
 	if (fill_buffer == 0 && pkt) {
 		DCD_EP_Tx (pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
 		audio_in_buffer_pop_pkt((int16_t*)pkt);
 	} else {
-		if (pkt == NULL) {
-			fill_buffer = USB_AUDIO_NUM_BUF/2 + 1;
+		if (fill_buffer == 0) {
+			fill_buffer = USB_AUDIO_OUT_NUM_BUF/2 + 1;
 		}
 		fill_buffer--;
 		// transmit something if we do not have enough in buffer
