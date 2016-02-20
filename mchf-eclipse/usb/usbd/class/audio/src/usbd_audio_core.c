@@ -150,9 +150,9 @@ uint8_t  IsocOutBuff [TOTAL_OUT_BUF_SIZE * 2];
 uint8_t* IsocOutWrPtr = IsocOutBuff;
 uint8_t* IsocOutRdPtr = IsocOutBuff;
 
-#define USB_AUDIO_OUT_NUM_BUF 8
+#define USB_AUDIO_IN_NUM_BUF 8
 #define USB_AUDIO_IN_PKT_SIZE   (AUDIO_IN_PACKET/2)
-#define USB_AUDIO_IN_BUF_SIZE (USB_AUDIO_OUT_NUM_BUF * USB_AUDIO_IN_PKT_SIZE)
+#define USB_AUDIO_IN_BUF_SIZE (USB_AUDIO_IN_NUM_BUF * USB_AUDIO_IN_PKT_SIZE)
 
 static volatile int16_t in_buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
 static int16_t Silence[USB_AUDIO_IN_PKT_SIZE];
@@ -193,13 +193,13 @@ void audio_in_buffer_pop_pkt(int16_t* ptr) {
 
 static void audio_in_fill_ep_fifo(void *pdev) {
 	uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
-	static uint16_t fill_buffer = (USB_AUDIO_OUT_NUM_BUF/2) + 1;
+	static uint16_t fill_buffer = (USB_AUDIO_IN_NUM_BUF/2) + 1;
 	if (fill_buffer == 0 && pkt) {
 		DCD_EP_Tx (pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
 		audio_in_buffer_pop_pkt((int16_t*)pkt);
 	} else {
 		if (fill_buffer == 0) {
-			fill_buffer = USB_AUDIO_OUT_NUM_BUF/2 + 1;
+			fill_buffer = USB_AUDIO_IN_NUM_BUF/2 + 1;
 		}
 		fill_buffer--;
 		// transmit something if we do not have enough in buffer
@@ -637,6 +637,8 @@ static uint8_t  usbd_audio_Init (void  *pdev,
 
 	/* Prepare Out endpoint to receive audio data */
 #ifdef AUDIO_OUT
+	IsocOutRdPtr = IsocOutBuff;
+	IsocOutWrPtr = IsocOutBuff;
 	DCD_EP_PrepareRx(pdev,
 			AUDIO_OUT_EP,
 			(uint8_t*)IsocOutBuff,
@@ -823,9 +825,20 @@ static uint8_t  usbd_audio_DataIn (void *pdev, uint8_t epnum)
  */
 static uint8_t  usbd_audio_DataOut (void *pdev, uint8_t epnum)
 {     
+
 	if (epnum == AUDIO_OUT_EP)
 	{
-		/* Increment the Buffer pointer or roll it back when all buffers are full */
+		// mchf_board_green_led(PlayFlag != 0);
+		// during init the first buffer part was already set up to receive data
+		// if we end up here, one chunk of data has arrived. Thats cool. And it is
+		// a good time to hand over the packet to the next layer.
+		// we do that now, since we can be sure that there is at least one packet of
+		// data.
+		// The buffer implementation is quite interesting, since it uses
+		// OUT_PACKET_NUM + 1 slots but allocates OUT_PACKET_NUM *  2 slots
+		// just to be on the save side I guess. Don't know which side this is, though.
+
+		/* If all available buffers have been consumed, stop playing */
 		if (IsocOutWrPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
 		{/* All buffers are full: roll back */
 			IsocOutWrPtr = IsocOutBuff;
@@ -845,12 +858,35 @@ static uint8_t  usbd_audio_DataOut (void *pdev, uint8_t epnum)
 				(uint8_t*)(IsocOutWrPtr),
 				AUDIO_OUT_PACKET);
 
-		/* Trigger the start of streaming only when half buffer is full */
-		if ((PlayFlag == 0) && (IsocOutWrPtr >= (IsocOutBuff + ((AUDIO_OUT_PACKET * OUT_PACKET_NUM) / 2))))
+		if (PlayFlag)
 		{
-			/* Enable start of Streaming */
-			PlayFlag = 1;
+			PlayFlag = 5;
+			/* Start playing received packet */
+			AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutRdPtr),  /* Samples buffer pointer */
+					AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
+					AUDIO_CMD_PLAY);           /* Command to be processed */
+
+			/* Increment the Buffer pointer or roll it back when all buffers all full */
+			if (IsocOutRdPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
+			{/* Roll back to the start of buffer */
+				IsocOutRdPtr = IsocOutBuff;
+			} else
+			{/* Increment to the next sub-buffer */
+				IsocOutRdPtr += AUDIO_OUT_PACKET;
+			}
 		}
+
+		/* Increment the Buffer pointer or roll it back when all buffers are full */
+
+		/* Trigger the start of streaming only when half buffer is full */
+		if (PlayFlag == 0)  {
+			if (IsocOutWrPtr >= (IsocOutBuff + ((AUDIO_OUT_PACKET * OUT_PACKET_NUM) / 2))) {
+				/* Enable start of Streaming */
+				PlayFlag = 5;
+			}
+		}
+
+		// mchf_board_green_led(0);
 	}
 	if (epnum == (CDC_OUT_EP & 0x7f)) {
 		return USBD_CDC_cb.DataOut(pdev,epnum);
@@ -878,26 +914,9 @@ static uint8_t  usbd_audio_SOF (void *pdev)
 		SendFlag = 2;
 	}
 #endif
-	if (PlayFlag)
-	{
-
-		/* Start playing received packet */
-		AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutRdPtr),  /* Samples buffer pointer */
-				AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
-				AUDIO_CMD_PLAY);           /* Command to be processed */
-
-		/* Increment the Buffer pointer or roll it back when all buffers all full */
-		if (IsocOutRdPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
-		{/* Roll back to the start of buffer */
-			IsocOutRdPtr = IsocOutBuff;
-		}
-		{/* Increment to the next sub-buffer */
-			IsocOutRdPtr += AUDIO_OUT_PACKET;
-		}
-
-		/* If all available buffers have been consumed, stop playing */
-		if (IsocOutRdPtr == IsocOutWrPtr)
-		{
+	if (PlayFlag) {
+		PlayFlag--;
+		if (PlayFlag == 0) {
 			/* Pause the audio stream */
 			AUDIO_OUT_fops.AudioCmd((uint8_t*)(IsocOutBuff),   /* Samples buffer pointer */
 					AUDIO_OUT_PACKET,          /* Number of samples in Bytes */

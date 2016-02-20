@@ -142,25 +142,23 @@ enum USB_DIG_AUDIO {
   * @{
   */ 
 
-#define USB_AUDIO_OUT_NUM_BUF 8
+#define USB_AUDIO_OUT_NUM_BUF 16
 #define USB_AUDIO_OUT_PKT_SIZE   (AUDIO_OUT_PACKET/2)
 #define USB_AUDIO_OUT_BUF_SIZE (USB_AUDIO_OUT_NUM_BUF * USB_AUDIO_OUT_PKT_SIZE)
 
 static volatile int16_t out_buffer[USB_AUDIO_OUT_BUF_SIZE]; //buffer for filtered PCM data from Recv.
-static int16_t Silence[USB_AUDIO_OUT_PKT_SIZE];
 static volatile uint16_t out_buffer_tail;
 static volatile uint16_t out_buffer_head;
 static volatile uint16_t out_buffer_overflow;
 
-uint32_t data_received;
-
 static void audio_out_put_buffer(int16_t sample) {
 
-	out_buffer[out_buffer_head] = sample;
-	data_received++;
-	out_buffer_head=  (out_buffer_head + 1) %USB_AUDIO_OUT_BUF_SIZE;
-	// now test buffer full
-	if (out_buffer_head == out_buffer_tail) {
+	uint32_t next_head = (out_buffer_head + 1) %USB_AUDIO_OUT_BUF_SIZE;
+
+	if (next_head != out_buffer_head) {
+		out_buffer[out_buffer_head] = sample;
+		out_buffer_head = next_head;
+	} else {
 		// ok. We loose data now, should never ever happen, but so what
 		// will cause minor distortion if only a few bytes.
 		out_buffer_overflow++;
@@ -187,18 +185,13 @@ static void audio_out_buffer_pop_pkt(volatile int16_t* ptr, uint32_t len) {
 }
 
 /* len is length in 16 bit samples */
-
-uint32_t silence_delivered;
-uint32_t data_delivered;
-uint32_t last_streak;
-
 void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len) {
 	volatile int16_t *pkt = audio_out_buffer_next_pkt(len);
 
 	static uint16_t fill_buffer = 1;
 	if (fill_buffer == 0 && pkt) {
-		data_delivered+=len;
-		for (;len;len--) {
+		uint32_t idx;
+		for (idx = len;idx;idx--) {
 			*buffer++ = *pkt++;
 		}
 		audio_out_buffer_pop_pkt(pkt,len);
@@ -206,12 +199,7 @@ void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len) {
 		if (fill_buffer == 0) {
 			fill_buffer = 1;
 		}
-		if (data_delivered) {
-			last_streak = data_delivered;
-			data_delivered = 0;
-		}
-		silence_delivered+=len;
-		if (audio_out_buffer_next_pkt(USB_AUDIO_OUT_BUF_SIZE/2) != NULL) {
+		if (audio_out_buffer_next_pkt((USB_AUDIO_OUT_BUF_SIZE*2)/3) != NULL) {
 			fill_buffer = 0;
 		}
 		// Deliver silence if not enough data is stored in buffer
