@@ -4568,9 +4568,9 @@ static void UiDriverTimeScheduler(void)
 				//
 				if(ts.dmod_mode != DEMOD_CW)
 					UiDriverChangeCmpLevel(1);	// enable compression adjust if voice mode
-/*				else
+				else
 					UiDriverChangeStGain(1);	// enable sidetone gain if CW mode
-*/
+
 				//
 				// change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
 				//
@@ -4579,9 +4579,9 @@ static void UiDriverTimeScheduler(void)
 				UiDriverChangeRit(0);
 				if(ts.dmod_mode != DEMOD_CW)
 					UIDriverChangeAudioGain(1);		// enable audio gain
-/*				else
+				else
 					UiDriverChangeKeyerSpeed(1);	// enable keyer speed if it was CW mode
-*/
+
 			}
 		}
 		else	{	// In RX mode
@@ -4594,9 +4594,9 @@ static void UiDriverTimeScheduler(void)
 					UiDriverChangeAfGain(1);	// Yes, audio gain enabled
 					if(ts.dmod_mode != DEMOD_CW)
 						UiDriverChangeCmpLevel(0);	// disable compression level (if in voice mode)
-/*					else
+					else
 						UiDriverChangeStGain(0);	// disable sidetone gain (if in CW mode)
-*/
+
 				}
 				//
 				ts.enc_thr_mode = enc_three_mode;
@@ -4604,9 +4604,9 @@ static void UiDriverTimeScheduler(void)
 					UiDriverChangeRit(1);			// enable RIT
 					if(ts.dmod_mode != DEMOD_CW)
 						UIDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
-/*					else
+					else
 						UiDriverChangeKeyerSpeed(0);	// disable keyer speed if it was CW mode
-*/
+
 				}
 				was_tx = 0;		// clear flag indicating that we'd entered TX mode
 			}
@@ -5923,7 +5923,7 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 static void UiDriverChangeAfGain(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	if(enabled)
 		color = White;
@@ -5949,7 +5949,7 @@ static void UiDriverChangeAfGain(uchar enabled)
 void UiDriverChangeStGain(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	if(enabled)
 		color = White;
@@ -5974,7 +5974,7 @@ void UiDriverChangeStGain(uchar enabled)
 void UiDriverChangeCmpLevel(uchar enabled)
 {
 	ushort 	color = White;
-	char	temp[100];
+	char	temp[5];
 
 
 	UiLcdHy28_DrawEmptyRect( POS_SG_IND_X,POS_SG_IND_Y,13,49,Grey);
@@ -6008,7 +6008,7 @@ void UiDriverChangeCmpLevel(uchar enabled)
 static void UiDriverChangeDSPMode(void)
 {
 	ushort color = White;
-	char txt[32];
+	char txt[9];
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
@@ -6049,7 +6049,7 @@ static void UiDriverChangeDSPMode(void)
 static void UiDriverChangeDigitalMode(void)
 {
 	ushort color = White;
-	char txt[32];
+	char txt[9];
 //	ulong	x_off = 0;
 
 	// Draw line for box
@@ -6130,28 +6130,30 @@ static void UiDriverChangeDigitalMode(void)
 static void UiDriverChangePowerLevel(void)
 {
 	ushort color = White;
-
+	char txt[9];
+	
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	switch(ts.power_level)
 	{
 		case PA_LEVEL_5W:
-			UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),"   5W  ",color,Blue,0);
+			sprintf(txt,"%s","   5W  ");
 			break;
 		case PA_LEVEL_2W:
-			UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),"   2W  ",color,Blue,0);
+			sprintf(txt,"%s","   2W  ");
 			break;
 		case PA_LEVEL_1W:
-			UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),"   1W  ",color,Blue,0);
+			sprintf(txt,"%s","   1W  ");
 			break;
 		case PA_LEVEL_0_5W:
-			UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),"  0.5W ",color,Blue,0);
+			sprintf(txt,"%s","  0.5W ");
 			break;
 		default:
-			UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),"  FULL ",color,Blue,0);
+			sprintf(txt,"%s","  FULL ");
 			break;
 	}
+	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
 
 	// Set TX power factor - to reflect changed power
 	UiDriverSetBandPowerFactor(ts.band);
@@ -6167,7 +6169,7 @@ static void UiDriverChangePowerLevel(void)
 void UiDriverChangeKeyerSpeed(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	if(enabled)
 		color = White;
@@ -6179,7 +6181,7 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 	else
 		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",Grey1,Grey,0);
 
-	memset(temp,0,100);
+//	memset(temp,0,100);
 	sprintf(temp,"%2d",ts.keyer_speed);
 
 	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
@@ -6200,7 +6202,7 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 void UIDriverChangeAudioGain(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	if(enabled)
 		color = White;
@@ -6221,7 +6223,7 @@ void UIDriverChangeAudioGain(uchar enabled)
 		strcpy(temp, "???");
 	}
 	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,enabled?Black:Grey1,Grey,0);
-	memset(temp,0,100);
+//	memset(temp,0,100);
 
 	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Mic gain mode
 		sprintf(temp,"%2d",ts.tx_mic_gain);
@@ -6242,7 +6244,7 @@ void UIDriverChangeAudioGain(uchar enabled)
 void UiDriverChangeRfGain(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	if(enabled)
 		color = White;
@@ -6293,7 +6295,7 @@ void UiDriverChangeRfGain(uchar enabled)
 static void UiDriverChangeSigProc(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[100];
+	char	temp[5];
 
 	UiLcdHy28_DrawEmptyRect( POS_RA_IND_X,POS_RA_IND_Y,13,49,Grey);		// draw box
 
@@ -6357,7 +6359,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverChangeRit(uchar enabled)
 {
-	char	temp[100];
+	char	temp[5];
 	ushort 	color = Grey;
 
 	if(enabled)
@@ -6390,7 +6392,7 @@ static void UiDriverChangeRit(uchar enabled)
 void UiDriverChangeFilter(uchar ui_only_update)
 {
 	ushort fcolor = White;
-	char txt[16];
+	char txt[9];
 
 	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ",	White, 	Orange, 0);
 
