@@ -1513,7 +1513,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L && ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
