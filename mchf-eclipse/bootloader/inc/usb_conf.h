@@ -169,8 +169,8 @@
 #define RX_FIFO_FS_SIZE   128
 #define TXH_NP_FS_FIFOSIZ  96
 #define TXH_P_FS_FIFOSIZ   96
-#define TXH_NP_HS_FIFOSIZ  96
-#define TXH_P_HS_FIFOSIZ   96
+#define TXH_NP_HS_FIFOSIZ  384
+#define TXH_P_HS_FIFOSIZ   384
 
 /****************** USB OTG FS CONFIGURATION **********************************/
 #ifdef USB_OTG_FS_CORE
@@ -186,6 +186,7 @@
 
 /****************** USB OTG MISC CONFIGURATION ********************************/
 //#define VBUS_SENSING_ENABLED
+//#define USB_OTG_INTERNAL_VBUS_ENABLED
 
 /****************** USB OTG MODE CONFIGURATION ********************************/
 #define USE_HOST_MODE

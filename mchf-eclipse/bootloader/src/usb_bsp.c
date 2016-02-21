@@ -122,6 +122,8 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_OTG_HS, ENABLE);
 
+//	RCC_APB1PeriphResetCmd(RCC_APB1Periph_PWR,ENABLE);
+
  #endif //USB_OTG_HS
 
   /* Intialize Timer for delay function */
