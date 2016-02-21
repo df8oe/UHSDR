@@ -2067,7 +2067,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 
 				// To TX
 				ts.txrx_mode = TRX_MODE_TX;
-				ui_driver_toggle_tx();				// tune
+				ui_driver_toggle_tx();				// tune ON
 
 				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Red,Black,0);
 				//
@@ -2088,7 +2088,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				//
 				// Back to RX
 				ts.txrx_mode = TRX_MODE_RX;
-				ui_driver_toggle_tx();				// tune
+				ui_driver_toggle_tx();				// tune OFF
 				UiDriverChangePowerLevel();			// former position was upper commented out position
 										// at this position display error in CW when using LCD in parallel
 										// mode and working power is FULL and TUNE power is 5W
