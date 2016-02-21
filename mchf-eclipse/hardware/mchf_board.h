@@ -714,7 +714,9 @@ enum {
 #define TX_AUDIO_MIC			0
 #define TX_AUDIO_LINEIN_L		1
 #define TX_AUDIO_LINEIN_R		2
-#define TX_AUDIO_MAX_ITEMS		2
+#define TX_AUDIO_DIG			3
+#define TX_AUDIO_DIGIQ			4
+#define TX_AUDIO_MAX_ITEMS		4
 //
 #define	LINE_GAIN_MIN			3
 #define	LINE_GAIN_MAX			31

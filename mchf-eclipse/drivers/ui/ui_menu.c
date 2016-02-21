@@ -1448,12 +1448,17 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						TX_AUDIO_MIC,
 						1
 						);
-		if(ts.tx_audio_source == TX_AUDIO_MIC)
-			strcpy(options, "   MIC");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L)
-			strcpy(options, "LINE-L");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)
-			strcpy(options, "LINE-R");
+		if(ts.tx_audio_source == TX_AUDIO_MIC) {
+			strcpy(options, "    MIC");
+		} else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L) {
+			strcpy(options, " LINE-L");
+		} else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {
+			strcpy(options, " LINE-R");
+		} else if(ts.tx_audio_source == TX_AUDIO_DIG) {
+			strcpy(options, " DIGITAL");
+		} else if(ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+			strcpy(options, " DIG I/Q");
+		}
 
 		if(fchange)	{		// if there was a change, do update of on-screen information
 			if(ts.dmod_mode == DEMOD_CW)
@@ -1461,6 +1466,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			else
 				UIDriverChangeAudioGain(0);
 		}
+
+		if((!ts.cat_mode_active) &&(ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIG)) {
+			// RED if CAT is not enabled
+			clr = Red;
+		}
+
 		break;
 	//
 	case MENU_MIC_GAIN:	// Mic Gain setting
@@ -1493,8 +1504,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UIDriverChangeAudioGain(0);
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_MIC)	// Orange if not in MIC-IN mode
+		if(ts.tx_audio_source != TX_AUDIO_MIC) {	// Orange if not in MIC-IN mode
 			clr = Orange;
+		}
 		//
 		sprintf(options, "   %u", ts.tx_mic_gain);
 		break;

@@ -1425,6 +1425,10 @@ static void UiDriverProcessKeyboard(void)
 							ts.tx_audio_source = TX_AUDIO_LINEIN_L;
 						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
 							ts.tx_audio_source = TX_AUDIO_LINEIN_R;
+						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R)
+							ts.tx_audio_source = TX_AUDIO_DIG;
+						else if (ts.tx_audio_source == TX_AUDIO_DIG)
+							ts.tx_audio_source = TX_AUDIO_DIGIQ;
 						else
 							ts.tx_audio_source = TX_AUDIO_MIC;
 						//
@@ -6203,18 +6207,20 @@ void UIDriverChangeAudioGain(uchar enabled)
 
 	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
 
-	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Microphone gain
+	if(ts.tx_audio_source == TX_AUDIO_MIC) {		// Microphone gain
 		strcpy(temp, "MIC");
-	else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)										// Line gain
+	} else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L) {										// Line gain
 		strcpy(temp, "L>L");
-	else
+	}else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R) {										// Line gain
 		strcpy(temp, "L>R");
-
-	if(enabled)
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,Black,Grey,0);
-	else
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,Grey1,Grey,0);
-
+	} else if (ts.tx_audio_source == TX_AUDIO_DIG) {										// Line gain
+		strcpy(temp, "DIG");
+	} else if (ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+		strcpy(temp, "DIQ");
+	} else {
+		strcpy(temp, "???");
+	}
+	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,enabled?Black:Grey1,Grey,0);
 	memset(temp,0,100);
 
 	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Mic gain mode
@@ -6774,7 +6780,7 @@ static void UiDriverFFTWindowFunction(char mode)
 				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
 			}
 			break;
-		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejér) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
+		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejï¿½r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
 				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
 			}

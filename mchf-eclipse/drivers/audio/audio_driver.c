@@ -1834,10 +1834,20 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	int16_t				*ptr;
 	uint32_t			pindex;
 
+	// If source is digital usb in, pull from USB buffer, discard line or mic audio and
+	// let the normal processing happen
+	if (ts.tx_audio_source == TX_AUDIO_DIG) {
+		audio_out_fill_tx_buffer(src,size);
+	}
+
 	// -----------------------------
 	// TUNE mode handler for CW mode
 	//
-	if((ts.tune) && ((ts.dmod_mode != DEMOD_LSB) && (ts.dmod_mode != DEMOD_AM) && (ts.dmod_mode != DEMOD_FM) && (ts.dmod_mode != DEMOD_USB)))	// Tune mode - but NOT in USB/LSB/AM/FM mode
+	if (!ts.tune && ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+		// Output I and Q as stereo, fill buffer and leave
+		audio_out_fill_tx_buffer(dst,size);
+		return;
+	} else if((ts.tune) && ((ts.dmod_mode != DEMOD_LSB) && (ts.dmod_mode != DEMOD_AM) && (ts.dmod_mode != DEMOD_FM) && (ts.dmod_mode != DEMOD_USB)))	// Tune mode - but NOT in USB/LSB/AM/FM mode
 	{
 		softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size/2);		// generate tone/modulation for TUNE
 		//
@@ -1916,11 +1926,13 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			}
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)		// Are we in LINE IN mode?
 			gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
-		else	{
+		else if (ts.tx_audio_source == TX_AUDIO_MIC)	{
 			gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
 			gain_calc /= MIC_GAIN_RESCALE;				// rescale microphone gain to a reasonable range
+		} else {
+			gain_calc = 1;
 		}
 		//
 		// Apply gain if not in TUNE mode
@@ -2445,7 +2457,6 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 				// TODO: HACK: simply overwrite input buffer with USB data instead of using data from I2S bus
 				// I2S just delivers the "timing".
 				// needs to be used only if USB digital line in is selected.
-				audio_out_fill_tx_buffer(src,size/2);
 				audio_tx_processor(src,dst,size);
 			}
 			else
