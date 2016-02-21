@@ -2050,7 +2050,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if((ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
 				ts.tune = 0;	// no TUNE mode in AM or FM!
 
-			// Change button color
+			// Enter TUNE mode
 			if(ts.tune)
 			{
 				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
@@ -2077,7 +2077,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
 				    {
 				    ts.power_level = ts.power_temp;					// restore tx level
-				    UiDriverChangePowerLevel();
+//				    UiDriverChangePowerLevel();
 				    }
 				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	// DDS off if voice mode
 					softdds_setfreq(0.0,ts.samp_rate,0);
@@ -2089,6 +2089,10 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				// Back to RX
 				ts.txrx_mode = TRX_MODE_RX;
 				ui_driver_toggle_tx();				// tune
+				UiDriverChangePowerLevel();			// former position was upper commented out position
+										// at this position display error in CW when using LCD in parallel
+										// mode and working power is FULL and TUNE power is 5W
+										// WARNING THIS WORKAROUND IS UGLY
 
 				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);
 				//
