@@ -51,14 +51,22 @@
   * @{
   */ 
 #define USBD_AUDIO_FREQ 48000
-#define USBD_IN_AUDIO_FREQ 16000
+// this is fixed to match the I2S Frequency
+#define USBD_AUDIO_OUT_CHANNELS 2
+#define USBD_AUDIO_IN_OUT_DIV 1
+// USBD_IN_AUDIO_IN_OUT_DIV must be set to an integer number between 3 and 1
+// in order to keep within the limits of the existing code in audio_driver.c audio_rx_processor
+
+#define USBD_AUDIO_IN_CHANNELS 2
+#define USBD_AUDIO_IN_FREQ (USBD_AUDIO_FREQ/USBD_AUDIO_IN_OUT_DIV)
+
 
 
 
 
 /* AudioFreq * DataSize (2 bytes) * NumChannels (Stereo: 2) */
-#define AUDIO_OUT_PACKET                              (uint32_t)(((USBD_AUDIO_FREQ * 2 * 2) /1000)) 
-#define AUDIO_IN_PACKET                              (uint32_t)(((USBD_IN_AUDIO_FREQ * 1 * 2) /1000))
+#define AUDIO_OUT_PACKET                              (uint32_t)(((USBD_AUDIO_FREQ * USBD_AUDIO_OUT_CHANNELS * 2) /1000))
+#define AUDIO_IN_PACKET                              (uint32_t)(((USBD_AUDIO_IN_FREQ * USBD_AUDIO_IN_CHANNELS * 2) /1000))
 
 
 
@@ -143,8 +151,8 @@ typedef struct _Audio_Fops
   * @{
   */ 
 // this works only for 2channel 16 bit audio
-#define AUDIO_PACKET_SZE(frq)          (uint8_t)(((frq * 2 * 2)/1000) & 0xFF), \
-                                       (uint8_t)((((frq * 2 * 2)/1000) >> 8) & 0xFF)
+#define AUDIO_PACKET_SZE(frq,channels)          (uint8_t)(((frq * channels * 2)/1000) & 0xFF), \
+                                       (uint8_t)((((frq * channels * 2)/1000) >> 8) & 0xFF)
 #define SAMPLE_FREQ(frq)               (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
 
 extern void audio_in_put_buffer(int16_t sample);

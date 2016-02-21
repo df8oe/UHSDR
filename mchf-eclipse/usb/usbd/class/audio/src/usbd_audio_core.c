@@ -152,6 +152,7 @@ uint8_t* IsocOutRdPtr = IsocOutBuff;
 
 #define USB_AUDIO_IN_NUM_BUF 8
 #define USB_AUDIO_IN_PKT_SIZE   (AUDIO_IN_PACKET/2)
+// size in samples not size in bytes
 #define USB_AUDIO_IN_BUF_SIZE (USB_AUDIO_IN_NUM_BUF * USB_AUDIO_IN_PKT_SIZE)
 
 static volatile int16_t in_buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
@@ -447,7 +448,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x04,                         // ID of this Terminal.
 		0x01,0x02,                    // Terminal is Microphone (0x01,0x02)
 		0x00,                         // No association
-		0x01,                         // One channel
+		USBD_AUDIO_IN_CHANNELS,                         // One or two channel
 		0x00,0x00,                    // Mono sets no position bits
 		0x00,                         // Unused.
 		0x00,                         // Unused.
@@ -480,7 +481,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		/* Interface 1, Alternate Setting 1                                           */
 		AUDIO_INTERFACE_DESC_SIZE,  /* bLength */
 		USB_INTERFACE_DESCRIPTOR_TYPE,        /* bDescriptorType */
-		AUDIO_OUT_IF,                                 /* bInterfaceNumber */
+		AUDIO_OUT_IF,                         /* bInterfaceNumber */
 		0x01,                                 /* bAlternateSetting */
 		0x01,                                 /* bNumEndpoints */
 		USB_DEVICE_CLASS_AUDIO,               /* bInterfaceClass */
@@ -516,7 +517,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		USB_ENDPOINT_DESCRIPTOR_TYPE,         /* bDescriptorType */
 		AUDIO_OUT_EP,                         /* bEndpointAddress 1 out endpoint*/
 		USB_ENDPOINT_TYPE_ISOCHRONOUS,        /* bmAttributes */
-		AUDIO_PACKET_SZE(USBD_AUDIO_FREQ),    /* wMaxPacketSize in Bytes (Freq(Samples)*2(Stereo)*2(HalfWord)) */
+		AUDIO_PACKET_SZE(USBD_AUDIO_FREQ,USBD_AUDIO_OUT_CHANNELS),    /* wMaxPacketSize in Bytes (Freq(Samples)*2(Stereo)*2(HalfWord)) */
 		0x01,                                 /* bInterval */
 		0x00,                                 /* bRefresh */
 		0x00,                                 /* bSynchAddress */
@@ -569,11 +570,11 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		AUDIO_INTERFACE_DESCRIPTOR_TYPE,// CS_INTERFACE Descriptor Type (bDescriptorType) 0x24
 		AUDIO_STREAMING_FORMAT_TYPE,   // FORMAT_TYPE subtype. (bDescriptorSubtype) 0x02
 		0x01,                        // FORMAT_TYPE_I. (bFormatType)
-		0x01,                        // One channel.(bNrChannels)
+		USBD_AUDIO_IN_CHANNELS,                        // One or two channel.(bNrChannels)
 		0x02,                        // Two bytes per audio subframe.(bSubFrameSize)
 		0x10,                        // 16 bits per sample.(bBitResolution)
 		0x01,                        // One frequency supported. (bSamFreqType)
-		(USBD_IN_AUDIO_FREQ&0xFF),((USBD_IN_AUDIO_FREQ>>8)&0xFF),0x00,  // 16000Hz. (tSamFreq) (NOT COMPLETE!!!)
+		(USBD_AUDIO_IN_FREQ&0xFF),((USBD_AUDIO_IN_FREQ>>8)&0xFF),0x00,  // (tSamFreq) (NOT COMPLETE!!!)
 
 		/*  USB Microphone Standard Endpoint Descriptor (CODE == 8)*/ //Standard AS Isochronous Audio Data Endpoint Descriptor
 		0x09,                       // Size of the descriptor, in bytes (bLength)

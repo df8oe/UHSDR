@@ -1429,8 +1429,16 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		}
 		//
 		// 16 bit format - convert to float and increment
+		// we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+		if (ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+			if (i%USBD_AUDIO_IN_OUT_DIV == modulus) {
+				audio_in_put_buffer(*src);
+				audio_in_put_buffer(*(src+1));
+			}
+		}
 		ads.i_buffer[i] = (float32_t)*src++;
 		ads.q_buffer[i] = (float32_t)*src++;
+		// HACK: we have 48 khz sample frequency
 		//
 	}
 	//
@@ -1579,15 +1587,29 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			beep_accum = 0;
 		//
 		*dst++ = (int16_t)ads.b_buffer[i];		// Speaker channel (variable level)
-		// HACK: we have 48 khz sample frequency
-		if (i%3 == modulus) {
-			audio_in_put_buffer(ads.a_buffer[i]);
+
+		// Unless this is DIGITAL I/Q Mode, we sent processed audio
+		if (ts.tx_audio_source != TX_AUDIO_DIGIQ) {
+			if (i%USBD_AUDIO_IN_OUT_DIV == modulus) {
+				audio_in_put_buffer(ads.a_buffer[i]);
+				if (USBD_AUDIO_IN_CHANNELS == 2) {
+					audio_in_put_buffer(ads.a_buffer[i]);
+				}
+			}
 		}
 		*dst++ = (int16_t)ads.a_buffer[i++];		// LINE OUT (constant level)
 
 	}
-	modulus++;
-	modulus%=3;
+	// calculate the first index we read so that we are not loosing
+	// values.
+	// For 1 and 2,4 we do not need to shift modulus
+	// since (SIZE/2) % USBD_AUDIO_IN_OUT_DIV == 0
+	// if someone needs lower rates, just add formula or values
+	// but this would bring us down to less than 12khz bitrate
+	if (USBD_AUDIO_IN_OUT_DIV == 3) {
+		modulus++;
+		modulus%=USBD_AUDIO_IN_OUT_DIV;
+	}
 	//
 }
 
