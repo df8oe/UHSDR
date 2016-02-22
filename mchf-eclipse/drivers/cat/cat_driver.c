@@ -24,6 +24,7 @@
 #include "usbd_audio_core.h"
 #include "cat_driver.h"
 #include "ui_driver.h"
+#include "audio_driver.h"
 
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 
@@ -221,13 +222,17 @@ void CatDriverFT817CheckAndExecute() {
 			case 1: /* SET FREQ */
 			{
 				ulong f = 0;
+                ulong fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq():0;
+                // If we are in DIGITAL IQ Output mode, use real tune frequency frequency instead
+                // translated RX frequency
+
 				int fidx;
 				for (fidx = 0; fidx < 4; fidx++) {
 					f *= 100;
 					f +=  (ft817.req[fidx] >> 4) * 10 + (ft817.req[fidx] & 0x0f);
 				}
 				f *= 40;
-				df.tune_new = f;
+				df.tune_new = f - fdelta;
 				UiDriverUpdateFrequency(true,0);
 				resp[0] = 0;
 				bc = 1;
@@ -236,7 +241,10 @@ void CatDriverFT817CheckAndExecute() {
 
 			case 3: /* READ FREQ */
 			{
-				ulong f = (df.tune_new + 20)/ 40 ;
+			    ulong fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq():0;
+			    // If we are in DIGITAL IQ Output mode, send real tune frequency frequency instead
+			    // translated RX frequency
+				ulong f = (df.tune_new + fdelta  + 20)/ 40 ;
 				ulong fbcd = 0;
 				int fidx;
 				for (fidx = 0; fidx < 8; fidx++)
