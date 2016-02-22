@@ -345,7 +345,10 @@ void CatDriverFT817CheckAndExecute() {
 				bc = 1;
 				break;
 			case 247: /* F7 */
-				resp[0]=0x00;
+				// FT-817 responds 0xFF if not TX and 0x00 if TX
+				// This differs from KA7OEI description but has been verified
+				// with the real thing.
+				resp[0]=ts.txrx_mode == TRX_MODE_TX?0x00:0xFF;
 				bc = 1;
 				break;
 			case 255: /* FF sent out by HRD */
