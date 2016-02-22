@@ -51,6 +51,18 @@
 #include "filters/fir_rx_interpolate_16.h"	// filter for interpolate-by-16 operation
 #include "filters/fir_rx_interpolate_16_10kHz.h"	// This has relaxed LPF for the 10 kHz filter mode
 
+
+uint32_t audio_driver_xlate_freq() {
+  uint32_t fdelta = 0;
+  switch (ts.iq_freq_mode) {
+  case FREQ_IQ_CONV_P6KHZ: fdelta = 6000*4; break;
+  case FREQ_IQ_CONV_M6KHZ: fdelta = - 6000*4; break;
+  case FREQ_IQ_CONV_P12KHZ: fdelta = 12000*4; break;
+  case FREQ_IQ_CONV_M12KHZ: fdelta = -12000*4; break;
+  }
+  return fdelta;
+}
+
 static void Audio_Init(void);
 
 // ---------------------------------
