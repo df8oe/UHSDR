@@ -467,7 +467,7 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"335-Tune Power Level",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
-		"                    "
+		"DSP NR (EXPERIMENTAL)"
 }
 
 };
@@ -3185,6 +3185,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				NVIC_SystemReset();			// restart mcHF
 			}
 		}
+		break;
+	case CONFIG_DSP_ENABLE:	// Enable DSP NR
+		temp_var = ts.dsp_enabled;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    ts.dsp_enabled = temp_var;
 		break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");

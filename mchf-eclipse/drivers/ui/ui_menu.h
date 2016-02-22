@@ -193,6 +193,7 @@ enum {
 	CONFIG_TUNE_POWER_LEVEL,
 	CONFIG_FFT_WINDOW_TYPE,
 	CONFIG_RESET_SER_EEPROM,
+	CONFIG_DSP_ENABLE,
 	//
 	MAX_RADIO_CONFIG_ITEMS	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };

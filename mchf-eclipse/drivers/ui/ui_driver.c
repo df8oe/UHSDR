@@ -1051,7 +1051,12 @@ static void UiDriverProcessKeyboard(void)
 				{
 					if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
 						if((!(ts.dsp_active & 1)) && (!(ts.dsp_active & 4)))	// both NR and notch are inactive
-							ts.dsp_active |= 1;									// turn on NR
+						    {
+						    if(ts.dsp_enabled)
+							ts.dsp_active |= 1;					// turn on NR
+						    else
+							ts.dsp_active |= 4;
+						    }
 						else if((ts.dsp_active & 1) && (!(ts.dsp_active & 4))) {	// NR active, notch inactive
 							if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
 								ts.dsp_active |= 4;									// turn on notch
@@ -1065,7 +1070,12 @@ static void UiDriverProcessKeyboard(void)
 							if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
 								ts.dsp_active &= 0xfa;			// it was AM + wide - turn off NR and notch
 							else
+							    {
+							    if(ts.dsp_enabled)
 								ts.dsp_active |= 1;				// no - turn on NR
+							    else
+								ts.dsp_active &= 0xfa;				// no - turn off NR and NOTCH
+							    }
 						//
 						else	{
 							ts.dsp_active &= 0xfa;								// turn off NR and notch
