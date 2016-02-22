@@ -638,11 +638,11 @@ if(mode > 3)
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-	if(ts.ser_eeprom_in_use != 0x0 && ts.ser_eeprom_in_use != 0x10 && ts.ser_eeprom_in_use != 0x5 && ts.ser_eeprom_in_use != 0xff )	// ???
-	    {
-	    sprintf(out,"%02x",ts.ser_eeprom_in_use);
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Yellow,Black,0);
-	    }
+//	if(ts.ser_eeprom_in_use != 0x0 && ts.ser_eeprom_in_use != 0x10 && ts.ser_eeprom_in_use != 0x5 && ts.ser_eeprom_in_use != 0xff )	// debugging
+//	    {
+//	    sprintf(out,"%02x",ts.ser_eeprom_in_use);
+//	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Yellow,Black,0);
+//	    }
 	if(ts.tp_present == 0)
 	    outs = "n/a             ";
 	else
