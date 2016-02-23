@@ -6381,10 +6381,7 @@ static void UiDriverChangeRit(uchar enabled)
 
 	UiLcdHy28_DrawEmptyRect( POS_RIT_IND_X,POS_RIT_IND_Y,13,57,Grey);
 
-	if(enabled)
-		UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),"RIT",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),"RIT",Grey1,Grey,0);
+	UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),"RIT",enabled?Black:Grey1,Grey,0);
 
 	if(ts.rit_value >= 0)
 		sprintf(temp,"+%i",ts.rit_value);
@@ -6406,88 +6403,81 @@ static void UiDriverChangeRit(uchar enabled)
 void UiDriverChangeFilter(uchar ui_only_update)
 {
 	ushort fcolor = White;
-	char txt[9];
 
 	UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ",	White, 	Orange, 0);
 
 	// Do a filter re-load
-	if(!ui_only_update)
+	if(!ui_only_update) {
 		audio_driver_set_rx_audio_filter();
-
+	}
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
-	// Clear screen
-	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),"00000", Black, Black,  0);
+	char* filter_ptr;
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
 		switch(ts.filter_id)
 		{
-			case AUDIO_300HZ:
-				UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15)," 300Hz", fcolor,Black,0);
-				break;
-
-			case AUDIO_500HZ:
-			UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15)," 500Hz", fcolor,Black,0);
+		case AUDIO_300HZ:
+			filter_ptr = " 300Hz";
 			break;
-
-			case AUDIO_1P8KHZ:
-				UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),"  1.8k", fcolor,Black,0);
+		case AUDIO_500HZ:
+			filter_ptr = " 500Hz";
+			break;
+		case AUDIO_1P8KHZ:
+			filter_ptr = "  1.8k";
+			break;
+		case AUDIO_2P3KHZ:
+			filter_ptr = "  2.3k";
+			break;
+		case AUDIO_3P6KHZ:
+			filter_ptr = "  3.6k";
+			break;
+		case AUDIO_WIDE:
+			switch(ts.filter_wide_select)	{
+			case WIDE_FILTER_5K:
+			case WIDE_FILTER_5K_AM:
+				filter_ptr = "   5k ";
 				break;
-
-			case AUDIO_2P3KHZ:
-				UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),"  2.3k", fcolor,Black,0);
+			case WIDE_FILTER_6K:
+			case WIDE_FILTER_6K_AM:
+				filter_ptr = "   6k ";
 				break;
-
-			case AUDIO_3P6KHZ:
-				UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),"  3.6k", fcolor,Black,0);
+			case WIDE_FILTER_7K5:
+			case WIDE_FILTER_7K5_AM:
+				filter_ptr = "  7.5k";
 				break;
-
-			case AUDIO_WIDE:
-				switch(ts.filter_wide_select)	{
-					case WIDE_FILTER_5K:
-					case WIDE_FILTER_5K_AM:
-						sprintf(txt,"   5k ");
-						break;
-					case WIDE_FILTER_6K:
-					case WIDE_FILTER_6K_AM:
-						sprintf(txt,"   6k ");
-						break;
-					case WIDE_FILTER_7K5:
-					case WIDE_FILTER_7K5_AM:
-						sprintf(txt,"  7.5k");
-						break;
-					case WIDE_FILTER_10K:
-					case WIDE_FILTER_10K_AM:
-					default:
-						sprintf(txt,"  10k ");
-						break;
-				}
-				UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),txt,fcolor,Black,0);
+			case WIDE_FILTER_10K:
+			case WIDE_FILTER_10K_AM:
+			default:
+				filter_ptr = "  10k ";
 				break;
-				default:
-					break;
+			}
+			break;
+			default:
+				filter_ptr = "      ";
+				break;
 		}
 	}
 	else	{		// This is the FM special case to display bandwidth
 		switch(ts.fm_rx_bandwidth)	{
-			case FM_RX_BANDWIDTH_7K2:
-				sprintf(txt,"7k2 FM");
-				break;
-			case FM_RX_BANDWIDTH_12K:
-				sprintf(txt,"12k FM");
-				break;
-//			case FM_RX_BANDWIDTH_15K:
-//				sprintf(txt,"15k FM");
-//				break;
-			case FM_RX_BANDWIDTH_10K:
-			default:
-				sprintf(txt,"10k FM");
-				break;
+		case FM_RX_BANDWIDTH_7K2:
+			filter_ptr = "7k2 FM";
+			break;
+		case FM_RX_BANDWIDTH_12K:
+			filter_ptr = "12k FM";
+			break;
+			//			case FM_RX_BANDWIDTH_15K:
+			//				filter_ptr = "15k FM";
+			//				break;
+		case FM_RX_BANDWIDTH_10K:
+		default:
+			filter_ptr = "10k FM";
+			break;
 		}
-		UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),txt,fcolor,Black,0);
 	}
+	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,fcolor,Black,0);
 }
 //
 //
