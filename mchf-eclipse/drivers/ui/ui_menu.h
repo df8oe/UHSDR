@@ -195,7 +195,7 @@ enum {
 	CONFIG_RESET_SER_EEPROM,
 	CONFIG_DSP_ENABLE,
 	//
-	MAX_RADIO_CONFIG_ITEMS	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
+	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 //
 #endif

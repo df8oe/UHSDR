@@ -281,187 +281,211 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 }
 
 
-static char* base_screens[10][MENUSIZE] = { { //1
+static char* base_screens[10][MENUSIZE] = {
+{ //1
 		"010-DSP NR Strength",
 		"020-300Hz Center Freq.",
 		"021-500HZ Center Freq.",
 		"022-1.8k Center Freq.",
 		"023-2.3k Center Freq.",
 		"024-3.6k Filter"
-
-}, { // 2
+},
+{ // 2
 		"025-Wide Filt. Sel.",
 		"026-Wide Filt in CW Mode",
 		"027-CW Filt in SSB Mode",
 		"028-AM Mode",
 		"029-LSB/USB Auto Select",
 		"040-FM Mode"
-}, { // 3
+},
+{ // 3
 		"041-FM Sub Tone Gen",
 		"042-FM Sub Tone Det",
 		"043-FM Tone Burst",
 		"044-FM RX Bandwidth",
 		"045-FM Deviation",
 		"050-AGC Mode"
-}, { // 4
+},
+{ // 4
 		"051-RF Gain",
 		"052-Cust AGC (+=Slower)",
 		"053-RX Codec Gain",
 		"054-RX NB Setting",
 		"055-RX/TX Freq Xlate",
 		"060-Mic/Line Select"
-}, {	// 5
+},
+{	// 5
 		"061-Mic Input Gain",
 		"062-Line Input Gain",
 		"063-ALC Release Time",
 		"064-TX PRE ALC Gain",
 		"065-TX Audio Compress",
 		"070-CW Keyer Mode",
-}, {	// 6
+},
+{	// 6
 		"071-CW Keyer Speed",
 		"072-CW Sidetone Gain",
 		"073-CW Side/Off Freq",
 		"074-CW Paddle Reverse",
 		"075-CW TX->RX Delay",
 		"076-CW Freq. Offset",
-}, {	// 7
+},
+{	// 7
 		"090-TCXO Off/On/Stop",
 		"091-TCXO Temp. (C/F)",
 		"100-Spec Scope 1/Speed",
 		"101-Spec/Wfall Filter",
 		"102-Spec. Trace Colour",
 		"103-Spec. Grid Colour"
-}, {	// 8
+},
+{	// 8
 		"104-Spec/Wfall ScaleClr",
 		"105-Spec/Wfall 2x Magn",
 		"106-Spec/Wfall AGC Adj.",
 		"107-Spec Scope Ampl.",
 		"108-Spec/Wfall Line",
 		"109-Scope/Waterfall"
-}, {	// 9
+},
+{	// 9
 		"110-Wfall Colours",
 		"111-Wfall Step Size",
 		"112-Wfall Brightness",
 		"113-Wfall Contrast",
 		"114-Wfall 1/Speed",
 		"115-Scope NoSig Adj."
-}, {	// 10
-		"116-Wfall NoSig Adj.        ",
-		"117-Wfall Size              ",
-		"197-Backup Config           ",
-		"198-Restore Config          ",
-		"199-Hardware Info           ",
-		"000-Adjustment Menu          "
-
+},
+{	// 10
+		"116-Wfall NoSig Adj.",
+		"117-Wfall Size",
+		"197-Backup Config",
+		"198-Restore Config",
+		"199-Hardware Info",
+		"000-Adjustment Menu"
 }
-
 };
-static char* conf_screens[16][MENUSIZE] = { { // 1
+
+static char* conf_screens[16][MENUSIZE] = {
+{ // 1
 		"200-Step Size Marker",
 		"201-Step Button Swap",
 		"202-Band+/- Button Swap",
 		"203-Transmit Disable",
 		"204-Menu SW on TX disable",
 		"205-Mute Line Out TX"
-} , {	// 2
+},
+{	// 2
 		"206-TX Mute Delay",
 		"207-LCD Auto Blank",
 		"208-Voltmeter Cal.",
 		"209-Filter BW Display",
 		"210-Max Volume",
 		"211-Max RX Gain (0=Max)"
-} , { // 3
+},
+{ // 3
 		"212-Key Beep",
 		"213-Beep Frequency",
 		"214-Beep Volume",
 		"220-CAT Mode",
 		"230-Freq. Calibrate",
 		"231-Freq. Limit Disable"
-} , { // 4
+},
+{ // 4
 		"232-MemFreq Lim Disable",
 		"240-LSB RX IQ Bal.",
 		"241-LSB RX IQ Phase",
 		"242-USB RX IQ Bal.",
 		"243-USB RX IQ Phase",
 		"244-AM  RX IQ Bal."
-} , { // 5
+},
+{ // 5
 		"245-FM  RX IQ Bal.",
 		"250-LSB TX IQ Bal.",
 		"251-LSB TX IQ Phase",
 		"252-USB TX IQ Bal.",
 		"253-USB TX IQ Phase",
 		"254-AM  TX IQ Bal."
-} , { // 6
+},
+{ // 6
 		"255-FM  TX IQ Bal.",
 		"260-CW PA Bias (If >0 )",
 		"261-PA Bias",
 		"270-Disp. Pwr (mW)",
 		"271-Pwr. Det. Null",
 		"C01-2200m Coupling Adj."
-} , { // 7
+},
+{ // 7
 		"C02-630m Coupling Adj.",
 		"C03-160m Coupling Adj.",
 		"C04-80m  Coupling Adj.",
 		"C05-40m  Coupling Adj.",
 		"C06-20m  Coupling Adj.",
 		"C07-15m  Coupling Adj."
-} , {	// 8
+},
+{	// 8
 		"C08-6m   Coupling Adj.",
 		"C09-2m   Coupling Adj.",
 		"C10-70cm Coupling Adj.",
 		"C11-23cm Coupling Adj.",
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
-} , { // 9
+},
+{ // 9
 		"281-XVTR Offset",
 		"P01-2200m 5W PWR Adjust",
 		"P02-630m  5W PWR Adjust",
 		"P03-160m  5W PWR Adjust",
 		"P04-80m   5W PWR Adjust",
 		"P05-60m   5W PWR Adjust"
-} , { // 10
+},
+{ // 10
 		"P06-40m   5W PWR Adjust",
 		"P07-30m   5W PWR Adjust",
 		"P08-20m   5W PWR Adjust",
 		"P09-17m   5W PWR Adjust",
 		"P10-15m   5W PWR Adjust",
 		"P11-12m   5W PWR Adjust"
-} , { // 11
+},
+{ // 11
 		"P12-10m   5W PWR Adjust",
 		"P13-6m    5W PWR Adjust",
 		"P14-4m    5W PWR Adjust",
 		"P15-2m    5W PWR Adjust",
 		"P16-70cm  5W PWR Adjust",
 		"P17-23cm  5W PWR Adjust"
-} , { // 12
+},
+{ // 12
 		"O01-2200m Full PWR Adjust",
 		"O02-630m  Full PWR Adjust",
 		"O03-160m  Full PWR Adjust",
 		"O04-80m   Full PWR Adjust",
 		"O05-60m   Full PWR Adjust",
 		"O06-40m   Full PWR Adjust"
-} , { // 13
+},
+{ // 13
 		"O07-30m   Full PWR Adjust",
 		"O08-20m   Full PWR Adjust",
 		"O09-17m   Full PWR Adjust",
 		"O10-15m   Full PWR Adjust",
 		"O11-12m   Full PWR Adjust",
 		"O12-10m   Full PWR Adjust"
-} , { // 14
+},
+{ // 14
 		"O13-6m    Full PWR Adjust",
 		"O14-4m    Full PWR Adjust",
 		"O15-2m    Full PWR Adjust",
 		"O16-70cm  Full PWR Adjust",
 		"O17-23cm  Full PWR Adjust",
 		"310-DSP NR BufLen"
-} , { // 15
+},
+{ // 15
 		"311-DSP NR FFT NumTaps",
 		"312-DSP NR Post-AGC",
 		"313-DSP Notch ConvRate",
 		"314-DSP Notch BufLen",
 		"315-DSP Notch FFTNumTap",
 		"320-NB  AGC T/C (<=Slow)"
-} , { // 16
+},
+{ // 16
 		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
 		"335-Tune Power Level",
@@ -469,7 +493,6 @@ static char* conf_screens[16][MENUSIZE] = { { // 1
 		"341-Reset Ser EEPROM",
 		"DSP NR (EXPERIMENTAL)"
 }
-
 };
 
 
@@ -556,11 +579,10 @@ void UiDriverUpdateMenu(uchar mode)
 	uchar var;
 	bool  update_vars;
 	static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
-//	static uchar screen_disp_old = 99;
 	ulong	m_clr, c_clr;
 	static	int	menu_var_changed = 99;
-//	static	bool menu_var_change_detect = 0;
 	uchar warn = 0;
+	int offset = 50;
 
 	m_clr = Yellow;
 	c_clr = Cyan;
@@ -613,23 +635,7 @@ if(mode > 3)
 	    break;
 	    }
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
-/*	uint16_t var, data, data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11;
-	var = 8;
-	Read_SerEEPROM(var, &data);
-	EE_ReadVariable(VirtAddVarTab[var], &data1);
-	Read_SerEEPROM(var+1, &data2);
-	EE_ReadVariable(VirtAddVarTab[var+1], &data3);
-	Read_SerEEPROM(var+2, &data4);
-	EE_ReadVariable(VirtAddVarTab[var+2], &data5);
-	Read_SerEEPROM(var+3, &data6);
-	EE_ReadVariable(VirtAddVarTab[var+3], &data7);
-	Read_SerEEPROM(var+4, &data8);
-	EE_ReadVariable(VirtAddVarTab[var+4], &data9);
-	Read_SerEEPROM(var+5, &data10);
-	EE_ReadVariable(VirtAddVarTab[var+5], &data11);
-	sprintf(out,"%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x", data,"/", data1,"-", data2,"/", data3,"-", data4,"/", data5,"-", data6,"/", data7,"-", data8,"/", data9,"-", data10,"/", data11);
-//	sprintf(out,"%s%x%s",">>",ts.df8oe_test,"<<");
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0); */
+
 	if(ts.ser_eeprom_in_use == 0)		// in use & data ok
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
 	if(ts.ser_eeprom_in_use == 0xFF)	// not in use
@@ -638,11 +644,7 @@ if(mode > 3)
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-//	if(ts.ser_eeprom_in_use != 0x0 && ts.ser_eeprom_in_use != 0x10 && ts.ser_eeprom_in_use != 0x5 && ts.ser_eeprom_in_use != 0xff )	// debugging
-//	    {
-//	    sprintf(out,"%02x",ts.ser_eeprom_in_use);
-//	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Yellow,Black,0);
-//	    }
+
 	if(ts.tp_present == 0)
 	    outs = "n/a             ";
 	else
@@ -666,11 +668,10 @@ if(mode > 3)
     else
     {
     	uint8_t old_screen_disp = screen_disp;
-    	if (ts.menu_item < MAX_MENU_ITEM) {
-    		screen_disp = 1+ (ts.menu_item / MENUSIZE);
-    	} else {
-    		screen_disp = 51+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
-    	}
+    	if (ts.menu_item < MAX_MENU_ITEM)
+    	    screen_disp = 1+ (ts.menu_item / MENUSIZE);
+    	else
+    	    screen_disp = offset+1+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
 
        	if(old_screen_disp != screen_disp)	// redraw if this screen wasn't already displayed
        				UiDriverClearSpectrumDisplay();
@@ -678,26 +679,29 @@ if(mode > 3)
 
 
 
-	if(ts.menu_item < MAX_MENU_ITEM)	{	// display first screen of items
-		int i;
-		for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ ) {
-			bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
-			// this takes care of the removing 2 items if serial eeprom is not fitted
-			if (show) {
-				UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
-			}
+	//
+	// ****************   Main Menu  ***************
+	//
+	if(ts.menu_item < MAX_MENU_ITEM)
+	    {		// Is this part of the main menu?
+	    int i;
+	    for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ )
+		{
+		bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
+		// this takes care of the removing 2 items if serial eeprom is not fitted
+		if (show)
+		    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
 		}
-	}
+	    }
 	//
 	// ****************   Radio Calibration Menu  ***************
 	//
-	else if(ts.menu_item >= MAX_MENU_ITEM)	{		// Is this part of the radio configuration menu?
-		int i;
-		for (i=MENUSIZE*(screen_disp-51); i < MENUSIZE*(screen_disp-50); i++ ) {
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-51][(i%MENUSIZE)],c_clr,Black,0);
-		}
-
-	}
+	else
+	    {		// Is this part of the radio configuration menu?
+	    int i;
+	    for (i=MENUSIZE*(screen_disp-offset-1); i < MENUSIZE*(screen_disp-offset); i++ )
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-offset-1][(i%MENUSIZE)],c_clr,Black,0);
+	    }
 
 
 	if(ts.menu_var_changed)	{		// show warning if variable has changed
@@ -740,7 +744,7 @@ if(mode > 3)
 		// *** ADJUSTMENT MENU ***
 		//
 		else {	// Is this one of the radio configuration items?
-			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++) {
+			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM); var++) {
 				UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
 			}
 		}
@@ -776,7 +780,7 @@ if(mode > 3)
 static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 {
 	char options[32];
-	ulong opt_pos;					// y position of option cursor
+	ulong opt_pos;			// y position of option cursor
 	static ulong opt_oldpos = 999;	// y position of option cursor, previous
 	uchar select;
 	ulong	clr;
@@ -2114,7 +2118,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    UiDriverUpdateMenu(9);
 			    }
 			break;
-			//
+//
 //
 // ******************  Make sure that this menu item is ALWAYS the last of the main menu items!
 //

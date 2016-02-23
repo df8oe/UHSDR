@@ -1266,7 +1266,7 @@ static void UiDriverProcessKeyboard(void)
 								ts.menu_item = 0;	// yes - set it to the beginning of the first menu
 							else	{			// this IS the first menu item
 								if(ts.radio_config_menu_enable)		// yes - is the configuration menu enabled?
-									ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)-1;	// move to the last config/adjustment menu item
+									ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
 								else								// configuration menu NOT enabled
 									ts.menu_item = MAX_MENU_ITEM - 1;
 							}
@@ -1310,10 +1310,10 @@ static void UiDriverProcessKeyboard(void)
 								ts.menu_item = MAX_MENU_ITEM-1;		// go to the last item in the main menu
 						}
 						else	{		// we were NOT in the main menu, but in the configuration menu!
-							if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS-1))		// are we on the last item of the configuration menu?
+							if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))		// are we on the last item of the configuration menu?
 								ts.menu_item = 0;					// yes - go to the first item of the main menu
 							else	{		// we are NOT on the last item of the configuration menu
-								ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS) - 1;		// go to the last item in the configuration menu
+								ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;		// go to the last item in the configuration menu
 							}
 						}
 						UiDriverUpdateMenu(0);	// update menu display
@@ -1866,7 +1866,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				if(!ts.radio_config_menu_enable)	// yes - config/adjust menu not enabled?
 					ts.menu_item = MAX_MENU_ITEM-1;	// yes, go to last item in normal menu
 				else
-					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)-1;	// move to the last config/adjustment menu item
+					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
 			}
 			else	{
 				if(ts.menu_item < MAX_MENU_ITEM)	// are we in the config menu?
@@ -1946,7 +1946,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				}
 			}
 			else	{	// in calibrate/adjust menu mode
-				if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS-1))	{	// already at last item?
+				if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))	{	// already at last item?
 					is_last_menu_item = 0;				// make sure flag is clear
 					ts.menu_item = 0;					// to to first item
 				}
@@ -1961,9 +1961,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 					else	// not on adjustment menu
 						ts.menu_item += 6;	// go to next configuration screen
 					//
-					if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS-1))	{	// were we at last item?
+					if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))	{	// were we at last item?
 						if(!is_last_menu_item)	{	// have we NOT seen the last menu item flag before?
-							ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS-1;	// set to last menu item
+							ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1;	// set to last menu item
 							is_last_menu_item = 1;		// set flag indicating that we are at last menu item
 						}
 						else	{	// last menu item flag was set
@@ -5380,7 +5380,7 @@ static void UiDriverCheckEncoderTwo(void)
 				if(!ts.radio_config_menu_enable)
 					ts.menu_item = MAX_MENU_ITEM-1;	// move to the last menu item (e.g. "wrap around")
 				else
-					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)-1;	// move to the last menu item (e.g. "wrap around")
+					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last menu item (e.g. "wrap around")
 			}
 		}
 		else	{
@@ -5391,7 +5391,7 @@ static void UiDriverCheckEncoderTwo(void)
 				}
 			}
 			else	{
-				if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS)	{
+				if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)	{
 					ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
 				}
 			}
