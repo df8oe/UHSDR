@@ -261,7 +261,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8
 }
 
 
-void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* options,uint32_t* clr_ptr) {
+void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr) {
 	char* clr_str;
 	switch(color) {
 	case SPEC_WHITE: 	*clr_ptr = White;	clr_str = " Wht"; 	break;
@@ -276,7 +276,9 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 	case SPEC_GREY2: 	*clr_ptr = Grey; 	clr_str = "GRY2"; 	break;
 	default: 			*clr_ptr = Grey; 	clr_str = " Gry";
 	}
-	strcpy(options,clr_str);
+	if (options != NULL) {
+		strcpy(options,clr_str);
+	}
 }
 void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t value ,const uint32_t string_max, const char** strings) {
     strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");

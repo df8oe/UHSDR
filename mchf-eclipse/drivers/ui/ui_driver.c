@@ -2121,48 +2121,59 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 void UiDriverShowMode(void)	{
 	// Clear control
 	UiLcdHy28_DrawFullRect(POS_DEMOD_MODE_MASK_X,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_H,POS_DEMOD_MODE_MASK_W,Blue);
+	uint16_t offset = 4; // where to print the text
+	char* txt = "MODE?";
+	uint16_t clr_fg = Cream,clr_bg = Blue;
 
 	// Create Decode Mode (USB/LSB/AM/FM/CW)
 	switch(ts.dmod_mode)
 	{
 		case DEMOD_USB:
-			UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 8),POS_DEMOD_MODE_Y,"USB",Cream,Blue,0);
+			offset = 8;
+			txt = "USB";
 			break;
 		case DEMOD_LSB:
-			UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 8),POS_DEMOD_MODE_Y,"LSB",Cream,Blue,0);
+			offset = 8;
+			txt = "LSB";
 			break;
 		case DEMOD_AM:
-			UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 12),POS_DEMOD_MODE_Y,"AM",Cream,Blue,0);
+			offset = 12;
+			txt = "AM";
 			break;
 		case DEMOD_FM:
+		{
+
 			if(ts.txrx_mode == TRX_MODE_RX)	{
-				if(ads.fm_squelched)	// is audio squelched?
-					UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y," FM ",Cream,Blue,0);	// yes - print normally
-				else	{
-					if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))	// is tone decoding enabled AND a tone being detected?
-						UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y," FM ",Black,Red2,0);	// Not squelched, passing audio - change color!
-					else	// tone decoder disabled - squelch only
-						UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y," FM ",Black,Cream,0);	// Not squelched, passing audio - change color, but different from tone
+				if(!ads.fm_squelched) {
+					// is audio not squelched?
+					if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))	{
+						// is tone decoding enabled AND a tone being detected?
+						clr_fg =  Black;
+						clr_bg = Red2;	// Not squelched, passing audio - change color!
+					} else {	// tone decoder disabled - squelch only
+						clr_fg = Black;
+						clr_bg = Cream;	// Not squelched, passing audio - change color, but different from tone
+					}
 				}
 			}
 			else if(ts.txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
 				if(ads.fm_tone_burst_active)	{		// yes - is tone burst active?
-					UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y," FM ",Black,Yellow,0);	// Yes, make "FM" yellow
-				}
-				else	{
-					UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y," FM ",Cream,Blue,0);	// no - print normally
+					clr_fg = Black;
+					clr_bg = Yellow;	// Yes, make "FM" yellow
 				}
 			}
+			offset = 4;
+			txt = " FM ";
 			break;
+		}
 		case DEMOD_CW:
-			if(ts.cw_lsb)	// determine if CW is USB or LSB mode
-				UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y,"CW-L",Cream,Blue,0);
-			else
-				UiLcdHy28_PrintText((POS_DEMOD_MODE_X + 4),POS_DEMOD_MODE_Y,"CW-U",Cream,Blue,0);
+			offset = 4;
+			txt = ts.cw_lsb?"CW-L":"CW-U";
 			break;
 		default:
 			break;
 	}
+	UiLcdHy28_PrintText((POS_DEMOD_MODE_X + offset),POS_DEMOD_MODE_Y,txt,clr_fg,clr_bg,0);
 }
 
 //*----------------------------------------------------------------------------
@@ -2801,10 +2812,8 @@ static void UiDriverCreateSMeter(void)
 	UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,72,202,Grey);
 
 	// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,White);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,White);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 113),(POS_SM_IND_Y + 20),75,LCD_DIR_HORIZONTAL,Green);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 113),(POS_SM_IND_Y + 21),75,LCD_DIR_HORIZONTAL,Green);
+	UiLcdHy28_DrawFullRect((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),2,92,White);
+	UiLcdHy28_DrawFullRect((POS_SM_IND_X +  113),(POS_SM_IND_Y + 20),2,75,Green);
 
 	// Leading text
 	UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y +  5),"S",  White,Black,4);
@@ -3105,38 +3114,13 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	//
 	// get color for frequency scale
 	//
-	if(ts.scope_scale_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.scope_scale_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.scope_scale_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.scope_scale_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.scope_scale_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.scope_scale_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.scope_scale_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.scope_scale_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.scope_scale_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+	UiDriverMenuMapColors(ts.scope_scale_colour,NULL, &clr);
+
 
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
 
 	if(!sd.magnify)	{		// if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
-		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// Is "RX LO HIGH" translate mode active?
-			freq_calc += FREQ_SHIFT_MAG;	// Yes, shift receive frequency to left of center
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)		// it is "RX LO LOW" in translate mode
-			freq_calc -= FREQ_SHIFT_MAG;	// shift receive frequency to right of center
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// it is "RX LO LOW" in translate mode
-			freq_calc += FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)		// it is "RX LO LOW" in translate mode
-			freq_calc -= FREQ_SHIFT_MAG*2;	// shift receive frequency to right of center
+		freq_calc += audio_driver_xlate_freq();
 	}
 	freq_calc = (freq_calc + 500)/1000;	// round graticule frequency to the nearest kHz
 
@@ -3226,67 +3210,33 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 //*----------------------------------------------------------------------------
 void UiDriverCreateSpectrumScope(void)
 {
-	ulong i, clr;
+	ulong i;
+	uint32_t clr;
 	char s[32];
 	ulong slen;
 
 	//
 	// get grid colour of all but center line
 	//
-	if(ts.scope_grid_colour == SPEC_GREY)
+	UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+	if(ts.scope_grid_colour == SPEC_GREY) {
 		ts.scope_grid_colour_active = Grid;
-	else if(ts.scope_grid_colour == SPEC_BLUE)
-		ts.scope_grid_colour_active = Blue;
-	else if(ts.scope_grid_colour == SPEC_RED)
-		ts.scope_grid_colour_active = Red;
-	else if(ts.scope_grid_colour == SPEC_MAGENTA)
-		ts.scope_grid_colour_active = Magenta;
-	else if(ts.scope_grid_colour == SPEC_GREEN)
-		ts.scope_grid_colour_active = Green;
-	else if(ts.scope_grid_colour == SPEC_CYAN)
-		ts.scope_grid_colour_active = Cyan;
-	else if(ts.scope_grid_colour == SPEC_YELLOW)
-		ts.scope_grid_colour_active = Yellow;
-	else if(ts.scope_grid_colour == SPEC_BLACK)
-		ts.scope_grid_colour_active = Black;
-	else if(ts.scope_grid_colour == SPEC_ORANGE)
-		ts.scope_grid_colour_active = Orange;
-	else if(ts.scope_grid_colour == SPEC_GREY2)
-		ts.scope_grid_colour_active = Grey;
-	else
-		ts.scope_grid_colour_active = White;
+	} else {
+		UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+	}
 	//
 	//
 	// Get color of center vertical line of spectrum scope
 	//
-	if(ts.scope_centre_grid_colour == SPEC_GREY)
+	if(ts.scope_centre_grid_colour == SPEC_GREY) {
 		ts.scope_centre_grid_colour_active = Grid;
-	else if(ts.scope_centre_grid_colour == SPEC_BLUE)
-		ts.scope_centre_grid_colour_active = Blue;
-	else if(ts.scope_centre_grid_colour == SPEC_RED)
-		ts.scope_centre_grid_colour_active = Red;
-	else if(ts.scope_centre_grid_colour == SPEC_MAGENTA)
-		ts.scope_centre_grid_colour_active = Magenta;
-	else if(ts.scope_centre_grid_colour == SPEC_GREEN)
-		ts.scope_centre_grid_colour_active = Green;
-	else if(ts.scope_centre_grid_colour == SPEC_CYAN)
-		ts.scope_centre_grid_colour_active = Cyan;
-	else if(ts.scope_centre_grid_colour == SPEC_YELLOW)
-		ts.scope_centre_grid_colour_active = Yellow;
-	else if(ts.scope_centre_grid_colour == SPEC_BLACK)
-		ts.scope_centre_grid_colour_active = Black;
-	else if(ts.scope_centre_grid_colour == SPEC_ORANGE)
-		ts.scope_centre_grid_colour_active = Orange;
-	else if(ts.scope_centre_grid_colour == SPEC_GREY2)
-		ts.scope_centre_grid_colour_active = Grey;
-	else
-		ts.scope_centre_grid_colour_active = White;
-
+	} else {
+		UiDriverMenuMapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_grid_colour_active);
+	}
 
 	// Clear screen where frequency information will be under graticule
 	//
 	UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
-
 
 	//
 	strcpy(s, "SPECTRUM SCOPE ");
@@ -3579,7 +3529,7 @@ static void UiDriverCheckFilter(ulong freq)
 {
 	if(freq < BAND_FILTER_UPPER_160)	{	// are we low enough if frequency for the 160 meter filter?
 		if(ts.filter_band != FILTER_BAND_160)	{
-			UiDriverChangeBandFilter(BAND_MODE_160, 0);	// yes - set to 80 meters
+			UiDriverChangeBandFilter(BAND_MODE_160, 0);	// yes - set to 160 meters
 			ts.filter_band = FILTER_BAND_160;
 		}
 	}
@@ -3609,13 +3559,13 @@ static void UiDriverCheckFilter(ulong freq)
 	}
 	else if(freq < BAND_FILTER_UPPER_6)	{
 		if(ts.filter_band != FILTER_BAND_6)	{
-			UiDriverChangeBandFilter(BAND_MODE_6, 0);	// yes - set to 20 meters
+			UiDriverChangeBandFilter(BAND_MODE_6, 0);	// yes - set to 6 meters
 			ts.filter_band = FILTER_BAND_6;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_4)	{
 		if(ts.filter_band != FILTER_BAND_4)	{
-			UiDriverChangeBandFilter(BAND_MODE_4, 0);	// yes - set to 20 meters
+			UiDriverChangeBandFilter(BAND_MODE_4, 0);	// yes - set to 4 meters
 			ts.filter_band = FILTER_BAND_4;
 		}
 	}
@@ -3637,15 +3587,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	band_scan = 0;
 	flag = 0;
 	//
-	if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	// is frequency translate active and in "RX LO HIGH" mode?
-		freq -= FREQ_SHIFT_MAG * 4;	// yes - subtract offset amount
-	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	// is frequency translate active and in "RX LO LOW" mode?
-		freq += FREQ_SHIFT_MAG * 4;	// yes - add offset amount
-	else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
-		freq -= FREQ_SHIFT_MAG * 8;	// yes - add offset amount
-	else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	// is frequency translate active and in "RX LO LOW" mode?
-		freq += FREQ_SHIFT_MAG * 8;	// yes - add offset amount
-
+	freq -= audio_driver_xlate_freq();
 
 	while((!flag) && (band_scan < MAX_BANDS))	{
 		if((freq >= tune_bands[band_scan]) && (freq <= (tune_bands[band_scan] + size_bands[band_scan])))	// Is this frequency within this band?
@@ -3731,14 +3673,7 @@ skip_check:
 	// Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
-			ts.tune_freq += FREQ_SHIFT_MAG * 4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
-			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-			ts.tune_freq += FREQ_SHIFT_MAG * 8;
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
-			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
+		ts.tune_freq += audio_driver_xlate_freq();		// magnitude of shift is quadrupled at actual Si570 operating frequency
 	}
 
 	if(mode != 3)	{		// updating ONLY the TX frequency display?
@@ -3860,14 +3795,7 @@ void UiDriverUpdateFrequencyFast(void)
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)
-			ts.tune_freq += FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)
-			ts.tune_freq -= FREQ_SHIFT_MAG * 4;
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-			ts.tune_freq += FREQ_SHIFT_MAG * 8;
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
-			ts.tune_freq -= FREQ_SHIFT_MAG * 8;
+			ts.tune_freq += audio_driver_xlate_freq();
 	}
 
 	// Extra tuning actions
@@ -3919,11 +3847,25 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	uchar		d_100khz,d_10khz,d_1khz;
 	uchar		d_100hz,d_10hz,d_1hz;
 	uchar		digit_size;
+	uint8_t		digits[9], dial_digits[9];
 	ulong		pos_y_loc;
 	ulong		pos_x_loc;
 	ulong		font_width;
+	uint32_t	idx;
+	int8_t		pos_mult[9] = {9,7,8,5,4,3,1,0,-1};
+	ulong		dial_freq_temp;
 
 	char		digit[2];
+
+	dial_digits[0] = df.dial_001_hz;
+	dial_digits[1] = df.dial_010_hz;
+	dial_digits[2] = df.dial_100_hz;
+	dial_digits[3] = df.dial_001_khz;
+	dial_digits[4] = df.dial_010_khz;
+	dial_digits[5] = df.dial_100_khz;
+	dial_digits[6] = df.dial_001_mhz;
+	dial_digits[7] = df.dial_010_mhz;
+	dial_digits[8] = df.dial_100_mhz;
 
 	ts.refresh_freq_disp = true; //because of coloured digits...
 	    
@@ -3985,167 +3927,37 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		font_width = LARGE_FONT_WIDTH;
 	}
 
-	// -----------------------
-	// See if 100 Mhz needs update
-	d_100mhz = (dial_freq/100000000);
-	if((d_100mhz != df.dial_100_mhz) || ts.refresh_freq_disp)
-	{
-		//printf("100 mhz diff: %d\n\r",d_100mhz);
-
-		// To string
-		digit[0] = 0x30 + (d_100mhz & 0x0F);
-
-		// Update segment
-		if(d_100mhz)
-			UiLcdHy28_PrintText((pos_x_loc - font_width),pos_y_loc,digit,color,Black,digit_size);
-		else
-			UiLcdHy28_PrintText((pos_x_loc - font_width),pos_y_loc,digit,Black,Black,digit_size);	// mask the zero
-
-		// Save value
-		df.dial_100_mhz = d_100mhz;
+	// calculate the digits
+	dial_freq_temp = dial_freq;
+	for (idx = 0; idx < 9; idx++ ) {
+		digits[idx] = dial_freq_temp % 10;
+		dial_freq_temp /= 10;
 	}
 
-
-	// -----------------------
-	// See if 10 Mhz needs update
-	d_10mhz = (dial_freq%100000000)/10000000;
-	if((d_10mhz != df.dial_010_mhz) || ts.refresh_freq_disp)
-	{
-		//printf("10 mhz diff: %d\n\r",d_10mhz);
-
-		// To string
-		digit[0] = 0x30 + (d_10mhz & 0x0F);
-
-		if(d_100mhz)	// update if 100 MHz digit is being displayed
-			UiLcdHy28_PrintText((pos_x_loc + 0),pos_y_loc,digit,color,Black,digit_size);
-		else	{
-			if(d_10mhz)
-				UiLcdHy28_PrintText((pos_x_loc + 0),pos_y_loc,digit,color,Black,digit_size);
-			else
-				UiLcdHy28_PrintText((pos_x_loc + 0),pos_y_loc,digit,Black,Black,digit_size);	// mask the zero
+	for (idx =0; idx < 9; idx ++) {
+		// -----------------------
+		// See if digit needs update
+		if((digits[idx] != dial_digits[idx]) || ts.refresh_freq_disp)
+		{
+			bool noshow = (idx == 8 && digits[8] == 0) || (idx == 7 && digits[8] == 0 && digits[7] == 0);
+			//	if less than 100Mhz -> don't show 8th digit
+			//  if less than 10Mhz -> don't show 7th digit
+			digit[0] = 0x30 + (digits[idx] & 0x0F);
+			// Update segment
+			UiLcdHy28_PrintText((pos_x_loc + pos_mult[idx] * font_width),pos_y_loc,digit,noshow?Black:color,Black,digit_size);
 		}
-		// Save value
-		df.dial_010_mhz = d_10mhz;
 	}
 
-	// -----------------------
-	// See if 1 Mhz needs update
-	d_1mhz = (dial_freq%10000000)/1000000;
-	if((d_1mhz != df.dial_001_mhz) || ts.refresh_freq_disp)
-	{
-		//printf("1 mhz diff: %d\n\r",d_1mhz);
+	df.dial_001_hz = digits[0];
+	df.dial_010_hz = digits[1];
+	df.dial_100_hz = digits[2];
+	df.dial_001_khz = digits[3];
+	df.dial_010_khz = digits[4];
+	df.dial_100_khz = digits[5];
+	df.dial_001_mhz = digits[6];
+	df.dial_010_mhz = digits[7];
+	df.dial_100_mhz = digits[8];
 
-		// To string
-		digit[0] = 0x30 + (d_1mhz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_001_mhz = d_1mhz;
-	}
-
-	// -----------------------
-	// See if 100 khz needs update
-	d_100khz = (dial_freq%1000000)/100000;
-	if((d_100khz != df.dial_100_khz) || ts.refresh_freq_disp)
-	{
-		//printf("100 khz diff: %d\n\r",d_100khz);
-
-		// To string
-		digit[0] = 0x30 + (d_100khz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width*3),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_100_khz = d_100khz;
-	}
-
-	// -----------------------
-	// See if 10 khz needs update
-	d_10khz = (dial_freq%100000)/10000;
-	if((d_10khz != df.dial_010_khz) || ts.refresh_freq_disp)
-	{
-		//printf("10 khz diff: %d\n\r",d_10khz);
-
-		// To string
-		digit[0] = 0x30 + (d_10khz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc +font_width*4),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_010_khz = d_10khz;
-	}
-
-	// -----------------------
-	// See if 1 khz needs update
-	d_1khz = (dial_freq%10000)/1000;
-	if((d_1khz != df.dial_001_khz) || ts.refresh_freq_disp)
-	{
-		//printf("1 khz diff: %d\n\r",d_1khz);
-
-		// To string
-		digit[0] = 0x30 + (d_1khz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width*5),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_001_khz = d_1khz;
-	}
-
-	// -----------------------
-	// See if 100 hz needs update
-	d_100hz = (dial_freq%1000)/100;
-	if((d_100hz != df.dial_100_hz) || ts.refresh_freq_disp)
-	{
-		//printf("100 hz diff: %d\n\r",d_100hz);
-
-		// To string
-		digit[0] = 0x30 + (d_100hz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width*7),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_100_hz = d_100hz;
-	}
-
-	// -----------------------
-	// See if 10 hz needs update
-	d_10hz = (dial_freq%100)/10;
-	if((d_10hz != df.dial_010_hz) || ts.refresh_freq_disp)
-	{
-		//printf("10 hz diff: %d\n\r",d_10hz);
-
-		// To string
-		digit[0] = 0x30 + (d_10hz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width*8),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_010_hz = d_10hz;
-	}
-
-	// -----------------------
-	// See if 1 hz needs update
-	d_1hz = (dial_freq%10)/1;
-	if((d_1hz != df.dial_001_hz) || ts.refresh_freq_disp)
-	{
-		//printf("1 hz diff: %d\n\r",d_1hz);
-
-		// To string
-		digit[0] = 0x30 + (d_1hz & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((pos_x_loc + font_width*9),pos_y_loc,digit,color,Black,digit_size);
-
-		// Save value
-		df.dial_001_hz = d_1hz;
-	}
 }
 
 //*----------------------------------------------------------------------------
@@ -6494,7 +6306,7 @@ void UiDriverDisplayFilterBW(void)
 	float	width, offset, calc;
 	ushort	lpos;
 	bool	is_usb;
-	ushort clr;
+	uint32_t clr;
 
 	if(ts.menu_mode)	// bail out if in menu mode
 		return;
@@ -6733,26 +6545,8 @@ void UiDriverDisplayFilterBW(void)
 	//
 	// get color for line
 	//
-	if(ts.filter_disp_colour == SPEC_GREY)
-		clr = Grey;
-	else if(ts.filter_disp_colour == SPEC_BLUE)
-		clr = Blue;
-	else if(ts.filter_disp_colour == SPEC_RED)
-		clr = Red;
-	else if(ts.filter_disp_colour == SPEC_MAGENTA)
-		clr = Magenta;
-	else if(ts.filter_disp_colour == SPEC_GREEN)
-		clr = Green;
-	else if(ts.filter_disp_colour == SPEC_CYAN)
-		clr = Cyan;
-	else if(ts.filter_disp_colour == SPEC_YELLOW)
-		clr = Yellow;
-	else if(ts.filter_disp_colour == SPEC_BLACK)
-		clr = Black;
-	else if(ts.filter_disp_colour == SPEC_ORANGE)
-		clr = Orange;
-	else
-		clr = White;
+
+	UiDriverMenuMapColors(ts.filter_disp_colour,NULL, &clr);
 	//
 	// draw line
 	//
@@ -7387,8 +7181,8 @@ static void UiDriverReDrawSpectrumDisplay(void)
 		//
 		case 5:
 		{
-		ulong	clr;
-        clr = UiDriverGetScopeTraceColour();
+		uint32_t	clr;
+		UiDriverMenuMapColors(ts.scope_trace_colour,NULL, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiLcdHy28_DrawSpectrum_Interleaved((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update)
@@ -7755,36 +7549,6 @@ static void UiDriverReDrawWaterfallDisplay(void)
 	}
 }
 //
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverGetScopeTraceColour
-//* Object              : Gets setting from trace color variable
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-static ulong UiDriverGetScopeTraceColour(void)
-{
-	if(ts.scope_trace_colour == SPEC_GREY)
-		return Grey;
-	else if(ts.scope_trace_colour == SPEC_BLUE)
-		return Blue;
-	else if(ts.scope_trace_colour == SPEC_RED)
-		return Red;
-	else if(ts.scope_trace_colour == SPEC_MAGENTA)
-			return Magenta;
-	else if(ts.scope_trace_colour == SPEC_GREEN)
-		return Green;
-	else if(ts.scope_trace_colour == SPEC_CYAN)
-		return Cyan;
-	else if(ts.scope_trace_colour == SPEC_YELLOW)
-		return Yellow;
-	else if(ts.scope_trace_colour == SPEC_ORANGE)
-		return Orange;
-	else
-		return White;
-}
 //
 //
 //*----------------------------------------------------------------------------
