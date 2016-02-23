@@ -64,7 +64,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 // ------------------------------------------------
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
 extern __IO OscillatorState os;
 // ------------------------------------------------
 // Frequency public
@@ -278,6 +277,9 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 	default: 			*clr_ptr = Grey; 	clr_str = " Gry";
 	}
 	strcpy(options,clr_str);
+}
+void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t value ,const uint32_t string_max, const char** strings) {
+    strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");
 }
 
 
@@ -495,6 +497,47 @@ static char* conf_screens[16][MENUSIZE] = {
 }
 };
 
+static const char* filter_list_300Hz[] =      {
+    "  OFF",
+    "500Hz",
+    "550Hz",
+    "600Hz",
+    "650Hz",
+    "700Hz",
+    "750Hz",
+    "800Hz",
+    "850Hz",
+    "900Hz"
+} ;
+
+static const char* filter_list_500Hz[] =      {
+    "  OFF",
+	"550Hz",
+	"650Hz",
+	"750Hz",
+	"850Hz",
+	"950Hz"
+} ;
+
+static const char* filter_list_1P8KHz[] =      {
+    "   OFF",
+	"1125Hz",
+	"1275Hz",
+	"1427Hz",
+	"1575Hz",
+	"1725Hz",
+	"   LPF"
+} ;
+
+static const char* filter_list_2P3KHz[] =      {
+    "   OFF",
+	"1262Hz",
+	"1412Hz",
+	"1562Hz",
+	"1712Hz",
+	"   LPF"
+} ;
+
 
 typedef struct BandInfo {
 		uint8_t default_pf;
@@ -563,6 +606,18 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint
 	sprintf(options, "  %u", *adj_ptr);
 	return tchange;
 }
+
+
+void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bool changed) {
+	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
+		if(ts.filter_id == filter_id)	{
+			//UiDriverProcessActiveFilterScan();	// find next active filter
+			UiDriverChangeFilter(0);
+			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+		}
+	}
+}
+
 //
 //
 //
@@ -849,50 +904,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_300Hz_select)	{
-		case 0:
-			strcpy(options, "  OFF");
+
+		if (ts.filter_300Hz_select == 0)	{
 			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "500Hz");
-			break;
-		case 2:
-			strcpy(options, "550Hz");
-			break;
-		case 3:
-			strcpy(options, "600Hz");
-			break;
-		case 4:
-			strcpy(options, "650Hz");
-			break;
-		case 5:
-			strcpy(options, "700Hz");
-			break;
-		case 6:
-			strcpy(options, "750Hz");
-			break;
-		case 7:
-			strcpy(options, "800Hz");
-			break;
-		case 8:
-			strcpy(options, "850Hz");
-			break;
-		case 9:
-			strcpy(options, "900Hz");
-			break;
 		}
-		//
-		// TODO: Understand the different code fragments used for different filters (see 2k3 filter)
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{		// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_300HZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-			}
-		}
+
+		UiDriverMenuMapStrings(options,ts.filter_300Hz_select,MAX_300HZ_FILTER, filter_list_300Hz);
+		UiDriverMenuChangeFilter(AUDIO_300HZ,fchange);
 		break;
 	case MENU_500HZ_SEL:	// 500 Hz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -907,37 +925,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_500Hz_select)	{
-		case 0:
-			strcpy(options, "  OFF");
+
+		if (ts.filter_500Hz_select == 0)	{
 			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "550Hz");
-			break;
-		case 2:
-			strcpy(options, "650Hz");
-			break;
-		case 3:
-			strcpy(options, "750Hz");
-			break;
-		case 4:
-			strcpy(options, "850Hz");
-			break;
-		case 5:
-			strcpy(options, "950Hz");
-			break;
 		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{		// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_500HZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-			}
-		}
+
+		UiDriverMenuMapStrings(options,ts.filter_500Hz_select,MAX_500HZ_FILTER, filter_list_500Hz);
+		UiDriverMenuChangeFilter(AUDIO_500HZ,fchange);
 		break;
+
 	case MENU_1K8_SEL:	// 1.8 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_1k8_select,
@@ -951,41 +947,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_1k8_select)	{
-		case 0:
-			strcpy(options, "   OFF");
-			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "1125Hz");
-			break;
-		case 2:
-			strcpy(options, "1275Hz");
-			break;
-		case 3:
-			strcpy(options, "1427Hz");
-			break;
-		case 4:
-			strcpy(options, "1575Hz");
-			break;
-		case 5:
-			strcpy(options, "1725Hz");
-			break;
-		case 6:
-			strcpy(options, "   LPF");
-			break;
 
-		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{	// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_1P8KHZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-			}
-		}
+		UiDriverMenuMapStrings(options,ts.filter_1k8_select,MAX_1K8_FILTER, filter_list_1P8KHz);
+		UiDriverMenuChangeFilter(AUDIO_1P8KHZ,fchange);
 		break;
 	case MENU_2k3_SEL: // 2.3 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1002,35 +966,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_2k3_select)	{
-		case 0:
-			strcpy(options, "   OFF");
-			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "1262Hz");
-			break;
-		case 2:
-			strcpy(options, "1412Hz");
-			break;
-		case 3:
-			strcpy(options, "1562Hz");
-			break;
-		case 4:
-			strcpy(options, "1712Hz");
-			break;
-		case 5:
-			strcpy(options, "   LPF");
-			break;
-		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))		// set filter if changed
-			audio_driver_set_rx_audio_filter();
+
+		UiDriverMenuMapStrings(options,ts.filter_2k3_select,MAX_2K3_FILTER, filter_list_2P3KHz);
+		UiDriverMenuChangeFilter(AUDIO_2P3KHZ,fchange);
 		break;
 	case MENU_3K6_SEL: // 3.6 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
-
 			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.filter_3k6_select,FILTER_3K6_DEFAULT,options,&clr);
 			if(ts.filter_id != AUDIO_3P6KHZ)
 				clr = Orange;
@@ -1038,12 +979,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else				// show disabled if in FM
 			clr = Red;
 
-		if((ts.filter_id == AUDIO_3P6KHZ) && fchange)	{
-			//UiDriverProcessActiveFilterScan();	// find next active filter
-			UiDriverChangeFilter(0);
-			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-		}
-		//
+		UiDriverMenuChangeFilter(AUDIO_3P6KHZ,fchange);
 		break;
 	case MENU_WIDE_SEL: // Wide filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1868,7 +1804,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
 		UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
-		// disp_shift = 1;
 		break;
 	case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
