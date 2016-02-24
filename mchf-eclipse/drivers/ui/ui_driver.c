@@ -3939,12 +3939,16 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		// See if digit needs update
 		if((digits[idx] != dial_digits[idx]) || ts.refresh_freq_disp)
 		{
-			bool noshow = (idx == 8 && digits[8] == 0) || (idx == 7 && digits[8] == 0 && digits[7] == 0);
+			bool noshow = (idx == 8 && digits[8] == 0) || (idx == 7 && digits[8] == 0 && digits[7] == 0) || (idx == 6 && digits[8] == 0 && digits[7] == 0 && digits[6] == 0);
 			//	if less than 100Mhz -> don't show 8th digit
 			//  if less than 10Mhz -> don't show 7th digit
 			digit[0] = 0x30 + (digits[idx] & 0x0F);
 			// Update segment
 			UiLcdHy28_PrintText((pos_x_loc + pos_mult[idx] * font_width),pos_y_loc,digit,noshow?Black:color,Black,digit_size);
+			if(digits[8] == 0 && digits[7] == 0 && digits[6] == 0)		// removing leading 0. if f < 1MHz
+			    UiLcdHy28_PrintText(pos_x_loc+2*font_width,pos_y_loc," ",Black,Black,digit_size);
+			else
+			    UiLcdHy28_PrintText(pos_x_loc+2*font_width,pos_y_loc,".",White,Black,digit_size);
 		}
 	}
 
@@ -4077,17 +4081,26 @@ static void UiDriverUpdateSecondLcdFreq(ulong dial_freq)
 	// See if 1 Mhz needs update
 	d_1mhz = (dial_freq%10000000)/1000000;
 	if(d_1mhz != df.sdial_001_mhz)
-	{
-		//printf("1 mhz diff: %d\n\r",d_1mhz);
+	    {
+	    //printf("1 mhz diff: %d\n\r",d_1mhz);
 
-		// To string
-		digit[0] = 0x30 + (d_1mhz & 0x0F);
+	    // To string
+	    digit[0] = 0x30 + (d_1mhz & 0x0F);
 
-		// Update segment
+	    // Update segment
+	    if(d_1mhz)
+		{
 		UiLcdHy28_PrintText((POS_TUNE_SFREQ_X + SMALL_FONT_WIDTH),POS_TUNE_SFREQ_Y,digit,Grey,Black,0);
+		UiLcdHy28_PrintText((POS_TUNE_SFREQ_X + 2*SMALL_FONT_WIDTH),POS_TUNE_SFREQ_Y,".",Grey,Black,0);	// adding "."
+		}
+	    else
+		{
+		UiLcdHy28_PrintText((POS_TUNE_SFREQ_X + SMALL_FONT_WIDTH),POS_TUNE_SFREQ_Y,digit,Black,Black,0);
+		UiLcdHy28_PrintText((POS_TUNE_SFREQ_X + 2*SMALL_FONT_WIDTH),POS_TUNE_SFREQ_Y,digit,Black,Black,0);	// removing "."
+		}
 
-		// Save value
-		df.sdial_001_mhz = d_1mhz;
+	    // Save value
+	    df.sdial_001_mhz = d_1mhz;
 	}
 
 	// -----------------------
