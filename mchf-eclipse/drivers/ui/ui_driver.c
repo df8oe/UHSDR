@@ -3587,7 +3587,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	band_scan = 0;
 	flag = 0;
 	//
-	freq -= audio_driver_xlate_freq();
+	freq -= audio_driver_xlate_freq()*4;
 
 	while((!flag) && (band_scan < MAX_BANDS))	{
 		if((freq >= tune_bands[band_scan]) && (freq <= (tune_bands[band_scan] + size_bands[band_scan])))	// Is this frequency within this band?
@@ -3673,7 +3673,7 @@ skip_check:
 	// Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		ts.tune_freq += audio_driver_xlate_freq();		// magnitude of shift is quadrupled at actual Si570 operating frequency
+		ts.tune_freq += audio_driver_xlate_freq()*4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
 	}
 
 	if(mode != 3)	{		// updating ONLY the TX frequency display?
@@ -3795,7 +3795,7 @@ void UiDriverUpdateFrequencyFast(void)
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
 	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-			ts.tune_freq += audio_driver_xlate_freq();
+			ts.tune_freq += audio_driver_xlate_freq()*4;
 	}
 
 	// Extra tuning actions

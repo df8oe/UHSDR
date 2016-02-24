@@ -55,10 +55,10 @@
 uint32_t audio_driver_xlate_freq() {
   uint32_t fdelta = 0;
   switch (ts.iq_freq_mode) {
-  case FREQ_IQ_CONV_P6KHZ: fdelta = 6000*4; break;
-  case FREQ_IQ_CONV_M6KHZ: fdelta = - 6000*4; break;
-  case FREQ_IQ_CONV_P12KHZ: fdelta = 12000*4; break;
-  case FREQ_IQ_CONV_M12KHZ: fdelta = -12000*4; break;
+  case FREQ_IQ_CONV_P6KHZ: fdelta = 6000; break;
+  case FREQ_IQ_CONV_M6KHZ: fdelta = - 6000; break;
+  case FREQ_IQ_CONV_P12KHZ: fdelta = 12000; break;
+  case FREQ_IQ_CONV_M12KHZ: fdelta = -12000; break;
   }
   return fdelta;
 }
