@@ -145,7 +145,7 @@ static void 	UiDriverInitSpectrumDisplay(void);
 //static void 	UiDriverClearSpectrumDisplay(void);
 static void 	UiDriverReDrawSpectrumDisplay(void);
 static void 	UiDriverReDrawWaterfallDisplay(void);
-static ulong 	UiDriverGetScopeTraceColour(void);
+// static ulong 	UiDriverGetScopeTraceColour(void);
 //static void 	UiDriverUpdateEthernetStatus(void);
 //static void 	UiDriverUpdateUsbKeyboardStatus(void);
 static void 	UiDriverHandleSmeter(void);
@@ -3843,9 +3843,9 @@ void UiDriverUpdateFrequencyFast(void)
 //*----------------------------------------------------------------------------
 static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 {
-	uchar		d_100mhz,d_10mhz,d_1mhz;
-	uchar		d_100khz,d_10khz,d_1khz;
-	uchar		d_100hz,d_10hz,d_1hz;
+//	uchar		d_100mhz,d_10mhz,d_1mhz;
+//	uchar		d_100khz,d_10khz,d_1khz;
+//	uchar		d_100hz,d_10hz,d_1hz;
 	uchar		digit_size;
 	uint8_t		digits[9], dial_digits[9];
 	ulong		pos_y_loc;

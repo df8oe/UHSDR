@@ -429,7 +429,7 @@ __ALIGN_BEGIN uint8_t usbd_cdc_OtherCfgDesc[USB_CDC_CONFIG_DESC_SIZ]  __ALIGN_EN
 static uint8_t  usbd_cdc_Init (void  *pdev, 
                                uint8_t cfgidx)
 {
-  uint8_t *pbuf;
+//  uint8_t *pbuf;
 
   /* Open EP IN */
   DCD_EP_Open(pdev,
