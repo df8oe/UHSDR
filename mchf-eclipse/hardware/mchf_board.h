@@ -1153,6 +1153,7 @@ enum {
 #define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
 #define EEPROM_TUNE_POWER_LEVEL		313
 #define EEPROM_CAT_MODE_ACTIVE		314
+#define EEPROM_CAT_XLAT			315
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1516,6 +1517,7 @@ typedef struct TransceiverState
 	uchar	tune_power_level;		// TX power in antenna tuning function
 	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
 	bool	dsp_enabled;			// NR disabled
+	uchar	xlat;				// CAT <> IQ-Audio
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //

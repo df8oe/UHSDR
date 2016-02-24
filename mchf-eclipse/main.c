@@ -922,6 +922,7 @@ void TransceiverStateInit(void)
 	ts.vhfuhfmod_present = 0;			// VHF/UHF mod not present
 	ts.multi = 0;					// non-translate
 	ts.tune_power_level = 0;			// Tune with FULL POWER
+	ts.xlat = 0;					// 0 = report base frequency, 1 = report xlat-frequency;
 }
 
 //*----------------------------------------------------------------------------
@@ -1109,7 +1110,10 @@ int main(void)
 	TransceiverStateInit();
 
 	if( *(__IO uint32_t*)(SRAM2_BASE+10) == 0x29)	// DSP betatesting for DG9BFC
+	    {
 	    ts.dsp_enabled = 1;
+	    ts.xlat = 1;
+	    }
 
 	ConfigurationStorage_Init();
 

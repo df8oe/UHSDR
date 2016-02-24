@@ -10272,6 +10272,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS);
 	UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
 	UiReadSettingEEPROM_UInt8(EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_MAX_ENTRY,PA_LEVEL_FULL,PA_LEVEL_MAX_ENTRY);
+	UiReadSettingEEPROM_UInt8(EEPROM_CAT_XLAT,&ts.xlat,1,0,1);
 
 	ts.dsp_inhibit = dspmode;		// restore setting
 }
@@ -10546,6 +10547,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
 	UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TUNE_POWER_LEVEL,ts.tune_power_level,PA_LEVEL_MAX_ENTRY);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_CAT_XLAT,ts.xlat,1);
 	
 //	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
 	// if serial eeprom is in use write blocks to it and switch block write flag back

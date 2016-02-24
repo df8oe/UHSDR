@@ -221,10 +221,17 @@ void CatDriverFT817CheckAndExecute() {
 			switch(ft817.req[4]) {
 			case 1: /* SET FREQ */
 			{
-				ulong f = 0;
-                ulong fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*4:0;
-                // If we are in DIGITAL IQ Output mode, use real tune frequency frequency instead
-                // translated RX frequency
+			ulong f = 0;
+			ulong fdelta;
+			
+			if(ts.xlat == 0)
+			    {
+            		    fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*4:0;
+            		    // If we are in DIGITAL IQ Output mode, use real tune frequency frequency instead
+            		    // translated RX frequency
+            		    }
+            		else
+            		    fdelta = 0;
 
 				int fidx;
 				for (fidx = 0; fidx < 4; fidx++) {
@@ -241,9 +248,17 @@ void CatDriverFT817CheckAndExecute() {
 
 			case 3: /* READ FREQ */
 			{
-			    ulong fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*4:0;
+			ulong fdelta;
+			
+			if(ts.xlat == 0)
+			    {
+			    fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*4:0;
 			    // If we are in DIGITAL IQ Output mode, send real tune frequency frequency instead
 			    // translated RX frequency
+			    }
+			else
+			    fdelta = 0;
+			    
 				ulong f = (df.tune_new + fdelta  + 20)/ 40 ;
 				ulong fbcd = 0;
 				int fidx;

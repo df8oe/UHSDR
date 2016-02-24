@@ -368,7 +368,7 @@ static char* base_screens[10][MENUSIZE] = {
 }
 };
 
-static char* conf_screens[16][MENUSIZE] = {
+static char* conf_screens[17][MENUSIZE] = {
 { // 1
 		"200-Step Size Marker",
 		"201-Step Button Swap",
@@ -496,6 +496,14 @@ static char* conf_screens[16][MENUSIZE] = {
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
 		"DSP NR (EXPERIMENTAL)"
+},
+{ // 17
+		"400-CAT-IQ-FREQ-XLAT",
+		"",
+		"",
+		"",
+		"",
+		""
 }
 };
 
@@ -3132,6 +3140,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)
 		    ts.dsp_enabled = temp_var;
+		break;
+	case CONFIG_CAT_XLAT:	// CAT xlat reporting
+		temp_var = ts.xlat;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    ts.xlat = temp_var;
 		break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");

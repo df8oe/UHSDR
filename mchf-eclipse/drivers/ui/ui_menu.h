@@ -196,6 +196,7 @@ enum {
 	CONFIG_FFT_WINDOW_TYPE,
 	CONFIG_RESET_SER_EEPROM,
 	CONFIG_DSP_ENABLE,
+	CONFIG_CAT_XLAT,
 	//
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
