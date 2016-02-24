@@ -1342,7 +1342,7 @@ typedef struct TransceiverState
 	uchar	scope_grid_colour;	// saved color of spectrum scope grid;
 	ulong	scope_grid_colour_active;	// active color of spectrum scope grid;
 	uchar	scope_centre_grid_colour;	// color of center line of scope grid
-	ushort	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
+	ulong	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
 	uchar	scope_scale_colour;	// color of spectrum scope frequency scale
 	uchar	scope_rescale_rate;	// rescale rate on the 'scope
 	uchar	scope_agc_rate;		// agc rate on the 'scope

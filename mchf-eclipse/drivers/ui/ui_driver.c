@@ -3231,7 +3231,7 @@ void UiDriverCreateSpectrumScope(void)
 	if(ts.scope_centre_grid_colour == SPEC_GREY) {
 		ts.scope_centre_grid_colour_active = Grid;
 	} else {
-		UiDriverMenuMapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_grid_colour_active);
+		UiDriverMenuMapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
 	}
 
 	// Clear screen where frequency information will be under graticule
