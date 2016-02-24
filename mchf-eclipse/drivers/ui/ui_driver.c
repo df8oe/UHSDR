@@ -3852,7 +3852,7 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	ulong		pos_x_loc;
 	ulong		font_width;
 	uint32_t	idx;
-	int8_t		pos_mult[9] = {9,7,8,5,4,3,1,0,-1};
+	int8_t		pos_mult[9] = {9,8,7,5,4,3,1,0,-1};
 	ulong		dial_freq_temp;
 
 	char		digit[2];
