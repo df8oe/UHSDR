@@ -262,7 +262,8 @@ void CatDriverFT817CheckAndExecute() {
 			switch(ts.dmod_mode) {
 			case DEMOD_LSB: resp[4] = 0; break;
 			case DEMOD_USB: resp[4] = 1; break;
-			case DEMOD_CW: 	resp[4] = 2; break;
+			case DEMOD_CW: 	resp[4] = 2 + (ts.cw_lsb==true?1:0); break;
+			// return 3 if CW in LSB aka CW-R
 			case DEMOD_AM:  resp[4] = 4; break;
 			case DEMOD_FM:  resp[4] = 8; break;
 			default: resp[4] = 1;
@@ -280,7 +281,11 @@ void CatDriverFT817CheckAndExecute() {
 					new_mode = DEMOD_USB;
 					break;
 				case 2: // CW
+					ts.cw_lsb = false;
+					new_mode = DEMOD_CW;
+					break;
 				case 3: // CW-R
+					ts.cw_lsb = true;
 					new_mode = DEMOD_CW;
 					break;
 				case 4: // AM
