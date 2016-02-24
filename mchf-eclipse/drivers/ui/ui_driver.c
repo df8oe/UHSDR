@@ -3864,7 +3864,7 @@ static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_di
 
 #define MAX_DIGITS 9
         ulong dial_freq_temp;
-        int8_t pos_mult[MAX_DIGITS] = {9, 7, 8, 5, 4, 3, 1, 0, -1};
+        int8_t pos_mult[MAX_DIGITS] = {9, 8, 7, 5, 4, 3, 1, 0, -1};
         uint32_t idx;
         uint8_t digits[MAX_DIGITS];
         char digit[2];
