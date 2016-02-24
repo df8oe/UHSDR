@@ -19,6 +19,8 @@
 void UiDriverUpdateMenu(uchar mode);
 void UiDriverMemMenu(void);
 void UiDriverUpdateMemLines(uchar var);
+void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
+
 //
 void UiLoadBeepFreq(void);
 //
