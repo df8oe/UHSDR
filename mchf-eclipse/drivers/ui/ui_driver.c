@@ -2001,7 +2001,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			vfo[VFO_WORK].band[ts.band].decod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 			vfo[VFO_WORK].band[ts.band].filter_mode = vfo[vfo_active].band[ts.band].filter_mode;
 			//
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO A",White,Black,0);
+			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,vfo_name,White,Black,0);
 
 
 			df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;

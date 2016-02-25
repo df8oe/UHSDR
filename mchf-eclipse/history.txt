@@ -14,6 +14,8 @@
 - corrected TX/RX switching of AFG/STG and RIT/WPM in CW
 - added USB audio functions
 - added #335 Tune Power Level for antenna tuning with specific power
+- added USB I/Q-Audio
+- reworked much code for better serviceability
 
 
 20160213 [DF8OE]
