@@ -162,8 +162,6 @@ static void 	UiDriverSwitchOffPtt(void);
 //static void		UiCalcTxIqGainAdj(void);
 static void 	UiDriverLoadEepromValues(void);
 void			UiDriverUpdateMenu(uchar mode);
-void 			UiDriverUpdateMenuLines(uchar index, uchar mode);
-void			UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 uint16_t 		UiDriverSaveEepromValuesPowerDown(void);
 static void 	UiDriverInitMainFreqDisplay(void);
 //
@@ -314,26 +312,6 @@ enum {
 __IO BandRegs vfo[VFO_MAX];
 
 
-//
-// VFO Work registers
-//
-__IO ulong band_dial_value[MAX_BANDS+1];
-__IO ulong band_decod_mode[MAX_BANDS+1];
-__IO ulong band_filter_mode[MAX_BANDS+1];
-
-//
-// VFO A registers
-//
-__IO ulong band_dial_value_a[MAX_BANDS+1];
-__IO ulong band_decod_mode_a[MAX_BANDS+1];
-__IO ulong band_filter_mode_a[MAX_BANDS+1];
-//
-// VFO B registers
-//
-__IO ulong band_dial_value_b[MAX_BANDS+1];
-__IO ulong band_decod_mode_b[MAX_BANDS+1];
-__IO ulong band_filter_mode_b[MAX_BANDS+1];
-//
 // ------------------------------------------------
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
@@ -404,10 +382,6 @@ extern	__IO	SMeter			sm;
 // Public Audio
 extern __IO		AudioDriverState	ads;
 
-// ------------------------------------------------
-// Eeprom items
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
-
 
 uchar drv_state = 0;
 uchar drv_init = 0;
@@ -464,7 +438,7 @@ void ui_driver_init(void)
 	//
 	UiCalcTxCompLevel();		// calculate current settings for TX speech compressor
 	//
-	df.tune_new = band_dial_value[ts.band];		// init "tuning dial" frequency based on restored settings
+	df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
 	//
 	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
@@ -804,18 +778,18 @@ void ui_driver_toggle_tx(void)
 		if(ts.vfo_mem_mode & 0x40)	{				// is VFO-B active?
 			if(ts.txrx_mode == TRX_MODE_TX)	{	// are we in TX mode?
 				if(was_rx)	{						// did we just enter TX mode?
-					band_dial_value_b[ts.band] = df.tune_new;	// yes - save current RX frequency in VFO location (B)
+					vfo[VFO_B].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (B)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
 				}
-				df.tune_new = band_dial_value_a[ts.band];	// load with VFO-A frequency
+				df.tune_new = vfo[VFO_A].band[ts.band].dial_value;	// load with VFO-A frequency
 			}
 			else					// we are in RX mode
-				df.tune_new = band_dial_value_b[ts.band];	// load with VFO-B frequency
+				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
 		}
 		else	{	// VFO-A is active
 			if(ts.txrx_mode == TRX_MODE_TX)	{				// are we in TX mode?
 				if(was_rx)	{								// did we just enter TX mode?
-					band_dial_value_a[ts.band] = df.tune_new;	// yes - save current RX frequency in VFO location (A)
+					vfo[VFO_A].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (A)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
 					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 					//
@@ -823,10 +797,10 @@ void ui_driver_toggle_tx(void)
 						ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 					//
 				}
-				df.tune_new = band_dial_value_b[ts.band];	// load with VFO-B frequency
+				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
 			}
 			else							// we are in RX mode
-				df.tune_new = band_dial_value_a[ts.band];	// load with VFO-A frequency
+				df.tune_new = vfo[VFO_A].band[ts.band].dial_value;	// load with VFO-A frequency
 		}
 	}
 
@@ -1344,16 +1318,17 @@ static void UiDriverProcessKeyboard(void)
 						UiDriverUpdateMenu(1);	// update cursor
 					}
 					else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
+						__IO VfoReg* vfo_store;
 						if(ts.vfo_mem_mode & 0x40)	{	// are we in VFO B mode?
-							band_dial_value_a[ts.band] = df.tune_new;					// yes, copy frequency into A
-							band_decod_mode_a[ts.band] = ts.dmod_mode;					// copy active VFO (B) settings into A
-							band_filter_mode_a[ts.band] = ts.filter_id;
+							vfo_store = &vfo[VFO_A].band[ts.band];
 						}
 						else	{	// we were in VFO A mode
-							band_dial_value_b[ts.band] = df.tune_new;					// yes, copy frequency into B
-							band_decod_mode_b[ts.band] = ts.dmod_mode;					// copy active VFO (A) settings into B
-							band_filter_mode_b[ts.band] = ts.filter_id;
+							vfo_store = &vfo[VFO_B].band[ts.band];
 						}
+						vfo_store->dial_value = df.tune_new;
+						vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
+						vfo_store->filter_mode = ts.filter_id;
+
 						if(ts.vfo_mem_mode & 0x80)	{	// are we in SPLIT mode?
 							ts.refresh_freq_disp = 1;	// yes, we need to update the TX frequency:  Make frequency display refresh all digits
 							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
@@ -2002,33 +1977,34 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			UiDriverUpdateMenu(1);		// Update that menu item
 		}
 		else	{	// NOT menu mode
+			uint8_t vfo_active,vfo_new;
+			char* vfo_name;
+
 			if(ts.vfo_mem_mode & 0x40)		{	// LSB on VFO mode byte set?
+				vfo_active = VFO_A;
+				vfo_new = VFO_B;
+				vfo_name = " VFO A";
 				ts.vfo_mem_mode &= 0xbf;	// yes, it's now VFO-B mode, so clear it, setting it to VFO A mode
-				band_dial_value_b[ts.band] = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
-				band_decod_mode_b[ts.band] = ts.dmod_mode;	//band_decod_mode[ts.band];
-				band_filter_mode_b[ts.band] = ts.filter_id;	//band_filter_mode[ts.band];
-				//
-				
-				band_dial_value[ts.band] = band_dial_value_a[ts.band];		// load "VFO A" settings into working registers
-				band_decod_mode[ts.band] = band_decod_mode_a[ts.band];
-				band_filter_mode[ts.band] = band_filter_mode_a[ts.band];
-				//
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO A",White,Black,0);
-				//
 			}
 			else	{						// LSB on VFO mode byte NOT set?
 				ts.vfo_mem_mode |= 0x40;			// yes, it's now in VFO-A mode, so set it, setting it to VFO B mode
-				band_dial_value_a[ts.band] = df.tune_old;	//band_dial_value[ts.band];		// save "VFO A" settings
-				band_decod_mode_a[ts.band] = ts.dmod_mode;	//band_decod_mode[ts.band];
-				band_filter_mode_a[ts.band] = ts.filter_id;	//band_filter_mode[ts.band];
-					//
-				band_dial_value[ts.band] = band_dial_value_b[ts.band];		// load "VFO B" settings
-				band_decod_mode[ts.band] = band_decod_mode_b[ts.band];
-				band_filter_mode[ts.band] = band_filter_mode_b[ts.band];
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO B",White,Black,0);
-				//
+				vfo_active = VFO_B;
+				vfo_new = VFO_A;
+				vfo_name = " VFO B";
 			}
-			df.tune_new = band_dial_value[ts.band];
+			vfo[vfo_new].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
+			vfo[vfo_new].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
+			vfo[vfo_new].band[ts.band].filter_mode = ts.filter_id;	//band_filter_mode[ts.band];
+			//
+
+			vfo[VFO_WORK].band[ts.band].dial_value = vfo[vfo_active].band[ts.band].dial_value;		// load "VFO A" settings into working registers
+			vfo[VFO_WORK].band[ts.band].decod_mode = vfo[vfo_active].band[ts.band].decod_mode;
+			vfo[VFO_WORK].band[ts.band].filter_mode = vfo[vfo_active].band[ts.band].filter_mode;
+			//
+			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO A",White,Black,0);
+
+
+			df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;
 			//
 			// do frequency/display update
 			if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
@@ -2050,23 +2026,23 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverUpdateFrequency(1,0);
 
 			// Change decode mode if need to
-			if(ts.dmod_mode != band_decod_mode[ts.band])
+			if(ts.dmod_mode != vfo[VFO_WORK].band[ts.band].decod_mode)
 			{
 				// Update mode
-				ts.dmod_mode = band_decod_mode[ts.band];
+				ts.dmod_mode = vfo[VFO_WORK].band[ts.band].decod_mode;
 
 				// Update Decode Mode (USB/LSB/AM/FM/CW)
 				UiDriverShowMode();
 			}
 
 			// Change filter mode if need to
-			if(ts.filter_id != band_filter_mode[ts.band])
+			if(ts.filter_id != vfo[VFO_WORK].band[ts.band].filter_mode)
 			{
-				ts.filter_id = band_filter_mode[ts.band];
+				ts.filter_id = vfo[VFO_WORK].band[ts.band].filter_mode;
 				UiDriverChangeFilter(0);	// update display and change filter
 				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				audio_driver_set_rx_audio_filter();
-				audio_driver_set_rx_audio_filter();	// we have to invoke the filter change several times for some unknown reason - 'dunno why!
+				audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
 			}
 		}
 		//
@@ -3501,14 +3477,15 @@ static void UiDriverInitFrequency(void)
 	// Clear band values array
 	for(i = 0; i < MAX_BANDS; i++)
 	{
-		band_dial_value[i] = 0xFFFFFFFF;	// clear dial values
-		band_decod_mode[i] = DEMOD_USB; 	// clear decode mode
-		band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// clear filter mode
+		vfo[VFO_WORK].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
+		vfo[VFO_WORK].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
+		vfo[VFO_WORK].band[i].filter_mode = AUDIO_DEFAULT_FILTER;	// clear filter mode
 	}
 
 	// Lower bands default to LSB mode
+	// TODO: This needs to be checked, some lower bands have higher numbers now
 	for(i = 0; i < 4; i++)
-		band_decod_mode[i] = DEMOD_LSB;
+		vfo[VFO_WORK].band[i].decod_mode = DEMOD_LSB;
 
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.value_old	= 0;
@@ -3658,9 +3635,9 @@ skip_check:
 
 	if(mode == 3)	{				// are we updating the TX frequency (small, lower display)?
 		if(ts.vfo_mem_mode & 0x40)					// yes are we receiving with VFO B?
-			loc_tune_new = band_dial_value_a[ts.band];		// yes - get VFO A frequency for TX
+			loc_tune_new = vfo[VFO_A].band[ts.band].dial_value;		// yes - get VFO A frequency for TX
 		else									// we must be receiving with VFO A
-			loc_tune_new = band_dial_value_b[ts.band];		// get VFO B frequency for TX
+			loc_tune_new = vfo[VFO_B].band[ts.band].dial_value;		// get VFO B frequency for TX
 	}
 	else	// everything else uses main VFO frequency
 		loc_tune_new = df.tune_new;				// yes, get that frequency
@@ -4557,15 +4534,9 @@ static void UiDriverChangeBand(uchar is_up)
 	if(curr_band_index < (MAX_BANDS))
 	{
 		// Save dial
-		band_dial_value[curr_band_index] = df.tune_old;
-
-		// Save decode mode
-		band_decod_mode[curr_band_index] = ts.dmod_mode;
-
-		// Save filter setting
-		band_filter_mode[curr_band_index] = ts.filter_id;
-
-		//printf("saved freq: %d and mode: %d\n\r",band_dial_value[curr_band_index],band_decod_mode[curr_band_index]);
+		vfo[VFO_WORK].band[curr_band_index].dial_value = df.tune_old;
+		vfo[VFO_WORK].band[curr_band_index].decod_mode = ts.dmod_mode;
+		vfo[VFO_WORK].band[curr_band_index].filter_mode = ts.filter_id;
 	}
 
 	// Handle direction
@@ -4635,16 +4606,17 @@ static void UiDriverChangeBand(uchar is_up)
 		    new_band_index = MAX_BANDS-1;
 		    }
 	}
+	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
 	//printf("new band index: %d and freq: %d\n\r",new_band_index,new_band_freq);
 	//
 	// Load frequency value - either from memory or default for
 	// the band if this is first band selection
-	if(band_dial_value[new_band_index] != 0xFFFFFFFF)
+	if(vfo[VFO_WORK].band[new_band_index].dial_value != 0xFFFFFFFF)
 	{
 		//printf("load value from memory\n\r");
 
 		// Load old frequency from memory
-		df.tune_new = band_dial_value[new_band_index];
+		df.tune_new = vfo[VFO_WORK].band[new_band_index].dial_value;
 	}
 	else
 	{
@@ -4660,23 +4632,23 @@ static void UiDriverChangeBand(uchar is_up)
 //	UiDriverUpdateSecondLcdFreq(df.tune_new/4);
 
 	// Change decode mode if need to
-	if(ts.dmod_mode != band_decod_mode[new_band_index])
+	if(ts.dmod_mode != vfo[VFO_WORK].band[new_band_index].decod_mode)
 	{
 		// Update mode
-		ts.dmod_mode = band_decod_mode[new_band_index];
+		ts.dmod_mode = vfo[VFO_WORK].band[new_band_index].decod_mode;
 
 		// Update Decode Mode (USB/LSB/AM/FM/CW)
 		UiDriverShowMode();
 	}
 
 	// Change filter mode if need to
-	if(ts.filter_id != band_filter_mode[new_band_index])
+	if(ts.filter_id != vfo[VFO_WORK].band[new_band_index].filter_mode)
 	{
-		ts.filter_id = band_filter_mode[new_band_index];
+		ts.filter_id = vfo[VFO_WORK].band[new_band_index].filter_mode;
 		UiDriverChangeFilter(0);	// update display and change filter
 		UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		audio_driver_set_rx_audio_filter();
-		audio_driver_set_rx_audio_filter();	// we have to invoke the filter change several times for some unknown reason - 'dunno why!
+		audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
 	}
 
 	// Create Band value
@@ -9736,23 +9708,20 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
 	}
 }
 
-void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg) {
 	uint32_t value32;
 	uint16_t value16;
 
 	UiReadSettingEEPROM_UInt16(band_mode + i,&value16,0,0,0xffff);
 	{
 		// Note that ts.band will, by definition, be equal to index "i"
-		//
-		band_decod_mode[i] = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
+		vforeg->decod_mode = (value16 >> 8) & 0x0F;		// demodulator mode might not be right for saved band!
 		if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// valid mode value from EEPROM? or defaults loaded?
-			band_decod_mode[i] = DEMOD_LSB;			// no - set to LSB
+			vforeg->decod_mode = DEMOD_LSB;			// no - set to LSB
 		//
-		band_filter_mode[i] = (value16 >> 12) & 0x0F;	// get filter setting
-		if((band_filter_mode[i] >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
-			band_filter_mode[i] = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->band, mode and filter setting loaded\n\r");
+		vforeg->filter_mode = (value16 >> 12) & 0x0F;	// get filter setting
+		if((vforeg->filter_mode >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)		// audio filter invalid or defaults to be loaded??
+			vforeg->filter_mode = AUDIO_DEFAULT_FILTER;	// set default audio filter
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -9766,18 +9735,18 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 		//
 		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[i]) && (value32 <= (tune_bands[i] + size_bands[i])))
 		{
-			band_dial_value[i] = value32;
+			vforeg->dial_value = value32;
 			//printf("-->frequency loaded\n\r");
 		}
 		else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
 		{	// xxxx relax memory-save frequency restrictions and is it within the allowed range?
-			band_dial_value[i] = value32;
+			vforeg->dial_value = value32;
 			//printf("-->frequency loaded (relaxed)\n\r");
 		}
 		else
 		{
 			// Load default for this band
-			band_dial_value[i] = tune_bands[i] + DEFAULT_FREQ_OFFSET;
+			vforeg->dial_value = tune_bands[i] + DEFAULT_FREQ_OFFSET;
 			//printf("-->base frequency loaded\n\r");
 		}
 	}
@@ -9802,16 +9771,16 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_Int_16(uint16_t 
 }
 #endif
 
-static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO uint32_t* band_dial_value, __IO uint32_t* band_decod_mode, __IO uint32_t* band_filter_mode) {
+static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg) {
 
 	// ------------------------------------------------------------------------------------
 	// Read Band and Mode saved values - update if changed
 	UiReadWriteSettingEEPROM_UInt16(band_mode + i,
-			(band_decod_mode[i] << 8)|(band_filter_mode[i] << 12),
-			((band_decod_mode[i] & 0x0f) << 8) | (band_filter_mode[i] << 12)
+			(vforeg->decod_mode << 8)|(vforeg->filter_mode << 12),
+			((vforeg->decod_mode & 0x0f) << 8) | (vforeg->filter_mode << 12)
 	);
 	// Try to read Freq saved values - update if changed
-	UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, band_dial_value[i], band_dial_value[i]);
+	UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
 }
 
 
@@ -9886,9 +9855,9 @@ void UiDriverLoadEepromValues(void)
 	//
 	for(i = 0; i < MAX_BANDS; i++)
 	{	// read from stored bands
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, band_dial_value, band_decod_mode, band_filter_mode);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_a, band_filter_mode_a);
-		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, &vfo[VFO_WORK].band[i]);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
+		UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
 	}
 	//
 	// ------------------------------------------------------------------------------------
@@ -10157,19 +10126,19 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	// save current band/frequency/mode settings
 	//
 	// save frequency
-	band_dial_value[ts.band] = df.tune_new;
+	vfo[VFO_WORK].band[ts.band].dial_value = df.tune_new;
 	// Save decode mode
-	band_decod_mode[ts.band] = ts.dmod_mode;
+	vfo[VFO_WORK].band[ts.band].decod_mode = ts.dmod_mode;
 	// Save filter setting
-	band_filter_mode[ts.band] = ts.filter_id;
+	vfo[VFO_WORK].band[ts.band].filter_mode = ts.filter_id;
 	//
 	// Save stored band/mode/frequency memory from RAM
 	//
 
 	for(i = 0; i < MAX_BANDS; i++)	{	// scan through each band's frequency/mode data     qqqqq
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  band_dial_value, band_decod_mode, band_filter_mode);
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, band_dial_value_a, band_decod_mode_a, band_filter_mode_a);
-		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, band_dial_value_b, band_decod_mode_b, band_filter_mode_b);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
+		UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
 	}
 
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_FREQ_STEP,df.selected_idx,3);
