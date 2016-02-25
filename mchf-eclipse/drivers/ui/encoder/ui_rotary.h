@@ -64,26 +64,9 @@ typedef struct DialFrequency
 	uchar	de_detent;			// sw de-detent flag
 
 	// Virtual segments
-	uchar	dial_100_mhz;
-	uchar	dial_010_mhz;
-	uchar	dial_001_mhz;
-	uchar	dial_100_khz;
-	uchar	dial_010_khz;
-	uchar	dial_001_khz;
-	uchar	dial_100_hz;
-	uchar	dial_010_hz;
-	uchar	dial_001_hz;
-
+	uint8_t	dial_digits[9];
 	// Second display
-	uchar	sdial_100_mhz;
-	uchar	sdial_010_mhz;
-	uchar	sdial_001_mhz;
-	uchar	sdial_100_khz;
-	uchar	sdial_010_khz;
-	uchar	sdial_001_khz;
-	uchar	sdial_100_hz;
-	uchar	sdial_010_hz;
-	uchar	sdial_001_hz;
+	uint8_t	sdial_digits[9];
 				
 } DialFrequency;
 
