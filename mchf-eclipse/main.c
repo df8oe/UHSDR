@@ -1112,7 +1112,6 @@ int main(void)
 	if( *(__IO uint32_t*)(SRAM2_BASE+10) == 0x29)	// DSP betatesting for DG9BFC
 	    {
 	    ts.dsp_enabled = 1;
-	    ts.xlat = 1;
 	    }
 
 	ConfigurationStorage_Init();

@@ -499,11 +499,11 @@ static char* conf_screens[17][MENUSIZE] = {
 },
 { // 17
 		"400-CAT-IQ-FREQ-XLAT",
-		"",
-		"",
-		"",
-		"",
-		""
+		" ",
+		" ",
+		" ",
+		" ",
+		" "
 }
 };
 
