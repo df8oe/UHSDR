@@ -408,6 +408,15 @@ static float 			FirState_Q_TX[128];
 extern __IO	arm_fir_instance_f32	FIR_Q_TX;
 //
 
+#define VFO_MEM_MODE_SPLIT 0x80
+#define VFO_MEM_MODE_VFO_B 0x40
+
+inline bool is_splitmode() {
+	return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
+}
+inline bool is_vfo_b() {
+	return (ts.vfo_mem_mode & VFO_MEM_MODE_VFO_B) != 0;
+}
 
 
 //*----------------------------------------------------------------------------
@@ -499,7 +508,7 @@ void ui_driver_init(void)
 	// Do update of frequency display
 	ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 	//
-	if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
+	if(is_splitmode())	{	// in SPLIT mode?
 		UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 		UiDriverUpdateFrequency(1,2);	// update RX frequency
 	}
@@ -773,9 +782,9 @@ void ui_driver_toggle_tx(void)
 
 	reset_freq = 0;		// clear flag that indicates that we should reset the frequency
 
-	if(ts.vfo_mem_mode & 0x80)	{				// is SPLIT mode active?
+	if(is_splitmode())	{				// is SPLIT mode active?
 		reset_freq = 1;							// yes - indicate that we WILL need to reset the synthesizer frequency
-		if(ts.vfo_mem_mode & 0x40)	{				// is VFO-B active?
+		if(is_vfo_b())	{				// is VFO-B active?
 			if(ts.txrx_mode == TRX_MODE_TX)	{	// are we in TX mode?
 				if(was_rx)	{						// did we just enter TX mode?
 					vfo[VFO_B].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (B)
@@ -985,7 +994,7 @@ static void UiDriverProcessKeyboard(void)
 //						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
 						    df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 						    ts.refresh_freq_disp = 1;			// update ALL digits
-						    if(ts.vfo_mem_mode & 0x80)
+						    if(is_splitmode())
 							{						// SPLIT mode
 							UiDriverUpdateFrequency(1,3);
 							UiDriverUpdateFrequency(1,2);
@@ -1285,7 +1294,7 @@ static void UiDriverProcessKeyboard(void)
 						}
 						else	{
 							ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
-							if(ts.vfo_mem_mode & 0x80)	// SPLIT mode active?
+							if(is_splitmode())	// SPLIT mode active?
 								UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_ACTIVE_COLOUR,Black,0);	// yes - indicate with color
 							else
 								UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);		// not active - grey
@@ -1319,7 +1328,7 @@ static void UiDriverProcessKeyboard(void)
 					}
 					else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
 						__IO VfoReg* vfo_store;
-						if(ts.vfo_mem_mode & 0x40)	{	// are we in VFO B mode?
+						if(is_vfo_b())	{	// are we in VFO B mode?
 							vfo_store = &vfo[VFO_A].band[ts.band];
 						}
 						else	{	// we were in VFO A mode
@@ -1329,14 +1338,14 @@ static void UiDriverProcessKeyboard(void)
 						vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
 						vfo_store->filter_mode = ts.filter_id;
 
-						if(ts.vfo_mem_mode & 0x80)	{	// are we in SPLIT mode?
+						if(is_splitmode())	{	// are we in SPLIT mode?
 							ts.refresh_freq_disp = 1;	// yes, we need to update the TX frequency:  Make frequency display refresh all digits
 							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 							UiDriverUpdateFrequency(1,2);	// Update receive frequency
 							ts.refresh_freq_disp = 0;	// disable refresh all digits flag
 						}
 						UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
-						if(ts.vfo_mem_mode & 0x40)	// VFO B active?
+						if(is_vfo_b())	// VFO B active?
 							UiLcdHy28_PrintText(80,160,"VFO B -> VFO A",Cyan,Black,1);		// yes, indicate copy of B into A
 						else			// VFO A active
 							UiLcdHy28_PrintText(80,160,"VFO A -> VFO B",Cyan,Black,1);		// indicate copy of A into B
@@ -1509,7 +1518,7 @@ static void UiDriverProcessKeyboard(void)
 						// update frequency display
 						ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 						//
-						if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
+						if(is_splitmode())	{	// in SPLIT mode?
 							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 							UiDriverUpdateFrequency(1,2);	// update RX frequency
 						}
@@ -1532,7 +1541,7 @@ static void UiDriverProcessKeyboard(void)
 						// update frequency display
 						ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 						//
-						if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
+						if(is_splitmode())	{	// in SPLIT mode?
 							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 							UiDriverUpdateFrequency(1,2);	// update RX frequency
 						}
@@ -1785,48 +1794,49 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverChangeEncoderOneMode(0);
 				UiDriverChangeEncoderTwoMode(0);
 				UiDriverChangeEncoderThreeMode(0);
-				// Call twice since the function TOGGLES, not just enables (need to fix this at some point!)
+				// FIXME: Call twice since the function TOGGLES, not just enables (need to fix this at some point!)
 				UiDriverChangeEncoderOneMode(0);
 				UiDriverChangeEncoderTwoMode(0);
 				UiDriverChangeEncoderThreeMode(0);
 				UiDriverChangeFilter(1);	// update bandwidth display
-				//
-				if(!ts.menu_var_changed)
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," MENU  ",White,Black,0);
-				else		// Asterisk indicates that a change has been made and that an EEPROM save should be done
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," MENU *",Orange,Black,0);
-				//
+				// Label for Button F1
+				{
+					char* label;
+					uint32_t color;
+					if(!ts.menu_var_changed) {
+						label = " MENU  ";
+						color = White;
+					} else {
+						label = " MENU *";
+						color = Orange;
+					}
+					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,label,color,Black,0);
+				}
+				// Label for Button F2
 				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
-				/*
-				switch(ts.tx_meter_mode)	{	// redraw button according to meter mode
-				case METER_SWR:
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y,"  SWR ",White,Black,0);
-					break;
-				case METER_ALC:
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y,"  ALC ",White,Black,0);
-					break;
-				case METER_AUDIO:
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," AUDIO",White,Black,0);
-					break;
-				default:
-					break;
+
+				// Display Label for Button F3
+				{
+					uint32_t color;
+					char* label;
+
+					if(!ts.vfo_mem_flag)	{	// in normal VFO mode?
+						label = " SPLIT";
+						color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+					}
+					else	{					// in memory mode
+						color = White;
+						label = "  MEM";
+					}
+					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,label,color,Black,0);	// yes - indicate with color
+
 				}
-				*/
-				//
-				if(!ts.vfo_mem_flag)	{	// in normal VFO mode?
-					if(ts.vfo_mem_mode & 0x80)	// SPLIT mode active?
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_ACTIVE_COLOUR,Black,0);	// yes - indicate with color
-					else
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);		// not active - grey
+				// Display Label for Button F4
+				{
+					char* label = is_vfo_b()?" VFO B":" VFO A";
+					// VFO B active?
+					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,label,White,Black,0);
 				}
-				else	{					// in memory mode
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,"  MEM ",White,Black,0);	// yes - indicate with color
-				}
-				//
-				if(ts.vfo_mem_mode & 0x40)		// VFO B active?
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO B",White,Black,0);	// VFO B active
-				else
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y," VFO A",White,Black,0);
 			}
 		}
 	}
@@ -1891,14 +1901,14 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		}
 		else	{	// NOT menu mode
 			if(!ts.vfo_mem_flag)	{		// update screen if in VFO (not memory) mode
-				if(ts.vfo_mem_mode & 0x80)	{	// are we in SPLIT mode?
+				if(is_splitmode())	{	// are we in SPLIT mode?
 					ts.vfo_mem_mode &= 0x7f;	// yes - turn off MSB to turn off SPLIT
 					UiDriverInitMainFreqDisplay();		// update the main frequency display to reflect the mode
 					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 					UiDriverUpdateFrequency(1,1);	// force update of large digits
 					ts.refresh_freq_disp = 0;	// disable refresh all digits flag
 				}
-				else if(!(ts.vfo_mem_mode & 0x80))	{	// are we NOT in SPLIT mode?
+				else if(!(is_splitmode()))	{	// are we NOT in SPLIT mode?
 					ts.vfo_mem_mode |= 0x80;		// yes - turn on MSB to activate SPLIT
 					UiDriverInitMainFreqDisplay();		//
 					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
@@ -1980,7 +1990,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			uint8_t vfo_active,vfo_new;
 			char* vfo_name;
 
-			if(ts.vfo_mem_mode & 0x40)		{	// LSB on VFO mode byte set?
+			if(is_vfo_b())		{	// LSB on VFO mode byte set?
 				vfo_active = VFO_A;
 				vfo_new = VFO_B;
 				vfo_name = " VFO A";
@@ -2007,8 +2017,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;
 			//
 			// do frequency/display update
-			if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
-				if(!(ts.vfo_mem_mode & 0x40))	{
+			if(is_splitmode())	{	// in SPLIT mode?
+				if(!(is_vfo_b()))	{
 					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(A) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
 					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(B) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
 				}
@@ -2538,7 +2548,7 @@ do_bpf:
 //*----------------------------------------------------------------------------
 static void UiDriverInitMainFreqDisplay(void)
 {
-	if(!(ts.vfo_mem_mode & 0x80))	{	// are we in SPLIT mode?
+	if(!(is_splitmode()))	{	// are we in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);	// make SPLIT indicator grey to indicate off
 		}
@@ -2552,7 +2562,7 @@ static void UiDriverInitMainFreqDisplay(void)
 		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
 		UiLcdHy28_PrintText(POS_TUNE_SPLIT_FREQ_X,POS_TUNE_FREQ_Y,"  .   .   ",White,Black,0);	// clear frequency display and replace dots for RX freq
 		UiLcdHy28_PrintText(POS_TUNE_SPLIT_FREQ_X,POS_TUNE_SPLIT_FREQ_Y_TX,"  .   .   ",White,Black,0);	// clear frequency display and replace dots for TX freq
-		if(!(ts.vfo_mem_mode & 0x40))	{
+		if(!(is_vfo_b()))	{
 			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(A) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
 			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(B) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
 		}
@@ -2677,7 +2687,7 @@ static void UiDriverCreateDesktop(void)
 	//UiDriverUpdateFrequency(1,0);
 	ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 	//
-	if(!(ts.vfo_mem_mode & 0x80))	{	// are we in SPLIT mode?
+	if(!(is_splitmode()))	{	// are we in SPLIT mode?
 		UiDriverUpdateFrequency(1,1);	// yes - force update of large digits
 	}
 	else	{	// are we in SPLIT mode?
@@ -2715,7 +2725,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	strcpy(cap1,"  MENU");
 	strcpy(cap2," METER");
 	strcpy(cap3," SPLIT");
-	if(ts.vfo_mem_mode & 0x40)		// VFO B mode?
+	if(is_vfo_b())		// VFO B mode?
 		strcpy(cap4," VFO B");	// yes - indicate
 	else
 		strcpy(cap4," VFO A");	// VFO A mode otherwise
@@ -2727,7 +2737,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y,cap2,White,Black,0);
 
 	if(!ts.vfo_mem_flag)	{	// is it in VFO (not memory) mode?
-		if(ts.vfo_mem_mode & 0x80)	// SPLIT mode active?
+		if(is_splitmode())	// SPLIT mode active?
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_ACTIVE_COLOUR,Black,0);		// yes - make yellow
 		else
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_INACTIVE_COLOUR,Black,0);		// SPLIT mode not active - grey
@@ -3634,7 +3644,7 @@ skip_check:
 	// Get value, while blocking update
 
 	if(mode == 3)	{				// are we updating the TX frequency (small, lower display)?
-		if(ts.vfo_mem_mode & 0x40)					// yes are we receiving with VFO B?
+		if(is_vfo_b())					// yes are we receiving with VFO B?
 			loc_tune_new = vfo[VFO_A].band[ts.band].dial_value;		// yes - get VFO A frequency for TX
 		else									// we must be receiving with VFO A
 			loc_tune_new = vfo[VFO_B].band[ts.band].dial_value;		// get VFO B frequency for TX
@@ -3902,7 +3912,7 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 
 	//
 	if(!mode)	{
-		if(ts.vfo_mem_mode & 0x80) {	// in "split" mode?
+		if(is_splitmode()) {	// in "split" mode?
 			mode = 2;				// yes - update upper, small digits (receive frequency)
 		} else {
 			mode = 1;				// NOT in split mode:  large, normal-sized digits
@@ -4666,7 +4676,7 @@ static void UiDriverChangeBand(uchar is_up)
 	//
 	ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 	//
-	if(ts.vfo_mem_mode & 0x80)	{	// in SPLIT mode?
+	if(is_splitmode())	{	// in SPLIT mode?
 		UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 		UiDriverUpdateFrequency(1,2);	// update RX frequency
 	}
