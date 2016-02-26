@@ -98,9 +98,9 @@
 // ----------------------------------------------------------
 
 void 	UiLcdHy28_LcdClear(ushort Color);
-void 	UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
-void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor, uchar font);
-uint16_t 	UiLcdHy28_TextWidth(char *str, uchar font);
+void 	UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor, uchar font);
+void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor, uchar font);
+uint16_t 	UiLcdHy28_TextWidth(const char *str, uchar font);
 
 void 	UiLcdHy28_DrawStraightLine(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
 void 	UiLcdHy28_DrawHorizLineWithGrad(ushort Xpos, ushort Ypos, ushort Length,ushort gradient_start);

@@ -698,6 +698,7 @@ void ui_driver_toggle_tx(void)
 	bool	reset_freq = 0;
 	ulong	calc_var;
 
+	// FIXME: drv_init never used anywhere in the current code
 	// Disable irq processing
 	drv_init = 0;
 	if(ts.txrx_mode == TRX_MODE_TX)
@@ -2709,8 +2710,8 @@ static void UiDriverCreateDesktop(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCreateFunctionButtons(bool full_repaint)
 {
-	char cap1[20],cap2[20],cap3[20],cap4[20],cap5[20];
-	ulong	clr;
+	const char* cap;
+	uint32_t	clr;
 
 	// Create bottom bar
 	if(full_repaint)
@@ -2722,39 +2723,36 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 		UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*4 + 8),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,(POS_BOTTOM_BAR_BUTTON_W + 1),Grey);
 	}
 
-	strcpy(cap1,"  MENU");
-	strcpy(cap2," METER");
-	strcpy(cap3," SPLIT");
-	if(is_vfo_b())		// VFO B mode?
-		strcpy(cap4," VFO B");	// yes - indicate
-	else
-		strcpy(cap4," VFO A");	// VFO A mode otherwise
-	strcpy(cap5,"  TUNE");
-	//
+	// Button F1
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,"  MENU",White,Black,0);
+	// Button F2
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
 
-	// Draw buttons text
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,cap1,White,Black,0);
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y,cap2,White,Black,0);
-
-	if(!ts.vfo_mem_flag)	{	// is it in VFO (not memory) mode?
-		if(is_splitmode())	// SPLIT mode active?
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_ACTIVE_COLOUR,Black,0);		// yes - make yellow
-		else
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_INACTIVE_COLOUR,Black,0);		// SPLIT mode not active - grey
-	}
-	else	{	// it is in memory mode (not VFO) mode
-		strcpy(cap3,"  MEM ");
-		UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,White,Black,0);		// yes - make yellow
+	// Button F3
+	if(!ts.vfo_mem_flag) {	// is it in VFO (not memory) mode?
+		cap = " SPLIT";
+		if(is_splitmode()) {	// SPLIT mode active?
+			clr = SPLIT_ACTIVE_COLOUR;		// yes - make yellow
+		} else {
+			clr = SPLIT_INACTIVE_COLOUR;		// SPLIT mode not active - grey
+		}
+	} else	{	// it is in memory mode (not VFO) mode
+		clr = White;
+		cap = "  MEM ";
 	}
 
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,cap4,White,Black,0);
-	//
-	if(ts.tx_disable)	// is transmit disabled?
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap,clr,Black,0);
+
+	// Button F4
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,is_vfo_b()?" VFO B":" VFO A",White,Black,0);
+
+	// Button F5
+	if(ts.tx_disable) {	// is transmit disabled?
 		clr = Grey1;	// Yes - make TUNE button gray
-	else
+	} else {
 		clr = White;	// Not disabled, it is white
-
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,cap5,clr,Black,0);
+	}
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",clr,Black,0);
 }
 
 //
@@ -3396,26 +3394,14 @@ void UiDriverCreateSpectrumScope(void)
 		//printf("vx: %d\n\r",sd.vert_grid_id[i - 1]);
 	}
 
-	if(ts.misc_flags1 & 128)	{	// is it in waterfall mode?
-		if(!ts.waterfall_speed)			// print "disabled" in the middle of the screen if the waterfall was disabled
+	if (((ts.misc_flags1 & 128) && (!ts.waterfall_speed)) || (!(ts.misc_flags1 & 128) && (!ts.scope_speed)))	{
+			// print "disabled" in the middle of the screen if the waterfall or scope was disabled
 			UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
 												(POS_SPECTRUM_IND_Y + 18),
 												"   DISABLED   ",
 												Grey,
 												RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
 	}
-	else	{
-		if(!ts.scope_speed)		// print "disabled" in the middle of the screen if the spectrum scope was disabled
-		UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
-											(POS_SPECTRUM_IND_Y + 18),
-											"   DISABLED   ",
-											Grey,
-											RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-	}
-
-
-
-
 }
 
 //
@@ -5584,10 +5570,7 @@ void UiDriverChangeCmpLevel(uchar enabled)
 
 	UiLcdHy28_DrawEmptyRect( POS_SG_IND_X,POS_SG_IND_Y,13,49,Grey);
 
-	if(enabled)
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"CMP",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"CMP",Grey1,Grey,0);
+	UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"CMP",enabled?Black:Grey1,Grey,0);
 
 	if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	{	// 	display numbers for all but the highest value
 		sprintf(temp,"%02d",ts.tx_comp_level);
@@ -5613,33 +5596,29 @@ void UiDriverChangeCmpLevel(uchar enabled)
 static void UiDriverChangeDSPMode(void)
 {
 	ushort color = White;
-	char txt[9];
+	const char* txt;
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
-	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
+	if(((ts.dsp_active & 1) || (ts.dsp_active & 4))) {	// DSP active and NOT in FM mode?
 		color = White;
-	else	// DSP not active
+	} else	// DSP not active
 		color = Grey2;
-
 	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
-		sprintf(txt, "DSP-OFF");
+		txt = "DSP-OFF";
 		color = Grey2;
-	}
-	else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
-		sprintf(txt, "NR+NOTC");
-	}
-	else if(ts.dsp_active & 1)	{
-		sprintf(txt, "   NR  ");
-	}
-	else if(ts.dsp_active & 4)	{
-		sprintf(txt, " NOTCH ");
+	} else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
+		txt = "NR+NOTC";
+	} else if(ts.dsp_active & 1)	{
+		txt = "   NR  ";
+	} else if(ts.dsp_active & 4)	{
+		txt = " NOTCH ";
 		if(ts.dmod_mode == DEMOD_CW)
 			color = Grey2;
+	} else {
+		txt = "DSP-OFF";
 	}
-	else
-		sprintf(txt, "DSP-OFF");
 
 	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
 }
@@ -5654,51 +5633,51 @@ static void UiDriverChangeDSPMode(void)
 static void UiDriverChangeDigitalMode(void)
 {
 	ushort color = White;
-	char txt[9];
-//	ulong	x_off = 0;
+	const char* txt;
+	//	ulong	x_off = 0;
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
 	switch(ts.digital_mode){
-	    case 0:
-		sprintf(txt, "DIGITAL");
+	case 0:
+		txt = "DIGITAL";
 		color = Grey2;
 		break;
-	    case 1:
-		sprintf(txt, "FREEDV1");
+	case 1:
+		txt = "FREEDV1";
 		color = Grey2;
 		break;
-	    case 2:
-		sprintf(txt, "FREEDV2");
+	case 2:
+		txt = "FREEDV2";
 		color = Grey2;
 		break;
-	    case 3:
-		sprintf(txt, "BPSK 31");
+	case 3:
+		txt = "BPSK 31";
 		color = Grey2;
 		break;
-	    case 4:
-		sprintf(txt, "  RTTY ");
+	case 4:
+		txt = "  RTTY ";
 		color = Grey2;
 		break;
-	    case 5:
-		sprintf(txt, "  SSTV ");
+	case 5:
+		txt = "  SSTV ";
 		color = Grey2;
 		break;
-	    case 6:
-		sprintf(txt, "WSPR  A");
+	case 6:
+		txt = "WSPR  A";
 		color = Grey2;
 		break;
-	    case 7:
-		sprintf(txt, "WSPR  P");
+	case 7:
+		txt = "WSPR  P";
 		color = Grey2;
 		break;
-	    default:
+	default:
 		break;
-		}
+	}
 
 
-/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
+	/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
 		color = White;
 	else	// DSP not active
 		color = Grey2;
@@ -5735,31 +5714,29 @@ static void UiDriverChangeDigitalMode(void)
 static void UiDriverChangePowerLevel(void)
 {
 	ushort color = White;
-	char txt[9];
-	
+	const char* txt;
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	switch(ts.power_level)
 	{
 		case PA_LEVEL_5W:
-			sprintf(txt,"%s","   5W  ");
+			txt = "   5W  ";
 			break;
 		case PA_LEVEL_2W:
-			sprintf(txt,"%s","   2W  ");
+			txt = "   2W  ";
 			break;
 		case PA_LEVEL_1W:
-			sprintf(txt,"%s","   1W  ");
+			txt = "   1W  ";
 			break;
 		case PA_LEVEL_0_5W:
-			sprintf(txt,"%s","  0.5W ");
+			txt = "  0.5W ";
 			break;
 		default:
-			sprintf(txt,"%s","  FULL ");
+			txt = "  FULL ";
 			break;
 	}
 	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
-
 	// Set TX power factor - to reflect changed power
 	UiDriverSetBandPowerFactor(ts.band);
 }
@@ -5781,12 +5758,8 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 
 	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
 
-	if(enabled)
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",Grey1,Grey,0);
+	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",enabled?Black:Grey1,Grey,0);
 
-//	memset(temp,0,100);
 	sprintf(temp,"%2d",ts.keyer_speed);
 
 	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
@@ -5807,35 +5780,38 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 void UIDriverChangeAudioGain(uchar enabled)
 {
 	ushort 	color = Grey;
-	char	temp[5];
+	const char* txt;
+	char  txt_buf[5];
 
 	if(enabled)
 		color = White;
 
 	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
 
-	if(ts.tx_audio_source == TX_AUDIO_MIC) {		// Microphone gain
-		strcpy(temp, "MIC");
-	} else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L) {										// Line gain
-		strcpy(temp, "L>L");
-	}else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R) {										// Line gain
-		strcpy(temp, "L>R");
-	} else if (ts.tx_audio_source == TX_AUDIO_DIG) {										// Line gain
-		strcpy(temp, "DIG");
-	} else if (ts.tx_audio_source == TX_AUDIO_DIGIQ) {
-		strcpy(temp, "DIQ");
-	} else {
-		strcpy(temp, "???");
+	switch (ts.tx_audio_source) {
+	case TX_AUDIO_MIC:
+		txt = "MIC";
+		break;
+	case TX_AUDIO_LINEIN_L:										// Line gain
+		txt = "L>L";
+		break;
+	case TX_AUDIO_LINEIN_R:										// Line gain
+		txt = "L>R";
+		break;
+	case TX_AUDIO_DIG:										// Line gain
+		txt = "DIG";
+		break;
+	case TX_AUDIO_DIGIQ:
+		txt = "DIQ";
+		break;
+	default:
+		txt = "???";
 	}
-	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,enabled?Black:Grey1,Grey,0);
-//	memset(temp,0,100);
+	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),txt,enabled?Black:Grey1,Grey,0);
 
-	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Mic gain mode
-		sprintf(temp,"%2d",ts.tx_mic_gain);
-	else
-		sprintf(temp,"%2d",ts.tx_line_gain);	// Line gain mode
+	sprintf(txt_buf,"%2d",ts.tx_audio_source == TX_AUDIO_MIC?ts.tx_mic_gain:ts.tx_line_gain);
 
-	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), txt_buf,color,Black,0);
 
 }
 
@@ -5848,20 +5824,16 @@ void UIDriverChangeAudioGain(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeRfGain(uchar enabled)
 {
-	ushort 	color = Grey;
+	uint32_t 	color = enabled?White:Grey;
+	uint32_t label_color = enabled?Black:Grey1;
+
 	char	temp[5];
+	const char* label = ts.dmod_mode==DEMOD_FM?"SQL":"RFG";
+	int32_t value;
 
-	if(enabled)
-		color = White;
-
-	UiLcdHy28_DrawEmptyRect( POS_RF_IND_X,POS_RF_IND_Y,13,57,Grey);
 
 	if(ts.dmod_mode != DEMOD_FM)	{	// If not FM, use RF gain
-
-
-
 		if(enabled)	{
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"RFG",Black,Grey,0);
 			//
 			// set color as warning that RX sensitivity is reduced
 			//
@@ -5872,21 +5844,16 @@ void UiDriverChangeRfGain(uchar enabled)
 			else if(ts.rf_gain < 40)
 				color = Yellow;
 		}
-		else
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"RFG",Grey1,Grey,0);
-
-		sprintf(temp," %02d",ts.rf_gain);
+		value = ts.rf_gain;
+	} else	{						// it is FM, display squelch instead
+		value = ts.fm_sql_threshold;
 	}
-	else	{						// it is FM, display squelch instead
 
-		if(enabled)
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"SQL",Black,Grey,0);
-		else
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"SQL",Grey1,Grey,0);
+	sprintf(temp," %02d",value);
 
-		sprintf(temp," %02d",(int)ts.fm_sql_threshold);
-	}
-		UiLcdHy28_PrintTextRight    ((POS_RF_IND_X + 55),(POS_RF_IND_Y + 1), temp,color,Black,0);
+	UiLcdHy28_DrawEmptyRect( POS_RF_IND_X,POS_RF_IND_Y,13,57,Grey);
+	UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),label,label_color,Grey,0);
+	UiLcdHy28_PrintTextRight    ((POS_RF_IND_X + 55),(POS_RF_IND_Y + 1), temp,color,Black,0);
 
 }
 
@@ -5899,10 +5866,13 @@ void UiDriverChangeRfGain(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverChangeSigProc(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
+	uint32_t 	color = enabled?White:Grey;
+	uint32_t label_color = enabled?Black:Grey1;
 
-	UiLcdHy28_DrawEmptyRect( POS_RA_IND_X,POS_RA_IND_Y,13,49,Grey);		// draw box
+	char	temp[5];
+	const char* label;
+	int32_t value;
+
 
 	//
 	// Noise blanker settings display
@@ -5919,12 +5889,9 @@ static void UiDriverChangeSigProc(uchar enabled)
 				color = White;		// Otherwise, make it white
 		}
 		//
-		if((!enabled) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))	// is NB disabled, at 10 kHZ and/or are we in AM mode?
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"NB ",Grey1,Grey,0);	// yes - it is gray
-		else
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"NB ",Black,Grey,0);
-		//
-		sprintf(temp,"%02d",ts.nb_setting);
+		label_color = (!enabled || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))?Grey1:Black;
+		label = "NB ";
+		value = ts.nb_setting;
 	}
 	//
 	// DSP settings display
@@ -5940,17 +5907,17 @@ static void UiDriverChangeSigProc(uchar enabled)
 			else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
 				color = Yellow;
 		}
-		//
-		if(enabled)
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"DSP",Black,Grey,0);
-		else
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"DSP",Grey1,Grey,0);
-
-		sprintf(temp,"%02d",ts.dsp_nr_strength);
+		label = "DSP";
+		value = ts.dsp_nr_strength;
 	}
+
 	//
 	// display numerical value
 	//
+	sprintf(temp,"%02d",value);
+
+	UiLcdHy28_DrawEmptyRect( POS_RA_IND_X,POS_RA_IND_Y,13,49,Grey);		// draw box
+	UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),label,label_color,Grey,0);
 	UiLcdHy28_PrintText    ((POS_RA_IND_X + 30),(POS_RA_IND_Y + 1), temp,color,Black,0);
 }
 
@@ -5965,21 +5932,17 @@ static void UiDriverChangeSigProc(uchar enabled)
 static void UiDriverChangeRit(uchar enabled)
 {
 	char	temp[5];
-	ushort 	color = Grey;
+	uint32_t 	color = enabled?White:Grey;
+	uint32_t label_color = enabled?Black:Grey1;
+	const char* value_format = ts.rit_value >= 0?"+%i":"%i";
+	const char* label = "RIT";
 
-	if(enabled)
-		color = White;
+	// UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
+
+	sprintf(temp,value_format, ts.rit_value);
 
 	UiLcdHy28_DrawEmptyRect( POS_RIT_IND_X,POS_RIT_IND_Y,13,57,Grey);
-
-	UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),"RIT",enabled?Black:Grey1,Grey,0);
-
-	if(ts.rit_value >= 0)
-		sprintf(temp,"+%i",ts.rit_value);
-	else
-		sprintf(temp,"%i", ts.rit_value);
-
-	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
+	UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),label,label_color,Grey,0);
 	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1), temp,color,Black,0);
 }
 
@@ -6004,7 +5967,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
-	char* filter_ptr;
+	const char* filter_ptr;
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
@@ -6316,16 +6279,16 @@ void UiDriverDisplayFilterBW(void)
 		lpos += (offset - (width/2));			// if USB it will be above zero Hz
 
 	//
+	// get color for line
+	//
+	UiDriverMenuMapColors(ts.filter_disp_colour,NULL, &clr);
+
+	//
 	//	erase old line
 	//
 	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
 	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y + 1), 256, LCD_DIR_HORIZONTAL, Black);
 	//
-	//
-	// get color for line
-	//
-
-	UiDriverMenuMapColors(ts.filter_disp_colour,NULL, &clr);
 	//
 	// draw line
 	//
@@ -6359,7 +6322,7 @@ static void UiDriverFFTWindowFunction(char mode)
 				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
 			}
 			break;
-		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej�r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
+		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
 				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
 			}
@@ -7966,7 +7929,15 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 //*----------------------------------------------------------------------------
 void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 {
-	if(create)
+    const char *label, *txt, *value_str = NULL;
+    uint32_t label_color, txt_color;
+
+    label = "TCXO ";
+    label_color = Black;
+    txt = "*";
+    txt_color = enabled?Red:Grey;
+
+    if(create)
 	{
 		// Top part - name and temperature display
 		UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,14,109,Grey);
@@ -7974,38 +7945,32 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 		// LO tracking indicator
 		UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
 		// Temperature - initial draw
-		if(df.temp_enabled & 0xf0)
-			UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "  77.0F",Grey,Black,0);
-		else
-			UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "  25.0C",Grey,Black,0);
+		value_str = (df.temp_enabled & 0xf0)?"  ??.?F":"  ??.?C";
 	}
 
-	if(enabled)
-	{
-		// Control name
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),"TCXO ",Black,Grey,0);
+    if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
+		txt = " ";
+		value_str = "STOPPED";
+	}
 
-		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Red,Black,0);
-	}
-	else
-	{
-		// Control name
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),"TCXO ",Grey1,Grey,0);
+	// Label
+	UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),label,label_color,Grey,0);
 
-		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Grey,Black,0);
+	// Lock Indicator
+	UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), txt,txt_color,Black,0);	// show/delete asterisk
+
+	// Show Initial Temp Value or "STOPPED"
+	if (value_str) {
+		// Value
+		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
 	}
-	//
-	if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), " ",Grey,Black,0);	// delete asterisc
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "STOPPED",Grey,Black,0);
-	}
+
 	//
 	// Meter
 	UiDriverUpdateLoMeter(13,enabled);
 }
 
+// FIXME: This can be simplified, see FreqDisplay Code
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCreateTemperatureDisplay
 //* Object              : refresh ui
@@ -8600,6 +8565,7 @@ void UiLCDBlankTiming(void)
 		ts.lcd_blanking_flag = 0;		// clear flag to make LCD turn on
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8630,6 +8596,7 @@ void UiCalcAGCDecay(void)
 	else
 		ads.agc_decay = AGC_MED_DECAY;
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8652,6 +8619,7 @@ void UiCalcALCDecay(void)
 	tcalc *= -1;
 	ads.alc_decay = powf(10, tcalc);
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8674,6 +8642,8 @@ void UiCalcRFGain(void)
 	ads.agc_rf_gain = powf(10, tcalc);
 
 }
+// TODO: MOVE TO AUDIO /RF Function
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -8697,6 +8667,7 @@ void UiCalcAGCVals(void)
 		ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF /  (float)(ts.max_rf_gain + 1);
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCWSidebandMode
@@ -8732,6 +8703,8 @@ void UiCWSidebandMode(void)
 			break;
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -8755,6 +8728,7 @@ void UiCalcNB_AGC(void)
 	ads.nb_sig_filt = log10f(temp_float);			// de-linearize and save in "new signal" contribution parameter
 	ads.nb_agc_filt = 1 - ads.nb_sig_filt;			// calculate parameter for recyling "old" AGC value
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8780,7 +8754,7 @@ void UiCalcRxIqGainAdj(void)
 	ts.rx_adj_gain_var_i += 1;		// offset it by one (e.g. 0 = unity)
 	ts.rx_adj_gain_var_q += 1;
 }
-
+// TODO: MOVE TO AUDIO /RF Function
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcTxIqGainAdj
 //* Object              : Calculate TX IQ Gain adjustments
@@ -8809,6 +8783,7 @@ void UiCalcTxIqGainAdj(void)
 	ts.tx_adj_gain_var_q += 1;
 }
 
+// TODO: MOVE TO AUDIO / RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcRxPhaseAdj
@@ -9031,6 +9006,7 @@ void UiCalcRxPhaseAdj(void)
 	arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);		// load "Q" with "Q" coefficients
 	//
 }
+// TODO: MOVE TO AUDIO / RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -9114,6 +9090,7 @@ void UiCalcTxCompLevel(void)
 	tcalc = powf(10, tcalc);
 	ads.alc_decay = tcalc;
 }
+// TODO: MOVE TO AUDIO / RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcSubaudibleGenFreq
@@ -9128,6 +9105,7 @@ void UiCalcSubaudibleGenFreq(void)
 	ads.fm_subaudible_tone_word = (ulong)(ads.fm_subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR);	// calculate tone word
 }
 //
+// TODO: MOVE TO AUDIO / RF Function
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcSubaudibleDetFreq
 //* Object              : Calculate frequency word for subaudible tone  [KA7OEI October, 2015]
@@ -9169,6 +9147,8 @@ void UiCalcSubaudibleDetFreq(void)
 	ads.fm_goertzel_ctr_cos = cos(ads.fm_goertzel_ctr_b);
 	ads.fm_goertzel_ctr_r = 2 * ads.fm_goertzel_ctr_cos;
 }
+
+// TODO: MOVE TO RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -9234,7 +9214,8 @@ void UiKeyBeep(void)
 	ts.beep_timing = ts.sysclock + BEEP_DURATION;		// set duration of beep
 	ts.beep_active = 1;									// activate tone
 }
-//
+
+// TODO: MOVE TO RF Function
 void UiSideToneRef(void)
 {
 	if((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	{		// do sidetone beep only in modes that have a "BFO"
@@ -9254,6 +9235,8 @@ void UiSideToneRef(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+// TODO: MOVE TO RF Function
 void UiCalcTxPhaseAdj(void)
 {
 	float f_coeff, f_offset, var_norm, var_inv;
@@ -9328,8 +9311,6 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
 		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->filter mode loaded\n\r");
 	}
 }
 
@@ -9348,8 +9329,6 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 //
 void UiCheckForEEPROMLoadDefaultRequest(void)
 {
-char txt[64];
-
 	uint16_t i;
 
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
@@ -9363,35 +9342,21 @@ char txt[64];
 		//
 		UiLcdHy28_LcdClear(Red);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		sprintf(txt,"   EEPROM DEFAULTS");
-		UiLcdHy28_PrintText(2,05,txt,White,Red,1);
-		sprintf(txt,"      LOADED!!!");
-		UiLcdHy28_PrintText(2,35,txt,White,Red,1);
-		//
-		sprintf(txt,"  DISCONNECT power NOW if you do NOT");
-		UiLcdHy28_PrintText(2,70,txt,Cyan,Red,0);
-		//
-		sprintf(txt,"  want to lose your current settings!");
-		UiLcdHy28_PrintText(2,85,txt,Cyan,Red,0);
-		//
-		sprintf(txt,"  If you want to save default settings");
-		UiLcdHy28_PrintText(2,120,txt,Green,Red,0);
-		//
-		sprintf(txt,"  press and hold POWER button to power");
-		UiLcdHy28_PrintText(2,135,txt,Green,Red,0);
-		//
-		sprintf(txt,"   down and save settings to EEPROM.");
-		UiLcdHy28_PrintText(2,150,txt,Green,Red,0);
+		UiLcdHy28_PrintText(2,05,"   EEPROM DEFAULTS",White,Red,1);
+		UiLcdHy28_PrintText(2,35,"      LOADED!!!",White,Red,1);
+		UiLcdHy28_PrintText(2,70,"  DISCONNECT power NOW if you do NOT",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,85,"  want to lose your current settings!",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,120,"  If you want to save default settings",Green,Red,0);
+		UiLcdHy28_PrintText(2,135,"  press and hold POWER button to power",Green,Red,0);
+		UiLcdHy28_PrintText(2,150,"   down and save settings to EEPROM.",Green,Red,0);
 		//
 		// On screen delay									// delay a bit...
 		for(i = 0; i < 10; i++)
 		   non_os_delay();
 		//
-		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
-		UiLcdHy28_PrintText(50,195,txt,Yellow,Red,0);
-
-		sprintf(txt,"               [Radio startup halted]");
-		UiLcdHy28_PrintText(2,225,txt,White,Red,4);
+		// add this for emphasis
+		UiLcdHy28_PrintText(50,195,"     YOU HAVE BEEN WARNED!",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,225,"               [Radio startup halted]",White,Red,4);
 	}
 }
 //
@@ -9410,8 +9375,6 @@ char txt[64];
 //
 void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 {
-char txt[64];
-
 	uint16_t i;
 
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
@@ -9425,35 +9388,20 @@ char txt[64];
 		//
 		UiLcdHy28_LcdClear(Yellow);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		sprintf(txt,"   FREQUENCY/MODE");
-		UiLcdHy28_PrintText(2,05,txt,Black,Yellow,1);
-		sprintf(txt," DEFAULTS LOADED!!!");
-		UiLcdHy28_PrintText(2,35,txt,Black,Yellow,1);
-		//
-		sprintf(txt,"  DISCONNECT power NOW if you do NOT");
-		UiLcdHy28_PrintText(2,70,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"want to lose your current frequencies!");
-		UiLcdHy28_PrintText(2,85,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"If you want to save default frequencies");
-		UiLcdHy28_PrintText(2,120,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"  press and hold POWER button to power");
-		UiLcdHy28_PrintText(2,135,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"   down and save settings to EEPROM.");
-		UiLcdHy28_PrintText(2,150,txt,Black,Yellow,0);
-		//
+		UiLcdHy28_PrintText(2,05,	"   FREQUENCY/MODE",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,35,	" DEFAULTS LOADED!!!",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,70,	"  DISCONNECT power NOW if you do NOT",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,85,	"want to lose your current frequencies!",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,120,	"If you want to save default frequencies",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,135,	"  press and hold POWER button to power",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,150,	"   down and save settings to EEPROM.",Black,Yellow,0);
 		// On screen delay									// delay a bit...
 		for(i = 0; i < 10; i++)
 		   non_os_delay();
-		//
-		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
-		UiLcdHy28_PrintText(50,195,txt,Black,Yellow,0);
 
-		sprintf(txt,"               [Radio startup halted]");
-		UiLcdHy28_PrintText(2,225,txt,Black,Yellow,4);
+		// add this for emphasis
+		UiLcdHy28_PrintText(50,195,"     YOU HAVE BEEN WARNED!",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,225,"               [Radio startup halted]",Black,Yellow,4);
 	}
 }
 //
@@ -9477,8 +9425,8 @@ void UiCheckForPressedKey(void)
 	bool stat = 1;
 	poweroffcount = rbcount = 0;
 	p_o_state = rb_state = new_state = 0;
-	char txt[40];
-
+	char txt_buf[40];
+	char* txt;
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
 		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
 			stat = 0;						// yes - clear flag
@@ -9491,129 +9439,124 @@ void UiCheckForPressedKey(void)
 	UiLcdHy28_LcdClear(Blue);							// clear the screen
 
 	//
-	sprintf(txt,"  Button Test  ");
-	UiLcdHy28_PrintText(40,35,txt,White,Blue,1);
-	//
-	sprintf(txt,"press & hold POWER-button to poweroff");
-	UiLcdHy28_PrintText(15,70,txt,White,Blue,0);
-	sprintf(txt,"press & hold BANDM-button to reboot");
-	UiLcdHy28_PrintText(20,90,txt,White,Blue,0);
+	UiLcdHy28_PrintText(40,35,"  Button Test  ",White,Blue,1);
+	UiLcdHy28_PrintText(15,70,"press & hold POWER-button to poweroff",White,Blue,0);
+	UiLcdHy28_PrintText(20,90,"press & hold BANDM-button to reboot",White,Blue,0);
 	//
 	for(;;)	{		// get stuck here for test duration
 		j = 99;		// load with flag value
 		k = 0;
 
 		for(i = 0; i <= 17; i++)
-		    {				// scan all buttons
-		    if(!UiDriverButtonCheck(i))
+		{				// scan all buttons
+			if(!UiDriverButtonCheck(i))
 			{		// is this button pressed?
-			k++;
-			if(j == 99)						// is this the first button pressed?
-			j = i;						// save button number
+				k++;
+				if(j == 99)						// is this the first button pressed?
+					j = i;						// save button number
 			}
-		    }
+		}
 
-		    if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
-			{
+		if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
+		{
 			rbcount = 0;
 			new_state = 1;
-			}
+		}
 
 		switch(j)	{							// decode button to text
-			case	BUTTON_POWER_PRESSED:
-				strcpy(txt, "POWER ");
-				if(poweroffcount > 75)
-				    {
-				    strcpy(txt, "powering off");
-				    p_o_state = 1;
-				    }
-				poweroffcount++;
-				break;
-			case	BUTTON_M1_PRESSED:
-				strcpy(txt, "  M1  ");
-				break;
-			case	BUTTON_M2_PRESSED:
-				strcpy(txt, "  M2  ");
-				break;
-			case	BUTTON_M3_PRESSED:
-				strcpy(txt, "  M3  ");
-				break;
-			case	BUTTON_G1_PRESSED:
-				strcpy(txt, "  G1  ");
-				break;
-			case	BUTTON_G2_PRESSED:
-				strcpy(txt, "  G2  ");
-				break;
-			case	BUTTON_G3_PRESSED:
-				strcpy(txt, "  G3  ");
-				break;
-			case	BUTTON_G4_PRESSED:
-				strcpy(txt, "  G4  ");
-				break;
-			case	BUTTON_F1_PRESSED:
-				strcpy(txt, "  F1  ");
-				break;
-			case	BUTTON_F2_PRESSED:
-				strcpy(txt, "  F2  ");
-				break;
-			case	BUTTON_F3_PRESSED:
-				strcpy(txt, "  F3  ");
-				break;
-			case	BUTTON_F4_PRESSED:
-				strcpy(txt, "  F4  ");
-				poweroffcount = 0;
-				break;
-			case	BUTTON_F5_PRESSED:
-				strcpy(txt, "  F5  ");
-				break;
-			case	BUTTON_BNDM_PRESSED:
-				strcpy(txt, " BNDM ");
-				if(rbcount > 75)
-				    {
-				    strcpy(txt, "rebooting");
-				    rb_state = 1;
-				    }
-				rbcount++;
-				break;
-			case	BUTTON_BNDP_PRESSED:
-				strcpy(txt, " BNDP ");
-				break;
-			case	BUTTON_STEPM_PRESSED:
-				strcpy(txt, "STEPM ");
-				break;
-			case	BUTTON_STEPP_PRESSED:
-				strcpy(txt, "STEPP ");
-				break;
-			case	TOUCHSCREEN_ACTIVE: ;
-				char out[32];
-				get_touchscreen_coordinates();
-				sprintf(out,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
-				strcpy(txt, out);
-				break;
-			default:
-				strcpy(txt, "<Null>");		// no button pressed
-				poweroffcount = 0;
-				rbcount = 0;
+		case	BUTTON_POWER_PRESSED:
+			txt = "POWER ";
+			if(poweroffcount > 75)
+			{
+				txt = "powering off";
+				p_o_state = 1;
+			}
+			poweroffcount++;
+			break;
+		case	BUTTON_M1_PRESSED:
+			txt = "  M1  ";
+			break;
+		case	BUTTON_M2_PRESSED:
+			txt = "  M2  ";
+			break;
+		case	BUTTON_M3_PRESSED:
+			txt = "  M3  ";
+			break;
+		case	BUTTON_G1_PRESSED:
+			txt = "  G1  ";
+			break;
+		case	BUTTON_G2_PRESSED:
+			txt = "  G2  ";
+			break;
+		case	BUTTON_G3_PRESSED:
+			txt = "  G3  ";
+			break;
+		case	BUTTON_G4_PRESSED:
+			txt = "  G4  ";
+			break;
+		case	BUTTON_F1_PRESSED:
+			txt = "  F1  ";
+			break;
+		case	BUTTON_F2_PRESSED:
+			txt = "  F2  ";
+			break;
+		case	BUTTON_F3_PRESSED:
+			txt = "  F3  ";
+			break;
+		case	BUTTON_F4_PRESSED:
+			txt = "  F4  ";
+			poweroffcount = 0;
+			break;
+		case	BUTTON_F5_PRESSED:
+			txt = "  F5  ";
+			break;
+		case	BUTTON_BNDM_PRESSED:
+			txt = " BNDM ";
+			if(rbcount > 75)
+			{
+				txt = "rebooting";
+				rb_state = 1;
+			}
+			rbcount++;
+			break;
+		case	BUTTON_BNDP_PRESSED:
+			txt = " BNDP ";
+			break;
+		case	BUTTON_STEPM_PRESSED:
+			txt = "STEPM ";
+			break;
+		case	BUTTON_STEPP_PRESSED:
+			txt = "STEPP ";
+			break;
+		case	TOUCHSCREEN_ACTIVE: ;
+		get_touchscreen_coordinates();
+		sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+		txt = txt_buf;
+		break;
+		default:
+			txt = "<none>";		// no button pressed
+			poweroffcount = 0;
+			rbcount = 0;
 		}
 		//
 		UiLcdHy28_PrintText(120,120,txt,White,Blue,1);		// identify button on screen
-		sprintf(txt, "# of buttons pressed: %d  ", (int)k);
-		UiLcdHy28_PrintText(75,160,txt,White,Blue,0);		// show number of buttons pressed on screen
+		sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
+		UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);		// show number of buttons pressed on screen
 
 		if(p_o_state == 1)
-		    {
-		    GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
-		    while (1 == 1) ;
-		    }
+		{
+			GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
+			while (1 == 1) ;
+		}
 		if(rb_state == 1)
-		    {
-		    if(j != BUTTON_BNDM_PRESSED)
+		{
+			if(j != BUTTON_BNDM_PRESSED)
 			{
-			ui_si570_get_configuration();			// restore SI570 to factory default
-			*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-			NVIC_SystemReset();
+				ui_si570_get_configuration();			// restore SI570 to factory default
+				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+				NVIC_SystemReset();
 			}
-		    }
+		}
 	}
 }
 

@@ -868,7 +868,7 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
     uint8_t    TempChar;
     const sFONT   *cf;
@@ -926,7 +926,7 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushor
 }
 
 
-uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
+uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 
 	const sFONT   *cf;
 	uint16_t Xpos = 0;
@@ -964,7 +964,7 @@ uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
 	return Xpos;
 }
 
-void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
 
 	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
