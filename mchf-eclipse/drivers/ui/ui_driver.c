@@ -5042,8 +5042,8 @@ static void UiDriverChangeBand(uchar is_up)
 static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
-
-
+	static int  delta_tics = 0;
+	int			enc_multiplier;
 	// Skip too regular read of the timer value, to avoid flickering
 //	df.update_skip++;
 //	if(df.update_skip < FREQ_UPDATE_SKIP)
@@ -5064,7 +5064,11 @@ static bool UiDriverCheckFrequencyEncoder(void)
 
 	// No change, return
 	if(df.value_old == df.value_new)
+
+	{
+		delta_tics++;  // how often do we come here until the encoder has changed in times of 10ms
 		return false;
+	}
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
@@ -5091,18 +5095,39 @@ static bool UiDriverCheckFrequencyEncoder(void)
 	//printf("freq pot: %d \n\r",df.value_new);
 
 	// Encoder value to difference
-	if(df.value_new > df.value_old)
-		pot_diff = +1;
-	else
-		pot_diff = -1;
+	//if(df.value_new > df.value_old)
+		//pot_diff = +1;
+		pot_diff = df.value_new-df.value_old;  // >1, if ecoder turns very fast, more than 1 step in 10ms
+	//else
+		//pot_diff = -1;
 
 	//printf("pot diff: %d\n\r",pot_diff);
 
+
+
+	// estimate speed of encoder
+
+
+	enc_multiplier = 1; //set standard speed
+	if (delta_tics < 2) enc_multiplier = 10; // turning medium speed -> increase speed by 10
+	if ((delta_tics < 2) && ((pot_diff>2) || (pot_diff<(-2))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
+	delta_tics=0;
+	if ((df.tuning_step == 10000) && (enc_multiplier > 10)) enc_multiplier = 10; //limit speed to 100000kHz/step
+	if ((df.tuning_step == 100000) && (enc_multiplier > 1)) enc_multiplier = 1; //limit speed to 100000kHz/step
+
+
+
 	// Finaly convert to frequency incr/decr
-	if(pot_diff < 0)
-		df.tune_new -= (df.tuning_step * 4);
+
+	if(pot_diff>0)
+		df.tune_new += (df.tuning_step * 4 * enc_multiplier);
 	else
-		df.tune_new += (df.tuning_step * 4);
+		df.tune_new -= (df.tuning_step * 4 * enc_multiplier);
+
+
+
+		//df.tune_new += (df.tuning_step * 4 * enc_multiplier * pot_diff);
+		//df.tune_new += (df.tuning_step * 4 * enc_multiplier);
 
 	// Updated
 	df.value_old = df.value_new;
@@ -6669,7 +6694,7 @@ static void UiDriverFFTWindowFunction(char mode)
 				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
 			}
 			break;
-		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejér) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
+		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fejï¿½r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
 				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
 			}
