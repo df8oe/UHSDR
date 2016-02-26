@@ -672,6 +672,27 @@ void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Directi
    }
 }
 
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLine(x, y+1, Length, Direction,color);
+	}
+}
+
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x+2, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLineDouble(x, y+1, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x, y+2, Length, Direction,color);
+	}
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawHorizLineWithGrad
 //* Object              : draq horizontal line with gradient, most bright in

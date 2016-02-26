@@ -103,6 +103,8 @@ void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort 
 uint16_t 	UiLcdHy28_TextWidth(const char *str, uchar font);
 
 void 	UiLcdHy28_DrawStraightLine(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
+void    UiLcdHy28_DrawStraightLineDouble(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
+void    UiLcdHy28_DrawStraightLineTriple(ushort Xpos, ushort Ypos, ushort Length, uchar Direction,ushort color);
 void 	UiLcdHy28_DrawHorizLineWithGrad(ushort Xpos, ushort Ypos, ushort Length,ushort gradient_start);
 
 void 	UiLcdHy28_DrawEmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width, ushort color);
