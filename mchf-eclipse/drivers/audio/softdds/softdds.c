@@ -22,7 +22,7 @@
 #include "softdds.h"
 
 // Software DDS public
-__IO 	SoftDds	sd;
+__IO 	SoftDds	softdds;
 
 // Step in the public structure - don't work for some crazy reason
 ulong 	step;
@@ -44,7 +44,7 @@ void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
 	// Reset accumulator, if need smooth tone
 	// transition, do not reset it (e.g. wspr)
 	if(!smooth)
-		sd.acc = 0;
+		softdds.acc = 0;
 
 	// Calculate new step
 	f   	 /= 65536.0;
@@ -68,8 +68,8 @@ void softdds_runf(float *i_buff,float *q_buff,ushort size)
 	for(i = 0; i < size; i++)
 	{
 		// Calculate next sample
-		sd.acc += step;
-		k    = sd.acc >> DDS_ACC_SHIFT;
+		softdds.acc += step;
+		k    = softdds.acc >> DDS_ACC_SHIFT;
 
 		// Fix ptr overload
 		k &= (DDS_TBL_SIZE - 1);
