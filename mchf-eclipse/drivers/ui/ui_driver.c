@@ -5637,6 +5637,12 @@ void UiDriverChangeFilter(uchar ui_only_update)
 		case AUDIO_2P3KHZ:
 			filter_ptr = "  2.3k";
 			break;
+		case AUDIO_2P7KHZ:
+			filter_ptr = "  2.7k";
+			break;
+		case AUDIO_2P9KHZ:
+			filter_ptr = "  2.9k";
+			break;
 		case AUDIO_3P6KHZ:
 			filter_ptr = "  3.6k";
 			break;
@@ -5821,12 +5827,51 @@ void UiDriverDisplayFilterBW(void)
 			width = FILTER_2300HZ_WIDTH;
 			//
 			break;
-
-		case AUDIO_3P6KHZ:	// 3.6 kHz wide filter
-			offset = FILT3600;
-			width = FILTER_3600HZ_WIDTH;
+		case AUDIO_2P7KHZ:		// 2.7 kHz wide filter
+			switch(ts.filter_2k7_select)	{
+				case 1:
+					offset = FILT2700_1;
+					break;
+				case 2:
+					offset = FILT2700_2;
+					break;
+				default:
+					offset = FILT2700_2;
+					break;
+			}
+			width = FILTER_2700HZ_WIDTH;
+			//
 			break;
-
+		case AUDIO_2P9KHZ:		// 2.9 kHz wide filter
+			switch(ts.filter_2k9_select)	{
+				case 1:
+					offset = FILT2900_1;
+					break;
+				case 2:
+					offset = FILT2900_2;
+					break;
+				default:
+					offset = FILT2900_2;
+					break;
+			}
+			width = FILTER_2900HZ_WIDTH;
+			//
+			break;
+		case AUDIO_3P6KHZ:		// 3.6 kHz wide filter
+			switch(ts.filter_3k6_select)	{
+				case 1:
+					offset = FILT3600_1;
+					break;
+				case 2:
+					offset = FILT3600_2;
+					break;
+				default:
+					offset = FILT3600_2;
+					break;
+			}
+			width = FILTER_3600HZ_WIDTH;
+			//
+			break;
 		case AUDIO_WIDE:	// selectable "wide" bandwidth filter
 			switch(ts.filter_wide_select)	{
 				case WIDE_FILTER_5K:
@@ -8272,7 +8317,15 @@ void UiCalcRxPhaseAdj(void)
 				}
 			}
 		}
-		else if((ts.filter_id == AUDIO_3P6KHZ) || (ts.dmod_mode == DEMOD_FM))	{	// "Medium" AM - "3.6" kHz filter (total of 7.2 kHz bandwidth) - or if we are using FM
+		else if(ts.filter_id == AUDIO_3P6KHZ)	{
+				// "Medium" AM - 3.6 kHz filter (total of 7.2kHz bandwidth), use 5kHz FIR and 3k6 IIR --> allows sideband-selected AM by detuning!
+			for(i = 0; i < Q_NUM_TAPS; i++)	{
+				fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
+				fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+			}
+		}
+		else if((ts.filter_id == AUDIO_2P7KHZ)|| (ts.filter_id == AUDIO_2P9KHZ) || (ts.dmod_mode == DEMOD_FM))	{
+				// "low Medium" AM - 2.7 or 2.9 (total of 2x bandwidth) - or if we are using FM
 			for(i = 0; i < Q_NUM_TAPS; i++)	{
 				fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
 				fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
@@ -9288,6 +9341,8 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_500HZ_SEL,&ts.filter_500Hz_select,FILTER_500HZ_DEFAULT,0,MAX_500HZ_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K8_SEL,&ts.filter_1k8_select,FILTER_1K8_DEFAULT,0,MAX_1K8_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K3_SEL,&ts.filter_2k3_select,FILTER_2K3_DEFAULT,0,MAX_2K3_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K7_SEL,&ts.filter_2k7_select,FILTER_2K7_DEFAULT,0,MAX_2K7_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K9_SEL,&ts.filter_2k9_select,FILTER_2K9_DEFAULT,0,MAX_2K9_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K6_SEL,&ts.filter_3k6_select,FILTER_3K6_DEFAULT,0,1);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_WIDE_SEL,&ts.filter_wide_select,FILTER_WIDE_DEFAULT,0,WIDE_FILTER_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_PA_BIAS,&ts.pa_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS);
@@ -9540,6 +9595,8 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_500Hz_select,FILTER_500HZ_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_1k8_select,FILTER_1K8_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_2k3_select,FILTER_2K3_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K7_SEL,ts.filter_2k7_select,FILTER_2K7_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K9_SEL,ts.filter_2k9_select,FILTER_2K9_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_3k6_select,FILTER_3K6_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select,FILTER_WIDE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);

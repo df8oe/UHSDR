@@ -248,88 +248,97 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
 }
 
 
-static char* base_screens[10][MENUSIZE] = {
+static char* base_screens[11][MENUSIZE] = {
 { //1
 		"010-DSP NR Strength",
 		"020-300Hz Center Freq.",
 		"021-500HZ Center Freq.",
 		"022-1.8k Center Freq.",
 		"023-2.3k Center Freq.",
-		"024-3.6k Filter"
+		"024-2.7k Filter"
 },
 { // 2
-		"025-Wide Filt. Sel.",
-		"026-Wide Filt in CW Mode",
-		"027-CW Filt in SSB Mode",
-		"028-AM Mode",
-		"029-LSB/USB Auto Select",
-		"040-FM Mode"
+		"025-2.9k Filter",
+		"026-3.6k Filter",
+		"027-Wide Filt. Sel.",
+		"028-Wide Filt in CW Mode",
+		"029-CW Filt in SSB Mode",
+		"030-AM Mode"
 },
 { // 3
+		"031-LSB/USB Auto Select",
+		"040-FM Mode",
 		"041-FM Sub Tone Gen",
 		"042-FM Sub Tone Det",
 		"043-FM Tone Burst",
-		"044-FM RX Bandwidth",
-		"045-FM Deviation",
-		"050-AGC Mode"
+		"044-FM RX Bandwidth"
 },
 { // 4
+		"045-FM Deviation",
+		"050-AGC Mode",
 		"051-RF Gain",
 		"052-Cust AGC (+=Slower)",
 		"053-RX Codec Gain",
-		"054-RX NB Setting",
-		"055-RX/TX Freq Xlate",
-		"060-Mic/Line Select"
+		"054-RX NB Setting"
 },
 {	// 5
+		"055-RX/TX Freq Xlate",
+		"060-Mic/Line Select",
 		"061-Mic Input Gain",
 		"062-Line Input Gain",
 		"063-ALC Release Time",
-		"064-TX PRE ALC Gain",
-		"065-TX Audio Compress",
-		"070-CW Keyer Mode",
+		"064-TX PRE ALC Gain"
 },
 {	// 6
+		"065-TX Audio Compress",
+		"070-CW Keyer Mode",
 		"071-CW Keyer Speed",
 		"072-CW Sidetone Gain",
 		"073-CW Side/Off Freq",
-		"074-CW Paddle Reverse",
-		"075-CW TX->RX Delay",
-		"076-CW Freq. Offset",
+		"074-CW Paddle Reverse"
 },
 {	// 7
+		"075-CW TX->RX Delay",
+		"076-CW Freq. Offset",
 		"090-TCXO Off/On/Stop",
 		"091-TCXO Temp. (C/F)",
 		"100-Spec Scope 1/Speed",
-		"101-Spec/Wfall Filter",
-		"102-Spec. Trace Colour",
-		"103-Spec. Grid Colour"
+		"101-Spec/Wfall Filter"
 },
 {	// 8
+		"102-Spec. Trace Colour",
+		"103-Spec. Grid Colour",
 		"104-Spec/Wfall ScaleClr",
 		"105-Spec/Wfall 2x Magn",
 		"106-Spec/Wfall AGC Adj.",
-		"107-Spec Scope Ampl.",
-		"108-Spec/Wfall Line",
-		"109-Scope/Waterfall"
+		"107-Spec Scope Ampl."
 },
 {	// 9
+		"108-Spec/Wfall Line",
+		"109-Scope/Waterfall",
 		"110-Wfall Colours",
 		"111-Wfall Step Size",
 		"112-Wfall Brightness",
-		"113-Wfall Contrast",
-		"114-Wfall 1/Speed",
-		"115-Scope NoSig Adj."
+		"113-Wfall Contrast"
 },
 {	// 10
+		"114-Wfall 1/Speed",
+		"115-Scope NoSig Adj.",
 		"116-Wfall NoSig Adj.",
 		"117-Wfall Size",
 		"197-Backup Config",
-		"198-Restore Config",
+		"198-Restore Config"
+},
+{	// 11
 		"199-Hardware Info",
 		"000-Adjustment Menu"
+		" ",
+		" ",
+		" ",
+		" "
 }
 };
+
 
 static char* conf_screens[17][MENUSIZE] = {
 { // 1
@@ -509,6 +518,24 @@ static const char* filter_list_2P3KHz[] =      {
 	"1562Hz",
 	"1712Hz",
 	"   LPF"
+} ;
+
+static const char* filter_list_2P7KHz[] =      {
+    "   OFF",
+	"   LPF",
+	"   BPF"
+} ;
+
+static const char* filter_list_2P9KHz[] =      {
+    "   OFF",
+	"   LPF",
+	"   BPF"
+} ;
+
+static const char* filter_list_3P6KHz[] =      {
+    "   OFF",
+	"   LPF",
+	"   BPF"
 } ;
 
 
@@ -921,7 +948,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		UiDriverMenuMapStrings(options,ts.filter_1k8_select,MAX_1K8_FILTER, filter_list_1P8KHz);
 		UiDriverMenuChangeFilter(AUDIO_1P8KHZ,fchange);
 		break;
-	case MENU_2k3_SEL: // 2.3 kHz filter select
+	case MENU_2K3_SEL: // 2.3 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
 
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k3_select,
@@ -940,15 +967,61 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		UiDriverMenuMapStrings(options,ts.filter_2k3_select,MAX_2K3_FILTER, filter_list_2P3KHz);
 		UiDriverMenuChangeFilter(AUDIO_2P3KHZ,fchange);
 		break;
-	case MENU_3K6_SEL: // 3.6 kHz filter select
+	case MENU_2K7_SEL: // 2.7 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
-			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.filter_3k6_select,FILTER_3K6_DEFAULT,options,&clr);
-			if(ts.filter_id != AUDIO_3P6KHZ)
+
+			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k7_select,
+					0,
+					MAX_2K7_FILTER,
+					FILTER_2K7_DEFAULT,
+					1
+			);
+			if(ts.filter_id != AUDIO_2P7KHZ)
 				clr = Orange;
+
 		}
 		else				// show disabled if in FM
 			clr = Red;
 
+		UiDriverMenuMapStrings(options,ts.filter_2k7_select,MAX_2K7_FILTER, filter_list_2P7KHz);
+		UiDriverMenuChangeFilter(AUDIO_2P7KHZ,fchange);
+		break;
+	case MENU_2K9_SEL: // 2.9 kHz filter select
+		if(ts.dmod_mode != DEMOD_FM)	{
+
+			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k9_select,
+					0,
+					MAX_2K9_FILTER,
+					FILTER_2K9_DEFAULT,
+					1
+			);
+			if(ts.filter_id != AUDIO_2P9KHZ)
+				clr = Orange;
+
+		}
+		else				// show disabled if in FM
+			clr = Red;
+
+		UiDriverMenuMapStrings(options,ts.filter_2k9_select,MAX_2K9_FILTER, filter_list_2P9KHz);
+		UiDriverMenuChangeFilter(AUDIO_2P9KHZ,fchange);
+		break;
+	case MENU_3K6_SEL: // 3.6 kHz filter select
+		if(ts.dmod_mode != DEMOD_FM)	{
+
+			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_3k6_select,
+					0,
+					MAX_3K6_FILTER,
+					FILTER_3K6_DEFAULT,
+					1
+			);
+			if(ts.filter_id != AUDIO_3P6KHZ)
+				clr = Orange;
+
+		}
+		else				// show disabled if in FM
+			clr = Red;
+
+		UiDriverMenuMapStrings(options,ts.filter_3k6_select,MAX_3K6_FILTER, filter_list_3P6KHz);
 		UiDriverMenuChangeFilter(AUDIO_3P6KHZ,fchange);
 		break;
 	case MENU_WIDE_SEL: // Wide filter select
@@ -1980,7 +2053,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, " Do it!");
 			    clr = White;
-			    opt_pos = 2;	// Y position of this menu item
+//			    opt_pos = 2;	// Y position of this menu item
+			    opt_pos = 4;	// Y position of this menu item
 			    if(var>=1)
 				{
 				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+24,"Working",Red,Black,0);
@@ -1999,7 +2073,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, "Do it!");
 			    clr = White;
-			    opt_pos = 3;	// Y position of this menu item
+//			    opt_pos = 3;	// Y position of this menu item
+			    opt_pos = 5;	// Y position of this menu item
 			    if(var>=1)
 				{
 				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+36,"Working",Red,Black,0);
@@ -2015,7 +2090,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;
-			opt_pos = 4;	// Y position of this menu item
+//			opt_pos = 4;	// Y position of this menu item
+			opt_pos = 0;	// Y position of this menu item
 			if(var>=1)
 			    {
 			    strcpy(options, "    ");
@@ -2045,11 +2121,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else
 			strcpy(options, "OFF");
 
-		opt_pos = 5;	// Y position of this menu item
+//		opt_pos = 5;	// Y position of this menu item
+		opt_pos = 1;	// Y position of this menu item
 		break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");
-		opt_pos = 5;
+//		opt_pos = 5;
+		opt_pos = 1;
 		break;
 	}
 	//

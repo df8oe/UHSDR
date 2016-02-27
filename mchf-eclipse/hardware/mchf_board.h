@@ -571,6 +571,8 @@ enum	{
 	AUDIO_500HZ,
 	AUDIO_1P8KHZ,
 	AUDIO_2P3KHZ,
+	AUDIO_2P7KHZ,
+	AUDIO_2P9KHZ,
 	AUDIO_3P6KHZ,
 	AUDIO_WIDE
 };
@@ -584,7 +586,7 @@ enum	{
 //
 // use below to define the highest-used filter number-1
 //
-#define AUDIO_MAX_FILTER		6
+#define AUDIO_MAX_FILTER		8
 //
 //
 #define MIN_FILTER_SELECT_VAL		1		// Minimum value for selection of sub-filter
@@ -601,8 +603,14 @@ enum	{
 #define	MAX_2K3_FILTER			5
 #define	FILTER_2K3_DEFAULT		2		// Center frequency of 1412 Hz
 //
-#define	FILTER_3K6_DEFAULT		1		// 1 = Enabled
-#define	MAX_3K6_FILTER			1		// only on/off
+#define	MAX_2K7_FILTER			2
+#define	FILTER_2K7_DEFAULT		2		// Center frequency of 1412 Hz
+//
+#define	MAX_2K9_FILTER			2
+#define	FILTER_2K9_DEFAULT		2		// Center frequency of 1412 Hz
+//
+#define	MAX_3K6_FILTER			2		// only on/off
+#define	FILTER_3K6_DEFAULT		2		// 1 = Enabled
 //
 enum	{
 	WIDE_FILTER_10K_AM = 0,
@@ -626,6 +634,8 @@ enum	{
 #define	FILTER_500HZ_WIDTH		500
 #define	FILTER_1800HZ_WIDTH		1800
 #define FILTER_2300HZ_WIDTH		2300
+#define FILTER_2700HZ_WIDTH		2700
+#define FILTER_2900HZ_WIDTH		2900
 #define FILTER_3600HZ_WIDTH		3600
 #define	FILTER_5000HZ_WIDTH		5000
 #define	FILTER_6000HZ_WIDTH		6000
@@ -663,8 +673,14 @@ enum	{
 #define	FILT2300_4			1712
 #define	FILT2300_5			1150
 //
+#define FILT2700_1			1350
+#define	FILT2700_2			1425
+//
+#define FILT2900_1			1450
+#define	FILT2900_2			1525
+//
 #define FILT3600_1			1800
-#define	FILT3600_2			1800
+#define	FILT3600_2			1875
 #define	FILT3600			1800
 //
 #define	FILT5000			2500
@@ -1156,6 +1172,10 @@ enum {
 #define EEPROM_TUNE_POWER_LEVEL		313
 #define EEPROM_CAT_MODE_ACTIVE		314
 #define EEPROM_CAT_XLAT			315
+#define	EEPROM_FILTER_2K7_SEL		316		// Selection of 2.7 kHz filter
+#define	EEPROM_FILTER_2K9_SEL		317		// Selection of 2.9 kHz filter
+
+
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1285,6 +1305,8 @@ typedef struct TransceiverState
 	uchar	filter_500Hz_select;
 	uchar	filter_1k8_select;
 	uchar	filter_2k3_select;
+	uchar	filter_2k7_select;
+	uchar	filter_2k9_select;
 	uchar	filter_3k6_select;
 	uchar	filter_wide_select;
 	//

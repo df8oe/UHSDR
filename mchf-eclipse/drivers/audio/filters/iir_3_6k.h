@@ -13,6 +13,48 @@
 
 #ifndef __IIR_3_6K
 #define __IIR_3_6K
+
+// alternative filter designed with MATLAB fdatools by DD4WH 2016-02-02
+// 12k sampling rate, Lattice ARMA structure
+// 10th order IIR Elliptic lowpass
+// Fpass 3600Hz
+// Astop 60dB
+// coefficients in reverse order than that spit out by MATLAB
+
+const uint16_t IIR_3k6_numStages = 10;
+const float IIR_3k6_LPF_pkCoeffs[] =
+{
+		0.182604754397413,
+		-0.297364372108114,
+		0.545463598315966,
+		-0.221554941171137,
+		0.914413017285099,
+		0.131148813295864,
+		0.992992542452280,
+		0.260698968055509,
+		0.999556840879677,
+		0.301864824451559
+
+};
+
+const float IIR_3k6_LPF_pvCoeffs[] =
+{
+
+		0.0481999578478482,
+		0.218712180455229,
+		0.412921909514823,
+		0.313810309656850,
+		-0.0329738792744796,
+		-0.0858389869457352,
+		-0.0158927513034342,
+		0.00483419702063959,
+		0.00477236245823653,
+		1.66508193628068e-05,
+		-0.000116754074820341
+};
+
+
+
 //
 // Filter designed 20141202 by C. Turner, KA7OEI using MatLAB fdatools
 //
@@ -31,8 +73,7 @@
 //	-60dB points:  <85, >4385 Hz
 //
 
-const uint16_t IIR_3k6_numStages = 10;
-const float IIR_3k6_pkCoeffs[] =
+const float IIR_3k6_BPF_pkCoeffs[] =
 {
 		0.1309746791958,
 		-0.3193816788598,
@@ -46,7 +87,7 @@ const float IIR_3k6_pkCoeffs[] =
 		-0.9970944160657
 };
 
-const float IIR_3k6_pvCoeffs[] =
+const float IIR_3k6_BPF_pvCoeffs[] =
 {
 		-0.07111514509409,
 		-0.2707254278064,
