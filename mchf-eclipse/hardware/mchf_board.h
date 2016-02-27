@@ -449,6 +449,7 @@ typedef struct ButtonMap
 //
 #define	MIN_BANDS			0		// lowest band number
 #define	MAX_BANDS			17		// Highest band number:  17 = General coverage (RX only) band
+#define	MAX_BAND_NUM		(MAX_BANDS+1)		// Number of Bands
 
 #define	KHZ_MULT			4000	// multiplier to convert oscillator frequency or band size to display kHz, used below
 //
@@ -528,6 +529,7 @@ typedef struct ButtonMap
 #define	BAND_MODE_GEN			17			// General Coverage
 #define	BAND_FREQ_GEN			10000*KHZ_MULT		// 10000 kHz
 #define	BAND_SIZE_GEN			1*KHZ_MULT		// Dummy variable
+
 //
 //
 //
@@ -1361,6 +1363,10 @@ typedef struct TransceiverState
 	//
 	// Calibration factors for output power, in percent (100 = 1.00)
 	//
+#define ADJ_5W 0
+#define ADJ_FULL_POWER 1
+	uchar	pwr_adj[2][MAX_BAND_NUM];
+#if 0
 	uchar	pwr_80m_5w_adj;			// calibration adjust for 80 meters, 5 watts
 	uchar	pwr_60m_5w_adj;			// calibration adjust for 60 meters, 5 watts
 	uchar	pwr_40m_5w_adj;			// calibration adjust for 40 meters, 5 watts
@@ -1396,6 +1402,7 @@ typedef struct TransceiverState
 	uchar	pwr_2200m_full_adj;			// calibration adjust for 2200 meters, full power
 	uchar	pwr_630m_full_adj;			// calibration adjust for 630 meters, full power
 	uchar	pwr_160m_full_adj;			// calibration adjust for 160 meters, full power
+#endif
 	//
 	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
 	ulong	alc_decay_var;				// adjustable ALC release time - working variable version

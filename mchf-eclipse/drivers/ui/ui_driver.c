@@ -24,6 +24,7 @@
 #include "waterfall_colours.h"
 //
 //
+#include "ui.h"
 // LCD
 #include "ui_lcd_hy28.h"
 
@@ -180,45 +181,6 @@ T_STEP_1MHZ,
 T_STEP_10MHZ
 };
 
-
-//
-// Band definitions - band base frequency value
-const ulong tune_bands[MAX_BANDS] = {					  BAND_FREQ_80,
-									  BAND_FREQ_60,
-									  BAND_FREQ_40,
-									  BAND_FREQ_30,
-									  BAND_FREQ_20,
-									  BAND_FREQ_17,
-									  BAND_FREQ_15,
-									  BAND_FREQ_12,
-									  BAND_FREQ_10,
-									  BAND_FREQ_6,
-									  BAND_FREQ_4,
-									  BAND_FREQ_2,
-									  BAND_FREQ_70,
-									  BAND_FREQ_23,
-									  BAND_FREQ_2200,
-									  BAND_FREQ_630,
-									  BAND_FREQ_160};
-
-// Band definitions - band frequency size
-const ulong size_bands[MAX_BANDS] = {					  BAND_SIZE_80,
-									  BAND_SIZE_60,
-									  BAND_SIZE_40,
-									  BAND_SIZE_30,
-									  BAND_SIZE_20,
-									  BAND_SIZE_17,
-									  BAND_SIZE_15,
-									  BAND_SIZE_12,
-									  BAND_SIZE_10,
-									  BAND_SIZE_6,
-									  BAND_SIZE_4,
-									  BAND_SIZE_2,
-									  BAND_SIZE_70,
-									  BAND_SIZE_23,
-									  BAND_SIZE_2200,
-									  BAND_SIZE_630,
-									  BAND_SIZE_160};
 
 // -------------------------------------------------------
 // Constant declaration of the buttons map across ports
@@ -2306,89 +2268,11 @@ void UiDriverShowStep(ulong step)
 //*----------------------------------------------------------------------------
 static void UiDriverShowBand(uchar band)
 {
-	const char* band_name;
+	if (band < MAX_BAND_NUM) {
 	// Clear control
-	UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
-
-	// Create Band value
-	switch(band)
-	{
-		case BAND_MODE_2200:
-			band_name  = "2200m";
-			break;
-
-		case BAND_MODE_630:
-			band_name  = " 630m";
-			break;
-
-		case BAND_MODE_160:
-			band_name  = " 160m";
-			break;
-
-		case BAND_MODE_80:
-			band_name  = "  80m";
-			break;
-
-		case BAND_MODE_60:
-			band_name  = "  60m";
-			break;
-
-		case BAND_MODE_40:
-			band_name  = "  40m";
-			break;
-
-		case BAND_MODE_30:
-			band_name  = "  30m";
-			break;
-
-		case BAND_MODE_20:
-			band_name  = "  20m";
-			break;
-
-		case BAND_MODE_17:
-			band_name  = "  17m";
-			break;
-
-		case BAND_MODE_15:
-			band_name  = "  15m";
-			break;
-
-		case BAND_MODE_12:
-			band_name  = "  12m";
-			break;
-
-		case BAND_MODE_10:
-			band_name  = "  10m";
-			break;
-
-		case BAND_MODE_6:
-			band_name  = "   6m";
-			break;
-
-		case BAND_MODE_4:
-			band_name  = "   4m";
-			break;
-
-		case BAND_MODE_2:
-			band_name  = "   2m";
-			break;
-
-		case BAND_MODE_70:
-			band_name  = " 70cm";
-			break;
-
-		case BAND_MODE_23:
-			band_name  = " 23cm";
-			break;
-
-		case BAND_MODE_GEN:
-			band_name  = "  Gen";
-			break;
-
-		default:
-			break;
+		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
+		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandInfo[band].name,Orange,Black,0);
 	}
-	UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,band_name,Orange,Black,0);
 }
 
 // -------------------------------------------
@@ -2693,7 +2577,7 @@ static void UiDriverCreateDesktop(void)
 	// Create voltage
 	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText			(POS_PWRN_IND_X, POS_PWRN_IND_Y,"  VCC  ", Grey2, 	Blue, 0);
-	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "??.??V",  COL_PWR_IND,Black,0);
+	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "--.--V",  COL_PWR_IND,Black,0);
 
 	// Create temperature
 	if((lo.sensor_present == 0) && (df.temp_enabled & 0x0f))
@@ -3472,8 +3356,8 @@ static void UiDriverInitFrequency(void)
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.value_old	= 0;
 	df.value_new	= 0;
-	df.tune_old 	= tune_bands[ts.band];
-	df.tune_new 	= tune_bands[ts.band];
+	df.tune_old 	= bandInfo[ts.band].tune;
+	df.tune_new 	= bandInfo[ts.band].tune;
 	df.selected_idx = 3; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.update_skip	= 0;		// skip value to compensate for fast dial rotation - test!!!
@@ -3573,7 +3457,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	freq -= audio_driver_xlate_freq()*4;
 
 	while((!flag) && (band_scan < MAX_BANDS))	{
-		if((freq >= tune_bands[band_scan]) && (freq <= (tune_bands[band_scan] + size_bands[band_scan])))	// Is this frequency within this band?
+		if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size)))	// Is this frequency within this band?
 			flag = 1;	// yes - stop the scan
 		else	// no - not in this band
 			band_scan++;	// scan the next band qqqqq
@@ -4519,65 +4403,55 @@ static void UiDriverChangeBand(uchar is_up)
 			//printf("going up band\n\r");
 
 			// Increase
-			new_band_freq  = tune_bands[curr_band_index + 1];
 			new_band_index = curr_band_index + 1;
 			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
-			    {						// jump 10m --> 160m
-			    new_band_freq = tune_bands[MAX_BANDS-1];
-			    new_band_index = MAX_BANDS-1;
-			    }
+			{						// jump 10m --> 160m
+				new_band_index = MAX_BANDS-1;
+			}
 			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 8)
-			    {						// jump 10m --> 2m
-			    new_band_freq = tune_bands[11];
-			    new_band_index = 11;
-			    }
+			{						// jump 10m --> 2m
+				new_band_index = 11;
+			}
 			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 13)
-			    {						// jump 2200m --> 16m
-			    new_band_freq = tune_bands[16];
-			    new_band_index = 16;
-			    }
+			{						// jump 2200m --> 16m
+				new_band_index = 16;
+			}
 			if(ts.rfmod_present == 1 && ts.vhfuhfmod_present == 0 && curr_band_index == 10)
-			    {						// jump 4m --> 2200m
-			    new_band_freq = tune_bands[14];
-			    new_band_index = 14;
-			    }
+			{						// jump 4m --> 2200m
+				new_band_index = 14;
+			}
+
 		}
 		else	{	// wrap around to the lowest band
-			new_band_freq = tune_bands[MIN_BANDS];
 			new_band_index = MIN_BANDS;
 		}
 	}
 	else
 	{
-		if(curr_band_index)			// qqqqq
-		    {
-		    //printf("going down band\n\r");
-
-		    // Decrease
-		    new_band_freq  = tune_bands[curr_band_index - 1];
-		    new_band_index = curr_band_index - 1;
-		    if(ts.rfmod_present == 0 && curr_band_index == MAX_BANDS-1)
+		if(curr_band_index)
+		{
+			// Decrease
+			new_band_index = curr_band_index - 1;
+			if(ts.rfmod_present == 0 && curr_band_index == MAX_BANDS-1)
 			{		// jump 160m --> 23cm
-			new_band_freq  = tune_bands[13];
-			new_band_index = 13;
+				new_band_index = 13;
 			}
-		    if(ts.vhfuhfmod_present == 0 && new_band_index == 13)
+			if(ts.vhfuhfmod_present == 0 && new_band_index == 13)
 			{		// jump 2200m --> 6m
-			new_band_freq  = tune_bands[10];
-			new_band_index = 10;
+				new_band_index = 10;
 			}
-		    if(ts.rfmod_present == 0 && new_band_index == 10)
+			if(ts.rfmod_present == 0 && new_band_index == 10)
 			{		// jump 2m --> 10m
-			new_band_freq  = tune_bands[8];
-			new_band_index = 8;
+				new_band_index = 8;
 			}
-		    }
+		}
 		else
-		    {	// wrap around to the highest band
-		    new_band_freq = tune_bands[MAX_BANDS-1];
-		    new_band_index = MAX_BANDS-1;
-		    }
+		{	// wrap around to the highest band
+			new_band_index = MAX_BANDS-1;
+		}
 	}
+	new_band_freq  = bandInfo[curr_band_index].tune;
+
 	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
 	//printf("new band index: %d and freq: %d\n\r",new_band_index,new_band_freq);
 	//
@@ -7679,20 +7553,24 @@ static void UiDriverHandlePowerSupply(void)
 	if(pwmt.voltage != val_p)	{	// Time to update - or was this the first time it was called?
 		char digits[6];
 		int idx;
-		int dot = 1;
+		int dot = 0;
 		char digit[2];
 
 		digit[1] = 0;
 		snprintf(digits,6,"%5d",val_p);
-		for (idx = 1; idx < 5; idx++)
+		for (idx = 0; idx < 4; idx++)
 		{
 			if (digits[idx] != pwmt.digits[idx]) {
 				digit[0] = digits[idx];
-				UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*(4-dot-idx)),POS_PWR_IND_Y,digit,col,Black,0);
+				if (dot && digits[idx] == ' ') {
+					digits[idx] = '0'; // zeros after dot are print always
+				}
+				UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*(idx+dot)),POS_PWR_IND_Y,digit,col,Black,0);
 				pwmt.digits[idx] = digits[idx];
 				if (idx == 1) {
+					// now place dot on screen
 					UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*2),POS_PWR_IND_Y,".",col,Black,0);
-					dot = 0;
+					dot = 1;
 				}
 			}
 		}
@@ -7762,7 +7640,7 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 		// LO tracking indicator
 		UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
 		// Temperature - initial draw
-		value_str = (df.temp_enabled & 0xf0)?"  ??.?F":"  ??.?C";
+		value_str = (df.temp_enabled & 0xf0)?"  --.-F":"  --.-C";
 	}
 
     if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
@@ -8219,125 +8097,10 @@ void UiDriverSetBandPowerFactor(uchar band)
 {
 	float	pf_temp;	// used as a holder for percentage of power output scaling
 
-	// Display clear
-//	UiLcdHy28_PrintText(((POS_SM_IND_X + 18) + 140),(POS_SM_IND_Y + 59),"PROT",Black,Black,4);
-
-	//
-	if(ts.power_level == PA_LEVEL_FULL)	{
-		switch(band)	{		// get pre-loaded power output scaling factor for band
-			case BAND_MODE_2200:
-				pf_temp = (float)ts.pwr_2200m_full_adj;		// load full power level for 2200m
-				break;
-			case BAND_MODE_630:
-				pf_temp = (float)ts.pwr_630m_full_adj;		// load full power level for 630m
-				break;
-			case BAND_MODE_160:
-				pf_temp = (float)ts.pwr_160m_full_adj;		// load full power level for 160m
-				break;
-			case BAND_MODE_80:
-				pf_temp = (float)ts.pwr_80m_full_adj;		// load full power level for 80m
-				break;
-			case BAND_MODE_60:
-				pf_temp = (float)ts.pwr_60m_full_adj;		// load full power level for 60m
-				break;
-			case BAND_MODE_40:
-				pf_temp = (float)ts.pwr_40m_full_adj;		// load full power level for 40m
-				break;
-			case BAND_MODE_30:
-				pf_temp = (float)ts.pwr_30m_full_adj;		// load full power level for 30m
-				break;
-			case BAND_MODE_20:
-				pf_temp = (float)ts.pwr_20m_full_adj;		// load full power level for 20m
-				break;
-			case BAND_MODE_17:
-				pf_temp = (float)ts.pwr_17m_full_adj;		// load full power level for 17m
-				break;
-			case BAND_MODE_15:
-				pf_temp = (float)ts.pwr_15m_full_adj;		// load full power level for 15m
-				break;
-			case BAND_MODE_12:
-				pf_temp = (float)ts.pwr_12m_full_adj;		// load full power level for 12m
-				break;
-			case BAND_MODE_10:
-				pf_temp = (float)ts.pwr_10m_full_adj;		// load full power level for 10m
-				break;
-			case BAND_MODE_6:
-				pf_temp = (float)ts.pwr_6m_full_adj;		// load full power level for 6m
-				break;
-			case BAND_MODE_4:
-				pf_temp = (float)ts.pwr_4m_full_adj;		// load full power level for 4m
-				break;
-			case BAND_MODE_2:
-				pf_temp = (float)ts.pwr_2m_full_adj;		// load full power level for 2m
-				break;
-			case BAND_MODE_70:
-				pf_temp = (float)ts.pwr_70cm_full_adj;		// load full power level for 70cm
-				break;
-			case BAND_MODE_23:
-				pf_temp = (float)ts.pwr_23cm_full_adj;		// load full power level for 23cm
-				break;
-			default:
-				pf_temp = 50;
-				break;
-		}
-	}
-	else	{					// OTHER than FULL power!
-		switch(band)	{		// get pre-loaded power output scaling factor for band
-			case BAND_MODE_2200:
-				pf_temp = (float)ts.pwr_2200m_5w_adj;		// load 5 watt power level for 2200m
-				break;
-			case BAND_MODE_630:
-				pf_temp = (float)ts.pwr_160m_5w_adj;		// load 5 watt power level for 630m
-				break;
-			case BAND_MODE_160:
-				pf_temp = (float)ts.pwr_160m_5w_adj;		// load 5 watt power level for 160m
-				break;
-			case BAND_MODE_80:
-				pf_temp = (float)ts.pwr_80m_5w_adj;		// load 5 watt power level for 80m
-				break;
-			case BAND_MODE_60:
-				pf_temp = (float)ts.pwr_60m_5w_adj;		// load 5 watt power level for 60m
-				break;
-			case BAND_MODE_40:
-				pf_temp = (float)ts.pwr_40m_5w_adj;		// load 5 watt power level for 40m
-				break;
-			case BAND_MODE_30:
-				pf_temp = (float)ts.pwr_30m_5w_adj;		// load 5 watt power level for 30m
-				break;
-			case BAND_MODE_20:
-				pf_temp = (float)ts.pwr_20m_5w_adj;		// load 5 watt power level for 20m
-				break;
-			case BAND_MODE_17:
-				pf_temp = (float)ts.pwr_17m_5w_adj;		// load 5 watt power level for 17m
-				break;
-			case BAND_MODE_15:
-				pf_temp = (float)ts.pwr_15m_5w_adj;		// load 5 watt power level for 15m
-				break;
-			case BAND_MODE_12:
-				pf_temp = (float)ts.pwr_12m_5w_adj;		// load 5 watt power level for 12m
-				break;
-			case BAND_MODE_10:
-				pf_temp = (float)ts.pwr_10m_5w_adj;		// load 5 watt power level for 10m
-				break;
-			case BAND_MODE_6:
-				pf_temp = (float)ts.pwr_6m_5w_adj;		// load 5 watt power level for 6m
-				break;
-			case BAND_MODE_4:
-				pf_temp = (float)ts.pwr_4m_5w_adj;		// load 5 watt power level for 4m
-				break;
-			case BAND_MODE_2:
-				pf_temp = (float)ts.pwr_2m_5w_adj;		// load 5 watt power level for 2m
-				break;
-			case BAND_MODE_70:
-				pf_temp = (float)ts.pwr_70cm_5w_adj;		// load 5 watt power level for 70cm
-				break;
-			case BAND_MODE_23:
-				pf_temp = (float)ts.pwr_23cm_5w_adj;		// load 5 watt power level for 23cm
-				break;
-			default:
-				pf_temp = 50;
-				break;
-		}
+	if (band >= MAX_BANDS) {
+		pf_temp = 3; // use very low value in case of wrong call to this function
+	} else {
+		pf_temp = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
 	}
 	//
 	ts.tx_power_factor = pf_temp/100;	// preliminarily scale to percent, which is the default for 5 watts
@@ -9501,14 +9264,14 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 
 	// ------------------------------------------------------------------------------------
 	// Try to read Freq saved values
-	UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,tune_bands[i] + DEFAULT_FREQ_OFFSET,0,0xffffffff);
+	UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i].tune + DEFAULT_FREQ_OFFSET,0,0xffffffff);
 	{
 		//
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first (also check to see if defaults should be loaded)
 		//
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[i]) && (value32 <= (tune_bands[i] + size_bands[i])))
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= bandInfo[i].tune) && (value32 <= (bandInfo[i].tune + bandInfo[i].size)))
 		{
 			vforeg->dial_value = value32;
 			//printf("-->frequency loaded\n\r");
@@ -9521,7 +9284,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 		else
 		{
 			// Load default for this band
-			vforeg->dial_value = tune_bands[i] + DEFAULT_FREQ_OFFSET;
+			vforeg->dial_value = bandInfo[i].tune + DEFAULT_FREQ_OFFSET;
 			//printf("-->base frequency loaded\n\r");
 		}
 	}
@@ -9607,7 +9370,7 @@ void UiDriverLoadEepromValues(void)
 		// We have loaded from eeprom the last used band, but can't just
 		// load saved frequency, as it could be out of band, so do a
 		// boundary check first (also check to see if defaults should be loaded)
-		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= tune_bands[ts.band]) && (value32 <= (tune_bands[ts.band] + size_bands[ts.band])))
+		if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= bandInfo[ts.band].tune) && (value32 <= (bandInfo[ts.band].tune + bandInfo[ts.band].size)))
 		{
 			df.tune_new = value32;
 			//printf("-->frequency loaded\n\r");
@@ -9619,7 +9382,7 @@ void UiDriverLoadEepromValues(void)
 		else
 		{
 			// Load default for this band
-			df.tune_new = tune_bands[ts.band];
+			df.tune_new = bandInfo[ts.band].tune;
 			//printf("-->base frequency loaded\n\r");
 		}
 	}
@@ -9698,7 +9461,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX);
 
-#define UI_R_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_5W,&ts.pwr_##bandName1##bandName2##_5w_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
+#define UI_R_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_5W,&ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
 
 	UI_R_EEPROM_BAND_5W_PF(0,80,m);
 	UI_R_EEPROM_BAND_5W_PF(1,60,m);
@@ -9718,7 +9481,7 @@ void UiDriverLoadEepromValues(void)
 	UI_R_EEPROM_BAND_5W_PF(15,630,m);
 	UI_R_EEPROM_BAND_5W_PF(16,160,m);
 
-#define UI_R_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_FULL,&ts.pwr_##bandName1##bandName2##_full_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
+#define UI_R_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadSettingEEPROM_UInt8(EEPROM_BAND##bandNo##_FULL,&ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX)
 
 	UI_R_EEPROM_BAND_FULL_PF(0,80,m);
 	UI_R_EEPROM_BAND_FULL_PF(1,60,m);
@@ -9940,7 +9703,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_XVERTER_DISP,ts.xverter_mode,0);
 
-#define UI_RW_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_5W,ts.pwr_##bandName1##bandName2##_5w_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT)
+#define UI_RW_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_5W,ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
 
 	UI_RW_EEPROM_BAND_5W_PF(0,80,m);
 	UI_RW_EEPROM_BAND_5W_PF(1,60,m);
@@ -9960,7 +9723,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UI_RW_EEPROM_BAND_5W_PF(15,630,m);
 	UI_RW_EEPROM_BAND_5W_PF(16,160,m);
 
-#define UI_RW_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_FULL,ts.pwr_##bandName1##bandName2##_full_adj,TX_POWER_FACTOR_##bandName1##_DEFAULT)
+#define UI_RW_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_FULL,ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
 
 	UI_RW_EEPROM_BAND_FULL_PF(0,80,m);
 	UI_RW_EEPROM_BAND_FULL_PF(1,60,m);
