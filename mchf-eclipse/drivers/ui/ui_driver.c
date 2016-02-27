@@ -905,6 +905,18 @@ static void UiDriverPublicsInit(void)
 	lo.v1000				= 0;
 }
 
+// check if touched point is within rectange of valid action
+inline bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
+{
+	return (ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up);
+}
+
+void UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) {
+  UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, label,
+                      label_color, Black, 0);
+}
+
+
 void UiDriverEncoderDisplay(const uint8_t column, const uint8_t row, const char *label, bool enabled,
                             char temp[5], uint32_t color) {
 
@@ -1275,7 +1287,7 @@ static void UiDriverProcessKeyboard(void)
 				}
 				//
 				if(!ts.menu_mode)	// are we in menu mode?
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," MENU  ",White,Black,0);	// no - update menu button to reflect no memory save needed
+					UiDriverFButtonLabel(1," MENU  ",White);	// no - update menu button to reflect no memory save needed
 				else
 					UiDriverUpdateMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
@@ -1304,12 +1316,12 @@ static void UiDriverProcessKeyboard(void)
 				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
 						ts.vfo_mem_flag = 1;		// yes, switch to memory mode
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,"  MEM ",White,Black,0);	// yes - indicate with color
+						UiDriverFButtonLabel(3,"  MEM ",White);	// yes - indicate with color
 					}
 					else	{
 						uint32_t color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
 						ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",color,Black,0);
+						UiDriverFButtonLabel(3," SPLIT",color);
 					}
 					//
 				}
@@ -1369,7 +1381,7 @@ static void UiDriverProcessKeyboard(void)
 				{
 					ts.tx_disable = !ts.tx_disable;
 
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",ts.tx_disable?Grey1:White,Black,0);
+					UiDriverFButtonLabel(4,"  TUNE",ts.tx_disable?Grey1:White);
 					// Set TUNE button color according to ts.tx_disable
 				}
 				break;
@@ -1754,6 +1766,7 @@ void UiDriverDisplaySplitFreqLabels() {
                       0);  // Place identifying marker for TX frequency
 }
 
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessFunctionKeyClick
 //* Object              : process function buttons click
@@ -1776,10 +1789,10 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.menu_mode = 1;
 				is_last_menu_item = 0;	// clear last screen detect flag
 				UiDriverClearSpectrumDisplay();
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," EXIT  ",Yellow,Black,0);
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," DEFLT",Yellow,Black,0);
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,"  PREV",Yellow,Black,0);
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,"  NEXT",Yellow,Black,0);
+                UiDriverFButtonLabel(1," EXIT  ", Yellow);
+                UiDriverFButtonLabel(2," DEFLT",Yellow);
+                UiDriverFButtonLabel(3,"  PREV",Yellow);
+                UiDriverFButtonLabel(4,"  NEXT",Yellow);
 				//
 				//
 				// Grey out adjustments and put encoders in known states
@@ -1831,10 +1844,10 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 						label = " MENU *";
 						color = Orange;
 					}
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,label,color,Black,0);
+					UiDriverFButtonLabel(1,label,color);
 				}
 				// Label for Button F2
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
+				UiDriverFButtonLabel(2," METER",White);
 
 				// Display Label for Button F3
 				{
@@ -1849,14 +1862,14 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 						color = White;
 						label = "  MEM";
 					}
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,label,color,Black,0);	// yes - indicate with color
+					UiDriverFButtonLabel(3,label,color);	// yes - indicate with color
 
 				}
 				// Display Label for Button F4
 				{
 					char* label = is_vfo_b()?" VFO B":" VFO A";
 					// VFO B active?
-					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,label,White,Black,0);
+					UiDriverFButtonLabel(4,label,White);
 				}
 			}
 		}
@@ -1878,7 +1891,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if(ts.tx_meter_mode >= METER_MAX)
 				ts.tx_meter_mode = 0;
 			//
-			// UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
+			// UiDriverFButtonLabel(2," METER",White);
 			//
 			UiDriverDeleteSMeter();
 			UiDriverCreateSMeter();	// redraw meter
@@ -2032,7 +2045,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			vfo[VFO_WORK].band[ts.band].decod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 			vfo[VFO_WORK].band[ts.band].filter_mode = vfo[vfo_active].band[ts.band].filter_mode;
 			//
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,vfo_name,White,Black,0);
+			UiDriverFButtonLabel(4,vfo_name,White);
 
 
 			df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;
@@ -2102,7 +2115,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.txrx_mode = TRX_MODE_TX;
 				ui_driver_toggle_tx();				// tune ON
 
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Red,Black,0);
+				UiDriverFButtonLabel(5,"  TUNE",Red);
 				//
 			}
 			else
@@ -2127,7 +2140,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 										// mode and working power is FULL and TUNE power is 5W
 										// WARNING THIS WORKAROUND IS UGLY
 
-				UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);
+				UiDriverFButtonLabel(5,"  TUNE",White);
 				//
 			}
 		}
@@ -2237,37 +2250,38 @@ void UiDriverShowStep(ulong step)
 			break;
 		case T_STEP_10HZ:
 			line_loc = 8;
-			"10Hz";
+			step_name = "10Hz";
 			break;
 		case T_STEP_100HZ:
-			"100Hz";
+			step_name = "100Hz";
 			line_loc = 7;
 			break;
 		case T_STEP_1KHZ:
-			"1kHz";
+			step_name = "1kHz";
 			line_loc = 5;
 			break;
 		case T_STEP_5KHZ:
-			"5kHz";
+			step_name = "5kHz";
 			line_loc = 5;
 			break;
 		case T_STEP_10KHZ:
-			"10kHz";
+			step_name = "10kHz";
 			line_loc = 4;
 			break;
 		case T_STEP_100KHZ:
-			"100kHz";
+			step_name = "100kHz";
 			line_loc = 3;
 			break;
 		case T_STEP_1MHZ:
-			"1MHz";
+			step_name = "1MHz";
 			line_loc = 3;
 			break;
 		case T_STEP_10MHZ:
-			"10MHz";
+			step_name = "10MHz";
 			line_loc = 3;
 			break;
 		default:
+			step_name = "???";
 			line_loc = 0; // default for unknown tuning step modes, disables the frequency marker display
 			break;
 		}
@@ -2568,12 +2582,12 @@ static void UiDriverInitMainFreqDisplay(void)
 {
 	if(!(is_splitmode()))	{	// are we in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);	// make SPLIT indicator grey to indicate off
+			UiDriverFButtonLabel(3," SPLIT",SPLIT_INACTIVE_COLOUR);	// make SPLIT indicator grey to indicate off
 		}
 	}
 	else	{	// are we NOT in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",White,Black,0);	// make SPLIT indicator YELLOW to indicate on
+			UiDriverFButtonLabel(3," SPLIT",White);	// make SPLIT indicator YELLOW to indicate on
 		}
 		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriverDisplaySplitFreqLabels();
@@ -2727,9 +2741,9 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	}
 
 	// Button F1
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,"  MENU",White,Black,0);
+	UiDriverFButtonLabel(1,"  MENU",White);
 	// Button F2
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
+	UiDriverFButtonLabel(2," METER",White);
 
 	// Button F3
 	if(!ts.vfo_mem_flag) {	// is it in VFO (not memory) mode?
@@ -2740,14 +2754,14 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 		cap = "  MEM ";
 	}
 
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap,clr,Black,0);
+	UiDriverFButtonLabel(3,cap,clr);
 
 	// Button F4
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,is_vfo_b()?" VFO B":" VFO A",White,Black,0);
+	UiDriverFButtonLabel(4,is_vfo_b()?" VFO B":" VFO A",White);
 
 	// Button F5
 	clr = ts.tx_disable?Grey1:White;
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",clr,Black,0);
+	UiDriverFButtonLabel(5,"  TUNE",clr);
 }
 
 //
@@ -4216,16 +4230,6 @@ static void UiDriverTimeScheduler(void)
 			old_burst_active = ads.fm_tone_burst_active;
 		}
 	}
-/*
-	if(ts.dsp_check)	{
-		ts.dsp_check = 0;
-		char txt[16];
-		sprintf(txt, " %d ", (ulong)(fabs(ads.dsp_nr_sample)));
-		UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,txt,0xFFFF,0,0);
-		sprintf(txt, " %d ", (ulong)(ads.dsp_zero_count));
-		UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,txt,0xFFFF,0,0);
-	}
-*/
 	///
 	// DSP crash detection
 	//
@@ -6278,6 +6282,11 @@ static void UiDriverFFTWindowFunction(char mode)
 //
 //
 //
+
+static inline const uint32_t FftIdx2BufMap(const uint32_t idx) {
+return (FFT_IQ_BUFF_LEN/4 + idx)%FFT_IQ_BUFF_LEN/2;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitSpectrumDisplay - for both "Spectrum Display" and "Waterfall" Display
 //* Object              : FFT init
@@ -6737,84 +6746,38 @@ static void UiDriverReDrawSpectrumDisplay(void)
 			//
 			// Now, re-arrange the spectrum for the various magnify modes so that they display properly!
 			//
+			// we can calculate any position in the spectrum by using the
+			// following thinking
+			// the spectrum is 256 entries wide == FFT_IQ_BUFF_LEN/2
+			// the begin of the spectrum (== -24khz) is in the middle of the buffer
+			// i.e. 0 == FFT_IQ_BUFF_LEN/2/2 == 128
+			// that means (FFT_IQ_BUFF_LEN/4 + idx)%FFT_IQ_BUFF_LEN/2 == (128+idx)%256
+			// gives us the index in the buffer.
+			// we use this  knowledge to simplify the magnification code
+			// compiler can heavily optimize this since we  all these values being power of 2 value
 			if(sd.magnify)	{	// is magnify mode on?
-				if(!ts.iq_freq_mode)	{	// yes - frequency translate mode is off
-					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > FFT_IQ_BUFF_LEN/4)	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = 128..128 + FFT_IQ_BUFF_LEN/8 */
-							ptr = (i/2)+128;
-							if(ptr < FFT_IQ_BUFF_LEN/2)
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
-						}
-						else	{	/* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = 0..FFT_IQ_BUFF_LEN/8  */
-							ptr = (i/2);						// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr]; /* each entry from fft is used twice */
-						}
-					}
+				uint32_t end_range;
+				switch(ts.iq_freq_mode) {
+				break;
+				case FREQ_IQ_CONV_P6KHZ:	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+					ptr = 3 * FFT_IQ_BUFF_LEN/16 ; // FFT_IQ_BUFF_LEN/8 + FFT_IQ_BUFF_LEN/16  = -12khz + 6khz = -6khz <-> + 18khz
+					break;
+				case FREQ_IQ_CONV_M6KHZ: // frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+					ptr = FFT_IQ_BUFF_LEN/16 ; // FFT_IQ_BUFF_LEN/8 - FFT_IQ_BUFF_LEN/16  = -12khz - 6khz = -18khz <-> + 6khz
+					break;
+				case FREQ_IQ_CONV_P12KHZ: // frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+					ptr = FFT_IQ_BUFF_LEN/4 ; // FFT_IQ_BUFF_LEN/8 + FFT_IQ_BUFF_LEN/8  = -12khz + 12khz = 0khz <-> + 24khz
+					break;
+				case FREQ_IQ_CONV_M12KHZ:	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
+					ptr = 0 ; // FFT_IQ_BUFF_LEN/8 - FFT_IQ_BUFF_LEN/8  = -12khz - 12khz = -24khz <-> 0khz
+					break;
+				default:	// yes - frequency translate mode is off
+					ptr = FFT_IQ_BUFF_LEN/8; // FFT_IQ_BUFF_LEN/8  = -12khz = -12khz <-> + 12khz
 				}
-				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{ /* i = FFT_IQ_BUFF_LEN/4 + 1 .. FFT_IQ_BUFF_LEN/2  ptr = (128 - 32) ..(128 - 32) + FFT_IQ_BUFF_LEN/8 */
-							ptr = (i/2)+96;
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
-							}
-						}
-						else	{
-							ptr = (i/2);					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{ /* i = 0 .. FFT_IQ_BUFF_LEN/4 -> ptr = (0 -32)..(0 -32) + FFT_IQ_BUFF_LEN/8  */
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+224)%256];
-							}
-						}
-					}
-				}
-				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{
-							ptr = (i/2);
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+160)%256];
-							}
-						}
-						else	{
-							ptr = (i/2) + 32;					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
-							}
-						}
-					}
-				}
-				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{
-							ptr = (i/2)+64;
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
-							}
-						}
-						else	{
-							ptr = (i/2);					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
-							}
-						}
-					}
-				}
-				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						if(i > (FFT_IQ_BUFF_LEN/4))	{
-							ptr = (i/2);
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[(ptr+192)%256];
-							}
-						}
-						else	{
-							ptr = (i/2) + 64;					// process upper half
-							if(ptr < FFT_IQ_BUFF_LEN/2)	{
-								sd.FFT_DspData[i] = sd.FFT_TempData[ptr];
-							}
-						}
-					}
+				end_range = ptr+FFT_IQ_BUFF_LEN/4; // exclusive
+				for(i=0; ptr < end_range; ptr++)	{	// expand data to fill entire screen - get lower half
+					sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* each entry from fft is used twice */
+					sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* each entry from fft is used twice */
 				}
 			}
 			else
@@ -6842,7 +6805,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 		UiDriverMenuMapColors(ts.scope_trace_colour,NULL, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiLcdHy28_DrawSpectrum_Interleaved((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
-        // Right part of the screen (mask and update)
+        // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
         UiLcdHy28_DrawSpectrum_Interleaved((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
         sd.state = 0;   // Stage 0 - collection of data by the Audio driver
 		break;
@@ -7652,9 +7615,6 @@ static void UiDriverHandleLowerMeter(void)
 static void UiDriverHandlePowerSupply(void)
 {
 	ulong	val_p, calib;
-	uchar	v10,v100,v1000,v10000;
-	//char 	cap1[50];
-	char	digit[2];
 	int		col;
 
 //	char txt[32];
@@ -7703,18 +7663,6 @@ static void UiDriverHandlePowerSupply(void)
 	//val_p -= 550;
 	val_p *= 4;
 
-//	debug
-//	sprintf(txt, "%d ", (int)(val_p));
-//	UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
-
-	// Terminate
-	digit[1] = 0;
-
-	v10000 = (val_p%100000)/10000;
-	v1000 = (val_p%10000)/1000;
-	v100 = (val_p%1000)/100;
-	v10 = (val_p%100)/10;
-	//
 	//
 	col = COL_PWR_IND;	// Assume normal voltage, so Set normal color
 	//
@@ -7728,71 +7676,27 @@ static void UiDriverHandlePowerSupply(void)
 	//
 	// did we detect a voltage change?
 	//
-	if((v10000 != pwmt.v10000) || (v1000 != pwmt.v1000) || (v100 != pwmt.v100) || (v10 != pwmt.v10))	{	// Time to update - or was this the first time it was called?
+	if(pwmt.voltage != val_p)	{	// Time to update - or was this the first time it was called?
+		char digits[6];
+		int idx;
+		int dot = 1;
+		char digit[2];
 
-
-		// -----------------------
-		// 10V update
-
-		//printf("10V diff: %d\n\r",v10000);
-
-		// To string
-		digit[0] = 0x30 + (v10000 & 0x0F);
-
-		// Update segment
-		if(v10000)
-			UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*0),POS_PWR_IND_Y,digit,col,Black,0);
-		else
-			UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*0),POS_PWR_IND_Y,digit,Black,Black,0);
-
-		// Save value
-		pwmt.v10000 = v10000;
-
-
-		// -----------------------
-		// 1V update
-
-		//printf("1V diff: %d\n\r",v1000);
-
-		// To string
-		digit[0] = 0x30 + (v1000 & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*1),POS_PWR_IND_Y,digit,col,Black,0);
-
-		// Save value
-		pwmt.v1000 = v1000;
-
-		// -----------------------
-		// 0.1V update
-
-		//printf("0.1V diff: %d\n\r",v100);
-
-		// To string
-		digit[0] = 0x30 + (v100 & 0x0F);
-
-		// Update segment(skip the dot)
-		UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*3),POS_PWR_IND_Y,digit,col,Black,0);
-
-		// Save value
-		pwmt.v100 = v100;
-
-		// -----------------------
-		// 0.01Vupdate
-
-		//printf("0.01V diff: %d\n\r",v10);
-
-		// To string
-		digit[0] = 0x30 + (v10 & 0x0F);
-
-		// Update segment(skip the dot)
-		UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*4),POS_PWR_IND_Y,digit,col,Black,0);
-
-		// Save value
-		pwmt.v10 = v10;
+		digit[1] = 0;
+		snprintf(digits,6,"%5d",val_p);
+		for (idx = 1; idx < 5; idx++)
+		{
+			if (digits[idx] != pwmt.digits[idx]) {
+				digit[0] = digits[idx];
+				UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*(4-dot-idx)),POS_PWR_IND_Y,digit,col,Black,0);
+				pwmt.digits[idx] = digits[idx];
+				if (idx == 1) {
+					UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*2),POS_PWR_IND_Y,".",col,Black,0);
+					dot = 0;
+				}
+			}
+		}
 	}
-
-
 	// Reset accumulator
 	pwmt.p_curr 	= 0;
 	pwmt.pwr_aver 	= 0;
@@ -9442,10 +9346,10 @@ void UiCheckForPressedKey(void)
 			txt = "STEPP ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
-		get_touchscreen_coordinates();
-		sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
-		txt = txt_buf;
-		break;
+			get_touchscreen_coordinates();
+			sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+			txt = txt_buf;
+			break;
 		default:
 			txt = "<none>";		// no button pressed
 			poweroffcount = 0;
@@ -9473,6 +9377,11 @@ void UiCheckForPressedKey(void)
 	}
 }
 
+
+
+
+
+// TODO: START OF EEPROM HANDLING SECTION
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, volatile bool* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
 	uint16_t value;
 	if(Read_EEPROM(addr, &value) == 0)
@@ -9896,32 +9805,6 @@ void UiDriverLoadEepromValues(void)
 	ts.dsp_inhibit = dspmode;		// restore setting
 }
 
-//
-// Below is a marker to make it easier to find the "Read" and "Save" EEPROM functions when scanning/scrolling the source code
-//
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
-// ********************************************************************************************************************
 // ********************************************************************************************************************
 //
 //*----------------------------------------------------------------------------
@@ -10196,14 +10079,4 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	ts.dmod_mode = demodmode;	// restore active mode
 
 	return retVal;
-}
-
-
-// check if touched point is within rectange of valid action
-bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
-{
-	if(ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up)
-		return true;
-	else
-		return false;
 }
