@@ -8652,17 +8652,6 @@ void UiKeyBeep(void)
 	ts.beep_active = 1;									// activate tone
 }
 
-// TODO: MOVE TO RF Function
-void UiSideToneRef(void)
-{
-	if((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	{		// do sidetone beep only in modes that have a "BFO"
-		ads.beep_word = ts.sidetone_freq * 65536;		// yes - calculated/load frequency
-		ads.beep_word /= 48000;
-		ts.beep_timing = ts.sysclock + SIDETONE_REF_BEEP_DURATION;	// set duration of beep used as a reference for the sidetone frequency
-		ts.beep_active = 1;
-	}
-
-}
 //
 //
 //*----------------------------------------------------------------------------
