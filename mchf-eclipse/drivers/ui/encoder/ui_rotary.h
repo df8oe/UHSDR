@@ -72,13 +72,13 @@ typedef struct DialFrequency
 
 // --------------------------------
 // Maximum pot value
-#define ENCODER_ONE_RANGE	0xFFF
+#define ENCODER_RANGE	0xFFF
 
 // Divider to create non linearity
-#define ENCODER_ONE_LOG_D	1
+#define ENCODER_LOG_D	1
 
 // Audio Gain public structure
-typedef struct EncoderOneSelection
+typedef struct EncoderSelection
 {
 	// pot values
 	//
@@ -86,47 +86,22 @@ typedef struct EncoderOneSelection
 	ulong	value_new;			// most current value
 	uchar	de_detent;			// sw de-detent flag
 
-} EncoderOneSelection;
+} EncoderSelection;
 
-// --------------------------------
-// Maximum pot value
-#define ENCODER_TWO_RANGE	0xFFF
-
-// Divider to create non linearity
-#define ENCODER_TWO_LOG_D	1
-
-// Audio Gain public structure
-typedef struct EncoderTwoSelection
-{
-	// pot values
-	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-	uchar	de_detent;			// sw de-detent flag
-
-} EncoderTwoSelection;
-
-// --------------------------------
-// Maximum pot value
-#define ENCODER_THR_RANGE	0xFFF
-
-// Divider to create non linearity
-#define ENCODER_THR_LOG_D	1
-
-// FIR selector public structure
-typedef struct EncoderThreeSelection
-{
-	// pot values
-	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-	uchar	de_detent;			// sw de-detent flag
-
-} EncoderThreeSelection;
 
 void UiRotaryFreqEncoderInit(void);
 void UiRotaryEncoderOneInit(void);
 void UiRotaryEncoderTwoInit(void);
 void UiRotaryEncoderThreeInit(void);
+
+
+// ------------------------------------------------
+// Frequency public
+extern __IO DialFrequency 				df;
+
+
+extern __IO EncoderSelection encSel[3];
+
+
 
 #endif

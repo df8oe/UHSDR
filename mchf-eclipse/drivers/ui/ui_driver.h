@@ -774,4 +774,21 @@ STATE_SWITCH_OFF_PTT			//
 #define	STEP_PRESS_MINUS	1
 #define	STEP_PRESS_PLUS	2
 //
+
+// ------------------------------------------------
+// Keypad state
+extern __IO KeypadState				ks;
+
+// ------------------------------------------------
+// SWR/Power meter
+extern __IO SWRMeter					swrm;
+
+// ------------------------------------------------
+// Power supply meter
+extern __IO PowerMeter					pwmt;
+
+// ------------------------------------------------
+// LO Tcxo
+extern __IO LoTcxo						lo;
+
 #endif

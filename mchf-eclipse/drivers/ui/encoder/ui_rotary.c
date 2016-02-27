@@ -16,9 +16,6 @@
 
 #include "ui_rotary.h"
 
-extern 		DialFrequency 		df;
-//extern		AudioGain			ag;
-
 //*----------------------------------------------------------------------------
 //* Function Name       : UiRotaryFreqEncoderInit
 //* Object              : 
@@ -84,7 +81,7 @@ void UiRotaryEncoderOneInit(void)
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
-	TIM_TimeBaseStructure.TIM_Period = (ENCODER_ONE_RANGE/ENCODER_ONE_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
+	TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
 	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -122,7 +119,7 @@ void UiRotaryEncoderTwoInit(void)
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
-	TIM_TimeBaseStructure.TIM_Period = (ENCODER_TWO_RANGE/ENCODER_TWO_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
+	TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
 	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -160,7 +157,7 @@ void UiRotaryEncoderThreeInit(void)
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 
-	TIM_TimeBaseStructure.TIM_Period = (ENCODER_THR_RANGE/ENCODER_THR_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
+	TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
 	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
