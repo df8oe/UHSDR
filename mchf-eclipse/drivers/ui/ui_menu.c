@@ -15,6 +15,7 @@
 // Common
 //
 #include "mchf_board.h"
+#include "ui.h"
 #include "ui_menu.h"
 
 #include <stdio.h>
@@ -549,36 +550,33 @@ static const char* filter_list_2P3KHz[] =      {
 } ;
 
 
-typedef struct BandInfo {
-		uint8_t default_pf;
-		uint8_t selector_5W;
-		uint8_t selector_FULL;
-} BandInfo;
-
-#define BandInfoGenerate(BAND,SUFFIX) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST }
+#define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
 BandInfo bandInfo[] = {
-				BandInfoGenerate(80,M) ,
-				BandInfoGenerate(60,M),
-				BandInfoGenerate(40,M),
-				BandInfoGenerate(30,M),
-				BandInfoGenerate(20,M),
-				BandInfoGenerate(17,M),
-				BandInfoGenerate(15,M),
-				BandInfoGenerate(12,M),
-				BandInfoGenerate(10,M),
-				BandInfoGenerate(6,M),
-				BandInfoGenerate(4,M),
-				BandInfoGenerate(2,M),
-				BandInfoGenerate(70,CM),
-				BandInfoGenerate(23,CM),
-				BandInfoGenerate(2200,M),
-				BandInfoGenerate(630,M),
-				BandInfoGenerate(160,M),
-				{ 0, 0, 0 } // Generic Band
+				BandInfoGenerate(80,M,"80m") ,
+				BandInfoGenerate(60,M,"60m"),
+				BandInfoGenerate(40,M,"40m"),
+				BandInfoGenerate(30,M,"30m"),
+				BandInfoGenerate(20,M,"20m"),
+				BandInfoGenerate(17,M,"17m"),
+				BandInfoGenerate(15,M,"15m"),
+				BandInfoGenerate(12,M,"12m"),
+				BandInfoGenerate(10,M,"10m"),
+				BandInfoGenerate(6,M,"6m"),
+				BandInfoGenerate(4,M,"4m"),
+				BandInfoGenerate(2,M,"2m"),
+				BandInfoGenerate(70,CM,"70cm"),
+				BandInfoGenerate(23,CM,"23cm"),
+				BandInfoGenerate(2200,M,"2200m"),
+				BandInfoGenerate(630,M,"630m"),
+				BandInfoGenerate(160,M,"160m"),
+				{ 0, 0, 0, 0, 0, "Gen" } // Generic Band
 };
 
-bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, volatile uint8_t* adj_ptr, char* options, uint32_t* clr_ptr) {
+bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr) {
+	volatile uint8_t* adj_ptr;
+	adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
+
 	bool tchange = false;
 	if((ts.band == band_mode) && (ts.power_level == pa_level))	{
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
@@ -2800,107 +2798,109 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
 		sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
 		break;
+
+
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_630M_5W_ADJUST:		// 630m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_5W, &ts.pwr_630m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_160M_5W_ADJUST:		// 160m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_5W, &ts.pwr_160m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_80M_5W_ADJUST:		// 80m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_5W, &ts.pwr_80m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_60M_5W_ADJUST:		// 60m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_5W, &ts.pwr_60m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_40M_5W_ADJUST:		// 40m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_5W, &ts.pwr_40m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_30M_5W_ADJUST:		// 30m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_5W, &ts.pwr_30m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_20M_5W_ADJUST:		// 20m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_5W, &ts.pwr_20m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_17M_5W_ADJUST:		// 17m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_5W, &ts.pwr_17m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_15M_5W_ADJUST:		// 15m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_5W, &ts.pwr_15m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_12M_5W_ADJUST:		// 12m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_5W, &ts.pwr_12m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_10M_5W_ADJUST:		// 10m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_5W, &ts.pwr_10m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_6M_5W_ADJUST:		// 6m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_5W, &ts.pwr_6m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_4M_5W_ADJUST:		// 4m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_5W, &ts.pwr_4m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_2M_5W_ADJUST:		// 2m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_5W, &ts.pwr_2m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_70CM_5W_ADJUST:		// 70cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_5W, &ts.pwr_70cm_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_23CM_5W_ADJUST:		// 23cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_5W, &ts.pwr_23cm_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_2200M_FULL_POWER_ADJUST:		// 2200m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_FULL, &ts.pwr_2200m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_630M_FULL_POWER_ADJUST:		// 630m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_FULL, &ts.pwr_630m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_160M_FULL_POWER_ADJUST:		// 160m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_FULL, &ts.pwr_160m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_80M_FULL_POWER_ADJUST:		// 80m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_FULL, &ts.pwr_80m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_60M_FULL_POWER_ADJUST:		// 60m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_FULL, &ts.pwr_60m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_40M_FULL_POWER_ADJUST:		// 40m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_FULL, &ts.pwr_40m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_30M_FULL_POWER_ADJUST:		// 30m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_FULL, &ts.pwr_30m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_20M_FULL_POWER_ADJUST:		// 20m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_FULL, &ts.pwr_20m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_17M_FULL_POWER_ADJUST:		// 17m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_FULL, &ts.pwr_17m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_15M_FULL_POWER_ADJUST:		// 15m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_FULL, &ts.pwr_15m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_12M_FULL_POWER_ADJUST:		// 12m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_FULL, &ts.pwr_12m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_10M_FULL_POWER_ADJUST:		// 10m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_FULL, &ts.pwr_10m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_6M_FULL_POWER_ADJUST:		// 6m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_FULL, &ts.pwr_6m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_4M_FULL_POWER_ADJUST:		// 4m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_FULL, &ts.pwr_4m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_2M_FULL_POWER_ADJUST:		// 2m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_FULL, &ts.pwr_2m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_70CM_FULL_POWER_ADJUST:		// 70cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_FULL, &ts.pwr_70cm_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_23CM_FULL_POWER_ADJUST:		// 23cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, &ts.pwr_23cm_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		ts.dsp_nr_delaybuf_len &= 0xfff0;	// mask bottom nybble to enforce 16-count boundary

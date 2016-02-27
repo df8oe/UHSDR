@@ -803,23 +803,13 @@ void TransceiverStateInit(void)
 	ts.refresh_freq_disp	= 1;					// TRUE if frequency/color display is to be refreshed when next called - NORMALLY LEFT AT 0 (FALSE)!!!
 													// This is NOT reset by the LCD function, but must be enabled/disabled externally
 	//
-	ts.pwr_2200m_5w_adj	= 1;
-	ts.pwr_630m_5w_adj	= 1;
-	ts.pwr_160m_5w_adj	= 1;
-	ts.pwr_80m_5w_adj	= 1;
-	ts.pwr_60m_5w_adj	= 1;
-	ts.pwr_40m_5w_adj	= 1;
-	ts.pwr_30m_5w_adj	= 1;
-	ts.pwr_20m_5w_adj	= 1;
-	ts.pwr_17m_5w_adj	= 1;
-	ts.pwr_15m_5w_adj	= 1;
-	ts.pwr_12m_5w_adj	= 1;
-	ts.pwr_10m_5w_adj	= 1;
-	ts.pwr_6m_5w_adj	= 1;
-	ts.pwr_4m_5w_adj	= 1;
-	ts.pwr_2m_5w_adj	= 1;
-	ts.pwr_70cm_5w_adj	= 1;
-	ts.pwr_23cm_5w_adj	= 1;
+	{
+		int idx;
+		for (idx=0;idx<MAX_BANDS;idx++) {
+			ts.pwr_adj[ADJ_5W][idx] = 1;
+			ts.pwr_adj[ADJ_FULL_POWER][idx] = 1;
+		}
+	}
 	//
 	ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
 	ts.filter_ssb_narrow_disable	= 0;			// TRUE if narrow (CW) filters are to be disabled in SSB mdoe
