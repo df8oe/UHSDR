@@ -66,44 +66,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
 extern __IO OscillatorState os;
-// ------------------------------------------------
-// Frequency public
-__IO DialFrequency 				df;
-
-// ------------------------------------------------
-// Encoder one public
-__IO EncoderOneSelection		eos;
-
-// ------------------------------------------------
-// Encoder two public
-__IO EncoderTwoSelection		ews;
-
-// ------------------------------------------------
-// Encoder three public
-__IO EncoderThreeSelection		ets;
-
-// ------------------------------------------------
-// Keypad state
-__IO KeypadState				ks;
-
-// ------------------------------------------------
-// SWR/Power meter
-__IO SWRMeter					swrm;
-
-// ------------------------------------------------
-// Power supply meter
-__IO PowerMeter					pwmt;
-
-// ------------------------------------------------
-// LO Tcxo
-__IO LoTcxo						lo;
-
-// ------------------------------------------------
-// Spectrum display
-extern __IO	SpectrumDisplay		sd;
-
-// Public Audio
-extern __IO		AudioDriverState	ads;
 
 
 

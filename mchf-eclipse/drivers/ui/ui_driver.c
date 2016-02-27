@@ -282,17 +282,6 @@ extern __IO TransceiverState 	ts;
 // Frequency public
 __IO DialFrequency 				df;
 
-// ------------------------------------------------
-// Encoder one public
-__IO EncoderOneSelection		eos;
-
-// ------------------------------------------------
-// Encoder two public
-__IO EncoderTwoSelection		ews;
-
-// ------------------------------------------------
-// Encoder three public
-__IO EncoderThreeSelection		ets;
 
 // ------------------------------------------------
 // Keypad state
@@ -811,20 +800,6 @@ static void UiDriverPublicsInit(void)
 	ks.button_processed		= 0;
 	ks.debounce_time		= 0;
 
-	// Init encoder one
-	eos.value_old 			= 0;
-	eos.value_new			= ENCODER_ONE_RANGE;
-	eos.de_detent			= 0;
-
-	// Init encoder two
-	ews.value_old 			= 0;
-	ews.value_new			= ENCODER_TWO_RANGE;
-	ews.de_detent			= 0;
-
-	// Init encoder three
-	ets.value_old 			= 0;
-	ets.value_new			= ENCODER_THR_RANGE;
-	ets.de_detent			= 0;
 
 	// Auto button blink state
 	//abst.blink_flag 		= 0;
@@ -4600,6 +4575,7 @@ static bool UiDriverCheckFrequencyEncoder(void)
 	return true;
 }
 
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckEncoderOne
 //* Object              :
@@ -4609,70 +4585,30 @@ static bool UiDriverCheckFrequencyEncoder(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCheckEncoderOne(void)
 {
-	char 	temp[10];
 	int 	pot_diff;
 
-	eos.value_new = TIM_GetCounter(TIM3);
-
-	// Ignore lower value flickr
-	if(eos.value_new < ENCODER_FLICKR_BAND)
-		return;
-
-	// Ignore lower value flickr
-	if(eos.value_new > (ENCODER_ONE_RANGE/ENCODER_ONE_LOG_D) + ENCODER_FLICKR_BAND)
-		return;
-
-	// No change, return
-	if(eos.value_old == eos.value_new)
-		return;
-
-#ifdef USE_DETENTED_ENCODERS
-	// SW de-detent routine
-	eos.de_detent++;
-	if(eos.de_detent < USE_DETENTED_VALUE)
-	{
-		eos.value_old = eos.value_new; // update and skip
-		return;
-	}
-	eos.de_detent = 0;
-#endif
-
-	//printf("gain pot: %d\n\r",gs.value_new);
-
-	// Encoder value to difference
-	if(eos.value_new > eos.value_old)
-		pot_diff = +1;
-	else
-		pot_diff = -1;
-
-	//printf("pot diff: %d\n\r",pot_diff);
+	pot_diff = UiDriverEncoderRead(ENC1);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
-	// Take appropriate action
-	switch(ts.enc_one_mode)
-	{
+	if (pot_diff) {
+		// Take appropriate action
+		switch(ts.enc_one_mode)
+		{
 		// Update audio volume
 		case ENC_ONE_MODE_AUDIO_GAIN:
 		{
 			// Convert to Audio Gain incr/decr
-			if(pot_diff < 0)
-			{
+			if(pot_diff < 0) {
 				if(ts.audio_gain)
 					ts.audio_gain -= 1;
-			}
-			else
-			{
+			} else {
 				ts.audio_gain += 1;
 				if(ts.audio_gain > ts.audio_max_volume)
 					ts.audio_gain = ts.audio_max_volume;
 			}
 
-			// Value to string
-			sprintf(temp,"%02d",ts.audio_gain);
-
-			// Update screen indicator
-			UiLcdHy28_PrintText((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,White,Black,0);
+			UiDriverChangeAfGain(1);
 			//
 			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 			//
@@ -4694,9 +4630,9 @@ static void UiDriverCheckEncoderOne(void)
 				}
 				else
 				{
-						ts.st_gain += 1;
-						if(ts.st_gain > SIDETONE_MAX_GAIN)		// limit value to proper range
-							ts.st_gain = SIDETONE_MAX_GAIN;
+					ts.st_gain += 1;
+					if(ts.st_gain > SIDETONE_MAX_GAIN)		// limit value to proper range
+						ts.st_gain = SIDETONE_MAX_GAIN;
 				}
 				UiDriverChangeStGain(1);
 				//
@@ -4704,14 +4640,6 @@ static void UiDriverCheckEncoderOne(void)
 				//
 				if(sd.use_spi)
 					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
-				//
-				/*
-				// Value to string
-				sprintf(temp,"%02d",ts.st_gain);
-
-				// Update screen indicator
-				UiLcdHy28_PrintText((POS_SG_IND_X + 30),(POS_SG_IND_Y + 1), temp,White,Black,0);
-				*/
 			}
 			else	{		// In voice mode - adjust audio compression level
 				// Convert to Audio Gain incr/decr
@@ -4733,7 +4661,6 @@ static void UiDriverCheckEncoderOne(void)
 				//
 				if(sd.use_spi)
 					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
-				//
 			}
 
 			break;
@@ -4741,11 +4668,11 @@ static void UiDriverCheckEncoderOne(void)
 
 		default:
 			break;
+		}
+
+		// Updated
+
 	}
-
-	// Updated
-	eos.value_old = eos.value_new;
-
 }
 //
 //*----------------------------------------------------------------------------
@@ -4760,84 +4687,51 @@ static void UiDriverCheckEncoderTwo(void)
 	//char 	temp[10];
 	int 	pot_diff;
 
-
-	ews.value_new = TIM_GetCounter(TIM4);
-
-	// Ignore lower value flickr
-	if(ews.value_new < ENCODER_FLICKR_BAND)
-		return;
-
-	// Ignore lower value flickr
-	if(ews.value_new > (ENCODER_TWO_RANGE/ENCODER_TWO_LOG_D) + ENCODER_FLICKR_BAND)
-		return;
-
-	// No change, return
-	if(ews.value_old == ews.value_new)
-		return;
-
-#ifdef USE_DETENTED_ENCODERS
-	// SW de-detent routine
-	ews.de_detent++;
-	if(ews.de_detent < USE_DETENTED_VALUE)
-	{
-		ews.value_old = ews.value_new; // update and skip
-		return;
-	}
-	ews.de_detent = 0;
-#endif
-
-	//printf("gain pot: %d\n\r",gs.value_new);
-
-	// Encoder value to difference
-	if(ews.value_new > ews.value_old)
-		pot_diff = +1;
-	else
-		pot_diff = -1;
-
-	//printf("pot diff: %d\n\r",pot_diff);
+	pot_diff = UiDriverEncoderRead(ENC2);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
-	if(ts.menu_mode)	{
-		if(pot_diff < 0)	{
-			if(ts.menu_item)	{
-				ts.menu_item--;
-			}
-			else	{
-				if(!ts.radio_config_menu_enable)
-					ts.menu_item = MAX_MENU_ITEM-1;	// move to the last menu item (e.g. "wrap around")
-				else
-					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last menu item (e.g. "wrap around")
-			}
-		}
-		else	{
-			ts.menu_item++;
-			if(!ts.radio_config_menu_enable)	{
-				if(ts.menu_item >= MAX_MENU_ITEM)	{
-					ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
+	if (pot_diff) {
+		if(ts.menu_mode)	{
+			if(pot_diff < 0)	{
+				if(ts.menu_item)	{
+					ts.menu_item--;
+				}
+				else	{
+					if(!ts.radio_config_menu_enable)
+						ts.menu_item = MAX_MENU_ITEM-1;	// move to the last menu item (e.g. "wrap around")
+					else
+						ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last menu item (e.g. "wrap around")
 				}
 			}
 			else	{
-				if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)	{
-					ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
+				ts.menu_item++;
+				if(!ts.radio_config_menu_enable)	{
+					if(ts.menu_item >= MAX_MENU_ITEM)	{
+						ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
+					}
+				}
+				else	{
+					if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)	{
+						ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
+					}
 				}
 			}
+			ts.menu_var = 0;			// clear variable that is used to change a menu item
+			UiDriverUpdateMenu(1);		// Update that menu item
+			//
+			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
+			//
+			if(sd.use_spi)
+				ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
+			//
+			goto skip_update;
 		}
-		ts.menu_var = 0;			// clear variable that is used to change a menu item
-		UiDriverUpdateMenu(1);		// Update that menu item
-		//
-		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-		//
-		if(sd.use_spi)
-			ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
-		//
-		goto skip_update;
-	}
-	if(ts.txrx_mode == TRX_MODE_RX)	{
-		//
-		// Take appropriate action
-		switch(ts.enc_two_mode)
-		{
+		if(ts.txrx_mode == TRX_MODE_RX)	{
+			//
+			// Take appropriate action
+			switch(ts.enc_two_mode)
+			{
 			case ENC_TWO_MODE_RF_GAIN:
 			{
 				if(ts.dmod_mode != DEMOD_FM)	{	// is this *NOT* FM?  Change RF gain
@@ -4937,13 +4831,10 @@ static void UiDriverCheckEncoderTwo(void)
 
 			default:
 				break;
+			}
 		}
+		skip_update: {}
 	}
-
-skip_update:
-
-	// Updated
-	ews.value_old = ews.value_new;
 }
 
 //
@@ -4958,66 +4849,34 @@ static void UiDriverCheckEncoderThree(void)
 {
 	int 	pot_diff;
 
-	ets.value_new = TIM_GetCounter(TIM5);
-
-	// Ignore lower value flicker
-	if(ets.value_new < ENCODER_FLICKR_BAND)
-		return;
-
-	// Ignore higher value flicker
-	if(ets.value_new > (ENCODER_THR_RANGE/ENCODER_THR_LOG_D) + ENCODER_FLICKR_BAND)
-		return;
-
-	// No change, return
-	if(ets.value_old == ets.value_new)
-		return;
-
-#ifdef USE_DETENTED_ENCODERS
-	// SW de-detent routine
-	ets.de_detent++;
-	if(ets.de_detent < USE_DETENTED_VALUE)
-	{
-		ets.value_old = ets.value_new; // update and skip
-		return;
-	}
-	ets.de_detent = 0;
-#endif
-
-	//printf("fir pot: %d\n\r",fs.value_new);
-
-	// Encoder value to difference
-	if(ets.value_new > ets.value_old)
-		pot_diff = +1;
-	else
-		pot_diff = -1;
-
-	//printf("pot diff: %d\n\r",pot_diff);
+	pot_diff = UiDriverEncoderRead(ENC3);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
-	if(ts.menu_mode)	{
-		if(pot_diff < 0)	{
-			ts.menu_var--;		// increment selected item
+	if (pot_diff) {
+		if(ts.menu_mode)	{
+			if(pot_diff < 0)	{
+				ts.menu_var--;		// increment selected item
+			}
+			else	{
+				ts.menu_var++;		// decrement selected item
+			}
+			//
+			UiDriverUpdateMenu(1);		// perform update of selected item
+			//
+			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
+			//
+			if(sd.use_spi)
+				ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
+			//
+			goto skip_update;
 		}
-		else	{
-			ts.menu_var++;		// decrement selected item
-		}
-		//
-		UiDriverUpdateMenu(1);		// perform update of selected item
-		//
-		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-		//
-		if(sd.use_spi)
-			ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
-		//
-		goto skip_update;
-	}
 
 
 
-	// Take appropriate action
-	switch(ts.enc_thr_mode)
-	{
+		// Take appropriate action
+		switch(ts.enc_thr_mode)
+		{
 		// Update RIT value
 		case ENC_THREE_MODE_RIT:
 		{
@@ -5132,12 +4991,10 @@ static void UiDriverCheckEncoderThree(void)
 
 		default:
 			break;
+		}
+
+		skip_update: {}
 	}
-
-skip_update:
-
-	// Updated
-	ets.value_old = ets.value_new;
 }
 
 //*----------------------------------------------------------------------------
