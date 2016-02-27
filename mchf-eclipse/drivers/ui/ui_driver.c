@@ -698,6 +698,7 @@ void ui_driver_toggle_tx(void)
 	bool	reset_freq = 0;
 	ulong	calc_var;
 
+	// FIXME: drv_init never used anywhere in the current code
 	// Disable irq processing
 	drv_init = 0;
 	if(ts.txrx_mode == TRX_MODE_TX)
@@ -904,6 +905,28 @@ static void UiDriverPublicsInit(void)
 	lo.v1000				= 0;
 }
 
+void UiDriverEncoderDisplay(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+                            char temp[5], uint32_t color) {
+
+  uint32_t label_color = enabled?Black:Grey1;
+
+  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56 * column, POS_AG_IND_Y + row * 16, 13, 53, Grey);
+  UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), label,
+                      label_color, Grey, 0);
+  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), temp,
+                           color, Black, 0);
+}
+
+void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+                            uint32_t value) {
+
+	char temp[5];
+	uint32_t color = enabled?White:Grey;
+
+	snprintf(temp,5,"%2d",value);
+	UiDriverEncoderDisplay(column, row, label, enabled,
+	                            temp, color);
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessKeyboard
 //* Object              : process hardcoded buttons click and hold
@@ -930,304 +953,295 @@ static void UiDriverProcessKeyboard(void)
 			//
 			switch(ks.button_id)
 			{
-				//
-				case TOUCHSCREEN_ACTIVE:				// touchscreen functions
-					if(ts.tp_x != 0xff)
-					    {
-					    if (ts.show_tp_coordinates)			// show coordinates for coding purposes
-						{
+			//
+			case TOUCHSCREEN_ACTIVE:				// touchscreen functions
+				if(ts.tp_x != 0xff)
+				{
+					if (ts.show_tp_coordinates)			// show coordinates for coding purposes
+					{
 						char text[10];
 						sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
 						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-						}
-					    if(!ts.menu_mode)		// normal operational screen
-						{
+					}
+					if(!ts.menu_mode)		// normal operational screen
+					{
 						if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
-						    {
-						    if(ts.misc_flags1 & 128)
-							{		// is the waterfall mode active?
-							ts.misc_flags1 &=  0x7f;	// yes, turn it off
-							UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-						    else
-							{	// waterfall mode was turned off
-							ts.misc_flags1 |=  128;	// turn it on
-							UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-						    UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
-						    }
-						if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
-						    {
-						    sd.magnify = !sd.magnify;
-						    ts.menu_var_changed = 1;
-						    UiInitSpectrumScopeWaterfall();			// init spectrum scope
-						    }
-						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
-						    {
-						    int step = 2000;				// adjust to 500Hz
-						    if(ts.dmod_mode == DEMOD_AM)
-							step = 20000;				// adjust to 5KHz
-						    uchar line = 0x40;				// x-position of rx frequency in middle position
-						    if(!sd.magnify)				// xposition differs in translated modes not magnified
-							{
-							switch(ts.iq_freq_mode){
-							    case FREQ_IQ_CONV_P6KHZ:
-								line = 0x46;
-								break;
-							    case FREQ_IQ_CONV_M6KHZ:
-								line = 0x32;
-								break;
-							    case FREQ_IQ_CONV_P12KHZ:
-								line = 0x54;
-								break;
-							    case FREQ_IQ_CONV_M12KHZ:
-								line = 0x25;
-								break;
-							    default:
-								line = 0x40;
-							    }
-							}
-						    uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
-//						char text[30];
-//						sprintf(text,"%d",tunediff);
-//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
-//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-						    df.tune_new = lround((df.tune_new + tunediff)/step) * step;
-						    ts.refresh_freq_disp = 1;			// update ALL digits
-						    if(is_splitmode())
-							{						// SPLIT mode
-							UiDriverUpdateFrequency(1,3);
-							UiDriverUpdateFrequency(1,2);
-							}
-						    else
-							UiDriverUpdateFrequency(1,0);		// no SPLIT mode
-						    ts.refresh_freq_disp = 0;			// update ALL digits
-						    } 
-						if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
-						    {
-						    if(ts.digital_mode < 7)
-							ts.digital_mode += 1;
-						    else
-							ts.digital_mode = 0;
-						    UiDriverChangeDigitalMode();
-						    }
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action (left_x,right_x,down_y,up_y)
-						    {
-						    }
-						}
-					    else						// menu screen functions
 						{
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
-						    {
-						    ts.show_tp_coordinates = !ts.show_tp_coordinates;
-						    if(ts.show_tp_coordinates)
-							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"enabled",Green,Black,0);
-						    else
-							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"       ",White,Black,0);
-						    }
-						if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
-						    {
-						    ts.rfmod_present = !ts.rfmod_present;
-						    if(ts.rfmod_present)
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,"present         ",White,Black,0);
-						    else
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,"n/a             ",White,Black,0);
-						    ts.menu_var_changed = 1;
-						    }
-						if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
-						    {
-						    ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
-						    if(ts.vhfuhfmod_present)
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,"present         ",White,Black,0);
-						    else
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,"n/a             ",White,Black,0);
-						    ts.menu_var_changed = 1;
-						    }
-						}
-					ts.tp_x = 0xff;						// mark data as invalid
-					}
-					break;
-				case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
-					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
-						UiDriverChangeDemodMode(0);
-						UiInitRxParms();				// re-init with change of mode
-					}
-					break;
-				//
-				case BUTTON_G2_PRESSED:		// BUTTON_G2
-				{
-					if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
-						if((!(ts.dsp_active & 1)) && (!(ts.dsp_active & 4)))	// both NR and notch are inactive
-						    {
-						    if(ts.dsp_enabled)
-							ts.dsp_active |= 1;					// turn on NR
-						    else
-							ts.dsp_active |= 4;
-						    }
-						else if((ts.dsp_active & 1) && (!(ts.dsp_active & 4))) {	// NR active, notch inactive
-							if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
-								ts.dsp_active |= 4;									// turn on notch
-								ts.dsp_active &= 0xfe;								// turn off NR
+							if(ts.misc_flags1 & 128)
+							{		// is the waterfall mode active?
+								ts.misc_flags1 &=  0x7f;	// yes, turn it off
+								UiInitSpectrumScopeWaterfall();			// init spectrum scope
 							}
-							else	{	// CW mode - do not select notches, skip directly to "off"
-								ts.dsp_active &= 0xfa;	// turn off NR and notch
-							}
-						}
-						else if((!(ts.dsp_active & 1)) && (ts.dsp_active & 4))	//	NR inactive, notch active
-							if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
-								ts.dsp_active &= 0xfa;			// it was AM + wide - turn off NR and notch
 							else
-							    {
-							    if(ts.dsp_enabled)
-								ts.dsp_active |= 1;				// no - turn on NR
-							    else
-								ts.dsp_active &= 0xfa;				// no - turn off NR and NOTCH
-							    }
-						//
-						else	{
-							ts.dsp_active &= 0xfa;								// turn off NR and notch
+							{	// waterfall mode was turned off
+								ts.misc_flags1 |=  128;	// turn it on
+								UiInitSpectrumScopeWaterfall();			// init spectrum scope
+							}
+							UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 						}
-						//
-						ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
-						//
-						ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
-						audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-						ts.reset_dsp_nr = 0;
-						UiDriverChangeDSPMode();			// update on-screen display
-						//
-						// Update DSP/NB/RFG control display
-						//
-						if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-							UiDriverChangeSigProc(0);
+						if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
+						{
+							sd.magnify = !sd.magnify;
+							ts.menu_var_changed = 1;
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
+						{
+							int step = 2000;				// adjust to 500Hz
+							if(ts.dmod_mode == DEMOD_AM)
+								step = 20000;				// adjust to 5KHz
+							uchar line = 0x40;				// x-position of rx frequency in middle position
+							if(!sd.magnify)				// xposition differs in translated modes not magnified
+							{
+								switch(ts.iq_freq_mode){
+								case FREQ_IQ_CONV_P6KHZ:
+									line = 0x46;
+									break;
+								case FREQ_IQ_CONV_M6KHZ:
+									line = 0x32;
+									break;
+								case FREQ_IQ_CONV_P12KHZ:
+									line = 0x54;
+									break;
+								case FREQ_IQ_CONV_M12KHZ:
+									line = 0x25;
+									break;
+								default:
+									line = 0x40;
+								}
+							}
+							uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
+							//						char text[30];
+							//						sprintf(text,"%d",tunediff);
+							//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
+							//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+							df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+							ts.refresh_freq_disp = 1;			// update ALL digits
+							if(is_splitmode())
+							{						// SPLIT mode
+								UiDriverUpdateFrequency(1,3);
+								UiDriverUpdateFrequency(1,2);
+							}
+							else
+								UiDriverUpdateFrequency(1,0);		// no SPLIT mode
+							ts.refresh_freq_disp = 0;			// update ALL digits
+						}
+						if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
+						{
+							if(ts.digital_mode < 7)
+								ts.digital_mode += 1;
+							else
+								ts.digital_mode = 0;
+							UiDriverChangeDigitalMode();
+						}
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action (left_x,right_x,down_y,up_y)
+						{
+						}
+					}
+					else						// menu screen functions
+					{
+						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+						{
+							ts.show_tp_coordinates = !ts.show_tp_coordinates;
+							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
+						}
+						if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
+						{
+							ts.rfmod_present = !ts.rfmod_present;
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present         ":"n/a             ",White,Black,0);
+							ts.menu_var_changed = 1;
+						}
+						if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
+						{
+							ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
+							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present         ":"n/a             ",White,Black,0);
+							ts.menu_var_changed = 1;
+						}
+					}
+					ts.tp_x = 0xff;						// mark data as invalid
+				}
+				break;
+			case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
+				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
+					UiDriverChangeDemodMode(0);
+					UiInitRxParms();				// re-init with change of mode
+				}
+				break;
+				//
+			case BUTTON_G2_PRESSED:		// BUTTON_G2
+			{
+				if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
+					if((!(ts.dsp_active & 1)) && (!(ts.dsp_active & 4)))	// both NR and notch are inactive
+					{
+						if(ts.dsp_enabled)
+							ts.dsp_active |= 1;					// turn on NR
 						else
-							UiDriverChangeSigProc(1);
+							ts.dsp_active |= 4;
 					}
-//					}
-					break;
+					else if((ts.dsp_active & 1) && (!(ts.dsp_active & 4))) {	// NR active, notch inactive
+						if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
+							ts.dsp_active |= 4;									// turn on notch
+							ts.dsp_active &= 0xfe;								// turn off NR
+						}
+						else	{	// CW mode - do not select notches, skip directly to "off"
+							ts.dsp_active &= 0xfa;	// turn off NR and notch
+						}
+					}
+					else if((!(ts.dsp_active & 1)) && (ts.dsp_active & 4))	//	NR inactive, notch active
+						if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
+							ts.dsp_active &= 0xfa;			// it was AM + wide - turn off NR and notch
+						else
+						{
+							if(ts.dsp_enabled)
+								ts.dsp_active |= 1;				// no - turn on NR
+							else
+								ts.dsp_active &= 0xfa;				// no - turn off NR and NOTCH
+						}
+					//
+					else	{
+						ts.dsp_active &= 0xfa;								// turn off NR and notch
+					}
+					//
+					ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
+					//
+					ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
+					audio_driver_set_rx_audio_filter();	// update DSP/filter settings
+					ts.reset_dsp_nr = 0;
+					UiDriverChangeDSPMode();			// update on-screen display
+					//
+					// Update DSP/NB/RFG control display
+					//
+					if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
+						UiDriverChangeSigProc(0);
+					else
+						UiDriverChangeSigProc(1);
+				}
+				//					}
+				break;
+			}
+			//
+			case BUTTON_G3_PRESSED:		{	// BUTTON_G3 - Change power setting
+				ts.power_level++;
+				//
+				if(ts.dmod_mode == DEMOD_AM)	{			// in AM mode?
+					if(ts.power_level >= PA_LEVEL_MAX_ENTRY)	// yes, power over 2 watts?
+						ts.power_level = PA_LEVEL_2W;	// force to 2 watt mode when we "roll over"
+				}
+				else	{	// other modes, do not limit max power
+					if(ts.power_level >= PA_LEVEL_MAX_ENTRY)
+						ts.power_level = PA_LEVEL_FULL;
 				}
 				//
-				case BUTTON_G3_PRESSED:		{	// BUTTON_G3 - Change power setting
-					ts.power_level++;
+				UiDriverChangePowerLevel();
+				if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
+					if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+						Codec_SidetoneSetgain();
+				//
+				if(ts.menu_mode)	// are we in menu mode?
+					UiDriverUpdateMenu(0);	// yes, update display when we change power setting
+				//
+				break;
+			}
+			//
+			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
+				if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
+					ts.filter_id++;
 					//
-					if(ts.dmod_mode == DEMOD_AM)	{			// in AM mode?
-						if(ts.power_level >= PA_LEVEL_MAX_ENTRY)	// yes, power over 2 watts?
-							ts.power_level = PA_LEVEL_2W;	// force to 2 watt mode when we "roll over"
-					}
-					else	{	// other modes, do not limit max power
-						if(ts.power_level >= PA_LEVEL_MAX_ENTRY)
-							ts.power_level = PA_LEVEL_FULL;
-					}
+					if(ts.filter_id >= AUDIO_MAX_FILTER)
+						ts.filter_id = AUDIO_MIN_FILTER;
 					//
-					UiDriverChangePowerLevel();
-					if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
-						if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-							Codec_SidetoneSetgain();
+					UiDriverProcessActiveFilterScan();	// make sure that filter is active - if not, find next active filter
+					//
+					// Change filter
+					//
+					UiDriverChangeFilter(0);
+					//
+					UiInitRxParms();		// re-init for change of filter
 					//
 					if(ts.menu_mode)	// are we in menu mode?
-						UiDriverUpdateMenu(0);	// yes, update display when we change power setting
+						UiDriverUpdateMenu(0);	// yes, update display when we change filters
 					//
-					break;
 				}
+				break;
+			}
+			//
+			case BUTTON_M1_PRESSED:		// BUTTON_M1
+				UiDriverChangeEncoderOneMode(0);
+				break;
 				//
-				case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
-					if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
-						ts.filter_id++;
-						//
-						if(ts.filter_id >= AUDIO_MAX_FILTER)
-							ts.filter_id = AUDIO_MIN_FILTER;
-						//
-						UiDriverProcessActiveFilterScan();	// make sure that filter is active - if not, find next active filter
-						//
-						// Change filter
-						//
-						UiDriverChangeFilter(0);
-						//
-						UiInitRxParms();		// re-init for change of filter
-						//
-						if(ts.menu_mode)	// are we in menu mode?
-							UiDriverUpdateMenu(0);	// yes, update display when we change filters
-						//
-					}
-					break;
+			case BUTTON_M2_PRESSED:		// BUTTON_M2
+				UiDriverChangeEncoderTwoMode(0);
+				break;
+				//
+			case BUTTON_M3_PRESSED:		// BUTTON_M3
+				UiDriverChangeEncoderThreeMode(0);
+				break;
+				//
+			case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
+				if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+					UiDriverChangeTuningStep(0);	// decrease step size
+				else		// button swap enabled
+					UiDriverChangeTuningStep(1);	// increase step size
+				break;
+				//
+			case BUTTON_STEPP_PRESSED:		// BUTTON_STEPP
+				if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+					UiDriverChangeTuningStep(1);	// increase step size
+				else
+					UiDriverChangeTuningStep(0);	// decrease step size
+				break;
+				//
+			case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
+				btemp = ads.af_dissabled;
+				ads.af_dissabled = 0;
+				//
+				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
+				ts.dsp_inhibit = 1;
+				ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
+				//
+				if(ts.misc_flags1 & 2)		// band up/down button swapped?
+					UiDriverChangeBand(1);	// yes - go up
+				else
+					UiDriverChangeBand(0);	// not swapped, go down
+				//
+				UiInitRxParms();	// re-init because mode/filter may have changed
+				//
+				if(ts.menu_mode)	// are we in menu mode?
+					UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
+				//
+				ads.af_dissabled =  btemp;
+				break;
+				//
+			case BUTTON_BNDP_PRESSED:	// BUTTON_BNDP
+				btemp = ads.af_dissabled;
+				ads.af_dissabled = 0;
+				//
+				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
+				ts.dsp_inhibit = 1;
+				ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
+				//
+				if(ts.misc_flags1 & 2)		// band up/down button swapped?
+					UiDriverChangeBand(0);	// yes, go down
+				else
+					UiDriverChangeBand(1);	// no, go up
+				//
+				UiInitRxParms();		// re-init because mode/filter may have changed
+				//
+				if(ts.menu_mode)	// are we in menu mode?
+					UiDriverUpdateMenu(0);	// yes, update display when we change bands
+				//
+				ads.af_dissabled = btemp;
+				break;
+				//
+			case BUTTON_POWER_PRESSED:
+				if(!ts.boot_halt_flag)	{	// do brightness adjust ONLY if NOT in "boot halt" mode
+					ts.lcd_backlight_brightness++;
+					ts.lcd_backlight_brightness &= 3;	// limit range of brightness to 0-3
 				}
-				//
-				case BUTTON_M1_PRESSED:		// BUTTON_M1
-					UiDriverChangeEncoderOneMode(0);
-					break;
-				//
-				case BUTTON_M2_PRESSED:		// BUTTON_M2
-					UiDriverChangeEncoderTwoMode(0);
-					break;
-				//
-				case BUTTON_M3_PRESSED:		// BUTTON_M3
-					UiDriverChangeEncoderThreeMode(0);
-					break;
-				//
-				case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
-					if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
-						UiDriverChangeTuningStep(0);	// decrease step size
-					else		// button swap enabled
-						UiDriverChangeTuningStep(1);	// increase step size
-					break;
-				//
-				case BUTTON_STEPP_PRESSED:		// BUTTON_STEPP
-					if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
-						UiDriverChangeTuningStep(1);	// increase step size
-					else
-						UiDriverChangeTuningStep(0);	// decrease step size
-					break;
-				//
-				case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
-					btemp = ads.af_dissabled;
-					ads.af_dissabled = 0;
-					//
-					ts.dsp_timed_mute = 1;		// disable DSP when changing bands
-					ts.dsp_inhibit = 1;
-					ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
-					//
-					if(ts.misc_flags1 & 2)		// band up/down button swapped?
-						UiDriverChangeBand(1);	// yes - go up
-					else
-						UiDriverChangeBand(0);	// not swapped, go down
-					//
-					UiInitRxParms();	// re-init because mode/filter may have changed
-					//
-					if(ts.menu_mode)	// are we in menu mode?
-						UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
-					//
-					ads.af_dissabled =  btemp;
-					break;
-				//
-				case BUTTON_BNDP_PRESSED:	// BUTTON_BNDP
-					btemp = ads.af_dissabled;
-					ads.af_dissabled = 0;
-					//
-					ts.dsp_timed_mute = 1;		// disable DSP when changing bands
-					ts.dsp_inhibit = 1;
-					ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
-					//
-					if(ts.misc_flags1 & 2)		// band up/down button swapped?
-						UiDriverChangeBand(0);	// yes, go down
-					else
-						UiDriverChangeBand(1);	// no, go up
-					//
-					UiInitRxParms();		// re-init because mode/filter may have changed
-					//
-					if(ts.menu_mode)	// are we in menu mode?
-						UiDriverUpdateMenu(0);	// yes, update display when we change bands
-					//
-					ads.af_dissabled = btemp;
-					break;
-				//
-				case BUTTON_POWER_PRESSED:
-					if(!ts.boot_halt_flag)	{	// do brightness adjust ONLY if NOT in "boot halt" mode
-						ts.lcd_backlight_brightness++;
-						ts.lcd_backlight_brightness &= 3;	// limit range of brightness to 0-3
-					}
-					break;
-				default:
-					UiDriverProcessFunctionKeyClick(ks.button_id);
-					break;
+				break;
+			default:
+				UiDriverProcessFunctionKeyClick(ks.button_id);
+				break;
 			}
 		}
 		else	{
@@ -1239,326 +1253,315 @@ static void UiDriverProcessKeyboard(void)
 			// *******************************************************************************
 			//
 			switch(ks.button_id)	{
-				case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
-					if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
-						if(!ts.menu_mode)	{						// not in menu mode
-							UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
-							if(ts.ser_eeprom_in_use == 0xFF)
-							    UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
-							if(ts.ser_eeprom_in_use == 0x00)
-							    UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
-							UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
-							for(temp = 0; temp < 6; temp++)			// delay so that it may be read
-								non_os_delay();
-								//
-							UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							ts.menu_mode = 0;
-						}
-						else	// If in menu mode, just save data, but don't clear screen area
-							UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
-						//
-						ts.menu_var_changed = 0;					// clear "EEPROM SAVE IS NECESSARY" indicators
-					}
-					//
-					if(!ts.menu_mode)	// are we in menu mode?
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," MENU  ",White,Black,0);	// no - update menu button to reflect no memory save needed
-					else
-						UiDriverUpdateMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
-					break;
-				case BUTTON_F3_PRESSED:	// Press-and-hold button F3
-					// Move to the BEGINNING of the current menu structure
-					if(ts.menu_mode)	{		// Are we in menu mode?
-						if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
-							if(ts.menu_item)	// is this NOT the first menu item?
-								ts.menu_item = 0;	// yes - set it to the beginning of the first menu
-							else	{			// this IS the first menu item
-								if(ts.radio_config_menu_enable)		// yes - is the configuration menu enabled?
-									ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
-								else								// configuration menu NOT enabled
-									ts.menu_item = MAX_MENU_ITEM - 1;
-							}
-						}
-						else	{		// we are within the CONFIGURATION menu
-							if(ts.menu_item > MAX_MENU_ITEM)		// is this NOT at the first entry of the configuration menu?
-								ts.menu_item = MAX_MENU_ITEM;	// yes, go to the first entry of the configuration item
-							else		// this IS the first entry of the configuration menu
-								ts.menu_item = MAX_MENU_ITEM - 1;	// go to the last entry of the main menu
-						}
-						UiDriverUpdateMenu(0);	// update menu display
-						UiDriverUpdateMenu(1);	// update cursor
-					}
-					else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
-						if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
-							ts.vfo_mem_flag = 1;		// yes, switch to memory mode
-							UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,"  MEM ",White,Black,0);	// yes - indicate with color
-						}
-						else	{
-							ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
-							if(is_splitmode())	// SPLIT mode active?
-								UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_ACTIVE_COLOUR,Black,0);	// yes - indicate with color
-							else
-								UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);		// not active - grey
-						}
-						//
-					}
-					break;
-				case BUTTON_F4_PRESSED:	// Press-and-hold button F4
-					//
-					// Move to the END of the current menu structure
-					if(ts.menu_mode){		// are we in menu mode?
-						if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
-							if(ts.menu_item == MAX_MENU_ITEM-1)	{	// are we on the LAST menu item of the main menu?
-								if(ts.radio_config_menu_enable)		// Yes - is the configuration menu enabled?
-									ts.menu_item = MAX_MENU_ITEM;	// yes - go to the FIRST item of the configuration menu
-								else								// configuration menu NOT enabled
-									ts.menu_item = 0;				// go to the FIRST menu main menu item
-							}
-							else									// we had not been on the last item of the main menu
-								ts.menu_item = MAX_MENU_ITEM-1;		// go to the last item in the main menu
-						}
-						else	{		// we were NOT in the main menu, but in the configuration menu!
-							if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))		// are we on the last item of the configuration menu?
-								ts.menu_item = 0;					// yes - go to the first item of the main menu
-							else	{		// we are NOT on the last item of the configuration menu
-								ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;		// go to the last item in the configuration menu
-							}
-						}
-						UiDriverUpdateMenu(0);	// update menu display
-						UiDriverUpdateMenu(1);	// update cursor
-					}
-					else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
-						__IO VfoReg* vfo_store;
-						if(is_vfo_b())	{	// are we in VFO B mode?
-							vfo_store = &vfo[VFO_A].band[ts.band];
-						}
-						else	{	// we were in VFO A mode
-							vfo_store = &vfo[VFO_B].band[ts.band];
-						}
-						vfo_store->dial_value = df.tune_new;
-						vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
-						vfo_store->filter_mode = ts.filter_id;
-
-						if(is_splitmode())	{	// are we in SPLIT mode?
-							ts.refresh_freq_disp = 1;	// yes, we need to update the TX frequency:  Make frequency display refresh all digits
-							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
-							UiDriverUpdateFrequency(1,2);	// Update receive frequency
-							ts.refresh_freq_disp = 0;	// disable refresh all digits flag
-						}
+			case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
+				if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
+					if(!ts.menu_mode)	{						// not in menu mode
 						UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
-						if(is_vfo_b())	// VFO B active?
-							UiLcdHy28_PrintText(80,160,"VFO B -> VFO A",Cyan,Black,1);		// yes, indicate copy of B into A
-						else			// VFO A active
-							UiLcdHy28_PrintText(80,160,"VFO A -> VFO B",Cyan,Black,1);		// indicate copy of A into B
-						for(temp = 0; temp < 18; temp++)			// delay so that it may be read
+						if(ts.ser_eeprom_in_use == 0xFF)
+							UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
+						if(ts.ser_eeprom_in_use == 0x00)
+							UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
+						UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
+						for(temp = 0; temp < 6; temp++)			// delay so that it may be read
 							non_os_delay();
-							//
+						//
 						UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						ts.menu_mode = 0;
 					}
-					break;
-				case BUTTON_F5_PRESSED:			// Button F5 was pressed-and-held - Toggle TX Disable
-					if(ts.txrx_mode == TRX_MODE_RX)	// do NOT allow mode change in TUNE mode or transmit mode
-					    {
-					    if(ts.tx_disable)
-						{
-						ts.tx_disable = 0;		// Enable TX
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);	// Make TUNE button White
-						}
-					    else
-						{
-						ts.tx_disable = 1;		// Disable TX
-						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
-						}
-					    }
-					break;
-				case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
-					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
-						UiDriverChangeDemodMode(1);		// go to next mode, including disabled modes
-						UiInitRxParms();
-					}
-						//
-					break;
-				//
-				case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
-					if(ts.dmod_mode != DEMOD_FM)	{		// do not allow change of mode when in FM
-						if(ts.dsp_active & 5)	{			// is DSP NR or NOTCH active?
-							ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
-							ts.dsp_active &= 0xfa;				// turn off NR and notch
-						}
-						else	{		// neither notch or NR was active
-							if(ts.dsp_active_toggle != 0xff)	{	// has this holder been used before?
-								ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
-							}
-						}
-						audio_driver_set_rx_audio_filter();	// update DSP settings
-						UiDriverChangeDSPMode();			// update on-screen display
-						//
-						// Update DSP/NB/RFG control display
-						if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-							UiDriverChangeSigProc(0);
-						else
-							UiDriverChangeSigProc(1);
-					}
-					break;
-				case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
-					UiInitRxParms();			// generate "reference" for sidetone frequency
-				break;
-				}
-				case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
-					if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
-						ts.filter_id++;
-						//
-						if(ts.filter_id >= AUDIO_MAX_FILTER)
-							ts.filter_id = AUDIO_MIN_FILTER;
-						//
-						// Change filter
-						//
-						UiDriverChangeFilter(0);
-						UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
-						UiDriverChangeDSPMode();	// Change DSP display setting as well
-						UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-						//
-						if(ts.menu_mode)	// are we in menu mode?
-							UiDriverUpdateMenu(0);	// yes, update display when we change filters
-						//
-					}
-					else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
-						if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	{	// is tone burst mode enabled?
-							ads.fm_tone_burst_active = 1;					// activate the tone burst
-							ts.fm_tone_burst_timing = ts.sysclock + FM_TONE_BURST_DURATION;	// set the duration/timing of the tone burst
-						}
-					}
-					break;
-				}
-				case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
-					ts.dsp_active ^= 8;	// toggle whether or not DSP or NB is to be displayed
+					else	// If in menu mode, just save data, but don't clear screen area
+						UiDriverSaveEepromValuesPowerDown();	// save settings to EEPROM
 					//
+					ts.menu_var_changed = 0;					// clear "EEPROM SAVE IS NECESSARY" indicators
+				}
+				//
+				if(!ts.menu_mode)	// are we in menu mode?
+					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y," MENU  ",White,Black,0);	// no - update menu button to reflect no memory save needed
+				else
+					UiDriverUpdateMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
+				break;
+			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
+				// Move to the BEGINNING of the current menu structure
+				if(ts.menu_mode)	{		// Are we in menu mode?
+					if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
+						if(ts.menu_item)	// is this NOT the first menu item?
+							ts.menu_item = 0;	// yes - set it to the beginning of the first menu
+						else	{			// this IS the first menu item
+							if(ts.radio_config_menu_enable)		// yes - is the configuration menu enabled?
+								ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
+							else								// configuration menu NOT enabled
+								ts.menu_item = MAX_MENU_ITEM - 1;
+						}
+					}
+					else	{		// we are within the CONFIGURATION menu
+						if(ts.menu_item > MAX_MENU_ITEM)		// is this NOT at the first entry of the configuration menu?
+							ts.menu_item = MAX_MENU_ITEM;	// yes, go to the first entry of the configuration item
+						else		// this IS the first entry of the configuration menu
+							ts.menu_item = MAX_MENU_ITEM - 1;	// go to the last entry of the main menu
+					}
+					UiDriverUpdateMenu(0);	// update menu display
+					UiDriverUpdateMenu(1);	// update cursor
+				}
+				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
+					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
+						ts.vfo_mem_flag = 1;		// yes, switch to memory mode
+						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,"  MEM ",White,Black,0);	// yes - indicate with color
+					}
+					else	{
+						uint32_t color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+						ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
+						UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",color,Black,0);
+					}
+					//
+				}
+				break;
+			case BUTTON_F4_PRESSED:	// Press-and-hold button F4
+				//
+				// Move to the END of the current menu structure
+				if(ts.menu_mode){		// are we in menu mode?
+					if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
+						if(ts.menu_item == MAX_MENU_ITEM-1)	{	// are we on the LAST menu item of the main menu?
+							if(ts.radio_config_menu_enable)		// Yes - is the configuration menu enabled?
+								ts.menu_item = MAX_MENU_ITEM;	// yes - go to the FIRST item of the configuration menu
+							else								// configuration menu NOT enabled
+								ts.menu_item = 0;				// go to the FIRST menu main menu item
+						}
+						else									// we had not been on the last item of the main menu
+							ts.menu_item = MAX_MENU_ITEM-1;		// go to the last item in the main menu
+					}
+					else	{		// we were NOT in the main menu, but in the configuration menu!
+						if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))		// are we on the last item of the configuration menu?
+							ts.menu_item = 0;					// yes - go to the first item of the main menu
+						else	{		// we are NOT on the last item of the configuration menu
+							ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;		// go to the last item in the configuration menu
+						}
+					}
+					UiDriverUpdateMenu(0);	// update menu display
+					UiDriverUpdateMenu(1);	// update cursor
+				}
+				else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
+					__IO VfoReg* vfo_store;
+					if(is_vfo_b())	{	// are we in VFO B mode?
+						vfo_store = &vfo[VFO_A].band[ts.band];
+					}
+					else	{	// we were in VFO A mode
+						vfo_store = &vfo[VFO_B].band[ts.band];
+					}
+					vfo_store->dial_value = df.tune_new;
+					vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
+					vfo_store->filter_mode = ts.filter_id;
+
+					if(is_splitmode())	{	// are we in SPLIT mode?
+						ts.refresh_freq_disp = 1;	// yes, we need to update the TX frequency:  Make frequency display refresh all digits
+						UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
+						UiDriverUpdateFrequency(1,2);	// Update receive frequency
+						ts.refresh_freq_disp = 0;	// disable refresh all digits flag
+					}
+					UiDriverClearSpectrumDisplay();			// clear display under spectrum scope
+					UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
+					for(temp = 0; temp < 18; temp++)			// delay so that it may be read
+						non_os_delay();
+					//
+					UiInitSpectrumScopeWaterfall();			// init spectrum scope
+				}
+				break;
+			case BUTTON_F5_PRESSED:			// Button F5 was pressed-and-held - Toggle TX Disable
+				if(ts.txrx_mode == TRX_MODE_RX)	// do NOT allow mode change in TUNE mode or transmit mode
+				{
+					ts.tx_disable = !ts.tx_disable;
+
+					UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",ts.tx_disable?Grey1:White,Black,0);
+					// Set TUNE button color according to ts.tx_disable
+				}
+				break;
+			case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
+				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
+					UiDriverChangeDemodMode(1);		// go to next mode, including disabled modes
+					UiInitRxParms();
+				}
+				//
+				break;
+				//
+			case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
+				if(ts.dmod_mode != DEMOD_FM)	{		// do not allow change of mode when in FM
+					if(ts.dsp_active & 5)	{			// is DSP NR or NOTCH active?
+						ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
+						ts.dsp_active &= 0xfa;				// turn off NR and notch
+					}
+					else	{		// neither notch or NR was active
+						if(ts.dsp_active_toggle != 0xff)	{	// has this holder been used before?
+							ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
+						}
+					}
+					audio_driver_set_rx_audio_filter();	// update DSP settings
+					UiDriverChangeDSPMode();			// update on-screen display
+					//
+					// Update DSP/NB/RFG control display
 					if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
 						UiDriverChangeSigProc(0);
 					else
 						UiDriverChangeSigProc(1);
-					break;
-				case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
-					if(ts.dmod_mode != DEMOD_CW)	{
-						if(ts.tx_audio_source == TX_AUDIO_MIC)
-							ts.tx_audio_source = TX_AUDIO_LINEIN_L;
-						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
-							ts.tx_audio_source = TX_AUDIO_LINEIN_R;
-						else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R)
-							ts.tx_audio_source = TX_AUDIO_DIG;
-						else if (ts.tx_audio_source == TX_AUDIO_DIG)
-							ts.tx_audio_source = TX_AUDIO_DIGIQ;
-						else
-							ts.tx_audio_source = TX_AUDIO_MIC;
-						//
-						if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
-							UIDriverChangeAudioGain(0);
-						else									// not RIT mode - don't grey out
-							UIDriverChangeAudioGain(1);
-					}
-					break;
-				case BUTTON_POWER_PRESSED:
-					if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
-						if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
-							ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
-						else 
-						    {
-						    if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
-							ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
-						    }
-					    }
-					else
-					    {	// ONLY the POWER button was pressed
-					    if(ts.txrx_mode == TRX_MODE_RX)		// only allow power-off in RX mode
-						mchf_board_power_off();
-					    }
-					break;
-				case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
-					if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
-						if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
-							ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
-						else if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
-							ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
-					}
-					else if(!UiDriverButtonCheck(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
-						if(!ts.menu_mode)	{			// do not do this in menu mode!
-							if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
-								ts.misc_flags1 &=  0x7f;	// yes, turn it off
-								UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-							else	{	// waterfall mode was turned off
-								ts.misc_flags1 |=  128;	// turn it on
-								UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-							UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
-						}
-					}
-					break;
-				case BUTTON_BNDP_PRESSED:			// BAND+ button pressed-and-held?
-					if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// and BAND-DOWN pressed at the same time?
-						if(!ts.menu_mode)	{		// do not do this if in menu mode!
-							if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
-								ts.misc_flags1 &=  0x7f;	// yes, turn it off
-								UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-							else	{	// waterfall mode was turned off
-								ts.misc_flags1 |=  128;	// turn it on
-								UiInitSpectrumScopeWaterfall();			// init spectrum scope
-							}
-							UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
-						}
-					}
-					if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
-					    ts.ser_eeprom_in_use = 0x20;			// power down without saving settings
-					    mchf_board_power_off();
-					}
-					break;
-				case BUTTON_STEPM_PRESSED:
-					if(!UiDriverButtonCheck(BUTTON_STEPP_PRESSED))	{	// was button STEP+ pressed at the same time?
-						ts.frequency_lock = !ts.frequency_lock;
-						// update frequency display
-						ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
-						//
-						if(is_splitmode())	{	// in SPLIT mode?
-							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
-							UiDriverUpdateFrequency(1,2);	// update RX frequency
-						}
-						else	{	// not in SPLIT mode - standard update
-							UiDriverUpdateFrequency(1,0);
-						}
-						ts.refresh_freq_disp = 0;	// restore selective update mode for frequency display
-					}
-					else	{
-						if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
-							UiDriverPressHoldStep(0);	// decrease step size
-						else		// button swap enabled
-							UiDriverPressHoldStep(1);	// increase step size
-					}
+				}
+				break;
+			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
+				UiInitRxParms();			// generate "reference" for sidetone frequency
+				break;
+			}
+			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
+				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
+					ts.filter_id++;
 					//
-					break;
-				case BUTTON_STEPP_PRESSED:
-					if(!UiDriverButtonCheck(BUTTON_STEPM_PRESSED))	{	// was button STEP- pressed at the same time?
-						ts.frequency_lock = !ts.frequency_lock;
-						// update frequency display
-						ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
-						//
-						if(is_splitmode())	{	// in SPLIT mode?
-							UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
-							UiDriverUpdateFrequency(1,2);	// update RX frequency
-						}
-						else	{	// not in SPLIT mode - standard update
-							UiDriverUpdateFrequency(1,0);
-						}
-						ts.refresh_freq_disp = 0;	// restore selective update mode for frequency display
+					if(ts.filter_id >= AUDIO_MAX_FILTER)
+						ts.filter_id = AUDIO_MIN_FILTER;
+					//
+					// Change filter
+					//
+					UiDriverChangeFilter(0);
+					UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
+					UiDriverChangeDSPMode();	// Change DSP display setting as well
+					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+					//
+					if(ts.menu_mode)	// are we in menu mode?
+						UiDriverUpdateMenu(0);	// yes, update display when we change filters
+					//
+				}
+				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
+					if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	{	// is tone burst mode enabled?
+						ads.fm_tone_burst_active = 1;					// activate the tone burst
+						ts.fm_tone_burst_timing = ts.sysclock + FM_TONE_BURST_DURATION;	// set the duration/timing of the tone burst
 					}
-					else	{
-						if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
-							UiDriverPressHoldStep(1);	// increase step size
-						else		// button swap enabled
-							UiDriverPressHoldStep(0);	// decrease step size
+				}
+				break;
+			}
+			case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
+				ts.dsp_active ^= 8;	// toggle whether or not DSP or NB is to be displayed
+				//
+				if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
+					UiDriverChangeSigProc(0);
+				else
+					UiDriverChangeSigProc(1);
+				break;
+			case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
+				if(ts.dmod_mode != DEMOD_CW)	{
+					if(ts.tx_audio_source == TX_AUDIO_MIC)
+						ts.tx_audio_source = TX_AUDIO_LINEIN_L;
+					else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
+						ts.tx_audio_source = TX_AUDIO_LINEIN_R;
+					else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R)
+						ts.tx_audio_source = TX_AUDIO_DIG;
+					else if (ts.tx_audio_source == TX_AUDIO_DIG)
+						ts.tx_audio_source = TX_AUDIO_DIGIQ;
+					else
+						ts.tx_audio_source = TX_AUDIO_MIC;
+					//
+					if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
+						UIDriverChangeAudioGain(0);
+					else									// not RIT mode - don't grey out
+						UIDriverChangeAudioGain(1);
+				}
+				break;
+			case BUTTON_POWER_PRESSED:
+				if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
+					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
+						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
+					else
+					{
+						if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
+							ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
 					}
-					break;
-				default:
-					break;
+				}
+				else
+				{	// ONLY the POWER button was pressed
+					if(ts.txrx_mode == TRX_MODE_RX)		// only allow power-off in RX mode
+						mchf_board_power_off();
+				}
+				break;
+			case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
+				if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
+					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
+						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
+					else if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
+						ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
+				}
+				else if(!UiDriverButtonCheck(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
+					if(!ts.menu_mode)	{			// do not do this in menu mode!
+						if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
+							ts.misc_flags1 &=  0x7f;	// yes, turn it off
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+						else	{	// waterfall mode was turned off
+							ts.misc_flags1 |=  128;	// turn it on
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+					}
+				}
+				break;
+			case BUTTON_BNDP_PRESSED:			// BAND+ button pressed-and-held?
+				if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// and BAND-DOWN pressed at the same time?
+					if(!ts.menu_mode)	{		// do not do this if in menu mode!
+						if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
+							ts.misc_flags1 &=  0x7f;	// yes, turn it off
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+						else	{	// waterfall mode was turned off
+							ts.misc_flags1 |=  128;	// turn it on
+							UiInitSpectrumScopeWaterfall();			// init spectrum scope
+						}
+						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+					}
+				}
+				if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
+					ts.ser_eeprom_in_use = 0x20;			// power down without saving settings
+					mchf_board_power_off();
+				}
+				break;
+			case BUTTON_STEPM_PRESSED:
+				if(!UiDriverButtonCheck(BUTTON_STEPP_PRESSED))	{	// was button STEP+ pressed at the same time?
+					ts.frequency_lock = !ts.frequency_lock;
+					// update frequency display
+					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
+					//
+					if(is_splitmode())	{	// in SPLIT mode?
+						UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
+						UiDriverUpdateFrequency(1,2);	// update RX frequency
+					}
+					else	{	// not in SPLIT mode - standard update
+						UiDriverUpdateFrequency(1,0);
+					}
+					ts.refresh_freq_disp = 0;	// restore selective update mode for frequency display
+				}
+				else	{
+					if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+						UiDriverPressHoldStep(0);	// decrease step size
+					else		// button swap enabled
+						UiDriverPressHoldStep(1);	// increase step size
+				}
+				//
+				break;
+			case BUTTON_STEPP_PRESSED:
+				if(!UiDriverButtonCheck(BUTTON_STEPM_PRESSED))	{	// was button STEP- pressed at the same time?
+					ts.frequency_lock = !ts.frequency_lock;
+					// update frequency display
+					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
+					//
+					if(is_splitmode())	{	// in SPLIT mode?
+						UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
+						UiDriverUpdateFrequency(1,2);	// update RX frequency
+					}
+					else	{	// not in SPLIT mode - standard update
+						UiDriverUpdateFrequency(1,0);
+					}
+					ts.refresh_freq_disp = 0;	// restore selective update mode for frequency display
+				}
+				else	{
+					if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+						UiDriverPressHoldStep(1);	// increase step size
+					else		// button swap enabled
+						UiDriverPressHoldStep(0);	// decrease step size
+				}
+				break;
+			default:
+				break;
 			}
 		}
 		//
@@ -1733,6 +1736,24 @@ bool	voice_mode, select_10k, select_3k6;
 		}
 }
 
+void UiDriverDisplaySplitFreqLabels() {
+  // in SPLIT mode?
+  const char *split_rx, *split_tx;
+  if (!(is_vfo_b())) {
+    split_rx = "(A) RX->";  // Place identifying marker for RX frequency
+    split_tx = "(B) TX->";  // Place identifying marker for TX frequency
+  } else {
+    split_rx = "(B) RX->";  // Place identifying marker for RX frequency
+    split_tx = "(A) TX->";  // Place identifying marker for TX frequency
+  }
+  UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
+                      POS_TUNE_FREQ_Y, split_rx, RX_Grey, Black,
+                      0);  // Place identifying marker for RX frequency
+  UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
+                      POS_TUNE_SPLIT_FREQ_Y_TX, split_tx, TX_Grey, Black,
+                      0);  // Place identifying marker for TX frequency
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessFunctionKeyClick
 //* Object              : process function buttons click
@@ -1857,7 +1878,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if(ts.tx_meter_mode >= METER_MAX)
 				ts.tx_meter_mode = 0;
 			//
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
+			// UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
 			//
 			UiDriverDeleteSMeter();
 			UiDriverCreateSMeter();	// redraw meter
@@ -2018,16 +2039,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			//
 			// do frequency/display update
 			if(is_splitmode())	{	// in SPLIT mode?
-				if(!(is_vfo_b()))	{
-					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(A) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
-					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(B) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
-				}
-				else	{
-					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(B) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
-					UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(A) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
-				}
-				//
-				ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
+                UiDriverDisplaySplitFreqLabels();
+                ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
 				UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency - do this first so small display shows RX freq
 				UiDriverUpdateFrequency(1,2);	// update RX frequency
 				ts.refresh_freq_disp = 0;
@@ -2206,60 +2219,63 @@ void UiDriverShowStep(ulong step)
 		color = White;	// step size in white
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
-		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 25),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
 	UiLcdHy28_DrawFullRect(POS_TUNE_STEP_MASK_X,POS_TUNE_STEP_MASK_Y,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,Black);
 
-	// Create Step Mode
-	switch(df.tuning_step)
 	{
+		const char* step_name;
+
+		// Create Step Mode
+		switch(df.tuning_step)
+		{
 		case T_STEP_1HZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*3),POS_TUNE_STEP_Y,"1Hz",color,Black,0);
+			step_name = "1Hz";
 			line_loc = 9;
 			break;
 		case T_STEP_10HZ:
 			line_loc = 8;
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"10Hz",color,Black,0);
+			"10Hz";
 			break;
 		case T_STEP_100HZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*1),POS_TUNE_STEP_Y,"100Hz",color,Black,0);
+			"100Hz";
 			line_loc = 7;
 			break;
 		case T_STEP_1KHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"1kHz",color,Black,0);
+			"1kHz";
 			line_loc = 5;
 			break;
 		case T_STEP_5KHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*2),POS_TUNE_STEP_Y,"5kHz",color,Black,0);
+			"5kHz";
 			line_loc = 5;
 			break;
 		case T_STEP_10KHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*1),POS_TUNE_STEP_Y,"10kHz",color,Black,0);
+			"10kHz";
 			line_loc = 4;
 			break;
 		case T_STEP_100KHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*0),POS_TUNE_STEP_Y,"100kHz",color,Black,0);
+			"100kHz";
 			line_loc = 3;
 			break;
 		case T_STEP_1MHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*0),POS_TUNE_STEP_Y,"1MHz",color,Black,0);
+			"1MHz";
 			line_loc = 3;
 			break;
 		case T_STEP_10MHZ:
-			UiLcdHy28_PrintText((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*0),POS_TUNE_STEP_Y,"10MHz",color,Black,0);
+			"10MHz";
 			line_loc = 3;
 			break;
 		default:
 			line_loc = 0; // default for unknown tuning step modes, disables the frequency marker display
 			break;
+		}
+		UiLcdHy28_PrintTextRight((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*6),POS_TUNE_STEP_Y,step_name,color,Black,0);
 	}
 	//
 	if((ts.freq_step_config & 0x0f) && line_loc > 0)	{		// is frequency step marker line enabled?
-		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 25),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		step_line = 1;	// indicate that a line under the step size had been drawn
 	}
 	else	// marker line not enabled
@@ -2276,6 +2292,7 @@ void UiDriverShowStep(ulong step)
 //*----------------------------------------------------------------------------
 static void UiDriverShowBand(uchar band)
 {
+	const char* band_name;
 	// Clear control
 	UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
 
@@ -2283,80 +2300,81 @@ static void UiDriverShowBand(uchar band)
 	switch(band)
 	{
 		case BAND_MODE_2200:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"2200m",Orange,Black,0);
+			band_name  = "2200m";
 			break;
 
 		case BAND_MODE_630:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y," 630m",Orange,Black,0);
+			band_name  = " 630m";
 			break;
 
 		case BAND_MODE_160:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y," 160m",Orange,Black,0);
+			band_name  = " 160m";
 			break;
 
 		case BAND_MODE_80:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  80m",Orange,Black,0);
+			band_name  = "  80m";
 			break;
 
 		case BAND_MODE_60:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  60m",Orange,Black,0);
+			band_name  = "  60m";
 			break;
 
 		case BAND_MODE_40:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  40m",Orange,Black,0);
+			band_name  = "  40m";
 			break;
 
 		case BAND_MODE_30:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  30m",Orange,Black,0);
+			band_name  = "  30m";
 			break;
 
 		case BAND_MODE_20:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  20m",Orange,Black,0);
+			band_name  = "  20m";
 			break;
 
 		case BAND_MODE_17:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  17m",Orange,Black,0);
+			band_name  = "  17m";
 			break;
 
 		case BAND_MODE_15:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  15m",Orange,Black,0);
+			band_name  = "  15m";
 			break;
 
 		case BAND_MODE_12:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  12m",Orange,Black,0);
+			band_name  = "  12m";
 			break;
 
 		case BAND_MODE_10:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  10m",Orange,Black,0);
+			band_name  = "  10m";
 			break;
 
 		case BAND_MODE_6:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"   6m",Orange,Black,0);
+			band_name  = "   6m";
 			break;
 
 		case BAND_MODE_4:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"   4m",Orange,Black,0);
+			band_name  = "   4m";
 			break;
 
 		case BAND_MODE_2:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"   2m",Orange,Black,0);
+			band_name  = "   2m";
 			break;
 
 		case BAND_MODE_70:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y," 70cm",Orange,Black,0);
+			band_name  = " 70cm";
 			break;
 
 		case BAND_MODE_23:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y," 23cm",Orange,Black,0);
+			band_name  = " 23cm";
 			break;
 
 		case BAND_MODE_GEN:
-			UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,"  Gen",Orange,Black,0);
+			band_name  = "  Gen";
 			break;
 
 		default:
 			break;
 	}
+	UiLcdHy28_PrintText(POS_BAND_MODE_X,POS_BAND_MODE_Y,band_name,Orange,Black,0);
 }
 
 // -------------------------------------------
@@ -2552,24 +2570,13 @@ static void UiDriverInitMainFreqDisplay(void)
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",SPLIT_INACTIVE_COLOUR,Black,0);	// make SPLIT indicator grey to indicate off
 		}
-//		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y + 4,"          ",White,Black,1);	// clear area near frequency display
-		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"  .   .   ",White,Black,1);	// clear frequency display and replace dots
 	}
 	else	{	// are we NOT in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y," SPLIT",White,Black,0);	// make SPLIT indicator YELLOW to indicate on
 		}
 		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
-		UiLcdHy28_PrintText(POS_TUNE_SPLIT_FREQ_X,POS_TUNE_FREQ_Y,"  .   .   ",White,Black,0);	// clear frequency display and replace dots for RX freq
-		UiLcdHy28_PrintText(POS_TUNE_SPLIT_FREQ_X,POS_TUNE_SPLIT_FREQ_Y_TX,"  .   .   ",White,Black,0);	// clear frequency display and replace dots for TX freq
-		if(!(is_vfo_b()))	{
-			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(A) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
-			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(B) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
-		}
-		else	{
-			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_FREQ_Y,"(B) RX->",RX_Grey,Black,0);	// Place identifying marker for RX frequency
-			UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X-(SMALL_FONT_WIDTH*5),POS_TUNE_SPLIT_FREQ_Y_TX,"(A) TX->",TX_Grey,Black,0);	// Place identifying marker for TX frequency
-		}
+		UiDriverDisplaySplitFreqLabels();
 	}
 }
 
@@ -2604,9 +2611,6 @@ static void UiDriverCreateDesktop(void)
 
 	// Frequency
 	UiDriverInitMainFreqDisplay();
-
-	// Second Frequency
-	UiLcdHy28_PrintText(POS_TUNE_SFREQ_X,POS_TUNE_SFREQ_Y,"00.000.00 ",Grey,Black,0);	// clear area of display, placing decimal points
 
 	// Function buttons
 	UiDriverCreateFunctionButtons(true);
@@ -2675,7 +2679,7 @@ static void UiDriverCreateDesktop(void)
 	// Create voltage
 	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText			(POS_PWRN_IND_X, POS_PWRN_IND_Y,"  VCC  ", Grey2, 	Blue, 0);
-	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "12.00V",  COL_PWR_IND,Black,0);
+	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "??.??V",  COL_PWR_IND,Black,0);
 
 	// Create temperature
 	if((lo.sensor_present == 0) && (df.temp_enabled & 0x0f))
@@ -2709,8 +2713,8 @@ static void UiDriverCreateDesktop(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCreateFunctionButtons(bool full_repaint)
 {
-	char cap1[20],cap2[20],cap3[20],cap4[20],cap5[20];
-	ulong	clr;
+	const char* cap;
+	uint32_t	clr;
 
 	// Create bottom bar
 	if(full_repaint)
@@ -2722,39 +2726,28 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 		UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*4 + 8),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,(POS_BOTTOM_BAR_BUTTON_W + 1),Grey);
 	}
 
-	strcpy(cap1,"  MENU");
-	strcpy(cap2," METER");
-	strcpy(cap3," SPLIT");
-	if(is_vfo_b())		// VFO B mode?
-		strcpy(cap4," VFO B");	// yes - indicate
-	else
-		strcpy(cap4," VFO A");	// VFO A mode otherwise
-	strcpy(cap5,"  TUNE");
-	//
+	// Button F1
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,"  MENU",White,Black,0);
+	// Button F2
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y," METER",White,Black,0);
 
-	// Draw buttons text
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X,POS_BOTTOM_BAR_F1_Y,cap1,White,Black,0);
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F2_X,POS_BOTTOM_BAR_F2_Y,cap2,White,Black,0);
-
-	if(!ts.vfo_mem_flag)	{	// is it in VFO (not memory) mode?
-		if(is_splitmode())	// SPLIT mode active?
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_ACTIVE_COLOUR,Black,0);		// yes - make yellow
-		else
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,SPLIT_INACTIVE_COLOUR,Black,0);		// SPLIT mode not active - grey
-	}
-	else	{	// it is in memory mode (not VFO) mode
-		strcpy(cap3,"  MEM ");
-		UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap3,White,Black,0);		// yes - make yellow
+	// Button F3
+	if(!ts.vfo_mem_flag) {	// is it in VFO (not memory) mode?
+		cap = " SPLIT";
+		clr= is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+	} else	{	// it is in memory mode (not VFO) mode
+		clr = White;
+		cap = "  MEM ";
 	}
 
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,cap4,White,Black,0);
-	//
-	if(ts.tx_disable)	// is transmit disabled?
-		clr = Grey1;	// Yes - make TUNE button gray
-	else
-		clr = White;	// Not disabled, it is white
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,cap,clr,Black,0);
 
-	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,cap5,clr,Black,0);
+	// Button F4
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F4_X,POS_BOTTOM_BAR_F4_Y,is_vfo_b()?" VFO B":" VFO A",White,Black,0);
+
+	// Button F5
+	clr = ts.tx_disable?Grey1:White;
+	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",clr,Black,0);
 }
 
 //
@@ -2770,8 +2763,7 @@ static void UiDriverDrawSMeter(ushort color)
 	uchar 	i,v_s;
 
 	// Draw top line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,color);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X +  18),(POS_SM_IND_Y + 21),92,LCD_DIR_HORIZONTAL,color);
+	UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,color);
 	// Draw s markers on top white line
 	for(i = 0; i < 10; i++)
 	{
@@ -2781,8 +2773,7 @@ static void UiDriverDrawSMeter(ushort color)
 		else
 			v_s = 3;
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
+		UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
 	}
 }
 //
@@ -2849,8 +2840,7 @@ static void UiDriverCreateSMeter(void)
 			v_s = 3;
 
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
+		UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
 	}
 
 	// Draw s markers on top green line
@@ -2867,14 +2857,12 @@ static void UiDriverCreateSMeter(void)
 			UiLcdHy28_PrintText(((POS_SM_IND_X + 113) - 6 + i*20),(POS_SM_IND_Y + 5),num,Green,Black,4);
 
 			// Draw vert lines
-			UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 113) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
-			UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 114) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
+			UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 113) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
 		}
 	}
 
 	// Draw middle line
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 32),170,LCD_DIR_HORIZONTAL,White);
-	UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 33),170,LCD_DIR_HORIZONTAL,White);
+	UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 32),170,LCD_DIR_HORIZONTAL,White);
 
 	// Draw s markers on middle white line
 	for(i = 0; i < 12; i++)
@@ -2900,13 +2888,11 @@ static void UiDriverCreateSMeter(void)
 			// Lines
 			if(i)
 			{
-				UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 2),2,LCD_DIR_VERTICAL,White);
-				UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*15),((POS_SM_IND_Y + 32) - 2),2,LCD_DIR_VERTICAL,White);
+				UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 2),2,LCD_DIR_VERTICAL,White);
 			}
 			else
 			{
-				UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 7),7,LCD_DIR_VERTICAL,White);
-				UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*15),((POS_SM_IND_Y + 32) - 7),7,LCD_DIR_VERTICAL,White);
+				UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 7),7,LCD_DIR_VERTICAL,White);
 			}
 		}
 	}
@@ -2916,10 +2902,8 @@ static void UiDriverCreateSMeter(void)
 		UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59),"SWR",Red2,Black,4);
 
 		// Draw bottom line for SWR indicator
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 56), 62,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 83),(POS_SM_IND_Y + 56),105,LCD_DIR_HORIZONTAL,Red);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
 		col = White;
 
 		// Draw S markers on middle white line
@@ -2937,13 +2921,11 @@ static void UiDriverCreateSMeter(void)
 					// Text
 					UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
 
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
 				}
 				else
 				{
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
 				}
 			}
 		}
@@ -2957,10 +2939,8 @@ static void UiDriverCreateSMeter(void)
 //		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55),59,LCD_DIR_HORIZONTAL,Red);
 //		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 56),59,LCD_DIR_HORIZONTAL,Red);
 
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 56), 62,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 83),(POS_SM_IND_Y + 56),105,LCD_DIR_HORIZONTAL,Red);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
 
 		col = White;
 
@@ -2976,13 +2956,11 @@ static void UiDriverCreateSMeter(void)
 					// Text
 					UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
 
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
 				}
 				else
 				{
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
 				}
 			}
 		}
@@ -2991,10 +2969,8 @@ static void UiDriverCreateSMeter(void)
 		UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59),"AUD",Cyan,Black,4);
 
 		// Draw bottom line for SWR indicator
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 108,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 56), 108,LCD_DIR_HORIZONTAL,White);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55),59,LCD_DIR_HORIZONTAL,Red);
-		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 56),59,LCD_DIR_HORIZONTAL,Red);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 108,LCD_DIR_HORIZONTAL,White);
+		UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55),59,LCD_DIR_HORIZONTAL,Red);
 		col = White;
 
 		// Draw markers on middle line
@@ -3009,13 +2985,11 @@ static void UiDriverCreateSMeter(void)
 					// Text
 					UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
 
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
 				}
 				else
 				{
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
-					UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+					UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
 				}
 			}
 		}
@@ -3053,9 +3027,7 @@ static void UiDriverUpdateTopMeterA(uchar val,uchar old)
 			col = Grid;
 
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 20) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
+		UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
 	}
 }
 
@@ -3088,9 +3060,7 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 			col = Red2;					// yes - display values above that color in red
 
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 19) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_SM_IND_X + 20) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
+		UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
 	}
 }
 
@@ -3396,26 +3366,14 @@ void UiDriverCreateSpectrumScope(void)
 		//printf("vx: %d\n\r",sd.vert_grid_id[i - 1]);
 	}
 
-	if(ts.misc_flags1 & 128)	{	// is it in waterfall mode?
-		if(!ts.waterfall_speed)			// print "disabled" in the middle of the screen if the waterfall was disabled
+	if (((ts.misc_flags1 & 128) && (!ts.waterfall_speed)) || (!(ts.misc_flags1 & 128) && (!ts.scope_speed)))	{
+			// print "disabled" in the middle of the screen if the waterfall or scope was disabled
 			UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
 												(POS_SPECTRUM_IND_Y + 18),
 												"   DISABLED   ",
 												Grey,
 												RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
 	}
-	else	{
-		if(!ts.scope_speed)		// print "disabled" in the middle of the screen if the spectrum scope was disabled
-		UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
-											(POS_SPECTRUM_IND_Y + 18),
-											"   DISABLED   ",
-											Grey,
-											RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-	}
-
-
-
-
 }
 
 //
@@ -5527,21 +5485,7 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 //*----------------------------------------------------------------------------
 static void UiDriverChangeAfGain(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
-
-	if(enabled)
-		color = White;
-
-	UiLcdHy28_DrawEmptyRect( POS_AG_IND_X,POS_AG_IND_Y,13,57,Grey);
-
-	if(enabled)
-		UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1),"AFG",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1),"AFG",Grey1,Grey,0);
-
-	sprintf(temp,"%02d",ts.audio_gain);
-	UiLcdHy28_PrintTextRight    ((POS_AG_IND_X + 55),(POS_AG_IND_Y + 1), temp,color,Black,0);
+	UiDriverEncoderDisplaySimple(0,0,"AFG", enabled, ts.audio_gain);
 }
 
 //*----------------------------------------------------------------------------
@@ -5553,21 +5497,7 @@ static void UiDriverChangeAfGain(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeStGain(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
-
-	if(enabled)
-		color = White;
-
-	UiLcdHy28_DrawEmptyRect( POS_SG_IND_X,POS_SG_IND_Y,13,49,Grey);
-
-	if(enabled)
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"STG",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"STG",Grey1,Grey,0);
-
-	sprintf(temp,"%02d",ts.st_gain);
-	UiLcdHy28_PrintText    ((POS_SG_IND_X + 30),(POS_SG_IND_Y + 1), temp,color,Black,0);
+	UiDriverEncoderDisplaySimple(0,0,"STG", enabled, ts.st_gain);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeCmpLevel
@@ -5578,16 +5508,8 @@ void UiDriverChangeStGain(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeCmpLevel(uchar enabled)
 {
-	ushort 	color = White;
+	ushort 	color = enabled?White:Grey;
 	char	temp[5];
-
-
-	UiLcdHy28_DrawEmptyRect( POS_SG_IND_X,POS_SG_IND_Y,13,49,Grey);
-
-	if(enabled)
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"CMP",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText    ((POS_SG_IND_X + 1), (POS_SG_IND_Y + 1),"CMP",Grey1,Grey,0);
 
 	if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	{	// 	display numbers for all but the highest value
 		sprintf(temp,"%02d",ts.tx_comp_level);
@@ -5597,10 +5519,7 @@ void UiDriverChangeCmpLevel(uchar enabled)
 		color = Yellow;	// Stored value - use yellow
 	}
 
-	if(enabled == 0)		// always display grey if disabled
-		color = Grey;
-
-	UiLcdHy28_PrintText    ((POS_SG_IND_X + 30),(POS_SG_IND_Y + 1), temp,color,Black,0);
+	UiDriverEncoderDisplay(1,0,"CMP" , enabled, temp, color);
 }
 //
 //*----------------------------------------------------------------------------
@@ -5613,33 +5532,29 @@ void UiDriverChangeCmpLevel(uchar enabled)
 static void UiDriverChangeDSPMode(void)
 {
 	ushort color = White;
-	char txt[9];
+	const char* txt;
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
-	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
+	if(((ts.dsp_active & 1) || (ts.dsp_active & 4))) {	// DSP active and NOT in FM mode?
 		color = White;
-	else	// DSP not active
+	} else	// DSP not active
 		color = Grey2;
-
 	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
-		sprintf(txt, "DSP-OFF");
+		txt = "DSP-OFF";
 		color = Grey2;
-	}
-	else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
-		sprintf(txt, "NR+NOTC");
-	}
-	else if(ts.dsp_active & 1)	{
-		sprintf(txt, "   NR  ");
-	}
-	else if(ts.dsp_active & 4)	{
-		sprintf(txt, " NOTCH ");
+	} else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
+		txt = "NR+NOTC";
+	} else if(ts.dsp_active & 1)	{
+		txt = "   NR  ";
+	} else if(ts.dsp_active & 4)	{
+		txt = " NOTCH ";
 		if(ts.dmod_mode == DEMOD_CW)
 			color = Grey2;
+	} else {
+		txt = "DSP-OFF";
 	}
-	else
-		sprintf(txt, "DSP-OFF");
 
 	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
 }
@@ -5654,51 +5569,51 @@ static void UiDriverChangeDSPMode(void)
 static void UiDriverChangeDigitalMode(void)
 {
 	ushort color = White;
-	char txt[9];
-//	ulong	x_off = 0;
+	const char* txt;
+	//	ulong	x_off = 0;
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
 	switch(ts.digital_mode){
-	    case 0:
-		sprintf(txt, "DIGITAL");
+	case 0:
+		txt = "DIGITAL";
 		color = Grey2;
 		break;
-	    case 1:
-		sprintf(txt, "FREEDV1");
+	case 1:
+		txt = "FREEDV1";
 		color = Grey2;
 		break;
-	    case 2:
-		sprintf(txt, "FREEDV2");
+	case 2:
+		txt = "FREEDV2";
 		color = Grey2;
 		break;
-	    case 3:
-		sprintf(txt, "BPSK 31");
+	case 3:
+		txt = "BPSK 31";
 		color = Grey2;
 		break;
-	    case 4:
-		sprintf(txt, "  RTTY ");
+	case 4:
+		txt = "  RTTY ";
 		color = Grey2;
 		break;
-	    case 5:
-		sprintf(txt, "  SSTV ");
+	case 5:
+		txt = "  SSTV ";
 		color = Grey2;
 		break;
-	    case 6:
-		sprintf(txt, "WSPR  A");
+	case 6:
+		txt = "WSPR  A";
 		color = Grey2;
 		break;
-	    case 7:
-		sprintf(txt, "WSPR  P");
+	case 7:
+		txt = "WSPR  P";
 		color = Grey2;
 		break;
-	    default:
+	default:
 		break;
-		}
+	}
 
 
-/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
+	/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
 		color = White;
 	else	// DSP not active
 		color = Grey2;
@@ -5735,31 +5650,29 @@ static void UiDriverChangeDigitalMode(void)
 static void UiDriverChangePowerLevel(void)
 {
 	ushort color = White;
-	char txt[9];
-	
+	const char* txt;
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	switch(ts.power_level)
 	{
 		case PA_LEVEL_5W:
-			sprintf(txt,"%s","   5W  ");
+			txt = "   5W  ";
 			break;
 		case PA_LEVEL_2W:
-			sprintf(txt,"%s","   2W  ");
+			txt = "   2W  ";
 			break;
 		case PA_LEVEL_1W:
-			sprintf(txt,"%s","   1W  ");
+			txt = "   1W  ";
 			break;
 		case PA_LEVEL_0_5W:
-			sprintf(txt,"%s","  0.5W ");
+			txt = "  0.5W ";
 			break;
 		default:
-			sprintf(txt,"%s","  FULL ");
+			txt = "  FULL ";
 			break;
 	}
 	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
-
 	// Set TX power factor - to reflect changed power
 	UiDriverSetBandPowerFactor(ts.band);
 }
@@ -5781,12 +5694,8 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 
 	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
 
-	if(enabled)
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",Black,Grey,0);
-	else
-		UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",Grey1,Grey,0);
+	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",enabled?Black:Grey1,Grey,0);
 
-//	memset(temp,0,100);
 	sprintf(temp,"%2d",ts.keyer_speed);
 
 	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
@@ -5806,37 +5715,33 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 //*----------------------------------------------------------------------------
 void UIDriverChangeAudioGain(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
+	ushort 	color = enabled?White:Grey;
+	const char* txt;
+	char  txt_buf[5];
 
-	if(enabled)
-		color = White;
-
-	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
-
-	if(ts.tx_audio_source == TX_AUDIO_MIC) {		// Microphone gain
-		strcpy(temp, "MIC");
-	} else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L) {										// Line gain
-		strcpy(temp, "L>L");
-	}else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R) {										// Line gain
-		strcpy(temp, "L>R");
-	} else if (ts.tx_audio_source == TX_AUDIO_DIG) {										// Line gain
-		strcpy(temp, "DIG");
-	} else if (ts.tx_audio_source == TX_AUDIO_DIGIQ) {
-		strcpy(temp, "DIQ");
-	} else {
-		strcpy(temp, "???");
+	switch (ts.tx_audio_source) {
+	case TX_AUDIO_MIC:
+		txt = "MIC";
+		break;
+	case TX_AUDIO_LINEIN_L:										// Line gain
+		txt = "L>L";
+		break;
+	case TX_AUDIO_LINEIN_R:										// Line gain
+		txt = "L>R";
+		break;
+	case TX_AUDIO_DIG:										// Line gain
+		txt = "DIG";
+		break;
+	case TX_AUDIO_DIGIQ:
+		txt = "DIQ";
+		break;
+	default:
+		txt = "???";
 	}
-	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),temp,enabled?Black:Grey1,Grey,0);
-//	memset(temp,0,100);
 
-	if(ts.tx_audio_source == TX_AUDIO_MIC)		// Mic gain mode
-		sprintf(temp,"%2d",ts.tx_mic_gain);
-	else
-		sprintf(temp,"%2d",ts.tx_line_gain);	// Line gain mode
+	sprintf(txt_buf,"%2d",ts.tx_audio_source == TX_AUDIO_MIC?ts.tx_mic_gain:ts.tx_line_gain);
 
-	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
-
+	UiDriverEncoderDisplay(1,2,txt, enabled, txt_buf, color);
 }
 
 //*----------------------------------------------------------------------------
@@ -5848,20 +5753,15 @@ void UIDriverChangeAudioGain(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeRfGain(uchar enabled)
 {
-	ushort 	color = Grey;
+	uint32_t color = enabled?White:Grey;
+
 	char	temp[5];
+	const char* label = ts.dmod_mode==DEMOD_FM?"SQL":"RFG";
+	int32_t value;
 
-	if(enabled)
-		color = White;
-
-	UiLcdHy28_DrawEmptyRect( POS_RF_IND_X,POS_RF_IND_Y,13,57,Grey);
 
 	if(ts.dmod_mode != DEMOD_FM)	{	// If not FM, use RF gain
-
-
-
 		if(enabled)	{
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"RFG",Black,Grey,0);
 			//
 			// set color as warning that RX sensitivity is reduced
 			//
@@ -5872,21 +5772,14 @@ void UiDriverChangeRfGain(uchar enabled)
 			else if(ts.rf_gain < 40)
 				color = Yellow;
 		}
-		else
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"RFG",Grey1,Grey,0);
-
-		sprintf(temp," %02d",ts.rf_gain);
+		value = ts.rf_gain;
+	} else	{						// it is FM, display squelch instead
+		value = ts.fm_sql_threshold;
 	}
-	else	{						// it is FM, display squelch instead
 
-		if(enabled)
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"SQL",Black,Grey,0);
-		else
-			UiLcdHy28_PrintText((POS_RF_IND_X + 1), (POS_RF_IND_Y + 1),"SQL",Grey1,Grey,0);
+	sprintf(temp," %02d",value);
 
-		sprintf(temp," %02d",(int)ts.fm_sql_threshold);
-	}
-		UiLcdHy28_PrintTextRight    ((POS_RF_IND_X + 55),(POS_RF_IND_Y + 1), temp,color,Black,0);
+	UiDriverEncoderDisplay(0,1,label, enabled, temp, color);
 
 }
 
@@ -5899,10 +5792,13 @@ void UiDriverChangeRfGain(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverChangeSigProc(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
+	uint32_t 	color = enabled?White:Grey;
+	uint32_t label_color = enabled?Black:Grey1;
 
-	UiLcdHy28_DrawEmptyRect( POS_RA_IND_X,POS_RA_IND_Y,13,49,Grey);		// draw box
+	char	temp[5];
+	const char* label;
+	int32_t value;
+
 
 	//
 	// Noise blanker settings display
@@ -5919,12 +5815,9 @@ static void UiDriverChangeSigProc(uchar enabled)
 				color = White;		// Otherwise, make it white
 		}
 		//
-		if((!enabled) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))	// is NB disabled, at 10 kHZ and/or are we in AM mode?
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"NB ",Grey1,Grey,0);	// yes - it is gray
-		else
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"NB ",Black,Grey,0);
-		//
-		sprintf(temp,"%02d",ts.nb_setting);
+		label_color = (!enabled || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))?Grey1:Black;
+		label = "NB ";
+		value = ts.nb_setting;
 	}
 	//
 	// DSP settings display
@@ -5940,19 +5833,18 @@ static void UiDriverChangeSigProc(uchar enabled)
 			else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
 				color = Yellow;
 		}
-		//
-		if(enabled)
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"DSP",Black,Grey,0);
-		else
-			UiLcdHy28_PrintText    ((POS_RA_IND_X + 1), (POS_RA_IND_Y + 1),"DSP",Grey1,Grey,0);
-
-		sprintf(temp,"%02d",ts.dsp_nr_strength);
+		label = "DSP";
+		value = ts.dsp_nr_strength;
 	}
+
 	//
 	// display numerical value
 	//
-	UiLcdHy28_PrintText    ((POS_RA_IND_X + 30),(POS_RA_IND_Y + 1), temp,color,Black,0);
+	sprintf(temp,"%02d",value);
+
+	UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
 }
+
 
 //
 //*----------------------------------------------------------------------------
@@ -5965,24 +5857,12 @@ static void UiDriverChangeSigProc(uchar enabled)
 static void UiDriverChangeRit(uchar enabled)
 {
 	char	temp[5];
-	ushort 	color = Grey;
+	uint32_t 	color = enabled?White:Grey;
 
-	if(enabled)
-		color = White;
+	sprintf(temp,"%+3i", ts.rit_value);
 
-	UiLcdHy28_DrawEmptyRect( POS_RIT_IND_X,POS_RIT_IND_Y,13,57,Grey);
-
-	UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 1),"RIT",enabled?Black:Grey1,Grey,0);
-
-	if(ts.rit_value >= 0)
-		sprintf(temp,"+%i",ts.rit_value);
-	else
-		sprintf(temp,"%i", ts.rit_value);
-
-	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1),"000",Black,Black,0); // clear screen
-	UiLcdHy28_PrintTextRight((POS_RIT_IND_X + 55),(POS_RIT_IND_Y + 1), temp,color,Black,0);
+    UiDriverEncoderDisplay(0,2,"RIT", enabled, temp, color);
 }
-
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeFilter
@@ -6004,7 +5884,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	// Draw top line
 	UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
-	char* filter_ptr;
+	const char* filter_ptr;
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
@@ -6316,21 +6196,19 @@ void UiDriverDisplayFilterBW(void)
 		lpos += (offset - (width/2));			// if USB it will be above zero Hz
 
 	//
-	//	erase old line
-	//
-	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
-	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y + 1), 256, LCD_DIR_HORIZONTAL, Black);
-	//
-	//
 	// get color for line
 	//
-
 	UiDriverMenuMapColors(ts.filter_disp_colour,NULL, &clr);
+
+	//
+	//	erase old line
+	//
+	UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
+	//
 	//
 	// draw line
 	//
-	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
-	UiLcdHy28_DrawStraightLine((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y + 1), (ushort)width, LCD_DIR_HORIZONTAL, clr);
+	UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
 
 }
 //
@@ -6359,7 +6237,7 @@ static void UiDriverFFTWindowFunction(char mode)
 				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
 			}
 			break;
-		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej�r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
+		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
 				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
 			}
@@ -7951,9 +7829,7 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 			col = Grey;
 
 		// Lines
-		UiLcdHy28_DrawStraightLine(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_TEMP_IND_X + 2) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,col);
-		UiLcdHy28_DrawStraightLine(((POS_TEMP_IND_X + 3) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,col);
+		UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,col);
 	}
 }
 
@@ -7966,7 +7842,15 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 //*----------------------------------------------------------------------------
 void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 {
-	if(create)
+    const char *label, *txt, *value_str = NULL;
+    uint32_t label_color, txt_color;
+
+    label = "TCXO ";
+    label_color = Black;
+    txt = "*";
+    txt_color = enabled?Red:Grey;
+
+    if(create)
 	{
 		// Top part - name and temperature display
 		UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,14,109,Grey);
@@ -7974,38 +7858,32 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 		// LO tracking indicator
 		UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
 		// Temperature - initial draw
-		if(df.temp_enabled & 0xf0)
-			UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "  77.0F",Grey,Black,0);
-		else
-			UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "  25.0C",Grey,Black,0);
+		value_str = (df.temp_enabled & 0xf0)?"  ??.?F":"  ??.?C";
 	}
 
-	if(enabled)
-	{
-		// Control name
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),"TCXO ",Black,Grey,0);
+    if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
+		txt = " ";
+		value_str = "STOPPED";
+	}
 
-		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Red,Black,0);
-	}
-	else
-	{
-		// Control name
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),"TCXO ",Grey1,Grey,0);
+	// Label
+	UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),label,label_color,Grey,0);
 
-		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Grey,Black,0);
+	// Lock Indicator
+	UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), txt,txt_color,Black,0);	// show/delete asterisk
+
+	// Show Initial Temp Value or "STOPPED"
+	if (value_str) {
+		// Value
+		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
 	}
-	//
-	if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), " ",Grey,Black,0);	// delete asterisc
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "STOPPED",Grey,Black,0);
-	}
+
 	//
 	// Meter
 	UiDriverUpdateLoMeter(13,enabled);
 }
 
+// FIXME: This can be simplified, see FreqDisplay Code
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCreateTemperatureDisplay
 //* Object              : refresh ui
@@ -8600,6 +8478,7 @@ void UiLCDBlankTiming(void)
 		ts.lcd_blanking_flag = 0;		// clear flag to make LCD turn on
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8630,6 +8509,7 @@ void UiCalcAGCDecay(void)
 	else
 		ads.agc_decay = AGC_MED_DECAY;
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8652,6 +8532,7 @@ void UiCalcALCDecay(void)
 	tcalc *= -1;
 	ads.alc_decay = powf(10, tcalc);
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8674,6 +8555,8 @@ void UiCalcRFGain(void)
 	ads.agc_rf_gain = powf(10, tcalc);
 
 }
+// TODO: MOVE TO AUDIO /RF Function
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -8697,6 +8580,7 @@ void UiCalcAGCVals(void)
 		ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF /  (float)(ts.max_rf_gain + 1);
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCWSidebandMode
@@ -8732,6 +8616,8 @@ void UiCWSidebandMode(void)
 			break;
 	}
 }
+// TODO: MOVE TO AUDIO /RF Function
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -8755,6 +8641,7 @@ void UiCalcNB_AGC(void)
 	ads.nb_sig_filt = log10f(temp_float);			// de-linearize and save in "new signal" contribution parameter
 	ads.nb_agc_filt = 1 - ads.nb_sig_filt;			// calculate parameter for recyling "old" AGC value
 }
+// TODO: MOVE TO AUDIO /RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -8780,7 +8667,7 @@ void UiCalcRxIqGainAdj(void)
 	ts.rx_adj_gain_var_i += 1;		// offset it by one (e.g. 0 = unity)
 	ts.rx_adj_gain_var_q += 1;
 }
-
+// TODO: MOVE TO AUDIO /RF Function
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcTxIqGainAdj
 //* Object              : Calculate TX IQ Gain adjustments
@@ -8809,6 +8696,7 @@ void UiCalcTxIqGainAdj(void)
 	ts.tx_adj_gain_var_q += 1;
 }
 
+// TODO: MOVE TO AUDIO / RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcRxPhaseAdj
@@ -9031,6 +8919,7 @@ void UiCalcRxPhaseAdj(void)
 	arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);		// load "Q" with "Q" coefficients
 	//
 }
+// TODO: MOVE TO AUDIO / RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -9114,6 +9003,7 @@ void UiCalcTxCompLevel(void)
 	tcalc = powf(10, tcalc);
 	ads.alc_decay = tcalc;
 }
+// TODO: MOVE TO AUDIO / RF Function
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcSubaudibleGenFreq
@@ -9128,6 +9018,7 @@ void UiCalcSubaudibleGenFreq(void)
 	ads.fm_subaudible_tone_word = (ulong)(ads.fm_subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR);	// calculate tone word
 }
 //
+// TODO: MOVE TO AUDIO / RF Function
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcSubaudibleDetFreq
 //* Object              : Calculate frequency word for subaudible tone  [KA7OEI October, 2015]
@@ -9169,6 +9060,8 @@ void UiCalcSubaudibleDetFreq(void)
 	ads.fm_goertzel_ctr_cos = cos(ads.fm_goertzel_ctr_b);
 	ads.fm_goertzel_ctr_r = 2 * ads.fm_goertzel_ctr_cos;
 }
+
+// TODO: MOVE TO RF Function
 //
 //
 //*----------------------------------------------------------------------------
@@ -9234,7 +9127,8 @@ void UiKeyBeep(void)
 	ts.beep_timing = ts.sysclock + BEEP_DURATION;		// set duration of beep
 	ts.beep_active = 1;									// activate tone
 }
-//
+
+// TODO: MOVE TO RF Function
 void UiSideToneRef(void)
 {
 	if((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	{		// do sidetone beep only in modes that have a "BFO"
@@ -9254,6 +9148,8 @@ void UiSideToneRef(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+// TODO: MOVE TO RF Function
 void UiCalcTxPhaseAdj(void)
 {
 	float f_coeff, f_offset, var_norm, var_inv;
@@ -9328,8 +9224,6 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
 		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
 			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
-		//
-		//printf("-->filter mode loaded\n\r");
 	}
 }
 
@@ -9348,8 +9242,6 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 //
 void UiCheckForEEPROMLoadDefaultRequest(void)
 {
-char txt[64];
-
 	uint16_t i;
 
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
@@ -9363,35 +9255,21 @@ char txt[64];
 		//
 		UiLcdHy28_LcdClear(Red);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		sprintf(txt,"   EEPROM DEFAULTS");
-		UiLcdHy28_PrintText(2,05,txt,White,Red,1);
-		sprintf(txt,"      LOADED!!!");
-		UiLcdHy28_PrintText(2,35,txt,White,Red,1);
-		//
-		sprintf(txt,"  DISCONNECT power NOW if you do NOT");
-		UiLcdHy28_PrintText(2,70,txt,Cyan,Red,0);
-		//
-		sprintf(txt,"  want to lose your current settings!");
-		UiLcdHy28_PrintText(2,85,txt,Cyan,Red,0);
-		//
-		sprintf(txt,"  If you want to save default settings");
-		UiLcdHy28_PrintText(2,120,txt,Green,Red,0);
-		//
-		sprintf(txt,"  press and hold POWER button to power");
-		UiLcdHy28_PrintText(2,135,txt,Green,Red,0);
-		//
-		sprintf(txt,"   down and save settings to EEPROM.");
-		UiLcdHy28_PrintText(2,150,txt,Green,Red,0);
+		UiLcdHy28_PrintText(2,05,"   EEPROM DEFAULTS",White,Red,1);
+		UiLcdHy28_PrintText(2,35,"      LOADED!!!",White,Red,1);
+		UiLcdHy28_PrintText(2,70,"  DISCONNECT power NOW if you do NOT",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,85,"  want to lose your current settings!",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,120,"  If you want to save default settings",Green,Red,0);
+		UiLcdHy28_PrintText(2,135,"  press and hold POWER button to power",Green,Red,0);
+		UiLcdHy28_PrintText(2,150,"   down and save settings to EEPROM.",Green,Red,0);
 		//
 		// On screen delay									// delay a bit...
 		for(i = 0; i < 10; i++)
 		   non_os_delay();
 		//
-		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
-		UiLcdHy28_PrintText(50,195,txt,Yellow,Red,0);
-
-		sprintf(txt,"               [Radio startup halted]");
-		UiLcdHy28_PrintText(2,225,txt,White,Red,4);
+		// add this for emphasis
+		UiLcdHy28_PrintText(50,195,"     YOU HAVE BEEN WARNED!",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,225,"               [Radio startup halted]",White,Red,4);
 	}
 }
 //
@@ -9410,8 +9288,6 @@ char txt[64];
 //
 void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 {
-char txt[64];
-
 	uint16_t i;
 
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
@@ -9425,35 +9301,20 @@ char txt[64];
 		//
 		UiLcdHy28_LcdClear(Yellow);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		sprintf(txt,"   FREQUENCY/MODE");
-		UiLcdHy28_PrintText(2,05,txt,Black,Yellow,1);
-		sprintf(txt," DEFAULTS LOADED!!!");
-		UiLcdHy28_PrintText(2,35,txt,Black,Yellow,1);
-		//
-		sprintf(txt,"  DISCONNECT power NOW if you do NOT");
-		UiLcdHy28_PrintText(2,70,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"want to lose your current frequencies!");
-		UiLcdHy28_PrintText(2,85,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"If you want to save default frequencies");
-		UiLcdHy28_PrintText(2,120,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"  press and hold POWER button to power");
-		UiLcdHy28_PrintText(2,135,txt,Black,Yellow,0);
-		//
-		sprintf(txt,"   down and save settings to EEPROM.");
-		UiLcdHy28_PrintText(2,150,txt,Black,Yellow,0);
-		//
+		UiLcdHy28_PrintText(2,05,	"   FREQUENCY/MODE",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,35,	" DEFAULTS LOADED!!!",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,70,	"  DISCONNECT power NOW if you do NOT",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,85,	"want to lose your current frequencies!",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,120,	"If you want to save default frequencies",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,135,	"  press and hold POWER button to power",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,150,	"   down and save settings to EEPROM.",Black,Yellow,0);
 		// On screen delay									// delay a bit...
 		for(i = 0; i < 10; i++)
 		   non_os_delay();
-		//
-		sprintf(txt,"     YOU HAVE BEEN WARNED!");			// add this for emphasis
-		UiLcdHy28_PrintText(50,195,txt,Black,Yellow,0);
 
-		sprintf(txt,"               [Radio startup halted]");
-		UiLcdHy28_PrintText(2,225,txt,Black,Yellow,4);
+		// add this for emphasis
+		UiLcdHy28_PrintText(50,195,"     YOU HAVE BEEN WARNED!",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,225,"               [Radio startup halted]",Black,Yellow,4);
 	}
 }
 //
@@ -9477,8 +9338,8 @@ void UiCheckForPressedKey(void)
 	bool stat = 1;
 	poweroffcount = rbcount = 0;
 	p_o_state = rb_state = new_state = 0;
-	char txt[40];
-
+	char txt_buf[40];
+	char* txt;
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
 		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
 			stat = 0;						// yes - clear flag
@@ -9491,129 +9352,124 @@ void UiCheckForPressedKey(void)
 	UiLcdHy28_LcdClear(Blue);							// clear the screen
 
 	//
-	sprintf(txt,"  Button Test  ");
-	UiLcdHy28_PrintText(40,35,txt,White,Blue,1);
-	//
-	sprintf(txt,"press & hold POWER-button to poweroff");
-	UiLcdHy28_PrintText(15,70,txt,White,Blue,0);
-	sprintf(txt,"press & hold BANDM-button to reboot");
-	UiLcdHy28_PrintText(20,90,txt,White,Blue,0);
+	UiLcdHy28_PrintText(40,35,"  Button Test  ",White,Blue,1);
+	UiLcdHy28_PrintText(15,70,"press & hold POWER-button to poweroff",White,Blue,0);
+	UiLcdHy28_PrintText(20,90,"press & hold BANDM-button to reboot",White,Blue,0);
 	//
 	for(;;)	{		// get stuck here for test duration
 		j = 99;		// load with flag value
 		k = 0;
 
 		for(i = 0; i <= 17; i++)
-		    {				// scan all buttons
-		    if(!UiDriverButtonCheck(i))
+		{				// scan all buttons
+			if(!UiDriverButtonCheck(i))
 			{		// is this button pressed?
-			k++;
-			if(j == 99)						// is this the first button pressed?
-			j = i;						// save button number
+				k++;
+				if(j == 99)						// is this the first button pressed?
+					j = i;						// save button number
 			}
-		    }
+		}
 
-		    if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
-			{
+		if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
+		{
 			rbcount = 0;
 			new_state = 1;
-			}
+		}
 
 		switch(j)	{							// decode button to text
-			case	BUTTON_POWER_PRESSED:
-				strcpy(txt, "POWER ");
-				if(poweroffcount > 75)
-				    {
-				    strcpy(txt, "powering off");
-				    p_o_state = 1;
-				    }
-				poweroffcount++;
-				break;
-			case	BUTTON_M1_PRESSED:
-				strcpy(txt, "  M1  ");
-				break;
-			case	BUTTON_M2_PRESSED:
-				strcpy(txt, "  M2  ");
-				break;
-			case	BUTTON_M3_PRESSED:
-				strcpy(txt, "  M3  ");
-				break;
-			case	BUTTON_G1_PRESSED:
-				strcpy(txt, "  G1  ");
-				break;
-			case	BUTTON_G2_PRESSED:
-				strcpy(txt, "  G2  ");
-				break;
-			case	BUTTON_G3_PRESSED:
-				strcpy(txt, "  G3  ");
-				break;
-			case	BUTTON_G4_PRESSED:
-				strcpy(txt, "  G4  ");
-				break;
-			case	BUTTON_F1_PRESSED:
-				strcpy(txt, "  F1  ");
-				break;
-			case	BUTTON_F2_PRESSED:
-				strcpy(txt, "  F2  ");
-				break;
-			case	BUTTON_F3_PRESSED:
-				strcpy(txt, "  F3  ");
-				break;
-			case	BUTTON_F4_PRESSED:
-				strcpy(txt, "  F4  ");
-				poweroffcount = 0;
-				break;
-			case	BUTTON_F5_PRESSED:
-				strcpy(txt, "  F5  ");
-				break;
-			case	BUTTON_BNDM_PRESSED:
-				strcpy(txt, " BNDM ");
-				if(rbcount > 75)
-				    {
-				    strcpy(txt, "rebooting");
-				    rb_state = 1;
-				    }
-				rbcount++;
-				break;
-			case	BUTTON_BNDP_PRESSED:
-				strcpy(txt, " BNDP ");
-				break;
-			case	BUTTON_STEPM_PRESSED:
-				strcpy(txt, "STEPM ");
-				break;
-			case	BUTTON_STEPP_PRESSED:
-				strcpy(txt, "STEPP ");
-				break;
-			case	TOUCHSCREEN_ACTIVE: ;
-				char out[32];
-				get_touchscreen_coordinates();
-				sprintf(out,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
-				strcpy(txt, out);
-				break;
-			default:
-				strcpy(txt, "<Null>");		// no button pressed
-				poweroffcount = 0;
-				rbcount = 0;
+		case	BUTTON_POWER_PRESSED:
+			txt = "POWER ";
+			if(poweroffcount > 75)
+			{
+				txt = "powering off";
+				p_o_state = 1;
+			}
+			poweroffcount++;
+			break;
+		case	BUTTON_M1_PRESSED:
+			txt = "  M1  ";
+			break;
+		case	BUTTON_M2_PRESSED:
+			txt = "  M2  ";
+			break;
+		case	BUTTON_M3_PRESSED:
+			txt = "  M3  ";
+			break;
+		case	BUTTON_G1_PRESSED:
+			txt = "  G1  ";
+			break;
+		case	BUTTON_G2_PRESSED:
+			txt = "  G2  ";
+			break;
+		case	BUTTON_G3_PRESSED:
+			txt = "  G3  ";
+			break;
+		case	BUTTON_G4_PRESSED:
+			txt = "  G4  ";
+			break;
+		case	BUTTON_F1_PRESSED:
+			txt = "  F1  ";
+			break;
+		case	BUTTON_F2_PRESSED:
+			txt = "  F2  ";
+			break;
+		case	BUTTON_F3_PRESSED:
+			txt = "  F3  ";
+			break;
+		case	BUTTON_F4_PRESSED:
+			txt = "  F4  ";
+			poweroffcount = 0;
+			break;
+		case	BUTTON_F5_PRESSED:
+			txt = "  F5  ";
+			break;
+		case	BUTTON_BNDM_PRESSED:
+			txt = " BNDM ";
+			if(rbcount > 75)
+			{
+				txt = "rebooting";
+				rb_state = 1;
+			}
+			rbcount++;
+			break;
+		case	BUTTON_BNDP_PRESSED:
+			txt = " BNDP ";
+			break;
+		case	BUTTON_STEPM_PRESSED:
+			txt = "STEPM ";
+			break;
+		case	BUTTON_STEPP_PRESSED:
+			txt = "STEPP ";
+			break;
+		case	TOUCHSCREEN_ACTIVE: ;
+		get_touchscreen_coordinates();
+		sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+		txt = txt_buf;
+		break;
+		default:
+			txt = "<none>";		// no button pressed
+			poweroffcount = 0;
+			rbcount = 0;
 		}
 		//
 		UiLcdHy28_PrintText(120,120,txt,White,Blue,1);		// identify button on screen
-		sprintf(txt, "# of buttons pressed: %d  ", (int)k);
-		UiLcdHy28_PrintText(75,160,txt,White,Blue,0);		// show number of buttons pressed on screen
+		sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
+		UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);		// show number of buttons pressed on screen
 
 		if(p_o_state == 1)
-		    {
-		    GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
-		    while (1 == 1) ;
-		    }
+		{
+			GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
+			while (1 == 1) ;
+		}
 		if(rb_state == 1)
-		    {
-		    if(j != BUTTON_BNDM_PRESSED)
+		{
+			if(j != BUTTON_BNDM_PRESSED)
 			{
-			ui_si570_get_configuration();			// restore SI570 to factory default
-			*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-			NVIC_SystemReset();
+				ui_si570_get_configuration();			// restore SI570 to factory default
+				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+				NVIC_SystemReset();
 			}
-		    }
+		}
 	}
 }
 

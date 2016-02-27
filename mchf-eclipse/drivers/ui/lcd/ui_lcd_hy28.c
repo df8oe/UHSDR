@@ -672,6 +672,27 @@ void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Directi
    }
 }
 
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLine(x, y+1, Length, Direction,color);
+	}
+}
+
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x+2, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLineDouble(x, y+1, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x, y+2, Length, Direction,color);
+	}
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawHorizLineWithGrad
 //* Object              : draq horizontal line with gradient, most bright in
@@ -868,7 +889,7 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
     uint8_t    TempChar;
     const sFONT   *cf;
@@ -926,7 +947,7 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushor
 }
 
 
-uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
+uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 
 	const sFONT   *cf;
 	uint16_t Xpos = 0;
@@ -964,7 +985,7 @@ uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
 	return Xpos;
 }
 
-void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
 
 	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);

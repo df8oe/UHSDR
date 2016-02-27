@@ -90,7 +90,8 @@ signed int PutUnsignedInt(
     char *pStr,
     char fill,
     signed int width,
-    unsigned int value)
+    unsigned int value,
+	bool signboth)
 {
     signed int num = 0;
 
@@ -100,7 +101,7 @@ signed int PutUnsignedInt(
     /* Recursively write upper digits */
     if ((value / 10) > 0) {
 
-        num = PutUnsignedInt(pStr, fill, width, value / 10);
+        num = PutUnsignedInt(pStr, fill, width, value / 10,false);
         pStr += num;
     }
     
@@ -136,7 +137,8 @@ signed int PutSignedInt(
     char *pStr,
     char fill,
     signed int width,
-    signed int value)
+    signed int value,
+	bool signboth)
 {
     signed int num = 0;
     unsigned int absolute;
@@ -159,18 +161,18 @@ signed int PutSignedInt(
 
         if (value < 0) {
         
-            num = PutSignedInt(pStr, fill, width, -(absolute / 10));
+            num = PutSignedInt(pStr, fill, width, -(absolute / 10),false);
         }
         else {
 
-            num = PutSignedInt(pStr, fill, width, absolute / 10);
+            num = PutSignedInt(pStr, fill, width, absolute / 10,false);
         }
         pStr += num;
     }
     else {
 
         /* Reserve space for sign */
-        if (value < 0) {
+        if (value < 0 || signboth) {
 
             width--;
         }
@@ -189,6 +191,9 @@ signed int PutSignedInt(
 
             num += PutChar(pStr, '-');
             pStr++;
+        } else if (signboth == true) {
+        	num += PutChar(pStr, '+');
+        	pStr++;
         }
     }
 
@@ -279,6 +284,7 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
 {
     char          fill;
     unsigned char width;
+    bool 		  signboth = false;
     signed int    num = 0;
     signed int    size = 0;
 
@@ -308,8 +314,16 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
         else {
 
             fill = ' ';
+            signboth = false;
             width = 0;
             pFormat++;
+
+
+            /* Parse sign */
+            if (*pFormat == '+') {
+                signboth = true;
+                pFormat++;
+            }
 
             /* Parse filler */
             if (*pFormat == '0') {
@@ -334,8 +348,8 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             /* Parse type */
             switch (*pFormat) {
             case 'd': 
-            case 'i': num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int)); break;
-            case 'u': num = PutUnsignedInt(pStr, fill, width, va_arg(ap, unsigned int)); break;
+            case 'i': num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int),signboth); break;
+            case 'u': num = PutUnsignedInt(pStr, fill, width, va_arg(ap, unsigned int),signboth); break;
             case 'x': num = PutHexa(pStr, fill, width, 0, va_arg(ap, unsigned int)); break;
             case 'X': num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int)); break;
             case 's': num = PutString(pStr, va_arg(ap, char *)); break;
