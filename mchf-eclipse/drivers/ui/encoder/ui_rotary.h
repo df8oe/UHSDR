@@ -85,23 +85,29 @@ typedef struct EncoderSelection
 	ulong	value_old;			// previous value
 	ulong	value_new;			// most current value
 	uchar	de_detent;			// sw de-detent flag
+	TIM_TypeDef* tim;
 
 } EncoderSelection;
 
 
 void UiRotaryFreqEncoderInit(void);
+
 void UiRotaryEncoderOneInit(void);
 void UiRotaryEncoderTwoInit(void);
 void UiRotaryEncoderThreeInit(void);
+enum EncoderId {
+	ENC1 = 0,
+	ENC2,
+	ENC3,
+	ENCFREQ,
+	ENC_MAX // this needs to be the last entry
+};
 
+int UiDriverEncoderRead(const uint32_t encId);
 
 // ------------------------------------------------
 // Frequency public
 extern __IO DialFrequency 				df;
-
-
-extern __IO EncoderSelection encSel[3];
-
 
 
 #endif

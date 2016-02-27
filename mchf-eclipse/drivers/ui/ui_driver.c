@@ -282,9 +282,6 @@ extern __IO TransceiverState 	ts;
 // Frequency public
 __IO DialFrequency 				df;
 
-// ------------------------------------------------
-// Encoder one public
-__IO EncoderSelection		encSel[3];
 
 // ------------------------------------------------
 // Keypad state
@@ -803,20 +800,6 @@ static void UiDriverPublicsInit(void)
 	ks.button_processed		= 0;
 	ks.debounce_time		= 0;
 
-	// Init encoder one
-	encSel[0].value_old 			= 0;
-	encSel[0].value_new			= ENCODER_RANGE;
-	encSel[0].de_detent			= 0;
-
-	// Init encoder two
-	encSel[1].value_old 			= 0;
-	encSel[1].value_new			= ENCODER_RANGE;
-	encSel[1].de_detent			= 0;
-
-	// Init encoder three
-	encSel[2].value_old 			= 0;
-	encSel[2].value_new			= ENCODER_RANGE;
-	encSel[2].de_detent			= 0;
 
 	// Auto button blink state
 	//abst.blink_flag 		= 0;
@@ -4592,38 +4575,6 @@ static bool UiDriverCheckFrequencyEncoder(void)
 	return true;
 }
 
-static int UiDriverEncoderRead(volatile EncoderSelection* encSel_ptr, TIM_TypeDef* tim) {
-	bool no_change = false;
-	int pot_diff = 0;
-	encSel_ptr->value_new = TIM_GetCounter(tim);
-	// Ignore lower value flickr
-	if (encSel_ptr->value_new < ENCODER_FLICKR_BAND) {
-		no_change = true;
-	} else if (encSel_ptr->value_new >
-	(ENCODER_RANGE / ENCODER_LOG_D) + ENCODER_FLICKR_BAND) {
-		no_change = true;
-	} else if (encSel_ptr->value_old == encSel_ptr->value_new) {
-		no_change = true;
-	}
-
-	// SW de-detent routine
-	encSel_ptr->de_detent++;
-	if (encSel_ptr->de_detent < USE_DETENTED_VALUE) {
-		encSel_ptr->value_old = encSel_ptr->value_new;  // update and skip
-		no_change = true;
-	} else {
-		encSel_ptr->de_detent = 0;
-	}
-	// printf("gain pot: %d\n\r",gs.value_new);
-	// Encoder value to difference
-	if (no_change == false) {
-		if (encSel_ptr->value_new > encSel_ptr->value_old)
-			pot_diff = +1;
-		else
-			pot_diff = -1;
-	}
-	return pot_diff;
-}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckEncoderOne
@@ -4634,10 +4585,9 @@ static int UiDriverEncoderRead(volatile EncoderSelection* encSel_ptr, TIM_TypeDe
 //*----------------------------------------------------------------------------
 static void UiDriverCheckEncoderOne(void)
 {
-	char 	temp[10];
 	int 	pot_diff;
 
-	pot_diff = UiDriverEncoderRead(&encSel[0],TIM3);
+	pot_diff = UiDriverEncoderRead(ENC1);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
@@ -4721,7 +4671,7 @@ static void UiDriverCheckEncoderOne(void)
 		}
 
 		// Updated
-		encSel[0].value_old = encSel[0].value_new;
+
 	}
 }
 //
@@ -4737,7 +4687,7 @@ static void UiDriverCheckEncoderTwo(void)
 	//char 	temp[10];
 	int 	pot_diff;
 
-	pot_diff = UiDriverEncoderRead(&encSel[1],TIM4);
+	pot_diff = UiDriverEncoderRead(ENC2);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
@@ -4883,11 +4833,7 @@ static void UiDriverCheckEncoderTwo(void)
 				break;
 			}
 		}
-
-		skip_update:
-
-		// Updated
-		encSel[1].value_old = encSel[1].value_new;
+		skip_update: {}
 	}
 }
 
@@ -4903,7 +4849,7 @@ static void UiDriverCheckEncoderThree(void)
 {
 	int 	pot_diff;
 
-	pot_diff = UiDriverEncoderRead(&encSel[2],TIM5);
+	pot_diff = UiDriverEncoderRead(ENC3);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
@@ -5047,10 +4993,7 @@ static void UiDriverCheckEncoderThree(void)
 			break;
 		}
 
-		skip_update:
-
-		// Updated
-		encSel[2].value_old = encSel[2].value_new;
+		skip_update: {}
 	}
 }
 

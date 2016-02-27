@@ -1,20 +1,24 @@
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
-************************************************************************************/
+ **                                                                                 **
+ **                               mcHF QRP Transceiver                              **
+ **                             K Atanassov - M0NKA 2014                            **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+ ************************************************************************************/
 
 // Common
 #include "mchf_board.h"
 
 #include "ui_rotary.h"
+
+// ------------------------------------------------
+// Encoder 1-4 Array
+__IO EncoderSelection		encSel[4];
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiRotaryFreqEncoderInit
@@ -25,6 +29,12 @@
 //*----------------------------------------------------------------------------
 void UiRotaryFreqEncoderInit(void)
 {
+	// Init encoder one
+	encSel[ENCFREQ].value_old 		= 0;
+	encSel[ENCFREQ].value_new			= ENCODER_RANGE;
+	encSel[ENCFREQ].de_detent			= 0;
+	encSel[ENCFREQ].tim 				= TIM8;
+
 	TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
 	GPIO_InitTypeDef 			GPIO_InitStructure;
 
@@ -63,6 +73,13 @@ void UiRotaryFreqEncoderInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderOneInit(void)
 {
+	// Init encoder one
+	encSel[ENC1].value_old 		= 0;
+	encSel[ENC1].value_new			= ENCODER_RANGE;
+	encSel[ENC1].de_detent			= 0;
+	encSel[ENC1].tim 				= TIM3;
+
+
 	TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
 	GPIO_InitTypeDef 			GPIO_InitStructure;
 
@@ -101,6 +118,13 @@ void UiRotaryEncoderOneInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderTwoInit(void)
 {
+	// Init encoder two
+	encSel[ENC2].value_old 		= 0;
+	encSel[ENC2].value_new			= ENCODER_RANGE;
+	encSel[ENC2].de_detent			= 0;
+	encSel[ENC2].tim 				= TIM4;
+
+
 	TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
 	GPIO_InitTypeDef 			GPIO_InitStructure;
 
@@ -128,6 +152,8 @@ void UiRotaryEncoderTwoInit(void)
 
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 	TIM_Cmd(TIM4, ENABLE);
+
+
 }
 
 //*----------------------------------------------------------------------------
@@ -139,6 +165,12 @@ void UiRotaryEncoderTwoInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderThreeInit(void)
 {
+	// Init encoder three
+	encSel[ENC3].value_old 		= 0;
+	encSel[ENC3].value_new			= ENCODER_RANGE;
+	encSel[ENC3].de_detent			= 0;
+	encSel[ENC3].tim 				= TIM5;
+
 	TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
 	GPIO_InitTypeDef 			GPIO_InitStructure;
 
@@ -169,3 +201,42 @@ void UiRotaryEncoderThreeInit(void)
 }
 
 
+int UiDriverEncoderRead(const uint32_t encId) {
+	bool no_change = false;
+	int pot_diff = 0;
+
+	if (encId < ENC_MAX) {
+		encSel[encId].value_new = TIM_GetCounter(encSel[encId].tim);
+		// Ignore lower value flickr
+		if (encSel[encId].value_new < ENCODER_FLICKR_BAND) {
+			no_change = true;
+		} else if (encSel[encId].value_new >
+		(ENCODER_RANGE / ENCODER_LOG_D) + ENCODER_FLICKR_BAND) {
+			no_change = true;
+		} else if (encSel[encId].value_old == encSel[encId].value_new) {
+			no_change = true;
+		}
+
+		// SW de-detent routine
+		encSel[encId].de_detent++;
+		if (encSel[encId].de_detent < USE_DETENTED_VALUE) {
+			encSel[encId].value_old = encSel[encId].value_new;  // update and skip
+			no_change = true;
+		} else {
+			encSel[encId].de_detent = 0;
+		}
+		// printf("gain pot: %d\n\r",gs.value_new);
+		// Encoder value to difference
+		if (no_change == false) {
+			if (encSel[encId].value_new > encSel[encId].value_old) {
+				pot_diff = +1;
+			}
+			else {
+				pot_diff = -1;
+			}
+			encSel[encId].value_old = encSel[encId].value_new;
+
+		}
+	}
+	return pot_diff;
+}
