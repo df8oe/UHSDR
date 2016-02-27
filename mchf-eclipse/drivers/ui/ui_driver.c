@@ -6015,7 +6015,7 @@ static void UiDriverFFTWindowFunction(char mode)
 //
 
 static inline const uint32_t FftIdx2BufMap(const uint32_t idx) {
-return (FFT_IQ_BUFF_LEN/4 + idx)%FFT_IQ_BUFF_LEN/2;
+return (FFT_IQ_BUFF_LEN/4 + idx)%(FFT_IQ_BUFF_LEN/2);
 }
 
 //*----------------------------------------------------------------------------
