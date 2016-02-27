@@ -1852,6 +1852,29 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 	arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.q_buffer, size/2);
 }
 
+// Equalize based on band and simultaneously apply I/Q gain adjustments
+void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size) {
+	int16_t i;
+	arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
+	arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
+	//
+	// ------------------------
+	// Output I and Q as stereo data
+	if(swap == false)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
+		for(i = 0; i < size/2; i++)	{
+			// Prepare data for DAC
+			*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
+			*dst++ = (int16_t)ads.q_buffer[i];	// save right channel
+		}
+	}
+	else	{	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
+		for(i = 0; i < size/2; i++)	{
+			// Prepare data for DAC
+			*dst++ = (int16_t)ads.q_buffer[i];	// save left channel
+			*dst++ = (int16_t)ads.i_buffer[i];	// save right channel
+		}
+	}
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_processor
 //* Object              :
@@ -1870,37 +1893,29 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	// If source is digital usb in, pull from USB buffer, discard line or mic audio and
 	// let the normal processing happen
-	if (ts.tx_audio_source == TX_AUDIO_DIG) {
+	if (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ) {
 		audio_out_fill_tx_buffer(src,size);
 	}
 
 	// -----------------------------
-	// TUNE mode handler for CW mode
+	// TUNE mode handler for DIGIQ mode
 	//
 	if (!ts.tune && ts.tx_audio_source == TX_AUDIO_DIGIQ) {
 		// Output I and Q as stereo, fill buffer and leave
-		audio_out_fill_tx_buffer(dst,size);
-		return;
+		for(i = 0; i < size/2; i++)	{				// Copy to single buffer
+			ads.i_buffer[i] = (float)*src++;
+			ads.q_buffer[i] = (float)*src++;
+		}
+
+		audio_tx_final_iq_processing(1.0, false, dst, size);
 	} else if((ts.tune) && ((ts.dmod_mode != DEMOD_LSB) && (ts.dmod_mode != DEMOD_AM) && (ts.dmod_mode != DEMOD_FM) && (ts.dmod_mode != DEMOD_USB)))	// Tune mode - but NOT in USB/LSB/AM/FM mode
 	{
 		softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size/2);		// generate tone/modulation for TUNE
 		//
 		// Equalize based on band and simultaneously apply I/Q gain adjustments
 		//
-		arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i), (float32_t *)ads.i_buffer, size/2);
-		arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q), (float32_t *)ads.q_buffer, size/2);
-		//
-		// Output I and Q as stereo
-		for(i = 0; i < size/2; i++)	{
-			if(!ts.cw_lsb)	{	// CW in USB mode
-				*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.q_buffer[i];	// save right channel
-			}
-			else	{			// CW in LSB mode
-				*dst++ = (int16_t)ads.q_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.i_buffer[i];	// save right channel
-			}
-		}
+		audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
+
 		return;
 	}
 
@@ -1922,22 +1937,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			//
 			// Equalize based on band and simultaneously apply I/Q gain adjustments
 			//
-			arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i), (float32_t *)ads.i_buffer, size/2);
-			arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q), (float32_t *)ads.q_buffer, size/2);
-			//
-			// Copy soft DDS data
-			for(i = 0; i < size/2; i++)	{
-				if(!ts.cw_lsb)	{	// CW in USB mode
-					*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
-					*dst++ = (int16_t)ads.q_buffer[i];	// save right channel
-				}
-				else	{			// CW in LSB mode
-					*dst++ = (int16_t)ads.q_buffer[i];	// save left channel
-					*dst++ = (int16_t)ads.i_buffer[i];	// save right channel
-				}
-			}
+			audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
 		}
-		return;
 	}
 	//
 	// ------------------------
@@ -2018,39 +2019,15 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 		//
 		if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
-			if(ts.dmod_mode == DEMOD_LSB)	{		// Is it LSB?
-				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
-					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
-			else								// it is in "RX LO LOW" mode
-					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
-			}
-			else	{								// It is USB!
-				if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
-					audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
-			else								// it is in "RX LO LOW" mode
-					audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
-			}
+
+			bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+			swap |= DEMOD_USB && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+			audio_rx_freq_conv(size, swap);
 		}
 		//
 		// Equalize based on band and simultaneously apply I/Q gain adjustments
 		//
-		arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * SSB_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
-		arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * SSB_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
-		//
-		// ------------------------
-		// Output I and Q as stereo data
-		for(i = 0; i < size/2; i++)	{
-			// Prepare data for DAC
-			if(ts.dmod_mode == DEMOD_USB)	{
-				*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.q_buffer[i];	// save right channel
-			}
-			else	{		// Save in the opposite order for LSB
-				*dst++ = (int16_t)ads.q_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.i_buffer[i];	// save right channel
-			}
-		}
-		return;
+		audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, size);
 	}
 	// -----------------------------
 	// AM handler - Generate USB and LSB AM signals and combine  [KA7OEI]
@@ -2182,16 +2159,14 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 				//
 				// Prepare data for DAC, adding the USB AM data to the already-stored LSB AM data
 				//
-				(*dst) += (int16_t)ads.q_buffer[i];	// save left channel
-				dst++;
-				(*dst) += (int16_t)ads.i_buffer[i];	// save right channel
-				dst++;
+				(*dst++) += (int16_t)ads.q_buffer[i];	// save left channel
+				(*dst++) += (int16_t)ads.i_buffer[i];	// save right channel
 			}
 		}
 		else	{	// Translate mode is NOT active - we CANNOT do full-carrier AM! (if we tried, we'd end up with DSB SSB because of the "DC hole"!))
-		for(i = 0; i < size/2; i++)	{				// send nothing out to the DAC if AM attempted with translate mode turned off!
-			*dst++ = 0;	// save left channel
-			*dst++ = 0;	// save right channel
+			for(i = 0; i < size/2; i++)	{				// send nothing out to the DAC if AM attempted with translate mode turned off!
+				*dst++ = 0;	// save left channel
+				*dst++ = 0;	// save right channel
 			}
 		}
 	}
@@ -2299,28 +2274,11 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// Equalize based on band and simultaneously apply I/Q gain adjustments
 		//
-		arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * FM_MOD_AMPLITUDE_SCALING), (float32_t *)ads.i_buffer, size/2);
-		arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * FM_MOD_AMPLITUDE_SCALING), (float32_t *)ads.q_buffer, size/2);
-		//
-		// ------------------------
-		// Output I and Q as stereo data
-		if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
-			for(i = 0; i < size/2; i++)	{
-				// Prepare data for DAC
-				*dst++ = (int16_t)ads.i_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.q_buffer[i];	// save right channel
-			}
+		{
+			bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+			audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, size);
 		}
-		else	{	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
-			for(i = 0; i < size/2; i++)	{
-				// Prepare data for DAC
-				*dst++ = (int16_t)ads.q_buffer[i];	// save left channel
-				*dst++ = (int16_t)ads.i_buffer[i];	// save right channel
-			}
-		}
-		return;
 	}
-	return;
 }
 //
 // This is a stripped-down TX processor - work in progress

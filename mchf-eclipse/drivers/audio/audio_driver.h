@@ -575,4 +575,14 @@ void I2S_RX_CallBack(int32_t *src, int32_t *dst, int16_t size, uint16_t ht);
 void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 #endif
 
+// ------------------------------------------------
+// Spectrum display
+extern __IO	SpectrumDisplay		sd;
+
+// Public Audio
+extern __IO		AudioDriverState	ads;
+
+
+
+
 #endif
