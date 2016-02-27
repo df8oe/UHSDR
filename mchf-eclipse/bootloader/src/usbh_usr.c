@@ -369,9 +369,9 @@ int USBH_USR_MSC_Application(void)
     else
     {
       /* Set Off Orange LED : Download Done */
-/*      STM_EVAL_LEDOff(LED3);  */
+/*      STM_EVAL_LEDOff(LED3);  */
       /* Set ON Green LED: Waiting User button pressed */
-/*      STM_EVAL_LEDOn(LED4);  */
+/*      STM_EVAL_LEDOn(LED4);  */
     }
     
     STM_EVAL_LEDOff(BLON);

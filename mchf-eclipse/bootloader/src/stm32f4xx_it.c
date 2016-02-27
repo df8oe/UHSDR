@@ -156,7 +156,7 @@ void SysTick_Handler(void)
         else
         {
           /* Toggle Blue LED : Upload condition Verified */
-/*          STM_EVAL_LEDToggle(LED6);  */
+/*          STM_EVAL_LEDToggle(LED6);  */
           Counter = 0x00;
         }
       }
@@ -216,7 +216,7 @@ void EXTI0_IRQHandler(void)
   if (EXTI_GetITStatus(EXTI_Line0) != RESET)
   {
     /* Download On Going: Set Blue LED ON */
-/*    STM_EVAL_LEDOn(LED6);  */
+/*    STM_EVAL_LEDOn(LED6);  */
     EXTI_ClearITPendingBit(EXTI_Line0);
   }
 }

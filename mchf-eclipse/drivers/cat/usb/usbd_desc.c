@@ -33,8 +33,11 @@
 #include "usb_regs.h"
 
 #define USBD_VID                        0x0483
-#define USBD_PID                        0x5740
-
+#ifndef USB_AUDIO_SUPPORT
+	#define USBD_PID                        0x5740
+#else
+	#define USBD_PID                        0x5732
+#endif
 /** @defgroup USB_String_Descriptors
   * @{
   */ 
@@ -44,7 +47,11 @@
 #define USBD_PRODUCT_HS_STRING          (uint8_t*)"STM32 Virtual ComPort in HS mode"
 #define USBD_SERIALNUMBER_HS_STRING     (uint8_t*)"00000000050B"
 
-#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
+#ifndef USB_AUDIO_SUPPORT
+	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
+#else
+	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 AUDIO in FS Mode"
+#endif
 #define USBD_SERIALNUMBER_FS_STRING     (uint8_t*)"00000000050C"
 
 #define USBD_CONFIGURATION_HS_STRING    (uint8_t*)"VCP Config"
@@ -53,6 +60,7 @@
 #define USBD_CONFIGURATION_FS_STRING    (uint8_t*)"VCP Config"
 #define USBD_INTERFACE_FS_STRING        (uint8_t*)"VCP Interface"
 
+#define USBD_CDC_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
 
 USBD_DEVICE USR_desc =
 {
@@ -73,9 +81,9 @@ __ALIGN_BEGIN uint8_t USBD_DeviceDesc[USB_SIZ_DEVICE_DESC] __ALIGN_END =
     USB_DEVICE_DESCRIPTOR_TYPE, /*bDescriptorType*/
     0x00,                       /*bcdUSB */
     0x02,
-    0x00,                       /*bDeviceClass*/
-    0x00,                       /*bDeviceSubClass*/
-    0x00,                       /*bDeviceProtocol*/
+    USB_DEVICE_CLASS_MISCELLANEOUS,                       /*bDeviceClass*/
+    0x02,                       /*bDeviceSubClass*/
+    0x01,                       /*bDeviceProtocol*/
     USB_OTG_MAX_EP0_SIZE,      /*bMaxPacketSize*/
     LOBYTE(USBD_VID),           /*idVendor*/
     HIBYTE(USBD_VID),           /*idVendor*/

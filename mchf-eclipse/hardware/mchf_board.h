@@ -40,20 +40,23 @@
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K Atanassov - M0NKA 2014-2016"
+#define 	AUTHOR_STRING   		"K. Atanassov - M0NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		27
 //
-#define 	TRX4M_VER_BUILD			3
+#define 	TRX4M_VER_BUILD			4
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
-#define		ATTRIB_STRING3			"and Amateur Radio communities"
+#define		ATTRIB_STRING3			"and Amateur Radio Communities"
 //
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
+
+#define USB_AUDIO_SUPPORT // uncomment this to get experimental USB AUDIO Support
+
 
 #define		WD_REFRESH_WINDOW		80
 #define		WD_REFRESH_COUNTER		127
@@ -446,6 +449,7 @@ typedef struct ButtonMap
 //
 #define	MIN_BANDS			0		// lowest band number
 #define	MAX_BANDS			17		// Highest band number:  17 = General coverage (RX only) band
+#define	MAX_BAND_NUM		(MAX_BANDS+1)		// Number of Bands
 
 #define	KHZ_MULT			4000	// multiplier to convert oscillator frequency or band size to display kHz, used below
 //
@@ -525,6 +529,7 @@ typedef struct ButtonMap
 #define	BAND_MODE_GEN			17			// General Coverage
 #define	BAND_FREQ_GEN			10000*KHZ_MULT		// 10000 kHz
 #define	BAND_SIZE_GEN			1*KHZ_MULT		// Dummy variable
+
 //
 //
 //
@@ -711,7 +716,9 @@ enum {
 #define TX_AUDIO_MIC			0
 #define TX_AUDIO_LINEIN_L		1
 #define TX_AUDIO_LINEIN_R		2
-#define TX_AUDIO_MAX_ITEMS		3
+#define TX_AUDIO_DIG			3
+#define TX_AUDIO_DIGIQ			4
+#define TX_AUDIO_MAX_ITEMS		4
 //
 #define	LINE_GAIN_MIN			3
 #define	LINE_GAIN_MAX			31
@@ -1146,8 +1153,9 @@ enum {
 
 #define	EEPROM_DETECTOR_COUPLING_COEFF_160M	311	// Calibration coupling coefficient for FWD/REV power sensor for 160 meters
 #define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
-#define EEPROM_MIC_BIAS_ENABLE		313
+#define EEPROM_TUNE_POWER_LEVEL		313
 #define EEPROM_CAT_MODE_ACTIVE		314
+#define EEPROM_CAT_XLAT			315
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1337,7 +1345,7 @@ typedef struct TransceiverState
 	uchar	scope_grid_colour;	// saved color of spectrum scope grid;
 	ulong	scope_grid_colour_active;	// active color of spectrum scope grid;
 	uchar	scope_centre_grid_colour;	// color of center line of scope grid
-	ushort	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
+	ulong	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
 	uchar	scope_scale_colour;	// color of spectrum scope frequency scale
 	uchar	scope_rescale_rate;	// rescale rate on the 'scope
 	uchar	scope_agc_rate;		// agc rate on the 'scope
@@ -1355,6 +1363,10 @@ typedef struct TransceiverState
 	//
 	// Calibration factors for output power, in percent (100 = 1.00)
 	//
+#define ADJ_5W 0
+#define ADJ_FULL_POWER 1
+	uchar	pwr_adj[2][MAX_BAND_NUM];
+#if 0
 	uchar	pwr_80m_5w_adj;			// calibration adjust for 80 meters, 5 watts
 	uchar	pwr_60m_5w_adj;			// calibration adjust for 60 meters, 5 watts
 	uchar	pwr_40m_5w_adj;			// calibration adjust for 40 meters, 5 watts
@@ -1390,6 +1402,7 @@ typedef struct TransceiverState
 	uchar	pwr_2200m_full_adj;			// calibration adjust for 2200 meters, full power
 	uchar	pwr_630m_full_adj;			// calibration adjust for 630 meters, full power
 	uchar	pwr_160m_full_adj;			// calibration adjust for 160 meters, full power
+#endif
 	//
 	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
 	ulong	alc_decay_var;				// adjustable ALC release time - working variable version
@@ -1507,9 +1520,15 @@ typedef struct TransceiverState
 	bool	show_tp_coordinates;		// show coordinates on LCD
 	uchar	rfmod_present;			// 0 = not present
 	uchar	vhfuhfmod_present;		// 0 = not present
+	uchar	multi;				// actual translate factor
+	uchar	tune_power_level;		// TX power in antenna tuning function
+	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
+	bool	dsp_enabled;			// NR disabled
+	uchar	xlat;				// CAT <> IQ-Audio
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //
+extern __IO TransceiverState ts;
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 

@@ -19,6 +19,8 @@
 void UiDriverUpdateMenu(uchar mode);
 void UiDriverMemMenu(void);
 void UiDriverUpdateMemLines(uchar var);
+void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
+
 //
 void UiLoadBeepFreq(void);
 //
@@ -190,11 +192,13 @@ enum {
 	CONFIG_AGC_TIME_CONSTANT,
 	CONFIG_AM_TX_FILTER_ENABLE,
 	CONFIG_SSB_TX_FILTER_ENABLE,
-	CONFIG_MIC_BIAS_ENABLE,
+	CONFIG_TUNE_POWER_LEVEL,
 	CONFIG_FFT_WINDOW_TYPE,
 	CONFIG_RESET_SER_EEPROM,
+	CONFIG_DSP_ENABLE,
+	CONFIG_CAT_XLAT,
 	//
-	MAX_RADIO_CONFIG_ITEMS	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
+	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 //
 #endif

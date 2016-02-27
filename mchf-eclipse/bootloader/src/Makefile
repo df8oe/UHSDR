@@ -1,7 +1,4 @@
 
-# Put your stlink folder here so make burn will work.
-STLINK=~/stlink.git
-
 SRCS=main.c command.c flash_if.c stm32f4xx_it.c system_stm32f4xx.c usb_bsp.c usbh_usr.c
 
 # Library modules
@@ -29,10 +26,9 @@ CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -I../inc
 
-# Choose fullspeed or highseed (?)
-CFLAGS += -DUSE_OTG_FS_CORE -DUSE_USB_OTG_FS
-#CFLAGS += -DUSE_OTG_HS_CORE -DUSE_USB_OTG_HS
-# Choose fullspeed or highseed (?)
+# Choose fullspeed or highspeed (?)
+CFLAGS += -DUSE_USB_OTG_FS
+#CFLAGS += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY
 
 # Include files from STM libraries
 CFLAGS += -I$(STM_COMMON)/../drivers/fat_fs/inc
@@ -54,7 +50,6 @@ vpath %.c $(STM_COMMON)/../cmsis_lib/source \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Class/MSC/src \
           $(STM_COMMON)/../drivers/fat_fs/src
 
-
 .PHONY: proj
 
 all: proj
@@ -74,8 +69,9 @@ clean:
 	rm -f $(PROJ_NAME).hex
 	rm -f $(PROJ_NAME).bin
 	rm -f $(PROJ_NAME).dfu
-
+	rm -f ../hex2dfu/intelhex/*.pyc
 
 # Flash the STM32F4
 burn: proj
-	$(STLINK)/st-flash write $(PROJ_NAME).bin 0x8000000
+	st-flash write $(PROJ_NAME).bin 0x8000000
+#	$(STLINK)/st-flash write $(PROJ_NAME).bin 0x8000000

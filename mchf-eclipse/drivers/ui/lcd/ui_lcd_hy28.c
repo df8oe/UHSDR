@@ -546,6 +546,33 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : UiLcdHy28_WriteRAM_Prepare
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+void UiLcdHy28_WriteRAM_Prepare(void)
+{
+   if(sd.use_spi)
+   {
+      UiLcdHy28_WriteIndexSpi(0x0022);
+      GPIO_ResetBits(lcd_cs_pio, lcd_cs);
+      UiLcdHy28_WriteDataSpiStart();
+   }
+   else
+      LCD_REG = 0x22;
+}
+
+inline void UiLcdHy28_WriteRAM_Finish(void)
+{
+   if(sd.use_spi)
+   {
+      GPIO_SetBits(lcd_cs_pio, lcd_cs);
+   }
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_LcdClear
 //* Object              :
 //* Input Parameters    :
@@ -554,23 +581,29 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 //*----------------------------------------------------------------------------
 void UiLcdHy28_LcdClear(ushort Color)
 {
-   ulong i;
+   UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
+   UiLcdHy28_BulkWriteColor(Color,MAX_X * MAX_Y);
+   UiLcdHy28_CloseBulkWrite();
+}
 
-   UiLcdHy28_SetCursorA(0,0);
-   UiLcdHy28_WriteRAM_Prepare();
+#define PIXELBUFFERSIZE 256
+static uint16_t   pixelbuffer[PIXELBUFFERSIZE];
+static uint16_t pixelcount = 0;
 
-   if(sd.use_spi)
-   {
-      for( i = 0; i < (MAX_X * MAX_Y); i++ )
-         UiLcdHy28_WriteDataOnly(Color);
+static inline void UiLcdHy28_BulkPixel_BufferInit() {
+	pixelcount = 0;
+}
 
-      UiLcdHy28_FinishSpiTransfer();
-   }
-   else
-   {
-      for( i = 0; i < (MAX_X * MAX_Y); i++ )
-         LCD_RAM = Color;
-   }
+static inline void UiLcdHy28_BulkPixel_BufferFlush() {
+	UiLcdHy28_BulkWrite(pixelbuffer,pixelcount);
+	pixelcount = 0;
+}
+
+static inline void UiLcdHy28_BulkPixel_Put(uint16_t pixel) {
+	pixelbuffer[pixelcount++] = pixel;
+		if (pixelcount == PIXELBUFFERSIZE) {
+			UiLcdHy28_BulkPixel_BufferFlush();
+		}
 }
 
 //*----------------------------------------------------------------------------
@@ -589,24 +622,7 @@ void UiLcdHy28_SetPoint( unsigned short Xpos, unsigned short Ypos, unsigned shor
    UiLcdHy28_WriteReg(0x0022,point);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteRAM_Prepare
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_WriteRAM_Prepare(void)
-{
-   if(sd.use_spi)
-   {
-      UiLcdHy28_WriteIndexSpi(0x0022);
-      GPIO_ResetBits(lcd_cs_pio, lcd_cs);
-      UiLcdHy28_WriteDataSpiStart();
-   }
-   else
-      LCD_REG = 0x22;
-}
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -625,9 +641,7 @@ void UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color)
 
    UiLcdHy28_WriteDataOnly(color);
 
-   if(sd.use_spi)
-      GPIO_SetBits(lcd_cs_pio, lcd_cs);
-
+   UiLcdHy28_WriteRAM_Finish();
 }
 //
 //
@@ -641,36 +655,44 @@ void UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-   uint32_t i = 0;
-
-   UiLcdHy28_SetCursorA(x, y);
-
    if(Direction == LCD_DIR_VERTICAL)
    {
+	  // here we use the "manual" approach instead of using bulk write
+	  // since  we need less setup bytes and vertical lines are mostly short
+	  // and vertical mode is default, we save some time in most cases.
+	  UiLcdHy28_SetCursorA(x, y);
       UiLcdHy28_WriteRAM_Prepare();
-
-      for(i = 0; i < Length; i++)
-         UiLcdHy28_WriteDataOnly(color);
-
-      if(sd.use_spi)
-         GPIO_SetBits(lcd_cs_pio, lcd_cs);
-   }
+      UiLcdHy28_BulkWriteColor(color,Length);
+      UiLcdHy28_WriteRAM_Finish();   }
    else
    {
-      for(i = 0; i < Length; i++)
-      {
-         UiLcdHy28_WriteRAM_Prepare();
-         UiLcdHy28_WriteDataOnly(color);
-
-         if(sd.use_spi)
-            GPIO_SetBits(lcd_cs_pio, lcd_cs);
-
-         x++;
-         UiLcdHy28_SetCursorA(x, y);
-      }
+	  UiLcdHy28_OpenBulkWrite(x,Length,y,1);
+      UiLcdHy28_BulkWriteColor(color,Length);
+      UiLcdHy28_CloseBulkWrite();
    }
 }
 
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLine(x, y+1, Length, Direction,color);
+	}
+}
+
+// FIXME: DrawRectangle should be used
+void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color) {
+	UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
+	if(Direction == LCD_DIR_VERTICAL) {
+		UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x+2, y, Length, Direction,color);
+	} else {
+		UiLcdHy28_DrawStraightLineDouble(x, y+1, Length, Direction,color);
+		UiLcdHy28_DrawStraightLine(x, y+2, Length, Direction,color);
+	}
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawHorizLineWithGrad
 //* Object              : draq horizontal line with gradient, most bright in
@@ -684,17 +706,12 @@ void UiLcdHy28_DrawHorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gr
    uint32_t i = 0,j = 0;
    ushort     k = gradient_start;
 
+   UiLcdHy28_OpenBulkWrite(x,Length,y,1);
+   UiLcdHy28_BulkPixel_BufferInit();
    for(i = 0; i < Length; i++)
    {
-      UiLcdHy28_SetCursorA(x, y);
-
-      UiLcdHy28_WriteRAM_Prepare();
-      UiLcdHy28_WriteDataOnly(RGB(k,k,k));
-
-      if(sd.use_spi)
-         GPIO_SetBits(lcd_cs_pio, lcd_cs);
-
-      j++;
+      UiLcdHy28_BulkPixel_Put(RGB(k,k,k));
+       j++;
       if(j == GRADIENT_STEP)
       {
          if(i < (Length/2))
@@ -704,10 +721,9 @@ void UiLcdHy28_DrawHorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gr
 
          j = 0;
       }
-
-      //non_os_delay();
-      x++;
    }
+   UiLcdHy28_BulkPixel_BufferFlush();
+   UiLcdHy28_CloseBulkWrite();
 }
 
 //*----------------------------------------------------------------------------
@@ -737,7 +753,6 @@ void UiLcdHy28_DrawEmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Wid
 void UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort Width,ushort color)
 {
    UiLcdHy28_DrawStraightLine(Xpos, (Ypos),        Width, LCD_DIR_HORIZONTAL,color);
-
    UiLcdHy28_DrawStraightLine(Xpos, Ypos,          Height,LCD_DIR_VERTICAL,  color);
    UiLcdHy28_DrawStraightLine((Xpos + Width), Ypos,Height,LCD_DIR_VERTICAL,  color);
 }
@@ -751,45 +766,10 @@ void UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort 
 //*----------------------------------------------------------------------------
 void UiLcdHy28_DrawFullRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width ,ushort color)
 {
-	ulong i, j;
-
-	if(sd.use_spi)	{		// SPI enabled?
-		UiLcdHy28_SetCursorA(Xpos, Ypos);	// yes, establish window in which rectangle will be filled
-		//
-		UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and turn on cursor auto-increment
-		// Establish CGRAM window for THIS rectangle
-		UiLcdHy28_WriteReg(0x50, Ypos);    // Vertical GRAM Start Address
-		UiLcdHy28_WriteReg(0x51, (Ypos + Height)-1);    // Vertical GRAM End Address
-		UiLcdHy28_WriteReg(0x52, Xpos);    // Horizontal GRAM Start Address
-		UiLcdHy28_WriteReg(0x53, (Xpos + Width)-1);    // Horizontal GRAM End Address
-		//
-		j = (ulong)Height * (ulong)Width;		// calculate number of pixels in rectangle
-		//
-		UiLcdHy28_WriteRAM_Prepare();			// get ready to write pixels
-		//
-		for(i = 0; i < j; i++)	{				// fill area with pixels of desired color
-		      UiLcdHy28_WriteDataOnly(color);
-		}
-
-		// Restore normal operation, removing window, setting it back to default (entire display)
-		UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-		UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-		UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-		UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-		//
-		UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
-	}
-	else	{
-		while(Width--)	{
-			UiLcdHy28_DrawStraightLine(Xpos,Ypos,Height,LCD_DIR_VERTICAL,color);
-			Xpos++;
-		}
-	}
+		UiLcdHy28_OpenBulkWrite(Xpos, Width, Ypos, Height);
+		UiLcdHy28_BulkWriteColor(color,(uint32_t)Height * (uint32_t)Width);
+		UiLcdHy28_CloseBulkWrite();
 }
-
-
-
-
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_OpenBulk
@@ -832,6 +812,14 @@ void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 		}
 }
 
+void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
+{
+		uint32_t i = len;
+		for (; i; i--) {
+			UiLcdHy28_WriteDataOnly(Color);
+		}
+}
+
 
 
 //*----------------------------------------------------------------------------
@@ -868,74 +856,30 @@ void UiLcdHy28_CloseBulkWrite(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+
+
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
-   ulong       i,j;
-   ushort     x_addr = x;
-   ushort      a,b;
-   uchar      fw = cf->Width;
-   const short   *ch = (const short *)(&cf->table[(symb - 32) * cf->Height]);
+	ulong       i,j;
+	ushort      a,b;
+	const uchar      fw = cf->Width;
+	const short   *ch = (const short *)(&cf->table[(symb - 32) * cf->Height]);
 
-   UiLcdHy28_SetCursorA(x_addr,y);	// set starting position of character
-
-   if(sd.use_spi)	{		// SPI enabled?
-	   UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and turn on cursor auto-increment
-	   // Establish CGRAM window for THIS character
-	   UiLcdHy28_WriteReg(0x50, y);    // Vertical GRAM Start Address
-	   UiLcdHy28_WriteReg(0x51, y+(cf->Height)-1);    // Vertical GRAM End Address	-1
-	   UiLcdHy28_WriteReg(0x52, x);    // Horizontal GRAM Start Address
-	   UiLcdHy28_WriteReg(0x53, x_addr+(cf->Width)-1);    // Horizontal GRAM End Address  -1
-	   //
-	   UiLcdHy28_WriteRAM_Prepare();					// prepare for bulk-write to character window
-	   //
-	   for(i = 0; i < cf->Height; i++)	{
-		   // Draw line
-		   for(j = 0; j < cf->Width; j++)	{
-			   a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
-			   b = ((ch[i] &  (0x01 << j)));
-			   //
-			   if((!a && (fw <= 12)) || (!b && (fw > 12)))	{	// background color
-				   UiLcdHy28_WriteDataOnly(bkColor);
-			   }
-			   else	{	// foreground color
-				   UiLcdHy28_WriteDataOnly(Color);
-			   }
-		   }
-	   }
-	   GPIO_SetBits(lcd_cs_pio, lcd_cs);	// bulk-write complete!
-	   //
-	   UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-	   UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-	   UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-	   UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-	   //
-	   UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
-   }
-
-   else	{	// NOT SPI mode
-	   for(i = 0; i < cf->Height; i++)	{
-		   // Draw line
-		   for(j = 0; j < cf->Width; j++)	{
-			   UiLcdHy28_WriteRAM_Prepare();
-			   a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
-			   b = ((ch[i] &  (0x01 << j)));
-
-			   if((!a && (fw <= 12)) || (!b && (fw > 12)))
-				   UiLcdHy28_WriteDataOnly(bkColor);
-			   else
-				   UiLcdHy28_WriteDataOnly(Color);
-
-			   x_addr++;
-			   UiLcdHy28_SetCursorA(x_addr,y);
-		   }
-
-		   y++;
-		   x_addr = x;
-		   UiLcdHy28_SetCursorA(x_addr,y);
-	   }
-   }
-
-
+	UiLcdHy28_OpenBulkWrite(x,cf->Width,y,cf->Height);
+	UiLcdHy28_BulkPixel_BufferInit();
+	for(i = 0; i < cf->Height; i++)	{
+		// Draw line
+		for(j = 0; j < cf->Width; j++)	{
+			a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
+			b = ((ch[i] &  (0x01 << j)));
+			//
+			UiLcdHy28_BulkPixel_Put(((!a && (fw <= 12)) || (!b && (fw > 12)))?bkColor:Color);
+		}
+	}
+	UiLcdHy28_BulkPixel_BufferFlush();
+	// flush all not yet  transferred pixel to display.
+	UiLcdHy28_CloseBulkWrite();
 }
 
 //*----------------------------------------------------------------------------
@@ -945,7 +889,7 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
     uint8_t    TempChar;
     const sFONT   *cf;
@@ -1003,7 +947,7 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, char *str,ushort Color, ushor
 }
 
 
-uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
+uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 
 	const sFONT   *cf;
 	uint16_t Xpos = 0;
@@ -1041,7 +985,7 @@ uint16_t UiLcdHy28_TextWidth(char *str, uchar font) {
 	return Xpos;
 }
 
-void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
 {
 
 	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
@@ -1134,21 +1078,12 @@ void UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift)
             }
          }
 
-         if(sd.use_spi)
-         {
-            // Update GRAM
-            UiLcdHy28_WriteDataOnly(clr);
-         }
-         else
-            LCD_RAM = clr;
-
+         UiLcdHy28_WriteDataOnly(clr);
          // Track absolute position
          y1++;
       }
 
-      if(sd.use_spi)
-         lcd_cs_pio->BSRRL = lcd_cs;
-
+      UiLcdHy28_WriteRAM_Finish();
       // Reset flag
       if(repaint_v_grid)
          repaint_v_grid = 0;
@@ -1224,9 +1159,13 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
                x   = sd.vert_grid_id[k];
                if((sd.magnify) && (k == 3))
            	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_LOW) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
+               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
            		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_HIGH) && (k == 2) && (!sd.magnify))
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
            	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
@@ -1265,20 +1204,12 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
             }
          }
 
-         if(sd.use_spi)
-         {
-            // Update GRAM
-            UiLcdHy28_WriteDataOnly(clr);
-         }
-         else
-            LCD_RAM = clr;
-
+         UiLcdHy28_WriteDataOnly(clr);
          // Track absolute position
          y1_old++;
       }
 
-      if(sd.use_spi)
-         lcd_cs_pio->BSRRL = lcd_cs;
+      UiLcdHy28_WriteRAM_Finish();
 
       // Reset flag
       if(repaint_v_grid)
@@ -1308,9 +1239,15 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
                x   = sd.vert_grid_id[k];
                if((sd.magnify) && (k == 3))
            	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_LOW) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
+               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
            		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_LO_HIGH) && (k == 2) && (!sd.magnify))
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
+           		   clr = ts.scope_centre_grid_colour_active;
+           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 2) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
            	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
            		   clr = ts.scope_centre_grid_colour_active;
@@ -1349,21 +1286,12 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
             }
          }
 
-         if(sd.use_spi)
-         {
-            // Update GRAM
-
-            UiLcdHy28_WriteDataOnly(clr);
-         }
-         else
-            LCD_RAM = clr;
-
+         UiLcdHy28_WriteDataOnly(clr);
          // Track absolute position
          y1_new++;
       }
 
-      if(sd.use_spi)
-         lcd_cs_pio->BSRRL = lcd_cs;
+      UiLcdHy28_WriteRAM_Finish();
 
       // Reset flag
       if(repaint_v_grid)
@@ -1662,7 +1590,7 @@ void UiLcdHy28_Test(void)
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_Init
 //* Object              : Search interface and LCD init
-//* Input Parameters    :
+//* InZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"""""""""""""""""""""""""""""""""'''''''put Parameters    :
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
@@ -1785,23 +1713,25 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Display the mode of the display interface
    //
-   if(sd.use_spi)
-   {
-	   if(sd.use_spi == 1)
-		   sprintf(tx,"LCD: HY28A SPI Mode");
-	   else
-		   sprintf(tx,"LCD: HY28B SPI Mode");
+   switch(sd.use_spi) {
+      case 0:
+         sprintf(tx,"LCD: Parallel Mode");
+         break;
+      case 1:
+         sprintf(tx,"LCD: HY28A SPI Mode");
+         break;
+      default:
+         sprintf(tx,"LCD: HY28B SPI Mode");
    }
-   else
-	   sprintf(tx,"LCD: Parallel Mode");
+
    //
    UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
 
    //
    // Display startup frequency of Si570, By DF8OE, 201506
    //
-   int vorkomma = (int)(os.fout);
-   int nachkomma = (int)roundf((os.fout-vorkomma)*10000);
+   unsigned int vorkomma = (unsigned int)(os.fout);
+   unsigned int nachkomma = (unsigned int)roundf((os.fout-vorkomma)*10000);
 
    sprintf(tx,"%s%u%s%u%s","SI570 startup frequency: ",vorkomma,".",nachkomma," MHz");
    UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
@@ -1823,7 +1753,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 	   }
    }
 
-
    // Additional Attrib line 1
    sprintf(tx,"%s",ATTRIB_STRING1);
    UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
@@ -1836,8 +1765,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
    sprintf(tx,"%s",ATTRIB_STRING3);
    UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
 
-
-
    // Backlight on
    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
 
@@ -1849,12 +1776,12 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
 void get_touchscreen_coordinates(void)
 {
-GPIO_ResetBits(TP_CS_PIO, TP_CS);
-UiLcdHy28_SendByteSpi(144);
-ts.tp_x = UiLcdHy28_ReadByteSpi();
-UiLcdHy28_SendByteSpi(208);
-ts.tp_y = UiLcdHy28_ReadByteSpi();
-GPIO_SetBits(TP_CS_PIO, TP_CS);
+   GPIO_ResetBits(TP_CS_PIO, TP_CS);
+   UiLcdHy28_SendByteSpi(144);
+   ts.tp_x = UiLcdHy28_ReadByteSpi();
+   UiLcdHy28_SendByteSpi(208);
+   ts.tp_y = UiLcdHy28_ReadByteSpi();
+   GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
 #pragma GCC optimize("O0")

@@ -64,86 +64,50 @@ typedef struct DialFrequency
 	uchar	de_detent;			// sw de-detent flag
 
 	// Virtual segments
-	uchar	dial_100_mhz;
-	uchar	dial_010_mhz;
-	uchar	dial_001_mhz;
-	uchar	dial_100_khz;
-	uchar	dial_010_khz;
-	uchar	dial_001_khz;
-	uchar	dial_100_hz;
-	uchar	dial_010_hz;
-	uchar	dial_001_hz;
-
+	uint8_t	dial_digits[9];
 	// Second display
-	uchar	sdial_100_mhz;
-	uchar	sdial_010_mhz;
-	uchar	sdial_001_mhz;
-	uchar	sdial_100_khz;
-	uchar	sdial_010_khz;
-	uchar	sdial_001_khz;
-	uchar	sdial_100_hz;
-	uchar	sdial_010_hz;
-	uchar	sdial_001_hz;
+	uint8_t	sdial_digits[9];
 				
 } DialFrequency;
 
 // --------------------------------
 // Maximum pot value
-#define ENCODER_ONE_RANGE	0xFFF
+#define ENCODER_RANGE	0xFFF
 
 // Divider to create non linearity
-#define ENCODER_ONE_LOG_D	1
+#define ENCODER_LOG_D	1
 
 // Audio Gain public structure
-typedef struct EncoderOneSelection
+typedef struct EncoderSelection
 {
 	// pot values
 	//
 	ulong	value_old;			// previous value
 	ulong	value_new;			// most current value
 	uchar	de_detent;			// sw de-detent flag
+	TIM_TypeDef* tim;
 
-} EncoderOneSelection;
+} EncoderSelection;
 
-// --------------------------------
-// Maximum pot value
-#define ENCODER_TWO_RANGE	0xFFF
-
-// Divider to create non linearity
-#define ENCODER_TWO_LOG_D	1
-
-// Audio Gain public structure
-typedef struct EncoderTwoSelection
-{
-	// pot values
-	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-	uchar	de_detent;			// sw de-detent flag
-
-} EncoderTwoSelection;
-
-// --------------------------------
-// Maximum pot value
-#define ENCODER_THR_RANGE	0xFFF
-
-// Divider to create non linearity
-#define ENCODER_THR_LOG_D	1
-
-// FIR selector public structure
-typedef struct EncoderThreeSelection
-{
-	// pot values
-	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-	uchar	de_detent;			// sw de-detent flag
-
-} EncoderThreeSelection;
 
 void UiRotaryFreqEncoderInit(void);
+
 void UiRotaryEncoderOneInit(void);
 void UiRotaryEncoderTwoInit(void);
 void UiRotaryEncoderThreeInit(void);
+enum EncoderId {
+	ENC1 = 0,
+	ENC2,
+	ENC3,
+	ENCFREQ,
+	ENC_MAX // this needs to be the last entry
+};
+
+int UiDriverEncoderRead(const uint32_t encId);
+
+// ------------------------------------------------
+// Frequency public
+extern __IO DialFrequency 				df;
+
 
 #endif

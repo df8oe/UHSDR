@@ -15,6 +15,7 @@
 // Common
 //
 #include "mchf_board.h"
+#include "ui.h"
 #include "ui_menu.h"
 
 #include <stdio.h>
@@ -64,46 +65,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 // ------------------------------------------------
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
 extern __IO OscillatorState os;
-// ------------------------------------------------
-// Frequency public
-__IO DialFrequency 				df;
-
-// ------------------------------------------------
-// Encoder one public
-__IO EncoderOneSelection		eos;
-
-// ------------------------------------------------
-// Encoder two public
-__IO EncoderTwoSelection		ews;
-
-// ------------------------------------------------
-// Encoder three public
-__IO EncoderThreeSelection		ets;
-
-// ------------------------------------------------
-// Keypad state
-__IO KeypadState				ks;
-
-// ------------------------------------------------
-// SWR/Power meter
-__IO SWRMeter					swrm;
-
-// ------------------------------------------------
-// Power supply meter
-__IO PowerMeter					pwmt;
-
-// ------------------------------------------------
-// LO Tcxo
-__IO LoTcxo						lo;
-
-// ------------------------------------------------
-// Spectrum display
-extern __IO	SpectrumDisplay		sd;
-
-// Public Audio
-extern __IO		AudioDriverState	ads;
 
 
 
@@ -262,7 +224,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8
 }
 
 
-void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* options,uint32_t* clr_ptr) {
+void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr) {
 	char* clr_str;
 	switch(color) {
 	case SPEC_WHITE: 	*clr_ptr = White;	clr_str = " Wht"; 	break;
@@ -277,232 +239,306 @@ void __attribute__ ((noinline)) UiDriverMenuMapColors(uint32_t color ,char* opti
 	case SPEC_GREY2: 	*clr_ptr = Grey; 	clr_str = "GRY2"; 	break;
 	default: 			*clr_ptr = Grey; 	clr_str = " Gry";
 	}
-	strcpy(options,clr_str);
+	if (options != NULL) {
+		strcpy(options,clr_str);
+	}
+}
+void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t value ,const uint32_t string_max, const char** strings) {
+    strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");
 }
 
 
-static char* base_screens[10][MENUSIZE] = { { //1
+static char* base_screens[10][MENUSIZE] = {
+{ //1
 		"010-DSP NR Strength",
 		"020-300Hz Center Freq.",
 		"021-500HZ Center Freq.",
 		"022-1.8k Center Freq.",
 		"023-2.3k Center Freq.",
 		"024-3.6k Filter"
-
-}, { // 2
+},
+{ // 2
 		"025-Wide Filt. Sel.",
 		"026-Wide Filt in CW Mode",
 		"027-CW Filt in SSB Mode",
 		"028-AM Mode",
 		"029-LSB/USB Auto Select",
 		"040-FM Mode"
-}, { // 3
+},
+{ // 3
 		"041-FM Sub Tone Gen",
 		"042-FM Sub Tone Det",
 		"043-FM Tone Burst",
 		"044-FM RX Bandwidth",
 		"045-FM Deviation",
 		"050-AGC Mode"
-}, { // 4
+},
+{ // 4
 		"051-RF Gain",
 		"052-Cust AGC (+=Slower)",
 		"053-RX Codec Gain",
 		"054-RX NB Setting",
 		"055-RX/TX Freq Xlate",
 		"060-Mic/Line Select"
-}, {	// 5
+},
+{	// 5
 		"061-Mic Input Gain",
 		"062-Line Input Gain",
 		"063-ALC Release Time",
 		"064-TX PRE ALC Gain",
 		"065-TX Audio Compress",
 		"070-CW Keyer Mode",
-}, {	// 6
+},
+{	// 6
 		"071-CW Keyer Speed",
 		"072-CW Sidetone Gain",
 		"073-CW Side/Off Freq",
 		"074-CW Paddle Reverse",
 		"075-CW TX->RX Delay",
 		"076-CW Freq. Offset",
-}, {	// 7
+},
+{	// 7
 		"090-TCXO Off/On/Stop",
 		"091-TCXO Temp. (C/F)",
 		"100-Spec Scope 1/Speed",
 		"101-Spec/Wfall Filter",
 		"102-Spec. Trace Colour",
 		"103-Spec. Grid Colour"
-}, {	// 8
+},
+{	// 8
 		"104-Spec/Wfall ScaleClr",
 		"105-Spec/Wfall 2x Magn",
 		"106-Spec/Wfall AGC Adj.",
 		"107-Spec Scope Ampl.",
 		"108-Spec/Wfall Line",
 		"109-Scope/Waterfall"
-}, {	// 9
+},
+{	// 9
 		"110-Wfall Colours",
 		"111-Wfall Step Size",
 		"112-Wfall Brightness",
 		"113-Wfall Contrast",
 		"114-Wfall 1/Speed",
 		"115-Scope NoSig Adj."
-}, {	// 10
-		"116-Wfall NoSig Adj.        ",
-		"117-Wfall Size              ",
-		"197-Backup Config           ",
-		"198-Restore Config          ",
-		"199-Hardware Info           ",
-		"000-Adjustment Menu          "
-
+},
+{	// 10
+		"116-Wfall NoSig Adj.",
+		"117-Wfall Size",
+		"197-Backup Config",
+		"198-Restore Config",
+		"199-Hardware Info",
+		"000-Adjustment Menu"
 }
-
 };
-static char* conf_screens[16][MENUSIZE] = { { // 1
+
+static char* conf_screens[17][MENUSIZE] = {
+{ // 1
 		"200-Step Size Marker",
 		"201-Step Button Swap",
 		"202-Band+/- Button Swap",
 		"203-Transmit Disable",
-		"204-O/S Menu SW on TX",
+		"204-Menu SW on TX disable",
 		"205-Mute Line Out TX"
-} , {	// 2
+},
+{	// 2
 		"206-TX Mute Delay",
 		"207-LCD Auto Blank",
 		"208-Voltmeter Cal.",
 		"209-Filter BW Display",
 		"210-Max Volume",
 		"211-Max RX Gain (0=Max)"
-} , { // 3
+},
+{ // 3
 		"212-Key Beep",
-		"213-Beep Frequency (Hz)",
+		"213-Beep Frequency",
 		"214-Beep Volume",
 		"220-CAT Mode",
 		"230-Freq. Calibrate",
 		"231-Freq. Limit Disable"
-} , { // 4
+},
+{ // 4
 		"232-MemFreq Lim Disable",
 		"240-LSB RX IQ Bal.",
 		"241-LSB RX IQ Phase",
 		"242-USB RX IQ Bal.",
 		"243-USB RX IQ Phase",
 		"244-AM  RX IQ Bal."
-} , { // 5
+},
+{ // 5
 		"245-FM  RX IQ Bal.",
 		"250-LSB TX IQ Bal.",
 		"251-LSB TX IQ Phase",
 		"252-USB TX IQ Bal.",
 		"253-USB TX IQ Phase",
 		"254-AM  TX IQ Bal."
-} , { // 6
+},
+{ // 6
 		"255-FM  TX IQ Bal.",
 		"260-CW PA Bias (If >0 )",
 		"261-PA Bias",
 		"270-Disp. Pwr (mW)",
 		"271-Pwr. Det. Null",
 		"C01-2200m Coupling Adj."
-} , { // 7
+},
+{ // 7
 		"C02-630m Coupling Adj.",
 		"C03-160m Coupling Adj.",
 		"C04-80m  Coupling Adj.",
 		"C05-40m  Coupling Adj.",
 		"C06-20m  Coupling Adj.",
 		"C07-15m  Coupling Adj."
-} , {	// 8
+},
+{	// 8
 		"C08-6m   Coupling Adj.",
 		"C09-2m   Coupling Adj.",
 		"C10-70cm Coupling Adj.",
 		"C11-23cm Coupling Adj.",
 		"276-FWD/REV ADC Swap.",
 		"280-XVTR Offs/Mult"
-} , { // 9
-		"281-XVTR Offset (Hz)",
+},
+{ // 9
+		"281-XVTR Offset",
 		"P01-2200m 5W PWR Adjust",
 		"P02-630m  5W PWR Adjust",
 		"P03-160m  5W PWR Adjust",
 		"P04-80m   5W PWR Adjust",
 		"P05-60m   5W PWR Adjust"
-} , { // 10
+},
+{ // 10
 		"P06-40m   5W PWR Adjust",
 		"P07-30m   5W PWR Adjust",
 		"P08-20m   5W PWR Adjust",
 		"P09-17m   5W PWR Adjust",
 		"P10-15m   5W PWR Adjust",
 		"P11-12m   5W PWR Adjust"
-} , { // 11
+},
+{ // 11
 		"P12-10m   5W PWR Adjust",
 		"P13-6m    5W PWR Adjust",
 		"P14-4m    5W PWR Adjust",
 		"P15-2m    5W PWR Adjust",
 		"P16-70cm  5W PWR Adjust",
 		"P17-23cm  5W PWR Adjust"
-} , { // 12
+},
+{ // 12
 		"O01-2200m Full PWR Adjust",
 		"O02-630m  Full PWR Adjust",
 		"O03-160m  Full PWR Adjust",
 		"O04-80m   Full PWR Adjust",
 		"O05-60m   Full PWR Adjust",
 		"O06-40m   Full PWR Adjust"
-} , { // 13
+},
+{ // 13
 		"O07-30m   Full PWR Adjust",
 		"O08-20m   Full PWR Adjust",
 		"O09-17m   Full PWR Adjust",
 		"O10-15m   Full PWR Adjust",
 		"O11-12m   Full PWR Adjust",
 		"O12-10m   Full PWR Adjust"
-} , { // 14
+},
+{ // 14
 		"O13-6m    Full PWR Adjust",
 		"O14-4m    Full PWR Adjust",
 		"O15-2m    Full PWR Adjust",
 		"O16-70cm  Full PWR Adjust",
 		"O17-23cm  Full PWR Adjust",
 		"310-DSP NR BufLen"
-} , { // 15
+},
+{ // 15
 		"311-DSP NR FFT NumTaps",
 		"312-DSP NR Post-AGC",
 		"313-DSP Notch ConvRate",
 		"314-DSP Notch BufLen",
 		"315-DSP Notch FFTNumTap",
 		"320-NB  AGC T/C (<=Slow)"
-} , { // 16
+},
+{ // 16
 		"330-AM  TX Audio Filter",
 		"331-SSB TX Audio Filter",
-		"332-Mic Bias enable",
+		"335-Tune Power Level",
 		"340-FFT Windowing",
 		"341-Reset Ser EEPROM",
-		"                    "
+		"DSP NR (EXPERIMENTAL)"
+},
+{ // 17
+		"400-CAT-IQ-FREQ-XLAT",
+		" ",
+		" ",
+		" ",
+		" ",
+		" "
 }
-
 };
 
+static const char* filter_list_300Hz[] =      {
+    "  OFF",
+    "500Hz",
+    "550Hz",
+    "600Hz",
+    "650Hz",
+    "700Hz",
+    "750Hz",
+    "800Hz",
+    "850Hz",
+    "900Hz"
+} ;
 
-typedef struct BandInfo {
-		uint8_t default_pf;
-		uint8_t selector_5W;
-		uint8_t selector_FULL;
-} BandInfo;
+static const char* filter_list_500Hz[] =      {
+    "  OFF",
+	"550Hz",
+	"650Hz",
+	"750Hz",
+	"850Hz",
+	"950Hz"
+} ;
 
-#define BandInfoGenerate(BAND,SUFFIX) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST }
+static const char* filter_list_1P8KHz[] =      {
+    "   OFF",
+	"1125Hz",
+	"1275Hz",
+	"1427Hz",
+	"1575Hz",
+	"1725Hz",
+	"   LPF"
+} ;
+
+static const char* filter_list_2P3KHz[] =      {
+    "   OFF",
+	"1262Hz",
+	"1412Hz",
+	"1562Hz",
+	"1712Hz",
+	"   LPF"
+} ;
+
+
+#define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
 BandInfo bandInfo[] = {
-				BandInfoGenerate(80,M) ,
-				BandInfoGenerate(60,M),
-				BandInfoGenerate(40,M),
-				BandInfoGenerate(30,M),
-				BandInfoGenerate(20,M),
-				BandInfoGenerate(17,M),
-				BandInfoGenerate(15,M),
-				BandInfoGenerate(12,M),
-				BandInfoGenerate(10,M),
-				BandInfoGenerate(6,M),
-				BandInfoGenerate(4,M),
-				BandInfoGenerate(2,M),
-				BandInfoGenerate(70,CM),
-				BandInfoGenerate(23,CM),
-				BandInfoGenerate(2200,M),
-				BandInfoGenerate(630,M),
-				BandInfoGenerate(160,M),
-				{ 0, 0, 0 } // Generic Band
+				BandInfoGenerate(80,M,"80m") ,
+				BandInfoGenerate(60,M,"60m"),
+				BandInfoGenerate(40,M,"40m"),
+				BandInfoGenerate(30,M,"30m"),
+				BandInfoGenerate(20,M,"20m"),
+				BandInfoGenerate(17,M,"17m"),
+				BandInfoGenerate(15,M,"15m"),
+				BandInfoGenerate(12,M,"12m"),
+				BandInfoGenerate(10,M,"10m"),
+				BandInfoGenerate(6,M,"6m"),
+				BandInfoGenerate(4,M,"4m"),
+				BandInfoGenerate(2,M,"2m"),
+				BandInfoGenerate(70,CM,"70cm"),
+				BandInfoGenerate(23,CM,"23cm"),
+				BandInfoGenerate(2200,M,"2200m"),
+				BandInfoGenerate(630,M,"630m"),
+				BandInfoGenerate(160,M,"160m"),
+				{ 0, 0, 0, 0, 0, "Gen" } // Generic Band
 };
 
-bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, volatile uint8_t* adj_ptr, char* options, uint32_t* clr_ptr) {
+bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr) {
+	volatile uint8_t* adj_ptr;
+	adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
+
 	bool tchange = false;
 	if((ts.band == band_mode) && (ts.power_level == pa_level))	{
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
@@ -540,6 +576,18 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint
 	sprintf(options, "  %u", *adj_ptr);
 	return tchange;
 }
+
+
+void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bool changed) {
+	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
+		if(ts.filter_id == filter_id)	{
+			//UiDriverProcessActiveFilterScan();	// find next active filter
+			UiDriverChangeFilter(0);
+			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+		}
+	}
+}
+
 //
 //
 //
@@ -556,11 +604,10 @@ void UiDriverUpdateMenu(uchar mode)
 	uchar var;
 	bool  update_vars;
 	static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
-//	static uchar screen_disp_old = 99;
 	ulong	m_clr, c_clr;
 	static	int	menu_var_changed = 99;
-//	static	bool menu_var_change_detect = 0;
 	uchar warn = 0;
+	int offset = 50;
 
 	m_clr = Yellow;
 	c_clr = Cyan;
@@ -613,23 +660,7 @@ if(mode > 3)
 	    break;
 	    }
 	sprintf(out,"%s%s","Serial EEPROM: ",outs);
-/*	uint16_t var, data, data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11;
-	var = 8;
-	Read_SerEEPROM(var, &data);
-	EE_ReadVariable(VirtAddVarTab[var], &data1);
-	Read_SerEEPROM(var+1, &data2);
-	EE_ReadVariable(VirtAddVarTab[var+1], &data3);
-	Read_SerEEPROM(var+2, &data4);
-	EE_ReadVariable(VirtAddVarTab[var+2], &data5);
-	Read_SerEEPROM(var+3, &data6);
-	EE_ReadVariable(VirtAddVarTab[var+3], &data7);
-	Read_SerEEPROM(var+4, &data8);
-	EE_ReadVariable(VirtAddVarTab[var+4], &data9);
-	Read_SerEEPROM(var+5, &data10);
-	EE_ReadVariable(VirtAddVarTab[var+5], &data11);
-	sprintf(out,"%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x%s%x", data,"/", data1,"-", data2,"/", data3,"-", data4,"/", data5,"-", data6,"/", data7,"-", data8,"/", data9,"-", data10,"/", data11);
-//	sprintf(out,"%s%x%s",">>",ts.df8oe_test,"<<");
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0); */
+
 	if(ts.ser_eeprom_in_use == 0)		// in use & data ok
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
 	if(ts.ser_eeprom_in_use == 0xFF)	// not in use
@@ -638,11 +669,7 @@ if(mode > 3)
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
 	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
 	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-	if(ts.ser_eeprom_in_use != 0x0 && ts.ser_eeprom_in_use != 0x10 && ts.ser_eeprom_in_use != 0x5 && ts.ser_eeprom_in_use != 0xff )	// ???
-	    {
-	    sprintf(out,"%02x",ts.ser_eeprom_in_use);
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Yellow,Black,0);
-	    }
+
 	if(ts.tp_present == 0)
 	    outs = "n/a             ";
 	else
@@ -666,11 +693,10 @@ if(mode > 3)
     else
     {
     	uint8_t old_screen_disp = screen_disp;
-    	if (ts.menu_item < MAX_MENU_ITEM) {
-    		screen_disp = 1+ (ts.menu_item / MENUSIZE);
-    	} else {
-    		screen_disp = 51+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
-    	}
+    	if (ts.menu_item < MAX_MENU_ITEM)
+    	    screen_disp = 1+ (ts.menu_item / MENUSIZE);
+    	else
+    	    screen_disp = offset+1+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
 
        	if(old_screen_disp != screen_disp)	// redraw if this screen wasn't already displayed
        				UiDriverClearSpectrumDisplay();
@@ -678,26 +704,29 @@ if(mode > 3)
 
 
 
-	if(ts.menu_item < MAX_MENU_ITEM)	{	// display first screen of items
-		int i;
-		for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ ) {
-			bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
-			// this takes care of the removing 2 items if serial eeprom is not fitted
-			if (show) {
-				UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
-			}
+	//
+	// ****************   Main Menu  ***************
+	//
+	if(ts.menu_item < MAX_MENU_ITEM)
+	    {		// Is this part of the main menu?
+	    int i;
+	    for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ )
+		{
+		bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
+		// this takes care of the removing 2 items if serial eeprom is not fitted
+		if (show)
+		    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
 		}
-	}
+	    }
 	//
 	// ****************   Radio Calibration Menu  ***************
 	//
-	else if(ts.menu_item >= MAX_MENU_ITEM)	{		// Is this part of the radio configuration menu?
-		int i;
-		for (i=MENUSIZE*(screen_disp-51); i < MENUSIZE*(screen_disp-50); i++ ) {
-			UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-51][(i%MENUSIZE)],c_clr,Black,0);
-		}
-
-	}
+	else
+	    {		// Is this part of the radio configuration menu?
+	    int i;
+	    for (i=MENUSIZE*(screen_disp-offset-1); i < MENUSIZE*(screen_disp-offset); i++ )
+		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-offset-1][(i%MENUSIZE)],c_clr,Black,0);
+	    }
 
 
 	if(ts.menu_var_changed)	{		// show warning if variable has changed
@@ -740,7 +769,7 @@ if(mode > 3)
 		// *** ADJUSTMENT MENU ***
 		//
 		else {	// Is this one of the radio configuration items?
-			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEMS); var++) {
+			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM); var++) {
 				UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
 			}
 		}
@@ -776,7 +805,7 @@ if(mode > 3)
 static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 {
 	char options[32];
-	ulong opt_pos;					// y position of option cursor
+	ulong opt_pos;			// y position of option cursor
 	static ulong opt_oldpos = 999;	// y position of option cursor, previous
 	uchar select;
 	ulong	clr;
@@ -845,50 +874,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_300Hz_select)	{
-		case 0:
-			strcpy(options, "  OFF");
+
+		if (ts.filter_300Hz_select == 0)	{
 			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "500Hz");
-			break;
-		case 2:
-			strcpy(options, "550Hz");
-			break;
-		case 3:
-			strcpy(options, "600Hz");
-			break;
-		case 4:
-			strcpy(options, "650Hz");
-			break;
-		case 5:
-			strcpy(options, "700Hz");
-			break;
-		case 6:
-			strcpy(options, "750Hz");
-			break;
-		case 7:
-			strcpy(options, "800Hz");
-			break;
-		case 8:
-			strcpy(options, "850Hz");
-			break;
-		case 9:
-			strcpy(options, "900Hz");
-			break;
 		}
-		//
-		// TODO: Understand the different code fragments used for different filters (see 2k3 filter)
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{		// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_300HZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-			}
-		}
+
+		UiDriverMenuMapStrings(options,ts.filter_300Hz_select,MAX_300HZ_FILTER, filter_list_300Hz);
+		UiDriverMenuChangeFilter(AUDIO_300HZ,fchange);
 		break;
 	case MENU_500HZ_SEL:	// 500 Hz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -903,37 +895,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_500Hz_select)	{
-		case 0:
-			strcpy(options, "  OFF");
+
+		if (ts.filter_500Hz_select == 0)	{
 			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "550Hz");
-			break;
-		case 2:
-			strcpy(options, "650Hz");
-			break;
-		case 3:
-			strcpy(options, "750Hz");
-			break;
-		case 4:
-			strcpy(options, "850Hz");
-			break;
-		case 5:
-			strcpy(options, "950Hz");
-			break;
 		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{		// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_500HZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-			}
-		}
+
+		UiDriverMenuMapStrings(options,ts.filter_500Hz_select,MAX_500HZ_FILTER, filter_list_500Hz);
+		UiDriverMenuChangeFilter(AUDIO_500HZ,fchange);
 		break;
+
 	case MENU_1K8_SEL:	// 1.8 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_1k8_select,
@@ -947,41 +917,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_1k8_select)	{
-		case 0:
-			strcpy(options, "   OFF");
-			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "1125Hz");
-			break;
-		case 2:
-			strcpy(options, "1275Hz");
-			break;
-		case 3:
-			strcpy(options, "1427Hz");
-			break;
-		case 4:
-			strcpy(options, "1575Hz");
-			break;
-		case 5:
-			strcpy(options, "1725Hz");
-			break;
-		case 6:
-			strcpy(options, "   LPF");
-			break;
 
-		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))	{	// set filter if changed
-			audio_driver_set_rx_audio_filter();
-			if(ts.filter_id == AUDIO_1P8KHZ)	{
-				//UiDriverProcessActiveFilterScan();	// find next active filter
-				UiDriverChangeFilter(0);
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-			}
-		}
+		UiDriverMenuMapStrings(options,ts.filter_1k8_select,MAX_1K8_FILTER, filter_list_1P8KHz);
+		UiDriverMenuChangeFilter(AUDIO_1P8KHZ,fchange);
 		break;
 	case MENU_2k3_SEL: // 2.3 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -998,35 +936,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else				// show disabled if in FM
 			clr = Red;
-		//
-		switch(ts.filter_2k3_select)	{
-		case 0:
-			strcpy(options, "   OFF");
-			clr = Red;
-			break;
-		case 1:
-			strcpy(options, "1262Hz");
-			break;
-		case 2:
-			strcpy(options, "1412Hz");
-			break;
-		case 3:
-			strcpy(options, "1562Hz");
-			break;
-		case 4:
-			strcpy(options, "1712Hz");
-			break;
-		case 5:
-			strcpy(options, "   LPF");
-			break;
-		}
-		//
-		if((ts.txrx_mode == TRX_MODE_RX) && (fchange))		// set filter if changed
-			audio_driver_set_rx_audio_filter();
+
+		UiDriverMenuMapStrings(options,ts.filter_2k3_select,MAX_2K3_FILTER, filter_list_2P3KHz);
+		UiDriverMenuChangeFilter(AUDIO_2P3KHZ,fchange);
 		break;
 	case MENU_3K6_SEL: // 3.6 kHz filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
-
 			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.filter_3k6_select,FILTER_3K6_DEFAULT,options,&clr);
 			if(ts.filter_id != AUDIO_3P6KHZ)
 				clr = Orange;
@@ -1034,12 +949,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		else				// show disabled if in FM
 			clr = Red;
 
-		if((ts.filter_id == AUDIO_3P6KHZ) && fchange)	{
-			//UiDriverProcessActiveFilterScan();	// find next active filter
-			UiDriverChangeFilter(0);
-			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-		}
-		//
+		UiDriverMenuChangeFilter(AUDIO_3P6KHZ,fchange);
 		break;
 	case MENU_WIDE_SEL: // Wide filter select
 		if(ts.dmod_mode != DEMOD_FM)	{
@@ -1421,11 +1331,17 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			sprintf(options,">> OFF! <<");
 			clr = Red3;
 		}
-		else if(ts.iq_freq_mode == 1)	{
-			sprintf(options,"RX LO HIGH");
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{
+			sprintf(options,"RX  +6kHz");
 		}
-		else if(ts.iq_freq_mode == 2)	{
-			sprintf(options," RX LO LOW");
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{
+			sprintf(options,"RX  -6kHz");
+		}
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{
+			sprintf(options,"RX +12kHz");
+		}
+		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{
+			sprintf(options,"RX -12kHz");
 		}
 		//
 		//
@@ -1438,16 +1354,21 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_MIC_LINE_MODE:	// Mic/Line mode
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_source,
 						0,
-						TX_AUDIO_LINEIN_R,
+						TX_AUDIO_MAX_ITEMS,
 						TX_AUDIO_MIC,
 						1
 						);
-		if(ts.tx_audio_source == TX_AUDIO_MIC)
-			strcpy(options, "   MIC");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L)
-			strcpy(options, "LINE-L");
-		else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)
-			strcpy(options, "LINE-R");
+		if(ts.tx_audio_source == TX_AUDIO_MIC) {
+			strcpy(options, "    MIC");
+		} else if(ts.tx_audio_source == TX_AUDIO_LINEIN_L) {
+			strcpy(options, " LINE-L");
+		} else if(ts.tx_audio_source == TX_AUDIO_LINEIN_R) {
+			strcpy(options, " LINE-R");
+		} else if(ts.tx_audio_source == TX_AUDIO_DIG) {
+			strcpy(options, " DIGITAL");
+		} else if(ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+			strcpy(options, " DIG I/Q");
+		}
 
 		if(fchange)	{		// if there was a change, do update of on-screen information
 			if(ts.dmod_mode == DEMOD_CW)
@@ -1455,6 +1376,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			else
 				UIDriverChangeAudioGain(0);
 		}
+
+		if((!ts.cat_mode_active) &&(ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIG)) {
+			// RED if CAT is not enabled
+			clr = Red;
+		}
+
 		break;
 	//
 	case MENU_MIC_GAIN:	// Mic Gain setting
@@ -1487,15 +1414,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UIDriverChangeAudioGain(0);
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_MIC)	// Orange if not in MIC-IN mode
+		if(ts.tx_audio_source != TX_AUDIO_MIC) {	// Orange if not in MIC-IN mode
 			clr = Orange;
+		}
 		//
 		sprintf(options, "   %u", ts.tx_mic_gain);
 		break;
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L && ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
+		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
@@ -1649,7 +1577,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
-		sprintf(options, "  %u", (uint)ts.sidetone_freq);
+		sprintf(options, "  %uHz", (uint)ts.sidetone_freq);
 		break;
 	//
 	case MENU_PADDLE_REVERSE:	// CW Paddle reverse
@@ -1669,7 +1597,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_CW_OFFSET_MODE:	// CW offset mode (e.g. USB, LSB, etc.)
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_offset_mode,
 						0,
-						CW_OFFSET_AUTO_RX,
+						CW_OFFSET_MAX,
 						CW_OFFSET_MODE_DEFAULT,
 						1
 						);
@@ -1846,7 +1774,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
 		UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
-		// disp_shift = 1;
 		break;
 	case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
@@ -2048,6 +1975,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 			break;
 	case MENU_BACKUP_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, " Do it!");
@@ -2066,6 +1994,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			select = MENU_HARDWARE_INFO;
 			break;
 	case MENU_RESTORE_CONFIG:
+			strcpy(options," ");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, "Do it!");
@@ -2094,7 +2023,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    UiDriverUpdateMenu(9);
 			    }
 			break;
-			//
+//
 //
 // ******************  Make sure that this menu item is ALWAYS the last of the main menu items!
 //
@@ -2374,7 +2303,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
-		if(ts.misc_flags2 | 4)	{	// is beep enabled?
+		if(ts.misc_flags2 & 4)	{	// is beep enabled?
 			tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.beep_frequency,
 								MIN_BEEP_FREQUENCY,
 								MAX_BEEP_FREQUENCY,
@@ -2387,7 +2316,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		else	// beep not enabled - display frequency in red
 			clr = Orange;
-		sprintf(options, "   %u", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
+		sprintf(options, "   %uHz", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
 		break;
 	//
 	case CONFIG_BEEP_LOUDNESS:	// beep loudness
@@ -2683,7 +2612,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					1);
 
 			if(tchange)	{
-				if((ts.dmod_mode != DEMOD_CW) || ((ts.dmod_mode == DEMOD_CW) && !ts.pa_cw_bias))	{	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
+				if(ts.dmod_mode != DEMOD_CW || ts.pa_cw_bias == 0)	{	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
 					calc_var = BIAS_OFFSET + (ts.pa_bias * 2);
 					if(calc_var > 255)
 						calc_var = 255;
@@ -2829,109 +2758,111 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;		// make number red to alert user of this!
 		//
 		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
-		sprintf(options, " %9u", (uint)ts.xverter_offset);	// print with nine digits
+		sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
 		break;
+
+
 	case CONFIG_2200M_5W_ADJUST:		// 2200m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, &ts.pwr_2200m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_630M_5W_ADJUST:		// 630m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_5W, &ts.pwr_630m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_160M_5W_ADJUST:		// 160m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_5W, &ts.pwr_160m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_80M_5W_ADJUST:		// 80m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_5W, &ts.pwr_80m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_60M_5W_ADJUST:		// 60m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_5W, &ts.pwr_60m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_40M_5W_ADJUST:		// 40m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_5W, &ts.pwr_40m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_30M_5W_ADJUST:		// 30m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_5W, &ts.pwr_30m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_20M_5W_ADJUST:		// 20m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_5W, &ts.pwr_20m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_17M_5W_ADJUST:		// 17m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_5W, &ts.pwr_17m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_15M_5W_ADJUST:		// 15m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_5W, &ts.pwr_15m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_12M_5W_ADJUST:		// 12m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_5W, &ts.pwr_12m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_10M_5W_ADJUST:		// 10m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_5W, &ts.pwr_10m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_6M_5W_ADJUST:		// 6m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_5W, &ts.pwr_6m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_4M_5W_ADJUST:		// 4m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_5W, &ts.pwr_4m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_2M_5W_ADJUST:		// 2m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_5W, &ts.pwr_2m_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_70CM_5W_ADJUST:		// 70cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_5W, &ts.pwr_70cm_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_23CM_5W_ADJUST:		// 23cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_5W, &ts.pwr_23cm_5w_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_5W, options, &clr);
 		break;
 	case CONFIG_2200M_FULL_POWER_ADJUST:		// 2200m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_FULL, &ts.pwr_2200m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_630M_FULL_POWER_ADJUST:		// 630m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_FULL, &ts.pwr_630m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_160M_FULL_POWER_ADJUST:		// 160m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_FULL, &ts.pwr_160m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_80M_FULL_POWER_ADJUST:		// 80m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_FULL, &ts.pwr_80m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_60M_FULL_POWER_ADJUST:		// 60m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_FULL, &ts.pwr_60m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_40M_FULL_POWER_ADJUST:		// 40m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_FULL, &ts.pwr_40m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_30M_FULL_POWER_ADJUST:		// 30m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_FULL, &ts.pwr_30m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_20M_FULL_POWER_ADJUST:		// 20m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_FULL, &ts.pwr_20m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_17M_FULL_POWER_ADJUST:		// 17m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_FULL, &ts.pwr_17m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_15M_FULL_POWER_ADJUST:		// 15m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_FULL, &ts.pwr_15m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_12M_FULL_POWER_ADJUST:		// 12m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_FULL, &ts.pwr_12m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_10M_FULL_POWER_ADJUST:		// 10m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_FULL, &ts.pwr_10m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_6M_FULL_POWER_ADJUST:		// 6m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_FULL, &ts.pwr_6m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_4M_FULL_POWER_ADJUST:		// 4m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_FULL, &ts.pwr_4m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_2M_FULL_POWER_ADJUST:		// 2m 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_FULL, &ts.pwr_2m_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_70CM_FULL_POWER_ADJUST:		// 70cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_FULL, &ts.pwr_70cm_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_23CM_FULL_POWER_ADJUST:		// 23cm 5 watt adjust
-		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, &ts.pwr_23cm_full_adj, options, &clr);
+		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		ts.dsp_nr_delaybuf_len &= 0xfff0;	// mask bottom nybble to enforce 16-count boundary
@@ -3079,19 +3010,34 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;					// warn user that filter is off!
 		}
 		break;
-	case CONFIG_MIC_BIAS_ENABLE:		// Enable/disable mic bias
-		temp_var = ts.mic_bias;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)		{
-			if(temp_var)
-				ts.mic_bias = 1;
-			else
-				ts.mic_bias = 0;
+	case CONFIG_TUNE_POWER_LEVEL:	// set power for antenne tuning
+		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tune_power_level,
+				0,
+				PA_LEVEL_MAX_ENTRY,
+				PA_LEVEL_FULL,
+				1);
+
+		// disp_shift = 1;
+		switch(ts.tune_power_level)	{
+		case PA_LEVEL_FULL:
+			strcpy(options, "FULL POWER");
+			break;
+		case PA_LEVEL_5W:
+			strcpy(options, "        5W");
+			break;
+		case PA_LEVEL_2W:
+			strcpy(options, "        2W");
+			break;
+		case PA_LEVEL_1W:
+			strcpy(options, "        1W");
+			break;
+		case PA_LEVEL_0_5W:
+			strcpy(options, "      0.5W");
+			break;
+		case PA_LEVEL_MAX_ENTRY:
+			strcpy(options, " as TX PWR");
+			break;
 		}
-		if(ts.mic_bias)
-			clr = Red;
-		else
-			clr = White;
 		break;
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
@@ -3142,7 +3088,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			if(var>=1)
 			{
 				// clear EEPROM
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+36,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+48,"Working",Red,Black,0);
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
 				ui_si570_get_configuration();		// restore SI570 to factory default
@@ -3150,6 +3096,18 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				NVIC_SystemReset();			// restart mcHF
 			}
 		}
+		break;
+	case CONFIG_DSP_ENABLE:	// Enable DSP NR
+		temp_var = ts.dsp_enabled;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    ts.dsp_enabled = temp_var;
+		break;
+	case CONFIG_CAT_XLAT:	// CAT xlat reporting
+		temp_var = ts.xlat;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    ts.xlat = temp_var;
 		break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");

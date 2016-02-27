@@ -10,6 +10,7 @@ So DEVEL is nothing to play around for beginners. You can build
 binaries and test them AT YOUR OWN RISK.
 
 Have fun - Open-Source opens possibilities!
-
+<br><br>
+The Open Source mcHF Community<br>
 KA7OEI, Clint<br>
 DF8OE, Andreas

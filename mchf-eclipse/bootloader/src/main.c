@@ -53,6 +53,7 @@ int main(void)
 
 double i,border;
 
+// *(__IO uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for DG9BFC Beta-Testing
 if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
     border = 300000;
 else
@@ -85,11 +86,15 @@ else
   /* Init upgrade mode display */
   STM_EVAL_LEDOn(BLON);
 
+#ifdef USE_USB_OTG_FS
   USBH_Init(&USB_OTG_Core, USB_OTG_FS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
+#else	// use HS_CORE
+  USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
+#endif
     
   while (1)
   {
     /* Host Task handler */
     USBH_Process(&USB_OTG_Core, &USB_Host);
   }
-}
+}

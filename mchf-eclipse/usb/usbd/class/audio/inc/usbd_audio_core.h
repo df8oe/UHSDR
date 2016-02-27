@@ -50,17 +50,39 @@
 /** @defgroup usbd_audio_Exported_Defines
   * @{
   */ 
+#define USBD_AUDIO_FREQ 48000
+// this is fixed to match the I2S Frequency
+#define USBD_AUDIO_OUT_CHANNELS 2
+#define USBD_AUDIO_IN_OUT_DIV 1
+// USBD_IN_AUDIO_IN_OUT_DIV must be set to an integer number between 3 and 1
+// in order to keep within the limits of the existing code in audio_driver.c audio_rx_processor
+
+#define USBD_AUDIO_IN_CHANNELS 2
+#define USBD_AUDIO_IN_FREQ (USBD_AUDIO_FREQ/USBD_AUDIO_IN_OUT_DIV)
+
+
+
+
 
 /* AudioFreq * DataSize (2 bytes) * NumChannels (Stereo: 2) */
-#define AUDIO_OUT_PACKET                              (uint32_t)(((USBD_AUDIO_FREQ * 2 * 2) /1000)) 
+#define AUDIO_OUT_PACKET                              (uint32_t)(((USBD_AUDIO_FREQ * USBD_AUDIO_OUT_CHANNELS * 2) /1000))
+#define AUDIO_IN_PACKET                              (uint32_t)(((USBD_AUDIO_IN_FREQ * USBD_AUDIO_IN_CHANNELS * 2) /1000))
+
+
 
 /* Number of sub-packets in the audio transfer buffer. You can modify this value but always make sure
   that it is an even number and higher than 3 */
 #define OUT_PACKET_NUM                                   4
 /* Total size of the audio transfer buffer */
 #define TOTAL_OUT_BUF_SIZE                           ((uint32_t)(AUDIO_OUT_PACKET * OUT_PACKET_NUM))
-
-#define AUDIO_CONFIG_DESC_SIZE                        109
+#define AUDIO_BOTH
+#if  defined(AUDIO_BOTH)
+	#define AUDIO_IN
+	#define AUDIO_OUT
+	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8 + 66)
+#elif defined(AUDIO_OUT)
+	#define AUDIO_CONFIG_DESC_SIZE                        (109 + 8)
+#endif
 #define AUDIO_INTERFACE_DESC_SIZE                     9
 #define USB_AUDIO_DESC_SIZ                            0x09
 #define AUDIO_STANDARD_ENDPOINT_DESC_SIZE             0x09
@@ -128,9 +150,13 @@ typedef struct _Audio_Fops
 /** @defgroup USBD_CORE_Exported_Macros
   * @{
   */ 
-#define AUDIO_PACKET_SZE(frq)          (uint8_t)(((frq * 2 * 2)/1000) & 0xFF), \
-                                       (uint8_t)((((frq * 2 * 2)/1000) >> 8) & 0xFF)
+// this works only for 2channel 16 bit audio
+#define AUDIO_PACKET_SZE(frq,channels)          (uint8_t)(((frq * channels * 2)/1000) & 0xFF), \
+                                       (uint8_t)((((frq * channels * 2)/1000) >> 8) & 0xFF)
 #define SAMPLE_FREQ(frq)               (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
+
+extern void audio_in_put_buffer(int16_t sample);
+extern void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len);
 /**
   * @}
   */ 
@@ -148,6 +174,8 @@ extern USBD_Class_cb_TypeDef  AUDIO_cb;
 /** @defgroup USB_CORE_Exported_Functions
   * @{
   */
+
+
 /**
   * @}
   */ 
@@ -162,3 +190,5 @@ extern USBD_Class_cb_TypeDef  AUDIO_cb;
   */ 
   
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+

@@ -9,6 +9,27 @@
 #########################################################################
 #########################################################################
 
+
+20160213 [DF8OE]
+- corrected TX/RX switching of AFG/STG and RIT/WPM in CW
+- added USB audio functions
+- added #335 Tune Power Level for antenna tuning with specific power
+- added USB I/Q-Audio
+- reworked much code for better serviceability
+- activatiing ALC for USB-I/Q-input signals
+
+20160213 [DF8OE]
+- adding new translate modes +/- 12KHz
+- added 5KHz tuning steps
+- added possibility to use filters as LPF (not with center frequency)
+- rework of display code for speed up
+- further code reworking
+- FM only allowed on 10m when #029-LSB/USB Auto Select is ON
+- touchscreen tuning disabled when frequency lock set
+- touchscreen steps 5KHz in AM mode
+- bugfix in EEPROM routines
+
+
 20160203 [DF8OE]
 - CAT implementation finished using small USB plug (FT817 protocol)
   Linux recognizes serial device out of the box, Windows needs drivers from STM:
@@ -20,7 +41,6 @@
 20160201 [DF8OE]
 - beginning CAT implementation
 - beginning DIGI-modes implementation
-- added menu #332 mic-bias enable/disable
 
 
 20160130 [DF8OE]

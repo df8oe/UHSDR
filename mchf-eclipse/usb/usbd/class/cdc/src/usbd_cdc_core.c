@@ -429,7 +429,7 @@ __ALIGN_BEGIN uint8_t usbd_cdc_OtherCfgDesc[USB_CDC_CONFIG_DESC_SIZ]  __ALIGN_EN
 static uint8_t  usbd_cdc_Init (void  *pdev, 
                                uint8_t cfgidx)
 {
-  uint8_t *pbuf;
+//  uint8_t *pbuf;
 
   /* Open EP IN */
   DCD_EP_Open(pdev,
@@ -449,10 +449,10 @@ static uint8_t  usbd_cdc_Init (void  *pdev,
               CDC_CMD_PACKET_SZE,
               USB_OTG_EP_INT);
   
-  pbuf = (uint8_t *)USBD_DeviceDesc;
+/*  pbuf = (uint8_t *)USBD_DeviceDesc;
   pbuf[4] = DEVICE_CLASS_CDC;
   pbuf[5] = DEVICE_SUBCLASS_CDC;
-  
+*/
   /* Initialize the Interface physical components */
   APP_FOPS.pIf_Init();
 

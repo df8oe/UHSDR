@@ -1397,8 +1397,8 @@ USB_OTG_STS USB_OTG_EnableDevInt(USB_OTG_CORE_HANDLE *pdev)
   intmsk.b.outepintr  = 1;
   intmsk.b.sofintr    = 1; 
   
-  intmsk.b.incomplisoin    = 1; 
-  intmsk.b.incomplisoout    = 1;   
+//  intmsk.b.incomplisoin    = 1;
+//  intmsk.b.incomplisoout    = 1;
 #ifdef VBUS_SENSING_ENABLED
   intmsk.b.sessreqintr    = 1; 
   intmsk.b.otgintr    = 1;    
