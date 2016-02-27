@@ -79,7 +79,7 @@
 #if  defined(AUDIO_BOTH)
 	#define AUDIO_IN
 	#define AUDIO_OUT
-	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8 + 66)
+	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8 + 66 + 9)
 #elif defined(AUDIO_OUT)
 	#define AUDIO_CONFIG_DESC_SIZE                        (109 + 8)
 #endif
