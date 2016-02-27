@@ -359,16 +359,13 @@ typedef struct SWRMeter
 // Power supply
 typedef struct PowerMeter
 {
-	ulong	skip;
+	ulong	 skip;
 
-	ulong	pwr_aver;
-	uchar	p_curr;
+	ulong	 pwr_aver;
+	uchar	 p_curr;
 
-	uchar	v10;
-	uchar	v100;
-	uchar	v1000;
-	uchar	v10000;
-
+	uint32_t voltage;
+	char	 digits[6]; // voltage in millivolt upto 99.000 volt
 } PowerMeter;
 
 #define LO_COMP_SKP					50		//50000
