@@ -1669,6 +1669,13 @@ bool	voice_mode, select_10k, select_3k6;
 		//
 		// At this point we would hit the 2.3 kHz filter, which is ALWAYS enabled!
 		//
+		//
+		if((ts.filter_id == AUDIO_2P7KHZ) && (!ts.filter_2k7_select))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_2P9KHZ) && (!ts.filter_2k9_select))
+			ts.filter_id++;
+
 		if((ts.filter_id == AUDIO_3P6KHZ) && (!select_3k6))
 			ts.filter_id++;
 		//
