@@ -388,7 +388,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x00,          /* 1.00 */             /* bcdADC */
 		0x01,
 #ifdef AUDIO_IN
-		61 + 9,
+		61 /* + 9 + 7 */,
 #else
 		39,
 #endif
@@ -460,9 +460,9 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x05,                            // ID of this Terminal. (bTerminalID)
 		0x01, 0x01,                      // USB Streaming. (wTerminalType
 		0x00,                            // unused         (bAssocTerminal)
-		0x06,                            // From Input Terminal.(bSourceID)
+		0x04,                            // From Input Terminal.(bSourceID)
 		0x00,                            // unused  (iTerminal)
-
+#if 0
 		/* USB Speaker Audio Feature Unit Descriptor */
 		0x09,                                 /* bLength */
 		AUDIO_INTERFACE_DESCRIPTOR_TYPE,      /* bDescriptorType */
@@ -475,6 +475,15 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x00,                                 /* iTerminal */
 		/* 09 byte*/
 
+		/* AC Selector Unit Descriptor */
+		0x07, //	bLength
+		0x24, //	bDescriptorType
+		0x05, //	bDescriptorSubtype
+		0x07, //	bUnitID
+		0x01, //	bBrInPins
+		0x06, //	baSourceID(1)
+		0x00, //	iSelector
+#endif
 #endif
 		// ========================================== END AudioControl
 		/* USB Speaker Standard AS Interface Descriptor - Audio Streaming Zero Bandwith */
