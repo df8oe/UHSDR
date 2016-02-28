@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+**  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 #ifndef __KEYB_DRIVER_H

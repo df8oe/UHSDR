@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+**  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 #ifndef __IQ_RX_FILTER_AM_5KHZ_H

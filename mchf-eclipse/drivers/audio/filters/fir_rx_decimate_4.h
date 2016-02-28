@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  License:		For radio amateurs experimentation, non-commercial use only!   **
+**  License:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 #ifndef __FIR_RX_DECIMATE_4_H

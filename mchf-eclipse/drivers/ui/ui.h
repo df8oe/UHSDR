@@ -12,7 +12,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+**  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 #include "mchf_board.h"
