@@ -61,7 +61,7 @@ static uint16_t EE_PageTransfer(uint16_t VirtAddress, uint16_t Data);
   */
 uint16_t EE_InitA(void)
 {
-  uint16_t PageStatus0 = 6, PageStatus1 = 6;
+  uint16_t PageStatus0, PageStatus1;
   uint16_t VarIdx = 0;
   uint16_t EepromStatus = 0, ReadStatus = 0;
   int16_t x = -1;
@@ -288,7 +288,7 @@ uint16_t EE_Init(void)
   */
 uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data)
 {
-  uint16_t ValidPage = PAGE0;
+  uint16_t ValidPage;
   uint16_t AddressValue = 0x5555, ReadStatus = 1;
   uint32_t Address = EEPROM_START_ADDRESS, PageStartAddress = EEPROM_START_ADDRESS;
 
@@ -375,7 +375,7 @@ uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data)
   */
 static FLASH_Status EE_Format(void)
 {
-  FLASH_Status FlashStatus = FLASH_COMPLETE;
+  FLASH_Status FlashStatus;
 
   /* Erase Page0 */
   FlashStatus = FLASH_EraseSector(PAGE0_ID, VOLTAGE_RANGE);
@@ -413,7 +413,7 @@ static FLASH_Status EE_Format(void)
   */
 static uint16_t EE_FindValidPage(uint8_t Operation)
 {
-  uint16_t PageStatus0 = 6, PageStatus1 = 6;
+  uint16_t PageStatus0, PageStatus1;
 
   /* Get Page0 actual status */
   PageStatus0 = (*(__IO uint16_t*)PAGE0_BASE_ADDRESS);
@@ -485,8 +485,8 @@ static uint16_t EE_FindValidPage(uint8_t Operation)
   */
 static uint16_t EE_VerifyPageFullWriteVariable(uint16_t VirtAddress, uint16_t Data)
 {
-  FLASH_Status FlashStatus = FLASH_COMPLETE;
-  uint16_t ValidPage = PAGE0;
+  FLASH_Status FlashStatus;
+  uint16_t ValidPage;
   uint32_t Address = EEPROM_START_ADDRESS, PageEndAddress = EEPROM_START_ADDRESS+PAGE_SIZE;
 
   /* Get valid Page for write operation */
@@ -546,11 +546,11 @@ static uint16_t EE_VerifyPageFullWriteVariable(uint16_t VirtAddress, uint16_t Da
   */
 static uint16_t EE_PageTransfer(uint16_t VirtAddress, uint16_t Data)
 {
-  FLASH_Status FlashStatus = FLASH_COMPLETE;
+  FLASH_Status FlashStatus;
   uint32_t NewPageAddress = EEPROM_START_ADDRESS;
   uint16_t OldPageId=0;
-  uint16_t ValidPage = PAGE0, VarIdx = 0;
-  uint16_t EepromStatus = 0, ReadStatus = 0;
+  uint16_t ValidPage;
+  uint16_t VarIdx = 0, EepromStatus = 0, ReadStatus = 0;
 
   /* Get active Page for read operation */
   ValidPage = EE_FindValidPage(READ_FROM_VALID_PAGE);
