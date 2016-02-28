@@ -717,6 +717,8 @@ void TransceiverStateInit(void)
 	ts.filter_500Hz_select	= FILTER_500HZ_DEFAULT;	// Select 750 Hz center filter as default
 	ts.filter_1k8_select	= FILTER_1K8_DEFAULT;	// Select 1425 Hz center filter as default
 	ts.filter_2k3_select	= FILTER_2K3_DEFAULT;	// Select 1412 Hz center filter as default
+	ts.filter_2k7_select	= FILTER_2K7_DEFAULT;	// Select 1412 Hz center filter as default
+	ts.filter_2k9_select	= FILTER_2K9_DEFAULT;	// Select 1412 Hz center filter as default
 	ts.filter_3k6_select	= FILTER_3K6_DEFAULT;	// This is enabled by default
 	ts.filter_wide_select	= FILTER_WIDE_DEFAULT;	// This is enabled by default
 	//
