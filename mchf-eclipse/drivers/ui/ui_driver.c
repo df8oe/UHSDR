@@ -553,84 +553,7 @@ if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
 	drv_state++;
 
 }
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
-// **************************  OBSOLETE  ***************************************
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_driver_irq - THIS FUNCTION IS OBSOLETE!
-//* Object              : All real time processing here
-//* Object              : only fast, non blocking operations
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-/*void ui_driver_irq(void)
-{
-
-	// Do not run the state machine
-	// before the driver init is done
-	if(!drv_init)
-		return;
-
-	switch(drv_state)
-	{
-//		case STATE_SPECTRUM_DISPLAY:
-//			if(ts.misc_flags1 & 128)		// is waterfall mode to be used?  call it instead
-//				UiDriverReDrawWaterfallDisplay();
-//			else
-//				UiDriverReDrawSpectrumDisplay();
-//			break;
-		case STATE_S_METER:
-			UiDriverHandleSmeter();
-			break;
-		case STATE_SWR_METER:
-			if(ts.txrx_mode == TRX_MODE_TX)	{		// do this if in TX mode
-				UiDriverHandleLowerMeter();
-				break;
-			}
-			drv_state++;					// drop through if in RX mode
-		case STATE_HANDLE_POWERSUPPLY:
-			UiDriverHandlePowerSupply();
-			break;
-		case STATE_LO_TEMPERATURE:
-			UiDriverHandleLoTemperature();
-			break;
-		case STATE_TASK_CHECK:
-			UiDriverTimeScheduler();		// Handles live update of Calibrate between TX/RX and volume control
-			break;
-		case STATE_CHECK_ENC_ONE:
-			UiDriverCheckEncoderOne();
-			break;
-		case STATE_CHECK_ENC_TWO:
-			UiDriverCheckEncoderTwo();
-			break;
-		case STATE_CHECK_ENC_THREE:
-			UiDriverCheckEncoderThree();
-			break;
-		case STATE_UPDATE_FREQUENCY:
-			UiDriverUpdateFrequency(0,0);
-			break;
-		case STATE_PROCESS_KEYBOARD:
-			UiDriverProcessKeyboard();
-			break;
-		case STATE_SWITCH_OFF_PTT:
-			UiDriverSwitchOffPtt();
-			break;
-		default:
-			drv_state = 0;
-			return;
-	}
-	drv_state++;
-}
-*/
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_toggle_tx
 //* Object              :
@@ -5484,12 +5407,9 @@ void UiDriverChangeRfGain(uchar enabled)
 static void UiDriverChangeSigProc(uchar enabled)
 {
 	uint32_t 	color = enabled?White:Grey;
-	uint32_t label_color = enabled?Black:Grey1;
-
 	char	temp[5];
 	const char* label;
 	int32_t value;
-
 
 	//
 	// Noise blanker settings display
@@ -5505,8 +5425,6 @@ static void UiDriverChangeSigProc(uchar enabled)
 			else
 				color = White;		// Otherwise, make it white
 		}
-		//
-		label_color = (!enabled || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))?Grey1:Black;
 		label = "NB ";
 		value = ts.nb_setting;
 	}
@@ -8640,17 +8558,6 @@ void UiKeyBeep(void)
 	ts.beep_active = 1;									// activate tone
 }
 
-// TODO: MOVE TO RF Function
-void UiSideToneRef(void)
-{
-	if((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	{		// do sidetone beep only in modes that have a "BFO"
-		ads.beep_word = ts.sidetone_freq * 65536;		// yes - calculated/load frequency
-		ads.beep_word /= 48000;
-		ts.beep_timing = ts.sysclock + SIDETONE_REF_BEEP_DURATION;	// set duration of beep used as a reference for the sidetone frequency
-		ts.beep_active = 1;
-	}
-
-}
 //
 //
 //*----------------------------------------------------------------------------
@@ -8967,7 +8874,7 @@ void UiCheckForPressedKey(void)
 		if(p_o_state == 1)
 		{
 			GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
-			while (1 == 1) ;
+			for(;;);
 		}
 		if(rb_state == 1)
 		{
