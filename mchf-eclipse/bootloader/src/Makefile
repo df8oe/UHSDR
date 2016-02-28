@@ -54,14 +54,19 @@ vpath %.c $(STM_COMMON)/../cmsis_lib/source \
 
 all: proj
 
-proj: $(PROJ_NAME).elf
+proj: $(PROJ_NAME).bin $(PROJ_NAME).dfu
 
 $(PROJ_NAME).elf: $(SRCS)
 	$(CC) $(CFLAGS) $^ -o $@
+
+$(PROJ_NAME).hex: $(PROJ_NAME).elf
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
+
+$(PROJ_NAME).bin: $(PROJ_NAME).elf
 	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
 
-	../hex2dfu/hex2dfu.py bootloader.hex
+$(PROJ_NAME).dfu: $(PROJ_NAME).hex
+	../hex2dfu/hex2dfu.py $(PROJ_NAME).hex
 
 clean:
 	rm -f *.o
@@ -69,7 +74,6 @@ clean:
 	rm -f $(PROJ_NAME).hex
 	rm -f $(PROJ_NAME).bin
 	rm -f $(PROJ_NAME).dfu
-	rm -f ../hex2dfu/intelhex/*.pyc
 
 # Flash the STM32F4
 burn: proj
