@@ -92,7 +92,6 @@ static void 	UiDriverProcessFunctionKeyClick(ulong id);
 //static void 	UiDriverShowMode(void);
 //static void 	UiDriverShowStep(ulong step);
 static void 	UiDriverShowBand(uchar band);
-//static void 	UiDriverChangeBandFilter(uchar band,uchar bpf_only);
 static void 	UiDriverCreateDesktop(void);
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
 //static void 	UiDriverCreateSpectrumScope(void);
@@ -2250,136 +2249,29 @@ static void UiDriverShowBand(uchar band)
 	}
 }
 
-// -------------------------------------------
-// 	 BAND		BAND0		BAND1		BAND2
-//
-//	 80m		1			1			x
-//	 40m		1			0			x
-//	 20/30m		0			0			x
-//	 15-10m		0			1			x
-//
-// -------------------------------------------
-//
-void UiDriverChangeBandFilter(uchar band,uchar bpf_only)
-{
-	if(bpf_only)
-		goto do_bpf;
+void UiDriverChangeBandFilterPulseRelays() {
+	BAND2_PIO->BSRRH = BAND2;
+	non_os_delay();
+	BAND2_PIO->BSRRL = BAND2;
+}
 
+void UiDriverChangeBandFilter(uchar band)
+{
+	// -------------------------------------------
+	// 	 BAND		BAND0		BAND1		BAND2
+	//
+	//	 80m		1			1			x
+	//	 40m		1			0			x
+	//	 20/30m		0			0			x
+	//	 15-10m		0			1			x
+	//
 	// ---------------------------------------------
-	// Set LPFs
+	// Set LPFs:
 	// Set relays in groups, internal first, then external group
 	// state change via two pulses on BAND2 line, then idle
-	switch(band)
-	{
-		case BAND_MODE_2200:
-		case BAND_MODE_630:
-		case BAND_MODE_160:
-		case BAND_MODE_80:
-		{
-			// Internal group - Set(High/Low)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			// External group -Set(High/High)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			break;
-		}
-
-		case BAND_MODE_60:
-		case BAND_MODE_40:
-		{
-			// Internal group - Set(High/Low)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			// External group - Reset(Low/High)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			break;
-		}
-
-		case BAND_MODE_30:
-		case BAND_MODE_20:
-		{
-			// Internal group - Reset(Low/Low)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			// External group - Reset(Low/High)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			break;
-		}
-
-		case BAND_MODE_17:
-		case BAND_MODE_15:
-		case BAND_MODE_12:
-		case BAND_MODE_10:
-		case BAND_MODE_6:
-		case BAND_MODE_4:
-		{
-			// Internal group - Reset(Low/Low)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			// External group - Set(High/High)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			// Pulse relays
-			BAND2_PIO->BSRRH = BAND2;
-			non_os_delay();
-			BAND2_PIO->BSRRL = BAND2;
-
-			break;
-		}
-
-		default:
-			break;
-	}
-
-do_bpf:
-
-	// ---------------------------------------------
+	//
+	// then
+	//
 	// Set BPFs
 	// Constant line states for the BPF filter,
 	// always last - after LPF change
@@ -2390,24 +2282,66 @@ do_bpf:
 		case BAND_MODE_160:
 		case BAND_MODE_80:
 		{
+			// Internal group - Set(High/Low)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// External group -Set(High/High)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
 			break;
 		}
 
 		case BAND_MODE_60:
 		case BAND_MODE_40:
 		{
+			// Internal group - Set(High/Low)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// External group - Reset(Low/High)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
 			break;
 		}
 
 		case BAND_MODE_30:
 		case BAND_MODE_20:
 		{
+			// Internal group - Reset(Low/Low)
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// External group - Reset(Low/High)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
 			break;
 		}
 
@@ -2418,14 +2352,29 @@ do_bpf:
 		case BAND_MODE_6:
 		case BAND_MODE_4:
 		{
+			// Internal group - Reset(Low/Low)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// External group - Set(High/High)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			UiDriverChangeBandFilterPulseRelays();
+
+			// BPF
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
+
 			break;
 		}
 
 		default:
 			break;
 	}
+
 }
 
 
@@ -2474,7 +2423,7 @@ static void UiDriverCreateDesktop(void)
 	UiDriverShowBand(ts.band);
 
 	// Set filters
-	UiDriverChangeBandFilter(ts.band,0);
+	UiDriverChangeBandFilter(ts.band);
 
 	// Create Decode Mode (USB/LSB/AM/FM/CW)
 	UiDriverShowMode();
@@ -3371,43 +3320,43 @@ static void UiDriverCheckFilter(ulong freq)
 {
 	if(freq < BAND_FILTER_UPPER_160)	{	// are we low enough if frequency for the 160 meter filter?
 		if(ts.filter_band != FILTER_BAND_160)	{
-			UiDriverChangeBandFilter(BAND_MODE_160, 0);	// yes - set to 160 meters
+			UiDriverChangeBandFilter(BAND_MODE_160);	// yes - set to 160 meters
 			ts.filter_band = FILTER_BAND_160;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_80)	{	// are we low enough if frequency for the 80 meter filter?
 		if(ts.filter_band != FILTER_BAND_80)	{
-			UiDriverChangeBandFilter(BAND_MODE_80, 0);	// yes - set to 80 meters
+			UiDriverChangeBandFilter(BAND_MODE_80);	// yes - set to 80 meters
 			ts.filter_band = FILTER_BAND_80;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_40)	{
 		if(ts.filter_band != FILTER_BAND_40)	{
-			UiDriverChangeBandFilter(BAND_MODE_40, 0);	// yes - set to 40 meters
+			UiDriverChangeBandFilter(BAND_MODE_40);	// yes - set to 40 meters
 			ts.filter_band = FILTER_BAND_40;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_20)	{
 		if(ts.filter_band != FILTER_BAND_20)	{
-			UiDriverChangeBandFilter(BAND_MODE_20, 0);	// yes - set to 20 meters
+			UiDriverChangeBandFilter(BAND_MODE_20);	// yes - set to 20 meters
 			ts.filter_band = FILTER_BAND_20;
 		}
 	}
 	else if(freq >= BAND_FILTER_UPPER_20)	{
 		if(ts.filter_band != FILTER_BAND_15)	{
-			UiDriverChangeBandFilter(BAND_MODE_10, 0);	// yes - set to 10 meters
+			UiDriverChangeBandFilter(BAND_MODE_10);	// yes - set to 10 meters
 			ts.filter_band = FILTER_BAND_15;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_6)	{
 		if(ts.filter_band != FILTER_BAND_6)	{
-			UiDriverChangeBandFilter(BAND_MODE_6, 0);	// yes - set to 6 meters
+			UiDriverChangeBandFilter(BAND_MODE_6);	// yes - set to 6 meters
 			ts.filter_band = FILTER_BAND_6;
 		}
 	}
 	else if(freq < BAND_FILTER_UPPER_4)	{
 		if(ts.filter_band != FILTER_BAND_4)	{
-			UiDriverChangeBandFilter(BAND_MODE_4, 0);	// yes - set to 4 meters
+			UiDriverChangeBandFilter(BAND_MODE_4);	// yes - set to 4 meters
 			ts.filter_band = FILTER_BAND_4;
 		}
 	}
@@ -4479,7 +4428,7 @@ static void UiDriverChangeBand(uchar is_up)
 	UiDriverSetBandPowerFactor(new_band_index);
 
 	// Set filters
-	UiDriverChangeBandFilter(new_band_index,0);
+	UiDriverChangeBandFilter(new_band_index);
 
 	// Finally update public flag
 	ts.band = new_band_index;
