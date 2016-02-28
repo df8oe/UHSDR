@@ -562,9 +562,7 @@ enum	{
 //
 // Exports
 void audio_driver_init(void);
-void audio_driver_stop(void);
 void audio_driver_set_rx_audio_filter(void);
-void audio_driver_thread(void);
 void Audio_TXFilter_Init(void);
 uint32_t audio_driver_xlate_freq();
 //uchar audio_check_nr_dsp_state(void);

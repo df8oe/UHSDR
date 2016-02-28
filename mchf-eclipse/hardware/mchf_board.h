@@ -1576,15 +1576,11 @@ do {							\
 // Exports
 
 void mchf_board_green_led(int state);
-void mchf_board_red_led(int state);
 
-void mchf_board_switch_tx(char mode);
 void mchf_board_power_off(void);
 
 void mchf_board_init(void);
 void mchf_board_post_init(void);
-
-void mchf_board_power_button_input_init(void);
 
 uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value);

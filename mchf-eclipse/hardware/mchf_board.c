@@ -237,17 +237,6 @@ static void mchf_board_keyer_irq_init(void)
 	NVIC_Init(&NVIC_InitStructure);
 }
 
-void mchf_board_power_button_input_init(void)
-{
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	// Configure pin as input
-	GPIO_InitStructure.GPIO_Pin   = BUTTON_PWR;
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
-}
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_power_button_irq_init
 //* Object              :
@@ -667,58 +656,6 @@ void mchf_board_green_led(int state)
 		default:
 			GREEN_LED_PIO->ODR ^= GREEN_LED;
 			break;
-	}
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_red_led
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-	void mchf_board_red_led(int state)
-	{
-		switch(state)
-		{
-			case 1:
-				RED_LED_PIO->BSRRL = RED_LED;
-				break;
-			case 0:
-				RED_LED_PIO->BSRRH = RED_LED;
-				break;
-			default:
-				RED_LED_PIO->ODR ^= RED_LED;
-				break;
-		}
-	}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_switch_tx
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void mchf_board_switch_tx(char mode)
-{
-	if(mode)
-	{
-		mchf_board_green_led(0);
-		mchf_board_red_led(1);
-
-		// TX on (softrock control)
-		PTT_CNTR_PIO->BSRRL = PTT_CNTR;
-	}
-	else
-	{
-		mchf_board_red_led(0);
-		mchf_board_green_led(1);
-
-		// RX on
-		PTT_CNTR_PIO->BSRRH = PTT_CNTR;
 	}
 }
 
