@@ -1,0 +1,29 @@
+sudo: required
+language: generic
+dist: trusty
+install:
+    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu precise universe"
+    - sudo apt-get -qq update
+    - sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
+script:
+    - cd mchf-eclipse
+    - make all
+    - cd bootloader/src
+    - make
+    - cd ../..
+before_deploy:
+    - sudo apt-get install -y doxygen graphviz
+    - make docs > /dev/null && tar -czf docs.tar.gz -C .. docs
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: "SECURE TOKEN MISSING"
+  file:
+    - mchf.bin
+    - docs.tar.gz
+    - bootloader/src/bootloader.dfu
+    - bootloader/src/bootloader.bin
+  on:
+    repo: df8oe/mchf-github
+    tags: true
