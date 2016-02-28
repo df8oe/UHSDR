@@ -1069,10 +1069,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			a *= 10;		// "a" now has Hz*100 with 10ths removed
 			b -= a;			// "b" now has 10ths of Hz
 			a /= 10;		// "a" is back to units of Hz
-			if(a < 100)		// if we have fewer digits, put blank space at the end to remove "z" from "Hz" printed when frequencies are >= 100 Hz
-				sprintf(options, "  %d.%dHz", a, b);
-			else
-				sprintf(options, "  %d.%dHz", a, b);
+			sprintf(options, "  %d.%dHz", a, b);
 		}
 		else	{							// tone is off
 			sprintf(options, "     OFF");		// make it dislay "off"
@@ -1101,10 +1098,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			a *= 10;		// "a" now has Hz*100 with 10ths removed
 			b -= a;			// "b" now has 10ths of Hz
 			a /= 10;		// "a" is back to units of Hz
-			if(a < 100)		// if we have fewer digits, put blank space at the end to remove "z" from "Hz" printed when frequencies are >= 100 Hz
-				sprintf(options, "  %d.%dHz", a, b);
-			else
-				sprintf(options, "  %d.%dHz", a, b);
+			sprintf(options, "  %d.%dHz", a, b);
 		}
 		else	{							// tone is off
 			sprintf(options, "     OFF");		// make it dislay "off"
