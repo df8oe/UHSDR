@@ -470,7 +470,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x06,             					  /* bUnitID */
 		0x04,                                 /* bSourceID */
 		0x01,                                 /* bControlSize */
-		AUDIO_CONTROL_MUTE,                   /* bmaControls(0) */
+		AUDIO_CONTROL_MUTE,                   	      	  /* bmaControls(0) */
 		0x00,                                 /* bmaControls(1) */
 		0x00,                                 /* iTerminal */
 		/* 09 byte*/
@@ -607,7 +607,7 @@ static uint8_t usbd_audio_CfgDesc[AUDIO_CONFIG_DESC_SIZE] =
 		0x00,                       // Unused. (bRefresh)
 		0x00,                       // Unused. (bSynchAddress)
 
-		/* USB Microphone Class-specific Isoc. Audio Data Endpoint Descriptor (CODE == 7) OK - ������������ �������������*/
+		/* USB Microphone Class-specific Isoc. Audio Data Endpoint Descriptor */
 		0x07,                       // Size of the descriptor, in bytes (bLength)
 		AUDIO_ENDPOINT_DESCRIPTOR_TYPE,    // CS_ENDPOINT Descriptor Type (bDescriptorType) 0x25
 		AUDIO_ENDPOINT_GENERAL,            // GENERAL subtype. (bDescriptorSubtype) 0x01
@@ -797,6 +797,7 @@ static uint8_t  usbd_audio_Setup (void  *pdev,
  */
 static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 { 
+	uint8_t retval = USBD_OK;
 	/* Check if an AudioControl request has been issued */
 	if (AudioCtlCmd == AUDIO_REQ_SET_CUR)
 	{/* In this driver, to simplify code, only SET_CUR request is managed */
@@ -804,14 +805,16 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 		if (AudioCtlUnit == AUDIO_OUT_STREAMING_CTRL)
 		{/* In this driver, to simplify code, only one unit is manage */
 			/* Call the audio interface mute function */
-			AUDIO_OUT_fops.MuteCtl(AudioCtl[0]);
+			retval = AUDIO_OUT_fops.MuteCtl(AudioCtl[0]);
 
 			/* Reset the AudioCtlCmd variable to prevent re-entering this function */
 			AudioCtlCmd = 0;
 			AudioCtlLen = 0;
 		}
+	} else {
+		retval = USBD_CDC_cb.EP0_RxReady(pdev);
 	}
-	return USBD_CDC_cb.EP0_RxReady(pdev);
+	return retval;
 }
 
 /**
