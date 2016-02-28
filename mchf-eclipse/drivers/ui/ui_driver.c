@@ -6153,6 +6153,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 		//
 		case 3:
 		{
+			uint32_t i;
 			float32_t		filt_factor;
 			//
 			filt_factor = (float)ts.scope_filter;		// use stored filter setting
@@ -6173,7 +6174,7 @@ static void UiDriverReDrawSpectrumDisplay(void)
 				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
 				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
 				//
-				for(uint32_t i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
+				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
 					if(sd.FFT_AVGData[i] < 1)
 						sd.FFT_AVGData[i] = 1;
 				}
@@ -6542,7 +6543,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 		//  Low-pass filter amplitude magnitude data
 		//
 		case 3:
-		{
+		{	uint32_t i;
 			float32_t		filt_factor;
 			//
 			filt_factor = (float)ts.scope_filter;		// use stored filter setting
@@ -6563,7 +6564,7 @@ static void UiDriverReDrawWaterfallDisplay(void)
 				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
 				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
 				//
-				for(uint32_t i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
+				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
 					if(sd.FFT_AVGData[i] < 1)
 						sd.FFT_AVGData[i] = 1;
 				}
@@ -8660,7 +8661,7 @@ void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with
 //*----------------------------------------------------------------------------
 //
 void UiCheckForEEPROMLoadDefaultRequest(void)
-{
+{	uint16_t i;
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
 		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
 	}
@@ -8681,7 +8682,7 @@ void UiCheckForEEPROMLoadDefaultRequest(void)
 		UiLcdHy28_PrintText(2,150,"   down and save settings to EEPROM.",Green,Red,0);
 		//
 		// On screen delay									// delay a bit...
-		for(uint16_t i = 0; i < 10; i++)
+		for(i = 0; i < 10; i++)
 		   non_os_delay();
 		//
 		// add this for emphasis
@@ -8704,7 +8705,7 @@ void UiCheckForEEPROMLoadDefaultRequest(void)
 //*----------------------------------------------------------------------------
 //
 void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
-{
+{	uint16_t i;
 	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
 		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
 	}
@@ -8724,7 +8725,7 @@ void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 		UiLcdHy28_PrintText(2,135,	"  press and hold POWER button to power",Black,Yellow,0);
 		UiLcdHy28_PrintText(2,150,	"   down and save settings to EEPROM.",Black,Yellow,0);
 		// On screen delay									// delay a bit...
-		for(uint16_t i = 0; i < 10; i++)
+		for(i = 0; i < 10; i++)
 		   non_os_delay();
 
 		// add this for emphasis
