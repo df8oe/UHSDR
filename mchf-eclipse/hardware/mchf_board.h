@@ -48,9 +48,10 @@
 //
 #define 	TRX4M_VER_BUILD			4
 //
+
 #define		ATTRIB_STRING1			"Additional Contributions by"
-#define		ATTRIB_STRING2			"KA7OEI, DF8OE, the Open Source"
-#define		ATTRIB_STRING3			"and Amateur Radio Communities"
+#define		ATTRIB_STRING2			"KA7OEI, DF8OE and others."
+#define		ATTRIB_STRING3			"Licensed under CC BY-NC-SA 3.0"
 //
 // -----------------------------------------------------------------------------
 //#define 	DEBUG_BUILD
