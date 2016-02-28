@@ -69,7 +69,7 @@ typedef struct AudioDriverState
 	//
 	// Lock audio filter flag
 	//
-	bool					af_dissabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
+	bool					af_disabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
 	bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
 
 	// AGC and audio related variables
