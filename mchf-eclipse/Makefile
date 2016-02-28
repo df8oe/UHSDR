@@ -19,7 +19,7 @@ GCC_LIB_VERSION = 4.8
 
 # compilation options
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -ffunction-sections -O2 \
- -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER -Wall $(EXTRACFLAGS)
+ -std=c99 -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER -Wall $(EXTRACFLAGS)
 LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 LIBS := -Llibs -larm_cortexM4lf_math -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu \
  -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu -lm -lg -lc -lgcc
