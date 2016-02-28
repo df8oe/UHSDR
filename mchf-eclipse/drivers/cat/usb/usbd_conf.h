@@ -46,18 +46,18 @@
 /** @defgroup USB_VCP_Class_Layer_Parameter
   * @{
   */ 
-#define CDC_IN_EP                       0x81  /* EP1 for data IN */
-#define CDC_OUT_EP                      0x01  /* EP1 for data OUT */
-#define CDC_CMD_EP                      0x82  /* EP2 for CDC commands */
-#define CDC_CTRL_IF						0x00
-#define CDC_DATA_IF						0x01
+#define CDC_IN_EP                       		0x81  /* EP1 for data IN */
+#define CDC_OUT_EP                      		0x01  /* EP1 for data OUT */
+#define CDC_CMD_EP                      		0x82  /* EP2 for CDC commands */
+#define CDC_CTRL_IF					0x00
+#define CDC_DATA_IF					0x01
 #define CDC_TOTAL_IF_NUM 0x02
 
 #define AUDIO_OUT_EP 					0x02
 #define AUDIO_IN_EP 					0x83
 #define AUDIO_CTRL_IF					0x02
 #define AUDIO_OUT_IF					0x03
-#define AUDIO_IN_IF						0x04
+#define AUDIO_IN_IF					0x04
 #define AUDIO_TOTAL_IF_NUM 				0x03
 
 
