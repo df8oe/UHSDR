@@ -292,32 +292,6 @@ void audio_driver_init(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_stop
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void audio_driver_stop(void)
-{
-	I2S_Block_Stop();
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_thread
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void audio_driver_thread(void)
-{
-	// nothing
-}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : audio_driver_set_rx_audio_filter
 //* Object              :
 //* Object              : select audio filter
