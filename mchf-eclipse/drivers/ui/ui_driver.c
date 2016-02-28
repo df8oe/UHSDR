@@ -871,7 +871,7 @@ void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const
 	char temp[5];
 	uint32_t color = enabled?White:Grey;
 
-	snprintf(temp,5,"%2d",value);
+	snprintf(temp,5,"%2lu",value);
 	UiDriverEncoderDisplay(column, row, label, enabled,
 	                            temp, color);
 }
@@ -5468,7 +5468,7 @@ void UiDriverChangeRfGain(uchar enabled)
 		value = ts.fm_sql_threshold;
 	}
 
-	sprintf(temp," %02d",value);
+	sprintf(temp," %02ld",value);
 
 	UiDriverEncoderDisplay(0,1,label, enabled, temp, color);
 
@@ -5531,7 +5531,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 	//
 	// display numerical value
 	//
-	sprintf(temp,"%02d",value);
+	sprintf(temp,"%02ld",value);
 
 	UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
 }
@@ -7415,7 +7415,7 @@ static void UiDriverHandlePowerSupply(void)
 		char digit[2];
 
 		digit[1] = 0;
-		snprintf(digits,6,"%5d",val_p);
+		snprintf(digits,6,"%5ld",val_p);
 		for (idx = 0; idx < 4; idx++)
 		{
 			if (digits[idx] != pwmt.digits[idx]) {
