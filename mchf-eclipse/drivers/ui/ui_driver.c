@@ -1726,7 +1726,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 					}
 					else	{					// in memory mode
 						color = White;
-						label = "  MEM";
+						label = "  MEM ";
 					}
 					UiDriverFButtonLabel(3,label,color);	// yes - indicate with color
 
