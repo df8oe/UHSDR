@@ -660,30 +660,6 @@ void mchf_board_green_led(int state)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_red_led
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-	void mchf_board_red_led(int state)
-	{
-		switch(state)
-		{
-			case 1:
-				RED_LED_PIO->BSRRL = RED_LED;
-				break;
-			case 0:
-				RED_LED_PIO->BSRRH = RED_LED;
-				break;
-			default:
-				RED_LED_PIO->ODR ^= RED_LED;
-				break;
-		}
-	}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_power_off
 //* Object              :
 //* Object              :
