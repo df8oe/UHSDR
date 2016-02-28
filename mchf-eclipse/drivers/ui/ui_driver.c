@@ -7410,28 +7410,9 @@ static void UiDriverHandlePowerSupply(void)
 	//
 	if(pwmt.voltage != val_p)	{	// Time to update - or was this the first time it was called?
 		char digits[6];
-		int idx;
-		int dot = 0;
-		char digit[2];
-
-		digit[1] = 0;
-		snprintf(digits,6,"%5ld",val_p);
-		for (idx = 0; idx < 4; idx++)
-		{
-			if (digits[idx] != pwmt.digits[idx]) {
-				digit[0] = digits[idx];
-				if (dot && digits[idx] == ' ') {
-					digits[idx] = '0'; // zeros after dot are print always
-				}
-				UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*(idx+dot)),POS_PWR_IND_Y,digit,col,Black,0);
-				pwmt.digits[idx] = digits[idx];
-				if (idx == 1) {
-					// now place dot on screen
-					UiLcdHy28_PrintText((POS_PWR_IND_X + SMALL_FONT_WIDTH*2),POS_PWR_IND_Y,".",col,Black,0);
-					dot = 1;
-				}
-			}
-		}
+		val_p /= 10;
+		snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
+		UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
 	}
 	// Reset accumulator
 	pwmt.p_curr 	= 0;
