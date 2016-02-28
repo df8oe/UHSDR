@@ -219,7 +219,7 @@ void audio_driver_init(void)
 	cw_gen_init();
 
 	// Audio filter disabled
-	ads.af_dissabled = 1;
+	ads.af_disabled = 1;
 
 	// Reset S meter public
 	sm.skip		= 0;
@@ -284,7 +284,7 @@ void audio_driver_init(void)
 	I2S_Block_Process((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
 	// Audio filter enabled
-	ads.af_dissabled = 0;
+	ads.af_disabled = 0;
 
 #ifdef DEBUG_BUILD
 	printf("audio driver init ok\n\r");
@@ -341,7 +341,7 @@ void audio_driver_set_rx_audio_filter(void)
 
 	dsp_inhibit_temp = ts.dsp_inhibit;
 	ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
-	ads.af_dissabled = 1;
+	ads.af_disabled = 1;
 
 	switch(ts.filter_id)	{
 		case AUDIO_300HZ:
@@ -638,7 +638,7 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Unlock - re-enable filtering
 	//
-	ads.af_dissabled = 0;
+	ads.af_disabled = 0;
 	ts.dsp_inhibit = dsp_inhibit_temp;
 	//
 }
@@ -1510,7 +1510,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
 		//
 		//
-		if((!ads.af_dissabled) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	{	// No notch in CW
+		if((!ads.af_disabled) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	{	// No notch in CW
 			audio_lms_notch_filter(psize);		// Do notch filter
 		}
 
@@ -1518,13 +1518,13 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// DSP noise reduction using LMS (Least Mean Squared) algorithm
 		// This is the pre-filter/AGC instance
 		//
-		if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_dissabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
+		if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
 			audio_lms_noise_reduction(psize);
 		}
 		//
 		// ------------------------
 		// Apply audio  bandpass filter
-		if((!ads.af_dissabled)	&& (ts.filter_id != AUDIO_WIDE))	{	// we don't need to filter here if running in "wide" AM mode (Hilbert/FIR does the job!)
+		if((!ads.af_disabled)	&& (ts.filter_id != AUDIO_WIDE))	{	// we don't need to filter here if running in "wide" AM mode (Hilbert/FIR does the job!)
 			// IIR ARMA-type lattice filter
 			arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
 		}
@@ -1537,7 +1537,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// DSP noise reduction using LMS (Least Mean Squared) algorithm
 		// This is the post-filter, post-AGC instance
 		//
-		if((ts.dsp_active & 1) && (ts.dsp_active & 2) && (!ads.af_dissabled) && (!ts.dsp_inhibit))	{	// Do DSP NR if enabled and if post-DSP NR enabled
+		if((ts.dsp_active & 1) && (ts.dsp_active & 2) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do DSP NR if enabled and if post-DSP NR enabled
 			//
 			audio_lms_noise_reduction(psize);
 		}
