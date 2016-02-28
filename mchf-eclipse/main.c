@@ -704,7 +704,7 @@ void TransceiverStateInit(void)
 	ts.filter_band		= 0;						// used to indicate the bpf filter selection for power detector coefficient selection
 	ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
 	ts.audio_gain		= DEFAULT_AUDIO_GAIN;		// Set initial volume
-	ts.audio_gain		= MAX_VOLUME_DEFAULT;		// Set max volume default
+	ts.audio_max_volume	= MAX_VOLUME_DEFAULT;		// Set max volume default
 	ts.audio_gain_active = 1;						// this variable is used in the active RX audio processing function
 	ts.rf_gain			= DEFAULT_RF_GAIN;			//
 	ts.max_rf_gain		= MAX_RF_GAIN_DEFAULT;		// setting for maximum gain (e.g. minimum S-meter reading)

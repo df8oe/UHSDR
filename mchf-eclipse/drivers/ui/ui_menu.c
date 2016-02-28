@@ -331,11 +331,11 @@ static char* base_screens[11][MENUSIZE] = {
 },
 {	// 11
 		"199-Hardware Info",
+		" ",
+		" ",
+		" ",
+		" ",
 		"000-Adjustment Menu"
-		" ",
-		" ",
-		" ",
-		" "
 }
 };
 
@@ -2053,11 +2053,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, " Do it!");
 			    clr = White;
-//			    opt_pos = 2;	// Y position of this menu item
-			    opt_pos = 4;	// Y position of this menu item
 			    if(var>=1)
 				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+24,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
 				copy_ser2virt();
 				strcpy(options, " Done...");
 				clr = Green;
@@ -2073,11 +2071,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			    {
 			    strcpy(options, "Do it!");
 			    clr = White;
-//			    opt_pos = 3;	// Y position of this menu item
-			    opt_pos = 5;	// Y position of this menu item
 			    if(var>=1)
 				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+36,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
 				copy_virt2ser();
 				ui_si570_get_configuration();		// restore SI570 to factory default
 				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
@@ -2090,14 +2086,24 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
 			clr = White;
-//			opt_pos = 4;	// Y position of this menu item
-			opt_pos = 0;	// Y position of this menu item
 			if(var>=1)
 			    {
 			    strcpy(options, "    ");
 			    clr = White;
 			    UiDriverUpdateMenu(9);
 			    }
+			break;
+	case MENU_DUMMY_LINE_2:
+			strcpy(options, " ");
+			break;
+	case MENU_DUMMY_LINE_3:
+			strcpy(options, " ");
+			break;
+	case MENU_DUMMY_LINE_4:
+			strcpy(options, " ");
+			break;
+	case MENU_DUMMY_LINE_5:
+			strcpy(options, " ");
 			break;
 //
 //
@@ -2120,14 +2126,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		else
 			strcpy(options, "OFF");
-
-//		opt_pos = 5;	// Y position of this menu item
-		opt_pos = 1;	// Y position of this menu item
 		break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");
-//		opt_pos = 5;
-		opt_pos = 1;
 		break;
 	}
 	//
@@ -3166,7 +3167,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			if(var>=1)
 			{
 				// clear EEPROM
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+48,"Working",Red,Black,0);
+				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
 				ui_si570_get_configuration();		// restore SI570 to factory default

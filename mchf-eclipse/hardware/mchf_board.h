@@ -543,9 +543,9 @@ typedef struct ButtonMap
 //
 #define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20/30 meter filter
 //
-#define	BAND_FILTER_UPPER_6		4000000				// Upper limit for 4/6 meter filter
+#define	BAND_FILTER_UPPER_6		40000000			// Upper limit for 6 meter filter
 //
-#define	BAND_FILTER_UPPER_4		7000000				// Upper limit for 4/6 meter filter
+#define	BAND_FILTER_UPPER_4		70000000			// Upper limit for 4 meter filter
 //
 #define	DEFAULT_FREQ_OFFSET		4000				// Amount of offset (at LO freq) when loading "default" frequency
 //

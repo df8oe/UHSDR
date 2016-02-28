@@ -17,6 +17,8 @@
 - added USB I/Q-Audio
 - reworked much code for better serviceability
 - activatiing ALC for USB-I/Q-input signals
+- added filters 2.7KHz and 2.9KHz as LPF and BPF
+
 
 20160213 [DF8OE]
 - adding new translate modes +/- 12KHz
