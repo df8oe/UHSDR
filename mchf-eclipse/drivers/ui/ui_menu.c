@@ -1371,7 +1371,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UIDriverChangeAudioGain(0);
 		}
 
-		if((!ts.cat_mode_active) &&(ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIG)) {
+		if((!ts.cat_mode_active) && ts.tx_audio_source == TX_AUDIO_DIG) {
 			// RED if CAT is not enabled
 			clr = Red;
 		}
