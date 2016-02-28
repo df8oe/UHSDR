@@ -1141,8 +1141,8 @@ static void UiDriverProcessKeyboard(void)
 				break;
 				//
 			case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
-				btemp = ads.af_dissabled;
-				ads.af_dissabled = 0;
+				btemp = ads.af_disabled;
+				ads.af_disabled = 0;
 				//
 				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
 				ts.dsp_inhibit = 1;
@@ -1158,12 +1158,12 @@ static void UiDriverProcessKeyboard(void)
 				if(ts.menu_mode)	// are we in menu mode?
 					UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
 				//
-				ads.af_dissabled =  btemp;
+				ads.af_disabled =  btemp;
 				break;
 				//
 			case BUTTON_BNDP_PRESSED:	// BUTTON_BNDP
-				btemp = ads.af_dissabled;
-				ads.af_dissabled = 0;
+				btemp = ads.af_disabled;
+				ads.af_disabled = 0;
 				//
 				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
 				ts.dsp_inhibit = 1;
@@ -1179,7 +1179,7 @@ static void UiDriverProcessKeyboard(void)
 				if(ts.menu_mode)	// are we in menu mode?
 					UiDriverUpdateMenu(0);	// yes, update display when we change bands
 				//
-				ads.af_dissabled = btemp;
+				ads.af_disabled = btemp;
 				break;
 				//
 			case BUTTON_POWER_PRESSED:
@@ -4092,7 +4092,7 @@ static void UiDriverTimeScheduler(void)
 	///
 	// DSP crash detection
 	//
-	if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_dissabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
+	if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
 		if((ads.dsp_nr_sample > DSP_HIGH_LEVEL)	|| (ads.dsp_nr_sample == -1)){		// is the DSP output very high, or wrapped around to -1?
 			dsp_crash_count+=2;			// yes - increase detect count quickly
 		}
