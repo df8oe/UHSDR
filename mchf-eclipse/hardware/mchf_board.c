@@ -237,17 +237,6 @@ static void mchf_board_keyer_irq_init(void)
 	NVIC_Init(&NVIC_InitStructure);
 }
 
-void mchf_board_power_button_input_init(void)
-{
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	// Configure pin as input
-	GPIO_InitStructure.GPIO_Pin   = BUTTON_PWR;
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
-}
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_power_button_irq_init
 //* Object              :
