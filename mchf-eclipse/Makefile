@@ -154,7 +154,7 @@ OBJS  += $(SRC:.c=.o)
 	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -c ${INC_DIRS} $< -o $@
 
-.PHONY: all clean
+.PHONY: all clean docs
 
 all: $(LPRJ).elf $(PRJ).bin
 
@@ -179,6 +179,9 @@ clean:
 handy:
 	$(RM) $(call FixPath,$(OBJS))
 	$(RM) $(call FixPath,*~)
+
+docs:
+	doxygen Doxyfile
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
