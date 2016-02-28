@@ -2051,7 +2051,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 
 			bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
-			swap |= DEMOD_USB && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+			swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 			audio_rx_freq_conv(size, swap);
 		}
 		//

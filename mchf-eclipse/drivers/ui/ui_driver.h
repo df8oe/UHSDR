@@ -558,7 +558,7 @@ typedef struct EepromSave
 // Supply Voltage indicator
 #define POS_PWRN_IND_X						0
 #define POS_PWRN_IND_Y						193
-#define POS_PWR_IND_X						5
+#define POS_PWR_IND_X						4
 #define POS_PWR_IND_Y						(POS_PWRN_IND_Y + 15)
 #define COL_PWR_IND							Grey2
 
