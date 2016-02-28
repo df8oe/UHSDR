@@ -1442,7 +1442,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
 			else
+				{
 				UIDriverChangeAudioGain(0);
+				UiDriverUpdateMenu(0);
+				}
 		}
 
 		if((!ts.cat_mode_active) && ts.tx_audio_source == TX_AUDIO_DIG) {
@@ -1491,7 +1494,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
-		if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)	{	// Allow adjustment only if in line-in mode
+		if(ts.tx_audio_source != TX_AUDIO_MIC)	{	// Allow adjustment only if in line-in mode
 			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
@@ -1511,7 +1514,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			}
 		}
 		//
-		if(ts.tx_audio_source != TX_AUDIO_LINEIN_L && ts.tx_audio_source != TX_AUDIO_LINEIN_R)	// Orange if not in LINE-IN mode
+		if(ts.tx_audio_source == TX_AUDIO_MIC)	// Orange if in MIC mode
 			clr = Orange;
 		//
 		sprintf(options, "  %u", ts.tx_line_gain);
@@ -2374,6 +2377,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				ts.misc_flags2 |= 4;		// set LSB+2
 			else			// beep is to be disabled
 				ts.misc_flags2 &= 0xfb;		// clear LSB+2
+			UiDriverUpdateMenu(0);
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
