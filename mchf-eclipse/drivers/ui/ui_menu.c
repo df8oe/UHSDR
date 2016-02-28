@@ -247,6 +247,7 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
     strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");
 }
 
+char blankline[33] = "                                ";
 
 static char* base_screens[11][MENUSIZE] = {
 { //1
@@ -330,12 +331,12 @@ static char* base_screens[11][MENUSIZE] = {
 		"198-Restore Config"
 },
 {	// 11
-		"199-Hardware Info",
-		" ",
-		" ",
-		" ",
-		" ",
-		"000-Adjustment Menu"
+		"199-Hardware Info               ",	//this screen must have blanks for cleaning hardware info page
+		blankline,
+		blankline,
+		blankline,
+		blankline,
+		"000-Adjustment Menu             "
 }
 };
 
@@ -655,10 +656,10 @@ if(mode > 3)
 	    if(sd.use_spi == 1)
 		outs = "HY28A SPI Mode  ";
 	    else
-		outs = "HY28B SPI Mode  ";
+		outs = "HY28B SPI Mode    ";
 	    }
 	else
-	    outs = "HY28A/B parallel";
+	    outs = "HY28A/B parallel  ";
 	sprintf(out,"%s%s","LCD Display  : ",outs);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
 	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma,"MHz");
@@ -2088,7 +2089,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = White;
 			if(var>=1)
 			    {
-			    strcpy(options, "    ");
+			    strcpy(options, " ");
 			    clr = White;
 			    UiDriverUpdateMenu(9);
 			    }
