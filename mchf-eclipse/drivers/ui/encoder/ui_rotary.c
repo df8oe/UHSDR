@@ -53,7 +53,7 @@ void UiRotaryFreqEncoderInit(void)
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
 
-	TIM_TimeBaseStructure.TIM_Period = (FREQ_ENCODER_RANGE/FREQ_ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
+	TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
 	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
