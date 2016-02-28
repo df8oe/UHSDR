@@ -1556,7 +1556,6 @@ do {							\
 void mchf_board_green_led(int state);
 void mchf_board_red_led(int state);
 
-void mchf_board_switch_tx(char mode);
 void mchf_board_power_off(void);
 
 void mchf_board_init(void);

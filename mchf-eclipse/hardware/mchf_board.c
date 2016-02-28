@@ -695,34 +695,6 @@ void mchf_board_green_led(int state)
 	}
 
 //*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_switch_tx
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void mchf_board_switch_tx(char mode)
-{
-	if(mode)
-	{
-		mchf_board_green_led(0);
-		mchf_board_red_led(1);
-
-		// TX on (softrock control)
-		PTT_CNTR_PIO->BSRRL = PTT_CNTR;
-	}
-	else
-	{
-		mchf_board_red_led(0);
-		mchf_board_green_led(1);
-
-		// RX on
-		PTT_CNTR_PIO->BSRRH = PTT_CNTR;
-	}
-}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_power_off
 //* Object              :
 //* Object              :
