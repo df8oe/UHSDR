@@ -344,7 +344,12 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
 
                 width = length - size;
             }
-        
+            // we ignore an 'l' since l equal 32 bits aka int
+            if (*pFormat == 'l') {
+                pFormat++;
+            }
+
+
             /* Parse type */
             switch (*pFormat) {
             case 'd': 
