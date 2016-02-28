@@ -8895,7 +8895,7 @@ void UiCheckForPressedKey(void)
 		if(p_o_state == 1)
 		{
 			GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
-			while (1 == 1) ;
+			for(;;);
 		}
 		if(rb_state == 1)
 		{
