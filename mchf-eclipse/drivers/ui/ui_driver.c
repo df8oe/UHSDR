@@ -5451,12 +5451,9 @@ void UiDriverChangeRfGain(uchar enabled)
 static void UiDriverChangeSigProc(uchar enabled)
 {
 	uint32_t 	color = enabled?White:Grey;
-	uint32_t label_color = enabled?Black:Grey1;
-
 	char	temp[5];
 	const char* label;
 	int32_t value;
-
 
 	//
 	// Noise blanker settings display
@@ -5472,8 +5469,6 @@ static void UiDriverChangeSigProc(uchar enabled)
 			else
 				color = White;		// Otherwise, make it white
 		}
-		//
-		label_color = (!enabled || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id == AUDIO_WIDE))?Grey1:Black;
 		label = "NB ";
 		value = ts.nb_setting;
 	}
