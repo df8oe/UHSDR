@@ -3266,8 +3266,9 @@ static void UiDriverCheckFilter(ulong freq)
 			if(ts.filter_band != bandFilters[idx].filter_band)	{
 				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to 160 meters
 				ts.filter_band = bandFilters[idx].filter_band;
-				break;
+
 			}
+			break;
 		}
 	}
 }
