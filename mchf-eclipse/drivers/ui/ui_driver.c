@@ -3241,6 +3241,8 @@ static void UiDriverInitFrequency(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
+
+
 typedef struct BandFilterDescriptor {
 	uint32_t upper;
 	uint16_t filter_band;
@@ -3249,6 +3251,8 @@ typedef struct BandFilterDescriptor {
 
 #define BAND_FILTER_NUM 7
 
+// The descriptor array below has to be ordered from the lowest BPF frequency filter
+// to the highest.
 static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
 		{ BAND_FILTER_UPPER_160, FILTER_BAND_160, BAND_MODE_160 },
 		{ BAND_FILTER_UPPER_80, FILTER_BAND_80, BAND_MODE_80 },
@@ -3259,9 +3263,19 @@ static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
 		{ BAND_FILTER_UPPER_4, FILTER_BAND_4, BAND_MODE_4 }
 };
 
+
+/**
+ * @brief Select and activate the correct BPF for the frequency given in @p freq
+ *
+ *
+ * @param freq The frequency to activate the BPF for in Hz
+ *
+ * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
+ */
 static void UiDriverCheckFilter(ulong freq)
 {
-	for (int idx = 0; idx < BAND_FILTER_NUM; idx++) {
+	int idx;
+	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
 		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for the 160 meter filter?
 			if(ts.filter_band != bandFilters[idx].filter_band)	{
 				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to 160 meters
