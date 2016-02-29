@@ -4378,12 +4378,13 @@ static bool UiDriverCheckFrequencyEncoder(void)
 	if(ts.frequency_lock)
 		return false;						// frequency adjust is locked
 
-	// Finaly convert to frequency incr/decr
-	if(pot_diff < 0)
-		df.tune_new -= (df.tuning_step * 4);
-	else
-		df.tune_new += (df.tuning_step * 4);
-
+	if (pot_diff != 0) {
+		// Finaly convert to frequency incr/decr
+		if(pot_diff < 0)
+			df.tune_new -= (df.tuning_step * 4);
+		else
+			df.tune_new += (df.tuning_step * 4);
+	}
 	return true;
 }
 
