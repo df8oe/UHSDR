@@ -1548,6 +1548,7 @@ typedef struct TransceiverState
 	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
 	bool	dsp_enabled;			// NR disabled
 	uchar	xlat;				// CAT <> IQ-Audio
+	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //
