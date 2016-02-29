@@ -9,7 +9,7 @@
 **  File name:    	ui_menu.c                                                      **
 **  Description:    main user interface configuration/adjustment menu system       **
 **  Last Modified:                                                                 **
-**  Licence:		For radio amateurs experimentation, non-commercial use only!   **
+**  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 // Common

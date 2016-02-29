@@ -9,7 +9,7 @@
 **  Description:                                                                   **
 **  Last Modified:  October 2015 for FM Modulator by KA7OEI based on "dds_table.h" **
 **                  Also used for subaudible tone, burst and keyboard beep         **
-**  License:		For radio amateurs experimentation, non-commercial use only!   **
+**  License:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
 #ifndef __FM_DDS_TABLE_H

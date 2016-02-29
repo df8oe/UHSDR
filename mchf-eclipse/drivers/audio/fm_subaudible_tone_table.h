@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:	Created October 2015, KA7OEI                               **
-**  Licence:	For radio amateurs experimentation, non-commercial use only!   	   **
+**  Licence:	CC BY-NC-SA 3.0                                                	   **
 ************************************************************************************/
 
 #ifndef __SUBAUDIBLE_TONE_TABLE
