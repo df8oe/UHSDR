@@ -24,24 +24,11 @@
 // capacitors
 #define ENCODER_FLICKR_BAND	4
 
-// Maximum pot value
-#define FREQ_ENCODER_RANGE	0xFFF
-
-// Divider to create non linearity
-#define FREQ_ENCODER_LOG_D	1
-
-// The UI checking function will skip
-// reading too often based on this value
-#define FREQ_UPDATE_SKIP	100
-
 // Frequency public structure
 typedef struct DialFrequency
 {
 	// pot values
 	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-
 	// SI570 actual frequency
 	ulong	tune_old;			// previous value
 	ulong	tune_new;			// most current value
@@ -60,8 +47,6 @@ typedef struct DialFrequency
 	// TCXO routine factor/flag
 	int		temp_factor;
 	uchar	temp_enabled;
-
-	uchar	de_detent;			// sw de-detent flag
 
 	// Virtual segments
 	uint8_t	dial_digits[9];

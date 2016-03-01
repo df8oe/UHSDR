@@ -3203,18 +3203,15 @@ static void UiDriverInitFrequency(void)
 	}
 
 	// Lower bands default to LSB mode
-	// TODO: This needs to be checked, some lower bands have higher numbers now
+	// TODO: This needs to be checked, some even lower bands have higher numbers now
 	for(i = 0; i < 4; i++)
 		vfo[VFO_WORK].band[i].decod_mode = DEMOD_LSB;
 
 	// Init frequency publics(set diff values so update on LCD will be done)
-	df.value_old	= 0;
-	df.value_new	= 0;
 	df.tune_old 	= bandInfo[ts.band].tune;
 	df.tune_new 	= bandInfo[ts.band].tune;
 	df.selected_idx = 3; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
-	df.update_skip	= 0;		// skip value to compensate for fast dial rotation - test!!!
 	df.temp_factor	= 0;
 	df.temp_enabled = 0;		// startup state of TCXO
 
@@ -3222,9 +3219,6 @@ static void UiDriverInitFrequency(void)
 	//	df.transv_freq = TRANSVT_FREQ_A;
 	//else
 //	df.transv_freq	= 0;	// LO freq, zero on HF, 42 Mhz on 4m
-
-	//df.tx_shift		= 0;		// offcet fo tx
-	df.de_detent	= 0;
 
 	// Set virtual segments initial value (diff than zero!)
 	df.dial_digits[8]	= 0;
@@ -3246,48 +3240,49 @@ static void UiDriverInitFrequency(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+
+
+typedef struct BandFilterDescriptor {
+	uint32_t upper;
+	uint16_t filter_band;
+	uint16_t band_mode;
+} BandFilterDescriptor;
+
+#define BAND_FILTER_NUM 7
+
+// The descriptor array below has to be ordered from the lowest BPF frequency filter
+// to the highest.
+static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
+		{ BAND_FILTER_UPPER_160, FILTER_BAND_160, BAND_MODE_160 },
+		{ BAND_FILTER_UPPER_80, FILTER_BAND_80, BAND_MODE_80 },
+		{ BAND_FILTER_UPPER_40, FILTER_BAND_40, BAND_MODE_40 },
+		{ BAND_FILTER_UPPER_20, FILTER_BAND_20, BAND_MODE_20 },
+		{ BAND_FILTER_UPPER_10, FILTER_BAND_15, BAND_MODE_10 },
+		{ BAND_FILTER_UPPER_6, FILTER_BAND_6, BAND_MODE_6 },
+		{ BAND_FILTER_UPPER_4, FILTER_BAND_4, BAND_MODE_4 }
+};
+
+
+/**
+ * @brief Select and activate the correct BPF for the frequency given in @p freq
+ *
+ *
+ * @param freq The frequency to activate the BPF for in Hz
+ *
+ * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
+ */
 static void UiDriverCheckFilter(ulong freq)
 {
-	if(freq < BAND_FILTER_UPPER_160)	{	// are we low enough if frequency for the 160 meter filter?
-		if(ts.filter_band != FILTER_BAND_160)	{
-			UiDriverChangeBandFilter(BAND_MODE_160);	// yes - set to 160 meters
-			ts.filter_band = FILTER_BAND_160;
-		}
-	}
-	else if(freq < BAND_FILTER_UPPER_80)	{	// are we low enough if frequency for the 80 meter filter?
-		if(ts.filter_band != FILTER_BAND_80)	{
-			UiDriverChangeBandFilter(BAND_MODE_80);	// yes - set to 80 meters
-			ts.filter_band = FILTER_BAND_80;
-		}
-	}
-	else if(freq < BAND_FILTER_UPPER_40)	{
-		if(ts.filter_band != FILTER_BAND_40)	{
-			UiDriverChangeBandFilter(BAND_MODE_40);	// yes - set to 40 meters
-			ts.filter_band = FILTER_BAND_40;
-		}
-	}
-	else if(freq < BAND_FILTER_UPPER_20)	{
-		if(ts.filter_band != FILTER_BAND_20)	{
-			UiDriverChangeBandFilter(BAND_MODE_20);	// yes - set to 20 meters
-			ts.filter_band = FILTER_BAND_20;
-		}
-	}
-	else if(freq >= BAND_FILTER_UPPER_20)	{
-		if(ts.filter_band != FILTER_BAND_15)	{
-			UiDriverChangeBandFilter(BAND_MODE_10);	// yes - set to 10 meters
-			ts.filter_band = FILTER_BAND_15;
-		}
-	}
-	else if(freq < BAND_FILTER_UPPER_6)	{
-		if(ts.filter_band != FILTER_BAND_6)	{
-			UiDriverChangeBandFilter(BAND_MODE_6);	// yes - set to 6 meters
-			ts.filter_band = FILTER_BAND_6;
-		}
-	}
-	else if(freq < BAND_FILTER_UPPER_4)	{
-		if(ts.filter_band != FILTER_BAND_4)	{
-			UiDriverChangeBandFilter(BAND_MODE_4);	// yes - set to 4 meters
-			ts.filter_band = FILTER_BAND_4;
+	int idx;
+	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
+		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for the 160 meter filter?
+			if(ts.filter_band != bandFilters[idx].filter_band)	{
+				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to 160 meters
+				ts.filter_band = bandFilters[idx].filter_band;
+
+			}
+			break;
 		}
 	}
 }
@@ -4376,82 +4371,35 @@ static void UiDriverChangeBand(uchar is_up)
 	ts.refresh_freq_disp = 0;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckFrequencyEncoder
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
+ *
+ * @returns true if a frequency change was detected and a new tuning frequency was set in a global variable.
+ */
 static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
+	bool		retval = false;
 
-
-	// Skip too regular read of the timer value, to avoid flickering
-//	df.update_skip++;
-//	if(df.update_skip < FREQ_UPDATE_SKIP)
-//		return false;
-
-//	df.update_skip = 0;
-
-	// Load pot value
-	df.value_new = TIM_GetCounter(TIM8);
-
-	// Ignore lower value flickr
-	if(df.value_new < ENCODER_FLICKR_BAND)
-		return false;
-
-	// Ignore higher value flickr
-	if(df.value_new > (FREQ_ENCODER_RANGE/FREQ_ENCODER_LOG_D) + ENCODER_FLICKR_BAND)
-		return false;
-
-	// No change, return
-	if(df.value_old == df.value_new)
-		return false;
+	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
 	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
-#ifdef USE_DETENTED_ENCODERS
-	// SW de-detent routine
-	df.de_detent++;
-	if(df.de_detent < USE_DETENTED_VALUE)
-	{
-		df.value_old = df.value_new; // update and skip
-		return false;
+	if (pot_diff != 0 &&
+			ts.txrx_mode == TRX_MODE_RX
+			&& ks.button_just_pressed == false
+			&& ts.frequency_lock == false)	{
+		// allow tuning only if in rx mode, no freq lock,
+
+		// ks.button_just_press press-and-hold - button just pressed for "temporary" step size change (not taken effect yet)
+		// Finaly convert to frequency incr/decr
+		if(pot_diff < 0)
+			df.tune_new -= (df.tuning_step * 4);
+		else
+			df.tune_new += (df.tuning_step * 4);
+		retval = true;
 	}
-	df.de_detent = 0;
-#endif
-
-	if(ts.txrx_mode != TRX_MODE_RX)		// do not allow tuning if in transmit mode
-		return false;
-
-	if(ks.button_just_pressed)		// press-and-hold - button just pressed for "temporary" step size change (not taken effect yet)
-		return false;
-
-	if(ts.frequency_lock)
-		return false;						// frequency adjust is locked
-
-	//printf("freq pot: %d \n\r",df.value_new);
-
-	// Encoder value to difference
-	if(df.value_new > df.value_old)
-		pot_diff = +1;
-	else
-		pot_diff = -1;
-
-	//printf("pot diff: %d\n\r",pot_diff);
-
-	// Finaly convert to frequency incr/decr
-	if(pot_diff < 0)
-		df.tune_new -= (df.tuning_step * 4);
-	else
-		df.tune_new += (df.tuning_step * 4);
-
-	// Updated
-	df.value_old = df.value_new;
-
-	return true;
+	return retval;
 }
 
 
@@ -5223,6 +5171,7 @@ static void UiDriverChangeDigitalMode(void)
 		color = Grey2;
 		break;
 	default:
+		txt = "       ";
 		break;
 	}
 
