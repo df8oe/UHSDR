@@ -4371,36 +4371,35 @@ static void UiDriverChangeBand(uchar is_up)
 	ts.refresh_freq_disp = 0;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckFrequencyEncoder
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
+ *
+ * @returns true if a frequency change was detected and a new tuning frequency was set in a global variable.
+ */
 static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
+	bool		retval = false;
 
 	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
-	if(ts.txrx_mode != TRX_MODE_RX)		// do not allow tuning if in transmit mode
-		return false;
+	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 
-	if(ks.button_just_pressed)		// press-and-hold - button just pressed for "temporary" step size change (not taken effect yet)
-		return false;
+	if (pot_diff != 0 &&
+			ts.txrx_mode == TRX_MODE_RX
+			&& ks.button_just_pressed == false
+			&& ts.frequency_lock == false)	{
+		// allow tuning only if in rx mode, no freq lock,
 
-	if(ts.frequency_lock)
-		return false;						// frequency adjust is locked
-
-	if (pot_diff != 0) {
+		// ks.button_just_press press-and-hold - button just pressed for "temporary" step size change (not taken effect yet)
 		// Finaly convert to frequency incr/decr
 		if(pot_diff < 0)
 			df.tune_new -= (df.tuning_step * 4);
 		else
 			df.tune_new += (df.tuning_step * 4);
+		retval = true;
 	}
-	return true;
+	return retval;
 }
 
 
