@@ -1103,6 +1103,43 @@ void UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift)
 //
 //  This should reduce the amount of CGRAM access - especially via SPI mode - to a minimum.
 //
+
+static bool UiLcdHy28_DrawSpectrum_IsVgrid(uint16_t x, uint32_t color_new, uint16_t* clr_ptr ) {
+	int k;
+	bool repaint_v_grid = false;
+	// Enumerate all saved x positions
+	for(k = 0; k < 7; k++)
+	{
+		// Exit on match
+		if(x == sd.vert_grid_id[k])
+		{
+			// New data for repaint
+			x   = sd.vert_grid_id[k];
+			if((sd.magnify) && (k == 3))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 2) && (!sd.magnify))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
+				*clr_ptr = ts.scope_centre_grid_colour_active;
+			else
+				*clr_ptr = ts.scope_grid_colour_active;
+
+			repaint_v_grid = true;
+			break;
+		}
+	}
+
+	return repaint_v_grid;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawSpectrum_Interleaved
 //* Object              : repaint spectrum scope control
@@ -1110,9 +1147,9 @@ void UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new, ushort shift)
+void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
-   ushort       i, k, x, y_old , y_new, y1_old, y1_new, len_old, len_new, sh, clr;
+   uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, len_new, sh, clr;
    bool      repaint_v_grid = false;
 
    if(shift)
@@ -1143,39 +1180,14 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
       if(y_old <= y_new)	// is old line going to be overwritten by new line, anyway?
          goto draw_new;		// only draw new line - don't bother erasing old line...
 
+
       // Repaint vertical grid on clear
       // Basically paint over the grid is allowed
       // but during spectrum clear instead of masking
       // grid lines with black - they are repainted
-      if(color_old == Black)
-      {
-         // Enumerate all saved x positions
-         for(k = 0; k < 7; k++)
-         {
-            // Exit on match
-            if(x == sd.vert_grid_id[k])
-            {
-               // New data for repaint
-               x   = sd.vert_grid_id[k];
-               if((sd.magnify) && (k == 3))
-           	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else
-           		   clr = ts.scope_grid_colour_active;
-               //
-               repaint_v_grid = true;
-               break;
-            }
-         }
+      // TODO: This code is  always executed, since this function is always called with color_old == Black
+      if(color_old == Black) {
+    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr);
       }
       //
       UiLcdHy28_SetCursorA(x, y1_old);
@@ -1189,7 +1201,11 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
          {
             clr = color_old;
 
-            // Are we masking over horizontal grid line ?
+            // Are we trying to paint over horizontal grid line ?
+            // prevent that by changing this points color to the grid color
+            // TODO: This code is  always executed, since this function is always called with color_old == Black
+            // This code does not make sense to me: it should check if the CURRENT y value (stored in i) is a horizontal
+            // grid, not the y1_old.
             if(color_old == Black)
             {
                // Enumerate all saved y positions
@@ -1227,39 +1243,12 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
       // but during spectrum clear instead of masking
       // grid lines with black - they are repainted
       //
-      if(color_new == Black)
-      {
-         // Enumerate all saved x positions
-         for(k = 0; k < 7; k++)
-         {
-            // Exit on match
-            if(x == sd.vert_grid_id[k])
-            {
-               // New data for repaint
-               x   = sd.vert_grid_id[k];
-               if((sd.magnify) && (k == 3))
-           	   	   clr = ts.scope_centre_grid_colour_active;
-               else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 2) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
-           		   clr = ts.scope_centre_grid_colour_active;
-           	   else
-           		   clr = ts.scope_grid_colour_active;
-
-               repaint_v_grid = true;
-               break;
-            }
-         }
-      }
       //
+      // TODO: This code is  never executed, since this function is never called with color_new == Black
+      if(color_new == Black) {
+    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr);
+      }
+
       UiLcdHy28_SetCursorA(x, y1_new);
       UiLcdHy28_WriteRAM_Prepare();
 
@@ -1271,7 +1260,9 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushor
          {
             clr = color_new;
 
-            // Are we masking over horizontal grid line ?
+            // Are we trying to paint over horizontal grid line ?
+            // prevent that by changing this points color to the grid color
+            // TODO: This code is  never executed, since this function is never called with color_new == Black
             if(color_new == Black)
             {
                // Enumerate all saved y positions

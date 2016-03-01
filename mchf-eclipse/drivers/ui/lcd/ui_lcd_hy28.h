@@ -124,7 +124,7 @@ void	UiLcdHy28_WriteRAM_Prepare(void);
 void	UiLcdHy28_WriteRAM_Finish(void);
 
 void 	UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift);
-void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new,ushort shift);
+void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift);
 
 void 	UiLcdHy28_Test(void);
 uchar 	UiLcdHy28_Init(void);
