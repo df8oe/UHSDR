@@ -905,9 +905,23 @@ static void UiDriverProcessKeyboard(void)
 								ts.digital_mode = 0;
 							UiDriverChangeDigitalMode();
 						}
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// new touchscreen action (left_x,right_x,down_y,up_y)
-						{
-						}
+						if(check_tp_coordinates(0x42,0x34,0x4e,0x56))	// new touchscreen action
+					    {											// temporary used for dynamic tuning activation
+							if (ts.dynamic_tuning_active)				// is it off??
+							{
+								ts.dynamic_tuning_active = false;				// then turn it on
+							}
+							else
+							{
+								ts.dynamic_tuning_active = true;				// if already on, turn it off
+							}
+							UiDriverShowStep(df.selected_idx);
+
+
+					    }
+
+
+
 					}
 					else						// menu screen functions
 					{
@@ -2091,11 +2105,18 @@ void UiDriverShowStep(ulong step)
 	ulong	line_loc;
 	static	bool	step_line = 0;	// used to indicate the presence of a step line
 	ulong	color;
+	ulong 	stepsize_background;
 
 	if(ts.tune_step)		// is this a "Temporary" step size from press-and-hold?
 		color = Cyan;	// yes - display step size in Cyan
 	else				// normal mode
 		color = White;	// step size in white
+
+	if (ts.dynamic_tuning_active)  // is dynamic tuning activated ??
+			stepsize_background = Grey3;		// yes, display on Grey3
+		else
+			stepsize_background = Black;		// no, display on Black
+
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
 		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
@@ -2151,7 +2172,7 @@ void UiDriverShowStep(ulong step)
 			line_loc = 0; // default for unknown tuning step modes, disables the frequency marker display
 			break;
 		}
-		UiLcdHy28_PrintTextRight((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*6),POS_TUNE_STEP_Y,step_name,color,Black,0);
+		UiLcdHy28_PrintTextRight((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*6),POS_TUNE_STEP_Y,step_name,color,stepsize_background,0);
 	}
 	//
 	if((ts.freq_step_config & 0x0f) && line_loc > 0)	{		// is frequency step marker line enabled?
@@ -4380,23 +4401,48 @@ static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
 	bool		retval = false;
+	static int  delta_tics = 0;
+	int			enc_multiplier;
+	static float pot_diff_avg = 0.0;  //keeps the averaged encoder speed
 
 	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
-	UiLCDBlankTiming();	// calculate/process LCD blanking timing
+	if (pot_diff == 0) { delta_tics++; } // how often do we come here until the encoder has changed in times of 10ms}
 
+	UiLCDBlankTiming();	// calculate/process LCD blanking timing
 	if (pot_diff != 0 &&
 			ts.txrx_mode == TRX_MODE_RX
 			&& ks.button_just_pressed == false
 			&& ts.frequency_lock == false)	{
 		// allow tuning only if in rx mode, no freq lock,
 
-		// ks.button_just_press press-and-hold - button just pressed for "temporary" step size change (not taken effect yet)
+		pot_diff_avg = 0.1*pot_diff + 0.9*pot_diff_avg; // app. VZ1 to smooth encoder speed
+		// estimate speed of encoder
+		enc_multiplier = 1; //set standard speed
+
+		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
+		{
+			if ((delta_tics < 2) && ((pot_diff_avg > 1.5) || (pot_diff_avg < (-1.5)))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
+			if ((delta_tics < 2) && ((pot_diff_avg > 2.5) || (pot_diff_avg < (-2.5))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
+			delta_tics=0;
+			if ((df.tuning_step == 10000) && (enc_multiplier > 10)) enc_multiplier = 10; //limit speed to 100000kHz/step
+			if ((df.tuning_step == 100000) && (enc_multiplier > 1)) enc_multiplier = 1; //limit speed to 100000kHz/step
+		}
+
+
 		// Finaly convert to frequency incr/decr
-		if(pot_diff < 0)
-			df.tune_new -= (df.tuning_step * 4);
-		else
-			df.tune_new += (df.tuning_step * 4);
+
+		if(pot_diff>0) {
+			df.tune_new += (df.tuning_step * 4 * enc_multiplier);
+		} else {
+			df.tune_new -= (df.tuning_step * 4 * enc_multiplier);
+		}
+
+		if (enc_multiplier == 10) {  df.tune_new = 4*10 *df.tuning_step * div((df.tune_new/4),10* df.tuning_step).quot; } // keep last digit to zero
+		if (enc_multiplier == 100){ df.tune_new = 4*100*df.tuning_step * div((df.tune_new/4),100*df.tuning_step).quot;  }// keep last 2 digits to zero))
+
+		//df.tune_new += (df.tuning_step * 4 * enc_multiplier * pot_diff);
+		//df.tune_new += (df.tuning_step * 4 * enc_multiplier);
 		retval = true;
 	}
 	return retval;

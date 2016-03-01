@@ -228,14 +228,8 @@ int UiDriverEncoderRead(const uint32_t encId) {
 		// printf("gain pot: %d\n\r",gs.value_new);
 		// Encoder value to difference
 		if (no_change == false) {
-			if (encSel[encId].value_new > encSel[encId].value_old) {
-				pot_diff = +1;
-			}
-			else {
-				pot_diff = -1;
-			}
+			pot_diff = encSel[encId].value_new - encSel[encId].value_old;
 			encSel[encId].value_old = encSel[encId].value_new;
-
 		}
 	}
 	return pot_diff;
