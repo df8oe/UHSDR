@@ -4810,46 +4810,23 @@ static void UiDriverCheckEncoderThree(void)
 				//
 			}
 			else	{	// in voice mode, adjust audio gain
-				if(ts.tx_audio_source != TX_AUDIO_MIC)	{		// in LINE-IN mode?
-					if(pot_diff < 0)	{						// yes, adjust line gain
-						ts.tx_line_gain--;
-						if(ts.tx_line_gain < LINE_GAIN_MIN)
-							ts.tx_line_gain = LINE_GAIN_MIN;
+
+				uint16_t gain_max = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MAX:LINE_GAIN_MAX;
+				uint16_t gain_min = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MIN:LINE_GAIN_MIN;
+
+				if(pot_diff < 0)	{						// yes, adjust line gain
+					ts.tx_gain[ts.tx_audio_source]--;
+					if(ts.tx_gain[ts.tx_audio_source] < gain_min) {
+						ts.tx_gain[ts.tx_audio_source] = gain_min;
 					}
-					else	{
-						ts.tx_line_gain++;
-						if(ts.tx_line_gain > LINE_GAIN_MAX)
-							ts.tx_line_gain = LINE_GAIN_MAX;
-					}
-					//
-					if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))		// in transmit and in voice mode?
-						Codec_Line_Gain_Adj(ts.tx_line_gain);		// change codec gain
 				}
 				else	{
-					if(pot_diff < 0)	{						// yes, adjust line gain
-						ts.tx_mic_gain--;
-						if(ts.tx_mic_gain < MIC_GAIN_MIN)
-							ts.tx_mic_gain = MIC_GAIN_MIN;
-					}
-					else	{
-						ts.tx_mic_gain++;
-						if(ts.tx_mic_gain > MIC_GAIN_MAX)
-							ts.tx_mic_gain = MIC_GAIN_MAX;
-					}
-					if(ts.tx_mic_gain > 50)	{		// actively adjust microphone gain and microphone boost
-						ts.mic_boost = 1;	// software boost active
-						ts.tx_mic_gain_mult = (ts.tx_mic_gain - 35)/3;			// above 50, rescale software amplification
-						if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))	{		// in transmit and in voice mode?
-							Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// set mic boost on
-						}
-					}
-					else	{
-						ts.mic_boost = 0;	// software mic gain boost inactive
-						ts.tx_mic_gain_mult = ts.tx_mic_gain;
-						if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))	{	// in transmit and in voice mode?
-							Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// set mic boost off
-						}
-					}
+					ts.tx_gain[ts.tx_audio_source]++;
+					if(ts.tx_gain[ts.tx_audio_source] > gain_max)
+						ts.tx_gain[ts.tx_audio_source] = gain_max;
+				}
+				if (ts.tx_audio_source == TX_AUDIO_MIC) {
+					Codec_MicBoostCheck();
 				}
 				UIDriverChangeAudioGain(1);
 				//
@@ -5348,7 +5325,7 @@ void UIDriverChangeAudioGain(uchar enabled)
 		txt = "???";
 	}
 
-	sprintf(txt_buf,"%2d",ts.tx_audio_source == TX_AUDIO_MIC?ts.tx_mic_gain:ts.tx_line_gain);
+	sprintf(txt_buf,"%2d",ts.tx_gain[ts.tx_audio_source]);
 
 	UiDriverEncoderDisplay(1,2,txt, enabled, txt_buf, color);
 }
@@ -9158,8 +9135,10 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_SIDETONE_GAIN,&ts.st_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN);
 	UiReadSettingEEPROM_Int(EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL);
 	UiReadSettingEEPROM_UInt8(EEPROM_AGC_MODE,&ts.agc_mode,AGC_DEFAULT,0,AGC_MAX_MODE);
-	UiReadSettingEEPROM_UInt8(EEPROM_MIC_GAIN,&ts.tx_mic_gain,MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX);
-	UiReadSettingEEPROM_UInt8(EEPROM_LINE_GAIN,&ts.tx_line_gain,LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_MIC_GAIN,&ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_LINE_GAIN,&ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX);
+	ts.tx_gain[TX_AUDIO_LINEIN_R] = ts.tx_gain[TX_AUDIO_LINEIN_L];
+	// TODO: Right and Left Settings stored
 	UiReadSettingEEPROM_UInt32_16(EEPROM_SIDETONE_FREQ,&ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_SPEC_SCOPE_FILTER,&ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT,SPECTRUM_SCOPE_FILTER_MIN,SPECTRUM_SCOPE_FILTER_MAX);
@@ -9412,8 +9391,8 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_GAIN,ts.st_gain,DEFAULT_SIDETONE_GAIN);
 	UiReadWriteSettingEEPROM_Int32_16(EEPROM_FREQ_CAL,ts.freq_cal,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_MODE,ts.agc_mode,AGC_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_MIC_GAIN,ts.tx_mic_gain,MIC_GAIN_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_LINE_GAIN,ts.tx_line_gain,LINE_GAIN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MIC_GAIN,ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_LINE_GAIN,ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_SIDETONE_FREQ,ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_SPEED,ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT);

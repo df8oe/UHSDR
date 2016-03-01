@@ -1458,7 +1458,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	case MENU_MIC_GAIN:	// Mic Gain setting
 
 		if(ts.tx_audio_source == TX_AUDIO_MIC)	{	// Allow adjustment only if in MIC mode
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_mic_gain,
+			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_gain[TX_AUDIO_MIC],
 							MIC_GAIN_MIN,
 							MIC_GAIN_MAX,
 							MIC_GAIN_DEFAULT,
@@ -1466,16 +1466,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 							);
 		}
 		if((ts.txrx_mode == TRX_MODE_TX) && (fchange))	{		// only adjust the hardware if in TX mode (it will kill RX otherwise!)
-			if(ts.tx_mic_gain > 50)	{		// actively adjust microphone gain and microphone boost
-				ts.mic_boost = 1;
-				Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
-				ts.tx_mic_gain_mult = (ts.tx_mic_gain - 35)/3;			// above 50, rescale software amplification
-			}
-			else	{
-				ts.mic_boost = 0;
-				Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
-				ts.tx_mic_gain_mult = ts.tx_mic_gain;
-			}
+			Codec_MicBoostCheck();
 		}
 		//
 		if(fchange)	{		// update on-screen info if there was a change
@@ -1489,13 +1480,14 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			clr = Orange;
 		}
 		//
-		sprintf(options, "   %u", ts.tx_mic_gain);
+		sprintf(options, "   %u", ts.tx_gain[TX_AUDIO_MIC]);
 		break;
 	//
 	case MENU_LINE_GAIN:	// Line Gain setting
 
+		// TODO: Revise, since it now changes the currently selected tx source setting
 		if(ts.tx_audio_source != TX_AUDIO_MIC)	{	// Allow adjustment only if in line-in mode
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_line_gain,
+			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_gain[ts.tx_audio_source],
 							LINE_GAIN_MIN,
 							LINE_GAIN_MAX,
 							LINE_GAIN_DEFAULT,
@@ -1510,14 +1502,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			else	{		// in voice mode
 				UIDriverChangeAudioGain(0);
 				if(ts.txrx_mode == TRX_MODE_TX)		// in transmit mode?
-					Codec_Line_Gain_Adj(ts.tx_line_gain);		// change codec gain
+					// TODO: Think about this, this is a hack
+					Codec_Line_Gain_Adj(ts.tx_gain[TX_AUDIO_LINEIN_L]);		// change codec gain
 			}
 		}
 		//
 		if(ts.tx_audio_source == TX_AUDIO_MIC)	// Orange if in MIC mode
 			clr = Orange;
 		//
-		sprintf(options, "  %u", ts.tx_line_gain);
+		sprintf(options, "  %u", ts.tx_gain[ts.tx_audio_source]);
 		break;
 	//
 	case MENU_ALC_RELEASE:		// ALC Release adjust
@@ -2346,7 +2339,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 						);
 		if(ts.audio_gain > ts.audio_max_volume)	{			// is the volume currently higher than the new setting?
 			ts.audio_gain = ts.audio_max_volume;		// yes - force the volume to the new value
-			//
+			//  TODO: Remove this display write
 			sprintf(temp,"%02d",ts.audio_gain);			// Update screen indicator
 			UiLcdHy28_PrintText((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,White,Black,0);
 		}

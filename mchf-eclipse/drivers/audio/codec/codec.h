@@ -97,6 +97,6 @@ void     Codec_Reset(uint32_t AudioFreq,ulong word_size);
 uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue);
 void     Codec_GPIO_Init(void);
 void Codec_SidetoneSetgain(void);
-
+void Codec_MicBoostCheck();
 
 #endif

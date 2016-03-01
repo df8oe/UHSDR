@@ -228,18 +228,18 @@ UsbAudioUnit usbUnits[UnitMax] =
 		{
 				.cs  = AUDIO_CONTROL_VOLUME,
 				.cn  = AUDIO_OUT_STREAMING_CTRL,
-				.min = -40 * 0x100,
-				.max = 0,
+				.min = -31 * 0x100,
+				.max = 0 * 0x100,
 				.res = 0x100,
-				.cur = -20* 0x100
+				.cur = -16* 0x100
 		},
 		{
 				.cs  = AUDIO_CONTROL_VOLUME,
 				.cn  = 0x06,
-				.min = -40 * 0x100,
-				.max = 0,
+				.min = -31 * 0x100,
+				.max = 0 * 0x100,
 				.res = 0x100,
-				.cur = -20* 0x100
+				.cur = -16* 0x100
 		}
 
 };
@@ -834,15 +834,14 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 		if (AudioCtlUnit == AUDIO_OUT_STREAMING_CTRL)
 		{/* In this driver, to simplify code, only one unit is manage */
 			/* Call the audio interface mute function */
-			retval = AUDIO_OUT_fops.MuteCtl(AudioCtl[0]);
-
+			int16_t val = *((int16_t*)&AudioCtl[0]);
+			retval = AUDIO_OUT_fops.VolumeCtl((val/0x100)+31);
+			usbUnits[UnitVolumeTX].cur = val;
 			/* Reset the AudioCtlCmd variable to prevent re-entering this function */
-			AudioCtlCmd = 0;
-			AudioCtlLen = 0;
-			AudioCtlCS = 0;
-			AudioCtlCN = 0;
-			AudioCtlIf = 0;
-
+		} else {
+			int16_t val = *((int16_t*)&AudioCtl[0]);
+			retval = AUDIO_IN_fops.VolumeCtl((val/0x100)+31);
+			usbUnits[UnitVolumeRX].cur = val;
 		}
 		/* Reset the AudioCtlCmd variable to prevent re-entering this function */
 		AudioCtlCmd = 0;

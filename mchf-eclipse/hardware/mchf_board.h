@@ -738,6 +738,7 @@ enum {
 #define TX_AUDIO_DIG			3
 #define TX_AUDIO_DIGIQ			4
 #define TX_AUDIO_MAX_ITEMS		4
+#define TX_AUDIO_NUM			(TX_AUDIO_MAX_ITEMS +1)
 //
 #define	LINE_GAIN_MIN			3
 #define	LINE_GAIN_MAX			31
@@ -1344,11 +1345,11 @@ typedef struct TransceiverState
 
 	uchar 	tx_audio_source;
 	uchar   tx_line_channel;  // 1 LEFT 2 RIGHT
-	uchar	tx_mic_gain;
 	ulong	tx_mic_gain_mult;
 	ulong	tx_mic_gain_mult_temp;	// used to temporarily hold the mic gain when going from RX to TX
-	uchar	tx_line_gain;
+	uchar	tx_gain[TX_AUDIO_NUM];
 	uchar	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
+	uchar	rx_usb_gain;			// volume setting for usb audio out
 
 	// Microphone gain boost of +20dB via Codec command (TX)
 	uchar	mic_boost;
@@ -1391,43 +1392,6 @@ typedef struct TransceiverState
 #define ADJ_5W 0
 #define ADJ_FULL_POWER 1
 	uchar	pwr_adj[2][MAX_BAND_NUM];
-#if 0
-	uchar	pwr_80m_5w_adj;			// calibration adjust for 80 meters, 5 watts
-	uchar	pwr_60m_5w_adj;			// calibration adjust for 60 meters, 5 watts
-	uchar	pwr_40m_5w_adj;			// calibration adjust for 40 meters, 5 watts
-	uchar	pwr_30m_5w_adj;			// calibration adjust for 30 meters, 5 watts
-	uchar	pwr_20m_5w_adj;			// calibration adjust for 20 meters, 5 watts
-	uchar	pwr_17m_5w_adj;			// calibration adjust for 17 meters, 5 watts
-	uchar	pwr_15m_5w_adj;			// calibration adjust for 15 meters, 5 watts
-	uchar	pwr_12m_5w_adj;			// calibration adjust for 12 meters, 5 watts
-	uchar	pwr_10m_5w_adj;			// calibration adjust for 10 meters, 5 watts
-	uchar	pwr_6m_5w_adj;			// calibration adjust for 6 meters, 5 watts
-	uchar	pwr_4m_5w_adj;			// calibration adjust for 4 meters, 5 watts
-	uchar	pwr_2m_5w_adj;			// calibration adjust for 2 meters, 5 watts
-	uchar	pwr_70cm_5w_adj;		// calibration adjust for 70 centimeters, 5 watts
-	uchar	pwr_23cm_5w_adj;		// calibration adjust for 23 centimeters, 5 watts
-	uchar	pwr_2200m_5w_adj;		// calibration adjust for 2200 meters, 5 watts
-	uchar	pwr_630m_5w_adj;		// calibration adjust for 630 meters, 5 watts
-	uchar	pwr_160m_5w_adj;		// calibration adjust for 160 meters, 5 watts
-	//
-	uchar	pwr_80m_full_adj;			// calibration adjust for 80 meters, full power
-	uchar	pwr_60m_full_adj;			// calibration adjust for 60 meters, full power
-	uchar	pwr_40m_full_adj;			// calibration adjust for 40 meters, full power
-	uchar	pwr_30m_full_adj;			// calibration adjust for 30 meters, full power
-	uchar	pwr_20m_full_adj;			// calibration adjust for 20 meters, full power
-	uchar	pwr_17m_full_adj;			// calibration adjust for 17 meters, full power
-	uchar	pwr_15m_full_adj;			// calibration adjust for 15 meters, full power
-	uchar	pwr_12m_full_adj;			// calibration adjust for 12 meters, full power
-	uchar	pwr_10m_full_adj;			// calibration adjust for 10 meters, full power
-	uchar	pwr_6m_full_adj;			// calibration adjust for 6 meters, full power
-	uchar	pwr_4m_full_adj;			// calibration adjust for 4 meters, full power
-	uchar	pwr_2m_full_adj;			// calibration adjust for 2 meters, full power
-	uchar	pwr_70cm_full_adj;			// calibration adjust for 70 centimeters, full power
-	uchar	pwr_23cm_full_adj;			// calibration adjust for 23 centimeters, full power
-	uchar	pwr_2200m_full_adj;			// calibration adjust for 2200 meters, full power
-	uchar	pwr_630m_full_adj;			// calibration adjust for 630 meters, full power
-	uchar	pwr_160m_full_adj;			// calibration adjust for 160 meters, full power
-#endif
 	//
 	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
 	ulong	alc_decay_var;				// adjustable ALC release time - working variable version

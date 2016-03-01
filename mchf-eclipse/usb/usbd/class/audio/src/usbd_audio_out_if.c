@@ -107,6 +107,15 @@ static uint8_t  MuteCtl      (uint8_t cmd);
 static uint8_t  PeriodicTC   (uint8_t cmd);
 static uint8_t  GetState     (void);
 
+
+static uint8_t  InInit         (uint32_t  AudioFreq, uint32_t Volume, uint32_t options);
+static uint8_t  InDeInit       (uint32_t options);
+static uint8_t  InAudioCmd     (uint8_t* pbuf, uint32_t size, uint8_t cmd);
+static uint8_t  InVolumeCtl    (uint8_t vol);
+static uint8_t  InMuteCtl      (uint8_t cmd);
+static uint8_t  InPeriodicTC   (uint8_t cmd);
+static uint8_t  INGetState     (void);
+
 /**
   * @}
   */ 
@@ -124,6 +133,18 @@ AUDIO_FOPS_TypeDef  AUDIO_OUT_fops =
   PeriodicTC,
   GetState
 };
+
+AUDIO_FOPS_TypeDef  AUDIO_IN_fops =
+{
+  Init,
+  DeInit,
+  AudioCmd,
+  InVolumeCtl,
+  MuteCtl,
+  PeriodicTC,
+  GetState
+};
+
 
 static uint8_t AudioState = AUDIO_STATE_INACTIVE;
 
@@ -382,6 +403,20 @@ static uint8_t  VolumeCtl    (uint8_t vol)
 */
   return AUDIO_OK;
 }
+static uint8_t  InVolumeCtl    (uint8_t vol)
+{
+  /* Call low layer volume setting function */
+/* if (EVAL_AUDIO_VolumeCtl(vol) != 0)
+  {
+    AudioState = AUDIO_STATE_ERROR;
+    return AUDIO_FAIL;
+  }
+*/
+  ts.rx_usb_gain = vol;
+  return AUDIO_OK;
+}
+
+
 
 /**
   * @brief  MuteCtl
