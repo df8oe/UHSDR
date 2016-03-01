@@ -10,6 +10,11 @@
 #########################################################################
 
 
+2016xxyy [DF8OE]
+- added dynamically tuning, activated/deactivated by tapping on step size 
+- hopefully improved USB audio recongnition of all Windows versions and Linux
+
+
 20160228 [DF8OE]
 - corrected TX/RX switching of AFG/STG and RIT/WPM in CW
 - added USB audio functions
