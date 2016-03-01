@@ -185,6 +185,7 @@
 
 /****************** USB OTG MISC CONFIGURATION ********************************/
 //#define VBUS_SENSING_ENABLED
+// #define USB_SUPPORT_USER_STRING_DESC
 
 /****************** USB OTG MODE CONFIGURATION ********************************/
 #define USE_HOST_MODE
