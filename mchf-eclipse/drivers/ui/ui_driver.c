@@ -4401,9 +4401,9 @@ static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
 	bool		retval = false;
-	static int  delta_tics = 0;
-	int			enc_multiplier;
-	static float pot_diff_avg = 0.0;  //keeps the averaged encoder speed
+	static int  	delta_tics = 0;
+	int		enc_multiplier;
+	static float 	pot_diff_avg = 0.0;  //keeps the averaged encoder speed
 
 	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
@@ -4422,8 +4422,8 @@ static bool UiDriverCheckFrequencyEncoder(void)
 
 		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
 		{
-			if ((delta_tics < 2) && ((pot_diff_avg > 1.5) || (pot_diff_avg < (-1.5)))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
-			if ((delta_tics < 2) && ((pot_diff_avg > 2.5) || (pot_diff_avg < (-2.5))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
+			if ((delta_tics < 6) && ((pot_diff_avg > 1.5) || (pot_diff_avg < (-1.5)))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
+			if ((delta_tics < 6) && ((pot_diff_avg > 2.5) || (pot_diff_avg < (-2.5))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
 			delta_tics=0;
 			if ((df.tuning_step == 10000) && (enc_multiplier > 10)) enc_multiplier = 10; //limit speed to 100000kHz/step
 			if ((df.tuning_step == 100000) && (enc_multiplier > 1)) enc_multiplier = 1; //limit speed to 100000kHz/step
