@@ -368,6 +368,25 @@ inline bool is_vfo_b() {
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_VFO_B) != 0;
 }
 
+inline bool is_dsp_nb() {
+	return (ts.dsp_active & DSP_NB_ENABLE) != 0;
+}
+
+inline bool is_dsp_nr() {
+	return (ts.dsp_active & DSP_NR_ENABLE) != 0;
+}
+
+inline bool is_dsp_nr_postagc() {
+	return (ts.dsp_active & DSP_NR_POSTAGC_ENABLE) != 0;
+}
+
+
+inline bool is_dsp_notch() {
+	return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
+}
+
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_init
@@ -956,35 +975,35 @@ static void UiDriverProcessKeyboard(void)
 			case BUTTON_G2_PRESSED:		// BUTTON_G2
 			{
 				if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
-					if((!(ts.dsp_active & 1)) && (!(ts.dsp_active & 4)))	// both NR and notch are inactive
+					if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
 					{
 						if(ts.dsp_enabled)
-							ts.dsp_active |= 1;					// turn on NR
+							ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
 						else
-							ts.dsp_active |= 4;
+							ts.dsp_active |= DSP_NOTCH_ENABLE;
 					}
-					else if((ts.dsp_active & 1) && (!(ts.dsp_active & 4))) {	// NR active, notch inactive
+					else if((is_dsp_nr()) && (!(is_dsp_notch()))) {	// NR active, notch inactive
 						if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
-							ts.dsp_active |= 4;									// turn on notch
-							ts.dsp_active &= 0xfe;								// turn off NR
+							ts.dsp_active |= DSP_NOTCH_ENABLE;									// turn on notch
+							ts.dsp_active &= ~DSP_NR_ENABLE;								// turn off NR
 						}
 						else	{	// CW mode - do not select notches, skip directly to "off"
-							ts.dsp_active &= 0xfa;	// turn off NR and notch
+							ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);	// turn off NR and notch
 						}
 					}
-					else if((!(ts.dsp_active & 1)) && (ts.dsp_active & 4))	//	NR inactive, notch active
+					else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
 						if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
-							ts.dsp_active &= 0xfa;			// it was AM + wide - turn off NR and notch
+							ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
 						else
 						{
 							if(ts.dsp_enabled)
-								ts.dsp_active |= 1;				// no - turn on NR
+								ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
 							else
-								ts.dsp_active &= 0xfa;				// no - turn off NR and NOTCH
+								ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// no - turn off NR and NOTCH
 						}
 					//
 					else	{
-						ts.dsp_active &= 0xfa;								// turn off NR and notch
+						ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
 					}
 					//
 					ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
@@ -1268,9 +1287,9 @@ static void UiDriverProcessKeyboard(void)
 				//
 			case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
 				if(ts.dmod_mode != DEMOD_FM)	{		// do not allow change of mode when in FM
-					if(ts.dsp_active & 5)	{			// is DSP NR or NOTCH active?
+					if(is_dsp_nr()|| is_dsp_notch())	{			// is DSP NR or NOTCH active?
 						ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
-						ts.dsp_active &= 0xfa;				// turn off NR and notch
+						ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// turn off NR and notch
 					}
 					else	{		// neither notch or NR was active
 						if(ts.dsp_active_toggle != 0xff)	{	// has this holder been used before?
@@ -1318,7 +1337,7 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			}
 			case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
-				ts.dsp_active ^= 8;	// toggle whether or not DSP or NB is to be displayed
+				ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
 				//
 				if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
 					UiDriverChangeSigProc(0);
@@ -3436,7 +3455,7 @@ skip_check:
 				ts.rx_muting = 1;				// yes - mute audio output
 				ts.dsp_inhibit_mute = ts.dsp_inhibit;		// get current status of DSP muting and save for later restoration
 				ts.dsp_inhibit = 1;				// disable DSP during tuning to avoid disruption
-				if(ts.dsp_active & 1)	// is DSP active?
+				if(is_dsp_nr())	// is DSP active?
 					ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_ON;	// yes - schedule un-muting of audio when DSP is on
 				else
 					ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF;	// no - schedule un-muting of audio when DSP is off
@@ -3987,7 +4006,7 @@ static void UiDriverTimeScheduler(void)
 	///
 	// DSP crash detection
 	//
-	if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
+	if((is_dsp_nr()) && (!(is_dsp_nr_postagc())) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
 		if((ads.dsp_nr_sample > DSP_HIGH_LEVEL)	|| (ads.dsp_nr_sample == -1)){		// is the DSP output very high, or wrapped around to -1?
 			dsp_crash_count+=2;			// yes - increase detect count quickly
 		}
@@ -4662,7 +4681,7 @@ static void UiDriverCheckEncoderTwo(void)
 			// Update DSP/NB setting
 			case ENC_TWO_MODE_SIG_PROC:
 			{
-				if(ts.dsp_active & 8)	{	// is it in noise blanker mode?
+				if(is_dsp_nb())	{	// is it in noise blanker mode?
 					// Convert to NB incr/decr
 					if(pot_diff < 0)
 					{
@@ -4676,7 +4695,7 @@ static void UiDriverCheckEncoderTwo(void)
 							ts.nb_setting = MAX_NB_SETTING;
 					}
 				}
-				else if(ts.dsp_active & 1)	{	// only allow adjustment if DSP NR is active
+				else if(is_dsp_nr())	{	// only allow adjustment if DSP NR is active
 					// Convert to NB incr/decr
 					if(pot_diff < 0)
 					{
@@ -5122,18 +5141,18 @@ static void UiDriverChangeDSPMode(void)
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	//
-	if(((ts.dsp_active & 1) || (ts.dsp_active & 4))) {	// DSP active and NOT in FM mode?
+	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
 		color = White;
 	} else	// DSP not active
 		color = Grey2;
 	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
 		txt = "DSP-OFF";
 		color = Grey2;
-	} else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
+	} else if((is_dsp_nr()) && (is_dsp_notch()) && (ts.dmod_mode != DEMOD_CW))	{
 		txt = "NR+NOTC";
-	} else if(ts.dsp_active & 1)	{
+	} else if(is_dsp_nr())	{
 		txt = "   NR  ";
-	} else if(ts.dsp_active & 4)	{
+	} else if(is_dsp_notch())	{
 		txt = " NOTCH ";
 		if(ts.dmod_mode == DEMOD_CW)
 			color = Grey2;
@@ -5151,79 +5170,45 @@ static void UiDriverChangeDSPMode(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+typedef struct DigitalModeDescriptor_s {
+	const char* label;
+	const uint32_t enabled;
+} DigitalModeDescriptor;
+
+
+enum {
+		Digital = 0,
+		FreeDV1,
+		FreeDV2,
+		BPSK31,
+		RTTY,
+		SSTV,
+		WSPR_A,
+		WSPR_P,
+		DigitalModeMax
+};
+// The following descriptor table has to be in the order of the enum above
+// This table is stored in flash (due to const) and cannot be written to
+// for operational data per mode [r/w], use a different table with order of modes
+const DigitalModeDescriptor digimodes[DigitalModeMax] =
+{
+		{ "DIGITAL", false	},
+		{ "FREEDV1", false },
+		{ "FREEDV2", false },
+		{ "BPSK 31", false },
+		{ "  RTTY ", false },
+		{ "  SSTV ", false },
+		{ "WSPR  A", false },
+		{ "WSPR  P", false },
+};
+
 static void UiDriverChangeDigitalMode(void)
 {
-	ushort color = White;
-	const char* txt;
-	//	ulong	x_off = 0;
+	ushort color = digimodes[ts.digital_mode].enabled?White:Grey2;
+	const char* txt = digimodes[ts.digital_mode].label;
 
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
-	//
-	switch(ts.digital_mode){
-	case 0:
-		txt = "DIGITAL";
-		color = Grey2;
-		break;
-	case 1:
-		txt = "FREEDV1";
-		color = Grey2;
-		break;
-	case 2:
-		txt = "FREEDV2";
-		color = Grey2;
-		break;
-	case 3:
-		txt = "BPSK 31";
-		color = Grey2;
-		break;
-	case 4:
-		txt = "  RTTY ";
-		color = Grey2;
-		break;
-	case 5:
-		txt = "  SSTV ";
-		color = Grey2;
-		break;
-	case 6:
-		txt = "WSPR  A";
-		color = Grey2;
-		break;
-	case 7:
-		txt = "WSPR  P";
-		color = Grey2;
-		break;
-	default:
-		txt = "       ";
-		break;
-	}
-
-
-	/*	if(((ts.dsp_active & 1) || (ts.dsp_active & 4)))	// DSP active and NOT in FM mode?
-		color = White;
-	else	// DSP not active
-		color = Grey2;
-
-	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
-		sprintf(txt, "DIGITAL");
-		color = Grey2;
-	}
-	else if((ts.dsp_active & 1) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW))	{
-		sprintf(txt, "NR+NOT");
-		x_off = 4;
-	}
-	else if(ts.dsp_active & 1)	{
-		sprintf(txt, "  NR  ");
-		x_off = 4;
-	}
-	else if(ts.dsp_active & 4)	{
-		sprintf(txt, " NOTCH");
-		if(ts.dmod_mode == DEMOD_CW)
-			color = Grey2;
-	}
-	else
-		sprintf(txt, "DIGITAL"); */
-
 	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
@@ -5386,7 +5371,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 	//
 	// Noise blanker settings display
 	//
-	if(ts.dsp_active & 8)	{	// is noise blanker to be displayed
+	if(is_dsp_nb())	{	// is noise blanker to be displayed
 		if(enabled)	{
 			if(ts.nb_setting >= NB_WARNING3_SETTING)
 				color = Red;		// above this value, make it red
@@ -5404,7 +5389,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 	// DSP settings display
 	//
 	else	{			// DSP settings are to be displayed
-		if(enabled && (ts.dsp_active & 1))	{	// if this menu is enabled AND the DSP NR is also enabled...
+		if(enabled && (is_dsp_nr()))	{	// if this menu is enabled AND the DSP NR is also enabled...
 			color = White;		// Make it white by default
 			//
 			if(ts.dsp_nr_strength >= DSP_STRENGTH_RED)

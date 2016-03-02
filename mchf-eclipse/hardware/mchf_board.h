@@ -1402,6 +1402,13 @@ typedef struct TransceiverState
 	//
 	bool	nb_disable;					// TRUE if noise blanker is to be disabled
 	//
+
+	#define DSP_NR_ENABLE 	  0x01
+	#define DSP_NR_POSTAGC_ENABLE 	  0x02
+	#define DSP_NOTCH_ENABLE 0x04
+	#define DSP_NB_ENABLE 0x08
+
+
 	uchar	dsp_active;					// Used to hold various aspects of DSP mode selection
 										// LSB = 1 if DSP NR mode is on (| 1)
 										// LSB+1 = 1 if DSP NR is to occur post AGC (| 2)
