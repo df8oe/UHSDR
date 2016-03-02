@@ -5997,6 +5997,7 @@ static void UiDriverInitSpectrumDisplay(void)
 
 	// Ready
 	sd.enabled		= 1;
+	sd.first_run 	= 2;
 }
 
 //

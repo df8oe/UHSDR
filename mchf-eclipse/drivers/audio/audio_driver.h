@@ -191,6 +191,9 @@ typedef struct SpectrumDisplay
 	// Init done flag
 	uchar 	enabled;
 
+	// There is no data on screen;
+	uint8_t 	first_run;
+
 	// Flag to indicate frequency change,
 	// we need it to clear spectrum control
 	uchar	dial_moved;
@@ -219,6 +222,7 @@ typedef struct SpectrumDisplay
 	uchar 	wfall_size;					// vertical size of the waterfall
 	uchar	wfall_height;
 	uchar	wfall_ystart;
+
 
 } SpectrumDisplay;
 //

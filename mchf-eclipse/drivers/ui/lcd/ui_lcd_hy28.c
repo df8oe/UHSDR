@@ -12,7 +12,7 @@
 ************************************************************************************/
 
 // Optimization disable for this file
-#pragma GCC optimize "O0"
+// #pragma GCC optimize "O0"
 
 
 // Common
@@ -25,8 +25,6 @@
 #include "ui_lcd_hy28.h"
 #include "ui_si570.h"
 
-// For spectrum display struct
-#include "audio_driver.h"
 
 // Saved fonts
 extern sFONT GL_Font8x8;
@@ -36,15 +34,13 @@ extern sFONT GL_Font12x12;
 extern sFONT GL_Font16x24;
 
 // Transceiver state public structure
-__IO TransceiverState ts;
+extern __IO TransceiverState ts;
 
 //uchar use_spi = 0;
 int16_t lcd_cs;
 GPIO_TypeDef* lcd_cs_pio;
 
-// ------------------------------------------------
-// Spectrum display
-extern __IO   SpectrumDisplay      sd;
+uint16_t display_use_spi;
 
 extern __IO OscillatorState os;		// oscillator values - including Si570 startup frequency, displayed on splash screen
 
@@ -444,7 +440,7 @@ void UiLcdHy28_WriteDataSpiStart(void)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
-   if(sd.use_spi)
+   if(display_use_spi)
    {
       UiLcdHy28_SendByteSpiFast((data >>   8));      /* Write D8..D15                */
       UiLcdHy28_SendByteSpiFast((data & 0xFF));      /* Write D0..D7                 */
@@ -495,7 +491,7 @@ void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)	// touchscreen pressed -> read data
 	get_touchscreen_coordinates();
 
-   if(sd.use_spi)
+   if(display_use_spi)
     {
      UiLcdHy28_WriteIndexSpi(LCD_Reg);
      UiLcdHy28_WriteDataSpi(LCD_RegValue);
@@ -516,7 +512,7 @@ void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 //*----------------------------------------------------------------------------
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
-   if(sd.use_spi)
+   if(display_use_spi)
    {
       // Write 16-bit Index (then Read Reg)
       UiLcdHy28_WriteIndexSpi(LCD_Reg);
@@ -539,7 +535,7 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
+void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 {
    UiLcdHy28_WriteReg(0x0020, Ypos );
    UiLcdHy28_WriteReg(0x0021, Xpos );
@@ -554,7 +550,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteRAM_Prepare(void)
 {
-   if(sd.use_spi)
+   if(display_use_spi)
    {
       UiLcdHy28_WriteIndexSpi(0x0022);
       GPIO_ResetBits(lcd_cs_pio, lcd_cs);
@@ -566,7 +562,7 @@ void UiLcdHy28_WriteRAM_Prepare(void)
 
 inline void UiLcdHy28_WriteRAM_Finish(void)
 {
-   if(sd.use_spi)
+   if(display_use_spi)
    {
       GPIO_SetBits(lcd_cs_pio, lcd_cs);
    }
@@ -599,7 +595,7 @@ static inline void UiLcdHy28_BulkPixel_BufferFlush() {
 	pixelcount = 0;
 }
 
-static inline void UiLcdHy28_BulkPixel_Put(uint16_t pixel) {
+inline void UiLcdHy28_BulkPixel_Put(uint16_t pixel) {
 	pixelbuffer[pixelcount++] = pixel;
 		if (pixelcount == PIXELBUFFERSIZE) {
 			UiLcdHy28_BulkPixel_BufferFlush();
@@ -832,7 +828,7 @@ void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 void UiLcdHy28_CloseBulkWrite(void)
 {
 
-   if(sd.use_spi)	{		// SPI enabled?
+   if(display_use_spi)	{		// SPI enabled?
 
 	   GPIO_SetBits(lcd_cs_pio, lcd_cs);	// bulk-write complete!
 
@@ -996,311 +992,6 @@ void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort C
 	}
 	UiLcdHy28_PrintText(Xpos, Ypos, str, Color, bkColor, font);
 }
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawSpectrum
-//* Object              : repaint spectrum scope control
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift)
-{
-   ushort       i,k,x,y,y1,len,sh,clr;
-   bool      repaint_v_grid = false;
-
-   if(shift)
-      sh = (SPECTRUM_WIDTH/2);
-   else
-      sh = 0;
-
-   // Draw spectrum
-   for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
-   {
-      y = *fft++;
-
-      // Limit vertical
-      if(y > (SPECTRUM_HEIGHT - 15))
-         y = (SPECTRUM_HEIGHT - 15);
-
-      // Data to y position and length
-      y1  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y;
-      len = y;
-
-      // Skip noise
-      if(y == 0)
-         continue;
-
-      // Repaint vertical grid on clear
-      // Basically paint over the grid is allowed
-      // but during spectrum clear instead of masking
-      // grid lines with black - they are repainted
-      if(color == Black)
-      {
-         // Enumerate all saved x positions
-         for(k = 0; k < 7; k++)
-         {
-            // Exit on match
-            if(x == sd.vert_grid_id[k])
-            {
-               // New data for repaint
-               x   = sd.vert_grid_id[k];
-               clr = ts.scope_grid_colour_active;
-               repaint_v_grid = true;
-               break;
-            }
-         }
-      }
-
-      UiLcdHy28_SetCursorA(x, y1);
-      UiLcdHy28_WriteRAM_Prepare();
-
-      // Draw line
-      for(i = 0; i < len; i++)
-      {
-         // Do not check for horizontal grid when we have vertical masking
-         if(!repaint_v_grid)
-         {
-            clr = color;
-
-            // Are we masking over horizontal grid line ?
-            if(color == Black)
-            {
-               // Enumerate all saved y positions
-               for(k = 0; k < 3; k++)
-               {
-                  if(y1 == sd.horz_grid_id[k])
-                  {
-                     clr = ts.scope_grid_colour_active;
-                     break;
-                  }
-               }
-            }
-         }
-
-         UiLcdHy28_WriteDataOnly(clr);
-         // Track absolute position
-         y1++;
-      }
-
-      UiLcdHy28_WriteRAM_Finish();
-      // Reset flag
-      if(repaint_v_grid)
-         repaint_v_grid = 0;
-
-      // ----------------------------------------------------------
-      // ----------------------------------------------------------
-   }
-}
-
-
-// This version of "Draw Spectrum" is revised from the original in that it interleaves the erasure with the drawing
-// of the spectrum to minimize visible flickering  (KA7OEI, 20140916, adapted from original)
-//
-// 20141004 NOTE:  This has been somewhat optimized to prevent drawing vertical line segments that would need to be re-drawn:
-//  - New lines that were shorter than old ones are NOT erased
-//  - Line segments that are to be erased are only erased starting at the position of the new line segment.
-//
-//  This should reduce the amount of CGRAM access - especially via SPI mode - to a minimum.
-//
-
-static inline bool UiLcdHy28_DrawSpectrum_IsVgrid(const uint16_t x, const uint16_t color_new, uint16_t* clr_ptr, const uint16_t x_center_line) {
-	bool repaint_v_grid = false;
-
-	if (x == x_center_line) {
-		*clr_ptr = ts.scope_centre_grid_colour_active;
-		repaint_v_grid = true;
-	} else {
-		int k;
-		// Enumerate all saved x positions
-		for(k = 0; k < 7; k++)
-		{
-			// Exit on match
-			if(x == sd.vert_grid_id[k]) {
-				*clr_ptr = ts.scope_grid_colour_active;
-				repaint_v_grid = true;
-				break;
-				// leave loop, found match
-			}
-		}
-	}
-	return repaint_v_grid;
-}
-
-static uint16_t UiLcdHy28_DrawSpectrum_GetCenterLineX() {
-	static uint16_t idx;
-
-	static const uint16_t  center[FREQ_IQ_CONV_MODE_MAX+1] = { 3,2,4,1,5 };
-	// list the idx for the different modes (which are numbered from 0)
-	// the list static const in order to have it in flash
-	// it would be faster in ram but this is not necessary
-
-	if(sd.magnify) {
-		idx = 3;
-	} else {
-		idx = center[ts.iq_freq_mode];
-	}
-	return sd.vert_grid_id[idx];
-}
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawSpectrum_Interleaved
-//* Object              : repaint spectrum scope control
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
-{
-   uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, len_new, sh, clr;
-   bool      repaint_v_grid = false;
-
-   uint16_t x_center_line = UiLcdHy28_DrawSpectrum_GetCenterLineX();
-
-
-   if(shift)
-      sh = (SPECTRUM_WIDTH/2)-1;   // Shift to fill gap in center
-   else
-      sh = 1;                  // Shift to fill gap in center
-
-   for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
-   {
-	  y_old = *fft_old++;
-      y_new = *fft_new++;
-
-      // Limit vertical
-      if(y_old > (SPECTRUM_HEIGHT - 7))
-         y_old = (SPECTRUM_HEIGHT - 7);
-
-      if(y_new > (SPECTRUM_HEIGHT - 7))
-         y_new = (SPECTRUM_HEIGHT - 7);
-
-      // Data to y position and length
-      y1_old  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y_old;
-      len_old = y_old;
-
-      y1_new  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y_new;
-      len_new = y_new;
-
-      //
-      if(y_old <= y_new)	// is old line going to be overwritten by new line, anyway?
-         goto draw_new;		// only draw new line - don't bother erasing old line...
-
-
-      // Repaint vertical grid on clear
-      // Basically paint over the grid is allowed
-      // but during spectrum clear instead of masking
-      // grid lines with black - they are repainted
-      // TODO: This code is  always executed, since this function is always called with color_old == Black
-      if(color_old == Black) {
-    	repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr, x_center_line);
-       }
-      //
-      UiLcdHy28_SetCursorA(x, y1_old);
-      UiLcdHy28_WriteRAM_Prepare();
-
-      // Draw vertical line, starting only with position of where new line would be!
-      for(i = y_new; i < len_old; i++)
-      {
-         // Do not check for horizontal grid when we have vertical masking
-         if(!repaint_v_grid)
-         {
-            clr = color_old;
-
-            // Are we trying to paint over horizontal grid line ?
-            // prevent that by changing this points color to the grid color
-            // TODO: This code is  always executed, since this function is always called with color_old == Black
-            // This code does not make sense to me: it should check if the CURRENT y value (stored in i) is a horizontal
-            // grid, not the y1_old.
-            if(color_old == Black)
-            {
-               // Enumerate all saved y positions
-               for(k = 0; k < 3; k++)
-               {
-                  if(y1_old == sd.horz_grid_id[k])
-                  {
-                     clr = ts.scope_grid_colour_active;
-                     break;
-                  }
-               }
-            }
-         }
-
-         UiLcdHy28_WriteDataOnly(clr);
-         // Track absolute position
-         y1_old++;
-      }
-
-      UiLcdHy28_WriteRAM_Finish();
-
-      // Reset flag
-      if(repaint_v_grid)
-         repaint_v_grid = 0;
-
-      // ----------------------------------------------------------
-      //
-      draw_new:
-      //
-      if(y_new == 0)	// no new line to be drawn?
-         continue;
-      //
-      // Repaint vertical grid on clear
-      // Basically paint over the grid is allowed
-      // but during spectrum clear instead of masking
-      // grid lines with black - they are repainted
-      //
-      //
-      // TODO: This code is  never executed, since this function is never called with color_new == Black
-      if(color_new == Black) {
-    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr, x_center_line);
-      }
-
-      UiLcdHy28_SetCursorA(x, y1_new);
-      UiLcdHy28_WriteRAM_Prepare();
-
-      // Draw line
-      for(i = 0; i < len_new; i++)
-      {
-         // Do not check for horizontal grid when we have vertical masking
-         if(!repaint_v_grid)
-         {
-            clr = color_new;
-
-            // Are we trying to paint over horizontal grid line ?
-            // prevent that by changing this points color to the grid color
-            // TODO: This code is  never executed, since this function is never called with color_new == Black
-            if(color_new == Black)
-            {
-               // Enumerate all saved y positions
-               for(k = 0; k < 3; k++)
-               {
-                  if(y1_new == sd.horz_grid_id[k])
-                  {
-                     clr = ts.scope_grid_colour_active;
-                     break;
-                  }
-               }
-            }
-         }
-
-         UiLcdHy28_WriteDataOnly(clr);
-         // Track absolute position
-         y1_new++;
-      }
-
-      UiLcdHy28_WriteRAM_Finish();
-
-      // Reset flag
-      if(repaint_v_grid)
-         repaint_v_grid = 0;
-      //
-   }
-}
-
-
-
-
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_InitA
@@ -1598,7 +1289,7 @@ uchar UiLcdHy28_Init(void)
    UiLcdHy28_BacklightInit();
 
    // Select interface, spi HY28A first
-   sd.use_spi = 1;
+   display_use_spi = 1;
 
    lcd_cs = LCD_D11;
    lcd_cs_pio = LCD_D11_PIO;
@@ -1617,7 +1308,7 @@ uchar UiLcdHy28_Init(void)
    UiLcdHy28_SpiDeInit();
 
    // Select interface, spi HY28B second
-   sd.use_spi = 2;
+   display_use_spi = 2;
 
    lcd_cs = LCD_CS;
    lcd_cs_pio = LCD_CS_PIO;
@@ -1639,7 +1330,7 @@ uchar UiLcdHy28_Init(void)
 //   UiLcdHy28_SpiInit();
 
    // Select parallel
-   sd.use_spi = 0;
+   display_use_spi = 0;
 
    // Parallel init
    UiLcdHy28_ParallelInit();
@@ -1711,7 +1402,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
 
    // Display the mode of the display interface
    //
-   switch(sd.use_spi) {
+   switch(display_use_spi) {
       case 0:
          sprintf(tx,"LCD: Parallel Mode");
          break;
