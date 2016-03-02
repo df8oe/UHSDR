@@ -1104,39 +1104,45 @@ void UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift)
 //  This should reduce the amount of CGRAM access - especially via SPI mode - to a minimum.
 //
 
-static bool UiLcdHy28_DrawSpectrum_IsVgrid(uint16_t x, uint32_t color_new, uint16_t* clr_ptr ) {
-	int k;
+static inline bool UiLcdHy28_DrawSpectrum_IsVgrid(const uint16_t x, const uint16_t color_new, uint16_t* clr_ptr, const uint16_t x_center_line) {
 	bool repaint_v_grid = false;
-	// Enumerate all saved x positions
-	for(k = 0; k < 7; k++)
-	{
-		// Exit on match
-		if(x == sd.vert_grid_id[k])
-		{
-			// New data for repaint
-			x   = sd.vert_grid_id[k];
-			if((sd.magnify) && (k == 3))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (k == 4) && (!sd.magnify))			// place the (spectrum) center line with the selected color based on translate mode
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else
-			    *clr_ptr = ts.scope_grid_colour_active;
 
-			repaint_v_grid = true;
-			break;
+	if (x == x_center_line) {
+		*clr_ptr = ts.scope_centre_grid_colour_active;
+		repaint_v_grid = true;
+	} else {
+		int k;
+		// Enumerate all saved x positions
+		for(k = 0; k < 7; k++)
+		{
+			// Exit on match
+			if(x == sd.vert_grid_id[k]) {
+				*clr_ptr = ts.scope_grid_colour_active;
+				repaint_v_grid = true;
+				break;
+				// leave loop, found match
+			}
 		}
 	}
-
 	return repaint_v_grid;
 }
+
+static uint16_t UiLcdHy28_DrawSpectrum_GetCenterLineX() {
+	static uint16_t idx;
+
+	static const uint16_t  center[FREQ_IQ_CONV_MODE_MAX+1] = { 3,2,4,1,5 };
+	// list the idx for the different modes (which are numbered from 0)
+	// the list static const in order to have it in flash
+	// it would be faster in ram but this is not necessary
+
+	if(sd.magnify) {
+		idx = 3;
+	} else {
+		idx = center[ts.iq_freq_mode];
+	}
+	return sd.vert_grid_id[idx];
+}
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_DrawSpectrum_Interleaved
@@ -1149,6 +1155,9 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const
 {
    uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, len_new, sh, clr;
    bool      repaint_v_grid = false;
+
+   uint16_t x_center_line = UiLcdHy28_DrawSpectrum_GetCenterLineX();
+
 
    if(shift)
       sh = (SPECTRUM_WIDTH/2)-1;   // Shift to fill gap in center
@@ -1185,8 +1194,8 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const
       // grid lines with black - they are repainted
       // TODO: This code is  always executed, since this function is always called with color_old == Black
       if(color_old == Black) {
-    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr);
-      }
+    	repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr, x_center_line);
+       }
       //
       UiLcdHy28_SetCursorA(x, y1_old);
       UiLcdHy28_WriteRAM_Prepare();
@@ -1244,7 +1253,7 @@ void    UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, const
       //
       // TODO: This code is  never executed, since this function is never called with color_new == Black
       if(color_new == Black) {
-    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr);
+    	  repaint_v_grid = UiLcdHy28_DrawSpectrum_IsVgrid(x, color_new, &clr, x_center_line);
       }
 
       UiLcdHy28_SetCursorA(x, y1_new);
@@ -1441,12 +1450,12 @@ uchar UiLcdHy28_InitA(void)
       UiLcdHy28_WriteReg(0x0061,0x0003);   // Driver Output Control
       UiLcdHy28_WriteReg(0x006A,0x0000);   // Vertical Scroll Control
 
-      UiLcdHy28_WriteReg(0x0080,0x0000);   // Display Position �C Partial Display 1
-      UiLcdHy28_WriteReg(0x0081,0x0000);   // RAM Address Start �C Partial Display 1
+      UiLcdHy28_WriteReg(0x0080,0x0000);   // Display Position ?C Partial Display 1
+      UiLcdHy28_WriteReg(0x0081,0x0000);   // RAM Address Start ?C Partial Display 1
       UiLcdHy28_WriteReg(0x0082,0x0000);   // RAM address End - Partial Display 1
-      UiLcdHy28_WriteReg(0x0083,0x0000);   // Display Position �C Partial Display 2
-      UiLcdHy28_WriteReg(0x0084,0x0000);   // RAM Address Start �C Partial Display 2
-      UiLcdHy28_WriteReg(0x0085,0x0000);   // RAM address End �C Partail Display2
+      UiLcdHy28_WriteReg(0x0083,0x0000);   // Display Position ?C Partial Display 2
+      UiLcdHy28_WriteReg(0x0084,0x0000);   // RAM Address Start ?C Partial Display 2
+      UiLcdHy28_WriteReg(0x0085,0x0000);   // RAM address End ?C Partail Display2
       UiLcdHy28_WriteReg(0x0090,0x0013);   // Frame Cycle Control
       UiLcdHy28_WriteReg(0x0092,0x0000);    // Panel Interface Control 2
       UiLcdHy28_WriteReg(0x0093,0x0003);   // Panel Interface control 3
