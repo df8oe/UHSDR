@@ -108,13 +108,13 @@ static uint8_t  PeriodicTC   (uint8_t cmd);
 static uint8_t  GetState     (void);
 
 
-static uint8_t  InInit         (uint32_t  AudioFreq, uint32_t Volume, uint32_t options);
-static uint8_t  InDeInit       (uint32_t options);
-static uint8_t  InAudioCmd     (uint8_t* pbuf, uint32_t size, uint8_t cmd);
+// static uint8_t  InInit         (uint32_t  AudioFreq, uint32_t Volume, uint32_t options);
+// static uint8_t  InDeInit       (uint32_t options);
+// static uint8_t  InAudioCmd     (uint8_t* pbuf, uint32_t size, uint8_t cmd);
 static uint8_t  InVolumeCtl    (uint8_t vol);
-static uint8_t  InMuteCtl      (uint8_t cmd);
-static uint8_t  InPeriodicTC   (uint8_t cmd);
-static uint8_t  INGetState     (void);
+// static uint8_t  InMuteCtl      (uint8_t cmd);
+// static uint8_t  InPeriodicTC   (uint8_t cmd);
+// static uint8_t  INGetState     (void);
 
 /**
   * @}
