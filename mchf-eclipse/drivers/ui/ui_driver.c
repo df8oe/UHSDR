@@ -695,8 +695,6 @@ void ui_driver_toggle_tx(void)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
 					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 					//
-//yyy					if(sd.use_spi)
-//yyy						ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 					//
 				}
 				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
@@ -3471,8 +3469,6 @@ skip_check:
 		//
 		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 		//
-//yyy		if(sd.use_spi)
-//yyy			ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 	}
 	//
 	// Update main frequency display
@@ -4504,8 +4500,6 @@ static void UiDriverCheckEncoderOne(void)
 			//
 			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 			//
-//yyy			if(sd.use_spi)
-//yyy				ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 			//
 			break;
 		}
@@ -4530,8 +4524,6 @@ static void UiDriverCheckEncoderOne(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 			}
 			else	{		// In voice mode - adjust audio compression level
 				// Convert to Audio Gain incr/decr
@@ -4551,8 +4543,6 @@ static void UiDriverCheckEncoderOne(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 			}
 
 			break;
@@ -4614,8 +4604,6 @@ static void UiDriverCheckEncoderTwo(void)
 			//
 			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 			//
-//yyy			if(sd.use_spi)
-//yyy				ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 			//
 			goto skip_update;
 		}
@@ -4647,8 +4635,6 @@ static void UiDriverCheckEncoderTwo(void)
 					//
 					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 					//
-//yyy					if(sd.use_spi)
-//yyy						ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 					//
 					break;
 				}
@@ -4671,8 +4657,6 @@ static void UiDriverCheckEncoderTwo(void)
 					//
 					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 					//
-//yyy					if(sd.use_spi)
-//yyy						ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 					//
 					break;
 				}
@@ -4715,8 +4699,6 @@ static void UiDriverCheckEncoderTwo(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 				//
 				break;
 			}
@@ -4758,8 +4740,6 @@ static void UiDriverCheckEncoderThree(void)
 			//
 			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 			//
-//yyy			if(sd.use_spi)
-//yyy				ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 			//
 			goto skip_update;
 		}
@@ -4795,8 +4775,6 @@ static void UiDriverCheckEncoderThree(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 				//
 			}
 			break;
@@ -4824,8 +4802,6 @@ static void UiDriverCheckEncoderThree(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 				//
 			}
 			else	{	// in voice mode, adjust audio gain
@@ -4851,8 +4827,6 @@ static void UiDriverCheckEncoderThree(void)
 				//
 				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
 				//
-//yyy				if(sd.use_spi)
-//yyy					ts.hold_off_spectrum_scope	= ts.sysclock + SPECTRUM_SCOPE_SPI_HOLDOFF_TIME_TUNE;	// schedule the time after which we again update the spectrum scope
 				//
 			}
 			break;
