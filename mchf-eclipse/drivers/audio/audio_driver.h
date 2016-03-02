@@ -16,8 +16,8 @@
 #define __AUDIO_DRIVER_H
 
 #include "arm_math.h"
-#include "ui_lcd_hy28.h"
-
+// #include "ui_lcd_hy28.h"
+#include "ui_spectrum.h"
 // 16 or 24 bits from Codec
 //
 //#define USE_24_BITS

@@ -727,7 +727,7 @@ if(mode > 3)
     	    screen_disp = offset+1+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
 
        	if(old_screen_disp != screen_disp)	// redraw if this screen wasn't already displayed
-       				UiDriverClearSpectrumDisplay();
+       				UiSpectrumClearDisplay();
 		update_vars = 1;
 
 
