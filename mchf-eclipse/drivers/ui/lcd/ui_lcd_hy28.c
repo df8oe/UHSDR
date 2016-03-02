@@ -1121,16 +1121,14 @@ static bool UiLcdHy28_DrawSpectrum_IsVgrid(uint16_t x, uint32_t color_new, uint1
 				*clr_ptr = ts.scope_centre_grid_colour_active;
 			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (k == 2) && (!sd.magnify))
 				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
-				*clr_ptr = ts.scope_centre_grid_colour_active;
 			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (k == 5) && (!sd.magnify))
 				*clr_ptr = ts.scope_centre_grid_colour_active;
-			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 2) && (!sd.magnify))
+			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (k == 1) && (!sd.magnify))
 				*clr_ptr = ts.scope_centre_grid_colour_active;
 			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (k == 3) && (!sd.magnify))
 				*clr_ptr = ts.scope_centre_grid_colour_active;
 			else
-				*clr_ptr = ts.scope_grid_colour_active;
+			    *clr_ptr = ts.scope_grid_colour_active;
 
 			repaint_v_grid = true;
 			break;

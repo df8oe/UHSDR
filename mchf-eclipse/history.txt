@@ -13,6 +13,8 @@
 2016xxyy [DF8OE]
 - added dynamically tuning, activated/deactivated by tapping on step size 
 - hopefully improved USB audio recongnition of all Windows versions and Linux
+- removed scope/waterfall blocking in SPI mode
+- added LCD mode difference to dynamic tuning
 
 
 20160228 [DF8OE]
