@@ -113,6 +113,7 @@ drivers/ui/ui_driver.c \
 drivers/ui/encoder/ui_rotary.c \
 drivers/ui/lcd/ui_lcd_hy28.c \
 drivers/ui/lcd/ui_lcd_hy28_fonts.c \
+drivers/ui/lcd/ui_spectrum.c \
 hardware/mchf_hw_i2c2.c \
 hardware/mchf_hw_i2c.c \
 hardware/mchf_board.c \
