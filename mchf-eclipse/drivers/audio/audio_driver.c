@@ -1607,9 +1607,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// Unless this is DIGITAL I/Q Mode, we sent processed audio
 		if (ts.tx_audio_source != TX_AUDIO_DIGIQ) {
 			if (i%USBD_AUDIO_IN_OUT_DIV == modulus) {
-				audio_in_put_buffer(ads.a_buffer[i]);
+				float32_t val = ads.a_buffer[i] * ts.rx_usb_gain/31.0;
+				audio_in_put_buffer(val);
 				if (USBD_AUDIO_IN_CHANNELS == 2) {
-					audio_in_put_buffer(ads.a_buffer[i]);
+					audio_in_put_buffer(val);
 				}
 			}
 		}

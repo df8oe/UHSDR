@@ -674,6 +674,7 @@ void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulatio
 //
 #define	MAX_AUDIO_GAIN		30		// Maximum audio gain setting
 #define	DEFAULT_AUDIO_GAIN	16		// Default audio gain
+#define	DEFAULT_USB_GAIN	16		// Default audio gain
 //
 // The following are used in the max volume setting in the menu system
 //

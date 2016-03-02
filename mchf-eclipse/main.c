@@ -701,6 +701,7 @@ void TransceiverStateInit(void)
 	ts.filter_band		= 0;						// used to indicate the bpf filter selection for power detector coefficient selection
 	ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
 	ts.audio_gain		= DEFAULT_AUDIO_GAIN;		// Set initial volume
+	ts.rx_usb_gain		= DEFAULT_USB_GAIN;
 	ts.audio_max_volume	= MAX_VOLUME_DEFAULT;		// Set max volume default
 	ts.audio_gain_active = 1;						// this variable is used in the active RX audio processing function
 	ts.rf_gain			= DEFAULT_RF_GAIN;			//
@@ -756,10 +757,13 @@ void TransceiverStateInit(void)
 	ts.buffer_clear		= 0;						// used on return from TX to purge the audio buffers
 
 	ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
-	ts.tx_mic_gain		= MIC_GAIN_DEFAULT;			// default microphone gain
-	ts.tx_mic_gain_mult	= ts.tx_mic_gain;			// actual operating value for microphone gain
+	ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
 	ts.mic_boost		= 0;
-	ts.tx_line_gain		= LINE_GAIN_DEFAULT;		// default line gain
+	ts.tx_gain[TX_AUDIO_MIC]		= MIC_GAIN_DEFAULT;		// default line gain
+	ts.tx_gain[TX_AUDIO_LINEIN_L]		= LINE_GAIN_DEFAULT;		// default line gain
+	ts.tx_gain[TX_AUDIO_LINEIN_R]		= LINE_GAIN_DEFAULT;		// default line gain
+	ts.tx_gain[TX_AUDIO_DIG]		= LINE_GAIN_DEFAULT;		// default line gain
+	ts.tx_gain[TX_AUDIO_DIGIQ]		= LINE_GAIN_DEFAULT;		// default line gain
 
 	ts.tune				= 0;						// reset tuning flag
 

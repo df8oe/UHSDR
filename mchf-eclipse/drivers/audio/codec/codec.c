@@ -113,6 +113,35 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
 	Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
 }
 
+void Codec_MicBoostCheck() {
+	// Set up microphone gain and adjust mic boost accordingly
+	if(ts.tx_gain[TX_AUDIO_MIC] > 50)	{		// actively adjust microphone gain and microphone boost
+		ts.mic_boost = 1;
+		// if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
+		{	// in transmit and in voice mode?
+			Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
+		}
+		ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35)/3;			// above 50, rescale software amplification
+	}
+	else	{
+		ts.mic_boost = 0;
+		// if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
+		{	// in transmit and in voice mode?
+			Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
+		}
+		ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
+	}
+	// Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
+	// Reg 06: Power Down Control (Clk off, Osc off, Mic On)
+	if(ts.mic_bias) {
+		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
+	} else {
+		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
+	}
+
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : Codec_RX_TX
 //* Object              : switch codec mode
@@ -183,33 +212,14 @@ void Codec_RX_TX(void)
 			// Select source or leave it as it is
 			// PHONE out is muted, normal exit routed to TX modulator
 			// input audio is routed via 4066 switch
-			if(ts.tx_audio_source == TX_AUDIO_MIC)
-			{
-				// Set up microphone gain and adjust mic boost accordingly
-				if(ts.tx_mic_gain > 50)	{
-					ts.mic_boost = 1;
-					ts.tx_mic_gain_mult = (ts.tx_mic_gain - 35)/3;
-				}
-				else	{
-					ts.mic_boost = 0;
-					ts.tx_mic_gain_mult = ts.tx_mic_gain;
-				}
-				//
-				if(!ts.mic_boost)
-					Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
-				else
-					Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
-				//
-				// Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
-				// Reg 06: Power Down Control (Clk off, Osc off, Mic On)
-				if(ts.mic_bias)
-				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
-				else
-				    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
+
+			// TODO: MicBoost Code exists three times identical
+			if(ts.tx_audio_source == TX_AUDIO_MIC) {
+				Codec_MicBoostCheck();
+			} else {
+				Codec_Line_Gain_Adj(ts.tx_gain[ts.tx_audio_source]);	// set LINE input gain if in LINE in mode
 			}
-			else
-				Codec_Line_Gain_Adj(ts.tx_line_gain);	// set LINE input gain if in LINE in mode
-			//
+
 		}
 	}
 }
@@ -291,7 +301,7 @@ void Codec_Volume(uchar vol)
 	// Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
 	//
 	if(ts.txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
-		if(ts.iq_freq_mode || ts.misc_flags1&4)	// is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
+		if(ts.iq_freq_mode || (ts.misc_flags1&4))	// is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
 			Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);	// yes - mute LINE OUT during transmit
 		else							// audio is NOT to be muted during transmit
 			Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0x78);	// value selected for 0.5VRMS at AGC setting
