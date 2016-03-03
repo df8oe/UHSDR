@@ -3082,7 +3082,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
-		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tune_power_level,
+		tchange = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tune_power_level,
 				0,
 				PA_LEVEL_MAX_ENTRY,
 				PA_LEVEL_MAX_ENTRY,
