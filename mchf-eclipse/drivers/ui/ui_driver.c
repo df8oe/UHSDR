@@ -353,8 +353,14 @@ static float 			FirState_Q_TX[128];
 extern __IO	arm_fir_instance_f32	FIR_Q_TX;
 //
 
+
+inline bool is_touchscreen_pressed() {
+	return (ts.tp_x != 0xff);
+}
+
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40
+
 
 inline bool is_splitmode() {
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
@@ -381,6 +387,236 @@ inline bool is_dsp_notch() {
 }
 
 
+void UiDriver_HandleSwitchToNextDspMode()
+{
+	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
+		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
+		{
+			if(ts.dsp_enabled)
+				ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
+			else
+				ts.dsp_active |= DSP_NOTCH_ENABLE;
+		}
+		else if((is_dsp_nr()) && (!(is_dsp_notch()))) {	// NR active, notch inactive
+			if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
+				ts.dsp_active |= DSP_NOTCH_ENABLE;									// turn on notch
+				ts.dsp_active &= ~DSP_NR_ENABLE;								// turn off NR
+			}
+			else	{	// CW mode - do not select notches, skip directly to "off"
+				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);	// turn off NR and notch
+			}
+		}
+		else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
+			if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
+				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
+			else
+			{
+				if(ts.dsp_enabled)
+					ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
+				else
+					ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// no - turn off NR and NOTCH
+			}
+		//
+		else	{
+			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
+		}
+		//
+		ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
+		//
+		ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
+		audio_driver_set_rx_audio_filter();	// update DSP/filter settings
+		ts.reset_dsp_nr = 0;
+		UiDriverChangeDSPMode();			// update on-screen display
+		//
+		// Update DSP/NB/RFG control display
+		//
+		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
+			UiDriverChangeSigProc(0);
+		else
+			UiDriverChangeSigProc(1);
+	}
+}
+
+void UiDriver_HandleTouchScreen()
+{
+	if (ts.show_tp_coordinates)			// show coordinates for coding purposes
+	{
+		char text[10];
+		sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
+		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+	}
+	if(!ts.menu_mode)		// normal operational screen
+	{
+		if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
+		{
+			if(ts.misc_flags1 & 128)
+			{		// is the waterfall mode active?
+				ts.misc_flags1 &=  0x7f;	// yes, turn it off
+				UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+			}
+			else
+			{	// waterfall mode was turned off
+				ts.misc_flags1 |=  128;	// turn it on
+				UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+			}
+			UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+		}
+		if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
+		{
+			sd.magnify = !sd.magnify;
+			ts.menu_var_changed = 1;
+			UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+		}
+		if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
+		{
+			int step = 2000;				// adjust to 500Hz
+			if(ts.dmod_mode == DEMOD_AM)
+				step = 20000;				// adjust to 5KHz
+			uchar line = 0x40;				// x-position of rx frequency in middle position
+			if(!sd.magnify)				// xposition differs in translated modes not magnified
+			{
+				switch(ts.iq_freq_mode){
+				case FREQ_IQ_CONV_P6KHZ:
+					line = 0x46;
+					break;
+				case FREQ_IQ_CONV_M6KHZ:
+					line = 0x32;
+					break;
+				case FREQ_IQ_CONV_P12KHZ:
+					line = 0x54;
+					break;
+				case FREQ_IQ_CONV_M12KHZ:
+					line = 0x25;
+					break;
+				default:
+					line = 0x40;
+				}
+			}
+			uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
+			//						char text[30];
+			//						sprintf(text,"%d",tunediff);
+			//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
+			//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+			df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+			ts.refresh_freq_disp = 1;			// update ALL digits
+			if(is_splitmode())
+			{						// SPLIT mode
+				UiDriverUpdateFrequency(1,3);
+				UiDriverUpdateFrequency(1,2);
+			}
+			else
+				UiDriverUpdateFrequency(1,0);		// no SPLIT mode
+			ts.refresh_freq_disp = 0;			// update ALL digits
+		}
+		if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
+		{
+			if(ts.digital_mode < 7)
+				ts.digital_mode += 1;
+			else
+				ts.digital_mode = 0;
+			UiDriverChangeDigitalMode();
+		}
+		if(check_tp_coordinates(0x42,0x34,0x4e,0x56))	// new touchscreen action
+		{											// temporary used for dynamic tuning activation
+			if (ts.dynamic_tuning_active)				// is it off??
+			{
+				ts.dynamic_tuning_active = false;				// then turn it on
+			}
+			else
+			{
+				ts.dynamic_tuning_active = true;				// if already on, turn it off
+			}
+			UiDriverShowStep(df.selected_idx);
+		}
+
+
+	}
+	else						// menu screen functions
+	{
+		if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+		{
+			ts.show_tp_coordinates = !ts.show_tp_coordinates;
+			UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
+		}
+		if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
+		{
+			ts.rfmod_present = !ts.rfmod_present;
+			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present         ":"n/a             ",White,Black,0);
+			ts.menu_var_changed = 1;
+		}
+		if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
+		{
+			ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
+			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present         ":"n/a             ",White,Black,0);
+			ts.menu_var_changed = 1;
+		}
+	}
+	ts.tp_x = 0xff;						// mark data as invalid
+}
+
+
+/**
+ * @brief API Function, implements application logic for changing the power level including display updates
+ *
+ *
+ * @param power_level The requested power level (as PA_LEVEL constants)
+ */
+void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
+	//
+	if(ts.dmod_mode == DEMOD_AM)	{			// in AM mode?
+		if(power_level >= PA_LEVEL_MAX_ENTRY)	// yes, power over 2 watts?
+			power_level = PA_LEVEL_2W;	// force to 2 watt mode when we "roll over"
+	}
+	else	{	// other modes, do not limit max power
+		if(power_level >= PA_LEVEL_MAX_ENTRY)
+			power_level = PA_LEVEL_FULL;
+	}
+	//
+	if (power_level != ts.power_level) {
+		ts.power_level = power_level;
+		UiDriverChangePowerLevel();
+		if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
+			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+				Codec_SidetoneSetgain();
+		//
+		if(ts.menu_mode)	// are we in menu mode?
+			UiDriverUpdateMenu(0);	// yes, update display when we change power setting
+		//
+	}
+}
+
+
+void UiDriver_HandleBandButtons(uint16_t button) {
+	uint8_t normal,swapped;
+	bool btemp;
+	if (button == BUTTON_BNDM) {
+		normal = 0;
+		swapped = 1;
+	} else {
+		normal = 1;
+		swapped = 0;
+	}
+
+	btemp = ads.af_disabled;
+	ads.af_disabled = 0;
+	//
+	ts.dsp_timed_mute = 1;		// disable DSP when changing bands
+	ts.dsp_inhibit = 1;
+	ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
+	//
+	if(ts.misc_flags1 & MISC_FLAGS1_SWAP_BAND_BTN)		// band up/down button swapped?
+		UiDriverChangeBand(swapped);	// yes - go up
+	else
+		UiDriverChangeBand(normal);	// not swapped, go down
+	//
+	UiInitRxParms();	// re-init because mode/filter may have changed
+	//
+	if(ts.menu_mode)	// are we in menu mode?
+		UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
+	//
+	ads.af_disabled =  btemp;
+
+}
 
 
 //*----------------------------------------------------------------------------
@@ -597,18 +833,8 @@ void ui_driver_toggle_tx(void)
 		//
 		ts.dsp_inhibit = 1;								// disable DSP when going into TX mode
 		//
-		if(ts.dmod_mode == DEMOD_AM)	{		// is it AM mode?
-			if(ts.power_level < PA_LEVEL_2W)	{	// is it over 2 watts?
-				ts.power_level = PA_LEVEL_2W;	// yes - force to 2 watts
-				//
-				UiDriverChangePowerLevel();			// update the power level display
-				if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
-					Codec_SidetoneSetgain();
-				//
-				if(ts.menu_mode)	// are we in menu mode?
-					UiDriverUpdateMenu(0);	// yes, update display when we change power setting
-			}
-		}
+		UiDriver_HandlePowerLevelChange(ts.power_level);
+		// make sure that power level and mode fit together
 		//
 		if(ts.dmod_mode != DEMOD_CW)	{				// are we in a voice mode?
 			if(ts.tx_audio_source != TX_AUDIO_MIC)	{	// yes - are we in LINE IN mode?
@@ -819,7 +1045,6 @@ void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const
 //*----------------------------------------------------------------------------
 static void UiDriverProcessKeyboard(void)
 {
-	bool btemp;
 	uchar temp;
 
 	if(ks.button_processed)	{
@@ -838,121 +1063,8 @@ static void UiDriverProcessKeyboard(void)
 			{
 			//
 			case TOUCHSCREEN_ACTIVE:				// touchscreen functions
-				if(ts.tp_x != 0xff)
-				{
-					if (ts.show_tp_coordinates)			// show coordinates for coding purposes
-					{
-						char text[10];
-						sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
-						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-					}
-					if(!ts.menu_mode)		// normal operational screen
-					{
-						if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
-						{
-							if(ts.misc_flags1 & 128)
-							{		// is the waterfall mode active?
-								ts.misc_flags1 &=  0x7f;	// yes, turn it off
-								UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-							}
-							else
-							{	// waterfall mode was turned off
-								ts.misc_flags1 |=  128;	// turn it on
-								UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-							}
-							UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
-						}
-						if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
-						{
-							sd.magnify = !sd.magnify;
-							ts.menu_var_changed = 1;
-							UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-						}
-						if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
-						{
-							int step = 2000;				// adjust to 500Hz
-							if(ts.dmod_mode == DEMOD_AM)
-								step = 20000;				// adjust to 5KHz
-							uchar line = 0x40;				// x-position of rx frequency in middle position
-							if(!sd.magnify)				// xposition differs in translated modes not magnified
-							{
-								switch(ts.iq_freq_mode){
-								case FREQ_IQ_CONV_P6KHZ:
-									line = 0x46;
-									break;
-								case FREQ_IQ_CONV_M6KHZ:
-									line = 0x32;
-									break;
-								case FREQ_IQ_CONV_P12KHZ:
-									line = 0x54;
-									break;
-								case FREQ_IQ_CONV_M12KHZ:
-									line = 0x25;
-									break;
-								default:
-									line = 0x40;
-								}
-							}
-							uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
-							//						char text[30];
-							//						sprintf(text,"%d",tunediff);
-							//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
-							//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-							df.tune_new = lround((df.tune_new + tunediff)/step) * step;
-							ts.refresh_freq_disp = 1;			// update ALL digits
-							if(is_splitmode())
-							{						// SPLIT mode
-								UiDriverUpdateFrequency(1,3);
-								UiDriverUpdateFrequency(1,2);
-							}
-							else
-								UiDriverUpdateFrequency(1,0);		// no SPLIT mode
-							ts.refresh_freq_disp = 0;			// update ALL digits
-						}
-						if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
-						{
-							if(ts.digital_mode < 7)
-								ts.digital_mode += 1;
-							else
-								ts.digital_mode = 0;
-							UiDriverChangeDigitalMode();
-						}
-						if(check_tp_coordinates(0x42,0x34,0x4e,0x56))	// new touchscreen action
-						{											// temporary used for dynamic tuning activation
-							if (ts.dynamic_tuning_active)				// is it off??
-							{
-								ts.dynamic_tuning_active = false;				// then turn it on
-							}
-							else
-							{
-								ts.dynamic_tuning_active = true;				// if already on, turn it off
-							}
-							UiDriverShowStep(df.selected_idx);
-						}
-
-
-					}
-					else						// menu screen functions
-					{
-						if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
-						{
-							ts.show_tp_coordinates = !ts.show_tp_coordinates;
-							UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
-						}
-						if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
-						{
-							ts.rfmod_present = !ts.rfmod_present;
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present         ":"n/a             ",White,Black,0);
-							ts.menu_var_changed = 1;
-						}
-						if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
-						{
-							ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
-							UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present         ":"n/a             ",White,Black,0);
-							ts.menu_var_changed = 1;
-						}
-					}
-					ts.tp_x = 0xff;						// mark data as invalid
+				if(is_touchscreen_pressed()) {
+					UiDriver_HandleTouchScreen();
 				}
 				break;
 			case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
@@ -963,80 +1075,12 @@ static void UiDriverProcessKeyboard(void)
 				break;
 				//
 			case BUTTON_G2_PRESSED:		// BUTTON_G2
-			{
-				if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
-					if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
-					{
-						if(ts.dsp_enabled)
-							ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
-						else
-							ts.dsp_active |= DSP_NOTCH_ENABLE;
-					}
-					else if((is_dsp_nr()) && (!(is_dsp_notch()))) {	// NR active, notch inactive
-						if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
-							ts.dsp_active |= DSP_NOTCH_ENABLE;									// turn on notch
-							ts.dsp_active &= ~DSP_NR_ENABLE;								// turn off NR
-						}
-						else	{	// CW mode - do not select notches, skip directly to "off"
-							ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);	// turn off NR and notch
-						}
-					}
-					else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
-						if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
-							ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
-						else
-						{
-							if(ts.dsp_enabled)
-								ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
-							else
-								ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// no - turn off NR and NOTCH
-						}
-					//
-					else	{
-						ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
-					}
-					//
-					ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
-					//
-					ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
-					audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-					ts.reset_dsp_nr = 0;
-					UiDriverChangeDSPMode();			// update on-screen display
-					//
-					// Update DSP/NB/RFG control display
-					//
-					if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-						UiDriverChangeSigProc(0);
-					else
-						UiDriverChangeSigProc(1);
-				}
-				//					}
+				UiDriver_HandleSwitchToNextDspMode();
 				break;
-			}
 			//
-			case BUTTON_G3_PRESSED:		{	// BUTTON_G3 - Change power setting
-				ts.power_level++;
-				//
-				if(ts.dmod_mode == DEMOD_AM)	{			// in AM mode?
-					if(ts.power_level >= PA_LEVEL_MAX_ENTRY)	// yes, power over 2 watts?
-						ts.power_level = PA_LEVEL_2W;	// force to 2 watt mode when we "roll over"
-				}
-				else	{	// other modes, do not limit max power
-					if(ts.power_level >= PA_LEVEL_MAX_ENTRY)
-						ts.power_level = PA_LEVEL_FULL;
-				}
-				//
-				UiDriverChangePowerLevel();
-				if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
-					if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-						Codec_SidetoneSetgain();
-				//
-				if(ts.menu_mode)	// are we in menu mode?
-					UiDriverUpdateMenu(0);	// yes, update display when we change power setting
-				//
+			case BUTTON_G3_PRESSED:		// BUTTON_G3 - Change power setting
+				UiDriver_HandlePowerLevelChange(ts.power_level+1);
 				break;
-			}
-			//
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
 				if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
 					ts.filter_id++;
@@ -1072,61 +1116,25 @@ static void UiDriverProcessKeyboard(void)
 				break;
 				//
 			case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
-				if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+				if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	// button swap NOT enabled
 					UiDriverChangeTuningStep(0);	// decrease step size
 				else		// button swap enabled
 					UiDriverChangeTuningStep(1);	// increase step size
 				break;
 				//
 			case BUTTON_STEPP_PRESSED:		// BUTTON_STEPP
-				if(!(ts.freq_step_config & 0xf0))	// button swap NOT enabled
+				if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	// button swap NOT enabled
 					UiDriverChangeTuningStep(1);	// increase step size
 				else
 					UiDriverChangeTuningStep(0);	// decrease step size
 				break;
 				//
 			case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
-				btemp = ads.af_disabled;
-				ads.af_disabled = 0;
-				//
-				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
-				ts.dsp_inhibit = 1;
-				ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
-				//
-				if(ts.misc_flags1 & 2)		// band up/down button swapped?
-					UiDriverChangeBand(1);	// yes - go up
-				else
-					UiDriverChangeBand(0);	// not swapped, go down
-				//
-				UiInitRxParms();	// re-init because mode/filter may have changed
-				//
-				if(ts.menu_mode)	// are we in menu mode?
-					UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
-				//
-				ads.af_disabled =  btemp;
+				UiDriver_HandleBandButtons(BUTTON_BNDM);
 				break;
-				//
 			case BUTTON_BNDP_PRESSED:	// BUTTON_BNDP
-				btemp = ads.af_disabled;
-				ads.af_disabled = 0;
-				//
-				ts.dsp_timed_mute = 1;		// disable DSP when changing bands
-				ts.dsp_inhibit = 1;
-				ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
-				//
-				if(ts.misc_flags1 & 2)		// band up/down button swapped?
-					UiDriverChangeBand(0);	// yes, go down
-				else
-					UiDriverChangeBand(1);	// no, go up
-				//
-				UiInitRxParms();		// re-init because mode/filter may have changed
-				//
-				if(ts.menu_mode)	// are we in menu mode?
-					UiDriverUpdateMenu(0);	// yes, update display when we change bands
-				//
-				ads.af_disabled = btemp;
+				UiDriver_HandleBandButtons(BUTTON_BNDP);
 				break;
-				//
 			case BUTTON_POWER_PRESSED:
 				if(!ts.boot_halt_flag)	{	// do brightness adjust ONLY if NOT in "boot halt" mode
 					ts.lcd_backlight_brightness++;
