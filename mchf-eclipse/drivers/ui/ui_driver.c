@@ -693,9 +693,6 @@ void ui_driver_toggle_tx(void)
 				if(was_rx)	{								// did we just enter TX mode?
 					vfo[VFO_A].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (A)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
-					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-					//
-					//
 				}
 				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
 			}
@@ -3466,9 +3463,6 @@ skip_check:
 			if(test == 2)
 			    col = Yellow;	// Color in yellow if there was a problem setting frequency
 		}
-		//
-		// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-		//
 	}
 	//
 	// Update main frequency display
@@ -4497,10 +4491,6 @@ static void UiDriverCheckEncoderOne(void)
 			}
 
 			UiDriverChangeAfGain(1);
-			//
-			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-			//
-			//
 			break;
 		}
 
@@ -4521,9 +4511,6 @@ static void UiDriverCheckEncoderOne(void)
 						ts.st_gain = SIDETONE_MAX_GAIN;
 				}
 				UiDriverChangeStGain(1);
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
 			}
 			else	{		// In voice mode - adjust audio compression level
 				// Convert to Audio Gain incr/decr
@@ -4540,9 +4527,6 @@ static void UiDriverCheckEncoderOne(void)
 				}
 				UiCalcTxCompLevel();		// calculate values for selection compression level
 				UiDriverChangeCmpLevel(1);	// update on-screen display
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
 			}
 
 			break;
@@ -4601,10 +4585,6 @@ static void UiDriverCheckEncoderTwo(void)
 			}
 			ts.menu_var = 0;			// clear variable that is used to change a menu item
 			UiDriverUpdateMenu(1);		// Update that menu item
-			//
-			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-			//
-			//
 			goto skip_update;
 		}
 		if(ts.txrx_mode == TRX_MODE_RX)	{
@@ -4632,10 +4612,6 @@ static void UiDriverCheckEncoderTwo(void)
 					//
 					UiCalcRFGain();		// convert from user RF gain value to "working" RF gain value
 					UiDriverChangeRfGain(1);	// change on screen
-					//
-					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-					//
-					//
 					break;
 				}
 				else	{		// it is FM - change squelch setting
@@ -4654,10 +4630,6 @@ static void UiDriverCheckEncoderTwo(void)
 					// get RF gain value and calculate new value
 					//
 					UiDriverChangeRfGain(1);	// change on screen
-					//
-					// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-					//
-					//
 					break;
 				}
 			}
@@ -4696,10 +4668,6 @@ static void UiDriverCheckEncoderTwo(void)
 				}
 				// Signal processor setting
 				UiDriverChangeSigProc(1);
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
-				//
 				break;
 			}
 
@@ -4737,10 +4705,6 @@ static void UiDriverCheckEncoderThree(void)
 			}
 			//
 			UiDriverUpdateMenu(1);		// perform update of selected item
-			//
-			// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-			//
-			//
 			goto skip_update;
 		}
 
@@ -4772,10 +4736,6 @@ static void UiDriverCheckEncoderThree(void)
 
 				// Change frequency
 				UiDriverUpdateFrequency(1,0);
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
-				//
 			}
 			break;
 		}
@@ -4799,10 +4759,6 @@ static void UiDriverCheckEncoderThree(void)
 				}
 
 				UiDriverChangeKeyerSpeed(1);
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
-				//
 			}
 			else	{	// in voice mode, adjust audio gain
 
@@ -4824,10 +4780,6 @@ static void UiDriverCheckEncoderThree(void)
 					Codec_MicBoostCheck();
 				}
 				UIDriverChangeAudioGain(1);
-				//
-				// If using a serial (SPI) LCD, hold off on updating the spectrum scope for a time AFTER we stop twiddling the tuning knob.
-				//
-				//
 			}
 			break;
 		}

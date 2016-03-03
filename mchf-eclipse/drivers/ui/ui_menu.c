@@ -3081,14 +3081,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 			clr = Red;					// warn user that filter is off!
 		}
 		break;
-	case CONFIG_TUNE_POWER_LEVEL:	// set power for antenne tuning
+	case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tune_power_level,
 				0,
 				PA_LEVEL_MAX_ENTRY,
-				PA_LEVEL_FULL,
+				PA_LEVEL_MAX_ENTRY,
 				1);
-
-		// disp_shift = 1;
 		switch(ts.tune_power_level)	{
 		case PA_LEVEL_FULL:
 			strcpy(options, "FULL POWER");
