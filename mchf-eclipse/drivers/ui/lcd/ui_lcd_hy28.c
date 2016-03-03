@@ -45,6 +45,7 @@ uint16_t display_use_spi;
 extern __IO OscillatorState os;		// oscillator values - including Si570 startup frequency, displayed on splash screen
 
 static void UiLcdHy28_Delay(ulong delay);
+static void UiLcdHy28_Test(void);
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_BacklightInit
@@ -324,7 +325,7 @@ void UiLcdHy28_FSMCConfig(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_SendByteSpi(uint8_t byte)
+static inline void UiLcdHy28_SendByteSpi(uint8_t byte)
 {
    // while ((SPI2>SR & (SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
    // SPI2->DR = Data;
@@ -335,7 +336,7 @@ void UiLcdHy28_SendByteSpi(uint8_t byte)
    SPI_I2S_ReceiveData(SPI2);
 
 }
-void UiLcdHy28_SendByteSpiFast(uint8_t byte)
+static inline void UiLcdHy28_SendByteSpiFast(uint8_t byte)
 {
 
    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET);
@@ -426,7 +427,7 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_WriteDataSpiStart(void)
+static inline void UiLcdHy28_WriteDataSpiStart()
 {
    UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
@@ -438,7 +439,7 @@ void UiLcdHy28_WriteDataSpiStart(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_WriteDataOnly( unsigned short data)
+static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
    if(display_use_spi)
    {
@@ -535,7 +536,7 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
+static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 {
    UiLcdHy28_WriteReg(0x0020, Ypos );
    UiLcdHy28_WriteReg(0x0021, Xpos );
@@ -548,7 +549,7 @@ void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_WriteRAM_Prepare(void)
+static void UiLcdHy28_WriteRAM_Prepare(void)
 {
    if(display_use_spi)
    {
@@ -560,7 +561,7 @@ void UiLcdHy28_WriteRAM_Prepare(void)
       LCD_REG = 0x22;
 }
 
-inline void UiLcdHy28_WriteRAM_Finish(void)
+static inline void UiLcdHy28_WriteRAM_Finish(void)
 {
    if(display_use_spi)
    {
@@ -1242,7 +1243,7 @@ uchar UiLcdHy28_InitA(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_Test(void)
+static void UiLcdHy28_Test(void)
 {
    // Backlight on - only when all is drawn
    //LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;

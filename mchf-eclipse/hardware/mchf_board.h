@@ -1398,6 +1398,7 @@ typedef struct TransceiverState
 	ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
 	ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 	//
+	#define FREQ_STEP_SWAP_BTN	0xf0
 	uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 	//
 	bool	nb_disable;					// TRUE if noise blanker is to be disabled
@@ -1439,6 +1440,7 @@ typedef struct TransceiverState
 	//
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
+	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
 										// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
 										// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
