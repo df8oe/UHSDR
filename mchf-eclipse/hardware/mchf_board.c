@@ -778,7 +778,7 @@ void mchf_board_init(void)
 	mchf_board_touchscreen_init();
 
 	// I2C init
-	mchf_hw_i2c_init();
+//	mchf_hw_i2c_init();
 
 	// Get startup frequency of Si570, by DF8OE, 201506
 	ui_si570_calculate_startup_frequency();
@@ -789,6 +789,9 @@ void mchf_board_init(void)
 
 	// LCD Init
 	UiLcdHy28_Init();
+
+	// Init keypad hw
+	mchf_board_keypad_init();
 
 	// Encoders init
 	UiRotaryFreqEncoderInit();
