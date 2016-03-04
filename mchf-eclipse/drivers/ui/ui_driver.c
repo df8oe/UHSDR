@@ -437,10 +437,11 @@ void UiDriver_HandleSwitchToNextDspMode()
 	}
 }
 
+
 void UiDriver_HandleTouchScreen()
 {
 	if (ts.show_tp_coordinates)			// show coordinates for coding purposes
-	{
+	{	// pressing small "d" of green "dB" right top during menu mode toggles display of coordinates under "RIT/DIG"-box.
 		char text[10];
 		sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
 		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
@@ -493,10 +494,6 @@ void UiDriver_HandleTouchScreen()
 				}
 			}
 			uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
-			//						char text[30];
-			//						sprintf(text,"%d",tunediff);
-			//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,"            ",White,Black,0);
-			//						UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
 			df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 			ts.refresh_freq_disp = 1;			// update ALL digits
 			if(is_splitmode())
@@ -516,8 +513,8 @@ void UiDriver_HandleTouchScreen()
 				ts.digital_mode = 0;
 			UiDriverChangeDigitalMode();
 		}
-		if(check_tp_coordinates(0x42,0x34,0x4e,0x56))	// new touchscreen action
-		{											// temporary used for dynamic tuning activation
+		if(check_tp_coordinates(0x44,0x32,0x4e,0x56))	// temporary used for dynamic tuning activation
+		{
 			if (ts.dynamic_tuning_active)				// is it off??
 			{
 				ts.dynamic_tuning_active = false;				// then turn it on
@@ -528,7 +525,11 @@ void UiDriver_HandleTouchScreen()
 			}
 			UiDriverShowStep(df.selected_idx);
 		}
-
+/*		if(check_tp_coordinates(x-left,x-right,y-down,y-up))	// new touchscreen action. LEAVE AS EXAMPLE. copy&paste for your purposes.
+		{											// temporary used for dynamic tuning activation
+		// here put action
+		}
+*/
 
 	}
 	else						// menu screen functions
