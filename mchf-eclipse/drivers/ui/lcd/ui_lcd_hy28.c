@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:      CC BY-NC-SA 3.0                                                **
+**  Licence:      CC BY-NC-SA 3.0                                                  **
 ************************************************************************************/
 
 // Optimization disable for this file
@@ -77,7 +77,7 @@ void UiLcdHy28_BacklightInit(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_SpiInit()
+void UiLcdHy28_SpiInit(bool hispeed)
 {
    GPIO_InitTypeDef GPIO_InitStructure;
    SPI_InitTypeDef  SPI_InitStructure;
@@ -115,7 +115,7 @@ void UiLcdHy28_SpiInit()
    SPI_InitStructure.SPI_CPOL			= SPI_CPOL_High;
    SPI_InitStructure.SPI_CPHA			= SPI_CPHA_2Edge;
    SPI_InitStructure.SPI_NSS			= SPI_NSS_Soft;
-   SPI_InitStructure.SPI_BaudRatePrescaler	= SPI_BaudRatePrescaler_4;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
+   SPI_InitStructure.SPI_BaudRatePrescaler = hispeed?SPI_BaudRatePrescaler_2:SPI_BaudRatePrescaler_4;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
    SPI_InitStructure.SPI_FirstBit		= SPI_FirstBit_MSB;
    SPI_InitStructure.SPI_Mode			= SPI_Mode_Master;
    SPI_Init(SPI2, &SPI_InitStructure);
@@ -1288,6 +1288,7 @@ static void UiLcdHy28_Test(void)
 //*----------------------------------------------------------------------------
 uchar UiLcdHy28_Init(void)
 {
+	uchar retval = 0;
    // Backlight
    UiLcdHy28_BacklightInit();
 
@@ -1298,14 +1299,15 @@ uchar UiLcdHy28_Init(void)
    lcd_cs_pio = LCD_D11_PIO;
 
    // Try SPI Init
-   UiLcdHy28_SpiInit();
+   UiLcdHy28_SpiInit(false);
+   // HY28A works only with less then 32 Mhz, so we do low speed
 
    // Reset
    UiLcdHy28_Reset();
 
    // LCD Init
-   if(UiLcdHy28_InitA() == 0)
-      return 0;         // success, SPI found
+   if(UiLcdHy28_InitA() != 0) {
+        // no success, no SPI found
 
    // SPI disable
    UiLcdHy28_SpiDeInit();
@@ -1317,14 +1319,16 @@ uchar UiLcdHy28_Init(void)
    lcd_cs_pio = LCD_CS_PIO;
 
    // Try SPI Init
-   UiLcdHy28_SpiInit();
+   UiLcdHy28_SpiInit(true);
+   // HY28B works with 50 Mhz, so we do high speed
 
    // Reset
    UiLcdHy28_Reset();
 
    // LCD Init
-   if(UiLcdHy28_InitA() == 0)
-      return 0;         // success, SPI found
+   }
+   if(UiLcdHy28_InitA() != 0) {
+      // no success, no SPI found
 
    // SPI disable
 //   UiLcdHy28_SpiDeInit();
@@ -1343,9 +1347,10 @@ uchar UiLcdHy28_Init(void)
    UiLcdHy28_Reset();
 
    // LCD Init
-   UiLcdHy28_InitA();   // on error here ?
+   retval = UiLcdHy28_InitA() != 0;   // on error here ?
+   }
 
-   return 0;
+   return retval;
 }
 
 //*----------------------------------------------------------------------------
