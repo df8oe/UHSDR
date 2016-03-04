@@ -542,13 +542,14 @@ void 	UiDriverSetBandPowerFactor(uchar band);
 void	UiCalcRxIqGainAdj(void);
 void	UiCalcTxIqGainAdj(void);
 //
+void    UiDriverChangeAudioGain(uchar enabled);
 void 	UiDriverChangeStGain(uchar enabled);
 void 	UiDriverChangeCmpLevel(uchar enabled);
 void 	UiDriverChangeKeyerSpeed(uchar enabled);
-void	UiDriverChangeAudioGain(uchar enabled);
 void 	UiDriverChangeRfGain(uchar enabled);
+void    UiDriverChangeAfGain(uchar enabled);
+
 //
-void 	UIDriverChangeAudioGain(uchar enabled);
 //
 void 	UiDriverShowStep(ulong step);
 //
@@ -618,8 +619,9 @@ void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_
 #define	DEFAULT_RF_CODEC_GAIN_VAL	9		// Default RF gain setting (9 = AUTO mode)
 //
 #define	MAX_AUDIO_GAIN		30		// Maximum audio gain setting
+#define MAX_DIG_GAIN      31      // Maximum audio gain setting
 #define	DEFAULT_AUDIO_GAIN	16		// Default audio gain
-#define	DEFAULT_USB_GAIN	16		// Default audio gain
+#define	DEFAULT_DIG_GAIN	16		// Default audio gain
 //
 // The following are used in the max volume setting in the menu system
 //

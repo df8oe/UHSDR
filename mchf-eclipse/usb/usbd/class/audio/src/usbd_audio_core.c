@@ -231,7 +231,8 @@ UsbAudioUnit usbUnits[UnitMax] =
 				.min = -31 * 0x100,
 				.max = 0 * 0x100,
 				.res = 0x100,
-				.cur = -16* 0x100
+				.cur = -16* 0x100,
+				.ptr = &ts.tx_gain[TX_AUDIO_DIG]
 		},
 		{
 				.cs  = AUDIO_CONTROL_VOLUME,
@@ -239,7 +240,8 @@ UsbAudioUnit usbUnits[UnitMax] =
 				.min = -31 * 0x100,
 				.max = 0 * 0x100,
 				.res = 0x100,
-				.cur = -16* 0x100
+				.cur = -16* 0x100,
+				.ptr = &ts.rx_gain[RX_AUDIO_DIG].value
 		}
 
 };
@@ -833,7 +835,7 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 		/* Check for which addressed unit the AudioControl request has been issued */
 		if (AudioCtlUnit == AUDIO_OUT_STREAMING_CTRL)
 		{/* In this driver, to simplify code, only one unit is manage */
-			/* Call the audio interface mute function */
+			/* Call the audio interface volume function */
 			int16_t val = *((int16_t*)&AudioCtl[0]);
 			retval = AUDIO_OUT_fops.VolumeCtl((val/0x100)+31);
 			usbUnits[UnitVolumeTX].cur = val;
@@ -1037,6 +1039,9 @@ static void AUDIO_Req_GetCurrent(void *pdev, USB_SETUP_REQ *req)
 		word[0] = unit->res;
 		break;
 	case AUDIO_REQ_GET_CUR:
+	    // we load the current value from the application layer and convert it.
+	    // not the most beautiful approach
+	    unit->cur = (((int16_t)(*unit->ptr))-31)*0x100;
 		word[0] = unit->cur;
 		break;
 	}

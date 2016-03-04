@@ -89,14 +89,9 @@ static void 	UiDriverProcessKeyboard(void);
 static void 	UiDriverPressHoldStep(uchar is_up);
 static void 	UiDriverProcessFunctionKeyClick(ulong id);
 
-//static void 	UiDriverShowMode(void);
-//static void 	UiDriverShowStep(ulong step);
 static void 	UiDriverShowBand(uchar band);
 static void 	UiDriverCreateDesktop(void);
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
-//static void 	UiDriverCreateSpectrumScope(void);
-//static void 	UiDriverCreateDigiPanel(void);
-//
 static void UiDriverDeleteSMeter(void);
 static void 	UiDriverCreateSMeter(void);
 static void 	UiDriverDrawSMeter(ushort color);
@@ -108,10 +103,7 @@ static void 	UiDriverInitFrequency(void);
 //
 static void 	UiDriverCheckFilter(ulong freq);
 uchar 			UiDriverCheckBand(ulong freq, ushort update);
-//static void 	UiDriverUpdateFrequency(char skip_encoder_check, uchar mode);
-//static void 	UiDriverUpdateFrequencyFast(void);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
-//static void 	UiDriverChangeTuningStep(uchar is_up);
 static uchar 	UiDriverButtonCheck(ulong button_num);
 static void		UiDriverTimeScheduler(void);				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriverChangeDemodMode(uchar noskip);
@@ -124,24 +116,14 @@ static void 	UiDriverChangeEncoderOneMode(uchar skip);
 static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 // encoder one
-static void 	UiDriverChangeAfGain(uchar enabled);
-//static void 	UiDriverChangeStGain(uchar enabled);
-//static void 	UiDriverChangeKeyerSpeed(uchar enabled);
 // encoder two
-//static void 	UiDriverChangeRfGain(uchar enabled);
 static void 	UiDriverChangeSigProc(uchar enabled);
 // encoder three
 static void 	UiDriverChangeRit(uchar enabled);
-//static void 	UiDriverChangeFilter(uchar ui_only_update);
 static void 	UiDriverProcessActiveFilterScan(void);
 static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
-//static void 	UiDrawSpectrumScopeFrequencyBarText(void);
-//static void 	UiDriverClearSpectrumDisplay(void);
-// static ulong 	UiDriverGetScopeTraceColour(void);
-//static void 	UiDriverUpdateEthernetStatus(void);
-//static void 	UiDriverUpdateUsbKeyboardStatus(void);
 static void 	UiDriverHandleSmeter(void);
 static void 	UiDriverHandleLowerMeter(void);
 static void 	UiDriverHandlePowerSupply(void);
@@ -150,11 +132,7 @@ static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature(void);
-//static void 	UiDriverEditMode(void);
 static void 	UiDriverSwitchOffPtt(void);
-//static void 	UiDriverSetBandPowerFactor(uchar band);
-//
-//static void		UiCalcTxIqGainAdj(void);
 static void 	UiDriverLoadEepromValues(void);
 void			UiDriverUpdateMenu(uchar mode);
 uint16_t 		UiDriverSaveEepromValuesPowerDown(void);
@@ -686,7 +664,7 @@ void ui_driver_init(void)
 	// Update codec volume
 	//  0 - 16: via codec command
 	// 17 - 30: soft gain after decoder
-	Codec_Volume((ts.audio_gain*8));		// This is only approximate - it will be properly set later
+	Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*8));		// This is only approximate - it will be properly set later
 
 	// Set TX power factor
 	UiDriverSetBandPowerFactor(ts.band);
@@ -843,7 +821,6 @@ void ui_driver_toggle_tx(void)
 			}
 			else	{	// we are in MIC IN mode
 				Codec_Line_Gain_Adj(0);			// momentarily mute LINE IN audio until we switch modes because we will blast any connected LINE IN source until we switch
-				ts.tx_mic_gain_mult_temp = ts.tx_mic_gain_mult;		// temporarily hold the mic gain value while we switch
 				ts.tx_mic_gain_mult = 0;		// momentarily set the mic gain to zero while we go to TX
 				Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);	// Mute the microphone with the CODEC (this does so without a CLICK)
 			}
@@ -1354,9 +1331,9 @@ static void UiDriverProcessKeyboard(void)
 						ts.tx_audio_source = TX_AUDIO_MIC;
 					//
 					if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
-						UIDriverChangeAudioGain(0);
+						UiDriverChangeAudioGain(0);
 					else									// not RIT mode - don't grey out
-						UIDriverChangeAudioGain(1);
+						UiDriverChangeAudioGain(1);
 				}
 				break;
 			case BUTTON_POWER_PRESSED:
@@ -1505,7 +1482,7 @@ void UiInitRxParms(void)
 		UiDriverChangeStGain(0);			// sidetone gain when in CW mode
 	}
 	else	{
-		UIDriverChangeAudioGain(0);			// display Line/Mic gain and
+		UiDriverChangeAudioGain(0);			// display Line/Mic gain and
 		UiDriverChangeCmpLevel(0);			// Compression level when in voice mode
 	}
 }
@@ -1702,7 +1679,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				if(ts.dmod_mode == DEMOD_CW)
 					UiDriverChangeKeyerSpeed(0);
 				else
-					UIDriverChangeAudioGain(0);
+					UiDriverChangeAudioGain(0);
 				//
 				UiDriverChangeRit(0);
 				//
@@ -2440,7 +2417,7 @@ static void UiDriverCreateDesktop(void)
 	if(ts.dmod_mode == DEMOD_CW)
 		UiDriverChangeKeyerSpeed(0);
 	else
-		UIDriverChangeAudioGain(0);
+		UiDriverChangeAudioGain(0);
 	//
 	cw_gen_init();
 
@@ -3649,19 +3626,19 @@ static void UiDriverTimeScheduler(void)
 	if(ts.txrx_mode != TRX_MODE_TX)	{
 		was_rx = 1;			// set flag to indicate that we are in RX mode
 		if(ts.boot_halt_flag)	{	// are we halting boot?
-			ts.audio_gain_active = 0;	// yes - null out audio
+			ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
 			Codec_Volume(0);
 		}
-		else if((ts.audio_gain != ts.audio_gain_change) || (unmute_flag) || ts.band_change)	{	// in normal mode - calculate volume normally
-			ts.audio_gain_change = ts.audio_gain;
-			ts.audio_gain_active = 1;		// software gain not active - set to unity
-			if(ts.audio_gain <= 16)				// Note:  Gain > 16 adjusted in audio_driver.c via software
-				Codec_Volume((ts.audio_gain*5));
+		else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || (unmute_flag) || ts.band_change)	{	// in normal mode - calculate volume normally
+			ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
+			ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
+			if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)				// Note:  Gain > 16 adjusted in audio_driver.c via software
+				Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5));
 			else	{	// are we in the "software amplification" range?
 				Codec_Volume((80));		// set to fixed "maximum" gain
-				ts.audio_gain_active = (float)ts.audio_gain;	// to float
-				ts.audio_gain_active /= 2.5;	// rescale to reasonable step size
-				ts.audio_gain_active -= 5.35;	// offset to get gain multiplier value
+				ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
+				ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
+				ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
 			}
 			//
 			unmute_flag = 0;
@@ -3716,7 +3693,7 @@ static void UiDriverTimeScheduler(void)
 				ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
 				UiDriverChangeRit(0);
 				if(ts.dmod_mode != DEMOD_CW)
-					UIDriverChangeAudioGain(1);		// enable audio gain
+					UiDriverChangeAudioGain(1);		// enable audio gain
 				else
 					UiDriverChangeKeyerSpeed(1);	// enable keyer speed if it was CW mode
 
@@ -3741,7 +3718,7 @@ static void UiDriverTimeScheduler(void)
 				if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	{		// are we to switch back to RIT mode?
 					UiDriverChangeRit(1);			// enable RIT
 					if(ts.dmod_mode != DEMOD_CW)
-						UIDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
+						UiDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
 					else
 						UiDriverChangeKeyerSpeed(0);	// disable keyer speed if it was CW mode
 
@@ -4278,12 +4255,12 @@ static void UiDriverCheckEncoderOne(void)
 		{
 			// Convert to Audio Gain incr/decr
 			if(pot_diff < 0) {
-				if(ts.audio_gain)
-					ts.audio_gain -= 1;
+				if(ts.rx_gain[RX_AUDIO_SPKR].value)
+					ts.rx_gain[RX_AUDIO_SPKR].value -= 1;
 			} else {
-				ts.audio_gain += 1;
-				if(ts.audio_gain > ts.audio_max_volume)
-					ts.audio_gain = ts.audio_max_volume;
+				ts.rx_gain[RX_AUDIO_SPKR].value += 1;
+				if(ts.rx_gain[RX_AUDIO_SPKR].value > ts.rx_gain[RX_AUDIO_SPKR].max)
+					ts.rx_gain[RX_AUDIO_SPKR].value = ts.rx_gain[RX_AUDIO_SPKR].max;
 			}
 
 			UiDriverChangeAfGain(1);
@@ -4575,7 +4552,7 @@ static void UiDriverCheckEncoderThree(void)
 				if (ts.tx_audio_source == TX_AUDIO_MIC) {
 					Codec_MicBoostCheck();
 				}
-				UIDriverChangeAudioGain(1);
+				UiDriverChangeAudioGain(1);
 			}
 			break;
 		}
@@ -4767,7 +4744,7 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
 			else
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 
 			break;
 		}
@@ -4780,7 +4757,7 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(1);
 			else
-				UIDriverChangeAudioGain(1);
+				UiDriverChangeAudioGain(1);
 
 			break;
 		}
@@ -4794,7 +4771,7 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
 			else
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 
 			break;
 		}
@@ -4809,9 +4786,9 @@ static void UiDriverChangeEncoderThreeMode(uchar skip)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverChangeAfGain(uchar enabled)
+void UiDriverChangeAfGain(uchar enabled)
 {
-	UiDriverEncoderDisplaySimple(0,0,"AFG", enabled, ts.audio_gain);
+	UiDriverEncoderDisplaySimple(0,0,"AFG", enabled, ts.rx_gain[RX_AUDIO_SPKR].value);
 }
 
 //*----------------------------------------------------------------------------
@@ -5006,7 +4983,7 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UIDriverChangeAudioGain(uchar enabled)
+void UiDriverChangeAudioGain(uchar enabled)
 {
 	ushort 	color = enabled?White:Grey;
 	const char* txt;
@@ -7868,7 +7845,7 @@ void UiDriverLoadEepromValues(void)
 
 	UiReadSettingEEPROM_UInt8(EEPROM_TX_AUDIO_SRC,&ts.tx_audio_source,0,0,TX_AUDIO_MAX_ITEMS);
 	UiReadSettingEEPROM_UInt8(EEPROM_TCXO_STATE,&df.temp_enabled,TCXO_ON,0,TCXO_TEMP_STATE_MAX);
-	UiReadSettingEEPROM_UInt8(EEPROM_AUDIO_GAIN,&ts.audio_gain,DEFAULT_AUDIO_GAIN,0,MAX_AUDIO_GAIN);
+	UiReadSettingEEPROM_UInt8(EEPROM_AUDIO_GAIN,&ts.rx_gain[RX_AUDIO_SPKR].value,DEFAULT_AUDIO_GAIN,0,MAX_AUDIO_GAIN);
 	UiReadSettingEEPROM_UInt8(EEPROM_RX_CODEC_GAIN,&ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL,0,MAX_RF_CODEC_GAIN_VAL);
 	UiReadSettingEEPROM_Int(EEPROM_RX_GAIN,&ts.rf_gain,DEFAULT_RF_GAIN,0,MAX_RF_GAIN);
 	UiReadSettingEEPROM_UInt8(EEPROM_NB_SETTING,&ts.nb_setting,0,0,MAX_RF_ATTEN);
@@ -7892,7 +7869,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_SCALE_COLOUR,&ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT, 0, SPEC_MAX_COLOUR);
 	UiReadSettingEEPROM_UInt8(EEPROM_PADDLE_REVERSE,&ts.paddle_reverse,0,0,1);
 	UiReadSettingEEPROM_UInt8(EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX);
-	UiReadSettingEEPROM_UInt8(EEPROM_MAX_VOLUME,&ts.audio_max_volume,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_MAX_VOLUME,&ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_300HZ_SEL,&ts.filter_300Hz_select,FILTER_300HZ_DEFAULT,0,MAX_300HZ_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_500HZ_SEL,&ts.filter_500Hz_select,FILTER_500HZ_DEFAULT,0,MAX_500HZ_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K8_SEL,&ts.filter_1k8_select,FILTER_1K8_DEFAULT,0,MAX_1K8_FILTER);
@@ -8124,7 +8101,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_FREQ_STEP,df.selected_idx,3);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_AUDIO_GAIN,ts.audio_gain,DEFAULT_AUDIO_GAIN);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_AUDIO_GAIN,ts.rx_gain[RX_AUDIO_SPKR].value,DEFAULT_AUDIO_GAIN);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_CODEC_GAIN,ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL);
 	UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_GAIN,ts.rf_gain,DEFAULT_RF_GAIN);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_SETTING,ts.nb_setting,0);
@@ -8146,7 +8123,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_PADDLE_REVERSE,ts.paddle_reverse,0);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_RX_DELAY,ts.cw_rx_delay,CW_RX_DELAY_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.audio_max_volume,MAX_VOLUME_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_300Hz_select,FILTER_300HZ_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_500Hz_select,FILTER_500HZ_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_1k8_select,FILTER_1K8_DEFAULT);

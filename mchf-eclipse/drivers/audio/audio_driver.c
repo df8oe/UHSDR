@@ -1582,8 +1582,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//  0 - 16: via codec command
 		// 17 - 20: soft gain after decoder
 		//
-		if(ts.audio_gain > 16)	// is volume control above highest hardware setting?
-			arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.audio_gain_active, (float32_t *)ads.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
+		if(ts.rx_gain[RX_AUDIO_SPKR].value > 16)	// is volume control above highest hardware setting?
+			arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, (float32_t *)ads.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
 	}
 	//
 	// Transfer processed audio to DMA buffer
@@ -1607,7 +1607,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// Unless this is DIGITAL I/Q Mode, we sent processed audio
 		if (ts.tx_audio_source != TX_AUDIO_DIGIQ) {
 			if (i%USBD_AUDIO_IN_OUT_DIV == modulus) {
-				float32_t val = ads.a_buffer[i] * ts.rx_usb_gain/31.0;
+				float32_t val = ads.a_buffer[i] * ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 				audio_in_put_buffer(val);
 				if (USBD_AUDIO_IN_CHANNELS == 2) {
 					audio_in_put_buffer(val);
@@ -1772,8 +1772,8 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//  0 - 16: via codec command
 		// 17 - 20: soft gain after decoder
 		//
-		if(ts.audio_gain > 16)	// is volume control above highest hardware setting?
-			arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.audio_gain_active, (float32_t *)ads.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
+		if(ts.rx_gain[RX_AUDIO_SPKR].value > 16)	// is volume control above highest hardware setting?
+			arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, (float32_t *)ads.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
 	}
 	//
 	// Transfer processed audio to DMA buffer
