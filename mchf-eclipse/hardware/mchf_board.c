@@ -772,7 +772,7 @@ void mchf_board_init(void)
 	mchf_board_led_init();
 
 	// Init keypad hw
-//	mchf_board_keypad_init();
+	mchf_board_keypad_init();
 
 	// Touchscreen Init
 	mchf_board_touchscreen_init();
@@ -789,9 +789,6 @@ void mchf_board_init(void)
 
 	// LCD Init
 	UiLcdHy28_Init();
-
-	// Init keypad hw
-	mchf_board_keypad_init();
 
 	// Encoders init
 	UiRotaryFreqEncoderInit();
