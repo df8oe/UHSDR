@@ -1319,7 +1319,7 @@ uchar UiLcdHy28_Init(void)
    lcd_cs_pio = LCD_CS_PIO;
 
    // Try SPI Init
-   UiLcdHy28_SpiInit(true);
+   UiLcdHy28_SpiInit(HY28BHISPEED);
    // HY28B works with 50 Mhz, so we do high speed
 
    // Reset

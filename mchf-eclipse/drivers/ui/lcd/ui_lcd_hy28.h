@@ -21,6 +21,8 @@
 #define MAX_X  320
 #define MAX_Y  240
 
+#define HY28BHISPEED false
+
 #define SPI_START   (0x70)              /* Start byte for SPI transfer        */
 #define SPI_RD      (0x01)              /* WR bit 1 within start              */
 #define SPI_WR      (0x00)              /* WR bit 0 within start              */

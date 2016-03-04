@@ -15,7 +15,8 @@
 - hopefully improved USB audio recongnition of all Windows versions and Linux
 - removed scope/waterfall blocking in SPI mode
 - added LCD mode difference to dynamic tuning
-
+- more speed for LCD parallel/SPI
+ added possibility of swapping SPI to 50MHz instead of 25MHz (ununsed at the moment)
 
 20160228 [DF8OE]
 - corrected TX/RX switching of AFG/STG and RIT/WPM in CW
