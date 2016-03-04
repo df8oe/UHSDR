@@ -174,6 +174,7 @@
   </Components>
   <Files>
     <File name="drivers/ui/lcd/ui_lcd_hy28_fonts.c" path="drivers/ui/lcd/ui_lcd_hy28_fonts.c" type="1"/>
+    <File name="drivers/ui/lcd/ui_spectrum.c" path="drivers/ui/lcd/ui_spectrum.c" type="1"/>    
     <File name="cmsis_lib/source/stm32f4xx_usart.c" path="cmsis_lib/source/stm32f4xx_usart.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_dac.h" path="cmsis_lib/include/stm32f4xx_dac.h" type="1"/>
     <File name="usb/usbd/core/src/usbd_ioreq.c" path="usb/usbd/core/src/usbd_ioreq.c" type="1"/>
@@ -384,6 +385,7 @@
     <File name="drivers/audio/filters/fir_rx_decimate_4.h" path="drivers/audio/filters/fir_rx_decimate_4.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_exti.h" path="cmsis_lib/include/stm32f4xx_exti.h" type="1"/>
     <File name="drivers/ui/lcd/ui_lcd_hy28.h" path="drivers/ui/lcd/ui_lcd_hy28.h" type="1"/>
+    <File name="drivers/ui/lcd/ui_spectrum.h" path="drivers/ui/lcd/ui_spectrum.h" type="1"/>    
     <File name="drivers/audio/filters/iir_2k7_tx_bpf.h" path="drivers/audio/filters/iir_2k7_tx_bpf.h" type="1"/>
     <File name="drivers/keyboard/keyb_driver.h" path="drivers/keyboard/keyb_driver.h" type="1"/>
     <File name="usb/usbd/class/cdc/src" path="" type="2"/>

@@ -46,7 +46,7 @@
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		27
 //
-#define 	TRX4M_VER_BUILD			5
+#define 	TRX4M_VER_BUILD			6
 //
 
 #define		ATTRIB_STRING1			"Additional Contributions by"
@@ -543,6 +543,8 @@ typedef struct ButtonMap
 #define	BAND_FILTER_UPPER_40		8000000				// Upper limit for 40/60 meter filter
 //
 #define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20/30 meter filter
+
+#define	BAND_FILTER_UPPER_10		32000000			// Upper limit for 10 meter filter
 //
 #define	BAND_FILTER_UPPER_6		40000000			// Upper limit for 6 meter filter
 //
@@ -736,6 +738,7 @@ enum {
 #define TX_AUDIO_DIG			3
 #define TX_AUDIO_DIGIQ			4
 #define TX_AUDIO_MAX_ITEMS		4
+#define TX_AUDIO_NUM			(TX_AUDIO_MAX_ITEMS +1)
 //
 #define	LINE_GAIN_MIN			3
 #define	LINE_GAIN_MAX			31
@@ -1342,11 +1345,11 @@ typedef struct TransceiverState
 
 	uchar 	tx_audio_source;
 	uchar   tx_line_channel;  // 1 LEFT 2 RIGHT
-	uchar	tx_mic_gain;
 	ulong	tx_mic_gain_mult;
 	ulong	tx_mic_gain_mult_temp;	// used to temporarily hold the mic gain when going from RX to TX
-	uchar	tx_line_gain;
+	uchar	tx_gain[TX_AUDIO_NUM];
 	uchar	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
+	uchar	rx_usb_gain;			// volume setting for usb audio out
 
 	// Microphone gain boost of +20dB via Codec command (TX)
 	uchar	mic_boost;
@@ -1389,53 +1392,24 @@ typedef struct TransceiverState
 #define ADJ_5W 0
 #define ADJ_FULL_POWER 1
 	uchar	pwr_adj[2][MAX_BAND_NUM];
-#if 0
-	uchar	pwr_80m_5w_adj;			// calibration adjust for 80 meters, 5 watts
-	uchar	pwr_60m_5w_adj;			// calibration adjust for 60 meters, 5 watts
-	uchar	pwr_40m_5w_adj;			// calibration adjust for 40 meters, 5 watts
-	uchar	pwr_30m_5w_adj;			// calibration adjust for 30 meters, 5 watts
-	uchar	pwr_20m_5w_adj;			// calibration adjust for 20 meters, 5 watts
-	uchar	pwr_17m_5w_adj;			// calibration adjust for 17 meters, 5 watts
-	uchar	pwr_15m_5w_adj;			// calibration adjust for 15 meters, 5 watts
-	uchar	pwr_12m_5w_adj;			// calibration adjust for 12 meters, 5 watts
-	uchar	pwr_10m_5w_adj;			// calibration adjust for 10 meters, 5 watts
-	uchar	pwr_6m_5w_adj;			// calibration adjust for 6 meters, 5 watts
-	uchar	pwr_4m_5w_adj;			// calibration adjust for 4 meters, 5 watts
-	uchar	pwr_2m_5w_adj;			// calibration adjust for 2 meters, 5 watts
-	uchar	pwr_70cm_5w_adj;		// calibration adjust for 70 centimeters, 5 watts
-	uchar	pwr_23cm_5w_adj;		// calibration adjust for 23 centimeters, 5 watts
-	uchar	pwr_2200m_5w_adj;		// calibration adjust for 2200 meters, 5 watts
-	uchar	pwr_630m_5w_adj;		// calibration adjust for 630 meters, 5 watts
-	uchar	pwr_160m_5w_adj;		// calibration adjust for 160 meters, 5 watts
-	//
-	uchar	pwr_80m_full_adj;			// calibration adjust for 80 meters, full power
-	uchar	pwr_60m_full_adj;			// calibration adjust for 60 meters, full power
-	uchar	pwr_40m_full_adj;			// calibration adjust for 40 meters, full power
-	uchar	pwr_30m_full_adj;			// calibration adjust for 30 meters, full power
-	uchar	pwr_20m_full_adj;			// calibration adjust for 20 meters, full power
-	uchar	pwr_17m_full_adj;			// calibration adjust for 17 meters, full power
-	uchar	pwr_15m_full_adj;			// calibration adjust for 15 meters, full power
-	uchar	pwr_12m_full_adj;			// calibration adjust for 12 meters, full power
-	uchar	pwr_10m_full_adj;			// calibration adjust for 10 meters, full power
-	uchar	pwr_6m_full_adj;			// calibration adjust for 6 meters, full power
-	uchar	pwr_4m_full_adj;			// calibration adjust for 4 meters, full power
-	uchar	pwr_2m_full_adj;			// calibration adjust for 2 meters, full power
-	uchar	pwr_70cm_full_adj;			// calibration adjust for 70 centimeters, full power
-	uchar	pwr_23cm_full_adj;			// calibration adjust for 23 centimeters, full power
-	uchar	pwr_2200m_full_adj;			// calibration adjust for 2200 meters, full power
-	uchar	pwr_630m_full_adj;			// calibration adjust for 630 meters, full power
-	uchar	pwr_160m_full_adj;			// calibration adjust for 160 meters, full power
-#endif
 	//
 	ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
 	ulong	alc_decay_var;				// adjustable ALC release time - working variable version
 	ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
 	ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 	//
+	#define FREQ_STEP_SWAP_BTN	0xf0
 	uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 	//
 	bool	nb_disable;					// TRUE if noise blanker is to be disabled
 	//
+
+	#define DSP_NR_ENABLE 	  0x01
+	#define DSP_NR_POSTAGC_ENABLE 	  0x02
+	#define DSP_NOTCH_ENABLE 0x04
+	#define DSP_NB_ENABLE 0x08
+
+
 	uchar	dsp_active;					// Used to hold various aspects of DSP mode selection
 										// LSB = 1 if DSP NR mode is on (| 1)
 										// LSB+1 = 1 if DSP NR is to occur post AGC (| 2)
@@ -1466,6 +1440,7 @@ typedef struct TransceiverState
 	//
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
+	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
 										// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
 										// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
@@ -1548,6 +1523,7 @@ typedef struct TransceiverState
 	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
 	bool	dsp_enabled;			// NR disabled
 	uchar	xlat;				// CAT <> IQ-Audio
+	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;			// only debugging use
 } TransceiverState;
 //

@@ -111,6 +111,7 @@
 #define AUDIO_STREAMING_INTERFACE_DESC_SIZE           0x07
 
 #define AUDIO_CONTROL_MUTE                            0x0001
+#define AUDIO_CONTROL_VOLUME                          0x0002
 
 #define AUDIO_FORMAT_TYPE_I                           0x01
 #define AUDIO_FORMAT_TYPE_III                         0x03
@@ -119,9 +120,32 @@
 #define AUDIO_ENDPOINT_GENERAL                        0x01
 
 #define AUDIO_REQ_GET_CUR                             0x81
+#define AUDIO_REQ_GET_MIN                             0x82
+#define AUDIO_REQ_GET_MAX                             0x83
+#define AUDIO_REQ_GET_RES                             0x84
+
 #define AUDIO_REQ_SET_CUR                             0x01
 
 #define AUDIO_OUT_STREAMING_CTRL                      0x02
+
+
+typedef struct UsbAudioUnit_s {
+	uint8_t cs;
+	uint8_t cn;
+	int16_t min;
+	int16_t max;
+	uint16_t res;
+	int16_t cur;
+} UsbAudioUnit;
+
+// In / Out Volume;
+
+enum {
+	UnitVolumeTX = 0,
+	UnitVolumeRX,
+	UnitMax
+};
+extern UsbAudioUnit usbUnits[UnitMax];
 
 /**
   * @}

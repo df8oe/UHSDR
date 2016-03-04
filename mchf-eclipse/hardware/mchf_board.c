@@ -673,7 +673,7 @@ void mchf_board_power_off(void)
 	char	tx[40];
 	// Power off all - high to disable main regulator
 
-	UiDriverClearSpectrumDisplay();	// clear display under spectrum scope
+	UiSpectrumClearDisplay();	// clear display under spectrum scope
 
 	Codec_Mute(1);	// mute audio when powering down
 

@@ -42,7 +42,7 @@
   * @{
   */ 
 #define USBD_LANGID_STRING              0x409
-#define USBD_MANUFACTURER_STRING        (uint8_t*)"STMicroelectronics"
+#define USBD_MANUFACTURER_STRING        (uint8_t*)"mcHF Open Source Community (based on STMicroelectronics Drivers)"
 
 #define USBD_PRODUCT_HS_STRING          (uint8_t*)"STM32 Virtual ComPort in HS mode"
 #define USBD_SERIALNUMBER_HS_STRING     (uint8_t*)"00000000050B"
@@ -50,7 +50,7 @@
 #ifndef USB_AUDIO_SUPPORT
 	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
 #else
-	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"STM32 AUDIO in FS Mode"
+	#define USBD_PRODUCT_FS_STRING          (uint8_t*)"mcHF USB Interface"
 #endif
 #define USBD_SERIALNUMBER_FS_STRING     (uint8_t*)"00000000050C"
 
@@ -61,6 +61,8 @@
 #define USBD_INTERFACE_FS_STRING        (uint8_t*)"VCP Interface"
 
 #define USBD_CDC_FS_STRING          (uint8_t*)"STM32 Virtual ComPort in FS Mode"
+#define USBD_AUDIO_IN_FS_STRING          (uint8_t*)"mcHF Audio RX"
+#define USBD_AUDI_OUT_FS_STRING          (uint8_t*)"mcHF Audio TX"
 
 USBD_DEVICE USR_desc =
 {

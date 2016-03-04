@@ -21,6 +21,8 @@
 #define MAX_X  320
 #define MAX_Y  240
 
+#define HY28BHISPEED false
+
 #define SPI_START   (0x70)              /* Start byte for SPI transfer        */
 #define SPI_RD      (0x01)              /* WR bit 1 within start              */
 #define SPI_WR      (0x00)              /* WR bit 0 within start              */
@@ -67,24 +69,6 @@
 
 
 // ----------------------------------------------------------
-// Spectrum draw params
-//
-// WARNING:  Because the waterfall uses a "block write" which is, in effect, a "blind" writing of data to the LCD, the size of the graphic
-// block *MUST* exactly match the number of pixels within that block.
-//
-// Furthermore, the "SPECTRUM WIDTH" must match exactly with graphical width of the "X" size of each line to be written or skewing will result!
-//
-#define SPECTRUM_START_X		POS_SPECTRUM_IND_X
-//
-// Shift of whole spectrum in vertical direction
-#define SPECTRUM_START_Y		(POS_SPECTRUM_IND_Y - 10)
-//
-// Spectrum hight is bit lower that the whole control
-#define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
-//
-// Dependent on FFT samples,but should be less than control width!
-#define SPECTRUM_WIDTH			256
-// ----------------------------------------------------------
 
 #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
 #define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
@@ -96,8 +80,8 @@
 #define LCD_CS_PIO	         	LCD_CSA_PIO
 
 // ----------------------------------------------------------
-
 void 	UiLcdHy28_LcdClear(ushort Color);
+
 void 	UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor, uchar font);
 void 	UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor, uchar font);
 uint16_t 	UiLcdHy28_TextWidth(const char *str, uchar font);
@@ -110,23 +94,15 @@ void 	UiLcdHy28_DrawHorizLineWithGrad(ushort Xpos, ushort Ypos, ushort Length,us
 void 	UiLcdHy28_DrawEmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width, ushort color);
 void 	UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort Width,ushort color);
 void 	UiLcdHy28_DrawFullRect (ushort Xpos, ushort Ypos, ushort Height, ushort Width, ushort color);
-void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
-void 	UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height);
-void 	UiLcdHy28_SendByteSpi(uint8_t byte);
-uint8_t UiLcdHy28_ReadByteSpi(void);
-void 	UiLcdHy28_WriteDataOnly( unsigned short data);
 
+void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
+
+void 	UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height);
+void 	UiLcdHy28_BulkPixel_Put(uint16_t pixel);
 void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_BulkWriteColor(uint16_t color, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
 
-void	UiLcdHy28_WriteRAM_Prepare(void);
-void	UiLcdHy28_WriteRAM_Finish(void);
-
-void 	UiLcdHy28_DrawSpectrum(q15_t *fft,ushort color,ushort shift);
-void 	UiLcdHy28_DrawSpectrum_Interleaved(q15_t *fft_old, q15_t *fft_new, ushort color_old, ushort color_new,ushort shift);
-
-void 	UiLcdHy28_Test(void);
 uchar 	UiLcdHy28_Init(void);
 
 void 	UiLcdHy28_ShowStartUpScreen(ulong hold_time);
