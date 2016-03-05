@@ -310,8 +310,8 @@ inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uin
 }
 
 inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint8_t min, uint8_t max) {
-  if (change  > (val - min)) { val = max; }
-  else if (change >  max - val) { val = min; }
+  if (change  > (max - val)) { val = min; }
+  else if (change <  min - val) { val = max; }
   else { val +=change; }
   return val;
 }
@@ -2765,7 +2765,6 @@ static void UiDriverCreateSMeter(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 static uint8_t topmeter_last;
-static uint8_t btmmeter_last;
 static void UiDriverUpdateTopMeterA(uchar val)
 {
 
@@ -2780,7 +2779,6 @@ static void UiDriverUpdateTopMeterA(uchar val)
 
     // decide if we need to draw more boxes or delete some
     if (val > topmeter_last) {
-      col = Blue2;
       from = topmeter_last+1;
       to = val+1;
     } else {
@@ -2803,31 +2801,58 @@ static void UiDriverUpdateTopMeterA(uchar val)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+static uint8_t btmmeter_last;
+static uint8_t btmmeter_last_warn;
+
 static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 {
-	uchar 	i,v_s;
-	int		col = Cyan;
+  uchar 	i,v_s = 3;
+  int		col = Cyan;
+  uint8_t from, from_warn = 0, to;
 
-	// limit meter
-	if(val > 34) { val = 34; }
+  // limit meter
+  if(val > 34) { val = 34; }
+  if (warn == 0) { warn = 34; } // never warn
 
-	// Indicator height
-	v_s = 3;
+  if(warn != btmmeter_last_warn)
+  {
+    if (warn < btmmeter_last_warn) {
+      from_warn = warn+1;
+    } else {
+      from_warn = btmmeter_last_warn + 1;
+    }
+  }
 
 
-	// Draw indicator
-	for(i = 1; i < 34; i++)
-	{
-		if(val < i)
-			col = Grid;
-		else if((i >= warn) && warn)	// is level above "warning" color? (is "warn" is zero, disable warning)
-			col = Red2;					// yes - display values above that color in red
+  if(val != btmmeter_last || from_warn != 0) {
 
-		// Lines
-		UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
-	}
+    // decide if we need to draw more boxes or delete some
+    if (val > btmmeter_last) {
+      // we will draw more active boxes
+      from = btmmeter_last+1;
+      to = val+1;
+
+    } else {
+      from = val+1;
+      to   = btmmeter_last+1;
+    }
+    if (from_warn < from) { from = from_warn; }
+
+    // Draw indicator
+    for(i = from; i < to; i++)
+    {
+      if (i>val) {col = Grid; } // switch to delete color
+      if((i >= warn) && warn && col != Grid) {	// is level above "warning" color? (is "warn" is zero, disable warning)
+        col = Red2;					// yes - display values above that color in red
+      }
+      // Lines
+      UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
+    }
+
+    btmmeter_last = val;
+    btmmeter_last_warn = warn;
+  }
 }
-
 
 //
 //*----------------------------------------------------------------------------
@@ -2994,6 +3019,10 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+void dummy() {
+
+}
 static void UiDriverInitFrequency(void)
 {
 	ulong i;
