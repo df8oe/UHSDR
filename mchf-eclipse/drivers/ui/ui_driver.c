@@ -302,16 +302,16 @@ extern __IO	arm_fir_instance_f32	FIR_Q_TX;
 //
 
 
-inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint8_t min, uint8_t max) {
+inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max) {
   if (change  > (val - min)) { val = min; }
   else if (change >  max - val) { val = max; }
   else { val +=change;}
   return val;
 }
 
-inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint8_t min, uint8_t max) {
+inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max) {
   if (change  > (max - val)) { val = min; }
-  else if (change <  min - val) { val = max; }
+  else if (change + (int32_t)val <  min) { val = max; }
   else { val +=change; }
   return val;
 }
@@ -1192,7 +1192,7 @@ static void UiDriverProcessKeyboard(void)
 					incr_wrap_uint8(
 					    &ts.filter_id,
 					    AUDIO_MIN_FILTER,
-					    AUDIO_MAX_FILTER);
+					    AUDIO_MAX_FILTER-1);
 
 					UiDriverProcessActiveFilterScan();	// make sure that filter is active - if not, find next active filter
 					//
@@ -1380,7 +1380,7 @@ static void UiDriverProcessKeyboard(void)
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
-				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER);
+				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
 
 				  UiDriverChangeFilter(0);
 				  UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
