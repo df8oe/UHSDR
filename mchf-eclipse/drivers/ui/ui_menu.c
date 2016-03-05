@@ -17,6 +17,7 @@
 #include "mchf_board.h"
 #include "ui.h"
 #include "ui_menu.h"
+#include "ui_configuration.h"
 
 #include <stdio.h>
 #include "arm_math.h"

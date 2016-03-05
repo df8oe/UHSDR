@@ -22,9 +22,6 @@
 #include "mchf_hw_i2c2.h"
 #include "codec.h"
 
-// Demodulator mode public flag
-extern __IO ulong demod_mode;
-
 // Transceiver state public structure
 extern __IO TransceiverState ts;
 
