@@ -109,6 +109,7 @@ uchar 	ui_si570_init_temp_sensor(void);
 uchar 	ui_si570_read_temp(int *temp);
 void 	ui_si570_conv_temp(uchar *temp, int *dtemp);
 void 	ui_si570_calculate_startup_frequency(void);
+float   ui_si570_get_startup_frequency();
 void 	calc_suf_sub(void);
 
 #endif

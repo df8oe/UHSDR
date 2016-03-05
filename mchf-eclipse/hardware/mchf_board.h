@@ -1180,6 +1180,13 @@ enum {
 #define	EEPROM_FILTER_2K9_SEL		317		// Selection of 2.9 kHz filter
 
 
+enum {
+  DISPLAY_NONE = 0,
+  DISPLAY_HY28A_SPI,
+  DISPLAY_HY28B_SPI,
+  DISPLAY_HY28B_PARALLEL
+};
+
 //
 //
 // NOTE:  EEPROM addresses up to 383 are currently defined
@@ -1522,6 +1529,9 @@ typedef struct TransceiverState
 	uchar	xlat;				// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;			// only debugging use
+
+	uint8_t display_type;           // existence/identification of display type
+
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

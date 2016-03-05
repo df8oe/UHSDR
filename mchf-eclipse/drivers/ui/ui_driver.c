@@ -4202,7 +4202,7 @@ static bool UiDriverCheckFrequencyEncoder(void)
 		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
 		{
 			uchar border = 6;	// when LCD is in parallel mode
-			if(sd.use_spi)
+			if(ts.display_type!=DISPLAY_HY28B_PARALLEL)
 			    border = 4;		// when LCD is in SPI mode
 			if ((delta_tics < border) && ((pot_diff_avg > 1.5) || (pot_diff_avg < (-1.5)))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
 			if ((delta_tics < border) && ((pot_diff_avg > 2.5) || (pot_diff_avg < (-2.5))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
@@ -7550,7 +7550,7 @@ void UiCheckForPressedKey(void)
 			txt = "STEPP ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
-			get_touchscreen_coordinates();
+			UiLcdHy28_GetTouchscreenCoordinates();
 			sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
 			txt = txt_buf;
 			break;
@@ -7993,7 +7993,7 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt32_16(EEPROM_WATERFALL_OFFSET,&ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT,WATERFALL_OFFSET_MIN,WATERFALL_OFFSET_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_SIZE,&ts.waterfall_size,WATERFALL_SIZE_DEFAULT,0,WATERFALL_MAX);
 	UiReadSettingEEPROM_UInt32_16(EEPROM_WATERFALL_CONTRAST,&ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT,WATERFALL_CONTRAST_MIN,WATERFALL_CONTRAST_MAX);
-	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_SPEED,&ts.waterfall_speed,sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,0,WATERFALL_SPEED_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_SPEED,&ts.waterfall_speed,ts.display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,0,WATERFALL_SPEED_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,&ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT,SPECTRUM_SCOPE_NOSIG_ADJUST_MIN,SPECTRUM_SCOPE_NOSIG_ADJUST_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_WATERFALL_NOSIG_ADJUST,&ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT,WATERFALL_NOSIG_ADJUST_MIN,WATERFALL_NOSIG_ADJUST_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_FFT_WINDOW,&ts.fft_window_type,FFT_WINDOW_DEFAULT,0,FFT_WINDOW_MAX);
@@ -8244,7 +8244,7 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_OFFSET,ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SIZE,ts.waterfall_size,WATERFALL_SIZE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_CONTRAST,ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,ts.display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_NOSIG_ADJUST,ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FFT_WINDOW,ts.fft_window_type,FFT_WINDOW_DEFAULT);
