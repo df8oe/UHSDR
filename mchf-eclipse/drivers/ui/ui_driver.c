@@ -1673,6 +1673,8 @@ bool	voice_mode, select_10k, select_3k6;
 		if((ts.filter_id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode)))
 			ts.filter_id++;
 		//
+		if((ts.filter_id == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW)))
+			ts.filter_id = AUDIO_300HZ;
 		if((ts.filter_id == AUDIO_1P8KHZ) && (!ts.filter_1k8_select))
 			ts.filter_id++;
 		//
