@@ -1838,7 +1838,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			ts.menu_var_changed = 1;
 		}
 		else	{	// Not in MENU mode - select the METER mode
-		    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX);
+		    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
 
 		    UiDriverDeleteSMeter();
 			UiDriverCreateSMeter();	// redraw meter
@@ -2752,7 +2752,9 @@ static void UiDriverCreateSMeter(void)
 		}
 	}
 	// Draw meters
+	UiDriverUpdateTopMeterA(34);
 	UiDriverUpdateTopMeterA(0);
+	UiDriverUpdateBtmMeter(34, 34);
 	UiDriverUpdateBtmMeter(0, 34);
 
 }
@@ -2764,34 +2766,89 @@ static void UiDriverCreateSMeter(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static uint8_t topmeter_last;
-static void UiDriverUpdateTopMeterA(uchar val)
+#define SMETER_MAX_LEVEL 33
+
+enum {
+  METER_TOP = 0,
+  METER_BTM,
+  METER_NUM
+};
+typedef struct MeterState_s {
+  uint8_t last;
+  uint8_t last_warn;
+} MeterState;
+
+static MeterState meters[METER_NUM];
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverUpdateBtmMeter
+//* Object              : redraw indicator
+//* Input Parameters    : val=indicated value, warn=red warning threshold
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+
+static void UiDriverUpdateMeter(uchar val, uchar warn, uint32_t color_norm, uint8_t meterId)
 {
-
-  uchar 	i,v_s;
-  int		col = Blue2;
+  uchar     i;
+  const uint8_t v_s = 3;
+  uint32_t       col = color_norm;
   uint8_t from, to;
+  uint8_t from_warn = 255;
 
-  if (val>34) { val = 34; }
-  if(val != topmeter_last) {
-    // Indicator height
-    v_s = 3;
+  uint16_t ypos = meterId==METER_TOP?(POS_SM_IND_Y + 28):(POS_SM_IND_Y + 51);
+
+  // limit meter
+  if(val > SMETER_MAX_LEVEL) { val = SMETER_MAX_LEVEL; }
+  if (warn == 0) { warn = SMETER_MAX_LEVEL+1; } // never warn if warn == 0
+
+  if(warn != meters[meterId].last_warn)
+  {
+    if (warn < meters[meterId].last_warn) {
+      from_warn = warn;
+    } else {
+      from_warn = meters[meterId].last_warn;
+    }
+  }
+
+
+  if(val != meters[meterId].last || from_warn != 255) {
 
     // decide if we need to draw more boxes or delete some
-    if (val > topmeter_last) {
-      from = topmeter_last+1;
+    if (val > meters[meterId].last) {
+      // we will draw more active boxes
+      from = meters[meterId].last;
       to = val+1;
+
     } else {
-      col = Grid;
-      from = val+1;
-      to   = topmeter_last+1;
+      from = val;
+      to   = meters[meterId].last+1;
     }
-    for(i = from; i < to; i++)  {
+    if (from_warn < from) { from = from_warn; }
+
+    // Draw indicator
+    // we never draw a zero, so we start from 1 min
+    if (from == 0) { from = 1; }
+
+    for(i = from; i < to; i++)
+    {
+      if (i>val) {col = Grid; } // switch to delete color
+      if((i >= warn) && warn && col != Grid) {  // is level above "warning" color? (is "warn" is zero, disable warning)
+        col = Red2;                 // yes - display values above that color in red
+      }
       // Lines
-      UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
+      UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),(ypos - v_s),v_s,LCD_DIR_VERTICAL,col);
     }
-    topmeter_last = val;
+
+    meters[meterId].last = val;
+    meters[meterId].last_warn = warn;
   }
+}
+
+
+static void UiDriverUpdateTopMeterA(uchar val)
+{
+  UiDriverUpdateMeter(val,SMETER_MAX_LEVEL+1,Blue2,METER_TOP);
 }
 
 //*----------------------------------------------------------------------------
@@ -2801,57 +2858,9 @@ static void UiDriverUpdateTopMeterA(uchar val)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static uint8_t btmmeter_last;
-static uint8_t btmmeter_last_warn;
-
 static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 {
-  uchar 	i,v_s = 3;
-  int		col = Cyan;
-  uint8_t from, from_warn = 0, to;
-
-  // limit meter
-  if(val > 34) { val = 34; }
-  if (warn == 0) { warn = 34; } // never warn
-
-  if(warn != btmmeter_last_warn)
-  {
-    if (warn < btmmeter_last_warn) {
-      from_warn = warn+1;
-    } else {
-      from_warn = btmmeter_last_warn + 1;
-    }
-  }
-
-
-  if(val != btmmeter_last || from_warn != 0) {
-
-    // decide if we need to draw more boxes or delete some
-    if (val > btmmeter_last) {
-      // we will draw more active boxes
-      from = btmmeter_last+1;
-      to = val+1;
-
-    } else {
-      from = val+1;
-      to   = btmmeter_last+1;
-    }
-    if (from_warn < from) { from = from_warn; }
-
-    // Draw indicator
-    for(i = from; i < to; i++)
-    {
-      if (i>val) {col = Grid; } // switch to delete color
-      if((i >= warn) && warn && col != Grid) {	// is level above "warning" color? (is "warn" is zero, disable warning)
-        col = Red2;					// yes - display values above that color in red
-      }
-      // Lines
-      UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 51) - v_s),v_s,LCD_DIR_VERTICAL,col);
-    }
-
-    btmmeter_last = val;
-    btmmeter_last_warn = warn;
-  }
+  UiDriverUpdateMeter(val,warn,Cyan,METER_BTM);
 }
 
 //
