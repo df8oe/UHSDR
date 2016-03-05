@@ -1508,9 +1508,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(ts.tx_audio_source == TX_AUDIO_MIC)	// Orange if in MIC mode
-			clr = Orange;
-		//
-		sprintf(options, "  %u", ts.tx_gain[ts.tx_audio_source]);
+		    {
+		    clr = Orange;
+		    sprintf(options, "  %u", ts.tx_gain[TX_AUDIO_LINEIN_L]);
+		    }
+		else
+		    sprintf(options, "  %u", ts.tx_gain[ts.tx_audio_source]);
 		break;
 	//
 	case MENU_ALC_RELEASE:		// ALC Release adjust
