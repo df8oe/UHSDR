@@ -1216,6 +1216,31 @@ typedef struct Gain_s {
   uint8_t value_old;
   float   active_value;
 } Gain;
+//
+// Bands tuning values - WORKING registers - used "live" during transceiver operation
+// (May contain VFO A, B or "Memory" channel values)
+//
+struct vfo_reg_s {
+    uint32_t dial_value;
+    uint32_t decod_mode;
+    uint32_t filter_mode;
+};
+
+typedef struct vfo_reg_s VfoReg;
+
+struct band_regs_s {
+    VfoReg band[MAX_BANDS+1];
+};
+typedef struct band_regs_s BandRegs;
+
+enum {
+    VFO_WORK = 0,
+    VFO_A,
+    VFO_B,
+    VFO_MAX
+};
+// Working register plus VFO A and VFO B registers.
+extern __IO BandRegs vfo[VFO_MAX];
 
 
 // Transceiver state public structure

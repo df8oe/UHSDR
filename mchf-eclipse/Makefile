@@ -110,6 +110,7 @@ drivers/keyboard/keyb_driver.c \
 drivers/ui/oscillator/ui_si570.c \
 drivers/ui/ui_menu.c \
 drivers/ui/ui_driver.c \
+drivers/ui/ui_configuration.c \
 drivers/ui/encoder/ui_rotary.c \
 drivers/ui/lcd/ui_lcd_hy28.c \
 drivers/ui/lcd/ui_lcd_hy28_fonts.c \

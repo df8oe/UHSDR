@@ -732,7 +732,7 @@ void mchf_board_power_off(void)
 	ts.powering_down = 1;	// indicate that we should be powering down
 
 	if(ts.ser_eeprom_in_use != 0x20)
-	    UiDriverSaveEepromValuesPowerDown();		// save EEPROM values again - to make sure...
+	    UiConfiguration_SaveEepromValues();		// save EEPROM values again - to make sure...
 
 	//
 	// Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
@@ -752,9 +752,7 @@ void mchf_board_power_off(void)
 //*----------------------------------------------------------------------------
 void mchf_board_init(void)
 {
-    uint8_t display_type;
-
-	// Enable clock on all ports
+  	// Enable clock on all ports
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
