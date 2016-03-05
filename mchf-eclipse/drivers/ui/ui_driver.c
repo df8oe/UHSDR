@@ -220,11 +220,6 @@ const float S_Meter_Cal[] =
 __IO BandRegs vfo[VFO_MAX];
 
 
-const uint8_t touchscreentable [] = {0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,0x1c,0x1d,0x1e,0x1f,0x22,
-0x23,0x24,0x25,0x26,0x27,0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,0x40,0x42,0x44,0x45,0x46,0x47,0x4c,
-0x4d,0x4e,0x52,0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,0x80};
-
-
 // ------------------------------------------------
 // Frequency public
 __IO DialFrequency 				df;
@@ -377,7 +372,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 		ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
 		//
 		ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
-		audio_driver_set_rx_audio_filter();	// update DSP/filter settings
+		audio_driver_set_rx_audio_filter();		// update DSP/filter settings
 		ts.reset_dsp_nr = 0;
 		UiDriverChangeDSPMode();			// update on-screen display
 		//
@@ -393,68 +388,60 @@ void UiDriver_HandleSwitchToNextDspMode()
 
 void UiDriver_HandleTouchScreen()
 {
-	if (ts.show_tp_coordinates)			// show coordinates for coding purposes
-	{	// pressing small "d" of green "dB" right top during menu mode toggles display of coordinates under "RIT/DIG"-box.
-		char text[10];
-		uint8_t i, x,y;
-		for(i=0; touchscreentable[i] <= ts.tp_x; i++)
-		    ;
-		x = 60-i;
-		for(i=0; touchscreentable[i] <= ts.tp_y; i++)
-		    ;
-		y = i--;
-//		sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
-		sprintf(text,"%02d%s%02d%s",x," : ",y,"  ");
-		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
-	}
-	if(!ts.menu_mode)		// normal operational screen
+	if (ts.show_tp_coordinates)					// show coordinates for coding purposes
+	    {
+	    char text[10];
+	    sprintf(text,"%02d%s%02d%s",ts.tp_x," : ",ts.tp_y,"  ");
+	    UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+	    }
+	if(!ts.menu_mode)						// normal operational screen
 	{
-		if(check_tp_coordinates(0x40,0x05,0x35,0x42))	// wf/scope bar right part
+		if(check_tp_coordinates(30,57,27,31))			// wf/scope bar right part
 		{
 			if(ts.misc_flags1 & 128)
-			{		// is the waterfall mode active?
-				ts.misc_flags1 &=  0x7f;	// yes, turn it off
-				UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+			{						// is the waterfall mode active?
+				ts.misc_flags1 &=  0x7f;		// yes, turn it off
+				UiSpectrumInitWaterfallDisplay();	// init spectrum scope
 			}
 			else
-			{	// waterfall mode was turned off
-				ts.misc_flags1 |=  128;	// turn it on
-				UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+			{						// waterfall mode was turned off
+				ts.misc_flags1 |=  128;			// turn it on
+				UiSpectrumInitWaterfallDisplay();	// init spectrum scope
 			}
-			UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+			UiDriverDisplayFilterBW();			// Update on-screen indicator of filter bandwidth
 		}
-		if(check_tp_coordinates(0x67,0x40,0x35,0x42))	// wf/scope bar left part
+		if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
 		{
 			sd.magnify = !sd.magnify;
 			ts.menu_var_changed = 1;
-			UiSpectrumInitWaterfallDisplay();			// init spectrum scope
+			UiSpectrumInitWaterfallDisplay();		// init spectrum scope
 		}
-		if(check_tp_coordinates(0x67,0x0d,0x0f,0x2d) && !ts.frequency_lock)	// wf/scope frequency dial
+		if(check_tp_coordinates(8,60,5,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
 		{
 			int step = 2000;				// adjust to 500Hz
 			if(ts.dmod_mode == DEMOD_AM)
 				step = 20000;				// adjust to 5KHz
-			uchar line = 0x40;				// x-position of rx frequency in middle position
-			if(!sd.magnify)				// xposition differs in translated modes not magnified
+			uchar line = 29;				// x-position of rx frequency in middle position
+			if(!sd.magnify)					// x-position differs in translated modes if not magnified
 			{
 				switch(ts.iq_freq_mode){
 				case FREQ_IQ_CONV_P6KHZ:
-					line = 0x46;
+					line = 25;
 					break;
 				case FREQ_IQ_CONV_M6KHZ:
-					line = 0x32;
+					line = 35;
 					break;
 				case FREQ_IQ_CONV_P12KHZ:
-					line = 0x54;
+					line = 19;
 					break;
 				case FREQ_IQ_CONV_M12KHZ:
-					line = 0x25;
+					line = 43;
 					break;
 				default:
-					line = 0x40;
+					line = 29;
 				}
 			}
-			uint tunediff = ((36000/(0x62-0x18))/(sd.magnify+1))*(line-ts.tp_x)*4;
+			uint tunediff = ((1000)/(sd.magnify+1))*(ts.tp_x-line)*4;
 			df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 			ts.refresh_freq_disp = 1;			// update ALL digits
 			if(is_splitmode())
@@ -466,7 +453,7 @@ void UiDriver_HandleTouchScreen()
 				UiDriverUpdateFrequency(1,0);		// no SPLIT mode
 			ts.refresh_freq_disp = 0;			// update ALL digits
 		}
-		if(check_tp_coordinates(0x7d,0x6d,0x40,0x44))	// toggle digital modes
+		if(check_tp_coordinates(0,7,31,33))			// toggle digital modes
 		{
 			if(ts.digital_mode < 7)
 				ts.digital_mode += 1;
@@ -474,39 +461,39 @@ void UiDriver_HandleTouchScreen()
 				ts.digital_mode = 0;
 			UiDriverChangeDigitalMode();
 		}
-		if(check_tp_coordinates(0x44,0x32,0x4e,0x56))	// temporary used for dynamic tuning activation
+		if(check_tp_coordinates(26,35,39,43))			// dynamic tuning activation
 		{
-			if (ts.dynamic_tuning_active)				// is it off??
+			if (ts.dynamic_tuning_active)			// is it off??
 			{
-				ts.dynamic_tuning_active = false;				// then turn it on
+				ts.dynamic_tuning_active = false;	// then turn it on
 			}
 			else
 			{
-				ts.dynamic_tuning_active = true;				// if already on, turn it off
+				ts.dynamic_tuning_active = true;	// if already on, turn it off
 			}
 			UiDriverShowStep(df.selected_idx);
 		}
 /*		if(check_tp_coordinates(x-left,x-right,y-down,y-up))	// new touchscreen action. LEAVE AS EXAMPLE. copy&paste for your purposes.
-		{											// temporary used for dynamic tuning activation
+		{
 		// here put action
 		}
 */
 
 	}
-	else						// menu screen functions
+	else								// menu screen functions
 	{
-		if(check_tp_coordinates(0x10,0x05,0x74,0x80))	// right up "dB"
+		if(check_tp_coordinates(54,57,55,57))			// right up "dB"
 		{
 			ts.show_tp_coordinates = !ts.show_tp_coordinates;
 			UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
 		}
-		if(check_tp_coordinates(0x47,0x41,0x20,0x26))	// rf bands mod ":"
+		if(check_tp_coordinates(26,28,14,19))			// rf bands mod ":"
 		{
 			ts.rfmod_present = !ts.rfmod_present;
 			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present         ":"n/a             ",White,Black,0);
 			ts.menu_var_changed = 1;
 		}
-		if(check_tp_coordinates(0x47,0x41,0x19,0x1F))	// vhf/uhf bands mod ":"
+		if(check_tp_coordinates(26,28,10,13))		// vhf/uhf bands mod ":"
 		{
 			ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
 			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present         ":"n/a             ",White,Black,0);
@@ -963,7 +950,7 @@ static void UiDriverPublicsInit(void)
 // check if touched point is within rectange of valid action
 inline bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
 {
-	return (ts.tp_x < x_left && ts.tp_x > x_right && ts.tp_y > y_down && ts.tp_y < y_up);
+	return (ts.tp_x <= x_right && ts.tp_x >= x_left && ts.tp_y >= y_down && ts.tp_y <= y_up);
 }
 
 void UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) {
@@ -7534,15 +7521,7 @@ void UiCheckForPressedKey(void)
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates();
-		uint8_t i, x,y;
-		for(i=0; touchscreentable[i] <= ts.tp_x; i++)
-		    ;
-		x = 60-i;
-		for(i=0; touchscreentable[i] <= ts.tp_y; i++)
-		    ;
-		y = i--;
-			sprintf(txt_buf,"%02d%s%02d%s", x,"  ",y,"  ");	//show touched coordinates
-//			sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+			sprintf(txt_buf,"%02d%s%02d%s",ts.tp_x,"  ",ts.tp_y,"  ");	//show touched coordinates
 			txt = txt_buf;
 			break;
 		default:
