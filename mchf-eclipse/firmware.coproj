@@ -264,6 +264,8 @@
     <File name="drivers/audio/filters/q_rx_filter_3k6.h" path="drivers/audio/filters/q_rx_filter_3k6.h" type="1"/>
     <File name="usb/otg/inc/usb_hcd.h" path="usb/otg/inc/usb_hcd.h" type="1"/>
     <File name="drivers/ui/ui_driver.c" path="drivers/ui/ui_driver.c" type="1"/>
+    <File name="drivers/ui/ui_configuration.c" path="drivers/ui/ui_configuration.c" type="1"/>
+    <File name="drivers/ui/ui_configuration.h" path="drivers/ui/ui_configuration.h" type="1"/>
     <File name="usb/usbd/core/inc/usbd_ioreq.h" path="usb/usbd/core/inc/usbd_ioreq.h" type="1"/>
     <File name="usb/usbh/class/hid/src/usbh_hid_keybd.c" path="usb/usbh/class/HID/src/usbh_hid_keybd.c" type="1"/>
     <File name="drivers/cat/usb" path="" type="2"/>
