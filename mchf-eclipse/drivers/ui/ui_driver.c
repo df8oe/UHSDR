@@ -4837,8 +4837,9 @@ void UiDriverChangeAfGain(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriverChangeStGain(uchar enabled)
 {
-	UiDriverEncoderDisplaySimple(0,0,"STG", enabled, ts.st_gain);
+	UiDriverEncoderDisplaySimple(1,0,"STG", enabled, ts.st_gain);
 }
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeCmpLevel
 //* Object              : Display TX audio compression level
@@ -4993,19 +4994,17 @@ static void UiDriverChangePowerLevel(void)
 //*----------------------------------------------------------------------------
 void UiDriverChangeKeyerSpeed(uchar enabled)
 {
-	ushort 	color = Grey;
-	char	temp[5];
+	ushort 	color = enabled?White:Grey;
+	const char* txt;
+	char  txt_buf[5];
 
 	if(enabled)
 		color = White;
 
-	UiLcdHy28_DrawEmptyRect( POS_KS_IND_X,POS_KS_IND_Y,13,49,Grey);
+	txt = "WPM";
+	sprintf(txt_buf,"%2d",ts.keyer_speed);
 
-	UiLcdHy28_PrintText((POS_KS_IND_X + 1), (POS_KS_IND_Y + 1),"WPM",enabled?Black:Grey1,Grey,0);
-
-	sprintf(temp,"%2d",ts.keyer_speed);
-
-	UiLcdHy28_PrintText    ((POS_KS_IND_X + 30),(POS_KS_IND_Y + 1), temp,color,Black,0);
+	UiDriverEncoderDisplay(1,2,txt, enabled, txt_buf, color);
 
 	// Update CW gen module
 	if(enabled)
