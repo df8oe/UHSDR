@@ -407,7 +407,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 			}
 		}
 		else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
-			if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id == AUDIO_WIDE))		// was it AM with a wide filter selected?
+			if((ts.dmod_mode == DEMOD_AM) && ((ts.filter_1 > 31) || (ts.filter_2 > 0)))		// was it AM with a filter > 4k8 selected?
 				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
 			else
 			{
@@ -1590,10 +1590,11 @@ bool	voice_mode, select_10k, select_3k6;
 	else					// not in voice mode
 		voice_mode = 0;
 
-	if((ts.filter_wide_select >= WIDE_FILTER_10K) || (ts.dmod_mode == DEMOD_AM))	// is 10k filter to be enabled and in AM or FM??
-		select_10k = 1;				// yes - and it should always be available in AM/FM mode
-	else
-		select_10k = 0;				// it is not to be enabled
+// 	I am not sure, if we still need this!? DD4WH March, 5th 2016
+//	if((ts.filter_wide_select >= WIDE_FILTER_10K) || (ts.dmod_mode == DEMOD_AM))	// is 10k filter to be enabled and in AM or FM??
+//		select_10k = 1;				// yes - and it should always be available in AM/FM mode
+//	else
+//		select_10k = 0;				// it is not to be enabled
 
 	if((ts.filter_3k6_select) || (ts.dmod_mode == DEMOD_AM))	// is 3.6k filter to be enabled or in AM mode?
 		select_3k6 = 1;				// yes - and it should always be available in AM/FM mode
@@ -1615,32 +1616,101 @@ bool	voice_mode, select_10k, select_3k6;
 		if((ts.filter_id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode)))
 			ts.filter_id++;
 		//
+		if((ts.filter_id == AUDIO_1P4KHZ) && (!ts.filter_1k4_select))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_1P6KHZ) && (!ts.filter_1k6_select))
+			ts.filter_id++;
+		//
 		if((ts.filter_id == AUDIO_1P8KHZ) && (!ts.filter_1k8_select))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_2P1KHZ) && (!ts.filter_2k1_select))
 			ts.filter_id++;
 		//
 		// At this point we would hit the 2.3 kHz filter, which is ALWAYS enabled!
 		//
+		if((ts.filter_id == AUDIO_2P5KHZ) && (!ts.filter_2k5_select))
+			ts.filter_id++;
 		//
 		if((ts.filter_id == AUDIO_2P7KHZ) && (!ts.filter_2k7_select))
 			ts.filter_id++;
 		//
 		if((ts.filter_id == AUDIO_2P9KHZ) && (!ts.filter_2k9_select))
 			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_3P2KHZ) && (!ts.filter_3k2_select))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_3P4KHZ) && (!ts.filter_3k4_select))
+			ts.filter_id++;
 
-		if((ts.filter_id == AUDIO_3P6KHZ) && (!select_3k6))
+		if((ts.filter_id == AUDIO_3P6KHZ) && (!select_3k6)) // ALWAYS AVAILABLE IN AM MODE; SHOULD THIS BE SO?
 			ts.filter_id++;
 		//
 		if(ts.filter_id == AUDIO_3P6KHZ && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW)))
 			ts.filter_id++;
 		//
-		if(((ts.filter_id == AUDIO_WIDE) && (!select_10k)) || ((ts.filter_id == AUDIO_WIDE) && (ts.dmod_mode == DEMOD_CW) && ts.filter_cw_wide_disable))	{
+		if((ts.filter_id == AUDIO_3P8KHZ) && (!ts.filter_3k8_select))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_4P0KHZ) & (!ts.filter_1&1))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_4P2KHZ) & (!ts.filter_1&2))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_4P4KHZ) & (!ts.filter_1&4))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_4P6KHZ) & (!ts.filter_1&8))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_4P8KHZ) & (!ts.filter_1&16))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_5P0KHZ) & (!ts.filter_1&32))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_5P5KHZ) & (!ts.filter_1&64))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_6P0KHZ) & (!ts.filter_1&128))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_6P5KHZ) & (!ts.filter_2&1))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_7P0KHZ) & (!ts.filter_2&2))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_7P5KHZ) & (!ts.filter_2&4))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_8P0KHZ) & (!ts.filter_2&8))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_8P5KHZ) & (!ts.filter_2&16))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_9P0KHZ) & (!ts.filter_2&32))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_9P5KHZ) & (!ts.filter_2&64))
+			ts.filter_id++;
+		//
+		if((ts.filter_id == AUDIO_10P0KHZ) & (!ts.filter_2&128))
+			ts.filter_id++;
+
+		//
+/*		if(((ts.filter_id == AUDIO_WIDE) && (!select_10k)) || ((ts.filter_id == AUDIO_WIDE) && (ts.dmod_mode == DEMOD_CW) && ts.filter_cw_wide_disable))	{
 			ts.filter_id = AUDIO_MIN_FILTER;
 			filter_scan++;
 			if(filter_scan <= 1)	// Is this the first time here?
 				goto first_filter;	// Yes - wrap around to find the other filters
 			else	// second time around?
 				ts.filter_id = AUDIO_2P3KHZ;	// Force selection of 2.3 kHz filter as all others are disabled
-		}
+		} */
 }
 
 void UiDriverDisplaySplitFreqLabels() {
@@ -5184,11 +5254,23 @@ void UiDriverChangeFilter(uchar ui_only_update)
 		case AUDIO_500HZ:
 			filter_ptr = " 500Hz";
 			break;
+		case AUDIO_1P4KHZ:
+			filter_ptr = "  1.4k";
+			break;
+		case AUDIO_1P6KHZ:
+			filter_ptr = "  1.6k";
+			break;
 		case AUDIO_1P8KHZ:
 			filter_ptr = "  1.8k";
 			break;
+		case AUDIO_2P1KHZ:
+			filter_ptr = "  2.1k";
+			break;
 		case AUDIO_2P3KHZ:
 			filter_ptr = "  2.3k";
+			break;
+		case AUDIO_2P5KHZ:
+			filter_ptr = "  2.5k";
 			break;
 		case AUDIO_2P7KHZ:
 			filter_ptr = "  2.7k";
@@ -5196,10 +5278,67 @@ void UiDriverChangeFilter(uchar ui_only_update)
 		case AUDIO_2P9KHZ:
 			filter_ptr = "  2.9k";
 			break;
+		case AUDIO_3P2KHZ:
+			filter_ptr = "  3.2k";
+			break;
+		case AUDIO_3P4KHZ:
+			filter_ptr = "  3.4k";
+			break;
 		case AUDIO_3P6KHZ:
 			filter_ptr = "  3.6k";
 			break;
-		case AUDIO_WIDE:
+		case AUDIO_3P8KHZ:
+			filter_ptr = "  3.8k";
+			break;
+		case AUDIO_4P0KHZ:
+			filter_ptr = "  4.0k";
+			break;
+		case AUDIO_4P2KHZ:
+			filter_ptr = "  4.2k";
+			break;
+		case AUDIO_4P4KHZ:
+			filter_ptr = "  4.4k";
+			break;
+		case AUDIO_4P6KHZ:
+			filter_ptr = "  4.6k";
+			break;
+		case AUDIO_4P8KHZ:
+			filter_ptr = "  4.8k";
+			break;
+		case AUDIO_5P0KHZ:
+			filter_ptr = "   5k ";
+			break;
+		case AUDIO_5P5KHZ:
+			filter_ptr = "  5.5k";
+			break;
+		case AUDIO_6P0KHZ:
+			filter_ptr = "   6k ";
+			break;
+		case AUDIO_6P5KHZ:
+			filter_ptr = "  6.5k";
+			break;
+		case AUDIO_7P0KHZ:
+			filter_ptr = "   7k ";
+			break;
+		case AUDIO_7P5KHZ:
+			filter_ptr = "  7.5k";
+			break;
+		case AUDIO_8P0KHZ:
+			filter_ptr = "   8k ";
+			break;
+		case AUDIO_8P5KHZ:
+			filter_ptr = "  8.5k";
+			break;
+		case AUDIO_9P0KHZ:
+			filter_ptr = "   9k ";
+			break;
+		case AUDIO_9P5KHZ:
+			filter_ptr = "  9.5k";
+			break;
+		case AUDIO_10P0KHZ:
+			filter_ptr = "  10k";
+
+/*		case AUDIO_WIDE:
 			switch(ts.filter_wide_select)	{
 			case WIDE_FILTER_5K:
 			case WIDE_FILTER_5K_AM:
@@ -5219,6 +5358,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 				filter_ptr = "  10k ";
 				break;
 			}
+			*/
 			break;
 			default:
 				filter_ptr = "      ";
@@ -5329,6 +5469,36 @@ void UiDriverDisplayFilterBW(void)
 			width = FILTER_500HZ_WIDTH;
 			//
 			break;
+		case AUDIO_1P4KHZ:		//
+			switch(ts.filter_1k4_select)	{
+				case 1:
+					offset = FILT1400_1;
+					break;
+				case 2:
+					offset = FILT1400_2;
+					break;
+				default:
+					offset = FILT1400_2;
+					break;
+			}
+			width = FILTER_1400HZ_WIDTH;
+			//
+			break;
+		case AUDIO_1P6KHZ:		//
+			switch(ts.filter_1k6_select)	{
+				case 1:
+					offset = FILT1600_1;
+					break;
+				case 2:
+					offset = FILT1600_2;
+					break;
+				default:
+					offset = FILT1600_2;
+					break;
+			}
+			width = FILTER_1600HZ_WIDTH;
+			//
+			break;
 		case AUDIO_1P8KHZ:		// 1.8 kHz wide filter
 			switch(ts.filter_1k8_select)	{
 				case 1:
@@ -5356,6 +5526,21 @@ void UiDriverDisplayFilterBW(void)
 			width = FILTER_1800HZ_WIDTH;
 			//
 			break;
+		case AUDIO_2P1KHZ:		//
+			switch(ts.filter_2k1_select)	{
+				case 1:
+					offset = FILT2100_1;
+					break;
+				case 2:
+					offset = FILT2100_2;
+					break;
+				default:
+					offset = FILT2100_2;
+					break;
+			}
+			width = FILTER_2100HZ_WIDTH;
+			//
+			break;
 		case AUDIO_2P3KHZ:		// 2.3 kHz wide filter
 			switch(ts.filter_2k3_select)	{
 				case 1:
@@ -5378,6 +5563,21 @@ void UiDriverDisplayFilterBW(void)
 					break;
 			}
 			width = FILTER_2300HZ_WIDTH;
+			//
+			break;
+		case AUDIO_2P5KHZ:		//
+			switch(ts.filter_2k5_select)	{
+				case 1:
+					offset = FILT2500_1;
+					break;
+				case 2:
+					offset = FILT2500_2;
+					break;
+				default:
+					offset = FILT2500_2;
+					break;
+			}
+			width = FILTER_2500HZ_WIDTH;
 			//
 			break;
 		case AUDIO_2P7KHZ:		// 2.7 kHz wide filter
@@ -5410,6 +5610,36 @@ void UiDriverDisplayFilterBW(void)
 			width = FILTER_2900HZ_WIDTH;
 			//
 			break;
+		case AUDIO_3P2KHZ:		//
+			switch(ts.filter_3k2_select)	{
+				case 1:
+					offset = FILT3200_1;
+					break;
+				case 2:
+					offset = FILT3200_2;
+					break;
+				default:
+					offset = FILT3200_2;
+					break;
+			}
+			width = FILTER_3200HZ_WIDTH;
+			//
+			break;
+		case AUDIO_3P4KHZ:		//
+			switch(ts.filter_3k4_select)	{
+				case 1:
+					offset = FILT3400_1;
+					break;
+				case 2:
+					offset = FILT3400_2;
+					break;
+				default:
+					offset = FILT3400_2;
+					break;
+			}
+			width = FILTER_3400HZ_WIDTH;
+			//
+				break;
 		case AUDIO_3P6KHZ:		// 3.6 kHz wide filter
 			switch(ts.filter_3k6_select)	{
 				case 1:
@@ -5425,7 +5655,87 @@ void UiDriverDisplayFilterBW(void)
 			width = FILTER_3600HZ_WIDTH;
 			//
 			break;
-		case AUDIO_WIDE:	// selectable "wide" bandwidth filter
+		case AUDIO_3P8KHZ:		// 3.8 kHz wide filter
+			switch(ts.filter_3k8_select)	{
+				case 1:
+					offset = FILT3800_1;
+					break;
+				case 2:
+					offset = FILT3800_2;
+					break;
+				default:
+					offset = FILT3800_2;
+					break;
+			}
+			width = FILTER_3800HZ_WIDTH;
+			//
+			break;
+		case AUDIO_4P0KHZ:		//
+			offset = FILT4000;
+			width = FILTER_4000HZ_WIDTH;
+			break;
+		case AUDIO_4P2KHZ:		//
+			offset = FILT4200;
+			width = FILTER_4200HZ_WIDTH;
+			break;
+		case AUDIO_4P4KHZ:		//
+			offset = FILT4400;
+			width = FILTER_4400HZ_WIDTH;
+			break;
+		case AUDIO_4P6KHZ:		//
+			offset = FILT4600;
+			width = FILTER_4600HZ_WIDTH;
+			break;
+		case AUDIO_4P8KHZ:		//
+			offset = FILT4800;
+			width = FILTER_4800HZ_WIDTH;
+			break;
+		case AUDIO_5P0KHZ:		//
+			offset = FILT5000;
+			width = FILTER_5000HZ_WIDTH;
+			break;
+		case AUDIO_5P5KHZ:		//
+			offset = FILT5500;
+			width = FILTER_5500HZ_WIDTH;
+			break;
+		case AUDIO_6P0KHZ:		//
+			offset = FILT6000;
+			width = FILTER_6000HZ_WIDTH;
+			break;
+		case AUDIO_6P5KHZ:		//
+			offset = FILT6500;
+			width = FILTER_6500HZ_WIDTH;
+			break;
+		case AUDIO_7P0KHZ:		//
+			offset = FILT7000;
+			width = FILTER_7000HZ_WIDTH;
+			break;
+		case AUDIO_7P5KHZ:		//
+			offset = FILT7500;
+			width = FILTER_7500HZ_WIDTH;
+			break;
+		case AUDIO_8P0KHZ:		//
+			offset = FILT8000;
+			width = FILTER_8000HZ_WIDTH;
+			break;
+		case AUDIO_8P5KHZ:		//
+			offset = FILT8500;
+			width = FILTER_8500HZ_WIDTH;
+			break;
+		case AUDIO_9P0KHZ:		//
+			offset = FILT9000;
+			width = FILTER_9000HZ_WIDTH;
+			break;
+		case AUDIO_9P5KHZ:		//
+			offset = FILT9500;
+			width = FILTER_9500HZ_WIDTH;
+			break;
+		case AUDIO_10P0KHZ:		//
+			offset = FILT10000;
+			width = FILTER_10000HZ_WIDTH;
+			break;
+
+/*		case AUDIO_WIDE:	// selectable "wide" bandwidth filter
 			switch(ts.filter_wide_select)	{
 				case WIDE_FILTER_5K:
 				case WIDE_FILTER_5K_AM:
@@ -5450,6 +5760,7 @@ void UiDriverDisplayFilterBW(void)
 					break;
 			}
 			break;
+			*/
 		default:
 			// in case of call with not yet covered parameters we set the widest filter as default
 			offset = FILT10000;
@@ -6859,7 +7170,39 @@ void UiCalcRxPhaseAdj(void)
 	fc.rx_i_block_size = I_BLOCK_SIZE;
 	//
 	if(ts.dmod_mode == DEMOD_AM)	{		// AM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
-		if(ts.filter_id == AUDIO_WIDE)	{	// Wide AM - selectable from menu
+		// FIR 2k3 up to 2k3 filter
+		// FIR 3k6 up to 3k6 filter
+		// FIR 5k up to 5k filter
+		// FIR 7k5 up to 7k5 filter
+		// FIR 10k up to 10k filter
+		for(i = 0; i < Q_NUM_TAPS; i++)	{
+			if (ts.filter_id <= AUDIO_2P3KHZ){
+				fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
+				fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
+			} else
+				if (ts.filter_id <= AUDIO_3P6KHZ){
+					fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
+					fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
+				} else
+					if (ts.filter_id <= AUDIO_5P0KHZ){
+						fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
+						fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+					} else
+						if (ts.filter_id <= AUDIO_6P0KHZ){
+							fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];
+							fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
+						} else
+							if (ts.filter_id <= AUDIO_7P5KHZ){
+								fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];
+								fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
+							} else {
+									fc.rx_filt_q[i] = iq_rx_am_10k_coeffs[i];
+									fc.rx_filt_i[i] = iq_rx_am_10k_coeffs[i];
+							}
+		} // end for
+
+
+/*		if(ts.filter_id == AUDIO_WIDE)	{	// Wide AM - selectable from menu
 			for(i = 0; i < Q_NUM_TAPS; i++)	{
 				switch(ts.filter_wide_select)	{
 					case WIDE_FILTER_5K:
@@ -6905,7 +7248,8 @@ void UiCalcRxPhaseAdj(void)
 				fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
 				fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
 			}
-		}
+		} */
+
 	}
 	else if(ts.dmod_mode == DEMOD_FM)	{		// FM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
 		for(i = 0; i < Q_NUM_TAPS; i++)	{
@@ -6932,8 +7276,33 @@ void UiCalcRxPhaseAdj(void)
 			}
 		}
 	}
-	else	{		// Not AM or FM - load Hilbert transformation filters
-		if(ts.filter_id == AUDIO_WIDE)	{
+	else	{		// SSB, Not AM or FM - load Hilbert transformation filters
+		// fill Hilbert coeffs into fc.rx_filt
+		for(i = 0; i < Q_NUM_TAPS; i++)	{
+			if (ts.filter_id <= AUDIO_3P6KHZ){
+				fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
+				fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];
+			} else
+					if (ts.filter_id <= AUDIO_5P0KHZ){
+						fc.rx_filt_q[i] = q_rx_5k_coeffs[i];
+						fc.rx_filt_i[i] = i_rx_5k_coeffs[i];
+					} else
+						if (ts.filter_id <= AUDIO_6P0KHZ){
+							fc.rx_filt_q[i] = q_rx_6k_coeffs[i];
+							fc.rx_filt_i[i] = i_rx_6k_coeffs[i];
+						} else
+							if (ts.filter_id <= AUDIO_7P5KHZ){
+								fc.rx_filt_q[i] = q_rx_7k5_coeffs[i];
+								fc.rx_filt_i[i] = i_rx_7k5_coeffs[i];
+							} else {
+								fc.rx_filt_q[i] = q_rx_10k_coeffs[i];
+								fc.rx_filt_i[i] = i_rx_10k_coeffs[i];
+							}
+		} // end for
+
+	}	// end else = SSB
+
+/*		if(ts.filter_id == AUDIO_WIDE)	{
 			for(i = 0; i < Q_NUM_TAPS; i++)	{
 				switch(ts.filter_wide_select)	{
 					case WIDE_FILTER_5K:
@@ -6966,7 +7335,8 @@ void UiCalcRxPhaseAdj(void)
 				fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
 				fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];	// phase shift in other modes
 			}
-		}
+		} */
+
 		//
 		if(ts.dmod_mode == DEMOD_LSB)	// get phase setting appropriate to mode
 			phase = ts.rx_iq_lsb_phase_balance;		// yes, get current gain adjustment setting for LSB
@@ -6980,7 +7350,48 @@ void UiCalcRxPhaseAdj(void)
 			var_norm /= 32;		// fractionalize by the number of steps
 			var_inv /= 32;						// fractionalize this one, too
 			if(phase < 0)	{	// was the phase adjustment negative?
-				if(ts.filter_id == AUDIO_WIDE)	{
+
+				if(ts.filter_id <=AUDIO_3P6KHZ){
+					for(i = 0; i < Q_NUM_TAPS; i++)	{
+						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
+						f_offset = var_norm * q_rx_3k6_coeffs_minus[i];	// get fraction of 89.5 degree setting
+						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+					}
+				} else
+					if(ts.filter_id <=AUDIO_5P0KHZ){
+						for(i = 0; i < Q_NUM_TAPS; i++)	{
+							f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
+							f_offset = var_norm * q_rx_5k_coeffs_minus[i];	// get fraction of 89.5 degree setting
+							fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+						}
+					} else
+						if(ts.filter_id <=AUDIO_6P0KHZ){
+							for(i = 0; i < Q_NUM_TAPS; i++)	{
+								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
+								f_offset = var_norm * q_rx_6k_coeffs_minus[i];	// get fraction of 89.5 degree setting
+								fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+							}
+						}	else
+								if(ts.filter_id <=AUDIO_7P5KHZ){
+									for(i = 0; i < Q_NUM_TAPS; i++)	{
+										f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
+										f_offset = var_norm * q_rx_7k5_coeffs_minus[i];	// get fraction of 89.5 degree setting
+										fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+									}
+								}	else {
+										for(i = 0; i < Q_NUM_TAPS; i++)	{
+											f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
+											f_offset = var_norm * q_rx_10k_coeffs_minus[i];	// get fraction of 89.5 degree setting
+											fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+										}
+									}
+
+
+
+
+
+
+					/*				if(ts.filter_id == AUDIO_WIDE)	{
 					for(i = 0; i < Q_NUM_TAPS; i++)	{
 						switch(ts.filter_wide_select)	{
 							case WIDE_FILTER_5K:
@@ -7007,17 +7418,56 @@ void UiCalcRxPhaseAdj(void)
 						}
 						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
 					}
-				}
+				} // end if Audio wide
 				else	{
 					for(i = 0; i < Q_NUM_TAPS; i++)	{
 						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
 						f_offset = var_norm * q_rx_3k6_coeffs_minus[i];	// get fraction of 89.5 degree setting
 						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
 					}
-				}
-			}
+				} //
+				*/
+
+
+			} // end phase adjustment negative
 			else	{							// adjustment was positive
-				if(ts.filter_id == AUDIO_WIDE)	{
+				if(ts.filter_id <=AUDIO_3P6KHZ){
+					for(i = 0; i < Q_NUM_TAPS; i++)	{
+						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
+						f_offset = var_norm * q_rx_3k6_coeffs_plus[i];	// get fraction of 90.5 degree setting
+						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+					}
+				} else
+					if(ts.filter_id <=AUDIO_5P0KHZ){
+						for(i = 0; i < Q_NUM_TAPS; i++)	{
+							f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
+							f_offset = var_norm * q_rx_5k_coeffs_plus[i];	// get fraction of 90.5 degree setting
+							fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+						}
+					} else
+						if(ts.filter_id <=AUDIO_6P0KHZ){
+							for(i = 0; i < Q_NUM_TAPS; i++)	{
+								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
+								f_offset = var_norm * q_rx_6k_coeffs_plus[i];	// get fraction of 90.5 degree setting
+								fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+							}
+						}	else
+								if(ts.filter_id <=AUDIO_7P5KHZ){
+									for(i = 0; i < Q_NUM_TAPS; i++)	{
+										f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
+										f_offset = var_norm * q_rx_7k5_coeffs_plus[i];	// get fraction of 90.5 degree setting
+										fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+									}
+								}	else {
+										for(i = 0; i < Q_NUM_TAPS; i++)	{
+											f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
+											f_offset = var_norm * q_rx_10k_coeffs_plus[i];	// get fraction of 90.5 degree setting
+											fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
+										}
+									}
+			} // end phase adjustment positive
+
+/*				if(ts.filter_id == AUDIO_WIDE)	{
 					for(i = 0; i < Q_NUM_TAPS; i++)	{
 						switch(ts.filter_wide_select)	{
 							case WIDE_FILTER_5K:
@@ -7052,9 +7502,10 @@ void UiCalcRxPhaseAdj(void)
 						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
 					}
 				}
-			}
-		}
-	}
+			}  // end phase adjustment positive
+		*/
+		} // end if phase adjustment non-zero
+
 	//
 	// In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
 	if(ts.dmod_mode == DEMOD_AM)		// use "Q" filter settings in AM mode for "I" channel
@@ -7895,12 +8346,22 @@ void UiDriverLoadEepromValues(void)
 	UiReadSettingEEPROM_UInt8(EEPROM_MAX_VOLUME,&ts.audio_max_volume,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_300HZ_SEL,&ts.filter_300Hz_select,FILTER_300HZ_DEFAULT,0,MAX_300HZ_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_500HZ_SEL,&ts.filter_500Hz_select,FILTER_500HZ_DEFAULT,0,MAX_500HZ_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K4_SEL,&ts.filter_1k4_select,FILTER_1K4_DEFAULT,0,MAX_1K4_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K6_SEL,&ts.filter_1k6_select,FILTER_1K6_DEFAULT,0,MAX_1K6_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1K8_SEL,&ts.filter_1k8_select,FILTER_1K8_DEFAULT,0,MAX_1K8_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K1_SEL,&ts.filter_2k1_select,FILTER_2K1_DEFAULT,0,MAX_2K1_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K3_SEL,&ts.filter_2k3_select,FILTER_2K3_DEFAULT,0,MAX_2K3_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K5_SEL,&ts.filter_2k5_select,FILTER_2K5_DEFAULT,0,MAX_2K5_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K7_SEL,&ts.filter_2k7_select,FILTER_2K7_DEFAULT,0,MAX_2K7_FILTER);
 	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2K9_SEL,&ts.filter_2k9_select,FILTER_2K9_DEFAULT,0,MAX_2K9_FILTER);
-	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K6_SEL,&ts.filter_3k6_select,FILTER_3K6_DEFAULT,0,1);
-	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_WIDE_SEL,&ts.filter_wide_select,FILTER_WIDE_DEFAULT,0,WIDE_FILTER_MAX);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K2_SEL,&ts.filter_3k2_select,FILTER_3K2_DEFAULT,0,MAX_3K2_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K4_SEL,&ts.filter_3k4_select,FILTER_3K4_DEFAULT,0,MAX_3K4_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K6_SEL,&ts.filter_3k6_select,FILTER_3K6_DEFAULT,0,MAX_3K6_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_3K8_SEL,&ts.filter_3k8_select,FILTER_3K8_DEFAULT,0,MAX_3K8_FILTER);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_1_SEL,&ts.filter_1,0,0,255);
+	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_2_SEL,&ts.filter_2,0,0,255);
+
+	//	UiReadSettingEEPROM_UInt8(EEPROM_FILTER_WIDE_SEL,&ts.filter_wide_select,FILTER_WIDE_DEFAULT,0,WIDE_FILTER_MAX);
 	UiReadSettingEEPROM_UInt8(EEPROM_PA_BIAS,&ts.pa_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS);
 	{
 		ulong bias_val;
@@ -8149,12 +8610,21 @@ uint16_t UiDriverSaveEepromValuesPowerDown(void)
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.audio_max_volume,MAX_VOLUME_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_300Hz_select,FILTER_300HZ_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_500Hz_select,FILTER_500HZ_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K4_SEL,ts.filter_1k4_select,FILTER_1K4_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K6_SEL,ts.filter_1k6_select,FILTER_1K6_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_1k8_select,FILTER_1K8_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K1_SEL,ts.filter_2k1_select,FILTER_2K1_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_2k3_select,FILTER_2K3_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K5_SEL,ts.filter_2k5_select,FILTER_2K5_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K7_SEL,ts.filter_2k7_select,FILTER_2K7_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K9_SEL,ts.filter_2k9_select,FILTER_2K9_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K2_SEL,ts.filter_3k2_select,FILTER_3K2_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K4_SEL,ts.filter_3k4_select,FILTER_3K4_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_3k6_select,FILTER_3K6_DEFAULT);
-	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select,FILTER_WIDE_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K8_SEL,ts.filter_3k8_select,FILTER_3K8_DEFAULT);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1_SEL,ts.filter_1,0);
+	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2_SEL,ts.filter_2,0);
+//	UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select,FILTER_WIDE_DEFAULT);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);
 	UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_CW_BIAS,ts.pa_cw_bias,DEFAULT_PA_BIAS);
 	UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_GAIN_BALANCE,ts.tx_iq_lsb_gain_balance,0);

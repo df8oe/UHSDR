@@ -713,12 +713,22 @@ void TransceiverStateInit(void)
 	ts.filter_id		= AUDIO_DEFAULT_FILTER;		// startup audio filter
 	ts.filter_300Hz_select	= FILTER_300HZ_DEFAULT;	// Select 750 Hz center filter as default
 	ts.filter_500Hz_select	= FILTER_500HZ_DEFAULT;	// Select 750 Hz center filter as default
+	ts.filter_1k4_select	= FILTER_1K4_DEFAULT;	//
+	ts.filter_1k6_select	= FILTER_1K6_DEFAULT;	//
 	ts.filter_1k8_select	= FILTER_1K8_DEFAULT;	// Select 1425 Hz center filter as default
-	ts.filter_2k3_select	= FILTER_2K3_DEFAULT;	// Select 1412 Hz center filter as default
-	ts.filter_2k7_select	= FILTER_2K7_DEFAULT;	// Select 1412 Hz center filter as default
-	ts.filter_2k9_select	= FILTER_2K9_DEFAULT;	// Select 1412 Hz center filter as default
+	ts.filter_2k1_select	= FILTER_2K1_DEFAULT;	//
+	ts.filter_2k3_select	= FILTER_2K3_DEFAULT;	//
+	ts.filter_2k5_select	= FILTER_2K5_DEFAULT;	//
+	ts.filter_2k7_select	= FILTER_2K7_DEFAULT;	//
+	ts.filter_2k9_select	= FILTER_2K9_DEFAULT;	//
+	ts.filter_3k2_select	= FILTER_3K2_DEFAULT;	//
+	ts.filter_3k4_select	= FILTER_3K4_DEFAULT;	//
 	ts.filter_3k6_select	= FILTER_3K6_DEFAULT;	// This is enabled by default
-	ts.filter_wide_select	= FILTER_WIDE_DEFAULT;	// This is enabled by default
+	ts.filter_3k8_select	= FILTER_3K8_DEFAULT;	// This is disabled by default
+	ts.filter_1				= 0;
+	ts.filter_2				= 0;
+
+//	ts.filter_wide_select	= FILTER_WIDE_DEFAULT;	// This is enabled by default
 	//
 	ts.st_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
 	ts.keyer_mode		= CW_MODE_IAM_B;			// CW keyer mode
