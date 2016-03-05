@@ -246,6 +246,11 @@ enum {
 __IO BandRegs vfo[VFO_MAX];
 
 
+const uint8_t touchscreentable [] = {0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,0x1c,0x1d,0x1e,0x1f,0x22,
+0x23,0x24,0x25,0x26,0x27,0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,0x40,0x42,0x44,0x45,0x46,0x47,0x4c,
+0x4d,0x4e,0x52,0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,0x80};
+
+
 // ------------------------------------------------
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
@@ -421,7 +426,15 @@ void UiDriver_HandleTouchScreen()
 	if (ts.show_tp_coordinates)			// show coordinates for coding purposes
 	{	// pressing small "d" of green "dB" right top during menu mode toggles display of coordinates under "RIT/DIG"-box.
 		char text[10];
-		sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
+		uint8_t i, x,y;
+		for(i=0; touchscreentable[i] <= ts.tp_x; i++)
+		    ;
+		x = 60-i;
+		for(i=0; touchscreentable[i] <= ts.tp_y; i++)
+		    ;
+		y = i--;
+//		sprintf(text,"%02x%s%02x",ts.tp_x," : ",ts.tp_y);
+		sprintf(text,"%02d%s%02d%s",x," : ",y,"  ");
 		UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
 	}
 	if(!ts.menu_mode)		// normal operational screen
@@ -7551,7 +7564,15 @@ void UiCheckForPressedKey(void)
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates();
-			sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
+		uint8_t i, x,y;
+		for(i=0; touchscreentable[i] <= ts.tp_x; i++)
+		    ;
+		x = 60-i;
+		for(i=0; touchscreentable[i] <= ts.tp_y; i++)
+		    ;
+		y = i--;
+			sprintf(txt_buf,"%02d%s%02d%s", x,"  ",y,"  ");	//show touched coordinates
+//			sprintf(txt_buf,"%02x%s%02x", ts.tp_x,"  ",ts.tp_y);	//show touched coordinates
 			txt = txt_buf;
 			break;
 		default:
