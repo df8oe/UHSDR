@@ -95,7 +95,7 @@ static void UiDriverDeleteSMeter(void);
 static void 	UiDriverCreateSMeter(void);
 static void 	UiDriverDrawSMeter(ushort color);
 //
-static void 	UiDriverUpdateTopMeterA(uchar val,uchar old);
+static void 	UiDriverUpdateTopMeterA(uchar val);
 static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 
 static void 	UiDriverInitFrequency(void);
@@ -302,6 +302,170 @@ extern __IO	arm_fir_instance_f32	FIR_Q_TX;
 //
 
 
+inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint8_t min, uint8_t max) {
+  if (change  > (val - min)) { val = min; }
+  else if (change >  max - val) { val = max; }
+  else { val +=change;}
+  return val;
+}
+
+inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint8_t min, uint8_t max) {
+  if (change  > (val - min)) { val = max; }
+  else if (change >  max - val) { val = min; }
+  else { val +=change; }
+  return val;
+}
+
+inline void incr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
+{
+  *ptr = (change_and_wrap_uint(*ptr,+1,min,max))&0xff;
+}
+inline void incr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
+{
+  *ptr = (change_and_wrap_uint(*ptr,+1,min,max))&0xff;
+}
+inline void decr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
+{
+  *ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
+}
+inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
+{
+  *ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
+}
+
+
+// -----------------------------------------------
+static bool is_last_menu_item = 0;
+
+void menu_last_screen() {
+
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+      if(ts.menu_item == MAX_MENU_ITEM-1) {   // are we on the LAST menu item of the main menu?
+          if(ts.radio_config_menu_enable)     // Yes - is the configuration menu enabled?
+              ts.menu_item = MAX_MENU_ITEM;   // yes - go to the FIRST item of the configuration menu
+          else                                // configuration menu NOT enabled
+              ts.menu_item = 0;               // go to the FIRST menu main menu item
+      }
+      else                                    // we had not been on the last item of the main menu
+          ts.menu_item = MAX_MENU_ITEM-1;     // go to the last item in the main menu
+  }
+  else    {       // we were NOT in the main menu, but in the configuration menu!
+      if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))       // are we on the last item of the configuration menu?
+          ts.menu_item = 0;                   // yes - go to the first item of the main menu
+      else    {       // we are NOT on the last item of the configuration menu
+          ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;     // go to the last item in the configuration menu
+      }
+  }
+  UiDriverUpdateMenu(0);  // update menu display
+  UiDriverUpdateMenu(1);  // update cursor
+
+}
+void menu_first_screen() {
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+        if(ts.menu_item)    // is this NOT the first menu item?
+            ts.menu_item = 0;   // yes - set it to the beginning of the first menu
+        else    {           // this IS the first menu item
+            if(ts.radio_config_menu_enable)     // yes - is the configuration menu enabled?
+                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+            else                                // configuration menu NOT enabled
+                ts.menu_item = MAX_MENU_ITEM - 1;
+        }
+    }
+    else    {       // we are within the CONFIGURATION menu
+        if(ts.menu_item > MAX_MENU_ITEM)        // is this NOT at the first entry of the configuration menu?
+            ts.menu_item = MAX_MENU_ITEM;   // yes, go to the first entry of the configuration item
+        else        // this IS the first entry of the configuration menu
+            ts.menu_item = MAX_MENU_ITEM - 1;   // go to the last entry of the main menu
+    }
+    UiDriverUpdateMenu(0);  // update menu display
+    UiDriverUpdateMenu(1);  // update cursor
+}
+void menu_next_screen() {
+  //
+  if(!ts.radio_config_menu_enable)    {   // Not in config/calibrate menu mode
+    if(ts.menu_item == MAX_MENU_ITEM - 1)   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // go to first item
+    }
+    else    {   // not at last item - go ahead
+      ts.menu_item += 6;
+      if(ts.menu_item >= MAX_MENU_ITEM - 1)   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM - 1;   // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  else    {   // in calibrate/adjust menu mode
+    if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // to to first item
+    }
+    else    {   // not at last item - go ahead
+      if(ts.menu_item < MAX_MENU_ITEM - 1)    {   // are we starting from the adjustment menu?
+        if((ts.menu_item + 6) >= MAX_MENU_ITEM) {       // yes - is the next jump past the end of the menu?
+          ts.menu_item = MAX_MENU_ITEM-1;     // yes - jump to the last item
+        }
+        else
+          ts.menu_item += 6;  // not at last item - go to next screen
+      }
+      else    // not on adjustment menu
+        ts.menu_item += 6;  // go to next configuration screen
+      //
+      if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1; // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void menu_prev_screen() {
+  is_last_menu_item = 0;  // clear last screen detect flag
+  if(ts.menu_item < 6)    {   // are we less than one screen away from the beginning?
+    if(!ts.radio_config_menu_enable)    // yes - config/adjust menu not enabled?
+      ts.menu_item = MAX_MENU_ITEM-1; // yes, go to last item in normal menu
+    else
+      ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+  }
+  else    {
+    if(ts.menu_item < MAX_MENU_ITEM)    // are we in the config menu?
+      if(ts.menu_item >= 6)           // yes - are we at least on the second screen?
+        ts.menu_item -= 6;              // yes, go to the previous screen
+      else                            // we are on the first screen
+        ts.menu_item = 0;           // go to the first item
+    //
+    else if(ts.menu_item > MAX_MENU_ITEM)   {   // are we within the adjustment menu by at least one entry?
+      if((ts.menu_item - 6) < MAX_MENU_ITEM)  {   // yes, will the next step be outside the adjustment menu?
+        ts.menu_item = MAX_MENU_ITEM;           // yes - go to bottom of adjustment menu
+      }
+      else                            // we will stay within the adjustment menu
+        ts.menu_item -= 6;          // go back to previous page
+    }
+    else if(ts.menu_item == MAX_MENU_ITEM)  // are we at the bottom of the adjustment menu?
+      ts.menu_item --;                // yes - go to the last entry of the adjustment menu
+  }
+  //              ts.menu_item -= 6;  // not less than 6, so we subtract!
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+
 inline bool is_touchscreen_pressed() {
 	return (ts.tp_x != 0xff);
 }
@@ -455,10 +619,7 @@ void UiDriver_HandleTouchScreen()
 		}
 		if(check_tp_coordinates(0,7,31,33))			// toggle digital modes
 		{
-			if(ts.digital_mode < 7)
-				ts.digital_mode += 1;
-			else
-				ts.digital_mode = 0;
+		    incr_wrap_uint8(&ts.digital_mode,0,7);
 			UiDriverChangeDigitalMode();
 		}
 		if(check_tp_coordinates(26,35,39,43))			// dynamic tuning activation
@@ -1028,11 +1189,11 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
 				if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
-					ts.filter_id++;
-					//
-					if(ts.filter_id >= AUDIO_MAX_FILTER)
-						ts.filter_id = AUDIO_MIN_FILTER;
-					//
+					incr_wrap_uint8(
+					    &ts.filter_id,
+					    AUDIO_MIN_FILTER,
+					    AUDIO_MAX_FILTER);
+
 					UiDriverProcessActiveFilterScan();	// make sure that filter is active - if not, find next active filter
 					//
 					// Change filter
@@ -1082,8 +1243,7 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_POWER_PRESSED:
 				if(!ts.boot_halt_flag)	{	// do brightness adjust ONLY if NOT in "boot halt" mode
-					ts.lcd_backlight_brightness++;
-					ts.lcd_backlight_brightness &= 3;	// limit range of brightness to 0-3
+				  incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
 				}
 				break;
 			default:
@@ -1129,24 +1289,7 @@ static void UiDriverProcessKeyboard(void)
 			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
 				// Move to the BEGINNING of the current menu structure
 				if(ts.menu_mode)	{		// Are we in menu mode?
-					if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
-						if(ts.menu_item)	// is this NOT the first menu item?
-							ts.menu_item = 0;	// yes - set it to the beginning of the first menu
-						else	{			// this IS the first menu item
-							if(ts.radio_config_menu_enable)		// yes - is the configuration menu enabled?
-								ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
-							else								// configuration menu NOT enabled
-								ts.menu_item = MAX_MENU_ITEM - 1;
-						}
-					}
-					else	{		// we are within the CONFIGURATION menu
-						if(ts.menu_item > MAX_MENU_ITEM)		// is this NOT at the first entry of the configuration menu?
-							ts.menu_item = MAX_MENU_ITEM;	// yes, go to the first entry of the configuration item
-						else		// this IS the first entry of the configuration menu
-							ts.menu_item = MAX_MENU_ITEM - 1;	// go to the last entry of the main menu
-					}
-					UiDriverUpdateMenu(0);	// update menu display
-					UiDriverUpdateMenu(1);	// update cursor
+				  menu_first_screen();
 				}
 				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
@@ -1165,25 +1308,7 @@ static void UiDriverProcessKeyboard(void)
 				//
 				// Move to the END of the current menu structure
 				if(ts.menu_mode){		// are we in menu mode?
-					if(ts.menu_item < MAX_MENU_ITEM)	{	// Yes - Is this within the main menu?
-						if(ts.menu_item == MAX_MENU_ITEM-1)	{	// are we on the LAST menu item of the main menu?
-							if(ts.radio_config_menu_enable)		// Yes - is the configuration menu enabled?
-								ts.menu_item = MAX_MENU_ITEM;	// yes - go to the FIRST item of the configuration menu
-							else								// configuration menu NOT enabled
-								ts.menu_item = 0;				// go to the FIRST menu main menu item
-						}
-						else									// we had not been on the last item of the main menu
-							ts.menu_item = MAX_MENU_ITEM-1;		// go to the last item in the main menu
-					}
-					else	{		// we were NOT in the main menu, but in the configuration menu!
-						if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))		// are we on the last item of the configuration menu?
-							ts.menu_item = 0;					// yes - go to the first item of the main menu
-						else	{		// we are NOT on the last item of the configuration menu
-							ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;		// go to the last item in the configuration menu
-						}
-					}
-					UiDriverUpdateMenu(0);	// update menu display
-					UiDriverUpdateMenu(1);	// update cursor
+				    menu_last_screen();
 				}
 				else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
 					__IO VfoReg* vfo_store;
@@ -1255,19 +1380,14 @@ static void UiDriverProcessKeyboard(void)
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
-					ts.filter_id++;
-					//
-					if(ts.filter_id >= AUDIO_MAX_FILTER)
-						ts.filter_id = AUDIO_MIN_FILTER;
-					//
-					// Change filter
-					//
-					UiDriverChangeFilter(0);
-					UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
-					UiDriverChangeDSPMode();	// Change DSP display setting as well
-					UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-					//
-					if(ts.menu_mode)	// are we in menu mode?
+				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER);
+
+				  UiDriverChangeFilter(0);
+				  UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
+				  UiDriverChangeDSPMode();	// Change DSP display setting as well
+				  UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
+				  //
+				  if(ts.menu_mode)	// are we in menu mode?
 						UiDriverUpdateMenu(0);	// yes, update display when we change filters
 					//
 				}
@@ -1289,16 +1409,7 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
 				if(ts.dmod_mode != DEMOD_CW)	{
-					if(ts.tx_audio_source == TX_AUDIO_MIC)
-						ts.tx_audio_source = TX_AUDIO_LINEIN_L;
-					else if (ts.tx_audio_source == TX_AUDIO_LINEIN_L)
-						ts.tx_audio_source = TX_AUDIO_LINEIN_R;
-					else if (ts.tx_audio_source == TX_AUDIO_LINEIN_R)
-						ts.tx_audio_source = TX_AUDIO_DIG;
-					else if (ts.tx_audio_source == TX_AUDIO_DIG)
-						ts.tx_audio_source = TX_AUDIO_DIGIQ;
-					else
-						ts.tx_audio_source = TX_AUDIO_MIC;
+				    incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
 					//
 					if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
 						UiDriverChangeAudioGain(0);
@@ -1619,7 +1730,6 @@ void UiDriverDisplaySplitFreqLabels() {
 //*----------------------------------------------------------------------------
 static void UiDriverProcessFunctionKeyClick(ulong id)
 {
-	static bool is_last_menu_item = 0;
 	//printf("button: %02x\n\r",id);
 
 	// --------------------------------------------
@@ -1705,7 +1815,6 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 						label = "  MEM ";
 					}
 					UiDriverFButtonLabel(3,label,color);	// yes - indicate with color
-
 				}
 				// Display Label for Button F4
 				{
@@ -1729,13 +1838,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			ts.menu_var_changed = 1;
 		}
 		else	{	// Not in MENU mode - select the METER mode
-			ts.tx_meter_mode++;
-			if(ts.tx_meter_mode >= METER_MAX)
-				ts.tx_meter_mode = 0;
-			//
-			// UiDriverFButtonLabel(2," METER",White);
-			//
-			UiDriverDeleteSMeter();
+		    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX);
+
+		    UiDriverDeleteSMeter();
 			UiDriverCreateSMeter();	// redraw meter
 		}
 	}
@@ -1746,34 +1851,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		//
 		//
 		if(ts.menu_mode)	{		// Previous screen
-			is_last_menu_item = 0;	// clear last screen detect flag
-			if(ts.menu_item < 6)	{	// are we less than one screen away from the beginning?
-				if(!ts.radio_config_menu_enable)	// yes - config/adjust menu not enabled?
-					ts.menu_item = MAX_MENU_ITEM-1;	// yes, go to last item in normal menu
-				else
-					ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last config/adjustment menu item
-			}
-			else	{
-				if(ts.menu_item < MAX_MENU_ITEM)	// are we in the config menu?
-					if(ts.menu_item >= 6)			// yes - are we at least on the second screen?
-						ts.menu_item -= 6;				// yes, go to the previous screen
-					else							// we are on the first screen
-						ts.menu_item = 0;			// go to the first item
-				//
-				else if(ts.menu_item > MAX_MENU_ITEM)	{	// are we within the adjustment menu by at least one entry?
-					if((ts.menu_item - 6) < MAX_MENU_ITEM)	{	// yes, will the next step be outside the adjustment menu?
-						ts.menu_item = MAX_MENU_ITEM;			// yes - go to bottom of adjustment menu
-					}
-					else							// we will stay within the adjustment menu
-						ts.menu_item -= 6;			// go back to previous page
-				}
-				else if(ts.menu_item == MAX_MENU_ITEM)	// are we at the bottom of the adjustment menu?
-					ts.menu_item --;				// yes - go to the last entry of the adjustment menu
-			}
-//				ts.menu_item -= 6;	// not less than 6, so we subtract!
-			//
-			ts.menu_var = 0;			// clear variable that is used to change a menu item
-			UiDriverUpdateMenu(1);		// Update that menu item
+		  menu_prev_screen();
 		}
 		else	{	// NOT menu mode
 			if(!ts.vfo_mem_flag)	{		// update screen if in VFO (not memory) mode
@@ -1809,58 +1887,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	// --------------------------------------------
 	// F4 process
 	if(id == BUTTON_F4_PRESSED)	{
-		//
-		if(ts.menu_mode)	{		// Next screen
-			if(!ts.radio_config_menu_enable)	{	// Not in config/calibrate menu mode
-				if(ts.menu_item == MAX_MENU_ITEM - 1)	{	// already at last item?
-					is_last_menu_item = 0;				// make sure flag is clear
-					ts.menu_item = 0;					// go to first item
-				}
-				else	{	// not at last item - go ahead
-					ts.menu_item += 6;
-					if(ts.menu_item >= MAX_MENU_ITEM - 1)	{	// were we at last item?
-						if(!is_last_menu_item)	{	// have we NOT seen the last menu item flag before?
-							ts.menu_item = MAX_MENU_ITEM - 1;	// set to last menu item
-							is_last_menu_item = 1;		// set flag indicating that we are at last menu item
-						}
-						else	{	// last menu item flag was set
-							ts.menu_item = 0;				// yes, wrap around
-							is_last_menu_item = 0;				// clear flag
-						}
-					}
-				}
-			}
-			else	{	// in calibrate/adjust menu mode
-				if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))	{	// already at last item?
-					is_last_menu_item = 0;				// make sure flag is clear
-					ts.menu_item = 0;					// to to first item
-				}
-				else	{	// not at last item - go ahead
-					if(ts.menu_item < MAX_MENU_ITEM - 1)	{	// are we starting from the adjustment menu?
-						if((ts.menu_item + 6) >= MAX_MENU_ITEM)	{		// yes - is the next jump past the end of the menu?
-							ts.menu_item = MAX_MENU_ITEM-1;		// yes - jump to the last item
-						}
-						else
-							ts.menu_item += 6;	// not at last item - go to next screen
-					}
-					else	// not on adjustment menu
-						ts.menu_item += 6;	// go to next configuration screen
-					//
-					if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))	{	// were we at last item?
-						if(!is_last_menu_item)	{	// have we NOT seen the last menu item flag before?
-							ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1;	// set to last menu item
-							is_last_menu_item = 1;		// set flag indicating that we are at last menu item
-						}
-						else	{	// last menu item flag was set
-							ts.menu_item = 0;				// yes, wrap around
-							is_last_menu_item = 0;				// clear flag
-						}
-					}
-				}
-			}
-			//
-			ts.menu_var = 0;			// clear variable that is used to change a menu item
-			UiDriverUpdateMenu(1);		// Update that menu item
+
+	   if (ts.menu_mode) {
+	      menu_next_screen();
 		}
 		else	{	// NOT menu mode
 			uint8_t vfo_active,vfo_new;
@@ -2069,16 +2098,9 @@ void UiDriverShowStep(ulong step)
 	ulong	color;
 	ulong 	stepsize_background;
 
-	if(ts.tune_step)		// is this a "Temporary" step size from press-and-hold?
-		color = Cyan;	// yes - display step size in Cyan
-	else				// normal mode
-		color = White;	// step size in white
-
-	if (ts.dynamic_tuning_active)  // is dynamic tuning activated ??
-			stepsize_background = Grey3;		// yes, display on Grey3
-		else
-			stepsize_background = Black;		// no, display on Black
-
+	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
+	stepsize_background = ts.dynamic_tuning_active?Grey3:Black;
+	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
 		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
@@ -2730,8 +2752,8 @@ static void UiDriverCreateSMeter(void)
 		}
 	}
 	// Draw meters
-	UiDriverUpdateTopMeterA(0,0);
-	UiDriverUpdateBtmMeter(0, 0);
+	UiDriverUpdateTopMeterA(0);
+	UiDriverUpdateBtmMeter(0, 34);
 
 }
 
@@ -2742,28 +2764,36 @@ static void UiDriverCreateSMeter(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverUpdateTopMeterA(uchar val,uchar old)
+static uint8_t topmeter_last;
+static uint8_t btmmeter_last;
+static void UiDriverUpdateTopMeterA(uchar val)
 {
-	uchar 	i,v_s;
-	int		col = Blue2;
 
+  uchar 	i,v_s;
+  int		col = Blue2;
+  uint8_t from, to;
 
-	// Do not waste time redrawing if outside of the range or if the meter has not changed
-	if((val > 34) || (val == old))
-		return;
+  if (val>34) { val = 34; }
+  if(val != topmeter_last) {
+    // Indicator height
+    v_s = 3;
 
-	// Indicator height
-	v_s = 3;
-
-	// Draw first indicator
-	for(i = 1; i < 34; i++)
-	{
-		if(val < i)
-			col = Grid;
-
-		// Lines
-		UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
-	}
+    // decide if we need to draw more boxes or delete some
+    if (val > topmeter_last) {
+      col = Blue2;
+      from = topmeter_last+1;
+      to = val+1;
+    } else {
+      col = Grid;
+      from = val+1;
+      to   = topmeter_last+1;
+    }
+    for(i = from; i < to; i++)  {
+      // Lines
+      UiLcdHy28_DrawStraightLineTriple(((POS_SM_IND_X + 18) + i*5),((POS_SM_IND_Y + 28) - v_s),v_s,LCD_DIR_VERTICAL,col);
+    }
+    topmeter_last = val;
+  }
 }
 
 //*----------------------------------------------------------------------------
@@ -2778,9 +2808,8 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 	uchar 	i,v_s;
 	int		col = Cyan;
 
-	// Do not waste time redrawing if outside of the range
-	if(val > 34)
-		return;
+	// limit meter
+	if(val > 34) { val = 34; }
 
 	// Indicator height
 	v_s = 3;
@@ -5614,7 +5643,7 @@ static void UiDriverHandleSmeter(void)
 	if(!val)	// make sure that the S meter always reads something!
 		val = 1;
 	//
-	UiDriverUpdateTopMeterA(val,sm.old);
+	UiDriverUpdateTopMeterA(val);
 	sm.old = val;
 	//
 	// Now handle automatic A/D input gain control timing
@@ -5856,9 +5885,7 @@ static void UiDriverHandleLowerMeter(void)
 	//
 	scale_calc = (uchar)(swrm.fwd_pwr * 3);		// 3 dots-per-watt for RF power meter
 	//
-	if(scale_calc > 34)		// limit maximum reading
-		scale_calc = 34;
-	UiDriverUpdateTopMeterA(scale_calc, 33);
+	UiDriverUpdateTopMeterA(scale_calc);
 
 	//
 	// Do selectable meter readings
@@ -5875,8 +5902,6 @@ static void UiDriverHandleLowerMeter(void)
 			}
 			//
 			scale_calc = (uchar)(swrm.vswr_dampened * 4);		// yes - four dots per unit of VSWR
-			if(scale_calc > 34)					// limit maximum scale
-				scale_calc = 34;
 			UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
 		}
 	}
@@ -5885,10 +5910,9 @@ static void UiDriverHandleLowerMeter(void)
 		scale_calc *= scale_calc;		// square the value
 		scale_calc = log10f(scale_calc);	// get the log10
 		scale_calc *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
-		if(scale_calc > 34)		// limit range of values being sent to the meter
-			scale_calc = 34;
-		else if(scale_calc < 0)
+		if(scale_calc < 0) {
 			scale_calc = 0;
+		}
 		//
 		UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
 	}
@@ -5900,9 +5924,7 @@ static void UiDriverHandleLowerMeter(void)
 		scale_calc *= 10;					// convert to DeciBels and scale for the meter
 		scale_calc += 11;					// offset for meter
 		//
-		if(scale_calc > 34)					// limit range of values being sent to the meter
-			scale_calc = 34;
-		else if(scale_calc < 0)
+		if(scale_calc < 0)
 			scale_calc = 0;
 		//
 		UiDriverUpdateBtmMeter((uchar)(scale_calc), 22);	// update the meter, setting the "red" threshold
