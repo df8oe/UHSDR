@@ -1443,7 +1443,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				UiDriverChangeKeyerSpeed(0);
 			else
 				{
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 				UiDriverUpdateMenu(0);
 				}
 		}
@@ -1473,7 +1473,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
 			else
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 		}
 		//
 		if(ts.tx_audio_source != TX_AUDIO_MIC) {	// Orange if not in MIC-IN mode
@@ -1500,7 +1500,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			if(ts.dmod_mode == DEMOD_CW)
 				UiDriverChangeKeyerSpeed(0);
 			else	{		// in voice mode
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 				if(ts.txrx_mode == TRX_MODE_TX)		// in transmit mode?
 					// TODO: Think about this, this is a hack
 					Codec_Line_Gain_Adj(ts.tx_gain[TX_AUDIO_LINEIN_L]);		// change codec gain
@@ -1606,7 +1606,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			if(ts.dmod_mode == DEMOD_CW)		// yes, update on-screen info
 				UiDriverChangeKeyerSpeed(0);
 			else
-				UIDriverChangeAudioGain(0);
+				UiDriverChangeAudioGain(0);
 		}
 		//
 		sprintf(options, "  %u", ts.keyer_speed);
@@ -2162,7 +2162,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 //
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 {
-	char options[32], temp[32];
+	char options[32];
 	ulong opt_pos;					// y position of option
 	static ulong opt_oldpos = 999;	// y position of option
 	uchar select;
@@ -2331,23 +2331,21 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		break;
 		//
 	case CONFIG_MAX_VOLUME:	// maximum audio volume
-		UiDriverMenuItemChangeUInt8(var, mode, &ts.audio_max_volume,
+		UiDriverMenuItemChangeUInt8(var, mode, &ts.rx_gain[RX_AUDIO_SPKR].max,
 						MAX_VOLUME_MIN,
 						MAX_VOLUME_MAX,
 						MAX_VOLUME_DEFAULT,
 						1
 						);
-		if(ts.audio_gain > ts.audio_max_volume)	{			// is the volume currently higher than the new setting?
-			ts.audio_gain = ts.audio_max_volume;		// yes - force the volume to the new value
-			//  TODO: Remove this display write
-			sprintf(temp,"%02d",ts.audio_gain);			// Update screen indicator
-			UiLcdHy28_PrintText((POS_AG_IND_X + 38),(POS_AG_IND_Y + 1), temp,White,Black,0);
+		if(ts.rx_gain[RX_AUDIO_SPKR].value > ts.rx_gain[RX_AUDIO_SPKR].max)	{			// is the volume currently higher than the new setting?
+			ts.rx_gain[RX_AUDIO_SPKR].value = ts.rx_gain[RX_AUDIO_SPKR].max;		// yes - force the volume to the new value
+			UiDriverChangeAfGain(0);
 		}
-		sprintf(options, "    %u", ts.audio_max_volume);
+		sprintf(options, "    %u", ts.rx_gain[RX_AUDIO_SPKR].value);
 		//
-		if(ts.audio_max_volume <= MAX_VOL_RED_THRESH)			// Indicate that gain has been reduced by changing color
+		if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOL_RED_THRESH)			// Indicate that gain has been reduced by changing color
 			clr = Red;
-		else if(ts.audio_max_volume <= MAX_VOLT_YELLOW_THRESH)
+		else if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOLT_YELLOW_THRESH)
 			clr = Orange;
 		break;
 	case CONFIG_MAX_RX_GAIN:	// maximum RX gain setting

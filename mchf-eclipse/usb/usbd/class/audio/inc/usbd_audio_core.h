@@ -136,6 +136,7 @@ typedef struct UsbAudioUnit_s {
 	int16_t max;
 	uint16_t res;
 	int16_t cur;
+	uint8_t* ptr; // pointer to data structure which is used elsewhere to store volume
 } UsbAudioUnit;
 
 // In / Out Volume;

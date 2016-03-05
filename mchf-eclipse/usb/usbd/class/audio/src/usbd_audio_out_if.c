@@ -401,6 +401,8 @@ static uint8_t  VolumeCtl    (uint8_t vol)
     return AUDIO_FAIL;
   }
 */
+  uint16_t source = ts.tx_audio_source == TX_AUDIO_DIGIQ?TX_AUDIO_DIGIQ:TX_AUDIO_DIG;
+  ts.tx_gain[source] = vol;
   return AUDIO_OK;
 }
 static uint8_t  InVolumeCtl    (uint8_t vol)
@@ -412,7 +414,7 @@ static uint8_t  InVolumeCtl    (uint8_t vol)
     return AUDIO_FAIL;
   }
 */
-  ts.rx_usb_gain = vol;
+  ts.rx_gain[RX_AUDIO_DIG].value = vol;
   return AUDIO_OK;
 }
 

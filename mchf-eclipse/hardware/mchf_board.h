@@ -1203,6 +1203,14 @@ typedef struct FilterCoeffs
 	uint32_t	tx_i_block_size;
 } FilterCoeffs;
 
+typedef struct Gain_s {
+  uint8_t value;
+  uint8_t max;
+  uint8_t value_old;
+  float   active_value;
+} Gain;
+
+
 // Transceiver state public structure
 typedef struct TransceiverState
 {
@@ -1211,10 +1219,11 @@ typedef struct TransceiverState
 
 	// Virtual pots public values
 	short  	rit_value;
-	uchar 	audio_gain;
-	float	audio_gain_active;	// working variable for processing audio gain - used in rx audio function
-	uchar	audio_max_volume;	// limit for maximum audio gain
-	uchar   audio_gain_change;	// change detect for audio gain
+
+#define RX_AUDIO_SPKR 0
+#define RX_AUDIO_DIG  1
+	Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
+
 	int 	rf_gain;			// RF gain control
 	uchar	rf_codec_gain;		// gain for codec (A/D converter) in receive mode
 	uchar 	nb_setting;
@@ -1282,20 +1291,11 @@ typedef struct TransceiverState
 	//uchar	txrx_lock;
 	uchar	ptt_req;
 
-	// Unattended TX public flag
-	//uchar 	auto_mode;
 
 	// Demodulator mode public flag
 	uchar 	dmod_mode;
 
-	// Digital mode public flag
-	//uchar 	digi_mode;
 
-	// FIR encoder current mode
-	//uchar 	fir_enc_mode;
-
-	// Gain encoder current mode
-	//uchar 	gain_enc_mode;			// old var, to be removed
 	uchar 	enc_one_mode;
 	uchar 	enc_two_mode;
 	uchar 	enc_thr_mode;
@@ -1344,12 +1344,9 @@ typedef struct TransceiverState
 	uchar	power_level;
 
 	uchar 	tx_audio_source;
-	uchar   tx_line_channel;  // 1 LEFT 2 RIGHT
 	ulong	tx_mic_gain_mult;
-	ulong	tx_mic_gain_mult_temp;	// used to temporarily hold the mic gain when going from RX to TX
 	uchar	tx_gain[TX_AUDIO_NUM];
 	uchar	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
-	uchar	rx_usb_gain;			// volume setting for usb audio out
 
 	// Microphone gain boost of +20dB via Codec command (TX)
 	uchar	mic_boost;

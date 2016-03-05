@@ -700,10 +700,14 @@ void TransceiverStateInit(void)
 	ts.band_change		= 0;						// used in muting audio during band change
 	ts.filter_band		= 0;						// used to indicate the bpf filter selection for power detector coefficient selection
 	ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
-	ts.audio_gain		= DEFAULT_AUDIO_GAIN;		// Set initial volume
-	ts.rx_usb_gain		= DEFAULT_USB_GAIN;
-	ts.audio_max_volume	= MAX_VOLUME_DEFAULT;		// Set max volume default
-	ts.audio_gain_active = 1;						// this variable is used in the active RX audio processing function
+	ts.rx_gain[RX_AUDIO_SPKR].value = DEFAULT_AUDIO_GAIN;
+	ts.rx_gain[RX_AUDIO_DIG].value		= DEFAULT_DIG_GAIN;
+
+	ts.rx_gain[RX_AUDIO_SPKR].max	= MAX_VOLUME_DEFAULT;		// Set max volume default
+    ts.rx_gain[RX_AUDIO_DIG].max   =  MAX_DIG_GAIN;       // Set max volume default
+
+	ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;						// this variable is used in the active RX audio processing function
+	ts.rx_gain[RX_AUDIO_DIG].active_value = 1;                     // this variable is used in the active RX audio processing function
 	ts.rf_gain			= DEFAULT_RF_GAIN;			//
 	ts.max_rf_gain		= MAX_RF_GAIN_DEFAULT;		// setting for maximum gain (e.g. minimum S-meter reading)
 	ts.rf_codec_gain	= DEFAULT_RF_CODEC_GAIN_VAL;	// Set default RF gain (0 = lowest, 8 = highest, 9 = "Auto")
@@ -1150,7 +1154,7 @@ int main(void)
 	//
 	UiLoadBeepFreq();		// load/set beep frequency
 	//
-	ts.audio_gain_change = 99;		// Force update of volume control
+	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted
 
 	UiCheckForEEPROMLoadDefaultRequest();	// check - and act on - request for loading of EEPROM defaults, if any
