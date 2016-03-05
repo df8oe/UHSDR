@@ -752,6 +752,8 @@ void mchf_board_power_off(void)
 //*----------------------------------------------------------------------------
 void mchf_board_init(void)
 {
+    uint8_t display_type;
+
 	// Enable clock on all ports
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
@@ -788,7 +790,9 @@ void mchf_board_init(void)
 	mchf_hw_i2c2_init();
 
 	// LCD Init
-	UiLcdHy28_Init();
+	ts.display_type = UiLcdHy28_Init();
+	// we could now implement some error strategy if no display is present
+	// i.e. 0 is returned
 
 	// Encoders init
 	UiRotaryFreqEncoderInit();

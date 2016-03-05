@@ -28,6 +28,7 @@
 #include "ui_rotary.h"
 #include "ui_lcd_hy28.h"
 #include "ui_menu.h"
+#include "ui_si570.h"
 
 // Keyboard Driver
 // #include "keyb_driver.h"
@@ -972,6 +973,134 @@ static void wd_reset(void)
 	}
 }
 */
+
+
+
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiLcdHy28_ShowStartUpScreen
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
+{
+  uint16_t    i;
+  //  uint16_t    t, s, u, v;
+  char   tx[100];
+
+  // Clear all
+  UiLcdHy28_LcdClear(Black);
+
+  non_os_delay();
+  // Show first line
+  sprintf(tx,"%s",DEVICE_STRING);
+  UiLcdHy28_PrintText(0,30,tx,Cyan,Black,1);       // Position with original text size:  78,40
+  //
+
+  // Show second line
+  sprintf(tx,"%s",AUTHOR_STRING);
+  UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
+
+  // Show third line
+  sprintf(tx,"v %d.%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD);
+  UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
+
+  // Show fourth line
+#define GITHUB_IDENT "$Id: 5dbafdb7751341f70f9c05951696de9ee532e0bc $"
+  char ty[8];
+  for(i=5;i<12;i++)
+    ty[i-5] = GITHUB_IDENT[i];
+  ty[7] = 0;
+  sprintf(tx,"DF8OE-Github-Commit %s",ty);
+
+  //   sprintf(tx,"DF8OE-GitHub-Version %s","0.12.rt.4");
+  UiLcdHy28_PrintText(45,100,tx,Yellow,Black,0);
+
+  //
+  Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
+
+  if(!(i & 0xff))  {
+    sprintf(tx,"WARNING:  Freq. Translation is OFF!!!");
+    UiLcdHy28_PrintText(16,120,tx,Black,Red3,0);
+    sprintf(tx,"Translation is STRONGLY recommended!!");
+    UiLcdHy28_PrintText(16,135,tx,Black,Red3,0);
+  }
+  else {
+    sprintf(tx," Freq. Translate On ");
+    UiLcdHy28_PrintText(80,120,tx,Grey3,Black,0);
+  }
+
+  // Display the mode of the display interface
+  //
+  switch(ts.display_type) {
+  case DISPLAY_HY28B_PARALLEL:
+    sprintf(tx,"LCD: Parallel Mode");
+    break;
+  case DISPLAY_HY28A_SPI:
+    sprintf(tx,"LCD: HY28A SPI Mode");
+    break;
+  case DISPLAY_HY28B_SPI:
+    sprintf(tx,"LCD: HY28B SPI Mode");
+    break;
+  default:
+    sprintf(tx,"LCD: None Detected ");
+    // Yes, this is pointless, no display, no boot splash :-)
+  }
+
+  //
+  UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
+
+  //
+  // Display startup frequency of Si570, By DF8OE, 201506
+  //
+  float suf = ui_si570_get_startup_frequency();
+  int vorkomma = (int)(suf);
+  int nachkomma = (int) roundf((suf-vorkomma)*10000);
+
+  sprintf(tx,"SI570 startup frequency: %u.%04u MHz",vorkomma,nachkomma);
+  UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
+  //
+
+  if(ts.ee_init_stat != FLASH_COMPLETE)    {   // Show error code if problem with EEPROM init
+    sprintf(tx, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
+    UiLcdHy28_PrintText(60,180,tx,White,Black,0);
+  }
+  else {
+    ushort adc2, adc3;
+    adc2 = ADC_GetConversionValue(ADC2);
+    adc3 = ADC_GetConversionValue(ADC3);
+    if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))   {
+      sprintf(tx, "SWR Bridge resistor mod NOT completed!");
+      UiLcdHy28_PrintText(8,180,tx,Red3,Black,0);
+      //   sprintf(tx, "Value=%d,%d",adc2, adc3);          // debug
+      //   UiLcdHy28_PrintText(60,170,tx,Red,Black,0);     // debug
+    }
+  }
+
+  // Additional Attrib line 1
+  sprintf(tx,"%s",ATTRIB_STRING1);
+  UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
+
+  // Additional Attrib line 2
+  sprintf(tx,"%s",ATTRIB_STRING2);
+  UiLcdHy28_PrintText(42,210,tx,Grey1,Black,0);
+
+  // Additional Attrib line 3
+  sprintf(tx,"%s",ATTRIB_STRING3);
+  UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
+
+  // Backlight on
+  LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
+
+  // On screen delay - decrease if drivers init takes longer
+  for(i = 0; i < hold_time; i++)
+    non_os_delay();
+}
+
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : main
 //* Object              :
@@ -1080,7 +1209,7 @@ void ConfigurationStorage_Init() {
 
 void CheckIsTouchscreenPresent(void)
 {
-	get_touchscreen_coordinates();				// initial reading of XPT2046
+	UiLcdHy28_GetTouchscreenCoordinates();				// initial reading of XPT2046
 	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
 	    ts.tp_present = 1;						// yes - touchscreen present!
 	else

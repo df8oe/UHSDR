@@ -649,20 +649,20 @@ if(mode > 3)
 	char out[32];
 	char* outs;
 	m_clr = White;
-	int vorkomma = (int)(os.fout);
-	int nachkomma = (int) roundf((os.fout-vorkomma)*10000);
-	if(sd.use_spi)
-	    {
-	    if(sd.use_spi == 1)
-		outs = "HY28A SPI Mode  ";
-	    else
-		outs = "HY28B SPI Mode    ";
-	    }
-	else
-	    outs = "HY28A/B parallel  ";
-	sprintf(out,"%s%s","LCD Display  : ",outs);
+	float suf = ui_si570_get_startup_frequency();
+	int vorkomma = (int)(suf);
+	int nachkomma = (int) roundf((suf-vorkomma)*10000);
+	static const char* display_types[] = {
+	  "                ",
+	  "HY28A SPI Mode  ",
+	  "HY28B SPI Mode  ",
+	  "HY28A/B parallel"
+	};
+
+	sprintf(out,"LCD Display  : %s",display_types[ts.display_type]);
+
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
-	sprintf(out,"%s%x%s%u%s%u%s","SI570        : ",(os.si570_address >> 1),"h / ",vorkomma,".",nachkomma,"MHz");
+	sprintf(out,"SI570        : %xh / %u.%04u MHz",(os.si570_address >> 1),vorkomma,nachkomma);
 	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
 	switch (ts.ser_eeprom_type){
 	    case 0:
@@ -771,7 +771,7 @@ if(mode > 3)
 
 	//
 	//
-	if((sd.use_spi) && (ts.menu_var != menu_var_changed))	{	// if LCD SPI mode is active, do additional validation to avoid additional updates on display
+	if(ts.menu_var != menu_var_changed)	{	// do additional validation to avoid additional updates on display
 		update_vars = 1;
 	}
 	menu_var_changed = ts.menu_var;
@@ -1983,11 +1983,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_speed,
 					WATERFALL_SPEED_MIN,
 					WATERFALL_SPEED_MAX,
-					sd.use_spi?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
+					ts.display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
 					1
 					);
 			//
-			if(sd.use_spi)	{
+			if(ts.display_type != DISPLAY_HY28B_PARALLEL)	{
 				if(ts.waterfall_speed <= WATERFALL_SPEED_WARN_SPI)
 					clr = Red;
 				else if(ts.waterfall_speed <= WATERFALL_SPEED_WARN1_SPI)

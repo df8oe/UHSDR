@@ -12,7 +12,9 @@
 **  Last Modified:                                                                 **
 **  Licence:      CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
-
+#include "mchf_board.h"
+#include "mchf_types.h"
+#include "audio_driver.h"
 
 void UiSpectrumInitSpectrumDisplay();
 void UiSpectrumInitWaterfallDisplay();
@@ -85,6 +87,9 @@ void UiSpectrumReDrawSpectrumDisplay();
 
 #define	WFALL_MEDIUM_ADDITIONAL	12					// additional vertical height in pixels of "medium" waterfall
 
+// Dark grey colour used for spectrum scope grid
+#define Grid                RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD)      // COL_SPECTRUM_GRAD = 0x40
+
 // WARNING:  Because the waterfall uses a "block write" which is, in effect, a "blind" writing of data to the LCD, the size of the graphic
 // block *MUST* exactly match the number of pixels within that block.
 //
@@ -101,6 +106,76 @@ void UiSpectrumReDrawSpectrumDisplay();
 // Dependent on FFT samples,but should be less than control width!
 #define SPECTRUM_WIDTH			256
 
+// Spectrum display
+typedef struct SpectrumDisplay
+{
+    // FFT state
+    arm_rfft_instance_f32           S;
 
+    arm_cfft_radix4_instance_f32    S_CFFT;
+
+    // Samples buffer
+    //
+    float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
+    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN];
+    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN/2];
+    q15_t   FFT_BkpData[FFT_IQ_BUFF_LEN];
+    q15_t   FFT_DspData[FFT_IQ_BUFF_LEN];       // Rescaled and de-linearized display data
+    q15_t   FFT_TempData[FFT_IQ_BUFF_LEN];
+    float32_t   FFT_AVGData[FFT_IQ_BUFF_LEN/2];     // IIR low-pass filtered FFT buffer data
+
+    // Current data ptr
+    ulong   samp_ptr;
+
+    // Skip flag for FFT processing
+    ulong   skip_process;
+
+    // Addresses of vertical grid lines on x axis
+    ushort  vert_grid_id[7];
+
+    // Addresses of horizontal grid lines on x axis
+    ushort  horz_grid_id[3];
+
+    // State machine current state
+    uchar   state;
+
+    // Init done flag
+    uchar   enabled;
+
+    // There is no data on screen;
+    uint8_t     first_run;
+
+    // Flag to indicate frequency change,
+    // we need it to clear spectrum control
+    uchar   dial_moved;
+
+    // Variables used in spectrum display AGC
+    //
+    //
+    float mag_calc;     // spectrum display rescale control
+
+    uchar   magnify;    // TRUE if in magnify mode
+
+    float   rescale_rate;   // this holds the rate at which the rescaling happens when the signal appears/disappears
+    float   display_offset;                                 // "vertical" offset for spectral scope, gain adjust for waterfall
+    float   agc_rate;       // this holds AGC rate for the Spectrum Display
+    float   db_scale;       // scaling factor for dB/division
+    ushort  wfall_line_update;  // used to set the number of lines per update on the waterfall
+    float   wfall_contrast; // used to adjust the contrast of the waterfall display
+
+    ushort  waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
+    float32_t   wfall_temp[FFT_IQ_BUFF_LEN/2];                  // temporary holder for rescaling screen
+    ushort  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][FFT_IQ_BUFF_LEN/2];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+
+    uchar   wfall_line;                                     // pointer to current line of waterfall data
+    uchar   wfall_size;                 // vertical size of the waterfall
+    uchar   wfall_height;
+    uchar   wfall_ystart;
+
+
+} SpectrumDisplay;
+
+// Spectrum display
+extern __IO   SpectrumDisplay      sd;
 
 #endif

@@ -11,7 +11,6 @@
  **  Licence:      CC BY-NC-SA 3.0                                                **
  ************************************************************************************/
 #include "ui_spectrum.h"
-#include "mchf_board.h"
 #include "ui_lcd_hy28.h"
 // For spectrum display struct
 #include "audio_driver.h"
@@ -19,8 +18,8 @@
 #include "ui_rotary.h" // dial frequency df
 #include "waterfall_colours.h"
 // ------------------------------------------------
-// Spectrum display
-extern __IO   SpectrumDisplay      sd;
+// Spectrum display public
+__IO    SpectrumDisplay         sd;
 
 static void 	UiDriverFFTWindowFunction(char mode);
 

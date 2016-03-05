@@ -17,11 +17,14 @@
 #include "arm_math.h"
 #include "math.h"
 #include "ui_driver.h"
+#include "ui_spectrum.h"
 
 #define MAX_X  320
 #define MAX_Y  240
 
-#define HY28BHISPEED false
+#ifndef HY28BHISPEED
+  #define HY28BHISPEED false
+#endif
 
 #define SPI_START   (0x70)              /* Start byte for SPI transfer        */
 #define SPI_RD      (0x01)              /* WR bit 1 within start              */
@@ -59,8 +62,6 @@
 #define	RX_Grey				RGB(0xb8,0xdb,0xa8)	// slightly green grey
 #define TX_Grey				RGB(0xe8,0xad,0xa0)	// slightly red(ish) grey (more magenta, actually...)
 
-// Dark grey colour used for spectrum scope grid
-#define Grid				RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD)		// COL_SPECTRUM_GRAD = 0x40
 
 #define LCD_DIR_HORIZONTAL	0x0000
 #define LCD_DIR_VERTICAL	0x0001
@@ -103,10 +104,8 @@ void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_BulkWriteColor(uint16_t color, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
 
-uchar 	UiLcdHy28_Init(void);
+uint8_t 	UiLcdHy28_Init(void);
 
-void 	UiLcdHy28_ShowStartUpScreen(ulong hold_time);
-
-void 	get_touchscreen_coordinates(void);
+void 	UiLcdHy28_GetTouchscreenCoordinates(void);
 
 #endif

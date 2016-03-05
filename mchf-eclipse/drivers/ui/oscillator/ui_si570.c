@@ -31,6 +31,14 @@ const float	fdco_min	= FDCO_MIN;
 // All publics as struct, so eventually could be malloc-ed and in CCM for faster access!!
 __IO OscillatorState os;
 
+/*
+ * @brief Returns startup frequency value of Si570, call only after init of Si570
+ *
+ * @returns Startup frequency in Mhz
+ */
+float   ui_si570_get_startup_frequency() {
+  return os.fout;
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_si570_setbits
 //* Object              :
