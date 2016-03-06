@@ -55,6 +55,7 @@ void OTG_HS_IRQHandler(void)
 
 void keyb_driver_init(void)
 {
+#if 0
 	printf("keyb driver init...\n\r");
 
 	// Init Host Library
@@ -65,6 +66,7 @@ void keyb_driver_init(void)
 	            &USR_Callbacks);
 
 	printf("keyb driver init ok\n\r");
+#endif
 }
 
 void keyb_driver_thread(void)
