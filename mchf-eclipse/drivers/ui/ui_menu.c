@@ -473,7 +473,7 @@ static char* conf_screens[20][MENUSIZE] = {
 		"502-1.4k Filter",
 },
 { // 17
-		"503-1.6k Filter"
+		"503-1.6k Filter",
 		"505-2.1k Filter",
 		"507-2.5k Filter",
 		"509-2.9k Filter",
@@ -481,7 +481,7 @@ static char* conf_screens[20][MENUSIZE] = {
 		"511-3.4k Filter"
 },
 { // 18
-		"513-3.8k Filter"
+		"513-3.8k Filter",
 		"514-4.0k Filter",
 		"515-4.2k Filter",
 		"517-4.6k Filter",
@@ -489,7 +489,7 @@ static char* conf_screens[20][MENUSIZE] = {
 		"519-5.0k Filter"
 },
 { // 19
-		"520-5.5k Filter"
+		"520-5.5k Filter",
 		"522-6.5k Filter",
 		"523-7.0k Filter",
 		"524-7.5k Filter",
@@ -497,11 +497,11 @@ static char* conf_screens[20][MENUSIZE] = {
 		"526-8.5k Filter"
 },
 { // 20
-		"527-9.0k Filter"
+		"527-9.0k Filter",
 		"528-9.5k Filter",
 		"529-10.0k Filter",
-		"DSP NR (EXPERIMENTAL)"
-		"400-CAT-IQ-FREQ-XLAT"," ",
+		"DSP NR (EXPERIMENTAL)",
+		"400-CAT-IQ-FREQ-XLAT",
 		" "
 }
 };

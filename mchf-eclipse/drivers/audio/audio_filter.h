@@ -57,6 +57,13 @@ enum    {
     AUDIO_10P0KHZ,
     AUDIO_FILTER_NUM
 };
+
+enum {
+  FILTER_CW = 1,
+  FILTER_SSB = 2,
+  FILTER_AM = 4,
+  FILTER_FM = 8
+};
 //
 //
 #define AUDIO_DEFAULT_FILTER        AUDIO_2P3KHZ
@@ -79,6 +86,8 @@ typedef struct FilterDescriptor_s {
   const uint8_t id;
   const char* name;
   const uint16_t width;
+  const uint16_t allowed_modes;
+  const uint16_t always_on_modes;
   const uint8_t configs_num;
   const uint8_t config_default;
   const FilterConfig* config;
@@ -112,6 +121,8 @@ enum    {
 //
 #define HILBERT3600         1900    // "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
 //
+
+uint8_t AudioFilter_NextApplicableFilter();
 
 
 #endif /* DRIVERS_AUDIO_AUDIO_FILTER_H_ */
