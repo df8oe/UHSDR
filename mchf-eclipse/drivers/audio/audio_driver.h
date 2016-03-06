@@ -171,9 +171,6 @@ typedef struct SMeter
 	float	gain_calc;
 	int		curr_max;
 
-	uchar	old;
-	//uchar	max_upd;
-
 } SMeter;
 //
 // AGC Time constants
@@ -507,7 +504,8 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 
 // Public Audio
 extern __IO		AudioDriverState	ads;
-
+extern __IO     SMeter              sm;
+extern __IO FilterCoeffs        fc;
 
 
 

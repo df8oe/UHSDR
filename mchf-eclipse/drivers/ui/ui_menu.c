@@ -41,7 +41,7 @@
 //
 #include "audio_driver.h"
 #include "audio_filter.h"
-
+#include "audio_management.h"
 #include "ui_driver.h"
 //#include "usbh_usr.h"
 //
@@ -1027,7 +1027,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 				);
 
 		if(ts.fm_subaudible_tone_gen_select)	{	// tone select not zero (tone activated
-			UiCalcSubaudibleGenFreq();		// calculate frequency word
+			AudioManagement_CalcSubaudibleGenFreq();		// calculate frequency word
 			a = (int)(ads.fm_subaudible_tone_gen_freq * 10);		// convert to integer, Hz*10
 			b = a;
 			a /= 10;		// remove 10ths of Hz
@@ -1056,7 +1056,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 					);
 		//
 		if(ts.fm_subaudible_tone_det_select)	{	// tone select not zero (tone activated
-			UiCalcSubaudibleDetFreq();		// calculate frequency word
+			AudioManagement_CalcSubaudibleDetFreq();		// calculate frequency word
 			a = (int)(ads.fm_subaudible_tone_det_freq * 10);		// convert to integer, Hz*10
 			b = a;
 			a /= 10;		// remove 10ths of Hz
@@ -1126,7 +1126,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		}
 		//
 		if(fchange)	{			// was the bandwidth changed?
-			UiCalcRxPhaseAdj();			// yes - update the filters!
+			AudioFilter_CalcRxPhaseAdj();			// yes - update the filters!
 			UiDriverChangeFilter(1);	// update display of filter bandwidth (numerical) on screen only
 		}
 		//
@@ -1180,7 +1180,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		//
 		if(fchange)	{
 			// now set the AGC
-			UiCalcAGCDecay();	// initialize AGC decay ("hang time") values
+			AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
 		}
 		//
 		if(ts.txrx_mode == TRX_MODE_TX)	// Orange if in TX mode
@@ -1195,7 +1195,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						1
 						);
 		if(fchange)	{
-			UiCalcRFGain();
+			AudioManagement_CalcRFGain();
 		}
 		//
 		if(ts.rf_gain < 20)
@@ -1417,7 +1417,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 							1
 							);
 			if(fchange)	{		// value changed?  Recalculate
-				UiCalcALCDecay();
+				AudioManagement_CalcALCDecay();
 			}
 		}
 		else			// indicate RED if "Compression Level" below was nonzero
@@ -1460,7 +1460,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 						);
 		//
 		if(fchange)	{
-			UiCalcTxCompLevel();			// calculate parameters for selected amount of compression
+			AudioManagement_CalcTxCompLevel();			// calculate parameters for selected amount of compression
 			//
 			if(ts.dmod_mode != DEMOD_CW)	// In voice mode?
 				UiDriverChangeCmpLevel(0);	// update on-screen display of compression level
@@ -2250,7 +2250,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 						1
 						);
 		if(tchange)	{
-			UiCalcAGCVals();	// calculate new internal AGC values from user settings
+			AudioManagement_CalcAGCVals();	// calculate new internal AGC values from user settings
 		}
 		sprintf(options, "    %u", ts.max_rf_gain);
 		break;
@@ -2273,8 +2273,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 								DEFAULT_BEEP_FREQUENCY,
 								25);
 			if(tchange)		{
-				UiLoadBeepFreq();
-				UiKeyBeep();		// make beep to demonstrate frequency
+				AudioManagement_LoadBeepFreq();
+				AudioManagement_KeyBeep();		// make beep to demonstrate frequency
 			}
 		}
 		else	// beep not enabled - display frequency in red
@@ -2289,8 +2289,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 							DEFAULT_BEEP_LOUDNESS,
 							1);
 		if(tchange)	{
-			UiLoadBeepFreq();	// calculate new beep loudness values
-			UiKeyBeep();		// make beep to demonstrate loudness
+			AudioManagement_LoadBeepFreq();	// calculate new beep loudness values
+			AudioManagement_KeyBeep();		// make beep to demonstrate loudness
 		}
 		sprintf(options, "    %u", ts.beep_loudness);
 		break;
@@ -2374,7 +2374,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 								0,
 								1);
 			if(tchange)
-				UiCalcRxIqGainAdj();
+				AudioManagement_CalcRxIqGainAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2388,7 +2388,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 								0,
 								1);
 			if(tchange)
-				UiCalcRxPhaseAdj();
+				AudioFilter_CalcRxPhaseAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2402,7 +2402,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 								0,
 								1);
 			if(tchange)
-				UiCalcRxIqGainAdj();
+				AudioManagement_CalcRxIqGainAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2415,7 +2415,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 											MAX_RX_IQ_PHASE_BALANCE,
 											0,
 											1);if(tchange)
-				UiCalcRxPhaseAdj();
+				AudioFilter_CalcRxPhaseAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2429,7 +2429,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 											0,
 											1);
 			if(tchange)
-				UiCalcRxIqGainAdj();
+				AudioManagement_CalcRxIqGainAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2442,7 +2442,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 													MAX_RX_IQ_GAIN_BALANCE,
 													0,
 													1);if(tchange)
-				UiCalcRxIqGainAdj();
+				AudioManagement_CalcRxIqGainAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2456,7 +2456,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 													0,
 													1);
 			if(tchange)
-				UiCalcTxIqGainAdj();
+				AudioManagement_CalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2470,7 +2470,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					0,
 					1);
 			if(tchange)
-				UiCalcTxPhaseAdj();
+				AudioFilter_CalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2484,7 +2484,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 													0,
 													1);
 			if(tchange)
-				UiCalcTxIqGainAdj();
+				AudioManagement_CalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2498,7 +2498,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					0,
 					1);
 			if(tchange)
-				UiCalcTxPhaseAdj();
+				AudioFilter_CalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2515,7 +2515,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					0,
 					1);
 			if(tchange)
-				UiCalcTxIqGainAdj();
+				AudioManagement_CalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2529,7 +2529,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 					0,
 					1);
 			if(tchange)
-				UiCalcTxIqGainAdj();
+				AudioManagement_CalcTxIqGainAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2942,7 +2942,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 				NB_AGC_DEFAULT,
 				1);
 		if(tchange)	{				// parameter changed?
-			UiCalcNB_AGC();	// yes - recalculate new values for Noise Blanker AGC
+			AudioManagement_CalcNB_AGC();	// yes - recalculate new values for Noise Blanker AGC
 		}
 		//
 		sprintf(options, "  %u", ts.nb_agc_time_const);

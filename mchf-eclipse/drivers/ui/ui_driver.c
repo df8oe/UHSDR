@@ -16,8 +16,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "arm_math.h"
-#include "math.h"
 #include "codec.h"
 #include "ui_menu.h"
 //
@@ -42,6 +40,7 @@
 #include "softdds.h"
 
 #include "audio_driver.h"
+#include "audio_management.h"
 #include "ui_driver.h"
 //#include "usbh_usr.h"
 
@@ -49,39 +48,8 @@
 
 
 #include "ui_configuration.h"
-//
-//
-// List of subaudible tones - used for FM
-#include "fm_subaudible_tone_table.h"
-//
 #include "cw_gen.h"
 
-// SSB/AM filters
-
-#include "filters/q_rx_filter_10kHz.h"
-#include "filters/i_rx_filter_10kHz.h"
-//
-#include "filters/q_rx_filter_7kHz5.h"
-#include "filters/i_rx_filter_7kHz5.h"
-//
-#include "filters/q_rx_filter_6kHz.h"
-#include "filters/i_rx_filter_6kHz.h"
-//
-#include "filters/q_rx_filter_5kHz.h"
-#include "filters/i_rx_filter_5kHz.h"
-//
-#include "filters/q_rx_filter_3k6.h"
-#include "filters/i_rx_filter_3k6.h"
-//
-#include "filters/q_tx_filter.h"
-#include "filters/i_tx_filter.h"
-
-#include "filters/iq_rx_filter_am_10kHz.h"
-#include "filters/iq_rx_filter_am_7kHz5.h"
-#include "filters/iq_rx_filter_am_6kHz.h"
-#include "filters/iq_rx_filter_am_5kHz.h"
-#include "filters/iq_rx_filter_am_3k6.h"
-#include "filters/iq_rx_filter_am_2k3.h"
 
 static void 	UiDriverPublicsInit(void);
 static void 	UiDriverProcessKeyboard(void);
@@ -91,7 +59,7 @@ static void 	UiDriverProcessFunctionKeyClick(ulong id);
 static void 	UiDriverShowBand(uchar band);
 static void 	UiDriverCreateDesktop(void);
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
-static void UiDriverDeleteSMeter(void);
+static void     UiDriverDeleteSMeter(void);
 static void 	UiDriverCreateSMeter(void);
 static void 	UiDriverDrawSMeter(ushort color);
 //
@@ -178,7 +146,7 @@ const ButtonMap	bm[16] =
 // The numbers within are linear gain values, not logarithmic, starting with a zero signal level of 1
 // There are 33 entries, one corresponding with each point on the S-meter
 #define	S_Meter_Cal_Size	33	// number of entries in table below
-const float S_Meter_Cal[] =
+const float S_Meter_Cal[S_Meter_Cal_Size] =
 {
 // - Dummy variable		1,		//0, S0, 0dB
 		14.1,	//1.41,	//1, S0.5, 3dB
@@ -248,11 +216,6 @@ __IO PowerMeter					pwmt;
 // LO Tcxo
 __IO LoTcxo						lo;
 
-// ------------------------------------------------
-// Eeprom Saving
-__IO EepromSave					es;
-
-// ------------------------------------------------
 // CAT driver state
 __IO CatDriver					kd;
 
@@ -267,38 +230,13 @@ extern __IO	SpectrumDisplay		sd;
 // Public USB Keyboard status
 extern __IO KeypadState		ks;
 
-// ------------------------------------------------
-// Public s meter
-extern	__IO	SMeter			sm;
-//
-// Public Audio
-extern __IO		AudioDriverState	ads;
 
 
 uchar drv_state = 0;
 uchar drv_init = 0;
 
 //
-extern __IO	FilterCoeffs		fc;
 
-//
-// RX Hilbert transform (90 degree) FIR filter state tables and instances
-//
-static float32_t 		FirState_I[128];
-extern __IO arm_fir_instance_f32 	FIR_I;
-//
-static float32_t 		FirState_Q[128];
-extern __IO arm_fir_instance_f32 	FIR_Q;
-
-//
-// TX Hilbert transform (90 degree) FIR filter state tables and instances
-//
-static float 			FirState_I_TX[128];
-extern __IO	arm_fir_instance_f32	FIR_I_TX;
-
-static float 			FirState_Q_TX[128];
-extern __IO	arm_fir_instance_f32	FIR_Q_TX;
-//
 
 
 inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max) {
@@ -754,20 +692,20 @@ void ui_driver_init(void)
 	// Load stored data from eeprom
 	UiConfiguration_LoadEepromValues();
 	//
-	UiCalcTxCompLevel();		// calculate current settings for TX speech compressor
+	AudioManagement_CalcTxCompLevel();		// calculate current settings for TX speech compressor
 	//
 	df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
 	//
 	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
 	//
-	UiCalcRxIqGainAdj();		// Init RX IQ gain
+	AudioManagement_CalcRxIqGainAdj();		// Init RX IQ gain
 	//
-	UiCalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
+	AudioFilter_CalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
 	//
-	UiCalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
+	AudioFilter_CalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
 	//
-	UiCalcTxIqGainAdj();		// Init TX IQ gain
+	AudioManagement_CalcTxIqGainAdj();		// Init TX IQ gain
 	//
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
@@ -1162,7 +1100,7 @@ static void UiDriverProcessKeyboard(void)
 		// Is it click or hold ?
 		if(!ks.press_hold)	{
 			// Process click
-			UiKeyBeep();	// make keyboard beep, if enabled
+			AudioManagement_KeyBeep();	// make keyboard beep, if enabled
 			//
 			switch(ks.button_id)
 			{
@@ -1247,7 +1185,7 @@ static void UiDriverProcessKeyboard(void)
 		}
 		else	{
 			//
-			UiKeyBeep();	// make keyboard beep, if enabled
+			AudioManagement_KeyBeep();	// make keyboard beep, if enabled
 			//
 			// *******************************************************************************
 			// Process press-and-hold of button(s).  Note that this can accommodate multiple buttons at once.
@@ -1377,7 +1315,7 @@ static void UiDriverProcessKeyboard(void)
 				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
 
 				  UiDriverChangeFilter(0);
-				  UiCalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
+				  AudioFilter_CalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
 				  UiDriverChangeDSPMode();	// Change DSP display setting as well
 				  UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				  //
@@ -1540,9 +1478,9 @@ void UiInitRxParms(void)
 	if(ts.menu_mode)	// are we in menu mode?
 		UiDriverUpdateMenu(0);	// yes, update display when we change modes
 	//
-	UiCalcTxIqGainAdj();		// update gain and phase values when changing modes
-	UiCalcTxPhaseAdj();
-	UiCalcRxPhaseAdj();
+	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
+	AudioFilter_CalcTxPhaseAdj();
+	AudioFilter_CalcRxPhaseAdj();
 	UiDriverChangeRfGain(1);	// update RFG/SQL on screen
 	Audio_TXFilter_Init();
 	UiDriverChangeDSPMode();	// Change DSP display setting as well
@@ -3880,11 +3818,11 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 
 	UiDriverShowMode();
 
-	UiCalcRxPhaseAdj();		// set gain and phase values according to mode
-	UiCalcRxIqGainAdj();
+	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
+	AudioManagement_CalcRxIqGainAdj();
 	//
-	UiCalcTxPhaseAdj();
-	UiCalcTxIqGainAdj();
+	AudioFilter_CalcTxPhaseAdj();
+	AudioManagement_CalcTxIqGainAdj();
 
 	// Change function buttons caption
 	//UiDriverCreateFunctionButtons(false);
@@ -4249,7 +4187,7 @@ static void UiDriverCheckEncoderOne(void)
 					if(ts.tx_comp_level > TX_AUDIO_COMPRESSION_MAX)		// limit value to proper range
 						ts.tx_comp_level = TX_AUDIO_COMPRESSION_MAX;
 				}
-				UiCalcTxCompLevel();		// calculate values for selection compression level
+				AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
 				UiDriverChangeCmpLevel(1);	// update on-screen display
 			}
 
@@ -4334,7 +4272,7 @@ static void UiDriverCheckEncoderTwo(void)
 					//
 					// get RF gain value and calculate new value
 					//
-					UiCalcRFGain();		// convert from user RF gain value to "working" RF gain value
+					AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
 					UiDriverChangeRfGain(1);	// change on screen
 					break;
 				}
@@ -5362,7 +5300,7 @@ static void UiDriverHandleSmeter(void)
 	sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
 	//
 	sm.s_count = 0;		// Init S-meter search counter
-	while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count <= S_Meter_Cal_Size))	{	// find corresponding signal level
+	while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	{	// find corresponding signal level
 		sm.s_count++;;
 	}
 	val = (uchar)sm.s_count;
@@ -5370,7 +5308,6 @@ static void UiDriverHandleSmeter(void)
 		val = 1;
 	//
 	UiDriverUpdateTopMeterA(val);
-	sm.old = val;
 	//
 	// Now handle automatic A/D input gain control timing
 	//
@@ -6313,108 +6250,6 @@ void UiLCDBlankTiming(void)
 }
 // TODO: MOVE TO AUDIO /RF Function
 //
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcAGCDecay
-//* Object              : Calculate Decay timing for AGC (RECEIVE!)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiCalcAGCDecay(void)
-{
-	float tcalc;	// temporary holder - used to avoid conflict during operation
-
-	// Set AGC rate - this needs to be moved to its own function (and the one in "ui_menu.c")
-	//
-	if(ts.agc_mode == AGC_SLOW)
-		ads.agc_decay = AGC_SLOW_DECAY;
-	else if(ts.agc_mode == AGC_FAST)
-		ads.agc_decay = AGC_FAST_DECAY;
-	else if(ts.agc_mode == AGC_CUSTOM)	{	// calculate custom AGC setting
-		tcalc = (float)ts.agc_custom_decay;
-		tcalc += 30;
-		tcalc /= 10;
-		tcalc = -tcalc;
-		ads.agc_decay = powf(10, tcalc);
-	}
-	else
-		ads.agc_decay = AGC_MED_DECAY;
-}
-// TODO: MOVE TO AUDIO /RF Function
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcALCDecay
-//* Object              : Calculate Decay timing for ALC (TRANSMIT!)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiCalcALCDecay(void)
-{
-	float tcalc;	// temporary holder - used to avoid conflict during operation
-
-	// calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
-	//
-	tcalc = (float)ts.alc_decay_var;
-	tcalc += 35;
-	tcalc /= 10;
-	tcalc *= -1;
-	ads.alc_decay = powf(10, tcalc);
-}
-// TODO: MOVE TO AUDIO /RF Function
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcRFGain
-//* Object              : Calculate RF Gain internal value from user setting
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiCalcRFGain(void)
-{
-	float tcalc;	// temporary value as "ads.agc_rf_gain" may be used during the calculation!
-
-	// calculate working RF gain value
-	tcalc = (float)ts.rf_gain;
-	tcalc *= 1.4;
-	tcalc -= 20;
-	tcalc /= 10;
-	ads.agc_rf_gain = powf(10, tcalc);
-
-}
-// TODO: MOVE TO AUDIO /RF Function
-
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcAGCVals
-//* Object              : Calculate internal AGC values from user settings
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiCalcAGCVals(void)
-{
-	if(ts.max_rf_gain <= MAX_RF_GAIN_MAX)	{
-		ads.agc_knee = AGC_KNEE_REF * (float)(ts.max_rf_gain + 1);
-		ads.agc_val_max = AGC_VAL_MAX_REF / ((float)(ts.max_rf_gain + 1));
-		ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
-	}
-	else	{
-		ads.agc_knee = AGC_KNEE_REF * MAX_RF_GAIN_DEFAULT+1;
-		ads.agc_val_max = AGC_VAL_MAX_REF / MAX_RF_GAIN_DEFAULT+1;
-		ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF /  (float)(ts.max_rf_gain + 1);
-	}
-}
-// TODO: MOVE TO AUDIO /RF Function
-//
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCWSidebandMode
 //* Object              : Determine CW sideband and offset mode settings
@@ -6425,755 +6260,29 @@ void UiCalcAGCVals(void)
 //
 void UiCWSidebandMode(void)
 {
-	switch(ts.cw_offset_mode)	{
-		case CW_OFFSET_USB_TX:
-		case CW_OFFSET_USB_RX:
-		case CW_OFFSET_USB_SHIFT:
-			ts.cw_lsb = 0;				// Not LSB!
-			break;
-		case CW_OFFSET_LSB_TX:
-		case CW_OFFSET_LSB_RX:
-		case CW_OFFSET_LSB_SHIFT:
-			ts.cw_lsb = 1;				// It is LSB
-			break;
-		case CW_OFFSET_AUTO_TX:						// For "auto" modes determine if we are above or below threshold frequency
-		case CW_OFFSET_AUTO_RX:
-		case CW_OFFSET_AUTO_SHIFT:
-			if(df.tune_new >= USB_FREQ_THRESHOLD)	// is the current frequency above the USB threshold?
-				ts.cw_lsb = 0;						// yes - indicate that it is USB
-			else
-				ts.cw_lsb = 1;						// no - LSB
-			break;
-		default:
-			ts.cw_lsb = 0;
-			break;
-	}
-}
-// TODO: MOVE TO AUDIO /RF Function
-
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcNB_AGC
-//* Object              : Calculate Noise Blanker AGC settings
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcNB_AGC(void)
-{
-	float temp_float;
-
-	temp_float = (float)ts.nb_agc_time_const;	// get user setting
-	temp_float = NB_MAX_AGC_SETTING-temp_float;		// invert (0 = minimum))
-	temp_float /= 1.1;								// scale calculation
-	temp_float *= temp_float;						// square value
-	temp_float += 1;								// offset by one
-	temp_float /= 44000;							// rescale
-	temp_float += 1;								// prevent negative log result
-	ads.nb_sig_filt = log10f(temp_float);			// de-linearize and save in "new signal" contribution parameter
-	ads.nb_agc_filt = 1 - ads.nb_sig_filt;			// calculate parameter for recyling "old" AGC value
-}
-// TODO: MOVE TO AUDIO /RF Function
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcRxIqGainAdj
-//* Object              : Calculate RX IQ Gain adjustments
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcRxIqGainAdj(void)
-{
-	if(ts.dmod_mode == DEMOD_AM)
-		ts.rx_adj_gain_var_i = (float)ts.rx_iq_am_gain_balance;			// get current gain adjustment for AM
-	if(ts.dmod_mode == DEMOD_FM)
-		ts.rx_adj_gain_var_i = (float)ts.rx_iq_fm_gain_balance;			// get current gain adjustment for FM
-	else if(ts.dmod_mode == DEMOD_LSB)
-		ts.rx_adj_gain_var_i = (float)ts.rx_iq_lsb_gain_balance;		// get current gain adjustment setting for LSB
-	else
-		ts.rx_adj_gain_var_i = (float)ts.rx_iq_usb_gain_balance;		// get current gain adjustment setting	USB and other modes
-	//
-	ts.rx_adj_gain_var_i /= 1024;		// fractionalize it
-	ts.rx_adj_gain_var_q = -ts.rx_adj_gain_var_i;				// get "invert" of it
-	ts.rx_adj_gain_var_i += 1;		// offset it by one (e.g. 0 = unity)
-	ts.rx_adj_gain_var_q += 1;
-}
-// TODO: MOVE TO AUDIO /RF Function
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcTxIqGainAdj
-//* Object              : Calculate TX IQ Gain adjustments
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcTxIqGainAdj(void)
-{
-	// Note:  There is a fixed amount of offset due to the fact that the phase-added Hilbert (e.g. 0, 90) transforms are
-	// slightly asymmetric that is added so that "zero" is closer to being the proper phase balance.
-	//
-	if(ts.dmod_mode == DEMOD_AM)	// is it AM mode?
-		ts.tx_adj_gain_var_i = (float)ts.tx_iq_am_gain_balance;		// get current gain balance adjustment setting for AM
-	else if(ts.dmod_mode == DEMOD_FM)	// is it in FM mode?
-		ts.tx_adj_gain_var_i = (float)ts.tx_iq_fm_gain_balance;		// get current gain balance adjustment setting for FM
-	else if(ts.dmod_mode == DEMOD_LSB)
-		ts.tx_adj_gain_var_i = (float)ts.tx_iq_lsb_gain_balance;		// get current gain balance adjustment setting for LSB
-	else
-		ts.tx_adj_gain_var_i = (float)ts.tx_iq_usb_gain_balance;		// get current gain adjustment setting for USB and other non AM/FM modes
-
-	//
-	ts.tx_adj_gain_var_i /= 1024;		// fractionalize it
-	ts.tx_adj_gain_var_q = -ts.tx_adj_gain_var_i;				// get "invert" of it
-	ts.tx_adj_gain_var_i += 1;		// offset it by one (e.g. 0 = unity)
-	ts.tx_adj_gain_var_q += 1;
-}
-
-// TODO: MOVE TO AUDIO / RF Function
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcRxPhaseAdj
-//* Object              : Calculate RX FFT coeffients based on adjustment settings
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcRxPhaseAdj(void)
-{
-	float f_coeff, f_offset, var_norm, var_inv;
-	ulong i;
-	int phase;
-	//
-	// always make a fresh copy of the original Q and I coefficients
-	// NOTE:  We are assuming that the I and Q filters are of the same length!
-	//
-	fc.rx_q_num_taps = Q_NUM_TAPS;
-	fc.rx_i_num_taps = I_NUM_TAPS;
-	//
-	fc.rx_q_block_size = Q_BLOCK_SIZE;
-	fc.rx_i_block_size = I_BLOCK_SIZE;
-	//
-	if(ts.dmod_mode == DEMOD_AM)	{		// AM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
-		// FIR 2k3 up to 2k3 filter
-		// FIR 3k6 up to 3k6 filter
-		// FIR 5k up to 5k filter
-		// FIR 7k5 up to 7k5 filter
-		// FIR 10k up to 10k filter
-		for(i = 0; i < Q_NUM_TAPS; i++)	{
-			if (ts.filter_id <= AUDIO_2P3KHZ){
-				fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
-				fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
-			} else
-				if (ts.filter_id <= AUDIO_3P6KHZ){
-					fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
-					fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
-				} else
-					if (ts.filter_id <= AUDIO_5P0KHZ){
-						fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
-						fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
-					} else
-						if (ts.filter_id <= AUDIO_6P0KHZ){
-							fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];
-							fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
-						} else
-							if (ts.filter_id <= AUDIO_7P5KHZ){
-								fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];
-								fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
-							} else {
-									fc.rx_filt_q[i] = iq_rx_am_10k_coeffs[i];
-									fc.rx_filt_i[i] = iq_rx_am_10k_coeffs[i];
-							}
-		} // end for
-
-
-/*		if(ts.filter_id == AUDIO_WIDE)	{	// Wide AM - selectable from menu
-			for(i = 0; i < Q_NUM_TAPS; i++)	{
-				switch(ts.filter_wide_select)	{
-					case WIDE_FILTER_5K:
-					case WIDE_FILTER_5K_AM:
-						fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
-						fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
-						break;
-					case WIDE_FILTER_6K:
-					case WIDE_FILTER_6K_AM:
-						fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];
-						fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
-						break;
-					case WIDE_FILTER_7K5:
-					case WIDE_FILTER_7K5_AM:
-						fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];
-						fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
-						break;
-					case WIDE_FILTER_10K:
-					case WIDE_FILTER_10K_AM:
-					default:
-						fc.rx_filt_q[i] = iq_rx_am_10k_coeffs[i];
-						fc.rx_filt_i[i] = iq_rx_am_10k_coeffs[i];
-						break;
-				}
-			}
-		}
-		else if(ts.filter_id == AUDIO_3P6KHZ)	{
-				// "Medium" AM - 3.6 kHz filter (total of 7.2kHz bandwidth), use 5kHz FIR and 3k6 IIR --> allows sideband-selected AM by detuning!
-			for(i = 0; i < Q_NUM_TAPS; i++)	{
-				fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
-				fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
-			}
-		}
-		else if((ts.filter_id == AUDIO_2P7KHZ)|| (ts.filter_id == AUDIO_2P9KHZ) || (ts.dmod_mode == DEMOD_FM))	{
-				// "low Medium" AM - 2.7 or 2.9 (total of 2x bandwidth) - or if we are using FM
-			for(i = 0; i < Q_NUM_TAPS; i++)	{
-				fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
-				fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
-			}
-		}
-		else	{
-			for(i = 0; i < Q_NUM_TAPS; i++)	{		// "Narrow" AM - "1.8" kHz filter (total of 3.6 kHz bandwidth)
-				fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
-				fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
-			}
-		} */
-
-	}
-	else if(ts.dmod_mode == DEMOD_FM)	{		// FM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
-		for(i = 0; i < Q_NUM_TAPS; i++)	{
-			switch(ts.fm_rx_bandwidth)	{
-				case FM_RX_BANDWIDTH_10K:
-					fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];	// load 5 kHz FIR (2 x 5kHz = 10 kHz)
-					fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
-					break;
-				case FM_RX_BANDWIDTH_12K:
-					fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];	// load 6 kHz FIR (2 x 6 kHz = 12 kHz)
-					fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
-					break;
-//				case FM_RX_BANDWIDTH_15K:
-//					fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];	// load 7.5kHz FIR (2 x 7.5 kHz = 15 kHz)
-//					fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
-//					break;
-				case FM_RX_BANDWIDTH_7K2:
-				default:
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];	// load 3.6 kHz FIR (2 x 3.6 kHz = 7.2 kHz)
-						fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
-					}
-					break;
-			}
-		}
-	}
-	else	{		// SSB, Not AM or FM - load Hilbert transformation filters
-		// fill Hilbert coeffs into fc.rx_filt
-		for(i = 0; i < Q_NUM_TAPS; i++)	{
-			if (ts.filter_id <= AUDIO_3P6KHZ){
-				fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
-				fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];
-			} else
-					if (ts.filter_id <= AUDIO_5P0KHZ){
-						fc.rx_filt_q[i] = q_rx_5k_coeffs[i];
-						fc.rx_filt_i[i] = i_rx_5k_coeffs[i];
-					} else
-						if (ts.filter_id <= AUDIO_6P0KHZ){
-							fc.rx_filt_q[i] = q_rx_6k_coeffs[i];
-							fc.rx_filt_i[i] = i_rx_6k_coeffs[i];
-						} else
-							if (ts.filter_id <= AUDIO_7P5KHZ){
-								fc.rx_filt_q[i] = q_rx_7k5_coeffs[i];
-								fc.rx_filt_i[i] = i_rx_7k5_coeffs[i];
-							} else {
-								fc.rx_filt_q[i] = q_rx_10k_coeffs[i];
-								fc.rx_filt_i[i] = i_rx_10k_coeffs[i];
-							}
-		} // end for
-
-	}	// end else = SSB
-
-/*		if(ts.filter_id == AUDIO_WIDE)	{
-			for(i = 0; i < Q_NUM_TAPS; i++)	{
-				switch(ts.filter_wide_select)	{
-					case WIDE_FILTER_5K:
-					case WIDE_FILTER_5K_AM:
-						fc.rx_filt_q[i] = q_rx_5k_coeffs[i];
-						fc.rx_filt_i[i] = i_rx_5k_coeffs[i];
-						break;
-					case WIDE_FILTER_6K:
-					case WIDE_FILTER_6K_AM:
-						fc.rx_filt_q[i] = q_rx_6k_coeffs[i];
-						fc.rx_filt_i[i] = i_rx_6k_coeffs[i];
-						break;
-					case WIDE_FILTER_7K5:
-					case WIDE_FILTER_7K5_AM:
-						fc.rx_filt_q[i] = q_rx_7k5_coeffs[i];
-						fc.rx_filt_i[i] = i_rx_7k5_coeffs[i];
-						break;
-					case WIDE_FILTER_10K:
-					case WIDE_FILTER_10K_AM:
-					default:
-						fc.rx_filt_q[i] = q_rx_10k_coeffs[i];
-						fc.rx_filt_i[i] = i_rx_10k_coeffs[i];
-						break;
-				}
-
-			}
-		}
-		else	{
-			for(i = 0; i < Q_NUM_TAPS; i++)	{
-				fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
-				fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];	// phase shift in other modes
-			}
-		} */
-
-		//
-		if(ts.dmod_mode == DEMOD_LSB)	// get phase setting appropriate to mode
-			phase = ts.rx_iq_lsb_phase_balance;		// yes, get current gain adjustment setting for LSB
-		else
-			phase = ts.rx_iq_usb_phase_balance;		// yes, get current gain adjustment setting for USB and other mdoes
-		//
-		if(phase != 0)	{	// is phase adjustment non-zero?
-			var_norm = (float)phase;
-			var_norm = fabs(var_norm);		// get absolute value of this gain adjustment
-			var_inv = 32 - var_norm;		// calculate "inverse" of number of steps
-			var_norm /= 32;		// fractionalize by the number of steps
-			var_inv /= 32;						// fractionalize this one, too
-			if(phase < 0)	{	// was the phase adjustment negative?
-
-				if(ts.filter_id <=AUDIO_3P6KHZ){
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
-						f_offset = var_norm * q_rx_3k6_coeffs_minus[i];	// get fraction of 89.5 degree setting
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				} else
-					if(ts.filter_id <=AUDIO_5P0KHZ){
-						for(i = 0; i < Q_NUM_TAPS; i++)	{
-							f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
-							f_offset = var_norm * q_rx_5k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-							fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-						}
-					} else
-						if(ts.filter_id <=AUDIO_6P0KHZ){
-							for(i = 0; i < Q_NUM_TAPS; i++)	{
-								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_6k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-								fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-							}
-						}	else
-								if(ts.filter_id <=AUDIO_7P5KHZ){
-									for(i = 0; i < Q_NUM_TAPS; i++)	{
-										f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
-										f_offset = var_norm * q_rx_7k5_coeffs_minus[i];	// get fraction of 89.5 degree setting
-										fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-									}
-								}	else {
-										for(i = 0; i < Q_NUM_TAPS; i++)	{
-											f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
-											f_offset = var_norm * q_rx_10k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-											fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-										}
-									}
-
-
-
-
-
-
-					/*				if(ts.filter_id == AUDIO_WIDE)	{
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						switch(ts.filter_wide_select)	{
-							case WIDE_FILTER_5K:
-							case WIDE_FILTER_5K_AM:
-								f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_5k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-								break;
-							case WIDE_FILTER_6K:
-							case WIDE_FILTER_6K_AM:
-								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_6k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-								break;
-							case WIDE_FILTER_7K5:
-							case WIDE_FILTER_7K5_AM:
-								f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_7k5_coeffs_minus[i];	// get fraction of 89.5 degree setting
-								break;
-							case WIDE_FILTER_10K:
-							case WIDE_FILTER_10K_AM:
-							default:
-								f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_10k_coeffs_minus[i];	// get fraction of 89.5 degree setting
-								break;
-						}
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				} // end if Audio wide
-				else	{
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
-						f_offset = var_norm * q_rx_3k6_coeffs_minus[i];	// get fraction of 89.5 degree setting
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				} //
-				*/
-
-
-			} // end phase adjustment negative
-			else	{							// adjustment was positive
-				if(ts.filter_id <=AUDIO_3P6KHZ){
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
-						f_offset = var_norm * q_rx_3k6_coeffs_plus[i];	// get fraction of 90.5 degree setting
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				} else
-					if(ts.filter_id <=AUDIO_5P0KHZ){
-						for(i = 0; i < Q_NUM_TAPS; i++)	{
-							f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
-							f_offset = var_norm * q_rx_5k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-							fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-						}
-					} else
-						if(ts.filter_id <=AUDIO_6P0KHZ){
-							for(i = 0; i < Q_NUM_TAPS; i++)	{
-								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_6k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-								fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-							}
-						}	else
-								if(ts.filter_id <=AUDIO_7P5KHZ){
-									for(i = 0; i < Q_NUM_TAPS; i++)	{
-										f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
-										f_offset = var_norm * q_rx_7k5_coeffs_plus[i];	// get fraction of 90.5 degree setting
-										fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-									}
-								}	else {
-										for(i = 0; i < Q_NUM_TAPS; i++)	{
-											f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
-											f_offset = var_norm * q_rx_10k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-											fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-										}
-									}
-			} // end phase adjustment positive
-
-/*				if(ts.filter_id == AUDIO_WIDE)	{
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						switch(ts.filter_wide_select)	{
-							case WIDE_FILTER_5K:
-							case WIDE_FILTER_5K_AM:
-								f_coeff = var_inv * q_rx_5k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_5k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-								break;
-							case WIDE_FILTER_6K:
-							case WIDE_FILTER_6K_AM:
-								f_coeff = var_inv * q_rx_6k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_6k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-								break;
-							case WIDE_FILTER_7K5:
-							case WIDE_FILTER_7K5_AM:
-								f_coeff = var_inv * q_rx_7k5_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_7k5_coeffs_plus[i];	// get fraction of 90.5 degree setting
-								break;
-							case WIDE_FILTER_10K:
-							case WIDE_FILTER_10K_AM:
-							default:
-								f_coeff = var_inv * q_rx_10k_coeffs[i];	// get fraction of 90 degree setting
-								f_offset = var_norm * q_rx_10k_coeffs_plus[i];	// get fraction of 90.5 degree setting
-								break;
-						}
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				}
-				else	{
-					for(i = 0; i < Q_NUM_TAPS; i++)	{
-						f_coeff = var_inv * q_rx_3k6_coeffs[i];	// get fraction of 90 degree setting
-						f_offset = var_norm * q_rx_3k6_coeffs_plus[i];	// get fraction of 90.5 degree setting
-						fc.rx_filt_q[i] = f_coeff + f_offset;	// synthesize new coefficient
-					}
-				}
-			}  // end phase adjustment positive
-		*/
-		} // end if phase adjustment non-zero
-
-	//
-	// In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
-	if(ts.dmod_mode == DEMOD_AM)		// use "Q" filter settings in AM mode for "I" channel
-		arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_q_block_size);	// load "I" with "Q" coefficients
-	else								// not in AM mode, but SSB or FM - use normal settings where I and Q are 90 degrees apart
-		arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size);	// load "I" with "I" coefficients
-	//
-	arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);		// load "Q" with "Q" coefficients
-	//
-}
-// TODO: MOVE TO AUDIO / RF Function
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcTxCompLevel
-//* Object              : Set TX audio compression settings (gain and ALC decay rate) based on user setting
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcTxCompLevel(void)
-{
-	float tcalc;
-
-	switch(ts.tx_comp_level)	{				// get the speech compressor setting
-		case 0:		// minimum compression
-			ts.alc_tx_postfilt_gain_var = 1;		// set the gain for that processor value
-			ts.alc_decay_var = 15;					// set the decay rate for that processor value
-			break;
-		case 1:
-			ts.alc_tx_postfilt_gain_var = 2;
-			ts.alc_decay_var = 12;
-			break;
-		case 2:
-			ts.alc_tx_postfilt_gain_var = 4;
-			ts.alc_decay_var = 10;
-			break;
-		case 3:
-			ts.alc_tx_postfilt_gain_var = 6;
-			ts.alc_decay_var = 9;
-			break;
-		case 4:
-			ts.alc_tx_postfilt_gain_var = 8;
-			ts.alc_decay_var = 8;
-			break;
-		case 5:
-			ts.alc_tx_postfilt_gain_var = 7;
-			ts.alc_decay_var = 7;
-			break;
-		case 6:
-			ts.alc_tx_postfilt_gain_var = 10;
-			ts.alc_decay_var = 6;
-			break;
-		case 7:
-			ts.alc_tx_postfilt_gain_var = 12;
-			ts.alc_decay_var = 5;
-			break;
-		case 8:
-			ts.alc_tx_postfilt_gain_var = 15;
-			ts.alc_decay_var = 4;
-			break;
-		case 9:
-			ts.alc_tx_postfilt_gain_var = 17;
-			ts.alc_decay_var = 3;
-			break;
-		case 10:
-			ts.alc_tx_postfilt_gain_var = 20;
-			ts.alc_decay_var = 2;
-			break;
-		case 11:
-			ts.alc_tx_postfilt_gain_var = 25;
-			ts.alc_decay_var = 1;
-			break;
-		case 12:		// Maximum compression
-			ts.alc_tx_postfilt_gain_var = 25;
-			ts.alc_decay_var = 0;
-			break;
-		case 13:	// read saved values from EEPROM
-			ts.alc_tx_postfilt_gain_var = ts.alc_tx_postfilt_gain;		// restore "pristine" EEPROM values
-			ts.alc_decay_var = ts.alc_decay;
-			break;
-		default:
-			ts.alc_tx_postfilt_gain_var = 4;
-			ts.alc_decay_var = 10;
-			break;
-	}
-	//
-	tcalc = (float)ts.alc_decay_var;	// use temp var "tcalc" as audio function
-	tcalc += 35;			// can be called mid-calculation!
-	tcalc /= 10;
-	tcalc *= -1;
-	tcalc = powf(10, tcalc);
-	ads.alc_decay = tcalc;
-}
-// TODO: MOVE TO AUDIO / RF Function
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcSubaudibleGenFreq
-//* Object              : Calculate frequency word for subaudible tone generation  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcSubaudibleGenFreq(void)
-{
-	ads.fm_subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];		// look up tone frequency (in Hz)
-	ads.fm_subaudible_tone_word = (ulong)(ads.fm_subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR);	// calculate tone word
-}
-//
-// TODO: MOVE TO AUDIO / RF Function
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcSubaudibleDetFreq
-//* Object              : Calculate frequency word for subaudible tone  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiCalcSubaudibleDetFreq(void)
-{
-	ulong size;
-
-	size = BUFF_LEN;
-
-	ads.fm_subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];		// look up tone frequency (in Hz)
-	//
-	// Calculate Goertzel terms for tone detector(s)
-	//
-	// Terms for "above" detection frequency
-	//
-	ads.fm_goertzel_high_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_HIGH) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
-	ads.fm_goertzel_high_b = (2*PI*ads.fm_goertzel_high_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
-	ads.fm_goertzel_high_sin = sin(ads.fm_goertzel_high_b);
-	ads.fm_goertzel_high_cos = cos(ads.fm_goertzel_high_b);
-	ads.fm_goertzel_high_r = 2 * ads.fm_goertzel_high_cos;
-	//
-	// Terms for "below" detection frequency
-	//
-	ads.fm_goertzel_low_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_LOW) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
-	ads.fm_goertzel_low_b = (2*PI*ads.fm_goertzel_low_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
-	ads.fm_goertzel_low_sin = sin(ads.fm_goertzel_low_b);
-	ads.fm_goertzel_low_cos = cos(ads.fm_goertzel_low_b);
-	ads.fm_goertzel_low_r = 2 * ads.fm_goertzel_low_cos;
-	//
-	// Terms for the actual detection frequency
-	//
-	ads.fm_goertzel_ctr_a = (0.5 + ads.fm_subaudible_tone_det_freq * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
-	ads.fm_goertzel_ctr_b = (2*PI*ads.fm_goertzel_ctr_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
-	ads.fm_goertzel_ctr_sin = sin(ads.fm_goertzel_ctr_b);
-	ads.fm_goertzel_ctr_cos = cos(ads.fm_goertzel_ctr_b);
-	ads.fm_goertzel_ctr_r = 2 * ads.fm_goertzel_ctr_cos;
-}
-
-// TODO: MOVE TO RF Function
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLoadToneBurstMode
-//* Object              : Load tone burst mode  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLoadToneBurstMode(void)
-{
-	switch(ts.fm_tone_burst_mode)	{
-		case FM_TONE_BURST_1750_MODE:
-			ads.fm_tone_burst_word = FM_TONE_BURST_1750;
-			break;
-		case FM_TONE_BURST_2135_MODE:
-			ads.fm_tone_burst_word = FM_TONE_BURST_2135;
-			break;
-		default:
-			ads.fm_tone_burst_word = 0;
-			break;
-	}
-
-}
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLoadBeepFreq
-//* Object              : Load beep frequency  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLoadBeepFreq(void)
-{
-	float calc;
-
-	if(ts.misc_flags2 & 4)	{	// is beep enabled?
-		ads.beep_word = ts.beep_frequency * 65536;		// yes - calculated/load frequency
-		ads.beep_word /= 48000;
-	}
-	else
-		ads.beep_word = 0;		// not enabled - zero out frequency word
-	//
-	calc = (float)ts.beep_loudness;		// range 0-20
-	calc /= 2;							// range 0-10
-	calc *= calc;						// range 0-100
-	calc += 3;							// range 3-103
-	ads.beep_loudness_factor = calc / 400;		// range from 0.0075 to 0.2575 - multiplied by DDS output
-}
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiKeyBeep
-//* Object              : Make beep  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiKeyBeep(void)
-{
-	UiLoadBeepFreq();		// load and calculate beep frequency
-	ts.beep_timing = ts.sysclock + BEEP_DURATION;		// set duration of beep
-	ts.beep_active = 1;									// activate tone
-}
-
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcTxPhaseAdj
-//* Object              : Calculate TX FFT coeffients based on adjustment settings
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-// TODO: MOVE TO RF Function
-void UiCalcTxPhaseAdj(void)
-{
-	float f_coeff, f_offset, var_norm, var_inv;
-	ulong i;
-	int phase;
-	//
-	ads.tx_filter_adjusting = 1;		// disable TX I/Q filter during adjustment
-	//
-
-	// always make a fresh copy of the original Q and I coefficients
-	// NOTE:  We are assuming that the I and Q filters are of the same length!
-	//
-	fc.tx_q_num_taps = Q_TX_NUM_TAPS;
-	fc.tx_i_num_taps = I_TX_NUM_TAPS;
-	//
-	fc.tx_q_block_size = Q_TX_BLOCK_SIZE;
-	fc.tx_i_block_size = I_TX_BLOCK_SIZE;
-	//
-	for(i = 0; i < Q_TX_NUM_TAPS; i++)	{
-		fc.tx_filt_q[i] = q_tx_coeffs[i];
-		fc.tx_filt_i[i] = i_tx_coeffs[i];
-	}
-	//
-	if(ts.dmod_mode == DEMOD_LSB)
-		phase = ts.tx_iq_lsb_phase_balance;		// yes, get current gain adjustment setting for LSB
-	else
-		phase = ts.tx_iq_usb_phase_balance;		// yes, get current gain adjustment setting
-	//
-	if(phase != 0)	{	// is phase adjustment non-zero?
-		var_norm = (float)phase;		// yes, get current gain adjustment setting
-		var_norm = fabs(var_norm);		// get absolute value of this gain adjustment
-		var_inv = 32 - var_norm;		// calculate "inverse" of number of steps
-		var_norm /= 32;		// fractionalize by the number of steps
-		var_inv /= 32;						// fractionalize this one, too
-		if(phase < 0)	{	// was the phase adjustment negative?
-			for(i = 0; i < Q_TX_NUM_TAPS; i++)	{
-				f_coeff = var_inv * q_tx_coeffs[i];	// get fraction of 90 degree setting
-				f_offset = var_norm * q_tx_coeffs_minus[i];
-				fc.tx_filt_q[i] = f_coeff + f_offset;
-			}
-		}
-		else	{							// adjustment was positive
-			for(i = 0; i < Q_TX_NUM_TAPS; i++)	{
-				f_coeff = var_inv * q_tx_coeffs[i];	// get fraction of 90 degree setting
-				f_offset = var_norm * q_tx_coeffs_plus[i];
-				fc.tx_filt_q[i] = f_coeff + f_offset;
-			}
-		}
-	}
-	//
-	arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);
-	arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q_TX,fc.tx_q_num_taps,(float32_t *)&fc.tx_filt_q[0], &FirState_Q_TX[0],fc.tx_q_block_size);
-
-	ads.tx_filter_adjusting = 0;		// re enable TX I/Q filter now that we are done
+    switch(ts.cw_offset_mode)   {
+        case CW_OFFSET_USB_TX:
+        case CW_OFFSET_USB_RX:
+        case CW_OFFSET_USB_SHIFT:
+            ts.cw_lsb = 0;              // Not LSB!
+            break;
+        case CW_OFFSET_LSB_TX:
+        case CW_OFFSET_LSB_RX:
+        case CW_OFFSET_LSB_SHIFT:
+            ts.cw_lsb = 1;              // It is LSB
+            break;
+        case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
+        case CW_OFFSET_AUTO_RX:
+        case CW_OFFSET_AUTO_SHIFT:
+            if(df.tune_new >= USB_FREQ_THRESHOLD)   // is the current frequency above the USB threshold?
+                ts.cw_lsb = 0;                      // yes - indicate that it is USB
+            else
+                ts.cw_lsb = 1;                      // no - LSB
+            break;
+        default:
+            ts.cw_lsb = 0;
+            break;
+    }
 }
 
 //

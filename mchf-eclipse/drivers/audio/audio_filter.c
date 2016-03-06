@@ -11,6 +11,37 @@
 **  Licence:        CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 #include "mchf_board.h"
+#include "audio_filter.h"
+
+#include "arm_math.h"
+#include "math.h"
+#include "audio_driver.h"
+
+// SSB/AM filters
+#include "filters/q_rx_filter_10kHz.h"
+#include "filters/i_rx_filter_10kHz.h"
+//
+#include "filters/q_rx_filter_7kHz5.h"
+#include "filters/i_rx_filter_7kHz5.h"
+//
+#include "filters/q_rx_filter_6kHz.h"
+#include "filters/i_rx_filter_6kHz.h"
+//
+#include "filters/q_rx_filter_5kHz.h"
+#include "filters/i_rx_filter_5kHz.h"
+//
+#include "filters/q_rx_filter_3k6.h"
+#include "filters/i_rx_filter_3k6.h"
+//
+#include "filters/q_tx_filter.h"
+#include "filters/i_tx_filter.h"
+
+#include "filters/iq_rx_filter_am_10kHz.h"
+#include "filters/iq_rx_filter_am_7kHz5.h"
+#include "filters/iq_rx_filter_am_6kHz.h"
+#include "filters/iq_rx_filter_am_5kHz.h"
+#include "filters/iq_rx_filter_am_3k6.h"
+#include "filters/iq_rx_filter_am_2k3.h"
 
 /*
 typedef struct FilterDescriptor_s {
@@ -205,3 +236,453 @@ uint8_t AudioFilter_NextApplicableFilter()
   }
   return retval;
 }
+
+
+
+//
+// RX Hilbert transform (90 degree) FIR filter state tables and instances
+//
+static float32_t        FirState_I[128];
+extern __IO arm_fir_instance_f32    FIR_I;
+//
+static float32_t        FirState_Q[128];
+extern __IO arm_fir_instance_f32    FIR_Q;
+
+//
+// TX Hilbert transform (90 degree) FIR filter state tables and instances
+//
+static float            FirState_I_TX[128];
+extern __IO arm_fir_instance_f32    FIR_I_TX;
+
+static float            FirState_Q_TX[128];
+extern __IO arm_fir_instance_f32    FIR_Q_TX;
+//
+
+/*
+ * @brief Calculate RX FFT coeffients based on adjustment settings
+ */
+void AudioFilter_CalcRxPhaseAdj(void)
+{
+    float f_coeff, f_offset, var_norm, var_inv;
+    ulong i;
+    int phase;
+    //
+    // always make a fresh copy of the original Q and I coefficients
+    // NOTE:  We are assuming that the I and Q filters are of the same length!
+    //
+    fc.rx_q_num_taps = Q_NUM_TAPS;
+    fc.rx_i_num_taps = I_NUM_TAPS;
+    //
+    fc.rx_q_block_size = Q_BLOCK_SIZE;
+    fc.rx_i_block_size = I_BLOCK_SIZE;
+    //
+    if(ts.dmod_mode == DEMOD_AM)    {       // AM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
+        // FIR 2k3 up to 2k3 filter
+        // FIR 3k6 up to 3k6 filter
+        // FIR 5k up to 5k filter
+        // FIR 7k5 up to 7k5 filter
+        // FIR 10k up to 10k filter
+        for(i = 0; i < Q_NUM_TAPS; i++) {
+            if (ts.filter_id <= AUDIO_2P3KHZ){
+                fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
+                fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
+            } else
+                if (ts.filter_id <= AUDIO_3P6KHZ){
+                    fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
+                    fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
+                } else
+                    if (ts.filter_id <= AUDIO_5P0KHZ){
+                        fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
+                        fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+                    } else
+                        if (ts.filter_id <= AUDIO_6P0KHZ){
+                            fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];
+                            fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
+                        } else
+                            if (ts.filter_id <= AUDIO_7P5KHZ){
+                                fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];
+                                fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
+                            } else {
+                                    fc.rx_filt_q[i] = iq_rx_am_10k_coeffs[i];
+                                    fc.rx_filt_i[i] = iq_rx_am_10k_coeffs[i];
+                            }
+        } // end for
+
+
+/*      if(ts.filter_id == AUDIO_WIDE)  {   // Wide AM - selectable from menu
+            for(i = 0; i < Q_NUM_TAPS; i++) {
+                switch(ts.filter_wide_select)   {
+                    case WIDE_FILTER_5K:
+                    case WIDE_FILTER_5K_AM:
+                        fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
+                        fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+                        break;
+                    case WIDE_FILTER_6K:
+                    case WIDE_FILTER_6K_AM:
+                        fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];
+                        fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
+                        break;
+                    case WIDE_FILTER_7K5:
+                    case WIDE_FILTER_7K5_AM:
+                        fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];
+                        fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
+                        break;
+                    case WIDE_FILTER_10K:
+                    case WIDE_FILTER_10K_AM:
+                    default:
+                        fc.rx_filt_q[i] = iq_rx_am_10k_coeffs[i];
+                        fc.rx_filt_i[i] = iq_rx_am_10k_coeffs[i];
+                        break;
+                }
+            }
+        }
+        else if(ts.filter_id == AUDIO_3P6KHZ)   {
+                // "Medium" AM - 3.6 kHz filter (total of 7.2kHz bandwidth), use 5kHz FIR and 3k6 IIR --> allows sideband-selected AM by detuning!
+            for(i = 0; i < Q_NUM_TAPS; i++) {
+                fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];
+                fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+            }
+        }
+        else if((ts.filter_id == AUDIO_2P7KHZ)|| (ts.filter_id == AUDIO_2P9KHZ) || (ts.dmod_mode == DEMOD_FM))  {
+                // "low Medium" AM - 2.7 or 2.9 (total of 2x bandwidth) - or if we are using FM
+            for(i = 0; i < Q_NUM_TAPS; i++) {
+                fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];
+                fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
+            }
+        }
+        else    {
+            for(i = 0; i < Q_NUM_TAPS; i++) {       // "Narrow" AM - "1.8" kHz filter (total of 3.6 kHz bandwidth)
+                fc.rx_filt_q[i] = iq_rx_am_2k3_coeffs[i];
+                fc.rx_filt_i[i] = iq_rx_am_2k3_coeffs[i];
+            }
+        } */
+
+    }
+    else if(ts.dmod_mode == DEMOD_FM)   {       // FM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
+        for(i = 0; i < Q_NUM_TAPS; i++) {
+            switch(ts.fm_rx_bandwidth)  {
+                case FM_RX_BANDWIDTH_10K:
+                    fc.rx_filt_q[i] = iq_rx_am_5k_coeffs[i];    // load 5 kHz FIR (2 x 5kHz = 10 kHz)
+                    fc.rx_filt_i[i] = iq_rx_am_5k_coeffs[i];
+                    break;
+                case FM_RX_BANDWIDTH_12K:
+                    fc.rx_filt_q[i] = iq_rx_am_6k_coeffs[i];    // load 6 kHz FIR (2 x 6 kHz = 12 kHz)
+                    fc.rx_filt_i[i] = iq_rx_am_6k_coeffs[i];
+                    break;
+//              case FM_RX_BANDWIDTH_15K:
+//                  fc.rx_filt_q[i] = iq_rx_am_7k5_coeffs[i];   // load 7.5kHz FIR (2 x 7.5 kHz = 15 kHz)
+//                  fc.rx_filt_i[i] = iq_rx_am_7k5_coeffs[i];
+//                  break;
+                case FM_RX_BANDWIDTH_7K2:
+                default:
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        fc.rx_filt_q[i] = iq_rx_am_3k6_coeffs[i];   // load 3.6 kHz FIR (2 x 3.6 kHz = 7.2 kHz)
+                        fc.rx_filt_i[i] = iq_rx_am_3k6_coeffs[i];
+                    }
+                    break;
+            }
+        }
+    }
+    else    {       // SSB, Not AM or FM - load Hilbert transformation filters
+        // fill Hilbert coeffs into fc.rx_filt
+        for(i = 0; i < Q_NUM_TAPS; i++) {
+            if (ts.filter_id <= AUDIO_3P6KHZ){
+                fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
+                fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];
+            } else
+                    if (ts.filter_id <= AUDIO_5P0KHZ){
+                        fc.rx_filt_q[i] = q_rx_5k_coeffs[i];
+                        fc.rx_filt_i[i] = i_rx_5k_coeffs[i];
+                    } else
+                        if (ts.filter_id <= AUDIO_6P0KHZ){
+                            fc.rx_filt_q[i] = q_rx_6k_coeffs[i];
+                            fc.rx_filt_i[i] = i_rx_6k_coeffs[i];
+                        } else
+                            if (ts.filter_id <= AUDIO_7P5KHZ){
+                                fc.rx_filt_q[i] = q_rx_7k5_coeffs[i];
+                                fc.rx_filt_i[i] = i_rx_7k5_coeffs[i];
+                            } else {
+                                fc.rx_filt_q[i] = q_rx_10k_coeffs[i];
+                                fc.rx_filt_i[i] = i_rx_10k_coeffs[i];
+                            }
+        } // end for
+
+    }   // end else = SSB
+
+/*      if(ts.filter_id == AUDIO_WIDE)  {
+            for(i = 0; i < Q_NUM_TAPS; i++) {
+                switch(ts.filter_wide_select)   {
+                    case WIDE_FILTER_5K:
+                    case WIDE_FILTER_5K_AM:
+                        fc.rx_filt_q[i] = q_rx_5k_coeffs[i];
+                        fc.rx_filt_i[i] = i_rx_5k_coeffs[i];
+                        break;
+                    case WIDE_FILTER_6K:
+                    case WIDE_FILTER_6K_AM:
+                        fc.rx_filt_q[i] = q_rx_6k_coeffs[i];
+                        fc.rx_filt_i[i] = i_rx_6k_coeffs[i];
+                        break;
+                    case WIDE_FILTER_7K5:
+                    case WIDE_FILTER_7K5_AM:
+                        fc.rx_filt_q[i] = q_rx_7k5_coeffs[i];
+                        fc.rx_filt_i[i] = i_rx_7k5_coeffs[i];
+                        break;
+                    case WIDE_FILTER_10K:
+                    case WIDE_FILTER_10K_AM:
+                    default:
+                        fc.rx_filt_q[i] = q_rx_10k_coeffs[i];
+                        fc.rx_filt_i[i] = i_rx_10k_coeffs[i];
+                        break;
+                }
+
+            }
+        }
+        else    {
+            for(i = 0; i < Q_NUM_TAPS; i++) {
+                fc.rx_filt_q[i] = q_rx_3k6_coeffs[i];
+                fc.rx_filt_i[i] = i_rx_3k6_coeffs[i];   // phase shift in other modes
+            }
+        } */
+
+        //
+        if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
+            phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
+        else
+            phase = ts.rx_iq_usb_phase_balance;     // yes, get current gain adjustment setting for USB and other mdoes
+        //
+        if(phase != 0)  {   // is phase adjustment non-zero?
+            var_norm = (float)phase;
+            var_norm = fabs(var_norm);      // get absolute value of this gain adjustment
+            var_inv = 32 - var_norm;        // calculate "inverse" of number of steps
+            var_norm /= 32;     // fractionalize by the number of steps
+            var_inv /= 32;                      // fractionalize this one, too
+            if(phase < 0)   {   // was the phase adjustment negative?
+
+                if(ts.filter_id <=AUDIO_3P6KHZ){
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                        f_offset = var_norm * q_rx_3k6_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                } else
+                    if(ts.filter_id <=AUDIO_5P0KHZ){
+                        for(i = 0; i < Q_NUM_TAPS; i++) {
+                            f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                            f_offset = var_norm * q_rx_5k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                        }
+                    } else
+                        if(ts.filter_id <=AUDIO_6P0KHZ){
+                            for(i = 0; i < Q_NUM_TAPS; i++) {
+                                f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_6k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        }   else
+                                if(ts.filter_id <=AUDIO_7P5KHZ){
+                                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                                        f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                        f_offset = var_norm * q_rx_7k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                    }
+                                }   else {
+                                        for(i = 0; i < Q_NUM_TAPS; i++) {
+                                            f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                            f_offset = var_norm * q_rx_10k_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                        }
+                                    }
+
+
+
+
+
+
+                    /*              if(ts.filter_id == AUDIO_WIDE)  {
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        switch(ts.filter_wide_select)   {
+                            case WIDE_FILTER_5K:
+                            case WIDE_FILTER_5K_AM:
+                                f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_5k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                                break;
+                            case WIDE_FILTER_6K:
+                            case WIDE_FILTER_6K_AM:
+                                f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_6k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                                break;
+                            case WIDE_FILTER_7K5:
+                            case WIDE_FILTER_7K5_AM:
+                                f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_7k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                break;
+                            case WIDE_FILTER_10K:
+                            case WIDE_FILTER_10K_AM:
+                            default:
+                                f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_10k_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                break;
+                        }
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                } // end if Audio wide
+                else    {
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                        f_offset = var_norm * q_rx_3k6_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                } //
+                */
+
+
+            } // end phase adjustment negative
+            else    {                           // adjustment was positive
+                if(ts.filter_id <=AUDIO_3P6KHZ){
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                        f_offset = var_norm * q_rx_3k6_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                } else
+                    if(ts.filter_id <=AUDIO_5P0KHZ){
+                        for(i = 0; i < Q_NUM_TAPS; i++) {
+                            f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                            f_offset = var_norm * q_rx_5k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                        }
+                    } else
+                        if(ts.filter_id <=AUDIO_6P0KHZ){
+                            for(i = 0; i < Q_NUM_TAPS; i++) {
+                                f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_6k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        }   else
+                                if(ts.filter_id <=AUDIO_7P5KHZ){
+                                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                                        f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                        f_offset = var_norm * q_rx_7k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                    }
+                                }   else {
+                                        for(i = 0; i < Q_NUM_TAPS; i++) {
+                                            f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                            f_offset = var_norm * q_rx_10k_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                        }
+                                    }
+            } // end phase adjustment positive
+
+/*              if(ts.filter_id == AUDIO_WIDE)  {
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        switch(ts.filter_wide_select)   {
+                            case WIDE_FILTER_5K:
+                            case WIDE_FILTER_5K_AM:
+                                f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_5k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                                break;
+                            case WIDE_FILTER_6K:
+                            case WIDE_FILTER_6K_AM:
+                                f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_6k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                                break;
+                            case WIDE_FILTER_7K5:
+                            case WIDE_FILTER_7K5_AM:
+                                f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_7k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                break;
+                            case WIDE_FILTER_10K:
+                            case WIDE_FILTER_10K_AM:
+                            default:
+                                f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_10k_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                break;
+                        }
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                }
+                else    {
+                    for(i = 0; i < Q_NUM_TAPS; i++) {
+                        f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                        f_offset = var_norm * q_rx_3k6_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                        fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                    }
+                }
+            }  // end phase adjustment positive
+        */
+        } // end if phase adjustment non-zero
+
+    //
+    // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
+    if(ts.dmod_mode == DEMOD_AM)        // use "Q" filter settings in AM mode for "I" channel
+        arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_q_block_size); // load "I" with "Q" coefficients
+    else                                // not in AM mode, but SSB or FM - use normal settings where I and Q are 90 degrees apart
+        arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
+    //
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
+    //
+}
+
+
+/*
+ * @brief Calculate TX FFT coeffients based on adjustment settings
+ */
+void AudioFilter_CalcTxPhaseAdj(void)
+{
+    float f_coeff, f_offset, var_norm, var_inv;
+    ulong i;
+    int phase;
+    //
+    ads.tx_filter_adjusting = 1;        // disable TX I/Q filter during adjustment
+    //
+
+    // always make a fresh copy of the original Q and I coefficients
+    // NOTE:  We are assuming that the I and Q filters are of the same length!
+    //
+    fc.tx_q_num_taps = Q_TX_NUM_TAPS;
+    fc.tx_i_num_taps = I_TX_NUM_TAPS;
+    //
+    fc.tx_q_block_size = Q_TX_BLOCK_SIZE;
+    fc.tx_i_block_size = I_TX_BLOCK_SIZE;
+    //
+    for(i = 0; i < Q_TX_NUM_TAPS; i++)  {
+        fc.tx_filt_q[i] = q_tx_coeffs[i];
+        fc.tx_filt_i[i] = i_tx_coeffs[i];
+    }
+    //
+    if(ts.dmod_mode == DEMOD_LSB)
+        phase = ts.tx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
+    else
+        phase = ts.tx_iq_usb_phase_balance;     // yes, get current gain adjustment setting
+    //
+    if(phase != 0)  {   // is phase adjustment non-zero?
+        var_norm = (float)phase;        // yes, get current gain adjustment setting
+        var_norm = fabs(var_norm);      // get absolute value of this gain adjustment
+        var_inv = 32 - var_norm;        // calculate "inverse" of number of steps
+        var_norm /= 32;     // fractionalize by the number of steps
+        var_inv /= 32;                      // fractionalize this one, too
+        if(phase < 0)   {   // was the phase adjustment negative?
+            for(i = 0; i < Q_TX_NUM_TAPS; i++)  {
+                f_coeff = var_inv * q_tx_coeffs[i]; // get fraction of 90 degree setting
+                f_offset = var_norm * q_tx_coeffs_minus[i];
+                fc.tx_filt_q[i] = f_coeff + f_offset;
+            }
+        }
+        else    {                           // adjustment was positive
+            for(i = 0; i < Q_TX_NUM_TAPS; i++)  {
+                f_coeff = var_inv * q_tx_coeffs[i]; // get fraction of 90 degree setting
+                f_offset = var_norm * q_tx_coeffs_plus[i];
+                fc.tx_filt_q[i] = f_coeff + f_offset;
+            }
+        }
+    }
+    //
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q_TX,fc.tx_q_num_taps,(float32_t *)&fc.tx_filt_q[0], &FirState_Q_TX[0],fc.tx_q_block_size);
+
+    ads.tx_filter_adjusting = 0;        // re enable TX I/Q filter now that we are done
+}
+
+
+

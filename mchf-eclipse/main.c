@@ -22,6 +22,7 @@
 
 // Audio Driver
 #include "audio_driver.h"
+#include "audio_management.h"
 #include "cw_gen.h"
 
 // UI Driver
@@ -867,11 +868,11 @@ int main(void)
 	// Init the RX Hilbert transform/filter prior
 	// to initializing the audio!
 	//
-	UiCalcRxPhaseAdj();
+	AudioFilter_CalcRxPhaseAdj();
 	//
 	// Init TX Hilbert transform/filter
 	//
-	UiCalcTxPhaseAdj();	//
+	AudioFilter_CalcTxPhaseAdj();	//
 
 	UiDriverLoadFilterValue();	// Get filter value so we can init audio with it
 
@@ -888,13 +889,13 @@ int main(void)
 	audio_driver_init();
 	//
 	//
-	UiCalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
+	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
 	//
-	UiCalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
+	AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
 	//
-	UiLoadToneBurstMode();	// load/set tone burst frequency
+	AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
 	//
-	UiLoadBeepFreq();		// load/set beep frequency
+	AudioManagement_LoadBeepFreq();		// load/set beep frequency
 	//
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted

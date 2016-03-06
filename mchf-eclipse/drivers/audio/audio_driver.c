@@ -24,6 +24,7 @@
 #include "softdds.h"
 
 #include "audio_driver.h"
+#include "audio_management.h"
 #include "fm_dds_table.h"
 #include "ui_driver.h"
 #include "usbd_audio_core.h"
@@ -261,15 +262,15 @@ void audio_driver_init(void)
 	ads.decimation_rate	=	RX_DECIMATION_RATE_12KHZ;		// Decimation rate, when enabled
 	//
 	//
-	UiCalcAGCDecay();	// initialize AGC decay ("hang time") values
+	AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
 	//
-	UiCalcRFGain();		// convert from user RF gain value to "working" RF gain value
+	AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
 	//
-	UiCalcALCDecay();	// initialize ALC decay values
+	AudioManagement_CalcALCDecay();	// initialize ALC decay values
 	//
-	UiCalcAGCVals();	// calculate AGC internal values from user settings
+	AudioManagement_CalcAGCVals();	// calculate AGC internal values from user settings
 	//
-	UiCalcNB_AGC();		// set up noise blanker AGC values
+	AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
 	//
 	UiCWSidebandMode();	// set up CW sideband mode setting
 	//

@@ -22,8 +22,6 @@ void UiDriverUpdateMemLines(uchar var);
 void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
 
 //
-void UiLoadBeepFreq(void);
-//
 #define	MENUSIZE	6				// number of menu items per page/screen
 //
 // Enumeration for main menu.
