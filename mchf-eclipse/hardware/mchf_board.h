@@ -35,6 +35,7 @@
 
 #include "stm32f4xx.h"
 #include "mchf_types.h"
+#include "audio_filter.h"
 //
 //
 //
@@ -567,245 +568,6 @@ typedef struct ButtonMap
 #define ENC_THREE_MODE_CW_SPEED		1
 #define ENC_THREE_MAX_MODE		2
 //
-// Audio filter select enumeration
-//
-enum	{
-	AUDIO_300HZ = 0,
-	AUDIO_500HZ,
-	AUDIO_1P4KHZ,
-	AUDIO_1P6KHZ,
-	AUDIO_1P8KHZ,
-	AUDIO_2P1KHZ,
-	AUDIO_2P3KHZ,
-	AUDIO_2P5KHZ,
-	AUDIO_2P7KHZ,
-	AUDIO_2P9KHZ,
-	AUDIO_3P2KHZ,
-	AUDIO_3P4KHZ,
-	AUDIO_3P6KHZ,
-	AUDIO_3P8KHZ,
-	AUDIO_4P0KHZ,
-	AUDIO_4P2KHZ,
-	AUDIO_4P4KHZ,
-	AUDIO_4P6KHZ,
-	AUDIO_4P8KHZ,
-	AUDIO_5P0KHZ,
-	AUDIO_5P5KHZ,
-	AUDIO_6P0KHZ,
-	AUDIO_6P5KHZ,
-	AUDIO_7P0KHZ,
-	AUDIO_7P5KHZ,
-	AUDIO_8P0KHZ,
-	AUDIO_8P5KHZ,
-	AUDIO_9P0KHZ,
-	AUDIO_9P5KHZ,
-	AUDIO_10P0KHZ
-};
-//
-//
-#define	AUDIO_DEFAULT_FILTER		AUDIO_2P3KHZ
-//
-// use below to define the lowest-used filter number
-//
-#define AUDIO_MIN_FILTER		0
-//
-// use below to define the highest-used filter number-1
-//
-#define AUDIO_MAX_FILTER		29
-//
-//
-#define MIN_FILTER_SELECT_VAL		1		// Minimum value for selection of sub-filter
-//
-#define	MAX_300HZ_FILTER		9		// Highest number selection of 500 Hz filter
-#define	FILTER_300HZ_DEFAULT		6		// Center frequency of 750 Hz
-//
-#define	MAX_500HZ_FILTER		5
-#define	FILTER_500HZ_DEFAULT		3		// Center frequency of 750 Hz
-//
-#define	MAX_1K4_FILTER			2
-#define	FILTER_1K4_DEFAULT		2		// BPF
-//
-#define	MAX_1K6_FILTER			2
-#define	FILTER_1K6_DEFAULT		2		// BPF
-//
-#define	MAX_1K8_FILTER			6
-#define	FILTER_1K8_DEFAULT		3		// Center frequency of 1425 Hz
-//
-#define	MAX_2K1_FILTER			2
-#define	FILTER_2K1_DEFAULT		2		// BPF
-//
-#define	MAX_2K3_FILTER			5
-#define	FILTER_2K3_DEFAULT		2		// Center frequency of 1412 Hz
-//
-#define	MAX_2K5_FILTER			2
-#define	FILTER_2K5_DEFAULT		2		// BPF
-//
-#define	MAX_2K7_FILTER			2
-#define	FILTER_2K7_DEFAULT		2		// BPF
-//
-#define	MAX_2K9_FILTER			2
-#define	FILTER_2K9_DEFAULT		2		// BPF
-//
-#define	MAX_3K2_FILTER			2		//
-#define	FILTER_3K2_DEFAULT		2		// BPF
-//
-#define	MAX_3K4_FILTER			2		//
-#define	FILTER_3K4_DEFAULT		2		// BPF
-//
-#define	MAX_3K6_FILTER			2		//
-#define	FILTER_3K6_DEFAULT		2		// BPF
-//
-#define	MAX_3K8_FILTER			2		//
-#define	FILTER_3K8_DEFAULT		2		// BPF
-
-/*//
-enum	{
-	WIDE_FILTER_10K_AM = 0,
-	WIDE_FILTER_7K5_AM,
-	WIDE_FILTER_6K_AM,
-	WIDE_FILTER_5K_AM,
-	WIDE_FILTER_10K,
-	WIDE_FILTER_7K5,
-	WIDE_FILTER_6K,
-	WIDE_FILTER_5K,
-	WIDE_FILTER_MAX
-};
-//
-//
-#define	FILTER_WIDE_DEFAULT		WIDE_FILTER_10K		// 10k selected by default
-*/
-
-//
-// Define visual widths of audio filters for on-screen indicator in Hz
-//
-#define	FILTER_300HZ_WIDTH		300
-#define	FILTER_500HZ_WIDTH		500
-#define	FILTER_1400HZ_WIDTH		1400
-#define	FILTER_1600HZ_WIDTH		1600
-#define	FILTER_1800HZ_WIDTH		1800
-#define FILTER_2100HZ_WIDTH		2100
-#define FILTER_2300HZ_WIDTH		2300
-#define FILTER_2500HZ_WIDTH		2500
-#define FILTER_2700HZ_WIDTH		2700
-#define FILTER_2900HZ_WIDTH		2900
-#define FILTER_3200HZ_WIDTH		3200
-#define FILTER_3400HZ_WIDTH		3400
-#define FILTER_3600HZ_WIDTH		3600
-#define FILTER_3800HZ_WIDTH		3800
-#define	FILTER_4000HZ_WIDTH		4000
-#define	FILTER_4200HZ_WIDTH		4200
-#define	FILTER_4400HZ_WIDTH		4400
-#define	FILTER_4600HZ_WIDTH		4600
-#define	FILTER_4800HZ_WIDTH		4800
-#define	FILTER_5000HZ_WIDTH		5000
-#define	FILTER_6000HZ_WIDTH		6000
-#define	FILTER_7000HZ_WIDTH		7000
-#define	FILTER_8000HZ_WIDTH		8000
-#define	FILTER_9000HZ_WIDTH		9000
-#define FILTER_5500HZ_WIDTH		5500
-#define FILTER_6500HZ_WIDTH		6500
-#define FILTER_7500HZ_WIDTH		7500
-#define FILTER_8500HZ_WIDTH		8500
-#define FILTER_9500HZ_WIDTH		9500
-#define	FILTER_10000HZ_WIDTH	10000
-//
-#define	HILBERT_3600HZ_WIDTH		3800	// Approximate bandwidth of 3.6 kHz wide Hilbert - This used to depict FM detection bandwidth
-//
-#define	FILT300_1			500
-#define	FILT300_2			550
-#define	FILT300_3			600
-#define	FILT300_4			650
-#define	FILT300_5			700
-#define	FILT300_6			750
-#define	FILT300_7			800
-#define	FILT300_8			850
-#define	FILT300_9			900
-//
-#define	FILT500_1			550
-#define	FILT500_2			650
-#define	FILT500_3			750
-#define	FILT500_4			850
-#define	FILT500_5			950
-//
-#define	FILT1400_1			700
-#define	FILT1400_2			775
-//
-#define	FILT1600_1			800
-#define	FILT1600_2			875
-//
-#define	FILT1800_1			1125
-#define	FILT1800_2			1275
-#define	FILT1800_3			1427
-#define	FILT1800_4			1575
-#define	FILT1800_5			1725
-#define	FILT1800_6			 900
-//
-#define	FILT2100_1			1050
-#define	FILT2100_2			1125
-//
-#define	FILT2300_1			1262
-#define	FILT2300_2			1412
-#define	FILT2300_3			1562
-#define	FILT2300_4			1712
-#define	FILT2300_5			1150
-//
-#define	FILT2500_1			1250
-#define	FILT2500_2			1325
-//
-#define FILT2700_1			1350
-#define	FILT2700_2			1425
-//
-#define FILT2900_1			1450
-#define	FILT2900_2			1525
-//
-#define	FILT3200_1			1600
-#define	FILT3200_2			1675
-//
-#define	FILT3400_1			1700
-#define	FILT3400_2			1775
-//
-#define FILT3600_1			1800
-#define	FILT3600_2			1875
-//
-#define	FILT3800_1			1900
-#define	FILT3800_2			1975
-//
-#define	FILT4000			2000
-//
-#define	FILT4200			2100
-//
-#define	FILT4400			2200
-//
-#define	FILT4600			2300
-//
-#define	FILT4800			2400
-//
-#define	FILT5000			2500
-//
-#define	FILT5500			2750
-//
-#define	FILT6000			3000
-//
-#define	FILT6500			3250
-//
-#define	FILT7000			3500
-//
-#define	FILT7500			3750
-//
-#define	FILT8000			4000
-//
-#define	FILT8500			4250
-//
-#define	FILT9000			4500
-//
-#define	FILT9500			4750
-//
-#define	FILT10000			5000
-//
-#define	HILBERT3600			1900	// "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
-//
-#define	FILT_DISPLAY_WIDTH		256		// width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
-//
 //
 #define CW_MODE_IAM_B			0
 #define CW_MODE_IAM_A			1
@@ -1296,6 +1058,7 @@ enum {
 #define	EEPROM_FILTER_1_SEL			325		// selection of filters 4k0 to 6k0
 #define	EEPROM_FILTER_2_SEL			326		// selection of filters 6k5 to 10k0
 
+#define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 
 
 enum {
@@ -1311,22 +1074,6 @@ enum {
 //
 // *******************************************************************************************************
 //
-typedef struct FilterCoeffs
-{
-	float	rx_filt_q[128];
-	uint16_t	rx_q_num_taps;
-	uint32_t	rx_q_block_size;
-	float	rx_filt_i[128];
-	uint16_t	rx_i_num_taps;
-	uint32_t	rx_i_block_size;
-	//
-	float	tx_filt_q[128];
-	uint16_t	tx_q_num_taps;
-	uint32_t	tx_q_block_size;
-	float	tx_filt_i[128];
-	uint16_t	tx_i_num_taps;
-	uint32_t	tx_i_block_size;
-} FilterCoeffs;
 
 typedef struct Gain_s {
   uint8_t value;
@@ -1455,40 +1202,7 @@ typedef struct TransceiverState
 	// Audio filter ID
 	uchar	filter_id;
 	//
-	uchar	filter_300Hz_select;
-	uchar	filter_500Hz_select;
-	uchar	filter_1k4_select;
-	uchar	filter_1k6_select;
-	uchar	filter_1k8_select;
-	uchar	filter_2k1_select;
-	uchar	filter_2k3_select;
-	uchar	filter_2k5_select;
-	uchar	filter_2k7_select;
-	uchar	filter_2k9_select;
-	uchar	filter_3k2_select;
-	uchar	filter_3k4_select;
-	uchar	filter_3k6_select;
-	uchar	filter_3k8_select;
-
-//	uchar	filter_wide_select;
-	uchar	filter_1; 	// holds ON/OFF status of the following audio filters
-						// 	|=1		4k0
-						//	|=2		4k2
-						//	|=4		4k4
-						//	|=8		4k6
-						//	|=16	4k8
-						//	|=32	5k0
-						//	|=64	5k5
-						//	|=128	6k0
-	uchar	filter_2; 	// holds ON/OFF status of the following audio filters
-						// 	|=1		6k5
-						//	|=2		7k0
-						//	|=4		7k5
-						//	|=8		8k0
-						//	|=16	8k5
-						//	|=32	9k0
-						//	|=64	9k5
-						//	|=128	10k0
+	uint8_t   filter_select[AUDIO_FILTER_NUM];
 	//
 
 	uchar	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
