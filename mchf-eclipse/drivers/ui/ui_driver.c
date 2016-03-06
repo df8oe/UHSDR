@@ -119,7 +119,6 @@ static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
 // encoder three
 static void 	UiDriverChangeRit(uchar enabled);
-static uint8_t 	AudioFilter_NextApplicableFilter(void);
 static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
@@ -1615,79 +1614,6 @@ static void UiDriverPressHoldStep(uchar is_up)
 }
 
 //
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverProcessActiveFilterScan
-//* Object              : verify that currently-selected filter is active and if not, select
-//* Object              : next active filter
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-// TODO: Move around into audio_filter, improve logic
-static uint8_t AudioFilter_NextApplicableFilter(void)
-{
-
-  bool	voice_mode, select_3k6;
-  uint8_t retval = ts.filter_id;
-  // by default we do not change the filter selection
-
-  if(ts.dmod_mode != DEMOD_FM) {		// bail out if FM as filters are selected in configuration menu
-    int idx;
-
-    //
-    // Scan through filters to determine if the selected filter is disabled - and skip if it is.
-    // NOTE:  The 2.3 kHz filter CANNOT be disabled
-    //
-    // This also handles filters that are disabled according to mode (e.g. CW filters in SSB mode, SSB filters in CW mode)
-    //
-
-    if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM))	// check to see if we are set to a "voice" mode
-    {
-      voice_mode = 1;
-    } else {					// not in voice mode
-      voice_mode = 0;
-    }
-
-    // 	I am not sure, if we still need this!? DD4WH March, 5th 2016
-    //	if((ts.filter_wide_select >= WIDE_FILTER_10K) || (ts.dmod_mode == DEMOD_AM))	// is 10k filter to be enabled and in AM or FM??
-    //		select_10k = 1;				// yes - and it should always be available in AM/FM mode
-    //	else
-    //		select_10k = 0;				// it is not to be enabled
-
-    if((ts.filter_select[AUDIO_3P6KHZ]) || (ts.dmod_mode == DEMOD_AM))	// is 3.6k filter to be enabled or in AM mode?
-      select_3k6 = 1;				// yes - and it should always be available in AM/FM mode
-    else
-      select_3k6 = 0;				// it is not to be enabled
-
-    // we run through all audio filters, starting with the next following, making sure to wrap around
-    // we leave this loop once we found a filter that is applicable
-    for (idx = (ts.filter_id+1)%AUDIO_FILTER_NUM; idx != ts.filter_id; idx = (idx+1)%AUDIO_FILTER_NUM)
-    {
-
-      // these rules handle special cases
-      if((idx == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW))) { idx = AUDIO_300HZ; break; }
-      // in this case, next applicable mode is 300 Hz, so selected and leave loop
-
-      if((idx == AUDIO_2P3KHZ)) { break; } // ALWAYS AVAILABLE
-      if((idx == AUDIO_3P6KHZ) && select_3k6) { break; } // ALWAYS AVAILABLE IN AM MODE; SHOULD THIS BE SO?
-
-
-      // now the rules for excluding a mode follow, in this case we call continue to go to next filter
-
-      // not enable; next please
-      if (!ts.filter_select[idx]) { continue; }
-
-      if((idx == AUDIO_300HZ || idx == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode))) { continue; }
-      // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
-
-      // if we have arrived here, all is good, we can  use the index, so lets bail out here
-      break;
-    }
-    retval = idx;
-  }
-  return retval;
-}
 
 void UiDriverDisplaySplitFreqLabels() {
   // in SPLIT mode?

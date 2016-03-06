@@ -591,8 +591,74 @@ static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mod
     // Try to read Freq saved values - update if changed
     UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
 }
+#define UiReadSettingFilter(EEID,FID)  UiReadSettingEEPROM_UInt8((EEID),&ts.filter_select[(FID)],FilterInfo[(FID)].config_default,0,FilterInfo[(FID)].configs_num-1);
 
 
+void UiReadWriteSettingEEPROM_Filter()
+{
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_select[AUDIO_300HZ],FilterInfo[AUDIO_300HZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_select[AUDIO_500HZ],FilterInfo[AUDIO_500HZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K4_SEL,ts.filter_select[AUDIO_1P4KHZ],FilterInfo[AUDIO_1P4KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K6_SEL,ts.filter_select[AUDIO_1P6KHZ],FilterInfo[AUDIO_1P6KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_select[AUDIO_1P8KHZ],FilterInfo[AUDIO_1P8KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K1_SEL,ts.filter_select[AUDIO_2P1KHZ],FilterInfo[AUDIO_2P1KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_select[AUDIO_2P3KHZ],FilterInfo[AUDIO_2P3KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K5_SEL,ts.filter_select[AUDIO_2P5KHZ],FilterInfo[AUDIO_2P5KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K7_SEL,ts.filter_select[AUDIO_2P7KHZ],FilterInfo[AUDIO_2P7KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K9_SEL,ts.filter_select[AUDIO_2P9KHZ],FilterInfo[AUDIO_2P9KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K2_SEL,ts.filter_select[AUDIO_3P2KHZ],FilterInfo[AUDIO_3P2KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K4_SEL,ts.filter_select[AUDIO_3P4KHZ],FilterInfo[AUDIO_3P4KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_select[AUDIO_3P6KHZ],FilterInfo[AUDIO_3P6KHZ].config_default);
+  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K8_SEL,ts.filter_select[AUDIO_3P8KHZ],FilterInfo[AUDIO_3P8KHZ].config_default);
+
+
+    // for filters above 3k8 we have only a single bit setting, this does not work with filters
+    // having more than on/off !
+    {
+      uint32_t filter_map = 0;
+      int idx, bit = 0;
+      for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
+        filter_map |=(ts.filter_select[idx]!=0?1:0)<<bit;
+      }
+      UiReadWriteSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,filter_map,0x0000);
+
+    }
+
+}
+
+void UiReadSettingEEPROM_Filter()
+{
+
+    UiReadSettingFilter(EEPROM_FILTER_300HZ_SEL,AUDIO_300HZ);
+    UiReadSettingFilter(EEPROM_FILTER_500HZ_SEL,AUDIO_500HZ);
+    UiReadSettingFilter(EEPROM_FILTER_1K4_SEL,AUDIO_1P4KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_1K6_SEL,AUDIO_1P6KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_1K8_SEL,AUDIO_1P8KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_2K1_SEL,AUDIO_2P1KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_2K3_SEL,AUDIO_2P3KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_2K5_SEL,AUDIO_2P5KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_2K7_SEL,AUDIO_2P7KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_2K9_SEL,AUDIO_2P9KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_3K2_SEL,AUDIO_3P2KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_3K4_SEL,AUDIO_3P4KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_3K6_SEL,AUDIO_3P6KHZ);
+    UiReadSettingFilter(EEPROM_FILTER_3K8_SEL,AUDIO_3P8KHZ);
+
+    // for filters above 3k8 we have only a single bit setting, this does not work with filters
+    // having more than on/off !
+    {
+
+      uint32_t filter_map = 0;
+      int idx, bit = 0;
+      UiReadSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,&filter_map,0x0000,0x0000,0xFFFF);
+
+      for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
+        ts.filter_select[idx] = (filter_map&(1<<bit))!=0?1:0;
+      }
+
+    }
+
+}
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverLoadEepromValues
@@ -701,24 +767,7 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_UInt8(EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX);
     UiReadSettingEEPROM_UInt8(EEPROM_MAX_VOLUME,&ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX);
 
-#define UiReadSettingFilter(EEID,FID)  UiReadSettingEEPROM_UInt8((EEID),&ts.filter_select[(FID)],FilterInfo[(FID)].config_default,0,FilterInfo[(FID)].configs_num-1);
-
-    UiReadSettingFilter(EEPROM_FILTER_300HZ_SEL,AUDIO_300HZ);
-    UiReadSettingFilter(EEPROM_FILTER_500HZ_SEL,AUDIO_500HZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K4_SEL,AUDIO_1P4KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K6_SEL,AUDIO_1P6KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K8_SEL,AUDIO_1P8KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K1_SEL,AUDIO_2P1KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K3_SEL,AUDIO_2P3KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K5_SEL,AUDIO_2P5KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K7_SEL,AUDIO_2P7KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K9_SEL,AUDIO_2P9KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K2_SEL,AUDIO_3P2KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K4_SEL,AUDIO_3P4KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K6_SEL,AUDIO_3P6KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K8_SEL,AUDIO_3P8KHZ);
-    // UiReadSettingFilter(EEPROM_FILTER_1_SEL,&ts.filter_1,0,0,255);
-    // UiReadSettingFilter(EEPROM_FILTER_2_SEL,&ts.filter_2,0,0,255);
+    UiReadSettingEEPROM_Filter();
 
     //  UiReadSettingFilter(EEPROM_FILTER_WIDE_SEL,&ts.filter_wide_select,FILTER_WIDE_DEFAULT,0,WIDE_FILTER_MAX);
     UiReadSettingEEPROM_UInt8(EEPROM_PA_BIAS,&ts.pa_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS);
@@ -968,23 +1017,8 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_RX_DELAY,ts.cw_rx_delay,CW_RX_DELAY_DEFAULT);
     UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT);
 
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_select[AUDIO_300HZ],FilterInfo[AUDIO_300HZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_select[AUDIO_500HZ],FilterInfo[AUDIO_500HZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K4_SEL,ts.filter_select[AUDIO_1P4KHZ],FilterInfo[AUDIO_1P4KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K6_SEL,ts.filter_select[AUDIO_1P6KHZ],FilterInfo[AUDIO_1P6KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_select[AUDIO_1P8KHZ],FilterInfo[AUDIO_1P8KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K1_SEL,ts.filter_select[AUDIO_2P1KHZ],FilterInfo[AUDIO_2P1KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_select[AUDIO_2P3KHZ],FilterInfo[AUDIO_2P3KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K5_SEL,ts.filter_select[AUDIO_2P5KHZ],FilterInfo[AUDIO_2P5KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K7_SEL,ts.filter_select[AUDIO_2P7KHZ],FilterInfo[AUDIO_2P7KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K9_SEL,ts.filter_select[AUDIO_2P9KHZ],FilterInfo[AUDIO_2P9KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K2_SEL,ts.filter_select[AUDIO_3P2KHZ],FilterInfo[AUDIO_3P2KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K4_SEL,ts.filter_select[AUDIO_3P4KHZ],FilterInfo[AUDIO_3P4KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_select[AUDIO_3P6KHZ],FilterInfo[AUDIO_3P6KHZ].config_default);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K8_SEL,ts.filter_select[AUDIO_3P8KHZ],FilterInfo[AUDIO_3P8KHZ].config_default);
-    //UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1_SEL,ts.filter_1,0);
-    //UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2_SEL,ts.filter_2,0);
-//  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_WIDE_SEL,ts.filter_wide_select,FILTER_WIDE_DEFAULT);
+    UiReadWriteSettingEEPROM_Filter();
+
     UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);
     UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_CW_BIAS,ts.pa_cw_bias,DEFAULT_PA_BIAS);
     UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_GAIN_BALANCE,ts.tx_iq_lsb_gain_balance,0);
