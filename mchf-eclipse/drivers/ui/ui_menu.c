@@ -40,6 +40,7 @@
 #include "softdds.h"
 //
 #include "audio_driver.h"
+#include "audio_filter.h"
 
 #include "ui_driver.h"
 //#include "usbh_usr.h"
@@ -505,106 +506,6 @@ static char* conf_screens[20][MENUSIZE] = {
 }
 };
 
-static const char* filter_list_300Hz[] =      {
-    "  OFF",
-    "500Hz",
-    "550Hz",
-    "600Hz",
-    "650Hz",
-    "700Hz",
-    "750Hz",
-    "800Hz",
-    "850Hz",
-    "900Hz"
-} ;
-
-static const char* filter_list_500Hz[] =      {
-    "  OFF",
-	"550Hz",
-	"650Hz",
-	"750Hz",
-	"850Hz",
-	"950Hz"
-} ;
-
-static const char* filter_list_1P4KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_1P6KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_1P8KHz[] =      {
-    "   OFF",
-	"1125Hz",
-	"1275Hz",
-	"1427Hz",
-	"1575Hz",
-	"1725Hz",
-	"   LPF"
-} ;
-
-static const char* filter_list_2P1KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_2P3KHz[] =      {
-    "   OFF",
-	"1262Hz",
-	"1412Hz",
-	"1562Hz",
-	"1712Hz",
-	"   LPF"
-} ;
-
-static const char* filter_list_2P5KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_2P7KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_2P9KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_3P2KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_3P4KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_3P6KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
-
-static const char* filter_list_3P8KHz[] =      {
-    "   OFF",
-	"   LPF",
-	"   BPF"
-} ;
 
 
 #define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
@@ -694,6 +595,38 @@ void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bo
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
+
+bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint8_t bwId) {
+  bool fchange = false;
+  if (bwId < AUDIO_FILTER_NUM) {
+    FilterDescriptor *filter = &FilterInfo[bwId];
+    if(ts.dmod_mode != DEMOD_FM)    {
+      fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_select[bwId],
+          0,
+          filter->configs_num-1,
+          filter->config_default,
+          1
+      );
+      if(ts.filter_id != bwId) {
+        *clr_ptr = Orange;
+      }
+    }
+    else                // show disabled if in FM
+      *clr_ptr = Red;
+
+    if (ts.filter_select[bwId] == 0)    {
+      *clr_ptr = Red;
+    }
+    strcpy(options,
+        (ts.filter_select[bwId] < filter->configs_num)?
+        filter->config[ts.filter_select[bwId]].label:
+        "UNDEFINED"
+        );
+    UiDriverMenuChangeFilter(bwId,fchange);
+  }
+  return fchange;
+}
+
 void UiDriverUpdateMenu(uchar mode)
 {
 	uchar var;
@@ -956,144 +889,30 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 		break;
 	//
 	case MENU_300HZ_SEL:	// 300 Hz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_300Hz_select,
-					0,
-					MAX_300HZ_FILTER,
-					FILTER_300HZ_DEFAULT,
-					1
-					);
-			if(ts.filter_id != AUDIO_300HZ) {
-				clr = Orange;
-			}
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		if (ts.filter_300Hz_select == 0)	{
-			clr = Red;
-		}
-
-		UiDriverMenuMapStrings(options,ts.filter_300Hz_select,MAX_300HZ_FILTER, filter_list_300Hz);
-		UiDriverMenuChangeFilter(AUDIO_300HZ,fchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_300HZ);
 		break;
 	case MENU_500HZ_SEL:	// 500 Hz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_500Hz_select,
-					0,
-					MAX_500HZ_FILTER,
-					FILTER_500HZ_DEFAULT,
-					1
-					);
-			if(ts.filter_id != AUDIO_500HZ)
-				clr = Orange;
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		if (ts.filter_500Hz_select == 0)	{
-			clr = Red;
-		}
-
-		UiDriverMenuMapStrings(options,ts.filter_500Hz_select,MAX_500HZ_FILTER, filter_list_500Hz);
-		UiDriverMenuChangeFilter(AUDIO_500HZ,fchange);
-		break;
-
+	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_500HZ);
+	  break;
 	case MENU_1K8_SEL:	// 1.8 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_1k8_select,
-					0,
-					MAX_1K8_FILTER,
-					FILTER_1K8_DEFAULT,
-					1
-					);
-			if(ts.filter_id != AUDIO_1P8KHZ)
-				clr = Orange;
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_1k8_select,MAX_1K8_FILTER, filter_list_1P8KHz);
-		UiDriverMenuChangeFilter(AUDIO_1P8KHZ,fchange);
-		break;
+	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P8KHZ);
+	  break;
 
 	case MENU_2K3_SEL: // 2.3 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k3_select,
-					0,
-					MAX_2K3_FILTER,
-					FILTER_2K3_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_2P3KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_2k3_select,MAX_2K3_FILTER, filter_list_2P3KHz);
-		UiDriverMenuChangeFilter(AUDIO_2P3KHZ,fchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P3KHZ);
 		break;
 	case MENU_2K7_SEL: // 2.7 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k7_select,
-					0,
-					MAX_2K7_FILTER,
-					FILTER_2K7_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_2P7KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_2k7_select,MAX_2K7_FILTER, filter_list_2P7KHz);
-		UiDriverMenuChangeFilter(AUDIO_2P7KHZ,fchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P7KHZ);
 		break;
 	case MENU_3K6_SEL: // 3.6 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_3k6_select,
-					0,
-					MAX_3K6_FILTER,
-					FILTER_3K6_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_3P6KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_3k6_select,MAX_3K6_FILTER, filter_list_3P6KHz);
-		UiDriverMenuChangeFilter(AUDIO_3P6KHZ,fchange);
+	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P6KHZ);
 		break;
 	case MENU_4K4_SEL:	//
-		temp_var = ts.filter_1 & 4;
-		fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(fchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 4;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xfb;		// clear LSB
-		}
-		break;
+	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P4KHZ);
+	  break;
 	case MENU_6K0_SEL:	//
-		temp_var = ts.filter_1 & 128;
-		fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(fchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 128;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0x7f;		// clear LSB
-		}
-		break;
+      UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_6P0KHZ);
+	  break;
 
 
 /*	case MENU_WIDE_SEL: // Wide filter select
@@ -3240,301 +3059,70 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		}
 		break;
 	case MENU_1K4_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_1k4_select,
-					0,
-					MAX_1K4_FILTER,
-					FILTER_1K4_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_1P4KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_1k4_select,MAX_1K4_FILTER, filter_list_1P4KHz);
-		UiDriverMenuChangeFilter(AUDIO_1P4KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P4KHZ);
 		break;
 	case MENU_1K6_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_1k6_select,
-					0,
-					MAX_1K6_FILTER,
-					FILTER_1K6_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_1P6KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_1k6_select,MAX_1K6_FILTER, filter_list_1P6KHz);
-		UiDriverMenuChangeFilter(AUDIO_1P6KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P6KHZ);
 		break;
 	case MENU_2K1_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k1_select,
-					0,
-					MAX_2K1_FILTER,
-					FILTER_2K1_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_2P1KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_2k1_select,MAX_2K1_FILTER, filter_list_2P1KHz);
-		UiDriverMenuChangeFilter(AUDIO_2P1KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P1KHZ);
 		break;
-
 	case MENU_2K5_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k5_select,
-					0,
-					MAX_2K5_FILTER,
-					FILTER_2K5_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_2P5KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_2k5_select,MAX_2K5_FILTER, filter_list_2P5KHz);
-		UiDriverMenuChangeFilter(AUDIO_2P5KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P5KHZ);
 		break;
 	case MENU_2K9_SEL: // 2.9 kHz filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_2k9_select,
-					0,
-					MAX_2K9_FILTER,
-					FILTER_2K9_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_2P9KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_2k9_select,MAX_2K9_FILTER, filter_list_2P9KHz);
-		UiDriverMenuChangeFilter(AUDIO_2P9KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P9KHZ);
 		break;
 	case MENU_3K2_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_3k2_select,
-					0,
-					MAX_3K2_FILTER,
-					FILTER_3K2_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_3P2KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_3k2_select,MAX_3K2_FILTER, filter_list_3P2KHz);
-		UiDriverMenuChangeFilter(AUDIO_3P2KHZ,tchange);
+      UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P2KHZ);
 		break;
 	case MENU_3K4_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_3k4_select,
-					0,
-					MAX_3K4_FILTER,
-					FILTER_3K4_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_3P4KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_3k4_select,MAX_3K4_FILTER, filter_list_3P4KHz);
-		UiDriverMenuChangeFilter(AUDIO_3P4KHZ,tchange);
+        UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P4KHZ);
 		break;
-
 	case MENU_3K8_SEL: //
-		if(ts.dmod_mode != DEMOD_FM)	{
-
-			tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_3k8_select,
-					0,
-					MAX_3K8_FILTER,
-					FILTER_3K8_DEFAULT,
-					1
-			);
-			if(ts.filter_id != AUDIO_3P8KHZ)
-				clr = Orange;
-
-		}
-		else				// show disabled if in FM
-			clr = Red;
-
-		UiDriverMenuMapStrings(options,ts.filter_3k8_select,MAX_3K8_FILTER, filter_list_3P8KHz);
-		UiDriverMenuChangeFilter(AUDIO_3P8KHZ,tchange);
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P8KHZ);
 		break;
-
-		//
 	case MENU_4K0_SEL:	//
-		temp_var = ts.filter_1 & 1;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 1;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xfe;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P0KHZ);
 		break;
 	case MENU_4K2_SEL:	//
-		temp_var = ts.filter_1 & 2;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 2;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xfd;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P2KHZ);
 		break;
-
 	case MENU_4K6_SEL:	//
-		temp_var = ts.filter_1 & 8;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 8;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xf7;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P6KHZ);
 		break;
 	case MENU_4K8_SEL:	//
-		temp_var = ts.filter_1 & 16;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 16;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xef;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P8KHZ);
 		break;
 	case MENU_5K0_SEL:	//
-		temp_var = ts.filter_1 & 32;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 32;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xdf;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_5P0KHZ);
 		break;
 	case MENU_5K5_SEL:	//
-		temp_var = ts.filter_1 & 64;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_1 |= 64;		// set LSB
-			else			// filter OFF
-				ts.filter_1 &= 0xbf;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_5P5KHZ);
 		break;
 	case MENU_6K5_SEL:	//
-		temp_var = ts.filter_2 & 1;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 1;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xfe;		// clear LSB
-		}
+        UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_6P5KHZ);
 		break;
 	case MENU_7K0_SEL:	//
-		temp_var = ts.filter_2 & 2;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 2;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xfd;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_7P0KHZ);
 		break;
 	case MENU_7K5_SEL:	//
-		temp_var = ts.filter_2 & 4;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 4;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xfb;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_7P5KHZ);
 		break;
 	case MENU_8K0_SEL:	//
-		temp_var = ts.filter_2 & 8;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 8;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xf7;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_8P0KHZ);
 		break;
 	case MENU_8K5_SEL:	//
-		temp_var = ts.filter_2 & 16;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 16;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xef;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_8P5KHZ);
 		break;
 	case MENU_9K0_SEL:	//
-		temp_var = ts.filter_2 & 32;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 32;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xdf;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_9P0KHZ);
 		break;
 	case MENU_9K5_SEL:	//
-		temp_var = ts.filter_2 & 64;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 64;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0xbf;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_9P5KHZ);
 		break;
 	case MENU_10K0_SEL:	//
-		temp_var = ts.filter_2 & 128;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)	{
-			if(temp_var)	// filter ON
-				ts.filter_2 |= 128;		// set LSB
-			else			// filter OFF
-				ts.filter_2 &= 0x7f;		// clear LSB
-		}
+	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_10P0KHZ);
 		break;
 
 	case CONFIG_DSP_ENABLE:	// Enable DSP NR

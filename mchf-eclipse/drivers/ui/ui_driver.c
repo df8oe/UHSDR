@@ -119,7 +119,7 @@ static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
 // encoder three
 static void 	UiDriverChangeRit(uchar enabled);
-static void 	UiDriverProcessActiveFilterScan(void);
+static uint8_t 	AudioFilter_NextApplicableFilter(void);
 static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
 static void 	UiDriverChangePowerLevel(void);
@@ -519,7 +519,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 			}
 		}
 		else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
-			if((ts.dmod_mode == DEMOD_AM) && ((ts.filter_1 > 31) || (ts.filter_2 > 0)))		// was it AM with a filter > 4k8 selected?
+			if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id > AUDIO_4P8KHZ))		// was it AM with a filter > 4k8 selected?
 				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
 			else
 			{
@@ -1189,12 +1189,7 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
 				if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
-					incr_wrap_uint8(
-					    &ts.filter_id,
-					    AUDIO_MIN_FILTER,
-					    AUDIO_MAX_FILTER-1);
-
-					UiDriverProcessActiveFilterScan();	// make sure that filter is active - if not, find next active filter
+					ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
 					//
 					// Change filter
 					//
@@ -1618,6 +1613,7 @@ static void UiDriverPressHoldStep(uchar is_up)
 	//
 	UiDriverShowStep(df.selected_idx);		// update display
 }
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessActiveFilterScan
@@ -1627,148 +1623,70 @@ static void UiDriverPressHoldStep(uchar is_up)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverProcessActiveFilterScan(void)
+
+// TODO: Move around into audio_filter, improve logic
+static uint8_t AudioFilter_NextApplicableFilter(void)
 {
-uchar filter_scan = 0;
 
-bool	voice_mode, select_10k, select_3k6;
+  bool	voice_mode, select_3k6;
+  uint8_t retval = ts.filter_id;
+  // by default we do not change the filter selection
 
-	if(ts.dmod_mode == DEMOD_FM)		// bail out if FM as filters are selected in configuration menu
-		return;
+  if(ts.dmod_mode != DEMOD_FM) {		// bail out if FM as filters are selected in configuration menu
+    int idx;
 
-	//
-	// Scan through filters to determine if the selected filter is disabled - and skip if it is.
-	// NOTE:  The 2.3 kHz filter CANNOT be disabled
-	//
-	// This also handles filters that are disabled according to mode (e.g. CW filters in SSB mode, SSB filters in CW mode)
-	//
+    //
+    // Scan through filters to determine if the selected filter is disabled - and skip if it is.
+    // NOTE:  The 2.3 kHz filter CANNOT be disabled
+    //
+    // This also handles filters that are disabled according to mode (e.g. CW filters in SSB mode, SSB filters in CW mode)
+    //
 
-	if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM))	// check to see if we are set to a "voice" mode
-		voice_mode = 1;
-	else					// not in voice mode
-		voice_mode = 0;
+    if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM))	// check to see if we are set to a "voice" mode
+    {
+      voice_mode = 1;
+    } else {					// not in voice mode
+      voice_mode = 0;
+    }
 
-// 	I am not sure, if we still need this!? DD4WH March, 5th 2016
-//	if((ts.filter_wide_select >= WIDE_FILTER_10K) || (ts.dmod_mode == DEMOD_AM))	// is 10k filter to be enabled and in AM or FM??
-//		select_10k = 1;				// yes - and it should always be available in AM/FM mode
-//	else
-//		select_10k = 0;				// it is not to be enabled
+    // 	I am not sure, if we still need this!? DD4WH March, 5th 2016
+    //	if((ts.filter_wide_select >= WIDE_FILTER_10K) || (ts.dmod_mode == DEMOD_AM))	// is 10k filter to be enabled and in AM or FM??
+    //		select_10k = 1;				// yes - and it should always be available in AM/FM mode
+    //	else
+    //		select_10k = 0;				// it is not to be enabled
 
-	if((ts.filter_3k6_select) || (ts.dmod_mode == DEMOD_AM))	// is 3.6k filter to be enabled or in AM mode?
-		select_3k6 = 1;				// yes - and it should always be available in AM/FM mode
-	else
-		select_3k6 = 0;				// it is not to be enabled
+    if((ts.filter_select[AUDIO_3P6KHZ]) || (ts.dmod_mode == DEMOD_AM))	// is 3.6k filter to be enabled or in AM mode?
+      select_3k6 = 1;				// yes - and it should always be available in AM/FM mode
+    else
+      select_3k6 = 0;				// it is not to be enabled
+
+    // we run through all audio filters, starting with the next following, making sure to wrap around
+    // we leave this loop once we found a filter that is applicable
+    for (idx = (ts.filter_id+1)%AUDIO_FILTER_NUM; idx != ts.filter_id; idx = (idx+1)%AUDIO_FILTER_NUM)
+    {
+
+      // these rules handle special cases
+      if((idx == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW))) { idx = AUDIO_300HZ; break; }
+      // in this case, next applicable mode is 300 Hz, so selected and leave loop
+
+      if((idx == AUDIO_2P3KHZ)) { break; } // ALWAYS AVAILABLE
+      if((idx == AUDIO_3P6KHZ) && select_3k6) { break; } // ALWAYS AVAILABLE IN AM MODE; SHOULD THIS BE SO?
 
 
-	first_filter:
-		//
-		if((ts.filter_id == AUDIO_300HZ) && (!ts.filter_300Hz_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_300HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode)))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_500HZ) && (!ts.filter_500Hz_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode)))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_1P4KHZ) && (!ts.filter_1k4_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_1P6KHZ) && (!ts.filter_1k6_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW)))
-		    ts.filter_id = AUDIO_300HZ;
-		//
-		if((ts.filter_id == AUDIO_2P1KHZ) && (!ts.filter_2k1_select))
-			ts.filter_id++;
-		//
-		// At this point we would hit the 2.3 kHz filter, which is ALWAYS enabled!
-		//
-		if((ts.filter_id == AUDIO_2P5KHZ) && (!ts.filter_2k5_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_2P7KHZ) && (!ts.filter_2k7_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_2P9KHZ) && (!ts.filter_2k9_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_3P2KHZ) && (!ts.filter_3k2_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_3P4KHZ) && (!ts.filter_3k4_select))
-			ts.filter_id++;
+      // now the rules for excluding a mode follow, in this case we call continue to go to next filter
 
-		if((ts.filter_id == AUDIO_3P6KHZ) && (!select_3k6)) // ALWAYS AVAILABLE IN AM MODE; SHOULD THIS BE SO?
-			ts.filter_id++;
-		//
-		if(ts.filter_id == AUDIO_3P6KHZ && ((ts.filter_cw_wide_disable) && (ts.dmod_mode == DEMOD_CW)))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_3P8KHZ) && (!ts.filter_3k8_select))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_4P0KHZ) & (!ts.filter_1&1))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_4P2KHZ) & (!ts.filter_1&2))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_4P4KHZ) & (!ts.filter_1&4))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_4P6KHZ) & (!ts.filter_1&8))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_4P8KHZ) & (!ts.filter_1&16))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_5P0KHZ) & (!ts.filter_1&32))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_5P5KHZ) & (!ts.filter_1&64))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_6P0KHZ) & (!ts.filter_1&128))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_6P5KHZ) & (!ts.filter_2&1))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_7P0KHZ) & (!ts.filter_2&2))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_7P5KHZ) & (!ts.filter_2&4))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_8P0KHZ) & (!ts.filter_2&8))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_8P5KHZ) & (!ts.filter_2&16))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_9P0KHZ) & (!ts.filter_2&32))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_9P5KHZ) & (!ts.filter_2&64))
-			ts.filter_id++;
-		//
-		if((ts.filter_id == AUDIO_10P0KHZ) & (!ts.filter_2&128))
-			ts.filter_id++;
+      // not enable; next please
+      if (!ts.filter_select[idx]) { continue; }
 
-		//
-/*		if(((ts.filter_id == AUDIO_WIDE) && (!select_10k)) || ((ts.filter_id == AUDIO_WIDE) && (ts.dmod_mode == DEMOD_CW) && ts.filter_cw_wide_disable))	{
-			ts.filter_id = AUDIO_MIN_FILTER;
-			filter_scan++;
-			if(filter_scan <= 1)	// Is this the first time here?
-				goto first_filter;	// Yes - wrap around to find the other filters
-			else	// second time around?
-				ts.filter_id = AUDIO_2P3KHZ;	// Force selection of 2.3 kHz filter as all others are disabled
-		} */
+      if((idx == AUDIO_300HZ || idx == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (voice_mode))) { continue; }
+      // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
+
+      // if we have arrived here, all is good, we can  use the index, so lets bail out here
+      break;
+    }
+    retval = idx;
+  }
+  return retval;
 }
 
 void UiDriverDisplaySplitFreqLabels() {
@@ -5256,127 +5174,11 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	const char* filter_ptr;
+	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
-		switch(ts.filter_id)
-		{
-		case AUDIO_300HZ:
-			filter_ptr = " 300Hz";
-			break;
-		case AUDIO_500HZ:
-			filter_ptr = " 500Hz";
-			break;
-		case AUDIO_1P4KHZ:
-			filter_ptr = "  1.4k";
-			break;
-		case AUDIO_1P6KHZ:
-			filter_ptr = "  1.6k";
-			break;
-		case AUDIO_1P8KHZ:
-			filter_ptr = "  1.8k";
-			break;
-		case AUDIO_2P1KHZ:
-			filter_ptr = "  2.1k";
-			break;
-		case AUDIO_2P3KHZ:
-			filter_ptr = "  2.3k";
-			break;
-		case AUDIO_2P5KHZ:
-			filter_ptr = "  2.5k";
-			break;
-		case AUDIO_2P7KHZ:
-			filter_ptr = "  2.7k";
-			break;
-		case AUDIO_2P9KHZ:
-			filter_ptr = "  2.9k";
-			break;
-		case AUDIO_3P2KHZ:
-			filter_ptr = "  3.2k";
-			break;
-		case AUDIO_3P4KHZ:
-			filter_ptr = "  3.4k";
-			break;
-		case AUDIO_3P6KHZ:
-			filter_ptr = "  3.6k";
-			break;
-		case AUDIO_3P8KHZ:
-			filter_ptr = "  3.8k";
-			break;
-		case AUDIO_4P0KHZ:
-			filter_ptr = "  4.0k";
-			break;
-		case AUDIO_4P2KHZ:
-			filter_ptr = "  4.2k";
-			break;
-		case AUDIO_4P4KHZ:
-			filter_ptr = "  4.4k";
-			break;
-		case AUDIO_4P6KHZ:
-			filter_ptr = "  4.6k";
-			break;
-		case AUDIO_4P8KHZ:
-			filter_ptr = "  4.8k";
-			break;
-		case AUDIO_5P0KHZ:
-			filter_ptr = "   5k ";
-			break;
-		case AUDIO_5P5KHZ:
-			filter_ptr = "  5.5k";
-			break;
-		case AUDIO_6P0KHZ:
-			filter_ptr = "   6k ";
-			break;
-		case AUDIO_6P5KHZ:
-			filter_ptr = "  6.5k";
-			break;
-		case AUDIO_7P0KHZ:
-			filter_ptr = "   7k ";
-			break;
-		case AUDIO_7P5KHZ:
-			filter_ptr = "  7.5k";
-			break;
-		case AUDIO_8P0KHZ:
-			filter_ptr = "   8k ";
-			break;
-		case AUDIO_8P5KHZ:
-			filter_ptr = "  8.5k";
-			break;
-		case AUDIO_9P0KHZ:
-			filter_ptr = "   9k ";
-			break;
-		case AUDIO_9P5KHZ:
-			filter_ptr = "  9.5k";
-			break;
-		case AUDIO_10P0KHZ:
-			filter_ptr = "  10k";
-
-/*		case AUDIO_WIDE:
-			switch(ts.filter_wide_select)	{
-			case WIDE_FILTER_5K:
-			case WIDE_FILTER_5K_AM:
-				filter_ptr = "   5k ";
-				break;
-			case WIDE_FILTER_6K:
-			case WIDE_FILTER_6K_AM:
-				filter_ptr = "   6k ";
-				break;
-			case WIDE_FILTER_7K5:
-			case WIDE_FILTER_7K5_AM:
-				filter_ptr = "  7.5k";
-				break;
-			case WIDE_FILTER_10K:
-			case WIDE_FILTER_10K_AM:
-			default:
-				filter_ptr = "  10k ";
-				break;
-			}
-			*/
-			break;
-			default:
-				filter_ptr = "      ";
-				break;
-		}
+	   filter_ptr = filter->name;
 	}
 	else	{		// This is the FM special case to display bandwidth
 		switch(ts.fm_rx_bandwidth)	{
@@ -5421,364 +5223,14 @@ void UiDriverDisplayFilterBW(void)
 
 	// Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 	//
-	switch(ts.filter_id)	{
-		case AUDIO_300HZ:	// 300 Hz CW filter
-			switch(ts.filter_300Hz_select)	{
-				case 1:
-					offset = FILT300_1;
-					break;
-				case 2:
-					offset = FILT300_2;
-					break;
-				case 3:
-					offset = FILT300_3;
-					break;
-				case 4:
-					offset = FILT300_4;
-					break;
-				case 5:
-					offset = FILT300_5;
-					break;
-				case 6:
-					offset = FILT300_6;
-					break;
-				case 7:
-					offset = FILT300_7;
-					break;
-				case 8:
-					offset = FILT300_8;
-					break;
-				case 9:
-					offset = FILT300_9;
-					break;
-				default:
-					offset = FILT300_6;
-					break;
-			}
-			width = FILTER_300HZ_WIDTH;
-			//
-			break;
-		case AUDIO_500HZ:	// 500 Hz CW filter
-			switch(ts.filter_500Hz_select)	{
-				case 1:
-					offset = FILT500_1;
-					break;
-				case 2:
-					offset = FILT500_2;
-					break;
-				case 3:
-					offset = FILT500_3;
-					break;
-				case 4:
-					offset = FILT500_4;
-					break;
-				case 5:
-					offset = FILT500_5;
-					break;
-				default:
-					offset = FILT500_3;
-					break;
-			}
-			width = FILTER_500HZ_WIDTH;
-			//
-			break;
-		case AUDIO_1P4KHZ:		//
-			switch(ts.filter_1k4_select)	{
-				case 1:
-					offset = FILT1400_1;
-					break;
-				case 2:
-					offset = FILT1400_2;
-					break;
-				default:
-					offset = FILT1400_2;
-					break;
-			}
-			width = FILTER_1400HZ_WIDTH;
-			//
-			break;
-		case AUDIO_1P6KHZ:		//
-			switch(ts.filter_1k6_select)	{
-				case 1:
-					offset = FILT1600_1;
-					break;
-				case 2:
-					offset = FILT1600_2;
-					break;
-				default:
-					offset = FILT1600_2;
-					break;
-			}
-			width = FILTER_1600HZ_WIDTH;
-			//
-			break;
-		case AUDIO_1P8KHZ:		// 1.8 kHz wide filter
-			switch(ts.filter_1k8_select)	{
-				case 1:
-					offset = FILT1800_1;
-					break;
-				case 2:
-					offset = FILT1800_2;
-					break;
-				case 3:
-					offset = FILT1800_3;
-					break;
-				case 4:
-					offset = FILT1800_4;
-					break;
-				case 5:
-					offset = FILT1800_5;
-					break;
-				case 6:
-					offset = FILT1800_6;
-					break;
-				default:
-					offset = FILT1800_3;
-					break;
-			}
-			width = FILTER_1800HZ_WIDTH;
-			//
-			break;
-		case AUDIO_2P1KHZ:		//
-			switch(ts.filter_2k1_select)	{
-				case 1:
-					offset = FILT2100_1;
-					break;
-				case 2:
-					offset = FILT2100_2;
-					break;
-				default:
-					offset = FILT2100_2;
-					break;
-			}
-			width = FILTER_2100HZ_WIDTH;
-			//
-			break;
-		case AUDIO_2P3KHZ:		// 2.3 kHz wide filter
-			switch(ts.filter_2k3_select)	{
-				case 1:
-					offset = FILT2300_1;
-					break;
-				case 2:
-					offset = FILT2300_2;
-					break;
-				case 3:
-					offset = FILT2300_3;
-					break;
-				case 4:
-					offset = FILT2300_4;
-					break;
-				case 5:
-					offset = FILT2300_5;
-					break;
-				default:
-					offset = FILT2300_2;
-					break;
-			}
-			width = FILTER_2300HZ_WIDTH;
-			//
-			break;
-		case AUDIO_2P5KHZ:		//
-			switch(ts.filter_2k5_select)	{
-				case 1:
-					offset = FILT2500_1;
-					break;
-				case 2:
-					offset = FILT2500_2;
-					break;
-				default:
-					offset = FILT2500_2;
-					break;
-			}
-			width = FILTER_2500HZ_WIDTH;
-			//
-			break;
-		case AUDIO_2P7KHZ:		// 2.7 kHz wide filter
-			switch(ts.filter_2k7_select)	{
-				case 1:
-					offset = FILT2700_1;
-					break;
-				case 2:
-					offset = FILT2700_2;
-					break;
-				default:
-					offset = FILT2700_2;
-					break;
-			}
-			width = FILTER_2700HZ_WIDTH;
-			//
-			break;
-		case AUDIO_2P9KHZ:		// 2.9 kHz wide filter
-			switch(ts.filter_2k9_select)	{
-				case 1:
-					offset = FILT2900_1;
-					break;
-				case 2:
-					offset = FILT2900_2;
-					break;
-				default:
-					offset = FILT2900_2;
-					break;
-			}
-			width = FILTER_2900HZ_WIDTH;
-			//
-			break;
-		case AUDIO_3P2KHZ:		//
-			switch(ts.filter_3k2_select)	{
-				case 1:
-					offset = FILT3200_1;
-					break;
-				case 2:
-					offset = FILT3200_2;
-					break;
-				default:
-					offset = FILT3200_2;
-					break;
-			}
-			width = FILTER_3200HZ_WIDTH;
-			//
-			break;
-		case AUDIO_3P4KHZ:		//
-			switch(ts.filter_3k4_select)	{
-				case 1:
-					offset = FILT3400_1;
-					break;
-				case 2:
-					offset = FILT3400_2;
-					break;
-				default:
-					offset = FILT3400_2;
-					break;
-			}
-			width = FILTER_3400HZ_WIDTH;
-			//
-				break;
-		case AUDIO_3P6KHZ:		// 3.6 kHz wide filter
-			switch(ts.filter_3k6_select)	{
-				case 1:
-					offset = FILT3600_1;
-					break;
-				case 2:
-					offset = FILT3600_2;
-					break;
-				default:
-					offset = FILT3600_2;
-					break;
-			}
-			width = FILTER_3600HZ_WIDTH;
-			//
-			break;
-		case AUDIO_3P8KHZ:		// 3.8 kHz wide filter
-			switch(ts.filter_3k8_select)	{
-				case 1:
-					offset = FILT3800_1;
-					break;
-				case 2:
-					offset = FILT3800_2;
-					break;
-				default:
-					offset = FILT3800_2;
-					break;
-			}
-			width = FILTER_3800HZ_WIDTH;
-			//
-			break;
-		case AUDIO_4P0KHZ:		//
-			offset = FILT4000;
-			width = FILTER_4000HZ_WIDTH;
-			break;
-		case AUDIO_4P2KHZ:		//
-			offset = FILT4200;
-			width = FILTER_4200HZ_WIDTH;
-			break;
-		case AUDIO_4P4KHZ:		//
-			offset = FILT4400;
-			width = FILTER_4400HZ_WIDTH;
-			break;
-		case AUDIO_4P6KHZ:		//
-			offset = FILT4600;
-			width = FILTER_4600HZ_WIDTH;
-			break;
-		case AUDIO_4P8KHZ:		//
-			offset = FILT4800;
-			width = FILTER_4800HZ_WIDTH;
-			break;
-		case AUDIO_5P0KHZ:		//
-			offset = FILT5000;
-			width = FILTER_5000HZ_WIDTH;
-			break;
-		case AUDIO_5P5KHZ:		//
-			offset = FILT5500;
-			width = FILTER_5500HZ_WIDTH;
-			break;
-		case AUDIO_6P0KHZ:		//
-			offset = FILT6000;
-			width = FILTER_6000HZ_WIDTH;
-			break;
-		case AUDIO_6P5KHZ:		//
-			offset = FILT6500;
-			width = FILTER_6500HZ_WIDTH;
-			break;
-		case AUDIO_7P0KHZ:		//
-			offset = FILT7000;
-			width = FILTER_7000HZ_WIDTH;
-			break;
-		case AUDIO_7P5KHZ:		//
-			offset = FILT7500;
-			width = FILTER_7500HZ_WIDTH;
-			break;
-		case AUDIO_8P0KHZ:		//
-			offset = FILT8000;
-			width = FILTER_8000HZ_WIDTH;
-			break;
-		case AUDIO_8P5KHZ:		//
-			offset = FILT8500;
-			width = FILTER_8500HZ_WIDTH;
-			break;
-		case AUDIO_9P0KHZ:		//
-			offset = FILT9000;
-			width = FILTER_9000HZ_WIDTH;
-			break;
-		case AUDIO_9P5KHZ:		//
-			offset = FILT9500;
-			width = FILTER_9500HZ_WIDTH;
-			break;
-		case AUDIO_10P0KHZ:		//
-			offset = FILT10000;
-			width = FILTER_10000HZ_WIDTH;
-			break;
+	const FilterDescriptor* filter_p = &FilterInfo[ts.filter_id];
+	const FilterConfig* config_p = &filter_p->config[ts.filter_select[ts.filter_id]];
+	offset = config_p->offset;
+	width = filter_p->width;
 
-/*		case AUDIO_WIDE:	// selectable "wide" bandwidth filter
-			switch(ts.filter_wide_select)	{
-				case WIDE_FILTER_5K:
-				case WIDE_FILTER_5K_AM:
-					offset = FILT5000;
-					width = FILTER_5000HZ_WIDTH;
-					break;
-				case WIDE_FILTER_6K:
-				case WIDE_FILTER_6K_AM:
-					offset = FILT6000;
-					width = FILTER_6000HZ_WIDTH;
-					break;
-				case WIDE_FILTER_7K5:
-				case WIDE_FILTER_7K5_AM:
-					offset = FILT7500;
-					width = FILTER_7500HZ_WIDTH;
-					break;
-				case WIDE_FILTER_10K:
-				case WIDE_FILTER_10K_AM:
-				default:
-					offset = FILT10000;
-					width = FILTER_10000HZ_WIDTH;
-					break;
-			}
-			break;
-			*/
-		default:
-			// in case of call with not yet covered parameters we set the widest filter as default
-			offset = FILT10000;
-			width = FILTER_10000HZ_WIDTH;
-			break;
+	// TODO: We cheat here a  little, until all filter configs are properly filled.
+	if (ts.filter_select[ts.filter_id] != 0 && offset == 0) {
+	  offset = width/2;
 	}
 	//
 	// Special case for FM
@@ -5789,16 +5241,16 @@ void UiDriverDisplayFilterBW(void)
 			width = HILBERT_3600HZ_WIDTH;
 		}
 		else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_12K)	{
-			offset = FILT6000;												// display bandwidth of +/- 6 kHz = 12 kHz
-			width = FILTER_6000HZ_WIDTH;
+			offset = 3000;												// display bandwidth of +/- 6 kHz = 12 kHz
+			width = 6000;
 		}
 //		else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_15K)	{
 //			offset = FILT7500;												// display bandwidth of +/- 7.5 kHz = 15 kHz
 //			width = FILTER_7500HZ_WIDTH;
 //		}
 		else	{			// this will be the 10 kHz BW mode - I hope!
-			offset = FILT5000;												// display bandwidth of +/- 5 kHz = 10 kHz
-			width = FILTER_5000HZ_WIDTH;
+			offset = 2500;												// display bandwidth of +/- 5 kHz = 10 kHz
+			width = 5000;
 		}
 	}
 	//
