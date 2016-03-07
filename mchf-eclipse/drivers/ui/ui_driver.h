@@ -520,8 +520,8 @@ typedef struct EepromSave
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
 void 	ui_driver_toggle_tx(void);
-void 	UiCalcRxPhaseAdj(void);
-void 	UiCalcTxPhaseAdj(void);
+void 	AudioFilter_CalcRxPhaseAdj(void);
+void 	AudioFilter_CalcTxPhaseAdj(void);
 void 	UiDriverLoadFilterValue(void);
 void 	UiSpectrumClearDisplay(void);
 //
@@ -531,16 +531,12 @@ void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(char skip_encoder_check, uchar mode);
 void 	UiSpectrumCreateDrawArea(void);
 void 	UiDriverUpdateFrequencyFast(void);
-void	UiCalcRxIqGainAdj(void);
-void	UiCalcTxIqGainAdj(void);
 void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
 void 	UiCheckForEEPROMLoadDefaultRequest(void);
 //
 void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	UiDriverSetBandPowerFactor(uchar band);
-void	UiCalcRxIqGainAdj(void);
-void	UiCalcTxIqGainAdj(void);
 //
 void    UiDriverChangeAudioGain(uchar enabled);
 void 	UiDriverChangeStGain(uchar enabled);
@@ -553,15 +549,9 @@ void    UiDriverChangeAfGain(uchar enabled);
 //
 void 	UiDriverShowStep(ulong step);
 //
-void 	UiCalcTxCompLevel(void);
-void 	UiCalcNB_AGC(void);
 void 	UiCWSidebandMode(void);
 void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
-void 	UiCalcAGCVals(void);
-void 	UiCalcRFGain(void);
-void 	UiCalcALCDecay(void);
-void 	UiCalcAGCDecay(void);
 //
 void	UiLCDBlankTiming(void);
 void 	UiDriverChangeTuningStep(uchar is_up);
@@ -571,14 +561,9 @@ void 	uiCodecMute(uchar val);
 uint16_t 	UiConfiguration_SaveEepromValues(void);
 void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
 void	UiCheckForPressedKey(void);
-void 	UiKeyBeep(void);
 void	UiInitRxParms(void);
 //
-void 	UiCalcSubaudibleFreq(void);
-void 	UiLoadToneBurstMode(void);
-void	UiCalcSubaudibleGenFreq(void);		// load/set current FM subaudible tone settings for generation
 //
-void 	UiCalcSubaudibleDetFreq(void);		// load/set current FM subaudible tone settings	for detection
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.

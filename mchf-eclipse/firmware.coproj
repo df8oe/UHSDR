@@ -239,6 +239,8 @@
     <File name="drivers/audio/audio_driver.c" path="drivers/audio/audio_driver.c" type="1"/>
     <File name="drivers/audio/audio_filter.c" path="drivers/audio/audio_filter.c" type="1"/>
     <File name="drivers/audio/audio_filter.h" path="drivers/audio/audio_filter.h" type="1"/>
+    <File name="drivers/audio/audio_management.c" path="drivers/audio/audio_management.c" type="1"/>
+    <File name="drivers/audio/audio_management.h" path="drivers/audio/audio_management.h" type="1"/>    
     <File name="cmsis_lib/source/stm32f4xx_dma.c" path="cmsis_lib/source/stm32f4xx_dma.c" type="1"/>
     <File name="drivers/audio/filters/i_tx_filter.h" path="drivers/audio/filters/i_tx_filter.h" type="1"/>
     <File name="usb/usbd/class/cdc/inc/usbd_cdc_core.h" path="usb/usbd/class/cdc/inc/usbd_cdc_core.h" type="1"/>

@@ -102,6 +102,7 @@ drivers/cat/usb/usbd_cdc_vcp.c \
 drivers/audio/cw/cw_gen.c \
 drivers/audio/audio_driver.c \
 drivers/audio/audio_filter.c \
+drivers/audio/audio_management.c \
 drivers/audio/codec/codec.c \
 drivers/audio/codec/i2s.c \
 drivers/audio/softdds/softdds.c \
