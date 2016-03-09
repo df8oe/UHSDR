@@ -11,7 +11,7 @@
 **  Last Modified:                                                                 **
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
-
+// #define NEWMENU
 // Common
 //
 #include "mchf_board.h"
@@ -388,29 +388,33 @@ const MenuGroupDescriptor groups[3] = {
 // move to next/previous page -> (this is n times prev/next)
 
 const MenuGroupDescriptor* UiMenu_GetGroupForEntry(const MenuDescriptor* me) {
-  return &groups[me->menuId];
+    return me==NULL?NULL:&groups[me->menuId];
 }
 
 inline bool UiMenu_IsGroup(const MenuDescriptor *entry) {
-  return entry->kind == MENU_GROUP;
+  return entry==NULL?false:entry->kind == MENU_GROUP;
 }
 inline bool UiMenu_IsEntry(const MenuDescriptor *entry) {
-  return entry->kind == MENU_ITEM;
+  return entry==NULL?false:entry->kind == MENU_ITEM;
 }
 inline bool UiMenu_SlotIsEmpty(MenuDisplaySlot* slot) {
-  return slot->entryItem == NULL;
+  return slot==NULL?false:slot->entryItem == NULL;
 }
 inline bool UiMenu_GroupIsUnfolded(const MenuDescriptor *group) {
-  return groups[group->number].state->unfolded;
+  return group==NULL?false:groups[group->number].state->unfolded;
 }
 inline uint16_t UiMenu_MenuGroupMemberCount(const MenuGroupDescriptor* gd) {
+  uint16_t retval = 0;
+  if (gd != NULL) {
   if (gd->state->count == 0) {
     const MenuDescriptor* entry;
     for (entry = &gd->entries[0];entry->kind != MENU_STOP; entry++) {
       gd->state->count++;
     }
   }
-  return gd->state->count;
+  retval = gd->state->count;
+  }
+  return retval;
 }
 
 inline void UiMenu_GroupFold(const MenuDescriptor* entry, bool fold) {
@@ -438,11 +442,15 @@ inline const MenuDescriptor* UiMenu_GroupGetFirst(const MenuGroupDescriptor *gro
 }
 
 const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
-  const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
   const MenuDescriptor* retval = NULL;
-  int index = (me - &group_ptr->entries[0])/sizeof(me);
-  if (index < group_ptr->state->count-1) {
-    retval = me + 1;
+
+  if (me != NULL) {
+    const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
+
+    int index = (me - &group_ptr->entries[0])/sizeof(me);
+    if (index < group_ptr->state->count-1) {
+      retval = me + 1;
+    }
   }
   return retval;
 }
@@ -450,8 +458,7 @@ const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
 const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me) {
   const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
   const MenuDescriptor* retval = NULL;
-  int index = (me - &group_ptr->entries[0])/sizeof(me);
-  if (index > 0) {
+  if (me != NULL && me != &group_ptr->entries[0]) {
     retval = me - 1;
   }
   return retval;
@@ -460,32 +467,40 @@ const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me) {
 
 
 const MenuDescriptor* UiMenu_GetParentForEntry(const MenuDescriptor* me) {
-  const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(me);
-  if (gd->state->me == NULL && gd->parent != NULL) {
-    const MenuGroupDescriptor* gdp = &groups[gd->parent->number];
-    uint16_t count = UiMenu_MenuGroupMemberCount(gdp);
-    uint16_t idx;
-    for(idx = 0; idx < count; idx++) {
-      if (gdp->entries[idx].number == me->menuId) {
-        gd->state->me = &gdp->entries[idx];
-        break;
+  const MenuDescriptor* retval = NULL;
+  if (me != NULL) {
+    const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(me);
+    if (gd->parent != NULL) {
+      if (gd->state->me == NULL ) {
+        const MenuGroupDescriptor* gdp = &groups[gd->parent->number];
+        uint16_t count = UiMenu_MenuGroupMemberCount(gdp);
+        uint16_t idx;
+        for(idx = 0; idx < count; idx++) {
+          if (gdp->entries[idx].number == me->menuId) {
+            gd->state->me = &gdp->entries[idx];
+            break;
+          }
+        }
       }
+      retval = gd->state->me;
     }
   }
-  return gd->state->me;
+  return retval;
 }
 
 const MenuDescriptor* UiMenu_FindNextEntryInUpperLevel(const MenuDescriptor* here) {
   const MenuDescriptor* next = NULL, *focus = here;
-   while(focus != NULL && next == NULL) {
-     // we have a parent group, we are member of a sub menu group,
-     // we need next entry in containing menu group, no matter if our menu group is folded or not
-     next = UiMenu_GetNextEntryInGroup(UiMenu_GetParentForEntry(focus));
-     if (next == NULL) {
-       focus = UiMenu_GetParentForEntry(focus);
-     }
-   }
-   return next;
+  if (here != NULL) {
+    while(focus != NULL && next == NULL) {
+      // we have a parent group, we are member of a sub menu group,
+      // we need next entry in containing menu group, no matter if our menu group is folded or not
+      next = UiMenu_GetNextEntryInGroup(UiMenu_GetParentForEntry(focus));
+      if (next == NULL) {
+        focus = UiMenu_GetParentForEntry(focus);
+      }
+    }
+  }
+  return next;
 }
 
 inline bool UiMenu_IsLastInMenuGroup(const MenuDescriptor* here) {
@@ -500,39 +515,52 @@ inline bool UiMenu_IsFirstInMenuGroup(const MenuDescriptor* here) {
 const MenuDescriptor* UiMenu_NextMenuEntry(const MenuDescriptor* here) {
   const MenuDescriptor* next = NULL;
 
-  if (UiMenu_IsGroup(here)) {
-    // is group entry
+  if (here != NULL) {
+    if (UiMenu_IsGroup(here)) {
+      // is group entry
 
-    if (UiMenu_GroupIsUnfolded(here)) {
-      const MenuGroupDescriptor* group = &groups[here->number];
-      next = UiMenu_GroupGetFirst(group);
-      if (next == NULL) {
-        // this is an empty menu group, should not happen, does make  sense
-        // but we handle this anyway
-        next = UiMenu_FindNextEntryInUpperLevel(here);
+      if (UiMenu_GroupIsUnfolded(here)) {
+        const MenuGroupDescriptor* group = &groups[here->number];
+        next = UiMenu_GroupGetFirst(group);
+        if (next == NULL) {
+          // this is an empty menu group, should not happen, does make  sense
+          // but we handle this anyway
+          next = UiMenu_FindNextEntryInUpperLevel(here);
+        }
+      } else {
+        // folded group, so we behave  like a normal entry
+        next = UiMenu_GetNextEntryInGroup(here);
       }
-    } else {
-      // folded group, so we behave  like a normal entry
-      next = UiMenu_GetNextEntryInGroup(here);
+    }
+    if (next == NULL) {
+      // we are currently at a normal entry or a folded group or empty group (in this case these are treated as simple entries)
+      // only 3 cases possible:
+      //   - final entry of menu, fill next slot with blank entry, return false
+      //   - next entry is normal entry (group or entry, no difference), just use this one
+      //   - last entry in menu group, go up, and search for next entry in this parent menu (recursively).
+
+      if (UiMenu_IsLastInMenuGroup(here)) {
+        // we need the parent menu in order to ask for the  entry after our
+        // menu group entry
+        // if we cannot find the parent group, we  are top level and the last menu entry
+        // so there is no further entry
+        next = UiMenu_FindNextEntryInUpperLevel(here);
+      } else {
+        next =  UiMenu_GetNextEntryInGroup(here);
+      }
     }
   }
-  if (next == NULL) {
-    // we are currently at a normal entry or a folded group or empty group (in this case these are treated as simple entries)
-    // only 3 cases possible:
-    //   - final entry of menu, fill next slot with blank entry, return false
-    //   - next entry is normal entry (group or entry, no difference), just use this one
-    //   - last entry in menu group, go up, and search for next entry in this parent menu (recursively).
+  return next;
+}
 
-    if (UiMenu_IsLastInMenuGroup(here)) {
-      // we need the parent menu in order to ask for the  entry after our
-      // menu group entry
-      // if we cannot find the parent group, we  are top level and the last menu entry
-      // so there is no further entry
-      next = UiMenu_FindNextEntryInUpperLevel(here);
-    } else {
-      next =  UiMenu_GetNextEntryInGroup(here);
-    }
-  }    return next;
+
+const MenuDescriptor* UiMenu_FindLastEntryInLowerLevel(const MenuDescriptor* here) {
+  const MenuDescriptor *last = here;
+  while (UiMenu_IsGroup(here) && UiMenu_GroupIsUnfolded(here) && here == last) {
+    const MenuDescriptor* last = UiMenu_GroupGetLast(UiMenu_GetGroupForEntry(here));
+    if (last) { here = last; }
+  }
+  return here;
 }
 
 const MenuDescriptor* UiMenu_PrevMenuEntry(const MenuDescriptor* here) {
@@ -548,14 +576,12 @@ const MenuDescriptor* UiMenu_PrevMenuEntry(const MenuDescriptor* here) {
       //     if unfolded menu_entry -> go to last entry
       //           -> if normal entry or folded menu -> we are done
       //           -> if unfolded menu entry -> go to last entry
-      prev = UiMenu_PrevMenuEntry(UiMenu_GetParentForEntry(here));
+      prev = UiMenu_GetParentForEntry(here);
     }
     else {
       prev = UiMenu_GetPrevEntryInGroup(here);
-      const MenuDescriptor *last = prev;
-      while (UiMenu_IsGroup(prev) && UiMenu_GroupIsUnfolded(prev) && prev == last) {
-        const MenuDescriptor* last = UiMenu_GroupGetLast(UiMenu_GetGroupForEntry(prev));
-        if (last) { prev = last; }
+      if (UiMenu_IsGroup(prev) && UiMenu_GroupIsUnfolded(prev)) {
+        prev = UiMenu_FindLastEntryInLowerLevel(here);
       }
     }
   }
@@ -584,10 +610,23 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   uint32_t  m_clr;
   m_clr = Yellow;
   char out[40];
-  snprintf(out,40,"%s-%s",entry->id,entry->label);
-  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
-  if (entry->kind == MENU_ITEM) {
-    UiDriverUpdateMenuLines(entry->number,mode,pos);
+  const char* blank = "                               ";
+
+  if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP)) {
+    uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
+    snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
+    switch(entry->kind) {
+    case MENU_ITEM:
+      UiDriverUpdateMenuLines(entry->number,mode,pos);
+      break;
+    case MENU_GROUP:
+      strcpy(out,UiMenu_GroupIsUnfolded(entry)?"HIDE":"SHOW");
+      UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), out, m_clr, Black, 0);       // yes, normal position
+      break;
+    }
+  } else {
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),blank,m_clr,Black,0);
   }
 }
 
@@ -596,20 +635,87 @@ void UiMenu_DisplayInitSlots(const MenuDescriptor* entry) {
   for (idx=0;idx < MENUSIZE;idx++) {
     UiMenu_FillSlotWithEntry(&menu[idx],entry);
     entry = UiMenu_NextMenuEntry(entry);
-    if (UiMenu_IsGroup(entry)) {
-      UiMenu_GroupFold(entry, false);
+  }
+}
+void UiMenu_DisplayInitSlotsBackwards(const MenuDescriptor* entry) {
+  int idx;
+  for (idx=MENUSIZE;idx > 0;idx--) {
+    UiMenu_FillSlotWithEntry(&menu[idx-1],entry);
+    entry = UiMenu_PrevMenuEntry(entry);
+  }
+}
+
+
+void UiMenu_DisplayMoveSlotsBackwards(int16_t change) {
+  int idx;
+  int dist = (change % MENUSIZE);
+  int screens = change / MENUSIZE;
+  for (idx = 0; idx < screens; idx++) {
+    const MenuDescriptor *prev = UiMenu_PrevMenuEntry(menu[0].entryItem);
+    if (prev != NULL) {
+      UiMenu_DisplayInitSlotsBackwards(prev);
+    } else {
+      // we stop here, since no more previous elements.
+      // TODO: Decide if roll over, in this case we would have to get very last element and
+      // then continue from there.
+      dist = 0;
+      break;
+    }
+  }
+
+  if (dist != 0) {
+    for (idx = MENUSIZE-dist; idx > 0; idx--) {
+      UiMenu_FillSlotWithEntry(&menu[MENUSIZE-idx],menu[MENUSIZE-(dist+idx)].entryItem);
+    }
+
+    for (idx = MENUSIZE-dist;idx >0; idx--) {
+      UiMenu_FillSlotWithEntry(&menu[idx-1],UiMenu_PrevMenuEntry(menu[idx].entryItem));
+    }
+  }
+}
+void UiMenu_DisplayMoveSlotsForward(int16_t change) {
+  int idx;
+  int dist = (change % MENUSIZE);
+  int screens = change / MENUSIZE;
+
+  // first jump screens. we have to iterate through the menu structure one by one
+  // in order to respect fold/unfold state etc.
+  for (idx = 0; idx < screens; idx++) {
+    const MenuDescriptor *next = UiMenu_NextMenuEntry(menu[MENUSIZE-1].entryItem);
+    if (next != NULL) {
+      UiMenu_DisplayInitSlots(next);
+    } else {
+      // stop here
+      // TODO: Rollover?
+      dist = 0;
+      break;
+    }
+  }
+  if (dist != 0) {
+    for (idx = 0; idx < MENUSIZE-dist; idx++) {
+      UiMenu_FillSlotWithEntry(&menu[idx],menu[dist+idx].entryItem);
+    }
+    for (idx = MENUSIZE-dist;idx < MENUSIZE; idx++) {
+      UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
     }
   }
 }
 
+bool init_done = false;
+
 void UiMenu_DisplayInitMenu(uint16_t mode) {
-  UiMenu_DisplayInitSlots(&baseGroup[0]);
+  if (init_done == false ) {
+    UiMenu_DisplayInitSlots(&baseGroup[0]);
+    init_done = true;
+  }
+  // UiMenu_DisplayMoveSlotsForward(6);
+  // UiMenu_DisplayMoveSlotsForward(3);
+  // UiMenu_DisplayMoveSlotsBackwards(10);
   int idx;
   for (idx = 0; idx < MENUSIZE; idx++) {
     UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
   }
 }
-
 
 void UiMenu_ShowSystemInfo() {
   uint32_t   m_clr;
@@ -1065,6 +1171,10 @@ bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* cl
 //
 void UiDriverUpdateMenu(uchar mode)
 {
+#ifdef NEWMENU
+  UiMenu_DisplayInitMenu(mode);
+  return;
+#endif
   uchar var;
   bool  update_vars;
   static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
@@ -3601,3 +3711,184 @@ void UiDriverUpdateMemLines(uchar var)
 //
 	return;
 }
+
+// -----------------------------------------------
+static bool is_last_menu_item = 0;
+
+
+void UiMenu_RenderChangeItem(int16_t pot_diff) {
+  if(pot_diff < 0)    {
+        if(ts.menu_item)    {
+            ts.menu_item--;
+        }
+        else    {
+            if(!ts.radio_config_menu_enable)
+                ts.menu_item = MAX_MENU_ITEM-1; // move to the last menu item (e.g. "wrap around")
+            else
+                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last menu item (e.g. "wrap around")
+        }
+    }
+    else    {
+        ts.menu_item++;
+        if(!ts.radio_config_menu_enable)    {
+            if(ts.menu_item >= MAX_MENU_ITEM)   {
+                ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
+            }
+        }
+        else    {
+            if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)   {
+                ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
+            }
+        }
+    }
+    ts.menu_var = 0;            // clear variable that is used to change a menu item
+    UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void UiMenu_RenderLastScreen() {
+#ifdef NEWMENU
+  return;
+#endif
+
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+      if(ts.menu_item == MAX_MENU_ITEM-1) {   // are we on the LAST menu item of the main menu?
+          if(ts.radio_config_menu_enable)     // Yes - is the configuration menu enabled?
+              ts.menu_item = MAX_MENU_ITEM;   // yes - go to the FIRST item of the configuration menu
+          else                                // configuration menu NOT enabled
+              ts.menu_item = 0;               // go to the FIRST menu main menu item
+      }
+      else                                    // we had not been on the last item of the main menu
+          ts.menu_item = MAX_MENU_ITEM-1;     // go to the last item in the main menu
+  }
+  else    {       // we were NOT in the main menu, but in the configuration menu!
+      if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))       // are we on the last item of the configuration menu?
+          ts.menu_item = 0;                   // yes - go to the first item of the main menu
+      else    {       // we are NOT on the last item of the configuration menu
+          ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;     // go to the last item in the configuration menu
+      }
+  }
+  UiDriverUpdateMenu(0);  // update menu display
+  UiDriverUpdateMenu(1);  // update cursor
+
+}
+void UiMenu_RenderFirstScreen() {
+#ifdef NEWMENU
+  init_done = false;
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+        if(ts.menu_item)    // is this NOT the first menu item?
+            ts.menu_item = 0;   // yes - set it to the beginning of the first menu
+        else    {           // this IS the first menu item
+            if(ts.radio_config_menu_enable)     // yes - is the configuration menu enabled?
+                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+            else                                // configuration menu NOT enabled
+                ts.menu_item = MAX_MENU_ITEM - 1;
+        }
+    }
+    else    {       // we are within the CONFIGURATION menu
+        if(ts.menu_item > MAX_MENU_ITEM)        // is this NOT at the first entry of the configuration menu?
+            ts.menu_item = MAX_MENU_ITEM;   // yes, go to the first entry of the configuration item
+        else        // this IS the first entry of the configuration menu
+            ts.menu_item = MAX_MENU_ITEM - 1;   // go to the last entry of the main menu
+    }
+    UiDriverUpdateMenu(0);  // update menu display
+    UiDriverUpdateMenu(1);  // update cursor
+}
+void UiMenu_RenderNextScreen() {
+#ifdef NEWMENU
+  UiMenu_DisplayMoveSlotsForward(MENUSIZE);
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+  //
+  if(!ts.radio_config_menu_enable)    {   // Not in config/calibrate menu mode
+    if(ts.menu_item == MAX_MENU_ITEM - 1)   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // go to first item
+    }
+    else    {   // not at last item - go ahead
+      ts.menu_item += 6;
+      if(ts.menu_item >= MAX_MENU_ITEM - 1)   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM - 1;   // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  else    {   // in calibrate/adjust menu mode
+    if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // to to first item
+    }
+    else    {   // not at last item - go ahead
+      if(ts.menu_item < MAX_MENU_ITEM - 1)    {   // are we starting from the adjustment menu?
+        if((ts.menu_item + 6) >= MAX_MENU_ITEM) {       // yes - is the next jump past the end of the menu?
+          ts.menu_item = MAX_MENU_ITEM-1;     // yes - jump to the last item
+        }
+        else
+          ts.menu_item += 6;  // not at last item - go to next screen
+      }
+      else    // not on adjustment menu
+        ts.menu_item += 6;  // go to next configuration screen
+      //
+      if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1; // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void UiMenu_RenderPrevScreen() {
+#ifdef NEWMENU
+  UiMenu_DisplayMoveSlotsBackwards(MENUSIZE);
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+  is_last_menu_item = 0;  // clear last screen detect flag
+  if(ts.menu_item < 6)    {   // are we less than one screen away from the beginning?
+    if(!ts.radio_config_menu_enable)    // yes - config/adjust menu not enabled?
+      ts.menu_item = MAX_MENU_ITEM-1; // yes, go to last item in normal menu
+    else
+      ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+  }
+  else    {
+    if(ts.menu_item < MAX_MENU_ITEM)    // are we in the config menu?
+      if(ts.menu_item >= 6)           // yes - are we at least on the second screen?
+        ts.menu_item -= 6;              // yes, go to the previous screen
+      else                            // we are on the first screen
+        ts.menu_item = 0;           // go to the first item
+    //
+    else if(ts.menu_item > MAX_MENU_ITEM)   {   // are we within the adjustment menu by at least one entry?
+      if((ts.menu_item - 6) < MAX_MENU_ITEM)  {   // yes, will the next step be outside the adjustment menu?
+        ts.menu_item = MAX_MENU_ITEM;           // yes - go to bottom of adjustment menu
+      }
+      else                            // we will stay within the adjustment menu
+        ts.menu_item -= 6;          // go back to previous page
+    }
+    else if(ts.menu_item == MAX_MENU_ITEM)  // are we at the bottom of the adjustment menu?
+      ts.menu_item --;                // yes - go to the last entry of the adjustment menu
+  }
+  //              ts.menu_item -= 6;  // not less than 6, so we subtract!
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+

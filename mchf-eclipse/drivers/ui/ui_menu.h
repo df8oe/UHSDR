@@ -21,6 +21,13 @@ void UiDriverMemMenu(void);
 void UiDriverUpdateMemLines(uchar var);
 void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
 
+
+void UiMenu_RenderChangeItem(int16_t pot_diff);
+void UiMenu_RenderLastScreen();
+void UiMenu_RenderFirstScreen();
+void UiMenu_RenderNextScreen();
+void UiMenu_RenderPrevScreen();
+
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
 //
