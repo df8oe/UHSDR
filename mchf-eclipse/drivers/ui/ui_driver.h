@@ -554,6 +554,7 @@ void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
 //
 void	UiLCDBlankTiming(void);
+void	UiDriverShowDebugText(char*);
 void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);

@@ -16,7 +16,9 @@
 - removed scope/waterfall blocking in SPI mode
 - added LCD mode difference to dynamic tuning
 - more speed for LCD parallel/SPI
- added possibility of swapping SPI to 50MHz instead of 25MHz (ununsed at the moment)
+- added possibility of swapping SPI to 50MHz instead of 25MHz (ununsed at the moment)
+- added more filters: 4.2k, 4.4k, 4.6k, 4.8k, 5k, 5.5k,6k,7k,8k,8,5k,9k and 9.5k
+
 
 20160228 [DF8OE]
 - corrected TX/RX switching of AFG/STG and RIT/WPM in CW

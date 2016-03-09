@@ -2650,7 +2650,6 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 	//
 	// Perform LCD backlight PWM brightness function
 	//
-
 	if(!ts.lcd_blanking_flag)	{	// is LCD *NOT* blanked?
 		if(!lcd_dim_prescale)	{	// Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
 			if(lcd_dim < ts.lcd_backlight_brightness)

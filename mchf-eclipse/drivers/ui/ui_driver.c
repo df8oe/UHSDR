@@ -435,6 +435,10 @@ inline bool is_dsp_notch() {
 	return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
 }
 
+void UiDriverShowDebugText(char* text)
+{
+UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+}
 
 void UiDriver_HandleSwitchToNextDspMode()
 {
@@ -848,7 +852,6 @@ if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
 			return;
 	}
 	drv_state++;
-
 }
 
 //*----------------------------------------------------------------------------
@@ -1273,7 +1276,7 @@ static void UiDriverProcessKeyboard(void)
 				{
 					ts.tx_disable = !ts.tx_disable;
 
-					UiDriverFButtonLabel(4,"  TUNE",ts.tx_disable?Grey1:White);
+					UiDriverFButtonLabel(5,"  TUNE",ts.tx_disable?Grey1:White);
 					// Set TUNE button color according to ts.tx_disable
 				}
 				break;
@@ -4077,7 +4080,8 @@ static bool UiDriverCheckFrequencyEncoder(void)
 
 	if (pot_diff == 0) { delta_tics++; } // how often do we come here until the encoder has changed in times of 10ms}
 
-	UiLCDBlankTiming();	// calculate/process LCD blanking timing
+	if (pot_diff != 0)
+	    UiLCDBlankTiming();	// calculate/process LCD blanking timing
 	if (pot_diff != 0 &&
 			ts.txrx_mode == TRX_MODE_RX
 			&& ks.button_just_pressed == false
@@ -4133,9 +4137,8 @@ static void UiDriverCheckEncoderOne(void)
 
 	pot_diff = UiDriverEncoderRead(ENC1);
 
-	UiLCDBlankTiming();	// calculate/process LCD blanking timing
-
 	if (pot_diff) {
+		UiLCDBlankTiming();	// calculate/process LCD blanking timing
 		// Take appropriate action
 		switch(ts.enc_one_mode)
 		{
@@ -4217,9 +4220,8 @@ static void UiDriverCheckEncoderTwo(void)
 
 	pot_diff = UiDriverEncoderRead(ENC2);
 
-	UiLCDBlankTiming();	// calculate/process LCD blanking timing
-
 	if (pot_diff) {
+		UiLCDBlankTiming();	// calculate/process LCD blanking timing
 		if(ts.menu_mode)	{
 			if(pot_diff < 0)	{
 				if(ts.menu_item)	{
@@ -4355,9 +4357,8 @@ static void UiDriverCheckEncoderThree(void)
 
 	pot_diff = UiDriverEncoderRead(ENC3);
 
-	UiLCDBlankTiming();	// calculate/process LCD blanking timing
-
 	if (pot_diff) {
+		UiLCDBlankTiming();	// calculate/process LCD blanking timing
 		if(ts.menu_mode)	{
 			if(pot_diff < 0)	{
 				ts.menu_var--;		// increment selected item
