@@ -3892,3 +3892,13 @@ void UiMenu_RenderPrevScreen() {
   UiDriverUpdateMenu(1);      // Update that menu item
 }
 
+void UiMenu_RenderChangeItemValue(int16_t pot_diff) {
+  if(pot_diff < 0)  {
+    ts.menu_var--;      // increment selected item
+  }
+  else  {
+    ts.menu_var++;      // decrement selected item
+  }
+  //
+  UiDriverUpdateMenu(1);        // perform update of selected item
+}
