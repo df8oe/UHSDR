@@ -59,7 +59,7 @@
 
 
 static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos);
-static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
+static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos);
 //
 //
 // Public data structures
@@ -267,32 +267,47 @@ struct  MenuGroupDescriptor_s;
 // Each menu group has to have a MenuGroupItem pointing to the descriptor
 // a MenuGroupItem is used to keep track of the fold/unfold state and to link the
 // Descriptors are stored in flash
+
 typedef struct {
-  const uint16_t menuId;
-  const uint16_t kind; //
-  const uint16_t number;
-  const char id[4];
-  const char* label;
+  const uint16_t menuId; // backlink to the menu we are part of. That implies, an entry can only be part of a single menu group
+  const uint16_t kind; // use the enum defined above to indicate what this entry represents
+  const uint16_t number; // this is an identification number which is passed to the menu entry handled
+                         // for standard items it is the id of the value to be changed, intepretation is left to handler
+                         // MENU_GROUP: for menu groups this MUST BE the index in the menu group table, THIS IS USED INTERNALLY
+  const char id[4];      // this is a visual 3 letter identification which may be display, depending on the render approach
+  const char* label;     // this is the label which will be display, depending on the render approach
 } MenuDescriptor;
 
 typedef struct {
-  bool unfolded;
-  uint16_t count;
-  const MenuDescriptor* me;
+  bool unfolded;            // runtime variable, tells if the user wants to have this groups items to be shown
+  uint16_t count;           // number of menu entries. This will be filled automatically on first use by internal code
+                            // do not write to this variable unless you know what you are doing.
+  const MenuDescriptor* me; // pointer to the MenuDescriptor of this menu group in its parent menu. This is the backlink to our parent.
+                            // This will be filled automatically on first use by internal code in order to avoid search through the menu structure.
+                            // do not write to this variable unless you know what you are doing.
 } MenuGroupState;
 
 
+// This data structure is intended to be placed in flash
+// all data is placed here at compile time
 typedef struct MenuGroupDescriptor_s {
-  const MenuDescriptor* entries;
-  MenuGroupState* state;
-  const MenuDescriptor* parent;
+  const MenuDescriptor* entries;          // array of member entries in the menu group
+  MenuGroupState* state;                  // writable data structure for menu management, pointer has to go into RAM
+  const MenuDescriptor* parent;           // pointer to the first element of the array in which our menu group is located in. It does not have
+                                          // to point to the MENU_GROUP item, wich can be at any position in this array. Used to calculate the real
+                                          // pointer later and to identify the parent menu group of this menu.
+                                          // use NULL for top level menus here (i.e. no parent).
 } MenuGroupDescriptor;
 
 
+// Runtime management of menu entries for onscreen rendering.
 typedef struct {
   const MenuDescriptor* entryItem;
 } MenuDisplaySlot;
 
+// we show MENUSIZE items at the same time to the user.
+// right now the render code uses this global variable since
+// only a single active menu is supported right now.
 MenuDisplaySlot menu[MENUSIZE];
 
 
@@ -333,7 +348,7 @@ const MenuDescriptor baseGroup[] = {
 };
 
 const MenuDescriptor confGroup[] = {
-    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","1eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","Beep Enabled"  },
     { MENU_CONF, MENU_GROUP, 2, "POW","Power Adjust" },
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","2eep Enabled"  },
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","3eep Enabled"  },
@@ -368,7 +383,9 @@ const MenuGroupDescriptor groups[3] = {
     { powGroup, &powGroupState, confGroup }  // Group 2
 
 };
-// actions
+
+// actions [this is an internal, not necessarily complete or accurate sketch of the used algorithms /API
+// read the source to find out how it is done. Left for the purpose of explaining the basic idea
 // show menu -> was previously displayed -> yes -> simply display all slots
 //                                       -> no  -> get first menu group, get first entry, fill first slot, run get next entry until all slots are filled
 
@@ -387,9 +404,15 @@ const MenuGroupDescriptor groups[3] = {
 
 // move to next/previous page -> (this is n times prev/next)
 
-const MenuGroupDescriptor* UiMenu_GetGroupForEntry(const MenuDescriptor* me) {
+// ===================== BEGIN MENU LOW LEVEL MANAGEMENT =====================
+const MenuGroupDescriptor* UiMenu_GetParentGroupForEntry(const MenuDescriptor* me) {
     return me==NULL?NULL:&groups[me->menuId];
 }
+
+const MenuGroupDescriptor* UiMenu_GetGroupForGroupEntry(const MenuDescriptor* me) {
+    return me==NULL?NULL:&groups[me->number];
+}
+
 
 inline bool UiMenu_IsGroup(const MenuDescriptor *entry) {
   return entry==NULL?false:entry->kind == MENU_GROUP;
@@ -445,7 +468,7 @@ const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
   const MenuDescriptor* retval = NULL;
 
   if (me != NULL) {
-    const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
+    const MenuGroupDescriptor* group_ptr = UiMenu_GetParentGroupForEntry(me);
 
     int index = (me - &group_ptr->entries[0])/sizeof(me);
     if (index < group_ptr->state->count-1) {
@@ -456,7 +479,7 @@ const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
 }
 
 const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me) {
-  const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
+  const MenuGroupDescriptor* group_ptr = UiMenu_GetParentGroupForEntry(me);
   const MenuDescriptor* retval = NULL;
   if (me != NULL && me != &group_ptr->entries[0]) {
     retval = me - 1;
@@ -469,10 +492,10 @@ const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me) {
 const MenuDescriptor* UiMenu_GetParentForEntry(const MenuDescriptor* me) {
   const MenuDescriptor* retval = NULL;
   if (me != NULL) {
-    const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(me);
+    const MenuGroupDescriptor* gd = UiMenu_GetParentGroupForEntry(me);
     if (gd->parent != NULL) {
       if (gd->state->me == NULL ) {
-        const MenuGroupDescriptor* gdp = &groups[gd->parent->number];
+        const MenuGroupDescriptor* gdp = &groups[gd->parent->menuId];
         uint16_t count = UiMenu_MenuGroupMemberCount(gdp);
         uint16_t idx;
         for(idx = 0; idx < count; idx++) {
@@ -488,6 +511,23 @@ const MenuDescriptor* UiMenu_GetParentForEntry(const MenuDescriptor* me) {
   return retval;
 }
 
+inline bool UiMenu_IsLastInMenuGroup(const MenuDescriptor* here) {
+  const MenuGroupDescriptor* gd = UiMenu_GetParentGroupForEntry(here);
+  return UiMenu_GroupGetLast(gd) == here;
+}
+inline bool UiMenu_IsFirstInMenuGroup(const MenuDescriptor* here) {
+  const MenuGroupDescriptor* gd = UiMenu_GetParentGroupForEntry(here);
+  return UiMenu_GroupGetFirst(gd) == here;
+}
+
+
+// ===================== END MENU LOW LEVEL MANAGEMENT =====================
+
+
+// ===================== BEGIN MENU ITERATION STRATEGY =====================
+// this code implements a specific strategy to walk through a menu structure
+
+// Helper Functions
 const MenuDescriptor* UiMenu_FindNextEntryInUpperLevel(const MenuDescriptor* here) {
   const MenuDescriptor* next = NULL, *focus = here;
   if (here != NULL) {
@@ -503,15 +543,26 @@ const MenuDescriptor* UiMenu_FindNextEntryInUpperLevel(const MenuDescriptor* her
   return next;
 }
 
-inline bool UiMenu_IsLastInMenuGroup(const MenuDescriptor* here) {
-  const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(here);
-  return UiMenu_GroupGetLast(gd) == here;
-}
-inline bool UiMenu_IsFirstInMenuGroup(const MenuDescriptor* here) {
-  const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(here);
-  return UiMenu_GroupGetFirst(gd) == here;
+const MenuDescriptor* UiMenu_FindLastEntryInLowerLevel(const MenuDescriptor* here) {
+  const MenuDescriptor *last = here;
+  while (UiMenu_IsGroup(here) && UiMenu_GroupIsUnfolded(here) && here == last) {
+    const MenuDescriptor* last = UiMenu_GroupGetLast(UiMenu_GetGroupForGroupEntry(here));
+    if (last) { here = last; }
+  }
+  return here;
 }
 
+
+// Main Strategy  Functions
+/*
+ * Strategy: Provide a 'virtual' flat list of menu entries, list members are dynamically inserted/removed if menu groups are (un)folded.
+ * External code navigates through only with next/prev operations.
+ *
+ */
+/*
+ * @brief Get next menu entry. If a menu group is unfolded, next entry after menu group item is first item from menu group
+ *
+ */
 const MenuDescriptor* UiMenu_NextMenuEntry(const MenuDescriptor* here) {
   const MenuDescriptor* next = NULL;
 
@@ -554,15 +605,10 @@ const MenuDescriptor* UiMenu_NextMenuEntry(const MenuDescriptor* here) {
 }
 
 
-const MenuDescriptor* UiMenu_FindLastEntryInLowerLevel(const MenuDescriptor* here) {
-  const MenuDescriptor *last = here;
-  while (UiMenu_IsGroup(here) && UiMenu_GroupIsUnfolded(here) && here == last) {
-    const MenuDescriptor* last = UiMenu_GroupGetLast(UiMenu_GetGroupForEntry(here));
-    if (last) { here = last; }
-  }
-  return here;
-}
-
+/*
+ * @brief Get previous menu entry. If on first item of a menu group, show the last entry of the previous menu group/menu item
+ *
+ */
 const MenuDescriptor* UiMenu_PrevMenuEntry(const MenuDescriptor* here) {
   const MenuDescriptor* prev = NULL;
 
@@ -581,7 +627,7 @@ const MenuDescriptor* UiMenu_PrevMenuEntry(const MenuDescriptor* here) {
     else {
       prev = UiMenu_GetPrevEntryInGroup(here);
       if (UiMenu_IsGroup(prev) && UiMenu_GroupIsUnfolded(prev)) {
-        prev = UiMenu_FindLastEntryInLowerLevel(here);
+        prev = UiMenu_FindLastEntryInLowerLevel(prev);
       }
     }
   }
@@ -601,6 +647,25 @@ bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry
   return retval;
 }
 
+void UiMenu_MoveCursor(uint32_t opt_pos) {
+  static uint32_t opt_oldpos = 999;  // y position of option cursor, previous
+  if(opt_oldpos != 999) {       // was the position of a previous cursor stored?
+      UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_oldpos * 12), " ", Black, Black, 0);   // yes - erase it
+  }
+  //
+  opt_oldpos = opt_pos;   // save position of new "old" cursor position
+  if (opt_pos != 999) {
+    UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);  // place cursor at active position
+  }
+}
+
+void UiMenu_UpdateLines(uint16_t number, uint16_t mode, int pos) {
+  if (number < MAX_MENU_ITEM) {
+    UiDriverUpdateMenuLines(number,mode,pos);
+  } else {
+    UiDriverUpdateConfigMenuLines(number,mode,pos);
+  }
+}
 
 /*
  * Render a menu entry on a given menu position
@@ -613,16 +678,32 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   const char* blank = "                               ";
 
   if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP)) {
-    uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
-    snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
-    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
+    if (mode == 0) {
+      uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
+      snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+      UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
+    }
     switch(entry->kind) {
     case MENU_ITEM:
-      UiDriverUpdateMenuLines(entry->number,mode,pos);
+      // TODO: Better Handler Selection with need for change in this location to add new handlers
+      UiMenu_UpdateLines(entry->number,mode,pos);
       break;
     case MENU_GROUP:
+      if (mode == 1) {
+        bool old_state = UiMenu_GroupIsUnfolded(entry);
+        if (ts.menu_var < 0 ) { UiMenu_GroupFold(entry,true); }
+        if (ts.menu_var > 0 ) { UiMenu_GroupFold(entry,false); }
+        if (old_state != UiMenu_GroupIsUnfolded(entry)) {
+          int idx;
+          for (idx = pos+1; idx < MENUSIZE;idx++) {
+            UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
+            UiMenu_UpdateMenuEntry(menu[idx].entryItem, 0, idx);
+          }
+        }
+      }
       strcpy(out,UiMenu_GroupIsUnfolded(entry)?"HIDE":"SHOW");
       UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), out, m_clr, Black, 0);       // yes, normal position
+      UiMenu_MoveCursor(pos);
       break;
     }
   } else {
@@ -703,6 +784,11 @@ void UiMenu_DisplayMoveSlotsForward(int16_t change) {
 
 bool init_done = false;
 
+/*
+ * @brief Display and change menu items
+ * @param mode   0=update all, 1=update current item, 2=go to next screen, 3=restore default setting for selected item
+ *
+ */
 void UiMenu_DisplayInitMenu(uint16_t mode) {
   if (init_done == false ) {
     UiMenu_DisplayInitSlots(&baseGroup[0]);
@@ -711,10 +797,26 @@ void UiMenu_DisplayInitMenu(uint16_t mode) {
   // UiMenu_DisplayMoveSlotsForward(6);
   // UiMenu_DisplayMoveSlotsForward(3);
   // UiMenu_DisplayMoveSlotsBackwards(10);
-  int idx;
-  for (idx = 0; idx < MENUSIZE; idx++) {
-    UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
+  switch (mode){
+  case 0: {// (re)draw all labels and values
+    int idx;
+    for (idx = 0; idx < MENUSIZE; idx++) {
+      UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
+    }
   }
+  break;
+
+  case 3:
+  case 1:
+  {
+    uint16_t current_item = ts.menu_item%MENUSIZE;
+    UiMenu_UpdateMenuEntry(menu[current_item].entryItem,mode, current_item);
+  }
+  break;
+  default:
+    break;
+  }
+
 }
 
 void UiMenu_ShowSystemInfo() {
@@ -1270,7 +1372,7 @@ void UiDriverUpdateMenu(uchar mode)
       //
       else {	// Is this one of the radio configuration items?
         for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM); var++) {
-          UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+          UiDriverUpdateConfigMenuLines(var, 0,-1);
         }
       }
     }
@@ -1278,20 +1380,21 @@ void UiDriverUpdateMenu(uchar mode)
     //
     //	screen_disp_old = screen_disp;
     //
-    if(mode == 1)	{	// individual item selected/changed
+    if(mode == 1 || mode == 3)	{	// individual item selected/changed
+#ifdef NEWMENU
+      UiMenu_DisplayInitMenu(mode);
+#else
+
       if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
-        UiDriverUpdateMenuLines(ts.menu_item, 1, -1);
+        UiDriverUpdateMenuLines(ts.menu_item, mode, -1);
       else												// "adjustment" menu item
-        UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM, 1);
-    }
-    else if(mode == 3)	{	// restore default setting for individual item
-      if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
-        UiDriverUpdateMenuLines(ts.menu_item, 3, -1);
-      else												// "adjustment" menu item
-        UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM,3);
+        UiDriverUpdateConfigMenuLines(ts.menu_item, mode,-1);
+#endif
+
     }
   }
 }
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -1306,7 +1409,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 {
 	char options[32];
 	ulong opt_pos;			// y position of option cursor
-	static ulong opt_oldpos = 999;	// y position of option cursor, previous
 	uchar select;
 	ulong	clr;
 	uchar temp_var;
@@ -1324,7 +1426,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		var = 0;		// prevent any change of variable
 	}
 	else	{			// this is "change" mode
+#ifdef NEWMENU
+	    select = index;
+#else
 		select = ts.menu_item;	// item selected from encoder
+#endif
 		var = ts.menu_var;		// change from encoder
 		ts.menu_var = 0;		// clear encoder change detect
 	}
@@ -2421,11 +2527,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 				copy_ser2virt();
 				strcpy(options, " Done...");
 				clr = Green;
-				UiDriverUpdateMenu(2);
 				}
 			    break;
 			    }
-			select = MENU_HARDWARE_INFO;
 			break;
 	case MENU_RESTORE_CONFIG:
 			strcpy(options," ");
@@ -2443,7 +2547,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 				}
 			    break;
 			    }
-			select = MENU_WFALL_SIZE;
 			break;
 	case MENU_HARDWARE_INFO:
 			strcpy(options, "SHOW");
@@ -2496,30 +2599,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	//
 	UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (opt_pos * 12), options, clr, Black, 0);		// yes, normal position
 	if(mode == 1)	{
-		if(opt_oldpos != 999)		// was the position of a previous cursor stored?
-			UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_oldpos * 12), " ", Black, Black, 0);	// yes - erase it
-		//
-		opt_oldpos = opt_pos;	// save position of new "old" cursor position
-		UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);	// place cursor at active position
+	  UiMenu_MoveCursor(opt_pos);
 	}
 	//
 	return;
 }
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 //
 
 //
@@ -2531,11 +2615,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
+static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 {
 	char options[32];
 	ulong opt_pos;					// y position of option
-	static ulong opt_oldpos = 999;	// y position of option
 	uchar select;
 	ulong	clr;
 	ulong	calc_var;
@@ -2553,10 +2636,16 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 		var = 0;		// prevent any change of variable
 	}
 	else	{			// this is "change" mode
-		select = ts.menu_item-MAX_MENU_ITEM;	// item selected from encoder
+#ifdef NEWMENU
+	    select = index;
+#else
+		select = ts.menu_item;	// item selected from encoder
+#endif
 		var = ts.menu_var;		// change from encoder
 		ts.menu_var = 0;		// clear encoder change detect
 	}
+
+
 	strcpy(options, "ERROR");	// pre-load to catch error condition
 	//
 	if(mode == 1)	{
@@ -2583,6 +2672,11 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	//
 
 	opt_pos = select % MENUSIZE;
+    if (pos > -1) {
+      opt_pos = pos;
+    }
+
+
 	switch(select)	{		//
 	//
 	case CONFIG_FREQ_STEP_MARKER_LINE:	// Frequency step marker line on/off
@@ -3621,11 +3715,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode)
 	}
 	UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (opt_pos * 12), options, clr, Black, 0);		// yes, normal position
 	if(mode == 1)	{	// Shifted over
-		if(opt_oldpos != 999)		// was the position of a previous cursor stored?
-			UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_oldpos * 12), " ", Black, Black, 0);	// yes - erase it
-		//
-		opt_oldpos = opt_pos;	// save position of new "old" cursor position
-		UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);	// place cursor at active position
+	  UiMenu_MoveCursor(opt_pos);
 	}
 	//
 	return;
@@ -3676,14 +3766,7 @@ void UiDriverMemMenu(void)
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateMemLines
-//* Object              : Display channel memory data
-//* Input Parameters    : var = memory item location on screen (1-6)
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
+
 void UiDriverUpdateMemLines(uchar var)
 {
 	ulong opt_pos;					// y position of option
@@ -3712,24 +3795,48 @@ void UiDriverUpdateMemLines(uchar var)
 	return;
 }
 
-// -----------------------------------------------
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverUpdateMemLines
+//* Object              : Display channel memory data
+//* Input Parameters    : var = memory item location on screen (1-6)
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+//
 static bool is_last_menu_item = 0;
 
+
+
+// -----------------------------------------------
+void UiMenu_RenderChangeItemValue(int16_t pot_diff) {
+  if(pot_diff < 0)  {
+    ts.menu_var--;      // increment selected item
+  }
+  else  {
+    ts.menu_var++;      // decrement selected item
+  }
+  //
+  UiDriverUpdateMenu(1);        // perform update of selected item
+}
 
 void UiMenu_RenderChangeItem(int16_t pot_diff) {
   if(pot_diff < 0)    {
         if(ts.menu_item)    {
             ts.menu_item--;
         }
+#ifndef NEWMENU
         else    {
             if(!ts.radio_config_menu_enable)
                 ts.menu_item = MAX_MENU_ITEM-1; // move to the last menu item (e.g. "wrap around")
             else
                 ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last menu item (e.g. "wrap around")
         }
+#endif
     }
     else    {
         ts.menu_item++;
+#ifndef NEWMENU
         if(!ts.radio_config_menu_enable)    {
             if(ts.menu_item >= MAX_MENU_ITEM)   {
                 ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
@@ -3740,6 +3847,7 @@ void UiMenu_RenderChangeItem(int16_t pot_diff) {
                 ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
             }
         }
+#endif
     }
     ts.menu_var = 0;            // clear variable that is used to change a menu item
     UiDriverUpdateMenu(1);      // Update that menu item
@@ -3747,6 +3855,11 @@ void UiMenu_RenderChangeItem(int16_t pot_diff) {
 
 void UiMenu_RenderLastScreen() {
 #ifdef NEWMENU
+
+  // TODO: we have to find the very last item and its MENUSIZE -1 predecessors
+  // for this we go on top level to the last item. Is this an normal entry OR a folded menu group OR an unfolded menu group with no entries-> get predecessors
+  // is this unfolded group, repeat search for last using same approach. Will terminate since menu structures are finite.
+  // right now we do nothing of this
   return;
 #endif
 
@@ -3892,13 +4005,3 @@ void UiMenu_RenderPrevScreen() {
   UiDriverUpdateMenu(1);      // Update that menu item
 }
 
-void UiMenu_RenderChangeItemValue(int16_t pot_diff) {
-  if(pot_diff < 0)  {
-    ts.menu_var--;      // increment selected item
-  }
-  else  {
-    ts.menu_var++;      // decrement selected item
-  }
-  //
-  UiDriverUpdateMenu(1);        // perform update of selected item
-}
