@@ -11,7 +11,7 @@
 **  Last Modified:                                                                 **
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
-
+// #define NEWMENU
 // Common
 //
 #include "mchf_board.h"
@@ -58,7 +58,7 @@
 #include "mchf_hw_i2c2.h"
 
 
-static void UiDriverUpdateMenuLines(uchar index, uchar mode);
+static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos);
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode);
 //
 //
@@ -250,6 +250,548 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
 }
 
 char blankline[33] = "                                ";
+
+// menu entry kind constants
+enum {
+  MENU_STOP = 0, // last entry in a menu / group
+  MENU_ITEM, // standard menu entry
+  MENU_GROUP, // menu group entry
+  MENU_SEP, // separator line
+  MENU_BLANK // blank
+};
+
+
+struct  MenuGroupDescriptor_s;
+
+// items are stored in RAM
+// Each menu group has to have a MenuGroupItem pointing to the descriptor
+// a MenuGroupItem is used to keep track of the fold/unfold state and to link the
+// Descriptors are stored in flash
+typedef struct {
+  const uint16_t menuId;
+  const uint16_t kind; //
+  const uint16_t number;
+  const char id[4];
+  const char* label;
+} MenuDescriptor;
+
+typedef struct {
+  bool unfolded;
+  uint16_t count;
+  const MenuDescriptor* me;
+} MenuGroupState;
+
+
+typedef struct MenuGroupDescriptor_s {
+  const MenuDescriptor* entries;
+  MenuGroupState* state;
+  const MenuDescriptor* parent;
+} MenuGroupDescriptor;
+
+
+typedef struct {
+  const MenuDescriptor* entryItem;
+} MenuDisplaySlot;
+
+MenuDisplaySlot menu[MENUSIZE];
+
+
+/*
+ * How to create a new menu entry in an existig menu:
+ * - Copy an existing entry of MENU_KIND and paste at the desired position
+ * - Just assign a unique number to the "number" attribute
+ * - Change the label, and implement handling
+ *
+ * How to create a menu group:
+ * - Add menu group id entry to enum below
+ * - Create a MenuDescriptor Array with the desired entries, make sure to have the MENU_STOP element at last position
+ *   and that all elements have the enum value as first attribute (menuId)
+ * - Added the menu group entry in the parent menu descriptor array.
+ * - Create a MenuState element
+ * - Added the menu group descriptor to the groups list at the position corresponding to the enum value
+ *   using the descriptor array, the address of the MenuState and the address of the parent menu descriptor array.
+ *
+ *
+ */
+
+enum {
+  MENU_BASE = 0,
+  MENU_CONF,
+  MENU_POW,
+};
+
+const MenuDescriptor baseGroup[] = {
+    { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
+    { MENU_BASE, MENU_GROUP, 1, "CON","Configuration Menu"},
+    { MENU_BASE, MENU_ITEM, MENU_300HZ_SEL, "500","300Hz Center Freq."  },
+    { MENU_BASE, MENU_ITEM, MENU_500HZ_SEL, "501","500Hz Center Freq."},
+    { MENU_BASE, MENU_ITEM, MENU_1K8_SEL, "504","1.8k Center Freq."},
+    { MENU_BASE, MENU_ITEM, MENU_2K3_SEL, "506","2.3k Center Freq."},
+    { MENU_BASE, MENU_ITEM, MENU_2K7_SEL, "508","2.7k Filter"},
+    { MENU_BASE, MENU_ITEM, MENU_3K6_SEL, "512","3.6k Filter"},
+    { MENU_BASE, MENU_STOP, 0, "   " , NULL }
+};
+
+const MenuDescriptor confGroup[] = {
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","1eep Enabled"  },
+    { MENU_CONF, MENU_GROUP, 2, "POW","Power Adjust" },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","2eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","3eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","4eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","5eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","6eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","7eep Enabled"  },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, "111","8eep Enabled"  },
+    { MENU_CONF, MENU_STOP, 0, "   " , NULL }
+};
+
+const MenuDescriptor powGroup[] = {
+    { MENU_POW, MENU_ITEM, CONFIG_10M_5W_ADJUST, "111","10 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_12M_5W_ADJUST, "111","12 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_15M_5W_ADJUST, "111","15 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_17M_5W_ADJUST, "111","17 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_20M_5W_ADJUST, "111","20 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_30M_5W_ADJUST, "111","30 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_40M_5W_ADJUST, "111","40 5W"  },
+    { MENU_POW, MENU_ITEM, CONFIG_80M_5W_ADJUST, "111","80 5W"  },
+    { MENU_POW, MENU_STOP, 0, "   " , NULL }
+};
+
+
+MenuGroupState baseGroupState;
+MenuGroupState confGroupState;
+MenuGroupState powGroupState;
+
+const MenuGroupDescriptor groups[3] = {
+    { baseGroup, &baseGroupState, NULL},  // Group 0
+    { confGroup, &confGroupState, baseGroup},  // Group 1
+    { powGroup, &powGroupState, confGroup }  // Group 2
+
+};
+// actions
+// show menu -> was previously displayed -> yes -> simply display all slots
+//                                       -> no  -> get first menu group, get first entry, fill first slot, run get next entry until all slots are filled
+
+// find next MenuEntry -> is menu group -> yes -> is unfolded -> yes -> get first item from menu group
+//                                                            -> no  -> treat as normal menu entry
+//                                      -> is there one more entry in my menu group ? -> yes -> takes this one
+//                                                                                      -> no  -> go one level up -> get next entry in this group
+//                     -> there is no such entry -> fill with dummy entry
+
+// find prev MenuEntry -> there is prev entry in menu group -> yes -> is this unfolded menu group -> yes -> get last entry of this menu group
+//                                                                                                -> no  -> fill slot with entry
+//                                                          -> no  -> go one level up -> get prev entry of this level
+
+// unfold menu group -> mark as unfold, run get next entry until all menu display slots are filled
+// fold menu group   -> mark as fold,   run get next entry until all menu display slots are filled
+
+// move to next/previous page -> (this is n times prev/next)
+
+const MenuGroupDescriptor* UiMenu_GetGroupForEntry(const MenuDescriptor* me) {
+    return me==NULL?NULL:&groups[me->menuId];
+}
+
+inline bool UiMenu_IsGroup(const MenuDescriptor *entry) {
+  return entry==NULL?false:entry->kind == MENU_GROUP;
+}
+inline bool UiMenu_IsEntry(const MenuDescriptor *entry) {
+  return entry==NULL?false:entry->kind == MENU_ITEM;
+}
+inline bool UiMenu_SlotIsEmpty(MenuDisplaySlot* slot) {
+  return slot==NULL?false:slot->entryItem == NULL;
+}
+inline bool UiMenu_GroupIsUnfolded(const MenuDescriptor *group) {
+  return group==NULL?false:groups[group->number].state->unfolded;
+}
+inline uint16_t UiMenu_MenuGroupMemberCount(const MenuGroupDescriptor* gd) {
+  uint16_t retval = 0;
+  if (gd != NULL) {
+  if (gd->state->count == 0) {
+    const MenuDescriptor* entry;
+    for (entry = &gd->entries[0];entry->kind != MENU_STOP; entry++) {
+      gd->state->count++;
+    }
+  }
+  retval = gd->state->count;
+  }
+  return retval;
+}
+
+inline void UiMenu_GroupFold(const MenuDescriptor* entry, bool fold) {
+  if (UiMenu_IsGroup(entry)) {
+    groups[entry->number].state->unfolded = fold == false;
+  }
+}
+
+inline const MenuDescriptor* UiMenu_GroupGetLast(const MenuGroupDescriptor *group) {
+  const MenuDescriptor* retval = NULL;
+  uint16_t count = UiMenu_MenuGroupMemberCount(group);
+  if (count>0) {
+    retval = &(group->entries[count-1]);
+  }
+  return retval;
+}
+
+inline const MenuDescriptor* UiMenu_GroupGetFirst(const MenuGroupDescriptor *group) {
+  const MenuDescriptor* retval = NULL;
+  uint16_t count = UiMenu_MenuGroupMemberCount(group);
+  if (count>0) {
+    retval = &(group->entries[0]);
+  }
+  return retval;
+}
+
+const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
+  const MenuDescriptor* retval = NULL;
+
+  if (me != NULL) {
+    const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
+
+    int index = (me - &group_ptr->entries[0])/sizeof(me);
+    if (index < group_ptr->state->count-1) {
+      retval = me + 1;
+    }
+  }
+  return retval;
+}
+
+const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me) {
+  const MenuGroupDescriptor* group_ptr = UiMenu_GetGroupForEntry(me);
+  const MenuDescriptor* retval = NULL;
+  if (me != NULL && me != &group_ptr->entries[0]) {
+    retval = me - 1;
+  }
+  return retval;
+}
+
+
+
+const MenuDescriptor* UiMenu_GetParentForEntry(const MenuDescriptor* me) {
+  const MenuDescriptor* retval = NULL;
+  if (me != NULL) {
+    const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(me);
+    if (gd->parent != NULL) {
+      if (gd->state->me == NULL ) {
+        const MenuGroupDescriptor* gdp = &groups[gd->parent->number];
+        uint16_t count = UiMenu_MenuGroupMemberCount(gdp);
+        uint16_t idx;
+        for(idx = 0; idx < count; idx++) {
+          if (gdp->entries[idx].number == me->menuId) {
+            gd->state->me = &gdp->entries[idx];
+            break;
+          }
+        }
+      }
+      retval = gd->state->me;
+    }
+  }
+  return retval;
+}
+
+const MenuDescriptor* UiMenu_FindNextEntryInUpperLevel(const MenuDescriptor* here) {
+  const MenuDescriptor* next = NULL, *focus = here;
+  if (here != NULL) {
+    while(focus != NULL && next == NULL) {
+      // we have a parent group, we are member of a sub menu group,
+      // we need next entry in containing menu group, no matter if our menu group is folded or not
+      next = UiMenu_GetNextEntryInGroup(UiMenu_GetParentForEntry(focus));
+      if (next == NULL) {
+        focus = UiMenu_GetParentForEntry(focus);
+      }
+    }
+  }
+  return next;
+}
+
+inline bool UiMenu_IsLastInMenuGroup(const MenuDescriptor* here) {
+  const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(here);
+  return UiMenu_GroupGetLast(gd) == here;
+}
+inline bool UiMenu_IsFirstInMenuGroup(const MenuDescriptor* here) {
+  const MenuGroupDescriptor* gd = UiMenu_GetGroupForEntry(here);
+  return UiMenu_GroupGetFirst(gd) == here;
+}
+
+const MenuDescriptor* UiMenu_NextMenuEntry(const MenuDescriptor* here) {
+  const MenuDescriptor* next = NULL;
+
+  if (here != NULL) {
+    if (UiMenu_IsGroup(here)) {
+      // is group entry
+
+      if (UiMenu_GroupIsUnfolded(here)) {
+        const MenuGroupDescriptor* group = &groups[here->number];
+        next = UiMenu_GroupGetFirst(group);
+        if (next == NULL) {
+          // this is an empty menu group, should not happen, does make  sense
+          // but we handle this anyway
+          next = UiMenu_FindNextEntryInUpperLevel(here);
+        }
+      } else {
+        // folded group, so we behave  like a normal entry
+        next = UiMenu_GetNextEntryInGroup(here);
+      }
+    }
+    if (next == NULL) {
+      // we are currently at a normal entry or a folded group or empty group (in this case these are treated as simple entries)
+      // only 3 cases possible:
+      //   - final entry of menu, fill next slot with blank entry, return false
+      //   - next entry is normal entry (group or entry, no difference), just use this one
+      //   - last entry in menu group, go up, and search for next entry in this parent menu (recursively).
+
+      if (UiMenu_IsLastInMenuGroup(here)) {
+        // we need the parent menu in order to ask for the  entry after our
+        // menu group entry
+        // if we cannot find the parent group, we  are top level and the last menu entry
+        // so there is no further entry
+        next = UiMenu_FindNextEntryInUpperLevel(here);
+      } else {
+        next =  UiMenu_GetNextEntryInGroup(here);
+      }
+    }
+  }
+  return next;
+}
+
+
+const MenuDescriptor* UiMenu_FindLastEntryInLowerLevel(const MenuDescriptor* here) {
+  const MenuDescriptor *last = here;
+  while (UiMenu_IsGroup(here) && UiMenu_GroupIsUnfolded(here) && here == last) {
+    const MenuDescriptor* last = UiMenu_GroupGetLast(UiMenu_GetGroupForEntry(here));
+    if (last) { here = last; }
+  }
+  return here;
+}
+
+const MenuDescriptor* UiMenu_PrevMenuEntry(const MenuDescriptor* here) {
+  const MenuDescriptor* prev = NULL;
+
+
+  if (here != NULL) {
+    if (UiMenu_IsFirstInMenuGroup(here)) {
+      // we go up, get previous entry
+      // if first entry,  go one further level up, ...
+      //  if not first entry -> get prev entry
+      //     if normal entry or folded menu -> we are done
+      //     if unfolded menu_entry -> go to last entry
+      //           -> if normal entry or folded menu -> we are done
+      //           -> if unfolded menu entry -> go to last entry
+      prev = UiMenu_GetParentForEntry(here);
+    }
+    else {
+      prev = UiMenu_GetPrevEntryInGroup(here);
+      if (UiMenu_IsGroup(prev) && UiMenu_GroupIsUnfolded(prev)) {
+        prev = UiMenu_FindLastEntryInLowerLevel(here);
+      }
+    }
+  }
+  return prev;
+}
+
+
+
+bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry) {
+  bool retval = false;
+  if (entry != NULL) {
+    here->entryItem = entry;
+    retval = true;
+  } else {
+    here->entryItem = NULL;
+  }
+  return retval;
+}
+
+
+/*
+ * Render a menu entry on a given menu position
+ */
+void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos)
+{
+  uint32_t  m_clr;
+  m_clr = Yellow;
+  char out[40];
+  const char* blank = "                               ";
+
+  if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP)) {
+    uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
+    snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
+    switch(entry->kind) {
+    case MENU_ITEM:
+      UiDriverUpdateMenuLines(entry->number,mode,pos);
+      break;
+    case MENU_GROUP:
+      strcpy(out,UiMenu_GroupIsUnfolded(entry)?"HIDE":"SHOW");
+      UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), out, m_clr, Black, 0);       // yes, normal position
+      break;
+    }
+  } else {
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),blank,m_clr,Black,0);
+  }
+}
+
+void UiMenu_DisplayInitSlots(const MenuDescriptor* entry) {
+  int idx;
+  for (idx=0;idx < MENUSIZE;idx++) {
+    UiMenu_FillSlotWithEntry(&menu[idx],entry);
+    entry = UiMenu_NextMenuEntry(entry);
+  }
+}
+void UiMenu_DisplayInitSlotsBackwards(const MenuDescriptor* entry) {
+  int idx;
+  for (idx=MENUSIZE;idx > 0;idx--) {
+    UiMenu_FillSlotWithEntry(&menu[idx-1],entry);
+    entry = UiMenu_PrevMenuEntry(entry);
+  }
+}
+
+
+void UiMenu_DisplayMoveSlotsBackwards(int16_t change) {
+  int idx;
+  int dist = (change % MENUSIZE);
+  int screens = change / MENUSIZE;
+  for (idx = 0; idx < screens; idx++) {
+    const MenuDescriptor *prev = UiMenu_PrevMenuEntry(menu[0].entryItem);
+    if (prev != NULL) {
+      UiMenu_DisplayInitSlotsBackwards(prev);
+    } else {
+      // we stop here, since no more previous elements.
+      // TODO: Decide if roll over, in this case we would have to get very last element and
+      // then continue from there.
+      dist = 0;
+      break;
+    }
+  }
+
+  if (dist != 0) {
+    for (idx = MENUSIZE-dist; idx > 0; idx--) {
+      UiMenu_FillSlotWithEntry(&menu[MENUSIZE-idx],menu[MENUSIZE-(dist+idx)].entryItem);
+    }
+
+    for (idx = MENUSIZE-dist;idx >0; idx--) {
+      UiMenu_FillSlotWithEntry(&menu[idx-1],UiMenu_PrevMenuEntry(menu[idx].entryItem));
+    }
+  }
+}
+void UiMenu_DisplayMoveSlotsForward(int16_t change) {
+  int idx;
+  int dist = (change % MENUSIZE);
+  int screens = change / MENUSIZE;
+
+  // first jump screens. we have to iterate through the menu structure one by one
+  // in order to respect fold/unfold state etc.
+  for (idx = 0; idx < screens; idx++) {
+    const MenuDescriptor *next = UiMenu_NextMenuEntry(menu[MENUSIZE-1].entryItem);
+    if (next != NULL) {
+      UiMenu_DisplayInitSlots(next);
+    } else {
+      // stop here
+      // TODO: Rollover?
+      dist = 0;
+      break;
+    }
+  }
+  if (dist != 0) {
+    for (idx = 0; idx < MENUSIZE-dist; idx++) {
+      UiMenu_FillSlotWithEntry(&menu[idx],menu[dist+idx].entryItem);
+    }
+    for (idx = MENUSIZE-dist;idx < MENUSIZE; idx++) {
+      UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
+    }
+  }
+}
+
+bool init_done = false;
+
+void UiMenu_DisplayInitMenu(uint16_t mode) {
+  if (init_done == false ) {
+    UiMenu_DisplayInitSlots(&baseGroup[0]);
+    init_done = true;
+  }
+  // UiMenu_DisplayMoveSlotsForward(6);
+  // UiMenu_DisplayMoveSlotsForward(3);
+  // UiMenu_DisplayMoveSlotsBackwards(10);
+  int idx;
+  for (idx = 0; idx < MENUSIZE; idx++) {
+    UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
+  }
+}
+
+void UiMenu_ShowSystemInfo() {
+  uint32_t   m_clr;
+
+  char out[32];
+  char* outs;
+  m_clr = White;
+  float suf = ui_si570_get_startup_frequency();
+  int vorkomma = (int)(suf);
+  int nachkomma = (int) roundf((suf-vorkomma)*10000);
+  static const char* display_types[] = {
+      "                ",
+      "HY28A SPI Mode  ",
+      "HY28B SPI Mode  ",
+      "HY28A/B parallel"
+  };
+
+  sprintf(out,"LCD Display  : %s",display_types[ts.display_type]);
+
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
+  sprintf(out,"SI570        : %xh / %u.%04u MHz",(os.si570_address >> 1),vorkomma,nachkomma);
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
+  switch (ts.ser_eeprom_type){
+  case 0:
+    outs = "n/a             ";
+    break;
+  case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
+    outs = "incompatible    ";
+    break;
+  case 16:
+    outs = "24xx512     64KB";
+    break;
+  case 17:
+    outs = "24xx1025   128KB";
+    break;
+  case 18:
+    outs = "24xx1026   128KB";
+    break;
+  case 19:
+    outs = "24CM02     256KB";
+    break;
+  default:
+    outs = "unknown         ";
+    break;
+  }
+  sprintf(out,"%s%s","Serial EEPROM: ",outs);
+
+  if(ts.ser_eeprom_in_use == 0)     // in use & data ok
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
+  if(ts.ser_eeprom_in_use == 0xFF)  // not in use
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
+  if(ts.ser_eeprom_in_use == 0x5)       // data not ok
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
+  if(ts.ser_eeprom_in_use == 0x10)  // EEPROM too small
+    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
+
+  if(ts.tp_present == 0)
+    outs = "n/a             ";
+  else
+    outs = "XPT2046         ";
+  sprintf(out,"%s%s","Touchscreen  : ",outs);
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
+  if(ts.rfmod_present == 0)
+    outs = "n/a             ";
+  else
+    outs = "present         ";
+  sprintf(out,"%s%s","RF Bands Mod : ",outs);
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,out,m_clr,Black,0);
+  if(ts.vhfuhfmod_present == 0)
+    outs = "n/a             ";
+  else
+    outs = "present         ";
+  sprintf(out,"%s%s","VHF/UHF Mod  : ",outs);
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
+}
+
 
 static char* base_screens[11][MENUSIZE] = {
 { //1
@@ -584,17 +1126,6 @@ void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bo
 	}
 }
 
-//
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateMenu
-//* Object              : Display and change menu items
-//* Input Parameters    : mode:  0=update all, 1=update current item, 2=go to next screen, 3=restore default setting for selected item
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
 
 bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint8_t bwId) {
   bool fchange = false;
@@ -627,210 +1158,151 @@ bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* cl
   return fchange;
 }
 
+//
+//
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverUpdateMenu
+//* Object              : Display and change menu items
+//* Input Parameters    : mode:  0=update all, 1=update current item, 2=go to next screen, 3=restore default setting for selected item
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+//
 void UiDriverUpdateMenu(uchar mode)
 {
-	uchar var;
-	bool  update_vars;
-	static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
-	ulong	m_clr, c_clr;
-	static	int	menu_var_changed = 99;
-	uchar warn = 0;
-	int offset = 50;
+#ifdef NEWMENU
+  UiMenu_DisplayInitMenu(mode);
+  return;
+#endif
+  uchar var;
+  bool  update_vars;
+  static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
+  uint32_t	m_clr, c_clr;
+  static	int	menu_var_changed = 99;
+  uchar warn = 0;
+  int offset = 50;
 
-	m_clr = Yellow;
-	c_clr = Cyan;
+  m_clr = Yellow;
+  c_clr = Cyan;
 
-	update_vars = 0;
+  update_vars = 0;
 
-if(mode > 3)
-    {
-    if(mode == 9)
-	{
-	char out[32];
-	char* outs;
-	m_clr = White;
-	float suf = ui_si570_get_startup_frequency();
-	int vorkomma = (int)(suf);
-	int nachkomma = (int) roundf((suf-vorkomma)*10000);
-	static const char* display_types[] = {
-	  "                ",
-	  "HY28A SPI Mode  ",
-	  "HY28B SPI Mode  ",
-	  "HY28A/B parallel"
-	};
-
-	sprintf(out,"LCD Display  : %s",display_types[ts.display_type]);
-
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+0,out,m_clr,Black,0);
-	sprintf(out,"SI570        : %xh / %u.%04u MHz",(os.si570_address >> 1),vorkomma,nachkomma);
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+12,out,m_clr,Black,0);
-	switch (ts.ser_eeprom_type){
-	    case 0:
-	    outs = "n/a             ";
-	    break;
-	    case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
-	    outs = "incompatible    ";
-	    break;
-	    case 16:
-	    outs = "24xx512     64KB";
-	    break;
-	    case 17:
-	    outs = "24xx1025   128KB";
-	    break;
-	    case 18:
-	    outs = "24xx1026   128KB";
-	    break;
-	    case 19:
-	    outs = "24CM02     256KB";
-	    break;
-	    default:
-	    outs = "unknown         ";
-	    break;
-	    }
-	sprintf(out,"%s%s","Serial EEPROM: ",outs);
-
-	if(ts.ser_eeprom_in_use == 0)		// in use & data ok
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Green,Black,0);
-	if(ts.ser_eeprom_in_use == 0xFF)	// not in use
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,m_clr,Black,0);
-	if(ts.ser_eeprom_in_use == 0x5)		// data not ok
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-	if(ts.ser_eeprom_in_use == 0x10)	// EEPROM too small
-	    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+24,out,Red,Black,0);
-
-	if(ts.tp_present == 0)
-	    outs = "n/a             ";
-	else
-	    outs = "XPT2046         ";
-	sprintf(out,"%s%s","Touchscreen  : ",outs);
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+36,out,m_clr,Black,0);
-	if(ts.rfmod_present == 0)
-	    outs = "n/a             ";
-	else
-	    outs = "present         ";
-	sprintf(out,"%s%s","RF Bands Mod : ",outs);
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+48,out,m_clr,Black,0);
-	if(ts.vhfuhfmod_present == 0)
-	    outs = "n/a             ";
-	else
-	    outs = "present         ";
-	sprintf(out,"%s%s","VHF/UHF Mod  : ",outs);
-	UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
-	}
+  if(mode > 3) {
+    if(mode == 9) {
+      UiMenu_ShowSystemInfo();
     }
+  } else  {
+    uint8_t old_screen_disp = screen_disp;
+    if (ts.menu_item < MAX_MENU_ITEM) {
+      screen_disp = 1+ (ts.menu_item / MENUSIZE);
+    } else {
+      screen_disp = offset+1+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
+    }
+
+    if(old_screen_disp != screen_disp) {	// redraw if this screen wasn't already displayed
+      UiSpectrumClearDisplay();
+    }
+    update_vars = 1;
+    //
+    // ****************   Main Menu  ***************
+    //
+    if(ts.menu_item < MAX_MENU_ITEM)
+    {		// Is this part of the main menu?
+      int i;
+      for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ )
+      {
+        bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
+        // this takes care of the removing 2 items if serial eeprom is not fitted
+        if (show)
+          UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
+      }
+    }
+    //
+    // ****************   Radio Calibration Menu  ***************
+    //
     else
-    {
-    	uint8_t old_screen_disp = screen_disp;
-    	if (ts.menu_item < MAX_MENU_ITEM)
-    	    screen_disp = 1+ (ts.menu_item / MENUSIZE);
-    	else
-    	    screen_disp = offset+1+ ((ts.menu_item - MAX_MENU_ITEM) / MENUSIZE);
-
-       	if(old_screen_disp != screen_disp)	// redraw if this screen wasn't already displayed
-       				UiSpectrumClearDisplay();
-		update_vars = 1;
-
-
-
-	//
-	// ****************   Main Menu  ***************
-	//
-	if(ts.menu_item < MAX_MENU_ITEM)
-	    {		// Is this part of the main menu?
-	    int i;
-	    for (i=MENUSIZE*(screen_disp-1); i < MENUSIZE*(screen_disp); i++ )
-		{
-		bool show = !(ts.ser_eeprom_in_use != 0 && (screen_disp == 10) && (i % MENUSIZE == 2 || i % MENUSIZE == 3));
-		// this takes care of the removing 2 items if serial eeprom is not fitted
-		if (show)
-		    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),base_screens[screen_disp-1][(i%MENUSIZE)],m_clr,Black,0);
-		}
-	    }
-	//
-	// ****************   Radio Calibration Menu  ***************
-	//
-	else
-	    {		// Is this part of the radio configuration menu?
-	    int i;
-	    for (i=MENUSIZE*(screen_disp-offset-1); i < MENUSIZE*(screen_disp-offset); i++ )
-		UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-offset-1][(i%MENUSIZE)],c_clr,Black,0);
-	    }
-
-
-	if(ts.menu_var_changed)	{		// show warning if variable has changed
-		if(warn != 1)
-			UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, " Save settings using POWER OFF!  ", Orange, Black, 0);
-		warn = 1;
-	}
-	else	{					// erase warning by using the same color as the background
-		if(warn != 2)
-			UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, " CW impaired when in MENU mode!  ", Grey, Black, 0);
-		warn = 2;
-	}
-	//
-
-	//
-	//
-	if(ts.menu_var != menu_var_changed)	{	// do additional validation to avoid additional updates on display
-		update_vars = 1;
-	}
-	menu_var_changed = ts.menu_var;
-	//
-	//
-	// These functions are used to scan the individual menu items and display the items.
-	// In each of the FOR loops below, make CERTAIN that the precise number of items are included for each menu!
-	//
-
-//	if(((mode == 0) && (sd.use_spi) && (screen_disp != screen_disp_old)) || (((mode == 0) && (!sd.use_spi))) || update_vars)	{		// display all items and their current settings
-		// but minimize updates if the LCD is using an SPI interface
-	if((mode == 0) || update_vars)	{
-		update_vars = 0;
-		uint32_t menu_num = ts.menu_item / MENUSIZE;
-		// calculate screen number simply by dividing by MENUSIZE
-		// then loop over the correct function to display the items
-		if (ts.menu_item < MAX_MENU_ITEM) {
-			for(var = menu_num * MENUSIZE; (var < ((menu_num+1) * MENUSIZE)) && var < MAX_MENU_ITEM; var++) {
-				UiDriverUpdateMenuLines(var, 0);
-			}
-		}
-		//
-		// *** ADJUSTMENT MENU ***
-		//
-		else {	// Is this one of the radio configuration items?
-			for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM); var++) {
-				UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
-			}
-		}
-	}
-
-	//
-//	screen_disp_old = screen_disp;
-	//
-	if(mode == 1)	{	// individual item selected/changed
-		if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
-			UiDriverUpdateMenuLines(ts.menu_item, 1);
-		else												// "adjustment" menu item
-			UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM, 1);
-	}
-	else if(mode == 3)	{	// restore default setting for individual item
-		if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
-			UiDriverUpdateMenuLines(ts.menu_item, 3);
-		else												// "adjustment" menu item
-			UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM,3);
-	}
+    {		// Is this part of the radio configuration menu?
+      int i;
+      for (i=MENUSIZE*(screen_disp-offset-1); i < MENUSIZE*(screen_disp-offset); i++ )
+        UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(i%MENUSIZE)),conf_screens[screen_disp-offset-1][(i%MENUSIZE)],c_clr,Black,0);
     }
+
+
+    if(ts.menu_var_changed)	{		// show warning if variable has changed
+      if(warn != 1)
+        UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, " Save settings using POWER OFF!  ", Orange, Black, 0);
+      warn = 1;
+    }
+    else	{					// erase warning by using the same color as the background
+      if(warn != 2)
+        UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, " CW impaired when in MENU mode!  ", Grey, Black, 0);
+      warn = 2;
+    }
+    //
+
+    //
+    //
+    if(ts.menu_var != menu_var_changed)	{	// do additional validation to avoid additional updates on display
+      update_vars = 1;
+    }
+    menu_var_changed = ts.menu_var;
+    //
+    //
+    // These functions are used to scan the individual menu items and display the items.
+    // In each of the FOR loops below, make CERTAIN that the precise number of items are included for each menu!
+    //
+
+    //	if(((mode == 0) && (sd.use_spi) && (screen_disp != screen_disp_old)) || (((mode == 0) && (!sd.use_spi))) || update_vars)	{		// display all items and their current settings
+    // but minimize updates if the LCD is using an SPI interface
+    if((mode == 0) || update_vars)	{
+      update_vars = 0;
+      uint32_t menu_num = ts.menu_item / MENUSIZE;
+      // calculate screen number simply by dividing by MENUSIZE
+      // then loop over the correct function to display the items
+      if (ts.menu_item < MAX_MENU_ITEM) {
+        for(var = menu_num * MENUSIZE; (var < ((menu_num+1) * MENUSIZE)) && var < MAX_MENU_ITEM; var++) {
+          UiDriverUpdateMenuLines(var, 0, -1);
+        }
+      }
+      //
+      // *** ADJUSTMENT MENU ***
+      //
+      else {	// Is this one of the radio configuration items?
+        for(var = menu_num * MENUSIZE; (var < (menu_num+1) * MENUSIZE) && var < (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM); var++) {
+          UiDriverUpdateConfigMenuLines(var-MAX_MENU_ITEM, 0);
+        }
+      }
+    }
+
+    //
+    //	screen_disp_old = screen_disp;
+    //
+    if(mode == 1)	{	// individual item selected/changed
+      if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
+        UiDriverUpdateMenuLines(ts.menu_item, 1, -1);
+      else												// "adjustment" menu item
+        UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM, 1);
+    }
+    else if(mode == 3)	{	// restore default setting for individual item
+      if(ts.menu_item < MAX_MENU_ITEM)					// main menu item
+        UiDriverUpdateMenuLines(ts.menu_item, 3, -1);
+      else												// "adjustment" menu item
+        UiDriverUpdateConfigMenuLines(ts.menu_item-MAX_MENU_ITEM,3);
+    }
+  }
 }
 //
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverUpdateMenuLines
 //* Object              : Display and and change line items
-//* Input Parameters    : index:  Line to display  mode:  0=display/update 1=change item 3=set default
+//* Input Parameters    : index:  Line to display  mode:  0=display/update 1=change item 3=set default, pos > -1 use this line as position
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-static void UiDriverUpdateMenuLines(uchar index, uchar mode)
+static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 {
 	char options[32];
 	ulong opt_pos;			// y position of option cursor
@@ -859,6 +1331,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode)
 	strcpy(options, "ERROR");	// pre-load to catch error condition
 	//
 	opt_pos = select % MENUSIZE; // calculate position from menu item number
+
+	if (pos > -1) {
+	  opt_pos = pos;
+	}
+
 	switch(select)	{		//  DSP_NR_STRENGTH_MAX
 	case MENU_DSP_NR_STRENGTH:	// DSP Noise reduction strength
 
@@ -3233,4 +3710,195 @@ void UiDriverUpdateMemLines(uchar var)
 		UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);	// place cursor at active position
 //
 	return;
+}
+
+// -----------------------------------------------
+static bool is_last_menu_item = 0;
+
+
+void UiMenu_RenderChangeItem(int16_t pot_diff) {
+  if(pot_diff < 0)    {
+        if(ts.menu_item)    {
+            ts.menu_item--;
+        }
+        else    {
+            if(!ts.radio_config_menu_enable)
+                ts.menu_item = MAX_MENU_ITEM-1; // move to the last menu item (e.g. "wrap around")
+            else
+                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last menu item (e.g. "wrap around")
+        }
+    }
+    else    {
+        ts.menu_item++;
+        if(!ts.radio_config_menu_enable)    {
+            if(ts.menu_item >= MAX_MENU_ITEM)   {
+                ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
+            }
+        }
+        else    {
+            if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)   {
+                ts.menu_item = 0;   // Note:  ts.menu_item is numbered starting at zero
+            }
+        }
+    }
+    ts.menu_var = 0;            // clear variable that is used to change a menu item
+    UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void UiMenu_RenderLastScreen() {
+#ifdef NEWMENU
+  return;
+#endif
+
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+      if(ts.menu_item == MAX_MENU_ITEM-1) {   // are we on the LAST menu item of the main menu?
+          if(ts.radio_config_menu_enable)     // Yes - is the configuration menu enabled?
+              ts.menu_item = MAX_MENU_ITEM;   // yes - go to the FIRST item of the configuration menu
+          else                                // configuration menu NOT enabled
+              ts.menu_item = 0;               // go to the FIRST menu main menu item
+      }
+      else                                    // we had not been on the last item of the main menu
+          ts.menu_item = MAX_MENU_ITEM-1;     // go to the last item in the main menu
+  }
+  else    {       // we were NOT in the main menu, but in the configuration menu!
+      if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))       // are we on the last item of the configuration menu?
+          ts.menu_item = 0;                   // yes - go to the first item of the main menu
+      else    {       // we are NOT on the last item of the configuration menu
+          ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;     // go to the last item in the configuration menu
+      }
+  }
+  UiDriverUpdateMenu(0);  // update menu display
+  UiDriverUpdateMenu(1);  // update cursor
+
+}
+void UiMenu_RenderFirstScreen() {
+#ifdef NEWMENU
+  init_done = false;
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+
+  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
+        if(ts.menu_item)    // is this NOT the first menu item?
+            ts.menu_item = 0;   // yes - set it to the beginning of the first menu
+        else    {           // this IS the first menu item
+            if(ts.radio_config_menu_enable)     // yes - is the configuration menu enabled?
+                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+            else                                // configuration menu NOT enabled
+                ts.menu_item = MAX_MENU_ITEM - 1;
+        }
+    }
+    else    {       // we are within the CONFIGURATION menu
+        if(ts.menu_item > MAX_MENU_ITEM)        // is this NOT at the first entry of the configuration menu?
+            ts.menu_item = MAX_MENU_ITEM;   // yes, go to the first entry of the configuration item
+        else        // this IS the first entry of the configuration menu
+            ts.menu_item = MAX_MENU_ITEM - 1;   // go to the last entry of the main menu
+    }
+    UiDriverUpdateMenu(0);  // update menu display
+    UiDriverUpdateMenu(1);  // update cursor
+}
+void UiMenu_RenderNextScreen() {
+#ifdef NEWMENU
+  UiMenu_DisplayMoveSlotsForward(MENUSIZE);
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+  //
+  if(!ts.radio_config_menu_enable)    {   // Not in config/calibrate menu mode
+    if(ts.menu_item == MAX_MENU_ITEM - 1)   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // go to first item
+    }
+    else    {   // not at last item - go ahead
+      ts.menu_item += 6;
+      if(ts.menu_item >= MAX_MENU_ITEM - 1)   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM - 1;   // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  else    {   // in calibrate/adjust menu mode
+    if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // already at last item?
+      is_last_menu_item = 0;              // make sure flag is clear
+      ts.menu_item = 0;                   // to to first item
+    }
+    else    {   // not at last item - go ahead
+      if(ts.menu_item < MAX_MENU_ITEM - 1)    {   // are we starting from the adjustment menu?
+        if((ts.menu_item + 6) >= MAX_MENU_ITEM) {       // yes - is the next jump past the end of the menu?
+          ts.menu_item = MAX_MENU_ITEM-1;     // yes - jump to the last item
+        }
+        else
+          ts.menu_item += 6;  // not at last item - go to next screen
+      }
+      else    // not on adjustment menu
+        ts.menu_item += 6;  // go to next configuration screen
+      //
+      if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // were we at last item?
+        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
+          ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1; // set to last menu item
+          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
+        }
+        else    {   // last menu item flag was set
+          ts.menu_item = 0;               // yes, wrap around
+          is_last_menu_item = 0;              // clear flag
+        }
+      }
+    }
+  }
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void UiMenu_RenderPrevScreen() {
+#ifdef NEWMENU
+  UiMenu_DisplayMoveSlotsBackwards(MENUSIZE);
+  UiMenu_DisplayInitMenu(0);
+  return;
+#endif
+  is_last_menu_item = 0;  // clear last screen detect flag
+  if(ts.menu_item < 6)    {   // are we less than one screen away from the beginning?
+    if(!ts.radio_config_menu_enable)    // yes - config/adjust menu not enabled?
+      ts.menu_item = MAX_MENU_ITEM-1; // yes, go to last item in normal menu
+    else
+      ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
+  }
+  else    {
+    if(ts.menu_item < MAX_MENU_ITEM)    // are we in the config menu?
+      if(ts.menu_item >= 6)           // yes - are we at least on the second screen?
+        ts.menu_item -= 6;              // yes, go to the previous screen
+      else                            // we are on the first screen
+        ts.menu_item = 0;           // go to the first item
+    //
+    else if(ts.menu_item > MAX_MENU_ITEM)   {   // are we within the adjustment menu by at least one entry?
+      if((ts.menu_item - 6) < MAX_MENU_ITEM)  {   // yes, will the next step be outside the adjustment menu?
+        ts.menu_item = MAX_MENU_ITEM;           // yes - go to bottom of adjustment menu
+      }
+      else                            // we will stay within the adjustment menu
+        ts.menu_item -= 6;          // go back to previous page
+    }
+    else if(ts.menu_item == MAX_MENU_ITEM)  // are we at the bottom of the adjustment menu?
+      ts.menu_item --;                // yes - go to the last entry of the adjustment menu
+  }
+  //              ts.menu_item -= 6;  // not less than 6, so we subtract!
+  //
+  ts.menu_var = 0;            // clear variable that is used to change a menu item
+  UiDriverUpdateMenu(1);      // Update that menu item
+}
+
+void UiMenu_RenderChangeItemValue(int16_t pot_diff) {
+  if(pot_diff < 0)  {
+    ts.menu_var--;      // increment selected item
+  }
+  else  {
+    ts.menu_var++;      // decrement selected item
+  }
+  //
+  UiDriverUpdateMenu(1);        // perform update of selected item
 }

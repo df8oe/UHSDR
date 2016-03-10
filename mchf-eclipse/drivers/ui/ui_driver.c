@@ -271,136 +271,7 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 }
 
 
-// -----------------------------------------------
-static bool is_last_menu_item = 0;
 
-void menu_last_screen() {
-
-  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
-      if(ts.menu_item == MAX_MENU_ITEM-1) {   // are we on the LAST menu item of the main menu?
-          if(ts.radio_config_menu_enable)     // Yes - is the configuration menu enabled?
-              ts.menu_item = MAX_MENU_ITEM;   // yes - go to the FIRST item of the configuration menu
-          else                                // configuration menu NOT enabled
-              ts.menu_item = 0;               // go to the FIRST menu main menu item
-      }
-      else                                    // we had not been on the last item of the main menu
-          ts.menu_item = MAX_MENU_ITEM-1;     // go to the last item in the main menu
-  }
-  else    {       // we were NOT in the main menu, but in the configuration menu!
-      if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))       // are we on the last item of the configuration menu?
-          ts.menu_item = 0;                   // yes - go to the first item of the main menu
-      else    {       // we are NOT on the last item of the configuration menu
-          ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM) - 1;     // go to the last item in the configuration menu
-      }
-  }
-  UiDriverUpdateMenu(0);  // update menu display
-  UiDriverUpdateMenu(1);  // update cursor
-
-}
-void menu_first_screen() {
-  if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
-        if(ts.menu_item)    // is this NOT the first menu item?
-            ts.menu_item = 0;   // yes - set it to the beginning of the first menu
-        else    {           // this IS the first menu item
-            if(ts.radio_config_menu_enable)     // yes - is the configuration menu enabled?
-                ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
-            else                                // configuration menu NOT enabled
-                ts.menu_item = MAX_MENU_ITEM - 1;
-        }
-    }
-    else    {       // we are within the CONFIGURATION menu
-        if(ts.menu_item > MAX_MENU_ITEM)        // is this NOT at the first entry of the configuration menu?
-            ts.menu_item = MAX_MENU_ITEM;   // yes, go to the first entry of the configuration item
-        else        // this IS the first entry of the configuration menu
-            ts.menu_item = MAX_MENU_ITEM - 1;   // go to the last entry of the main menu
-    }
-    UiDriverUpdateMenu(0);  // update menu display
-    UiDriverUpdateMenu(1);  // update cursor
-}
-void menu_next_screen() {
-  //
-  if(!ts.radio_config_menu_enable)    {   // Not in config/calibrate menu mode
-    if(ts.menu_item == MAX_MENU_ITEM - 1)   {   // already at last item?
-      is_last_menu_item = 0;              // make sure flag is clear
-      ts.menu_item = 0;                   // go to first item
-    }
-    else    {   // not at last item - go ahead
-      ts.menu_item += 6;
-      if(ts.menu_item >= MAX_MENU_ITEM - 1)   {   // were we at last item?
-        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
-          ts.menu_item = MAX_MENU_ITEM - 1;   // set to last menu item
-          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
-        }
-        else    {   // last menu item flag was set
-          ts.menu_item = 0;               // yes, wrap around
-          is_last_menu_item = 0;              // clear flag
-        }
-      }
-    }
-  }
-  else    {   // in calibrate/adjust menu mode
-    if(ts.menu_item == (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // already at last item?
-      is_last_menu_item = 0;              // make sure flag is clear
-      ts.menu_item = 0;                   // to to first item
-    }
-    else    {   // not at last item - go ahead
-      if(ts.menu_item < MAX_MENU_ITEM - 1)    {   // are we starting from the adjustment menu?
-        if((ts.menu_item + 6) >= MAX_MENU_ITEM) {       // yes - is the next jump past the end of the menu?
-          ts.menu_item = MAX_MENU_ITEM-1;     // yes - jump to the last item
-        }
-        else
-          ts.menu_item += 6;  // not at last item - go to next screen
-      }
-      else    // not on adjustment menu
-        ts.menu_item += 6;  // go to next configuration screen
-      //
-      if(ts.menu_item >= (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1))   {   // were we at last item?
-        if(!is_last_menu_item)  {   // have we NOT seen the last menu item flag before?
-          ts.menu_item = MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM-1; // set to last menu item
-          is_last_menu_item = 1;      // set flag indicating that we are at last menu item
-        }
-        else    {   // last menu item flag was set
-          ts.menu_item = 0;               // yes, wrap around
-          is_last_menu_item = 0;              // clear flag
-        }
-      }
-    }
-  }
-  //
-  ts.menu_var = 0;            // clear variable that is used to change a menu item
-  UiDriverUpdateMenu(1);      // Update that menu item
-}
-
-void menu_prev_screen() {
-  is_last_menu_item = 0;  // clear last screen detect flag
-  if(ts.menu_item < 6)    {   // are we less than one screen away from the beginning?
-    if(!ts.radio_config_menu_enable)    // yes - config/adjust menu not enabled?
-      ts.menu_item = MAX_MENU_ITEM-1; // yes, go to last item in normal menu
-    else
-      ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;   // move to the last config/adjustment menu item
-  }
-  else    {
-    if(ts.menu_item < MAX_MENU_ITEM)    // are we in the config menu?
-      if(ts.menu_item >= 6)           // yes - are we at least on the second screen?
-        ts.menu_item -= 6;              // yes, go to the previous screen
-      else                            // we are on the first screen
-        ts.menu_item = 0;           // go to the first item
-    //
-    else if(ts.menu_item > MAX_MENU_ITEM)   {   // are we within the adjustment menu by at least one entry?
-      if((ts.menu_item - 6) < MAX_MENU_ITEM)  {   // yes, will the next step be outside the adjustment menu?
-        ts.menu_item = MAX_MENU_ITEM;           // yes - go to bottom of adjustment menu
-      }
-      else                            // we will stay within the adjustment menu
-        ts.menu_item -= 6;          // go back to previous page
-    }
-    else if(ts.menu_item == MAX_MENU_ITEM)  // are we at the bottom of the adjustment menu?
-      ts.menu_item --;                // yes - go to the last entry of the adjustment menu
-  }
-  //              ts.menu_item -= 6;  // not less than 6, so we subtract!
-  //
-  ts.menu_var = 0;            // clear variable that is used to change a menu item
-  UiDriverUpdateMenu(1);      // Update that menu item
-}
 
 
 inline bool is_touchscreen_pressed() {
@@ -1224,7 +1095,7 @@ static void UiDriverProcessKeyboard(void)
 			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
 				// Move to the BEGINNING of the current menu structure
 				if(ts.menu_mode)	{		// Are we in menu mode?
-				  menu_first_screen();
+				  UiMenu_RenderFirstScreen();
 				}
 				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
@@ -1243,7 +1114,7 @@ static void UiDriverProcessKeyboard(void)
 				//
 				// Move to the END of the current menu structure
 				if(ts.menu_mode){		// are we in menu mode?
-				    menu_last_screen();
+				    UiMenu_RenderLastScreen();
 				}
 				else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
 					__IO VfoReg* vfo_store;
@@ -1594,7 +1465,6 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		if(!ts.mem_disp)	{			// allow only if NOT in memory display mode
 			if((!ts.menu_mode) && (!ts.boot_halt_flag))	{	// go into menu mode if NOT already in menu mode and not to halt on startup
 				ts.menu_mode = 1;
-				is_last_menu_item = 0;	// clear last screen detect flag
 				UiSpectrumClearDisplay();
                 UiDriverFButtonLabel(1," EXIT  ", Yellow);
                 UiDriverFButtonLabel(2," DEFLT",Yellow);
@@ -1706,7 +1576,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		//
 		//
 		if(ts.menu_mode)	{		// Previous screen
-		  menu_prev_screen();
+		  UiMenu_RenderPrevScreen();
 		}
 		else	{	// NOT menu mode
 			if(!ts.vfo_mem_flag)	{		// update screen if in VFO (not memory) mode
@@ -1744,7 +1614,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	if(id == BUTTON_F4_PRESSED)	{
 
 	   if (ts.menu_mode) {
-	      menu_next_screen();
+	      UiMenu_RenderNextScreen();
 		}
 		else	{	// NOT menu mode
 			uint8_t vfo_active,vfo_new;
@@ -4215,132 +4085,106 @@ static void UiDriverCheckEncoderOne(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCheckEncoderTwo(void)
 {
-	//char 	temp[10];
-	int 	pot_diff;
+  //char 	temp[10];
+  int 	pot_diff;
 
-	pot_diff = UiDriverEncoderRead(ENC2);
+  pot_diff = UiDriverEncoderRead(ENC2);
 
-	if (pot_diff) {
-		UiLCDBlankTiming();	// calculate/process LCD blanking timing
-		if(ts.menu_mode)	{
-			if(pot_diff < 0)	{
-				if(ts.menu_item)	{
-					ts.menu_item--;
-				}
-				else	{
-					if(!ts.radio_config_menu_enable)
-						ts.menu_item = MAX_MENU_ITEM-1;	// move to the last menu item (e.g. "wrap around")
-					else
-						ts.menu_item = (MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)-1;	// move to the last menu item (e.g. "wrap around")
-				}
-			}
-			else	{
-				ts.menu_item++;
-				if(!ts.radio_config_menu_enable)	{
-					if(ts.menu_item >= MAX_MENU_ITEM)	{
-						ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
-					}
-				}
-				else	{
-					if(ts.menu_item >= MAX_MENU_ITEM + MAX_RADIO_CONFIG_ITEM)	{
-						ts.menu_item = 0;	// Note:  ts.menu_item is numbered starting at zero
-					}
-				}
-			}
-			ts.menu_var = 0;			// clear variable that is used to change a menu item
-			UiDriverUpdateMenu(1);		// Update that menu item
-			goto skip_update;
-		}
-		if(ts.txrx_mode == TRX_MODE_RX)	{
-			//
-			// Take appropriate action
-			switch(ts.enc_two_mode)
-			{
-			case ENC_TWO_MODE_RF_GAIN:
-			{
-				if(ts.dmod_mode != DEMOD_FM)	{	// is this *NOT* FM?  Change RF gain
-					// Convert to Audio Gain incr/decr
-					if(pot_diff < 0)
-					{
-						if(ts.rf_gain)
-							ts.rf_gain -= 1;
-					}
-					else
-					{
-						ts.rf_gain += 1;
-						if(ts.rf_gain > MAX_RF_GAIN)
-							ts.rf_gain = MAX_RF_GAIN;
-					}
-					//
-					// get RF gain value and calculate new value
-					//
-					AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
-					UiDriverChangeRfGain(1);	// change on screen
-					break;
-				}
-				else	{		// it is FM - change squelch setting
-					if(pot_diff < 0)
-					{
-						if(ts.fm_sql_threshold)
-							ts.fm_sql_threshold -= 1;
-					}
-					else
-					{
-						ts.fm_sql_threshold += 1;
-						if(ts.fm_sql_threshold > FM_SQUELCH_MAX)
-							ts.fm_sql_threshold = FM_SQUELCH_MAX;
-					}
-					//
-					// get RF gain value and calculate new value
-					//
-					UiDriverChangeRfGain(1);	// change on screen
-					break;
-				}
-			}
+  if (pot_diff) {
+    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+    if(ts.menu_mode)	{
+      UiMenu_RenderChangeItem(pot_diff);
+    } else {
+      if(ts.txrx_mode == TRX_MODE_RX)	{
+        //
+        // Take appropriate action
+        switch(ts.enc_two_mode)
+        {
+        case ENC_TWO_MODE_RF_GAIN:
+        {
+          if(ts.dmod_mode != DEMOD_FM)	{	// is this *NOT* FM?  Change RF gain
+            // Convert to Audio Gain incr/decr
+            if(pot_diff < 0)
+            {
+              if(ts.rf_gain)
+                ts.rf_gain -= 1;
+            }
+            else
+            {
+              ts.rf_gain += 1;
+              if(ts.rf_gain > MAX_RF_GAIN)
+                ts.rf_gain = MAX_RF_GAIN;
+            }
+            //
+            // get RF gain value and calculate new value
+            //
+            AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
+            UiDriverChangeRfGain(1);	// change on screen
+            break;
+          }
+          else	{		// it is FM - change squelch setting
+            if(pot_diff < 0)
+            {
+              if(ts.fm_sql_threshold)
+                ts.fm_sql_threshold -= 1;
+            }
+            else
+            {
+              ts.fm_sql_threshold += 1;
+              if(ts.fm_sql_threshold > FM_SQUELCH_MAX)
+                ts.fm_sql_threshold = FM_SQUELCH_MAX;
+            }
+            //
+            // get RF gain value and calculate new value
+            //
+            UiDriverChangeRfGain(1);	// change on screen
+            break;
+          }
+        }
 
-			// Update DSP/NB setting
-			case ENC_TWO_MODE_SIG_PROC:
-			{
-				if(is_dsp_nb())	{	// is it in noise blanker mode?
-					// Convert to NB incr/decr
-					if(pot_diff < 0)
-					{
-						if(ts.nb_setting)
-							ts.nb_setting -= 1;
-					}
-					else
-					{
-						ts.nb_setting += 1;
-						if(ts.nb_setting > MAX_NB_SETTING)
-							ts.nb_setting = MAX_NB_SETTING;
-					}
-				}
-				else if(is_dsp_nr())	{	// only allow adjustment if DSP NR is active
-					// Convert to NB incr/decr
-					if(pot_diff < 0)
-					{
-						if(ts.dsp_nr_strength)
-							ts.dsp_nr_strength -= 1;
-					}
-					else
-					{
-						ts.dsp_nr_strength += 1;
-						if(ts.dsp_nr_strength > DSP_NR_STRENGTH_MAX)
-							ts.dsp_nr_strength = DSP_NR_STRENGTH_MAX;
-					}
-					audio_driver_set_rx_audio_filter();
-				}
-				// Signal processor setting
-				UiDriverChangeSigProc(1);
-				break;
-			}
+        // Update DSP/NB setting
+        case ENC_TWO_MODE_SIG_PROC:
+        {
+          if(is_dsp_nb())	{	// is it in noise blanker mode?
+            // Convert to NB incr/decr
+            if(pot_diff < 0)
+            {
+              if(ts.nb_setting)
+                ts.nb_setting -= 1;
+            }
+            else
+            {
+              ts.nb_setting += 1;
+              if(ts.nb_setting > MAX_NB_SETTING)
+                ts.nb_setting = MAX_NB_SETTING;
+            }
+          }
+          else if(is_dsp_nr())	{	// only allow adjustment if DSP NR is active
+            // Convert to NB incr/decr
+            if(pot_diff < 0)
+            {
+              if(ts.dsp_nr_strength)
+                ts.dsp_nr_strength -= 1;
+            }
+            else
+            {
+              ts.dsp_nr_strength += 1;
+              if(ts.dsp_nr_strength > DSP_NR_STRENGTH_MAX)
+                ts.dsp_nr_strength = DSP_NR_STRENGTH_MAX;
+            }
+            audio_driver_set_rx_audio_filter();
+          }
+          // Signal processor setting
+          UiDriverChangeSigProc(1);
+          break;
+        }
 
-			default:
-				break;
-			}
-		}
-		skip_update: {}
-	}
+        default:
+          break;
+        }
+      }
+    }
+  }
 }
 
 //
@@ -4353,106 +4197,98 @@ static void UiDriverCheckEncoderTwo(void)
 //*----------------------------------------------------------------------------
 static void UiDriverCheckEncoderThree(void)
 {
-	int 	pot_diff;
+  int 	pot_diff;
 
-	pot_diff = UiDriverEncoderRead(ENC3);
+  pot_diff = UiDriverEncoderRead(ENC3);
 
-	if (pot_diff) {
-		UiLCDBlankTiming();	// calculate/process LCD blanking timing
-		if(ts.menu_mode)	{
-			if(pot_diff < 0)	{
-				ts.menu_var--;		// increment selected item
-			}
-			else	{
-				ts.menu_var++;		// decrement selected item
-			}
-			//
-			UiDriverUpdateMenu(1);		// perform update of selected item
-			goto skip_update;
-		}
+  if (pot_diff) {
+    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+    if(ts.menu_mode)	{
+      UiMenu_RenderChangeItemValue(pot_diff);
+    } else {
 
 
 
-		// Take appropriate action
-		switch(ts.enc_thr_mode)
-		{
-		// Update RIT value
-		case ENC_THREE_MODE_RIT:
-		{
-			if(ts.txrx_mode == TRX_MODE_RX)	{
-				// Convert to RIT incr/decr
-				if(pot_diff < 0)
-				{
-					ts.rit_value -= 1;
-					if(ts.rit_value < -50)
-						ts.rit_value = MIN_RIT_VALUE;
-				}
-				else
-				{
-					ts.rit_value += 1;
-					if(ts.rit_value > 50)
-						ts.rit_value = MAX_RIT_VALUE;
-				}
+      // Take appropriate action
+      switch(ts.enc_thr_mode)
+      {
+      // Update RIT value
+      case ENC_THREE_MODE_RIT:
+      {
+        if(ts.txrx_mode == TRX_MODE_RX)	{
+          // Convert to RIT incr/decr
+          if(pot_diff < 0)
+          {
+            ts.rit_value -= 1;
+            if(ts.rit_value < -50)
+              ts.rit_value = MIN_RIT_VALUE;
+          }
+          else
+          {
+            ts.rit_value += 1;
+            if(ts.rit_value > 50)
+              ts.rit_value = MAX_RIT_VALUE;
+          }
 
-				// Update RIT
-				UiDriverChangeRit(1);
+          // Update RIT
+          UiDriverChangeRit(1);
 
-				// Change frequency
-				UiDriverUpdateFrequency(1,0);
-			}
-			break;
-		}
+          // Change frequency
+          UiDriverUpdateFrequency(1,0);
+        }
+        break;
+      }
 
-		// Keyer speed
-		case ENC_THREE_MODE_CW_SPEED:
-		{
-			if(ts.dmod_mode == DEMOD_CW)	{		// in CW mode, adjust keyer speed
-				// Convert to Audio Gain incr/decr
-				if(pot_diff < 0)
-				{
-					ts.keyer_speed--;
-					if(ts.keyer_speed < MIN_KEYER_SPEED)
-						ts.keyer_speed = MIN_KEYER_SPEED;
-				}
-				else
-				{
-					ts.keyer_speed++;
-					if(ts.keyer_speed > 48)
-						ts.keyer_speed = MAX_KEYER_SPEED;
-				}
+      // Keyer speed
+      case ENC_THREE_MODE_CW_SPEED:
+      {
+        if(ts.dmod_mode == DEMOD_CW)	{		// in CW mode, adjust keyer speed
+          // Convert to Audio Gain incr/decr
+          if(pot_diff < 0)
+          {
+            ts.keyer_speed--;
+            if(ts.keyer_speed < MIN_KEYER_SPEED)
+              ts.keyer_speed = MIN_KEYER_SPEED;
+          }
+          else
+          {
+            ts.keyer_speed++;
+            if(ts.keyer_speed > 48)
+              ts.keyer_speed = MAX_KEYER_SPEED;
+          }
 
-				UiDriverChangeKeyerSpeed(1);
-			}
-			else	{	// in voice mode, adjust audio gain
+          UiDriverChangeKeyerSpeed(1);
+        }
+        else	{	// in voice mode, adjust audio gain
 
-				uint16_t gain_max = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MAX:LINE_GAIN_MAX;
-				uint16_t gain_min = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MIN:LINE_GAIN_MIN;
+          uint16_t gain_max = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MAX:LINE_GAIN_MAX;
+          uint16_t gain_min = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MIN:LINE_GAIN_MIN;
 
-				if(pot_diff < 0)	{						// yes, adjust line gain
-					ts.tx_gain[ts.tx_audio_source]--;
-					if(ts.tx_gain[ts.tx_audio_source] < gain_min) {
-						ts.tx_gain[ts.tx_audio_source] = gain_min;
-					}
-				}
-				else	{
-					ts.tx_gain[ts.tx_audio_source]++;
-					if(ts.tx_gain[ts.tx_audio_source] > gain_max)
-						ts.tx_gain[ts.tx_audio_source] = gain_max;
-				}
-				if (ts.tx_audio_source == TX_AUDIO_MIC) {
-					Codec_MicBoostCheck();
-				}
-				UiDriverChangeAudioGain(1);
-			}
-			break;
-		}
+          if(pot_diff < 0)	{						// yes, adjust line gain
+            ts.tx_gain[ts.tx_audio_source]--;
+            if(ts.tx_gain[ts.tx_audio_source] < gain_min) {
+              ts.tx_gain[ts.tx_audio_source] = gain_min;
+            }
+          }
+          else	{
+            ts.tx_gain[ts.tx_audio_source]++;
+            if(ts.tx_gain[ts.tx_audio_source] > gain_max)
+              ts.tx_gain[ts.tx_audio_source] = gain_max;
+          }
+          if (ts.tx_audio_source == TX_AUDIO_MIC) {
+            Codec_MicBoostCheck();
+          }
+          UiDriverChangeAudioGain(1);
+        }
+        break;
+      }
 
-		default:
-			break;
-		}
+      default:
+        break;
+      }
 
-		skip_update: {}
-	}
+    }
+  }
 }
 
 //*----------------------------------------------------------------------------
