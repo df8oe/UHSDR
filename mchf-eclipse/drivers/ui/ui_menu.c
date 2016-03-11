@@ -60,6 +60,8 @@
 
 static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos);
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos);
+static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos);
+static void UiMenu_DisplayValue(const char* options,uint32_t clr,uint16_t pos);
 //
 //
 // Public data structures
@@ -256,6 +258,7 @@ enum {
   MENU_STOP = 0, // last entry in a menu / group
   MENU_ITEM, // standard menu entry
   MENU_GROUP, // menu group entry
+  MENU_INFO, // just like a normal entry (read-only) but just for display purposes.
   MENU_SEP, // separator line
   MENU_BLANK // blank
 };
@@ -329,15 +332,30 @@ MenuDisplaySlot menu[MENUSIZE];
  *
  */
 
+// ATTENTION: The numbering here has to be match in the groups
+// data structure found more or less at the end of this
+// menu definition block ! Otherwise menu display will not work
+// as expected and may crash mcHF
+
 enum {
-  MENU_BASE = 0,
+  MENU_TOP  = 0,
+  MENU_BASE,
   MENU_CONF,
   MENU_POW,
   MENU_FILTER,
+  MENU_HWINFO,
+  MENU_CW,
+  MENU_DISPLAY,
+};
+
+const MenuDescriptor topGroup[] = {
+    { MENU_TOP, MENU_GROUP, MENU_BASE, "STD","Standard Menu"},
+    { MENU_TOP, MENU_GROUP, MENU_CONF, "CON","Configuration Menu"},
+    { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu"},
+    { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
 const MenuDescriptor baseGroup[] = {
-    { MENU_BASE, MENU_GROUP, 1, "CON","Configuration Menu"},
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
     { MENU_BASE, MENU_ITEM, MENU_300HZ_SEL, "500","300Hz Center Freq."  },
     { MENU_BASE, MENU_ITEM, MENU_500HZ_SEL, "501","500Hz Center Freq."},
@@ -347,7 +365,7 @@ const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_3K6_SEL, "512","3.6k Filter"},
     { MENU_BASE, MENU_ITEM, MENU_4K4_SEL, "516","4.4k Filter"},
     { MENU_BASE, MENU_ITEM, MENU_6K0_SEL,"521","6.0k Filter"},
-    { MENU_BASE, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode"},
+    { MENU_BASE, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
@@ -369,37 +387,46 @@ const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","ALC Release Time"},
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX PRE ALC Gain"},
     { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL,"065","TX Audio Compress"},
-    { MENU_BASE, MENU_ITEM, MENU_KEYER_MODE,"070","CW Keyer Mode"},
-    { MENU_BASE, MENU_ITEM, MENU_KEYER_SPEED,"071","CW Keyer Speed"},
-    { MENU_BASE, MENU_ITEM, MENU_SIDETONE_GAIN,"072","CW Sidetone Gain"},
-    { MENU_BASE, MENU_ITEM, MENU_SIDETONE_FREQUENCY,"073","CW Side/Off Freq"},
-    { MENU_BASE, MENU_ITEM, MENU_PADDLE_REVERSE,"074","CW Paddle Reverse"},
-    { MENU_BASE, MENU_ITEM, MENU_CW_TX_RX_DELAY,"075","CW TX->RX Delay"},
-    { MENU_BASE, MENU_ITEM, MENU_CW_OFFSET_MODE,"076","CW Freq. Offset"},
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE,"090","TCXO Off/On/Stop"},
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)"},
-    { MENU_BASE, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spec/Wfall Filter"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Spec. Trace Colour"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Spec. Grid Colour"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_SCALE_COLOUR,"104","Spec/Wfall ScaleClr"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_MAGNIFY,"105","Spec/Wfall 2x Magn"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Spec Scope Ampl."},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_STEP_SIZE,"111","Wfall Step Size"},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
-    { MENU_BASE, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_BASE, MENU_ITEM, MENU_WFALL_SIZE,"117","Wfall Size"},
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config"},
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG,"198","Restore Config"},
-    { MENU_BASE, MENU_ITEM, MENU_HARDWARE_INFO,"199","Hardware Info"},
+    { MENU_BASE, MENU_GROUP, MENU_HWINFO,"INF","Hardware Info"},
     { MENU_BASE, MENU_STOP, 0, "   " , NULL }
+};
+
+const MenuDescriptor displayGroup[] = {
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spec/Wfall Filter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Spec. Trace Colour"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Spec. Grid Colour"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SCALE_COLOUR,"104","Spec/Wfall ScaleClr"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MAGNIFY,"105","Spec/Wfall 2x Magn"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Spec Scope Ampl."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE,"111","Wfall Step Size"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Wfall Size"},
+    { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
+};
+
+const MenuDescriptor cwGroup[] = {
+    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode"},
+    { MENU_CW, MENU_ITEM, MENU_KEYER_MODE,"070","CW Keyer Mode"},
+    { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED,"071","CW Keyer Speed"},
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN,"072","CW Sidetone Gain"},
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY,"073","CW Side/Off Freq"},
+    { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE,"074","CW Paddle Reverse"},
+    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY,"075","CW TX->RX Delay"},
+    { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE,"076","CW Freq. Offset"},
+    { MENU_CW, MENU_STOP, 0, "   " , NULL }
 };
 
 const MenuDescriptor confGroup[] = {
@@ -532,19 +559,50 @@ const MenuDescriptor filterGroup[] = {
         { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
         { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
         { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
+        { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
+enum {
+  INFO_EEPROM,
+  INFO_DISPLAY,
+  INFO_SI570,
+  INFO_TP,
+  INFO_RFMOD,
+  INFO_VHFUHFMOD
+
+
+};
+
+const MenuDescriptor infoGroup[] = {
+    { MENU_HWINFO, MENU_INFO, INFO_DISPLAY,"I01","Display"},
+    { MENU_HWINFO, MENU_INFO, INFO_SI570,"I02","SI570"},
+    { MENU_HWINFO, MENU_INFO, INFO_EEPROM,"I03","EEPROM"},
+    { MENU_HWINFO, MENU_INFO, INFO_TP,"I04","Touchscreen"},
+    { MENU_HWINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
+    { MENU_HWINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
+    { MENU_HWINFO, MENU_STOP, 0, "   " , NULL }
+};
+
+
+MenuGroupState topGroupState;
 MenuGroupState baseGroupState;
 MenuGroupState confGroupState;
 MenuGroupState powGroupState;
 MenuGroupState filterGroupState;
+MenuGroupState infoGroupState;
+MenuGroupState cwGroupState;
+MenuGroupState displayGroupState;
+
 
 const MenuGroupDescriptor groups[] = {
-    { baseGroup, &baseGroupState, NULL},  // Group 0
-    { confGroup, &confGroupState, baseGroup},  // Group 1
-    { powGroup, &powGroupState, confGroup },  // Group 2
-    { filterGroup, &filterGroupState, confGroup }  // Group 3
-
+    { topGroup, &topGroupState, NULL},  // Group 0
+    { baseGroup, &baseGroupState, topGroup},  // Group 1
+    { confGroup, &confGroupState, topGroup},  // Group 3
+    { powGroup, &powGroupState, confGroup },  // Group 4
+    { filterGroup, &filterGroupState, confGroup },  // Group 5
+    { infoGroup, &infoGroupState, baseGroup },  // Group 6
+    { cwGroup, &cwGroupState, baseGroup },  // Group 7
+    { displayGroup, &displayGroupState, topGroup },  // Group 8
 };
 
 // actions [this is an internal, not necessarily complete or accurate sketch of the used algorithms /API
@@ -580,9 +638,14 @@ const MenuGroupDescriptor* UiMenu_GetGroupForGroupEntry(const MenuDescriptor* me
 inline bool UiMenu_IsGroup(const MenuDescriptor *entry) {
   return entry==NULL?false:entry->kind == MENU_GROUP;
 }
-inline bool UiMenu_IsEntry(const MenuDescriptor *entry) {
+inline bool UiMenu_IsItem(const MenuDescriptor *entry) {
   return entry==NULL?false:entry->kind == MENU_ITEM;
 }
+inline bool UiMenu_IsInfo(const MenuDescriptor *entry) {
+  return entry==NULL?false:entry->kind == MENU_INFO;
+}
+
+
 inline bool UiMenu_SlotIsEmpty(MenuDisplaySlot* slot) {
   return slot==NULL?false:slot->entryItem == NULL;
 }
@@ -594,7 +657,7 @@ inline uint16_t UiMenu_MenuGroupMemberCount(const MenuGroupDescriptor* gd) {
   if (gd != NULL) {
   if (gd->state->count == 0) {
     const MenuDescriptor* entry;
-    for (entry = &gd->entries[0];entry->kind != MENU_STOP; entry++) {
+    for (entry = gd->entries;entry->kind != MENU_STOP; entry++) {
       gd->state->count++;
     }
   }
@@ -622,7 +685,7 @@ inline const MenuDescriptor* UiMenu_GroupGetFirst(const MenuGroupDescriptor *gro
   const MenuDescriptor* retval = NULL;
   uint16_t count = UiMenu_MenuGroupMemberCount(group);
   if (count>0) {
-    retval = &(group->entries[0]);
+    retval = group->entries;
   }
   return retval;
 }
@@ -632,9 +695,7 @@ const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me) {
 
   if (me != NULL) {
     const MenuGroupDescriptor* group_ptr = UiMenu_GetParentGroupForEntry(me);
-
-    int index = (me - &group_ptr->entries[0])/sizeof(me);
-    if (index < group_ptr->state->count-1) {
+    if (UiMenu_GroupGetLast(group_ptr)> me) {
       retval = me + 1;
     }
   }
@@ -662,7 +723,7 @@ const MenuDescriptor* UiMenu_GetParentForEntry(const MenuDescriptor* me) {
         uint16_t count = UiMenu_MenuGroupMemberCount(gdp);
         uint16_t idx;
         for(idx = 0; idx < count; idx++) {
-          if (gdp->entries[idx].number == me->menuId) {
+          if ((gdp->entries[idx].kind == MENU_GROUP) && (gdp->entries[idx].number == me->menuId)) {
             gd->state->me = &gdp->entries[idx];
             break;
           }
@@ -810,7 +871,12 @@ bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry
   return retval;
 }
 
-void UiMenu_MoveCursor(uint32_t opt_pos) {
+
+static void UiMenu_DisplayValue(const char* options,uint32_t clr,uint16_t pos) {
+  UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), options, clr, Black, 0);       // yes, normal position
+}
+
+static void UiMenu_MoveCursor(uint32_t opt_pos) {
   static uint32_t opt_oldpos = 999;  // y position of option cursor, previous
   if(opt_oldpos != 999) {       // was the position of a previous cursor stored?
       UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_oldpos * 12), " ", Black, Black, 0);   // yes - erase it
@@ -840,7 +906,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   char out[40];
   const char* blank = "                               ";
 
-  if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP)) {
+  if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP ||entry->kind == MENU_INFO) ) {
     if (mode == 0) {
       uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
       snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
@@ -850,6 +916,9 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
     case MENU_ITEM:
       // TODO: Better Handler Selection with need for change in this location to add new handlers
       UiMenu_UpdateLines(entry->number,mode,pos);
+      break;
+    case MENU_INFO:
+      UiMenu_UpdateHWInfoLines(entry->number,mode,pos);
       break;
     case MENU_GROUP:
       if (mode == 1) {
@@ -866,11 +935,13 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
       }
       strcpy(out,UiMenu_GroupIsUnfolded(entry)?"HIDE":"SHOW");
       UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), out, m_clr, Black, 0);       // yes, normal position
-      UiMenu_MoveCursor(pos);
       break;
     }
   } else {
     UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),blank,m_clr,Black,0);
+  }
+  if (mode == 1) {
+    UiMenu_MoveCursor(pos);
   }
 }
 
@@ -946,6 +1017,70 @@ void UiMenu_DisplayMoveSlotsForward(int16_t change) {
 }
 
 bool init_done = false;
+
+static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos) {
+   char out[32];
+   const char* outs = NULL;
+   uint32_t m_clr = White;
+
+
+   static const char* display_types[] = {
+       " ",
+       "HY28A SPI Mode",
+       "HY28B SPI Mode",
+       "HY28A/B Para."
+   };
+
+   switch (index) {
+   case INFO_DISPLAY:
+     outs = display_types[ts.display_type];
+     break;
+   case INFO_SI570:
+   {
+     float suf = ui_si570_get_startup_frequency();
+     int vorkomma = (int)(suf);
+     int nachkomma = (int) roundf((suf-vorkomma)*10000);
+     snprintf(out,32,"%xh / %u.%04u MHz",(os.si570_address >> 1),vorkomma,nachkomma);
+     outs = out;
+   }
+   break;
+   case INFO_TP:
+     outs = (ts.tp_present == 0)?"n/a":"XPT2046";
+   break;
+   case INFO_RFMOD:
+     outs = (ts.rfmod_present == 0)?"n/a":"present";
+     break;
+   case INFO_VHFUHFMOD:
+        outs = (ts.vhfuhfmod_present == 0)?"n/a":"present";
+        break;
+   case INFO_EEPROM:
+   {
+     switch (ts.ser_eeprom_type){
+     case 0:  outs = "n/a"; break;
+     case 16: outs = "24xx512/64KB"; break;
+     case 17: outs = "24xx1025/128KB"; break;
+     case 18: outs = "24xx1026/128KB"; break;
+     case 19: outs = "24CM02/256KB"; break;
+     case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
+        outs = "incompatible"; break;
+     default: outs = "unknown"; break;
+     }
+     sprintf(out,"%s%s","Serial EEPROM: ",outs);
+    switch(ts.ser_eeprom_in_use) {
+    case 0: m_clr = Green; break; // in use & ok
+    case 0x05: // not ok
+    case 0x10: // too small
+      m_clr = Red;
+    }
+   }
+   break;
+   default:
+       outs = "NO INFO";
+   }
+
+   UiMenu_DisplayValue(outs,m_clr,pos);
+}
+
 
 void UiMenu_ShowSystemInfo() {
   uint32_t   m_clr;
@@ -1030,7 +1165,7 @@ void UiMenu_ShowSystemInfo() {
  */
 void UiMenu_DisplayInitMenu(uint16_t mode) {
   if (init_done == false ) {
-    UiMenu_DisplayInitSlots(&baseGroup[0]);
+    UiMenu_DisplayInitSlots(groups[MENU_TOP].entries);
     init_done = true;
   }
   // UiMenu_DisplayMoveSlotsForward(6);
@@ -1046,12 +1181,6 @@ void UiMenu_DisplayInitMenu(uint16_t mode) {
   break;
 
   case 3:
-  break;
-  case 9:
-	{
-	UiMenu_ShowSystemInfo();
-	}
-	break;
   case 1:
   {
     uint16_t current_item = ts.menu_item%MENUSIZE;
@@ -1459,11 +1588,7 @@ void UiDriverUpdateMenu(uchar mode)
 
   update_vars = 0;
 
-  if(mode > 3) {
-    if(mode == 9) {
-      UiMenu_ShowSystemInfo();
-    }
-  } else  {
+
     uint8_t old_screen_disp = screen_disp;
     if (ts.menu_item < MAX_MENU_ITEM) {
       screen_disp = 1+ (ts.menu_item / MENUSIZE);
@@ -1561,7 +1686,6 @@ void UiDriverUpdateMenu(uchar mode)
 #endif
 
     }
-  }
 }
 
 //
@@ -2721,11 +2845,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			strcpy(options, "SHOW");
 			clr = White;
 			if(var>=1)
-			    {
+			{
 			    strcpy(options, " ");
 			    clr = White;
-			    UiDriverUpdateMenu(9);
-			    }
+			    UiMenu_ShowSystemInfo();
+			}
 			break;
 	case MENU_DUMMY_LINE_2:
 			strcpy(options, " ");
@@ -3880,7 +4004,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		opt_pos = 5;
 		break;
 	}
-	UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (opt_pos * 12), options, clr, Black, 0);		// yes, normal position
+	UiMenu_DisplayValue(options,clr,opt_pos);
 	if(mode == 1)	{	// Shifted over
 	  UiMenu_MoveCursor(opt_pos);
 	}
@@ -4022,11 +4146,10 @@ void UiMenu_RenderChangeItem(int16_t pot_diff) {
 
 void UiMenu_RenderLastScreen() {
 #ifdef NEWMENU
-
-  // TODO: we have to find the very last item and its MENUSIZE -1 predecessors
-  // for this we go on top level to the last item. Is this an normal entry OR a folded menu group OR an unfolded menu group with no entries-> get predecessors
-  // is this unfolded group, repeat search for last using same approach. Will terminate since menu structures are finite.
-  // right now we do nothing of this
+  while (menu[MENUSIZE-1].entryItem != NULL && UiMenu_NextMenuEntry(menu[MENUSIZE-1].entryItem) != NULL ) {
+    UiMenu_DisplayMoveSlotsForward(MENUSIZE);
+  }
+  UiMenu_DisplayInitMenu(0);
   return;
 #endif
 
