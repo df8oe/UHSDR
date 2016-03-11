@@ -904,12 +904,23 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   uint32_t  m_clr;
   m_clr = Yellow;
   char out[40];
-  const char* blank = "                               ";
+  const char blank[34] = "                               ";
 
   if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP ||entry->kind == MENU_INFO) ) {
     if (mode == 0) {
-      uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
-      snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+      uint16_t level = 0;
+      const MenuDescriptor* parent = entry;
+      do {
+        parent = UiMenu_GetParentForEntry(parent);
+        level++;
+      } while (parent != NULL);
+      level--;
+
+      // level = 3;
+      // uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
+      uint16_t labellen = level+strlen(entry->label);
+      // snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+      snprintf(out,34,"%s%s%s",(&blank[level>5?31-5:31-level]),entry->label,(&blank[labellen>33?33:labellen]));
       UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
     }
     switch(entry->kind) {
