@@ -1192,7 +1192,7 @@ void UiMenu_DisplayInitMenu(uint16_t mode) {
   }
 
 }
-
+#if 0
 static char* base_screens[11][MENUSIZE] = {
 { //1
 		"010-DSP NR Strength",
@@ -1447,7 +1447,7 @@ static char* conf_screens[20][MENUSIZE] = {
 		" "
 }
 };
-
+#endif
 
 
 #define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
@@ -1516,7 +1516,7 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint
 }
 
 
-void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bool changed) {
+static void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bool changed) {
 	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
 		if(ts.filter_id == filter_id)	{
 			//UiDriverProcessActiveFilterScan();	// find next active filter
@@ -1527,7 +1527,7 @@ void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bo
 }
 
 
-bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint8_t bwId) {
+static bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint8_t bwId) {
   bool fchange = false;
   if (bwId < AUDIO_FILTER_NUM) {
     FilterDescriptor *filter = &FilterInfo[bwId];
@@ -1575,6 +1575,7 @@ void UiDriverUpdateMenu(uchar mode)
   UiMenu_DisplayInitMenu(mode);
   return;
 #endif
+#if 0
   uchar var;
   bool  update_vars;
   static uchar screen_disp = 1;	// used to detect screen display switching and prevent unnecessary blanking
@@ -1686,6 +1687,7 @@ void UiDriverUpdateMenu(uchar mode)
 #endif
 
     }
+#endif
 }
 
 //
@@ -4095,8 +4097,9 @@ void UiDriverUpdateMemLines(uchar var)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
+#if 0
 static bool is_last_menu_item = 0;
-
+#endif
 
 
 // -----------------------------------------------
@@ -4152,7 +4155,7 @@ void UiMenu_RenderLastScreen() {
   UiMenu_DisplayInitMenu(0);
   return;
 #endif
-
+#if 0
   if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
       if(ts.menu_item == MAX_MENU_ITEM-1) {   // are we on the LAST menu item of the main menu?
           if(ts.radio_config_menu_enable)     // Yes - is the configuration menu enabled?
@@ -4172,7 +4175,7 @@ void UiMenu_RenderLastScreen() {
   }
   UiDriverUpdateMenu(0);  // update menu display
   UiDriverUpdateMenu(1);  // update cursor
-
+#endif
 }
 void UiMenu_RenderFirstScreen() {
 #ifdef NEWMENU
@@ -4180,7 +4183,7 @@ void UiMenu_RenderFirstScreen() {
   UiMenu_DisplayInitMenu(0);
   return;
 #endif
-
+#if 0
   if(ts.menu_item < MAX_MENU_ITEM)    {   // Yes - Is this within the main menu?
         if(ts.menu_item)    // is this NOT the first menu item?
             ts.menu_item = 0;   // yes - set it to the beginning of the first menu
@@ -4199,6 +4202,7 @@ void UiMenu_RenderFirstScreen() {
     }
     UiDriverUpdateMenu(0);  // update menu display
     UiDriverUpdateMenu(1);  // update cursor
+#endif
 }
 void UiMenu_RenderNextScreen() {
 #ifdef NEWMENU
@@ -4206,6 +4210,7 @@ void UiMenu_RenderNextScreen() {
   UiMenu_DisplayInitMenu(0);
   return;
 #endif
+#if 0
   //
   if(!ts.radio_config_menu_enable)    {   // Not in config/calibrate menu mode
     if(ts.menu_item == MAX_MENU_ITEM - 1)   {   // already at last item?
@@ -4257,6 +4262,7 @@ void UiMenu_RenderNextScreen() {
   //
   ts.menu_var = 0;            // clear variable that is used to change a menu item
   UiDriverUpdateMenu(1);      // Update that menu item
+#endif
 }
 
 void UiMenu_RenderPrevScreen() {
@@ -4265,6 +4271,7 @@ void UiMenu_RenderPrevScreen() {
   UiMenu_DisplayInitMenu(0);
   return;
 #endif
+#if 0
   is_last_menu_item = 0;  // clear last screen detect flag
   if(ts.menu_item < 6)    {   // are we less than one screen away from the beginning?
     if(!ts.radio_config_menu_enable)    // yes - config/adjust menu not enabled?
@@ -4293,5 +4300,6 @@ void UiMenu_RenderPrevScreen() {
   //
   ts.menu_var = 0;            // clear variable that is used to change a menu item
   UiDriverUpdateMenu(1);      // Update that menu item
+#endif
 }
 
