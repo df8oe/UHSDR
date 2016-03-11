@@ -13,7 +13,7 @@
 
 // Common
 #include "mchf_board.h"
-
+#include "stdlib.h"
 #include "ui_rotary.h"
 
 // ------------------------------------------------
