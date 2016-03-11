@@ -112,7 +112,7 @@ enum {
 // These items MUST be listed below in the order that they appear!
 //
 enum {
-	CONFIG_FREQ_STEP_MARKER_LINE = 0,
+	CONFIG_FREQ_STEP_MARKER_LINE = MAX_MENU_ITEM,
 	CONFIG_STEP_SIZE_BUTTON_SWAP,
 	CONFIG_BAND_BUTTON_SWAP,
 	CONFIG_TX_DISABLE,
