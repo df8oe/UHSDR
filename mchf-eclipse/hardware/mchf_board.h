@@ -1415,7 +1415,7 @@ typedef struct TransceiverState
 //	uint16_t df8oe_test;			// only debugging use
 
 	uint8_t display_type;           // existence/identification of display type
-	uint16_t audio_int_counter;		// used for encoder timing - test DL2FW
+	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
