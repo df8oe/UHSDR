@@ -3942,34 +3942,43 @@ static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
 	bool		retval = false;
-	static int  	delta_tics = 0;
-	int		enc_multiplier;
-	static float 	pot_diff_avg = 0.0;  //keeps the averaged encoder speed
+	int			enc_multiplier;
+	static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
+	int			delta_t, enc_speed;
+	// char	num[8];
+
 
 	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
-	if (pot_diff == 0) { delta_tics++; } // how often do we come here until the encoder has changed in times of 10ms}
 
-	if (pot_diff != 0)
+	if (pot_diff != 0){
+		delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
+		ts.audio_int_counter = 0;		 //reset tick counter
+
 	    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+
+	}
 	if (pot_diff != 0 &&
 			ts.txrx_mode == TRX_MODE_RX
 			&& ks.button_just_pressed == false
 			&& ts.frequency_lock == false)	{
 		// allow tuning only if in rx mode, no freq lock,
+		if (delta_t > 300) enc_speed_avg = 0; //when leaving speedy turning set avg_speed to 0
 
-		pot_diff_avg = 0.1*pot_diff + 0.9*pot_diff_avg; // app. VZ1 to smooth encoder speed
-		// estimate speed of encoder
+		enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+
+		if (enc_speed > 500) enc_speed = 500;   //limit calculated enc. speed
+		if (enc_speed < -500) enc_speed = -500;
+
+		enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
+
 		enc_multiplier = 1; //set standard speed
 
 		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
 		{
-			uchar border = 6;	// when LCD is in parallel mode
-			if(ts.display_type!=DISPLAY_HY28B_PARALLEL)
-			    border = 4;		// when LCD is in SPI mode
-			if ((delta_tics < border) && ((pot_diff_avg > 1.5) || (pot_diff_avg < (-1.5)))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
-			if ((delta_tics < border) && ((pot_diff_avg > 2.5) || (pot_diff_avg < (-2.5))))  enc_multiplier = 100; //turning fast speed -> increase speed by 100
-			delta_tics=0;
+			if ((enc_speed_avg > 80) || (enc_speed_avg < (-80))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
+			if ((enc_speed_avg > 300) || (enc_speed_avg < (-300))) enc_multiplier = 100; //turning fast speed -> increase speed by 100
+
 			if ((df.tuning_step == 10000) && (enc_multiplier > 10)) enc_multiplier = 10; //limit speed to 100000kHz/step
 			if ((df.tuning_step == 100000) && (enc_multiplier > 1)) enc_multiplier = 1; //limit speed to 100000kHz/step
 		}
@@ -3979,6 +3988,11 @@ static bool UiDriverCheckFrequencyEncoder(void)
 
 		if(pot_diff>0) {
 			df.tune_new += (df.tuning_step * 4 * enc_multiplier);
+			//itoa(enc_speed,num,6);
+			//UiSpectrumClearDisplay();			// clear display under spectrum scope
+			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
+
+
 		} else {
 			df.tune_new -= (df.tuning_step * 4 * enc_multiplier);
 		}
@@ -3986,8 +4000,6 @@ static bool UiDriverCheckFrequencyEncoder(void)
 		if (enc_multiplier == 10) {  df.tune_new = 4*10 *df.tuning_step * div((df.tune_new/4),10* df.tuning_step).quot; } // keep last digit to zero
 		if (enc_multiplier == 100){ df.tune_new = 4*100*df.tuning_step * div((df.tune_new/4),100*df.tuning_step).quot;  }// keep last 2 digits to zero))
 
-		//df.tune_new += (df.tuning_step * 4 * enc_multiplier * pot_diff);
-		//df.tune_new += (df.tuning_step * 4 * enc_multiplier);
 		retval = true;
 	}
 	return retval;

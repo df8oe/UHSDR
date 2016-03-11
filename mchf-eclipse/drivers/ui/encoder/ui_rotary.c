@@ -218,12 +218,16 @@ int UiDriverEncoderRead(const uint32_t encId) {
 		}
 
 		// SW de-detent routine
-		encSel[encId].de_detent++;
+
+		if (no_change == false) {
+		encSel[encId].de_detent+=abs(encSel[encId].value_new - encSel[encId].value_old);// corrected detent behaviour
+														// double counts are now processed - not count lost!
 		if (encSel[encId].de_detent < USE_DETENTED_VALUE) {
 			encSel[encId].value_old = encSel[encId].value_new;  // update and skip
 			no_change = true;
-		} else {
+		}	 else {
 			encSel[encId].de_detent = 0;
+		}
 		}
 		// printf("gain pot: %d\n\r",gs.value_new);
 		// Encoder value to difference

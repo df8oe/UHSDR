@@ -195,6 +195,8 @@ void DMA1_Stream2_IRQHandler(void)
 	GPIOE->BSRRL = GPIO_Pin_10;
 #endif
 
+ts.audio_int_counter++;   // generating a time base for encoder handling
+
 	// Transfer complete interrupt
 	if (DMA_GetFlagStatus(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_TC) != RESET)
 	{
