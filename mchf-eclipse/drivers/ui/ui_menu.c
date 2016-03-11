@@ -947,41 +947,6 @@ void UiMenu_DisplayMoveSlotsForward(int16_t change) {
 
 bool init_done = false;
 
-/*
- * @brief Display and change menu items
- * @param mode   0=update all, 1=update current item, 2=go to next screen, 3=restore default setting for selected item
- *
- */
-void UiMenu_DisplayInitMenu(uint16_t mode) {
-  if (init_done == false ) {
-    UiMenu_DisplayInitSlots(&baseGroup[0]);
-    init_done = true;
-  }
-  // UiMenu_DisplayMoveSlotsForward(6);
-  // UiMenu_DisplayMoveSlotsForward(3);
-  // UiMenu_DisplayMoveSlotsBackwards(10);
-  switch (mode){
-  case 0: {// (re)draw all labels and values
-    int idx;
-    for (idx = 0; idx < MENUSIZE; idx++) {
-      UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
-    }
-  }
-  break;
-
-  case 3:
-  case 1:
-  {
-    uint16_t current_item = ts.menu_item%MENUSIZE;
-    UiMenu_UpdateMenuEntry(menu[current_item].entryItem,mode, current_item);
-  }
-  break;
-  default:
-    break;
-  }
-
-}
-
 void UiMenu_ShowSystemInfo() {
   uint32_t   m_clr;
 
@@ -1057,6 +1022,47 @@ void UiMenu_ShowSystemInfo() {
   UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+60,out,m_clr,Black,0);
 }
 
+
+/*
+ * @brief Display and change menu items
+ * @param mode   0=update all, 1=update current item, 2=go to next screen, 3=restore default setting for selected item
+ *
+ */
+void UiMenu_DisplayInitMenu(uint16_t mode) {
+  if (init_done == false ) {
+    UiMenu_DisplayInitSlots(&baseGroup[0]);
+    init_done = true;
+  }
+  // UiMenu_DisplayMoveSlotsForward(6);
+  // UiMenu_DisplayMoveSlotsForward(3);
+  // UiMenu_DisplayMoveSlotsBackwards(10);
+  switch (mode){
+  case 0: {// (re)draw all labels and values
+    int idx;
+    for (idx = 0; idx < MENUSIZE; idx++) {
+      UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
+    }
+  }
+  break;
+
+  case 3:
+  break;
+  case 9:
+	{
+	UiMenu_ShowSystemInfo();
+	}
+	break;
+  case 1:
+  {
+    uint16_t current_item = ts.menu_item%MENUSIZE;
+    UiMenu_UpdateMenuEntry(menu[current_item].entryItem,mode, current_item);
+  }
+  break;
+  default:
+    break;
+  }
+
+}
 
 static char* base_screens[11][MENUSIZE] = {
 { //1
@@ -3238,7 +3244,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 			clr = Orange;
 		//
 		sprintf(options, "   %d", ts.tx_iq_usb_phase_balance);
-		opt_pos = CONFIG_USB_TX_IQ_PHASE_BAL % MENUSIZE;
 		break;
 		//
 	case 	CONFIG_AM_TX_GAIN_BAL:		// AM TX IQ Phase balance
@@ -3779,7 +3784,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		{
 			strcpy(options, "Do it!");
 			clr = White;
-			opt_pos =  CONFIG_RESET_SER_EEPROM % MENUSIZE;			// Y position of this menu item
 			if(var>=1)
 			{
 				// clear EEPROM
