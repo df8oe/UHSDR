@@ -352,22 +352,14 @@ const MenuDescriptor topGroup[] = {
     { MENU_TOP, MENU_GROUP, MENU_BASE, "STD","Standard Menu"},
     { MENU_TOP, MENU_GROUP, MENU_CONF, "CON","Configuration Menu"},
     { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu"},
-    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
+    { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
+    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
 const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
-    { MENU_BASE, MENU_ITEM, MENU_300HZ_SEL, "500","300Hz Center Freq."  },
-    { MENU_BASE, MENU_ITEM, MENU_500HZ_SEL, "501","500Hz Center Freq."},
-    { MENU_BASE, MENU_ITEM, MENU_1K8_SEL, "504","1.8k Center Freq."},
-    { MENU_BASE, MENU_ITEM, MENU_2K3_SEL, "506","2.3k Center Freq."},
-    { MENU_BASE, MENU_ITEM, MENU_2K7_SEL, "508","2.7k Filter"},
-    { MENU_BASE, MENU_ITEM, MENU_3K6_SEL, "512","3.6k Filter"},
-    { MENU_BASE, MENU_ITEM, MENU_4K4_SEL, "516","4.4k Filter"},
-    { MENU_BASE, MENU_ITEM, MENU_6K0_SEL,"521","6.0k Filter"},
-    { MENU_BASE, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
@@ -398,6 +390,9 @@ const MenuDescriptor baseGroup[] = {
 };
 
 const MenuDescriptor displayGroup[] = {
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE,"090","LCD Auto Blank"},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"091","Step Size Marker"},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spec/Wfall Filter"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Spec. Trace Colour"},
@@ -432,16 +427,13 @@ const MenuDescriptor cwGroup[] = {
 };
 
 const MenuDescriptor confGroup[] = {
-    { MENU_CONF, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"200","Step Size Marker"},
     { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap"},
     { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP,"202","Band+/- Button Swap"},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE,"203","Transmit Disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","Mute Line Out TX"},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_AUDIO_MUTE,"206","TX Mute Delay"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE,"207","LCD Auto Blank"},
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION,"208","Voltmeter Cal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"209","Filter BW Display"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME,"210","Max Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE,"212","Key Beep"},
