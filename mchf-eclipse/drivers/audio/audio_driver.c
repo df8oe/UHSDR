@@ -32,52 +32,7 @@
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-//
-// IIR lattice ARMA filters with time-reversed elements
-//
-#include "filters/iir_300hz.h"
-#include "filters/iir_500hz.h"
-#include "filters/iir_1_4k.h"
-#include "filters/iir_1_6k.h"
-#include "filters/iir_1_8k.h"
-#include "filters/iir_2_1k.h"
-#include "filters/iir_2_3k.h"
-#include "filters/iir_2_5k.h"
-#include "filters/iir_2_7k.h"
-#include "filters/iir_2_9k.h"
-#include "filters/iir_3_2k.h"
-#include "filters/iir_3_4k.h"
-#include "filters/iir_3_6k.h"
-#include "filters/iir_3_8k.h"
-#include "filters/iir_4k.h"
-#include "filters/iir_4_2k.h"
-#include "filters/iir_4_4k.h"
-#include "filters/iir_4_6k.h"
-#include "filters/iir_4_8k.h"
-#include "filters/iir_5k.h"
-#include "filters/iir_5_5k.h"
-#include "filters/iir_6k.h"
-#include "filters/iir_6_5k.h"
-#include "filters/iir_7k.h"
-#include "filters/iir_7_5k.h"
-#include "filters/iir_8k.h"
-#include "filters/iir_8_5k.h"
-#include "filters/iir_9k.h"
-#include "filters/iir_9_5k.h"
-#include "filters/iir_10k.h"
-
-#include "filters/iir_antialias.h"
-
-#include "filters/iir_15k_hpf_fm_squelch.h"
-
-#include "filters/iir_2k7_tx_bpf.h"
-#include "filters/iir_2k7_tx_bpf_fm.h"
-//
-#include "filters/fir_rx_decimate_4.h"	// with low-pass filtering
-#include "filters/fir_rx_decimate_4_min_lpf.h"	// This has minimized LPF for the 10 kHz filter mode
-#include "filters/fir_rx_interpolate_16.h"	// filter for interpolate-by-16 operation
-#include "filters/fir_rx_interpolate_16_10kHz.h"	// This has relaxed LPF for the 10 kHz filter mode
-
+// all filter file definitions moved to audio_filter.c
 
 uint32_t audio_driver_xlate_freq() {
   uint32_t fdelta = 0;
@@ -329,7 +284,11 @@ void audio_driver_set_rx_audio_filter(void)
 	ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
 	ads.af_disabled = 1;
 	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
-	switch(ts.filter_id)	{
+	// to do: implement switching according to FilterPathInfo
+	// ts.filter_id & ts.dmod_mode & ts.filter_select
+
+
+/*	switch(ts.filter_id)	{
 		case AUDIO_300HZ:
 		    IIR_PreFilter.numStages = IIR_300hz_numStages;		// number of stages
 		    if(ts.filter_select[ts.filter_id] == 1)	{
@@ -638,7 +597,7 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		default:
 			break;
-	}
+	} */
 	//
 	// Initialize IIR filter state buffer
  	//

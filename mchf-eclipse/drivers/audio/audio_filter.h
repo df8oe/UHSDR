@@ -108,23 +108,29 @@ typedef struct FilterDescriptor_s {
 
 extern FilterDescriptor FilterInfo[AUDIO_FILTER_NUM];
 
-/*//
-enum    {
-    WIDE_FILTER_10K_AM = 0,
-    WIDE_FILTER_7K5_AM,
-    WIDE_FILTER_6K_AM,
-    WIDE_FILTER_5K_AM,
-    WIDE_FILTER_10K,
-    WIDE_FILTER_7K5,
-    WIDE_FILTER_6K,
-    WIDE_FILTER_5K,
-    WIDE_FILTER_MAX
-};
-//
-//
-#define FILTER_WIDE_DEFAULT     WIDE_FILTER_10K     // 10k selected by default
-*/
+typedef struct FilterPathDescriptor_s {
+  const uint8_t id;
+  const uint16_t mode;
+  const uint8_t filter_select_id;
+  const uint8_t FIR_numTaps;
+  const float *FIR_I_coeff_file;
+  const float *FIR_Q_coeff_file;
+  const uint8_t FIR_dec_numTaps;
+  const float *FIR_dec_coeff_file;
+  const uint8_t sample_rate_dec;
+  const bool IIR_PreFilter_yes;
+  const uint16_t IIR_PreFilter_numTaps;
+  const float *IIR_PreFilter_pk_file;
+  const float *IIR_PreFilter_pv_file;
+  const uint8_t FIR_int_numTaps;
+  const float *FIR_int_coeff_file;
+  const bool IIR_int_yes;
+  const uint16_t *IIR_int_numTaps;
+  const float *IIR_int_pk_file;
+  const float *IIR_int_pv_file;
+} FilterPathDescriptor;
 
+extern FilterPathDescriptor FilterPathInfo[80]; // also change this figure in audio_filter.c
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //

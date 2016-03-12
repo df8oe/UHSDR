@@ -63,4 +63,41 @@ const float FirRxInterpolate[] =
 		-0.009023372039440496
 };
 
+/*#####################################################
+ *
+ * Interpolation filter with 4 taps
+ * 4 taps minimum for the ARM function to work
+ * two versions:
+ * 1.) for filter bandwidths between 3k4 and 4k8
+ * 		--> 5kHz stop frequency
+ * 2.) for filter bandwidths between 8k0 and 10k
+ * 		--> 10kHz stop frequency
+ *
+ * these "filters" do not filter much with 4 taps . . .
+ * FIR 4 taps, Fstop 5kHz / 10kHz, Rectangular
+ * designed with Iowa Hills FIR Filter Designer
+ * DD4WH 2016_03_11
+ *
+ * ####################################################
+ */
+
+#define	RX_INTERPOLATE_4_NUM_TAPS	4
+
+const float FirRxInterpolate_4_5k[] =
+{
+		0.210149639888675743,
+		0.292367020487055873,
+		0.292367020487055873,
+		0.210149639888675743
+
+};
+
+const float FirRxInterpolate_4_10k[] =
+{
+		 0.139302961114601442,
+		 0.460435107346899464,
+		 0.460435107346899464,
+		 0.139302961114601442
+};
+
 #endif
