@@ -125,7 +125,7 @@ typedef struct FilterPathDescriptor_s {
   const uint8_t FIR_int_numTaps;
   const float *FIR_int_coeff_file;
   const bool IIR_int_yes;
-  const uint16_t *IIR_int_numTaps;
+  const uint16_t IIR_int_numTaps;
   const float *IIR_int_pk_file;
   const float *IIR_int_pv_file;
 } FilterPathDescriptor;

@@ -68,10 +68,10 @@
 #include "filters/iir_4_6k.h"
 #include "filters/iir_4_8k.h"
 #include "filters/iir_5k.h"
-//#include "filters/iir_5_5k.h"
+#include "filters/iir_5_5k.h"
 #include "filters/iir_6k.h"
-//#include "filters/iir_6_5k.h"
-//#include "filters/iir_7k.h"
+#include "filters/iir_6_5k.h"
+#include "filters/iir_7k.h"
 #include "filters/iir_7_5k.h"
 #include "filters/iir_8k.h"
 #include "filters/iir_8_5k.h"
@@ -265,7 +265,7 @@ FilterPathDescriptor FilterPathInfo[80] = // how to automatically determine this
 // CW & SSB filters:
 //###################################################################################################################################
 
-		// 10 filters á 300Hz
+		// 10 filters ï¿½ 300Hz
 
 	{	AUDIO_300HZ, FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, RX_DECIMATE_NUM_TAPS, FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, 1, IIR_300hz_numStages, IIR_300hz_500_pkCoeffs, IIR_300hz_500_pvCoeffs,
@@ -307,7 +307,7 @@ FilterPathDescriptor FilterPathInfo[80] = // how to automatically determine this
 		RX_DECIMATION_RATE_12KHZ, 1, IIR_300hz_numStages, IIR_300hz_950_pkCoeffs, IIR_300hz_950_pvCoeffs,
 		RX_INTERPOLATE_NUM_TAPS, FirRxInterpolate, 0, 0 ,0 , 0},
 
-		// 5 filters á 500Hz
+		// 5 filters ï¿½ 500Hz
 	{	AUDIO_500HZ, FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, RX_DECIMATE_NUM_TAPS, FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, 1, IIR_500hz_numStages, IIR_500hz_550_pkCoeffs, IIR_500hz_550_pvCoeffs,
 		RX_INTERPOLATE_NUM_TAPS, FirRxInterpolate, 0, 0 ,0 , 0},

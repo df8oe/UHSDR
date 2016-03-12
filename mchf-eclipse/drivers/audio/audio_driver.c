@@ -29,6 +29,8 @@
 #include "ui_driver.h"
 #include "usbd_audio_core.h"
 #include "ui_spectrum.h"
+#include "filters.h"
+
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
@@ -288,7 +290,7 @@ void audio_driver_set_rx_audio_filter(void)
 	// ts.filter_id & ts.dmod_mode & ts.filter_select
 
 
-/*	switch(ts.filter_id)	{
+	switch(ts.filter_id)	{
 		case AUDIO_300HZ:
 		    IIR_PreFilter.numStages = IIR_300hz_numStages;		// number of stages
 		    if(ts.filter_select[ts.filter_id] == 1)	{
@@ -597,7 +599,7 @@ void audio_driver_set_rx_audio_filter(void)
 			break;
 		default:
 			break;
-	} */
+	}
 	//
 	// Initialize IIR filter state buffer
  	//
