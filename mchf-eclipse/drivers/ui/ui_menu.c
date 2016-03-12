@@ -3101,7 +3101,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 			ts.rx_gain[RX_AUDIO_SPKR].value = ts.rx_gain[RX_AUDIO_SPKR].max;		// yes - force the volume to the new value
 			UiDriverChangeAfGain(0);
 		}
-		sprintf(options, "    %u", ts.rx_gain[RX_AUDIO_SPKR].value);
+		sprintf(options, "    %u", ts.rx_gain[RX_AUDIO_SPKR].max);
 		//
 		if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOL_RED_THRESH)			// Indicate that gain has been reduced by changing color
 			clr = Red;
