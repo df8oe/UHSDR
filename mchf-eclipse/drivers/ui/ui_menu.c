@@ -352,6 +352,8 @@ const MenuDescriptor topGroup[] = {
     { MENU_TOP, MENU_GROUP, MENU_BASE, "STD","Standard Menu"},
     { MENU_TOP, MENU_GROUP, MENU_CONF, "CON","Configuration Menu"},
     { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu"},
+    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
+    { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -430,8 +432,6 @@ const MenuDescriptor cwGroup[] = {
 };
 
 const MenuDescriptor confGroup[] = {
-    { MENU_CONF, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
-    { MENU_CONF, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"200","Step Size Marker"},
     { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap"},
     { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP,"202","Band+/- Button Swap"},
@@ -490,7 +490,6 @@ const MenuDescriptor confGroup[] = {
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB  AGC T/C (<=Slow)"},
     { MENU_CONF, MENU_ITEM, CONFIG_AM_TX_FILTER_ENABLE,"330","AM  TX Audio Filter"},
     { MENU_CONF, MENU_ITEM, CONFIG_SSB_TX_FILTER_ENABLE,"331","SSB TX Audio Filter"},
-    { MENU_CONF, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"335","Tune Power Level"},
     { MENU_CONF, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Ser EEPROM"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_ENABLE,"530","DSP NR (EXPERIMENTAL)"},
@@ -499,6 +498,7 @@ const MenuDescriptor confGroup[] = {
 };
 
 const MenuDescriptor powGroup[] = {
+    { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"P00","Tune Power Level"},
     { MENU_POW, MENU_ITEM, CONFIG_2200M_5W_ADJUST,"P01","2200m 5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_630M_5W_ADJUST,"P02","630m  5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_160M_5W_ADJUST,"P03","160m  5W PWR Adjust"},
@@ -537,29 +537,37 @@ const MenuDescriptor powGroup[] = {
 };
 
 const MenuDescriptor filterGroup[] = {
+    { MENU_FILTER, MENU_ITEM, MENU_300HZ_SEL,"500","300Hz Center Freq."  },
+    { MENU_FILTER, MENU_ITEM, MENU_500HZ_SEL,"501","500Hz Center Freq."},
     { MENU_FILTER, MENU_ITEM, MENU_1K4_SEL,"502","1.4k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_1K6_SEL,"503","1.6k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_2K1_SEL,"505","2.1k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_2K5_SEL,"507","2.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_2K9_SEL,"509","2.9k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_3K2_SEL,"510","3.2k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_3K4_SEL,"511","3.4k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_3K8_SEL,"513","3.8k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_4K0_SEL,"514","4.0k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_4K2_SEL,"515","4.2k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_4K6_SEL,"517","4.6k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_4K8_SEL,"518","4.8k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_5K0_SEL,"519","5.0k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_5K5_SEL,"520","5.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_6K5_SEL,"522","6.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_7K0_SEL,"523","7.0k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_7K5_SEL,"524","7.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_8K0_SEL,"525","8.0k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_8K5_SEL,"526","8.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
-        { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
-        { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
+    { MENU_FILTER, MENU_ITEM, MENU_1K6_SEL,"503","1.6k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_1K8_SEL,"504","1.8k Center Freq."},
+    { MENU_FILTER, MENU_ITEM, MENU_2K1_SEL,"505","2.1k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_2K3_SEL,"506","2.3k Center Freq."},
+    { MENU_FILTER, MENU_ITEM, MENU_2K5_SEL,"507","2.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_2K7_SEL,"508","2.7k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_2K9_SEL,"509","2.9k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_3K2_SEL,"510","3.2k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_3K4_SEL,"511","3.4k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_3K6_SEL,"512","3.6k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_3K8_SEL,"513","3.8k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_4K0_SEL,"514","4.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_4K2_SEL,"515","4.2k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_4K4_SEL,"516","4.4k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_4K6_SEL,"517","4.6k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_4K8_SEL,"518","4.8k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_5K0_SEL,"519","5.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_5K5_SEL,"520","5.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_6K0_SEL,"521","6.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_6K5_SEL,"522","6.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_7K0_SEL,"523","7.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_7K5_SEL,"524","7.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_8K0_SEL,"525","8.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_8K5_SEL,"526","8.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
+    { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
 enum {
