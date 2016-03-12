@@ -455,21 +455,21 @@ void UiDriver_HandleTouchScreen()
 	}
 	else								// menu screen functions
 	{
-		if(check_tp_coordinates(54,57,55,57))			// right up "dB"
+		if(check_tp_coordinates(54,57,55,57))			// enable tp coordinates show S-meter "dB"
 		{
 			ts.show_tp_coordinates = !ts.show_tp_coordinates;
 			UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
 		}
-		if(check_tp_coordinates(26,28,14,19))			// rf bands mod ":"
+		if(check_tp_coordinates(46,49,55,57))			// rf bands mod S-meter "40"
 		{
 			ts.rfmod_present = !ts.rfmod_present;
-			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present         ":"n/a             ",White,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present":"    n/a",White,Black,0);
 			ts.menu_var_changed = 1;
 		}
-		if(check_tp_coordinates(26,28,10,13))		// vhf/uhf bands mod ":"
+		if(check_tp_coordinates(50,53,55,57))		// vhf/uhf bands mod S-meter "60"
 		{
 			ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
-			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present         ":"n/a             ",White,Black,0);
+			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present":"    n/a",White,Black,0);
 			ts.menu_var_changed = 1;
 		}
 	}
