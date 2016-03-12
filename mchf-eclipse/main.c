@@ -536,6 +536,9 @@ void TransceiverStateInit(void)
 	ts.tune_power_level = 0;			// Tune with FULL POWER
 	ts.xlat = 0;					// 0 = report base frequency, 1 = report xlat-frequency;
 	ts.audio_int_counter = 0;		//test DL2FW
+
+
+	// ts.filter_path = 22; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
 }
 
 //*----------------------------------------------------------------------------
