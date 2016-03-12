@@ -493,7 +493,7 @@ unsigned short UiLcdHy28_ReadDataSpi(void)
 void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)	// touchscreen pressed -> read data
-	UiLcdHy28_GetTouchscreenCoordinates();
+	UiLcdHy28_GetTouchscreenCoordinates(1);
 
    if(display_use_spi)
     {
@@ -1349,7 +1349,7 @@ uint8_t UiLcdHy28_Init(void)
    return retval;
 }
 
-void UiLcdHy28_GetTouchscreenCoordinates(void)
+void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
 {
     uchar i,x,y;
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
@@ -1359,12 +1359,20 @@ void UiLcdHy28_GetTouchscreenCoordinates(void)
     y = UiLcdHy28_ReadByteSpi();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-    for(i=0; touchscreentable[i]<= x; i++)
-	;
-    ts.tp_x = 60-i;
-    for(i=0; touchscreentable[i]<= y; i++)
-	;
-    ts.tp_y = i--;
+    if(mode)
+	{
+	for(i=0; touchscreentable[i]<= x; i++)
+	    ;
+	ts.tp_x = 60-i;
+	for(i=0; touchscreentable[i]<= y; i++)
+	    ;
+	ts.tp_y = i--;
+	}
+    else
+	{
+	ts.tp_x = x;
+	ts.tp_y = y;
+	}
 }
 
 #pragma GCC optimize("O0")

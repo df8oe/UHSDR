@@ -824,7 +824,7 @@ void ConfigurationStorage_Init() {
 
 void CheckIsTouchscreenPresent(void)
 {
-	UiLcdHy28_GetTouchscreenCoordinates();				// initial reading of XPT2046
+	UiLcdHy28_GetTouchscreenCoordinates(0);				// initial reading of XPT2046
 	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
 	    ts.tp_present = 1;						// yes - touchscreen present!
 	else
@@ -857,14 +857,14 @@ int main(void)
 
 	ConfigurationStorage_Init();
 
-	// test if touchscreen is present
-	CheckIsTouchscreenPresent();
-
 	// Show logo
 	UiLcdHy28_ShowStartUpScreen(100);
 
 	// Extra init
 	MiscInit();
+
+	// test if touchscreen is present
+	CheckIsTouchscreenPresent();
 
 	// Init the RX Hilbert transform/filter prior
 	// to initializing the audio!

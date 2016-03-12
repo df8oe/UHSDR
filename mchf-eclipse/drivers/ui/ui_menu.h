@@ -20,7 +20,7 @@ void UiDriverUpdateMenu(uchar mode);
 void UiDriverMemMenu(void);
 void UiDriverUpdateMemLines(uchar var);
 void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
-
+void UiMenu_DisplayInitMenu(uint16_t);
 
 void UiMenu_RenderChangeItemValue(int16_t pot_diff);
 void UiMenu_RenderChangeItem(int16_t pot_diff);

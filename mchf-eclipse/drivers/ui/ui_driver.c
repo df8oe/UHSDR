@@ -461,19 +461,13 @@ void UiDriver_HandleTouchScreen()
 			UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
 		}
 		if(check_tp_coordinates(46,49,55,57))			// rf bands mod S-meter "40"
-		{
-			ts.rfmod_present = !ts.rfmod_present;
-			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+48,ts.rfmod_present?"present":"    n/a",White,Black,0);
-			ts.menu_var_changed = 1;
-		}
-		if(check_tp_coordinates(50,53,55,57))		// vhf/uhf bands mod S-meter "60"
-		{
-			ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
-			UiLcdHy28_PrintText(POS_MENU_IND_X+120,POS_MENU_IND_Y+60,ts.vhfuhfmod_present?"present":"    n/a",White,Black,0);
-			ts.menu_var_changed = 1;
-		}
+		    ts.rfmod_present = !ts.rfmod_present;
+		if(check_tp_coordinates(50,53,55,57))			// vhf/uhf bands mod S-meter "60"
+		    ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
+		if(ts.menu_mode)					// refresh menu
+		    UiMenu_DisplayInitMenu(0);
 	}
-	ts.tp_x = 0xff;						// mark data as invalid
+	ts.tp_x = 0xff;							// prepare tp data for next touchscreen event
 }
 
 
@@ -6366,7 +6360,7 @@ void UiCheckForPressedKey(void)
 			txt = "STEPP ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
-			UiLcdHy28_GetTouchscreenCoordinates();
+			UiLcdHy28_GetTouchscreenCoordinates(1);
 			sprintf(txt_buf,"%02d%s%02d%s",ts.tp_x,"  ",ts.tp_y,"  ");	//show touched coordinates
 			txt = txt_buf;
 			break;
