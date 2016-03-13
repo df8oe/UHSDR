@@ -99,7 +99,6 @@ void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature(void);
 static void 	UiDriverSwitchOffPtt(void);
-void			UiDriverUpdateMenu(uchar mode);
 static void 	UiDriverInitMainFreqDisplay(void);
 //
 //
@@ -465,7 +464,7 @@ void UiDriver_HandleTouchScreen()
 		if(check_tp_coordinates(50,53,55,57))			// vhf/uhf bands mod S-meter "60"
 		    ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
 		if(ts.menu_mode)					// refresh menu
-		    UiMenu_DisplayInitMenu(0);
+		    UiMenu_RenderMenu(0);
 	}
 	ts.tp_x = 0xff;							// prepare tp data for next touchscreen event
 }
@@ -496,7 +495,7 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
 				Codec_SidetoneSetgain();
 		//
 		if(ts.menu_mode)	// are we in menu mode?
-			UiDriverUpdateMenu(0);	// yes, update display when we change power setting
+			UiMenu_RenderMenu(0);	// yes, update display when we change power setting
 		//
 	}
 }
@@ -528,7 +527,7 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 	UiInitRxParms();	// re-init because mode/filter may have changed
 	//
 	if(ts.menu_mode)	// are we in menu mode?
-		UiDriverUpdateMenu(0);	// yes, update menu display when we change bands
+		UiMenu_RenderMenu(0);	// yes, update menu display when we change bands
 	//
 	ads.af_disabled =  btemp;
 
@@ -840,7 +839,7 @@ void ui_driver_toggle_tx(void)
 		UiDriverUpdateFrequencyFast();
 
 	if((ts.menu_mode) || (was_menu))	{			// update menu when we are (or WERE) in MENU mode
-		UiDriverUpdateMenu(0);
+		UiMenu_RenderMenu(0);
 		was_menu = 1;
 	}
 
@@ -1003,7 +1002,7 @@ static void UiDriverProcessKeyboard(void)
 					UiInitRxParms();		// re-init for change of filter
 					//
 					if(ts.menu_mode)	// are we in menu mode?
-						UiDriverUpdateMenu(0);	// yes, update display when we change filters
+						UiMenu_RenderMenu(0);	// yes, update display when we change filters
 					//
 				}
 				break;
@@ -1084,7 +1083,7 @@ static void UiDriverProcessKeyboard(void)
 				if(!ts.menu_mode)	// are we in menu mode?
 					UiDriverFButtonLabel(1," MENU  ",White);	// no - update menu button to reflect no memory save needed
 				else
-					UiDriverUpdateMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
+					UiMenu_RenderMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
 			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
 				// Move to the BEGINNING of the current menu structure
@@ -1189,7 +1188,7 @@ static void UiDriverProcessKeyboard(void)
 				  UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				  //
 				  if(ts.menu_mode)	// are we in menu mode?
-						UiDriverUpdateMenu(0);	// yes, update display when we change filters
+						UiMenu_RenderMenu(0);	// yes, update display when we change filters
 					//
 				}
 				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
@@ -1345,7 +1344,7 @@ void UiInitRxParms(void)
 {
 	UiCWSidebandMode();
 	if(ts.menu_mode)	// are we in menu mode?
-		UiDriverUpdateMenu(0);	// yes, update display when we change modes
+		UiMenu_RenderMenu(0);	// yes, update display when we change modes
 	//
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_CalcTxPhaseAdj();
@@ -1489,8 +1488,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				//
 				ts.menu_var = 0;
 				//
-				UiDriverUpdateMenu(0);	// Draw the menu the first time
-				UiDriverUpdateMenu(1);	// Do update of the first menu item
+				UiMenu_RenderMenu(0);	// Draw the menu the first time
+				UiMenu_RenderMenu(1);	// Do update of the first menu item
 			}
 			else	{	// already in menu mode - we now exit
 				ts.menu_mode = 0;
@@ -1554,7 +1553,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		// If in MENU mode, this restores the DEFAULT setting
 		//
 		if(ts.menu_mode)	{		// Button F2 restores default setting of selected item
-			UiDriverUpdateMenu(3);
+			UiMenu_RenderMenu(3);
 			ts.menu_var_changed = 1;
 		}
 		else	{	// Not in MENU mode - select the METER mode
@@ -2612,7 +2611,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 	//
 	// get color for frequency scale
 	//
-	UiDriverMenuMapColors(ts.scope_scale_colour,NULL, &clr);
+	UiMenu_MapColors(ts.scope_scale_colour,NULL, &clr);
 
 
 	freq_calc = df.tune_new/4;		// get current frequency in Hz
@@ -5015,7 +5014,7 @@ void UiDriverDisplayFilterBW(void)
 	//
 	// get color for line
 	//
-	UiDriverMenuMapColors(ts.filter_disp_colour,NULL, &clr);
+	UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
 
 	//
 	//	erase old line

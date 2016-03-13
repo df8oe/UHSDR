@@ -16,18 +16,24 @@
 //
 // Exports
 //
-void UiDriverUpdateMenu(uchar mode);
-void UiDriverMemMenu(void);
-void UiDriverUpdateMemLines(uchar var);
-void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
-void UiMenu_DisplayInitMenu(uint16_t);
+void UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
+
+
+// The supported mode values
+enum {
+  MENU_RENDER_ONLY = 0,
+  MENU_PROCESS_VALUE_CHANGE,
+  MENU_PROCESS_VALUE_SETDEFAULT,
+};
+
+void UiMenu_RenderMenu(uint16_t mode);
 
 void UiMenu_RenderChangeItemValue(int16_t pot_diff);
 void UiMenu_RenderChangeItem(int16_t pot_diff);
 void UiMenu_RenderLastScreen();
 void UiMenu_RenderFirstScreen();
-void UiMenu_RenderNextScreen();
-void UiMenu_RenderPrevScreen();
+bool UiMenu_RenderNextScreen(); // returns true if screen was changed, i.e. not last screen
+bool UiMenu_RenderPrevScreen(); // returns true if screen was changed, i.e. not first screen
 
 //
 #define	MENUSIZE	6				// number of menu items per page/screen

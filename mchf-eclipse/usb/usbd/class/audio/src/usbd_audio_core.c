@@ -836,12 +836,12 @@ static uint8_t  usbd_audio_EP0_RxReady (void  *pdev)
 		if (AudioCtlUnit == AUDIO_OUT_STREAMING_CTRL)
 		{/* In this driver, to simplify code, only one unit is manage */
 			/* Call the audio interface volume function */
-			int16_t val = *((int16_t*)&AudioCtl[0]);
+			int16_t val = (int16_t)((uint16_t)AudioCtl[0] | ((uint16_t)AudioCtl[1])<<8) ;
 			retval = AUDIO_OUT_fops.VolumeCtl((val/0x100)+31);
 			usbUnits[UnitVolumeTX].cur = val;
 			/* Reset the AudioCtlCmd variable to prevent re-entering this function */
 		} else {
-			int16_t val = *((int16_t*)&AudioCtl[0]);
+			int16_t val = (int16_t)((uint16_t)AudioCtl[0] | ((uint16_t)AudioCtl[1])<<8) ;
 			retval = AUDIO_IN_fops.VolumeCtl((val/0x100)+31);
 			usbUnits[UnitVolumeRX].cur = val;
 		}

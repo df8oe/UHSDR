@@ -1171,7 +1171,7 @@ typedef struct TransceiverState
 
 	// Transceiver menu mode variables
 	uchar	menu_mode;		// TRUE if in menu mode
-	uchar	menu_item;		// Used to indicate specific menu item
+	int16_t	menu_item;		// Used to indicate specific menu item
 	int		menu_var;		// Used to change specific menu item
 	bool	menu_var_changed;	// TRUE if something changed in a menu and that an EEPROM save should be done!
 
