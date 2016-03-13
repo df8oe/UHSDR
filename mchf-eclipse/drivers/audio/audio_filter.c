@@ -79,13 +79,8 @@
 #include "filters/iir_9_5k.h"
 #include "filters/iir_10k.h"
 
-// single file with all of the different interpolation IIR filters
+// single file with all the different interpolation IIR filters
 #include "filters/iir_antialias.h"
-
-#include "filters/iir_15k_hpf_fm_squelch.h"
-
-#include "filters/iir_2k7_tx_bpf.h"
-#include "filters/iir_2k7_tx_bpf_fm.h"
 
 // FIR filters for decimation and interpolation
 #include "filters/fir_rx_decimate_4.h"	// with low-pass filtering
@@ -93,6 +88,12 @@
 #include "filters/fir_rx_interpolate_16.h"	// filter for interpolate-by-16 operation
 #include "filters/fir_rx_interpolate_16_10kHz.h"	// This has relaxed LPF for the 10 kHz filter mode
 
+// FM highhpass filter for squelch
+#include "filters/iir_15k_hpf_fm_squelch.h"
+
+// TX filters
+#include "filters/iir_2k7_tx_bpf.h"
+#include "filters/iir_2k7_tx_bpf_fm.h"
 
 /*
 typedef struct FilterDescriptor_s {
@@ -208,7 +209,13 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_10P0KHZ," 10.0k ", 10000, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff }
 };
 
-/*// filter_characteristic: bandpass (with different centre freqs), lowpass etc.
+/*
+id --> at the moment, we only have an ID for bandwidth, but no ID yet for each single filter path
+--> needs to be done
+
+mode
+
+filter_select_ID
 
 FIR coeff_I_numTaps (= FIR coeff_Q_numTaps)
 FIR coeff_I_coeffs: points to the array of FIR filter coeffs used in the I path
