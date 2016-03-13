@@ -3018,13 +3018,16 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		}
 		break;
 	case CONFIG_TX_DISABLE:	// Step size button swap on/off
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.tx_disable,0,options,&clr);
-		if(ts.tx_disable)	{			// Transmit disabled?
+		temp_var = ts.tx_disable & 1;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    {
+		    if(temp_var)			// Transmit disabled?
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
-		}
-		else	{
+		    else
 			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);	// Make TUNE button White
-		}
+		    ts.tx_disable = temp_var;
+		    }
 		break;
 	case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
 		temp_var = ts.misc_flags1 & 1;

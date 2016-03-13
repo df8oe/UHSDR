@@ -1136,14 +1136,15 @@ static void UiDriverProcessKeyboard(void)
 					UiSpectrumInitWaterfallDisplay();			// init spectrum scope
 				}
 				break;
-			case BUTTON_F5_PRESSED:			// Button F5 was pressed-and-held - Toggle TX Disable
-				if(ts.txrx_mode == TRX_MODE_RX)	// do NOT allow mode change in TUNE mode or transmit mode
-				{
-					ts.tx_disable = !ts.tx_disable;
-
-					UiDriverFButtonLabel(5,"  TUNE",ts.tx_disable?Grey1:White);
-					// Set TUNE button color according to ts.tx_disable
-				}
+			case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
+				if(ts.txrx_mode == TRX_MODE_RX && ts.tx_disable != 1)			// do NOT allow mode change in TUNE mode or transmit mode or disbled in config
+				    {
+				    if(!ts.tx_disable)
+					ts.tx_disable = 2;
+				    else
+					ts.tx_disable = 0;
+				    UiDriverFButtonLabel(5,"  TUNE",ts.tx_disable?Grey1:White);		// Set TUNE button color according to ts.tx_disable
+				    }
 				break;
 			case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
