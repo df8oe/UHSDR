@@ -241,4 +241,11 @@ enum {
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 //
+// Starting position of configuration menu
+//
+#define POS_MENU_IND_X                      60      // X position of description of menu item being changed
+#define POS_MENU_IND_Y                      128     // Y position of first (top) item being changed
+#define POS_MENU_CHANGE_X                   244     // Position of variable being changed
+#define POS_MENU_CURSOR_X                   311     // Position of cursor used to indicate selected item
+
 #endif

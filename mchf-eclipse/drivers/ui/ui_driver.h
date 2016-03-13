@@ -508,20 +508,12 @@ typedef struct EepromSave
 #define POS_TEMP_IND_X						0
 #define POS_TEMP_IND_Y						0
 //
-// Starting position of configuration menu
-//
-#define	POS_MENU_IND_X						60		// X position of description of menu item being changed
-#define	POS_MENU_IND_Y						128		// Y position of first (top) item being changed
-#define	POS_MENU_CHANGE_X					244		// Position of variable being changed
-#define	POS_MENU_CURSOR_X					311		// Position of cursor used to indicate selected item
 //
 // --------------------------------------------------------------------------
 // Exports
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
 void 	ui_driver_toggle_tx(void);
-void 	AudioFilter_CalcRxPhaseAdj(void);
-void 	AudioFilter_CalcTxPhaseAdj(void);
 void 	UiDriverLoadFilterValue(void);
 void 	UiSpectrumClearDisplay(void);
 //
@@ -545,6 +537,7 @@ void 	UiDriverChangeKeyerSpeed(uchar enabled);
 void 	UiDriverChangeRfGain(uchar enabled);
 void    UiDriverChangeAfGain(uchar enabled);
 
+void    UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
 //
 //
 void 	UiDriverShowStep(ulong step);

@@ -18,6 +18,11 @@
 //
 // Audio filter select enumeration
 //
+void    AudioFilter_CalcRxPhaseAdj(void);
+void    AudioFilter_CalcTxPhaseAdj(void);
+
+
+
 typedef struct FilterCoeffs
 {
     float   rx_filt_q[128];
