@@ -355,6 +355,7 @@ const MenuDescriptor topGroup[] = {
     { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
     { MENU_TOP, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
+    { MENU_TOP, MENU_GROUP, MENU_HWINFO,"INF","Hardware Info"},
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -385,7 +386,6 @@ const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)"},
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config"},
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG,"198","Restore Config"},
-    { MENU_BASE, MENU_GROUP, MENU_HWINFO,"INF","Hardware Info"},
     { MENU_BASE, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -598,10 +598,10 @@ const MenuGroupDescriptor groups[] = {
     { topGroup, &topGroupState, NULL},  // Group 0
     { baseGroup, &baseGroupState, topGroup},  // Group 1
     { confGroup, &confGroupState, topGroup},  // Group 3
-    { powGroup, &powGroupState, confGroup },  // Group 4
-    { filterGroup, &filterGroupState, confGroup },  // Group 5
-    { infoGroup, &infoGroupState, baseGroup },  // Group 6
-    { cwGroup, &cwGroupState, baseGroup },  // Group 7
+    { powGroup, &powGroupState, topGroup },  // Group 4
+    { filterGroup, &filterGroupState, topGroup },  // Group 5
+    { infoGroup, &infoGroupState, topGroup },  // Group 6
+    { cwGroup, &cwGroupState, topGroup },  // Group 7
     { displayGroup, &displayGroupState, topGroup },  // Group 8
 };
 
