@@ -23,7 +23,7 @@
 //
 //
 
-const uint16_t IIR_8k_numStages = 8;
+#define IIR_8k_numStages 8
 
 const float IIR_8k_LPF_pkCoeffs[] =
 {

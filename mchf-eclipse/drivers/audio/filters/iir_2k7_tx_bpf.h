@@ -53,8 +53,7 @@
 //	5: P0.93128, 0.009238;  Z (none)
 //
 //
-#define NCoef 10
-const uint16_t IIR_TX_2k7_numStages = NCoef;
+#define IIR_TX_2k7_numStages 10
 const float IIR_TX_2k7_pkCoeffs[] =
 {
 		0.6869176968793,
@@ -97,8 +96,7 @@ const float IIR_TX_2k7_pvCoeffs[] =
 //	-20dB points:  270, 2845 Hz
 //	-30dB points:  <265, >2915 Hz
 //
-#define NCoef 10
-const uint16_t IIR_TX_2k7_numStages = NCoef;
+#define IIR_TX_2k7_numStages 10 
 const float IIR_TX_2k7_pkCoeffs[] =
 {
 		0.6630364568624,

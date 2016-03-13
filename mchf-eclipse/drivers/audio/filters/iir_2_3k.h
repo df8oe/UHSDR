@@ -32,8 +32,7 @@
 //	-40dB points:  218,3193
 //	-60dB points:  194, 3424
 //
-#define NCoef 10
-const uint16_t IIR_2k3_numStages = NCoef;
+#define IIR_2k3_numStages 10 
 //
 const float IIR_2k3_1k412_pkCoeffs[] =
 {

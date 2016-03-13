@@ -27,7 +27,7 @@
 //
 //
 
-const uint16_t IIR_3k4_numStages = 10;
+#define IIR_3k4_numStages 10
 
 const float IIR_3k4_LPF_pkCoeffs[] =
 {

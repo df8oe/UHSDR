@@ -31,7 +31,7 @@
 //	-60dB points:  <85, >4385 Hz
 //
 
-const uint16_t IIR_3k_numStages = 10;
+#define IIR_3k_numStages 10
 const float IIR_3k_pkCoeffs[] =
 {
         0.00289573666141589550,

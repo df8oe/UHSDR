@@ -25,7 +25,7 @@
 //
 //
 
-const uint16_t IIR_2k5_numStages = 10;
+#define IIR_2k5_numStages 10
 const float IIR_2k5_LPF_pkCoeffs[] =
 {
 		0.304008884053488,

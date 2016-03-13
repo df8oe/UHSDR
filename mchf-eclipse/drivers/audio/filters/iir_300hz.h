@@ -32,8 +32,7 @@
 //	-40dB points:  529, 962
 //	-55dB points:  500, 990
 //
-#define NCoef 10
-const uint16_t IIR_300hz_numStages = NCoef;
+#define IIR_300hz_numStages 10 
 const float IIR_300hz_750_pkCoeffs[] =
 {
 		0.8420268438333,

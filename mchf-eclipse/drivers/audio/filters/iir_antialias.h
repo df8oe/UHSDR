@@ -21,8 +21,7 @@
 //
 // LPF 5k elliptic, 60dB stopband, 48ksps
 
-//#define NCoef 6
-const uint16_t IIR_aa_5k_numStages = 6;
+#define IIR_aa_5k_numStages 6
 const float IIR_aa_5k_pkCoeffs[] =
 {
 		0.547564303565301,
@@ -47,7 +46,7 @@ const float IIR_aa_5k_pvCoeffs[] =
 // IIR elliptic 48ksps, 6th order, FStop = 10000Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
 
-const uint16_t IIR_aa_10k_numStages = 6;
+#define IIR_aa_10k_numStages 6
 const float IIR_aa_10k_pkCoeffs[] =
 {
 		0.301098203357079,
@@ -72,7 +71,7 @@ const float IIR_aa_10k_pvCoeffs[] =
 // IIR elliptic 48ksps, 6th order, FStop = 8000Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
 
-const uint16_t IIR_aa_8k_numStages = 6;
+#define IIR_aa_8k_numStages 6
 const float IIR_aa_8k_pkCoeffs[] =
 {
 		0.382097471026454,
@@ -97,7 +96,7 @@ const float IIR_aa_8k_pvCoeffs[] =
 // IIR elliptic 48ksps, 6th order, FStop = 8500Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
 
-const uint16_t IIR_aa_8k5_numStages = 6;
+#define IIR_aa_8k5_numStages 6
 const float IIR_aa_8k5_pkCoeffs[] =
 {
 		0.359939618704540,
@@ -121,7 +120,7 @@ const float IIR_aa_8k5_pvCoeffs[] =
 // IIR elliptic 48ksps, 6th order, FStop = 9000Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
 
-const uint16_t IIR_aa_9k_numStages = 6;
+#define IIR_aa_9k_numStages 6
 const float IIR_aa_9k_pkCoeffs[] =
 {
 		0.339100957220132,
@@ -146,7 +145,7 @@ const float IIR_aa_9k_pvCoeffs[] =
 // IIR elliptic 48ksps, 6th order, FStop = 9500Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
 
-const uint16_t IIR_aa_9k5_numStages = 6;
+#define IIR_aa_9k5_numStages 6
 const float IIR_aa_9k5_pkCoeffs[] =
 {
 		0.319509178478567,
