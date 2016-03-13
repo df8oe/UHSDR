@@ -29,55 +29,12 @@
 #include "ui_driver.h"
 #include "usbd_audio_core.h"
 #include "ui_spectrum.h"
+#include "filters.h"
+
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-//
-// IIR lattice ARMA filters with time-reversed elements
-//
-#include "filters/iir_300hz.h"
-#include "filters/iir_500hz.h"
-#include "filters/iir_1_4k.h"
-#include "filters/iir_1_6k.h"
-#include "filters/iir_1_8k.h"
-#include "filters/iir_2_1k.h"
-#include "filters/iir_2_3k.h"
-#include "filters/iir_2_5k.h"
-#include "filters/iir_2_7k.h"
-#include "filters/iir_2_9k.h"
-#include "filters/iir_3_2k.h"
-#include "filters/iir_3_4k.h"
-#include "filters/iir_3_6k.h"
-#include "filters/iir_3_8k.h"
-#include "filters/iir_4k.h"
-#include "filters/iir_4_2k.h"
-#include "filters/iir_4_4k.h"
-#include "filters/iir_4_6k.h"
-#include "filters/iir_4_8k.h"
-#include "filters/iir_5k.h"
-#include "filters/iir_5_5k.h"
-#include "filters/iir_6k.h"
-#include "filters/iir_6_5k.h"
-#include "filters/iir_7k.h"
-#include "filters/iir_7_5k.h"
-#include "filters/iir_8k.h"
-#include "filters/iir_8_5k.h"
-#include "filters/iir_9k.h"
-#include "filters/iir_9_5k.h"
-#include "filters/iir_10k.h"
-
-#include "filters/iir_antialias.h"
-
-#include "filters/iir_15k_hpf_fm_squelch.h"
-
-#include "filters/iir_2k7_tx_bpf.h"
-#include "filters/iir_2k7_tx_bpf_fm.h"
-//
-#include "filters/fir_rx_decimate_4.h"	// with low-pass filtering
-#include "filters/fir_rx_decimate_4_min_lpf.h"	// This has minimized LPF for the 10 kHz filter mode
-#include "filters/fir_rx_interpolate_16.h"	// filter for interpolate-by-16 operation
-#include "filters/fir_rx_interpolate_16_10kHz.h"	// This has relaxed LPF for the 10 kHz filter mode
-
+// all filter file definitions moved to audio_filter.c
 
 uint32_t audio_driver_xlate_freq() {
   uint32_t fdelta = 0;
@@ -329,6 +286,11 @@ void audio_driver_set_rx_audio_filter(void)
 	ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
 	ads.af_disabled = 1;
 	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
+	// to do: implement switching according to FilterPathInfo
+	// ts.filter_id & ts.dmod_mode & ts.filter_select
+
+	if (ts.filter_path == 0 ) {
+
 	switch(ts.filter_id)	{
 		case AUDIO_300HZ:
 		    IIR_PreFilter.numStages = IIR_300hz_numStages;		// number of stages
@@ -639,6 +601,12 @@ void audio_driver_set_rx_audio_filter(void)
 		default:
 			break;
 	}
+	} else {
+        IIR_PreFilter.numStages = FilterPathInfo[ts.filter_path-1].IIR_PreFilter_numTaps;        // number of stages
+        IIR_PreFilter.pkCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pk_file; // point to reflection coefficients
+        IIR_PreFilter.pvCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pk_file; // point to ladder coefficients
+
+	}
 	//
 	// Initialize IIR filter state buffer
  	//
@@ -650,10 +618,17 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Initialize IIR antialias filter state buffer
  	//
-    IIR_AntiAlias.numStages = IIR_aa_5k_numStages;		// number of stages
-	IIR_AntiAlias.pkCoeffs = (float *)IIR_aa_5k_pkCoeffs;	// point to reflection coefficients
-	IIR_AntiAlias.pvCoeffs = (float *)IIR_aa_5k_pvCoeffs;	// point to ladder coefficients
+	// TODO: Review FilterPath Code
+	if (ts.filter_path == 0) {
+	  IIR_AntiAlias.numStages = IIR_aa_5k_numStages;		// number of stages
+	  IIR_AntiAlias.pkCoeffs = (float *)IIR_aa_5k_pkCoeffs;	// point to reflection coefficients
+	  IIR_AntiAlias.pvCoeffs = (float *)IIR_aa_5k_pvCoeffs;	// point to ladder coefficients
+	} else {
 
+	  IIR_AntiAlias.numStages = IIR_aa_5k_numStages;      // number of stages
+	  IIR_AntiAlias.pkCoeffs = (float *)IIR_aa_5k_pkCoeffs;   // point to reflection coefficients
+	  IIR_AntiAlias.pvCoeffs = (float *)IIR_aa_5k_pvCoeffs;   // point to ladder coefficients
+	}
 
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	{	// initialize state buffer to zeroes
     	iir_aa_state[i] = 0;
@@ -663,9 +638,17 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Initialize high-pass filter used for the FM noise squelch
 	//
-	IIR_Squelch_HPF.numStages = IIR_15k_hpf_numStages;		// number of stages
-	IIR_Squelch_HPF.pkCoeffs = (float *)IIR_15k_hpf_pkCoeffs;	// point to reflection coefficients
-	IIR_Squelch_HPF.pvCoeffs = (float *)IIR_15k_hpf_pvCoeffs;	// point to ladder coefficients
+    // TODO: Review FilterPath Code
+	if (ts.filter_path == 0) {
+	  IIR_Squelch_HPF.numStages = IIR_15k_hpf_numStages;		// number of stages
+	  IIR_Squelch_HPF.pkCoeffs = (float *)IIR_15k_hpf_pkCoeffs;	// point to reflection coefficients
+	  IIR_Squelch_HPF.pvCoeffs = (float *)IIR_15k_hpf_pvCoeffs;	// point to ladder coefficients
+	} else {
+	  IIR_Squelch_HPF.numStages = IIR_15k_hpf_numStages;      // number of stages
+	  IIR_Squelch_HPF.pkCoeffs = (float *)IIR_15k_hpf_pkCoeffs;   // point to reflection coefficients
+	  IIR_Squelch_HPF.pvCoeffs = (float *)IIR_15k_hpf_pvCoeffs;   // point to ladder coefficients
+
+	}
 	//
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	{	// initialize state buffer to zeroes
     	iir_squelch_rx_state[i] = 0;
@@ -775,7 +758,13 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Adjust decimation rate based on selected filter
 	//
-	if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
+    // TODO: Review FilterPath Code
+    if (ts.filter_path != 0) {
+      ads.decimation_rate = FilterPathInfo[ts.filter_path-1].sample_rate_dec;
+      DECIMATE_RX.pCoeffs = (float32_t *)FilterPathInfo[ts.filter_path-1].FIR_dec_coeff_file;       // Filter coefficients for lower-rate (slightly strong LPF)
+      INTERPOLATE_RX.pCoeffs = (float32_t *)FilterPathInfo[ts.filter_path-1].FIR_int_coeff_file; // Filter coefficients
+
+    } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
 		ads.decimation_rate = RX_DECIMATION_RATE_12KHZ;
 		DECIMATE_RX.pCoeffs = (float32_t *)&FirRxDecimate[0];		// Filter coefficients for lower-rate (slightly strong LPF)
 		INTERPOLATE_RX.pCoeffs = (float32_t *)&FirRxInterpolate[0];	// Filter coefficients
@@ -794,15 +783,25 @@ void audio_driver_set_rx_audio_filter(void)
 	//
     // Set up RX decimation/filter
 	DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
-	DECIMATE_RX.numTaps = RX_DECIMATE_NUM_TAPS;		// Number of taps in FIR filter
 
+    // TODO: Review FilterPath Code
+    if (ts.filter_path != 0) {
+      DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path-1].FIR_dec_numTaps;		// Number of taps in FIR filter
+    } else {
+      DECIMATE_RX.numTaps = RX_DECIMATE_NUM_TAPS;
+    }
 	DECIMATE_RX.pState = (float32_t *)&decimState[0];			// Filter state variables
 	//
 	// Set up RX interpolation/filter
 	// NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
 	//
 	INTERPOLATE_RX.L = ads.decimation_rate;			// Interpolation factor, L  (12 kHz * 4 = 48 kHz)
-	INTERPOLATE_RX.phaseLength = RX_INTERPOLATE_NUM_TAPS/ads.decimation_rate;	// Phase Length ( numTaps / L )
+	// TODO: Review FilterPath Code
+	if (ts.filter_path != 0) {
+	  INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].FIR_int_numTaps/ads.decimation_rate;    // Phase Length ( numTaps / L )
+	} else {
+	  INTERPOLATE_RX.phaseLength = RX_INTERPOLATE_NUM_TAPS/ads.decimation_rate;	// Phase Length ( numTaps / L )
+	}
 	INTERPOLATE_RX.pState = (float32_t *)&interpState[0];		// Filter state variables
 	//
 	for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS; i++)	{	// Initialize all filter state variables
@@ -839,9 +838,16 @@ void Audio_TXFilter_Init(void)
 	// Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
 	//
 	if(ts.dmod_mode != DEMOD_FM)	{						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
-		IIR_TXFilter.numStages = IIR_TX_2k7_numStages;		// number of stages
-		IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7_pkCoeffs;	// point to reflection coefficients
-		IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7_pvCoeffs;	// point to ladder coefficients
+	  // TODO: Review FilterPath Code
+	  if (ts.filter_path != 0) {
+	    IIR_TXFilter.numStages = IIR_TX_2k7_numStages;		// number of stages
+	    IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7_pkCoeffs;	// point to reflection coefficients
+	    IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7_pvCoeffs;	// point to ladder coefficients
+	  } else {
+	    IIR_TXFilter.numStages = IIR_TX_2k7_numStages;      // number of stages
+	    IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7_pkCoeffs;   // point to reflection coefficients
+	    IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7_pvCoeffs;   // point to ladder coefficients
+	  }
 	}
 	else	{	// This is FM - use a filter with "better" lows and highs more appropriate for FM
 		IIR_TXFilter.numStages = IIR_TX_2k7_FM_numStages;		// number of stages

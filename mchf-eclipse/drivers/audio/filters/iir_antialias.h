@@ -118,6 +118,30 @@ const float IIR_aa_8k5_pvCoeffs[] =
 		0.0109690817210141,
 		-0.0167288132890575
 };
+// IIR elliptic 48ksps, 6th order, FStop = 9000Hz
+// -60dB stopband att, ARMA structure, coefficients in reversed order
+
+const uint16_t IIR_aa_9k_numStages = 6;
+const float IIR_aa_9k_pkCoeffs[] =
+{
+		0.339100957220132,
+		-0.644493816414106,
+		0.779034723806422,
+		-0.747849414036102,
+		0.939827557980654,
+		-0.487848762987584
+};
+
+const float IIR_aa_9k_pvCoeffs[] =
+{
+		0.0125932272310938,
+		0.0585929866522992,
+		0.136927898008432,
+		0.165069644706020,
+		0.0942562014345331,
+		0.00684027662013907,
+		-0.0223862358637905
+};
 
 // IIR elliptic 48ksps, 6th order, FStop = 9500Hz
 // -60dB stopband att, ARMA structure, coefficients in reversed order
