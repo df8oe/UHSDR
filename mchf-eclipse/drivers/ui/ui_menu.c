@@ -2374,23 +2374,23 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			}
 			break;
 	case MENU_BACKUP_CONFIG:
-			strcpy(options," ");
+			strcpy(options,"n/a");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
-			    strcpy(options, " Do it!");
+			    strcpy(options, "Do it!");
 			    clr = White;
 			    if(var>=1)
 				{
 				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
 				copy_ser2virt();
-				strcpy(options, " Done...");
+				strcpy(options, "Done...");
 				clr = Green;
 				}
 			    break;
 			    }
 			break;
 	case MENU_RESTORE_CONFIG:
-			strcpy(options," ");
+			strcpy(options,"n/a");
 			if(ts.ser_eeprom_in_use == 0)
 			    {
 			    strcpy(options, "Do it!");
