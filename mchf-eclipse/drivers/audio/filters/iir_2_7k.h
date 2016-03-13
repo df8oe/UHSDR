@@ -20,8 +20,7 @@
 // inspired by Clint KA7OEI
 //
 // LPF 2k7
-#define NCoef 10
-const uint16_t IIR_2k7_numStages = NCoef;
+#define IIR_2k7_numStages 10
 const float IIR_2k7_LPF_pkCoeffs[] =
 {
 		0.276517739456119,

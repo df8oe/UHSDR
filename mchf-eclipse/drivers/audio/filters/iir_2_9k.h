@@ -21,7 +21,7 @@
 // Astop 60dB
 // coefficients in reverse order than that spit out by MATLAB
 
-const uint16_t IIR_2k9_numStages = 10;
+#define IIR_2k9_numStages 10
 
 const float IIR_2k9_LPF_pkCoeffs[] =
 {

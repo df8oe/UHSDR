@@ -1,153 +1,85 @@
 #ifndef _filters_h_
 #define _filters_h_
 
-#define __FIR_RX_DECIMATE_4_H
 #define	RX_DECIMATE_NUM_TAPS	4
-#define __FIR_RX_DECIMATE_4_MIN_LPF_H
 #define	RX_DECIMATE_MIN_LPF_NUM_TAPS	4
-#define __FIR_RX_INTERPOLATE_16_H
 #define	RX_INTERPOLATE_NUM_TAPS	16
 #define	RX_INTERPOLATE_4_NUM_TAPS	4
-#define __FIR_RX_INTERPOLATE_16_10KHZ_H
 #define	RX_INTERPOLATE_10KHZ_NUM_TAPS	16
-#define __I_RX_FILTER_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_10K_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_3K6_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_5K_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_6K_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_7K5_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_RX_FILTER_H
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
-#define __I_TX_FILTER_H
 #define I_TX_BLOCK_SIZE		1
 #define I_TX_NUM_TAPS			89
-#define __I_TX_FILTER_H
 #define I_TX_BLOCK_SIZE		1
 #define I_TX_NUM_TAPS			89
-#define __IIR_1K4
 #define IIR_1k4_numStages 10
-#define __IIR_1K6
 #define IIR_1k6_numStages 10
-#define __IIR_1_8K
 #define IIR_1k8_numStages 10
-#define __IIR_10K
 //#define NCoef 8
-#define __IIR_10K
-#define __IIR_HPF_15K
-#define __IIR_2K1
 #define IIR_2k1_numStages 10
-#define __IIR_2_3K
 #define IIR_2k3_numStages 10
-#define __IIR_2K5
 #define IIR_2k5_numStages 10
-#define __IIR_2_7K
 #define IIR_2k7_numStages 10
-#define __IIR_2_9K
 #define IIR_2k9_numStages 10
-#define __IIR_TX_2_7K
-#define NCoef 10
-#define NCoef 10
-#define __IIR_TX_2_7K_FM
-#define NCoef 10
-#define __IIR_3K2
 #define IIR_3k2_numStages 10
-#define __IIR_3K4
 #define IIR_3k4_numStages 10
-#define __IIR_3_6K
 #define IIR_3k6_numStages 10
-#define __IIR_3K8
 #define IIR_3k8_numStages 10
-#define __IIR_300HZ
 #define IIR_300hz_numStages 10
-#define __IIR_3K
-#define __IIR_4K2
 #define IIR_4k2_numStages 10
-#define __IIR_4_4K
 #define IIR_4k4_numStages 10
-#define __IIR_4_6K
 #define IIR_4k6_numStages 10
-#define __IIR_4_8K
 #define IIR_4k8_numStages 10
-#define __IIR_4K
 #define IIR_4k_numStages 10
-#define __IIR_5K5
 #define IIR_5k5_numStages 10
-#define __IIR_500HZ
 #define IIR_500hz_numStages 10
-#define __IIR_5K
-#define __IIR_6K5
 #define IIR_6k5_numStages 10
-#define __IIR_6K
 #define IIR_6k_numStages 10
-#define __IIR_7K5
 #define IIR_7k5_numStages 8
-#define __IIR_7K
 #define IIR_7k_numStages 8
-#define __IIR_8K5
-#define __IIR_8K
 #define IIR_8k_numStages 8
-#define __IIR_HPF_8K5
-//#define NCoef 8
-#define __IIR_9K5
-#define __IIR_9K
-#define __IIR_ANTIALIAS
-//#define NCoef 6
 #define IIR_aa_5k_numStages 6
 #define IIR_aa_10k_numStages 6
 #define IIR_aa_8k_numStages 6
 #define IIR_aa_8k5_numStages 6
 #define IIR_aa_9k_numStages 6
 #define IIR_aa_9k5_numStages 6
-#define __IQ_RX_FILTER_AM_10KHZ_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __IQ_RX_FILTER_AM_2k3_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __IQ_RX_FILTER_AM_3k6_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __IQ_RX_FILTER_AM_5KHZ_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __IQ_RX_FILTER_AM_6KHZ_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __IQ_RX_FILTER_AM_5KHZ5_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_10K_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_3K6_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_5K_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_6K_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_RX_FILTER_7K5_H
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define __Q_TX_FILTER_H
 #define Q_TX_BLOCK_SIZE		1
 #define Q_TX_NUM_TAPS			89
 
@@ -189,16 +121,12 @@ extern const float IIR_1k8_1k725_pkCoeffs[];
 extern const float IIR_1k8_1k725_pvCoeffs[];
 extern const float IIR_1k8_LPF_pkCoeffs[];
 extern const float IIR_1k8_LPF_pvCoeffs[];
-extern const uint16_t IIR_10k_numStages; 
+#define IIR_10k_numStages 8
 extern const float IIR_10k_pkCoeffs[];
 extern const float IIR_10k_pvCoeffs[];
-extern const uint16_t IIR_10k_numStages;
 extern const float IIR_10k_LPF_pkCoeffs[];
 extern const float IIR_10k_LPF_pvCoeffs[];
-extern const uint16_t IIR_15k_hpf_numStages; 
-extern const float IIR_15k_hpf_pkCoeffs[];
-extern const float IIR_15k_hpf_pvCoeffs[];
-extern const uint16_t IIR_15k_hpf_numStages;
+#define IIR_15k_hpf_numStages 6
 extern const float IIR_15k_hpf_pkCoeffs[];
 extern const float IIR_15k_hpf_pvCoeffs[];
 extern const float IIR_2k1_LPF_pkCoeffs[];
@@ -227,13 +155,10 @@ extern const float IIR_2k9_LPF_pkCoeffs[];
 extern const float IIR_2k9_LPF_pvCoeffs[];
 extern const float IIR_2k9_BPF_pkCoeffs[];
 extern const float IIR_2k9_BPF_pvCoeffs[];
-extern const uint16_t IIR_TX_2k7_numStages;
+#define IIR_TX_2k7_FM_numStages 10
 extern const float IIR_TX_2k7_pkCoeffs[];
 extern const float IIR_TX_2k7_pvCoeffs[];
-extern const uint16_t IIR_TX_2k7_numStages;
-extern const float IIR_TX_2k7_pkCoeffs[];
-extern const float IIR_TX_2k7_pvCoeffs[];
-extern const uint16_t IIR_TX_2k7_FM_numStages;
+#define IIR_TX_2k7_numStages 10
 extern const float IIR_TX_2k7_FM_pkCoeffs[];
 extern const float IIR_TX_2k7_FM_pvCoeffs[];
 extern const float IIR_3k2_LPF_pkCoeffs[];
@@ -272,7 +197,7 @@ extern const float IIR_300hz_550_pkCoeffs[];
 extern const float IIR_300hz_550_pvCoeffs[];
 extern const float IIR_300hz_500_pkCoeffs[];
 extern const float IIR_300hz_500_pvCoeffs[];
-extern const uint16_t IIR_3k_numStages;
+#define IIR_3k_numStages 10
 extern const float IIR_3k_pkCoeffs[];
 extern const float IIR_3k_pvCoeffs[];
 extern const float IIR_4k2_LPF_pkCoeffs[];
@@ -297,7 +222,7 @@ extern const float IIR_500hz_650_pkCoeffs[];
 extern const float IIR_500hz_650_pvCoeffs[];
 extern const float IIR_500hz_550_pkCoeffs[];
 extern const float IIR_500hz_550_pvCoeffs[];
-extern const uint16_t IIR_5k_numStages;
+#define IIR_5k_numStages 10
 extern const float IIR_5k_LPF_pkCoeffs[];
 extern const float IIR_5k_LPF_pvCoeffs[];
 extern const float IIR_6k5_LPF_pkCoeffs[];
@@ -308,18 +233,18 @@ extern const float IIR_7k5_LPF_pkCoeffs[];
 extern const float IIR_7k5_LPF_pvCoeffs[];
 extern const float IIR_7k_LPF_pkCoeffs[];
 extern const float IIR_7k_LPF_pvCoeffs[];
-extern const uint16_t IIR_8k5_numStages;
+#define IIR_8k5_numStages 8
 extern const float IIR_8k5_LPF_pkCoeffs[];
 extern const float IIR_8k5_LPF_pvCoeffs[];
 extern const float IIR_8k_LPF_pkCoeffs[];
 extern const float IIR_8k_LPF_pvCoeffs[];
-extern const uint16_t IIR_8k5_hpf_numStages;
+#define IIR_8k5_hpf_numStages 6
 extern const float IIR_8k5_hpf_pkCoeffs[];
 extern const float IIR_8k5_hpf_pvCoeffs[];
-extern const uint16_t IIR_9k5_numStages;
+#define IIR_9k5_numStages 8
 extern const float IIR_9k5_LPF_pkCoeffs[];
 extern const float IIR_9k5_LPF_pvCoeffs[];
-extern const uint16_t IIR_9k_numStages;
+#define IIR_9k_numStages 8
 extern const float IIR_9k_LPF_pkCoeffs[];
 extern const float IIR_9k_LPF_pvCoeffs[];
 extern const float IIR_aa_5k_pkCoeffs[];
@@ -364,4 +289,36 @@ extern const float q_tx_coeffs_plus[Q_NUM_TAPS];
 extern const float q_tx_coeffs[Q_NUM_TAPS];
 extern const float q_tx_coeffs_minus[Q_NUM_TAPS];
 extern const float q_tx_coeffs_plus[Q_NUM_TAPS];
+#define IIR_1k6_numStages 10
+#define IIR_1k8_numStages 10
+#define IIR_10k_numStages 8
+#define IIR_15k_hpf_numStages 6
+#define IIR_15k_hpf_numStages 6
+#define IIR_2k1_numStages 10
+#define IIR_2k3_numStages 10 
+#define IIR_2k5_numStages 10
+#define IIR_2k9_numStages 10
+#define IIR_TX_2k7_numStages 10
+#define IIR_TX_2k7_numStages 10 
+#define IIR_3k2_numStages 10
+#define IIR_3k4_numStages 10
+#define IIR_3k6_numStages 10
+#define IIR_3k8_numStages 10
+#define IIR_300hz_numStages 10 
+#define IIR_4k2_numStages 10
+#define IIR_4k4_numStages 10
+#define IIR_4k6_numStages 10
+#define IIR_4k8_numStages 10
+#define IIR_5k5_numStages 10
+#define IIR_500hz_numStages 10 
+#define IIR_6k5_numStages 10
+#define IIR_6k_numStages 10
+#define IIR_7k5_numStages 8
+#define IIR_7k_numStages 8
+#define IIR_aa_5k_numStages 6
+#define IIR_aa_10k_numStages 6
+#define IIR_aa_8k_numStages 6
+#define IIR_aa_8k5_numStages 6
+#define IIR_aa_9k_numStages 6
+#define IIR_aa_9k5_numStages 6
 #endif

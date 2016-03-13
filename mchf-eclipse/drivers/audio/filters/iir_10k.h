@@ -29,7 +29,7 @@
 //	-60dB point:  >10.88 kHz
 //
 //#define NCoef 8
-const uint16_t IIR_10k_numStages = 8;
+#define IIR_10k_numStages 8
 const float IIR_10k_pkCoeffs[] =
 {
 		0.3059837075323,

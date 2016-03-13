@@ -31,8 +31,7 @@
 //	-40dB points:  428, 2830
 //	-60dB points:  384, 3030
 //
-#define NCoef 10
-const uint16_t IIR_1k8_numStages = NCoef;
+#define IIR_1k8_numStages 10
 const float IIR_1k8_1k425_pkCoeffs[] =
 {
 		0.3633117201536,

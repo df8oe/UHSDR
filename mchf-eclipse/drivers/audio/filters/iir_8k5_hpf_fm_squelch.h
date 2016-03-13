@@ -29,7 +29,7 @@
 //	-60dB point:  <7.0 kHz
 //
 //#define NCoef 8
-const uint16_t IIR_8k5_hpf_numStages = 6;
+#define IIR_8k5_hpf_numStages  6
 const float IIR_8k5_hpf_pkCoeffs[] =
 {
 		0.3267431914313,

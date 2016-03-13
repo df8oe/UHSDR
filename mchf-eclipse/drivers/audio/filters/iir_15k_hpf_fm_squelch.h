@@ -32,7 +32,7 @@
 //	-60dB point:  13.3 kHz
 //
 /*
-const uint16_t IIR_15k_hpf_numStages = 6;
+#define IIR_15k_hpf_numStages 6
 const float IIR_15k_hpf_pkCoeffs[] =
 {
 		0.513580159973,
@@ -62,7 +62,7 @@ const float IIR_15k_hpf_pvCoeffs[] =
 //  -40dB: 13.9 kHz
 //	-58dB: <13.2 kHz
 
-const uint16_t IIR_15k_hpf_numStages = 6;
+#define IIR_15k_hpf_numStages 6
 const float IIR_15k_hpf_pkCoeffs[] =
 {
 		0.08584448365242,

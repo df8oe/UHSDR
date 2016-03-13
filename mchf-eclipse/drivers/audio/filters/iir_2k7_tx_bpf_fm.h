@@ -35,8 +35,8 @@
 //  -50dB points:  136, 4436 Hz
 //
 //
-#define NCoef 10
-const uint16_t IIR_TX_2k7_FM_numStages = NCoef;
+
+#define IIR_TX_2k7_FM_numStages 10
 const float IIR_TX_2k7_FM_pkCoeffs[] =
 {
 		0.795992813347,
