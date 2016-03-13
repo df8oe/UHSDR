@@ -336,6 +336,8 @@ MenuDisplaySlot menu[MENUSIZE];
 // data structure found more or less at the end of this
 // menu definition block ! Otherwise menu display will not work
 // as expected and may crash mcHF
+// If you move menus around, make sure to change the groups structure of the move
+// menu to reflect the new parent menu!
 
 enum {
   MENU_TOP  = 0,
