@@ -61,7 +61,7 @@
 static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos);
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos);
 static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos);
-static void UiMenu_DisplayValue(const char* options,uint32_t clr,uint16_t pos);
+static void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos);
 //
 //
 // Public data structures
@@ -873,22 +873,30 @@ bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry
   return retval;
 }
 
+// DISPLAY SPECIFIC CODE BEGIN
+static void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos) {
+  UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), value, clr, Black, 0);       // yes, normal position
+}
+static void UiMenu_DisplayLabel(const char* label,uint32_t clr,uint16_t pos) {
+  UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+}
+static void UiMenu_DisplayCursor(const char* label,uint32_t clr,uint16_t pos) {
+  UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+}
+// DISPLAY SPECIFIC CODE END
 
-static void UiMenu_DisplayValue(const char* options,uint32_t clr,uint16_t pos) {
-  UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), options, clr, Black, 0);       // yes, normal position
+
+static void UiMenu_MoveCursor(uint32_t newpos) {
+  static uint32_t oldpos = 999;  // y position of option cursor, previous
+  if(oldpos != 999) {       // was the position of a previous cursor stored?
+    UiMenu_DisplayCursor(" ", Green, oldpos);
+  }
+  oldpos = newpos;   // save position of new "old" cursor position
+  if (newpos != 999) {
+    UiMenu_DisplayCursor("<", Green, newpos);
+  }
 }
 
-static void UiMenu_MoveCursor(uint32_t opt_pos) {
-  static uint32_t opt_oldpos = 999;  // y position of option cursor, previous
-  if(opt_oldpos != 999) {       // was the position of a previous cursor stored?
-      UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_oldpos * 12), " ", Black, Black, 0);   // yes - erase it
-  }
-  //
-  opt_oldpos = opt_pos;   // save position of new "old" cursor position
-  if (opt_pos != 999) {
-    UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);  // place cursor at active position
-  }
-}
 
 void UiMenu_UpdateLines(uint16_t number, uint16_t mode, int pos) {
   if (number < MAX_MENU_ITEM) {
@@ -923,7 +931,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
       uint16_t labellen = level+strlen(entry->label);
       // snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
       snprintf(out,34,"%s%s%s",(&blank[level>5?31-5:31-level]),entry->label,(&blank[labellen>33?33:labellen]));
-      UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),out,m_clr,Black,0);
+      UiMenu_DisplayLabel(out,m_clr,pos);
     }
     switch(entry->kind) {
     case MENU_ITEM:
@@ -947,11 +955,11 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
         }
       }
       strcpy(out,UiMenu_GroupIsUnfolded(entry)?"HIDE":"SHOW");
-      UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), out, m_clr, Black, 0);       // yes, normal position
+      UiMenu_DisplayValue(out,m_clr,pos);
       break;
     }
   } else {
-    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),blank,m_clr,Black,0);
+    UiMenu_DisplayLabel(blank,m_clr,pos);
   }
   if (mode == 1) {
     UiMenu_MoveCursor(pos);
@@ -2376,42 +2384,41 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	case MENU_BACKUP_CONFIG:
 			strcpy(options,"n/a");
 			if(ts.ser_eeprom_in_use == 0)
-			    {
-			    strcpy(options, "Do it!");
-			    clr = White;
-			    if(var>=1)
-				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
-				copy_ser2virt();
-				strcpy(options, "Done...");
-				clr = Green;
-				}
-			    break;
-			    }
+			{
+			  strcpy(options, " Do it!");
+			  clr = White;
+			  if(var>=1)
+			  {
+			    UiMenu_DisplayValue("Working",Red,opt_pos);
+			    copy_ser2virt();
+			    strcpy(options, " Done...");
+			    clr = Green;
+			  }
+			}
 			break;
 	case MENU_RESTORE_CONFIG:
 			strcpy(options,"n/a");
 			if(ts.ser_eeprom_in_use == 0)
-			    {
-			    strcpy(options, "Do it!");
-			    clr = White;
-			    if(var>=1)
-				{
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
-				copy_virt2ser();
-				ui_si570_get_configuration();		// restore SI570 to factory default
-				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-				NVIC_SystemReset();			// restart mcHF
-				}
-			    break;
-			    }
+			{
+			  strcpy(options, "Do it!");
+			  clr = White;
+			  if(var>=1)
+			  {
+
+			    UiMenu_DisplayValue("Working",Red,opt_pos);
+			    copy_virt2ser();
+			    ui_si570_get_configuration();		// restore SI570 to factory default
+			    *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+			    NVIC_SystemReset();			// restart mcHF
+			  }
+			}
 			break;
 	default:						// Move to this location if we get to the bottom of the table!
 		strcpy(options, "ERROR!");
 		break;
 	}
 	//
-	UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (opt_pos * 12), options, clr, Black, 0);		// yes, normal position
+	UiMenu_DisplayValue(options,clr,opt_pos);
 	if(mode == 1)	{
 	  UiMenu_MoveCursor(opt_pos);
 	}
@@ -2516,14 +2523,10 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case CONFIG_TX_DISABLE:	// Step size button swap on/off
 		temp_var = ts.tx_disable & 1;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)
-		    {
-		    if(temp_var)			// Transmit disabled?
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",Grey1,Black,0);	// Make TUNE button Grey
-		    else
-			UiLcdHy28_PrintText(POS_BOTTOM_BAR_F5_X,POS_BOTTOM_BAR_F5_Y,"  TUNE",White,Black,0);	// Make TUNE button White
-		    ts.tx_disable = temp_var;
-		    }
+		if(tchange) {
+		  UiDriverFButtonLabel(5,"  TUNE",temp_var?Grey1:White);
+		  ts.tx_disable = temp_var;
+		}
 		break;
 	case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
 		temp_var = ts.misc_flags1 & 1;
@@ -3423,7 +3426,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 			if(var>=1)
 			{
 				// clear EEPROM
-				UiLcdHy28_PrintText(POS_MENU_IND_X+189, POS_MENU_IND_Y+opt_pos*12,"Working",Red,Black,0);
+                UiMenu_DisplayValue("Working",Red,opt_pos);
 				Write_24Cxx(0,0xFF,16);
 				Write_24Cxx(1,0xFF,16);
 				ui_si570_get_configuration();		// restore SI570 to factory default
@@ -3539,6 +3542,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
 void UiMenu_UpdateMemLines(uchar var)
 {
+  /*
 	ulong opt_pos;					// y position of option
 	static ulong opt_oldpos = 999;	// y position of option
 	// ulong	mem_mode, mem_freq_high, mem_freq_low;		// holders to store the memory that has been read
@@ -3562,6 +3566,8 @@ void UiMenu_UpdateMemLines(uchar var)
 		opt_oldpos = opt_pos;	// save position of new "old" cursor position
 		UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y + (opt_pos * 12), "<", Green, Black, 0);	// place cursor at active position
 //
+
+  */
 	return;
 }
 
@@ -3579,6 +3585,7 @@ void UiMenu_UpdateMemLines(uchar var)
 //
 void UiMenu_MemMenu(void)
 {
+  /*
     static bool update_vars = 1;
     static uchar change_detect = 255;
     static  uchar menu_num = 99;
@@ -3608,6 +3615,7 @@ void UiMenu_MemMenu(void)
                             UiMenu_UpdateMemLines(var);
         }
     }
+    */
 }
 
 
