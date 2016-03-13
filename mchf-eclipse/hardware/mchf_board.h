@@ -1204,7 +1204,7 @@ typedef struct TransceiverState
 	//
 	uint8_t   filter_select[AUDIO_FILTER_NUM];
 
-	uint8_t  filter_path;
+	uint16_t  filter_path;
 	//
 
 	uchar	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode

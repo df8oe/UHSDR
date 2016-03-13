@@ -538,7 +538,7 @@ void TransceiverStateInit(void)
 	ts.audio_int_counter = 0;		//test DL2FW
 
 
-	ts.filter_path = 70; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
+	//ts.filter_path = 52; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
 }
 
 //*----------------------------------------------------------------------------

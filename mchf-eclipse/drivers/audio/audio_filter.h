@@ -135,7 +135,7 @@ typedef struct FilterPathDescriptor_s {
   const float *IIR_int_pv_file;
 } FilterPathDescriptor;
 
-extern FilterPathDescriptor FilterPathInfo[80]; // also change this figure in audio_filter.c
+extern FilterPathDescriptor FilterPathInfo[83]; // also change this figure in audio_filter.c
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //
