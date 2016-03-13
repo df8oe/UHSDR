@@ -15,6 +15,7 @@
 // For spectrum display struct
 #include "audio_driver.h"
 #include "ui_driver.h"
+#include "ui_menu.h"
 #include "ui_rotary.h" // dial frequency df
 #include "waterfall_colours.h"
 // ------------------------------------------------
@@ -102,11 +103,11 @@ void UiSpectrumCreateDrawArea(void)
 	//
 	// get grid colour of all but center line
 	//
-	UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+	UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
 	if(ts.scope_grid_colour == SPEC_GREY) {
 		ts.scope_grid_colour_active = Grid;
 	} else {
-		UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+		UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
 	}
 	//
 	//
@@ -115,7 +116,7 @@ void UiSpectrumCreateDrawArea(void)
 	if(ts.scope_centre_grid_colour == SPEC_GREY) {
 		ts.scope_centre_grid_colour_active = Grid;
 	} else {
-		UiDriverMenuMapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
+		UiMenu_MapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
 	}
 
 	// Clear screen where frequency information will be under graticule
@@ -979,7 +980,7 @@ void UiSpectrumReDrawSpectrumDisplay()
 		case 5:
 		{
 		uint32_t	clr;
-		UiDriverMenuMapColors(ts.scope_trace_colour,NULL, &clr);
+		UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
