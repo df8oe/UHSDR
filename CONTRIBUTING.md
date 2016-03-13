@@ -8,10 +8,13 @@ The project is free for non-commercial use and is being developed within an open
 
 ### Getting Started
 
-Soon we'll point here to a document describing how to setup an environment to compile, upload and debug firmware. 
+Head over to the Wiki to get instructions for [setting up your build environment](https://github.com/df8oe/mchf-github/wiki/Setting-up-Firmware-Development-Software)
 
-Meanwhile you may try the available .bin files and follow the instructions in the 
-mchf-eclipse/bootloader/readme.txt how to upload these. 
+Git is easy once you know how to operate it. Until then these documents are good reads:
+  * [Atlassian Tutorial on git](https://www.atlassian.com/git/tutorials/setting-up-a-repository) - Very nice, not too complex. Does not cover github specifics. 
+  * [The Git Book](https://git-scm.com/book/en/v2) - Lots of details, has special github section. Not always as beginner-friendly as Atlassian
+  * Ask us: There is the [M0NKA Yahoo Group](https://uk.groups.yahoo.com/neo/groups/M0NKA-mcHF/info), the [german language mcHF board](http://www.amateurfunk-sulingen.de/forum/index.php?board=15) . 
+    And if nothing of this works for you and you have made the smartest improvment but can't share it: use the issue tracker to post a request for help.
 
 ### Pull-requests
 
