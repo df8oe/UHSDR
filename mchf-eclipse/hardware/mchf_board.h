@@ -41,7 +41,7 @@
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K. Atanassov - M0NKA 2014-2016"
+#define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			219
