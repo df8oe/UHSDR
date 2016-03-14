@@ -79,13 +79,8 @@
 #include "filters/iir_9_5k.h"
 #include "filters/iir_10k.h"
 
-// single file with all of the different interpolation IIR filters
+// single file with all the different interpolation IIR filters
 #include "filters/iir_antialias.h"
-
-#include "filters/iir_15k_hpf_fm_squelch.h"
-
-#include "filters/iir_2k7_tx_bpf.h"
-#include "filters/iir_2k7_tx_bpf_fm.h"
 
 // FIR filters for decimation and interpolation
 #include "filters/fir_rx_decimate_4.h"	// with low-pass filtering
@@ -93,6 +88,12 @@
 #include "filters/fir_rx_interpolate_16.h"	// filter for interpolate-by-16 operation
 #include "filters/fir_rx_interpolate_16_10kHz.h"	// This has relaxed LPF for the 10 kHz filter mode
 
+// FM highhpass filter for squelch
+#include "filters/iir_15k_hpf_fm_squelch.h"
+
+// TX filters
+#include "filters/iir_2k7_tx_bpf.h"
+#include "filters/iir_2k7_tx_bpf_fm.h"
 
 /*
 typedef struct FilterDescriptor_s {
@@ -208,7 +209,13 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_10P0KHZ," 10.0k ", 10000, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff }
 };
 
-/*// filter_characteristic: bandpass (with different centre freqs), lowpass etc.
+/*
+id --> at the moment, we only have an ID for bandwidth, but no ID yet for each single filter path
+--> needs to be done
+
+mode
+
+filter_select_ID
 
 FIR coeff_I_numTaps (= FIR coeff_Q_numTaps)
 FIR coeff_I_coeffs: points to the array of FIR filter coeffs used in the I path
@@ -253,7 +260,7 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  * ###############################################################
  */
 
-FilterPathDescriptor FilterPathInfo[80] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
+FilterPathDescriptor FilterPathInfo[83] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
 									// sum(
 {
 // ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
@@ -483,7 +490,19 @@ FilterPathDescriptor FilterPathInfo[80] = // how to automatically determine this
 		RX_DECIMATION_RATE_24KHZ, 0, 0, 0, 0,
 		RX_INTERPOLATE_10KHZ_NUM_TAPS, FirRxInterpolate10KHZ, 0, 0 ,0 , 0},
 
+	{	AUDIO_5P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, RX_DECIMATE_MIN_LPF_NUM_TAPS, FirRxDecimateMinLPF,
+		RX_DECIMATION_RATE_24KHZ, 0, 0, 0, 0,
+		RX_INTERPOLATE_10KHZ_NUM_TAPS, FirRxInterpolate10KHZ, 0, 0 ,0 , 0},
+
 	{	AUDIO_6P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, RX_DECIMATE_MIN_LPF_NUM_TAPS, FirRxDecimateMinLPF,
+		RX_DECIMATION_RATE_24KHZ, 0, 0, 0, 0,
+		RX_INTERPOLATE_10KHZ_NUM_TAPS, FirRxInterpolate10KHZ, 0, 0 ,0 , 0},
+
+	{	AUDIO_6P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, RX_DECIMATE_MIN_LPF_NUM_TAPS, FirRxDecimateMinLPF,
+		RX_DECIMATION_RATE_24KHZ, 0, 0, 0, 0,
+		RX_INTERPOLATE_10KHZ_NUM_TAPS, FirRxInterpolate10KHZ, 0, 0 ,0 , 0},
+
+	{	AUDIO_7P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, RX_DECIMATE_MIN_LPF_NUM_TAPS, FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, 0, 0, 0, 0,
 		RX_INTERPOLATE_10KHZ_NUM_TAPS, FirRxInterpolate10KHZ, 0, 0 ,0 , 0},
 
@@ -733,12 +752,26 @@ void AudioFilter_CalcRxPhaseAdj(void)
     // always make a fresh copy of the original Q and I coefficients
     // NOTE:  We are assuming that the I and Q filters are of the same length!
     //
+
+    // new filter_path method
+    // take all info from FilterPathInfo
+    // IIR_PreFilter.pkCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pk_file;
+    //
+    if (ts.filter_path == 0) {
     fc.rx_q_num_taps = Q_NUM_TAPS;
     fc.rx_i_num_taps = I_NUM_TAPS;
+    } else
+    {
+        fc.rx_q_num_taps = FilterPathInfo[ts.filter_path-1].FIR_numTaps;
+        fc.rx_i_num_taps = FilterPathInfo[ts.filter_path-1].FIR_numTaps;
+    }
     //
     fc.rx_q_block_size = Q_BLOCK_SIZE;
     fc.rx_i_block_size = I_BLOCK_SIZE;
     //
+
+    if (ts.filter_path == 0) {
+
     if(ts.dmod_mode == DEMOD_AM)    {       // AM - load low-pass, non Hilbert filters (e.g. no I/Q phase shift
         // FIR 2k3 up to 2k3 filter
         // FIR 3k6 up to 3k6 filter
@@ -820,14 +853,22 @@ void AudioFilter_CalcRxPhaseAdj(void)
                             }
         } // end for
     }   // end else = SSB
+    } // END old routine / if ts.filter_path == 0
+    else {
+    		// in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
+    		for(i = 0; i < fc.rx_q_num_taps; i++) { // fc.rx_q_num_taps is ALWAYS == fc.rx_i_num_taps
+    			fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file[i];
+                fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path-1].FIR_Q_coeff_file[i];
+    		}
+    }//
 
-        //
-        if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
+    	if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
             phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
         else
             phase = ts.rx_iq_usb_phase_balance;     // yes, get current gain adjustment setting for USB and other mdoes
         //
-        if(phase != 0)  {   // is phase adjustment non-zero?
+    	if (ts.filter_path ==0){
+    	if(phase != 0)  {   // is phase adjustment non-zero?
             var_norm = (float)phase;
             var_norm = fabs(var_norm);      // get absolute value of this gain adjustment
             var_inv = 32 - var_norm;        // calculate "inverse" of number of steps
@@ -907,8 +948,93 @@ void AudioFilter_CalcRxPhaseAdj(void)
                                     }
             } // end phase adjustment positive
         } // end if phase adjustment non-zero
+		} // END old routine (if (ts.filter_path == 0)
+    	else { // new switching with FilterPathInfo
 
-    //
+        	if(phase != 0)  {   // is phase adjustment non-zero?
+                var_norm = (float)phase;
+                var_norm = fabs(var_norm);      // get absolute value of this gain adjustment
+                var_inv = 32 - var_norm;        // calculate "inverse" of number of steps
+                var_norm /= 32;     // fractionalize by the number of steps
+                var_inv /= 32;                      // fractionalize this one, too
+                if(phase < 0)   {   // was the phase adjustment negative?
+
+                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_3k6_coeffs){ // Hilbert 3k6
+                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                            f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                            f_offset = var_norm * q_rx_3k6_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                        }
+                    } else
+                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){ // Hilbert 5k
+                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_5k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        } else
+                            if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_6k_coeffs){
+                                for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) { // Hilbert 6k
+                                    f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                    f_offset = var_norm * q_rx_6k_coeffs_minus[i];  // get fraction of 89.5 degree setting
+                                    fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                }
+                            }   else
+                                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_7k5_coeffs){ // Hilbert 7k5
+                                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                            f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                            f_offset = var_norm * q_rx_7k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                        }
+                                    }   else {
+                                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) { // hilbert 10k
+                                                f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                                f_offset = var_norm * q_rx_10k_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                            }
+                                        }
+                } // end phase adjustment negative
+                else    {                           // adjustment was positive
+                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_3k6_coeffs){
+                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                            f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
+                            f_offset = var_norm * q_rx_3k6_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                        }
+                    } else
+                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){
+                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_5k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        } else
+                            if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_6k_coeffs){
+                                for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                    f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
+                                    f_offset = var_norm * q_rx_6k_coeffs_plus[i];   // get fraction of 90.5 degree setting
+                                    fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                }
+                            }   else
+                                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_7k5_coeffs){
+                                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                            f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
+                                            f_offset = var_norm * q_rx_7k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                            fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                        }
+                                    }   else {
+                                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                                f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
+                                                f_offset = var_norm * q_rx_10k_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                                            }
+                                        }
+                } // end phase adjustment positive
+            } // end if phase adjustment non-zero
+
+    	}// END new switching with FilterPathInfo
+
+    	//
     // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
     if(ts.dmod_mode == DEMOD_AM)        // use "Q" filter settings in AM mode for "I" channel
         arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_q_block_size); // load "I" with "Q" coefficients

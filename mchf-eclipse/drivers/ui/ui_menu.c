@@ -1363,59 +1363,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
       UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_6P0KHZ);
 	  break;
 
-
-/*	case MENU_WIDE_SEL: // Wide filter select
-		if(ts.dmod_mode != DEMOD_FM)	{
-			fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_wide_select,
-					0,
-					WIDE_FILTER_MAX,
-					WIDE_FILTER_10K,
-					1
-			);
-			if((ts.filter_id != AUDIO_WIDE))	// make orange if NOT in "Wide" mode
-				clr = Orange;
-		}
-		else				// show disabled if in FM
-			clr = Red;
-		//
-		switch(ts.filter_wide_select)	{
-			case WIDE_FILTER_5K_AM:
-				strcpy(options, "  5kHz AM");
-				break;
-			case WIDE_FILTER_6K_AM:
-				strcpy(options, "  6kHz AM");
-				break;
-			case WIDE_FILTER_7K5_AM:
-				strcpy(options, "7.5kHz AM");
-				break;
-			case WIDE_FILTER_10K_AM:
-				strcpy(options, "10 kHz AM");
-				break;
-			case WIDE_FILTER_5K:
-				strcpy(options, "     5kHz");
-				break;
-			case WIDE_FILTER_6K:
-				strcpy(options, "     6kHz");
-				break;
-			case WIDE_FILTER_7K5:
-				strcpy(options, "    7.5kHz");
-				break;
-			case WIDE_FILTER_10K:
-			default:
-				strcpy(options, "     10kHz");
-				break;
-		}
-		//
-		if((ts.filter_id == AUDIO_WIDE) && fchange)	{
-			//UiDriverProcessActiveFilterScan();	// find next active filter
-			UiDriverChangeFilter(0);
-			UiCalcRxPhaseAdj();						// update Hilbert/LowPass filter setting
-			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-		}
-		//
-		// disp_shift = 1;		// move the options to the left slightly
-		break;
-	*/
 	case MENU_CW_WIDE_FILT: // CW mode wide filter enable/disable
 		UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.filter_cw_wide_disable,0,options,&clr);
 
