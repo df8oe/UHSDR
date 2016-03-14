@@ -1749,7 +1749,7 @@ void UiDriverShowMode(void)	{
 	UiLcdHy28_DrawFullRect(POS_DEMOD_MODE_MASK_X,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_H,POS_DEMOD_MODE_MASK_W,Blue);
 	uint16_t offset = 4; // where to print the text
 	char* txt = "MODE?";
-	uint16_t clr_fg = Cream,clr_bg = Blue;
+	uint16_t clr_fg = White,clr_bg = Blue;
 
 	// Create Decode Mode (USB/LSB/AM/FM/CW)
 	switch(ts.dmod_mode)
@@ -1778,7 +1778,7 @@ void UiDriverShowMode(void)	{
 						clr_bg = Red2;	// Not squelched, passing audio - change color!
 					} else {	// tone decoder disabled - squelch only
 						clr_fg = Black;
-						clr_bg = Cream;	// Not squelched, passing audio - change color, but different from tone
+						clr_bg = White;	// Not squelched, passing audio - change color, but different from tone
 					}
 				}
 			}
@@ -4853,7 +4853,11 @@ static void UiDriverChangeSigProc(uchar enabled)
 static void UiDriverChangeRit(uchar enabled)
 {
 	char	temp[5];
-	uint32_t 	color = enabled?White:Grey;
+	uint32_t color;
+	if(ts.rit_value)
+	    color = Green;
+	else
+	    color = enabled?White:Grey;
 
 	sprintf(temp,"%+3i", ts.rit_value);
 
