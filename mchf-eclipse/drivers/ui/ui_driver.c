@@ -1085,7 +1085,7 @@ static void UiDriverProcessKeyboard(void)
 				else
 					UiMenu_RenderMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
-			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
+			case BUTTON_F2_PRESSED:	// Press-and-hold button F3
 				// Move to the BEGINNING of the current menu structure
 				if(ts.menu_mode)	{		// Are we in menu mode?
 				  UiMenu_RenderFirstScreen();
@@ -1103,7 +1103,7 @@ static void UiDriverProcessKeyboard(void)
 					//
 				}
 				break;
-			case BUTTON_F4_PRESSED:	// Press-and-hold button F4
+			case BUTTON_F3_PRESSED:	// Press-and-hold button F4
 				//
 				// Move to the END of the current menu structure
 				if(ts.menu_mode){		// are we in menu mode?
