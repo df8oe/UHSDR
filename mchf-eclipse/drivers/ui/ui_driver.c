@@ -4861,7 +4861,10 @@ static void UiDriverChangeRit(uchar enabled)
 	else
 	    color = enabled?White:Grey;
 
-	sprintf(temp,"%+3i", ts.rit_value);
+	if(ts.rit_value)
+	    sprintf(temp,"%+3i", ts.rit_value);
+	else
+	    sprintf(temp,"%3i", ts.rit_value);
 
     UiDriverEncoderDisplay(0,2,"RIT", enabled, temp, color);
 }
