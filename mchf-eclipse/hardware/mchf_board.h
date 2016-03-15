@@ -1055,8 +1055,10 @@ enum {
 #define	EEPROM_FILTER_3K2_SEL		322		//
 #define	EEPROM_FILTER_3K4_SEL		323		//
 #define	EEPROM_FILTER_3K8_SEL		324		//
-#define	EEPROM_FILTER_1_SEL			325		// selection of filters 4k0 to 6k0
-#define	EEPROM_FILTER_2_SEL			326		// selection of filters 6k5 to 10k0
+#define	EEPROM_FILTER_1_SEL		325		// selection of filters 4k0 to 6k0
+#define	EEPROM_FILTER_2_SEL		326		// selection of filters 6k5 to 10k0
+#define	EEPROM_DYNAMIC_TUNING		327
+
 
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 
