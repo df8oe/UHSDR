@@ -307,7 +307,7 @@ inline bool is_dsp_notch() {
 
 void UiDriverShowDebugText(char* text)
 {
-UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
 }
 
 void UiDriver_HandleSwitchToNextDspMode()
@@ -2997,6 +2997,7 @@ skip_check:
 		    ts.last_tuning = ts.sysclock;
 		    }
 	}
+
 	//
 	// Update main frequency display
 	//
@@ -3011,9 +3012,6 @@ skip_check:
 		UiDriverCheckFilter(ts.tune_freq/4);	// check the filter status with the new frequency update
 		UiDriverCheckBand(ts.tune_freq, 1);		// check which band in which we are currently tuning and update the display
 	}
-	//
-	// Allow clear of spectrum display in its state machine
-	sd.dial_moved = 1;
 
 	// Save current freq
 	df.tune_old = loc_tune_new;

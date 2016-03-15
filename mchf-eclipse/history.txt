@@ -21,6 +21,7 @@
 - completely new functions for menu with submenus
 - slightly improvements in display colors and font usage
 - bugfix SI570 crashes when tuning is very fast and in very large steps
+- bugfix spectrum/waterfall stopped during tuning
 
 
 20160228 [DF8OE]

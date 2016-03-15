@@ -10,6 +10,7 @@
  **  Last Modified:                                                                 **
  **  Licence:      CC BY-NC-SA 3.0                                                **
  ************************************************************************************/
+#include <stdio.h>
 #include "ui_spectrum.h"
 #include "ui_lcd_hy28.h"
 // For spectrum display struct
