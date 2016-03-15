@@ -1332,92 +1332,92 @@ typedef struct TransceiverState
 	//
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
-										// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
-										// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
-										// LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled
-											//	when translate mode is DISABLED
-										// LSB+3 = 1 if AM TX has transmit filter DISABLED
-										// LSB+4 = 1 if FWD/REV A/D inputs from RF power detectors are to be reversed
-										// LSB+5 = 1 if Frequency tuning is to be relaxed
-										// LSB+6 = 1 if SSB TX has transmit filter DISABLED
-										// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
+							// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
+							// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
+							// LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled
+							//	when translate mode is DISABLED
+							// LSB+3 = 1 if AM TX has transmit filter DISABLED
+							// LSB+4 = 1 if FWD/REV A/D inputs from RF power detectors are to be reversed
+							// LSB+5 = 1 if Frequency tuning is to be relaxed
+							// LSB+6 = 1 if SSB TX has transmit filter DISABLED
+							// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-										// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
-										// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
-										// LSB+2 = 1 if key/button beep is enabled
-										// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
-	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
-										// is NEVER reset and is used for timing certain events.
-	uint16_t	version_number_minor;	// version number - minor - used to hold version number and detect change
-	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
-	uint16_t	version_number_release;	// version number - release - used to hold version number and detect change
+							// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
+							// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
+							// LSB+2 = 1 if key/button beep is enabled
+							// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
+	ulong	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
+							// is NEVER reset and is used for timing certain events.
+	uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
+	uint16_t	version_number_build;		// version number - build - used to hold version number and detect change
+	uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
 	uchar	nb_agc_time_const;			// used to calculate the AGC time constant
 	uchar	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
-	bool	cw_lsb;						// flag used to indicate that CW is to operate in LSB when TRUE
+	bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
 	uchar	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
-	uchar	lsb_usb_auto_select;		// holds setting of LSB/USB auto-select above/below 10 MHz
+	uchar	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
 	bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
-	ulong	hold_off_spectrum_scope;	// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
+	ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
 	ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
 	bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
-	bool	freq_cal_adjust_flag;		// set TRUE if frequency calibration is in process
+	bool	freq_cal_adjust_flag;			// set TRUE if frequency calibration is in process
 	bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
-	bool	rx_muting;					// set TRUE if audio output is to be muted
+	bool	rx_muting;				// set TRUE if audio output is to be muted
 	ulong	rx_blanking_time;			// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
 	ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
-										// LSB+6 (0x40):  0 = VFO A, 1 = VFO B
-										// LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
-	ulong	voltmeter_calibrate;		// used to calibrate the voltmeter
+							// LSB+6 (0x40):  0 = VFO A, 1 = VFO B
+							// LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
+	ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
 	bool	thread_timer;				// used to trigger the thread timing (e.g. "driver_thread()")
-	uchar	waterfall_color_scheme;		// stores waterfall color scheme
-	uchar	waterfall_vert_step_size;	// vertical step size in waterfall mode
+	uchar	waterfall_color_scheme;			// stores waterfall color scheme
+	uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
 	ulong	waterfall_offset;			// offset for waterfall display
 	ulong	waterfall_contrast;			// contrast setting for waterfall display
-	uchar	spectrum_scope_scheduler;	// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
-	uchar	spectrum_scope_nosig_adjust;	// Adjustment for no signal adjustment conditions for spectrum scope
-	uchar	waterfall_nosig_adjust;		// Adjustment for no signal adjustment conditions for waterfall
+	uchar	spectrum_scope_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+	uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
+	uchar	waterfall_nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 	uchar	waterfall_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 	uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
-	bool	dvmode;						// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
-	uchar	tx_audio_muting_timing;		// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-	ulong	tx_audio_muting_timer;		// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+	bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
+	uchar	tx_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
+	ulong	tx_audio_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
 	uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
-	bool	tx_audio_muting_flag;		// when TRUE, audio is to be muted after PTT/keyup
+	bool	tx_audio_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
 	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
-	bool	mem_disp;					// when TRUE, memory display is enabled
-	bool	load_eeprom_defaults;		// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-	ulong	fm_subaudible_tone_gen_select;	// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+	bool	mem_disp;				// when TRUE, memory display is enabled
+	bool	load_eeprom_defaults;			// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	ulong	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
 	uchar	fm_tone_burst_mode;			// this is the setting for the tone burst generator
-	ulong	fm_tone_burst_timing;		// this is used to time/schedule the duration of a tone burst
+	ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
 	uchar	fm_sql_threshold;			// squelch threshold "dial" setting
 	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
-	ulong	fm_subaudible_tone_det_select;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+	ulong	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
 	bool	beep_active;				// TRUE if beep is active
 	ulong	beep_frequency;				// beep frequency, in Hz
 	ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
-	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
-	bool	mic_bias;			// TRUE = mic bias on
-	uchar	ser_eeprom_type;		// serial eeprom type
-	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
-	uint8_t* eeprombuf;			// pointer to copy of config in RAM
-	uchar 	tp_present;			// touchscreen present = 1, absent = 0
-	uint8_t tp_x;				// touchscreen x coordinate
-	uint8_t tp_y;				// touchscreen y coordinate
-	bool	show_tp_coordinates;		// show coordinates on LCD
-	uchar	rfmod_present;			// 0 = not present
-	uchar	vhfuhfmod_present;		// 0 = not present
-	uchar	multi;				// actual translate factor
-	uchar	tune_power_level;		// TX power in antenna tuning function
-	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
-	bool	dsp_enabled;			// NR disabled
-	uchar	xlat;				// CAT <> IQ-Audio
-	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
-//	uint16_t df8oe_test;			// only debugging use
+	bool	mic_bias;				// TRUE = mic bias on
+	uchar	ser_eeprom_type;			// serial eeprom type
+	uchar	ser_eeprom_in_use;			// 0xFF = not in use, 0x1 = in use
+	uint8_t* eeprombuf;				// pointer to copy of config in RAM
+	uchar 	tp_present;				// touchscreen present = 1, absent = 0
+	uint8_t tp_x;					// touchscreen x coordinate
+	uint8_t tp_y;					// touchscreen y coordinate
+	bool	show_tp_coordinates;			// show coordinates on LCD
+	uchar	rfmod_present;				// 0 = not present
+	uchar	vhfuhfmod_present;			// 0 = not present
+	uchar	multi;					// actual translate factor
+	uchar	tune_power_level;			// TX power in antenna tuning function
+	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
+	bool	dsp_enabled;				// NR disabled
+	uchar	xlat;					// CAT <> IQ-Audio
+	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
+//	uint16_t df8oe_test;				// only debugging use
 
-	uint8_t display_type;           // existence/identification of display type
-	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
+	uint8_t display_type;           		// existence/identification of display type
+	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

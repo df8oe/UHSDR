@@ -2983,15 +2983,19 @@ skip_check:
 			}
 		}
 
-		// Set frequency
-		if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
-		{
-		char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+		if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	// prevention for SI570 crash due too fast frequency changes
+		    {
+		    // Set frequency
+		    if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
+			{
+			char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
 			if(test == 1)
 			    col = Red;	// Color in red if there was a problem setting frequency
 			if(test == 2)
 			    col = Yellow;	// Color in yellow if there was a problem setting frequency
-		}
+			}
+		    ts.last_tuning = ts.sysclock;
+		    }
 	}
 	//
 	// Update main frequency display
@@ -3936,9 +3940,9 @@ static bool UiDriverCheckFrequencyEncoder(void)
 {
 	int 		pot_diff;
 	bool		retval = false;
-	int			enc_multiplier;
+	int		enc_multiplier;
 	static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
-	int			delta_t, enc_speed;
+	int		delta_t, enc_speed;
 	// char	num[8];
 
 

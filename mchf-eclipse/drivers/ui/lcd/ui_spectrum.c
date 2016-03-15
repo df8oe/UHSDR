@@ -628,7 +628,7 @@ void UiSpectrumReDrawSpectrumDisplay()
 	//	return;
 
 	// Nothing to do here otherwise, or if scope is to be held off while other parts of the display are to be updated or the LCD is being blanked
-	if((!sd.enabled) || (ts.hold_off_spectrum_scope > ts.sysclock) || (ts.lcd_blanking_flag))
+	if((!sd.enabled) || (ts.lcd_blanking_flag))
 		return;
 
 	// The state machine will rest
@@ -647,7 +647,6 @@ void UiSpectrumReDrawSpectrumDisplay()
 		//
 		// Apply gain to collected IQ samples and then do FFT
 		//
-
 		case 1:
 		{
 			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
@@ -1028,7 +1027,7 @@ void UiSpectrumReDrawWaterfall()
 	//	return;
 
 	// Nothing to do here otherwise, or if scope is to be held off while other parts of the display are to be updated or the LCD is being blanked
-	if((!sd.enabled) || (ts.hold_off_spectrum_scope > ts.sysclock) || (ts.lcd_blanking_flag))
+	if((!sd.enabled) || (ts.lcd_blanking_flag))
 		return;
 
 	// The state machine will rest
