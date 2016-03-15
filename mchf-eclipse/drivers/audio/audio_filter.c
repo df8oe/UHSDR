@@ -184,7 +184,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_1P8KHZ, "  1.8k ",  1800, FILTER_SSBAM,   FILTER_SSB,  7, 6, filter_list_1P8KHz},
     {  AUDIO_2P1KHZ, "  2.1k ",  2100, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P3KHZ, "  2.3k ",  2300, FILTER_SSBAM,   FILTER_SSB,  6, 2, filter_list_2P3KHz },
-    {  AUDIO_2P5KHZ, "  2.5k ",  2500, FILTER_SSBAMFM, FILTER_FM,   3, 2, filter_stdLabelsLpfBpf },
+    {  AUDIO_2P5KHZ, "  2.5k ",  2500, FILTER_SSBAM,   FILTER_SSB,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P7KHZ, "  2.7k ",  2700, FILTER_NOFM,    FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P9KHZ, "  2.9k ",  2900, FILTER_SSBAM,   FILTER_AM,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P2KHZ, "  3.2k ",  3200, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
@@ -198,7 +198,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P0KHZ, "  5.0k ",  5000, FILTER_SSBAMFM, FILTER_FM,   2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P5KHZ, "  5.5k ",  5500, FILTER_SSB,	   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_SSBAMFM, FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_6P5KHZ, "  6.5k ",  6500, FILTER_SSB, 	   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_7P0KHZ, "  7.0k ",  7000, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_7P5KHZ, "  7.5k ",  7500, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
@@ -210,8 +210,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
 };
 
 /*
-id --> at the moment, we only have an ID for bandwidth, but no ID yet for each single filter path
---> needs to be done
+id --> ID for bandwidth
 
 mode
 
@@ -260,13 +259,31 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  * ###############################################################
  */
 
-FilterPathDescriptor FilterPathInfo[83] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
+FilterPathDescriptor FilterPathInfo[86] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
 									// sum(
 {
 // ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
 //		sample_rate_dec,bool IIR_PreFilter_yes_no, IIR_PreFilter_numTaps, IIR_PreFilter_pk_file,
 //		IIR_PreFilter_pv_file, FIR_int_numTaps, FIR_int_coeff_file, bool IIR_int_yes_no,
 //		IIR_int_numTaps, IIR_int_pk_file, IIR_int_pv_file
+
+
+//###################################################################################################################################
+// FM filters
+//	very special case, FM demodulation mainly in separate void, filterpath not defined in FilterPathInfo
+//###################################################################################################################################
+
+	{	AUDIO_3P6KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, 0, 0,
+		0, 1, 0, 0, 0,
+		0, 0, 0, 0 ,0 , 0},
+
+	{	AUDIO_5P0KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, 0, 0,
+		0, 1, 0, 0, 0,
+		0, 0, 0, 0 ,0 , 0},
+
+	{	AUDIO_6P0KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, 0, 0,
+		0, 1, 0, 0, 0,
+		0, 0, 0, 0 ,0 , 0},
 
 //###################################################################################################################################
 // CW & SSB filters:
@@ -856,6 +873,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     } // END old routine / if ts.filter_path == 0
     else {
     		// in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
+    		// also applicable for FM case !
     		for(i = 0; i < fc.rx_q_num_taps; i++) { // fc.rx_q_num_taps is ALWAYS == fc.rx_i_num_taps
     			fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file[i];
                 fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path-1].FIR_Q_coeff_file[i];
