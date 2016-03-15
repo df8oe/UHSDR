@@ -254,7 +254,7 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
 char blankline[33] = "                                ";
 
 // menu entry kind constants
-enum {
+enum MENU_KIND {
   MENU_STOP = 0, // last entry in a menu / group
   MENU_ITEM, // standard menu entry
   MENU_GROUP, // menu group entry
@@ -339,7 +339,7 @@ MenuDisplaySlot menu[MENUSIZE];
 // If you move menus around, make sure to change the groups structure of the move
 // menu to reflect the new parent menu!
 
-enum {
+enum MENU_GROUP_ITEM {
   MENU_TOP  = 0,
   MENU_BASE,
   MENU_CONF,
@@ -564,7 +564,7 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
-enum {
+enum MENU_INFO_ITEM {
   INFO_EEPROM,
   INFO_DISPLAY,
   INFO_SI570,

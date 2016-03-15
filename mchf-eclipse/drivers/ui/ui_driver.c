@@ -1461,9 +1461,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.menu_mode = 1;
 				UiSpectrumClearDisplay();
                 UiDriverFButtonLabel(1," EXIT  ", Yellow);
-                UiDriverFButtonLabel(2," DEFLT",Yellow);
-                UiDriverFButtonLabel(3,"  PREV",Yellow);
-                UiDriverFButtonLabel(4,"  NEXT",Yellow);
+                UiDriverFButtonLabel(2,"  PREV",Yellow);
+                UiDriverFButtonLabel(3,"  NEXT",Yellow);
+                UiDriverFButtonLabel(4," DEFLT",Yellow);
 				//
 				//
 				// Grey out adjustments and put encoders in known states
@@ -1488,8 +1488,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				//
 				ts.menu_var = 0;
 				//
-				UiMenu_RenderMenu(0);	// Draw the menu the first time
-				UiMenu_RenderMenu(1);	// Do update of the first menu item
+				UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
+				UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
 			}
 			else	{	// already in menu mode - we now exit
 				ts.menu_mode = 0;
@@ -1553,8 +1553,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		// If in MENU mode, this restores the DEFAULT setting
 		//
 		if(ts.menu_mode)	{		// Button F2 restores default setting of selected item
-			UiMenu_RenderMenu(3);
-			ts.menu_var_changed = 1;
+          UiMenu_RenderPrevScreen();
 		}
 		else	{	// Not in MENU mode - select the METER mode
 		    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
@@ -1570,7 +1569,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		//
 		//
 		if(ts.menu_mode)	{		// Previous screen
-		  UiMenu_RenderPrevScreen();
+          UiMenu_RenderNextScreen();
 		}
 		else	{	// NOT menu mode
 			if(!ts.vfo_mem_flag)	{		// update screen if in VFO (not memory) mode
@@ -1608,7 +1607,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	if(id == BUTTON_F4_PRESSED)	{
 
 	   if (ts.menu_mode) {
-	      UiMenu_RenderNextScreen();
+         UiMenu_RenderMenu(MENU_PROCESS_VALUE_SETDEFAULT);
 		}
 		else	{	// NOT menu mode
 			uint8_t vfo_active,vfo_new;
@@ -4572,9 +4571,6 @@ static void UiDriverChangeDSPMode(void)
 	ushort color = White;
 	const char* txt;
 
-	// Draw line for box
-	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
-	//
 	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
 		color = White;
 	} else	// DSP not active
@@ -4594,6 +4590,7 @@ static void UiDriverChangeDSPMode(void)
 		txt = "DSP-OFF";
 	}
 
+	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
 }
 //
@@ -4656,8 +4653,6 @@ static void UiDriverChangePowerLevel(void)
 {
 	ushort color = White;
 	const char* txt;
-	// Draw top line
-	UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	switch(ts.power_level)
 	{
@@ -4677,9 +4672,12 @@ static void UiDriverChangePowerLevel(void)
 			txt = "  FULL ";
 			break;
 	}
+    // Set TX power factor - to reflect changed power
+    UiDriverSetBandPowerFactor(ts.band);
+
+    // Draw top line
+    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
-	// Set TX power factor - to reflect changed power
-	UiDriverSetBandPowerFactor(ts.band);
 }
 
 //*----------------------------------------------------------------------------
@@ -4886,8 +4884,6 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	if(!ui_only_update) {
 		audio_driver_set_rx_audio_filter();
 	}
-	// Draw top line
-	UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
@@ -4913,6 +4909,9 @@ void UiDriverChangeFilter(uchar ui_only_update)
 			break;
 		}
 	}
+
+	// Draw top line
+    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,fcolor,Black,0);
 }
 //
@@ -5511,6 +5510,12 @@ static void UiDriverHandlePowerSupply(void)
 	//val_p -= 550;
 	val_p *= 4;
 
+	// Reset accumulator
+    pwmt.p_curr     = 0;
+    pwmt.pwr_aver   = 0;
+
+
+
 	//
 	col = COL_PWR_IND;	// Assume normal voltage, so Set normal color
 	//
@@ -5530,9 +5535,6 @@ static void UiDriverHandlePowerSupply(void)
 		snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
 		UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
 	}
-	// Reset accumulator
-	pwmt.p_curr 	= 0;
-	pwmt.pwr_aver 	= 0;
 }
 
 //*----------------------------------------------------------------------------
@@ -5746,6 +5748,7 @@ static void UiDriverHandleLoTemperature(void)
 	int		comp, comp_p;
 	float	dtemp, remain, t_index;
 	uchar	tblp;
+	uint32_t clr;
 
 	// No need to process if no chip avail or updates are disabled
 	if((lo.sensor_present) || ((df.temp_enabled & 0x0f) == TCXO_STOP))
@@ -5824,8 +5827,7 @@ static void UiDriverHandleLoTemperature(void)
 		return;				// yes - bail out, no change needed
 
 	// Update frequency, without reflecting it on the LCD
-	if(comp != (-1))
-	{
+	if(comp != (-1)) {
 		df.temp_factor = comp;
 		UiDriverUpdateFrequencyFast();
 
@@ -5834,17 +5836,17 @@ static void UiDriverHandleLoTemperature(void)
 		lo.comp = comp;
 
 		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Blue,Black,0);
-	}
-	else
-	{
+		clr = Blue;
+	} else {
 		// No compensation - commented out - keep last compensation value
 		//df.temp_factor = 0;
 		//UiDriverUpdateFrequencyFast();
 
 		// Lock indicator
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",Red,Black,0);
+	    clr = Red;
 	}
+    UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
+
 }
 
 //*----------------------------------------------------------------------------
