@@ -3015,12 +3015,8 @@ skip_check:
 	// Save current freq
 	df.tune_old = loc_tune_new;
 
-
-	// Save the tuning step used during the last dial update
-	// - really important so we know what segments to clear
-	// during tune step change
-//	df.last_tune_step = df.tuning_step;
-	//
+	// new drawing of frequencyscale for WF / Scope
+	sd.dial_moved = 1;
 }
 
 //*----------------------------------------------------------------------------

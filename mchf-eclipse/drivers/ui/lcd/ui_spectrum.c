@@ -689,24 +689,19 @@ void UiSpectrumReDrawSpectrumDisplay()
 			//
 			if(sd.dial_moved)	{	// Clear filter data if dial was moved in steps greater than 1 kHz
 				sd.dial_moved = 0;	// Dial moved - reset indicator
-				if(df.tuning_step > 1000)	{	// was tuning step greater than 1kHz?
-					arm_copy_f32((float32_t *)sd.FFT_MagData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// yes - copy current data into average buffer
-				}
 				//
 				UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
 				//
 			}
-			else	{	// dial was not moved - do normal IIR lowpass filtering to "smooth" display
-				arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-				arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
-				//
-				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
-					if(sd.FFT_AVGData[i] < 1)
-						sd.FFT_AVGData[i] = 1;
+			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
+			arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
+			arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
+			arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+			//
+			for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
+				if(sd.FFT_AVGData[i] < 1)
+				    sd.FFT_AVGData[i] = 1;
 				}
-			}
 		sd.state++;
 		break;
 		}
@@ -1079,24 +1074,19 @@ void UiSpectrumReDrawWaterfall()
 			//
 			if(sd.dial_moved)	{	// Clear filter data if dial was moved in steps greater than 1 kHz
 				sd.dial_moved = 0;	// Dial moved - reset indicator
-				if(df.tuning_step > 1000)	{	// was tuning step greater than 1kHz
-					arm_copy_f32((float32_t *)sd.FFT_MagData,(float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// copy current data into average buffer
-				}
 				//
 				UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
 				//
 			}
-			else	{	// dial was not moved - do IIR lowpass filtering to "smooth" display
-				arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-				arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
-				//
-				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
-					if(sd.FFT_AVGData[i] < 1)
-						sd.FFT_AVGData[i] = 1;
-				}
-			}
+			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
+			arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
+			arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
+			arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+			//
+			for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
+			    if(sd.FFT_AVGData[i] < 1)
+				sd.FFT_AVGData[i] = 1;
+			    }
 		sd.state++;
 		break;
 		}
