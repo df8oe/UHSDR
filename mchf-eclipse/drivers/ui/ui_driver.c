@@ -82,10 +82,7 @@ static void 	UiDriverCheckEncoderThree(void);
 static void 	UiDriverChangeEncoderOneMode(uchar skip);
 static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
-// encoder one
-// encoder two
 static void 	UiDriverChangeSigProc(uchar enabled);
-// encoder three
 static void 	UiDriverChangeRit(uchar enabled);
 static void 	UiDriverChangeDSPMode(void);
 static void 	UiDriverChangeDigitalMode(void);
@@ -225,14 +222,8 @@ __IO ulong 						unmute_delay = 0;
 // Spectrum display
 extern __IO	SpectrumDisplay		sd;
 
-// ------------------------------------------------
-// Public USB Keyboard status
-extern __IO KeypadState		ks;
-
-
 
 uchar drv_state = 0;
-uchar drv_init = 0;
 
 //
 
@@ -310,6 +301,19 @@ void UiDriverShowDebugText(char* text)
 UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
 }
 
+static void UiDriver_ToggleWaterfalScopeDisplay() {
+  if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)
+  {                       // is the waterfall mode active?
+    ts.misc_flags1 &=  ~MISC_FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
+    UiSpectrumInitWaterfallDisplay();   // init spectrum scope
+  }
+  else
+  {                       // waterfall mode was turned off
+    ts.misc_flags1 |=  MISC_FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
+    UiSpectrumInitWaterfallDisplay();   // init spectrum scope
+  }
+}
+
 void UiDriver_HandleSwitchToNextDspMode()
 {
 	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
@@ -373,17 +377,7 @@ void UiDriver_HandleTouchScreen()
 	{
 		if(check_tp_coordinates(30,57,27,31))			// wf/scope bar right part
 		{
-			if(ts.misc_flags1 & 128)
-			{						// is the waterfall mode active?
-				ts.misc_flags1 &=  0x7f;		// yes, turn it off
-				UiSpectrumInitWaterfallDisplay();	// init spectrum scope
-			}
-			else
-			{						// waterfall mode was turned off
-				ts.misc_flags1 |=  128;			// turn it on
-				UiSpectrumInitWaterfallDisplay();	// init spectrum scope
-			}
-			UiDriverDisplayFilterBW();			// Update on-screen indicator of filter bandwidth
+		  UiDriver_ToggleWaterfalScopeDisplay();
 		}
 		if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
 		{
@@ -464,7 +458,7 @@ void UiDriver_HandleTouchScreen()
 		if(check_tp_coordinates(50,53,55,57))			// vhf/uhf bands mod S-meter "60"
 		    ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
 		if(ts.menu_mode)					// refresh menu
-		    UiMenu_RenderMenu(0);
+		    UiMenu_RenderMenu(MENU_RENDER_ONLY);
 	}
 	ts.tp_x = 0xff;							// prepare tp data for next touchscreen event
 }
@@ -495,7 +489,7 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
 				Codec_SidetoneSetgain();
 		//
 		if(ts.menu_mode)	// are we in menu mode?
-			UiMenu_RenderMenu(0);	// yes, update display when we change power setting
+			UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change power setting
 		//
 	}
 }
@@ -527,7 +521,7 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 	UiInitRxParms();	// re-init because mode/filter may have changed
 	//
 	if(ts.menu_mode)	// are we in menu mode?
-		UiMenu_RenderMenu(0);	// yes, update menu display when we change bands
+		UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update menu display when we change bands
 	//
 	ads.af_disabled =  btemp;
 
@@ -545,11 +539,6 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 void ui_driver_init(void)
 {
 	short res;
-
-
-#ifdef DEBUG_BUILD
-	printf("ui driver init...\n\r");
-#endif
 
 	// Driver publics init
 	UiDriverPublicsInit();
@@ -589,7 +578,6 @@ void ui_driver_init(void)
 
 	// Create desktop screen
 	UiDriverCreateDesktop();
-	UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 
 	// Set SoftDDS in CW mode
 	if(ts.dmod_mode == DEMOD_CW)
@@ -613,12 +601,6 @@ void ui_driver_init(void)
 	// Extra HW init
 	mchf_board_post_init();
 
-	// Acknowledge end of init for the main thread called
-	// via irq(even before the init is done)
-	// bit useless since 0.171 as IRQs are enabled in
-	// mchf_board_post_init(), but still used by
-	// ui_driver_toggle_tx() to prevent re-entrance
-	drv_init = 1;
 
 	// Do update of frequency display
 	ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
@@ -653,7 +635,7 @@ void ui_driver_thread(void)
 {
 //char txt[32];
 
-if(ts.misc_flags1 & 128)	// is waterfall mode enabled?
+if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)	// is waterfall mode enabled?
 		UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
 	else
 		UiSpectrumReDrawSpectrumDisplay();	// Spectrum Display enabled - do that!
@@ -735,9 +717,6 @@ void ui_driver_toggle_tx(void)
 	bool	reset_freq = 0;
 	ulong	calc_var;
 
-	// FIXME: drv_init never used anywhere in the current code
-	// Disable irq processing
-	drv_init = 0;
 	if(ts.txrx_mode == TRX_MODE_TX)
 	{
 		//
@@ -839,7 +818,7 @@ void ui_driver_toggle_tx(void)
 		UiDriverUpdateFrequencyFast();
 
 	if((ts.menu_mode) || (was_menu))	{			// update menu when we are (or WERE) in MENU mode
-		UiMenu_RenderMenu(0);
+		UiMenu_RenderMenu(MENU_RENDER_ONLY);
 		was_menu = 1;
 	}
 
@@ -848,9 +827,6 @@ void ui_driver_toggle_tx(void)
 	//
 	// Switch codec mode
 	Codec_RX_TX();
-	//
-	// Enable irq processing
-	drv_init = 1;
 	//
 
 }
@@ -1002,7 +978,7 @@ static void UiDriverProcessKeyboard(void)
 					UiInitRxParms();		// re-init for change of filter
 					//
 					if(ts.menu_mode)	// are we in menu mode?
-						UiMenu_RenderMenu(0);	// yes, update display when we change filters
+						UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change filters
 					//
 				}
 				break;
@@ -1083,7 +1059,7 @@ static void UiDriverProcessKeyboard(void)
 				if(!ts.menu_mode)	// are we in menu mode?
 					UiDriverFButtonLabel(1," MENU  ",White);	// no - update menu button to reflect no memory save needed
 				else
-					UiMenu_RenderMenu(0);	// update menu display to remove indicator to do power-off to save EEPROM value
+					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
 			case BUTTON_F2_PRESSED:	// Press-and-hold button F3
 				// Move to the BEGINNING of the current menu structure
@@ -1188,7 +1164,7 @@ static void UiDriverProcessKeyboard(void)
 				  UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				  //
 				  if(ts.menu_mode)	// are we in menu mode?
-						UiMenu_RenderMenu(0);	// yes, update display when we change filters
+						UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change filters
 					//
 				}
 				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
@@ -1242,30 +1218,14 @@ static void UiDriverProcessKeyboard(void)
 				}
 				else if(!UiDriverButtonCheck(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
 					if(!ts.menu_mode)	{			// do not do this in menu mode!
-						if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
-							ts.misc_flags1 &=  0x7f;	// yes, turn it off
-							UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-						}
-						else	{	// waterfall mode was turned off
-							ts.misc_flags1 |=  128;	// turn it on
-							UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-						}
-						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+					  UiDriver_ToggleWaterfalScopeDisplay();
 					}
 				}
 				break;
 			case BUTTON_BNDP_PRESSED:			// BAND+ button pressed-and-held?
 				if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// and BAND-DOWN pressed at the same time?
 					if(!ts.menu_mode)	{		// do not do this if in menu mode!
-						if(ts.misc_flags1 & 128)	{		// is the waterfall mode active?
-							ts.misc_flags1 &=  0x7f;	// yes, turn it off
-							UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-						}
-						else	{	// waterfall mode was turned off
-							ts.misc_flags1 |=  128;	// turn it on
-							UiSpectrumInitWaterfallDisplay();			// init spectrum scope
-						}
-						UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+					  UiDriver_ToggleWaterfalScopeDisplay();
 					}
 				}
 				if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
@@ -1344,7 +1304,7 @@ void UiInitRxParms(void)
 {
 	UiCWSidebandMode();
 	if(ts.menu_mode)	// are we in menu mode?
-		UiMenu_RenderMenu(0);	// yes, update display when we change modes
+		UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change modes
 	//
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_CalcTxPhaseAdj();
@@ -3855,21 +3815,15 @@ static void UiDriverChangeBand(uchar is_up)
 	new_band_freq  = bandInfo[curr_band_index].tune;
 
 	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
-	//printf("new band index: %d and freq: %d\n\r",new_band_index,new_band_freq);
-	//
 	// Load frequency value - either from memory or default for
 	// the band if this is first band selection
 	if(vfo[VFO_WORK].band[new_band_index].dial_value != 0xFFFFFFFF)
 	{
-		//printf("load value from memory\n\r");
-
 		// Load old frequency from memory
 		df.tune_new = vfo[VFO_WORK].band[new_band_index].dial_value;
 	}
 	else
 	{
-		//printf("load default band freq\n\r");
-
 		// Load default band startup frequency
 		df.tune_new = new_band_freq;
 	}

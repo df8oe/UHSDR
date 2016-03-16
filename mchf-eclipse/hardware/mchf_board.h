@@ -1333,6 +1333,7 @@ typedef struct TransceiverState
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
+    #define MISC_FLAGS1_WFALL_SCOPE_TOGGLE 0x80
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
 							// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
 							// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
