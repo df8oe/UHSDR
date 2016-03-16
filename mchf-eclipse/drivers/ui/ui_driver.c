@@ -6033,6 +6033,9 @@ void UiDriverSetBandPowerFactor(uchar band)
 	}
 	//
 	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
+
+	if((band >= 0 && band <= 2) || (band >= 14 && band <=16))		// reduction for band <= 40m
+	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 //
 //
