@@ -2832,7 +2832,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 		if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size)))	// Is this frequency within this band?
 			flag = 1;	// yes - stop the scan
 		else	// no - not in this band
-			band_scan++;	// scan the next band qqqqq
+			band_scan++;	// scan the next band
 	}
 	//
 	if(update)	{		// are we to update the display?
@@ -3763,7 +3763,7 @@ static void UiDriverChangeBand(uchar is_up)
 	// Handle direction
 	if(is_up)
 	{
-		if(curr_band_index < (MAX_BANDS - 1))	// qqqqq
+		if(curr_band_index < (MAX_BANDS - 1))
 		{
 			//printf("going up band\n\r");
 
@@ -6034,7 +6034,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 	//
 	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
 
-	if((band >= 0 && band <= 2) || (band >= 14 && band <=16))		// reduction for band <= 40m
+	if(df.tune_new < 8000000 * 4)		// reduction for frequencies < 8 MHz
 	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 //
