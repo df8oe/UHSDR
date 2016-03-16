@@ -1731,7 +1731,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			else
 				{
 				UiDriverChangeAudioGain(0);
-				UiMenu_RenderMenu(0);
+				UiMenu_RenderMenu(MENU_RENDER_ONLY);
 				}
 		}
 
@@ -2588,7 +2588,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 				ts.misc_flags2 |= 4;		// set LSB+2
 			else			// beep is to be disabled
 				ts.misc_flags2 &= 0xfb;		// clear LSB+2
-			UiMenu_RenderMenu(0);
+			UiMenu_RenderMenu(MENU_RENDER_ONLY);
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
