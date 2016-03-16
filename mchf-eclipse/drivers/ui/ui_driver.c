@@ -1066,6 +1066,13 @@ static void UiDriverProcessKeyboard(void)
 				if(ts.menu_mode)	{		// Are we in menu mode?
 				  UiMenu_RenderFirstScreen();
 				}
+				break;
+			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
+				//
+				// Move to the END of the current menu structure
+				if(ts.menu_mode){		// are we in menu mode?
+				    UiMenu_RenderLastScreen();
+				}
 				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
 						ts.vfo_mem_flag = 1;		// yes, switch to memory mode
@@ -1079,13 +1086,9 @@ static void UiDriverProcessKeyboard(void)
 					//
 				}
 				break;
-			case BUTTON_F3_PRESSED:	// Press-and-hold button F4
-				//
-				// Move to the END of the current menu structure
-				if(ts.menu_mode){		// are we in menu mode?
-				    UiMenu_RenderLastScreen();
-				}
-				else	{	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
+			case BUTTON_F4_PRESSED:	// Press-and-hold button F4
+				if(!ts.menu_mode)
+				    {	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
 					__IO VfoReg* vfo_store;
 					if(is_vfo_b())	{	// are we in VFO B mode?
 						vfo_store = &vfo[VFO_A].band[ts.band];
