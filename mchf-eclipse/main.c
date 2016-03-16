@@ -908,7 +908,7 @@ int main(void)
 	//
 	UiCheckForEEPROMLoadFreqModeDefaultRequest();	// check - and act on - request for loading frequency/mode defaults, if any
 	//
-	UiCheckForPressedKey();
+	UiDriver_KeyTestScreen();
 
 	if (ts.cat_mode_active)
 		cat_driver_init();

@@ -554,7 +554,7 @@ void 	uiCodecMute(uchar val);
 //
 uint16_t 	UiConfiguration_SaveEepromValues(void);
 void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
-void	UiCheckForPressedKey(void);
+void	UiDriver_KeyTestScreen(void);
 void	UiInitRxParms(void);
 //
 //

@@ -5458,31 +5458,25 @@ static void UiDriverHandlePowerSupply(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 static void UiDriverUpdateLoMeter(uchar val,uchar active)
+
 {
-	uchar 	i,v_s;
-	int		col = White;
+  if (val < 26) {
+    //  Only redraw if inside of the range
 
-	// Do not waste time redrawing if outside of the range
-	if(val > 26)
-		return;
+    uchar 	i,v_s = 3;
+    int		clr = White;
 
-	// Indicator height
-	v_s = 3;
-
-	// Draw first indicator
-	for(i = 1; i < 26; i++)
-	{
-		if(val == i)
-			col = Blue;
-		else
-			col = White;
-
-		if(!active)
-			col = Grey;
-
-		// Lines
-		UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,col);
-	}
+    // Draw first indicator
+    for(i = 1; i < 26; i++)
+    {
+      if (active) {
+          clr = val==i?Blue:White;
+      } else {
+        clr = Grey;
+      }
+      UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,clr);
+    }
+  }
 }
 
 //*----------------------------------------------------------------------------
@@ -5520,17 +5514,13 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 
 	// Label
 	UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),label,label_color,Grey,0);
-
 	// Lock Indicator
 	UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), txt,txt_color,Black,0);	// show/delete asterisk
-
 	// Show Initial Temp Value or "STOPPED"
 	if (value_str) {
-		// Value
 		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
 	}
 
-	//
 	// Meter
 	UiDriverUpdateLoMeter(13,enabled);
 }
@@ -6176,7 +6166,7 @@ void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 //*----------------------------------------------------------------------------
 //
 //
-void UiCheckForPressedKey(void)
+void UiDriver_KeyTestScreen(void)
 {
 	ushort i, j, k, p_o_state, rb_state, new_state;
 	uint32_t poweroffcount, rbcount;
