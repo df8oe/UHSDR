@@ -22,6 +22,9 @@
 - slightly improvements in display colors and font usage
 - bugfix SI570 crashes when tuning is very fast and in very large steps
 - bugfix spectrum/waterfall stopped during tuning
+- grouped buttons EXIT-PREV-NEXT for better usability
+- state of dynamiv tuning is stored ow
+- started new filter selection method (FilterPath - experimantal!)
 
 
 20160228 [DF8OE]

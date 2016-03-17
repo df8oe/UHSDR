@@ -172,6 +172,7 @@ static const FilterConfig filter_list_2P3KHz[] =      {
 #define FILTER_NOFM (FILTER_CW|FILTER_SSB|FILTER_AM)
 #define FILTER_SSBAM (FILTER_SSB|FILTER_AM)
 #define FILTER_SSBCW (FILTER_SSB|FILTER_CW)
+#define FILTER_AMFM (FILTER_AM|FILTER_FM)
 #define FILTER_NONE (0)
 #define FILTER_SSBAMFM (FILTER_SSB|FILTER_AM|FILTER_FM)
 
@@ -194,19 +195,19 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_4P0KHZ, "  4.0k ",  4000, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P2KHZ, "  4.2k ",  4200, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P4KHZ, "  4.4k ",  4400, FILTER_NOFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_4P6KHZ, "  4.6k ",  4600, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_5P0KHZ, "  5.0k ",  5000, FILTER_SSBAMFM, FILTER_FM,   2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_5P5KHZ, "  5.5k ",  5500, FILTER_SSB,	   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_SSBAMFM, FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_6P5KHZ, "  6.5k ",  6500, FILTER_SSB, 	   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_7P0KHZ, "  7.0k ",  7000, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_7P5KHZ, "  7.5k ",  7500, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_8P0KHZ, "  8.0k ",  8000, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_8P5KHZ, "  8.5k ",  8500, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_9P0KHZ, "  9.0k ",  9000, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_9P5KHZ, "  9.5k ",  9500, FILTER_SSB,     FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_10P0KHZ," 10.0k ", 10000, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff }
+    {  AUDIO_4P6KHZ, "  4.6k ",  4600, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_5P0KHZ, "  5.0k ",  5000, FILTER_AMFM,    FILTER_FM,   2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_5P5KHZ, "  5.5k ",  5500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_AMFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_6P5KHZ, "  6.5k ",  6500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_7P0KHZ, "  7.0k ",  7000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_7P5KHZ, "  7.5k ",  7500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_8P0KHZ, "  8.0k ",  8000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_8P5KHZ, "  8.5k ",  8500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_9P0KHZ, "  9.0k ",  9000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_9P5KHZ, "  9.5k ",  9500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_10P0KHZ," 10.0k ", 10000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff }
 };
 
 /*
