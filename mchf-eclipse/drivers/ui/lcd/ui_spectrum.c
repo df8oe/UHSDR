@@ -473,7 +473,7 @@ return (FFT_IQ_BUFF_LEN/4 + idx)%(FFT_IQ_BUFF_LEN/2);
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverInitSpectrumDisplay()
+static void UiSpectrum_InitSpectrumDisplay()
 {
 	ulong i;
 	arm_status	a;
@@ -608,7 +608,7 @@ void UiDriverInitSpectrumDisplay()
 //
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 //
-void UiSpectrumReDrawSpectrumDisplay()
+void UiSpectrumReDrawScopeDisplay()
 {
 	ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
@@ -1349,13 +1349,13 @@ void UiSpectrumReDrawWaterfall()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiSpectrumInitWaterfallDisplay()
+void UiSpectrumInitSpectrumDisplay()
 {
 	if(ts.boot_halt_flag)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
 		return;
 
 	UiSpectrumClearDisplay();			// clear display under spectrum scope
 	UiSpectrumCreateDrawArea();
-	UiDriverInitSpectrumDisplay();
+	UiSpectrum_InitSpectrumDisplay();
 	UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }

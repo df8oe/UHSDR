@@ -17,10 +17,9 @@
 #include "audio_driver.h"
 
 void UiSpectrumInitSpectrumDisplay();
-void UiSpectrumInitWaterfallDisplay();
 void UiSpectrumClearDisplay();
 void UiSpectrumReDrawWaterfall();
-void UiSpectrumReDrawSpectrumDisplay();
+void UiSpectrumReDrawScopeDisplay();
 
 
 // Spectrum scope operational constants

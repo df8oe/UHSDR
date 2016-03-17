@@ -237,6 +237,7 @@ enum {
 	MENU_10K0_SEL,
 	CONFIG_DSP_ENABLE,
 	CONFIG_CAT_XLAT,
+	MENU_FP_SEL,
 	//
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };

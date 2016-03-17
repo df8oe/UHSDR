@@ -561,6 +561,7 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -3448,6 +3449,22 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case MENU_10K0_SEL:	//
 	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_10P0KHZ);
 		break;
+    case MENU_FP_SEL: // FIXME: Remove after FilterPaths become officially used
+        temp_var = ts.filter_path;
+        tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
+            0,
+            86,
+            0,
+            1);
+        ts.filter_path = temp_var;
+        if(tchange) {   // did something change?
+          // avoid FM filter paths for now
+          if (ts.filter_path == 1 || ts.filter_path == 2) { ts.filter_path = 4; }
+          if (ts.filter_path == 3) { ts.filter_path = 0; }
+          UiDriverChangeFilter(0);
+        }
+        sprintf(options, "  %u", ts.filter_path);
+        break;
 
 	case CONFIG_DSP_ENABLE:	// Enable DSP NR
 		temp_var = ts.dsp_enabled;
