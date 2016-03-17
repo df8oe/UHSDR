@@ -98,7 +98,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt8(int var, uint8_t mod
 		ts.menu_var_changed = 1;
 		*val_ptr = val_max;
 	}
-	if(mode == 3)	{
+	if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 		ts.menu_var_changed = 1;
 		*val_ptr = val_default;
 	}
@@ -129,7 +129,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt32(int var, uint32_t m
 		ts.menu_var_changed = 1;
 		*val_ptr = val_max;
 	}
-	if(mode == 3)	{
+	if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 		ts.menu_var_changed = 1;
 		*val_ptr = val_default;
 	}
@@ -159,7 +159,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt(int var, uint32_t mode
 		ts.menu_var_changed = 1;
 		*val_ptr = val_max;
 	}
-	if(mode == 3)	{
+	if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 		ts.menu_var_changed = 1;
 		*val_ptr = val_default;
 	}
@@ -188,7 +188,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt16(int var, uint32_t mo
 		ts.menu_var_changed = 1;
 		*val_ptr = val_max;
 	}
-	if(mode == 3)	{
+	if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 		ts.menu_var_changed = 1;
 		*val_ptr = val_default;
 	}
@@ -918,7 +918,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   const char blank[34] = "                               ";
 
   if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP ||entry->kind == MENU_INFO) ) {
-    if (mode == 0) {
+    if (mode == MENU_RENDER_ONLY) {
       uint16_t level = 0;
       const MenuDescriptor* parent = entry;
       do {
@@ -943,7 +943,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
       UiMenu_UpdateHWInfoLines(entry->number,mode,pos);
       break;
     case MENU_GROUP:
-      if (mode == 1) {
+      if (mode == MENU_PROCESS_VALUE_CHANGE) {
         bool old_state = UiMenu_GroupIsUnfolded(entry);
         if (ts.menu_var < 0 ) { UiMenu_GroupFold(entry,true); }
         if (ts.menu_var > 0 ) { UiMenu_GroupFold(entry,false); }
@@ -962,7 +962,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
   } else {
     UiMenu_DisplayLabel(blank,m_clr,pos);
   }
-  if (mode == 1) {
+  if (mode == MENU_PROCESS_VALUE_CHANGE) {
     UiMenu_MoveCursor(pos);
   }
 }
@@ -1129,7 +1129,7 @@ void UiMenu_RenderMenu(uint16_t mode) {
   // UiMenu_DisplayMoveSlotsForward(3);
   // UiMenu_DisplayMoveSlotsBackwards(10);
   switch (mode){
-  case 0: {// (re)draw all labels and values
+  case MENU_RENDER_ONLY: {// (re)draw all labels and values
     int idx;
     for (idx = 0; idx < MENUSIZE; idx++) {
       UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
@@ -1137,8 +1137,8 @@ void UiMenu_RenderMenu(uint16_t mode) {
   }
   break;
 
-  case 3:
-  case 1:
+  case MENU_PROCESS_VALUE_SETDEFAULT:
+  case MENU_PROCESS_VALUE_CHANGE:
   {
     // wrapping to next screen (and from end to start and vice versa)
     if (ts.menu_item >= MENUSIZE) {
@@ -1299,7 +1299,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	clr = White;		// color used it display of adjusted options
 
     select = index; // use index passed from calling function
-	if(mode == 0)	{	// are we in update/display mode?
+	if(mode == MENU_RENDER_ONLY)	{	// are we in update/display mode?
 		var = 0;		// prevent any change of variable
 	}
 	else	{			// this is "change" mode
@@ -2367,7 +2367,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	}
 	//
 	UiMenu_DisplayValue(options,clr,opt_pos);
-	if(mode == 1)	{
+	if(mode == MENU_PROCESS_VALUE_CHANGE)	{
 	  UiMenu_MoveCursor(opt_pos);
 	}
 	//
@@ -2398,7 +2398,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	clr = White;		// color used it display of adjusted options
 
     select = index; // use index passed from calling function
-	if(mode == 0)	{	// are we in update/display mode?
+	if(mode == MENU_RENDER_ONLY)	{	// are we in update/display mode?
 		var = 0;		// prevent any change of variable
 	} else {
 		var = ts.menu_var;		// change from encoder
@@ -2409,7 +2409,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
 	strcpy(options, "ERROR");	// pre-load to catch error condition
 	//
-	if(mode == 1)	{
+	if(mode == MENU_PROCESS_VALUE_CHANGE)	{
 		if(select == CONFIG_FREQUENCY_CALIBRATE)	// signal if we are in FREQUENCY CALIBRATE mode for alternate frequency steps
 			ts.freq_cal_adjust_flag = 1;
 		else	{							// NOT in frequency calibrate mode
@@ -2656,7 +2656,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		else if(ts.freq_cal > MAX_FREQ_CAL)
 			ts.freq_cal = MAX_FREQ_CAL;
 		//
-		if(mode == 3)	{
+		if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 			ts.menu_var_changed = 1;	// indicate that a change has occurred
 			ts.freq_cal = 0;
 			tchange = 1;
@@ -3025,7 +3025,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		if(ts.xverter_offset > XVERTER_OFFSET_MAX)
 			ts.xverter_offset  = XVERTER_OFFSET_MAX;
 		//
-		if(mode == 3)	{
+		if(mode == MENU_PROCESS_VALUE_SETDEFAULT)	{
 			ts.menu_var_changed = 1;	// indicate that a change has occurred
 			ts.xverter_offset = 0;		// default for this option is to zero it out
 			tchange = 1;
@@ -3484,7 +3484,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		break;
 	}
 	UiMenu_DisplayValue(options,clr,opt_pos);
-	if(mode == 1)	{	// Shifted over
+	if(mode == MENU_PROCESS_VALUE_CHANGE)	{	// Shifted over
 	  UiMenu_MoveCursor(opt_pos);
 	}
 	//
