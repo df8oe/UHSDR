@@ -10,7 +10,10 @@
 #########################################################################
 
 
-2016xxyy [DF8OE]
+2016mmdd [DF8OE]
+
+
+20160317 [DF8OE]
 - added dynamically tuning, activated/deactivated by tapping on step size 
 - hopefully improved USB audio recongnition of all Windows versions and Linux
 - removed scope/waterfall blocking in SPI mode
@@ -23,7 +26,7 @@
 - bugfix SI570 crashes when tuning is very fast and in very large steps
 - bugfix spectrum/waterfall stopped during tuning
 - grouped buttons EXIT-PREV-NEXT for better usability
-- state of dynamiv tuning is stored ow
+- state of dynamic tuning is stored ow
 - started new filter selection method (FilterPath - experimantal!)
 
 
