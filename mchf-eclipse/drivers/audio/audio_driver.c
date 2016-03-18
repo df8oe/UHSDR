@@ -607,6 +607,7 @@ void audio_driver_set_rx_audio_filter(void)
         IIR_PreFilter.numStages = FilterPathInfo[ts.filter_path-1].IIR_PreFilter_numTaps;        // number of stages
         IIR_PreFilter.pkCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pk_file; // point to reflection coefficients
         IIR_PreFilter.pvCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pv_file; // point to ladder coefficients
+        AudioFilter_CalcRxPhaseAdj(); // also set the FIR / Hilbert filters
 	}
 
 
