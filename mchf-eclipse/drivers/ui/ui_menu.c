@@ -493,6 +493,7 @@ const MenuDescriptor confGroup[] = {
 
 const MenuDescriptor powGroup[] = {
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"P00","Tune Power Level"},
+    { MENU_POW, MENU_ITEM, CONFIG_REDUCE_POWER_ON_LOW_BANDS,"P0A","Reduce Power on Low Bands"},
     { MENU_POW, MENU_ITEM, CONFIG_2200M_5W_ADJUST,"P01","2200m 5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_630M_5W_ADJUST,"P02","630m  5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_160M_5W_ADJUST,"P03","160m  5W PWR Adjust"},
@@ -3152,6 +3153,16 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		break;
 	case CONFIG_23CM_FULL_POWER_ADJUST:		// 23cm 5 watt adjust
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
+		break;
+	case CONFIG_REDUCE_POWER_ON_LOW_BANDS:	// Step size button swap on/off
+		temp_var = ts.misc_flags2 & 8;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange) {
+		    if(temp_var)
+			ts.misc_flags2 |= 8;
+		    else
+			ts.misc_flags2 &= 0xf7;
+		}
 		break;
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
 		ts.dsp_nr_delaybuf_len &= 0xfff0;	// mask bottom nybble to enforce 16-count boundary

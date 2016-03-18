@@ -5984,7 +5984,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 	//
 	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
 
-	if(df.tune_new < 8000000 * 4)		// reduction for frequencies < 8 MHz
+	if((df.tune_new < 8000000 * 4) && (ts.misc_flags2 & 8))		// reduction for frequencies < 8 MHz
 	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 //

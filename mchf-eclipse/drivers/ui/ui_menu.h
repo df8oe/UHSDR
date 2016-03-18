@@ -238,6 +238,7 @@ enum {
 	CONFIG_DSP_ENABLE,
 	CONFIG_CAT_XLAT,
 	MENU_FP_SEL,
+	CONFIG_REDUCE_POWER_ON_LOW_BANDS,
 	//
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
