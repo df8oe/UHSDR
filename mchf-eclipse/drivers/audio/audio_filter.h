@@ -15,6 +15,7 @@
 #define DRIVERS_AUDIO_AUDIO_FILTER_H_
 
 #include "mchf_types.h"
+#include "arm_math.h"
 //
 // Audio filter select enumeration
 //
@@ -126,29 +127,21 @@ typedef struct FilterPathDescriptor_s {
   const float *FIR_Q_coeff_file;
 
   // arm_fir_decimate_instance_f32*
-  const uint8_t FIR_dec_numTaps;
-  const float *FIR_dec_coeff_file;
+  const arm_fir_decimate_instance_f32* dec;
 
   const uint8_t sample_rate_dec;
 
-  const bool IIR_PreFilter_yes;
-  // arm_iir_lattice_instance_f32*
-  const uint16_t IIR_PreFilter_numTaps;
-  const float *IIR_PreFilter_pk_file;
-  const float *IIR_PreFilter_pv_file;
+  const arm_iir_lattice_instance_f32* pre_instance;
 
   // arm_fir_interpolate_instance*
   const uint8_t FIR_int_numTaps;
   const float *FIR_int_coeff_file;
 
-  const bool IIR_int_yes;
   // arm_iir_lattice_instance_f32*
-  const uint16_t IIR_int_numTaps;
-  const float *IIR_int_pk_file;
-  const float *IIR_int_pv_file;
+  const arm_iir_lattice_instance_f32* iir_instance;
 } FilterPathDescriptor;
 
-extern FilterPathDescriptor FilterPathInfo[86]; // also change this figure in audio_filter.c
+extern const FilterPathDescriptor FilterPathInfo[86]; // also change this figure in audio_filter.c
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //
