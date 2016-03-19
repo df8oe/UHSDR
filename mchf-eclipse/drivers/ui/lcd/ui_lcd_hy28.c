@@ -126,8 +126,8 @@ void UiLcdHy28_SpiInit(bool hispeed)
 
    // Common misc pins settings
    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+//   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	// maybe thats the relevant part for some builds
+//   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	// do have a "white-screen-issue?? It's gone now...
 
    // Configure GPIO PIN for Chip select
    GPIO_InitStructure.GPIO_Pin = lcd_cs;
