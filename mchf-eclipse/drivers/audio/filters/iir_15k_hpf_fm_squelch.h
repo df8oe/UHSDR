@@ -63,6 +63,7 @@ const float IIR_15k_hpf_pvCoeffs[] =
 //	-58dB: <13.2 kHz
 
 #define IIR_15k_hpf_numStages 6
+#define IIR_15k_numStages 6
 const float IIR_15k_hpf_pkCoeffs[] =
 {
 		0.08584448365242,

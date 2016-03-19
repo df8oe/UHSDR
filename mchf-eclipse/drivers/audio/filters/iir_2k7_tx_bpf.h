@@ -53,7 +53,9 @@
 //	5: P0.93128, 0.009238;  Z (none)
 //
 //
+#define IIR_TX_numStages 10
 #define IIR_TX_2k7_numStages 10
+
 const float IIR_TX_2k7_pkCoeffs[] =
 {
 		0.6869176968793,

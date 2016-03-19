@@ -1,6 +1,9 @@
 #ifndef _filters_h_
 #define _filters_h_
 
+#include "mchf_board.h"
+#include "arm_math.h"
+
 #define	RX_DECIMATE_NUM_TAPS	4
 #define	RX_DECIMATE_MIN_LPF_NUM_TAPS	4
 #define	RX_INTERPOLATE_NUM_TAPS	16
