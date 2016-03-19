@@ -204,15 +204,15 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 // 1
 	{	AUDIO_3P6KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, NULL,
 		0, NULL,
-		0, 0, NULL},
+		NULL, NULL},
 
 	{	AUDIO_5P0KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
 		0, NULL,
-		0, 0, NULL},
+		NULL, NULL},
 
 	{	AUDIO_6P0KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
 		0, NULL,
-		0, 0, NULL},
+		NULL, NULL},
 
 //###################################################################################################################################
 // CW & SSB filters:

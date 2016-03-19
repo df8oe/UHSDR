@@ -4804,7 +4804,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	if(!ui_only_update) {
 		audio_driver_set_rx_audio_filter();
 	}
-	const char  outs[8];
+	char  outs[8];
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
 
