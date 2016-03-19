@@ -11,9 +11,7 @@
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-#define Q_BLOCK_SIZE		1
-#define Q_NUM_TAPS			89
-
+#include "filters.h"
 /*
  	 * 89 tap FIR lowpass filter for AM demodulation
      * 10 kHz lowpass

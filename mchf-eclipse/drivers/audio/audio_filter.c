@@ -18,21 +18,6 @@
 #include "math.h"
 #include "audio_driver.h"
 
-// SSB Hilbert filters
-#include "filters/q_rx_filter_10kHz.h"
-#include "filters/i_rx_filter_10kHz.h"
-//
-#include "filters/q_rx_filter_7kHz5.h"
-#include "filters/i_rx_filter_7kHz5.h"
-//
-#include "filters/q_rx_filter_6kHz.h"
-#include "filters/i_rx_filter_6kHz.h"
-//
-#include "filters/q_rx_filter_5kHz.h"
-#include "filters/i_rx_filter_5kHz.h"
-//
-#include "filters/q_rx_filter_3k6.h"
-#include "filters/i_rx_filter_3k6.h"
 
 // SSB Hilbert TX Filter
 #include "filters/q_tx_filter.h"
