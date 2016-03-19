@@ -147,6 +147,7 @@ drivers/audio/filters/iir_8k5_hpf_fm_squelch.c \
 drivers/audio/filters/iir_9_5k.c \
 drivers/audio/filters/iir_9k.c \
 drivers/audio/filters/iir_antialias.c \
+drivers/audio/filters/iq_rx_filter_am.c \
 drivers/keyboard/usb/usbh_bsp.c \
 drivers/keyboard/usb/usbh_usr.c \
 drivers/keyboard/keyb_driver.c \

@@ -116,6 +116,7 @@ extern FilterDescriptor FilterInfo[AUDIO_FILTER_NUM];
 
 typedef struct FilterPathDescriptor_s {
   const uint8_t id;
+  const char* name;
   const uint16_t mode;
   const uint8_t filter_select_id;
 

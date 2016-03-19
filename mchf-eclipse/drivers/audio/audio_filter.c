@@ -38,15 +38,6 @@
 #include "filters/q_tx_filter.h"
 #include "filters/i_tx_filter.h"
 
-// AM RX Hilbert Filters
-#include "filters/iq_rx_filter_am_10kHz.h"
-#include "filters/iq_rx_filter_am_7kHz5.h"
-#include "filters/iq_rx_filter_am_6kHz.h"
-#include "filters/iq_rx_filter_am_5kHz.h"
-#include "filters/iq_rx_filter_am_3k6.h"
-#include "filters/iq_rx_filter_am_2k3.h"
-
-
 /*
 typedef struct FilterDescriptor_s {
   uint8_t id;
@@ -226,15 +217,15 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 //	very special case, FM demodulation mainly in separate void, filterpath not defined in FilterPathInfo
 //###################################################################################################################################
 // 1
-	{	AUDIO_3P6KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, NULL,
+	{	AUDIO_3P6KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, NULL,
 		0, NULL,
 		0, 0, NULL},
 
-	{	AUDIO_5P0KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
+	{	AUDIO_5P0KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
 		0, NULL,
 		0, 0, NULL},
 
-	{	AUDIO_6P0KHZ, FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
+	{	AUDIO_6P0KHZ, " FM", FILTER_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
 		0, NULL,
 		0, 0, NULL},
 
@@ -244,64 +235,63 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 
 		// 10 filters � 300Hz
 // 4
-	{	AUDIO_300HZ, FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "500", FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_500,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "550", FILTER_SSBCW, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_550,
 		&FirRxInterpolate, NULL},
-	{	AUDIO_300HZ, FILTER_SSBCW, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "600", FILTER_SSBCW, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_600,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "650", FILTER_SSBCW, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_650,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "700", FILTER_SSBCW, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_700,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 6, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "750", FILTER_SSBCW, 6, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_750,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 7, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "800", FILTER_SSBCW, 7, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_800,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 8, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "850", FILTER_SSBCW, 8, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_850,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 9, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "900", FILTER_SSBCW, 9, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_900,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_300HZ, FILTER_SSBCW, 10, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_300HZ, "950", FILTER_SSBCW, 10, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_950,
 		&FirRxInterpolate, NULL},
 
 		// 5 filters � 500Hz
-	{	AUDIO_500HZ, FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
-// 15
+	{	AUDIO_500HZ, "550", FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_550,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_500HZ, FILTER_SSBCW, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_500HZ, "650", FILTER_SSBCW, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_650,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_500HZ, FILTER_SSBCW, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_500HZ, "750", FILTER_SSBCW, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_750,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_500HZ, FILTER_SSBCW, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_500HZ, "850", FILTER_SSBCW, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_850,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_500HZ, FILTER_SSBCW, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_500HZ, "950", FILTER_SSBCW, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_950,
 		&FirRxInterpolate, NULL},
 
@@ -309,196 +299,195 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 // SSB only filters:
 //###################################################################################################################################
 // 19
-	{	AUDIO_1P4KHZ, FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
-// 20
+	{	AUDIO_1P4KHZ, "LPF", FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k4_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P4KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P4KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k4_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P6KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P6KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k6_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P6KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P6KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k6_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "1.1", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k125,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "1.3", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 //25
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k275,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "1.4", FILTER_SSB, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k425,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "1.6", FILTER_SSB, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k575,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "1.7", FILTER_SSB, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k725,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_SSB, 6, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, "LPF", FILTER_SSB, 6, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P1KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P1KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k1_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P1KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P1KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k1_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P3KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, "1.3", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_1k275,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P3KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, "1.4", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_1k412,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P3KHZ, FILTER_SSB, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, "1.6", FILTER_SSB, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_1k562,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P3KHZ, FILTER_SSB, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, "1.7", FILTER_SSB, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_1k712,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P3KHZ, FILTER_SSB, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, "LPF", FILTER_SSB, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
 		&FirRxInterpolate, NULL},
 //33
-	{	AUDIO_2P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k5_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P5KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P5KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k5_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P7KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P7KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k7_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P7KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P7KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k7_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P9KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P9KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P9KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P9KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_BPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_3P2KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P2KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k2_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_3P2KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P2KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k2_BPF,
 		&FirRxInterpolate, NULL},
 
 		// in filters from 3k4 on, the FIR interpolate is 4 taps and an additional IIR interpolation filter
 		// is switched in to accurately prevent alias frequencies
-	{	AUDIO_3P4KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P4KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P4KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P4KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P6KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P6KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P6KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_3P6KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k6_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P8KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_3P8KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k8_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P8KHZ, FILTER_SSB, 2, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_3P8KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k8_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P2KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P2KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P4KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P4KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k4_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 //50
-	{	AUDIO_4P6KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P6KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P8KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P8KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
 //55		// new decimation rate, new decimation filter, new interpolation filter, no IIR Prefilter, no IIR interpolation filter
-	{	AUDIO_5P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_5P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_5P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_5P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_6P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_6P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_6P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_6P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_7P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_7P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_7P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_7P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 			// additional IIR interpolation filter
-	{	AUDIO_8P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_8P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k},
 
-	{	AUDIO_8P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_8P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k5},
 
-	{	AUDIO_9P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_9P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k},
 
-	{	AUDIO_9P5KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_9P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k5},
 
-	{	AUDIO_10P0KHZ, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_10P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
@@ -511,77 +500,77 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 		// in AM, we ALWAYS use the LPF IIR audio PreFilter, regardless of the selected filter_select_ID.
 		// this is because we assume AM mode to be used to demodulate DSB signals, so BPF (sideband suppression) is not necessary
 
-	{	AUDIO_1P4KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+	{	AUDIO_1P4KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P6KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+	{	AUDIO_1P6KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_1P8KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+	{	AUDIO_1P8KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k2_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_2P1KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+	{	AUDIO_2P1KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_2P3KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+	{	AUDIO_2P3KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_2P5KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P5KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_2P7KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+	{	AUDIO_2P7KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_2P9KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_2P9KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_5k5_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_3P2KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_3P2KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_6k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_3P4KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_3P4KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_6k5_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_3P6KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_3P6KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_3P8KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_3P8KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_4P0KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P0KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k5_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_4P2KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P2KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_8k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
 		// from 4.4kHz on, the AM filter has no more IIR PreFilter (at 24ksps sample rate), BUT we add IIR filtering after interpolation (at 48 ksps)!
 //80
-	{	AUDIO_4P4KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P4KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k},
 
-	{	AUDIO_4P6KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P6KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k5},
 
-	{	AUDIO_4P8KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P8KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k},
 
-	{	AUDIO_5P0KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_5P0KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k5},
 
@@ -589,15 +578,15 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 		// remember that the AM 5k filter is capable of up to 10kHz bandwidth, if you offtune the AM carrier
 		// . . . same for 6k = 12kHz bw, 7k5 = 15kHz bw, 10kHz = max of 20kHz bandwidth
 
-	{	AUDIO_6P0KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_6k_coeffs, iq_rx_am_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_6P0KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_6k_coeffs, iq_rx_am_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
-	{	AUDIO_7P5KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_7k5_coeffs, iq_rx_am_7k5_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_7P5KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_7k5_coeffs, iq_rx_am_7k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
-	{	AUDIO_10P0KHZ, FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_10k_coeffs, iq_rx_am_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_10P0KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_10k_coeffs, iq_rx_am_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 	}; // end FilterPath
