@@ -11,8 +11,7 @@
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-#ifndef __FIR_RX_INTERPOLATE_16_10KHZ_H
-#define __FIR_RX_INTERPOLATE_16_10KHZ_H
+#include "filters.h"
 
 /**************************************************************
 
@@ -37,9 +36,9 @@ only on the order of -34dB, but this is suitable to avoid audible aliasing artif
 
 ***************************************************************/
 
-#define	RX_INTERPOLATE_10KHZ_NUM_TAPS	16
-
-const float FirRxInterpolate10KHZ[] =
+const arm_fir_interpolate_instance_f32 FirRxInterpolate10KHZ= {
+  .phaseLength = 16,
+  .pCoeffs = (float*) (const float[]) 
 {
 		0.05811583205356,
 		-0.0367094411696,
@@ -57,6 +56,6 @@ const float FirRxInterpolate10KHZ[] =
 		-0.7311312926885,
 		0.05542105288489,
 		0.4430274622578
+}
 };
 
-#endif

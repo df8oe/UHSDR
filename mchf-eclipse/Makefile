@@ -108,6 +108,8 @@ drivers/audio/codec/i2s.c \
 drivers/audio/softdds/softdds.c \
 drivers/audio/filters/fir_rx_decimate_4.c \
 drivers/audio/filters/fir_rx_decimate_4_min_lpf.c \
+drivers/audio/filters/fir_rx_interpolate_16.c \
+drivers/audio/filters/fir_rx_interpolate_16_10kHz.c \
 drivers/audio/filters/iir_1_4k.c \
 drivers/audio/filters/iir_1_6k.c \
 drivers/audio/filters/iir_1_8k.c \

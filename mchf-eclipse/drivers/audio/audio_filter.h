@@ -132,12 +132,7 @@ typedef struct FilterPathDescriptor_s {
   const uint8_t sample_rate_dec;
 
   const arm_iir_lattice_instance_f32* pre_instance;
-
-  // arm_fir_interpolate_instance*
-  const uint8_t FIR_int_numTaps;
-  const float *FIR_int_coeff_file;
-
-  // arm_iir_lattice_instance_f32*
+  const arm_fir_interpolate_instance_f32* interpolate;
   const arm_iir_lattice_instance_f32* iir_instance;
 } FilterPathDescriptor;
 
