@@ -1265,13 +1265,15 @@ void UiInitRxParms(void)
 
     // Init / Functional changes to operation in RX path
 	UiCWSidebandMode();
-	//
+	// I do not think we need the TX adjustments in RX ?! DD4WH
+	// not sure, I leave them here
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
-	AudioFilter_CalcTxPhaseAdj();
-	AudioFilter_CalcRxPhaseAdj();
+	AudioFilter_CalcTxPhaseAdj(); // dto.
+	// AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
 	Audio_TXFilter_Init();
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
+	// this is already included in the void audio_driver_set_rx_audio_filter(void);
+	//	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
 
 
     if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
