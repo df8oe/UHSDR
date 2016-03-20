@@ -1236,8 +1236,8 @@ static void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter
 	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
 		if(ts.filter_id == filter_id)	{
 			//UiDriverProcessActiveFilterScan();	// find next active filter
-			UiDriverChangeFilterDisplay();
 			audio_driver_set_rx_audio_filter();
+			UiDriverChangeFilterDisplay();
 			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		}
 	}
@@ -3473,8 +3473,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
           // avoid FM filter paths for now
           if (ts.filter_path == 1 || ts.filter_path == 2) { ts.filter_path = 4; }
           if (ts.filter_path == 3) { ts.filter_path = 0; }
-          UiDriverChangeFilterDisplay();
           audio_driver_set_rx_audio_filter();
+          UiDriverChangeFilterDisplay();
         }
         sprintf(options, "  %u", ts.filter_path);
         break;
