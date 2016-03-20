@@ -1269,7 +1269,7 @@ void UiInitRxParms(void)
 	// not sure, I leave them here
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_CalcTxPhaseAdj(); // dto.
-	// AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
+	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
 	Audio_TXFilter_Init();
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
 	// this is already included in the void audio_driver_set_rx_audio_filter(void);
@@ -1292,7 +1292,8 @@ void UiInitRxParms(void)
 	}
 
     // Update Display Only Code
-    UiDriverChangeFilter(0);    // make certain that numerical on-screen bandwidth indicator is updated
+    UiDriverChangeFilterDisplay();    // make certain that numerical on-screen bandwidth indicator is updated
+//    audio_driver_set_rx_audio_filter();
     UiDriverChangeDigitalMode();    // Change Dgital display setting as well
     UiDriverChangeDSPMode();  // Change DSP display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
@@ -1439,7 +1440,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverChangeEncoderOneMode(0);
 				UiDriverChangeEncoderTwoMode(0);
 				UiDriverChangeEncoderThreeMode(0);
-				UiDriverChangeFilter(1);	// update bandwidth display
+				UiDriverChangeFilterDisplay();	// update bandwidth display
 				// Label for Button F1
 				{
 					char* label;
@@ -1600,7 +1601,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if(ts.filter_id != vfo[VFO_WORK].band[ts.band].filter_mode)
 			{
 				ts.filter_id = vfo[VFO_WORK].band[ts.band].filter_mode;
-				UiDriverChangeFilter(0);	// update display and change filter
+				UiDriverChangeFilterDisplay();	// update display
 				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				audio_driver_set_rx_audio_filter();
 				audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
@@ -2077,7 +2078,7 @@ static void UiDriverCreateDesktop(void)
 	UiDriverChangePowerLevel();
 
 	// FIR via keypad, not encoder mode
-	UiDriverChangeFilter(1);
+	UiDriverChangeFilterDisplay();
 
 	UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 
@@ -3823,7 +3824,7 @@ static void UiDriverChangeBand(uchar is_up)
 	if(ts.filter_id != vfo[VFO_WORK].band[new_band_index].filter_mode)
 	{
 		ts.filter_id = vfo[VFO_WORK].band[new_band_index].filter_mode;
-		UiDriverChangeFilter(0);	// update display and change filter
+		UiDriverChangeFilterDisplay();	// update display and change filter
 		UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		audio_driver_set_rx_audio_filter();
 		audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
@@ -4794,19 +4795,18 @@ static void UiDriverChangeRit(uchar enabled)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeFilter
-//* Object              : change audio filter, based on public flag
+//* Function Name       : UiDriverChangeFilterDisplay
+//* Object              :
 //* Input Parameters    :
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverChangeFilter(uchar ui_only_update)
+void UiDriverChangeFilterDisplay(void)
 {
 	// Do a filter re-load
-	if(!ui_only_update) {
-		audio_driver_set_rx_audio_filter();
-		AudioFilter_CalcRxPhaseAdj();
-	}
+//	if(!ui_only_update) {
+//		audio_driver_set_rx_audio_filter();
+//	}
 	char  outs[8];
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
