@@ -776,18 +776,18 @@ void audio_driver_set_rx_audio_filter(void)
 	// DONE: DD4WH 2016_03_13
     if (ts.filter_path != 0) {
       ads.decimation_rate = FilterPathInfo[ts.filter_path-1].sample_rate_dec;
-      DECIMATE_RX.pCoeffs = (float32_t *)FilterPathInfo[ts.filter_path-1].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
-      INTERPOLATE_RX.pCoeffs = (float32_t *)FilterPathInfo[ts.filter_path-1].FIR_int_coeff_file; // Filter coefficients
+      DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
+      INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].interpolate->pCoeffs; // Filter coefficients
 
     } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
 		ads.decimation_rate = RX_DECIMATION_RATE_12KHZ;
-		DECIMATE_RX.pCoeffs = (float32_t *)&FirRxDecimate.pCoeffs[0];		// Filter coefficients for lower-rate (slightly strong LPF)
-		INTERPOLATE_RX.pCoeffs = (float32_t *)&FirRxInterpolate[0];	// Filter coefficients
+		DECIMATE_RX.pCoeffs = &FirRxDecimate.pCoeffs[0];		// Filter coefficients for lower-rate (slightly strong LPF)
+		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate.pCoeffs[0];	// Filter coefficients
 	}
 	else	{								// This is above 4.8kHz receiver bandwidth
 		ads.decimation_rate = RX_DECIMATION_RATE_24KHZ;
-		DECIMATE_RX.pCoeffs = (float32_t *)&FirRxDecimateMinLPF.pCoeffs[0];	// Filter coefficients for higher rate (weak LPF:  Hilbert is used for main LPF!)
-		INTERPOLATE_RX.pCoeffs = (float32_t *)&FirRxInterpolate10KHZ[0];	// Filter coefficients for higher rate (relaxed LPF)
+		DECIMATE_RX.pCoeffs = &FirRxDecimateMinLPF.pCoeffs[0];	// Filter coefficients for higher rate (weak LPF:  Hilbert is used for main LPF!)
+		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate10KHZ.pCoeffs[0];	// Filter coefficients for higher rate (relaxed LPF)
 	}										// FM - no decimation
 
     if(ts.dmod_mode == DEMOD_FM)
@@ -815,9 +815,9 @@ void audio_driver_set_rx_audio_filter(void)
 	// TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
 	if (ts.filter_path != 0) {
-	  INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].FIR_int_numTaps/ads.decimation_rate;    // Phase Length ( numTaps / L )
+	  INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
 	} else {
-	  INTERPOLATE_RX.phaseLength = RX_INTERPOLATE_NUM_TAPS/ads.decimation_rate;	// Phase Length ( numTaps / L )
+	  INTERPOLATE_RX.phaseLength = FirRxInterpolate.phaseLength/ads.decimation_rate;	// Phase Length ( numTaps / L )
 	}
 	INTERPOLATE_RX.pState = (float32_t *)&interpState[0];		// Filter state variables
 	//
@@ -859,18 +859,18 @@ void Audio_TXFilter_Init(void)
 		// We have not (yet?) coded TX filters in the FilterPathInfo!
 	  if (ts.filter_path != 0) {
 	    IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-	    IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-	    IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
+	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
 	  } else {
 	    IIR_TXFilter.numStages = IIR_TX_2k7.numStages;      // number of stages
-	    IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7.pkCoeffs;   // point to reflection coefficients
-	    IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7.pvCoeffs;   // point to ladder coefficients
+	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;   // point to reflection coefficients
+	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;   // point to ladder coefficients
 	  }
 	}
 	else	{	// This is FM - use a filter with "better" lows and highs more appropriate for FM
 		IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
-		IIR_TXFilter.pkCoeffs = (float *)IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
-		IIR_TXFilter.pvCoeffs = (float *)IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
+		IIR_TXFilter.pkCoeffs = IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
+		IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
 	}
 
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	{	// initialize state buffer to zeroes

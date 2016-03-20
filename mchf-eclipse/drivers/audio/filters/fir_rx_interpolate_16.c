@@ -11,8 +11,7 @@
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-#ifndef __FIR_RX_INTERPOLATE_16_H
-#define __FIR_RX_INTERPOLATE_16_H
+#include "filters.h"
 
 /**************************************************************
 
@@ -41,9 +40,9 @@ should make these artifacts inaudible.
 
 ***************************************************************/
 
-#define	RX_INTERPOLATE_NUM_TAPS	16
-
-const float FirRxInterpolate[] =
+const arm_fir_interpolate_instance_f32 FirRxInterpolate= {
+  .phaseLength = 16,
+  .pCoeffs = (float*) (const float[]) 
 {
 		 0.0064096284297950057,
 		 0.017769515865099398,
@@ -61,6 +60,7 @@ const float FirRxInterpolate[] =
 		-0.072726968058963559,
 		-0.031602889405696735,
 		-0.009023372039440496
+}
 };
 
 /*#####################################################
@@ -81,23 +81,25 @@ const float FirRxInterpolate[] =
  * ####################################################
  */
 
-#define	RX_INTERPOLATE_4_NUM_TAPS	4
-
-const float FirRxInterpolate_4_5k[] =
+const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_5k= {
+  .phaseLength = 4,
+  .pCoeffs = (float*) (const float[]) 
 {
 		0.210149639888675743,
 		0.292367020487055873,
 		0.292367020487055873,
 		0.210149639888675743
 
+}
 };
 
-const float FirRxInterpolate_4_10k[] =
+const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k= {
+  .phaseLength = 4,
+  .pCoeffs = (float*) (const float[]) 
 {
 		 0.139302961114601442,
 		 0.460435107346899464,
 		 0.460435107346899464,
 		 0.139302961114601442
+}
 };
-
-#endif

@@ -4804,9 +4804,10 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	if(!ui_only_update) {
 		audio_driver_set_rx_audio_filter();
 	}
-
+	char  outs[8];
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
+
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
@@ -4830,10 +4831,23 @@ void UiDriverChangeFilter(uchar ui_only_update)
 		}
 	}
 
+	if (ts.filter_path > 0) {
+	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
+	    filter = &FilterInfo[path->id];
+	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, White,  Orange, 0);
+	    if (path->name != NULL) {
+	      snprintf(outs,8,"  %s ",path->name);
+	      filter_ptr = outs;
+	    } else {
+	      filter_ptr = "       ";
+	    }
+	} else {
     UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ", White,  Orange, 0);
+	}
 	// Draw top line
     UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
 	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,White,Black,0);
+
 }
 //
 //
