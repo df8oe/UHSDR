@@ -519,10 +519,7 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 		UiDriverChangeBand(normal);	// not swapped, go down
 	//
 	UiInitRxParms();	// re-init because mode/filter may have changed
-	//
-	if(ts.menu_mode)	// are we in menu mode?
-		UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update menu display when we change bands
-	//
+
 	ads.af_disabled =  btemp;
 
 }
@@ -943,7 +940,7 @@ static void UiDriverProcessKeyboard(void)
 			case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	{	// do NOT allow mode change in TUNE mode or transmit mode
 					UiDriverChangeDemodMode(0);
-					UiInitRxParms();				// re-init with change of mode
+                    UiInitRxParms();        // re-init for change of filter including display updates
 				}
 				break;
 			case BUTTON_G2_PRESSED:		// BUTTON_G2
@@ -957,12 +954,7 @@ static void UiDriverProcessKeyboard(void)
 					ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
 
 					// Change filter
-					UiDriverChangeFilter(0);
-					UiInitRxParms();		// re-init for change of filter
-
-					if(ts.menu_mode) {	// are we in menu mode?
-						UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change filters
-					}
+					UiInitRxParms();		// re-init for change of filter including display updates
 				}
 				break;
 			}
@@ -1133,13 +1125,7 @@ static void UiDriverProcessKeyboard(void)
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
 				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
 
-				  UiDriverChangeFilter(0);
-				  AudioFilter_CalcRxPhaseAdj();			// We may have changed something in the RX filtering as well - do an update
-				  UiDriverChangeDSPMode();	// Change DSP display setting as well
-				  UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-				  //
-				  if(ts.menu_mode)	// are we in menu mode?
-						UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change filters
+	              UiInitRxParms();            // update rx internals accordingly including the necessary display updates
 				}
 				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
 					if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	{	// is tone burst mode enabled?
@@ -1277,8 +1263,6 @@ static void UiDriverProcessKeyboard(void)
 void UiInitRxParms(void)
 {
 	UiCWSidebandMode();
-	if(ts.menu_mode)	// are we in menu mode?
-		UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change modes
 	//
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_CalcTxPhaseAdj();
@@ -1300,6 +1284,10 @@ void UiInitRxParms(void)
 		UiDriverChangeAudioGain(0);			// display Line/Mic gain and
 		UiDriverChangeCmpLevel(0);			// Compression level when in voice mode
 	}
+
+	if(ts.menu_mode)    // are we in menu mode?
+        UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
+
 }
 //
 //
@@ -4803,6 +4791,7 @@ void UiDriverChangeFilter(uchar ui_only_update)
 	// Do a filter re-load
 	if(!ui_only_update) {
 		audio_driver_set_rx_audio_filter();
+		AudioFilter_CalcRxPhaseAdj();
 	}
 	char  outs[8];
 	const char* filter_ptr;
