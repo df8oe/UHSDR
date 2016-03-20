@@ -1389,5 +1389,5 @@ static void UiLcdHy28_Delay(ulong delay)
    ulong    i,k;
 
     for ( k = 0 ;(k < delay );k++ )
-      for ( i = 0 ;(i < US_DELAY );i++ );
+      for ( i = 0 ;(i < US_DELAY );i++ ) { asm(""); }
 }
