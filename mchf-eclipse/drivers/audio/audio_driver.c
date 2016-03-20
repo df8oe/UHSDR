@@ -833,6 +833,7 @@ void audio_driver_set_rx_audio_filter(void)
 	ads.af_disabled = 0;
 	ts.dsp_inhibit = dsp_inhibit_temp;
 	//
+	AudioFilter_CalcRxPhaseAdj();
 }
 //
 
