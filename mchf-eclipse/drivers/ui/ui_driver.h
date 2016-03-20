@@ -518,7 +518,7 @@ void 	UiDriverLoadFilterValue(void);
 void 	UiSpectrumClearDisplay(void);
 //
 void 	UiDriverChangeBandFilter(uchar band);
-void 	UiDriverChangeFilter(uchar ui_only_update);
+void 	UiDriverChangeFilterDisplay(void);
 void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(char skip_encoder_check, uchar mode);
 void 	UiSpectrumCreateDrawArea(void);
@@ -527,7 +527,7 @@ void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
 void 	UiCheckForEEPROMLoadDefaultRequest(void);
 //
-void 	UiDriverChangeFilter(uchar ui_only_update);
+//void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	UiDriverSetBandPowerFactor(uchar band);
 //
 void    UiDriverChangeAudioGain(uchar enabled);

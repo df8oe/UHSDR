@@ -189,7 +189,7 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  */
 
 const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
-									// sum(
+									//
 {
 // ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
 //		sample_rate_dec,bool IIR_PreFilter_yes_no, &IIR_PreFilter_numTaps, &IIR_PreFilter_pk_file,
@@ -242,7 +242,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_300HZ, "750", FILTER_SSBCW, 6, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_750,
 		&FirRxInterpolate, NULL},
-
+//10
 	{	AUDIO_300HZ, "800", FILTER_SSBCW, 7, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_300hz_800,
 		&FirRxInterpolate, NULL},
@@ -263,7 +263,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_500HZ, "550", FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_550,
 		&FirRxInterpolate, NULL},
-
+//15
 	{	AUDIO_500HZ, "650", FILTER_SSBCW, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_500hz_650,
 		&FirRxInterpolate, NULL},
@@ -287,7 +287,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_1P4KHZ, "LPF", FILTER_SSBCW, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k4_LPF,
 		&FirRxInterpolate, NULL},
-
+//20
 	{	AUDIO_1P4KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k4_BPF,
 		&FirRxInterpolate, NULL},
@@ -305,10 +305,9 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 		&FirRxInterpolate, NULL},
 
 	{	AUDIO_1P8KHZ, "1.3", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
-//25
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k275,
 		&FirRxInterpolate, NULL},
-
+//25
 	{	AUDIO_1P8KHZ, "1.4", FILTER_SSB, 3, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_1k8_1k425,
 		&FirRxInterpolate, NULL},
@@ -328,7 +327,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_2P1KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k1_LPF,
 		&FirRxInterpolate, NULL},
-
+//30
 	{	AUDIO_2P1KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k1_BPF,
 		&FirRxInterpolate, NULL},
@@ -348,11 +347,11 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_2P3KHZ, "1.7", FILTER_SSB, 4, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_1k712,
 		&FirRxInterpolate, NULL},
-
+//35
 	{	AUDIO_2P3KHZ, "LPF", FILTER_SSB, 5, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
 		&FirRxInterpolate, NULL},
-//33
+
 	{	AUDIO_2P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k5_LPF,
 		&FirRxInterpolate, NULL},
@@ -368,7 +367,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_2P7KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k7_BPF,
 		&FirRxInterpolate, NULL},
-
+//40
 	{	AUDIO_2P9KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
 		&FirRxInterpolate, NULL},
@@ -386,11 +385,11 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 		&FirRxInterpolate, NULL},
 
 		// in filters from 3k4 on, the FIR interpolate is 4 taps and an additional IIR interpolation filter
-		// is switched in to accurately prevent alias frequencies
+//44	// is switched in to accurately prevent alias frequencies
 	{	AUDIO_3P4KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
-
+//45
 	{	AUDIO_3P4KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
@@ -410,7 +409,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_3P8KHZ, "BPF", FILTER_SSB, 2, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k8_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
-
+//50
 	{	AUDIO_4P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
@@ -422,7 +421,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_4P4KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k4_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
-//50
+
 	{	AUDIO_4P6KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
@@ -451,7 +450,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_7P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
-
+//60
 	{	AUDIO_7P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},

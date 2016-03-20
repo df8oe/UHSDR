@@ -1236,7 +1236,8 @@ static void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter
 	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
 		if(ts.filter_id == filter_id)	{
 			//UiDriverProcessActiveFilterScan();	// find next active filter
-			UiDriverChangeFilter(0);
+			UiDriverChangeFilterDisplay();
+			audio_driver_set_rx_audio_filter();
 			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		}
 	}
@@ -1525,7 +1526,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		//
 		if(fchange)	{			// was the bandwidth changed?
 			AudioFilter_CalcRxPhaseAdj();			// yes - update the filters!
-			UiDriverChangeFilter(1);	// update display of filter bandwidth (numerical) on screen only
+			UiDriverChangeFilterDisplay();	// update display of filter bandwidth (numerical) on screen only
 		}
 		//
 		if(ts.dmod_mode != DEMOD_FM)	// make orange if we are NOT in FM
@@ -3472,7 +3473,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
           // avoid FM filter paths for now
           if (ts.filter_path == 1 || ts.filter_path == 2) { ts.filter_path = 4; }
           if (ts.filter_path == 3) { ts.filter_path = 0; }
-          UiDriverChangeFilter(0);
+          UiDriverChangeFilterDisplay();
+          audio_driver_set_rx_audio_filter();
         }
         sprintf(options, "  %u", ts.filter_path);
         break;
