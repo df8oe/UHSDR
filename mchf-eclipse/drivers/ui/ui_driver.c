@@ -1262,30 +1262,42 @@ static void UiDriverProcessKeyboard(void)
 //*----------------------------------------------------------------------------
 void UiInitRxParms(void)
 {
+
+    // Init / Functional changes to operation in RX path
 	UiCWSidebandMode();
 	//
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_CalcTxPhaseAdj();
 	AudioFilter_CalcRxPhaseAdj();
-	UiDriverChangeRfGain(1);	// update RFG/SQL on screen
 	Audio_TXFilter_Init();
-	UiDriverChangeDSPMode();	// Change DSP display setting as well
-	UiDriverChangeDigitalMode();	// Change Dgital display setting as well
-	UiDriverChangeFilter(1);	// make certain that numerical on-screen bandwidth indicator is updated
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-	UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator (graphical)
-	UiDriverUpdateFrequency(1,0);	// update frequency display without checking encoder
-	//
-	if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
+	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
+
+
+    if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
+
+       // FIXME: Separate Display Update and Function Change
+      // Mixed Display Update and Function Change Code
 		UiDriverChangeKeyerSpeed(0);		// emplace keyer speed (WPM) and
+
+		// display only code
 		UiDriverChangeStGain(0);			// sidetone gain when in CW mode
 	}
 	else	{
+	  // display only code
 		UiDriverChangeAudioGain(0);			// display Line/Mic gain and
 		UiDriverChangeCmpLevel(0);			// Compression level when in voice mode
 	}
 
-	if(ts.menu_mode)    // are we in menu mode?
+    // Update Display Only Code
+    UiDriverChangeFilter(0);    // make certain that numerical on-screen bandwidth indicator is updated
+    UiDriverChangeDigitalMode();    // Change Dgital display setting as well
+    UiDriverChangeDSPMode();  // Change DSP display setting as well
+    UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
+    UiDriverUpdateFrequency(1,0);   // update frequency display without checking encoder
+    UiDriverChangeRfGain(1);    // update RFG/SQL on screen
+
+    if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 
 }
