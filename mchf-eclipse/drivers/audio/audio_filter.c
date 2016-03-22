@@ -803,8 +803,8 @@ void AudioFilter_CalcRxPhaseAdj(void)
     		// in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
     		// also applicable for FM case !
     		for(i = 0; i < fc.rx_q_num_taps; i++) { // fc.rx_q_num_taps is ALWAYS == fc.rx_i_num_taps
-    			fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file[i];
-                fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path-1].FIR_Q_coeff_file[i];
+    			fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file[i];
+                fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path-1].FIR_Q_coeff_file[i];
     		}
     }//
 
