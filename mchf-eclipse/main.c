@@ -626,7 +626,7 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
   UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
 
   // Show fourth line
-  sprintf(tx,"Build n %s%s%s",__DATE__," at ",__TIME__);
+  sprintf(tx,"Build on %s%s%s",__DATE__," at ",__TIME__);
   UiLcdHy28_PrintText(35,100,tx,Yellow,Black,0);
 
   //

@@ -365,6 +365,7 @@ const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
     { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
+    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","Enable SAM Demod"  },
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
     { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE,"040","FM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen"},
@@ -563,7 +564,6 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
-	{ MENU_FILTER, MENU_ITEM, MENU_DEMOD_SAM,"SAM","Enable SAM dem."  },
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -1386,6 +1386,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.am_mode_disable,0,options,&clr);
 		break;
 		//
+	case MENU_DEMOD_SAM:	// Enable demodulation mode SAM
+		temp_var = ts.sam_enabled;
+		fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(fchange)
+		    ts.sam_enabled = temp_var;
+		break;
 	case MENU_SSB_AUTO_MODE_SELECT:		// Enable/Disable auto LSB/USB select
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.lsb_usb_auto_select,
 				0,
@@ -3480,12 +3486,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         sprintf(options, "  %u", ts.filter_path);
         break;
 
-    case MENU_DEMOD_SAM:	// Enable demodulation mode SAM
-		temp_var = ts.sam_enabled;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		if(tchange)
-		    ts.sam_enabled = temp_var;
-		break;
 
     case CONFIG_DSP_ENABLE:	// Enable DSP NR
 		temp_var = ts.dsp_enabled;

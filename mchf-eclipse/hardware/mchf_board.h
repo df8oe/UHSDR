@@ -1059,9 +1059,17 @@ enum {
 #define	EEPROM_FILTER_1_SEL		325		// selection of filters 4k0 to 6k0
 #define	EEPROM_FILTER_2_SEL		326		// selection of filters 6k5 to 10k0
 #define	EEPROM_DYNAMIC_TUNING		327
-
+#define EEPROM_SAM_ENABLE		328		// SAM demodulation enable
 
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
+
+//
+//
+// NOTE:  EEPROM addresses up to 383 are currently defined
+//
+// *******************************************************************************************************
+//
+
 
 
 enum {
@@ -1070,13 +1078,6 @@ enum {
   DISPLAY_HY28B_SPI,
   DISPLAY_HY28B_PARALLEL
 };
-
-//
-//
-// NOTE:  EEPROM addresses up to 383 are currently defined
-//
-// *******************************************************************************************************
-//
 
 typedef struct Gain_s {
   uint8_t value;
@@ -1334,9 +1335,9 @@ typedef struct TransceiverState
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
-    #define MISC_FLAGS1_WFALL_SCOPE_TOGGLE 0x80
+	#define MISC_FLAGS1_WFALL_SCOPE_TOGGLE 0x80
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
-							// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
+							// LSB   = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
 							// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
 							// LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled
 							//	when translate mode is DISABLED
@@ -1346,7 +1347,7 @@ typedef struct TransceiverState
 							// LSB+6 = 1 if SSB TX has transmit filter DISABLED
 							// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-							// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
+							// LSB   = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
 							// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
 							// LSB+2 = 1 if key/button beep is enabled
 							// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
