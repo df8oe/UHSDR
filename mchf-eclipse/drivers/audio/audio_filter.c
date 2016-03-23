@@ -114,7 +114,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_1P6KHZ, "  1.6k ",  1600, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf},
     {  AUDIO_1P8KHZ, "  1.8k ",  1800, FILTER_SSBAM,   FILTER_SSB,  7, 6, filter_list_1P8KHz},
     {  AUDIO_2P1KHZ, "  2.1k ",  2100, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
-    {  AUDIO_2P3KHZ, "  2.3k ",  2300, FILTER_SSBAM,   FILTER_SSB,  6, 2, filter_list_2P3KHz },
+    {  AUDIO_2P3KHZ, "  2.3k ",  2300, FILTER_SSBSAM,  FILTER_SSB,  6, 2, filter_list_2P3KHz },
     {  AUDIO_2P5KHZ, "  2.5k ",  2500, FILTER_SSBAM,   FILTER_SSB,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P7KHZ, "  2.7k ",  2700, FILTER_NOFM,    FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P9KHZ, "  2.9k ",  2900, FILTER_SSBSAM,  FILTER_AM,   3, 2, filter_stdLabelsLpfBpf },
@@ -126,13 +126,13 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_4P2KHZ, "  4.2k ",  4200, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P4KHZ, "  4.4k ",  4400, FILTER_NOFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P6KHZ, "  4.6k ",  4600, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_AMSAM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_AMSAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P0KHZ, "  5.0k ",  5000, FILTER_AMFM,    FILTER_FM,   2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P5KHZ, "  5.5k ",  5500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_AMFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_6P5KHZ, "  6.5k ",  6500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_7P0KHZ, "  7.0k ",  7000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_7P5KHZ, "  7.5k ",  7500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_7P5KHZ, "  7.5k ",  7500, FILTER_AMSAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_8P0KHZ, "  8.0k ",  8000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_8P5KHZ, "  8.5k ",  8500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_9P0KHZ, "  9.0k ",  9000, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
@@ -190,7 +190,7 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  * ###############################################################
  */
 
-const FilterPathDescriptor FilterPathInfo[88] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
+const FilterPathDescriptor FilterPathInfo[90] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
 									//
 {
 // ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
@@ -576,6 +576,10 @@ const FilterPathDescriptor FilterPathInfo[88] = // how to automatically determin
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
+	{	AUDIO_2P3KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
+		&FirRxInterpolate, NULL},
+
 	{	AUDIO_2P9KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
 		&FirRxInterpolate, NULL},
@@ -583,6 +587,10 @@ const FilterPathDescriptor FilterPathInfo[88] = // how to automatically determin
 	{	AUDIO_4P8KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
 		&FirRxInterpolate, NULL},
+
+	{	AUDIO_7P5KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
+		RX_DECIMATION_RATE_24KHZ, NULL,
+		&FirRxInterpolate10KHZ, NULL}
 
 }; // end FilterPath
 
