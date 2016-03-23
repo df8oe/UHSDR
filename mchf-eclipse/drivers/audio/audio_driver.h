@@ -56,6 +56,8 @@ typedef struct AudioDriverState
 	float32_t					i_buffer[IQ_BUFSZ+1];
 	float32_t 					q_buffer[IQ_BUFSZ+1];
 	float32_t 					a_buffer[IQ_BUFSZ+1];
+	float32_t 					a2_buffer[IQ_BUFSZ+1];
+	float32_t 					a3_buffer[IQ_BUFSZ+1];
 	float32_t 					b_buffer[(IQ_BUFSZ*2)+1];	// this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
 	float32_t					c_buffer[IQ_BUFSZ+1];
 	float32_t					d_buffer[IQ_BUFSZ+1];

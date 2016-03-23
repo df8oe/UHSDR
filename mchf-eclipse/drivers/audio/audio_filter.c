@@ -99,6 +99,8 @@ static const FilterConfig filter_list_2P3KHz[] =      {
 #define FILTER_ALL (FILTER_CW|FILTER_SSB|FILTER_AM|FILTER_FM)
 #define FILTER_NOFM (FILTER_CW|FILTER_SSB|FILTER_AM)
 #define FILTER_SSBAM (FILTER_SSB|FILTER_AM)
+#define FILTER_SSBSAM (FILTER_SSB|FILTER_AM|FILTER_SAM)
+#define FILTER_AMSAM (FILTER_AM|FILTER_SAM)
 #define FILTER_SSBCW (FILTER_SSB|FILTER_CW)
 #define FILTER_AMFM (FILTER_AM|FILTER_FM)
 #define FILTER_NONE (0)
@@ -115,7 +117,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_2P3KHZ, "  2.3k ",  2300, FILTER_SSBAM,   FILTER_SSB,  6, 2, filter_list_2P3KHz },
     {  AUDIO_2P5KHZ, "  2.5k ",  2500, FILTER_SSBAM,   FILTER_SSB,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P7KHZ, "  2.7k ",  2700, FILTER_NOFM,    FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
-    {  AUDIO_2P9KHZ, "  2.9k ",  2900, FILTER_SSBAM,   FILTER_AM,   3, 2, filter_stdLabelsLpfBpf },
+    {  AUDIO_2P9KHZ, "  2.9k ",  2900, FILTER_SSBSAM,  FILTER_AM,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P2KHZ, "  3.2k ",  3200, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P4KHZ, "  3.4k ",  3400, FILTER_SSBAM,   FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P6KHZ, "  3.6k ",  3600, FILTER_SSBAMFM, FILTER_NONE, 3, 2, filter_stdLabelsLpfBpf },
@@ -124,7 +126,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_4P2KHZ, "  4.2k ",  4200, FILTER_SSBAM,   FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P4KHZ, "  4.4k ",  4400, FILTER_NOFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P6KHZ, "  4.6k ",  4600, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_AMSAM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P0KHZ, "  5.0k ",  5000, FILTER_AMFM,    FILTER_FM,   2, 1, filter_stdLabelsOnOff },
     {  AUDIO_5P5KHZ, "  5.5k ",  5500, FILTER_AM,      FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_6P0KHZ, "  6.0k ",  6000, FILTER_AMFM,    FILTER_NONE, 2, 1, filter_stdLabelsOnOff },
@@ -188,7 +190,7 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  * ###############################################################
  */
 
-const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
+const FilterPathDescriptor FilterPathInfo[88] = // how to automatically determine this figure? --> also change in audio_filter.h !!!
 									//
 {
 // ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
@@ -431,47 +433,47 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
 //55		// new decimation rate, new decimation filter, new interpolation filter, no IIR Prefilter, no IIR interpolation filter
-	{	AUDIO_5P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_5P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_5P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_5P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_6P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_6P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_6P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_6P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_7P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_7P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_6k_coeffs, q_rx_6k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 //60
-	{	AUDIO_7P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_7P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_7k5_coeffs, q_rx_7k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate10KHZ, NULL},
 			// additional IIR interpolation filter
-	{	AUDIO_8P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_8P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k},
 
-	{	AUDIO_8P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_8P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k5},
 
-	{	AUDIO_9P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_9P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k},
 
-	{	AUDIO_9P5KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_9P5KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_9k5},
 
-	{	AUDIO_10P0KHZ, NULL, FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_10P0KHZ, "LPF", FILTER_SSB, 1, I_NUM_TAPS, i_rx_10k_coeffs, q_rx_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
@@ -481,7 +483,7 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 //		when tuned away from the carrier, this has been called "sideband-selected AM demodulation" . . . wow . . .
 //###################################################################################################################################
 
-		// in AM, we ALWAYS use the LPF IIR audio PreFilter, regardless of the selected filter_select_ID.
+		// in AM, we ALWAYS use the lowpass filter version of the IIR audio PreFilter, regardless of the selected filter_select_ID.
 		// this is because we assume AM mode to be used to demodulate DSB signals, so BPF (sideband suppression) is not necessary
 
 	{	AUDIO_1P4KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
@@ -573,7 +575,16 @@ const FilterPathDescriptor FilterPathInfo[86] = // how to automatically determin
 	{	AUDIO_10P0KHZ, " AM", FILTER_AM, 1, Q_NUM_TAPS, iq_rx_am_10k_coeffs, iq_rx_am_10k_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
-	}; // end FilterPath
+
+	{	AUDIO_2P9KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
+		&FirRxInterpolate, NULL},
+
+	{	AUDIO_4P8KHZ, "SAM", FILTER_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
+		&FirRxInterpolate, NULL},
+
+}; // end FilterPath
 
 
 /*
@@ -595,6 +606,9 @@ uint8_t AudioFilter_NextApplicableFilter()
   switch(ts.dmod_mode) {
   case DEMOD_AM:
     myMode = FILTER_AM;
+    break;
+  case DEMOD_SAM:
+    myMode = FILTER_SAM;
     break;
   case DEMOD_FM:
     myMode = FILTER_FM;
@@ -700,7 +714,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
 
     // new filter_path method
     // take all info from FilterPathInfo
-    // IIR_PreFilter.pkCoeffs = (float *)FilterPathInfo[ts.filter_path-1].IIR_PreFilter_pk_file;
+    // I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs
     //
     if (ts.filter_path == 0) {
     fc.rx_q_num_taps = Q_NUM_TAPS;
@@ -982,11 +996,14 @@ void AudioFilter_CalcRxPhaseAdj(void)
 
     	//
     // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
-    if(ts.dmod_mode == DEMOD_AM)        // use "Q" filter settings in AM mode for "I" channel
+    	// hmmm, is this necessary? In AM AND in SSB, we set the fc.rx_filt_XXX in the right manner in this void, so no need to distinguish again between AM and SSB
+/*    if(ts.dmod_mode == DEMOD_AM)        // use "Q" filter settings in AM mode for "I" channel
         arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_q_block_size); // load "I" with "Q" coefficients
     else                                // not in AM mode, but SSB or FM - use normal settings where I and Q are 90 degrees apart
         arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
-    //
+  */
+    // Initialization of the FIR/Hilbert filters
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
     //
 }
