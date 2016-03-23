@@ -1708,6 +1708,11 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		case DEMOD_AM:
 			audio_demod_am(size);
 			break;
+		case DEMOD_SAM:
+			arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a3_buffer, size/2);	// difference of I and Q - LSB
+			arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a2_buffer, size/2);	// sum of I and Q - USB
+			arm_add_f32((float32_t *)ads.a2_buffer, (float32_t *)ads.a3_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of LSB & USB = DSB
+			break;
 		case DEMOD_FM:
 			audio_demod_fm(size);
 			break;

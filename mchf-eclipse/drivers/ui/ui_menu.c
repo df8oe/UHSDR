@@ -563,6 +563,7 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
+	{ MENU_FILTER, MENU_ITEM, MENU_DEMOD_SAM,"SAM","Enable SAM dem."  },
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -3479,7 +3480,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         sprintf(options, "  %u", ts.filter_path);
         break;
 
-	case CONFIG_DSP_ENABLE:	// Enable DSP NR
+    case MENU_DEMOD_SAM:	// Enable demodulation mode SAM
+		temp_var = ts.sam_enabled;
+		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		if(tchange)
+		    ts.sam_enabled = temp_var;
+		break;
+
+    case CONFIG_DSP_ENABLE:	// Enable DSP NR
 		temp_var = ts.dsp_enabled;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)

@@ -1698,6 +1698,10 @@ void UiDriverShowMode(void)	{
 			offset = 8;
 			txt = "LSB";
 			break;
+		case DEMOD_SAM:
+			offset = 8;
+			txt = "SAM";
+			break;
 		case DEMOD_AM:
 			offset = 12;
 			txt = "AM";
@@ -3624,6 +3628,8 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 	//
 	AudioFilter_CalcTxPhaseAdj();
 	AudioManagement_CalcTxIqGainAdj();
+	// FIXME: HACK: remove this after implementation
+	if (ts.dmod_mode == DEMOD_SAM) audio_driver_set_rx_audio_filter();
 
 	// Change function buttons caption
 	//UiDriverCreateFunctionButtons(false);
@@ -3666,6 +3672,11 @@ static void UiDriverChangeDemodMode(uchar noskip)
 
 	if((loc_mode == DEMOD_FM) && (!ts.iq_freq_mode))	{	// are we in FM and frequency translate is off?
 		loc_mode++;		// yes - FM NOT permitted unless frequency translate is active, so skip!
+	}
+
+	if(loc_mode == DEMOD_SAM)	{	// yes - is this SAM mode?
+		if(!ts.sam_enabled)		// is SAM to be disabled?
+			loc_mode++;				// yes - go to next mode
 	}
 
 	// Check for overflow
@@ -4948,9 +4959,9 @@ void UiDriverDisplayFilterBW(void)
 	width /= calc;							// calculate width of line in pixels
 	//
 	//
-	if((ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))	{	// special cases - AM and FM, which are double-sidebanded
+	if((ts.dmod_mode == DEMOD_AM) ||(ts.dmod_mode == DEMOD_SAM) || (ts.dmod_mode == DEMOD_FM))	{	// special cases - AM, SAM and FM, which are double-sidebanded
 		lpos -= width;					// line starts "width" below center
-		width *= 2;						// the width is double in AM, above and below center
+		width *= 2;						// the width is double in AM & SAM, above and below center
 	}
 	else if(!is_usb)	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
 		lpos -= ((offset - (width/2)) + width);	// if LSB it will be below zero Hz

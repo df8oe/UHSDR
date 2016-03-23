@@ -81,7 +81,8 @@ enum {
   FILTER_CW = 1,
   FILTER_SSB = 2,
   FILTER_AM = 4,
-  FILTER_FM = 8
+  FILTER_FM = 8,
+  FILTER_SAM = 16
 };
 //
 //
@@ -137,7 +138,7 @@ typedef struct FilterPathDescriptor_s {
   const arm_iir_lattice_instance_f32* iir_instance;
 } FilterPathDescriptor;
 
-extern const FilterPathDescriptor FilterPathInfo[86]; // also change this figure in audio_filter.c
+extern const FilterPathDescriptor FilterPathInfo[88]; // also change this figure in audio_filter.c
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //

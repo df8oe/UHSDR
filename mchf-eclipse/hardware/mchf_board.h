@@ -430,8 +430,9 @@ typedef struct ButtonMap
 #define DEMOD_CW			2
 #define DEMOD_AM			3
 #define	DEMOD_FM			4
-#define DEMOD_DIGI			5
-#define DEMOD_MAX_MODE			5
+#define	DEMOD_SAM			5
+#define DEMOD_DIGI			6
+#define DEMOD_MAX_MODE			6
 
 #define RTC_OSC_FREQ			32768
 
@@ -1415,6 +1416,7 @@ typedef struct TransceiverState
 	uchar	tune_power_level;			// TX power in antenna tuning function
 	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
 	bool	dsp_enabled;				// NR disabled
+	bool	sam_enabled;				// demodulation mode SAM enabled
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;				// only debugging use
