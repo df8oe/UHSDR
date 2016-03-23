@@ -1502,7 +1502,8 @@ static void audio_demod_fm(int16_t size)
 static void audio_demod_am(int16_t size)
 {
 	ulong i, j;
-
+	bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
+	if(!testSAM){
 	j = 0;
 	for(i = 0; i < size/2; i++)	{					// interleave I and Q data, putting result in "b" buffer
 		ads.b_buffer[j] = ads.i_buffer[i];
@@ -1515,12 +1516,22 @@ static void audio_demod_am(int16_t size)
 	// instantaneous carrier power:  sqrtf(b[n]^2+b[n+1]^2) - put result in "a"
 	//
 	arm_cmplx_mag_f32((float32_t *)ads.b_buffer, (float32_t *)ads.a_buffer, size/2);	// use optimized (fast) ARM function
+	}
+	// this is the very experimental demodulator for DSB
+	// demodulates only the real part = I
+	//
+	if(testSAM){
+		for(i = 0; i < size/2; i++)	{			// put I into buffer a
+			ads.a_buffer[i] = ads.i_buffer[i];
+		}
+	}
 	//
 	// Now produce signal/carrier level for AGC
 	//
 	arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
 	ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
-	//
+
+
 }
 //
 //
