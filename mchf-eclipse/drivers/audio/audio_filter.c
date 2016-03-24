@@ -609,6 +609,9 @@ bool AudioFilter_IsApplicableFilterPath(const uint8_t filter_path, const uint8_t
   case DEMOD_CW:
     filter_mode = FILTER_CW;
     break;
+  case DEMOD_SAM:
+    filter_mode = FILTER_SAM;
+    break;
   // case DEMOD_LSB:
   // case DEMOD_USB:
   // case DEMOD_DIGI:
@@ -658,8 +661,6 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
   uint8_t last_bandwidth_id = FilterInfo[current_path].id;
   // by default we do not change the filter selection
 
-  uint16_t filter_mode;
-
   if(dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
     int idx;
 
@@ -674,8 +675,11 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
     // we run through all audio filters, starting with the next following, making sure to wrap around
     // we leave this loop once we found a filter that is applicable using "break"
     // or skip to next filter to check using "continue"
-    for (idx = (current_path+1)%AUDIO_FILTER_PATH_NUM; idx != current_path; idx = (idx+1)%AUDIO_FILTER_PATH_NUM)
+    for (idx = current_path+(query&PATH_DOWN)?-1:1; idx != current_path;
+         idx+=(query&PATH_DOWN)?-1:1)
     {
+      idx %= AUDIO_FILTER_PATH_NUM;
+      if (idx<0) { idx+=AUDIO_FILTER_PATH_NUM; }
 
       // skip over all filters of current bandwidth
       if (((query & NEXT_BANDWIDTH) != 0) && (last_bandwidth_id == FilterPathInfo[idx].id)) {

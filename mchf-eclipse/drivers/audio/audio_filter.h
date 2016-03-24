@@ -160,6 +160,8 @@ enum {
   ALL_APPLICABLE_PATHS = 0,
   NEXT_BANDWIDTH = 1,
   SAME_BANDWITH =2,
+  PATH_UP = 4,
+  PATH_DOWN = 8,
 };
 
 uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
