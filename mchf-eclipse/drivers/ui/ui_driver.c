@@ -3805,16 +3805,12 @@ static void UiDriverChangeBand(uchar is_up)
 	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
 	// Load frequency value - either from memory or default for
 	// the band if this is first band selection
-	if(vfo[VFO_WORK].band[new_band_index].dial_value != 0xFFFFFFFF)
-	{
-		// Load old frequency from memory
-		df.tune_new = vfo[VFO_WORK].band[new_band_index].dial_value;
-	}
+	if(is_vfo_b())
+	    df.tune_new = vfo[VFO_B].band[new_band_index].dial_value; 		// Load value from VFO B
+	else if(vfo[VFO_WORK].band[new_band_index].dial_value != 0xFFFFFFFF)
+	    df.tune_new = vfo[VFO_WORK].band[new_band_index].dial_value;	// Load value from VFO A
 	else
-	{
-		// Load default band startup frequency
-		df.tune_new = new_band_freq;
-	}
+	    df.tune_new = new_band_freq; 					// Load new frequency from startup
 
 //	UiDriverUpdateFrequency(1,0);
 
