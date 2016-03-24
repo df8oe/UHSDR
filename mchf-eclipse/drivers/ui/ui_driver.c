@@ -71,7 +71,7 @@ static void 	UiDriverInitFrequency(void);
 static void 	UiDriverCheckFilter(ulong freq);
 uchar 			UiDriverCheckBand(ulong freq, ushort update);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
-static uchar 	UiDriverButtonCheck(ulong button_num);
+static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriverTimeScheduler(void);				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriverChangeDemodMode(uchar noskip);
 static void 	UiDriverChangeBand(uchar is_up);
@@ -117,7 +117,7 @@ T_STEP_10MHZ
 // -------------------------------------------------------
 // Constant declaration of the buttons map across ports
 // - update if moving buttons around !!!
-const ButtonMap	bm[16] =
+const ButtonMap	bm[18] =
 {
 		{BUTTON_M2_PIO,		BUTTON_M2},		// 0
 		{BUTTON_G2_PIO,		BUTTON_G2},		// 1
@@ -134,7 +134,9 @@ const ButtonMap	bm[16] =
 		{BUTTON_F4_PIO,		BUTTON_F4},		// 12
 		{BUTTON_BNDP_PIO,	BUTTON_BNDP},	// 13
 		{BUTTON_F5_PIO,		BUTTON_F5},		// 14
-		{BUTTON_G1_PIO,		BUTTON_G1}		// 15
+		{BUTTON_G1_PIO,		BUTTON_G1},		// 15
+		{GPIOC,GPIO_Pin_13},                // 16 Power Button
+		{TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
 };
 
 
@@ -1154,7 +1156,7 @@ static void UiDriverProcessKeyboard(void)
 				}
 				break;
 			case BUTTON_POWER_PRESSED:
-				if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
 					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
 						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
 					else
@@ -1170,31 +1172,31 @@ static void UiDriverProcessKeyboard(void)
 				}
 				break;
 			case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
-				if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
 					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
 						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
 					else if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
 						ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
 				}
-				else if(!UiDriverButtonCheck(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
+				else if(UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
 					if(!ts.menu_mode)	{			// do not do this in menu mode!
 					  UiDriver_ToggleWaterfallScopeDisplay();
 					}
 				}
 				break;
 			case BUTTON_BNDP_PRESSED:			// BAND+ button pressed-and-held?
-				if(!UiDriverButtonCheck(BUTTON_BNDM_PRESSED))	{	// and BAND-DOWN pressed at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	{	// and BAND-DOWN pressed at the same time?
 					if(!ts.menu_mode)	{		// do not do this if in menu mode!
 					  UiDriver_ToggleWaterfallScopeDisplay();
 					}
 				}
-				if(!UiDriverButtonCheck(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
 					ts.ser_eeprom_in_use = 0x20;			// power down without saving settings
 					mchf_board_power_off();
 				}
 				break;
 			case BUTTON_STEPM_PRESSED:
-				if(!UiDriverButtonCheck(BUTTON_STEPP_PRESSED))	{	// was button STEP+ pressed at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_STEPP_PRESSED))	{	// was button STEP+ pressed at the same time?
 					ts.frequency_lock = !ts.frequency_lock;
 					// update frequency display
 					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
@@ -1217,7 +1219,7 @@ static void UiDriverProcessKeyboard(void)
 				//
 				break;
 			case BUTTON_STEPP_PRESSED:
-				if(!UiDriverButtonCheck(BUTTON_STEPM_PRESSED))	{	// was button STEP- pressed at the same time?
+				if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	{	// was button STEP- pressed at the same time?
 					ts.frequency_lock = !ts.frequency_lock;
 					// update frequency display
 					ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
@@ -3236,30 +3238,22 @@ void UiDriverChangeTuningStep(uchar is_up)
 	// Save to Eeprom
 	//TRX4M_VE_WriteStep(idx);
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverButtonCheck
-//* Object              : Scans buttons 0-16:  0-15 are normal buttons, 16 is power button
-//* Input Parameters    : button_num - 0-16:  Anything >=16 returns power button status
-//* Output Parameters   : FALSE if button is pressed
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-static uchar UiDriverButtonCheck(ulong button_num)
-{
-	if(button_num < 16)
-	    {				// buttons 0-15 are the normal keypad buttons
-	    if(!ts.boot_halt_flag)		// are we NOT in "boot halt" mode?
-		return(GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button));		// in normal mode - return key value
-	    else
-		return(1);						// we ARE in "load defaults" mode - always return "not pressed" (1) for buttons 0-15
-	    }
-	if(button_num == 16)					// button 16 is the power button
-	    return(GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13));
-	if(button_num == 17)					// 17 used for touchscreen
-	    return(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ));
 
-	return 1; // always return "not pressed" (1) for buttons which do not exist
+/*----------------------------------------------------------------------------
+ * @brief Scans buttons 0-16:  0-15 are normal buttons, 16 is power button, 17 touch
+ * @param button_num - 0-17
+ * @returns true if button is pressed
+ */
+
+static bool UiDriver_IsButtonPressed(ulong button_num)
+{
+    bool retval = false;
+	if(button_num < 18) {				// buttons 0-15 are the normal keypad buttons
+	    if(!ts.boot_halt_flag) {		// are we NOT in "boot halt" mode?
+	      retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
+	    }
+	}
+	return retval;
 }
 //
 //*----------------------------------------------------------------------------
@@ -3539,7 +3533,7 @@ static void UiDriverTimeScheduler(void)
 		// Scan inputs - 16 buttons in total, but on different ports
 		for(i = 0; i < 18; i++)	{		// button "17" is touchscreen
 			// Read each pin of the port, based on the declared pin map
-			if(!UiDriverButtonCheck(i))	{
+			if(UiDriver_IsButtonPressed(i))	{
 				// Change state to clicked
 				ks.button_id		= i;
 				ks.button_pressed	= 1;
@@ -3555,7 +3549,7 @@ static void UiDriverTimeScheduler(void)
 		}
 	}
 	else if((ks.debounce_time >= BUTTON_PRESS_DEBOUNCE) && (!ks.debounce_check_complete))	{
-		if(!UiDriverButtonCheck(ks.button_id))	{	// button still pressed?
+		if(UiDriver_IsButtonPressed(ks.button_id))	{	// button still pressed?
 			ks.button_just_pressed = 1;	// yes!
 			ks.debounce_check_complete = 1;	// indicate that the debounce check was completed
 		}
@@ -3568,7 +3562,7 @@ static void UiDriverTimeScheduler(void)
 		ks.press_hold = 1;
 		press_hold_release_delay = PRESS_HOLD_RELEASE_DELAY_TIME;	// Set up a bit of delay for when press-and-hold is released
 	}
-	else if(ks.press_hold && (UiDriverButtonCheck(ks.button_id)))	{	// was there a press-and-hold and the button is now released?
+	else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id)))	{	// was there a press-and-hold and the button is now released?
 		if(press_hold_release_delay)					// press-and-hold delay expired?
 			press_hold_release_delay--;					// no - continue counting down before cancelling "press-and-hold" mode
 		else	{							// Press-and-hold mode time expired!
@@ -3578,7 +3572,7 @@ static void UiDriverTimeScheduler(void)
 			ks.button_just_pressed = 0;
 		}
 	}
-	else if(UiDriverButtonCheck(ks.button_id) && (!ks.press_hold))	{	// button released and had been debounced?
+	else if(!UiDriver_IsButtonPressed(ks.button_id) && (!ks.press_hold))	{	// button released and had been debounced?
 		// Change state from click to released, and processing flag on - if the button had been held down adequately
 		ks.button_pressed 	= 0;
 		ks.button_released 	= 1;
@@ -6109,7 +6103,7 @@ void UiCheckForEEPROMLoadDefaultRequest(void)
 		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
 	}
 
-	if((!UiDriverButtonCheck(BUTTON_F1_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F3_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F5_PRESSED)))	{	// Are F1, F3 and F5 being held down?
+	if((UiDriver_IsButtonPressed(BUTTON_F1_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F3_PRESSED)) && (!UiDriver_IsButtonPressed(BUTTON_F5_PRESSED)))	{	// Are F1, F3 and F5 being held down?
 		ts.load_eeprom_defaults = 1;						// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
 		ts.boot_halt_flag = 1;								// set flag to halt boot-up
 		UiConfiguration_LoadEepromValues();							// call function to load values - default instead of EEPROM
@@ -6153,7 +6147,7 @@ void UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
 	}
 
-	if((!UiDriverButtonCheck(BUTTON_F2_PRESSED)) && (!UiDriverButtonCheck(BUTTON_F4_PRESSED)))	{	// Are F2, F4 being held down?
+	if((UiDriver_IsButtonPressed(BUTTON_F2_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F4_PRESSED)))	{	// Are F2, F4 being held down?
 		ts.load_freq_mode_defaults = 1;						// yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
 		ts.boot_halt_flag = 1;								// set flag to halt boot-up
 		UiConfiguration_LoadEepromValues();							// call function to load values - default instead of EEPROM
@@ -6200,7 +6194,7 @@ void UiDriver_KeyTestScreen(void)
 	char txt_buf[40];
 	char* txt;
 	for(i = 0; i <= 17; i++)	{			// scan all buttons
-		if(!UiDriverButtonCheck(i))	{		// is one button being pressed?
+		if(UiDriver_IsButtonPressed(i))	{		// is one button being pressed?
 			stat = 0;						// yes - clear flag
 		}
 	}
@@ -6221,7 +6215,7 @@ void UiDriver_KeyTestScreen(void)
 
 		for(i = 0; i <= 17; i++)
 		{				// scan all buttons
-			if(!UiDriverButtonCheck(i))
+			if(UiDriver_IsButtonPressed(i))
 			{		// is this button pressed?
 				k++;
 				if(j == 99)						// is this the first button pressed?
