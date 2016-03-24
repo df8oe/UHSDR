@@ -17,6 +17,10 @@
 #include "mchf_types.h"
 #include "arm_math.h"
 //
+
+
+
+
 // Audio filter select enumeration
 //
 void    AudioFilter_CalcRxPhaseAdj(void);
@@ -138,7 +142,10 @@ typedef struct FilterPathDescriptor_s {
   const arm_iir_lattice_instance_f32* iir_instance;
 } FilterPathDescriptor;
 
-extern const FilterPathDescriptor FilterPathInfo[90]; // also change this figure in audio_filter.c
+
+#define AUDIO_FILTER_PATH_NUM 90
+
+extern const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM];
 //
 // Define visual widths of audio filters for on-screen indicator in Hz
 //
@@ -148,6 +155,17 @@ extern const FilterPathDescriptor FilterPathInfo[90]; // also change this figure
 //
 #define HILBERT3600         1900    // "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
 //
+
+enum {
+  ALL_APPLICABLE_PATHS = 0,
+  NEXT_BANDWIDTH = 1,
+  SAME_BANDWITH =2,
+  PATH_UP = 4,
+  PATH_DOWN = 8,
+};
+
+uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
+bool AudioFilter_IsApplicableFilterPath(const uint8_t filter_path, const uint8_t dmod_mode);
 
 uint8_t AudioFilter_NextApplicableFilter();
 
