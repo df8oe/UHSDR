@@ -227,6 +227,7 @@ extern __IO	SpectrumDisplay		sd;
 
 uchar drv_state = 0;
 
+bool filter_path_change = false;
 //
 
 
@@ -954,7 +955,11 @@ static void UiDriverProcessKeyboard(void)
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
 				if(!ts.tune) {
 				  if (ts.filter_path != 0) {
-				    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1)+1;
+				    if (filter_path_change == true) {
+				      filter_path_change = false;
+				    } else {
+				      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1)+1;
+				    }
 				  } else if (ts.dmod_mode != DEMOD_FM)	{
 				    ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
 				  }
@@ -1130,6 +1135,8 @@ static void UiDriverProcessKeyboard(void)
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
 				  // incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
 				  // ts.filter_path = AudioFilter_NextApplicableFilterPath(ALL_APPLICABLE_PATHS,ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+				  filter_path_change = true;
+				  UiDriverChangeFilterDisplay();
 	              // UiInitRxParms();            // update rx internals accordingly including the necessary display updates
 				}
 				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
@@ -4032,7 +4039,7 @@ static void UiDriverCheckEncoderTwo(void)
 
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
-    if (true == ks.press_hold && BUTTON_G4_PRESSED == ks.button_id) {
+    if (filter_path_change) {
       ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
       UiInitRxParms();
     } else  if(ts.menu_mode)    {
@@ -4146,7 +4153,7 @@ static void UiDriverCheckEncoderThree(void)
 
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
-    if (true == ks.press_hold && BUTTON_G4_PRESSED == ks.button_id) {
+    if (filter_path_change) {
       ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
       UiInitRxParms();
     } else  if(ts.menu_mode)	{
@@ -4819,10 +4826,10 @@ void UiDriverChangeFilterDisplay(void)
 //	if(!ui_only_update) {
 //		audio_driver_set_rx_audio_filter();
 //	}
-	char  outs[8];
+	char  outs[9];
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
-
+	uint32_t bg_clr = Blue;
 
 	// Update screen indicator
 	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
@@ -4847,21 +4854,22 @@ void UiDriverChangeFilterDisplay(void)
 	}
 
 	if (ts.filter_path > 0) {
-	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
+	    bg_clr = filter_path_change?Orange:Blue;
+ 	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
 	    filter = &FilterInfo[path->id];
-	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, White,  Orange, 0);
+	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, White,  bg_clr, 0);
 	    if (path->name != NULL) {
-	      snprintf(outs,8,"  %s ",path->name);
+	      snprintf(outs,9,"  %s  ",path->name);
 	      filter_ptr = outs;
 	    } else {
 	      filter_ptr = "       ";
 	    }
 	} else {
-    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ", White,  Orange, 0);
+    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ", White,  bg_clr, 0);
 	}
 	// Draw top line
     UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
-	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,White,Black,0);
+	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,White,bg_clr,0);
 
 }
 //
