@@ -662,47 +662,32 @@ bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t filt
 uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path)
 {
 
-  uint8_t retval = current_path;
   uint8_t last_bandwidth_id = FilterPathInfo[current_path].id;
-  // by default we do not change the filter selection
+  int idx;
+  //
+  // we run through all audio filters, starting with the next following, making sure to wrap around
+  // we leave this loop once we found a filter that is applicable using "break"
+  // or skip to next filter to check using "continue"
+  for (idx = current_path+((query&PATH_DOWN)?-1:1); idx != current_path;
+      idx+=(query&PATH_DOWN)?-1:1)
+  {
+    idx %= AUDIO_FILTER_PATH_NUM;
+    if (idx<0) { idx+=AUDIO_FILTER_PATH_NUM; }
 
-//  if(dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
-  	  if (1){
-  	  int idx;
-
-    //
-    // Scan through filters to determine if the selected filter is disabled - and skip if it is.
-    // NOTE:  The 2.3 kHz filter CANNOT be disabled
-    //
-    // This also handles filters that are disabled according to mode (e.g. CW filters in SSB mode, SSB filters in CW mode)
-    //
-
-
-    // we run through all audio filters, starting with the next following, making sure to wrap around
-    // we leave this loop once we found a filter that is applicable using "break"
-    // or skip to next filter to check using "continue"
-    for (idx = current_path+((query&PATH_DOWN)?-1:1); idx != current_path;
-         idx+=(query&PATH_DOWN)?-1:1)
-    {
-      idx %= AUDIO_FILTER_PATH_NUM;
-      if (idx<0) { idx+=AUDIO_FILTER_PATH_NUM; }
-
-      // skip over all filters of current bandwidth
-      if (((query & PATH_NEXT_BANDWIDTH) != 0) && (last_bandwidth_id == FilterPathInfo[idx].id)) {
-        continue;
-      }
-      // skip over all filters of different bandwidth
-      if (((query & PATH_SAME_BANDWITH) != 0) && (last_bandwidth_id != FilterPathInfo[idx].id)) {
-        continue;
-      }
-
-      if (AudioFilter_IsApplicableFilterPath(query, idx,dmod_mode)) {
-       break;
-      }
+    // skip over all filters of current bandwidth
+    if (((query & PATH_NEXT_BANDWIDTH) != 0) && (last_bandwidth_id == FilterPathInfo[idx].id)) {
+      continue;
     }
-    retval = idx;
+    // skip over all filters of different bandwidth
+    if (((query & PATH_SAME_BANDWITH) != 0) && (last_bandwidth_id != FilterPathInfo[idx].id)) {
+      continue;
+    }
+
+    if (AudioFilter_IsApplicableFilterPath(query, idx,dmod_mode)) {
+      break;
+    }
   }
-  return retval;
+  return  idx;
 }
 
 
