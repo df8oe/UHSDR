@@ -2105,7 +2105,7 @@ static void UiDriverCreateDesktop(void)
 	//UiLcdHy28_PrintText(POS_TX_IND_X,POS_TX_IND_Y,	"RX", Green,Black,0);
 
 	// Create voltage
-	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintText			(POS_PWRN_IND_X, POS_PWRN_IND_Y,"  VCC  ", Grey2, 	Blue, 0);
 	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "--.--V",  COL_PWR_IND,Black,0);
 
@@ -4536,7 +4536,7 @@ static void UiDriverChangeDSPMode(void)
 		txt = "DSP-OFF";
 	}
 
-	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
 }
 //
@@ -4585,7 +4585,7 @@ static void UiDriverChangeDigitalMode(void)
 	const char* txt = digimodes[ts.digital_mode].label;
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
@@ -4622,7 +4622,7 @@ static void UiDriverChangePowerLevel(void)
     UiDriverSetBandPowerFactor(ts.band);
 
     // Draw top line
-    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
 }
 
@@ -4856,7 +4856,7 @@ void UiDriverChangeFilterDisplay(void)
 
 	if (ts.filter_path > 0) {
 	    bg_clr = filter_path_change?Orange:Blue;
-	    font_clr= filter_path_change?Black:White;
+	    font_clr= filter_path_change?White:White;
 	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
 	    filter = &FilterInfo[path->id];
 	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, font_clr,  bg_clr, 0);
@@ -4870,7 +4870,7 @@ void UiDriverChangeFilterDisplay(void)
     UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ", White,  bg_clr, 0);
 	}
 	// Draw top line
-    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
+    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,bg_clr);
 	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 12),filter_ptr,font_clr,bg_clr,0);
 
 }
