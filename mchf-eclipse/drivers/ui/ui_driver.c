@@ -4869,7 +4869,7 @@ void UiDriverChangeFilterDisplay(void)
 	}
 	// Draw top line
     UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Grey);
-	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 15),filter_ptr,White,bg_clr,0);
+	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 12),filter_ptr,White,bg_clr,0);
 
 }
 //
