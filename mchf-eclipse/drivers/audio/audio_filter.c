@@ -666,8 +666,9 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
   uint8_t last_bandwidth_id = FilterPathInfo[current_path].id;
   // by default we do not change the filter selection
 
-  if(dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
-    int idx;
+//  if(dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
+  	  if (1){
+  	  int idx;
 
     //
     // Scan through filters to determine if the selected filter is disabled - and skip if it is.
@@ -741,7 +742,8 @@ uint8_t AudioFilter_NextApplicableFilter()
     myMode = FILTER_SSB;
   }
 
-  if(ts.dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
+//  if(ts.dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
+  	if (1) {
     int idx;
 
     //
@@ -943,7 +945,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     	if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
             phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
         else
-            phase = ts.rx_iq_usb_phase_balance;     // yes, get current gain adjustment setting for USB and other mdoes
+            phase = ts.rx_iq_usb_phase_balance;     // yes, get current gain adjustment setting for USB and other modes
         //
     	if (ts.filter_path ==0){
     	if(phase != 0)  {   // is phase adjustment non-zero?
