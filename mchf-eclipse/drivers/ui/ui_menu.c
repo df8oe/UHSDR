@@ -1762,7 +1762,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 							1
 							);
 		}
-		if((ts.txrx_mode == TRX_MODE_TX) && (fchange))	{		// only adjust the hardware if in TX mode (it will kill RX otherwise!)
+		if(fchange)	{
 			Codec_MicBoostCheck();
 		}
 		//

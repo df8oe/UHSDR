@@ -111,31 +111,32 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
 }
 
 void Codec_MicBoostCheck() {
-	// Set up microphone gain and adjust mic boost accordingly
-	if(ts.tx_gain[TX_AUDIO_MIC] > 50)	{		// actively adjust microphone gain and microphone boost
-		ts.mic_boost = 1;
-		// if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
-		{	// in transmit and in voice mode?
-			Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
-		}
-		ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35)/3;			// above 50, rescale software amplification
-	}
-	else	{
-		ts.mic_boost = 0;
-		// if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
-		{	// in transmit and in voice mode?
-			Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
-		}
-		ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
-	}
-	// Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
-	// Reg 06: Power Down Control (Clk off, Osc off, Mic On)
-	if(ts.mic_bias) {
-		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
-	} else {
-		Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
-	}
-
+  if(ts.txrx_mode == TRX_MODE_TX) {       // only adjust the hardware if in TX mode (it will kill RX otherwise!)
+    // Set up microphone gain and adjust mic boost accordingly
+    if(ts.tx_gain[TX_AUDIO_MIC] > 50)	{		// actively adjust microphone gain and microphone boost
+      ts.mic_boost = 1;
+      // if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
+      {	// in transmit and in voice mode?
+        Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
+      }
+      ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35)/3;			// above 50, rescale software amplification
+    }
+    else	{
+      ts.mic_boost = 0;
+      // if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
+      {	// in transmit and in voice mode?
+        Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
+      }
+      ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
+    }
+    // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
+    // Reg 06: Power Down Control (Clk off, Osc off, Mic On)
+    if(ts.mic_bias) {
+      Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
+    } else {
+      Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
+    }
+  }
 }
 
 
