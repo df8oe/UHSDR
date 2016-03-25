@@ -127,11 +127,11 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_2P7KHZ, "  2.7k ",  2700, FILTER_MASK_NOFM,    FILTER_MASK_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_2P9KHZ, "  2.9k ",  2900, FILTER_MASK_SSBSAM,  FILTER_MASK_AM,   3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P2KHZ, "  3.2k ",  3200, FILTER_MASK_SSBAM,   FILTER_MASK_NONE, 3, 2, filter_stdLabelsLpfBpf },
-    {  AUDIO_3P4KHZ, "  3.4k ",  3400, FILTER_MASK_SSBAM,   FILTER_MASK_NONE, 3, 2, filter_stdLabelsLpfBpf },
+    {  AUDIO_3P4KHZ, "  3.4k ",  3400, FILTER_MASK_SSBSAM,  FILTER_MASK_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P6KHZ, "  3.6k ",  3600, FILTER_MASK_SSBAMFM, FILTER_MASK_NONE, 3, 2, filter_stdLabelsLpfBpf },
     {  AUDIO_3P8KHZ, "  3.8k ",  3800, FILTER_MASK_SSBAM,   FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P0KHZ, "  4.0k ",  4000, FILTER_MASK_SSBAM,   FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
-    {  AUDIO_4P2KHZ, "  4.2k ",  4200, FILTER_MASK_SSBAM,   FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
+    {  AUDIO_4P2KHZ, "  4.2k ",  4200, FILTER_MASK_SSBSAM,   FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P4KHZ, "  4.4k ",  4400, FILTER_MASK_NOFM,    FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P6KHZ, "  4.6k ",  4600, FILTER_MASK_AM,      FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
     {  AUDIO_4P8KHZ, "  4.8k ",  4800, FILTER_MASK_AMSAM,   FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff },
@@ -149,38 +149,6 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
 };
 
 uint16_t filterpath_mode_map[FILTER_MODE_MAX];
-
-/*
-id --> ID for bandwidth
-
-mode
-
-filter_select_ID
-
-FIR coeff_I_numTaps (= FIR coeff_Q_numTaps)
-FIR coeff_I_coeffs: points to the array of FIR filter coeffs used in the I path
-FIR coeff_Q_coeffs: points to the array of FIR filter coeffs used in the Q path
-
-dec- filter_numTaps: points to the array of FIR coeffs used in the decimation fliter
-dec- filter_coeffs
-
-sample rate: gives the sample rate used after decimation (12ksps, 24ksps . . .)
-
-IIR yes/no: bool: is an audio IIR filter used after decimation?
-
-IIR audio coeff_numStages: points to the array of IIR coeff used for the audio IIR filter
-IIR audio coeff_pk
-IIR audio coeff_pv
-
-int. filter coeffs_numTaps
-int. filter coeffs: points to the array of IIR coeffs for the antialias interpolation filter used by the ARM interpolation routine
-
-IIR_antialias_yes/no: bool - is an additional IIR filter after the interpolation used?
-
-IIR_antialias_numStages
-IIR_antialias_coeff_pk
-IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR filter (works at 48ksps)
-*/
 
 /*################################################################
  * FILTER PLAYGROUND for the brave mcHF owner
@@ -200,15 +168,48 @@ IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR 
  * ###############################################################
  */
 
+/*
+id --> ID for bandwidth
+
+mode name --> for display
+
+filter_select_ID
+
+FIR coeff_I_numTaps (= FIR coeff_Q_numTaps)
+FIR coeff_I_coeffs: points to the array of FIR filter coeffs used in the I path
+FIR coeff_Q_coeffs: points to the array of FIR filter coeffs used in the Q path
+
+&decimation filter instance
+[dec- filter_numTaps: points to the array of FIR coeffs used in the decimation fliter
+[dec- filter_coeffs
+
+sample rate: gives the sample rate used after decimation (12ksps, 24ksps . . .)
+
+&IIR_Pre_Filter instance
+[IIR audio coeff_numStages: points to the array of IIR coeff used for the audio IIR filter
+[IIR audio coeff_pk
+[IIR audio coeff_pv
+
+&FIR_interpolation filter instance
+[int. filter coeffs_numTaps
+[int. filter coeffs: points to the array of IIR coeffs for the antialias interpolation filter used by the ARM interpolation routine
+
+&IIR interpolation filter instance
+[IIR_antialias_numStages
+[IIR_antialias_coeff_pk
+[IIR_antialias_coeff_pv: points to the array of IIR coeffs for the antialias IIR filter (works at 48ksps)
+
+centre frequency of the filterpath in Hz (for the graphical display of the bandwidth under spectrum display)
+
+*/
+
 const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] = 
 									//
 {
-// ID, mode, filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, FIR_dec_numTaps, FIR_dec_coeff_file,
-//		sample_rate_dec,bool IIR_PreFilter_yes_no, &IIR_PreFilter_numTaps, &IIR_PreFilter_pk_file,
-//		IIR_PreFilter_pv_file, FIR_int_numTaps, FIR_int_coeff_file, bool IIR_int_yes_no,
-//		IIR_int_numTaps, &IIR_int_pk_file, &IIR_int_pv_file
-
-
+// ID, mode name (for display), filter_select_ID, FIR_numTaps, FIR_I_coeff_file, FIR_Q_coeff_file, &decimation filter,
+//		sample_rate_dec, &IIR_PreFilter,
+//		&FIR_interpolaton filter, &IIR_interpolation filter, centre frequency of the filterpath (for graphical bandwidth display)
+//
 //###################################################################################################################################
 // FM filters
 //	very special case, FM demodulation mainly in separate void, filterpath not defined in FilterPathInfo
@@ -587,12 +588,28 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_10k},
 
+//###################################################################################################################################
+// SAM filters: this is double sideband demodulation, LSB and USB are demodulated and added together, after that
+//				the IIR filter cuts off at the desired frequency
+//				Conceptually, these are very similar to the SSB filters
+//
+//###################################################################################################################################
+
+
 	{	AUDIO_2P3KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
 		&FirRxInterpolate, NULL},
 
 	{	AUDIO_2P9KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
+		&FirRxInterpolate, NULL},
+
+	{	AUDIO_3P4KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
+		&FirRxInterpolate, NULL},
+
+	{	AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+		RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
 		&FirRxInterpolate, NULL},
 
 	{	AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
