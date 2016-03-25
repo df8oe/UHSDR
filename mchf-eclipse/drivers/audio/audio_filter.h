@@ -157,15 +157,16 @@ extern const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM];
 //
 
 enum {
-  ALL_APPLICABLE_PATHS = 0,
-  NEXT_BANDWIDTH = 1,
-  SAME_BANDWITH =2,
+  PATH_ALL_APPLICABLE = 0,
+  PATH_NEXT_BANDWIDTH = 1,
+  PATH_SAME_BANDWITH =2,
   PATH_UP = 4,
   PATH_DOWN = 8,
+  PATH_USE_RULES = 16,
 };
 
 uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
-bool AudioFilter_IsApplicableFilterPath(const uint8_t filter_path, const uint8_t dmod_mode);
+bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t filter_path, const uint8_t dmod_mode);
 
 uint8_t AudioFilter_NextApplicableFilter();
 

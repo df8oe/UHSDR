@@ -1125,9 +1125,9 @@ static void UiDriverProcessKeyboard(void)
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
 				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX) && (ts.dmod_mode != DEMOD_FM))	{ // only allow in receive mode and when NOT in FM
-				  incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
-
-	              UiInitRxParms();            // update rx internals accordingly including the necessary display updates
+				  // incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
+				  // ts.filter_path = AudioFilter_NextApplicableFilterPath(ALL_APPLICABLE_PATHS,ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+	              // UiInitRxParms();            // update rx internals accordingly including the necessary display updates
 				}
 				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))	{
 					if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	{	// is tone burst mode enabled?
@@ -4027,7 +4027,10 @@ static void UiDriverCheckEncoderTwo(void)
 
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
-    if(ts.menu_mode)	{
+    if (true == ks.press_hold && BUTTON_G4_PRESSED == ks.button_id) {
+      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+      UiInitRxParms();
+    } else  if(ts.menu_mode)    {
       UiMenu_RenderChangeItem(pot_diff);
     } else {
       if(ts.txrx_mode == TRX_MODE_RX)	{
@@ -4138,7 +4141,10 @@ static void UiDriverCheckEncoderThree(void)
 
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
-    if(ts.menu_mode)	{
+    if (true == ks.press_hold && BUTTON_G4_PRESSED == ks.button_id) {
+      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+      UiInitRxParms();
+    } else  if(ts.menu_mode)	{
       UiMenu_RenderChangeItemValue(pot_diff);
     } else {
 
