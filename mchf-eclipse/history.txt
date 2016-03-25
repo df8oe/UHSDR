@@ -11,6 +11,9 @@
 
 
 2016mmdd [DF8OE]
+- added different LCD init code (must be selected before building at this stage -
+  subject to investigate runtime selsction)
+- new FilterPath-structure replaces old filter selection method
 
 
 20160317 [DF8OE]
