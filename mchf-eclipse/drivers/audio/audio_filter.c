@@ -1049,7 +1049,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                         }
                     } else
-                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){ // Hilbert 3k6
+                       if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){ // Hilbert 3k6
                             for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_4k5_coeffs[i]; // get fraction of 90 degree setting
                                 f_offset = var_norm * q_rx_4k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
