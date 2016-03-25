@@ -59,6 +59,10 @@
 
 #define USB_AUDIO_SUPPORT // uncomment this to get experimental USB AUDIO Support
 
+// hardware specific switches
+//#define hY28BHISPEED		true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
+#define OLDHY28INITCODE		true			// uncomment for using new HY28 init code if you get white screen
+
 
 #define		WD_REFRESH_WINDOW		80
 #define		WD_REFRESH_COUNTER		127

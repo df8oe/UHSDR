@@ -1164,7 +1164,7 @@ uchar UiLcdHy28_InitA(void)
    {
       printf("doing ILI9325 init\n\r");
 
-#ifdef OLDINIT		// original HY28B init code
+#ifdef OLDHY28INITCODE				// original HY28B init code
       {
       UiLcdHy28_WriteReg(0x00e7,0x0010);
       UiLcdHy28_WriteReg(0x0000,0x0001);  // start internal osc

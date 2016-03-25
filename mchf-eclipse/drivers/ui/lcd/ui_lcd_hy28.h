@@ -22,8 +22,6 @@
 #define MAX_X  320
 #define MAX_Y  240
 
-// #define HY28BHISPEED true
-
 #ifndef HY28BHISPEED
   #define HY28BHISPEED false
 #endif
