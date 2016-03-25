@@ -3697,6 +3697,9 @@ static void UiDriverChangeDemodMode(uchar noskip)
 			}
 		}
 	}
+	if (ts.filter_path != 0) {
+	    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,loc_mode,ts.filter_path-1)+1;
+	}
 	UiDriverSetDemodMode(loc_mode);
 }
 
