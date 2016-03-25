@@ -623,6 +623,14 @@ void UiReadWriteSettingEEPROM_Filter()
       UiReadWriteSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,filter_map,0x0000);
 
     }
+    {
+      int idx;
+      for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+        UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx,filterpath_mode_map[idx],0);
+
+      }
+    }
+
 
 }
 
@@ -655,7 +663,13 @@ void UiReadSettingEEPROM_Filter()
       for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
         ts.filter_select[idx] = (filter_map&(1<<bit))!=0?1:0;
       }
+      {
+        int idx;
+        for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+          UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx,&filterpath_mode_map[idx],0,0,0xFFFF);
 
+        }
+      }
     }
 
 }

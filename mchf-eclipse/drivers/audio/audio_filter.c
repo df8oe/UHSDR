@@ -148,7 +148,7 @@ FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
     {  AUDIO_10P0KHZ," 10.0k ", 10000, FILTER_MASK_AM,      FILTER_MASK_NONE, 2, 1, filter_stdLabelsOnOff }
 };
 
-static filterpath_mode_map[FILTER_MODE_MAX];
+uint16_t filterpath_mode_map[FILTER_MODE_MAX];
 
 /*
 id --> ID for bandwidth

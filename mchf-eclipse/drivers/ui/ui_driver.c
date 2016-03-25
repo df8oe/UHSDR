@@ -952,11 +952,14 @@ static void UiDriverProcessKeyboard(void)
 				UiDriver_HandlePowerLevelChange(ts.power_level+1);
 				break;
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
-				if((!ts.tune) && (ts.dmod_mode != DEMOD_FM))	{
-					ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
-
-					// Change filter
-					UiInitRxParms();		// re-init for change of filter including display updates
+				if(!ts.tune) {
+				  if (ts.filter_path != 0) {
+				    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1)+1;
+				  } else if (ts.dmod_mode != DEMOD_FM)	{
+				    ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
+				  }
+				  // Change filter
+				  UiInitRxParms();		// re-init for change of filter including display updates
 				}
 				break;
 			}
@@ -3613,9 +3616,6 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 		softdds_setfreq(0.0,ts.samp_rate,0);
 
 
-	// Update Decode Mode (USB/LSB/AM/FM/CW)
-
-	UiDriverShowMode();
 
 	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
 	AudioManagement_CalcRxIqGainAdj();
@@ -3623,7 +3623,11 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 	AudioFilter_CalcTxPhaseAdj();
 	AudioManagement_CalcTxIqGainAdj();
 	// FIXME: HACK: remove this after implementation
-	if (ts.dmod_mode == DEMOD_SAM) audio_driver_set_rx_audio_filter();
+	audio_driver_set_rx_audio_filter();
+
+    // Update Decode Mode (USB/LSB/AM/FM/CW)
+
+    UiDriverShowMode();
 
 	// Change function buttons caption
 	//UiDriverCreateFunctionButtons(false);
@@ -3696,9 +3700,6 @@ static void UiDriverChangeDemodMode(uchar noskip)
 				}
 			}
 		}
-	}
-	if (ts.filter_path != 0) {
-	    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,loc_mode,ts.filter_path-1)+1;
 	}
 	UiDriverSetDemodMode(loc_mode);
 }
@@ -3828,10 +3829,11 @@ static void UiDriverChangeBand(uchar is_up)
 	if(ts.filter_id != vfo[VFO_WORK].band[new_band_index].filter_mode)
 	{
 		ts.filter_id = vfo[VFO_WORK].band[new_band_index].filter_mode;
-		UiDriverChangeFilterDisplay();	// update display and change filter
-		UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 		audio_driver_set_rx_audio_filter();
 		audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
+        UiDriverChangeFilterDisplay();  // update display and change filter
+        UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator
+
 	}
 
 	// Create Band value
