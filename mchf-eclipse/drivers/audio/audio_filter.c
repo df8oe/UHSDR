@@ -596,7 +596,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 
 
 
-bool AudioFilter_IsApplicableFilterPath(const uint8_t filter_path, const uint8_t dmod_mode) {
+bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t filter_path, const uint8_t dmod_mode) {
   bool retval = false;
   uint8_t filter_mode;
   switch(dmod_mode) {
@@ -614,29 +614,34 @@ bool AudioFilter_IsApplicableFilterPath(const uint8_t filter_path, const uint8_t
     break;
   // case DEMOD_LSB:
   // case DEMOD_USB:
-  // case DEMOD_DIGI:
+    // case DEMOD_DIGI:
   default:
     filter_mode = FILTER_SSB;
   }
 
 
   // these rules handle special cases
-   // if((FilterPathInfo[idx].id == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (current_mode == DEMOD_CW))) { idx = AUDIO_300HZ; break; }
-   // in this case, next applicable mode is 300 Hz, so selected and leave loop
+  // if((FilterPathInfo[idx].id == AUDIO_1P8KHZ) && ((ts.filter_cw_wide_disable) && (current_mode == DEMOD_CW))) { idx = AUDIO_300HZ; break; }
+  // in this case, next applicable mode is 300 Hz, so selected and leave loop
+  if ((FilterPathInfo[filter_path].mode & filter_mode) != 0) {
+    if ((query & PATH_USE_RULES) != 0) {
+      // we have to check if this mode is IN the list of modes always offered in this mode, regardless of enablement
+      if ((FilterInfo[FilterPathInfo[filter_path].id].always_on_modes & filter_mode) != 0) {
+        // okay, applicable, leave loop
+        retval = true;
+      } else if (!ts.filter_select[FilterPathInfo[filter_path].id]) {
+        retval = false;
+      } else if((FilterPathInfo[filter_path].id == AUDIO_300HZ || FilterPathInfo[filter_path].id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (filter_mode != FILTER_CW))) {
+        // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
+        retval = false;
+      } else { // okay, applicable
+        retval = true;
+      }
+    } else {
+      retval = true;
+    }
 
-   // we have to check if this mode is IN the list of modes always offered in this mode, regardless of enablement
-   if ((FilterInfo[FilterPathInfo[filter_path].id].always_on_modes & filter_mode) != 0) {
-           // okay, applicable, leave loop
-           retval = true;
-   } else if (!ts.filter_select[FilterPathInfo[filter_path].id]) {
-     retval = false;
-   } else if((FilterPathInfo[filter_path].id == AUDIO_300HZ || FilterPathInfo[filter_path].id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (filter_mode != FILTER_CW))) {
-     // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
-     retval = false;
-   } else if ((FilterPathInfo[filter_path].mode & filter_mode) == 0) {
-     // okay, not applicable, next please
-     retval = true;
-   }
+  }
   return retval;
 }
 
@@ -658,7 +663,7 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
 {
 
   uint8_t retval = current_path;
-  uint8_t last_bandwidth_id = FilterInfo[current_path].id;
+  uint8_t last_bandwidth_id = FilterPathInfo[current_path].id;
   // by default we do not change the filter selection
 
   if(dmod_mode != DEMOD_FM) {        // bail out if FM as filters are selected in configuration menu
@@ -675,22 +680,22 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
     // we run through all audio filters, starting with the next following, making sure to wrap around
     // we leave this loop once we found a filter that is applicable using "break"
     // or skip to next filter to check using "continue"
-    for (idx = current_path+(query&PATH_DOWN)?-1:1; idx != current_path;
+    for (idx = current_path+((query&PATH_DOWN)?-1:1); idx != current_path;
          idx+=(query&PATH_DOWN)?-1:1)
     {
       idx %= AUDIO_FILTER_PATH_NUM;
       if (idx<0) { idx+=AUDIO_FILTER_PATH_NUM; }
 
       // skip over all filters of current bandwidth
-      if (((query & NEXT_BANDWIDTH) != 0) && (last_bandwidth_id == FilterPathInfo[idx].id)) {
+      if (((query & PATH_NEXT_BANDWIDTH) != 0) && (last_bandwidth_id == FilterPathInfo[idx].id)) {
         continue;
       }
       // skip over all filters of different bandwidth
-      if (((query & SAME_BANDWITH) != 0) && (last_bandwidth_id != FilterPathInfo[idx].id)) {
+      if (((query & PATH_SAME_BANDWITH) != 0) && (last_bandwidth_id != FilterPathInfo[idx].id)) {
         continue;
       }
 
-      if (AudioFilter_IsApplicableFilterPath(idx,dmod_mode)) {
+      if (AudioFilter_IsApplicableFilterPath(query, idx,dmod_mode)) {
        break;
       }
     }
