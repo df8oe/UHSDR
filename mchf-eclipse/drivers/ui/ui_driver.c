@@ -4886,13 +4886,19 @@ void UiDriverDisplayFilterBW(void)
 
 	// Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 	//
-	const FilterDescriptor* filter_p = &FilterInfo[ts.filter_id];
-	const FilterConfig* config_p = &filter_p->config[ts.filter_select[ts.filter_id]];
-	offset = config_p->offset;
-	width = filter_p->width;
+	if (ts.filter_path != 0) {
+	  const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path-1];
+	  const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
+	  offset = path_p->offset;
+	  width = filter_p->width;
 
-	// TODO: We cheat here a  little, until all filter configs are properly filled.
-	if (ts.filter_select[ts.filter_id] != 0 && offset == 0) {
+	} else {
+	  const FilterDescriptor* filter_p = &FilterInfo[ts.filter_id];
+	  const FilterConfig* config_p = &filter_p->config[ts.filter_select[ts.filter_id]];
+	  offset = config_p->offset;
+	  width = filter_p->width;
+	}
+	if (offset == 0) {
 	  offset = width/2;
 	}
 	//
