@@ -893,6 +893,8 @@ int main(void)
 	AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
 	//
 	AudioManagement_LoadBeepFreq();		// load/set beep frequency
+
+	UiInitRxParms();
 	//
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted

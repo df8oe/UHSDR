@@ -281,9 +281,16 @@ void audio_driver_set_rx_audio_filter(void)
 
 	// Lock - temporarily disable filter
 
+
+
 	dsp_inhibit_temp = ts.dsp_inhibit;
 	ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
 	ads.af_disabled = 1;
+
+	// make sure we have a proper filter path for the given mode
+	if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path-1)== false) {
+	  ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,ts.dmod_mode,ts.filter_path-1)+1;
+	}
 	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
 	// to do: implement switching according to FilterPathInfo
 	// ts.filter_id & ts.dmod_mode & ts.filter_select

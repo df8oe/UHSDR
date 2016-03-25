@@ -1064,7 +1064,8 @@ enum {
 #define	EEPROM_FILTER_2_SEL		326		// selection of filters 6k5 to 10k0
 #define	EEPROM_DYNAMIC_TUNING		327
 #define EEPROM_SAM_ENABLE		328		// SAM demodulation enable
-
+#define EEPROM_FILTER_PATH_MAP_BASE 329 //
+#define EEPROM_FILTER_PATH_MAP_END (329 + FILTER_MODE_MAX-1)
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 
 //
