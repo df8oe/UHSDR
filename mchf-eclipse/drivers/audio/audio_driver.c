@@ -779,8 +779,19 @@ void audio_driver_set_rx_audio_filter(void)
 	// DONE: DD4WH 2016_03_13
     if (ts.filter_path != 0) {
       ads.decimation_rate = FilterPathInfo[ts.filter_path-1].sample_rate_dec;
-      DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
-      INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].interpolate->pCoeffs; // Filter coefficients
+      if (FilterPathInfo[ts.filter_path-1].dec != NULL) {
+        DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path-1].dec->numTaps;      // Number of taps in FIR filter
+        DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
+      } else {
+        DECIMATE_RX.numTaps = 0;
+        DECIMATE_RX.pCoeffs = NULL;
+      }
+      if (FilterPathInfo[ts.filter_path-1].interpolate != NULL) {
+        INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].interpolate->pCoeffs; // Filter coefficients
+      } else {
+        INTERPOLATE_RX.phaseLength = 0;
+        INTERPOLATE_RX.pCoeffs = NULL;
+      }
 
     } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
 		ads.decimation_rate = RX_DECIMATION_RATE_12KHZ;
@@ -804,11 +815,10 @@ void audio_driver_set_rx_audio_filter(void)
 	DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
 
     // TODO: Review FilterPath Code
-    if (ts.filter_path != 0) {
-      DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path-1].dec->numTaps;		// Number of taps in FIR filter
-    } else {
+    if (ts.filter_path == 0) {
       DECIMATE_RX.numTaps = FirRxDecimate.numTaps;
     }
+
 	DECIMATE_RX.pState = (float32_t *)&decimState[0];			// Filter state variables
 	//
 	// Set up RX interpolation/filter
@@ -818,7 +828,11 @@ void audio_driver_set_rx_audio_filter(void)
 	// TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
 	if (ts.filter_path != 0) {
-	  INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
+      if (FilterPathInfo[ts.filter_path-1].interpolate != NULL) {
+        INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
+      } else {
+        INTERPOLATE_RX.phaseLength = 0;
+      }
 	} else {
 	  INTERPOLATE_RX.phaseLength = FirRxInterpolate.phaseLength/ads.decimation_rate;	// Phase Length ( numTaps / L )
 	}
@@ -1727,7 +1741,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// Do decimation down to lower rate to reduce processor load
 		//
-		arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
+	    if (DECIMATE_RX.numTaps > 0) {
+	      arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
+	    }
 		//
 		//
 		if((!ads.af_disabled) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	{	// No notch in CW
@@ -1794,8 +1810,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
 		//
-		arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, psize/2);
-
+		if (INTERPOLATE_RX.phaseLength > 0) {
+		  arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, psize/2);
+		}
 		// additional antialias filter for specific bandwidths
 		// IIR ARMA-type lattice filter
 	    // TODO: Review FilterPath Code

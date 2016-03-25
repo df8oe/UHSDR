@@ -82,12 +82,14 @@ enum    {
 };
 
 enum {
-  FILTER_CW = 1,
-  FILTER_SSB = 2,
-  FILTER_AM = 4,
-  FILTER_FM = 8,
-  FILTER_SAM = 16
+  FILTER_MODE_CW = 0,
+  FILTER_MODE_SSB,
+  FILTER_MODE_AM,
+  FILTER_MODE_FM,
+  FILTER_MODE_SAM,
+  FILTER_MODE_MAX
 };
+
 //
 //
 #define AUDIO_DEFAULT_FILTER        AUDIO_2P3KHZ
@@ -163,10 +165,11 @@ enum {
   PATH_UP = 4,
   PATH_DOWN = 8,
   PATH_USE_RULES = 16,
+  PATH_LAST_USED_IN_MODE = 32
 };
 
 uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
-bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t filter_path, const uint8_t dmod_mode);
+bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t filter_path);
 
 uint8_t AudioFilter_NextApplicableFilter();
 
