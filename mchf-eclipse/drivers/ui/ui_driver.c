@@ -4861,7 +4861,7 @@ void UiDriverChangeFilterDisplay(void)
 	    filter = &FilterInfo[path->id];
 	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, font_clr,  bg_clr, 0);
 	    if (path->name != NULL) {
-	      snprintf(outs,9,"  %s  ",path->name);
+	      snprintf(outs,8,"  %s  ",path->name);
 	      filter_ptr = outs;
 	    } else {
 	      filter_ptr = "       ";
