@@ -210,6 +210,11 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 //		sample_rate_dec, &IIR_PreFilter,
 //		&FIR_interpolaton filter, &IIR_interpolation filter, centre frequency of the filterpath (for graphical bandwidth display)
 //
+    // SPECIAL AUDIO_OFF Entry
+        {   AUDIO_OFF, "   ", FILTER_MASK_NONE, 0, 0, NULL, NULL, NULL,
+            0, NULL,
+            NULL, NULL},
+
 //###################################################################################################################################
 // FM filters
 //	very special case, FM demodulation mainly in separate void, filterpath not defined in FilterPathInfo
@@ -622,7 +627,11 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 
 }; // end FilterPath
 
-
+/*
+ * @brief Converts demodulation mode (DEMOD_CW ... ) to FILTER_MODE_CW ...
+ * @param demodulation mode (DEMOD_CW ... DEMOD_SAM)
+ * @returns filter mode for given demodulation (FILTER_MODE_CW / _SSB, ... )
+ */
 uint16_t AudioFilter_GetFilterModeFromDemodMode(const uint8_t dmod_mode) {
   uint16_t filter_mode;
   switch(dmod_mode) {
@@ -647,9 +656,21 @@ uint16_t AudioFilter_GetFilterModeFromDemodMode(const uint8_t dmod_mode) {
   return filter_mode;
 }
 
-bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t filter_path) {
+static bool AudioFilter_IsInPathMemory(uint16_t filter_mode, uint16_t filter_path) {
+  uint16_t idx;
   bool retval = false;
-  uint16_t filter_mode = AudioFilter_GetFilterModeFromDemodMode(dmod_mode);
+  for (idx = 1; idx < FILTER_PATH_MEM_MAX;idx++) {
+    if (ts.filter_path_mem[filter_mode][idx] == filter_path) {
+      retval = true;
+      break;
+    }
+    // leave loop if match found
+  }
+  return retval;
+}
+
+bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint16_t filter_mode, const uint8_t filter_path) {
+  bool retval = false;
   uint16_t filter_mode_mask = 1<<filter_mode;
 
   // these rules handle special cases
@@ -658,16 +679,18 @@ bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod
   if ((FilterPathInfo[filter_path].mode & filter_mode_mask) != 0) {
     if ((query & PATH_USE_RULES) != 0) {
       // we have to check if this mode is IN the list of modes always offered in this mode, regardless of enablement
-      if ((FilterInfo[FilterPathInfo[filter_path].id].always_on_modes & filter_mode_mask) != 0) {
+      /*if ((FilterInfo[FilterPathInfo[filter_path].id].always_on_modes & filter_mode_mask) != 0) {
         // okay, applicable, leave loop
         retval = true;
-      } else if (!ts.filter_select[FilterPathInfo[filter_path].id]) {
-        retval = false;
-      } else if((FilterPathInfo[filter_path].id == AUDIO_300HZ || FilterPathInfo[filter_path].id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (filter_mode_mask != FILTER_MASK_CW))) {
-        // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
-        retval = false;
-      } else { // okay, applicable
+      } else*/ if (AudioFilter_IsInPathMemory(filter_mode,filter_path)) {
         retval = true;
+//      } else if (!ts.filter_select[FilterPathInfo[filter_path].id]) {
+//        retval = false;
+//      } else if((FilterPathInfo[filter_path].id == AUDIO_300HZ || FilterPathInfo[filter_path].id == AUDIO_500HZ) && ((ts.filter_ssb_narrow_disable) && (filter_mode_mask != FILTER_MASK_CW))) {
+//        // jump over 300 Hz / 500 Hz if ssb_narrow_disable and voice mode
+//        retval = false;
+      } else { // no match in rules, not applicable
+        retval = false;
       }
     } else {
       retval = true;
@@ -684,21 +707,21 @@ bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod
  * valid filter id. In case not applicable filter was found, it returns the currently selected filter_id
  *
  * @param query specifies which selection approach is used: ALL_APPLICABLE_PATHS, NEXT_BANDWIDTH, SAME_BANDWIDTH
- * @param current_mode -> all values allowed for ts.dmod_mode
+ * @param current_mode -> all values allowed for FILTER_MODE_xxx
  * @param current_path -> a valid filter path id, which is used as starting point
  *        use ts.filter_path unless in special cases (e.g. use for filter selection menus)
  * @returns next applicable filter id
  */
 
 
-uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path)
+uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_t filter_mode, const uint8_t current_path)
 {
 
   uint8_t last_bandwidth_id = FilterPathInfo[current_path].id;
   int idx = 0;
 
-  if ((query & PATH_LAST_USED_IN_MODE) != 0 &&  filterpath_mode_map[AudioFilter_GetFilterModeFromDemodMode(dmod_mode)] != 0) {
-    idx = filterpath_mode_map[AudioFilter_GetFilterModeFromDemodMode(dmod_mode)]-1;
+  if ((query & PATH_LAST_USED_IN_MODE) != 0 &&  ts.filter_path_mem[filter_mode][0] != 0) {
+    idx = ts.filter_path_mem[filter_mode][0];
   } else {
     // we run through all audio filters, starting with the next following, making sure to wrap around
     // we leave this loop once we found a filter that is applicable using "break"
@@ -718,12 +741,14 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t
         continue;
       }
 
-      if (AudioFilter_IsApplicableFilterPath(query, dmod_mode, idx)) {
+      if (AudioFilter_IsApplicableFilterPath(query, filter_mode, idx)) {
         break;
       }
     }
   }
-  filterpath_mode_map[AudioFilter_GetFilterModeFromDemodMode(dmod_mode)] = idx+1;
+  if ((query&PATH_DONT_STORE) == 0) {
+    ts.filter_path_mem[filter_mode][0] = idx;
+  }
   return  idx;
 }
 
@@ -844,8 +869,8 @@ void AudioFilter_CalcRxPhaseAdj(void)
     fc.rx_i_num_taps = I_NUM_TAPS;
     } else
     {
-        fc.rx_q_num_taps = FilterPathInfo[ts.filter_path-1].FIR_numTaps;
-        fc.rx_i_num_taps = FilterPathInfo[ts.filter_path-1].FIR_numTaps;
+        fc.rx_q_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
+        fc.rx_i_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
     }
     //
     fc.rx_q_block_size = Q_BLOCK_SIZE;
@@ -940,8 +965,8 @@ void AudioFilter_CalcRxPhaseAdj(void)
     		// in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
     		// also applicable for FM case !
     		for(i = 0; i < fc.rx_q_num_taps; i++) { // fc.rx_q_num_taps is ALWAYS == fc.rx_i_num_taps
-    			fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file[i];
-                fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path-1].FIR_Q_coeff_file[i];
+    			fc.rx_filt_i[i] = FilterPathInfo[ts.filter_path].FIR_I_coeff_file[i];
+                fc.rx_filt_q[i] = FilterPathInfo[ts.filter_path].FIR_Q_coeff_file[i];
     		}
     }//
 
@@ -1042,42 +1067,42 @@ void AudioFilter_CalcRxPhaseAdj(void)
                 var_inv /= 32;                      // fractionalize this one, too
                 if(phase < 0)   {   // was the phase adjustment negative?
 
-                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_3k6_coeffs){ // Hilbert 3k6
-                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                    if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_3k6_coeffs){ // Hilbert 3k6
+                        for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                             f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
                             f_offset = var_norm * q_rx_3k6_coeffs_minus[i]; // get fraction of 89.5 degree setting
                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                         }
                     } else
-                       if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){ // Hilbert 3k6
-                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                       if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_4k5_coeffs){ // Hilbert 3k6
+                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_4k5_coeffs[i]; // get fraction of 90 degree setting
                                 f_offset = var_norm * q_rx_4k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                             }
                         } else
-                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){ // Hilbert 5k
-                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                        if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_5k_coeffs){ // Hilbert 5k
+                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
                                 f_offset = var_norm * q_rx_5k_coeffs_minus[i];  // get fraction of 89.5 degree setting
                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                             }
                         } else
-                            if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_6k_coeffs){
-                                for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) { // Hilbert 6k
+                            if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_6k_coeffs){
+                                for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) { // Hilbert 6k
                                     f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
                                     f_offset = var_norm * q_rx_6k_coeffs_minus[i];  // get fraction of 89.5 degree setting
                                     fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                                 }
                             }   else
-                                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_7k5_coeffs){ // Hilbert 7k5
-                                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                    if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_7k5_coeffs){ // Hilbert 7k5
+                                        for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                             f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
                                             f_offset = var_norm * q_rx_7k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
                                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                                         }
                                     }   else {
-                                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) { // hilbert 10k
+                                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) { // hilbert 10k
                                                 f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
                                                 f_offset = var_norm * q_rx_10k_coeffs_minus[i]; // get fraction of 89.5 degree setting
                                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
@@ -1085,42 +1110,42 @@ void AudioFilter_CalcRxPhaseAdj(void)
                                         }
                 } // end phase adjustment negative
                 else    {                           // adjustment was positive
-                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_3k6_coeffs){
-                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                    if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_3k6_coeffs){
+                        for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                             f_coeff = var_inv * q_rx_3k6_coeffs[i]; // get fraction of 90 degree setting
                             f_offset = var_norm * q_rx_3k6_coeffs_plus[i];  // get fraction of 90.5 degree setting
                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                         }
                     } else
-                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){
-                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                        if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_4k5_coeffs){
+                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_4k5_coeffs[i]; // get fraction of 90 degree setting
                                 f_offset = var_norm * q_rx_4k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                             }
                         } else
-                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){
-                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                        if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_5k_coeffs){
+                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
                                 f_offset = var_norm * q_rx_5k_coeffs_plus[i];   // get fraction of 90.5 degree setting
                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                             }
                         } else
-                            if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_6k_coeffs){
-                                for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                            if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_6k_coeffs){
+                                for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                     f_coeff = var_inv * q_rx_6k_coeffs[i];  // get fraction of 90 degree setting
                                     f_offset = var_norm * q_rx_6k_coeffs_plus[i];   // get fraction of 90.5 degree setting
                                     fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                                 }
                             }   else
-                                    if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_7k5_coeffs){
-                                        for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                    if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_7k5_coeffs){
+                                        for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                             f_coeff = var_inv * q_rx_7k5_coeffs[i]; // get fraction of 90 degree setting
                                             f_offset = var_norm * q_rx_7k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
                                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                                         }
                                     }   else {
-                                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                            for(i = 0; i < FilterPathInfo[ts.filter_path].FIR_numTaps; i++) {
                                                 f_coeff = var_inv * q_rx_10k_coeffs[i]; // get fraction of 90 degree setting
                                                 f_offset = var_norm * q_rx_10k_coeffs_plus[i];  // get fraction of 90.5 degree setting
                                                 fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient

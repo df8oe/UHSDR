@@ -78,6 +78,7 @@ enum    {
     AUDIO_9P0KHZ,
     AUDIO_9P5KHZ,
     AUDIO_10P0KHZ,
+    AUDIO_OFF,
     AUDIO_FILTER_NUM
 };
 
@@ -150,7 +151,7 @@ typedef struct FilterPathDescriptor_s {
 } FilterPathDescriptor;
 
 
-#define AUDIO_FILTER_PATH_NUM 92
+#define AUDIO_FILTER_PATH_NUM 93
 
 extern const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM];
 //
@@ -170,13 +171,14 @@ enum {
   PATH_UP = 4,
   PATH_DOWN = 8,
   PATH_USE_RULES = 16,
-  PATH_LAST_USED_IN_MODE = 32
+  PATH_LAST_USED_IN_MODE = 32,
+  PATH_DONT_STORE = 64,
 };
 
-uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
-bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t filter_path);
+uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_t filter_mode, const uint8_t current_path);
+bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint16_t filter_mode, const uint8_t filter_path);
 void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names);
-
+uint16_t AudioFilter_GetFilterModeFromDemodMode(uint8_t dmod_mode);
 uint8_t AudioFilter_NextApplicableFilter();
 
 

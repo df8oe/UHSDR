@@ -624,14 +624,13 @@ void UiReadWriteSettingEEPROM_Filter()
 
     }
     {
-      int idx;
+      int idx, mem_idx;
       for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-        UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx,filterpath_mode_map[idx],0);
-
+        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+          UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+        }
       }
     }
-
-
 }
 
 void UiReadSettingEEPROM_Filter()
@@ -664,10 +663,11 @@ void UiReadSettingEEPROM_Filter()
         ts.filter_select[idx] = (filter_map&(1<<bit))!=0?1:0;
       }
       {
-        int idx;
+        int idx, mem_idx;
         for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-          UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx,&filterpath_mode_map[idx],0,0,0xFFFF);
-
+          for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,0xFFFF);
+          }
         }
       }
     }

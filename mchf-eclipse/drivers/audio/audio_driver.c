@@ -294,9 +294,9 @@ void audio_driver_set_rx_audio_filter(void)
 	// I.e. setting the ts.filter_path anywere else in the code is useless. You have to call AudioFilter_NextApplicableFilterPath in order to
 	// select a new filter path as this sets the last used/selected memory for a demod mode.
 
-	//if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path-1)== false) {
-	  ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,ts.dmod_mode,ts.filter_path-1)+1;
-	//}
+	// if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path)== false) {
+	  ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+	// }
 	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
 	// to do: implement switching according to FilterPathInfo
 	// ts.filter_id & ts.dmod_mode & ts.filter_select
@@ -616,11 +616,11 @@ void audio_driver_set_rx_audio_filter(void)
 	}  // HERE (after the "else") the new filter switching starts !!!
 
 	else {
-	  if (FilterPathInfo[ts.filter_path-1].pre_instance != NULL) {
+	  if (FilterPathInfo[ts.filter_path].pre_instance != NULL) {
         // if we turn on a filter, set the number of members to the number of elements last
-	    IIR_PreFilter.pkCoeffs = FilterPathInfo[ts.filter_path-1].pre_instance->pkCoeffs; // point to reflection coefficients
-	    IIR_PreFilter.pvCoeffs = FilterPathInfo[ts.filter_path-1].pre_instance->pvCoeffs; // point to ladder coefficients
-	    IIR_PreFilter.numStages = FilterPathInfo[ts.filter_path-1].pre_instance->numStages;        // number of stages
+	    IIR_PreFilter.pkCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pkCoeffs; // point to reflection coefficients
+	    IIR_PreFilter.pvCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pvCoeffs; // point to ladder coefficients
+	    IIR_PreFilter.numStages = FilterPathInfo[ts.filter_path].pre_instance->numStages;        // number of stages
 	  } else {
         // if we turn on a filter, set the number of members to 0 first
 	    IIR_PreFilter.numStages = 0;        // number of stages
@@ -647,11 +647,11 @@ void audio_driver_set_rx_audio_filter(void)
 	  IIR_AntiAlias.pvCoeffs = IIR_aa_5k.pvCoeffs;	// point to ladder coefficients
       IIR_AntiAlias.numStages = IIR_aa_5k.numStages;        // number of stages
 	} else {
-	  if (FilterPathInfo[ts.filter_path-1].iir_instance != NULL) {
+	  if (FilterPathInfo[ts.filter_path].iir_instance != NULL) {
 	    // if we turn on a filter, set the number of members to the number of elements last
-        IIR_AntiAlias.pkCoeffs = FilterPathInfo[ts.filter_path-1].iir_instance->pkCoeffs; // point to reflection coefficients
-        IIR_AntiAlias.pvCoeffs = FilterPathInfo[ts.filter_path-1].iir_instance->pvCoeffs; // point to ladder coefficients
-        IIR_AntiAlias.numStages = FilterPathInfo[ts.filter_path-1].iir_instance->numStages;        // number of stages
+        IIR_AntiAlias.pkCoeffs = FilterPathInfo[ts.filter_path].iir_instance->pkCoeffs; // point to reflection coefficients
+        IIR_AntiAlias.pvCoeffs = FilterPathInfo[ts.filter_path].iir_instance->pvCoeffs; // point to ladder coefficients
+        IIR_AntiAlias.numStages = FilterPathInfo[ts.filter_path].iir_instance->numStages;        // number of stages
 	  } else {
 	    // if we turn off a filter, set the number of members to 0 first
 	    IIR_AntiAlias.numStages = 0;
@@ -791,16 +791,16 @@ void audio_driver_set_rx_audio_filter(void)
     // TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
     if (ts.filter_path != 0) {
-      ads.decimation_rate = FilterPathInfo[ts.filter_path-1].sample_rate_dec;
-      if (FilterPathInfo[ts.filter_path-1].dec != NULL) {
-        DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path-1].dec->numTaps;      // Number of taps in FIR filter
-        DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
+      ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
+      if (FilterPathInfo[ts.filter_path].dec != NULL) {
+        DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path].dec->numTaps;      // Number of taps in FIR filter
+        DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
       } else {
         DECIMATE_RX.numTaps = 0;
         DECIMATE_RX.pCoeffs = NULL;
       }
-      if (FilterPathInfo[ts.filter_path-1].interpolate != NULL) {
-        INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path-1].interpolate->pCoeffs; // Filter coefficients
+      if (FilterPathInfo[ts.filter_path].interpolate != NULL) {
+        INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].interpolate->pCoeffs; // Filter coefficients
       } else {
         INTERPOLATE_RX.phaseLength = 0;
         INTERPOLATE_RX.pCoeffs = NULL;
@@ -841,8 +841,8 @@ void audio_driver_set_rx_audio_filter(void)
 	// TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
 	if (ts.filter_path != 0) {
-      if (FilterPathInfo[ts.filter_path-1].interpolate != NULL) {
-        INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path-1].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
+      if (FilterPathInfo[ts.filter_path].interpolate != NULL) {
+        INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
       } else {
         INTERPOLATE_RX.phaseLength = 0;
       }
@@ -1804,7 +1804,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	    // TODO: Review FilterPath Code
 		// DONE: DD4WH 2016_03_13
 		if (ts.filter_path != 0) {
-			if ((FilterPathInfo[ts.filter_path-1].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
+			if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
 			else
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
