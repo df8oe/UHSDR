@@ -288,9 +288,15 @@ void audio_driver_set_rx_audio_filter(void)
 	ads.af_disabled = 1;
 
 	// make sure we have a proper filter path for the given mode
-	if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path-1)== false) {
+
+	// the commented out part made the code  only look at last used/selected filter path if the current filter path is not applicable
+	// with it commented out the filter path is ALWAYS loaded from the last used/selected memory
+	// I.e. setting the ts.filter_path anywere else in the code is useless. You have to call AudioFilter_NextApplicableFilterPath in order to
+	// select a new filter path as this sets the last used/selected memory for a demod mode.
+
+	//if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path-1)== false) {
 	  ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,ts.dmod_mode,ts.filter_path-1)+1;
-	}
+	//}
 	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
 	// to do: implement switching according to FilterPathInfo
 	// ts.filter_id & ts.dmod_mode & ts.filter_select

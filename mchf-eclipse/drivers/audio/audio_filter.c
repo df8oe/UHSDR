@@ -1205,5 +1205,14 @@ void AudioFilter_CalcTxPhaseAdj(void)
     ads.tx_filter_adjusting = 0;        // re enable TX I/Q filter now that we are done
 }
 
+void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names)
+{
 
+  const FilterPathDescriptor *path = &FilterPathInfo[filter_path];
+  const FilterDescriptor    *filter = &FilterInfo[path->id];
+
+  filter_names[0] = filter->name;
+  filter_names[1] = path->name;
+
+}
 

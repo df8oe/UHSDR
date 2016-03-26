@@ -175,6 +175,7 @@ enum {
 
 uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t current_path);
 bool AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint8_t dmod_mode, const uint8_t filter_path);
+void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names);
 
 uint8_t AudioFilter_NextApplicableFilter();
 
