@@ -240,6 +240,18 @@ enum {
 	CONFIG_CAT_XLAT,
 	MENU_FP_SEL,
 	CONFIG_REDUCE_POWER_ON_LOW_BANDS,
+	MENU_FP_CW_01,
+	MENU_FP_CW_02,
+	MENU_FP_CW_03,
+	MENU_FP_CW_04,
+    MENU_FP_AM_01,
+    MENU_FP_AM_02,
+    MENU_FP_AM_03,
+    MENU_FP_AM_04,
+    MENU_FP_SSB_01,
+    MENU_FP_SSB_02,
+    MENU_FP_SSB_03,
+    MENU_FP_SSB_04,
 	//
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };

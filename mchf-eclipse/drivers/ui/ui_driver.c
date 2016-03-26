@@ -952,7 +952,7 @@ static void UiDriverProcessKeyboard(void)
 				    if (filter_path_change == true) {
 				      filter_path_change = false;
 				    } else {
-				      AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1);
+				      AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
 				    }
 				  } else if (ts.dmod_mode != DEMOD_FM)	{
 				    ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
@@ -4039,7 +4039,7 @@ static void UiDriverCheckEncoderTwo(void)
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
     if (filter_path_change) {
-      AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
+      AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
       UiInitRxParms();
     } else  if(ts.menu_mode)    {
       UiMenu_RenderChangeItem(pot_diff);
@@ -4153,7 +4153,7 @@ static void UiDriverCheckEncoderThree(void)
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
     if (filter_path_change) {
-      AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
+      AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
       UiInitRxParms();
     } else  if(ts.menu_mode)	{
       UiMenu_RenderChangeItemValue(pot_diff);
@@ -4859,7 +4859,7 @@ void UiDriverChangeFilterDisplay(void)
 	    bg_clr = filter_path_change?Orange:Blue;
 	    font_clr= filter_path_change?Black:White;
 
-	    AudioFilter_GetNamesOfFilterPath(ts.filter_path-1,filter_names);
+	    AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
 	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter_names[0], font_clr,  bg_clr, 0);
 	    if (filter_names[1] != NULL) {
 	      snprintf(outs,8,"  %s  ",filter_names[1]);
@@ -4900,7 +4900,7 @@ void UiDriverDisplayFilterBW(void)
 	// Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 	//
 	if (ts.filter_path != 0) {
-	  const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path-1];
+	  const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
 	  const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
 	  offset = path_p->offset;
 	  width = filter_p->width;

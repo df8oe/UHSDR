@@ -228,6 +228,34 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8
 }
 
 
+bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t filter_mode,uint8_t memory_idx) {
+  uint32_t temp_var = ts.filter_path_mem[filter_mode][memory_idx];
+  uint16_t old_fp = temp_var;
+  // for now just a single location CW for testing
+  bool tchange = UiDriverMenuItemChangeUInt32(var, mode, &temp_var,
+      0,
+      AUDIO_FILTER_PATH_NUM,
+      0,
+      1);
+  if(tchange) {   // did something change?
+    uint16_t fp = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_DONT_STORE | (temp_var< old_fp?PATH_DOWN:PATH_UP),filter_mode,old_fp);
+    if (fp >= old_fp && temp_var < old_fp) {
+      // wrap around -> we need to insert "0"
+      fp = 0;
+    }
+    ts.filter_path_mem[filter_mode][memory_idx] = fp;
+  }
+  if (ts.filter_path_mem[filter_mode][memory_idx] > 0){
+    const char *filter_names[2];
+    AudioFilter_GetNamesOfFilterPath(ts.filter_path_mem[filter_mode][memory_idx],filter_names);
+    sprintf(options, "   %s/%s", filter_names[0],filter_names[1]);
+  } else {
+    sprintf(options, "      UNUSED");
+  }
+  return tchange;
+}
+
+
 void __attribute__ ((noinline)) UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr) {
 	char* clr_str;
 	switch(color) {
@@ -533,7 +561,21 @@ const MenuDescriptor powGroup[] = {
 };
 
 const MenuDescriptor filterGroup[] = {
-    { MENU_FILTER, MENU_ITEM, MENU_300HZ_SEL,"500","300Hz Center Freq."  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01,"600", "SSB Filter 1"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02,"600", "SSB Filter 2"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03,"600", "SSB Filter 3"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04,"600", "SSB Filter 4"  },
+
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01,"600", "CW Filter 1"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02,"600", "CW Filter 2"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4"  },
+
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4"  },
+/*
     { MENU_FILTER, MENU_ITEM, MENU_500HZ_SEL,"501","500Hz Center Freq."},
     { MENU_FILTER, MENU_ITEM, MENU_1K4_SEL,"502","1.4k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_1K6_SEL,"503","1.6k Filter"},
@@ -563,7 +605,8 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
-//    { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
+ */
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -3468,6 +3511,25 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case MENU_10K0_SEL:	//
 	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_10P0KHZ);
 		break;
+	case    MENU_FP_CW_01:
+	case    MENU_FP_CW_02:
+	case    MENU_FP_CW_03:
+	case    MENU_FP_CW_04:
+      UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_CW,(select - MENU_FP_CW_01)+1);
+      break;
+	case    MENU_FP_AM_01:
+	case    MENU_FP_AM_02:
+	case    MENU_FP_AM_03:
+	case    MENU_FP_AM_04:
+	  UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_AM,(select - MENU_FP_AM_01)+1);
+	  break;
+	case    MENU_FP_SSB_01:
+	case    MENU_FP_SSB_02:
+	case    MENU_FP_SSB_03:
+	case    MENU_FP_SSB_04:
+	UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SSB,(select - MENU_FP_SSB_01)+1);
+    break;
+
     case MENU_FP_SEL: // FIXME: Remove after FilterPaths become officially used
         {
           temp_var = ts.filter_path;
@@ -3477,12 +3539,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
               0,
               1);
           if(tchange) {   // did something change?
-            AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (temp_var< ts.filter_path?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
+            AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (temp_var< ts.filter_path?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
             UiInitRxParms();
           }
           {
             const char *filter_names[2];
-            AudioFilter_GetNamesOfFilterPath(ts.filter_path-1,filter_names);
+            AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
             sprintf(options, "   %s-%s", filter_names[0],filter_names[1]);
           }
         }
