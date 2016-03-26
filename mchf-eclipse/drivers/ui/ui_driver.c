@@ -442,12 +442,6 @@ void UiDriver_HandleTouchScreen()
 			}
 			UiDriverShowStep(df.selected_idx);
 		}
-/*		if(check_tp_coordinates(x-left,x-right,y-down,y-up))	// new touchscreen action. LEAVE AS EXAMPLE. copy&paste for your purposes.
-		{
-		// here put action
-		}
-*/
-
 	}
 	else								// menu screen functions
 	{
@@ -1775,6 +1769,7 @@ void UiDriverShowStep(ulong step)
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
 		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
@@ -1831,8 +1826,11 @@ void UiDriverShowStep(ulong step)
 	}
 	//
 	if((ts.freq_step_config & 0x0f) && line_loc > 0)	{		// is frequency step marker line enabled?
+	    if(is_splitmode())
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+	    else
 		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		step_line = 1;	// indicate that a line under the step size had been drawn
+	    step_line = 1;	// indicate that a line under the step size had been drawn
 	}
 	else	// marker line not enabled
 		step_line = 0;	// we don't need to erase "step size" marker line in the future
@@ -2006,6 +2004,7 @@ static void UiDriverInitMainFreqDisplay(void)
 		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriverDisplaySplitFreqLabels();
 	}
+	UiDriverShowStep(df.selected_idx);
 }
 
 //*----------------------------------------------------------------------------
