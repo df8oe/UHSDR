@@ -363,7 +363,7 @@ const MenuDescriptor topGroup[] = {
 
 const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
-    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
+//    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","Enable SAM Demod"  },
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
@@ -418,7 +418,7 @@ const MenuDescriptor displayGroup[] = {
 };
 
 const MenuDescriptor cwGroup[] = {
-    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode"},
+//    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode"},
     { MENU_CW, MENU_ITEM, MENU_KEYER_MODE,"070","CW Keyer Mode"},
     { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED,"071","CW Keyer Speed"},
     { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN,"072","CW Sidetone Gain"},
@@ -563,7 +563,7 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_9K0_SEL,"527","9.0k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_9K5_SEL,"528","9.5k Filter"},
     { MENU_FILTER, MENU_ITEM, MENU_10K0_SEL,"529","10.0k Filter"},
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SEL,"FPA","FilterPath (exp.)"  },
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
