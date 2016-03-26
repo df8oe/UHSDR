@@ -958,7 +958,7 @@ static void UiDriverProcessKeyboard(void)
 				    if (filter_path_change == true) {
 				      filter_path_change = false;
 				    } else {
-				      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1)+1;
+				      AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,ts.dmod_mode,ts.filter_path-1);
 				    }
 				  } else if (ts.dmod_mode != DEMOD_FM)	{
 				    ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
@@ -4040,7 +4040,7 @@ static void UiDriverCheckEncoderTwo(void)
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
     if (filter_path_change) {
-      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+      AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
       UiInitRxParms();
     } else  if(ts.menu_mode)    {
       UiMenu_RenderChangeItem(pot_diff);
@@ -4154,7 +4154,7 @@ static void UiDriverCheckEncoderThree(void)
   if (pot_diff) {
     UiLCDBlankTiming();	// calculate/process LCD blanking timing
     if (filter_path_change) {
-      ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
+      AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
       UiInitRxParms();
     } else  if(ts.menu_mode)	{
       UiMenu_RenderChangeItemValue(pot_diff);
@@ -4855,13 +4855,15 @@ void UiDriverChangeFilterDisplay(void)
 	}
 
 	if (ts.filter_path > 0) {
+	    const char *filter_names[2];
+
 	    bg_clr = filter_path_change?Orange:Blue;
 	    font_clr= filter_path_change?Black:White;
-	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
-	    filter = &FilterInfo[path->id];
-	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, font_clr,  bg_clr, 0);
-	    if (path->name != NULL) {
-	      snprintf(outs,8,"  %s  ",path->name);
+
+	    AudioFilter_GetNamesOfFilterPath(ts.filter_path-1,filter_names);
+	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter_names[0], font_clr,  bg_clr, 0);
+	    if (filter_names[1] != NULL) {
+	      snprintf(outs,8,"  %s  ",filter_names[1]);
 	      filter_ptr = outs;
 	    } else {
 	      filter_ptr = "       ";

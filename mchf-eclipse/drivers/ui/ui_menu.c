@@ -3469,21 +3469,23 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_10P0KHZ);
 		break;
     case MENU_FP_SEL: // FIXME: Remove after FilterPaths become officially used
-        temp_var = ts.filter_path;
-        tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
-            0,
-            86,
-            0,
-            1);
-        ts.filter_path = temp_var;
-        if(tchange) {   // did something change?
-          // avoid FM filter paths for now
-          if (ts.filter_path == 1 || ts.filter_path == 2) { ts.filter_path = 4; }
-          if (ts.filter_path == 3) { ts.filter_path = 0; }
-          audio_driver_set_rx_audio_filter();
-          UiDriverChangeFilterDisplay();
+        {
+          temp_var = ts.filter_path;
+          tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
+              0,
+              AUDIO_FILTER_PATH_NUM,
+              0,
+              1);
+          if(tchange) {   // did something change?
+            AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (temp_var< ts.filter_path?PATH_DOWN:PATH_UP),ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0);
+            UiInitRxParms();
+          }
+          {
+            const char *filter_names[2];
+            AudioFilter_GetNamesOfFilterPath(ts.filter_path-1,filter_names);
+            sprintf(options, "   %s-%s", filter_names[0],filter_names[1]);
+          }
         }
-        sprintf(options, "  %u", ts.filter_path);
         break;
 
 
