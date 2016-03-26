@@ -24,11 +24,13 @@ extern const float iq_rx_am_10k_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_2k3_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_3k6_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_5k_coeffs[Q_NUM_TAPS];
+extern const float iq_rx_am_4k5_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_6k_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_7k5_coeffs[Q_NUM_TAPS];
 
 extern const float i_rx_10k_coeffs[I_NUM_TAPS];
 extern const float i_rx_3k6_coeffs[I_NUM_TAPS];
+extern const float i_rx_4k5_coeffs[I_NUM_TAPS];
 extern const float i_rx_5k_coeffs[I_NUM_TAPS];
 extern const float i_rx_6k_coeffs[I_NUM_TAPS];
 extern const float i_rx_7k5_coeffs[I_NUM_TAPS];
@@ -46,6 +48,10 @@ extern const float q_rx_10k_coeffs_plus[Q_NUM_TAPS];
 extern const float q_rx_3k6_coeffs[Q_NUM_TAPS];
 extern const float q_rx_3k6_coeffs_minus[Q_NUM_TAPS];
 extern const float q_rx_3k6_coeffs_plus[Q_NUM_TAPS];
+
+extern const float q_rx_4k5_coeffs[Q_NUM_TAPS];
+extern const float q_rx_4k5_coeffs_minus[Q_NUM_TAPS];
+extern const float q_rx_4k5_coeffs_plus[Q_NUM_TAPS];
 
 extern const float q_rx_5k_coeffs[Q_NUM_TAPS];
 extern const float q_rx_5k_coeffs_minus[Q_NUM_TAPS];

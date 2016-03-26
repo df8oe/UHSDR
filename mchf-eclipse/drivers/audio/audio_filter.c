@@ -416,31 +416,31 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k6_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k, 1875},
 
-	{	AUDIO_3P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_3P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k8_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_3P8KHZ, "BPF", FILTER_MASK_SSB, 2, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_3P8KHZ, "BPF", FILTER_MASK_SSB, 2, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k8_BPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k, 1975},
 //50
-	{	AUDIO_4P0KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P0KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P2KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P2KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P4KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P4KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k4_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P6KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P6KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
-	{	AUDIO_4P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
 		&FirRxInterpolate_4_5k, &IIR_aa_5k},
 
@@ -542,25 +542,25 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_3P8KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_3P8KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_4P0KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P0KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_7k5_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
-	{	AUDIO_4P2KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P2KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, &IIR_8k_LPF,
 		&FirRxInterpolate10KHZ, NULL},
 
 		// from 4.4kHz on, the AM filter has no more IIR PreFilter (at 24ksps sample rate), BUT we add IIR filtering after interpolation (at 48 ksps)!
 //80
-	{	AUDIO_4P4KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P4KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k},
 
-	{	AUDIO_4P6KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+	{	AUDIO_4P6KHZ, " AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
 		RX_DECIMATION_RATE_24KHZ, NULL,
 		&FirRxInterpolate_4_10k, &IIR_aa_8k5},
 
@@ -608,11 +608,11 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 		RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
 		&FirRxInterpolate, NULL},
 
-	{	AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
+	{	AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
 		RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
 		&FirRxInterpolate, NULL},
 
@@ -1049,6 +1049,13 @@ void AudioFilter_CalcRxPhaseAdj(void)
                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                         }
                     } else
+                       if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){ // Hilbert 3k6
+                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                f_coeff = var_inv * q_rx_4k5_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_4k5_coeffs_minus[i]; // get fraction of 89.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        } else
                         if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){ // Hilbert 5k
                             for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting
@@ -1085,6 +1092,13 @@ void AudioFilter_CalcRxPhaseAdj(void)
                             fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
                         }
                     } else
+                        if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_4k5_coeffs){
+                            for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
+                                f_coeff = var_inv * q_rx_4k5_coeffs[i]; // get fraction of 90 degree setting
+                                f_offset = var_norm * q_rx_4k5_coeffs_plus[i];  // get fraction of 90.5 degree setting
+                                fc.rx_filt_q[i] = f_coeff + f_offset;   // synthesize new coefficient
+                            }
+                        } else
                         if(FilterPathInfo[ts.filter_path-1].FIR_I_coeff_file == i_rx_5k_coeffs){
                             for(i = 0; i < FilterPathInfo[ts.filter_path-1].FIR_numTaps; i++) {
                                 f_coeff = var_inv * q_rx_5k_coeffs[i];  // get fraction of 90 degree setting

@@ -119,7 +119,7 @@ const float i_rx_6k_coeffs[I_NUM_TAPS] =
 };
 
 /*
- 	 * Hilbert 90 Degree, "Phase-added" bandpass filter
+ 	 * Hilbert -90 Degree, "Phase-added" bandpass filter
      * Kaiser Window FIR Filter, Beta = 5.75, Raised Cosine = 0.91
      * Fc = 2.26 kHz (0.094)
      * BW = 7.25 kHz (0.302)
@@ -222,7 +222,7 @@ const float q_rx_6k_coeffs[Q_NUM_TAPS] =
 		0.000330908629757325,
 		0.000251931484270503
 };
-// 89.5 degrees
+// -89.5 degrees
 const float q_rx_6k_coeffs_minus[Q_NUM_TAPS] =
 {
 		-0.000252119559524393,
@@ -315,7 +315,7 @@ const float q_rx_6k_coeffs_minus[Q_NUM_TAPS] =
 		0.000331229249023390,
 		0.000251724286702972
 };
-// 90.5 degrees
+// -90.5 degrees
 const float q_rx_6k_coeffs_plus[Q_NUM_TAPS] =
 {
 		-0.000251724286702971,
