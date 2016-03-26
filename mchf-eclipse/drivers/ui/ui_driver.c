@@ -4856,7 +4856,7 @@ void UiDriverChangeFilterDisplay(void)
 
 	if (ts.filter_path > 0) {
 	    bg_clr = filter_path_change?Orange:Blue;
-	    font_clr= filter_path_change?White:White;
+	    font_clr= filter_path_change?Black:White;
 	    const FilterPathDescriptor *path = &FilterPathInfo[ts.filter_path-1];
 	    filter = &FilterInfo[path->id];
 	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter->name, font_clr,  bg_clr, 0);

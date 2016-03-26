@@ -150,6 +150,7 @@ drivers/audio/filters/iir_antialias.c \
 drivers/audio/filters/iq_rx_filter.c \
 drivers/audio/filters/iq_rx_filter_10k0.c \
 drivers/audio/filters/iq_rx_filter_3k6.c \
+drivers/audio/filters/iq_rx_filter_4k5.c \
 drivers/audio/filters/iq_rx_filter_5k0.c \
 drivers/audio/filters/iq_rx_filter_6k0.c \
 drivers/audio/filters/iq_rx_filter_7k5.c \
