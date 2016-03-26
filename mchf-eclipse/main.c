@@ -894,6 +894,8 @@ int main(void)
 	//
 	AudioManagement_LoadBeepFreq();		// load/set beep frequency
 
+	AudioFilter_SetDefaultMemories();
+
 	UiInitRxParms();
 	//
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control

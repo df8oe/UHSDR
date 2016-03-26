@@ -392,9 +392,9 @@ const MenuDescriptor topGroup[] = {
 const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
-    { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
-    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","Enable SAM Demod"  },
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
+    { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
+    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","SyncAM Mode"  },
     { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE,"040","FM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE,"042","FM Sub Tone Det"},
@@ -575,6 +575,12 @@ const MenuDescriptor filterGroup[] = {
     { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2"  },
     { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3"  },
     { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4"  },
+
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3"  },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4"  },
+
 /*
     { MENU_FILTER, MENU_ITEM, MENU_500HZ_SEL,"501","500Hz Center Freq."},
     { MENU_FILTER, MENU_ITEM, MENU_1K4_SEL,"502","1.4k Filter"},
@@ -3528,6 +3534,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case    MENU_FP_SSB_03:
 	case    MENU_FP_SSB_04:
 	UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SSB,(select - MENU_FP_SSB_01)+1);
+    break;
+
+    case    MENU_FP_SAM_01:
+    case    MENU_FP_SAM_02:
+    case    MENU_FP_SAM_03:
+    case    MENU_FP_SAM_04:
+    UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
     break;
 
     case MENU_FP_SEL: // FIXME: Remove after FilterPaths become officially used

@@ -1241,3 +1241,9 @@ void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_n
 
 }
 
+void AudioFilter_SetDefaultMemories() {
+  // filter selection for FM is hardcoded
+  ts.filter_path_mem[FILTER_MODE_FM][1] = 1;
+  ts.filter_path_mem[FILTER_MODE_FM][2] = 2;
+  ts.filter_path_mem[FILTER_MODE_FM][3] = 3;
+}
