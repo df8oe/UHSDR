@@ -2358,6 +2358,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 		if(!ts.tune)	{	// do post-filter gain calculations if we are NOT in TUNE mode
 			// perform post-filter gain operation
+			// this is part of the compression
 			//
 			gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
 			gain_calc /= 2;									// halve it
@@ -2365,7 +2366,74 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers
 			arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, size/2);
 		}
+		// #####################################################################################
+		// FIXME:
+		// we would have to insert the TX IQ phase correction here, I think
+		// IQ gain adjustments are done in audio_tx_final_iq_processing
 		//
+		if (ts.USE_NEW_PHASE_CORRECTION) { // FIXME: delete this, when tested
+		//
+		// the phase adjustment is done by mixing a little bit of I into Q or vice versa
+		// this is justified because the phase shift between two signals of equal frequency can
+		// be regulated by adjusting the amplitudes of the two signals!
+		//
+		float32_t scaling_Q_in_I_2 = 0;
+		float32_t scaling_I_in_Q_2 = 0;
+		//
+		// to speed things up, these ifs could be pushed somewhere else, they only need to be dealt with when adjusted in the menu
+		//
+		if (ts.dmod_mode == DEMOD_LSB){
+			if (ts.tx_iq_lsb_phase_balance > 0){
+				scaling_I_in_Q_2 = 0;
+				scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/1000.0;
+			} else
+			{
+				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/1000.0;
+				scaling_Q_in_I_2 = 0;
+			}
+		} else
+			if (ts.dmod_mode == DEMOD_USB){
+				if (ts.tx_iq_usb_phase_balance > 0){
+					scaling_I_in_Q_2 = 0;
+					scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+				} else
+				{
+					scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+					scaling_Q_in_I_2 = 0;
+				}
+
+			}
+				 else { // just to make Eclipse happy ;-)
+					scaling_I_in_Q_2 = 0;
+					scaling_Q_in_I_2 = 0;
+				}
+		//
+		if (scaling_I_in_Q_2) { // we only need to deal with I and put a little bit of it into Q
+				// copy I into e2 buffer
+				arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e2_buffer, size/2);
+				// scale e2 with scaling_I_in_Q
+				arm_scale_f32((float32_t *)ads.e2_buffer, (float32_t)scaling_I_in_Q_2, (float32_t *)ads.e2_buffer, size/2);
+				// Add Q plus a little bit of I (= e2) and put into f3 buffer
+				arm_add_f32((float32_t *)ads.q_buffer, (float32_t *)ads.e2_buffer, (float32_t *)ads.f3_buffer, size/2);
+				// copy f3 buffer into Q
+				arm_copy_f32((float32_t *)ads.f3_buffer, (float32_t *)ads.q_buffer, size/2);
+		}
+		else { // we only need to deal with Q and put a little bit of it into I
+				// copy Q into f2 buffer
+				arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f2_buffer, size/2);
+				// scale f2 with scaling_Q_in_I
+				arm_scale_f32((float32_t *)ads.f2_buffer, (float32_t)scaling_Q_in_I_2, (float32_t *)ads.f2_buffer, size/2);
+				// this is I + a little bit of Q --> f2
+				// Add I plus a little bit of Q (= f2) and put into e3 buffer
+				arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.f2_buffer, (float32_t *)ads.e3_buffer, size/2);
+				// copy e3 buffer into I
+				arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
+		}
+		} // FIXME: end test variable
+
+
+// ######################################################################################
+
 		audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 		//
 		if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
