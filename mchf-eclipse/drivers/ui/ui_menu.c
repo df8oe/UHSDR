@@ -479,6 +479,7 @@ const MenuDescriptor confGroup[] = {
     { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_GAIN_BAL,"242","USB RX IQ Bal."},
     { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_PHASE_BAL,"243","USB RX IQ Phase"},
     { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_GAIN_BAL,"244","AM  RX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_PHASE_BAL,"244b","AM  RX IQ Phase"},
     { MENU_CONF, MENU_ITEM, CONFIG_FM_RX_GAIN_BAL,"245","FM  RX IQ Bal."},
     { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_GAIN_BAL,"250","LSB TX IQ Bal."},
     { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_PHASE_BAL,"251","LSB TX IQ Phase"},
@@ -2779,10 +2780,10 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 								MAX_RX_IQ_PHASE_BALANCE,
 								0,
 								1);
-			if(tchange)
+			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
 				AudioFilter_CalcRxPhaseAdj();
 		}
-		else		// Orange if not in RX and/or correct mode
+			else		// Orange if not in RX and/or correct mode
 			clr = Orange;
 		sprintf(options, "   %d", ts.rx_iq_lsb_phase_balance);
 		break;
@@ -2806,8 +2807,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 											MIN_RX_IQ_PHASE_BALANCE,
 											MAX_RX_IQ_PHASE_BALANCE,
 											0,
-											1);if(tchange)
-				AudioFilter_CalcRxPhaseAdj();
+											1);
+			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
+					AudioFilter_CalcRxPhaseAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2826,6 +2828,18 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
 		sprintf(options, "   %d", ts.rx_iq_am_gain_balance);
+		break;
+	case 	CONFIG_AM_RX_PHASE_BAL:		// AM RX IQ Phase balance
+		if((ts.dmod_mode == DEMOD_AM)  && (ts.txrx_mode == TRX_MODE_RX))	{
+			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_am_phase_balance,
+											MIN_RX_IQ_PHASE_BALANCE,
+											MAX_RX_IQ_PHASE_BALANCE,
+											0,
+											1);
+		}
+		else		// Orange if not in RX and/or correct mode
+			clr = Orange;
+		sprintf(options, "   %d", ts.rx_iq_am_phase_balance);
 		break;
 	case 	CONFIG_FM_RX_GAIN_BAL:		// FM RX IQ Phase balance
 		if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_RX))	{
