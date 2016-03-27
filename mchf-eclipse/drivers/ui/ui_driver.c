@@ -878,7 +878,7 @@ inline bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down
 }
 
 void UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) {
-  UiLcdHy28_PrintText(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, label,
+  UiLcdHy28_PrintTextCentered(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, 56, label,
                       label_color, Black, 0);
 }
 
@@ -1027,7 +1027,7 @@ static void UiDriverProcessKeyboard(void)
 				}
 				//
 				if(!ts.menu_mode)	// are we in menu mode?
-					UiDriverFButtonLabel(1," MENU  ",White);	// no - update menu button to reflect no memory save needed
+					UiDriverFButtonLabel(1,"MENU",White);	// no - update menu button to reflect no memory save needed
 				else
 					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
@@ -1046,12 +1046,12 @@ static void UiDriverProcessKeyboard(void)
 				else	{			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 					if(!ts.vfo_mem_flag)	{		// is it in VFO mode now?
 						ts.vfo_mem_flag = 1;		// yes, switch to memory mode
-						UiDriverFButtonLabel(3,"  MEM ",White);	// yes - indicate with color
+						UiDriverFButtonLabel(3,"MEM",White);	// yes - indicate with color
 					}
 					else	{
 						uint32_t color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
 						ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
-						UiDriverFButtonLabel(3," SPLIT",color);
+						UiDriverFButtonLabel(3,"SPLIT",color);
 					}
 					//
 				}
@@ -1091,7 +1091,7 @@ static void UiDriverProcessKeyboard(void)
 				    ts.tx_disable = 2;
 				  else
 				    ts.tx_disable = 0;
-				  UiDriverFButtonLabel(5,"  TUNE",ts.tx_disable?Grey1:White);		// Set TUNE button color according to ts.tx_disable
+				  UiDriverFButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);		// Set TUNE button color according to ts.tx_disable
 				}
 				break;
 			case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
@@ -1403,10 +1403,10 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if((!ts.menu_mode) && (!ts.boot_halt_flag))	{	// go into menu mode if NOT already in menu mode and not to halt on startup
 				ts.menu_mode = 1;
 				UiSpectrumClearDisplay();
-                UiDriverFButtonLabel(1," EXIT  ", Yellow);
-                UiDriverFButtonLabel(2,"  PREV",Yellow);
-                UiDriverFButtonLabel(3,"  NEXT",Yellow);
-                UiDriverFButtonLabel(4," DEFLT",Yellow);
+                UiDriverFButtonLabel(1,"EXIT", Yellow);
+                UiDriverFButtonLabel(2,"PREV",Yellow);
+                UiDriverFButtonLabel(3,"NEXT",Yellow);
+                UiDriverFButtonLabel(4,"DEFLT",Yellow);
 				//
 				//
 				// Grey out adjustments and put encoders in known states
@@ -1461,7 +1461,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 					UiDriverFButtonLabel(1,label,color);
 				}
 				// Label for Button F2
-				UiDriverFButtonLabel(2," METER",White);
+				UiDriverFButtonLabel(2,"METER",White);
 
 				// Display Label for Button F3
 				{
@@ -1480,7 +1480,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				}
 				// Display Label for Button F4
 				{
-					char* label = is_vfo_b()?" VFO B":" VFO A";
+					char* label = is_vfo_b()?"VFO B":"VFO A";
 					// VFO B active?
 					UiDriverFButtonLabel(4,label,White);
 				}
@@ -1559,14 +1559,14 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			if(is_vfo_b())		{	// LSB on VFO mode byte set?
 				vfo_active = VFO_A;
 				vfo_new = VFO_B;
-				vfo_name = " VFO A";
+				vfo_name = "VFO A";
 				ts.vfo_mem_mode &= 0xbf;	// yes, it's now VFO-B mode, so clear it, setting it to VFO A mode
 			}
 			else	{						// LSB on VFO mode byte NOT set?
 				ts.vfo_mem_mode |= 0x40;			// yes, it's now in VFO-A mode, so set it, setting it to VFO B mode
 				vfo_active = VFO_B;
 				vfo_new = VFO_A;
-				vfo_name = " VFO B";
+				vfo_name = "VFO B";
 			}
 			vfo[vfo_new].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
 			vfo[vfo_new].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
@@ -1647,7 +1647,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.txrx_mode = TRX_MODE_TX;
 				ui_driver_toggle_tx();				// tune ON
 
-				UiDriverFButtonLabel(5,"  TUNE",Red);
+				UiDriverFButtonLabel(5,"TUNE",Red);
 				//
 			}
 			else
@@ -1672,12 +1672,13 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 										// mode and working power is FULL and TUNE power is 5W
 										// WARNING THIS WORKAROUND IS UGLY
 
-				UiDriverFButtonLabel(5,"  TUNE",White);
+				UiDriverFButtonLabel(5,"TUNE",White);
 				//
 			}
 		}
 	}
 }
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverShowMode
@@ -1688,65 +1689,57 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 //*----------------------------------------------------------------------------
 void UiDriverShowMode(void)	{
 	// Clear control
-	UiLcdHy28_DrawFullRect(POS_DEMOD_MODE_MASK_X,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_H,POS_DEMOD_MODE_MASK_W,Blue);
-	uint16_t offset = 4; // where to print the text
-	char* txt = "MODE?";
+	char* txt = "???";
 	uint16_t clr_fg = White,clr_bg = Blue;
 
 	// Create Decode Mode (USB/LSB/AM/FM/CW)
 	switch(ts.dmod_mode)
 	{
 		case DEMOD_USB:
-			offset = 8;
 			txt = "USB";
 			break;
 		case DEMOD_LSB:
-			offset = 8;
 			txt = "LSB";
 			break;
 		case DEMOD_SAM:
-			offset = 8;
 			txt = "SAM";
 			break;
 		case DEMOD_AM:
-			offset = 12;
 			txt = "AM";
 			break;
 		case DEMOD_FM:
-		{
-
-			if(ts.txrx_mode == TRX_MODE_RX)	{
-				if(!ads.fm_squelched) {
-					// is audio not squelched?
-					if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))	{
-						// is tone decoding enabled AND a tone being detected?
-						clr_fg =  Black;
-						clr_bg = Red2;	// Not squelched, passing audio - change color!
-					} else {	// tone decoder disabled - squelch only
-						clr_fg = Black;
-						clr_bg = White;	// Not squelched, passing audio - change color, but different from tone
-					}
-				}
-			}
-			else if(ts.txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
-				if(ads.fm_tone_burst_active)	{		// yes - is tone burst active?
-					clr_fg = Black;
-					clr_bg = Yellow;	// Yes, make "FM" yellow
-				}
-			}
-			offset = 4;
-			txt = " FM ";
-			break;
+            txt = "FM";
+		    {
+              if(ts.txrx_mode == TRX_MODE_RX)	{
+                if(!ads.fm_squelched) {
+                  // is audio not squelched?
+                  if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))	{
+                    // is tone decoding enabled AND a tone being detected?
+                    clr_fg =  Black;
+                    clr_bg = Red2;	// Not squelched, passing audio - change color!
+                  } else {	// tone decoder disabled - squelch only
+                    clr_fg = Black;
+                    clr_bg = White;	// Not squelched, passing audio - change color, but different from tone
+                  }
+                }
+              }
+              else if(ts.txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
+                if(ads.fm_tone_burst_active)	{		// yes - is tone burst active?
+                  clr_fg = Black;
+                  clr_bg = Yellow;	// Yes, make "FM" yellow
+                }
+              }
+              break;
 		}
 		case DEMOD_CW:
-			offset = 4;
 			txt = ts.cw_lsb?"CW-L":"CW-U";
 			break;
 		default:
 			break;
 	}
-	UiLcdHy28_PrintText((POS_DEMOD_MODE_X + offset),POS_DEMOD_MODE_Y,txt,clr_fg,clr_bg,0);
+	UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W,txt,clr_fg,clr_bg,0);
 }
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverShowStep
@@ -1994,12 +1987,12 @@ static void UiDriverInitMainFreqDisplay(void)
 {
 	if(!(is_splitmode()))	{	// are we in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
-			UiDriverFButtonLabel(3," SPLIT",SPLIT_INACTIVE_COLOUR);	// make SPLIT indicator grey to indicate off
+			UiDriverFButtonLabel(3,"SPLIT",SPLIT_INACTIVE_COLOUR);	// make SPLIT indicator grey to indicate off
 		}
 	}
 	else	{	// are we NOT in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
-			UiDriverFButtonLabel(3," SPLIT",White);	// make SPLIT indicator YELLOW to indicate on
+			UiDriverFButtonLabel(3,"SPLIT",White);	// make SPLIT indicator YELLOW to indicate on
 		}
 		UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriverDisplaySplitFreqLabels();
@@ -2104,9 +2097,9 @@ static void UiDriverCreateDesktop(void)
 	//UiLcdHy28_PrintText(POS_TX_IND_X,POS_TX_IND_Y,	"RX", Green,Black,0);
 
 	// Create voltage
-	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
-	UiLcdHy28_PrintText			(POS_PWRN_IND_X, POS_PWRN_IND_Y,"  VCC  ", Grey2, 	Blue, 0);
-	UiLcdHy28_PrintText			(POS_PWR_IND_X,POS_PWR_IND_Y,   "--.--V",  COL_PWR_IND,Black,0);
+	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+	UiLcdHy28_PrintTextCentered	(POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", Grey2, 	Blue, 0);
+	UiLcdHy28_PrintTextCentered	(POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 
 	// Create temperature
 	if((lo.sensor_present == 0) && (df.temp_enabled & 0x0f))
@@ -2154,9 +2147,9 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	}
 
 	// Button F1
-	UiDriverFButtonLabel(1,"  MENU",White);
+	UiDriverFButtonLabel(1,"MENU",White);
 	// Button F2
-	UiDriverFButtonLabel(2," METER",White);
+	UiDriverFButtonLabel(2,"METER",White);
 
 	// Button F3
 	if(!ts.vfo_mem_flag) {	// is it in VFO (not memory) mode?
@@ -2170,11 +2163,11 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	UiDriverFButtonLabel(3,cap,clr);
 
 	// Button F4
-	UiDriverFButtonLabel(4,is_vfo_b()?" VFO B":" VFO A",White);
+	UiDriverFButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
 
 	// Button F5
 	clr = ts.tx_disable?Grey1:White;
-	UiDriverFButtonLabel(5,"  TUNE",clr);
+	UiDriverFButtonLabel(5,"TUNE",clr);
 }
 
 //
@@ -4526,17 +4519,17 @@ static void UiDriverChangeDSPMode(void)
 	} else if((is_dsp_nr()) && (is_dsp_notch()) && (ts.dmod_mode != DEMOD_CW))	{
 		txt = "NR+NOTC";
 	} else if(is_dsp_nr())	{
-		txt = "   NR  ";
+		txt = "NR";
 	} else if(is_dsp_notch())	{
-		txt = " NOTCH ";
+		txt = "NOTCH";
 		if(ts.dmod_mode == DEMOD_CW)
 			color = Grey2;
 	} else {
 		txt = "DSP-OFF";
 	}
 
-	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
-	UiLcdHy28_PrintText((POS_DSPL_IND_X),(POS_DSPL_IND_Y),txt,color,Blue,0);
+	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+	UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
 //
 //*----------------------------------------------------------------------------
@@ -4572,10 +4565,10 @@ const DigitalModeDescriptor digimodes[DigitalModeMax] =
 		{ "FREEDV1", false },
 		{ "FREEDV2", false },
 		{ "BPSK 31", false },
-		{ "  RTTY ", false },
-		{ "  SSTV ", false },
-		{ "WSPR  A", false },
-		{ "WSPR  P", false },
+		{ "RTTY", false },
+		{ "SSTV", false },
+		{ "WSPR A", false },
+		{ "WSPR P", false },
 };
 
 static void UiDriverChangeDigitalMode(void)
@@ -4584,8 +4577,8 @@ static void UiDriverChangeDigitalMode(void)
 	const char* txt = digimodes[ts.digital_mode].label;
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
-	UiLcdHy28_PrintText((POS_DSPU_IND_X),(POS_DSPU_IND_Y),txt,color,Blue,0);
+	UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+	UiLcdHy28_PrintTextCentered((POS_DSPU_IND_X),(POS_DSPU_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel
@@ -4602,27 +4595,27 @@ static void UiDriverChangePowerLevel(void)
 	switch(ts.power_level)
 	{
 		case PA_LEVEL_5W:
-			txt = "   5W  ";
+			txt = "5W";
 			break;
 		case PA_LEVEL_2W:
-			txt = "   2W  ";
+			txt = "2W";
 			break;
 		case PA_LEVEL_1W:
-			txt = "   1W  ";
+			txt = "1W";
 			break;
 		case PA_LEVEL_0_5W:
-			txt = "  0.5W ";
+			txt = "0.5W";
 			break;
 		default:
-			txt = "  FULL ";
+			txt = "FULL";
 			break;
 	}
     // Set TX power factor - to reflect changed power
     UiDriverSetBandPowerFactor(ts.band);
 
     // Draw top line
-    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),56,LCD_DIR_HORIZONTAL,Blue);
-	UiLcdHy28_PrintText((POS_PW_IND_X),(POS_PW_IND_Y),txt,color,Blue,0);
+    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+	UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
 
 //*----------------------------------------------------------------------------
@@ -4825,7 +4818,6 @@ void UiDriverChangeFilterDisplay(void)
 //	if(!ui_only_update) {
 //		audio_driver_set_rx_audio_filter();
 //	}
-	char  outs[9];
 	const char* filter_ptr;
 	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
 	uint32_t bg_clr = Blue;
@@ -4860,19 +4852,18 @@ void UiDriverChangeFilterDisplay(void)
 	    font_clr= filter_path_change?Black:White;
 
 	    AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
-	    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y, filter_names[0], font_clr,  bg_clr, 0);
+	    UiLcdHy28_PrintTextCentered(POS_FIR_IND_X,POS_FIR_IND_Y,UI_LEFT_BOX_WIDTH,filter_names[0],font_clr,bg_clr,0);
 	    if (filter_names[1] != NULL) {
-	      snprintf(outs,8,"  %s  ",filter_names[1]);
-	      filter_ptr = outs;
+	      filter_ptr = filter_names[1];
 	    } else {
-	      filter_ptr = "       ";
+	      filter_ptr = " ";
 	    }
 	} else {
-    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "  FILT ", White,  bg_clr, 0);
+    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "FILT", White,  bg_clr, 0);
 	}
 	// Draw top line
-    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),56,LCD_DIR_HORIZONTAL,bg_clr);
-	UiLcdHy28_PrintText(POS_FIR_IND_X,(POS_FIR_IND_Y + 12),filter_ptr,font_clr,bg_clr,0);
+    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,bg_clr);
+    UiLcdHy28_PrintTextCentered(POS_FIR_IND_X,POS_FIR_IND_Y+12,UI_LEFT_BOX_WIDTH,filter_ptr,font_clr,bg_clr,0);
 
 }
 //
