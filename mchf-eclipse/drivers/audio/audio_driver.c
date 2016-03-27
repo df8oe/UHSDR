@@ -1547,7 +1547,7 @@ static void audio_demod_am(int16_t size)
 	// this is the very experimental demodulator for DSB
 	// demodulates only the real part = I
 	//
-	if(testSAM){
+	if(testSAM){ // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
 		for(i = 0; i < size/2; i++)	{			// put I into buffer a
 			ads.a_buffer[i] = ads.i_buffer[i];
 		}
@@ -1695,6 +1695,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// HACK: we have 48 khz sample frequency
 		//
 	}
+
 	if (ts.USE_NEW_PHASE_CORRECTION) { // FIXME: delete this, when tested
 	//
 	// the phase adjustment is done by mixing a little bit of I into Q or vice versa
@@ -1706,7 +1707,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	// to speed things up, these ifs could be pushed somewhere else, they only need to be dealt with when adjusted in the menu
 	//
-	if (ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_SAM){ // hmm, I do not yet know how to deal with SAM, for the moment, treat it here . . .
+	if (ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_FM){ // hmm, I do not yet know how to deal with SAM & FM, for the moment, treat it here . . .
 		if (ts.rx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q = 0;
 			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/1000.0;
@@ -1741,8 +1742,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 				scaling_I_in_Q = 0;
 				scaling_Q_in_I = 0;
 			}
-	//
-	if (scaling_I_in_Q) { // we only need to deal with I and put a little bit of it into Q
+	// this saves half of the CPU time for the adjustment ;-)
+	if (scaling_I_in_Q) { // phase adjustment > 0: we only need to deal with I and put a little bit of it into Q
 			// copy I into e2 buffer
 			arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e2_buffer, size/2);
 			// scale e2 with scaling_I_in_Q
@@ -1752,7 +1753,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			// copy f3 buffer into Q
 			arm_copy_f32((float32_t *)ads.f3_buffer, (float32_t *)ads.q_buffer, size/2);
 	}
-	else { // we only need to deal with Q and put a little bit of it into I
+	else { // phase adjustment <0: we only need to deal with Q and put a little bit of it into I
 			// copy Q into f2 buffer
 			arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f2_buffer, size/2);
 			// scale f2 with scaling_Q_in_I
