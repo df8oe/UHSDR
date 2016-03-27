@@ -1104,21 +1104,26 @@ bool UiMenu_DisplayMoveSlotsForward(int16_t change) {
 bool init_done = false;
 
 static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos) {
-   char out[32];
+   char out[32], outa[10];
    const char* outs = NULL;
    uint32_t m_clr = White;
 
-
+/*
    static const char* display_types[] = {
        " ",
        "HY28A SPI Mode",
        "HY28B SPI Mode",
        "HY28A/B Para."
    };
-
+*/
    switch (index) {
    case INFO_DISPLAY:
-     outs = display_types[ts.display_type];
+   if(ts.display_type == 3)
+	sprintf(outa,"ILI%04x parallel",ts.DeviceCode);
+    else
+	sprintf(outa,"ILI%04x SPI",ts.DeviceCode);
+    outs = outa;
+//     outs = display_types[ts.display_type];
      break;
    case INFO_SI570:
    {

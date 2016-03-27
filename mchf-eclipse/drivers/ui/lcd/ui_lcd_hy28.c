@@ -1010,17 +1010,17 @@ void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort C
 //
 uchar UiLcdHy28_InitA(void)
 {
-   unsigned short DeviceCode;
+//   unsigned short DeviceCode;
 
    // Read LCD ID
-   DeviceCode = UiLcdHy28_ReadReg(0x0000);
-   printf("lcd id: 0x%04x\n\r",DeviceCode);
+   ts.DeviceCode = UiLcdHy28_ReadReg(0x0000);
+   printf("lcd id: 0x%04x\n\r",ts.DeviceCode);
 
-   if(DeviceCode == 0x0000)
+   if(ts.DeviceCode == 0x0000)
       return 1;
 
    // HY28A - SPI interface only (ILI9320 controller)
-   if(DeviceCode == 0x9320)
+   if(ts.DeviceCode == 0x9320)
    {
       printf("doing ILI9320 init\n\r");
 
@@ -1110,7 +1110,7 @@ uchar UiLcdHy28_InitA(void)
    }
 
    // HY28A - Parallel interface only (SPFD5408B controller)
-   if(DeviceCode == 0x5408)
+   if(ts.DeviceCode == 0x5408)
    {
       printf("doing SPFD5408B init\n\r");
 
@@ -1160,7 +1160,7 @@ uchar UiLcdHy28_InitA(void)
    }
 
    // HY28B - Parallel & Serial interface - latest model (ILI9325 controller)
-   if((DeviceCode == 0x9325) || (DeviceCode == 0x9328))
+   if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
    {
       printf("doing ILI9325 init\n\r");
 

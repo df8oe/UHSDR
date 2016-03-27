@@ -1049,6 +1049,7 @@ typedef struct TransceiverState
 
 	uint8_t display_type;           		// existence/identification of display type
 	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
+	unsigned short DeviceCode;			// LCD ident code
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
