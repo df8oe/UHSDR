@@ -970,6 +970,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     		}
     }//
 
+    if (!ts.USE_NEW_PHASE_CORRECTION) {
     	if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
             phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
         else
@@ -1155,7 +1156,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
             } // end if phase adjustment non-zero
 
     	}// END new switching with FilterPathInfo
-
+    } // END if (!ts.USE_NEW_PHASE_CORRECTION)
     	//
     // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
     	// hmmm, is this necessary? In AM AND in SSB, we set the fc.rx_filt_XXX in the right manner in this void, so no need to distinguish again between AM and SSB
@@ -1197,6 +1198,8 @@ void AudioFilter_CalcTxPhaseAdj(void)
         fc.tx_filt_i[i] = i_tx_coeffs[i];
     }
     //
+    if (!ts.USE_NEW_PHASE_CORRECTION) {
+
     if(ts.dmod_mode == DEMOD_LSB)
         phase = ts.tx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
     else
@@ -1223,7 +1226,10 @@ void AudioFilter_CalcTxPhaseAdj(void)
             }
         }
     }
+    } // end Test configuration     if (!ts.USE_NEW_PHASE_CORRECTION) {
     //
+    //
+
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q_TX,fc.tx_q_num_taps,(float32_t *)&fc.tx_filt_q[0], &FirState_Q_TX[0],fc.tx_q_block_size);
 

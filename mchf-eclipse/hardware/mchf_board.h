@@ -773,6 +773,7 @@ typedef struct TransceiverState
 	int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
 	//
 	int		rx_iq_am_gain_balance;		// setting for AM RX IQ gain balance
+	int		rx_iq_am_phase_balance;		// setting for AM RX IQ phase balance
 	int		rx_iq_fm_gain_balance;		// setting for FM RX IQ gain balance
 	//
 	//
@@ -1050,6 +1051,7 @@ typedef struct TransceiverState
 	uint8_t display_type;           		// existence/identification of display type
 	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
 	unsigned short DeviceCode;			// LCD ident code
+	bool USE_NEW_PHASE_CORRECTION; // used to test new phase correction
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
