@@ -467,6 +467,7 @@ typedef struct EepromSave
 #define POS_FC_IND_X				0
 #define POS_FC_IND_Y				78
 
+#define UI_LEFT_BOX_WIDTH 56 // used for the lower left side controls
 // --------------------------------------------------
 // Standalone controls
 //

@@ -31,6 +31,15 @@ extern sFONT GL_Font8x12_bold;
 extern sFONT GL_Font12x12;
 extern sFONT GL_Font16x24;
 
+static sFONT *fontList[] = {
+    &GL_Font8x12_bold,
+    &GL_Font16x24,
+    &GL_Font12x12,
+    &GL_Font8x12,
+    &GL_Font8x8,
+};
+
+
 // Transceiver state public structure
 extern __IO TransceiverState ts;
 
@@ -883,6 +892,15 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 	UiLcdHy28_CloseBulkWrite();
 }
 
+const sFONT   *UiLcdHy28_Font(uint8_t font) {
+  const sFONT   *cf;
+
+  if (font >4) { cf = fontList[0]; }
+  else { cf = fontList[font]; }
+
+  return cf;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_PrintText
 //* Object              :
@@ -890,29 +908,10 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uchar font)
 {
     uint8_t    TempChar;
-    const sFONT   *cf;
-
-    switch(font)
-    {
-       case 1:
-          cf = &GL_Font16x24;
-          break;
-       case 2:
-          cf = &GL_Font12x12;
-          break;
-       case 3:
-          cf = &GL_Font8x12;
-          break;
-       case 4:
-          cf = &GL_Font8x8;
-          break;
-       default:
-          cf = &GL_Font8x12_bold;
-          break;
-    }
+    const sFONT   *cf = UiLcdHy28_Font(font);
 
     do{
         TempChar = *str++;
@@ -948,29 +947,18 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color,
 }
 
 
+uint16_t UiLcdHy28_TextHeight(uint8_t font) {
+
+    const sFONT   *cf = UiLcdHy28_Font(font);
+    return cf->Height;
+}
+
+
 uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 
-	const sFONT   *cf;
 	uint16_t Xpos = 0;
 
-	switch(font)
-	{
-	case 1:
-		cf = &GL_Font16x24;
-		break;
-	case 2:
-		cf = &GL_Font12x12;
-		break;
-	case 3:
-		cf = &GL_Font8x12;
-		break;
-	case 4:
-		cf = &GL_Font8x8;
-		break;
-	default:
-		cf = &GL_Font8x12_bold;
-		break;
-	}
+    const sFONT   *cf = UiLcdHy28_Font(font);
 
 	do{
 		Xpos+=cf->Width;
@@ -986,7 +974,7 @@ uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 	return Xpos;
 }
 
-void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintTextRight(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uint8_t font)
 {
 
 	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
@@ -997,6 +985,24 @@ void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort C
 	}
 	UiLcdHy28_PrintText(Xpos, Ypos, str, Color, bkColor, font);
 }
+
+void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uint16_t bbW,const char* txt,uint32_t clr_fg,uint32_t clr_bg,uint8_t font)
+{
+    const uint16_t bbH = UiLcdHy28_TextHeight(0);
+    const uint16_t txtW = UiLcdHy28_TextWidth(txt,0);
+    const uint16_t bbOffset = txtW>bbW?0:((bbW - txtW)+1)/2;
+
+    // we draw the part of  the box not used by text.
+    UiLcdHy28_DrawFullRect(bbX,bbY,bbH,bbOffset,clr_bg);
+    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,0);
+
+    // if the text is smaller than the box, we need to draw the end part of the
+    // box
+    if (txtW<bbW) {
+      UiLcdHy28_DrawFullRect(bbX+txtW+bbOffset,bbY,bbH,bbW-(bbOffset+txtW),clr_bg);
+    }
+}
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_InitA

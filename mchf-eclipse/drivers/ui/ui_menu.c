@@ -2535,7 +2535,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		temp_var = ts.tx_disable & 1;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange) {
-		  UiDriverFButtonLabel(5,"  TUNE",temp_var?Grey1:White);
+		  // FIXME: Call "abstract" function to update status of tune,
+		  // do not redraw menu button here directly
+		  UiDriverFButtonLabel(5,"TUNE",temp_var?Grey1:White);
 		  ts.tx_disable = temp_var;
 		}
 		break;
