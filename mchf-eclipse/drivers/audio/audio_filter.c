@@ -970,6 +970,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     		}
     }//
 
+    if (!ts.USE_NEW_PHASE_CORRECTION) {
     	if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
             phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
         else
@@ -1155,7 +1156,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
             } // end if phase adjustment non-zero
 
     	}// END new switching with FilterPathInfo
-
+    } // END if (!ts.USE_NEW_PHASE_CORRECTION)
     	//
     // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
     	// hmmm, is this necessary? In AM AND in SSB, we set the fc.rx_filt_XXX in the right manner in this void, so no need to distinguish again between AM and SSB

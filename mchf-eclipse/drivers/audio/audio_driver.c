@@ -1695,14 +1695,87 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// HACK: we have 48 khz sample frequency
 		//
 	}
+	if (ts.USE_NEW_PHASE_CORRECTION) {
+	// The plan is to insert phase adjustment here (for all modes!)
+	// the phase adjustment is done by mixing a little bit of I into Q or vice versa
+	// this is justified because the phase shift between two signals of equal frequency can
+	// be regulated by adjusting the amplitudes of the two signals!
+	//
+	// 1. calculate the amount of adding of I or Q
+	//
+	float32_t scaling_Q_in_I = 0;
+	float32_t scaling_I_in_Q = 0;
+	bool scale_I = 0; // if 1, then a little Q is added to I, if 0, then a little I is added to Q
+	//
+	if (ts.dmod_mode == DEMOD_LSB){
+		if (ts.rx_iq_lsb_phase_balance > 0){
+			scale_I = 0;
+			scaling_I_in_Q = 0;
+			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/1000.0;
+		} else
+		{
+			scale_I = 1;
+			scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/1000.0;
+			scaling_Q_in_I = 0;
+		}
+	} else
+		if (ts.dmod_mode == DEMOD_USB){
+			if (ts.rx_iq_usb_phase_balance > 0){
+				scale_I = 0;
+				scaling_I_in_Q = 0;
+				scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/1000.0;
+			} else
+			{
+				scale_I = 1;
+				scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/1000.0;
+				scaling_Q_in_I = 0;
+			}
+
+		} else
+			if (ts.dmod_mode == DEMOD_AM){
+
+			} else {
+				scale_I = 0;
+				scaling_I_in_Q = 0;
+				scaling_Q_in_I = 0;
+			}
+
+	if (scale_I){} // FIXME: reminder that I should really use this variable to save CPU cycles !
+
+	// 3. fill e2_buffer and f2_buffer with I & Q (arm_copy)
+	//
+	arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e2_buffer, size/2);
+	arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f2_buffer, size/2);
+	//
+	// 4. scale e2_buffer or f2_buffer
+	//
+	arm_scale_f32((float32_t *)ads.e2_buffer, (float32_t)scaling_I_in_Q, (float32_t *)ads.e2_buffer, size/2);
+	//
+	arm_scale_f32((float32_t *)ads.f2_buffer, (float32_t)scaling_Q_in_I, (float32_t *)ads.f2_buffer, size/2);
+	//
+
+	//
+	// 5. Add l_buffer to i_buffer or k_buffer to q_buffer = phase correction
+	// this is I + a little bit of Q --> f2
+	//
+	arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.f2_buffer, (float32_t *)ads.e3_buffer, size/2);
+	// this is Q + a little bit of I --> e2
+	arm_add_f32((float32_t *)ads.q_buffer, (float32_t *)ads.e2_buffer, (float32_t *)ads.f3_buffer, size/2);
+	//
+	// copy to i_buffer and q_buffer
+	//
+	arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
+	arm_copy_f32((float32_t *)ads.f3_buffer, (float32_t *)ads.q_buffer, size/2);
+
+	} // end test variable
+
 	//
 	// Apply gain corrections for I/Q gain balancing
 	//
 	arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
 	//
 	arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, size/2);
-	//
-	//
+
 	if(ts.iq_freq_mode)	{		// is receive frequency conversion to be done?
 		if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
 			audio_rx_freq_conv(size, 1);

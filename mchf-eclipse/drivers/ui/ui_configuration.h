@@ -80,11 +80,11 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MIN_RX_IQ_GAIN_BALANCE  -99 // Minimum setting for RX IQ gain balance
 #define MAX_RX_IQ_GAIN_BALANCE  99  // Maximum setting for RX IQ gain balance
 //
-#define MIN_TX_IQ_PHASE_BALANCE -32 // Minimum setting for TX IQ phase balance
-#define MAX_TX_IQ_PHASE_BALANCE 32  // Maximum setting for TX IQ phase balance
+#define MIN_TX_IQ_PHASE_BALANCE -100 // Minimum setting for TX IQ phase balance
+#define MAX_TX_IQ_PHASE_BALANCE 100  // Maximum setting for TX IQ phase balance
 //
-#define MIN_RX_IQ_PHASE_BALANCE -32 // Minimum setting for RX IQ phase balance
-#define MAX_RX_IQ_PHASE_BALANCE 32  // Maximum setting for RX IQ phase balance
+#define MIN_RX_IQ_PHASE_BALANCE -100 // Minimum setting for RX IQ phase balance
+#define MAX_RX_IQ_PHASE_BALANCE 100  // Maximum setting for RX IQ phase balance
 //
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
 #define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)

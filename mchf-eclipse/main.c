@@ -329,7 +329,7 @@ void TransceiverStateInit(void)
 	ts.agc_mode			= AGC_DEFAULT;			// AGC setting
 	ts.agc_custom_decay	= AGC_CUSTOM_DEFAULT;			// Default setting for AGC custom setting - higher = slower
 	ts.filter_id		= AUDIO_DEFAULT_FILTER;			// startup audio filter
-
+	ts.USE_NEW_PHASE_CORRECTION = 1; // just for testing new phase correction path
 	{
 	  int idx;
 	  for (idx = 0; idx < AUDIO_FILTER_NUM; idx++) {
@@ -357,6 +357,7 @@ void TransceiverStateInit(void)
 	ts.rx_iq_usb_gain_balance = 0;
 	ts.rx_iq_lsb_phase_balance = 0;
 	ts.rx_iq_usb_phase_balance = 0;
+	ts.rx_iq_am_phase_balance = 0;
 	ts.rx_iq_am_gain_balance = 0;
 	ts.rx_iq_fm_gain_balance = 0;
 	ts.tx_iq_am_gain_balance = 0;
