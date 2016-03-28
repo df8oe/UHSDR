@@ -29,6 +29,8 @@
 // -----------------------------
 // FFT buffer (128, 512 or 2048)
 #define FFT_IQ_BUFF_LEN		512
+
+
 //
 // Useful DEFINEs for windowing functions
 //
@@ -512,7 +514,6 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 extern __IO		AudioDriverState	ads;
 extern __IO     SMeter              sm;
 extern __IO FilterCoeffs        fc;
-
 
 
 #endif
