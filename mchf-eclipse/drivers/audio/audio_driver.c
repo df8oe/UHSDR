@@ -2436,7 +2436,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 // ######################################################################################
 
 		audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
-		 bool test_DD4WH = 0; // set to 1, if you want to try out the TX version that I believe it could be right
+		 bool test_DD4WH = 1; // set to 1, if you want to try out the TX version that I believe it could be right
 		//
 		 bool swap = 0;
 		 if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?

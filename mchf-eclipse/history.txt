@@ -14,6 +14,9 @@
 - added different LCD init code (must be selected before building at this stage -
   subject to investigate runtime selsction)
 - new FilterPath-structure replaces old filter selection method
+- bugfix RX IQ phase adjustment SSB/CW
+- bugfix TX path while in translated mode
+- changed filter character at low frequencies in TX for male voices with high lower frequencies
 
 
 20160317 [DF8OE]
