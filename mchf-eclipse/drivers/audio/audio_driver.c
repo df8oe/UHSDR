@@ -885,6 +885,9 @@ void Audio_TXFilter_Init(void)
 	// -------------------
 	// Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
 	//
+	// FIXME: remove after testing
+	bool better_low_audio = 0; // set this to 1, if you are male and you would not sing tenor in a choir
+	//
 	if(ts.dmod_mode != DEMOD_FM)	{						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
 	  // TODO: Review FilterPath Code
 		// We have not (yet?) coded TX filters in the FilterPathInfo!
@@ -893,9 +896,15 @@ void Audio_TXFilter_Init(void)
 	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
 	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
 	  } else {
+		  if(!better_low_audio){
 	    IIR_TXFilter.numStages = IIR_TX_2k7.numStages;      // number of stages
 	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;   // point to reflection coefficients
 	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;   // point to ladder coefficients
+	  } else { // this is the RX filter with 2k7 BPF response (120 - 2700)
+		    IIR_TXFilter.numStages = IIR_2k7_BPF.numStages;      // number of stages
+		    IIR_TXFilter.pkCoeffs = IIR_2k7_BPF.pkCoeffs;   // point to reflection coefficients
+		    IIR_TXFilter.pvCoeffs = IIR_2k7_BPF.pvCoeffs;   // point to ladder coefficients
+	  }
 	  }
 	}
 	else	{	// This is FM - use a filter with "better" lows and highs more appropriate for FM
