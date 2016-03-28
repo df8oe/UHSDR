@@ -31,7 +31,7 @@
 //	-20dB points:  246, 2988 Hz
 //	-30dB points:  <225, >3060 Hz
 //
-//  Low-end pre-emphasis added to offset effects of Hibert transformer:
+//  Low-end pre-emphasis added to offset effects of Hilbert transformer:
 //	>=8.0dB:   @ 280 Hz
 //	>=7.0dB:  <298 Hz
 //	>=6.0dB:  <355 Hz
