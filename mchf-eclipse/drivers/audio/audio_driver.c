@@ -2458,8 +2458,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			} else {
 			swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
 			swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
-			audio_rx_freq_conv(size, swap);
+
 		} }
+			audio_rx_freq_conv(size, swap);
 		//
 		// Equalize based on band and simultaneously apply I/Q gain adjustments
 		//
