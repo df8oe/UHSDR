@@ -886,7 +886,7 @@ void Audio_TXFilter_Init(void)
 	// Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
 	//
 	// FIXME: remove after testing
-	bool better_low_audio = 0; // set this to 1, if you are male and you would not sing tenor in a choir
+	bool better_low_audio = 1; // set this to 1, if you are male and you would not sing tenor in a choir
 	//
 	if(ts.dmod_mode != DEMOD_FM)	{						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
 	  // TODO: Review FilterPath Code

@@ -1052,6 +1052,7 @@ typedef struct TransceiverState
 	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
 	unsigned short DeviceCode;			// LCD ident code
 	bool USE_NEW_PHASE_CORRECTION; // used to test new phase correction
+	bool encoder3state;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

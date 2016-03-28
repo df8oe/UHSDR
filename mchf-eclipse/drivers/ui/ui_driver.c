@@ -1402,11 +1402,14 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		if(!ts.mem_disp)	{			// allow only if NOT in memory display mode
 			if((!ts.menu_mode) && (!ts.boot_halt_flag))	{	// go into menu mode if NOT already in menu mode and not to halt on startup
 				ts.menu_mode = 1;
+				ts.encoder3state = filter_path_change;
+				filter_path_change = false;			// deactivate while in menu mode
+				UiDriverChangeFilterDisplay();
 				UiSpectrumClearDisplay();
-                UiDriverFButtonLabel(1,"EXIT", Yellow);
-                UiDriverFButtonLabel(2,"PREV",Yellow);
-                UiDriverFButtonLabel(3,"NEXT",Yellow);
-                UiDriverFButtonLabel(4,"DEFLT",Yellow);
+				UiDriverFButtonLabel(1,"EXIT", Yellow);
+				UiDriverFButtonLabel(2,"PREV",Yellow);
+				UiDriverFButtonLabel(3,"NEXT",Yellow);
+				UiDriverFButtonLabel(4,"DEFLT",Yellow);
 				//
 				//
 				// Grey out adjustments and put encoders in known states
@@ -1436,6 +1439,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			}
 			else	{	// already in menu mode - we now exit
 				ts.menu_mode = 0;
+				filter_path_change = ts.encoder3state;
+				UiDriverChangeFilterDisplay();
 				UiSpectrumInitSpectrumDisplay();			// init spectrum scope
 				//
 				// Restore encoder displays to previous modes
