@@ -351,8 +351,9 @@ void TransceiverStateInit(void)
 	//
 	ts.tx_iq_lsb_gain_balance 	= 0;				// Default settings for RX and TX gain and phase balance
 	ts.tx_iq_usb_gain_balance 	= 0;
-	ts.tx_iq_lsb_gain_balance 	= 0;
-	ts.tx_iq_usb_gain_balance 	= 0;
+	ts.tx_iq_lsb_phase_balance 	= 0;
+	ts.tx_iq_usb_phase_balance 	= 0;
+
 	ts.rx_iq_lsb_gain_balance = 0;
 	ts.rx_iq_usb_gain_balance = 0;
 	ts.rx_iq_lsb_phase_balance = 0;
