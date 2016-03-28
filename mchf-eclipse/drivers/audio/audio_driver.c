@@ -2237,20 +2237,20 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
 	if (ts.dmod_mode == DEMOD_LSB){
 		if (ts.tx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q_2 = 0;
-			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/100.0;
+			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/1000.0;
 		} else
 		{
-			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/100.0;
+			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/1000.0;
 			scaling_Q_in_I_2 = 0;
 		}
 	} else
 		if (ts.dmod_mode == DEMOD_USB){
 			if (ts.tx_iq_usb_phase_balance > 0){
 				scaling_I_in_Q_2 = 0;
-				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/100.0;
+				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
 			} else
 			{
-				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/100.0;
+				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
 				scaling_Q_in_I_2 = 0;
 			}
 
@@ -2516,7 +2516,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 // ######################################################################################
 */
 		 bool test_DD4WH = 0; // set to 1, if you want to try out the TX version that I believe it could be right
-		//
+		// my version is not right ;-) works for LSB, but in USB, TX frequency is shifted down by IF!
 		 bool swap = 0;
 		 if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
 			if (test_DD4WH) {
