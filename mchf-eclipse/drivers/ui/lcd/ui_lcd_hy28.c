@@ -1172,17 +1172,23 @@ uchar UiLcdHy28_InitA(void)
 
 #ifdef OLDHY28INITCODE				// original HY28B init code
       {
-//      UiLcdHy28_WriteReg(0x00e7,0x0010); // commented out and added next line 0n 03/28/2016
-      UiLcdHy28_WriteReg(0x00e5,0x78f0);
-      UiLcdHy28_WriteReg(0x0000,0x0001);  // start internal osc
-      UiLcdHy28_WriteReg(0x0001,0x0000);   // 0x0100 will flip 180 degree
-      UiLcdHy28_WriteReg(0x0002,0x0700);    // power on sequence
-      UiLcdHy28_WriteReg(0x0003,(1<<12)|(1<<5)|(1<<4)|(0<<3) );
+//      UiLcdHy28_WriteReg(0x00e7,0x0010); // commented out on 03/28/2016
+//      UiLcdHy28_WriteReg(0x00e5,0x78f0); // line from code from DC4AS
+
+	// set internal timing like use on raspberry pi
+      UiLcdHy28_WriteReg(0x00e3,0x3008);
+      UiLcdHy28_WriteReg(0x00e7,0x0012);
+      UiLcdHy28_WriteReg(0x00ef,0x1231);
+
+//      UiLcdHy28_WriteReg(0x0000,0x0001);	// start internal osc commented out 03/28/2016
+      UiLcdHy28_WriteReg(0x0001,0x0000);	// 0x0100 will flip 180 degree
+      UiLcdHy28_WriteReg(0x0002,0x0700);	// power on sequence
+//      UiLcdHy28_WriteReg(0x0003,0x1030); // commented out 03/28/2016
       UiLcdHy28_WriteReg(0x0004,0x0000);
       UiLcdHy28_WriteReg(0x0008,0x0207);
       UiLcdHy28_WriteReg(0x0009,0x0000);
-      UiLcdHy28_WriteReg(0x000a,0x0000);    // display setting
-      UiLcdHy28_WriteReg(0x000c,0x0001);   // display setting
+      UiLcdHy28_WriteReg(0x000a,0x0000);
+      UiLcdHy28_WriteReg(0x000c,0x0001);
       UiLcdHy28_WriteReg(0x000d,0x0000);
       UiLcdHy28_WriteReg(0x000f,0x0000);
 
@@ -1238,9 +1244,9 @@ uchar UiLcdHy28_InitA(void)
 
       // display on sequence
       UiLcdHy28_WriteReg(0x0007,0x0133);
-
-      UiLcdHy28_WriteReg(0x0020,0x0000);   // Line first address 0
-      UiLcdHy28_WriteReg(0x0021,0x0000);  // Column first site 0
+// following lines commented out 03/28/2016
+//      UiLcdHy28_WriteReg(0x0020,0x0000);   // Line first address 0
+//      UiLcdHy28_WriteReg(0x0021,0x0000);  // Column first site 0
       }
 #else			// new init code - thanks to DC4AS
       {
