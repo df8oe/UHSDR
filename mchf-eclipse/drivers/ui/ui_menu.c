@@ -2869,9 +2869,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "   %d", ts.tx_iq_lsb_gain_balance);
 		break;
 	case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
-		// FIXME: change after test phase!
-		//		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(ts.dmod_mode == DEMOD_LSB)	{
+		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
 			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_phase_balance,
 					MIN_TX_IQ_PHASE_BALANCE,
 					MAX_TX_IQ_PHASE_BALANCE,
@@ -2899,9 +2897,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "   %d", ts.tx_iq_usb_gain_balance);
 		break;
 	case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
-		// FIXME: change after test phase!
-//		if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))	{
-			if(ts.dmod_mode == DEMOD_USB)	{
+		if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))	{
 			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_phase_balance,
 					MIN_TX_IQ_PHASE_BALANCE,
 					MAX_TX_IQ_PHASE_BALANCE,
