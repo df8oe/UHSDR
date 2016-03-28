@@ -2869,13 +2869,15 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "   %d", ts.tx_iq_lsb_gain_balance);
 		break;
 	case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
-		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
+		// FIXME: change after test phase!
+		//		if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))	{
+			if(ts.dmod_mode == DEMOD_LSB)	{
 			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_phase_balance,
 					MIN_TX_IQ_PHASE_BALANCE,
 					MAX_TX_IQ_PHASE_BALANCE,
 					0,
 					1);
-			if(tchange)
+			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
 				AudioFilter_CalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
@@ -2897,13 +2899,15 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "   %d", ts.tx_iq_usb_gain_balance);
 		break;
 	case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
-		if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))	{
+		// FIXME: change after test phase!
+//		if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))	{
+			if(ts.dmod_mode == DEMOD_USB)	{
 			tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_phase_balance,
 					MIN_TX_IQ_PHASE_BALANCE,
 					MAX_TX_IQ_PHASE_BALANCE,
 					0,
 					1);
-			if(tchange)
+			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
 				AudioFilter_CalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
