@@ -2356,8 +2356,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
 		// to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
-		//
-		if(!ads.tx_filter_adjusting)		{	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+		// FIXME: delete USE_NEW_PHASE_CORRECTION after testing
+		if(!ads.tx_filter_adjusting || ts.USE_NEW_PHASE_CORRECTION)		{	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
 			// yes - apply transformation AND audio filtering to buffer data
 			// + 0 deg to I data
 			arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
@@ -2395,20 +2395,20 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		if (ts.dmod_mode == DEMOD_LSB){
 			if (ts.tx_iq_lsb_phase_balance > 0){
 				scaling_I_in_Q_2 = 0;
-				scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/1000.0;
+				scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/100.0;
 			} else
 			{
-				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/1000.0;
+				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/100.0;
 				scaling_Q_in_I_2 = 0;
 			}
 		} else
 			if (ts.dmod_mode == DEMOD_USB){
 				if (ts.tx_iq_usb_phase_balance > 0){
 					scaling_I_in_Q_2 = 0;
-					scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+					scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/100.0;
 				} else
 				{
-					scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+					scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/100.0;
 					scaling_Q_in_I_2 = 0;
 				}
 
