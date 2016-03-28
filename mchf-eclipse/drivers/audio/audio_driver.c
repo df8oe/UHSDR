@@ -2381,7 +2381,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// we would have to insert the TX IQ phase correction here, I think
 		// IQ gain adjustments are done in audio_tx_final_iq_processing
 		//
-		if (ts.USE_NEW_PHASE_CORRECTION) { // FIXME: delete this, when tested
+		if (ts.USE_NEW_PHASE_CORRECTION) {	 // FIXME: delete this, when tested
 		//
 		// the phase adjustment is done by mixing a little bit of I into Q or vice versa
 		// this is justified because the phase shift between two signals of equal frequency can
