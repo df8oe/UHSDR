@@ -17,6 +17,7 @@
 - bugfix RX IQ phase adjustment SSB/CW
 - bugfix TX path while in translated mode
 - changed filter character at low frequencies in TX for male voices with high lower frequencies
+- bugfix TX IQ phase adjustment SSB/CW
 
 
 20160317 [DF8OE]

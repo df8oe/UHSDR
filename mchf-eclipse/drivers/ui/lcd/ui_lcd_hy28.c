@@ -1176,10 +1176,11 @@ uchar UiLcdHy28_InitA(void)
 //      UiLcdHy28_WriteReg(0x00e5,0x78f0); // line from code from DC4AS
 
 	// set internal timing like use on raspberry pi
-      UiLcdHy28_WriteReg(0x00e3,0x3008);
-      UiLcdHy28_WriteReg(0x00e7,0x0012);
-      UiLcdHy28_WriteReg(0x00ef,0x1231);
+//      UiLcdHy28_WriteReg(0x00e3,0x3008);
+//      UiLcdHy28_WriteReg(0x00e7,0x0012);
+//      UiLcdHy28_WriteReg(0x00ef,0x1231);
 
+// commented out - it is a RO register regarding datasheet!!
 //      UiLcdHy28_WriteReg(0x0000,0x0001);	// start internal osc commented out 03/28/2016
       UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
       UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion
