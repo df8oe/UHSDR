@@ -886,7 +886,7 @@ void Audio_TXFilter_Init(void)
 	// Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
 	//
 	// FIXME: remove after testing
-	bool better_low_audio = 1; // set this to 1, if you are male and you would not sing tenor in a choir
+	bool better_low_audio = 0; // set this to 1, if you are male and you would not sing tenor in a choir
 	//
 	if(ts.dmod_mode != DEMOD_FM)	{						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
 	  // TODO: Review FilterPath Code
@@ -2445,7 +2445,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 // ######################################################################################
 
 		audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
-		 bool test_DD4WH = 1; // set to 1, if you want to try out the TX version that I believe it could be right
+		 bool test_DD4WH = 0; // set to 1, if you want to try out the TX version that I believe it could be right
 		//
 		 bool swap = 0;
 		 if(ts.iq_freq_mode)	{		// is transmit frequency conversion to be done?
