@@ -115,7 +115,6 @@ __IO	arm_fir_instance_f32	FIR_Q_TX;
 // Transceiver state public structure
 extern __IO TransceiverState 	ts;
 
-
 // Audio driver publics
 __IO	AudioDriverState		ads;
 
@@ -1681,6 +1680,19 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 				sd.state    = 1;
 			}
 		}
+		if(sc.state == 0){
+			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for snap carrier
+			sc.samp_ptr++;
+			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src));
+			sc.samp_ptr++;
+			// obtain samples for snap carrier mode
+			if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2*2)
+			{
+				sc.samp_ptr = 0;
+				sc.state    = 1;
+			}
+		}
+
 		//
 		if(*src > ADC_CLIP_WARN_THRESHOLD/4)	{		// This is the release threshold for the auto RF gain
 			ads.adc_quarter_clip = 1;
