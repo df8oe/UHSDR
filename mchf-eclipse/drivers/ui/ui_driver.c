@@ -6434,7 +6434,7 @@ static void audio_snap_carrier (void)
 		//
 // do windowing function on input data to get less "Bin Leakage" on FFT data
 		// Hanning window
-		for(int i = 0; i < FFT_IQ_BUFF_LEN2; i++){
+		for(i = 0; i < FFT_IQ_BUFF_LEN2; i++){
 		    sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 		}
 
@@ -6457,7 +6457,8 @@ static void audio_snap_carrier (void)
 			}
 
 		// look for maximum value and save the bin # for frequency delta calculation
-        for (int c = Lbin; c <= Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+	int c;
+        for (c = Lbin; c <= Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
         if (maximum < sc.FFT_Samples[c]) {
             maximum = sc.FFT_Samples[c];
             maxbin = c;
