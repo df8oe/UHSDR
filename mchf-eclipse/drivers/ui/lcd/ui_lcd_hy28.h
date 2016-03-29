@@ -18,12 +18,11 @@
 #include "math.h"
 #include "ui_driver.h"
 #include "ui_spectrum.h"
+#include "mchf_board.h"
 
 #define MAX_X  320
 #define MAX_Y  240
 
-// uncomment to run new HY28B on 50MHz SPI
-// #define HY28BHISPEED true
 
 #ifndef HY28BHISPEED
   #define HY28BHISPEED false

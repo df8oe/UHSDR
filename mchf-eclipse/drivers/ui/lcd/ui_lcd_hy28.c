@@ -1170,7 +1170,7 @@ uchar UiLcdHy28_InitA(void)
    {
       printf("doing ILI9325 init\n\r");
 
-#ifdef OLDHY28INITCODE				// original HY28B init code
+#ifndef NEWHY28INITCODE				// original HY28B init code
       {
 //      UiLcdHy28_WriteReg(0x00e7,0x0010); // commented out on 03/28/2016
 //      UiLcdHy28_WriteReg(0x00e5,0x78f0); // line from code from DC4AS
@@ -1477,5 +1477,5 @@ static void UiLcdHy28_Delay(ulong delay)
    ulong    i,k;
 
     for ( k = 0 ;(k < delay );k++ )
-      for ( i = 0 ;(i < US_DELAY );i++ ) { asm(""); }
+        for ( i = 0 ;(i < US_DELAY );i++ ) { asm(""); }
 }
