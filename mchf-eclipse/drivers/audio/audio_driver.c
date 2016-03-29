@@ -1647,7 +1647,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 //* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes Rx to that freqeuency
 //* Input Parameters    :
 //* Output Parameters   :
-//* Functions called    :
+//* Functions called    : NOT YET WORKING 2016 03 29
 //*----------------------------------------------------------------------------
 
 // FIXME:
@@ -1660,8 +1660,6 @@ static void audio_lms_noise_reduction(int16_t psize)
 // * only call FFT once, but choose the right bins for bin1, bin2, bin3 ;-) --> DONE
 // * experiment with gain: 1000/2000/3000 . . .
 // * change from long press of button to short press
-// * reduce processor load by using flag (is FFT buffer to be filled?)
-
 
 static void audio_snap_carrier (void)
 {
@@ -1674,10 +1672,9 @@ static void audio_snap_carrier (void)
 	int16_t posbin = 0;
 	int16_t maxbin = 1;
 	int16_t bw_USB = 0;
-	float bin_BW = 48000.0 * 2.0 / FFT_IQ_BUFF_LEN2;
-	ulong delta, i;
-	//	ulong freq = df.tune_new / 4;
-	ulong freq = 14000000;
+	float bin_BW = 48000.0 * 2.0 / FFT_IQ_BUFF_LEN2; // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	long delta, i;
+	ulong freq = df.tune_new / 4;
 	float32_t bin1, bin2, bin3;
 
 	// now init of FFT structure has been moved to audio_driver_init()
@@ -1687,11 +1684,11 @@ static void audio_snap_carrier (void)
 
 //	1. determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
 
-//	2. determine posbin from ts.iq_freq_mode
+//	2. determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
-		if(!ts.iq_freq_mode)	{	// yes, are we NOT in translate mode?
-			posbin = FFT_IQ_BUFF_LEN2 / 4;
-		}
+		if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
+			posbin = FFT_IQ_BUFF_LEN2 / 4; // right in the middle!
+		} // frequency translation ON
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
 			posbin = (FFT_IQ_BUFF_LEN2 / 4) - (FFT_IQ_BUFF_LEN2 / 16);
 		}
@@ -1730,7 +1727,7 @@ static void audio_snap_carrier (void)
 
 // 	FFT preparation
 
-		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)(1/ads.codec_gain_calc * 10000), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
+		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)(1/ads.codec_gain_calc * 1000), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
 		//
 // do windowing function on input data to get less "Bin Leakage" on FFT data
 		// Hanning window
@@ -1742,11 +1739,11 @@ static void audio_snap_carrier (void)
 		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
 		//
 		// Calculate magnitude
-		//
+		// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
 		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(FFT_IQ_BUFF_LEN2/2));
 		//
 		// putting the bins in frequency-sequential order!
-		//
+/*		// why is this necessary ? I do not understand this? DD4WH 2016_03_29
 			for(i = 0; i < (FFT_IQ_BUFF_LEN2/2); i++)	{
 				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of spectrum data
 					sc.FFT_Samples[i] = sc.FFT_MagData[i + FFT_IQ_BUFF_LEN2/4];	// get data
@@ -1755,12 +1752,12 @@ static void audio_snap_carrier (void)
 					sc.FFT_Samples[i] = sc.FFT_MagData[i - FFT_IQ_BUFF_LEN2/4];	// get data
 				}
 			}
-
+*/
 		// look for maximum value and save the bin # for frequency delta calculation
 	int c;
         for (c = Lbin; c <= Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-        if (maximum < sc.FFT_Samples[c]) {
-            maximum = sc.FFT_Samples[c];
+        if (maximum < sc.FFT_MagData[c]) {
+            maximum = sc.FFT_MagData[c];
             maxbin = c;
         }}
         maximum = 0; // reset maximum for next time ;-)
@@ -1769,7 +1766,7 @@ static void audio_snap_carrier (void)
         delta = (maxbin - posbin) * bin_BW;
         // set frequency variable
         freq = freq + delta;
-//        df.tune_new = freq * 4;
+        df.tune_new = freq * 4;
         // set frequency of Si570
 //        UiDriverUpdateFrequency ( 2, 0);
 //        UiLcdHy28_PrintText(80,160, delta,Cyan,Black,1);
@@ -1813,9 +1810,9 @@ static void audio_snap_carrier (void)
     		// set frequency variable
         freq = freq + delta;
         // set frequency of Si570 with 4 * dialfrequency
-/*        df.tune_new = freq * 4;
+        df.tune_new = freq * 4;
         UiDriverUpdateFrequency ( 2, 0);
-*/
+
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
         sc.snap = 0; // reset flag for button press (used in ui_driver)
 
@@ -1869,7 +1866,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 				sd.state    = 1;
 			}
 		}
-		if(sc.state == 0 && sc.snap){
+		if(sc.state == 0 && sc.snap){ // collect samples for snap carrier FFT
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for snap carrier
 			sc.samp_ptr++;
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src));
@@ -1906,7 +1903,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 	}
 
-	audio_snap_carrier();
+	audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
+	// if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
 
 	if (ts.USE_NEW_PHASE_CORRECTION) { // FIXME: delete this, when tested
 	//
@@ -1922,20 +1920,20 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	if (ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_FM){ // hmm, I do not yet know how to deal with SAM & FM, for the moment, treat it here . . .
 		if (ts.rx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q = 0;
-			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/1000.0;
+			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/3000.0;
 		} else
 		{
-			scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/1000.0;
+			scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/3000.0;
 			scaling_Q_in_I = 0;
 		}
 	} else
 		if (ts.dmod_mode == DEMOD_USB){
 			if (ts.rx_iq_usb_phase_balance > 0){
 				scaling_I_in_Q = 0;
-				scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/1000.0;
+				scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/3000.0;
 			} else
 			{
-				scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/1000.0;
+				scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/3000.0;
 				scaling_Q_in_I = 0;
 			}
 
@@ -1943,10 +1941,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			if (ts.dmod_mode == DEMOD_AM){
 				if (ts.rx_iq_am_phase_balance > 0){
 					scaling_I_in_Q = 0;
-					scaling_Q_in_I = (float32_t) ts.rx_iq_am_phase_balance/1000.0;
+					scaling_Q_in_I = (float32_t) ts.rx_iq_am_phase_balance/3000.0;
 				} else
 				{
-					scaling_I_in_Q = (float32_t)ts.rx_iq_am_phase_balance/1000.0;
+					scaling_I_in_Q = (float32_t)ts.rx_iq_am_phase_balance/3000.0;
 					scaling_Q_in_I = 0;
 				}
 
@@ -2439,20 +2437,20 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
 	if (ts.dmod_mode == DEMOD_LSB){
 		if (ts.tx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q_2 = 0;
-			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/1000.0;
+			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/3000.0;
 		} else
 		{
-			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/1000.0;
+			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/3000.0;
 			scaling_Q_in_I_2 = 0;
 		}
 	} else
 		if (ts.dmod_mode == DEMOD_USB){
 			if (ts.tx_iq_usb_phase_balance > 0){
 				scaling_I_in_Q_2 = 0;
-				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/3000.0;
 			} else
 			{
-				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/1000.0;
+				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/3000.0;
 				scaling_Q_in_I_2 = 0;
 			}
 
