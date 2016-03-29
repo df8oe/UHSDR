@@ -1660,8 +1660,6 @@ static void audio_lms_noise_reduction(int16_t psize)
 // * only call FFT once, but choose the right bins for bin1, bin2, bin3 ;-) --> DONE
 // * experiment with gain: 1000/2000/3000 . . .
 // * change from long press of button to short press
-// * reduce processor load by using flag (is FFT buffer to be filled?)
-
 
 static void audio_snap_carrier (void)
 {
