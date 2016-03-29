@@ -290,6 +290,18 @@ void Default_Reset_Handler(void)
         "    it      lt\n"
         "    strlt   r2, [r0], #4\n"
         "    blt     zero_loop");
+  /* Zero fill the ccm segment.  This is done with inline assembly since this
+     will clear the value of pulDest if it is not kept in a register. */
+  __asm("  ldr     r0, =_sccm\n"
+        "  ldr     r1, =_eccm\n"
+        "  mov     r2, #0\n"
+        "  .thumb_func\n"
+        "zero_loop_ccm:\n"
+        "    cmp     r0, r1\n"
+        "    it      lt\n"
+        "    strlt   r2, [r0], #4\n"
+        "    blt     zero_loop_ccm");
+
 #ifdef __FPU_USED
   /* Enable FPU.*/ 
   __asm("  LDR.W R0, =0xE000ED88\n"
