@@ -158,6 +158,7 @@ uint16_t filterpath_mode_map[FILTER_MODE_MAX];
  * FilterPathInfo
  *
  * put together your custom filters here
+ * only add NEW filters at the END of the list in FilterPathInfo!!! (otherwise your filter settings will get mashed up completely in EEPROM)
  * All components of the whole filterpath are defined in this file
  * But: it could be that you have to change "FilterInfo" too
  * Have fun and learn about DSP ;-) but do not forget:
