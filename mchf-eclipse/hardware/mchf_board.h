@@ -61,7 +61,6 @@
 
 // hardware specific switches
 //#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
-//#define NEWHY28INITCODE		true		// uncomment for using new HY28 init code if you get white screen
 
 
 #define		WD_REFRESH_WINDOW		80
