@@ -1732,9 +1732,15 @@ static void audio_snap_carrier (void)
 		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)(1/ads.codec_gain_calc * 1000), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
 		//
 // do windowing function on input data to get less "Bin Leakage" on FFT data
-		// Hanning window
+		// Hamming window
 		for(i = 0; i < FFT_IQ_BUFF_LEN2; i++){
-		    sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+			//	Hanning 1.36
+			//sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+			// Hamming 1.22
+			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+			// Blackman 1.75
+			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1))) * sc.FFT_Samples[i];
+
 		}
 
 		// run FFT
@@ -1745,14 +1751,13 @@ static void audio_snap_carrier (void)
 		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(FFT_IQ_BUFF_LEN2/2));
 		//
 		// putting the bins in frequency-sequential order!
-		// why is this necessary ? I do not understand this? DD4WH 2016_03_29
 		// it puts the Magnitude samples into FFT_Samples again
-		//
+		// the samples are centred at FFT_IQ_BUFF_LEN2, this
 			for(i = 0; i < (FFT_IQ_BUFF_LEN2/2); i++)	{
-				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of spectrum data
+				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of magnitude data
 					sc.FFT_Samples[i] = sc.FFT_MagData[i + FFT_IQ_BUFF_LEN2/4];	// get data
 				}
-				else	{							// build right half of spectrum data
+				else	{							// build right half of magnitude data
 					sc.FFT_Samples[i] = sc.FFT_MagData[i - FFT_IQ_BUFF_LEN2/4];	// get data
 				}
 			}
@@ -1765,18 +1770,20 @@ static void audio_snap_carrier (void)
             maxbin = c;
         }}
         maximum = 0; // reset maximum for next time ;-)
-//        maxbin = 2;
-//        posbin = 4;
+
         // ok, we have found the maximum, now set frequency to that bin
         delta1 = (maxbin - posbin) * bin_BW;
         // set frequency variable
-       // estimate frequ of carrier by three-point-interpolation of bins around maxbin
+
+        // estimate frequ of carrier by three-point-interpolation of bins around maxbin
    		bin1 = sc.FFT_Samples[maxbin-1];
    		bin2 = sc.FFT_Samples[maxbin];
    		bin3 = sc.FFT_Samples[maxbin+1];
-        if (bin1+bin2+bin3==0) bin1=1; // prevent divide by 0
-       	// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-        delta2 = 1.0 * (bin_BW * (1.36 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+
+   		if (bin1+bin2+bin3==0) bin1=1; // prevent divide by 0
+
+   		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
+        delta2 = 1.0 * (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3)) + 7.0;
    		// set frequency variable
         freq = freq + delta1 + delta2;
         // set frequency of Si570 with 4 * dialfrequency
