@@ -122,7 +122,7 @@ SECTIONS
 		*(.co_stack .co_stack.*)
 	} > ram 
 	
-	.ccm : {
+	.ccm (NOLOAD) : {
   		. = ALIGN(4);
   		_sccm = .;
   		*(.ccm)
