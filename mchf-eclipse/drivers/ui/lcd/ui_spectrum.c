@@ -21,7 +21,11 @@
 #include "waterfall_colours.h"
 // ------------------------------------------------
 // Spectrum display public
-__IO    SpectrumDisplay         sd;
+__IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
+// this data structure is now located in the Core Connected Memory of the STM32F4
+// this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
+// If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
+
 
 static void 	UiDriverFFTWindowFunction(char mode);
 
