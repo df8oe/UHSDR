@@ -22,7 +22,7 @@
 /*----------Stack Configuration-----------------------------------------------*/
 #define STACK_SIZE       0x00000400      /*!< Stack size (in Words)           */
 __attribute__ ((section(".co_stack")))
-unsigned long pulStack[STACK_SIZE];
+  unsigned long pulStack[STACK_SIZE];
 
 
 /*----------Macro definition--------------------------------------------------*/
@@ -134,7 +134,7 @@ extern unsigned long _edata;     /*!< End address for the .data section       */
 extern unsigned long _sbss;      /*!< Start address for the .bss section      */
 extern unsigned long _ebss;      /*!< End address for the .bss section        */
 extern void _eram;               /*!< End address for ram                     */
-
+extern void* __stack;
 
 /*----------Function prototypes-----------------------------------------------*/
 extern int main(void);           /*!< The entry point for the application.    */
@@ -153,8 +153,9 @@ void (* const g_pfnVectors[])(void) =
 {
   /*----------Core Exceptions------------------------------------------------ */
   //(void *)&pulStack[STACK_SIZE-1],     /*!< The initial stack pointer         */
-  (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
-
+  // (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
+    // put stack end at end of ram.
+  (void*)&__stack - sizeof(void*),
   Reset_Handler,             /*!< Reset Handler                               */
   NMI_Handler,               /*!< NMI Handler                                 */
   HardFault_Handler,         /*!< Hard Fault Handler                          */
