@@ -515,5 +515,28 @@ extern __IO		AudioDriverState	ads;
 extern __IO     SMeter              sm;
 extern __IO FilterCoeffs        fc;
 
+#define FFT_IQ_BUFF_LEN2 2048
+typedef struct SnapCarrier
+{
+    // FFT state
+    arm_rfft_instance_f32           S;
+
+    arm_cfft_radix4_instance_f32    S_CFFT;
+
+    // Samples buffer
+    //
+    float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
+    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN2];
+    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
+    // Current data ptr
+    ulong   samp_ptr;
+    // State machine current state
+    uchar   state;
+    bool	snap;
+
+} SnapCarrier;
+
+__IO SnapCarrier sc;
+
 
 #endif
