@@ -6368,6 +6368,13 @@ void UiDriver_KeyTestScreen(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
+// FIXME:
+// * only call frequency update once
+// * only call FFT once, but choose the right bin ;-)
+// * change from long press of button to short press
+// * reduce processor load by using flag (is FFT buffer to be filled?)
+
+
 static void audio_snap_carrier (void)
 {
 	int16_t Lbin, Ubin;
