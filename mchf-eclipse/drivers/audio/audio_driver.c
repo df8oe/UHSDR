@@ -1647,7 +1647,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 //* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes Rx to that freqeuency
 //* Input Parameters    :
 //* Output Parameters   :
-//* Functions called    :
+//* Functions called    : NOT YET WORKING 2016 03 29
 //*----------------------------------------------------------------------------
 
 // FIXME:
@@ -1743,7 +1743,7 @@ static void audio_snap_carrier (void)
 		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(FFT_IQ_BUFF_LEN2/2));
 		//
 		// putting the bins in frequency-sequential order!
-		// why is this necessary ? I do not understand this? DD4WH 2016_03_29
+/*		// why is this necessary ? I do not understand this? DD4WH 2016_03_29
 			for(i = 0; i < (FFT_IQ_BUFF_LEN2/2); i++)	{
 				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of spectrum data
 					sc.FFT_Samples[i] = sc.FFT_MagData[i + FFT_IQ_BUFF_LEN2/4];	// get data
@@ -1752,7 +1752,7 @@ static void audio_snap_carrier (void)
 					sc.FFT_Samples[i] = sc.FFT_MagData[i - FFT_IQ_BUFF_LEN2/4];	// get data
 				}
 			}
-
+*/
 		// look for maximum value and save the bin # for frequency delta calculation
 	int c;
         for (c = Lbin; c <= Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
