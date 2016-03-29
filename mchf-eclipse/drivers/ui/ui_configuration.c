@@ -918,6 +918,9 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_Bool(EEPROM_DYNAMIC_TUNING,&ts.dynamic_tuning_active,0,0,1);
     UiReadSettingEEPROM_Bool(EEPROM_SAM_ENABLE,&ts.sam_enabled,0,0,1);
 
+    if(!ts.version_number_release)			// set xlate to -12KHz at first start
+	ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
+	
     ts.dsp_inhibit = dspmode;       // restore setting
 }
 
@@ -1000,7 +1003,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     // Save stored band/mode/frequency memory from RAM
     //
 
-    for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data     qqqqq
+    for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);

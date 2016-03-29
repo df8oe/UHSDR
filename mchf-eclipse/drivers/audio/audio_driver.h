@@ -481,7 +481,7 @@ enum	{
 // CONV_NCO_COS = cos(rate)
 //
 #define	CONV_NCO_SIN	0.70710678118654752440084436210485	// value for 6 kHz
-#define	CONV_NCO_COS	0.70710678118654752440084436210485	// value for 6 kHz - funny that they are the same, huh!
+#define	CONV_NCO_COS	CONV_NCO_SIN				// value for 6 kHz - funny that they are the same, huh!
 //
 //
 //
@@ -493,7 +493,7 @@ enum	{
 #define FREQ_IQ_CONV_P12KHZ		3	// LO is 12KHz above receive frequency in RX mode
 #define	FREQ_IQ_CONV_M12KHZ		4	// LO is 12KHz below receive frequency in RX mode
 //
-#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M6KHZ		//FREQ_IQ_CONV_MODE_OFF
+#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M12KHZ		//FREQ_IQ_CONV_MODE_OFF
 #define	FREQ_IQ_CONV_MODE_MAX		4
 //
 //
