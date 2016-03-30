@@ -1871,6 +1871,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
 	// if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
+	// if one or both are false, it immediately returns here
 
 	if (ts.USE_NEW_PHASE_CORRECTION) { // FIXME: delete this, when tested
 	//
@@ -1886,20 +1887,20 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	if (ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_FM){ // hmm, I do not yet know how to deal with SAM & FM, for the moment, treat it here . . .
 		if (ts.rx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q = 0;
-			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/3000.0;
+			scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 		} else
 		{
-			scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/3000.0;
+			scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 			scaling_Q_in_I = 0;
 		}
 	} else
 		if (ts.dmod_mode == DEMOD_USB){
 			if (ts.rx_iq_usb_phase_balance > 0){
 				scaling_I_in_Q = 0;
-				scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/3000.0;
+				scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 			} else
 			{
-				scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/3000.0;
+				scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 				scaling_Q_in_I = 0;
 			}
 
@@ -1907,10 +1908,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			if (ts.dmod_mode == DEMOD_AM){
 				if (ts.rx_iq_am_phase_balance > 0){
 					scaling_I_in_Q = 0;
-					scaling_Q_in_I = (float32_t) ts.rx_iq_am_phase_balance/3000.0;
+					scaling_Q_in_I = (float32_t) ts.rx_iq_am_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 				} else
 				{
-					scaling_I_in_Q = (float32_t)ts.rx_iq_am_phase_balance/3000.0;
+					scaling_I_in_Q = (float32_t)ts.rx_iq_am_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 					scaling_Q_in_I = 0;
 				}
 
@@ -2212,9 +2213,11 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		ads.q_buffer[i] = (float32_t)*src++;
 		//
 	}
-	//
+	// ***************************************************************************************************
+	// if this void is used for DIGI modes, put RX phase adjustment code HERE
+	// ***************************************************************************************************
+
 	// Apply gain corrections for I/Q gain balancing
-	//
 	arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
 	//
 	arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, size/2);
@@ -2403,20 +2406,20 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
 	if (ts.dmod_mode == DEMOD_LSB){
 		if (ts.tx_iq_lsb_phase_balance > 0){
 			scaling_I_in_Q_2 = 0;
-			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/3000.0;
+			scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 		} else
 		{
-			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/3000.0;
+			scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 			scaling_Q_in_I_2 = 0;
 		}
 	} else
 		if (ts.dmod_mode == DEMOD_USB){
 			if (ts.tx_iq_usb_phase_balance > 0){
 				scaling_I_in_Q_2 = 0;
-				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/3000.0;
+				scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 			} else
 			{
-				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/3000.0;
+				scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
 				scaling_Q_in_I_2 = 0;
 			}
 
@@ -2982,6 +2985,8 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * SSB_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
 	arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * SSB_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
+	//
+	// if this void is going to be used for DIGI modes, put code for TX phase adjustment at this place! DD4WH 2016_03_30
 	//
 	// ------------------------
 	// Output I and Q as stereo data
