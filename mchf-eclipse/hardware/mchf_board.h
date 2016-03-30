@@ -721,8 +721,8 @@ struct band_regs_s {
 typedef struct band_regs_s BandRegs;
 
 enum {
-    VFO_WORK = 0,
-    VFO_A,
+    // VFO_WORK = 0
+    VFO_A = 0,
     VFO_B,
     VFO_MAX
 };
@@ -992,6 +992,9 @@ typedef struct TransceiverState
 	bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
 	bool	rx_muting;				// set TRUE if audio output is to be muted
 	ulong	rx_blanking_time;			// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
+
+#define VFO_MEM_MODE_SPLIT 0x80
+#define VFO_MEM_MODE_VFO_B 0x40
 	ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
 							// LSB+6 (0x40):  0 = VFO A, 1 = VFO B
 							// LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
@@ -1094,5 +1097,7 @@ void verify_servirt(void);
 
 // in main.c
 void CriticalError(ulong error);
+
+bool is_vfo_b();
 
 #endif

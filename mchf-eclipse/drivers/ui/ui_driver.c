@@ -277,14 +277,13 @@ inline bool is_touchscreen_pressed() {
 	return (ts.tp_x != 0xff);
 }
 
-#define VFO_MEM_MODE_SPLIT 0x80
-#define VFO_MEM_MODE_VFO_B 0x40
 
 
-inline bool is_splitmode() {
+bool is_splitmode() {
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
-inline bool is_vfo_b() {
+
+bool is_vfo_b() {
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_VFO_B) != 0;
 }
 
@@ -551,7 +550,7 @@ void ui_driver_init(void)
 	//
 	AudioManagement_CalcTxCompLevel();		// calculate current settings for TX speech compressor
 	//
-	df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
+	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
 	//
 	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
@@ -1589,14 +1588,16 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			vfo[vfo_new].band[ts.band].filter_mode = ts.filter_id;	//band_filter_mode[ts.band];
 			//
 
+#if 0
 			vfo[VFO_WORK].band[ts.band].dial_value = vfo[vfo_active].band[ts.band].dial_value;		// load "VFO A" settings into working registers
 			vfo[VFO_WORK].band[ts.band].decod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 			vfo[VFO_WORK].band[ts.band].filter_mode = vfo[vfo_active].band[ts.band].filter_mode;
+#endif
 			//
 			UiDriverFButtonLabel(4,vfo_name,White);
 
 
-			df.tune_new = vfo[VFO_WORK].band[ts.band].dial_value;
+			df.tune_new = vfo[vfo_active].band[ts.band].dial_value;
 			//
 			// do frequency/display update
 			if(is_splitmode())	{	// in SPLIT mode?
@@ -1610,27 +1611,24 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverUpdateFrequency(1,0);
 
 			// Change decode mode if need to
-			if(ts.dmod_mode != vfo[VFO_WORK].band[ts.band].decod_mode)
+			if(ts.dmod_mode != vfo[vfo_active].band[ts.band].decod_mode)
 			{
 				// Update mode
-				ts.dmod_mode = vfo[VFO_WORK].band[ts.band].decod_mode;
+				ts.dmod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 
 				// Update Decode Mode (USB/LSB/AM/FM/CW)
 				UiDriverShowMode();
 			}
 
 			// Change filter mode if need to
-			if(ts.filter_id != vfo[VFO_WORK].band[ts.band].filter_mode)
+			if(ts.filter_id != vfo[vfo_active].band[ts.band].filter_mode)
 			{
-				ts.filter_id = vfo[VFO_WORK].band[ts.band].filter_mode;
+				ts.filter_id = vfo[vfo_active].band[ts.band].filter_mode;
 				UiDriverChangeFilterDisplay();	// update display
 				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
 				audio_driver_set_rx_audio_filter();
-				audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
 			}
 		}
-		//
-		//
 	}
 
 	// --------------------------------------------
@@ -2718,16 +2716,18 @@ static void UiDriverInitFrequency(void)
 	// Clear band values array
 	for(i = 0; i < MAX_BANDS; i++)
 	{
-		vfo[VFO_WORK].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
-		vfo[VFO_WORK].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
-		vfo[VFO_WORK].band[i].filter_mode = AUDIO_DEFAULT_FILTER;	// clear filter mode
+		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
+		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
+        vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
+        vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
 	}
 
 	// Lower bands default to LSB mode
 	// TODO: This needs to be checked, some even lower bands have higher numbers now
-	for(i = 0; i < 4; i++)
-		vfo[VFO_WORK].band[i].decod_mode = DEMOD_LSB;
-
+	for(i = 0; i < 4; i++) {
+		vfo[VFO_A].band[i].decod_mode = DEMOD_LSB;
+        vfo[VFO_B].band[i].decod_mode = DEMOD_LSB;
+	}
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.tune_old 	= bandInfo[ts.band].tune;
 	df.tune_new 	= bandInfo[ts.band].tune;
@@ -3733,6 +3733,7 @@ static void UiDriverChangeBand(uchar is_up)
 
 	ulong 	new_band_freq;		// new dial frequency
 
+	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
 	//printf("-----------> change band\n\r");
 
@@ -3753,9 +3754,9 @@ static void UiDriverChangeBand(uchar is_up)
 	if(curr_band_index < (MAX_BANDS))
 	{
 		// Save dial
-		vfo[VFO_WORK].band[curr_band_index].dial_value = df.tune_old;
-		vfo[VFO_WORK].band[curr_band_index].decod_mode = ts.dmod_mode;
-		vfo[VFO_WORK].band[curr_band_index].filter_mode = ts.filter_id;
+		vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
+		vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
+		vfo[vfo_sel].band[curr_band_index].filter_mode = ts.filter_id;
 	}
 
 	// Handle direction
@@ -3818,10 +3819,8 @@ static void UiDriverChangeBand(uchar is_up)
 	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
 	// Load frequency value - either from memory or default for
 	// the band if this is first band selection
-	if(is_vfo_b())
-	    df.tune_new = vfo[VFO_B].band[new_band_index].dial_value; 		// Load value from VFO B
-	else if(vfo[VFO_WORK].band[new_band_index].dial_value != 0xFFFFFFFF)
-	    df.tune_new = vfo[VFO_WORK].band[new_band_index].dial_value;	// Load value from VFO A
+	if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
+	    df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
 	else
 	    df.tune_new = new_band_freq; 					// Load new frequency from startup
 
@@ -3831,24 +3830,23 @@ static void UiDriverChangeBand(uchar is_up)
 //	UiDriverUpdateSecondLcdFreq(df.tune_new/4);
 
 	// Change decode mode if need to
-	if(ts.dmod_mode != vfo[VFO_WORK].band[new_band_index].decod_mode)
+	if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
 	{
 		// Update mode
-		ts.dmod_mode = vfo[VFO_WORK].band[new_band_index].decod_mode;
+		ts.dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
 
 		// Update Decode Mode (USB/LSB/AM/FM/CW)
 		UiDriverShowMode();
 	}
 
+	// FIXME: Uses filter_id, will be removed soon.
 	// Change filter mode if need to
-	if(ts.filter_id != vfo[VFO_WORK].band[new_band_index].filter_mode)
+	if(ts.filter_id != vfo[vfo_sel].band[new_band_index].filter_mode)
 	{
-		ts.filter_id = vfo[VFO_WORK].band[new_band_index].filter_mode;
+		ts.filter_id = vfo[vfo_sel].band[new_band_index].filter_mode;
 		audio_driver_set_rx_audio_filter();
-		audio_driver_set_rx_audio_filter();	// TODO: we have to invoke the filter change several times for some unknown reason - 'dunno why!
         UiDriverChangeFilterDisplay();  // update display and change filter
         UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator
-
 	}
 
 	// Create Band value

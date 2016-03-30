@@ -745,7 +745,7 @@ void UiConfiguration_LoadEepromValues(void)
     //
     for(i = 0; i < MAX_BANDS; i++)
     {   // read from stored bands
-        UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, &vfo[VFO_WORK].band[i]);
+        // UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, &vfo[VFO_WORK].band[i]);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
     }
@@ -994,17 +994,17 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     // save current band/frequency/mode settings
     //
     // save frequency
-    vfo[VFO_WORK].band[ts.band].dial_value = df.tune_new;
+    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
     // Save decode mode
-    vfo[VFO_WORK].band[ts.band].decod_mode = ts.dmod_mode;
+    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
     // Save filter setting
-    vfo[VFO_WORK].band[ts.band].filter_mode = ts.filter_id;
+    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].filter_mode = ts.filter_id;
     //
     // Save stored band/mode/frequency memory from RAM
     //
 
     for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
-        UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
+        // UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
     }
