@@ -208,6 +208,7 @@ const float q_rx_coeffs[Q_NUM_TAPS] =
 		-0.0012327055287524,
 		-0.00034491431846579
 };
+#if 0
 //
 // Same as above, but set to 89.50 degrees
 //
@@ -399,3 +400,4 @@ const float q_rx_coeffs_plus[Q_NUM_TAPS] =
 		-0.00122815169948919,
 		-0.0003457857
 };
+#endif

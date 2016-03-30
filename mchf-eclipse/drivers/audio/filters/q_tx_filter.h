@@ -125,7 +125,7 @@ const float q_tx_coeffs[Q_NUM_TAPS] =
 		-0.000048495992345297,
 		-0.0003506543
 };
-
+#if 0
 //
 // Same as above, but set to 89.50 degrees
 //
@@ -320,7 +320,7 @@ const float q_tx_coeffs_plus[Q_NUM_TAPS] =
 		-0.000035020356392576,
 		-0.000338712
 };
-
+#endif
 //static float32_t 		FirState_Q_TX[128];
 //arm_fir_instance_f32 	FIR_Q_TX;
 

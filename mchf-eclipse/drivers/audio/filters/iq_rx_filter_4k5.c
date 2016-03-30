@@ -229,6 +229,8 @@ const float q_rx_4k5_coeffs[Q_NUM_TAPS] =
 
 
 };
+
+#if 0
 // -89.5 degrees
 const float q_rx_4k5_coeffs_minus[Q_NUM_TAPS] =
 {
@@ -419,3 +421,4 @@ const float q_rx_4k5_coeffs_plus[Q_NUM_TAPS] =
 		 0.000419784959544385
 
 };
+#endif
