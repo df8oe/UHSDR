@@ -29,6 +29,8 @@
 // -----------------------------
 // FFT buffer (128, 512 or 2048)
 #define FFT_IQ_BUFF_LEN		512
+
+
 //
 // Useful DEFINEs for windowing functions
 //
@@ -56,11 +58,17 @@ typedef struct AudioDriverState
 	float32_t					i_buffer[IQ_BUFSZ+1];
 	float32_t 					q_buffer[IQ_BUFSZ+1];
 	float32_t 					a_buffer[IQ_BUFSZ+1];
+	float32_t 					a2_buffer[IQ_BUFSZ+1];
+	float32_t 					a3_buffer[IQ_BUFSZ+1];
 	float32_t 					b_buffer[(IQ_BUFSZ*2)+1];	// this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
 	float32_t					c_buffer[IQ_BUFSZ+1];
 	float32_t					d_buffer[IQ_BUFSZ+1];
 	float32_t					e_buffer[IQ_BUFSZ+1];
 	float32_t					f_buffer[IQ_BUFSZ+1];
+	float32_t					e2_buffer[IQ_BUFSZ+1];
+	float32_t					f2_buffer[IQ_BUFSZ+1];
+	float32_t					e3_buffer[IQ_BUFSZ+1];
+	float32_t					f3_buffer[IQ_BUFSZ+1];
 	//
 	float32_t					Osc_I_buffer[IQ_BUFSZ+1];
 	float32_t					Osc_Q_buffer[IQ_BUFSZ+1];
@@ -473,7 +481,7 @@ enum	{
 // CONV_NCO_COS = cos(rate)
 //
 #define	CONV_NCO_SIN	0.70710678118654752440084436210485	// value for 6 kHz
-#define	CONV_NCO_COS	0.70710678118654752440084436210485	// value for 6 kHz - funny that they are the same, huh!
+#define	CONV_NCO_COS	CONV_NCO_SIN				// value for 6 kHz - funny that they are the same, huh!
 //
 //
 //
@@ -485,7 +493,7 @@ enum	{
 #define FREQ_IQ_CONV_P12KHZ		3	// LO is 12KHz above receive frequency in RX mode
 #define	FREQ_IQ_CONV_M12KHZ		4	// LO is 12KHz below receive frequency in RX mode
 //
-#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M6KHZ		//FREQ_IQ_CONV_MODE_OFF
+#define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M12KHZ		//FREQ_IQ_CONV_MODE_OFF
 #define	FREQ_IQ_CONV_MODE_MAX		4
 //
 //
@@ -507,6 +515,28 @@ extern __IO		AudioDriverState	ads;
 extern __IO     SMeter              sm;
 extern __IO FilterCoeffs        fc;
 
+#define FFT_IQ_BUFF_LEN2 2048
+typedef struct SnapCarrier
+{
+    // FFT state
+    arm_rfft_instance_f32           S;
+
+    arm_cfft_radix4_instance_f32    S_CFFT;
+
+    // Samples buffer
+    //
+    float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
+    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN2];
+    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
+    // Current data ptr
+    ulong   samp_ptr;
+    // State machine current state
+    uchar   state;
+    bool	snap;
+
+} SnapCarrier;
+
+__IO SnapCarrier sc;
 
 
 #endif

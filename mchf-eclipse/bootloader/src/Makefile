@@ -37,6 +37,9 @@ CFLAGS += -I$(STM_COMMON)/../cmsis_lib/include
 CFLAGS += -I$(STM_COMMON)/Libraries/stm32_usb_host_library/Core/inc
 CFLAGS += -I$(STM_COMMON)/Libraries/stm32_usb_host_library/Class/MSC/inc
 CFLAGS += -I$(STM_COMMON)/Libraries/stm32_usb_otg_driver/inc
+#CFLAGS += -I$(STM_COMMON)/../usb/otg/inc
+#CFLAGS += -I$(STM_COMMON)/../usb/usbh/core/inc
+#CFLAGS += -I$(STM_COMMON)/../usb/usbh/class/MSC/inc
 
 
 # add startup file to build
@@ -49,6 +52,9 @@ vpath %.c $(STM_COMMON)/../cmsis_lib/source \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Core/src \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Class/MSC/src \
           $(STM_COMMON)/../drivers/fat_fs/src
+#          $(STM_COMMON)/../usb/otg/src \
+#          $(STM_COMMON)/../usb/usbh/core/src \
+#          $(STM_COMMON)/../usb/usbh/class/MSC/src \
 
 .PHONY: proj
 

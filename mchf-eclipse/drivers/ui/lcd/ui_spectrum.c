@@ -10,16 +10,22 @@
  **  Last Modified:                                                                 **
  **  Licence:      CC BY-NC-SA 3.0                                                **
  ************************************************************************************/
+#include <stdio.h>
 #include "ui_spectrum.h"
 #include "ui_lcd_hy28.h"
 // For spectrum display struct
 #include "audio_driver.h"
 #include "ui_driver.h"
+#include "ui_menu.h"
 #include "ui_rotary.h" // dial frequency df
 #include "waterfall_colours.h"
 // ------------------------------------------------
 // Spectrum display public
-__IO    SpectrumDisplay         sd;
+__IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
+// this data structure is now located in the Core Connected Memory of the STM32F4
+// this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
+// If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
+
 
 static void 	UiDriverFFTWindowFunction(char mode);
 
@@ -102,11 +108,11 @@ void UiSpectrumCreateDrawArea(void)
 	//
 	// get grid colour of all but center line
 	//
-	UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+	UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
 	if(ts.scope_grid_colour == SPEC_GREY) {
 		ts.scope_grid_colour_active = Grid;
 	} else {
-		UiDriverMenuMapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
+		UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
 	}
 	//
 	//
@@ -115,7 +121,7 @@ void UiSpectrumCreateDrawArea(void)
 	if(ts.scope_centre_grid_colour == SPEC_GREY) {
 		ts.scope_centre_grid_colour_active = Grid;
 	} else {
-		UiDriverMenuMapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
+		UiMenu_MapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
 	}
 
 	// Clear screen where frequency information will be under graticule
@@ -471,7 +477,7 @@ return (FFT_IQ_BUFF_LEN/4 + idx)%(FFT_IQ_BUFF_LEN/2);
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverInitSpectrumDisplay()
+static void UiSpectrum_InitSpectrumDisplay()
 {
 	ulong i;
 	arm_status	a;
@@ -606,7 +612,7 @@ void UiDriverInitSpectrumDisplay()
 //
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 //
-void UiSpectrumReDrawSpectrumDisplay()
+void UiSpectrumReDrawScopeDisplay()
 {
 	ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
@@ -627,7 +633,7 @@ void UiSpectrumReDrawSpectrumDisplay()
 	//	return;
 
 	// Nothing to do here otherwise, or if scope is to be held off while other parts of the display are to be updated or the LCD is being blanked
-	if((!sd.enabled) || (ts.hold_off_spectrum_scope > ts.sysclock) || (ts.lcd_blanking_flag))
+	if((!sd.enabled) || (ts.lcd_blanking_flag))
 		return;
 
 	// The state machine will rest
@@ -646,7 +652,6 @@ void UiSpectrumReDrawSpectrumDisplay()
 		//
 		// Apply gain to collected IQ samples and then do FFT
 		//
-
 		case 1:
 		{
 			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
@@ -686,26 +691,23 @@ void UiSpectrumReDrawSpectrumDisplay()
 			filt_factor = (float)ts.scope_filter;		// use stored filter setting
 			filt_factor = 1/filt_factor;		// invert filter factor to allow multiplication
 			//
-			if(sd.dial_moved)	{	// Clear filter data if dial was moved in steps greater than 1 kHz
-				sd.dial_moved = 0;	// Dial moved - reset indicator
-				if(df.tuning_step > 1000)	{	// was tuning step greater than 1kHz?
-					arm_copy_f32((float32_t *)sd.FFT_MagData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// yes - copy current data into average buffer
-				}
-				//
-				UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
-				//
-			}
-			else	{	// dial was not moved - do normal IIR lowpass filtering to "smooth" display
-				arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-				arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
-				//
-				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
-					if(sd.FFT_AVGData[i] < 1)
-						sd.FFT_AVGData[i] = 1;
-				}
-			}
+			if(sd.dial_moved)
+			    {
+			    sd.dial_moved = 0;	// Dial moved - reset indicator
+			    //
+			    UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
+			    //
+			    }
+			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
+			arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
+			arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
+			arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+			//
+			for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
+			    {		//		// guarantee that the result will always be >= 0
+			    if(sd.FFT_AVGData[i] < 1)
+				sd.FFT_AVGData[i] = 1;
+			    }
 		sd.state++;
 		break;
 		}
@@ -979,7 +981,7 @@ void UiSpectrumReDrawSpectrumDisplay()
 		case 5:
 		{
 		uint32_t	clr;
-		UiDriverMenuMapColors(ts.scope_trace_colour,NULL, &clr);
+		UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
         UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
@@ -1027,7 +1029,7 @@ void UiSpectrumReDrawWaterfall()
 	//	return;
 
 	// Nothing to do here otherwise, or if scope is to be held off while other parts of the display are to be updated or the LCD is being blanked
-	if((!sd.enabled) || (ts.hold_off_spectrum_scope > ts.sysclock) || (ts.lcd_blanking_flag))
+	if((!sd.enabled) || (ts.lcd_blanking_flag))
 		return;
 
 	// The state machine will rest
@@ -1076,26 +1078,22 @@ void UiSpectrumReDrawWaterfall()
 			filt_factor = (float)ts.scope_filter;		// use stored filter setting
 			filt_factor = 1/filt_factor;		// invert filter factor to allow multiplication
 			//
-			if(sd.dial_moved)	{	// Clear filter data if dial was moved in steps greater than 1 kHz
-				sd.dial_moved = 0;	// Dial moved - reset indicator
-				if(df.tuning_step > 1000)	{	// was tuning step greater than 1kHz
-					arm_copy_f32((float32_t *)sd.FFT_MagData,(float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// copy current data into average buffer
-				}
-				//
-				UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
-				//
-			}
-			else	{	// dial was not moved - do IIR lowpass filtering to "smooth" display
-				arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-				arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-				arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-				arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
-				//
-				for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
-					if(sd.FFT_AVGData[i] < 1)
-						sd.FFT_AVGData[i] = 1;
-				}
-			}
+			if(sd.dial_moved)
+			    {
+			    sd.dial_moved = 0;	// Dial moved - reset indicator
+			    //
+			    UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
+			    //
+			    }
+			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
+			arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
+			arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
+			arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+			//
+			for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		//		// guarantee that the result will always be >= 0
+			    if(sd.FFT_AVGData[i] < 1)
+				sd.FFT_AVGData[i] = 1;
+			    }
 		sd.state++;
 		break;
 		}
@@ -1355,13 +1353,13 @@ void UiSpectrumReDrawWaterfall()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiSpectrumInitWaterfallDisplay()
+void UiSpectrumInitSpectrumDisplay()
 {
 	if(ts.boot_halt_flag)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
 		return;
 
 	UiSpectrumClearDisplay();			// clear display under spectrum scope
 	UiSpectrumCreateDrawArea();
-	UiDriverInitSpectrumDisplay();
+	UiSpectrum_InitSpectrumDisplay();
 	UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }

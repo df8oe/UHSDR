@@ -16,8 +16,6 @@
 
 void    AudioManagement_CalcRxIqGainAdj(void);
 void    AudioManagement_CalcTxIqGainAdj(void);
-void    AudioManagement_CalcRxIqGainAdj(void);
-void    AudioManagement_CalcTxIqGainAdj(void);
 
 void    AudioManagement_CalcTxCompLevel(void);
 void    AudioManagement_CalcNB_AGC(void);

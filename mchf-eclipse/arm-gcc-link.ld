@@ -122,6 +122,14 @@ SECTIONS
 		*(.co_stack .co_stack.*)
 	} > ram 
 	
+	.ccm (NOLOAD) : {
+  		. = ALIGN(4);
+  		_sccm = .;
+  		*(.ccm)
+  		. = ALIGN(4);      
+  		_eccm = .;
+	}>ram1
+	
 	/* Set stack top to end of ram , and stack limit move down by
 	* size of stack_dummy section */
 	__StackTop = ORIGIN(ram ) + LENGTH(ram );

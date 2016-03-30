@@ -16,18 +16,24 @@
 //
 // Exports
 //
-void UiDriverUpdateMenu(uchar mode);
-void UiDriverMemMenu(void);
-void UiDriverUpdateMemLines(uchar var);
-void UiDriverMenuMapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
-void UiMenu_DisplayInitMenu(uint16_t);
+void UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
+
+
+// The supported mode values
+enum {
+  MENU_RENDER_ONLY = 0,
+  MENU_PROCESS_VALUE_CHANGE,
+  MENU_PROCESS_VALUE_SETDEFAULT,
+};
+
+void UiMenu_RenderMenu(uint16_t mode);
 
 void UiMenu_RenderChangeItemValue(int16_t pot_diff);
 void UiMenu_RenderChangeItem(int16_t pot_diff);
 void UiMenu_RenderLastScreen();
 void UiMenu_RenderFirstScreen();
-void UiMenu_RenderNextScreen();
-void UiMenu_RenderPrevScreen();
+bool UiMenu_RenderNextScreen(); // returns true if screen was changed, i.e. not last screen
+bool UiMenu_RenderPrevScreen(); // returns true if screen was changed, i.e. not first screen
 
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
@@ -98,6 +104,7 @@ enum {
 	MENU_BACKUP_CONFIG,
 	MENU_RESTORE_CONFIG,
 	MENU_HARDWARE_INFO,
+	MENU_DEMOD_SAM,
 	MENU_DUMMY_LINE_2,
 	MENU_DUMMY_LINE_3,
 	MENU_DUMMY_LINE_4,
@@ -136,6 +143,7 @@ enum {
 	CONFIG_USB_RX_IQ_GAIN_BAL,
 	CONFIG_USB_RX_IQ_PHASE_BAL,
 	CONFIG_AM_RX_GAIN_BAL,
+	CONFIG_AM_RX_PHASE_BAL,
 	CONFIG_FM_RX_GAIN_BAL,
 	CONFIG_LSB_TX_IQ_GAIN_BAL,
 	CONFIG_LSB_TX_IQ_PHASE_BAL,
@@ -231,8 +239,33 @@ enum {
 	MENU_10K0_SEL,
 	CONFIG_DSP_ENABLE,
 	CONFIG_CAT_XLAT,
+	MENU_FP_SEL,
+	CONFIG_REDUCE_POWER_ON_LOW_BANDS,
+	MENU_FP_CW_01,
+	MENU_FP_CW_02,
+	MENU_FP_CW_03,
+	MENU_FP_CW_04,
+    MENU_FP_AM_01,
+    MENU_FP_AM_02,
+    MENU_FP_AM_03,
+    MENU_FP_AM_04,
+    MENU_FP_SSB_01,
+    MENU_FP_SSB_02,
+    MENU_FP_SSB_03,
+    MENU_FP_SSB_04,
+    MENU_FP_SAM_01,
+    MENU_FP_SAM_02,
+    MENU_FP_SAM_03,
+    MENU_FP_SAM_04,
 	//
 	MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 //
+// Starting position of configuration menu
+//
+#define POS_MENU_IND_X                      60      // X position of description of menu item being changed
+#define POS_MENU_IND_Y                      128     // Y position of first (top) item being changed
+#define POS_MENU_CHANGE_X                   244     // Position of variable being changed
+#define POS_MENU_CURSOR_X                   311     // Position of cursor used to indicate selected item
+
 #endif

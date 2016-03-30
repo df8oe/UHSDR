@@ -31,6 +31,15 @@ extern sFONT GL_Font8x12_bold;
 extern sFONT GL_Font12x12;
 extern sFONT GL_Font16x24;
 
+static sFONT *fontList[] = {
+    &GL_Font8x12_bold,
+    &GL_Font16x24,
+    &GL_Font12x12,
+    &GL_Font8x12,
+    &GL_Font8x8,
+};
+
+
 // Transceiver state public structure
 extern __IO TransceiverState ts;
 
@@ -116,7 +125,7 @@ void UiLcdHy28_SpiInit(bool hispeed)
    SPI_InitStructure.SPI_CPOL			= SPI_CPOL_High;
    SPI_InitStructure.SPI_CPHA			= SPI_CPHA_2Edge;
    SPI_InitStructure.SPI_NSS			= SPI_NSS_Soft;
-   SPI_InitStructure.SPI_BaudRatePrescaler = hispeed?SPI_BaudRatePrescaler_2:SPI_BaudRatePrescaler_4;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
+   SPI_InitStructure.SPI_BaudRatePrescaler	= hispeed?SPI_BaudRatePrescaler_2:SPI_BaudRatePrescaler_4;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
    SPI_InitStructure.SPI_FirstBit		= SPI_FirstBit_MSB;
    SPI_InitStructure.SPI_Mode			= SPI_Mode_Master;
    SPI_Init(SPI2, &SPI_InitStructure);
@@ -126,9 +135,6 @@ void UiLcdHy28_SpiInit(bool hispeed)
 
    // Common misc pins settings
    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
    // Configure GPIO PIN for Chip select
    GPIO_InitStructure.GPIO_Pin = lcd_cs;
    GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
@@ -156,24 +162,24 @@ void UiLcdHy28_SpiDeInit()
    SPI_I2S_DeInit(SPI2);
 
    // Set as inputs
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+   GPIO_InitStructure.GPIO_Mode		= GPIO_Mode_IN;
+   GPIO_InitStructure.GPIO_Speed	= GPIO_Speed_2MHz;
+   GPIO_InitStructure.GPIO_PuPd		= GPIO_PuPd_NOPULL;
 
    // SPI SCK pin configuration
-   GPIO_InitStructure.GPIO_Pin = LCD_SCK;
+   GPIO_InitStructure.GPIO_Pin		= LCD_SCK;
    GPIO_Init(LCD_SCK_PIO, &GPIO_InitStructure);
 
    // SPI  MOSI pins configuration
-   GPIO_InitStructure.GPIO_Pin =  LCD_MOSI;
+   GPIO_InitStructure.GPIO_Pin		=  LCD_MOSI;
    GPIO_Init(LCD_MOSI_PIO, &GPIO_InitStructure);
 
    // SPI  MISO pins configuration
-   GPIO_InitStructure.GPIO_Pin =  LCD_MISO;
+   GPIO_InitStructure.GPIO_Pin		=  LCD_MISO;
    GPIO_Init(LCD_MISO_PIO, &GPIO_InitStructure);
 
    // Configure GPIO PIN for Chip select
-   GPIO_InitStructure.GPIO_Pin = lcd_cs;
+   GPIO_InitStructure.GPIO_Pin		= lcd_cs;
    GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
 }
 
@@ -239,10 +245,10 @@ void UiLcdHy28_ParallelInit()
    GPIO_PinAFConfig(LCD_D14_PIO, LCD_D14_SOURCE, GPIO_AF_FSMC);
 
    // Configure GPIO PIN for Reset
-   GPIO_InitStructure.GPIO_Pin = LCD_RESET;
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   GPIO_InitStructure.GPIO_Pin		= LCD_RESET;
+   GPIO_InitStructure.GPIO_Mode		= GPIO_Mode_OUT;
+   GPIO_InitStructure.GPIO_OType	= GPIO_OType_PP;
+   GPIO_InitStructure.GPIO_Speed	= GPIO_Speed_50MHz;
    GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 }
 
@@ -284,12 +290,12 @@ void UiLcdHy28_FSMCConfig(void)
    //-- FSMC Configuration ------------------------------------------------------
    //----------------------- SRAM Bank 3 ----------------------------------------
    // FSMC_Bank1_NORSRAM4 configuration
-   p.FSMC_AddressSetupTime       = 3;	// Slow external RAM interface to LCD to reduce corruption on some LCDs  10/14 - ka7oei
-   p.FSMC_AddressHoldTime          = 0;
-   p.FSMC_DataSetupTime          = 9;		// Slow external RAM interface to LCD to reduce corruption on some LCDs  10/14 - ka7oei
-   p.FSMC_BusTurnAroundDuration    = 0;
-   p.FSMC_CLKDivision             = 0;
-   p.FSMC_DataLatency             = 0;
+   p.FSMC_AddressSetupTime       = 6;		// slow external RAM interface to LCD to reduce corruption on slower LCDs
+   p.FSMC_AddressHoldTime        = 0;
+   p.FSMC_DataSetupTime          = 15;		// slow external RAM interface to LCD to reduce corruption on slower LCDs
+   p.FSMC_BusTurnAroundDuration  = 0;
+   p.FSMC_CLKDivision            = 0;
+   p.FSMC_DataLatency            = 0;
    p.FSMC_AccessMode             = FSMC_AccessMode_A;
 
    // Color LCD configuration ------------------------------------
@@ -301,21 +307,21 @@ void UiLcdHy28_FSMCConfig(void)
    //     - Extended Mode = Enable
    //     - Asynchronous Wait = Disable
 
-   FSMC_NORSRAMInitStructure.FSMC_Bank                = FSMC_Bank1_NORSRAM1;
-   FSMC_NORSRAMInitStructure.FSMC_DataAddressMux          = FSMC_DataAddressMux_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_MemoryType             = FSMC_MemoryType_SRAM;
-   FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth          = FSMC_MemoryDataWidth_16b;
-   FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode          = FSMC_BurstAccessMode_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_AsynchronousWait       = FSMC_AsynchronousWait_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity       = FSMC_WaitSignalPolarity_Low;
-   FSMC_NORSRAMInitStructure.FSMC_WrapMode             = FSMC_WrapMode_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_WaitSignalActive       = FSMC_WaitSignalActive_BeforeWaitState;
-   FSMC_NORSRAMInitStructure.FSMC_WriteOperation          = FSMC_WriteOperation_Enable;
-   FSMC_NORSRAMInitStructure.FSMC_WaitSignal             = FSMC_WaitSignal_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_ExtendedMode          = FSMC_ExtendedMode_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_WriteBurst             = FSMC_WriteBurst_Disable;
-   FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct    = &p;
-   FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct       = &p;
+   FSMC_NORSRAMInitStructure.FSMC_Bank			= FSMC_Bank1_NORSRAM1;
+   FSMC_NORSRAMInitStructure.FSMC_DataAddressMux	= FSMC_DataAddressMux_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_MemoryType		= FSMC_MemoryType_SRAM;
+   FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth	= FSMC_MemoryDataWidth_16b;
+   FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode	= FSMC_BurstAccessMode_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_AsynchronousWait	= FSMC_AsynchronousWait_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity	= FSMC_WaitSignalPolarity_Low;
+   FSMC_NORSRAMInitStructure.FSMC_WrapMode		= FSMC_WrapMode_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_WaitSignalActive	= FSMC_WaitSignalActive_BeforeWaitState;
+   FSMC_NORSRAMInitStructure.FSMC_WriteOperation	= FSMC_WriteOperation_Enable;
+   FSMC_NORSRAMInitStructure.FSMC_WaitSignal		= FSMC_WaitSignal_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_ExtendedMode		= FSMC_ExtendedMode_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_WriteBurst		= FSMC_WriteBurst_Disable;
+   FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct	= &p;
+   FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct	= &p;
    FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure);
 
    FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM1, ENABLE);
@@ -882,6 +888,15 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 	UiLcdHy28_CloseBulkWrite();
 }
 
+const sFONT   *UiLcdHy28_Font(uint8_t font) {
+  const sFONT   *cf;
+
+  if (font >4) { cf = fontList[0]; }
+  else { cf = fontList[font]; }
+
+  return cf;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_PrintText
 //* Object              :
@@ -889,29 +904,10 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uchar font)
 {
     uint8_t    TempChar;
-    const sFONT   *cf;
-
-    switch(font)
-    {
-       case 1:
-          cf = &GL_Font16x24;
-          break;
-       case 2:
-          cf = &GL_Font12x12;
-          break;
-       case 3:
-          cf = &GL_Font8x12;
-          break;
-       case 4:
-          cf = &GL_Font8x8;
-          break;
-       default:
-          cf = &GL_Font8x12_bold;
-          break;
-    }
+    const sFONT   *cf = UiLcdHy28_Font(font);
 
     do{
         TempChar = *str++;
@@ -947,29 +943,18 @@ void UiLcdHy28_PrintText(ushort Xpos, ushort Ypos, const char *str,ushort Color,
 }
 
 
+uint16_t UiLcdHy28_TextHeight(uint8_t font) {
+
+    const sFONT   *cf = UiLcdHy28_Font(font);
+    return cf->Height;
+}
+
+
 uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 
-	const sFONT   *cf;
 	uint16_t Xpos = 0;
 
-	switch(font)
-	{
-	case 1:
-		cf = &GL_Font16x24;
-		break;
-	case 2:
-		cf = &GL_Font12x12;
-		break;
-	case 3:
-		cf = &GL_Font8x12;
-		break;
-	case 4:
-		cf = &GL_Font8x8;
-		break;
-	default:
-		cf = &GL_Font8x12_bold;
-		break;
-	}
+    const sFONT   *cf = UiLcdHy28_Font(font);
 
 	do{
 		Xpos+=cf->Width;
@@ -985,7 +970,7 @@ uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 	return Xpos;
 }
 
-void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort Color, ushort bkColor,uchar font)
+void UiLcdHy28_PrintTextRight(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uint8_t font)
 {
 
 	uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
@@ -996,6 +981,24 @@ void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort C
 	}
 	UiLcdHy28_PrintText(Xpos, Ypos, str, Color, bkColor, font);
 }
+
+void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uint16_t bbW,const char* txt,uint32_t clr_fg,uint32_t clr_bg,uint8_t font)
+{
+    const uint16_t bbH = UiLcdHy28_TextHeight(0);
+    const uint16_t txtW = UiLcdHy28_TextWidth(txt,0);
+    const uint16_t bbOffset = txtW>bbW?0:((bbW - txtW)+1)/2;
+
+    // we draw the part of  the box not used by text.
+    UiLcdHy28_DrawFullRect(bbX,bbY,bbH,bbOffset,clr_bg);
+    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,0);
+
+    // if the text is smaller than the box, we need to draw the end part of the
+    // box
+    if (txtW<bbW) {
+      UiLcdHy28_DrawFullRect(bbX+txtW+bbOffset,bbY,bbH,bbW-(bbOffset+txtW),clr_bg);
+    }
+}
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_InitA
@@ -1009,17 +1012,17 @@ void UiLcdHy28_PrintTextRight(ushort Xpos, ushort Ypos, const char *str,ushort C
 //
 uchar UiLcdHy28_InitA(void)
 {
-   unsigned short DeviceCode;
+//   unsigned short DeviceCode;
 
    // Read LCD ID
-   DeviceCode = UiLcdHy28_ReadReg(0x0000);
-   printf("lcd id: 0x%04x\n\r",DeviceCode);
+   ts.DeviceCode = UiLcdHy28_ReadReg(0x0000);
+   printf("lcd id: 0x%04x\n\r",ts.DeviceCode);
 
-   if(DeviceCode == 0x0000)
+   if(ts.DeviceCode == 0x0000)
       return 1;
 
    // HY28A - SPI interface only (ILI9320 controller)
-   if(DeviceCode == 0x9320)
+   if(ts.DeviceCode == 0x9320)
    {
       printf("doing ILI9320 init\n\r");
 
@@ -1109,7 +1112,7 @@ uchar UiLcdHy28_InitA(void)
    }
 
    // HY28A - Parallel interface only (SPFD5408B controller)
-   if(DeviceCode == 0x5408)
+   if(ts.DeviceCode == 0x5408)
    {
       printf("doing SPFD5408B init\n\r");
 
@@ -1158,80 +1161,58 @@ uchar UiLcdHy28_InitA(void)
       UiLcdHy28_WriteReg(0x0007,0x0173);
    }
 
-   // HY28B - Parallel & Serial interface - latest model (ILI9325 controller)
-   if((DeviceCode == 0x9325) || (DeviceCode == 0x9328))
+   // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
+   if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
    {
       printf("doing ILI9325 init\n\r");
 
-      UiLcdHy28_WriteReg(0x00e7,0x0010);
-      UiLcdHy28_WriteReg(0x0000,0x0001);  // start internal osc
-      UiLcdHy28_WriteReg(0x0001,0x0000);   // 0x0100 will flip 180 degree
-      UiLcdHy28_WriteReg(0x0002,0x0700);    // power on sequence
-      UiLcdHy28_WriteReg(0x0003,(1<<12)|(1<<5)|(1<<4)|(0<<3) );
-      UiLcdHy28_WriteReg(0x0004,0x0000);
-      UiLcdHy28_WriteReg(0x0008,0x0207);
-      UiLcdHy28_WriteReg(0x0009,0x0000);
-      UiLcdHy28_WriteReg(0x000a,0x0000);    // display setting
-      UiLcdHy28_WriteReg(0x000c,0x0001);   // display setting
-      UiLcdHy28_WriteReg(0x000d,0x0000);
-      UiLcdHy28_WriteReg(0x000f,0x0000);
+      UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
+      UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion
+      UiLcdHy28_WriteReg(0x0004,0x0000);	// resize register
+      UiLcdHy28_WriteReg(0x0008,0x0207);	// set the back porch and front porch
+      UiLcdHy28_WriteReg(0x0009,0x0000);	// set non-display area refresh cycle
+      UiLcdHy28_WriteReg(0x000a,0x0000);	// FMARK function
+      UiLcdHy28_WriteReg(0x000c,0x0001);	// RGB interface setting
+      UiLcdHy28_WriteReg(0x000d,0x0000);	// frame marker position
+      UiLcdHy28_WriteReg(0x000f,0x0000);	// RGB interface polarity
 
       // Power On sequence
-      UiLcdHy28_WriteReg(0x0010,0x0000);
-      UiLcdHy28_WriteReg(0x0011,0x0007);
-      UiLcdHy28_WriteReg(0x0012,0x0000);
-      UiLcdHy28_WriteReg(0x0013,0x0000);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0010,0x1590);
-      UiLcdHy28_WriteReg(0x0011,0x0227);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0012,0x009c);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0013,0x1900);
-      UiLcdHy28_WriteReg(0x0029,0x0023);
-      UiLcdHy28_WriteReg(0x002b,0x000e);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0020,0x0000);
-      UiLcdHy28_WriteReg(0x0021,0x0000);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0030,0x0007);
-      UiLcdHy28_WriteReg(0x0031,0x0707);
-      UiLcdHy28_WriteReg(0x0032,0x0006);
-      UiLcdHy28_WriteReg(0x0035,0x0704);
-      UiLcdHy28_WriteReg(0x0036,0x1f04);
-      UiLcdHy28_WriteReg(0x0037,0x0004);
-      UiLcdHy28_WriteReg(0x0038,0x0000);
-      UiLcdHy28_WriteReg(0x0039,0x0706);
-      UiLcdHy28_WriteReg(0x003c,0x0701);
-      UiLcdHy28_WriteReg(0x003d,0x000f);
-      UiLcdHy28_Delay(100000);           // delay 100 ms
-      UiLcdHy28_WriteReg(0x0050,0x0000);
-      UiLcdHy28_WriteReg(0x0051,0x00ef);
-      UiLcdHy28_WriteReg(0x0052,0x0000);
-      UiLcdHy28_WriteReg(0x0053,0x013f);
-      UiLcdHy28_WriteReg(0x0060,0xa700);
-      UiLcdHy28_WriteReg(0x0061,0x0001);
-      UiLcdHy28_WriteReg(0x006a,0x0000);
+      UiLcdHy28_WriteReg(0x0010,0x0000);	// SAP, BT[3:0], AP, DSTB, SLP, STB
+      UiLcdHy28_WriteReg(0x0011,0x0007);	// DC1[2:0], DC0[2:0], VC[2:0]
+      UiLcdHy28_WriteReg(0x0012,0x0000);	// VREG1OUT voltage
+      UiLcdHy28_WriteReg(0x0013,0x0000);	// VDV[4:0] for VCOM amplitude
+      UiLcdHy28_Delay(200000);			// delay 200 ms
+      UiLcdHy28_WriteReg(0x0010,0x1590);	// SAP, BT[3:0], AP, DSTB, SLP, STB
+      UiLcdHy28_WriteReg(0x0011,0x0227);	// set DC1[2:0], DC0[2:0], VC[2:0]
+      UiLcdHy28_Delay(50000);			// delay 50 ms
+      UiLcdHy28_WriteReg(0x0012,0x009c);	// internal reference voltage init
+      UiLcdHy28_Delay(50000);			// delay 50 ms
+      UiLcdHy28_WriteReg(0x0013,0x1900);	// set VDV[4:0] for VCOM amplitude
+      UiLcdHy28_WriteReg(0x0029,0x0023);	// VCM[5:0] for VCOMH
+      UiLcdHy28_WriteReg(0x002b,0x000d);	// set frame rate: changed from 0e to 0d on 03/28/2016
+      UiLcdHy28_Delay(50000);			// delay 50 ms
+      UiLcdHy28_WriteReg(0x0020,0x0000);	// GRAM horizontal address
+      UiLcdHy28_WriteReg(0x0021,0x0000);	// GRAM vertical address
+      UiLcdHy28_WriteReg(0x0050,0x0000);	// horizontal GRAM start address
+      UiLcdHy28_WriteReg(0x0051,0x00ef);	// horizontal GRAM end address
+      UiLcdHy28_WriteReg(0x0052,0x0000);	// vertical GRAM start address
+      UiLcdHy28_WriteReg(0x0053,0x013f);	// vertical GRAM end address
+      UiLcdHy28_WriteReg(0x0060,0xa700);	// gate scan line
+      UiLcdHy28_WriteReg(0x0061,0x0001);	// NDL, VLE, REV
+      UiLcdHy28_WriteReg(0x006a,0x0000);	// set scrolling line
+      // partial display control
       UiLcdHy28_WriteReg(0x0080,0x0000);
       UiLcdHy28_WriteReg(0x0081,0x0000);
       UiLcdHy28_WriteReg(0x0082,0x0000);
       UiLcdHy28_WriteReg(0x0083,0x0000);
       UiLcdHy28_WriteReg(0x0084,0x0000);
       UiLcdHy28_WriteReg(0x0085,0x0000);
-
+      // panel control
       UiLcdHy28_WriteReg(0x0090,0x0010);
       UiLcdHy28_WriteReg(0x0092,0x0000);
-      UiLcdHy28_WriteReg(0x0093,0x0003);
-      UiLcdHy28_WriteReg(0x0095,0x0110);
-      UiLcdHy28_WriteReg(0x0097,0x0000);
-      UiLcdHy28_WriteReg(0x0098,0x0000);
-
-      // display on sequence
+      // activate display using 262k colours
       UiLcdHy28_WriteReg(0x0007,0x0133);
-
-      UiLcdHy28_WriteReg(0x0020,0x0000);   // Line first address 0
-      UiLcdHy28_WriteReg(0x0021,0x0000);  // Column first site 0
-   }
+      }
 
    // Test LCD
     UiLcdHy28_Test();
@@ -1388,5 +1369,5 @@ static void UiLcdHy28_Delay(ulong delay)
    ulong    i,k;
 
     for ( k = 0 ;(k < delay );k++ )
-      for ( i = 0 ;(i < US_DELAY );i++ );
+        for ( i = 0 ;(i < US_DELAY );i++ ) { asm(""); }
 }

@@ -623,7 +623,14 @@ void UiReadWriteSettingEEPROM_Filter()
       UiReadWriteSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,filter_map,0x0000);
 
     }
-
+    {
+      int idx, mem_idx;
+      for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+          UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+        }
+      }
+    }
 }
 
 void UiReadSettingEEPROM_Filter()
@@ -655,7 +662,14 @@ void UiReadSettingEEPROM_Filter()
       for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
         ts.filter_select[idx] = (filter_map&(1<<bit))!=0?1:0;
       }
-
+      {
+        int idx, mem_idx;
+        for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+          for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,0xFFFF);
+          }
+        }
+      }
     }
 
 }
@@ -681,8 +695,9 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
     // Let's use location zero - which may not work reliably, anyway!
     //
+    UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255);
     // ------------------------------------------------------------------------------------
-    // Try to read Band and Mode saved values
+    // Try to read Band and Mode saved values, but read freq-limit-settings before
     UiReadSettingEEPROM_UInt16(EEPROM_BAND_MODE,&value16,0,0,0xffff);
     {
         ts.band = value16 & 0x00FF;
@@ -861,7 +876,6 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_UInt8(EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,0,TX_AUDIO_COMPRESSION_MAX);
     UiReadSettingEEPROM_UInt8(EEPROM_TX_DISABLE,&ts.tx_disable,0,0,1);
     UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS1,&ts.misc_flags1,0,0,255);
-    UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255);
     UiReadSettingEEPROM_UInt16(EEPROM_VERSION_MINOR,&ts.version_number_minor,0,0,255);
     UiReadSettingEEPROM_UInt16(EEPROM_VERSION_NUMBER,&ts.version_number_release,0,0,255);
     UiReadSettingEEPROM_UInt16(EEPROM_VERSION_BUILD,&ts.version_number_build,0,0,255);
@@ -901,7 +915,12 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,&ts.cat_mode_active,0,0,1);
     UiReadSettingEEPROM_UInt8(EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_MAX_ENTRY,PA_LEVEL_FULL,PA_LEVEL_MAX_ENTRY);
     UiReadSettingEEPROM_UInt8(EEPROM_CAT_XLAT,&ts.xlat,1,0,1);
+    UiReadSettingEEPROM_Bool(EEPROM_DYNAMIC_TUNING,&ts.dynamic_tuning_active,0,0,1);
+    UiReadSettingEEPROM_Bool(EEPROM_SAM_ENABLE,&ts.sam_enabled,0,0,1);
 
+    if(!ts.version_number_release)			// set xlate to -12KHz at first start
+	ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
+	
     ts.dsp_inhibit = dspmode;       // restore setting
 }
 
@@ -984,7 +1003,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     // Save stored band/mode/frequency memory from RAM
     //
 
-    for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data     qqqqq
+    for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
@@ -1147,6 +1166,8 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
     UiReadWriteSettingEEPROM_UInt16(EEPROM_TUNE_POWER_LEVEL,ts.tune_power_level,PA_LEVEL_MAX_ENTRY);
     UiReadWriteSettingEEPROM_UInt16(EEPROM_CAT_XLAT,ts.xlat,1);
+    UiReadWriteSettingEEPROM_Bool(EEPROM_DYNAMIC_TUNING,ts.dynamic_tuning_active,0);
+    UiReadWriteSettingEEPROM_Bool(EEPROM_SAM_ENABLE,ts.sam_enabled,0);
 
 //  UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
     // if serial eeprom is in use write blocks to it and switch block write flag back

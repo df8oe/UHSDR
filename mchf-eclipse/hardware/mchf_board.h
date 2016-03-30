@@ -41,13 +41,13 @@
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K. Atanassov - M0NKA 2014-2016"
+#define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			0
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		27
 //
-#define 	TRX4M_VER_BUILD			6
+#define 	TRX4M_VER_BUILD			8
 //
 
 #define		ATTRIB_STRING1			"Additional Contributions by"
@@ -58,6 +58,9 @@
 //#define 	DEBUG_BUILD
 
 #define USB_AUDIO_SUPPORT // uncomment this to get experimental USB AUDIO Support
+
+// hardware specific switches
+//#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
 
 #define		WD_REFRESH_WINDOW		80
@@ -430,8 +433,9 @@ typedef struct ButtonMap
 #define DEMOD_CW			2
 #define DEMOD_AM			3
 #define	DEMOD_FM			4
-#define DEMOD_DIGI			5
-#define DEMOD_MAX_MODE			5
+#define	DEMOD_SAM			5
+#define DEMOD_DIGI			6
+#define DEMOD_MAX_MODE			6
 
 #define RTC_OSC_FREQ			32768
 
@@ -677,388 +681,15 @@ enum {
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
 
-#define MAX_VAR_ADDR 383
-//
-// *************************************************************************************************************************
-//
-// Eeprom items IDs - if updating, make sure eeprom.h list
-// is updated as well!!!
-//
-// These do NOT use "enum" as it is important that the number *NOT* change by the ineration of new variables:  All NEW variable should be placed at the END of the
-// list to maintain compatibility with older versions and the settings!
-//
-#define EEPROM_ZERO_LOC_UNRELIABLE	0		// DO NOT USE LOCATION ZERO AS IT MAY BE UNRELIABLE!!!!
-#define EEPROM_BAND_MODE		1
-#define EEPROM_FREQ_HIGH		2
-#define EEPROM_FREQ_LOW			3
-#define EEPROM_FREQ_STEP		4
-#define EEPROM_TX_AUDIO_SRC		5
-#define EEPROM_TCXO_STATE		6
-#define EEPROM_PA_BIAS			7
-#define EEPROM_AUDIO_GAIN		8
-#define EEPROM_RX_CODEC_GAIN		9
-#define EEPROM_MAX_VOLUME		10
-#define EEPROM_POWER_STATE		11
-#define EEPROM_TX_POWER_LEVEL		12
-#define EEPROM_KEYER_SPEED		13
-#define EEPROM_KEYER_MODE		14
-#define EEPROM_SIDETONE_GAIN		15
-#define EEPROM_MIC_BOOST		16
-#define	EEPROM_TX_IQ_LSB_GAIN_BALANCE	17		// TX gain balance
-#define	EEPROM_TX_IQ_LSB_PHASE_BALANCE	18		// TX phase balance
-#define	EEPROM_RX_IQ_LSB_GAIN_BALANCE	19
-#define	EEPROM_RX_IQ_LSB_PHASE_BALANCE	20
-//
-#define	EEPROM_BAND0_MODE		21		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE		22
-#define	EEPROM_BAND2_MODE		23
-#define	EEPROM_BAND3_MODE		24
-#define	EEPROM_BAND4_MODE		25
-#define	EEPROM_BAND5_MODE		26
-#define	EEPROM_BAND6_MODE		27
-#define	EEPROM_BAND7_MODE		28
-#define	EEPROM_BAND8_MODE		29
-#define	EEPROM_BAND9_MODE		30
-#define	EEPROM_BAND10_MODE		31
-#define	EEPROM_BAND11_MODE		32
-#define	EEPROM_BAND12_MODE		33
-#define	EEPROM_BAND13_MODE		34
-#define	EEPROM_BAND14_MODE		35
-#define	EEPROM_BAND15_MODE		36
-#define	EEPROM_BAND16_MODE		37
-#define	EEPROM_BAND17_MODE		38		// "Floating" General coverage band
-//
-//
-#define	EEPROM_BAND0_FREQ_HIGH		39		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH		40
-#define	EEPROM_BAND2_FREQ_HIGH		41
-#define	EEPROM_BAND3_FREQ_HIGH		42
-#define	EEPROM_BAND4_FREQ_HIGH		43
-#define	EEPROM_BAND5_FREQ_HIGH		44
-#define	EEPROM_BAND6_FREQ_HIGH		45
-#define	EEPROM_BAND7_FREQ_HIGH		46
-#define	EEPROM_BAND8_FREQ_HIGH		47
-#define	EEPROM_BAND9_FREQ_HIGH		48
-#define	EEPROM_BAND10_FREQ_HIGH		49
-#define	EEPROM_BAND11_FREQ_HIGH		50
-#define	EEPROM_BAND12_FREQ_HIGH		51
-#define	EEPROM_BAND13_FREQ_HIGH		52
-#define	EEPROM_BAND14_FREQ_HIGH		53
-#define	EEPROM_BAND15_FREQ_HIGH		54
-#define	EEPROM_BAND16_FREQ_HIGH		55
-#define	EEPROM_BAND17_FREQ_HIGH		56		// "Floating" General coverage band
-//
-//
-#define	EEPROM_BAND0_FREQ_LOW		57		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW		58
-#define	EEPROM_BAND2_FREQ_LOW		59
-#define	EEPROM_BAND3_FREQ_LOW		60
-#define	EEPROM_BAND4_FREQ_LOW		61
-#define	EEPROM_BAND5_FREQ_LOW		62
-#define	EEPROM_BAND6_FREQ_LOW		63
-#define	EEPROM_BAND7_FREQ_LOW		64
-#define	EEPROM_BAND8_FREQ_LOW		65
-#define	EEPROM_BAND9_FREQ_LOW		66
-#define	EEPROM_BAND10_FREQ_LOW		67
-#define	EEPROM_BAND11_FREQ_LOW		68
-#define	EEPROM_BAND12_FREQ_LOW		69
-#define	EEPROM_BAND13_FREQ_LOW		70
-#define	EEPROM_BAND14_FREQ_LOW		71
-#define	EEPROM_BAND15_FREQ_LOW		72
-#define	EEPROM_BAND16_FREQ_LOW		73
-#define	EEPROM_BAND17_FREQ_LOW		74		// "Floating" General coverage band
-//
-//
-#define	EEPROM_FREQ_CAL			75		// Frequency calibration
-#define	EEPROM_NB_SETTING		76		// Noise Blanker Setting
-#define	EEPROM_AGC_MODE			77		// AGC setting
-#define	EEPROM_MIC_GAIN			78		// Mic gain setting
-#define	EEPROM_LINE_GAIN		79		// Line gain setting
-#define	EEPROM_SIDETONE_FREQ		80		// Sidetone frequency (Hz)
-#define	EEPROM_SPEC_SCOPE_SPEED		81		// Spectrum Scope Speed
-#define	EEPROM_SPEC_SCOPE_FILTER	82		// Spectrum Scope filter strength
-#define	EEPROM_RX_GAIN			83		// RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
-#define	EEPROM_AGC_CUSTOM_DECAY		84		// Custom setting for AGC decay rate
-#define	EEPROM_SPECTRUM_TRACE_COLOUR	85		// Custom setting for spectrum scope trace colour
-#define	EEPROM_SPECTRUM_GRID_COLOUR	86		// Custom setting for spectrum scope grid colour
-#define	EEPROM_SPECTRUM_SCALE_COLOUR	87		// Custom setting for spectrum scope frequency scale colour
-#define	EEPROM_PADDLE_REVERSE		88		// TRUE if paddle is to be reversed
-#define	EEPROM_CW_RX_DELAY		89		// Delay after last CW element before returning to receive
-#define	EEPROM_SPECTRUM_CENTRE_GRID_COLOUR	90	// Custom setting for spectrum scope grid center marker colour
-//
-#define	EEPROM_DETECTOR_COUPLING_COEFF_2200M	91	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_630M	92	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_80M	93	// Calibration coupling coefficient for FWD/REV power sensor for 80 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_40M	94	// Calibration coupling coefficient for FWD/REV power sensor for 60/40 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_20M	95	// Calibration coupling coefficient for FWD/REV power sensor for 30/20/17 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_15M	96	// Calibration coupling coefficient for FWD/REV power sensor for 15/12/10 meters
-//
-// The following are the coefficients used to set the RF output power settings
-//
-#define	EEPROM_BAND0_5W			97		// 5 watt power setting, 80m
-#define	EEPROM_BAND1_5W			98		// 5 watt power setting, 60m
-#define	EEPROM_BAND2_5W			99		// 5 watt power setting, 40m
-#define	EEPROM_BAND3_5W			100		// 5 watt power setting, 30m
-#define	EEPROM_BAND4_5W			101		// 5 watt power setting, 20m
-#define	EEPROM_BAND5_5W			102		// 5 watt power setting, 17m
-#define	EEPROM_BAND6_5W			103		// 5 watt power setting, 15m
-#define	EEPROM_BAND7_5W			104		// 5 watt power setting, 12m
-#define	EEPROM_BAND8_5W			105		// 5 watt power setting, 10m
-#define	EEPROM_BAND9_5W			106		// 5 watt power setting, 6m
-#define	EEPROM_BAND10_5W		107		// 5 watt power setting, 4m
-#define	EEPROM_BAND11_5W		108		// 5 watt power setting, 2m
-#define	EEPROM_BAND12_5W		109		// 5 watt power setting, 70cm
-#define	EEPROM_BAND13_5W		110		// 5 watt power setting, 23cm
-#define	EEPROM_BAND14_5W		111		// 5 watt power setting, 2200m
-#define	EEPROM_BAND15_5W		112		// 5 watt power setting, 630m
-#define	EEPROM_BAND16_5W		113		// 5 watt power setting, 160m
-#define	EEPROM_BAND17_5W		114		// reserved
-//
-#define	EEPROM_BAND0_FULL		115		// "FULL" power setting, 80m
-#define	EEPROM_BAND1_FULL		116		// "FULL" power setting, 60m
-#define	EEPROM_BAND2_FULL		117		// "FULL" power setting, 40m
-#define	EEPROM_BAND3_FULL		118		// "FULL" power setting, 30m
-#define	EEPROM_BAND4_FULL		119		// "FULL" power setting, 20m
-#define	EEPROM_BAND5_FULL		120		// "FULL" power setting, 17m
-#define	EEPROM_BAND6_FULL		121		// "FULL" power setting, 15m
-#define	EEPROM_BAND7_FULL		122		// "FULL" power setting, 12m
-#define	EEPROM_BAND8_FULL		123		// "FULL" power setting, 10m
-#define	EEPROM_BAND9_FULL		124		// "FULL" power setting, 6m
-#define	EEPROM_BAND10_FULL		125		// "FULL" power setting, 4m
-#define	EEPROM_BAND11_FULL		126		// "FULL" power setting, 2m
-#define	EEPROM_BAND12_FULL		127		// "FULL" power setting, 70cm
-#define	EEPROM_BAND13_FULL		128		// "FULL" power setting, 23cm
-#define	EEPROM_BAND14_FULL		129		// "FULL" power setting, 2200m
-#define	EEPROM_BAND15_FULL		130		// "FULL" power setting, 630m
-#define	EEPROM_BAND16_FULL		131		// "FULL" power setting, 160m
-#define	EEPROM_BAND17_FULL		132		// reserved
-//
-#define	EEPROM_FILTER_300HZ_SEL		133		// Selection of 300 Hz filter
-#define EEPROM_FILTER_500HZ_SEL		134		// Selection of 500 Hz filter
-#define	EEPROM_FILTER_1K8_SEL		135		// Selection of 1.8 kHz filter
-#define	EEPROM_FILTER_2K3_SEL		136		// Selection of 2.3 kHz filter
-#define EEPROM_FILTER_3K6_SEL		137		// Selection of 3.6 kHz filter
-#define	EEPROM_FILTER_WIDE_SEL		138		// Selection of "Wide" filter (>3.6kHz)
-//
-#define	EEPROM_TX_IQ_USB_GAIN_BALANCE	139		// TX gain balance
-#define	EEPROM_TX_IQ_USB_PHASE_BALANCE	140		// TX phase balance
-#define	EEPROM_RX_IQ_USB_GAIN_BALANCE	141
-#define	EEPROM_RX_IQ_USB_PHASE_BALANCE	142
-#define	EEPROM_SENSOR_NULL		143		// Power meter sensor null calibrate
-//#define	EEPROM_REV_PWR_CAL	144		// REV power meter calibrate
-//
-#define	EEPROM_XVERTER_DISP		145		// TRUE if display is offset with transverter frequency offset
-#define	EEPROM_XVERTER_OFFSET_HIGH	146		// Frequency by which the display is offset for transverter use, high byte
-//
-#define	EEPROM_VFO_MEM_MODE		147		// settings of VFO/SPLIT/Memory configuration bits - see variable "vfo_mem_mode" for information.
-//
-#define	EEPROM_XVERTER_OFFSET_LOW	148		// Low byte of above
-//
-#define EEPROM_SPECTRUM_MAGNIFY		149		// TRUE if spectrum scope is to be magnified
-//
-#define	EEPROM_WIDE_FILT_CW_DISABLE	150		// TRUE if wide filters are to be disabled in CW mode
-#define	EEPROM_NARROW_FILT_SSB_DISABLE	151		// TRUE if narrow filters are to be disabled in SSB mode
-//
-#define	EEPROM_AM_MODE_DISABLE		152		// TRUE if AM mode is to be disabled
-//
-#define EEPROM_PA_CW_BIAS		153		// If non-zero, this is the PA bias setting when in CW mode
-//
-#define	EEPROM_SPECTRUM_DB_DIV		154		// Spectrum Scope dB/Division
-#define	EEPROM_SPECTRUM_AGC_RATE	155		// AGC setting for spectrum scope
-//
-#define	EEPROM_METER_MODE		156		// Stored setting of meter mode
-//
-#define	EEPROM_ALC_DECAY_TIME		157		// ALC Decay time
-#define	EEPROM_ALC_POSTFILT_TX_GAIN	158		// ALC post-filter TX audio gain
-//
-#define	EEPROM_STEP_SIZE_CONFIG		159		// TRUE if there is to be a line under the frequency digit indicating step size
-//
-#define	EEPROM_DSP_MODE			160		// Stores the DSP operational mode
-#define	EEPROM_DSP_NR_STRENGTH		161		// Stores the DSP Noise Reduction operational strength
-#define	EEPROM_DSP_NR_DECOR_BUFLEN	162		// DSP Noise Reduction De-correlator buffer length
-#define EEPROM_DSP_NR_FFT_NUMTAPS	163		// DSP Noise Reduction FFT number of taps
-#define	EEPROM_DSP_NOTCH_DECOR_BUFLEN	164		// DSP Notch De-correlator buffer length
-#define	EEPROM_DSP_NOTCH_CONV_RATE	165		// DSP Notch convergence rate
-//
-#define EEPROM_MAX_RX_GAIN		166		// Maximum RX gain - adjusts maximum allowed AGC gain in S-units
-#define	EEPROM_TX_AUDIO_COMPRESS	167		// TX audio compressor setting, used to calculate other values
-//
-#define	EEPROM_RX_IQ_AM_GAIN_BALANCE	168		// IQ Gain balance for AM reception
-//
-#define	EEPROM_TX_DISABLE		169		// TRUE of transmit is to be disabled
-#define	EEPROM_MISC_FLAGS1		170		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags1"
-#define	EEPROM_VERSION_NUMBER		171		// Storage of current version release - used to detect change of firmware
-#define	EEPROM_NB_AGC_TIME_CONST	172		// Noise blanker AGC time constant setting
-#define	EEPROM_CW_OFFSET_MODE		173		// CW Offset mode
-#define	EEPROM_FREQ_CONV_MODE		174		// Frequency Conversion Mode (e.g. I/Q frequency conversion done in receive/transmit to offset from zero)
-#define	EEPROM_LSB_USB_AUTO_SELECT	175		// Auto selection of LSB/USB above/below 10 MHz (including 60 meters)
-#define	EEPROM_VERSION_BUILD		176		// Storage of current version build number - used to detect change of firmware
-#define	EEPROM_LCD_BLANKING_CONFIG	177		// Configuration of automatic LCD blanking mode settings
-#define	EEPROM_VOLTMETER_CALIBRATE	178		// Holder for calibration of the on-screen voltmeter
-#define	EEPROM_WATERFALL_COLOR_SCHEME	179		// Color scheme for waterfall display
-#define	EEPROM_WATERFALL_VERTICAL_STEP_SIZE	180	// Number of vertical steps of waterfall per iteration
-#define	EEPROM_WATERFALL_OFFSET		181		// Palette offset for waterfall
-#define	EEPROM_WATERFALL_CONTRAST	182		// Palette contrast multiplier for waterfall
-//
-// VFO A storage
-//
-#define	EEPROM_BAND0_MODE_A		183		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE_A		184
-#define	EEPROM_BAND2_MODE_A		185
-#define	EEPROM_BAND3_MODE_A		186
-#define	EEPROM_BAND4_MODE_A		187
-#define	EEPROM_BAND5_MODE_A		188
-#define	EEPROM_BAND6_MODE_A		189
-#define	EEPROM_BAND7_MODE_A		190
-#define	EEPROM_BAND8_MODE_A		191
-#define	EEPROM_BAND9_MODE_A		192
-#define	EEPROM_BAND10_MODE_A		193
-#define	EEPROM_BAND11_MODE_A		194
-#define	EEPROM_BAND12_MODE_A		195
-#define	EEPROM_BAND13_MODE_A		196
-#define	EEPROM_BAND14_MODE_A		197
-#define	EEPROM_BAND15_MODE_A		198
-#define	EEPROM_BAND16_MODE_A		199
-#define	EEPROM_BAND17_MODE_A		200		// "Floating" General coverage band
-//
-#define	EEPROM_BAND0_FREQ_HIGH_A	201		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH_A	202
-#define	EEPROM_BAND2_FREQ_HIGH_A	203
-#define	EEPROM_BAND3_FREQ_HIGH_A	204
-#define	EEPROM_BAND4_FREQ_HIGH_A	205
-#define	EEPROM_BAND5_FREQ_HIGH_A	206
-#define	EEPROM_BAND6_FREQ_HIGH_A	207
-#define	EEPROM_BAND7_FREQ_HIGH_A	208
-#define	EEPROM_BAND8_FREQ_HIGH_A	209
-#define	EEPROM_BAND9_FREQ_HIGH_A	210
-#define	EEPROM_BAND10_FREQ_HIGH_A	211
-#define	EEPROM_BAND11_FREQ_HIGH_A	212
-#define	EEPROM_BAND12_FREQ_HIGH_A	213
-#define	EEPROM_BAND13_FREQ_HIGH_A	214
-#define	EEPROM_BAND14_FREQ_HIGH_A	215
-#define	EEPROM_BAND15_FREQ_HIGH_A	216
-#define	EEPROM_BAND16_FREQ_HIGH_A	217
-#define	EEPROM_BAND17_FREQ_HIGH_A	218		// "Floating" General coverage band
-//
-#define	EEPROM_BAND0_FREQ_LOW_A		219		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW_A		220
-#define	EEPROM_BAND2_FREQ_LOW_A		221
-#define	EEPROM_BAND3_FREQ_LOW_A		222
-#define	EEPROM_BAND4_FREQ_LOW_A		223
-#define	EEPROM_BAND5_FREQ_LOW_A		224
-#define	EEPROM_BAND6_FREQ_LOW_A		225
-#define	EEPROM_BAND7_FREQ_LOW_A		226
-#define	EEPROM_BAND8_FREQ_LOW_A		227
-#define	EEPROM_BAND9_FREQ_LOW_A		228
-#define	EEPROM_BAND10_FREQ_LOW_A	229
-#define	EEPROM_BAND11_FREQ_LOW_A	230
-#define	EEPROM_BAND12_FREQ_LOW_A	231
-#define	EEPROM_BAND13_FREQ_LOW_A	232
-#define	EEPROM_BAND14_FREQ_LOW_A	233
-#define	EEPROM_BAND15_FREQ_LOW_A	234
-#define	EEPROM_BAND16_FREQ_LOW_A	235
-#define	EEPROM_BAND17_FREQ_LOW_A	236		// "Floating" General coverage band
-//
-// VFO B storage
-//
-#define	EEPROM_BAND0_MODE_B		237		// Band/mode/filter memory per-band - bands indexed from here
-#define	EEPROM_BAND1_MODE_B		238
-#define	EEPROM_BAND2_MODE_B		239
-#define	EEPROM_BAND3_MODE_B		240
-#define	EEPROM_BAND4_MODE_B		241
-#define	EEPROM_BAND5_MODE_B		242
-#define	EEPROM_BAND6_MODE_B		243
-#define	EEPROM_BAND7_MODE_B		244
-#define	EEPROM_BAND8_MODE_B		245
-#define	EEPROM_BAND9_MODE_B		246
-#define	EEPROM_BAND10_MODE_B		247
-#define	EEPROM_BAND11_MODE_B		248
-#define	EEPROM_BAND12_MODE_B		249
-#define	EEPROM_BAND13_MODE_B		250
-#define	EEPROM_BAND14_MODE_B		251
-#define	EEPROM_BAND15_MODE_B		252
-#define	EEPROM_BAND16_MODE_B		253
-#define	EEPROM_BAND17_MODE_B		254		// "Floating" General coverage band
-//
-//
-#define	EEPROM_BAND0_FREQ_HIGH_B	255		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_HIGH_B	256
-#define	EEPROM_BAND2_FREQ_HIGH_B	257
-#define	EEPROM_BAND3_FREQ_HIGH_B	258
-#define	EEPROM_BAND4_FREQ_HIGH_B	259
-#define	EEPROM_BAND5_FREQ_HIGH_B	260
-#define	EEPROM_BAND6_FREQ_HIGH_B	261
-#define	EEPROM_BAND7_FREQ_HIGH_B	262
-#define	EEPROM_BAND8_FREQ_HIGH_B	263
-#define	EEPROM_BAND9_FREQ_HIGH_B	264
-#define	EEPROM_BAND10_FREQ_HIGH_B	265
-#define	EEPROM_BAND11_FREQ_HIGH_B	266
-#define	EEPROM_BAND12_FREQ_HIGH_B	267
-#define	EEPROM_BAND13_FREQ_HIGH_B	268
-#define	EEPROM_BAND14_FREQ_HIGH_B	269
-#define	EEPROM_BAND15_FREQ_HIGH_B	270
-#define	EEPROM_BAND16_FREQ_HIGH_B	271
-#define	EEPROM_BAND17_FREQ_HIGH_B	272		// "Floating" General coverage band
-//
-//
-#define	EEPROM_BAND0_FREQ_LOW_B		273		// Per-band frequency, high word - bands indexed from here
-#define	EEPROM_BAND1_FREQ_LOW_B		274
-#define	EEPROM_BAND2_FREQ_LOW_B		275
-#define	EEPROM_BAND3_FREQ_LOW_B		276
-#define	EEPROM_BAND4_FREQ_LOW_B		277
-#define	EEPROM_BAND5_FREQ_LOW_B		278
-#define	EEPROM_BAND6_FREQ_LOW_B		279
-#define	EEPROM_BAND7_FREQ_LOW_B		280
-#define	EEPROM_BAND8_FREQ_LOW_B		281
-#define	EEPROM_BAND9_FREQ_LOW_B		282
-#define	EEPROM_BAND10_FREQ_LOW_B	283
-#define	EEPROM_BAND11_FREQ_LOW_B	284
-#define	EEPROM_BAND12_FREQ_LOW_B	285
-#define	EEPROM_BAND13_FREQ_LOW_B	286
-#define	EEPROM_BAND14_FREQ_LOW_B	287
-#define	EEPROM_BAND15_FREQ_LOW_B	288
-#define	EEPROM_BAND16_FREQ_LOW_B	289
-#define	EEPROM_BAND17_FREQ_LOW_B	290		// "Floating" General coverage band
-//
-#define	EEPROM_WATERFALL_SPEED		291		// Spectrum Scope Speed
-#define	EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST	292	// adjustment for no-signal conditions of spectrum scope
-#define	EEPROM_WATERFALL_NOSIG_ADJUST	293		// adjustment for no-signal conditions of waterfall
-#define EEPROM_DSP_NOTCH_FFT_NUMTAPS	294		// DSP Notch FFT number of taps
-#define	EEPROM_WATERFALL_SIZE		295		// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
-#define EEPROM_FFT_WINDOW		296		// FFT Window information (lower nybble currently used - upper nybble reserved)
-#define	EEPROM_TX_PTT_AUDIO_MUTE	297		// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
-#define	EEPROM_MISC_FLAGS2		298		// Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
-#define	EEPROM_FILTER_DISP_COLOUR	299		// This contains the color of the line under the spectrum/waterfall display
-#define	EEPROM_TX_IQ_AM_GAIN_BALANCE	300		// IQ Gain balance for AM transmission
-#define	EEPROM_TX_IQ_FM_GAIN_BALANCE	301		// IQ Gain balance for FM transmission
-#define	EEPROM_FM_SUBAUDIBLE_TONE_GEN	302		// index for storage of subaudible tone generation
-#define	EEPROM_FM_TONE_BURST_MODE	303		// tone burst mode
-#define EEPROM_FM_SQUELCH_SETTING	304		// FM squelch setting
-#define EEPROM_FM_RX_BANDWIDTH		305		// bandwidth setting for FM reception
-#define	EEPROM_RX_IQ_FM_GAIN_BALANCE	306		// IQ Gain balance for AM reception
-#define	EEPROM_FM_SUBAUDIBLE_TONE_DET	307		// index for storage of subaudible tone detection
-#define	EEPROM_KEYBOARD_BEEP_FREQ	308		// keyboard beep frequency (in Hz)
-#define EEPROM_BEEP_LOUDNESS		309		// loudness of beep (keyboard, sidetone test)
-#define	EEPROM_VERSION_MINOR		310		// Storage of current minor version number - used to detect change of firmware
-
-#define	EEPROM_DETECTOR_COUPLING_COEFF_160M	311	// Calibration coupling coefficient for FWD/REV power sensor for 160 meters
-#define	EEPROM_DETECTOR_COUPLING_COEFF_6M	312	// Calibration coupling coefficient for FWD/REV power sensor for 6 meters
-#define EEPROM_TUNE_POWER_LEVEL		313
-#define EEPROM_CAT_MODE_ACTIVE		314
-#define EEPROM_CAT_XLAT			315
-#define	EEPROM_FILTER_2K7_SEL		316		// Selection of 2.7 kHz filter
-#define	EEPROM_FILTER_2K9_SEL		317		// Selection of 2.9 kHz filter
-#define	EEPROM_FILTER_1K4_SEL		318		//
-#define	EEPROM_FILTER_1K6_SEL		319		//
-#define	EEPROM_FILTER_2K1_SEL		320		//
-#define	EEPROM_FILTER_2K5_SEL		321		//
-#define	EEPROM_FILTER_3K2_SEL		322		//
-#define	EEPROM_FILTER_3K4_SEL		323		//
-#define	EEPROM_FILTER_3K8_SEL		324		//
-#define	EEPROM_FILTER_1_SEL			325		// selection of filters 4k0 to 6k0
-#define	EEPROM_FILTER_2_SEL			326		// selection of filters 6k5 to 10k0
-
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
+
+//
+//
+// NOTE:  EEPROM addresses up to 383 are currently defined
+//
+// *******************************************************************************************************
+//
+
 
 
 enum {
@@ -1067,13 +698,6 @@ enum {
   DISPLAY_HY28B_SPI,
   DISPLAY_HY28B_PARALLEL
 };
-
-//
-//
-// NOTE:  EEPROM addresses up to 383 are currently defined
-//
-// *******************************************************************************************************
-//
 
 typedef struct Gain_s {
   uint8_t value;
@@ -1148,6 +772,7 @@ typedef struct TransceiverState
 	int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
 	//
 	int		rx_iq_am_gain_balance;		// setting for AM RX IQ gain balance
+	int		rx_iq_am_phase_balance;		// setting for AM RX IQ phase balance
 	int		rx_iq_fm_gain_balance;		// setting for FM RX IQ gain balance
 	//
 	//
@@ -1171,7 +796,7 @@ typedef struct TransceiverState
 
 	// Transceiver menu mode variables
 	uchar	menu_mode;		// TRUE if in menu mode
-	uchar	menu_item;		// Used to indicate specific menu item
+	int16_t	menu_item;		// Used to indicate specific menu item
 	int		menu_var;		// Used to change specific menu item
 	bool	menu_var_changed;	// TRUE if something changed in a menu and that an EEPROM save should be done!
 
@@ -1203,6 +828,12 @@ typedef struct TransceiverState
 	uchar	filter_id;
 	//
 	uint8_t   filter_select[AUDIO_FILTER_NUM];
+
+
+#define FILTER_PATH_MEM_MAX 5
+	uint16_t   filter_path_mem[FILTER_MODE_MAX][FILTER_PATH_MEM_MAX];
+
+	uint16_t  filter_path;
 	//
 
 	uchar	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
@@ -1329,93 +960,98 @@ typedef struct TransceiverState
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
+	#define MISC_FLAGS1_WFALL_SCOPE_TOGGLE 0x80
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
-										// LSB = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
-										// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
-										// LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled
-											//	when translate mode is DISABLED
-										// LSB+3 = 1 if AM TX has transmit filter DISABLED
-										// LSB+4 = 1 if FWD/REV A/D inputs from RF power detectors are to be reversed
-										// LSB+5 = 1 if Frequency tuning is to be relaxed
-										// LSB+6 = 1 if SSB TX has transmit filter DISABLED
-										// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
+							// LSB   = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
+							// LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
+							// LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled
+							//	when translate mode is DISABLED
+							// LSB+3 = 1 if AM TX has transmit filter DISABLED
+							// LSB+4 = 1 if FWD/REV A/D inputs from RF power detectors are to be reversed
+							// LSB+5 = 1 if Frequency tuning is to be relaxed
+							// LSB+6 = 1 if SSB TX has transmit filter DISABLED
+							// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-										// LSB = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
-										// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
-										// LSB+2 = 1 if key/button beep is enabled
-										// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
-	ulong	sysclock;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
-										// is NEVER reset and is used for timing certain events.
-	uint16_t	version_number_minor;	// version number - minor - used to hold version number and detect change
-	uint16_t	version_number_build;	// version number - build - used to hold version number and detect change
-	uint16_t	version_number_release;	// version number - release - used to hold version number and detect change
+							// LSB   = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
+							// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
+							// LSB+2 = 1 if key/button beep is enabled
+							// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
+	ulong	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
+							// is NEVER reset and is used for timing certain events.
+	uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
+	uint16_t	version_number_build;		// version number - build - used to hold version number and detect change
+	uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
 	uchar	nb_agc_time_const;			// used to calculate the AGC time constant
 	uchar	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
-	bool	cw_lsb;						// flag used to indicate that CW is to operate in LSB when TRUE
+	bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
 	uchar	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
-	uchar	lsb_usb_auto_select;		// holds setting of LSB/USB auto-select above/below 10 MHz
+	uchar	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
 	bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
-	ulong	hold_off_spectrum_scope;	// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
+	ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
 	ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
 	bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
-	bool	freq_cal_adjust_flag;		// set TRUE if frequency calibration is in process
+	bool	freq_cal_adjust_flag;			// set TRUE if frequency calibration is in process
 	bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
-	bool	rx_muting;					// set TRUE if audio output is to be muted
+	bool	rx_muting;				// set TRUE if audio output is to be muted
 	ulong	rx_blanking_time;			// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
 	ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
-										// LSB+6 (0x40):  0 = VFO A, 1 = VFO B
-										// LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
-	ulong	voltmeter_calibrate;		// used to calibrate the voltmeter
+							// LSB+6 (0x40):  0 = VFO A, 1 = VFO B
+							// LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
+	ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
 	bool	thread_timer;				// used to trigger the thread timing (e.g. "driver_thread()")
-	uchar	waterfall_color_scheme;		// stores waterfall color scheme
-	uchar	waterfall_vert_step_size;	// vertical step size in waterfall mode
+	uchar	waterfall_color_scheme;			// stores waterfall color scheme
+	uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
 	ulong	waterfall_offset;			// offset for waterfall display
 	ulong	waterfall_contrast;			// contrast setting for waterfall display
-	uchar	spectrum_scope_scheduler;	// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
-	uchar	spectrum_scope_nosig_adjust;	// Adjustment for no signal adjustment conditions for spectrum scope
-	uchar	waterfall_nosig_adjust;		// Adjustment for no signal adjustment conditions for waterfall
+	uchar	spectrum_scope_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+	uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
+	uchar	waterfall_nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 	uchar	waterfall_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 	uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
-	bool	dvmode;						// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
-	uchar	tx_audio_muting_timing;		// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-	ulong	tx_audio_muting_timer;		// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+	bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
+	uchar	tx_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
+	ulong	tx_audio_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
 	uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
-	bool	tx_audio_muting_flag;		// when TRUE, audio is to be muted after PTT/keyup
+	bool	tx_audio_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
 	bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
-	bool	mem_disp;					// when TRUE, memory display is enabled
-	bool	load_eeprom_defaults;		// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-	ulong	fm_subaudible_tone_gen_select;	// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+	bool	mem_disp;				// when TRUE, memory display is enabled
+	bool	load_eeprom_defaults;			// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	ulong	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
 	uchar	fm_tone_burst_mode;			// this is the setting for the tone burst generator
-	ulong	fm_tone_burst_timing;		// this is used to time/schedule the duration of a tone burst
+	ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
 	uchar	fm_sql_threshold;			// squelch threshold "dial" setting
 	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
-	ulong	fm_subaudible_tone_det_select;	// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+	ulong	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
 	bool	beep_active;				// TRUE if beep is active
 	ulong	beep_frequency;				// beep frequency, in Hz
 	ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
 	uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
-	bool	load_freq_mode_defaults;	// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+	bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 	bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
-	bool	mic_bias;			// TRUE = mic bias on
-	uchar	ser_eeprom_type;		// serial eeprom type
-	uchar	ser_eeprom_in_use;		// 0xFF = not in use, 0x1 = in use
-	uint8_t* eeprombuf;			// pointer to copy of config in RAM
-	uchar 	tp_present;			// touchscreen present = 1, absent = 0
-	uint8_t tp_x;				// touchscreen x coordinate
-	uint8_t tp_y;				// touchscreen y coordinate
-	bool	show_tp_coordinates;		// show coordinates on LCD
-	uchar	rfmod_present;			// 0 = not present
-	uchar	vhfuhfmod_present;		// 0 = not present
-	uchar	multi;				// actual translate factor
-	uchar	tune_power_level;		// TX power in antenna tuning function
-	uchar	power_temp;			// temporary tx power if tune is different from actual tx power
-	bool	dsp_enabled;			// NR disabled
-	uchar	xlat;				// CAT <> IQ-Audio
-	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
-//	uint16_t df8oe_test;			// only debugging use
+	bool	mic_bias;				// TRUE = mic bias on
+	uchar	ser_eeprom_type;			// serial eeprom type
+	uchar	ser_eeprom_in_use;			// 0xFF = not in use, 0x1 = in use
+	uint8_t* eeprombuf;				// pointer to copy of config in RAM
+	uchar 	tp_present;				// touchscreen present = 1, absent = 0
+	uint8_t tp_x;					// touchscreen x coordinate
+	uint8_t tp_y;					// touchscreen y coordinate
+	bool	show_tp_coordinates;			// show coordinates on LCD
+	uchar	rfmod_present;				// 0 = not present
+	uchar	vhfuhfmod_present;			// 0 = not present
+	uchar	multi;					// actual translate factor
+	uchar	tune_power_level;			// TX power in antenna tuning function
+	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
+	bool	dsp_enabled;				// NR disabled
+	bool	sam_enabled;				// demodulation mode SAM enabled
+	uchar	xlat;					// CAT <> IQ-Audio
+	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
+//	uint16_t df8oe_test;				// only debugging use
 
-	uint8_t display_type;           // existence/identification of display type
-	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
+	uint8_t display_type;           		// existence/identification of display type
+	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
+	unsigned short DeviceCode;			// LCD ident code
+	bool USE_NEW_PHASE_CORRECTION; // used to test new phase correction
+	bool encoder3state;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

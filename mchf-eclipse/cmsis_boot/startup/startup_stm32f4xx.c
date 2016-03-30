@@ -22,7 +22,7 @@
 /*----------Stack Configuration-----------------------------------------------*/
 #define STACK_SIZE       0x00000400      /*!< Stack size (in Words)           */
 __attribute__ ((section(".co_stack")))
-unsigned long pulStack[STACK_SIZE];
+  unsigned long pulStack[STACK_SIZE];
 
 
 /*----------Macro definition--------------------------------------------------*/
@@ -134,7 +134,7 @@ extern unsigned long _edata;     /*!< End address for the .data section       */
 extern unsigned long _sbss;      /*!< Start address for the .bss section      */
 extern unsigned long _ebss;      /*!< End address for the .bss section        */
 extern void _eram;               /*!< End address for ram                     */
-
+extern void* __stack;
 
 /*----------Function prototypes-----------------------------------------------*/
 extern int main(void);           /*!< The entry point for the application.    */
@@ -153,8 +153,9 @@ void (* const g_pfnVectors[])(void) =
 {
   /*----------Core Exceptions------------------------------------------------ */
   //(void *)&pulStack[STACK_SIZE-1],     /*!< The initial stack pointer         */
-  (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
-
+  // (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
+    // put stack end at end of ram.
+  (void*)&__stack - sizeof(void*),
   Reset_Handler,             /*!< Reset Handler                               */
   NMI_Handler,               /*!< NMI Handler                                 */
   HardFault_Handler,         /*!< Hard Fault Handler                          */
@@ -289,6 +290,18 @@ void Default_Reset_Handler(void)
         "    it      lt\n"
         "    strlt   r2, [r0], #4\n"
         "    blt     zero_loop");
+  /* Zero fill the ccm segment.  This is done with inline assembly since this
+     will clear the value of pulDest if it is not kept in a register. */
+  __asm("  ldr     r0, =_sccm\n"
+        "  ldr     r1, =_eccm\n"
+        "  mov     r2, #0\n"
+        "  .thumb_func\n"
+        "zero_loop_ccm:\n"
+        "    cmp     r0, r1\n"
+        "    it      lt\n"
+        "    strlt   r2, [r0], #4\n"
+        "    blt     zero_loop_ccm");
+
 #ifdef __FPU_USED
   /* Enable FPU.*/ 
   __asm("  LDR.W R0, =0xE000ED88\n"
