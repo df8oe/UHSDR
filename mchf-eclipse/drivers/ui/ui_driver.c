@@ -1037,12 +1037,17 @@ static void UiDriverProcessKeyboard(void)
 				else
 					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// update menu display to remove indicator to do power-off to save EEPROM value
 				break;
-			case BUTTON_F2_PRESSED:	// Press-and-hold button F3
+			case BUTTON_F2_PRESSED:	// Press-and-hold button F2
 				// Move to the BEGINNING of the current menu structure
 				if(ts.menu_mode)	{		// Are we in menu mode?
 				  UiMenu_RenderFirstScreen();
+				} else {
+					// Not in MENU mode - select the METER mode
+				    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+
+				    UiDriverDeleteSMeter();
+					UiDriverCreateSMeter();	// redraw meter
 				}
-				else sc.snap = 1;
 				break;
 			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
 				//
@@ -1510,11 +1515,10 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 		if(ts.menu_mode)	{		// Button F2 restores default setting of selected item
           UiMenu_RenderPrevScreen();
 		}
-		else	{	// Not in MENU mode - select the METER mode
-		    incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+		else	{
+			sc.snap = 1;
 
-		    UiDriverDeleteSMeter();
-			UiDriverCreateSMeter();	// redraw meter
+
 		}
 	}
 
