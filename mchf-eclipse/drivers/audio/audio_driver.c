@@ -1651,37 +1651,25 @@ static void audio_lms_noise_reduction(int16_t psize)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-// FIXME:
-
-// it now works! But it has to be finetuned for greater accuracy DD4WH, 2016_03_30
-
-// * snap_carrier is called every time in the audio_rx_driver --> DONE
-// * sc.snap is assigned 1, if button for snap carrier has been pressed --> DONE
-// * if sc.snap = 1, the audio_rx_driver collects the IQ samples for the FFT and when ready, sets sc.state = 1;
-// * call init FFT only once at startup of mcHF --> DONE
-// * only call frequency update once --> DONE
-// * only call FFT once, but choose the right bins for bin1, bin2, bin3 ;-) --> DONE
-// * experiment with gain: 1000/2000/3000 . . .
-// * change from long press of button to short press --> DONE
-
 static void audio_snap_carrier (void)
 {
 	if (!sc.snap) return; // button has not been pressed
 	if (!sc.state) return; // FFT samples have not yet been collected
 
 	int Lbin, Ubin;
-	int bw_LSB = 0;
-	int maximum = 0;
+	float Lbin_f, Ubin_f;
+	uint16_t bw_LSB = 0;
+	float32_t maximum = 0;
 	int posbin = 0;
 	int maxbin = 1;
-	int bw_USB = 0;
-	float bin_BW = 48000.0 * 2.0 / FFT_IQ_BUFF_LEN2; // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	uint16_t bw_USB = 0;
+	float bin_BW = (float) (48000.0 * 2 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
 	long i;
 	float delta1, delta2;
 	ulong freq = df.tune_new / 4;
 	float bin1, bin2, bin3;
 
-	// now init of FFT structure has been moved to audio_driver_init()
+	// init of FFT structure has been moved to audio_driver_init()
 
 	//	1. determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
 
@@ -1703,7 +1691,7 @@ static void audio_snap_carrier (void)
 			posbin = (FFT_IQ_BUFF_LEN2 / 4) + (FFT_IQ_BUFF_LEN2 / 8);
 		}
 
-// 	3. calculate upper and lower limit for determination of maximum magnitude
+		// 	3. calculate upper and lower limit for determination of maximum magnitude
 
 //		determine bandwith separately for lower and upper sideband
 
@@ -1722,17 +1710,19 @@ static void audio_snap_carrier (void)
 			bw_USB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 		}
 
-		Lbin = posbin - (bw_LSB / bin_BW); // the bin on the lower sideband side
-		Ubin = posbin + (bw_USB / bin_BW); // the bin on the upper sideband side
-//		Lbin = posbin - 100;
-//		Ubin = posbin + 100;
 
+		Lbin_f = posbin - (bw_LSB / bin_BW); // the bin on the lower sideband side
+		// uint16_t divided by float ???
+		Ubin_f = posbin + (bw_USB / bin_BW); // the bin on the upper sideband side
+
+		Lbin = (int) Lbin_f;
+		Ubin = (int) Ubin_f;
 // 	FFT preparation
-
-		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)(1/ads.codec_gain_calc * 1000), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
+		// we do not need to scale for this purpose !
+//		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
 		//
-// do windowing function on input data to get less "Bin Leakage" on FFT data
-		// Hamming window
+		// do windowing function on input data to get less "Bin Leakage" on FFT data
+		//
 		for(i = 0; i < FFT_IQ_BUFF_LEN2; i++){
 			//	Hanning 1.36
 			//sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
@@ -1752,7 +1742,9 @@ static void audio_snap_carrier (void)
 		//
 		// putting the bins in frequency-sequential order!
 		// it puts the Magnitude samples into FFT_Samples again
-		// the samples are centred at FFT_IQ_BUFF_LEN2, this
+		// the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
+		// when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
+		//
 			for(i = 0; i < (FFT_IQ_BUFF_LEN2/2); i++)	{
 				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of magnitude data
 					sc.FFT_Samples[i] = sc.FFT_MagData[i + FFT_IQ_BUFF_LEN2/4];	// get data
@@ -1769,21 +1761,21 @@ static void audio_snap_carrier (void)
             maximum = sc.FFT_Samples[c];
             maxbin = c;
         }}
-        maximum = 0; // reset maximum for next time ;-)
+        maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now set frequency to that bin
         delta1 = (maxbin - posbin) * bin_BW;
         // set frequency variable
 
-        // estimate frequ of carrier by three-point-interpolation of bins around maxbin
+        // estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		bin1 = sc.FFT_Samples[maxbin-1];
    		bin2 = sc.FFT_Samples[maxbin];
    		bin3 = sc.FFT_Samples[maxbin+1];
 
-   		if (bin1+bin2+bin3==0) bin1=1; // prevent divide by 0
+   		if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-        delta2 = 1.0 * (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3)) + 7.0;
+        delta2 = 13.0 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable
         freq = freq + delta1 + delta2;
         // set frequency of Si570 with 4 * dialfrequency
