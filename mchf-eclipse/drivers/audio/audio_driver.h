@@ -51,6 +51,12 @@
 #define CODEC_DEFAULT_GAIN		0x1F	// Gain of line input to start with
 #define	ADC_CLIP_WARN_THRESHOLD	4096	// This is at least 12dB below the clipping threshold of the A/D converter itself
 //
+//
+//
+#define SCALING_FACTOR_IQ_PHASE_ADJUST 3000.0
+#define SCALING_FACTOR_IQ_AMPLITUDE_ADJUST 4096.0
+
+//
 // Audio driver publics
 typedef struct AudioDriverState
 {
