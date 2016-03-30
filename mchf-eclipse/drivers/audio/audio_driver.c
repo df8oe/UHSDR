@@ -1663,7 +1663,7 @@ static void audio_snap_carrier (void)
 	int posbin = 0;
 	int maxbin = 1;
 	uint16_t bw_USB = 0;
-	float bin_BW = (float) (48000.0 * 2 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	float bin_BW = (float) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
 	long i;
 	float delta1, delta2;
 	ulong freq = df.tune_new / 4;
