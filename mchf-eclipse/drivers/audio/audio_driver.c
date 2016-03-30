@@ -1639,78 +1639,83 @@ static void audio_snap_carrier (void)
 	if (!sc.snap) return; // button has not been pressed
 	if (!sc.state) return; // FFT samples have not yet been collected
 
-	int Lbin, Ubin;
-//	float Lbin_f, Ubin_f;
-	uint16_t bw_LSB = 0;
-	uint16_t bw_USB = 0;
-	float32_t maximum = 0;
+//	int Lbin, Ubin;
+//	uint16_t bw_LSB = 0;
+//	uint16_t bw_USB = 0;
+	float32_t  Lbin, Ubin;
+	float32_t bw_LSB = 0.0;
+	float32_t bw_USB = 0.0;
+	float32_t maximum = 0.0;
+//	int posbin = 0;
+//	int maxbin = 1;
 	int posbin = 0;
-	int maxbin = 1;
-	float bin_BW = (float) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-	long i;
-	float delta1, delta2;
-	ulong freq = df.tune_new / 4; //
-	float bin1, bin2, bin3;
-
+	float32_t maxbin = 1.0;
+	float32_t bin_BW = (float32_t) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	int i;
+	float32_t delta1 = 0.0;
+	float32_t delta2 = 0.0;
+	float32_t help_freq = (float32_t)df.tune_new / 4.0;
+	ulong freq; //
+	float32_t bin1, bin2, bin3;
+	float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN2;
+	int buff_len_int = FFT_IQ_BUFF_LEN2;
 	// init of FFT structure has been moved to audio_driver_init()
 
 	//	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
 		if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
-			posbin = FFT_IQ_BUFF_LEN2 / 4; // right in the middle!
+			posbin = buff_len / 4.0; // right in the middle!
 		} // frequency translation ON
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (FFT_IQ_BUFF_LEN2 / 4) - (FFT_IQ_BUFF_LEN2 / 16);
+			posbin = (buff_len / 4.0) - (buff_len / 16.0);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (FFT_IQ_BUFF_LEN2 / 4) + (FFT_IQ_BUFF_LEN2 / 16);
+			posbin = (buff_len / 4.0) + (buff_len / 16.0);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (FFT_IQ_BUFF_LEN2 / 4) - (FFT_IQ_BUFF_LEN2 / 8);
+			posbin = (buff_len / 4.0) - (buff_len / 8.0);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (FFT_IQ_BUFF_LEN2 / 4) + (FFT_IQ_BUFF_LEN2 / 8);
+			posbin = (buff_len / 4.0) + (buff_len / 8.0);
 		}
 
 		//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
 		//	= determine bandwith separately for lower and upper sideband
 
 		if (ts.dmod_mode == DEMOD_LSB) {
-			bw_USB = 1000; // also "look" 1kHz away from carrier
-			bw_LSB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_USB = 1000.0; // also "look" 1kHz away from carrier
+			bw_LSB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 		}
 
 		if (ts.dmod_mode == DEMOD_USB) {
-			bw_LSB = 1000; // also "look" 1kHz away from carrier
-			bw_USB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_LSB = 1000.0; // also "look" 1kHz away from carrier
+			bw_USB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 		}
 
 		if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM) {
-			bw_LSB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-			bw_USB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_LSB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_USB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 		}
 
 		// calculate upper and lower limit for determination of maximum magnitude
 
-		Lbin = posbin - round(bw_LSB / bin_BW); // the bin on the lower sideband side
-		// uint16_t divided by float ???
-		Ubin = posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+		Lbin = posbin - (bw_LSB / bin_BW); // the bin on the lower sideband side
+		Ubin = posbin + (bw_USB / bin_BW); // the bin on the upper sideband side
 
-//		Lbin = (int) Lbin_f;
-//		Ubin = (int) Ubin_f;
+
 		// 	FFT preparation
 		// we do not need to scale for this purpose !
 		// arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
 		//
 		// do windowing function on input data to get less "Bin Leakage" on FFT data
 		//
-		for(i = 0; i < FFT_IQ_BUFF_LEN2; i++){
+		for(i = 0; i < buff_len_int; i++){
 			//	Hanning 1.36
 			//sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 			// Hamming 1.22
 			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 			// Blackman 1.75
-			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1))) * sc.FFT_Samples[i];
+			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
 		}
 
 		// run FFT
@@ -1718,54 +1723,78 @@ static void audio_snap_carrier (void)
 		//
 		// Calculate magnitude
 		// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
-		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(FFT_IQ_BUFF_LEN2/2));
+		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(buff_len_int/2));
 		//
 		// putting the bins in frequency-sequential order!
 		// it puts the Magnitude samples into FFT_Samples again
 		// the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
 		// when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
 		//
-			for(i = 0; i < (FFT_IQ_BUFF_LEN2/2); i++)	{
-				if(i < (FFT_IQ_BUFF_LEN2/4))	{		// build left half of magnitude data
-					sc.FFT_Samples[i] = sc.FFT_MagData[i + FFT_IQ_BUFF_LEN2/4];	// get data
+			for(i = 0; i < (buff_len_int/2); i++)	{
+				if(i < (buff_len_int/4))	{		// build left half of magnitude data
+					sc.FFT_Samples[i] = sc.FFT_MagData[i + buff_len_int/4];	// get data
 				}
 				else	{							// build right half of magnitude data
-					sc.FFT_Samples[i] = sc.FFT_MagData[i - FFT_IQ_BUFF_LEN2/4];	// get data
+					sc.FFT_Samples[i] = sc.FFT_MagData[i - buff_len_int/4];	// get data
 				}
 			}
-
+//####################################################################
+		if (sc.FFT_number == 0){
 		// look for maximum value and save the bin # for frequency delta calculation
 		int c;
-        for (c = Lbin; c <= Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+        for (c = (int)Lbin; c <= (int)Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
         if (maximum < sc.FFT_Samples[c]) {
             maximum = sc.FFT_Samples[c];
-            maxbin = c;
+            maxbin = (float32_t)c;
         }}
         maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now save first delta frequency
-        delta1 = (float)(maxbin - posbin) * bin_BW;
+        delta1 = 15.0 + (maxbin - posbin) * bin_BW;
 
+        help_freq = help_freq + delta1;
+        freq = (ulong) help_freq;
+        // set frequency of Si570 with 4 * dialfrequency
+        df.tune_new = freq * 4.0;
+        UiDriverUpdateFrequency ( 2, 0);
+//        help_freq = (float32_t)df.tune_new / 4.0;
+        sc.FFT_number = 1;
+		sc.state    = 0;
+        return;
+		} else
+		{
+// ######################################################
+//        if (sc.FFT_number != 1) {
+//        	sc.FFT_number = 1;
+ //       	return;
+ //       }
         // and now: fine-tuning:
         //	get amplitude values of the three bins around the carrier
-   		bin1 = sc.FFT_Samples[maxbin-1];
-   		bin2 = sc.FFT_Samples[maxbin];
-   		bin3 = sc.FFT_Samples[maxbin+1];
+//	   		bin1 = sc.FFT_Samples[(int)maxbin-1];
+//	   		bin2 = sc.FFT_Samples[(int)maxbin];
+//	   		bin3 = sc.FFT_Samples[(int)maxbin+1];
+
+//			posbin = posbin + 10;
+			bin1 = sc.FFT_Samples[posbin-1];
+	   		bin2 = sc.FFT_Samples[posbin];
+	   		bin3 = sc.FFT_Samples[posbin+1];
 
    		if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
    		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-        delta2 = 13.0 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+        delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable with both delta frequencies
-        freq = freq + round(delta1 + delta2);
+        help_freq = help_freq + delta2;
+        freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = freq * 4.0;
         UiDriverUpdateFrequency ( 2, 0);
 
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
         sc.snap = 0; // reset flag for button press (used in ui_driver)
-
+        sc.FFT_number = 0; // reset flag to first FFT
+}
 }
 
 //
@@ -1813,7 +1842,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 				sd.state    = 1;
 			}
 		}
-		if(sc.state == 0 && sc.snap){ // collect samples for snap carrier FFT
+		if(sc.state == 0 && sc.snap){
+			if (sc.counter == 100){
+
+			// collect samples for snap carrier FFT
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for snap carrier
 			sc.samp_ptr++;
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src));
@@ -1823,7 +1855,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			{
 				sc.samp_ptr = 0;
 				sc.state    = 1;
+				sc.counter = 0;
 			}
+			} else sc.counter = sc.counter +1;
 		}
 
 		//
@@ -1850,7 +1884,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 	}
 
-	audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
+	if (sc.snap && sc.counter == 0)
+			audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
 	// if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
 	// if one or both are false, it immediately returns here
 
