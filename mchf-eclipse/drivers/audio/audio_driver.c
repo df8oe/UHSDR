@@ -299,12 +299,12 @@ void audio_driver_set_rx_audio_filter(void)
 	// select a new filter path as this sets the last used/selected memory for a demod mode.
 
 	// if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path)== false) {
-	  ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-	// }
-	// to do: different IIR filters for AM to enable side-band selected AM demodulation. DD4WH march, 5th, 2016
-	// to do: implement switching according to FilterPathInfo
-	// ts.filter_id & ts.dmod_mode & ts.filter_select
 
+	ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+
+	// }
+
+#if 0
 	if (ts.filter_path == 0 ) {  // for the moment, everything remains as-is until new filter path structure works
 	  switch(ts.filter_id)	{
 		case AUDIO_300HZ:
@@ -620,7 +620,9 @@ void audio_driver_set_rx_audio_filter(void)
 	}  // HERE (after the "else") the new filter switching starts !!!
 
 	else {
-	  if (FilterPathInfo[ts.filter_path].pre_instance != NULL) {
+#endif
+
+		if (FilterPathInfo[ts.filter_path].pre_instance != NULL) {
         // if we turn on a filter, set the number of members to the number of elements last
 	    IIR_PreFilter.pkCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pkCoeffs; // point to reflection coefficients
 	    IIR_PreFilter.pvCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pvCoeffs; // point to ladder coefficients
@@ -631,8 +633,6 @@ void audio_driver_set_rx_audio_filter(void)
 	    IIR_PreFilter.pkCoeffs = NULL; // point to reflection coefficients
 	    IIR_PreFilter.pvCoeffs = NULL; // point to ladder coefficients
 	  }
-	}
-
 
 	//
 	// Initialize IIR filter state buffer
@@ -645,13 +645,14 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Initialize IIR antialias filter state buffer
  	//
-	// TODO: Review FilterPath Code --> DONE, DD4WH 2016_03_13
+#if 0	// TODO: Review FilterPath Code --> DONE, DD4WH 2016_03_13
 	if (ts.filter_path == 0) {
 	  IIR_AntiAlias.pkCoeffs = IIR_aa_5k.pkCoeffs;	// point to reflection coefficients
 	  IIR_AntiAlias.pvCoeffs = IIR_aa_5k.pvCoeffs;	// point to ladder coefficients
       IIR_AntiAlias.numStages = IIR_aa_5k.numStages;        // number of stages
 	} else {
-	  if (FilterPathInfo[ts.filter_path].iir_instance != NULL) {
+#endif
+		if (FilterPathInfo[ts.filter_path].iir_instance != NULL) {
 	    // if we turn on a filter, set the number of members to the number of elements last
         IIR_AntiAlias.pkCoeffs = FilterPathInfo[ts.filter_path].iir_instance->pkCoeffs; // point to reflection coefficients
         IIR_AntiAlias.pvCoeffs = FilterPathInfo[ts.filter_path].iir_instance->pvCoeffs; // point to ladder coefficients
@@ -662,7 +663,7 @@ void audio_driver_set_rx_audio_filter(void)
 	    IIR_AntiAlias.pkCoeffs = NULL;
 	    IIR_AntiAlias.pvCoeffs = NULL;
 	  }
-	}
+
 
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	{	// initialize state buffer to zeroes
     	iir_aa_state[i] = 0;
@@ -672,17 +673,9 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Initialize high-pass filter used for the FM noise squelch
 	//
-    // TODO: Review FilterPath Code
-	// NOT NECESSARY: this filter is always the same in FM !
-	if (ts.filter_path == 0) {
-	  IIR_Squelch_HPF.pkCoeffs = IIR_15k_hpf.pkCoeffs;	// point to reflection coefficients
-	  IIR_Squelch_HPF.pvCoeffs = IIR_15k_hpf.pvCoeffs;	// point to ladder coefficients
-      IIR_Squelch_HPF.numStages = IIR_15k_hpf.numStages;        // number of stages
-	} else {
 	  IIR_Squelch_HPF.pkCoeffs = IIR_15k_hpf.pkCoeffs;   // point to reflection coefficients
 	  IIR_Squelch_HPF.pvCoeffs = IIR_15k_hpf.pvCoeffs;   // point to ladder coefficients
       IIR_Squelch_HPF.numStages = IIR_15k_hpf.numStages;      // number of stages
-	}
 	//
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	{	// initialize state buffer to zeroes
     	iir_squelch_rx_state[i] = 0;
@@ -794,11 +787,12 @@ void audio_driver_set_rx_audio_filter(void)
 	//
     // TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
-    if (ts.filter_path != 0) {
-      ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
+	//    if (ts.filter_path != 0) {
+
+	ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
       if (FilterPathInfo[ts.filter_path].dec != NULL) {
         DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path].dec->numTaps;      // Number of taps in FIR filter
-        DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].dec->pCoeffs;       // Filter coefficients for lower-rate (slightly strong LPF)
+        DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].dec->pCoeffs;       // Filter coefficients
       } else {
         DECIMATE_RX.numTaps = 0;
         DECIMATE_RX.pCoeffs = NULL;
@@ -809,8 +803,8 @@ void audio_driver_set_rx_audio_filter(void)
         INTERPOLATE_RX.phaseLength = 0;
         INTERPOLATE_RX.pCoeffs = NULL;
       }
-
-    } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
+#if 0
+//    } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
 		ads.decimation_rate = RX_DECIMATION_RATE_12KHZ;
 		DECIMATE_RX.pCoeffs = &FirRxDecimate.pCoeffs[0];		// Filter coefficients for lower-rate (slightly strong LPF)
 		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate.pCoeffs[0];	// Filter coefficients
@@ -820,6 +814,7 @@ void audio_driver_set_rx_audio_filter(void)
 		DECIMATE_RX.pCoeffs = &FirRxDecimateMinLPF.pCoeffs[0];	// Filter coefficients for higher rate (weak LPF:  Hilbert is used for main LPF!)
 		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate10KHZ.pCoeffs[0];	// Filter coefficients for higher rate (relaxed LPF)
 	}										// FM - no decimation
+#endif
 
     if(ts.dmod_mode == DEMOD_FM)
 		ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;		//
@@ -832,9 +827,11 @@ void audio_driver_set_rx_audio_filter(void)
 	DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
 
     // TODO: Review FilterPath Code
-    if (ts.filter_path == 0) {
-      DECIMATE_RX.numTaps = FirRxDecimate.numTaps;
-    }
+#if 0
+	//if (ts.filter_path == 0) {
+   //   DECIMATE_RX.numTaps = FirRxDecimate.numTaps;
+    //}
+#endif
 
 	DECIMATE_RX.pState = (float32_t *)&decimState[0];			// Filter state variables
 	//
@@ -844,15 +841,17 @@ void audio_driver_set_rx_audio_filter(void)
 	INTERPOLATE_RX.L = ads.decimation_rate;			// Interpolation factor, L  (12 kHz * 4 = 48 kHz)
 	// TODO: Review FilterPath Code
 	// DONE: DD4WH 2016_03_13
-	if (ts.filter_path != 0) {
+//	if (ts.filter_path != 0) {
       if (FilterPathInfo[ts.filter_path].interpolate != NULL) {
         INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
       } else {
         INTERPOLATE_RX.phaseLength = 0;
       }
-	} else {
+#if 0//	} else {
 	  INTERPOLATE_RX.phaseLength = FirRxInterpolate.phaseLength/ads.decimation_rate;	// Phase Length ( numTaps / L )
 	}
+#endif
+
 	INTERPOLATE_RX.pState = (float32_t *)&interpState[0];		// Filter state variables
 	//
 	for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS; i++)	{	// Initialize all filter state variables
@@ -889,27 +888,11 @@ void Audio_TXFilter_Init(void)
 	// -------------------
 	// Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
 	//
-	// FIXME: remove after testing
-	bool better_low_audio = 0; // set this to 1, if you are male and you would not sing tenor in a choir
 	//
 	if(ts.dmod_mode != DEMOD_FM)	{						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
-	  // TODO: Review FilterPath Code
-		// We have not (yet?) coded TX filters in the FilterPathInfo!
-	  if (ts.filter_path != 0) {
-	    IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
+		IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
 	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
 	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
-	  } else {
-		  if(!better_low_audio){
-	    IIR_TXFilter.numStages = IIR_TX_2k7.numStages;      // number of stages
-	    IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;   // point to reflection coefficients
-	    IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;   // point to ladder coefficients
-	  } else { // this is the RX filter with 2k7 BPF response (120 - 2700)
-		    IIR_TXFilter.numStages = IIR_2k7_BPF.numStages;      // number of stages
-		    IIR_TXFilter.pkCoeffs = IIR_2k7_BPF.pkCoeffs;   // point to reflection coefficients
-		    IIR_TXFilter.pvCoeffs = IIR_2k7_BPF.pvCoeffs;   // point to ladder coefficients
-	  }
-	  }
 	}
 	else	{	// This is FM - use a filter with "better" lows and highs more appropriate for FM
 		IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
@@ -1543,7 +1526,7 @@ static void audio_demod_am(int16_t size)
 {
 	ulong i, j;
 	bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
-	if(!testSAM){
+	if(!testSAM){ // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
 	j = 0;
 	for(i = 0; i < size/2; i++)	{					// interleave I and Q data, putting result in "b" buffer
 		ads.b_buffer[j] = ads.i_buffer[i];
@@ -1666,14 +1649,12 @@ static void audio_snap_carrier (void)
 	float bin_BW = (float) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
 	long i;
 	float delta1, delta2;
-	ulong freq = df.tune_new / 4; // was ulong !!!
+	ulong freq = df.tune_new / 4; //
 	float bin1, bin2, bin3;
 
 	// init of FFT structure has been moved to audio_driver_init()
 
-	//	1. determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
-
-	//	2. determine posbin (where we receive at the moment) from ts.iq_freq_mode
+	//	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
 		if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
 			posbin = FFT_IQ_BUFF_LEN2 / 4; // right in the middle!
@@ -1691,9 +1672,8 @@ static void audio_snap_carrier (void)
 			posbin = (FFT_IQ_BUFF_LEN2 / 4) + (FFT_IQ_BUFF_LEN2 / 8);
 		}
 
-		// 	3. calculate upper and lower limit for determination of maximum magnitude
-
-//		determine bandwith separately for lower and upper sideband
+		//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
+		//	= determine bandwith separately for lower and upper sideband
 
 		if (ts.dmod_mode == DEMOD_LSB) {
 			bw_USB = 1000; // also "look" 1kHz away from carrier
@@ -1710,6 +1690,7 @@ static void audio_snap_carrier (void)
 			bw_USB = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 		}
 
+		// calculate upper and lower limit for determination of maximum magnitude
 
 		Lbin = posbin - round(bw_LSB / bin_BW); // the bin on the lower sideband side
 		// uint16_t divided by float ???
@@ -1717,9 +1698,9 @@ static void audio_snap_carrier (void)
 
 //		Lbin = (int) Lbin_f;
 //		Ubin = (int) Ubin_f;
-// 	FFT preparation
+		// 	FFT preparation
 		// we do not need to scale for this purpose !
-//		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
+		// arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
 		//
 		// do windowing function on input data to get less "Bin Leakage" on FFT data
 		//
@@ -1730,7 +1711,6 @@ static void audio_snap_carrier (void)
 			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 			// Blackman 1.75
 			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN2-1))) * sc.FFT_Samples[i];
-
 		}
 
 		// run FFT
@@ -1763,20 +1743,21 @@ static void audio_snap_carrier (void)
         }}
         maximum = 0.0; // reset maximum for next time ;-)
 
-        // ok, we have found the maximum, now set frequency to that bin
+        // ok, we have found the maximum, now save first delta frequency
         delta1 = (float)(maxbin - posbin) * bin_BW;
-        // set frequency variable
 
-        // estimate frequency of carrier by three-point-interpolation of bins around maxbin
+        // and now: fine-tuning:
+        //	get amplitude values of the three bins around the carrier
    		bin1 = sc.FFT_Samples[maxbin-1];
    		bin2 = sc.FFT_Samples[maxbin];
    		bin3 = sc.FFT_Samples[maxbin+1];
 
    		if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
+   		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
         delta2 = 13.0 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
-   		// set frequency variable
+   		// set frequency variable with both delta frequencies
         freq = freq + round(delta1 + delta2);
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = freq * 4.0;
@@ -1944,7 +1925,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	} // FIXME: end test variable
 
 	//
-	// Apply gain corrections for I/Q gain balancing
+	// Apply gain corrections for I/Q amplitude correction
 	//
 	arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
 	//
@@ -1959,7 +1940,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	//
 	// ------------------------
 	// IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
-	// *** *EXCEPT* in AM mode - see the function "UiCalcRxPhaseAdj()"
+	// *** *EXCEPT* in AM mode
 	//    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
 	//	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
 	//
@@ -2022,17 +2003,20 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// Apply audio  bandpass filter
 	    // TODO: Review FilterPath Code
 		// DONE: DD4WH 2016_03_13
-	    if (ts.filter_path != 0) {
+//	    if (ts.filter_path != 0) {
 			if ((!ads.af_disabled)	&& (IIR_PreFilter.numStages > 0)) { // yes, we want an audio IIR filter
 			  arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
 			}
-	    } else
+#if 0 //	    } else
 
 	    	if((!ads.af_disabled)	&& (ts.filter_id < AUDIO_5P0KHZ))	{	// we don't need to filter here if running in "wide" AM mode (Hilbert/FIR does the job!)
-			// IIR ARMA-type lattice filter
+
+	    		// IIR ARMA-type lattice filter
 			arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
 		}
-		//
+#endif
+
+	    //
 		// now process the samples and perform the receiver AGC function
 		//
 		audio_rx_agc_processor(psize);
@@ -2050,16 +2034,17 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 	    // TODO: Review FilterPath Code
 		// DONE: DD4WH 2016_03_13
-		if (ts.filter_path != 0) {
+//		if (ts.filter_path != 0) {
 			if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
 			else
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
-		} else
+#if 0 //		} else
 		if(ts.filter_id < AUDIO_5P0KHZ)
 			post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
 		else
 		post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
+#endif
 		//
 		// Scale audio to according to AGC setting, demodulation mode and required fixed levels and scaling
 		//
@@ -2077,16 +2062,17 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		// IIR ARMA-type lattice filter
 	    // TODO: Review FilterPath Code
 		// DONE: DD4WH 2016_03_13
-	    if (ts.filter_path != 0) {
+//	    if (ts.filter_path != 0) {
 			if ((!ads.af_disabled) && (IIR_AntiAlias.numStages > 0)) { // yes, we want an interpolation IIR filter
 				arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);
 			}
-	    } else
+#if 0 //	    } else
 		if((ts.filter_id > AUDIO_1P8KHZ) && (ts.filter_id < AUDIO_5P0KHZ)) {
 		  arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);
 		}
+#endif
 
-	}
+	} // end NOT in FM mode
 	else	{		// it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
 		if(ts.misc_flags2 & 2)		// is this 5 kHz FM mode?  If so, scale down (reduce) audio to normalize
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_5K, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
