@@ -855,9 +855,11 @@ extern __IO arm_fir_instance_f32    FIR_Q_TX;
  */
 void AudioFilter_CalcRxPhaseAdj(void)
 {
-    float f_coeff, f_offset, var_norm, var_inv;
     ulong i;
-    int phase;
+
+
+	//  float f_coeff, f_offset, var_norm, var_inv;
+    //  int phase;
     //
     // always make a fresh copy of the original Q and I coefficients
     // NOTE:  We are assuming that the I and Q filters are of the same length!
@@ -973,7 +975,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     		}
     }//
 
-    if (!ts.USE_NEW_PHASE_CORRECTION) {
+/*    if (!ts.USE_NEW_PHASE_CORRECTION) {
     	if(ts.dmod_mode == DEMOD_LSB)   // get phase setting appropriate to mode
             phase = ts.rx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
         else
@@ -1160,7 +1162,9 @@ void AudioFilter_CalcRxPhaseAdj(void)
 
     	}// END new switching with FilterPathInfo
     } // END if (!ts.USE_NEW_PHASE_CORRECTION)
-    	//
+ */
+
+    //
     // In AM mode we do NOT do 90 degree phase shift, so we do FIR low-pass instead of Hilbert, setting "I" channel the same as "Q"
     	// hmmm, is this necessary? In AM AND in SSB, we set the fc.rx_filt_XXX in the right manner in this void, so no need to distinguish again between AM and SSB
 /*    if(ts.dmod_mode == DEMOD_AM)        // use "Q" filter settings in AM mode for "I" channel
@@ -1168,6 +1172,7 @@ void AudioFilter_CalcRxPhaseAdj(void)
     else                                // not in AM mode, but SSB or FM - use normal settings where I and Q are 90 degrees apart
         arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
   */
+
     // Initialization of the FIR/Hilbert filters
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
@@ -1180,10 +1185,11 @@ void AudioFilter_CalcRxPhaseAdj(void)
  */
 void AudioFilter_CalcTxPhaseAdj(void)
 {
-    float f_coeff, f_offset, var_norm, var_inv;
+  //  float f_coeff, f_offset, var_norm, var_inv;
+  //  int phase;
+
     ulong i;
-    int phase;
-    //
+	//
     ads.tx_filter_adjusting = 1;        // disable TX I/Q filter during adjustment
     //
 
@@ -1201,7 +1207,7 @@ void AudioFilter_CalcTxPhaseAdj(void)
         fc.tx_filt_i[i] = i_tx_coeffs[i];
     }
     //
-    if (!ts.USE_NEW_PHASE_CORRECTION) {
+/*    if (!ts.USE_NEW_PHASE_CORRECTION) {
 
     if(ts.dmod_mode == DEMOD_LSB)
         phase = ts.tx_iq_lsb_phase_balance;     // yes, get current gain adjustment setting for LSB
@@ -1230,7 +1236,7 @@ void AudioFilter_CalcTxPhaseAdj(void)
         }
     }
     } // end Test configuration     if (!ts.USE_NEW_PHASE_CORRECTION) {
-    //
+ */   //
     //
 
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);
