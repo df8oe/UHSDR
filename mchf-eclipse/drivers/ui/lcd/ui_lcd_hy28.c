@@ -1165,7 +1165,7 @@ uchar UiLcdHy28_InitA(void)
    if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
    {
       printf("doing ILI9325 init\n\r");
-
+//      UiLcdHy28_WriteReg(0x00e5,0x78f0);	// special testing
       UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
       UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion
       UiLcdHy28_WriteReg(0x0004,0x0000);	// resize register

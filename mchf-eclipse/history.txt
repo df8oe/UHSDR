@@ -5,19 +5,21 @@
 ##                                                                     ##
 ##  KA7OEI, Clint                                                      ##
 ##  DF8OE, Andreas                                                     ##
+##  DB4PLE, Danilo                                                     ##
+##  DD4WH, Frank                                                       ##
+##  and all other collaborateurs                                       ##
 ##                                                                     ##
 #########################################################################
 #########################################################################
 
 
 2016mmdd [DF8OE]
-- added different LCD init code (must be selected before building at this stage -
-  subject to investigate runtime selsction)
 - new FilterPath-structure replaces old filter selection method
-- bugfix RX IQ phase adjustment SSB/CW
+- added SAM demodulation for weak AM signals
 - bugfix TX path while in translated mode
 - changed filter character at low frequencies in TX for male voices with high lower frequencies
-- bugfix TX IQ phase adjustment SSB/CW
+- improved TX IQ balance and phase adjustment SSB/CW
+- bugfix "white screen issue" on some LCDs
 
 
 20160317 [DF8OE]
