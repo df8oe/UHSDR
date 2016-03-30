@@ -1657,16 +1657,16 @@ static void audio_snap_carrier (void)
 	if (!sc.state) return; // FFT samples have not yet been collected
 
 	int Lbin, Ubin;
-	float Lbin_f, Ubin_f;
+//	float Lbin_f, Ubin_f;
 	uint16_t bw_LSB = 0;
+	uint16_t bw_USB = 0;
 	float32_t maximum = 0;
 	int posbin = 0;
 	int maxbin = 1;
-	uint16_t bw_USB = 0;
 	float bin_BW = (float) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
 	long i;
 	float delta1, delta2;
-	ulong freq = df.tune_new / 4;
+	ulong freq = df.tune_new / 4; // was ulong !!!
 	float bin1, bin2, bin3;
 
 	// init of FFT structure has been moved to audio_driver_init()
@@ -1711,12 +1711,12 @@ static void audio_snap_carrier (void)
 		}
 
 
-		Lbin_f = posbin - (bw_LSB / bin_BW); // the bin on the lower sideband side
+		Lbin = posbin - round(bw_LSB / bin_BW); // the bin on the lower sideband side
 		// uint16_t divided by float ???
-		Ubin_f = posbin + (bw_USB / bin_BW); // the bin on the upper sideband side
+		Ubin = posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
-		Lbin = (int) Lbin_f;
-		Ubin = (int) Ubin_f;
+//		Lbin = (int) Lbin_f;
+//		Ubin = (int) Ubin_f;
 // 	FFT preparation
 		// we do not need to scale for this purpose !
 //		arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
@@ -1764,7 +1764,7 @@ static void audio_snap_carrier (void)
         maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now set frequency to that bin
-        delta1 = (maxbin - posbin) * bin_BW;
+        delta1 = (float)(maxbin - posbin) * bin_BW;
         // set frequency variable
 
         // estimate frequency of carrier by three-point-interpolation of bins around maxbin
@@ -1777,9 +1777,9 @@ static void audio_snap_carrier (void)
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
         delta2 = 13.0 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable
-        freq = freq + delta1 + delta2;
+        freq = freq + round(delta1 + delta2);
         // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = freq * 4;
+        df.tune_new = freq * 4.0;
         UiDriverUpdateFrequency ( 2, 0);
 
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
