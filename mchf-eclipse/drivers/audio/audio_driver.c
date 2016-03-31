@@ -1664,19 +1664,19 @@ static void audio_snap_carrier (void)
 	//	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
 		if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
-			posbin = buff_len / 4.0; // right in the middle!
+			posbin = buff_len_int / 4; // right in the middle!
 		} // frequency translation ON
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (buff_len / 4.0) - (buff_len / 16.0);
+			posbin = (buff_len_int / 4) - (buff_len_int / 16);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (buff_len / 4.0) + (buff_len / 16.0);
+			posbin = (buff_len_int / 4) + (buff_len_int / 16);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (buff_len / 4.0) - (buff_len / 8.0);
+			posbin = (buff_len_int / 4) - (buff_len_int / 8);
 		}
 		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (buff_len / 4.0) + (buff_len / 8.0);
+			posbin = (buff_len_int / 4) + (buff_len_int / 8);
 		}
 
 		//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
@@ -1699,8 +1699,8 @@ static void audio_snap_carrier (void)
 
 		// calculate upper and lower limit for determination of maximum magnitude
 
-		Lbin = posbin - (bw_LSB / bin_BW); // the bin on the lower sideband side
-		Ubin = posbin + (bw_USB / bin_BW); // the bin on the upper sideband side
+		Lbin = (float32_t)posbin - round(bw_LSB / bin_BW); // the bin on the lower sideband side
+		Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
 
 		// 	FFT preparation
@@ -1715,7 +1715,7 @@ static void audio_snap_carrier (void)
 			// Hamming 1.22
 			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 			// Blackman 1.75
-			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
+			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
 		}
 
 		// run FFT
@@ -1750,12 +1750,13 @@ static void audio_snap_carrier (void)
         maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now save first delta frequency
-        delta1 = 15.0 + (maxbin - posbin) * bin_BW;
+        delta1 = (maxbin - (float32_t)posbin) * bin_BW;
 
         help_freq = help_freq + delta1;
+        help_freq = help_freq * 4.0;
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = freq * 4.0;
+        df.tune_new = freq;
         UiDriverUpdateFrequency ( 2, 0);
 //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
@@ -1783,12 +1784,14 @@ static void audio_snap_carrier (void)
 
    		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-        delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+   		// 10.5 is an empirically derived constant . . .
+   		delta2 = 10.5 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable with both delta frequencies
         help_freq = help_freq + delta2;
+        help_freq = help_freq * 4.0;
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = freq * 4.0;
+        df.tune_new = freq;
         UiDriverUpdateFrequency ( 2, 0);
 
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
