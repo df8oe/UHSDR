@@ -1477,7 +1477,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 					UiDriverFButtonLabel(1,label,color);
 				}
 				// Label for Button F2
-				UiDriverFButtonLabel(2,"METER",White);
+				UiDriverFButtonLabel(2,"SNAP",White);
 
 				// Display Label for Button F3
 				{
@@ -2163,7 +2163,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	// Button F1
 	UiDriverFButtonLabel(1,"MENU",White);
 	// Button F2
-	UiDriverFButtonLabel(2,"METER",White);
+	UiDriverFButtonLabel(2,"SNAP",White);
 
 	// Button F3
 	if(!ts.vfo_mem_flag) {	// is it in VFO (not memory) mode?

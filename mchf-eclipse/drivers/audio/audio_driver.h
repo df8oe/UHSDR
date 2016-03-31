@@ -536,6 +536,8 @@ typedef struct SnapCarrier
     float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
     // Current data ptr
     ulong   samp_ptr;
+    int8_t FFT_number;
+    int16_t counter;
     // State machine current state
     uchar   state;
     bool	snap;
