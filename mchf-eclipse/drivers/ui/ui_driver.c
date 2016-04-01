@@ -67,7 +67,7 @@ static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 
 static void 	UiDriverInitFrequency(void);
 //
-static void 	UiDriverCheckFilter(ulong freq);
+static void 	UiDriver_SetHWFiltersForFrequency(ulong freq);
 uchar 			UiDriverCheckBand(ulong freq, ushort update);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
@@ -673,7 +673,11 @@ if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)	// is waterfall mode enabled
 			if(!ts.boot_halt_flag) { UiDriverCheckEncoderThree(); }
 			break;
 		case STATE_UPDATE_FREQUENCY:
-			if(!ts.boot_halt_flag) { UiDriverUpdateFrequency(0,0); }
+			if(!ts.boot_halt_flag) {
+			  if(UiDriverCheckFrequencyEncoder()) {
+			    UiDriverUpdateFrequency(1,0);
+			  }
+			}
 			break;
 		case STATE_PROCESS_KEYBOARD:
 			UiDriverProcessKeyboard();
@@ -1860,12 +1864,14 @@ static void UiDriverShowBand(uchar band)
 	}
 }
 
+// TODO: Move out to RF HAL
 void UiDriverChangeBandFilterPulseRelays() {
 	BAND2_PIO->BSRRH = BAND2;
 	non_os_delay();
 	BAND2_PIO->BSRRL = BAND2;
 }
 
+// TODO: Move out to RF HAL
 void UiDriverChangeBandFilter(uchar band)
 {
 	// -------------------------------------------
@@ -2793,7 +2799,7 @@ static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
  *
  * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
  */
-static void UiDriverCheckFilter(ulong freq)
+static void UiDriver_SetHWFiltersForFrequency(ulong freq)
 {
 	int idx;
 	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
@@ -2808,6 +2814,8 @@ static void UiDriverCheckFilter(ulong freq)
 	}
 }
 
+
+// TODO: Split into RF HAL Part and UI Part
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckBand
 //* Object              : Checks in which band the current frequency lies
@@ -2842,30 +2850,16 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	return band_scan;		// return with the band
 
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateFrequency
-//* Object              :
-//* Input Parameters    :skip_encoder_check: If TRUE, do not check encoder;  1 = do not check, 2 = do not check AND unconditionally update synthesizer EVEN IF frequency did not change
-//*						:mode: =0 automatic, 1=force large, 2=force small, upper (RX), 3 = small, lower (TX)
-//*                      WARNING:  If called with "mode = 3", you must ALWAYS call again with "mode = 2" to reset internal variables.
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiDriverUpdateFrequency(char skip_encoder_check, uchar mode)
+/*
+ * @param force_update 2 = unconditionally update synthesizer EVEN IF frequency did not change
+ * @param mode  =0 automatic, 1=force large, 2=force small, upper (RX), 3 = small, lower (TX)
+ *                      WARNING:  If called with "mode = 3", you must ALWAYS call again with "mode = 2" to reset internal variables.
+ */
+void UiDriverUpdateFrequency(char force_update, uchar mode)
 {
 	ulong		loc_tune_new, dial_freq, second_freq;
 	//uchar		old_rf_gain = ts.rf_gain;
 	ushort		col = White;
-
-	// On band change we don't have to check the encoder
-	if(skip_encoder_check)
-		goto skip_check;
-
-	// Check encoder
-	if(!UiDriverCheckFrequencyEncoder())
-		return;
-
-skip_check:
 
 	// Get value, while blocking update
 
@@ -2920,15 +2914,10 @@ skip_check:
 			ts.tune_freq += (ts.rit_value*80);	// Add RIT on receive
 		}
 
-
-		//printf("--------------------\n\r");
-		//printf("dial: %dHz, tune: %dHz\n\r",dial_freq,tune_freq);
-
-		if((ts.tune_freq == ts.tune_freq_old) && (!ts.refresh_freq_disp) && (skip_encoder_check != 2))	// has the frequency changed and full display refresh not requested AND we are in "AUTOMATIC" mode?
+		if((ts.tune_freq == ts.tune_freq_old) && (!ts.refresh_freq_disp) && (force_update != 2))	// has the frequency changed and full display refresh not requested AND we are in "AUTOMATIC" mode?
 			return;								// no - bail out - save time by NOT updating synthesizer!
 
 		ts.tune_freq_old = ts.tune_freq;		// frequency change required - update change detector
-
 
 		if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 1))	{	// did the tuning require that a large tuning step occur?
 			if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
@@ -2959,25 +2948,29 @@ skip_check:
 	}
 
 	//
-	// Update main frequency display
 	//
-		UiDriverUpdateLcdFreq(dial_freq,col, mode);
-	//
-	// Update second display to reflect RX frequency with RIT
-	//
-	if(mode != 3)	{		// do not update second display or check filters if we are updating TX frequency in SPLIT mode
-		UiDriverUpdateLcdFreq(second_freq/4,Grey,4);
-		// set mode parameter to 4 to update secondary display
-		//
-		UiDriverCheckFilter(ts.tune_freq/4);	// check the filter status with the new frequency update
-		UiDriverCheckBand(ts.tune_freq, 1);		// check which band in which we are currently tuning and update the display
+	if(mode != 3)	{		// do not check filters if we are updating TX frequency in SPLIT mode
+	   UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
 	}
 
 	// Save current freq
 	df.tune_old = loc_tune_new;
 
+	// ALL UI IN THIS FUNCTION BELOW THIS LINE
 	// new drawing of frequencyscale for WF / Scope
 	sd.dial_moved = 1;
+
+    // Update main frequency display
+    //
+    UiDriverUpdateLcdFreq(dial_freq,col, mode);
+    //
+    if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
+            UiDriverUpdateLcdFreq(second_freq/4,Grey,4);
+            // set mode parameter to 4 to update secondary display
+
+            UiDriverCheckBand(ts.tune_freq, 1);
+            // check which band in which we are currently tuning and update the display
+     }
 }
 
 //*----------------------------------------------------------------------------
