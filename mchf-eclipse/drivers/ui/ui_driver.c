@@ -342,7 +342,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 			}
 		}
 		else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
-			if((ts.dmod_mode == DEMOD_AM) && (ts.filter_id > AUDIO_4P8KHZ))		// was it AM with a filter > 4k8 selected?
+			if((ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ))		// was it AM with a filter > 4k8 selected?
 				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
 			else
 			{
@@ -957,15 +957,11 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_G4_PRESSED:		{		// BUTTON_G4 - Change filter bandwidth
 				if(!ts.tune) {
-				  if (ts.filter_path != 0) {
 				    if (filter_path_change == true) {
 				      filter_path_change = false;
 				    } else {
 				      AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
 				    }
-				  } else if (ts.dmod_mode != DEMOD_FM)	{
-				    ts.filter_id = AudioFilter_NextApplicableFilter();	// make sure that filter is active - if not, find next active filter
-				  }
 				  // Change filter
 				  UiInitRxParms();		// re-init for change of filter including display updates
 				}
@@ -1083,8 +1079,6 @@ static void UiDriverProcessKeyboard(void)
 					}
 					vfo_store->dial_value = df.tune_new;
 					vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
-					vfo_store->filter_mode = ts.filter_id;
-
 					if(is_splitmode())	{	// are we in SPLIT mode?
 						ts.refresh_freq_disp = 1;	// yes, we need to update the TX frequency:  Make frequency display refresh all digits
 						UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
@@ -1589,15 +1583,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			}
 			vfo[vfo_new].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
 			vfo[vfo_new].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
-			vfo[vfo_new].band[ts.band].filter_mode = ts.filter_id;	//band_filter_mode[ts.band];
-			//
 
-#if 0
-			vfo[VFO_WORK].band[ts.band].dial_value = vfo[vfo_active].band[ts.band].dial_value;		// load "VFO A" settings into working registers
-			vfo[VFO_WORK].band[ts.band].decod_mode = vfo[vfo_active].band[ts.band].decod_mode;
-			vfo[VFO_WORK].band[ts.band].filter_mode = vfo[vfo_active].band[ts.band].filter_mode;
-#endif
-			//
 			UiDriverFButtonLabel(4,vfo_name,White);
 
 
@@ -1624,14 +1610,6 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverShowMode();
 			}
 
-			// Change filter mode if need to
-			if(ts.filter_id != vfo[vfo_active].band[ts.band].filter_mode)
-			{
-				ts.filter_id = vfo[vfo_active].band[ts.band].filter_mode;
-				UiDriverChangeFilterDisplay();	// update display
-				UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-				audio_driver_set_rx_audio_filter();
-			}
 		}
 	}
 
@@ -3749,7 +3727,6 @@ static void UiDriverChangeBand(uchar is_up)
 		// Save dial
 		vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
 		vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
-		vfo[vfo_sel].band[curr_band_index].filter_mode = ts.filter_id;
 	}
 
 	// Handle direction
@@ -3832,15 +3809,6 @@ static void UiDriverChangeBand(uchar is_up)
 		UiDriverShowMode();
 	}
 
-	// FIXME: Uses filter_id, will be removed soon.
-	// Change filter mode if need to
-	if(ts.filter_id != vfo[vfo_sel].band[new_band_index].filter_mode)
-	{
-		ts.filter_id = vfo[vfo_sel].band[new_band_index].filter_mode;
-		audio_driver_set_rx_audio_filter();
-        UiDriverChangeFilterDisplay();  // update display and change filter
-        UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator
-	}
 
 	// Create Band value
 	UiDriverShowBand(new_band_index);
@@ -4826,33 +4794,10 @@ void UiDriverChangeFilterDisplay(void)
 //		audio_driver_set_rx_audio_filter();
 //	}
 	const char* filter_ptr;
-	const FilterDescriptor* filter = &FilterInfo[ts.filter_id];
-	uint32_t bg_clr = Blue;
-	uint32_t font_clr = White;
+    uint32_t bg_clr = Blue;
+    uint32_t font_clr = White;
 
-	// Update screen indicator
-	if(ts.dmod_mode != DEMOD_FM)	{	// in modes OTHER than FM
-	   filter_ptr = filter->name;
-	}
-	else	{		// This is the FM special case to display bandwidth
-		switch(ts.fm_rx_bandwidth)	{
-		case FM_RX_BANDWIDTH_7K2:
-			filter_ptr = "7k2 FM";
-			break;
-		case FM_RX_BANDWIDTH_12K:
-			filter_ptr = "12k FM";
-			break;
-			//			case FM_RX_BANDWIDTH_15K:
-			//				filter_ptr = "15k FM";
-			//				break;
-		case FM_RX_BANDWIDTH_10K:
-		default:
-			filter_ptr = "10k FM";
-			break;
-		}
-	}
-
-	if (ts.filter_path > 0) {
+	  {
 	    const char *filter_names[2];
 
 	    bg_clr = filter_path_change?Orange:Blue;
@@ -4865,8 +4810,6 @@ void UiDriverChangeFilterDisplay(void)
 	    } else {
 	      filter_ptr = " ";
 	    }
-	} else {
-    UiLcdHy28_PrintText(POS_FIR_IND_X,  POS_FIR_IND_Y,       "FILT", White,  bg_clr, 0);
 	}
 	// Draw top line
     UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,bg_clr);
@@ -4897,19 +4840,12 @@ void UiDriverDisplayFilterBW(void)
 
 	// Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 	//
-	if (ts.filter_path != 0) {
 	  const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
 	  const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
 	  offset = path_p->offset;
 	  width = filter_p->width;
 
-	} else {
-	  const FilterDescriptor* filter_p = &FilterInfo[ts.filter_id];
-	  const FilterConfig* config_p = &filter_p->config[ts.filter_select[ts.filter_id]];
-	  offset = config_p->offset;
-	  width = filter_p->width;
-	}
-	if (offset == 0) {
+	  if (offset == 0) {
 	  offset = width/2;
 	}
 	//
@@ -6087,27 +6023,6 @@ void UiCWSidebandMode(void)
             ts.cw_lsb = 0;
             break;
     }
-}
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverLoadFilterValue
-//* Object              : Load stored filter value from EEPROM
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiDriverLoadFilterValue(void)	// Get filter value so we can init audio with it
-{
-	uint16_t value;
-
-	if(Read_EEPROM(EEPROM_BAND_MODE, &value) == 0)
-	{
-		ts.filter_id = (value >> 12) & 0x0F;	// get filter setting
-		if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER))		// audio filter invalid?
-			ts.filter_id = AUDIO_DEFAULT_FILTER;	// set default audio filter
-	}
 }
 
 

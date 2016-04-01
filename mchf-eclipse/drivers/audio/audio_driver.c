@@ -303,325 +303,6 @@ void audio_driver_set_rx_audio_filter(void)
 	ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
 
 	// }
-
-#if 0
-	if (ts.filter_path == 0 ) {  // for the moment, everything remains as-is until new filter path structure works
-	  switch(ts.filter_id)	{
-		case AUDIO_300HZ:
-		    IIR_PreFilter.numStages = IIR_300hz_500.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_500.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_500.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 2)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_550.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_550.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 3)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_600.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_600.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 4)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_650.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_650.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 5)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_700.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_700.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 7)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_800.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_800.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 8)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_850.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_850.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 9)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_900.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_900.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 10)	{
-				IIR_PreFilter.pkCoeffs = IIR_300hz_950.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_950.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else	{	// default value
-				IIR_PreFilter.pkCoeffs = IIR_300hz_750.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_300hz_750.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_500HZ:
-		    IIR_PreFilter.numStages = IIR_500hz_550.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_500hz_550.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_500hz_550.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 2)	{
-				IIR_PreFilter.pkCoeffs = IIR_500hz_650.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_500hz_650.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 4)	{
-				IIR_PreFilter.pkCoeffs = IIR_500hz_850.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_500hz_850.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 5)	{
-				IIR_PreFilter.pkCoeffs = IIR_500hz_950.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_500hz_950.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else	{	// default value
-				IIR_PreFilter.pkCoeffs = IIR_500hz_750.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_500hz_750.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_1P4KHZ:
-		   	IIR_PreFilter.numStages = IIR_1k4_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k4_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k4_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_1k4_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k4_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_1P6KHZ:
-		   	IIR_PreFilter.numStages = IIR_1k6_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k6_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k6_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_1k6_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k6_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_1P8KHZ:
-		    IIR_PreFilter.numStages = IIR_1k8_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 6)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k8_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k8_1k125.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_1k125.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 2)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k8_1k275.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_1k275.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 4)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k8_1k575.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_1k575.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 5)	{
-				IIR_PreFilter.pkCoeffs = IIR_1k8_1k725.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_1k725.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else	{	// default value
-				IIR_PreFilter.pkCoeffs = IIR_1k8_1k425.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_1k8_1k425.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_2P1KHZ:
-		   	IIR_PreFilter.numStages = IIR_2k1_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k1_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k1_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_2k1_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k1_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_2P3KHZ:
-		    IIR_PreFilter.numStages = IIR_2k3_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 5)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k3_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k3_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k3_1k275.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k3_1k275.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 3)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k3_1k562.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k3_1k562.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else if(ts.filter_select[ts.filter_id] == 4)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k3_1k712.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k3_1k712.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else	{	// default value
-				IIR_PreFilter.pkCoeffs = IIR_2k3_1k412.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k3_1k412.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_2P5KHZ:
-		   	IIR_PreFilter.numStages = IIR_2k5_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k5_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k5_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_2k5_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k5_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_2P7KHZ:
-		    IIR_PreFilter.numStages = IIR_2k7_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k7_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k7_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_2k7_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k7_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_2P9KHZ:
-		    IIR_PreFilter.numStages = IIR_2k9_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_2k9_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k9_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_2k9_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_2k9_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_3P2KHZ:
-		   	IIR_PreFilter.numStages = IIR_3k2_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_3k2_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k2_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_3k2_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k2_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_3P4KHZ:
-		   	IIR_PreFilter.numStages = IIR_3k4_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_3k4_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k4_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_3k4_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k4_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_3P6KHZ:
-		   	IIR_PreFilter.numStages = IIR_3k6_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_3k6_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k6_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_3k6_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k6_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_3P8KHZ:
-		   	IIR_PreFilter.numStages = IIR_3k8_LPF.numStages;		// number of stages
-		    if(ts.filter_select[ts.filter_id] == 1)	{
-				IIR_PreFilter.pkCoeffs = IIR_3k8_LPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k8_LPF.pvCoeffs;	// point to ladder coefficients
-		    }
-		    else 	{  // default value
-				IIR_PreFilter.pkCoeffs = IIR_3k8_BPF.pkCoeffs;	// point to reflection coefficients
-				IIR_PreFilter.pvCoeffs = IIR_3k8_BPF.pvCoeffs;	// point to ladder coefficients
-		    }
-			break;
-		case AUDIO_4P0KHZ:
-		    IIR_PreFilter.numStages = IIR_4k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_4k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_4k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_4P2KHZ:
-		    IIR_PreFilter.numStages = IIR_4k2_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_4k2_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_4k2_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_4P4KHZ:
-		    IIR_PreFilter.numStages = IIR_4k4_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_4k4_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_4k4_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_4P6KHZ:
-		    IIR_PreFilter.numStages = IIR_4k6_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_4k6_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_4k6_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_4P8KHZ:
-		    IIR_PreFilter.numStages = IIR_4k8_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_4k8_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_4k8_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_5P0KHZ:
-		    IIR_PreFilter.numStages = IIR_5k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_5k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_5k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_5P5KHZ:
-		    IIR_PreFilter.numStages = IIR_5k5_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_5k5_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_5k5_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_6P0KHZ:
-		    IIR_PreFilter.numStages = IIR_6k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_6k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_6k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_6P5KHZ:
-		    IIR_PreFilter.numStages = IIR_6k5_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_6k5_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_6k5_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_7P0KHZ:
-		    IIR_PreFilter.numStages = IIR_7k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_7k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_7k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_7P5KHZ:
-		    IIR_PreFilter.numStages = IIR_7k5_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_7k5_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_7k5_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_8P0KHZ:
-		    IIR_PreFilter.numStages = IIR_8k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_8k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_8k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_8P5KHZ:
-		    IIR_PreFilter.numStages = IIR_8k5_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_8k5_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_8k5_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_9P0KHZ:
-		    IIR_PreFilter.numStages = IIR_9k_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_9k_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_9k_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_9P5KHZ:
-		    IIR_PreFilter.numStages = IIR_9k5_LPF.numStages;		// number of stages
-			IIR_PreFilter.pkCoeffs = IIR_9k5_LPF.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_9k5_LPF.pvCoeffs;	// point to ladder coefficients
-			break;
-		case AUDIO_10P0KHZ:
-			IIR_PreFilter.pkCoeffs = IIR_10k.pkCoeffs;	// point to reflection coefficients
-			IIR_PreFilter.pvCoeffs = IIR_10k.pvCoeffs;	// point to ladder coefficients
-            IIR_PreFilter.numStages = IIR_10k.numStages;        // number of stages
-			break;
-		default:
-			break;
-	}
-
-	}  // HERE (after the "else") the new filter switching starts !!!
-
-	else {
-#endif
-
 		if (FilterPathInfo[ts.filter_path].pre_instance != NULL) {
         // if we turn on a filter, set the number of members to the number of elements last
 	    IIR_PreFilter.pkCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pkCoeffs; // point to reflection coefficients
@@ -645,13 +326,6 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Initialize IIR antialias filter state buffer
  	//
-#if 0	// TODO: Review FilterPath Code --> DONE, DD4WH 2016_03_13
-	if (ts.filter_path == 0) {
-	  IIR_AntiAlias.pkCoeffs = IIR_aa_5k.pkCoeffs;	// point to reflection coefficients
-	  IIR_AntiAlias.pvCoeffs = IIR_aa_5k.pvCoeffs;	// point to ladder coefficients
-      IIR_AntiAlias.numStages = IIR_aa_5k.numStages;        // number of stages
-	} else {
-#endif
 		if (FilterPathInfo[ts.filter_path].iir_instance != NULL) {
 	    // if we turn on a filter, set the number of members to the number of elements last
         IIR_AntiAlias.pkCoeffs = FilterPathInfo[ts.filter_path].iir_instance->pkCoeffs; // point to reflection coefficients
@@ -803,18 +477,6 @@ void audio_driver_set_rx_audio_filter(void)
         INTERPOLATE_RX.phaseLength = 0;
         INTERPOLATE_RX.pCoeffs = NULL;
       }
-#if 0
-//    } else if(ts.filter_id < AUDIO_5P0KHZ)	{		// below 5kHz, use 12ksps sample rate
-		ads.decimation_rate = RX_DECIMATION_RATE_12KHZ;
-		DECIMATE_RX.pCoeffs = &FirRxDecimate.pCoeffs[0];		// Filter coefficients for lower-rate (slightly strong LPF)
-		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate.pCoeffs[0];	// Filter coefficients
-	}
-	else	{								// This is above 4.8kHz receiver bandwidth
-		ads.decimation_rate = RX_DECIMATION_RATE_24KHZ;
-		DECIMATE_RX.pCoeffs = &FirRxDecimateMinLPF.pCoeffs[0];	// Filter coefficients for higher rate (weak LPF:  Hilbert is used for main LPF!)
-		INTERPOLATE_RX.pCoeffs = &FirRxInterpolate10KHZ.pCoeffs[0];	// Filter coefficients for higher rate (relaxed LPF)
-	}										// FM - no decimation
-#endif
 
     if(ts.dmod_mode == DEMOD_FM)
 		ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;		//
@@ -826,12 +488,6 @@ void audio_driver_set_rx_audio_filter(void)
     // Set up RX decimation/filter
 	DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
 
-    // TODO: Review FilterPath Code
-#if 0
-	//if (ts.filter_path == 0) {
-   //   DECIMATE_RX.numTaps = FirRxDecimate.numTaps;
-    //}
-#endif
 
 	DECIMATE_RX.pState = (float32_t *)&decimState[0];			// Filter state variables
 	//
@@ -847,10 +503,6 @@ void audio_driver_set_rx_audio_filter(void)
       } else {
         INTERPOLATE_RX.phaseLength = 0;
       }
-#if 0//	} else {
-	  INTERPOLATE_RX.phaseLength = FirRxInterpolate.phaseLength/ads.decimation_rate;	// Phase Length ( numTaps / L )
-	}
-#endif
 
 	INTERPOLATE_RX.pState = (float32_t *)&interpState[0];		// Filter state variables
 	//
@@ -950,7 +602,7 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 	static	uchar	nb_delay = 0;
 	static float	nb_agc = 0;
 	//
-	if((!ts.nb_setting) || (ts.nb_disable) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (ts.filter_id > AUDIO_4P8KHZ))	{	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
+	if((!ts.nb_setting) || (ts.nb_disable) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ))	{	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
 		return;
 	}
 
@@ -2039,20 +1691,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 		// ------------------------
 		// Apply audio  bandpass filter
-	    // TODO: Review FilterPath Code
-		// DONE: DD4WH 2016_03_13
-//	    if (ts.filter_path != 0) {
 			if ((!ads.af_disabled)	&& (IIR_PreFilter.numStages > 0)) { // yes, we want an audio IIR filter
 			  arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
 			}
-#if 0 //	    } else
-
-	    	if((!ads.af_disabled)	&& (ts.filter_id < AUDIO_5P0KHZ))	{	// we don't need to filter here if running in "wide" AM mode (Hilbert/FIR does the job!)
-
-	    		// IIR ARMA-type lattice filter
-			arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
-		}
-#endif
 
 	    //
 		// now process the samples and perform the receiver AGC function
@@ -2069,20 +1710,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		}
 		//
 		// Calculate scaling based on decimation rate since this affects the audio gain
-		//
-	    // TODO: Review FilterPath Code
-		// DONE: DD4WH 2016_03_13
-//		if (ts.filter_path != 0) {
 			if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
 			else
 				post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
-#if 0 //		} else
-		if(ts.filter_id < AUDIO_5P0KHZ)
-			post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
-		else
-		post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
-#endif
 		//
 		// Scale audio to according to AGC setting, demodulation mode and required fixed levels and scaling
 		//
@@ -2098,17 +1729,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		}
 		// additional antialias filter for specific bandwidths
 		// IIR ARMA-type lattice filter
-	    // TODO: Review FilterPath Code
-		// DONE: DD4WH 2016_03_13
-//	    if (ts.filter_path != 0) {
 			if ((!ads.af_disabled) && (IIR_AntiAlias.numStages > 0)) { // yes, we want an interpolation IIR filter
 				arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);
 			}
-#if 0 //	    } else
-		if((ts.filter_id > AUDIO_1P8KHZ) && (ts.filter_id < AUDIO_5P0KHZ)) {
-		  arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);
-		}
-#endif
 
 	} // end NOT in FM mode
 	else	{		// it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude

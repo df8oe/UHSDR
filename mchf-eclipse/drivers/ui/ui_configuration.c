@@ -528,9 +528,6 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
         if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)       // valid mode value from EEPROM? or defaults loaded?
             vforeg->decod_mode = DEMOD_LSB;         // no - set to LSB
         //
-        vforeg->filter_mode = (value16 >> 12) & 0x0F;   // get filter setting
-        if((vforeg->filter_mode >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)     // audio filter invalid or defaults to be loaded??
-            vforeg->filter_mode = AUDIO_DEFAULT_FILTER; // set default audio filter
     }
 
     // ------------------------------------------------------------------------------------
@@ -574,43 +571,21 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_Int32_16(uint16_
     UiReadWriteSettingEEPROM_UInt16(addr,(uint16_t)(int16_t)set_val,default_val);
 }
 
-#if 0 // not used, so disabled
-static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_Int_16(uint16_t addr, int set_val, int default_val ) {
-    UiReadWriteSettingEEPROM_UInt16(addr,(uint16_t)set_val,(uint16_t)default_val);
-}
-#endif
 
 static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg) {
 
     // ------------------------------------------------------------------------------------
     // Read Band and Mode saved values - update if changed
     UiReadWriteSettingEEPROM_UInt16(band_mode + i,
-            (vforeg->decod_mode << 8)|(vforeg->filter_mode << 12),
-            ((vforeg->decod_mode & 0x0f) << 8) | (vforeg->filter_mode << 12)
+            (vforeg->decod_mode << 8),
+            ((vforeg->decod_mode & 0x0f) << 8)
     );
     // Try to read Freq saved values - update if changed
     UiReadWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
 }
-#define UiReadSettingFilter(EEID,FID)  UiReadSettingEEPROM_UInt8((EEID),&ts.filter_select[(FID)],FilterInfo[(FID)].config_default,0,FilterInfo[(FID)].configs_num-1);
-
 
 void UiReadWriteSettingEEPROM_Filter()
 {
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_300HZ_SEL,ts.filter_select[AUDIO_300HZ],FilterInfo[AUDIO_300HZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_500HZ_SEL,ts.filter_select[AUDIO_500HZ],FilterInfo[AUDIO_500HZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K4_SEL,ts.filter_select[AUDIO_1P4KHZ],FilterInfo[AUDIO_1P4KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K6_SEL,ts.filter_select[AUDIO_1P6KHZ],FilterInfo[AUDIO_1P6KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_1K8_SEL,ts.filter_select[AUDIO_1P8KHZ],FilterInfo[AUDIO_1P8KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K1_SEL,ts.filter_select[AUDIO_2P1KHZ],FilterInfo[AUDIO_2P1KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K3_SEL,ts.filter_select[AUDIO_2P3KHZ],FilterInfo[AUDIO_2P3KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K5_SEL,ts.filter_select[AUDIO_2P5KHZ],FilterInfo[AUDIO_2P5KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K7_SEL,ts.filter_select[AUDIO_2P7KHZ],FilterInfo[AUDIO_2P7KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_2K9_SEL,ts.filter_select[AUDIO_2P9KHZ],FilterInfo[AUDIO_2P9KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K2_SEL,ts.filter_select[AUDIO_3P2KHZ],FilterInfo[AUDIO_3P2KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K4_SEL,ts.filter_select[AUDIO_3P4KHZ],FilterInfo[AUDIO_3P4KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K6_SEL,ts.filter_select[AUDIO_3P6KHZ],FilterInfo[AUDIO_3P6KHZ].config_default);
-  UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_3K8_SEL,ts.filter_select[AUDIO_3P8KHZ],FilterInfo[AUDIO_3P8KHZ].config_default);
-
 
     // for filters above 3k8 we have only a single bit setting, this does not work with filters
     // having more than on/off !
@@ -636,32 +611,9 @@ void UiReadWriteSettingEEPROM_Filter()
 void UiReadSettingEEPROM_Filter()
 {
 
-    UiReadSettingFilter(EEPROM_FILTER_300HZ_SEL,AUDIO_300HZ);
-    UiReadSettingFilter(EEPROM_FILTER_500HZ_SEL,AUDIO_500HZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K4_SEL,AUDIO_1P4KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K6_SEL,AUDIO_1P6KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_1K8_SEL,AUDIO_1P8KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K1_SEL,AUDIO_2P1KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K3_SEL,AUDIO_2P3KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K5_SEL,AUDIO_2P5KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K7_SEL,AUDIO_2P7KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_2K9_SEL,AUDIO_2P9KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K2_SEL,AUDIO_3P2KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K4_SEL,AUDIO_3P4KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K6_SEL,AUDIO_3P6KHZ);
-    UiReadSettingFilter(EEPROM_FILTER_3K8_SEL,AUDIO_3P8KHZ);
-
     // for filters above 3k8 we have only a single bit setting, this does not work with filters
     // having more than on/off !
     {
-
-      uint32_t filter_map = 0;
-      int idx, bit = 0;
-      UiReadSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,&filter_map,0x0000,0x0000,0xFFFF);
-
-      for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
-        ts.filter_select[idx] = (filter_map&(1<<bit))!=0?1:0;
-      }
       {
         int idx, mem_idx;
         for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
@@ -707,12 +659,7 @@ void UiConfiguration_LoadEepromValues(void)
         ts.dmod_mode = (value16 >> 8) & 0x0F;       // demodulator mode might not be right for saved band!
         if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)       // valid mode value from EEPROM? or defaults loaded?
             ts.dmod_mode = DEMOD_LSB;           // no - set to LSB
-        //
-        ts.filter_id = (value16 >> 12) & 0x0F;  // get filter setting
-        if((ts.filter_id >= AUDIO_MAX_FILTER) || (ts.filter_id < AUDIO_MIN_FILTER) || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)        // audio filter invalid or defaults to be loaded?
-            ts.filter_id = AUDIO_DEFAULT_FILTER;    // set default audio filter
-        //
-        //printf("-->band and mode loaded\n\r");
+
     }
     // ------------------------------------------------------------------------------------
     // Try to read Freq saved values
@@ -983,12 +930,9 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 //      UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
     }
 
-
-    // ------------------------------------------------------------------------------------
-    // Read Band and Mode saved values - update if changed
     UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
-            (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8) | ((uint16_t)ts.filter_id << 12)),
-            (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) | ((uint16_t)ts.filter_id << 12) ));
+            (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
+            (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
 
     UiReadWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
     // save current band/frequency/mode settings
@@ -997,9 +941,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
     // Save decode mode
     vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
-    // Save filter setting
-    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].filter_mode = ts.filter_id;
-    //
+
     // Save stored band/mode/frequency memory from RAM
     //
 

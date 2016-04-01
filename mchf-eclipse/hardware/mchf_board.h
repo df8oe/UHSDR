@@ -710,7 +710,7 @@ typedef struct Gain_s {
 struct vfo_reg_s {
     uint32_t dial_value;
     uint32_t decod_mode;
-    uint32_t filter_mode;
+//    uint32_t filter_mode;
 };
 
 typedef struct vfo_reg_s VfoReg;
@@ -823,7 +823,7 @@ typedef struct TransceiverState
 	uchar	tx_meter_mode;				// meter mode
 
 	// Audio filter ID
-	uchar	filter_id;
+	// uchar	filter_id;
 	//
 	uint8_t   filter_select[AUDIO_FILTER_NUM];
 
