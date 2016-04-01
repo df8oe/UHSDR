@@ -104,20 +104,11 @@ enum {
 #define AUDIO_MAX_FILTER        (AUDIO_FILTER_NUM-1)
 //
 
-typedef struct FilterConfig_s {
-  const char*    label;
-  const uint16_t offset;
-} FilterConfig;
 
 typedef struct FilterDescriptor_s {
   const uint8_t id;
   const char* name;
   const uint16_t width;
-  const uint16_t allowed_modes;
-  const uint16_t always_on_modes;
-  const uint8_t configs_num;
-  const uint8_t config_default;
-  const FilterConfig* config;
 } FilterDescriptor;
 
 extern FilterDescriptor FilterInfo[AUDIO_FILTER_NUM];

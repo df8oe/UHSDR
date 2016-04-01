@@ -1288,50 +1288,6 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint
 }
 
 
-static void  __attribute__ ((noinline))  UiDriverMenuChangeFilter(uint8_t filter_id, bool changed) {
-	if((ts.txrx_mode == TRX_MODE_RX) && (changed))	{	// set filter if changed
-		if(ts.filter_id == filter_id)	{
-			//UiDriverProcessActiveFilterScan();	// find next active filter
-			audio_driver_set_rx_audio_filter();
-			UiDriverChangeFilterDisplay();
-			UiDriverDisplayFilterBW();	// update on-screen filter bandwidth indicator
-		}
-	}
-}
-
-
-static bool UiMenuHandleFilterConfig(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint8_t bwId) {
-  bool fchange = false;
-  if (bwId < AUDIO_FILTER_NUM) {
-    FilterDescriptor *filter = &FilterInfo[bwId];
-    if(ts.dmod_mode != DEMOD_FM)    {
-      fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_select[bwId],
-          0,
-          filter->configs_num-1,
-          filter->config_default,
-          1
-      );
-      if(ts.filter_id != bwId) {
-        *clr_ptr = Orange;
-      }
-    }
-    else                // show disabled if in FM
-      *clr_ptr = Red;
-
-    if (ts.filter_select[bwId] == 0)    {
-      *clr_ptr = Red;
-    }
-    strcpy(options,
-        (ts.filter_select[bwId] < filter->configs_num)?
-        filter->config[ts.filter_select[bwId]].label:
-        "UNDEFINED"
-        );
-    UiDriverMenuChangeFilter(bwId,fchange);
-  }
-  return fchange;
-}
-
-
 //
 //
 //*----------------------------------------------------------------------------
@@ -1394,47 +1350,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		}
 		//
 		sprintf(options, "  %u", ts.dsp_nr_strength);
-		break;
-	//
-	case MENU_300HZ_SEL:	// 300 Hz filter select
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_300HZ);
-		break;
-	case MENU_500HZ_SEL:	// 500 Hz filter select
-	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_500HZ);
-	  break;
-	case MENU_1K8_SEL:	// 1.8 kHz filter select
-	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P8KHZ);
-	  break;
-
-	case MENU_2K3_SEL: // 2.3 kHz filter select
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P3KHZ);
-		break;
-	case MENU_2K7_SEL: // 2.7 kHz filter select
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P7KHZ);
-		break;
-	case MENU_3K6_SEL: // 3.6 kHz filter select
-	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P6KHZ);
-		break;
-	case MENU_4K4_SEL:	//
-	  UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P4KHZ);
-	  break;
-	case MENU_6K0_SEL:	//
-      UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_6P0KHZ);
-	  break;
-
-	case MENU_CW_WIDE_FILT: // CW mode wide filter enable/disable
-		UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.filter_cw_wide_disable,0,options,&clr);
-
-		if((ts.filter_id != DEMOD_CW))	// make orange if NOT in "Wide" mode
-			clr = Orange;
-		break;
-	//
-	case MENU_SSB_NARROW_FILT: // SSW mode narrow filter enable/disable
-		UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.filter_ssb_narrow_disable,0,options,&clr);
-
-		if((ts.filter_id != DEMOD_CW))	// make orange if NOT in "Wide" mode
-					clr = Orange;
-
 		break;
 		//
 	case MENU_AM_DISABLE: // AM mode enable/disable
@@ -3472,72 +3387,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 			}
 		}
 		break;
-	case MENU_1K4_SEL: //
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P4KHZ);
-		break;
-	case MENU_1K6_SEL: //
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_1P6KHZ);
-		break;
-	case MENU_2K1_SEL: //
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P1KHZ);
-		break;
-	case MENU_2K5_SEL: //
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P5KHZ);
-		break;
-	case MENU_2K9_SEL: // 2.9 kHz filter select
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_2P9KHZ);
-		break;
-	case MENU_3K2_SEL: //
-      UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P2KHZ);
-		break;
-	case MENU_3K4_SEL: //
-        UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P4KHZ);
-		break;
-	case MENU_3K8_SEL: //
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_3P8KHZ);
-		break;
-	case MENU_4K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P0KHZ);
-		break;
-	case MENU_4K2_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P2KHZ);
-		break;
-	case MENU_4K6_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P6KHZ);
-		break;
-	case MENU_4K8_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_4P8KHZ);
-		break;
-	case MENU_5K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_5P0KHZ);
-		break;
-	case MENU_5K5_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_5P5KHZ);
-		break;
-	case MENU_6K5_SEL:	//
-        UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_6P5KHZ);
-		break;
-	case MENU_7K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_7P0KHZ);
-		break;
-	case MENU_7K5_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_7P5KHZ);
-		break;
-	case MENU_8K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_8P0KHZ);
-		break;
-	case MENU_8K5_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_8P5KHZ);
-		break;
-	case MENU_9K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_9P0KHZ);
-		break;
-	case MENU_9K5_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_9P5KHZ);
-		break;
-	case MENU_10K0_SEL:	//
-	    UiMenuHandleFilterConfig(var,mode,options,&clr,AUDIO_10P0KHZ);
-		break;
 	case    MENU_FP_CW_01:
 	case    MENU_FP_CW_02:
 	case    MENU_FP_CW_03:
@@ -3563,28 +3412,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
     case    MENU_FP_SAM_04:
     UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
     break;
-
-    case MENU_FP_SEL: // FIXME: Remove after FilterPaths become officially used
-        {
-          temp_var = ts.filter_path;
-          tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
-              0,
-              AUDIO_FILTER_PATH_NUM,
-              0,
-              1);
-          if(tchange) {   // did something change?
-            AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (temp_var< ts.filter_path?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-            UiInitRxParms();
-          }
-          {
-            const char *filter_names[2];
-            AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
-            sprintf(options, "   %s-%s", filter_names[0],filter_names[1]);
-          }
-        }
-        break;
-
-
     case CONFIG_DSP_ENABLE:	// Enable DSP NR
 		temp_var = ts.dsp_enabled;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
