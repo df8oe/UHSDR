@@ -1,53 +1,31 @@
-/**
-  ******************************************************************************
-  * @author  MCD Application Team
-  * @version V1.0.0
-  * @date    28-October-2011
-  * @brief   IAP thru USB host main file
-  ******************************************************************************
-  * @attention
-  *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  *
-  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
-  ******************************************************************************
-  */
+/************************************************************************************
+**                                                                                 **
+**                               mcHF QRP Transceiver                              **
+**                             K Atanassov - M0NKA 2014                            **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name: main.c                                                              **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:		CC BY-NC-SA 3.0                                            **
+************************************************************************************/
 
-/* Includes ------------------------------------------------------------------*/
 #include "usbh_core.h"
 #include "usbh_usr.h"
 #include "usbh_msc_core.h"
 #include "flash_if.h"
 
 
-/* External variables --------------------------------------------------------*/
-/* Private typedef -----------------------------------------------------------*/
-/* Private defines -----------------------------------------------------------*/
-/* Private macros ------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
 USB_OTG_CORE_HANDLE          USB_OTG_Core;
 USBH_HOST                    USB_Host;
 
 pFunction Jump_To_Application;
 uint32_t JumpAddress;
 
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-
-/**
-  * @brief  main
-  *         Main routine for IAP application
-  * @param  None
-  * @retval int
-  */
 int main(void)
 {
-  /* STM32 evalboard user initialization */
+  /* initialization */
   BSP_Init();
   STM_EVAL_LEDOn(ON);
 
@@ -66,7 +44,7 @@ else
 
   /* Flash unlock */
   FLASH_If_FlashUnlock();
-  
+
   /* Test if BAND- button on mchf is pressed */
   if (STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_SET)
   {

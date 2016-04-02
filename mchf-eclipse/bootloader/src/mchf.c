@@ -1,5 +1,19 @@
-/* Includes ------------------------------------------------------------------*/
+/************************************************************************************
+**                                                                                 **
+**                               mcHF QRP Transceiver                              **
+**                             K Atanassov - M0NKA 2014                            **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name: mchf.c                                                              **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:		CC BY-NC-SA 3.0                                            **
+************************************************************************************/
+
+
 #include "mchf.h"
+
 
 GPIO_TypeDef* GPIO_PORT[LEDn] = {LEDGREEN_GPIO_PORT, LEDRED_GPIO_PORT, ON_GPIO_PORT, BLON_GPIO_PORT};
 const uint16_t GPIO_PIN[LEDn] = {LEDGREEN_PIN, LEDRED_PIN, ON_PIN, BLON_PIN};
