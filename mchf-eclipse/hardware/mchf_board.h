@@ -681,14 +681,6 @@ enum {
 
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 
-//
-//
-// NOTE:  EEPROM addresses up to 383 are currently defined
-//
-// *******************************************************************************************************
-//
-
-
 
 enum {
   DISPLAY_NONE = 0,

@@ -481,5 +481,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_FILTER_PATH_MAP_END (329 + FILTER_MODE_MAX*FILTER_PATH_MEM_MAX)   // this is currently 5*5 = 25
 #define EEPROM_FIRST_UNUSED 329+25  // change this if new value ids are introduced
 
+// Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
+// need to modify virtual EEPROM routines otherwise system may crash
 
 #endif /* DRIVERS_UI_UI_CONFIGURATION_H_ */
