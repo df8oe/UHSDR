@@ -96,7 +96,6 @@ static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature(void);
 static void 	UiDriverSwitchOffPtt(void);
 static void 	UiDriverInitMainFreqDisplay(void);
-void 	audio_snap_carrier (void);
 
 //
 //
@@ -1747,10 +1746,10 @@ void UiDriverShowMode(void)	{
 void UiDriverShowStep(ulong step)
 {
 
-	ulong	line_loc;
+	int	line_loc;
 	static	bool	step_line = 0;	// used to indicate the presence of a step line
-	ulong	color;
-	ulong 	stepsize_background;
+	uint32_t	color;
+	uint32_t 	stepsize_background;
 
 	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
 	stepsize_background = ts.dynamic_tuning_active?Grey3:Black;
@@ -1765,52 +1764,18 @@ void UiDriverShowStep(ulong step)
 	UiLcdHy28_DrawFullRect(POS_TUNE_STEP_MASK_X,POS_TUNE_STEP_MASK_Y,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,Black);
 
 	{
-		const char* step_name;
+		char step_name[10];
 
-		// Create Step Mode
-		switch(df.tuning_step)
-		{
-		case T_STEP_1HZ:
-			step_name = "1Hz";
-			line_loc = 9;
-			break;
-		case T_STEP_10HZ:
-			line_loc = 8;
-			step_name = "10Hz";
-			break;
-		case T_STEP_100HZ:
-			step_name = "100Hz";
-			line_loc = 7;
-			break;
-		case T_STEP_1KHZ:
-			step_name = "1kHz";
-			line_loc = 5;
-			break;
-		case T_STEP_5KHZ:
-			step_name = "5kHz";
-			line_loc = 5;
-			break;
-		case T_STEP_10KHZ:
-			step_name = "10kHz";
-			line_loc = 4;
-			break;
-		case T_STEP_100KHZ:
-			step_name = "100kHz";
-			line_loc = 3;
-			break;
-		case T_STEP_1MHZ:
-			step_name = "1MHz";
-			line_loc = 3;
-			break;
-		case T_STEP_10MHZ:
-			step_name = "10MHz";
-			line_loc = 3;
-			break;
-		default:
-			step_name = "???";
-			line_loc = 0; // default for unknown tuning step modes, disables the frequency marker display
-			break;
-		}
+		// I know the code below will not win the price for the most readable code
+		// ever. But it does the job of display any freq step somewhat reasonable.
+		// khz/Mhz only whole  khz/Mhz is shown, no fraction
+		// showing fractions would require some more coding, which is not yet necessary
+		const uint32_t pow10 = log10(df.tuning_step);
+		line_loc = 9 - pow10 - pow10/3;
+		if (line_loc < 0) { line_loc = 0; }
+		const char* stepUnitPrefix[] = { "","k","M","G","T"};
+		snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((pow10/3)*3)), stepUnitPrefix[pow10/3]);
+
 		UiLcdHy28_PrintTextRight((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*6),POS_TUNE_STEP_Y,step_name,color,stepsize_background,0);
 	}
 	//

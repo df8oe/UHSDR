@@ -416,6 +416,26 @@ const uint16_t VirtAddVarTab[NB_OF_VAR] =
         VAR_ADDR_383
 };
 
+
+enum {
+  UInt8,
+};
+
+typedef struct {
+  int typeId;
+  uint16_t id;
+  volatile void* val_ptr;
+  int32_t val_default;
+  int32_t val_min;
+  int32_t val_max;
+} ConfigEntryDescriptor;
+
+ConfigEntryDescriptor ConfigEntryInfo[] = {
+    { UInt8, EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX},
+};
+
+
+
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, volatile bool* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
@@ -618,7 +638,7 @@ void UiReadSettingEEPROM_Filter()
         int idx, mem_idx;
         for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
           for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
-            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,0xFFFF);
+            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,AUDIO_FILTER_PATH_NUM-1);
           }
         }
       }
