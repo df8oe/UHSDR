@@ -3313,7 +3313,7 @@ static void UiDriverTimeScheduler(void)
 		}
 	}
 	//
-	if(!(ts.misc_flags1 & 1))	{			// If auto-switch on TX/RX is enabled
+	if(!(ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI))	{			// If auto-switch on TX/RX is enabled
 		if(ts.txrx_mode == TRX_MODE_TX)	{
 			if(!was_tx)	{
 				was_tx = 1;		// set flag so that we only change this once, as entering
@@ -3614,7 +3614,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 				loc_mode++;				// yes - go to next mode
 		}
 		if(loc_mode == DEMOD_FM)	{	// is this FM mode?
-			if((!(ts.misc_flags2 & 1)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
+			if((!(ts.misc_flags2 & MISC_FLAGS2_FM_MODE_ENABLE)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
 				loc_mode++;				// yes - go to next mode
 		}
 	}
@@ -5099,7 +5099,7 @@ static void UiDriverHandleLowerMeter(void)
 	if(swrm.p_curr < SWR_SAMPLES_CNT)
 	{
 		// Get next sample
-		if(!(ts.misc_flags1 & 16))	{	// is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
+		if(!(ts.misc_flags1 & MISC_FLAGS1_FREQ_LIMIT_RELAX))	{	// is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
 			val_p = ADC_GetConversionValue(ADC2);	// forward
 			val_s = ADC_GetConversionValue(ADC3);	// return
 		}
@@ -5929,7 +5929,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 	//
 	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
 
-	if((df.tune_new < 8000000 * 4) && (ts.misc_flags2 & 8))		// reduction for frequencies < 8 MHz
+	if((df.tune_new < 8000000 * 4) && (ts.misc_flags2 & MISC_FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
 	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 //

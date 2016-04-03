@@ -512,8 +512,8 @@ const MenuDescriptor confGroup[] = {
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap"},
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB  AGC T/C (<=Slow)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_AM_TX_FILTER_ENABLE,"330","AM  TX Audio Filter"},
-    { MENU_CONF, MENU_ITEM, CONFIG_SSB_TX_FILTER_ENABLE,"331","SSB TX Audio Filter"},
+    { MENU_CONF, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE,"330","AM  TX Audio Filter"},
+    { MENU_CONF, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
     { MENU_CONF, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Ser EEPROM"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_ENABLE,"530","DSP NR (EXPERIMENTAL)"},
@@ -1379,13 +1379,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	//
 	case MENU_FM_MODE_ENABLE:	// Enable/Disable FM
 		if(ts.iq_freq_mode)	{
-			temp_var = ts.misc_flags2 & 1;
+			temp_var = ts.misc_flags2 & MISC_FLAGS2_FM_MODE_ENABLE;
 			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)	{
 				if(temp_var)	// band up/down swap is to be enabled
-					ts.misc_flags2 |= 1;		// FM is enabled
+					ts.misc_flags2 |= MISC_FLAGS2_FM_MODE_ENABLE;		// FM is enabled
 				else			// band up/down swap is to be disabled
-					ts.misc_flags2 &= 0xfe;		// FM is disabled
+					ts.misc_flags2 &= ~MISC_FLAGS2_FM_MODE_ENABLE;		// FM is disabled
 			}
 
 		}
@@ -1512,16 +1512,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	//
 	case MENU_FM_DEV_MODE:	// Select +/- 2.5 or 5 kHz deviation on RX and TX
 		if(ts.iq_freq_mode)	{
-			temp_var = ts.misc_flags2 & 2;
+			temp_var = ts.misc_flags2 & MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ;
 			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)	{
 				if(temp_var)	// band up/down swap is to be enabled
-					ts.misc_flags2 |= 2;		// set 5 kHz mode
+					ts.misc_flags2 |= MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ;		// set 5 kHz mode
 				else			// band up/down swap is to be disabled
-					ts.misc_flags2 &= 0xfd;		// set 2.5 kHz mode
+					ts.misc_flags2 &= ~MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ;		// set 2.5 kHz mode
 			}
 			//
-			if(ts.misc_flags2 & 2)				// Check state of bit indication 2.5/5 kHz
+			if(ts.misc_flags2 & MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ)				// Check state of bit indication 2.5/5 kHz
 				strcpy(options, "+-5k (Wide)");		// Bit is set - 5 kHz
 			else
 				strcpy(options, "+-2k5 (Nar)");		// Not set - 2.5 kHz
@@ -2172,15 +2172,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						break;
 			//
 		case MENU_SCOPE_MODE:
-			temp_sel = (ts.misc_flags1 & 0x80)?1:0;
+			temp_sel = (ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
 
 			UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_sel,0,options,&clr);
 
-			if (temp_sel) { ts.misc_flags1 |= 0x80; }
-			else { ts.misc_flags1 &= ~0x80 ; }
+			if (temp_sel) { ts.misc_flags1 |= MISC_FLAGS1_WFALL_SCOPE_TOGGLE; }
+			else { ts.misc_flags1 &= ~MISC_FLAGS1_WFALL_SCOPE_TOGGLE ; }
 
 
-			if(ts.misc_flags1 & 0x80)				// is waterfall mode active?
+			if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)				// is waterfall mode active?
 				strcpy(options, "WFALL");		// yes - indicate waterfall mode
 			else
 				strcpy(options, "SCOPE");		// no, scope mode
@@ -2438,13 +2438,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		}
 		break;
 	case CONFIG_BAND_BUTTON_SWAP:	// Swap position of Band+ and Band- buttons
-		temp_var = ts.misc_flags1 & 2;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_SWAP_BAND_BTN;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// band up/down swap is to be enabled
-				ts.misc_flags1 |= 2;		// set LSB
+				ts.misc_flags1 |= MISC_FLAGS1_SWAP_BAND_BTN;		// set LSB
 			else			// band up/down swap is to be disabled
-				ts.misc_flags1 &= 0xfd;		// clear LSB
+				ts.misc_flags1 &= ~MISC_FLAGS1_SWAP_BAND_BTN;		// clear LSB
 		}
 		break;
 	case CONFIG_TX_DISABLE:	// Step size button swap on/off
@@ -2458,23 +2458,23 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		}
 		break;
 	case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
-		temp_var = ts.misc_flags1 & 1;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// change-on-tx is to be disabled
-				ts.misc_flags1 |= 1;		// set LSB
+				ts.misc_flags1 |= MISC_FLAGS1_TX_AUTOSWITCH_UI;		// set LSB
 			else			// change-on-tx is to be enabled
-				ts.misc_flags1 &= 0xfe;		// clear LSB
+				ts.misc_flags1 &= ~MISC_FLAGS1_TX_AUTOSWITCH_UI;		// clear LSB
 		}
 		break;
 	case CONFIG_MUTE_LINE_OUT_TX:	// Enable/disable MUTE of TX audio on LINE OUT
-		temp_var = ts.misc_flags1 & 4;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_MUTE_LINEOUT_TX;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if((tchange) && (!ts.iq_freq_mode))		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// Yes - MUTE of TX audio on LINE OUT is enabled
-				ts.misc_flags1 |= 4;		// set LSB
+				ts.misc_flags1 |= MISC_FLAGS1_MUTE_LINEOUT_TX;		// set LSB
 			else			// MUTE of TX audio on LINE OUT is disabled
-				ts.misc_flags1 &= 0xfb;		// clear LSB
+				ts.misc_flags1 &= ~MISC_FLAGS1_MUTE_LINEOUT_TX;		// clear LSB
 		}
 		if(ts.iq_freq_mode)	// Mark RED if translate mode is active
 			clr = Red;
@@ -2563,18 +2563,18 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "    %u", ts.max_rf_gain);
 		break;
 	case CONFIG_BEEP_ENABLE:	//
-		temp_var = ts.misc_flags2 & 4;
+		temp_var = ts.misc_flags2 & MISC_FLAGS2_KEY_BEEP_ENABLE;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// beep is to be enabled
-				ts.misc_flags2 |= 4;		// set LSB+2
+				ts.misc_flags2 |= MISC_FLAGS2_KEY_BEEP_ENABLE;		// set LSB+2
 			else			// beep is to be disabled
-				ts.misc_flags2 &= 0xfb;		// clear LSB+2
+				ts.misc_flags2 &= ~MISC_FLAGS2_KEY_BEEP_ENABLE;		// clear LSB+2
 			UiMenu_RenderMenu(MENU_RENDER_ONLY);
 		}
 		break;
 	case CONFIG_BEEP_FREQ:		// Beep frequency
-		if(ts.misc_flags2 & 4)	{	// is beep enabled?
+		if(ts.misc_flags2 & MISC_FLAGS2_KEY_BEEP_ENABLE)	{	// is beep enabled?
 			tchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.beep_frequency,
 								MIN_BEEP_FREQUENCY,
 								MAX_BEEP_FREQUENCY,
@@ -2649,28 +2649,28 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		break;
 		//
 	case CONFIG_FREQ_LIMIT_RELAX:	// Enable/disable Frequency tuning limits
-		temp_var = ts.misc_flags1 & 32;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_FREQ_LIMIT_RELAX;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// tuning limit is disabled
-				ts.misc_flags1 |= 32;		// set bit
+				ts.misc_flags1 |= MISC_FLAGS1_FREQ_LIMIT_RELAX;		// set bit
 			else			// tuning limit is enabled
-				ts.misc_flags1 &= 0xdf;		// clear bit
+				ts.misc_flags1 &= ~MISC_FLAGS1_FREQ_LIMIT_RELAX;		// clear bit
 		}
-		if(ts.misc_flags1 & 32)	{			// tuning limit is disabled
+		if(ts.misc_flags1 & MISC_FLAGS1_FREQ_LIMIT_RELAX)	{			// tuning limit is disabled
 			clr = Orange;					// warn user!
 		}
 		break;
 	case CONFIG_FREQ_MEM_LIMIT_RELAX:	// Enable/disable Frequency memory limits
-		temp_var = ts.misc_flags2 & 16;
+		temp_var = ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change?
 			if(temp_var)	// freq/mem limit is disabled
-				ts.misc_flags2 |= 16;		// set bit
+				ts.misc_flags2 |= MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX;		// set bit
 			else			// freq/mem limit is enabled
-				ts.misc_flags2 &= 0xef;		// clear bit
+				ts.misc_flags2 &= ~MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX;		// clear bit
 		}
-		if(ts.misc_flags2 & 16)	{			// frequency/memory limit is disabled
+		if(ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX)	{			// frequency/memory limit is disabled
 			clr = Orange;					// warn user!
 		}
 		break;
@@ -2964,15 +2964,15 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_23, &swrm.coupling_23cm_calc, options, &clr);
 		break;
 	case CONFIG_FWD_REV_SENSE_SWAP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
-		temp_var = ts.misc_flags1 & 16;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// swapping of FWD/REV is enabled
-				ts.misc_flags1 |= 16;		// set bit
+				ts.misc_flags1 |= MISC_FLAGS1_SWAP_FWDREV_SENSE;		// set bit
 			else			// swapping of FWD/REV bit is disabled
-				ts.misc_flags1 &= 0xef;		// clear bit
+				ts.misc_flags1 &= ~MISC_FLAGS1_SWAP_FWDREV_SENSE;		// clear bit
 		}
-		if(ts.misc_flags1 & 16)	{			// Display status FWD/REV swapping
+		if(ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE)	{			// Display status FWD/REV swapping
 			clr = Orange;					// warn user swapping is on!
 		}
 		break;
@@ -3148,13 +3148,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
 		break;
 	case CONFIG_REDUCE_POWER_ON_LOW_BANDS:	// Step size button swap on/off
-		temp_var = ts.misc_flags2 & 8;
+		temp_var = ts.misc_flags2 & MISC_FLAGS2_LOW_BAND_BIAS_REDUCE;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange) {
 		    if(temp_var)
-			ts.misc_flags2 |= 8;
+			ts.misc_flags2 |= MISC_FLAGS2_LOW_BAND_BIAS_REDUCE;
 		    else
-			ts.misc_flags2 &= 0xf7;
+			ts.misc_flags2 &= ~MISC_FLAGS2_LOW_BAND_BIAS_REDUCE;
 		}
 		break;
 	case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:		// Adjustment of DSP noise reduction de-correlation delay buffer length
@@ -3277,29 +3277,29 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		//
 		sprintf(options, "  %u", ts.nb_agc_time_const);
 		break;
-	case CONFIG_AM_TX_FILTER_ENABLE:	// Enable/disable AM TX audio filter
-		temp_var = ts.misc_flags1 & 8;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+	case CONFIG_AM_TX_FILTER_DISABLE:	// Enable/disable AM TX audio filter
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_AM_TX_FILTER_DISABLE;
+		tchange = UiDriverMenuItemChangeDisableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// AM TX audio filter is disabled
-				ts.misc_flags1 |= 8;		// set LSB
+				ts.misc_flags1 |= MISC_FLAGS1_AM_TX_FILTER_DISABLE;		// set LSB
 			else			// AM TX audio filter is enabled
-				ts.misc_flags1 &= 0xf7;		// clear LSB
+				ts.misc_flags1 &= ~MISC_FLAGS1_AM_TX_FILTER_DISABLE;		// clear LSB
 		}
-		if(ts.misc_flags1 & 8)	{			// Display status of TX audio filter
+		if(ts.misc_flags1 & MISC_FLAGS1_AM_TX_FILTER_DISABLE)	{			// Display status of TX audio filter
 			clr = Orange;					// warn user that filter is off!
 		}
 		break;
-	case CONFIG_SSB_TX_FILTER_ENABLE:	// Enable/disable SSB TX audio filter
-		temp_var = ts.misc_flags1 & 64;
-		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+	case CONFIG_SSB_TX_FILTER_DISABLE:	// Enable/disable SSB TX audio filter
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_SSB_TX_FILTER_DISABLE;
+		tchange = UiDriverMenuItemChangeDisableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)		{	// did the status change and is translate mode NOT active?
 			if(temp_var)	// SSB TX audio filter is disabled
-				ts.misc_flags1 |= 64;		// set bit
+				ts.misc_flags1 |= MISC_FLAGS1_SSB_TX_FILTER_DISABLE;		// set bit
 			else			// SSB TX audio filter is enabled
-				ts.misc_flags1 &= 0xbf;		// clear bit
+				ts.misc_flags1 &= ~MISC_FLAGS1_SSB_TX_FILTER_DISABLE;		// clear bit
 		}
-		if(ts.misc_flags1 & 64)	{			// Display status of TX audio filter
+		if(ts.misc_flags1 & MISC_FLAGS1_SSB_TX_FILTER_DISABLE)	{			// Display status of TX audio filter
 			clr = Red;					// warn user that filter is off!
 		}
 		break;

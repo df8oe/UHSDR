@@ -949,7 +949,13 @@ typedef struct TransceiverState
 	//
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
+    #define MISC_FLAGS1_TX_AUTOSWITCH_UI 0x01
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
+    #define MISC_FLAGS1_MUTE_LINEOUT_TX 0x04
+    #define MISC_FLAGS1_AM_TX_FILTER_DISABLE 0x08
+    #define MISC_FLAGS1_SWAP_FWDREV_SENSE 0x10
+    #define MISC_FLAGS1_FREQ_LIMIT_RELAX 0x20
+    #define MISC_FLAGS1_SSB_TX_FILTER_DISABLE 0x40
 	#define MISC_FLAGS1_WFALL_SCOPE_TOGGLE 0x80
 	uchar	misc_flags1;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
 							// LSB   = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
@@ -961,11 +967,18 @@ typedef struct TransceiverState
 							// LSB+5 = 1 if Frequency tuning is to be relaxed
 							// LSB+6 = 1 if SSB TX has transmit filter DISABLED
 							// LSB+7 = 0 = Spectrum Scope (analyzer), 1 = Waterfall display
+
+	#define MISC_FLAGS2_FM_MODE_ENABLE 0x01
+    #define MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ 0x02
+    #define MISC_FLAGS2_KEY_BEEP_ENABLE 0x04
+    #define MISC_FLAGS2_LOW_BAND_BIAS_REDUCE 0x08
+    #define MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX 0x10
 	uchar	misc_flags2;				// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
 							// LSB   = 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
 							// LSB+1 = 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
 							// LSB+2 = 1 if key/button beep is enabled
-							// LSB+3 = 1 if memory-save versus frequency restrictions are to be relaxed
+	                        // LSB+3 = 1 if bias values for lower bands  below 8Mhz have lower influence factor
+							// LSB+4 = 1 if memory-save versus frequency restrictions are to be relaxed
 	ulong	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
 							// is NEVER reset and is used for timing certain events.
 	uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
