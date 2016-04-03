@@ -430,9 +430,24 @@ typedef struct {
   int32_t val_max;
 } ConfigEntryDescriptor;
 
-ConfigEntryDescriptor ConfigEntryInfo[] = {
+#define CONFIG_ENTRY_NUM 1
+const ConfigEntryDescriptor ConfigEntryInfo[1] = {
     { UInt8, EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX},
 };
+
+// TODO: LINEAR SEARCH IS VERY BAD FOR LARGER SETS, replace with more clever strategy.
+const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id) {
+  int idx;
+  const ConfigEntryDescriptor* retval = NULL;
+    for (idx = 0; idx < CONFIG_ENTRY_NUM; idx++) {
+      if (ConfigEntryInfo[idx].id == id) {
+        retval = &ConfigEntryInfo[idx];
+        break;
+      }
+    }
+    return retval;
+}
+
 
 
 
@@ -510,7 +525,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32(uint16_t addrH
 }
 
 
-
+#if 0
 static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
@@ -536,6 +551,16 @@ static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_UInt32(uint16_t 
         Write_EEPROM(addrL, (uint16_t)(default_val));
     }
 }
+#endif
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
+    Write_EEPROM(addr, set_val);
+}
+
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val ) {
+    Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
+    Write_EEPROM(addrL, (uint16_t)(set_val));
+}
+
 
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg) {
     uint32_t value32;
@@ -564,7 +589,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
             vforeg->dial_value = value32;
             //printf("-->frequency loaded\n\r");
         }
-        else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+        else if((ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
         {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
             vforeg->dial_value = value32;
             //printf("-->frequency loaded (relaxed)\n\r");
@@ -578,6 +603,42 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
     }
 
 }
+
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Bool(uint16_t addr, bool set_val, bool default_val ) {
+    UiWriteSettingEEPROM_UInt16(addr,(uint16_t)set_val,(uint16_t)default_val);
+}
+
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val, uint16_t default_val ) {
+    UiWriteSettingEEPROM_UInt16(addr,set_val,default_val);
+}
+
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Int32_16(uint16_t addr, int32_t set_val, int32_t default_val ) {
+    UiWriteSettingEEPROM_UInt16(addr,(uint16_t)(int16_t)set_val,default_val);
+}
+
+
+static void UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg) {
+
+    // ------------------------------------------------------------------------------------
+    // Read Band and Mode saved values - update if changed
+    UiWriteSettingEEPROM_UInt16(band_mode + i,
+            (vforeg->decod_mode << 8),
+            ((vforeg->decod_mode & 0x0f) << 8)
+    );
+    // Try to read Freq saved values - update if changed
+    UiWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
+}
+
+void UiWriteSettingEEPROM_Filter() {
+  int idx, mem_idx;
+  for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+    for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+      UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+    }
+  }
+}
+
+#if 0
 
 static void __attribute__ ((noinline)) UiReadWriteSettingEEPROM_Bool(uint16_t addr, bool set_val, bool default_val ) {
     UiReadWriteSettingEEPROM_UInt16(addr,(uint16_t)set_val,(uint16_t)default_val);
@@ -606,44 +667,22 @@ static void UiReadWriteSettingsBandMode(const uint16_t i,const uint16_t band_mod
 
 void UiReadWriteSettingEEPROM_Filter()
 {
-
-    // for filters above 3k8 we have only a single bit setting, this does not work with filters
-    // having more than on/off !
-    {
-      uint32_t filter_map = 0;
-      int idx, bit = 0;
-      for (idx = AUDIO_4P0KHZ; idx < AUDIO_MAX_FILTER && bit < 32; idx++,bit++) {
-        filter_map |=(ts.filter_select[idx]!=0?1:0)<<bit;
-      }
-      UiReadWriteSettingEEPROM_UInt32(EEPROM_FILTER_2_SEL,EEPROM_FILTER_1_SEL,filter_map,0x0000);
-
+  int idx, mem_idx;
+  for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+    for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+      UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
     }
-    {
-      int idx, mem_idx;
-      for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
-          UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
-        }
-      }
-    }
+  }
 }
-
+#endif
 void UiReadSettingEEPROM_Filter()
 {
-
-    // for filters above 3k8 we have only a single bit setting, this does not work with filters
-    // having more than on/off !
-    {
-      {
-        int idx, mem_idx;
-        for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-          for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
-            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,AUDIO_FILTER_PATH_NUM-1);
-          }
-        }
-      }
+  int idx, mem_idx;
+  for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
+    for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
+      UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,AUDIO_FILTER_PATH_NUM-1);
     }
-
+  }
 }
 //
 //*----------------------------------------------------------------------------
@@ -692,17 +731,14 @@ void UiConfiguration_LoadEepromValues(void)
         if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= bandInfo[ts.band].tune) && (value32 <= (bandInfo[ts.band].tune + bandInfo[ts.band].size)))
         {
             df.tune_new = value32;
-            //printf("-->frequency loaded\n\r");
         }
-        else if((ts.misc_flags2 & 16) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))   {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        else if((ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))   {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
             df.tune_new = value32;
-            //printf("-->frequency loaded (relaxed)\n\r");
         }
         else
         {
             // Load default for this band
             df.tune_new = bandInfo[ts.band].tune;
-            //printf("-->base frequency loaded\n\r");
         }
     }
     //
@@ -950,11 +986,11 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 //      UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0);// strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
     }
 
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
+    UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
             (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
             (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
 
-    UiReadWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
+    UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
     // save current band/frequency/mode settings
     //
     // save frequency
@@ -966,59 +1002,59 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     //
 
     for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
-        // UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
-        UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
-        UiReadWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
+        // UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
+        UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
+        UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
     }
 
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_FREQ_STEP,df.selected_idx,3);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_AUDIO_GAIN,ts.rx_gain[RX_AUDIO_SPKR].value,DEFAULT_AUDIO_GAIN);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_RX_CODEC_GAIN,ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_GAIN,ts.rf_gain,DEFAULT_RF_GAIN);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_SETTING,ts.nb_setting,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_POWER_LEVEL,ts.power_level,PA_LEVEL_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_speed,DEFAULT_KEYER_SPEED);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_KEYER_MODE,ts.keyer_mode,CW_MODE_IAM_B);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_GAIN,ts.st_gain,DEFAULT_SIDETONE_GAIN);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_FREQ_CAL,ts.freq_cal,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_MODE,ts.agc_mode,AGC_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_MIC_GAIN,ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_LINE_GAIN,ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_SIDETONE_FREQ,ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_SPEED,ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_AGC_CUSTOM_DECAY,ts.agc_custom_decay,AGC_CUSTOM_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_TRACE_COLOUR,ts.scope_trace_colour,SPEC_COLOUR_TRACE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_GRID_COLOUR,ts.scope_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,ts.scope_centre_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_PADDLE_REVERSE,ts.paddle_reverse,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_RX_DELAY,ts.cw_rx_delay,CW_RX_DELAY_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_FREQ_STEP,df.selected_idx,3);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_SRC,ts.tx_audio_source,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TCXO_STATE,df.temp_enabled,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_AUDIO_GAIN,ts.rx_gain[RX_AUDIO_SPKR].value,DEFAULT_AUDIO_GAIN);
+    UiWriteSettingEEPROM_UInt16(EEPROM_RX_CODEC_GAIN,ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_GAIN,ts.rf_gain,DEFAULT_RF_GAIN);
+    UiWriteSettingEEPROM_UInt16(EEPROM_NB_SETTING,ts.nb_setting,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TX_POWER_LEVEL,ts.power_level,PA_LEVEL_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_KEYER_SPEED,ts.keyer_speed,DEFAULT_KEYER_SPEED);
+    UiWriteSettingEEPROM_UInt16(EEPROM_KEYER_MODE,ts.keyer_mode,CW_MODE_IAM_B);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SIDETONE_GAIN,ts.st_gain,DEFAULT_SIDETONE_GAIN);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_FREQ_CAL,ts.freq_cal,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_AGC_MODE,ts.agc_mode,AGC_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_MIC_GAIN,ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_LINE_GAIN,ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_SIDETONE_FREQ,ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_SPEED,ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPEC_SCOPE_FILTER,ts.scope_filter,SPECTRUM_SCOPE_FILTER_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_AGC_CUSTOM_DECAY,ts.agc_custom_decay,AGC_CUSTOM_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_TRACE_COLOUR,ts.scope_trace_colour,SPEC_COLOUR_TRACE_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_GRID_COLOUR,ts.scope_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_CENTRE_GRID_COLOUR,ts.scope_centre_grid_colour,SPEC_COLOUR_GRID_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCALE_COLOUR,ts.scope_scale_colour,SPEC_COLOUR_SCALE_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_PADDLE_REVERSE,ts.paddle_reverse,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_CW_RX_DELAY,ts.cw_rx_delay,CW_RX_DELAY_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_MAX_VOLUME,ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT);
 
-    UiReadWriteSettingEEPROM_Filter();
+    UiWriteSettingEEPROM_Filter();
 
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_PA_CW_BIAS,ts.pa_cw_bias,DEFAULT_PA_BIAS);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_GAIN_BALANCE,ts.tx_iq_lsb_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_USB_GAIN_BALANCE,ts.tx_iq_usb_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_PHASE_BALANCE,ts.tx_iq_lsb_phase_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_USB_PHASE_BALANCE,ts.tx_iq_usb_phase_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_LSB_GAIN_BALANCE,ts.rx_iq_lsb_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_USB_GAIN_BALANCE,ts.rx_iq_usb_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_LSB_PHASE_BALANCE,ts.rx_iq_lsb_phase_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_USB_PHASE_BALANCE,ts.rx_iq_usb_phase_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_AM_GAIN_BALANCE,ts.rx_iq_am_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_FM_GAIN_BALANCE,ts.rx_iq_fm_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_AM_GAIN_BALANCE,ts.tx_iq_am_gain_balance,0);
-    UiReadWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_FM_GAIN_BALANCE,ts.tx_iq_fm_gain_balance,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SENSOR_NULL,swrm.sensor_null,SENSOR_NULL_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_XVERTER_DISP,ts.xverter_mode,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_PA_BIAS,ts.pa_bias,DEFAULT_PA_BIAS);
+    UiWriteSettingEEPROM_UInt16(EEPROM_PA_CW_BIAS,ts.pa_cw_bias,DEFAULT_PA_BIAS);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_GAIN_BALANCE,ts.tx_iq_lsb_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_USB_GAIN_BALANCE,ts.tx_iq_usb_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_LSB_PHASE_BALANCE,ts.tx_iq_lsb_phase_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_USB_PHASE_BALANCE,ts.tx_iq_usb_phase_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_LSB_GAIN_BALANCE,ts.rx_iq_lsb_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_USB_GAIN_BALANCE,ts.rx_iq_usb_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_LSB_PHASE_BALANCE,ts.rx_iq_lsb_phase_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_USB_PHASE_BALANCE,ts.rx_iq_usb_phase_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_AM_GAIN_BALANCE,ts.rx_iq_am_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_RX_IQ_FM_GAIN_BALANCE,ts.rx_iq_fm_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_AM_GAIN_BALANCE,ts.tx_iq_am_gain_balance,0);
+    UiWriteSettingEEPROM_Int32_16(EEPROM_TX_IQ_FM_GAIN_BALANCE,ts.tx_iq_fm_gain_balance,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SENSOR_NULL,swrm.sensor_null,SENSOR_NULL_DEFAULT);
+    UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_XVERTER_DISP,ts.xverter_mode,0);
 
-#define UI_RW_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_5W,ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
+#define UI_RW_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) UiWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_5W,ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
 
     UI_RW_EEPROM_BAND_5W_PF(0,80,m);
     UI_RW_EEPROM_BAND_5W_PF(1,60,m);
@@ -1038,7 +1074,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     UI_RW_EEPROM_BAND_5W_PF(15,630,m);
     UI_RW_EEPROM_BAND_5W_PF(16,160,m);
 
-#define UI_RW_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiReadWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_FULL,ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
+#define UI_RW_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) UiWriteSettingEEPROM_UInt16(EEPROM_BAND##bandNo##_FULL,ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT)
 
     UI_RW_EEPROM_BAND_FULL_PF(0,80,m);
     UI_RW_EEPROM_BAND_FULL_PF(1,60,m);
@@ -1058,78 +1094,78 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     UI_RW_EEPROM_BAND_FULL_PF(15,630,m);
     UI_RW_EEPROM_BAND_FULL_PF(16,160,m);
 
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_MAGNIFY,sd.magnify,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WIDE_FILT_CW_DISABLE,ts.filter_cw_wide_disable,1);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_NARROW_FILT_SSB_DISABLE,ts.filter_ssb_narrow_disable,1);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_AM_MODE_DISABLE,ts.am_mode_disable,1);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_DB_DIV,ts.spectrum_db_scale,DB_DIV_ADJUST_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_AGC_RATE,ts.scope_agc_rate,SPECTRUM_SCOPE_AGC_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_METER_MODE,ts.tx_meter_mode,METER_SWR);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_MAGNIFY,sd.magnify,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WIDE_FILT_CW_DISABLE,ts.filter_cw_wide_disable,1);
+    UiWriteSettingEEPROM_UInt16(EEPROM_NARROW_FILT_SSB_DISABLE,ts.filter_ssb_narrow_disable,1);
+    UiWriteSettingEEPROM_UInt16(EEPROM_AM_MODE_DISABLE,ts.am_mode_disable,1);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_DB_DIV,ts.spectrum_db_scale,DB_DIV_ADJUST_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_AGC_RATE,ts.scope_agc_rate,SPECTRUM_SCOPE_AGC_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_METER_MODE,ts.tx_meter_mode,METER_SWR);
     //
     // is the TX compressor enabled?  If so, do NOT overwrite the currently-saved values for ALC release time or post-filter TX gain
     //
     //if(!ts.tx_comp_level) {
     // ------------------------------------------------------------------------------------
     // Try to read ALC release (decay) time - update if changed
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_ALC_DECAY_TIME,ts.alc_decay,ALC_DECAY_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_ALC_POSTFILT_TX_GAIN,ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_ALC_DECAY_TIME,ts.alc_decay,ALC_DECAY_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_ALC_POSTFILT_TX_GAIN,ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT);
     //  }
 
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_STEP_SIZE_CONFIG,ts.freq_step_config,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,ts.dsp_active,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_STRENGTH,ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_FFT_NUMTAPS,ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_CONV_RATE,ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_MAX_RX_GAIN,ts.max_rf_gain,MAX_RF_GAIN_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_COMPRESS,ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_DISABLE,ts.tx_disable,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS1,ts.misc_flags1,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS2,ts.misc_flags2,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_MINOR,ts.version_number_minor,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_NUMBER,ts.version_number_release,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_VERSION_BUILD,ts.version_number_build,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_NB_AGC_TIME_CONST,ts.nb_agc_time_const,NB_AGC_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_CW_OFFSET_MODE,ts.cw_offset_mode,CW_OFFSET_MODE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FREQ_CONV_MODE,ts.iq_freq_mode,FREQ_IQ_CONV_MODE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_LSB_USB_AUTO_SELECT,ts.lsb_usb_auto_select,AUTO_LSB_USB_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_LCD_BLANKING_CONFIG,ts.lcd_backlight_blanking,0);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_VFO_MEM_MODE,ts.vfo_mem_mode,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_2200M,swrm.coupling_2200m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_630M,swrm.coupling_630m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_160M,swrm.coupling_160m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_80M,swrm.coupling_80m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_40M,swrm.coupling_40m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_20M,swrm.coupling_20m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_15M,swrm.coupling_15m_calc,SWR_COUPLING_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_6M,swrm.coupling_6m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_STEP_SIZE_CONFIG,ts.freq_step_config,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_MODE,ts.dsp_active,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_STRENGTH,ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_DSP_NR_DECOR_BUFLEN,ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_NR_FFT_NUMTAPS,ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_DECOR_BUFLEN,ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_FFT_NUMTAPS,ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DSP_NOTCH_CONV_RATE,ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_MAX_RX_GAIN,ts.max_rf_gain,MAX_RF_GAIN_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TX_AUDIO_COMPRESS,ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TX_DISABLE,ts.tx_disable,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS1,ts.misc_flags1,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_MISC_FLAGS2,ts.misc_flags2,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_VERSION_MINOR,ts.version_number_minor,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_VERSION_NUMBER,ts.version_number_release,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_VERSION_BUILD,ts.version_number_build,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_NB_AGC_TIME_CONST,ts.nb_agc_time_const,NB_AGC_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_CW_OFFSET_MODE,ts.cw_offset_mode,CW_OFFSET_MODE_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FREQ_CONV_MODE,ts.iq_freq_mode,FREQ_IQ_CONV_MODE_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_LSB_USB_AUTO_SELECT,ts.lsb_usb_auto_select,AUTO_LSB_USB_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_LCD_BLANKING_CONFIG,ts.lcd_backlight_blanking,0);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_VFO_MEM_MODE,ts.vfo_mem_mode,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_2200M,swrm.coupling_2200m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_630M,swrm.coupling_630m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_160M,swrm.coupling_160m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_80M,swrm.coupling_80m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_40M,swrm.coupling_40m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_20M,swrm.coupling_20m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_15M,swrm.coupling_15m_calc,SWR_COUPLING_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_DETECTOR_COUPLING_COEFF_6M,swrm.coupling_6m_calc,SWR_COUPLING_DEFAULT);
 
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_VOLTMETER_CALIBRATE,ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_COLOR_SCHEME,ts.waterfall_color_scheme,WATERFALL_COLOR_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_VERTICAL_STEP_SIZE,ts.waterfall_vert_step_size,WATERFALL_STEP_SIZE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_OFFSET,ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SIZE,ts.waterfall_size,WATERFALL_SIZE_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_CONTRAST,ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,ts.display_type != DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_NOSIG_ADJUST,ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FFT_WINDOW,ts.fft_window_type,FFT_WINDOW_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TX_PTT_AUDIO_MUTE,ts.tx_audio_muting_timing,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FILTER_DISP_COLOUR,ts.filter_disp_colour,0);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_GEN,ts.fm_subaudible_tone_gen_select,0);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_DET,ts.fm_subaudible_tone_det_select,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_TONE_BURST_MODE,ts.fm_tone_burst_mode,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_SQUELCH_SETTING,ts.fm_sql_threshold,FM_SQUELCH_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_FM_RX_BANDWIDTH,ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT);
-    UiReadWriteSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,ts.beep_frequency,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
-    UiReadWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_TUNE_POWER_LEVEL,ts.tune_power_level,PA_LEVEL_MAX_ENTRY);
-    UiReadWriteSettingEEPROM_UInt16(EEPROM_CAT_XLAT,ts.xlat,1);
-    UiReadWriteSettingEEPROM_Bool(EEPROM_DYNAMIC_TUNING,ts.dynamic_tuning_active,0);
-    UiReadWriteSettingEEPROM_Bool(EEPROM_SAM_ENABLE,ts.sam_enabled,0);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_VOLTMETER_CALIBRATE,ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_COLOR_SCHEME,ts.waterfall_color_scheme,WATERFALL_COLOR_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_VERTICAL_STEP_SIZE,ts.waterfall_vert_step_size,WATERFALL_STEP_SIZE_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_OFFSET,ts.waterfall_offset,WATERFALL_OFFSET_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SIZE,ts.waterfall_size,WATERFALL_SIZE_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_WATERFALL_CONTRAST,ts.waterfall_contrast,WATERFALL_CONTRAST_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_SPEED,ts.waterfall_speed,ts.display_type != DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL);
+    UiWriteSettingEEPROM_UInt16(EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST,ts.spectrum_scope_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_WATERFALL_NOSIG_ADJUST,ts.waterfall_nosig_adjust,SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FFT_WINDOW,ts.fft_window_type,FFT_WINDOW_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TX_PTT_AUDIO_MUTE,ts.tx_audio_muting_timing,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_DISP_COLOUR,ts.filter_disp_colour,0);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_GEN,ts.fm_subaudible_tone_gen_select,0);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_FM_SUBAUDIBLE_TONE_DET,ts.fm_subaudible_tone_det_select,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FM_TONE_BURST_MODE,ts.fm_tone_burst_mode,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FM_SQUELCH_SETTING,ts.fm_sql_threshold,FM_SQUELCH_DEFAULT);
+    UiWriteSettingEEPROM_UInt16(EEPROM_FM_RX_BANDWIDTH,ts.fm_rx_bandwidth,FM_BANDWIDTH_DEFAULT);
+    UiWriteSettingEEPROM_UInt32_16(EEPROM_KEYBOARD_BEEP_FREQ,ts.beep_frequency,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_BEEP_LOUDNESS,ts.beep_loudness,0);
+    UiWriteSettingEEPROM_Bool(EEPROM_CAT_MODE_ACTIVE,ts.cat_mode_active,0);
+    UiWriteSettingEEPROM_UInt16(EEPROM_TUNE_POWER_LEVEL,ts.tune_power_level,PA_LEVEL_MAX_ENTRY);
+    UiWriteSettingEEPROM_UInt16(EEPROM_CAT_XLAT,ts.xlat,1);
+    UiWriteSettingEEPROM_Bool(EEPROM_DYNAMIC_TUNING,ts.dynamic_tuning_active,0);
+    UiWriteSettingEEPROM_Bool(EEPROM_SAM_ENABLE,ts.sam_enabled,0);
 
 //  UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y," ",White,Black,0); // strange: is neccessary otherwise saving to serial EEPROM sometimes takes minutes
     // if serial eeprom is in use write blocks to it and switch block write flag back

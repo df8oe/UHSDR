@@ -1735,7 +1735,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 
 	} // end NOT in FM mode
 	else	{		// it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
-		if(ts.misc_flags2 & 2)		// is this 5 kHz FM mode?  If so, scale down (reduce) audio to normalize
+		if(ts.misc_flags2 & MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ)		// is this 5 kHz FM mode?  If so, scale down (reduce) audio to normalize
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_5K, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 		else		// it is 2.5 kHz FM mode:  Scale audio level accordingly
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_2K5, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
@@ -2234,7 +2234,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 						// and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
 						// over the 275-2500 Hz range.
 						//
-			if(!(ts.misc_flags1 & 64))	// Do the audio filtering *IF* it is to be enabled
+			if(!(ts.misc_flags1 & MISC_FLAGS1_SSB_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
 				arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);
 		}
 		//
@@ -2313,7 +2313,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 			// and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
 			// over the 275-2500 Hz range.
 			//
-			if(!(ts.misc_flags1 & 8))	// Do the audio filtering *IF* it is to be enabled
+			if(!(ts.misc_flags1 & MISC_FLAGS1_AM_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
 				arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);	// this is the 275-2500-ish bandpass filter with low-end pre-emphasis
 			//
 			// This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
@@ -2422,7 +2422,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	else if((ts.dmod_mode == DEMOD_FM) && (ts.iq_freq_mode) && (!ts.tune))	{	//	Is it in FM mode *AND* is frequency translation active and NOT in TUNE mode?  (No FM possible unless in frequency translate mode!)
 		// Fill I and Q buffers with left channel(same as right)
 		//
-		if(ts.misc_flags2 & 2)	// are we in 5 kHz modulation mode?
+		if(ts.misc_flags2 & MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ)	// are we in 5 kHz modulation mode?
 			fm_mod_mult = 2;	// yes - multiply all modulation factors by 2
 		else
 			fm_mod_mult = 1;	// not in 5 kHz mode - used default (2.5 kHz) modulation factors
