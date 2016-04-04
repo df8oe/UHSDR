@@ -14,10 +14,30 @@
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "mchf_board.h"
 
+enum {
+  ConfigEntry_Stop,
+  ConfigEntry_UInt8,
+  ConfigEntry_UInt16,
+  ConfigEntry_UInt32_16,
+  ConfigEntry_Int32_16,
+  ConfigEntry_Bool,
+};
+
+typedef struct {
+  int typeId;
+  uint16_t id;
+  volatile void* val_ptr;
+  int32_t val_default;
+  int32_t val_min;
+  int32_t val_max;
+} ConfigEntryDescriptor;
+
+const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);
+
 void        UiConfiguration_LoadEepromValues(void);
 uint16_t    UiConfiguration_SaveEepromValues(void);
 
-// Configuration Value Definitons Follow
+// Configuration Value Definitions Follow
 //
 //
 #define SIDETONE_MAX_GAIN   10      // Maximum sidetone gain
@@ -251,6 +271,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_BAND16_FULL      131     // "FULL" power setting, 160m
 #define EEPROM_BAND17_FULL      132     // reserved
 //
+#if 0 // No longer being used, superseded by filter path
 #define EEPROM_FILTER_300HZ_SEL     133     // Selection of 300 Hz filter
 #define EEPROM_FILTER_500HZ_SEL     134     // Selection of 500 Hz filter
 #define EEPROM_FILTER_1K8_SEL       135     // Selection of 1.8 kHz filter
@@ -258,6 +279,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_FILTER_3K6_SEL       137     // Selection of 3.6 kHz filter
 #define EEPROM_FILTER_WIDE_SEL      138     // Selection of "Wide" filter (>3.6kHz)
 //
+#endif
 #define EEPROM_TX_IQ_USB_GAIN_BALANCE   139     // TX gain balance
 #define EEPROM_TX_IQ_USB_PHASE_BALANCE  140     // TX phase balance
 #define EEPROM_RX_IQ_USB_GAIN_BALANCE   141
@@ -464,6 +486,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TUNE_POWER_LEVEL     313
 #define EEPROM_CAT_MODE_ACTIVE      314
 #define EEPROM_CAT_XLAT         315
+#if 0 // No longer being used, superseded by filter path
 #define EEPROM_FILTER_2K7_SEL       316     // Selection of 2.7 kHz filter
 #define EEPROM_FILTER_2K9_SEL       317     // Selection of 2.9 kHz filter
 #define EEPROM_FILTER_1K4_SEL       318     //
@@ -475,6 +498,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_FILTER_3K8_SEL       324     //
 #define EEPROM_FILTER_1_SEL     325     // selection of filters 4k0 to 6k0
 #define EEPROM_FILTER_2_SEL     326     // selection of filters 6k5 to 10k0
+#endif
 #define EEPROM_DYNAMIC_TUNING       327
 #define EEPROM_SAM_ENABLE       328     // SAM demodulation enable
 #define EEPROM_FILTER_PATH_MAP_BASE 329 //
