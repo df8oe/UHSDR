@@ -4759,8 +4759,8 @@ void UiDriverChangeFilterDisplay(void)
 //		audio_driver_set_rx_audio_filter();
 //	}
 	const char* filter_ptr;
-    uint32_t bg_clr = Blue;
-    uint32_t font_clr = White;
+	uint32_t bg_clr = Blue;
+	uint32_t font_clr = White;
 
 	  {
 	    const char *filter_names[2];

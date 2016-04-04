@@ -992,6 +992,12 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
     UiWriteSettingEEPROM_Filter();
 
+    if(ts.ser_eeprom_in_use == 0xAA)
+	{
+	Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+	ts.ser_eeprom_in_use = 0;
+	}
+
     ts.dsp_inhibit = dspmode;   // restore DSP mode
     ts.dmod_mode = demodmode;   // restore active mode
 
