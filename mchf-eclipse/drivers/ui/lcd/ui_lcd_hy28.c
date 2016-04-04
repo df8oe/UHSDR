@@ -909,37 +909,33 @@ void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uin
     uint8_t    TempChar;
     const sFONT   *cf = UiLcdHy28_Font(font);
 
-    do{
+    if (str != NULL) {
+      while ( *str != 0 ) {
         TempChar = *str++;
 
         UiLcdHy28_DrawChar(Xpos, Ypos, TempChar,Color,bkColor,cf);
 
-        if(Xpos < (MAX_X - cf->Width))
-        {
-            Xpos += cf->Width;
+        if(Xpos < (MAX_X - cf->Width)) {
+          Xpos += cf->Width;
 
-            // Mod the 8x8 font - the shift is too big
-            // because of the letters
-            if(font == 4)
-            {
-               if(*str > 0x39)
-                  Xpos -= 1;
-               else
-                  Xpos -= 2;
-            }
+          // Mod the 8x8 font - the shift is too big
+          // because of the letters
+          if(font == 4) {
+            if(*str > 0x39)
+              Xpos -= 1;
+            else
+              Xpos -= 2;
+          }
         }
-        else if (Ypos < (MAX_Y - cf->Height))
-        {
-            Xpos  = 0;
-            Ypos += cf->Height;
+        else if (Ypos < (MAX_Y - cf->Height)) {
+          Xpos  = 0;
+          Ypos += cf->Height;
+        } else {
+          Xpos = 0;
+          Ypos = 0;
         }
-        else
-        {
-            Xpos = 0;
-            Ypos = 0;
-        }
-
-    } while ( *str != 0 );
+      }
+    }
 }
 
 
@@ -955,18 +951,18 @@ uint16_t UiLcdHy28_TextWidth(const char *str, uchar font) {
 	uint16_t Xpos = 0;
 
     const sFONT   *cf = UiLcdHy28_Font(font);
-
-	do{
-		Xpos+=cf->Width;
-		if(font == 4)
-		{
-			if(*str > 0x39)
-				Xpos -= 1;
-			else
-				Xpos -= 2;
-		}
-	} while ( *++str != 0 );
-
+    if (str != NULL) {
+      while ( *str != 0 ) {
+        Xpos+=cf->Width;
+        if(font == 4) {
+          if(*str > 0x39)
+            Xpos -= 1;
+          else
+            Xpos -= 2;
+        }
+        str++;
+      }
+    }
 	return Xpos;
 }
 
