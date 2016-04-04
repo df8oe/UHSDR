@@ -3427,24 +3427,40 @@ static void UiDriverTimeScheduler(void)
 	// This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
 	// and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
 	//
+
+	/* IMPORTANT
+	 * The code below is currently a functional "no operation"
+	 * It just informs the user of a detect change
+	 * The defaults of the new firmware have been enforced during loading of the
+	 * configuration already, so no additional task is necessary. And the previous
+	 * mandatory saving of the enforced changes is counter-productive in testing.
+	 * In normal operation all changes get saved when turning off anyway so no harm
+	 * is done.
+	 */
 	if((ts.sysclock > DSP_STARTUP_DELAY) && (!startup_flag))	{	// has it been long enough after startup?
 		if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Yes - check for new version
 			ts.version_number_build = TRX4M_VER_BUILD;	// save new F/W version
 			ts.version_number_release = TRX4M_VER_RELEASE;
 			ts.version_number_minor = TRX4M_VER_MINOR;
+
 			UiSpectrumClearDisplay();			// clear display under spectrum scope
 			UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
+            UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
+
+			/*
 			UiLcdHy28_PrintText(110,168," Preparing EEPROM ",Cyan,Black,0);
 			UiConfiguration_SaveEepromValues();	// rewrite EEPROM values
 			Write_EEPROM(EEPROM_VERSION_NUMBER, ts.version_number_release);	// save version number information to EEPROM
 			Write_EEPROM(EEPROM_VERSION_BUILD, ts.version_number_build);	//
 			Write_EEPROM(EEPROM_VERSION_MINOR, ts.version_number_minor);	//
+			*/
 			for(i = 0; i < 6; i++)			// delay so that it may be read
 				non_os_delay();
+			/*
 			UiLcdHy28_PrintText(110,180,"      Done!       ",Cyan,Black,0);
 			for(i = 0; i < 6; i++)			// delay so that it may be read
 				non_os_delay();
-			//
+			*/
 			UiSpectrumInitSpectrumDisplay();			// init spectrum scope
 		}
 		//
@@ -3452,9 +3468,7 @@ static void UiDriverTimeScheduler(void)
 		unmute_flag = 1;					// set unmute flag to force audio to be un-muted - just in case it starts up muted!
 		startup_flag = 1;					// set flag so that we do this only once
 		Codec_Mute(0);						// make sure that audio is un-muted
-		//
 	}
-	//
 
 	if((ts.sysclock >= ts.rx_blanking_time) && (ts.rx_muting) && (ts.rx_blanking_time> RX_MUTE_START_DELAY))	{
 			// is it time to un-mute audio AND have we NOT done it already AND is it long enough after start-up to allow muting?
