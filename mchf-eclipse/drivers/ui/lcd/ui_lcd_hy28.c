@@ -468,7 +468,7 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 //*----------------------------------------------------------------------------
 unsigned short UiLcdHy28_ReadDataSpi(void)
 {
-   unsigned short value;
+   unsigned short value = 0;
    uchar y,z;
 
    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
@@ -1018,7 +1018,7 @@ uchar UiLcdHy28_InitA(void)
    ts.DeviceCode = UiLcdHy28_ReadReg(0x0000);
    printf("lcd id: 0x%04x\n\r",ts.DeviceCode);
 
-   if(ts.DeviceCode == 0x0000)
+   if(ts.DeviceCode == 0x0000 || ts.DeviceCode == 0xffff)
       return 1;
 
    // HY28A - SPI interface only (ILI9320 controller)
