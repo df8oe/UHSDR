@@ -40,9 +40,6 @@ __IO KeyBoardStatus		kbs;
 
 void USBH_USR_Init(void)
 {
-	//printf("USBH_USR_Init\n\r");
-	//while(1);
-
 	// Default state - nothing connected
 	kbs.old_state = 0;
 	kbs.new_state = 0;
@@ -60,21 +57,16 @@ void USBH_USR_Init(void)
 
 void USBH_USR_DeviceAttached(void)
 {  
-	printf("USBH_USR_DeviceAttached\n\r");
-
 	// Device plugged
 	kbs.new_state = 1;
 }
 
 void USBH_USR_UnrecoveredError (void)
 {
-	printf("USBH_USR_UnrecoveredError\n\r");
 }
 
 void USBH_USR_DeviceDisconnected (void)
 {
-	//printf("USBH_USR_DeviceDisconnected\n\r");
-  
 	// Device unplugged
 	kbs.new_state = 0;
 }
@@ -88,19 +80,15 @@ void USBH_USR_DeviceSpeedDetected(uint8_t DeviceSpeed)
 {
   if(DeviceSpeed == HPRT0_PRTSPD_HIGH_SPEED)
   {
-	  //printf("hi speed\n\r");
   }
   else if(DeviceSpeed == HPRT0_PRTSPD_FULL_SPEED)
   {
-	  //printf("full speed\n\r");
   }
   else if(DeviceSpeed == HPRT0_PRTSPD_LOW_SPEED)
   {
-	  //printf("low speed\n\r");
   }
   else
   {
-	  //printf("speed error\n\r");
   }
 }
 
@@ -138,22 +126,18 @@ void USBH_USR_Configuration_DescAvailable(USBH_CfgDesc_TypeDef * cfgDesc,
 
 void USBH_USR_Manufacturer_String(void *ManufacturerString)
 {
-  //printf("Manufacturer : %s\n\r", (char *)ManufacturerString);
 }
 
 void USBH_USR_Product_String(void *ProductString)
 {
-  //printf("Product : %s\n\r", (char *)ProductString);
 }
 
 void USBH_USR_SerialNum_String(void *SerialNumString)
 {
-  //printf("Serial Number : %s\n\r", (char *)SerialNumString);
 } 
 
 void USBH_USR_EnumerationDone(void)
 {
-	//printf("enumeration done\n\r");
 } 
 
 /**
@@ -164,7 +148,6 @@ void USBH_USR_EnumerationDone(void)
 */
 void USBH_USR_DeviceNotSupported(void)
 {
-	printf("USB device not supported\n\r");
 }  
 
 
@@ -242,77 +225,13 @@ void USR_MOUSE_ProcessData(HID_MOUSE_Data_TypeDef *data)
 
 void  USR_KEYBRD_Init (void)
 {
-	 //printf("keyboard init\n\r");
-
 	 // Keyboard plugged
 	 kbs.new_state = 2;
 }
 
 void  USR_KEYBRD_ProcessData (uint8_t data)
 {
-//	char buf[10];
-
-	//printf("%02x ",data);
-
 	kbs.last_char = data;
-
-//	buf[0] = (char)data;
-//	buf[1] = 0;
-
-	//if(isalpha(data)||isdigit(data))
-//		printf("%s ",buf);
-	//else
-	//	printf("0x%02x\n\r",(char)data);
-  
-//  if(data == '\n')
-  //{
-    //KeybrdCharYpos = KYBRD_FIRST_COLUMN;
-    
-    /*Increment char X position*/
-//    KeybrdCharXpos+=SMALL_FONT_LINE_WIDTH;
-    
-  //}
-  //else if (data == '\r')
-  //{
-    /* Manage deletion of charactter and upadte cursor location*/
-    //if( KeybrdCharYpos == KYBRD_FIRST_COLUMN)
-    //{
-      /*First character of first line to be deleted*/
-      //if(KeybrdCharXpos == KYBRD_FIRST_LINE)
-      //{
-        //KeybrdCharYpos =KYBRD_FIRST_COLUMN;
-     // }
-     // else
-      //{
-//        KeybrdCharXpos-=SMALL_FONT_LINE_WIDTH;
-//        KeybrdCharYpos =(KYBRD_LAST_COLUMN+SMALL_FONT_COLUMN_WIDTH);
-      //}
-    //}
-    //else
-    //{
- //     KeybrdCharYpos +=SMALL_FONT_COLUMN_WIDTH;
-      
-    //}
-   // LCD_DisplayChar(KeybrdCharXpos,KeybrdCharYpos, ' ');
-  //}
- // else
- // {
-    //LCD_DisplayChar(KeybrdCharXpos,KeybrdCharYpos, data);
-    /* Update the cursor position on LCD */
-    
-    /*Increment char Y position*/
-//    KeybrdCharYpos -=SMALL_FONT_COLUMN_WIDTH;
-    
-    /*Check if the Y position has reached the last column*/
-//    if(KeybrdCharYpos == KYBRD_LAST_COLUMN)
-//    {
-//      KeybrdCharYpos = KYBRD_FIRST_COLUMN;
-      
-      /*Increment char X position*/
-  //    KeybrdCharXpos+=SMALL_FONT_LINE_WIDTH;
-      
- //   }
-  //}
 }
 
 void USBH_USR_DeInit(void)

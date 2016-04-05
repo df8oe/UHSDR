@@ -229,7 +229,6 @@ int UiDriverEncoderRead(const uint32_t encId) {
 			encSel[encId].de_detent = 0;
 		}
 		}
-		// printf("gain pot: %d\n\r",gs.value_new);
 		// Encoder value to difference
 		if (no_change == false) {
 			pot_diff = encSel[encId].value_new - encSel[encId].value_old;

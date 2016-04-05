@@ -75,10 +75,6 @@ static uchar ui_si570_verify_frequency(void)
 	// memset(regs, 0, 6);
 	// trx4m_hw_i2c_ReadData(os.si570_address, 7, regs, 5);
 
-	// printf("-----------------------------------\n\r");
-	// printf("write %02x %02x %02x %02x %02x %02x\n\r", os.regs[0], os.regs[1], os.regs[2], os.regs[3], os.regs[4], os.regs[5]);
-	// printf("read  %02x %02x %02x %02x %02x %02x\n\r", regs[0], regs[1], regs[2], regs[3], regs[4], regs[5]);
-
 	if(memcmp(regs, (uchar*)os.regs, 6) != 0)
 		return 1;
 
@@ -97,8 +93,6 @@ static uchar ui_si570_small_frequency_change(void)
 	uint16_t ret;
 	uchar reg_135;
 	uchar unfreeze = 0;
-
-	// printf("small\n\r");
 
 	// Read current
 	ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
@@ -148,8 +142,6 @@ static uchar ui_si570_large_frequency_change(void)
 {
 	uchar ret, reg_135, reg_137;
 	uchar unfreeze = 0;
-
-	// printf("large\n\r");
 
 	// Read the current state of Register 137
 	ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_137, &reg_137);
@@ -261,7 +253,6 @@ uchar ui_si570_get_configuration(void)
 	res = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
 	if(res != 0)
 	{
-		// printf("cmd1 err: %d\n\r", res);
 		return 1;
 	}
 
@@ -272,7 +263,6 @@ uchar ui_si570_get_configuration(void)
 		res = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &ret);
 		if(res != 0)
 		{
-			// printf("read1 err: %d\n\r", res);
 			return 2;
 		}
 
@@ -280,7 +270,6 @@ uchar ui_si570_get_configuration(void)
 		
 		if(i == 30)
 		{
-			// printf("read timeout\n\r");
 			return 3;
 		}
 	}
@@ -290,17 +279,14 @@ uchar ui_si570_get_configuration(void)
 		res = mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg + i), (uchar*)&(os.regs[i]));
 		if(res != 0)
 		{
-			// printf("read2 err: %d, i = %d\n\r", res, i);
 			return 4;
 		}
 	}
-	// printf("startup %02x %02x %02x %02x %02x %02x\n\r", os.regs[0], os.regs[1], os.regs[2], os.regs[3], os.regs[4], os.regs[5]);
 
 	hsdiv_curr = ((os.regs[0] & 0xE0) >> 5) + 4;
 
 #ifdef LOWER_PRECISION
 	os.init_hsdiv = hsdiv_curr;
-	// printf("init hsdiv: %d\n\r", hsdiv_curr);
 #endif
 
 	n1_curr = ((os.regs[0] & 0x1F) << 2) + ((os.regs[1] & 0xC0) >> 6);
@@ -311,7 +297,6 @@ uchar ui_si570_get_configuration(void)
 
 #ifdef LOWER_PRECISION
 	os.init_n1 = n1_curr;
-	// printf("init n1: %d\n\r", n1_curr);
 #endif
 
 	rfreq_int =	(os.regs[1] & 0x3F);
@@ -332,19 +317,6 @@ uchar ui_si570_get_configuration(void)
 
 	os.rfreq = rfreq_int + rfreq_frac / POW_2_28;
 	os.fxtal = (os.fout * n1_curr * hsdiv_curr) / os.rfreq;
-	
-	// Read signature
-	/*for(i = 0; i < 6; i++)
-	{
-		res = mchf_hw_i2c_ReadRegister(os.si570_address, (i + 13), &sig[i]);
-		if(res != 0)
-		{
-			printf("read sig err: %d, i = %d\n\r", res, i);
-			return 4;
-		}
-	}
-	printf("sig %02x %02x %02x %02x %02x %02x\n\r", sig[0], sig[1], sig[2], sig[3], sig[4], sig[5]);*/
-
 	return 0;
 }
 
@@ -375,7 +347,6 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 
 	divider_max = (ushort)floorf(fdco_max / new_freq);
 	curr_div	= (ushort)ceilf (fdco_min / new_freq);
-	// printf("%d-%d -> ", curr_div, divider_max);
 
 	bool found;
 	for (found = false;(curr_div <= divider_max) && !found; curr_div++)
@@ -405,15 +376,8 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 	}
 	else
 	{
-
-		// printf("(%d) %d %d\n\r", curr_div, n1, hsdiv);
-
 		// New RFREQ calculation
 		os.rfreq = ((long double)new_freq * (long double)(n1 * hsdiv)) / os.fxtal;
-		// printf("%d\n\r", (int)os.rfreq);
-
-		// Debug print calc freq
-		// printf("%d\n\r", (int)((os.fxtal*os.rfreq)/(n1*hsdiv)));
 
 	#ifdef LOWER_PRECISION
 		ratio = new_freq / fout0;
@@ -459,8 +423,6 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 		os.regs[1] = ui_si570_setbits(os.regs[1], 0xC0, (whole >> 4) & 0x3F);
 	#endif
 
-		// printf("write %02x %02x %02x %02x %02x %02x\n\r", os.regs[0], os.regs[1], os.regs[2], os.regs[3], os.regs[4], os.regs[5]);
-
 		// check to see if this tuning will result in a "large" tuning step, without setting the frequency
 		if(test)
 			return(ui_si570_is_large_change());
@@ -489,9 +451,6 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 		res = ui_si570_verify_frequency();
 		if(res == 0)
 			os.rfreq_old = os.rfreq;
-
-		// if(res)
-		//	printf("---- error ----\n\r");
 	}
 	return res;
 }
@@ -532,8 +491,6 @@ uchar ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test)
 	d = freq;								// convert to float
 	d = d / 1000000.0;						// Si570 set value = decimal MHz
 	si_freq = d;							// convert to float
-
-	// printf("set si750 freq to: %d\n\r", freq);
 
 	// new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
 	if (si_freq <= SI570_MAX_FREQ / 1000000 && si_freq >= SI570_MIN_FREQ / 1000000)
@@ -576,8 +533,6 @@ uchar ui_si570_init_temp_sensor(void)
 	if(res != 0)
 		return 1;
 
-	// printf("chip conf: %02x\n\r", config);
-
 	// Modify resolution
 	config &= ~(3 << MCP_ADC_RES);
 	config |= (MCP_ADC_RES_12 << MCP_ADC_RES);
@@ -586,19 +541,11 @@ uchar ui_si570_init_temp_sensor(void)
 	config &= ~(1 << MCP_SHUTDOWN);
 	config |= (MCP_POWER_UP << MCP_SHUTDOWN);
 
-	// printf("moded conf: %02x\n\r", config);
-
 	// Write config reg
 	res = mchf_hw_i2c_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
 	if(res != 0)
 		return 2;
 
-	// Verify
-	// res = mchf_hw_i2c_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
-	// if(res != 0)
-	//	return;
-
-	// printf("updated conf: %02x\n\r", config);
 	return 0;
 }
 
@@ -621,8 +568,6 @@ uchar ui_si570_read_temp(int *temp)
 	res = mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2);
 	if(res != 0)
 		return 2;
-
-	// printf("temp reg %02x%02x\n\r", data[0], data[1]);
 
 	// Convert to decimal
 	ui_si570_conv_temp(data, temp);
@@ -657,8 +602,6 @@ void ui_si570_conv_temp(uchar *temp, int *dtemp)
 	if(ts & 0x40) d += 2500;
 	if(ts & 0x20) d += 1250;
 	if(ts & 0x10) d += 625;
-
-	// printf("%i.%dC\n\r", t, d);
 
 	// Return int temperature (sign ok after this ?)
 	*dtemp = (t * 10000) + d;

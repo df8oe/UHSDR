@@ -1008,11 +1008,9 @@ void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uin
 //
 uchar UiLcdHy28_InitA(void)
 {
-//   unsigned short DeviceCode;
 
    // Read LCD ID
    ts.DeviceCode = UiLcdHy28_ReadReg(0x0000);
-   printf("lcd id: 0x%04x\n\r",ts.DeviceCode);
 
    if(ts.DeviceCode == 0x0000 || ts.DeviceCode == 0xffff)
       return 1;
@@ -1020,8 +1018,6 @@ uchar UiLcdHy28_InitA(void)
    // HY28A - SPI interface only (ILI9320 controller)
    if(ts.DeviceCode == 0x9320)
    {
-      printf("doing ILI9320 init\n\r");
-
       // Start Initial Sequence
       UiLcdHy28_WriteReg(0xE5,0x8000);   // Set the internal vcore voltage
       UiLcdHy28_WriteReg(0x00,  0x0001);    // Start internal OSC.
@@ -1110,8 +1106,6 @@ uchar UiLcdHy28_InitA(void)
    // HY28A - Parallel interface only (SPFD5408B controller)
    if(ts.DeviceCode == 0x5408)
    {
-      printf("doing SPFD5408B init\n\r");
-
       UiLcdHy28_WriteReg(0x0001,0x0000);   // (SS bit 8) - 0x0100 will flip 180 degree
       UiLcdHy28_WriteReg(0x0002,0x0700);   // LCD Driving Waveform Contral
       UiLcdHy28_WriteReg(0x0003,0x1030);   // Entry Mode (AM bit 3)
@@ -1160,7 +1154,6 @@ uchar UiLcdHy28_InitA(void)
    // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
    if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
    {
-      printf("doing ILI9325 init\n\r");
 //      UiLcdHy28_WriteReg(0x00e5,0x78f0);	// special testing
       UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
       UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion

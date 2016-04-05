@@ -92,7 +92,6 @@ void CriticalError(ulong error)
 //*----------------------------------------------------------------------------
 void NMI_Handler(void)
 {
-	printf("NMI_Handler called\n\r");
 	CriticalError(1);
 }
 
@@ -106,7 +105,6 @@ void NMI_Handler(void)
 //*----------------------------------------------------------------------------
 void HardFault_Handler(void)
 {
-	printf("HardFault_Handler called\n\r");
 	CriticalError(2);
 }
 
@@ -120,7 +118,6 @@ void HardFault_Handler(void)
 //*----------------------------------------------------------------------------
 void MemManage_Handler(void)
 {
-	printf("MemManage_Handler called\n\r");
 	CriticalError(3);
 }
 
@@ -134,7 +131,6 @@ void MemManage_Handler(void)
 //*----------------------------------------------------------------------------
 void BusFault_Handler(void)
 {
-	printf("BusFault_Handler called\n\r");
 	CriticalError(4);
 }
 
@@ -148,7 +144,6 @@ void BusFault_Handler(void)
 //*----------------------------------------------------------------------------
 void UsageFault_Handler(void)
 {
-	printf("UsageFault_Handler called\n\r");
 	CriticalError(5);
 }
 
@@ -162,7 +157,6 @@ void UsageFault_Handler(void)
 //*----------------------------------------------------------------------------
 void SVC_Handler(void)
 {
-	printf("SVC_Handler called\n\r");
 	CriticalError(6);
 }
 
@@ -176,7 +170,6 @@ void SVC_Handler(void)
 //*----------------------------------------------------------------------------
 void DebugMon_Handler(void)
 {
-	printf("DebugMon_Handler called\n\r");
 	CriticalError(7);
 }
 
@@ -545,17 +538,8 @@ void TransceiverStateInit(void)
 //*----------------------------------------------------------------------------
 void MiscInit(void)
 {
-	//printf("misc init...\n\r");
-
 	// Init Soft DDS
 	softdds_setfreq(0.0,ts.samp_rate,0);
-	//softdds_setfreq(500.0,ts.samp_rate,0);
-	//softdds_setfreq(1000.0,ts.samp_rate,0);
-	//softdds_setfreq(2000.0,ts.samp_rate,0);
-	//softdds_setfreq(3000.0,ts.samp_rate,0);
-	//softdds_setfreq(4000.0,ts.samp_rate,0);
-
-	//printf("misc init ok\n\r");
 }
 
 /*
@@ -679,8 +663,6 @@ void UiLcdHy28_ShowStartUpScreen(ulong hold_time)
     if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))   {
       sprintf(tx, "SWR Bridge resistor mod NOT completed!");
       UiLcdHy28_PrintText(8,180,tx,Red3,Black,0);
-      //   sprintf(tx, "Value=%d,%d",adc2, adc3);          // debug
-      //   UiLcdHy28_PrintText(60,170,tx,Red,Black,0);     // debug
     }
   }
 
@@ -901,10 +883,6 @@ int main(void)
 
 	if (ts.cat_mode_active)
 		cat_driver_init();
-
-#ifdef DEBUG_BUILD
-	printf("== main loop starting ==\n\r");
-#endif
 
 	// Transceiver main loop
 	for(;;)
