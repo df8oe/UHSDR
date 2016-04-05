@@ -13,13 +13,15 @@
 #########################################################################
 
 
-2016mmdd [DF8OE]
+20160405 [DF8OE]
 - new FilterPath-structure replaces old filter selection method
 - added SAM demodulation for weak AM signals
 - bugfix TX path while in translated mode
 - changed filter character at low frequencies in TX for male voices with high lower frequencies
 - improved TX IQ balance and phase adjustment SSB/CW
 - bugfix "white screen issue" on some LCDs
+- bugfix TX filter ON/OFF was swapped
+- started snap function for SAM (experimantal)
 
 
 20160317 [DF8OE]
