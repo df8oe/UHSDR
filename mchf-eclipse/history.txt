@@ -13,6 +13,10 @@
 #########################################################################
 
 
+2016mmdd [DF8OE]
+
+
+
 20160405 [DF8OE]
 - new FilterPath-structure replaces old filter selection method
 - added SAM demodulation for weak AM signals
