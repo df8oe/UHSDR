@@ -644,9 +644,6 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int32_16(uint16_t add
     }
 }
 
-
-
-
 static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile uint32_t* val_ptr, uint32_t default_val, uint32_t min_val, uint32_t max_val) {
     uint16_t valueH,valueL;
     if(Read_EEPROM(addrH, &valueH) == 0 && Read_EEPROM(addrL, &valueL) == 0)
@@ -662,7 +659,6 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
     }
 }
 
-
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
     Write_EEPROM(addr, set_val);
 }
@@ -671,7 +667,6 @@ static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addr
     Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
     Write_EEPROM(addrL, (uint16_t)(set_val));
 }
-
 
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg) {
     uint32_t value32;
@@ -929,27 +924,25 @@ void UiConfiguration_LoadEepromValues(void)
 
 uint16_t UiConfiguration_SaveEepromValues(void)
 {
-    uint16_t i, retVal = 0x0;
+    uint16_t i, retval = 0x0;
     bool dspmode;
     uchar demodmode;
 
-    if(ts.txrx_mode != TRX_MODE_RX)
-        return 0xFF00;
+    if(ts.txrx_mode != TRX_MODE_RX) {
+      retval = 0xFF00;
+    } else {
+      // disable DSP during write because it decreases speed tremendous
+      dspmode = ts.dsp_inhibit;
+      ts.dsp_inhibit = 1;
+      //  ts.dsp_active &= 0xfa;  // turn off DSP
 
-    //printf("eeprom save activate\n\r");
-
-    // disable DSP during write because it decreases speed tremendous
-    dspmode = ts.dsp_inhibit;
-    ts.dsp_inhibit = 1;
-//  ts.dsp_active &= 0xfa;  // turn off DSP
-
-    // switch to SSB during write when in FM because it decreases speed tremendous
-    demodmode = ts.dmod_mode;
-    if(ts.dmod_mode == DEMOD_FM)
+      // switch to SSB during write when in FM because it decreases speed tremendous
+      demodmode = ts.dmod_mode;
+      if(ts.dmod_mode == DEMOD_FM)
         ts.dmod_mode = DEMOD_USB;   // if FM switch to USB during write
 
-    if(ts.ser_eeprom_in_use == 0)
-    {
+      if(ts.ser_eeprom_in_use == 0)
+      {
         static uint8_t p[MAX_VAR_ADDR*2+2];
         ts.eeprombuf = p;
 
@@ -959,47 +952,47 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         ts.eeprombuf[1] = ts.ser_eeprom_in_use;
         for(i=1; i <= MAX_VAR_ADDR; i++)
         {
-            Read_SerEEPROM(i, &data);
-            ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
-            data = data>>8;
-            ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+          Read_SerEEPROM(i, &data);
+          ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
+          data = data>>8;
+          ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
         }
         ts.ser_eeprom_in_use = 0xAA;
-    }
+      }
 
-    UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
-            (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
-            (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
+      // TODO: move value to a static variable, so that it can be read/written with standard approach
+      UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
+          (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
+          (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
 
-    UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
-    // save current band/frequency/mode settings
-    //
-    // save frequency
-    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
-    // Save decode mode
-    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+      // TODO: move value to a static variable, so that it can be read/written with standard approach
+      UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 
-    // Save stored band/mode/frequency memory from RAM
-    for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
+      // save current band/frequency/mode settings
+      vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
+      // Save decode mode
+      vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+
+      // Save stored band/mode/frequency memory from RAM
+      for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
         // UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
         UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
+      }
+
+      UiConfiguration_WriteConfigEntries();
+
+      UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
+
+      UiWriteSettingEEPROM_Filter();
+
+      if(ts.ser_eeprom_in_use == 0xAA) {
+        Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+        ts.ser_eeprom_in_use = 0;
+      }
+
+      ts.dsp_inhibit = dspmode;   // restore DSP mode
+      ts.dmod_mode = demodmode;   // restore active mode
     }
-
-    UiConfiguration_WriteConfigEntries();
-
-    UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
-
-    UiWriteSettingEEPROM_Filter();
-
-    if(ts.ser_eeprom_in_use == 0xAA)
-	{
-	Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-	ts.ser_eeprom_in_use = 0;
-	}
-
-    ts.dsp_inhibit = dspmode;   // restore DSP mode
-    ts.dmod_mode = demodmode;   // restore active mode
-
-    return retVal;
+    return retval;
 }
