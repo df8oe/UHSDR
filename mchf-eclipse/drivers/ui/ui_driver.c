@@ -5113,7 +5113,7 @@ static void UiDriverHandleLowerMeter(void)
 	if(swrm.p_curr < SWR_SAMPLES_CNT)
 	{
 		// Get next sample
-		if(!(ts.misc_flags1 & MISC_FLAGS1_FREQ_LIMIT_RELAX))	{	// is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
+		if(!(ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE))	{	// is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
 			val_p = ADC_GetConversionValue(ADC2);	// forward
 			val_s = ADC_GetConversionValue(ADC3);	// return
 		}
