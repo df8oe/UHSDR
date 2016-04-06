@@ -174,35 +174,33 @@
   </Components>
   <Files>
     <File name="drivers/ui/lcd/ui_lcd_hy28_fonts.c" path="drivers/ui/lcd/ui_lcd_hy28_fonts.c" type="1"/>
-    <File name="drivers/ui/lcd/ui_spectrum.c" path="drivers/ui/lcd/ui_spectrum.c" type="1"/>    
     <File name="cmsis_lib/source/stm32f4xx_usart.c" path="cmsis_lib/source/stm32f4xx_usart.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_dac.h" path="cmsis_lib/include/stm32f4xx_dac.h" type="1"/>
     <File name="usb/usbd/core/src/usbd_ioreq.c" path="usb/usbd/core/src/usbd_ioreq.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_usart.h" path="cmsis_lib/include/stm32f4xx_usart.h" type="1"/>
     <File name="drivers/audio/fm_dds_table.h" path="drivers/audio/fm_dds_table.h" type="1"/>
     <File name="drivers/audio/codec/i2s.c" path="drivers/audio/codec/i2s.c" type="1"/>
-    <File name="drivers/keyboard/keyb_driver.c" path="drivers/keyboard/keyb_driver.c" type="1"/>
     <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
+    <File name="drivers/keyboard/keyb_driver.c" path="drivers/keyboard/keyb_driver.c" type="1"/>
     <File name="drivers/audio/softdds/dds_table.h" path="drivers/audio/softdds/dds_table.h" type="1"/>
     <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="usb/usbh/class/hid/inc" path="" type="2"/>
     <File name="drivers/audio/softdds/softdds.c" path="drivers/audio/softdds/softdds.c" type="1"/>
     <File name="usb/usbd/core/inc/usbd_def.h" path="usb/usbd/core/inc/usbd_def.h" type="1"/>
-    <File name="drivers/audio/filters/q_rx_filter_10kHz.h" path="drivers/audio/filters/q_rx_filter_10kHz.h" type="1"/>
-    <File name="drivers/audio/filters/iir_3_6k.h" path="drivers/audio/filters/iir_3_6k.h" type="1"/>
-    <File name="drivers/audio/filters/fir_rx_interpolate_16.h" path="drivers/audio/filters/fir_rx_interpolate_16.h" type="1"/>
     <File name="usb/otg/inc/usb_hcd_int.h" path="usb/otg/inc/usb_hcd_int.h" type="1"/>
     <File name="drivers/audio/softdds/softdds.h" path="drivers/audio/softdds/softdds.h" type="1"/>
     <File name="usb/usbd/class/cdc" path="" type="2"/>
+    <File name="drivers/audio/audio_filter.h" path="drivers/audio/audio_filter.h" type="1"/>
     <File name="usb/usbd/core/src" path="" type="2"/>
     <File name="usb/usb_conf.h" path="usb/usb_conf.h" type="1"/>
-    <File name="drivers/audio/filters/q_rx_filter.h" path="drivers/audio/filters/q_rx_filter.h" type="1"/>
     <File name="drivers/ui/lcd/ui_lcd_hy28.c" path="drivers/ui/lcd/ui_lcd_hy28.c" type="1"/>
     <File name="drivers/ui/ui_driver.h" path="drivers/ui/ui_driver.h" type="1"/>
     <File name="usb/usbd/core" path="" type="2"/>
+    <File name="drivers/audio/filters/iir_3k.c" path="drivers/audio/filters/iir_3k.c" type="1"/>
     <File name="drivers/audio/codec/codec.h" path="drivers/audio/codec/codec.h" type="1"/>
     <File name="misc/v_eprom" path="" type="2"/>
     <File name="stdio/printf.c" path="stdio/printf.c" type="1"/>
+    <File name="drivers/audio/filters/iir_3_6k.c" path="drivers/audio/filters/iir_3_6k.c" type="1"/>
     <File name="drivers/audio/cw" path="" type="2"/>
     <File name="drivers/ui/lcd/waterfall_colours.h" path="drivers/ui/lcd/waterfall_colours.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_syscfg.c" path="cmsis_lib/source/stm32f4xx_syscfg.c" type="1"/>
@@ -211,8 +209,9 @@
     <File name="cmsis_lib/source/stm32f4xx_rcc.c" path="cmsis_lib/source/stm32f4xx_rcc.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_pwr.c" path="cmsis_lib/source/stm32f4xx_pwr.c" type="1"/>
     <File name="usb/usbd/core/inc/usbd_req.h" path="usb/usbd/core/inc/usbd_req.h" type="1"/>
+    <File name="drivers/audio/audio_filter.c" path="drivers/audio/audio_filter.c" type="1"/>
     <File name="drivers/audio/codec/i2s.h" path="drivers/audio/codec/i2s.h" type="1"/>
-    <File name="drivers/audio/filters/fir_2_3k.h" path="drivers/audio/filters/fir_2_3k.h" type="1"/>
+    <File name="drivers/audio/filters/iir_4k.c" path="drivers/audio/filters/iir_4k.c" type="1"/>
     <File name="usb/usbh/core/inc/usbh_def.h" path="usb/usbh/core/inc/usbh_def.h" type="1"/>
     <File name="usb/usbh/core/inc/usbh_core.h" path="usb/usbh/core/inc/usbh_core.h" type="1"/>
     <File name="drivers" path="" type="2"/>
@@ -221,108 +220,117 @@
     <File name="drivers/keyboard/usb/usbh_conf.h" path="drivers/keyboard/usb/usbh_conf.h" type="1"/>
     <File name="drivers/ui/lcd/ui_lcd_hy28_fonts.h" path="drivers/ui/lcd/ui_lcd_hy28_fonts.h" type="1"/>
     <File name="drivers/ui/misc" path="" type="2"/>
-    <File name="drivers/audio/filters/iir_500hz.h" path="drivers/audio/filters/iir_500hz.h" type="1"/>
     <File name="hardware/mchf_types.h" path="hardware/mchf_types.h" type="1"/>
     <File name="cmsis_lib" path="" type="2"/>
+    <File name="drivers/audio/filters/iir_antialias.c" path="drivers/audio/filters/iir_antialias.c" type="1"/>
     <File name="usb/usbh/class/hid/inc/usbh_hid_keybd.h" path="usb/usbh/class/HID/inc/usbh_hid_keybd.h" type="1"/>
-    <File name="drivers/audio/filters/i_rx_filter_3k6.h" path="drivers/audio/filters/i_rx_filter_3k6.h" type="1"/>
+    <File name="drivers/audio/filters/iir_10k_neu.c" path="drivers/audio/filters/iir_10k_neu.c" type="1"/>
     <File name="cmsis_lib/include/misc.h" path="cmsis_lib/include/misc.h" type="1"/>
-    <File name="drivers/audio/filters/fir_rx_interpolate_16_10kHz.h" path="drivers/audio/filters/fir_rx_interpolate_16_10kHz.h" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_3k6.h" path="drivers/audio/filters/iq_rx_filter_am_3k6.h" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_7kHz5.h" path="drivers/audio/filters/iq_rx_filter_am_7kHz5.h" type="1"/>
+    <File name="drivers/audio/audio_management.h" path="drivers/audio/audio_management.h" type="1"/>
+    <File name="drivers/audio/filters/iir_1_4k.c" path="drivers/audio/filters/iir_1_4k.c" type="1"/>
     <File name="drivers/ui" path="" type="2"/>
     <File name="drivers/ui/encoder/ui_rotary.c" path="drivers/ui/encoder/ui_rotary.c" type="1"/>
     <File name="main.c" path="main.c" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_6k0.c" path="drivers/audio/filters/iq_rx_filter_6k0.c" type="1"/>
     <File name="drivers/cat" path="" type="2"/>
     <File name="cmsis_lib/source/stm32f4xx_gpio.c" path="cmsis_lib/source/stm32f4xx_gpio.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_i2c.h" path="cmsis_lib/include/stm32f4xx_i2c.h" type="1"/>
     <File name="drivers/audio/audio_driver.c" path="drivers/audio/audio_driver.c" type="1"/>
-    <File name="drivers/audio/audio_filter.c" path="drivers/audio/audio_filter.c" type="1"/>
-    <File name="drivers/audio/audio_filter.h" path="drivers/audio/audio_filter.h" type="1"/>
-    <File name="drivers/audio/audio_management.c" path="drivers/audio/audio_management.c" type="1"/>
-    <File name="drivers/audio/audio_management.h" path="drivers/audio/audio_management.h" type="1"/>    
     <File name="cmsis_lib/source/stm32f4xx_dma.c" path="cmsis_lib/source/stm32f4xx_dma.c" type="1"/>
     <File name="drivers/audio/filters/i_tx_filter.h" path="drivers/audio/filters/i_tx_filter.h" type="1"/>
     <File name="usb/usbd/class/cdc/inc/usbd_cdc_core.h" path="usb/usbd/class/cdc/inc/usbd_cdc_core.h" type="1"/>
-    <File name="drivers/audio/filters/fir_10k.h" path="drivers/audio/filters/fir_10k.h" type="1"/>
+    <File name="drivers/audio/filters/fir_rx_interpolate_16_10kHz.c" path="drivers/audio/filters/fir_rx_interpolate_16_10kHz.c" type="1"/>
     <File name="cmsis_boot" path="" type="2"/>
+    <File name="drivers/audio/filters/iir_5k.c" path="drivers/audio/filters/iir_5k.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_fsmc.c" path="cmsis_lib/source/stm32f4xx_fsmc.c" type="1"/>
     <File name="usb/usbh/class" path="" type="2"/>
     <File name="drivers/keyboard/usb" path="" type="2"/>
-    <File name="drivers/audio/filters/iir_2_3k.h" path="drivers/audio/filters/iir_2_3k.h" type="1"/>
-    <File name="drivers/audio/cw/cw_gen.h" path="drivers/audio/cw/cw_gen.h" type="1"/>
     <File name="usb/usbh/class/hid/src" path="" type="2"/>
+    <File name="drivers/audio/cw/cw_gen.h" path="drivers/audio/cw/cw_gen.h" type="1"/>
     <File name="drivers/cat/usb/usbd_desc.h" path="drivers/cat/usb/usbd_desc.h" type="1"/>
-    <File name="drivers/audio/filters/i_rx_filter_5kHz.h" path="drivers/audio/filters/i_rx_filter_5kHz.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_7k5.c" path="drivers/audio/filters/iq_rx_filter_7k5.c" type="1"/>
+    <File name="drivers/audio/filters/iir_3_2k.c" path="drivers/audio/filters/iir_3_2k.c" type="1"/>
     <File name="hardware/mchf_hw_i2c2.c" path="hardware/mchf_hw_i2c2.c" type="1"/>
-    <File name="cmsis_lib/include/stm32f4xx_tim.h" path="cmsis_lib/include/stm32f4xx_tim.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_adc.c" path="cmsis_lib/source/stm32f4xx_adc.c" type="1"/>
+    <File name="cmsis_lib/include/stm32f4xx_tim.h" path="cmsis_lib/include/stm32f4xx_tim.h" type="1"/>
+    <File name="drivers/audio/audio_management.c" path="drivers/audio/audio_management.c" type="1"/>
     <File name="usb/otg/src/usb_dcd.c" path="usb/otg/src/usb_dcd.c" type="1"/>
     <File name="usb" path="" type="2"/>
     <File name="usb/usbd/class/cdc/src/usbd_cdc_core.c" path="usb/usbd/class/cdc/src/usbd_cdc_core.c" type="1"/>
     <File name="usb/usbd/core/inc/usbd_core.h" path="usb/usbd/core/inc/usbd_core.h" type="1"/>
-    <File name="drivers/audio/filters/fir_1_8k.h" path="drivers/audio/filters/fir_1_8k.h" type="1"/>
     <File name="cmsis_boot/system_stm32f4xx.h" path="cmsis_boot/system_stm32f4xx.h" type="1"/>
+    <File name="drivers/audio/filters/iir_3_4k.c" path="drivers/audio/filters/iir_3_4k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_7_5k.c" path="drivers/audio/filters/iir_7_5k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_3_8k.c" path="drivers/audio/filters/iir_3_8k.c" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_5k0.c" path="drivers/audio/filters/iq_rx_filter_5k0.c" type="1"/>
+    <File name="drivers/audio/filters/iir_5_5k.c" path="drivers/audio/filters/iir_5_5k.c" type="1"/>
     <File name="hardware/mchf_hw_i2c2.h" path="hardware/mchf_hw_i2c2.h" type="1"/>
     <File name="drivers/audio/codec" path="" type="2"/>
-    <File name="drivers/audio/filters/q_rx_filter_3k6.h" path="drivers/audio/filters/q_rx_filter_3k6.h" type="1"/>
     <File name="usb/otg/inc/usb_hcd.h" path="usb/otg/inc/usb_hcd.h" type="1"/>
-    <File name="drivers/ui/ui_driver.c" path="drivers/ui/ui_driver.c" type="1"/>
-    <File name="drivers/ui/ui_configuration.c" path="drivers/ui/ui_configuration.c" type="1"/>
-    <File name="drivers/ui/ui_configuration.h" path="drivers/ui/ui_configuration.h" type="1"/>
     <File name="usb/usbd/core/inc/usbd_ioreq.h" path="usb/usbd/core/inc/usbd_ioreq.h" type="1"/>
+    <File name="drivers/ui/ui_driver.c" path="drivers/ui/ui_driver.c" type="1"/>
+    <File name="drivers/cat/usb/usbd_conf.h" path="drivers/cat/usb/usbd_conf.h" type="1"/>
     <File name="usb/usbh/class/hid/src/usbh_hid_keybd.c" path="usb/usbh/class/HID/src/usbh_hid_keybd.c" type="1"/>
     <File name="drivers/cat/usb" path="" type="2"/>
-    <File name="drivers/audio/filters/iir_2k7_tx_bpf_fm.h" path="drivers/audio/filters/iir_2k7_tx_bpf_fm.h" type="1"/>
-    <File name="drivers/cat/usb/usbd_conf.h" path="drivers/cat/usb/usbd_conf.h" type="1"/>
     <File name="usb/otg/inc/usb_otg.h" path="usb/otg/inc/usb_otg.h" type="1"/>
     <File name="usb/usbd/class/audio" path="" type="2"/>
+    <File name="drivers/audio/filters/iir_9_5k.c" path="drivers/audio/filters/iir_9_5k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_8k5_hpf_fm_squelch.c" path="drivers/audio/filters/iir_8k5_hpf_fm_squelch.c" type="1"/>
     <File name="hardware/mchf_hw_i2c.c" path="hardware/mchf_hw_i2c.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_exti.c" path="cmsis_lib/source/stm32f4xx_exti.c" type="1"/>
     <File name="usb/otg/inc/usb_regs.h" path="usb/otg/inc/usb_regs.h" type="1"/>
     <File name="usb/usbh/core/inc" path="" type="2"/>
     <File name="drivers/ui/oscillator" path="" type="2"/>
     <File name="hardware/mchf_board.h" path="hardware/mchf_board.h" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_10kHz.h" path="drivers/audio/filters/iq_rx_filter_am_10kHz.h" type="1"/>
     <File name="usb/otg/inc/usb_dcd_int.h" path="usb/otg/inc/usb_dcd_int.h" type="1"/>
+    <File name="drivers/audio/filters/iir_8_5k.c" path="drivers/audio/filters/iir_8_5k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_2_1k.c" path="drivers/audio/filters/iir_2_1k.c" type="1"/>
     <File name="hardware/mchf_board.c" path="hardware/mchf_board.c" type="1"/>
     <File name="usb/usbd/class" path="" type="2"/>
     <File name="usb/usbd/class/audio/inc/usbd_audio_core.h" path="usb/usbd/class/audio/inc/usbd_audio_core.h" type="1"/>
     <File name="usb/usbh/class/hid/inc/usbh_hid_core.h" path="usb/usbh/class/HID/inc/usbh_hid_core.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_gpio.h" path="cmsis_lib/include/stm32f4xx_gpio.h" type="1"/>
     <File name="drivers/audio/audio_driver.h" path="drivers/audio/audio_driver.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter.c" path="drivers/audio/filters/iq_rx_filter.c" type="1"/>
     <File name="misc" path="" type="2"/>
     <File name="usb/usbh/core/src/usbh_stdreq.c" path="usb/usbh/core/src/usbh_stdreq.c" type="1"/>
     <File name="usb/usbh" path="" type="2"/>
     <File name="drivers/audio/cw/cw_gen.c" path="drivers/audio/cw/cw_gen.c" type="1"/>
     <File name="usb/usbh/class/hid" path="" type="2"/>
     <File name="usb/usbh/core/src/usbh_ioreq.c" path="usb/usbh/core/src/usbh_ioreq.c" type="1"/>
+    <File name="drivers/audio/filters/fir_rx_interpolate_16.c" path="drivers/audio/filters/fir_rx_interpolate_16.c" type="1"/>
+    <File name="drivers/audio/filters/iir_2_3k.c" path="drivers/audio/filters/iir_2_3k.c" type="1"/>
     <File name="usb/otg/src/usb_core.c" path="usb/otg/src/usb_core.c" type="1"/>
     <File name="drivers/audio/filters/q_tx_filter.h" path="drivers/audio/filters/q_tx_filter.h" type="1"/>
     <File name="drivers/keyboard/usb/usbh_bsp.c" path="drivers/keyboard/usb/usbh_bsp.c" type="1"/>
     <File name="drivers/ui/lcd" path="" type="2"/>
     <File name="cmsis_lib/include/stm32f4xx_flash.h" path="cmsis_lib/include/stm32f4xx_flash.h" type="1"/>
+    <File name="drivers/audio/filters/iir_2_7k.c" path="drivers/audio/filters/iir_2_7k.c" type="1"/>
     <File name="drivers/audio" path="" type="2"/>
     <File name="usb/usbd" path="" type="2"/>
     <File name="usb/usbh/core/inc/usbh_ioreq.h" path="usb/usbh/core/inc/usbh_ioreq.h" type="1"/>
-    <File name="drivers/audio/filters/iir_1_8k.h" path="drivers/audio/filters/iir_1_8k.h" type="1"/>
-    <File name="drivers/audio/filters/iir_15k_hpf_fm_squelch.h" path="drivers/audio/filters/iir_15k_hpf_fm_squelch.h" type="1"/>
     <File name="drivers/ui/ui_menu.h" path="drivers/ui/ui_menu.h" type="1"/>
     <File name="hardware/mchf_hw_i2c.h" path="hardware/mchf_hw_i2c.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_am.c" path="drivers/audio/filters/iq_rx_filter_am.c" type="1"/>
     <File name="cmsis_boot/stm32f4xx.h" path="cmsis_boot/stm32f4xx.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_3k6.c" path="drivers/audio/filters/iq_rx_filter_3k6.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_spi.c" path="cmsis_lib/source/stm32f4xx_spi.c" type="1"/>
     <File name="usb/usbd/class/audio/src" path="" type="2"/>
-    <File name="drivers/audio/filters/fir_3_6k.h" path="drivers/audio/filters/fir_3_6k.h" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_10k0.c" path="drivers/audio/filters/iq_rx_filter_10k0.c" type="1"/>
+    <File name="drivers/audio/filters/iir_6k.c" path="drivers/audio/filters/iir_6k.c" type="1"/>
     <File name="usb/otg" path="" type="2"/>
     <File name="syscalls/syscalls.c" path="syscalls/syscalls.c" type="1"/>
-    <File name="drivers/audio/filters/i_rx_filter.h" path="drivers/audio/filters/i_rx_filter.h" type="1"/>
+    <File name="drivers/audio/filters/iir_1_8k.c" path="drivers/audio/filters/iir_1_8k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_2k7_tx_bpf.c" path="drivers/audio/filters/iir_2k7_tx_bpf.c" type="1"/>
     <File name="drivers/cat/usb/usbd_cdc_vcp.h" path="drivers/cat/usb/usbd_cdc_vcp.h" type="1"/>
     <File name="usb/usbh/core/inc/usbh_stdreq.h" path="usb/usbh/core/inc/usbh_stdreq.h" type="1"/>
     <File name="usb/otg/src/usb_hcd_int.c" path="usb/otg/src/usb_hcd_int.c" type="1"/>
+    <File name="drivers/audio/filters/iir_7k.c" path="drivers/audio/filters/iir_7k.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_dac.c" path="cmsis_lib/source/stm32f4xx_dac.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_wwdg.c" path="cmsis_lib/source/stm32f4xx_wwdg.c" type="1"/>
     <File name="usb/otg/inc" path="" type="2"/>
     <File name="cmsis_lib/source/stm32f4xx_rtc.c" path="cmsis_lib/source/stm32f4xx_rtc.c" type="1"/>
+    <File name="drivers/audio/filters/fir_rx_decimate_4.c" path="drivers/audio/filters/fir_rx_decimate_4.c" type="1"/>
     <File name="usb/usbh/core/inc/usbh_hcs.h" path="usb/usbh/core/inc/usbh_hcs.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_rcc.h" path="cmsis_lib/include/stm32f4xx_rcc.h" type="1"/>
     <File name="drivers/cat/cat_driver.c" path="drivers/cat/cat_driver.c" type="1"/>
@@ -334,44 +342,48 @@
     <File name="cmsis_boot/startup/startup_stm32f4xx.c" path="cmsis_boot/startup/startup_stm32f4xx.c" type="1"/>
     <File name="cmsis/core_cmInstr.h" path="cmsis/core_cmInstr.h" type="1"/>
     <File name="drivers/cat/usb/usbd_usr.c" path="drivers/cat/usb/usbd_usr.c" type="1"/>
-    <File name="drivers/audio/filters/i_rx_filter_6kHz.h" path="drivers/audio/filters/i_rx_filter_6kHz.h" type="1"/>
+    <File name="drivers/audio/filters/iir_15k_hpf_fm_squelch.c" path="drivers/audio/filters/iir_15k_hpf_fm_squelch.c" type="1"/>
+    <File name="drivers/audio/filters/iir_300hz.c" path="drivers/audio/filters/iir_300hz.c" type="1"/>
     <File name="drivers/ui/ui_menu.c" path="drivers/ui/ui_menu.c" type="1"/>
-    <File name="drivers/audio/filters/q_rx_filter_5kHz.h" path="drivers/audio/filters/q_rx_filter_5kHz.h" type="1"/>
+    <File name="drivers/audio/filters/iir_10k.c" path="drivers/audio/filters/iir_10k.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_adc.h" path="cmsis_lib/include/stm32f4xx_adc.h" type="1"/>
     <File name="usb/usbd/class/audio/inc" path="" type="2"/>
-    <File name="drivers/cat/cat_driver.h" path="drivers/cat/cat_driver.h" type="1"/>
     <File name="cmsis_boot/system_stm32f4xx.c" path="cmsis_boot/system_stm32f4xx.c" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_2k3.h" path="drivers/audio/filters/iq_rx_filter_am_2k3.h" type="1"/>
+    <File name="drivers/cat/cat_driver.h" path="drivers/cat/cat_driver.h" type="1"/>
     <File name="drivers/keyboard/usb/usbh_usr.c" path="drivers/keyboard/usb/usbh_usr.c" type="1"/>
     <File name="drivers/keyboard" path="" type="2"/>
     <File name="usb/usbd/core/inc/usbd_usr.h" path="usb/usbd/core/inc/usbd_usr.h" type="1"/>
     <File name="cmsis" path="" type="2"/>
-    <File name="drivers/audio/filters/q_rx_filter_6kHz.h" path="drivers/audio/filters/q_rx_filter_6kHz.h" type="1"/>
+    <File name="drivers/audio/filters/iir_4_4k.c" path="drivers/audio/filters/iir_4_4k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_2_5k.c" path="drivers/audio/filters/iir_2_5k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_1_6k.c" path="drivers/audio/filters/iir_1_6k.c" type="1"/>
     <File name="usb/otg/inc/usb_defines.h" path="usb/otg/inc/usb_defines.h" type="1"/>
     <File name="drivers/keyboard/usb/usbh_usr.h" path="drivers/keyboard/usb/usbh_usr.h" type="1"/>
-    <File name="drivers/audio/filters/iir_300hz.h" path="drivers/audio/filters/iir_300hz.h" type="1"/>
-    <File name="drivers/audio/filters/iir_10k.h" path="drivers/audio/filters/iir_10k.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_wwdg.h" path="cmsis_lib/include/stm32f4xx_wwdg.h" type="1"/>
+    <File name="drivers/audio/filters/iir_2_9k.c" path="drivers/audio/filters/iir_2_9k.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_rtc.h" path="cmsis_lib/include/stm32f4xx_rtc.h" type="1"/>
-    <File name="drivers/audio/filters/q_rx_filter_7kHz5.h" path="drivers/audio/filters/q_rx_filter_7kHz5.h" type="1"/>
     <File name="usb/usbd/class/cdc/inc" path="" type="2"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_6kHz.h" path="drivers/audio/filters/iq_rx_filter_am_6kHz.h" type="1"/>
     <File name="drivers/cat/usb/usbd_bsp.h" path="drivers/cat/usb/usbd_bsp.h" type="1"/>
     <File name="usb/otg/src/usb_hcd.c" path="usb/otg/src/usb_hcd.c" type="1"/>
     <File name="drivers/cat/usb/usbd_desc.c" path="drivers/cat/usb/usbd_desc.c" type="1"/>
+    <File name="usb/usbh/class/hid/src/usbh_hid_mouse.c" path="usb/usbh/class/HID/src/usbh_hid_mouse.c" type="1"/>
     <File name="usb/usbd/core/src/usbd_req.c" path="usb/usbd/core/src/usbd_req.c" type="1"/>
     <File name="usb/usbh/core/src/usbh_hcs.c" path="usb/usbh/core/src/usbh_hcs.c" type="1"/>
-    <File name="usb/usbh/class/hid/src/usbh_hid_mouse.c" path="usb/usbh/class/HID/src/usbh_hid_mouse.c" type="1"/>
-    <File name="drivers/audio/filters/i_rx_filter_7kHz5.h" path="drivers/audio/filters/i_rx_filter_7kHz5.h" type="1"/>
+    <File name="drivers/audio/filters/iir_8k.c" path="drivers/audio/filters/iir_8k.c" type="1"/>
+    <File name="drivers/audio/filters/iir_6_5k.c" path="drivers/audio/filters/iir_6_5k.c" type="1"/>
     <File name="misc/v_eprom/eeprom.h" path="misc/v_eprom/eeprom.h" type="1"/>
+    <File name="drivers/ui/ui_configuration.h" path="drivers/ui/ui_configuration.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_si570.h" path="drivers/ui/oscillator/ui_si570.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_syscfg.h" path="cmsis_lib/include/stm32f4xx_syscfg.h" type="1"/>
     <File name="usb/otg/inc/usb_dcd.h" path="usb/otg/inc/usb_dcd.h" type="1"/>
+    <File name="drivers/audio/filters/iir_4_8k.c" path="drivers/audio/filters/iir_4_8k.c" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_flash.c" path="cmsis_lib/source/stm32f4xx_flash.c" type="1"/>
     <File name="cmsis_boot/startup" path="" type="2"/>
+    <File name="drivers/ui/lcd/ui_spectrum.c" path="drivers/ui/lcd/ui_spectrum.c" type="1"/>
     <File name="usb/usbd/core/src/usbd_core.c" path="usb/usbd/core/src/usbd_core.c" type="1"/>
     <File name="cmsis/core_cm4.h" path="cmsis/core_cm4.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_soft_tcxo.h" path="drivers/ui/oscillator/ui_soft_tcxo.h" type="1"/>
+    <File name="drivers/audio/filters/fir_rx_decimate_4_min_lpf.c" path="drivers/audio/filters/fir_rx_decimate_4_min_lpf.c" type="1"/>
     <File name="cmsis/arm_math.h" path="cmsis/arm_math.h" type="1"/>
     <File name="cmsis_lib/source/misc.c" path="cmsis_lib/source/misc.c" type="1"/>
     <File name="usb/otg/src/usb_dcd_int.c" path="usb/otg/src/usb_dcd_int.c" type="1"/>
@@ -379,30 +391,31 @@
     <File name="drivers/cat/usb/usbd_bsp.c" path="drivers/cat/usb/usbd_bsp.c" type="1"/>
     <File name="cmsis_lib/source" path="" type="2"/>
     <File name="usb/usbh/core/src/usbh_core.c" path="usb/usbh/core/src/usbh_core.c" type="1"/>
+    <File name="drivers/audio/filters/iq_rx_filter_4k5.c" path="drivers/audio/filters/iq_rx_filter_4k5.c" type="1"/>
+    <File name="drivers/audio/filters/iir_9k.c" path="drivers/audio/filters/iir_9k.c" type="1"/>
     <File name="drivers/audio/softdds" path="" type="2"/>
     <File name="misc/v_eprom/eeprom.c" path="misc/v_eprom/eeprom.c" type="1"/>
     <File name="cmsis_boot/stm32f4xx_conf.h" path="cmsis_boot/stm32f4xx_conf.h" type="1"/>
     <File name="hardware" path="" type="2"/>
-    <File name="drivers/audio/filters/fir_rx_decimate_4_min_lpf.h" path="drivers/audio/filters/fir_rx_decimate_4_min_lpf.h" type="1"/>
     <File name="usb/otg/src" path="" type="2"/>
-    <File name="drivers/audio/cw/cw_sm_tbl.h" path="drivers/audio/cw/cw_sm_tbl.h" type="1"/>
     <File name="usb/usbh/core" path="" type="2"/>
+    <File name="drivers/audio/cw/cw_sm_tbl.h" path="drivers/audio/cw/cw_sm_tbl.h" type="1"/>
+    <File name="drivers/audio/filters/iir_500hz.c" path="drivers/audio/filters/iir_500hz.c" type="1"/>
     <File name="usb/usbd/class/audio/src/usbd_audio_core.c" path="usb/usbd/class/audio/src/usbd_audio_core.c" type="1"/>
-    <File name="drivers/audio/filters/fir_rx_decimate_4.h" path="drivers/audio/filters/fir_rx_decimate_4.h" type="1"/>
+    <File name="drivers/audio/filters/iir_2k7_tx_bpf_fm.c" path="drivers/audio/filters/iir_2k7_tx_bpf_fm.c" type="1"/>
+    <File name="drivers/audio/filters/iir_4_2k.c" path="drivers/audio/filters/iir_4_2k.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_exti.h" path="cmsis_lib/include/stm32f4xx_exti.h" type="1"/>
     <File name="drivers/ui/lcd/ui_lcd_hy28.h" path="drivers/ui/lcd/ui_lcd_hy28.h" type="1"/>
-    <File name="drivers/ui/lcd/ui_spectrum.h" path="drivers/ui/lcd/ui_spectrum.h" type="1"/>    
-    <File name="drivers/audio/filters/iir_2k7_tx_bpf.h" path="drivers/audio/filters/iir_2k7_tx_bpf.h" type="1"/>
     <File name="drivers/keyboard/keyb_driver.h" path="drivers/keyboard/keyb_driver.h" type="1"/>
     <File name="usb/usbd/class/cdc/src" path="" type="2"/>
-    <File name="drivers/audio/filters/i_rx_filter_10kHz.h" path="drivers/audio/filters/i_rx_filter_10kHz.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_si570.c" path="drivers/ui/oscillator/ui_si570.c" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_dma.h" path="cmsis_lib/include/stm32f4xx_dma.h" type="1"/>
-    <File name="drivers/audio/filters/iq_rx_filter_am_5kHz.h" path="drivers/audio/filters/iq_rx_filter_am_5kHz.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_tim.c" path="cmsis_lib/source/stm32f4xx_tim.c" type="1"/>
     <File name="drivers/audio/fm_subaudible_tone_table.h" path="drivers/audio/fm_subaudible_tone_table.h" type="1"/>
+    <File name="drivers/ui/ui_configuration.c" path="drivers/ui/ui_configuration.c" type="1"/>
     <File name="syscalls" path="" type="2"/>
     <File name="drivers/ui/encoder" path="" type="2"/>
+    <File name="drivers/audio/filters/iir_4_6k.c" path="drivers/audio/filters/iir_4_6k.c" type="1"/>
     <File name="drivers/audio/filters" path="" type="2"/>
     <File name="cmsis_lib/include/stm32f4xx_fsmc.h" path="cmsis_lib/include/stm32f4xx_fsmc.h" type="1"/>
     <File name="drivers/audio/codec/codec.c" path="drivers/audio/codec/codec.c" type="1"/>
@@ -410,6 +423,7 @@
     <File name="usb/usbd/core/inc" path="" type="2"/>
     <File name="drivers/keyboard/usb/usbh_bsp.h" path="drivers/keyboard/usb/usbh_bsp.h" type="1"/>
     <File name="usb/usbd/class/audio/inc/usbd_audio_out_if.h" path="usb/usbd/class/audio/inc/usbd_audio_out_if.h" type="1"/>
+    <File name="drivers/ui/lcd/ui_spectrum.h" path="drivers/ui/lcd/ui_spectrum.h" type="1"/>
     <File name="usb/usbd/class/audio/src/usbd_audio_out_if.c" path="usb/usbd/class/audio/src/usbd_audio_out_if.c" type="1"/>
   </Files>
 </Project>
