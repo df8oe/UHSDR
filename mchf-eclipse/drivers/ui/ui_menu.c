@@ -1271,8 +1271,9 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
 	return tchange;
 }
 
-bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint8_t mode, uint8_t filter_band, volatile uint8_t* adj_ptr, char* options, uint32_t* clr_ptr) {
+bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint8_t mode, uint8_t filter_band, char* options, uint32_t* clr_ptr) {
 	bool tchange = false;
+	volatile uint8_t *adj_ptr = &swrm.coupling_calc[filter_band];
 	if(ts.filter_band == filter_band)	{	// is this band selected?
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
 				SWR_COUPLING_MIN,
@@ -2931,37 +2932,37 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		sprintf(options, "  %u", swrm.sensor_null);
 		break;
 	case CONFIG_FWD_REV_COUPLING_2200M_ADJ:		// RF power sensor coupling adjust (2200m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_2200, &swrm.coupling_2200m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_2200M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_630M_ADJ:		// RF power sensor coupling adjust (630m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_630, &swrm.coupling_630m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_630M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_160M_ADJ:		// RF power sensor coupling adjust (160m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_160, &swrm.coupling_160m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_160M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_80M_ADJ:		// RF power sensor coupling adjust (80m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_80, &swrm.coupling_80m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_80M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_40M_ADJ:		// RF power sensor coupling adjust (40m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_40, &swrm.coupling_40m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_40M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_20M_ADJ:		// RF power sensor coupling adjust (20m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_20, &swrm.coupling_20m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_20M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_15M_ADJ:		// RF power sensor coupling adjust (15m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_15, &swrm.coupling_15m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_15M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_6M_ADJ:		// RF power sensor coupling adjust (6m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_6, &swrm.coupling_6m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_6M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_2M_ADJ:		// RF power sensor coupling adjust (2m)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_2, &swrm.coupling_2m_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_2M, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_70CM_ADJ:		// RF power sensor coupling adjust (70cm)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_70, &swrm.coupling_70cm_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_70CM, options, &clr);
 		break;
 	case CONFIG_FWD_REV_COUPLING_23CM_ADJ:		// RF power sensor coupling adjust (23cm)
-		UiDriverMenuBandRevCouplingAdjust(var, mode, FILTER_BAND_23, &swrm.coupling_23cm_calc, options, &clr);
+		UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_23CM, options, &clr);
 		break;
 	case CONFIG_FWD_REV_SENSE_SWAP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
 		temp_var = ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE;
