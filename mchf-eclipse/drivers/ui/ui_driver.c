@@ -854,14 +854,12 @@ static void UiDriverPublicsInit(void)
 	swrm.rev_dbm			= 0;
 	swrm.vswr			 	= 0;
 	swrm.sensor_null		= SENSOR_NULL_DEFAULT;
-	swrm.coupling_2200m_calc	= SWR_COUPLING_DEFAULT;
-	swrm.coupling_630m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_160m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_80m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_40m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_20m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_15m_calc		= SWR_COUPLING_DEFAULT;
-	swrm.coupling_6m_calc		= SWR_COUPLING_DEFAULT;
+	{
+	  int idx;
+	  for (idx = 0; idx < COUPLING_MAX; idx++) {
+	    swrm.coupling_calc[idx]    = SWR_COUPLING_DEFAULT;
+	  }
+	}
 	swrm.pwr_meter_disp		= 0;	// Display of numerical FWD/REV power metering off by default
 	swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
 
@@ -2724,13 +2722,12 @@ typedef struct BandFilterDescriptor {
 // The descriptor array below has to be ordered from the lowest BPF frequency filter
 // to the highest.
 static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
-		{ BAND_FILTER_UPPER_160, FILTER_BAND_160, BAND_MODE_160 },
-		{ BAND_FILTER_UPPER_80, FILTER_BAND_80, BAND_MODE_80 },
-		{ BAND_FILTER_UPPER_40, FILTER_BAND_40, BAND_MODE_40 },
-		{ BAND_FILTER_UPPER_20, FILTER_BAND_20, BAND_MODE_20 },
-		{ BAND_FILTER_UPPER_10, FILTER_BAND_15, BAND_MODE_10 },
-		{ BAND_FILTER_UPPER_6, FILTER_BAND_6, BAND_MODE_6 },
-		{ BAND_FILTER_UPPER_4, FILTER_BAND_4, BAND_MODE_4 }
+		{ BAND_FILTER_UPPER_160, COUPLING_160M, BAND_MODE_160 },
+		{ BAND_FILTER_UPPER_80,  COUPLING_80M, BAND_MODE_80 },
+		{ BAND_FILTER_UPPER_40,  COUPLING_40M, BAND_MODE_40 },
+		{ BAND_FILTER_UPPER_20,  COUPLING_20M, BAND_MODE_20 },
+		{ BAND_FILTER_UPPER_10,  COUPLING_15M, BAND_MODE_10 },
+		{ BAND_FILTER_UPPER_6,  COUPLING_6M, BAND_MODE_6 }
 };
 
 
@@ -5078,6 +5075,94 @@ static void UiDriverHandleSmeter(void)
 	}
 }
 
+void UiDriver_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr) {
+  float pwr;
+  float dbm;
+  val *= SWR_ADC_VOLT_REFERENCE;    // get nominal A/D reference voltage
+  val /= SWR_ADC_FULL_SCALE;        // divide by full-scale A/D count to yield actual input voltage from detector
+  val += sensor_null;               // offset result
+
+  if(val <= LOW_POWER_CALC_THRESHOLD) {   // is this low power as evidenced by low voltage from the sensor?
+        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * pow(val,2 )) + (LOW_RF_PWR_COEFF_D * pow(val, 3));
+  } else {        // it is high power
+        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * pow(val, 2));
+  }
+  // calculate forward and reverse RF power in watts (p = a + bx + cx^2) for high power (above 50-60
+
+  if(pwr < 0) {   // prevent negative power readings from emerging from the equations - particularly at zero output power
+        pwr = 0;
+  }
+
+  dbm = (10 * (log10(pwr))) + 30 + coupling_calc;
+  pwr = pow10(dbm/10)/1000;
+  *pwr_ptr = pwr;
+  *dbm_ptr = dbm;
+}
+
+static bool UiDriver_UpdatePowerAndVSWR() {
+
+  uint16_t  val_p,val_s = 0;
+  float sensor_null, coupling_calc;
+  bool retval = false;
+
+  swrm.skip++;
+  if(swrm.skip >= SWR_SAMPLES_SKP) {
+    swrm.skip = 0;
+
+    // Collect samples
+    if(swrm.p_curr < SWR_SAMPLES_CNT)
+    {
+      // Get next sample
+      if(!(ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE))   {   // is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
+        val_p = ADC_GetConversionValue(ADC2); // forward
+        val_s = ADC_GetConversionValue(ADC3); // return
+      }
+      else    {   // FWD/REV bits should be swapped
+        val_p = ADC_GetConversionValue(ADC3); // forward
+        val_s = ADC_GetConversionValue(ADC2); // return
+      }
+
+      // Add to accumulator to average A/D values
+      swrm.fwd_calc += (float)val_p;
+      swrm.rev_calc += (float)val_s;
+
+      swrm.p_curr++;
+    } else {
+      // obtain and calculate power meter coupling coefficients
+      coupling_calc = swrm.coupling_calc[ts.filter_band];
+      coupling_calc -= 100;                       // offset to zero
+      coupling_calc /= 10;                        // rescale to 0.1 dB/unit
+
+
+      sensor_null = (float)swrm.sensor_null;  // get calibration factor
+      sensor_null -= 100;                     // offset it so that 100 = 0
+      sensor_null /= 1000;                    // divide so that each step = 1 millivolt
+
+      // Compute average values
+
+      swrm.fwd_calc /= SWR_SAMPLES_CNT;
+      swrm.rev_calc /= SWR_SAMPLES_CNT;
+
+      UiDriver_PowerFromADCValue(swrm.fwd_calc, sensor_null, coupling_calc,&swrm.fwd_pwr, &swrm.fwd_dbm);
+      UiDriver_PowerFromADCValue(swrm.rev_calc, sensor_null, coupling_calc,&swrm.rev_pwr, &swrm.rev_dbm);
+
+      // Reset accumulators and variables for power measurements
+      swrm.p_curr   = 0;
+      swrm.fwd_calc = 0;
+      swrm.rev_calc = 0;
+
+
+      swrm.vswr = swrm.fwd_dbm-swrm.rev_dbm;      // calculate VSWR
+
+      // Calculate VSWR from power readings
+
+      swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrt(swrm.rev_pwr/swrm.fwd_pwr));
+      retval = true;
+    }
+  }
+  return retval;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverHandleLowerMeter
 //* Object              : Power, SWR, ALC and Audio indicator
@@ -5087,240 +5172,96 @@ static void UiDriverHandleSmeter(void)
 //*----------------------------------------------------------------------------
 static void UiDriverHandleLowerMeter(void)
 {
-	ushort	val_p,val_s = 0;
-	float	sensor_null, coupling_calc, scale_calc;
-	char txt[32];
-	static float fwd_pwr_avg, rev_pwr_avg;
-	static uchar	old_power_level = 99;
+  float	scale_calc;
+  char txt[32];
+  static float fwd_pwr_avg, rev_pwr_avg;
+  static uchar	old_power_level = 99;
 
-	//float 	rho,swr;
+  // Only in TX mode
+  if(ts.txrx_mode != TRX_MODE_TX)	{
+    swrm.vswr_dampened = 0;		// reset averaged readings when not in TX mode
+    fwd_pwr_avg = -1;
+    rev_pwr_avg = -1;
+  } else if (UiDriver_UpdatePowerAndVSWR()) {
+    // FIXME: SCALCULATION ENDS HERE, NOW WE DO DISPLAY, SEPARATE
 
-	// Only in TX mode
-	if(ts.txrx_mode != TRX_MODE_TX)	{
-		swrm.vswr_dampened = 0;		// reset averaged readings when not in TX mode
-		fwd_pwr_avg = -1;
-		rev_pwr_avg = -1;
-		return;
-	}
+    // display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
+    if(swrm.pwr_meter_disp)	{
+      if((fwd_pwr_avg < 0) || (ts.power_level != old_power_level)) {	// initialize with current value if it was zero (e.g. reset) or power level changed
+        fwd_pwr_avg = swrm.fwd_pwr;
+      }
 
-	swrm.skip++;
-	if(swrm.skip < SWR_SAMPLES_SKP)
-		return;
+      fwd_pwr_avg = fwd_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to forward power reading
+      fwd_pwr_avg += swrm.fwd_pwr * PWR_DAMPENING_FACTOR;
 
-	swrm.skip = 0;
+      if((rev_pwr_avg < 0) || (ts.power_level != old_power_level)) {	// initialize with current value if it was zero (e.g. reset) or power level changed
+        rev_pwr_avg = swrm.rev_pwr;
+      }
 
-	// Collect samples
-	if(swrm.p_curr < SWR_SAMPLES_CNT)
-	{
-		// Get next sample
-		if(!(ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE))	{	// is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
-			val_p = ADC_GetConversionValue(ADC2);	// forward
-			val_s = ADC_GetConversionValue(ADC3);	// return
-		}
-		else	{	// FWD/REV bits should be swapped
-			val_p = ADC_GetConversionValue(ADC3);	// forward
-			val_s = ADC_GetConversionValue(ADC2);	// return
-		}
+      old_power_level = ts.power_level;		// update power level change detector
 
-		// Add to accumulator to average A/D values
-		swrm.fwd_calc += (float)val_p;
-		swrm.rev_calc += (float)val_s;
+      rev_pwr_avg = rev_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to reverse power reading
+      rev_pwr_avg += swrm.rev_pwr * PWR_DAMPENING_FACTOR;
 
-		swrm.p_curr++;
+      sprintf(txt, "%d,%d   ", (int)(fwd_pwr_avg*1000), (int)(rev_pwr_avg*1000));		// scale to display power in milliwatts
+      UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
+      swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
+    }
 
-		//printf("sample no %d\n\r",swrm.p_curr);
-		return;
-	}
-
-	sensor_null = (float)swrm.sensor_null;	// get calibration factor
-	sensor_null -= 100;						// offset it so that 100 = 0
-	sensor_null /= 1000;					// divide so that each step = 1 millivolt
-
-	// Compute average values
-
-	swrm.fwd_calc /= SWR_SAMPLES_CNT;
-	swrm.rev_calc /= SWR_SAMPLES_CNT;
+    if((swrm.pwr_meter_was_disp) && (!swrm.pwr_meter_disp))	{	// had the numerical display been enabled - and it is now disabled?
+      UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,"            ",White,Black,0);	// yes - overwrite location of numerical power meter display to blank it
+      swrm.pwr_meter_was_disp = 0;	// clear flag so we don't do this again
+    }
 
 
-	// Calculate voltage of A/D inputs
+    // calculate and display RF power reading
 
-	swrm.fwd_calc *= SWR_ADC_VOLT_REFERENCE;	// get nominal A/D reference voltage
-	swrm.fwd_calc /= SWR_ADC_FULL_SCALE;		// divide by full-scale A/D count to yield actual input voltage from detector
-	swrm.fwd_calc += sensor_null;				// offset result
+    scale_calc = (uchar)(swrm.fwd_pwr * 3);		// 3 dots-per-watt for RF power meter
 
-	swrm.rev_calc *= SWR_ADC_VOLT_REFERENCE;	// get nominal A/D reference voltage
-	swrm.rev_calc /= SWR_ADC_FULL_SCALE;		// divide by full-scale A/D count to yield actual input voltage from detector
-	swrm.rev_calc += sensor_null;
+    UiDriverUpdateTopMeterA(scale_calc);
 
+    // Do selectable meter readings
 
-	// calculate forward and reverse RF power in watts (p = a + bx + cx^2) for high power (above 50-60 milliwatts) and (p = a + bx + cx^2 + dx^3) for low power.
-
-	if(swrm.fwd_calc <= LOW_POWER_CALC_THRESHOLD)	// is this low power as evidenced by low voltage from the sensor?
-		swrm.fwd_pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * swrm.fwd_calc) + (LOW_RF_PWR_COEFF_C * pow(swrm.fwd_calc,2 )) + (LOW_RF_PWR_COEFF_D * pow(swrm.fwd_calc, 3));
-	else		// it is high power
-		swrm.fwd_pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * swrm.fwd_calc) + (HIGH_RF_PWR_COEFF_C * pow(swrm.fwd_calc, 2));
-
-	if(swrm.rev_calc <= LOW_POWER_CALC_THRESHOLD)	// is this low power as evidenced by low voltage from the sensor?
-		swrm.rev_pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * swrm.rev_calc) + (LOW_RF_PWR_COEFF_C * pow(swrm.rev_calc, 2)) + (LOW_RF_PWR_COEFF_D * pow(swrm.rev_calc,3));
-	else
-		swrm.rev_pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * swrm.rev_calc) + (HIGH_RF_PWR_COEFF_C * pow(swrm.rev_calc, 2));
-	//
-	if(swrm.fwd_pwr < 0)	// prevent negative power readings from emerging from the equations - particularly at zero output power
-		swrm.fwd_pwr = 0;
-	//
-	if(swrm.rev_pwr < 0)
-		swrm.rev_pwr = 0;
-
-	// obtain and calculate power meter coupling coefficients
-	switch(ts.filter_band)	{
-		case	FILTER_BAND_2200:
-			coupling_calc = (float)swrm.coupling_2200m_calc;	// get coupling coefficient calibration for 2200 meters
-			break;
-		case	FILTER_BAND_630:
-			coupling_calc = (float)swrm.coupling_630m_calc;	// get coupling coefficient calibration for 630 meters
-			break;
-		case	FILTER_BAND_160:
-			coupling_calc = (float)swrm.coupling_160m_calc;	// get coupling coefficient calibration for 160 meters
-			break;
-		case	FILTER_BAND_80:
-			coupling_calc = (float)swrm.coupling_80m_calc;	// get coupling coefficient calibration for 80 meters
-			break;
-		case	FILTER_BAND_6:
-			coupling_calc = (float)swrm.coupling_6m_calc;	// get coupling coefficient calibration for 6 meters
-			break;
-		case	FILTER_BAND_20:
-			coupling_calc = (float)swrm.coupling_20m_calc;	// get coupling coefficient calibration for 30/20 meters
-			break;
-		case	FILTER_BAND_15:
-			coupling_calc = (float)swrm.coupling_15m_calc;	// get coupling coefficient calibration for 17/15/12/10 meters
-			break;
-		case	FILTER_BAND_40:
-		default:
-			coupling_calc = (float)swrm.coupling_40m_calc;	// get coupling coefficient calibration for 40/60 meters
-			break;
-	}
-	//
-	coupling_calc -= 100;						// offset to zero
-	coupling_calc /= 10;						// rescale to 0.1 dB/unit
-
-	// calculate forward and reverse RF power in dBm  (We are using dBm - just because!)
-
-	swrm.fwd_dbm = (10 * (log10(swrm.fwd_pwr))) + 30 + coupling_calc;
-	swrm.rev_dbm = (10 * (log10(swrm.rev_pwr))) + 30 + coupling_calc;
-
-	// now convert back to watts with the coupling coefficient included
-
-	swrm.fwd_pwr = pow10(swrm.fwd_dbm/10)/1000;
-	swrm.rev_pwr = pow10(swrm.rev_dbm/10)/1000;
-
-	swrm.vswr = swrm.fwd_dbm-swrm.rev_dbm;		// calculate VSWR
-
-	// Calculate VSWR from power readings
-
-	swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrt(swrm.rev_pwr/swrm.fwd_pwr));
-
-	// display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
-	if(swrm.pwr_meter_disp)	{
-		if((fwd_pwr_avg < 0) || (ts.power_level != old_power_level))	// initialize with current value if it was zero (e.g. reset) or power level changed
-			fwd_pwr_avg = swrm.fwd_pwr;
-		//
-		fwd_pwr_avg = fwd_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to forward power reading
-		fwd_pwr_avg += swrm.fwd_pwr * PWR_DAMPENING_FACTOR;
-		//
-		if((rev_pwr_avg < 0) || (ts.power_level != old_power_level))	{	// initialize with current value if it was zero (e.g. reset) or power level changed
-			rev_pwr_avg = swrm.rev_pwr;
-		}
-		//
-		old_power_level = ts.power_level;		// update power level change detector
-		//
-		//
-		rev_pwr_avg = rev_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to reverse power reading
-		rev_pwr_avg += swrm.rev_pwr * PWR_DAMPENING_FACTOR;
-		//
-		sprintf(txt, "%d,%d   ", (int)(fwd_pwr_avg*1000), (int)(rev_pwr_avg*1000));		// scale to display power in milliwatts
-		UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
-		swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
-	}
-	//
-	if((swrm.pwr_meter_was_disp) && (!swrm.pwr_meter_disp))	{	// had the numerical display been enabled - and it is now disabled?
-		UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,"            ",White,Black,0);	// yes - overwrite location of numerical power meter display to blank it
-		swrm.pwr_meter_was_disp = 0;	// clear flag so we don't do this again
-	}
-
-	//
-	// used for debugging
-//		char txt[32];
-//		sprintf(txt, " %d,%d,%d   ", (ulong)(swrm.fwd_pwr*100), (ulong)(swrm.rev_pwr*100),(ulong)(swrm.vswr*10));
-//		UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
-	//
-
-	//printf("aver power %d, aver ret %d\n\r", val_p,val_s);
-
-	// Transmitter protection - not enabled yet
-/*
-	if(val_s > 2000)
-	{
-		// Display
-		UiLcdHy28_PrintText(((POS_SM_IND_X + 18) + 140),(POS_SM_IND_Y + 59),"PROT",Red,Black,4);
-
-		// Disable tx - not used for now
-		//ts.tx_power_factor	= 0.0;
-	}
-*/
-	// calculate and display RF power reading
-	//
-	scale_calc = (uchar)(swrm.fwd_pwr * 3);		// 3 dots-per-watt for RF power meter
-	//
-	UiDriverUpdateTopMeterA(scale_calc);
-
-	//
-	// Do selectable meter readings
-	//
-	if(ts.tx_meter_mode == METER_SWR)	{
-		if(swrm.fwd_pwr >= SWR_MIN_CALC_POWER)	{		// is the forward power high enough for valid VSWR calculation?
-														// (Do nothing/freeze old data if below this power level)
-			//
-			if(swrm.vswr_dampened < 1)	// initialize averaging if this is the first time (e.g. VSWR <1 = just returned from RX)
-				swrm.vswr_dampened = swrm.vswr;
-			else	{
-				swrm.vswr_dampened = swrm.vswr_dampened * (1 - VSWR_DAMPENING_FACTOR);
-				swrm.vswr_dampened += swrm.vswr * VSWR_DAMPENING_FACTOR;
-			}
-			//
-			scale_calc = (uchar)(swrm.vswr_dampened * 4);		// yes - four dots per unit of VSWR
-			UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
-		}
-	}
-	else if(ts.tx_meter_mode == METER_ALC)	{
-		scale_calc = ads.alc_val;		// get TX ALC value
-		scale_calc *= scale_calc;		// square the value
-		scale_calc = log10f(scale_calc);	// get the log10
-		scale_calc *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
-		if(scale_calc < 0) {
-			scale_calc = 0;
-		}
-		//
-		UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
-	}
-	else if(ts.tx_meter_mode == METER_AUDIO)	{
-		scale_calc = ads.peak_audio/10000;		// get a copy of the peak TX audio (maximum reference = 30000)
-		ads.peak_audio = 0;					// reset the peak detect
-		scale_calc *= scale_calc;			// square the value
-		scale_calc = log10f(scale_calc);	// get the log10
-		scale_calc *= 10;					// convert to DeciBels and scale for the meter
-		scale_calc += 11;					// offset for meter
-		//
-		if(scale_calc < 0)
-			scale_calc = 0;
-		//
-		UiDriverUpdateBtmMeter((uchar)(scale_calc), 22);	// update the meter, setting the "red" threshold
-	}
-
-	// Reset accumulators and variables for power measurements
-
-	swrm.p_curr   = 0;
-	swrm.fwd_calc = 0;
-	swrm.rev_calc = 0;
+    if(ts.tx_meter_mode == METER_SWR)	{
+      if(swrm.fwd_pwr >= SWR_MIN_CALC_POWER)	{		// is the forward power high enough for valid VSWR calculation?
+        // (Do nothing/freeze old data if below this power level)
+        if(swrm.vswr_dampened < 1)	// initialize averaging if this is the first time (e.g. VSWR <1 = just returned from RX)
+          swrm.vswr_dampened = swrm.vswr;
+        else {
+          swrm.vswr_dampened = swrm.vswr_dampened * (1 - VSWR_DAMPENING_FACTOR);
+          swrm.vswr_dampened += swrm.vswr * VSWR_DAMPENING_FACTOR;
+        }
+        //
+        scale_calc = (uchar)(swrm.vswr_dampened * 4);		// yes - four dots per unit of VSWR
+        UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
+      }
+    }
+    else if(ts.tx_meter_mode == METER_ALC)	{
+      scale_calc = ads.alc_val;		// get TX ALC value
+      scale_calc *= scale_calc;		// square the value
+      scale_calc = log10f(scale_calc);	// get the log10
+      scale_calc *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
+      if(scale_calc < 0) {
+        scale_calc = 0;
+      }
+      //
+      UiDriverUpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
+    }
+    else if(ts.tx_meter_mode == METER_AUDIO)	{
+      scale_calc = ads.peak_audio/10000;		// get a copy of the peak TX audio (maximum reference = 30000)
+      ads.peak_audio = 0;					// reset the peak detect
+      scale_calc *= scale_calc;			// square the value
+      scale_calc = log10f(scale_calc);	// get the log10
+      scale_calc *= 10;					// convert to DeciBels and scale for the meter
+      scale_calc += 11;					// offset for meter
+      //
+      if(scale_calc < 0) {
+        scale_calc = 0;
+      }
+      //
+      UiDriverUpdateBtmMeter((uchar)(scale_calc), 22);	// update the meter, setting the "red" threshold
+    }
+  }
 }
 
 

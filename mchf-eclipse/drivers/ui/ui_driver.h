@@ -203,6 +203,21 @@ enum	{
 //
 #define	SD_DB_DIV_SCALING			0.0316	// Scaling factor for number of dB/Division	0.0316 = 10dB/Division
 
+enum {
+  COUPLING_2200M = 0,
+  COUPLING_630M,
+  COUPLING_160M,
+  COUPLING_80M,
+  COUPLING_40M,
+  COUPLING_20M,
+  COUPLING_15M,
+  COUPLING_6M,
+  COUPLING_2M,
+  COUPLING_70CM,
+  COUPLING_23CM,
+  COUPLING_MAX
+ };
+
 // SWR and RF power meter public
 typedef struct SWRMeter
 {
@@ -220,17 +235,8 @@ typedef struct SWRMeter
 	bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
 	uchar	p_curr;			// count used to update power meter
 	uchar	sensor_null;		// used to null out the sensor offset voltage
-	uchar	coupling_2200m_calc;	// coupling coefficient for forward and reverse couplers for 2200 meters
-	uchar	coupling_630m_calc;	// coupling coefficient for forward and reverse couplers for 630 meters
-	uchar	coupling_160m_calc;	// coupling coefficient for forward and reverse couplers for 160 meters
-	uchar	coupling_80m_calc;	// coupling coefficient for forward and reverse couplers for 80 meters
-	uchar	coupling_40m_calc;	// coupling coefficient for forward and reverse couplers for 40/60 meters
-	uchar	coupling_20m_calc;	// coupling coefficient for forward and reverse couplers for 30/20 meters
-	uchar	coupling_15m_calc;	// coupling coefficient for forward and reverse couplers for 17/15/12/10 meters
-	uchar	coupling_6m_calc;	// coupling coefficient for forward and reverse couplers for 6 meters
-	uchar	coupling_2m_calc;	// coupling coefficient for forward and reverse couplers for 2 meters
-	uchar	coupling_70cm_calc;	// coupling coefficient for forward and reverse couplers for 70 centimeters
-	uchar	coupling_23cm_calc;	// coupling coefficient for forward and reverse couplers for 23 centimeters
+
+	uint8_t coupling_calc[COUPLING_MAX];
 
 } SWRMeter;
 
@@ -241,19 +247,6 @@ typedef struct SWRMeter
 #define	SENSOR_NULL_MIN				75
 #define	SENSOR_NULL_MAX				125
 #define	SENSOR_NULL_DEFAULT			100
-//
-#define	FILTER_BAND_2200			11
-#define	FILTER_BAND_630				12
-#define	FILTER_BAND_160				5
-#define	FILTER_BAND_80				1
-#define	FILTER_BAND_40				2
-#define	FILTER_BAND_20				3
-#define FILTER_BAND_15				4
-#define	FILTER_BAND_6				6
-#define	FILTER_BAND_4				7
-#define	FILTER_BAND_2				8
-#define	FILTER_BAND_70				9
-#define	FILTER_BAND_23				10
 //
 // Location of numerical FWD/REV power indicator
 //
