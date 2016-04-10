@@ -5981,8 +5981,8 @@ static bool UiCheckForEEPROMLoadDefaultRequest(void)
 		//
 		UiLcdHy28_LcdClear(Red);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(2,05,"  EEPROM DEFAULTS",White,Red,1);
-		UiLcdHy28_PrintText(2,35,"   LOAD REQUEST",White,Red,1);
+		UiLcdHy28_PrintText(2,05,"   EEPROM DEFAULTS",White,Red,1);
+		UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",White,Red,1);
 		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Cyan,Red,0);
 		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Cyan,Red,0);
 		UiLcdHy28_PrintText(2,120,"  If you want to load default settings",Green,Red,0);
@@ -6008,7 +6008,7 @@ static bool UiCheckForEEPROMLoadDefaultRequest(void)
 		else
 		    {
 		    UiLcdHy28_LcdClear(Red);							// clear the screen
-		    UiLcdHy28_PrintText(2,108,"Loading EEPROM defaults in progress...",Green,Red,0);
+		    UiLcdHy28_PrintText(2,108,"loading EEPROM defaults in progress...",Green,Red,0);
 		    for(i = 0; i < 100; i++)
 			non_os_delay();
 		    ts.load_eeprom_defaults = 1;                     		// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
@@ -6047,7 +6047,7 @@ bool UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 		UiLcdHy28_LcdClear(Yellow);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
 		UiLcdHy28_PrintText(2,05," FREQ/MODE DEFAULTS",Black,Yellow,1);
-		UiLcdHy28_PrintText(2,35,"  ->LOAD REQUEST<-",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",Black,Yellow,1);
 		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Black,Yellow,0);
 		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Black,Yellow,0);
 		UiLcdHy28_PrintText(2,127,"                                        ",Yellow,Red,0);
