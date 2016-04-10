@@ -526,6 +526,26 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 }
 
 
+static void UiDriverFButton_F1MenuExit()
+{
+    char* label;
+    uint32_t color;
+    if(!ts.menu_var_changed) {
+      if (ts.menu_mode) {
+        label = "EXIT";
+        color = Yellow;
+      } else {
+        label = "MENU";
+        color = White;
+      }
+    } else {
+        label = ts.menu_mode?"EXIT *":"MENU *";
+        color = Orange;
+    }
+    UiDriverFButtonLabel(1,label,color);
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_init
 //* Object              :
@@ -1028,11 +1048,12 @@ static void UiDriverProcessKeyboard(void)
 					//
 					ts.menu_var_changed = 0;					// clear "EEPROM SAVE IS NECESSARY" indicators
 				}
-				//
-				if(!ts.menu_mode)	// are we in menu mode?
-					UiDriverFButtonLabel(1,"MENU",White);	// no - update menu button to reflect no memory save needed
-				else
+
+                UiDriverFButton_F1MenuExit();
+
+				if(ts.menu_mode) {	// are we in menu mode?
 					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// update menu display to remove indicator to do power-off to save EEPROM value
+				}
 				break;
 			case BUTTON_F2_PRESSED:	// Press-and-hold button F2
 				// Move to the BEGINNING of the current menu structure
@@ -1413,7 +1434,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				filter_path_change = false;			// deactivate while in menu mode
 				UiDriverChangeFilterDisplay();
 				UiSpectrumClearDisplay();
-				UiDriverFButtonLabel(1,"EXIT", Yellow);
+				UiDriverFButton_F1MenuExit();
 				UiDriverFButtonLabel(2,"PREV",Yellow);
 				UiDriverFButtonLabel(3,"NEXT",Yellow);
 				UiDriverFButtonLabel(4,"DEFLT",Yellow);
@@ -1460,18 +1481,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverChangeEncoderThreeMode(0);
 				UiDriverChangeFilterDisplay();	// update bandwidth display
 				// Label for Button F1
-				{
-					char* label;
-					uint32_t color;
-					if(!ts.menu_var_changed) {
-						label = " MENU  ";
-						color = White;
-					} else {
-						label = " MENU *";
-						color = Orange;
-					}
-					UiDriverFButtonLabel(1,label,color);
-				}
+				UiDriverFButton_F1MenuExit();
 				// Label for Button F2
 				UiDriverFButtonLabel(2,"SNAP",White);
 
@@ -2109,7 +2119,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
 	}
 
 	// Button F1
-	UiDriverFButtonLabel(1,"MENU",White);
+	UiDriverFButton_F1MenuExit();
 	// Button F2
 	UiDriverFButtonLabel(2,"SNAP",White);
 
