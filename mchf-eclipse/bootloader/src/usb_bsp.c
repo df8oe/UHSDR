@@ -336,9 +336,3 @@ void OTG_HS_IRQHandler(void)
     USBD_OTG_ISR_Handler(&USB_OTG_dev);
 }
 */
-
-/**
-* @}
-*/
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
