@@ -6009,12 +6009,12 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
     case CONFIG_DEFAULTS_LOAD_ALL:
       clr_bg = Red;
       clr_fg = White;
-      top_line = "   ALL DEFAULTS";
+      top_line = "    ALL DEFAULTS";
       break;
     case CONFIG_DEFAULTS_LOAD_FREQ:
       clr_bg = Yellow;
       clr_fg = Black;
-      top_line = "FREQ/MODE DEFAULTS";
+      top_line = " FREQ/MODE DEFAULTS";
       break;
     }
 
@@ -6046,10 +6046,11 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
       UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
       for(i = 0; i < 100; i++)
         non_os_delay();
+      load_mode = CONFIG_DEFAULTS_KEEP;
       retval = false;
     } else {
       UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-      UiLcdHy28_PrintText(2,108,"loading defaults in progress...",clr_fg,clr_bg,0);
+      UiLcdHy28_PrintText(2,108,"     loading defaults in progress...",clr_fg,clr_bg,0);
       for(i = 0; i < 100; i++)
         non_os_delay();
       // call function to load values - default instead of EEPROM
