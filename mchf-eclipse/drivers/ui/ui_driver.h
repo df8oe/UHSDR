@@ -544,13 +544,11 @@ void	UiDriverShowDebugText(char*);
 void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);
-//
 
-void    UiDriver_LoadSavedConfigurationAtStartup();
+void	UiInitRxParms();
 
-void	UiInitRxParms(void);
-//
-//
+void    UiDriver_KeyTestScreen();
+
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
