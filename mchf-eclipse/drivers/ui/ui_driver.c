@@ -5983,8 +5983,8 @@ static bool UiCheckForEEPROMLoadDefaultRequest(void)
 		//													// now do all of the warnings, blah, blah...
 		UiLcdHy28_PrintText(2,05,"  EEPROM DEFAULTS",White,Red,1);
 		UiLcdHy28_PrintText(2,35,"   LOAD REQUEST",White,Red,1);
-		UiLcdHy28_PrintText(2,70,"  DISCONNECT power NOW if you do NOT",Cyan,Red,0);
-		UiLcdHy28_PrintText(2,85,"  want to lose your current settings!",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Cyan,Red,0);
+		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Cyan,Red,0);
 		UiLcdHy28_PrintText(2,120,"  If you want to load default settings",Green,Red,0);
 		UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.",Green,Red,0);
 		UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",Green,Red,0);
@@ -5994,14 +5994,28 @@ static bool UiCheckForEEPROMLoadDefaultRequest(void)
 		   non_os_delay();
 		//
 		// add this for emphasis
-		UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-  ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING    ",Yellow,Red,0);
-		while(((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) { non_os_delay(); }        ts.load_eeprom_defaults = 1;                        // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
-		UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
-		ts.load_eeprom_defaults = 1;                        // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
-		ts.menu_var_changed = true;
-		retval = true;
-
+		UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-  ",Green,Red,0);
+		UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING    ",Green,Red,0);
+		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
+		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+		    {
+		    UiLcdHy28_LcdClear(Black);							// clear the screen
+		    UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+		    for(i = 0; i < 100; i++)
+			non_os_delay();
+		    retval = false;
+		    }
+		else
+		    {
+		    UiLcdHy28_LcdClear(Red);							// clear the screen
+		    UiLcdHy28_PrintText(2,108,"Loading EEPROM defaults in progress...",Green,Red,0);
+		    for(i = 0; i < 100; i++)
+			non_os_delay();
+		    ts.load_eeprom_defaults = 1;                     		// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+		    UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
+		    ts.menu_var_changed = true;
+		    retval = true;
+		    }
 	}
 	return retval;
 }
@@ -6029,31 +6043,46 @@ bool UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 #endif
 
 	if((UiDriver_IsButtonPressed(BUTTON_F2_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F4_PRESSED)))	{	// Are F2, F4 being held down?
-		UiConfiguration_LoadEepromValues();							// call function to load values - default instead of EEPROM
 		//
 		UiLcdHy28_LcdClear(Yellow);							// clear the screen
 		//													// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(2,05,"   FREQUENCY/MODE",Black,Yellow,1);
-		UiLcdHy28_PrintText(2,35," DEFAULTS LOADED!!!",Black,Yellow,1);
-		UiLcdHy28_PrintText(2,70,"   DISCONNECT power NOW if you do NOT",Black,Yellow,0);
-		UiLcdHy28_PrintText(2,85," want to lose your current frequencies!",Black,Yellow,0);
-		UiLcdHy28_PrintText(2,127,"                                        ",Green,Red,0);
-		UiLcdHy28_PrintText(2,142,"                                        ",Green,Red,0);
-		UiLcdHy28_PrintText(2,120,"  If you want to load default settings  ",Green,Red,0);
-		UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.       ",Green,Red,0);
-		UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF    ",Green,Red,0);
+		UiLcdHy28_PrintText(2,05," FREQ/MODE DEFAULTS",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,35,"  ->LOAD REQUEST<-",Black,Yellow,1);
+		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Black,Yellow,0);
+		UiLcdHy28_PrintText(2,127,"                                        ",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,142,"                                        ",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,120,"  If you want to load default settings  ",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.       ",Yellow,Red,0);
+		UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF    ",Yellow,Red,0);
 		// On screen delay									// delay a bit...
 		for(i = 0; i < 100; i++)
 		   non_os_delay();
 
 		UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-         ",Yellow,Red,0);
 		UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING           ",Yellow,Red,0);
-		while(((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) { non_os_delay(); }
-		ts.load_freq_mode_defaults = 1;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
-		UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
-		ts.load_freq_mode_defaults = 0;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
-		ts.menu_var_changed = true;
-		retval = true;
+		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
+		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+		    {
+		    UiLcdHy28_LcdClear(Black);							// clear the screen
+		    UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+		    for(i = 0; i < 100; i++)
+			non_os_delay();
+		    retval = false;
+		    }
+		else
+		    {
+		    UiLcdHy28_LcdClear(Yellow);							// clear the screen
+		    UiLcdHy28_PrintText(2,108,"   ...loading frequency/mode defaults   ",Yellow,Red,0);
+		    UiLcdHy28_PrintText(2,120,"              in progress...            ",Yellow,Red,0);
+		    for(i = 0; i < 100; i++)
+			non_os_delay();
+		    ts.load_freq_mode_defaults = 1;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
+		    UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
+		    ts.load_freq_mode_defaults = 0;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
+		    ts.menu_var_changed = true;
+		    retval = true;
+		    }
 	}
 	return retval;
 }
