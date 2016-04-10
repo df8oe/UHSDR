@@ -875,11 +875,6 @@ int main(void)
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	uiCodecMute(0);					// make cure codec is un-muted
 
-	UiCheckForEEPROMLoadDefaultRequest();	// check - and act on - request for loading of EEPROM defaults, if any
-	//
-	UiCheckForEEPROMLoadFreqModeDefaultRequest();	// check - and act on - request for loading frequency/mode defaults, if any
-	//
-	UiDriver_KeyTestScreen();
 
 	if (ts.cat_mode_active)
 		cat_driver_init();

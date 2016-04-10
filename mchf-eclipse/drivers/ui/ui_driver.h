@@ -519,7 +519,6 @@ void 	UiSpectrumCreateDrawArea(void);
 void 	UiDriverUpdateFrequencyFast(void);
 void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
-void 	UiCheckForEEPROMLoadDefaultRequest(void);
 //
 //void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	UiDriverSetBandPowerFactor(uchar band);
@@ -546,9 +545,9 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);
 //
-uint16_t 	UiConfiguration_SaveEepromValues(void);
-void	UiCheckForEEPROMLoadFreqModeDefaultRequest(void);
-void	UiDriver_KeyTestScreen(void);
+
+void    UiDriver_LoadSavedConfigurationAtStartup();
+
 void	UiInitRxParms(void);
 //
 //
