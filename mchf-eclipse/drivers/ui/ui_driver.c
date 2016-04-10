@@ -97,6 +97,7 @@ static void 	UiDriverHandleLoTemperature(void);
 static void 	UiDriverSwitchOffPtt(void);
 static void 	UiDriverInitMainFreqDisplay(void);
 
+static bool     UiDriver_LoadSavedConfigurationAtStartup();
 //
 //
 //
@@ -565,7 +566,9 @@ void ui_driver_init(void)
 	UiDriverInitFrequency();
 
 	// Load stored data from eeprom
-	UiDriver_LoadSavedConfigurationAtStartup();
+	if (UiDriver_LoadSavedConfigurationAtStartup() == false) {
+	  UiDriver_KeyTestScreen();
+	}
 
 	//
 	AudioManagement_CalcTxCompLevel();		// calculate current settings for TX speech compressor
@@ -1294,7 +1297,7 @@ static void UiDriverProcessKeyboard(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiInitRxParms(void)
+void UiInitRxParms()
 {
 
     // Init / Functional changes to operation in RX path
@@ -5969,122 +5972,106 @@ void UiCWSidebandMode(void)
 //  Comments            : WARNING:  Do *NOT* do this (press the buttons on power-up) when first loading a new firmware version as the EEPROM will be automatically be written over at startup!!!  [KA7OEI October, 2015]
 //*----------------------------------------------------------------------------
 //
-static bool UiCheckForEEPROMLoadDefaultRequest(void)
-{	uint16_t i;
+
+enum CONFIG_DEFAULTS{
+CONFIG_DEFAULTS_KEEP = 0,
+CONFIG_DEFAULTS_LOAD_FREQ,
+CONFIG_DEFAULTS_LOAD_ALL
+};
+
+
+/*
+ * @brief Handles the loading of the configuration at startup (including the load of defaults if requested);
+ * @returns false if it is a normal startup, true if defaults have been loaded
+ */
+
+static bool UiDriver_LoadSavedConfigurationAtStartup()
+{
+
+  uint16_t i;
   bool retval = false;
-#if 0 // QUESTION: Why not allow load defaults if firmware does not match? Especially in this case it can make sense to load defaults!
-	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
-		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
-	}
-#endif
-	if((UiDriver_IsButtonPressed(BUTTON_F1_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F3_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F5_PRESSED)))	{	// Are F1, F3 and F5 being held down?
-		//
-		UiLcdHy28_LcdClear(Red);							// clear the screen
-		//													// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(2,05,"   EEPROM DEFAULTS",White,Red,1);
-		UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",White,Red,1);
-		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Cyan,Red,0);
-		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Cyan,Red,0);
-		UiLcdHy28_PrintText(2,120,"  If you want to load default settings",Green,Red,0);
-		UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.",Green,Red,0);
-		UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",Green,Red,0);
-		//
-		// On screen delay									// delay a bit...
-		for(i = 0; i < 100; i++)
-		   non_os_delay();
-		//
-		// add this for emphasis
-		UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-  ",Green,Red,0);
-		UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING    ",Green,Red,0);
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
-		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
-		    {
-		    UiLcdHy28_LcdClear(Black);							// clear the screen
-		    UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-		    for(i = 0; i < 100; i++)
-			non_os_delay();
-		    retval = false;
-		    }
-		else
-		    {
-		    UiLcdHy28_LcdClear(Red);							// clear the screen
-		    UiLcdHy28_PrintText(2,108,"loading EEPROM defaults in progress...",Green,Red,0);
-		    for(i = 0; i < 100; i++)
-			non_os_delay();
-		    ts.load_eeprom_defaults = 1;                     		// yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
-		    UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
-		    ts.menu_var_changed = true;
-		    retval = true;
-		    }
-	}
-	return retval;
-}
-//
+  uint8_t load_mode = CONFIG_DEFAULTS_KEEP;
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCheckForEEPROMLoadFreqModeDefaultRequest
-//* Object              : Cause default values to be loaded for frequency/mode instead of EEPROM-stored values, show informational/warning splash screen, pause
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//* Comments            : The user MUST make a decision at that point, anyway:  To disconnect power
-//  Comments            : preserve "old" settings or to power down using the POWER button to the new, default settings to EEPROM.
-//  Comments            : WARNING:  Do *NOT* do this (press the buttons on power-up) when first loading a new firmware version as the EEPROM will be automatically be written over at startup!!!  [KA7OEI October, 2015]
-//*----------------------------------------------------------------------------
-//
-bool UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
-{	uint16_t i;
-    bool retval = false;
-#if 0 // QUESTION: Why not allow load defaults if firmware does not match? Especially in this case it can make sense to load defaults!
-	if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Does the current version NOT match what was in the EEPROM?
-		return;		// it does NOT match - DO NOT allow a "Load Default" operation this time!
-	}
-#endif
+  if (UiDriver_IsButtonPressed(BUTTON_F1_PRESSED) && UiDriver_IsButtonPressed(BUTTON_F3_PRESSED) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED)) {
+    load_mode = CONFIG_DEFAULTS_LOAD_ALL;
+  } else if (UiDriver_IsButtonPressed(BUTTON_F2_PRESSED) && UiDriver_IsButtonPressed(BUTTON_F4_PRESSED)) {
+    load_mode = CONFIG_DEFAULTS_LOAD_FREQ;
+  }
 
-	if((UiDriver_IsButtonPressed(BUTTON_F2_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_F4_PRESSED)))	{	// Are F2, F4 being held down?
-		//
-		UiLcdHy28_LcdClear(Yellow);							// clear the screen
-		//													// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(2,05," FREQ/MODE DEFAULTS",Black,Yellow,1);
-		UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",Black,Yellow,1);
-		UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",Black,Yellow,0);
-		UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",Black,Yellow,0);
-		UiLcdHy28_PrintText(2,127,"                                        ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,142,"                                        ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,120,"  If you want to load default settings  ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.       ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF    ",Yellow,Red,0);
-		// On screen delay									// delay a bit...
-		for(i = 0; i < 100; i++)
-		   non_os_delay();
+  if(load_mode != CONFIG_DEFAULTS_KEEP) {
+    // let us make sure, the user knows what he/she is doing
+    // in case of change of mindes, do normal configuration load
 
-		UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-         ",Yellow,Red,0);
-		UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING           ",Yellow,Red,0);
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
-		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
-		    {
-		    UiLcdHy28_LcdClear(Black);							// clear the screen
-		    UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-		    for(i = 0; i < 100; i++)
-			non_os_delay();
-		    retval = false;
-		    }
-		else
-		    {
-		    UiLcdHy28_LcdClear(Yellow);							// clear the screen
-		    UiLcdHy28_PrintText(2,108,"   ...loading frequency/mode defaults   ",Yellow,Red,0);
-		    UiLcdHy28_PrintText(2,120,"              in progress...            ",Yellow,Red,0);
-		    for(i = 0; i < 100; i++)
-			non_os_delay();
-		    ts.load_freq_mode_defaults = 1;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
-		    UiConfiguration_LoadEepromValues();                         // call function to load values - default instead of EEPROM
-		    ts.load_freq_mode_defaults = 0;                     // yes, set flag to indicate that frequency/mode defaults will be loaded instead of those from EEPROM
-		    ts.menu_var_changed = true;
-		    retval = true;
-		    }
-	}
-	return retval;
+    uint32_t clr_fg, clr_bg;
+    const char* top_line;
+
+    switch (load_mode) {
+    case CONFIG_DEFAULTS_LOAD_ALL:
+      clr_bg = Red;
+      clr_fg = White;
+      top_line = "   ALL DEFAULTS";
+      break;
+    case CONFIG_DEFAULTS_LOAD_FREQ:
+      clr_bg = Yellow;
+      clr_fg = Black;
+      top_line = "FREQ/MODE DEFAULTS";
+      break;
+    }
+
+
+    UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+    //													// now do all of the warnings, blah, blah...
+    UiLcdHy28_PrintText(2,05,top_line,clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,120,"  If you want to load default settings",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
+    //
+    // On screen delay									// delay a bit...
+    for(i = 0; i < 100; i++) {
+      non_os_delay();
+    }
+    //
+    // add this for emphasis
+    UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-  ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING    ",clr_fg,clr_bg,0);
+
+    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
+
+
+    if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED)) {
+      UiLcdHy28_LcdClear(Black);							// clear the screen
+      UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+      for(i = 0; i < 100; i++)
+        non_os_delay();
+      retval = false;
+    } else {
+      UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+      UiLcdHy28_PrintText(2,108,"loading defaults in progress...",clr_fg,clr_bg,0);
+      for(i = 0; i < 100; i++)
+        non_os_delay();
+      // call function to load values - default instead of EEPROM
+      retval = true;
+      ts.menu_var_changed = true;
+    }
+  }
+
+  switch (load_mode) {
+  case CONFIG_DEFAULTS_LOAD_ALL:
+    ts.load_eeprom_defaults = true;                           // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+    break;
+  case CONFIG_DEFAULTS_LOAD_FREQ:
+    ts.load_freq_mode_defaults = true;
+    break;
+  }
+
+  UiConfiguration_LoadEepromValues();
+  ts.load_eeprom_defaults = false;
+  ts.load_freq_mode_defaults = false;
+
+  return retval;
 }
 //
 //
@@ -6100,7 +6087,7 @@ bool UiCheckForEEPROMLoadFreqModeDefaultRequest(void)
 //*----------------------------------------------------------------------------
 //
 //
-void UiDriver_KeyTestScreen(void)
+void UiDriver_KeyTestScreen()
 {
 	ushort i, j, k, p_o_state, rb_state, new_state;
 	uint32_t poweroffcount, rbcount;
@@ -6242,15 +6229,3 @@ void UiDriver_KeyTestScreen(void)
 	}
 }
 
-// TODO: Keytest should be done even earlier. Right after Display Init
-/*
- * @brief Implements loading the various modes of loading defaults at startup (normal, reset, frequency reset, key test)
- */
-void    UiDriver_LoadSavedConfigurationAtStartup() {
-  UiConfiguration_LoadEepromValues();
-
-  if (UiCheckForEEPROMLoadDefaultRequest() == false) {   // check - and act on - request for loading of EEPROM defaults, if any
-    if (UiCheckForEEPROMLoadFreqModeDefaultRequest() == false)   // check - and act on - request for loading frequency/mode defaults, if any
-      UiDriver_KeyTestScreen();
-  }
-};
