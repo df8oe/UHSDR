@@ -244,20 +244,38 @@ void UiSpectrumCreateDrawArea(void)
 		// determine if we are drawing the "center" line on the spectrum  display
 		if(!sd.magnify)	{
 			if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
+				{
 				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
 			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (i == 3))		// shift left of center if RF HIGH translate mode
+				{
 				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
 			else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (i == 2))		// shift left of center if RF HIGH translate mode
+				{
 				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
 			else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (i == 6))		// shift right of center if RF HIGH translate mode
+				{
 				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
 			else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (i == 4))	// center if translate mode not active
+				{
 				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
 	        else
 	     	   clr = ts.scope_grid_colour_active;								// normal color if other lines
 		}
 		else if(i == 4)
-			clr = ts.scope_centre_grid_colour_active;
+				{
+				clr = ts.scope_centre_grid_colour_active;
+				ts.c_line = i;
+				}
         else
 
      	   clr = ts.scope_grid_colour_active;								// normal color if other lines
@@ -270,7 +288,6 @@ void UiSpectrumCreateDrawArea(void)
 									(POS_SPECTRUM_IND_Y -  4),
 									(POS_SPECTRUM_IND_H - 15),
 									LCD_DIR_VERTICAL,
-//									RGB((COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD)));
 									clr);
 
 		//printf("vx: %d\n\r",sd.vert_grid_id[i - 1]);
@@ -460,6 +477,12 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 				// Reset flag
 				if(repaint_v_grid)
 					repaint_v_grid = 0;
+		UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[ts.c_line - 1],
+									(POS_SPECTRUM_IND_Y -  4),
+									(POS_SPECTRUM_IND_H - 15),
+									LCD_DIR_VERTICAL,
+//									RGB((COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD)));
+									ts.scope_centre_grid_colour_active);
 
 			}
 		}

@@ -1058,6 +1058,7 @@ typedef struct TransceiverState
 	unsigned short DeviceCode;			// LCD ident code
 	bool USE_NEW_PHASE_CORRECTION; // used to test new phase correction
 	bool encoder3state;
+	uchar c_line;			// position of center line
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
