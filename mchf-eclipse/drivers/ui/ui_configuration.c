@@ -493,6 +493,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     { ConfigEntry_UInt8, EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,0,TX_AUDIO_COMPRESSION_MAX},
     { ConfigEntry_UInt8, EEPROM_TX_DISABLE,&ts.tx_disable,0,0,1},
     { ConfigEntry_UInt8, EEPROM_MISC_FLAGS1,&ts.misc_flags1,0,0,255},
+    { ConfigEntry_UInt8, EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_MINOR,&ts.version_number_minor,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_NUMBER,&ts.version_number_release,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_BUILD,&ts.version_number_build,0,0,255},
