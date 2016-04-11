@@ -31,8 +31,6 @@
 // Eeprom items
 #include "eeprom.h"
 extern uint16_t VirtAddVarTab[NB_OF_VAR];
-//
-extern const ButtonMap	bm[];
 
 // Transceiver state public structure
 extern __IO TransceiverState ts;
@@ -125,6 +123,31 @@ static void mchf_board_debug_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+// -------------------------------------------------------
+// Constant declaration of the buttons map across ports
+// - update if moving buttons around !!!
+const ButtonMap bm[18] =
+{
+        {BUTTON_M2_PIO,     BUTTON_M2},     // 0
+        {BUTTON_G2_PIO,     BUTTON_G2},     // 1
+        {BUTTON_G3_PIO,     BUTTON_G3},     // 2
+        {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3
+        {BUTTON_G4_PIO,     BUTTON_G4},     // 4
+        {BUTTON_M3_PIO,     BUTTON_M3},     // 5
+        {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6
+        {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7
+        {BUTTON_M1_PIO,     BUTTON_M1},     // 8
+        {BUTTON_F3_PIO,     BUTTON_F3},     // 9
+        {BUTTON_F1_PIO,     BUTTON_F1},     // 10
+        {BUTTON_F2_PIO,     BUTTON_F2},     // 11
+        {BUTTON_F4_PIO,     BUTTON_F4},     // 12
+        {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
+        {BUTTON_F5_PIO,     BUTTON_F5},     // 14
+        {BUTTON_G1_PIO,     BUTTON_G1},     // 15
+        {BUTTON_PWR_PIO, BUTTON_PWR},                // 16 Power Button
+        {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
+};
+
 static void mchf_board_keypad_init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -136,7 +159,10 @@ static void mchf_board_keypad_init(void)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
 	// Init all from public struct declaration (ui driver)
-	for(i = 0; i < 16; i++)
+	// we init all but the last button which is the TP virtual button
+	// this needs to be done by the TP code
+	// FIXME: Decide if TP pin can be setup here as well.
+	for(i = 0; i < (BUTTON_NUM -1); i++)
 	{
 		GPIO_InitStructure.GPIO_Pin = bm[i].button;
 		GPIO_Init(bm[i].port, &GPIO_InitStructure);
