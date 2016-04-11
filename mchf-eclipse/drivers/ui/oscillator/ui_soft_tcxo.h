@@ -27,7 +27,7 @@
 // for each Si570, but the values below appear to approximately follow typical AT-cut
 // temperature-frequency curves.
 //
-short tcxo_table_20m[100] =
+const short tcxo_table_20m[100] =
 {
 	-165	//	 0 C
 	-162,	//	 1 C

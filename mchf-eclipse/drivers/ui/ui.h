@@ -26,7 +26,7 @@ typedef struct BandInfo {
 		const char* name;
 } BandInfo;
 
-extern BandInfo bandInfo[MAX_BAND_NUM];
+extern const BandInfo bandInfo[MAX_BAND_NUM];
 
 #endif
 
