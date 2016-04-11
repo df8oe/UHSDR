@@ -115,30 +115,6 @@ T_STEP_10MHZ
 };
 
 
-// -------------------------------------------------------
-// Constant declaration of the buttons map across ports
-// - update if moving buttons around !!!
-const ButtonMap	bm[18] =
-{
-		{BUTTON_M2_PIO,		BUTTON_M2},		// 0
-		{BUTTON_G2_PIO,		BUTTON_G2},		// 1
-		{BUTTON_G3_PIO,		BUTTON_G3},		// 2
-		{BUTTON_BNDM_PIO,	BUTTON_BNDM},	// 3
-		{BUTTON_G4_PIO,		BUTTON_G4},		// 4
-		{BUTTON_M3_PIO,		BUTTON_M3},		// 5
-		{BUTTON_STEPM_PIO,	BUTTON_STEPM},	// 6
-		{BUTTON_STEPP_PIO,	BUTTON_STEPP},	// 7
-		{BUTTON_M1_PIO,		BUTTON_M1},		// 8
-		{BUTTON_F3_PIO,		BUTTON_F3},		// 9
-		{BUTTON_F1_PIO,		BUTTON_F1},		// 10
-		{BUTTON_F2_PIO,		BUTTON_F2},		// 11
-		{BUTTON_F4_PIO,		BUTTON_F4},		// 12
-		{BUTTON_BNDP_PIO,	BUTTON_BNDP},	// 13
-		{BUTTON_F5_PIO,		BUTTON_F5},		// 14
-		{BUTTON_G1_PIO,		BUTTON_G1},		// 15
-		{GPIOC,GPIO_Pin_13},                // 16 Power Button
-		{TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
-};
 
 
 // The following are calibrations for the S-meter based on 6 dB per S-unit, 10 dB per 10 dB mark above S-9
@@ -3213,7 +3189,7 @@ void UiDriverChangeTuningStep(uchar is_up)
 static bool UiDriver_IsButtonPressed(ulong button_num)
 {
     bool retval = false;
-	if(button_num < 18) {				// buttons 0-15 are the normal keypad buttons
+	if(button_num < BUTTON_NUM) {				// buttons 0-15 are the normal keypad buttons
 	    if(!ts.boot_halt_flag) {		// are we NOT in "boot halt" mode?
 	      retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
 	    }
