@@ -3683,12 +3683,17 @@ static void UiDriverChangeBand(uchar is_up)
 
 	// Save old band values
 	if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
-	{
-		// Save dial
-		vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
-		vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
-	}
-
+	    {
+	    // Save dial
+	    vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
+	    vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
+	    }
+	else
+	    {
+	    curr_band_index = ts.cat_band_index;
+	    ts.cat_band_index = 255;
+	    }
+	    
 	// Handle direction
 	if(is_up)
 	{

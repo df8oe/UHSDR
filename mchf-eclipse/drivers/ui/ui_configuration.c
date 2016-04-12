@@ -970,10 +970,13 @@ uint16_t UiConfiguration_SaveEepromValues(void)
       // TODO: move value to a static variable, so that it can be read/written with standard approach
       UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 
-      // save current band/frequency/mode settings
-      vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
-      // Save decode mode
-      vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+	if(ts.cat_band_index == 255)			// not in a sandbox
+	    {
+    	    // save current band/frequency/mode settings
+    	    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
+    	    // Save decode mode
+    	    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+	    }
 
       // Save stored band/mode/frequency memory from RAM
       for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
