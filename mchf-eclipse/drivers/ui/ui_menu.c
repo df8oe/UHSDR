@@ -279,8 +279,6 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
     strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");
 }
 
-char blankline[33] = "                                ";
-
 // menu entry kind constants
 enum MENU_KIND {
   MENU_STOP = 0, // last entry in a menu / group
@@ -1224,7 +1222,7 @@ void UiMenu_RenderMenu(uint16_t mode) {
 
 #define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
-BandInfo bandInfo[] = {
+const BandInfo bandInfo[] = {
 				BandInfoGenerate(80,M,"80m") ,
 				BandInfoGenerate(60,M,"60m"),
 				BandInfoGenerate(40,M,"40m"),
