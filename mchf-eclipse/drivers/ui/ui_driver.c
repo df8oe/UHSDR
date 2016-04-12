@@ -6086,7 +6086,7 @@ void UiDriver_KeyTestScreen()
 	UiLcdHy28_LcdClear(Blue);							// clear the screen
 
 	//
-	UiLcdHy28_PrintText(0,35," Input Elements Test",White,Blue,1);
+	UiLcdHy28_PrintText(10,35,"Input Elements Test",White,Blue,1);
 	UiLcdHy28_PrintText(15,70,"press & hold POWER-button to poweroff",White,Blue,0);
 	UiLcdHy28_PrintText(20,90,"press & hold BANDM-button to reboot",White,Blue,0);
 	//
@@ -6121,7 +6121,17 @@ void UiDriver_KeyTestScreen()
 			}
 		    }
 		if(t != ENC_MAX)
+		    {
+		    char encnum[3];
+		    sprintf(txt_buf,"%s"," Encoder ");		// building string for encoders
+		    sprintf(encnum,"%d",t+1);
+		    strcat(txt_buf,encnum);
+		    if(direction > 0)
+			strcat(txt_buf," <right>");
+		    else
+			strcat(txt_buf," <left> ");
 		    j = 18+t;					// add encoders behind buttons;
+		    }
 
 		switch(j)	{				// decode button to text
 		case	BUTTON_POWER_PRESSED:
@@ -6185,40 +6195,22 @@ void UiDriver_KeyTestScreen()
 			txt = "       STEPM        ";
 			break;
 		case	BUTTON_STEPP_PRESSED:
-			txt = "       STEPP        ";
+			txt = "      STEPP         ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates(1);
 			sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
 			txt = txt_buf;
 			break;
-		case	18+ENC1:
-			if(direction > 0)
-			    txt = "  Encoder 1 <right> ";//
-			else
-			    txt = "  Encoder 1 <left>  ";
-			break;
+		case	18+ENC1:							// handle encoder event
 		case	18+ENC2:
-			if(direction > 0)
-			    txt = "  Encoder 2 <right> ";
-			else
-			    txt = "  Encoder 2 <left>  ";
-			break;
 		case	18+ENC3:
-			if(direction > 0)
-			    txt = "  Encoder 3 <right> ";
-			else
-			    txt = "  Encoder 3 <left>  ";
-			break;
 		case	18+ENCFREQ:
-			if(direction > 0)
-			    txt = "  Encoder 4 <right> ";
-			else
-			    txt = "  Encoder 4 <left>  ";
+			txt = txt_buf;
 			break;
 		default:
 			if(!enccount)
-			    txt = "       <none>       ";		// no button pressed
+			    txt = "       <none>       ";				// no button pressed
 			else
 			    {
 			    txt = "";
@@ -6229,9 +6221,9 @@ void UiDriver_KeyTestScreen()
 		}
 		//
 		if(txt[0])
-		    UiLcdHy28_PrintText(0,120,txt,White,Blue,1);		// identify button on screen
+		    UiLcdHy28_PrintText(10,120,txt,White,Blue,1);			// identify button on screen
 		sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
-		UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);		// show number of buttons pressed on screen
+		UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
 
 		if(p_o_state == 1)
 		{
