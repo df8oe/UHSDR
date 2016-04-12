@@ -14,7 +14,10 @@
 
 
 2016mmdd [DF8OE]
-
+- again bugfix "white screen issue" on some left LCDs
+- bugfix loading defaults
+- added poweroff and reboot to "defaults loading screens"
+- expanding "button test function" to encoders
 
 
 20160405 [DF8OE]

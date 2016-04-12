@@ -6067,9 +6067,10 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 void UiDriver_KeyTestScreen()
 {
 	ushort i, j, k, p_o_state, rb_state, new_state;
-	uint32_t poweroffcount, rbcount;
+	uint32_t poweroffcount, rbcount, enccount;
+	int direction;
 	bool stat = 1;
-	poweroffcount = rbcount = 0;
+	poweroffcount = rbcount = enccount = 0;
 	p_o_state = rb_state = new_state = 0;
 	char txt_buf[40];
 	char* txt;
@@ -6085,7 +6086,7 @@ void UiDriver_KeyTestScreen()
 	UiLcdHy28_LcdClear(Blue);							// clear the screen
 
 	//
-	UiLcdHy28_PrintText(40,35,"  Button Test  ",White,Blue,1);
+	UiLcdHy28_PrintText(0,35," Input Elements Test",White,Blue,1);
 	UiLcdHy28_PrintText(15,70,"press & hold POWER-button to poweroff",White,Blue,0);
 	UiLcdHy28_PrintText(20,90,"press & hold BANDM-button to reboot",White,Blue,0);
 	//
@@ -6109,83 +6110,126 @@ void UiDriver_KeyTestScreen()
 			new_state = 1;
 		}
 
-		switch(j)	{							// decode button to text
+		char t;
+		for(t = 0; t < ENC_MAX; t++)
+		    {
+		    direction = UiDriverEncoderRead(t);
+		    if(direction)
+			{
+			enccount = 50;
+			break;
+			}
+		    }
+		if(t != ENC_MAX)
+		    j = 18+t;					// add encoders behind buttons;
+
+		switch(j)	{				// decode button to text
 		case	BUTTON_POWER_PRESSED:
-			txt = "POWER ";
+			txt = "        POWER       ";
 			if(poweroffcount > 75)
 			{
-				txt = "powering off";
-				p_o_state = 1;
+			txt = "  powering off...   ";
+			p_o_state = 1;
 			}
 			poweroffcount++;
 			break;
 		case	BUTTON_M1_PRESSED:
-			txt = "  M1  ";
+			txt = "         M1         ";
 			break;
 		case	BUTTON_M2_PRESSED:
-			txt = "  M2  ";
+			txt = "         M2         ";
 			break;
 		case	BUTTON_M3_PRESSED:
-			txt = "  M3  ";
+			txt = "         M3         ";
 			break;
 		case	BUTTON_G1_PRESSED:
-			txt = "  G1  ";
+			txt = "         G1         ";
 			break;
 		case	BUTTON_G2_PRESSED:
-			txt = "  G2  ";
+			txt = "         G2         ";
 			break;
 		case	BUTTON_G3_PRESSED:
-			txt = "  G3  ";
+			txt = "         G3         ";
 			break;
 		case	BUTTON_G4_PRESSED:
-			txt = "  G4  ";
+			txt = "         G4         ";
 			break;
 		case	BUTTON_F1_PRESSED:
-			txt = "  F1  ";
+			txt = "         F1         ";
 			break;
 		case	BUTTON_F2_PRESSED:
-			txt = "  F2  ";
+			txt = "         F2         ";
 			break;
 		case	BUTTON_F3_PRESSED:
-			txt = "  F3  ";
+			txt = "         F3         ";
 			break;
 		case	BUTTON_F4_PRESSED:
-			txt = "  F4  ";
-			poweroffcount = 0;
+			txt = "         F4         ";
 			break;
 		case	BUTTON_F5_PRESSED:
-			txt = "  F5  ";
+			txt = "         F5         ";
 			break;
 		case	BUTTON_BNDM_PRESSED:
-			txt = " BNDM ";
+			txt = "        BNDM        ";
 			if(rbcount > 75)
 			{
-				txt = "rebooting";
-				rb_state = 1;
+			txt = "    rebooting...    ";
+			rb_state = 1;
 			}
 			rbcount++;
 			break;
 		case	BUTTON_BNDP_PRESSED:
-			txt = " BNDP ";
+			txt = "        BNDP        ";
 			break;
 		case	BUTTON_STEPM_PRESSED:
-			txt = "STEPM ";
+			txt = "       STEPM        ";
 			break;
 		case	BUTTON_STEPP_PRESSED:
-			txt = "STEPP ";
+			txt = "       STEPP        ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates(1);
-			sprintf(txt_buf,"%02d%s%02d%s",ts.tp_x,"  ",ts.tp_y,"  ");	//show touched coordinates
+			sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
 			txt = txt_buf;
 			break;
+		case	18+ENC1:
+			if(direction > 0)
+			    txt = "  Encoder 1 <right> ";//
+			else
+			    txt = "  Encoder 1 <left>  ";
+			break;
+		case	18+ENC2:
+			if(direction > 0)
+			    txt = "  Encoder 2 <right> ";
+			else
+			    txt = "  Encoder 2 <left>  ";
+			break;
+		case	18+ENC3:
+			if(direction > 0)
+			    txt = "  Encoder 3 <right> ";
+			else
+			    txt = "  Encoder 3 <left>  ";
+			break;
+		case	18+ENCFREQ:
+			if(direction > 0)
+			    txt = "  Encoder 4 <right> ";
+			else
+			    txt = "  Encoder 4 <left>  ";
+			break;
 		default:
-			txt = "<none>";		// no button pressed
+			if(!enccount)
+			    txt = "       <none>       ";		// no button pressed
+			else
+			    {
+			    txt = "";
+			    enccount--;
+			    }
 			poweroffcount = 0;
 			rbcount = 0;
 		}
 		//
-		UiLcdHy28_PrintText(120,120,txt,White,Blue,1);		// identify button on screen
+		if(txt[0])
+		    UiLcdHy28_PrintText(0,120,txt,White,Blue,1);		// identify button on screen
 		sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
 		UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);		// show number of buttons pressed on screen
 

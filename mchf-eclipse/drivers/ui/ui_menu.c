@@ -1798,7 +1798,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			}
 		}
 		else			// indicate RED if "Compression Level" below was nonzero
+			{
 			clr = Red;
+			ts.alc_decay_var = 10;
+			}
 		//
 		if(ts.tx_comp_level == TX_AUDIO_COMPRESSION_SV)	// in "selectable value" mode?
 			ts.alc_decay = ts.alc_decay_var;	// yes, save new value
