@@ -111,7 +111,7 @@ typedef struct FilterDescriptor_s {
   const uint16_t width;
 } FilterDescriptor;
 
-extern FilterDescriptor FilterInfo[AUDIO_FILTER_NUM];
+extern const FilterDescriptor FilterInfo[AUDIO_FILTER_NUM];
 extern uint16_t filterpath_mode_map[FILTER_MODE_MAX];
 
 typedef struct FilterPathDescriptor_s {
