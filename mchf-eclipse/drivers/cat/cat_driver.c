@@ -118,6 +118,8 @@ uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len) {
 	}
 	return res;
 }
+
+
 uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len) {
 	uint8_t res = 0;
 	if (USBD_User_GetStatus()) {
@@ -239,6 +241,8 @@ void CatDriverFT817CheckAndExecute() {
 				UiDriverUpdateFrequency(true,0);
 				resp[0] = 0;
 				bc = 1;
+			if(ts.cat_in_sandbox)			// if running in sandbox store active band
+			    ts.cat_band_index = ts.band;
 			}
 			break;
 
@@ -314,8 +318,10 @@ void CatDriverFT817CheckAndExecute() {
 					break;
 				}
 				if  (new_mode != ts.dmod_mode) {
-					UiDriverSetDemodMode(new_mode);
-					UiDriverDisplayFilterBW();
+				    if(ts.cat_in_sandbox)			// if running in sandbox store active band
+					ts.cat_band_index = ts.band;
+				UiDriverSetDemodMode(new_mode);
+				UiDriverDisplayFilterBW();
 				}
 			}
 			break;

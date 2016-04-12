@@ -522,7 +522,8 @@ void TransceiverStateInit(void)
 	ts.multi = 0;							// non-translate
 	ts.tune_power_level = 0;					// Tune with FULL POWER
 	ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
-	ts.audio_int_counter = 0;					//test DL2FW
+	ts.audio_int_counter = 0;					// test DL2FW
+	ts.cat_band_index =255;						// no CAT command arrived
 	ts.sam_enabled = 0;						// demodulation mode SAM not enabled
 
 	//ts.filter_path = 52; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
@@ -822,10 +823,10 @@ int main(void)
 	// Set default transceiver state
 	TransceiverStateInit();
 
-	if( *(__IO uint32_t*)(SRAM2_BASE+10) == 0x29)	// DSP betatesting for DG9BFC
-	    {
-	    ts.dsp_enabled = 1;
-	    }
+//	if( *(__IO uint32_t*)(SRAM2_BASE+10) == 0x29)	// DSP betatesting for DG9BFC
+//	    {
+//	    ts.dsp_enabled = 1;
+//	    }
 
 	ConfigurationStorage_Init();
 

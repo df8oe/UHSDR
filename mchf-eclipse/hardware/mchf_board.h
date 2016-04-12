@@ -1074,7 +1074,8 @@ typedef struct TransceiverState
 	uchar	multi;					// actual translate factor
 	uchar	tune_power_level;			// TX power in antenna tuning function
 	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
-	bool	dsp_enabled;				// NR disabled
+	bool	cat_in_sandbox;				// CAT tuning in sandbox
+	uchar	cat_band_index;				// buffered bandindex before first CAT command arrived
 	bool	sam_enabled;				// demodulation mode SAM enabled
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed

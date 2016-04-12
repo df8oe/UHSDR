@@ -514,7 +514,7 @@ const MenuDescriptor confGroup[] = {
     { MENU_CONF, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
     { MENU_CONF, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Ser EEPROM"},
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_ENABLE,"530","DSP NR (EXPERIMENTAL)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX,"530","CAT Running In Sandbox"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT"},
     { MENU_CONF, MENU_STOP, 0, "   " , NULL }
 };
@@ -3408,17 +3408,19 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SSB,(select - MENU_FP_SSB_01)+1);
     break;
 
-    case    MENU_FP_SAM_01:
-    case    MENU_FP_SAM_02:
-    case    MENU_FP_SAM_03:
-    case    MENU_FP_SAM_04:
-    UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
-    break;
-    case CONFIG_DSP_ENABLE:	// Enable DSP NR
-		temp_var = ts.dsp_enabled;
+        case    MENU_FP_SAM_01:
+	case    MENU_FP_SAM_02:
+	case    MENU_FP_SAM_03:
+	case    MENU_FP_SAM_04:
+	    UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
+	    break;
+        case CONFIG_CAT_IN_SANDBOX:
+		temp_var = ts.cat_in_sandbox;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)
-		    ts.dsp_enabled = temp_var;
+		    ts.cat_in_sandbox = temp_var;
+		if(!ts.cat_in_sandbox)
+		    ts.cat_band_index = 255;
 		break;
 	case CONFIG_CAT_XLAT:	// CAT xlat reporting
 		temp_var = ts.xlat;

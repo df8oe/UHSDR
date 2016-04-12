@@ -535,6 +535,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     { ConfigEntry_UInt8, EEPROM_CAT_XLAT,&ts.xlat,1,0,1},
     { ConfigEntry_Bool, EEPROM_DYNAMIC_TUNING,&ts.dynamic_tuning_active,0,0,1},
     { ConfigEntry_Bool, EEPROM_SAM_ENABLE,&ts.sam_enabled,0,0,1},
+    { ConfigEntry_Bool, EEPROM_CAT_IN_SANDBOX,&ts.cat_in_sandbox,0,0,1},
     UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
     UI_C_EEPROM_BAND_5W_PF(2,40,m)

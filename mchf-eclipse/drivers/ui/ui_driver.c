@@ -303,10 +303,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
 		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
 		{
-			if(ts.dsp_enabled)
-				ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
-			else
-				ts.dsp_active |= DSP_NOTCH_ENABLE;
+		ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
 		}
 		else if((is_dsp_nr()) && (!(is_dsp_notch()))) {	// NR active, notch inactive
 			if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
@@ -322,10 +319,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
 			else
 			{
-				if(ts.dsp_enabled)
-					ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
-				else
-					ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// no - turn off NR and NOTCH
+			ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
 			}
 		//
 		else	{
@@ -3688,7 +3682,7 @@ static void UiDriverChangeBand(uchar is_up)
 	//printf("current index: %d and freq: %d\n\r",curr_band_index,tune_bands[ts.band]);
 
 	// Save old band values
-	if(curr_band_index < (MAX_BANDS))
+	if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
 	{
 		// Save dial
 		vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;

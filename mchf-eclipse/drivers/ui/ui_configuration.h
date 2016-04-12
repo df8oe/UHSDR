@@ -485,22 +485,13 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DETECTOR_COUPLING_COEFF_6M   312 // Calibration coupling coefficient for FWD/REV power sensor for 6 meters
 #define EEPROM_TUNE_POWER_LEVEL     313
 #define EEPROM_CAT_MODE_ACTIVE      314
-#define EEPROM_CAT_XLAT         315
-#if 0 // No longer being used, superseded by filter path
-#define EEPROM_FILTER_2K7_SEL       316     // Selection of 2.7 kHz filter
-#define EEPROM_FILTER_2K9_SEL       317     // Selection of 2.9 kHz filter
-#define EEPROM_FILTER_1K4_SEL       318     //
-#define EEPROM_FILTER_1K6_SEL       319     //
-#define EEPROM_FILTER_2K1_SEL       320     //
-#define EEPROM_FILTER_2K5_SEL       321     //
-#define EEPROM_FILTER_3K2_SEL       322     //
-#define EEPROM_FILTER_3K4_SEL       323     //
-#define EEPROM_FILTER_3K8_SEL       324     //
-#define EEPROM_FILTER_1_SEL     325     // selection of filters 4k0 to 6k0
-#define EEPROM_FILTER_2_SEL     326     // selection of filters 6k5 to 10k0
-#endif
+#define EEPROM_CAT_XLAT             315
+#define EEPROM_CAT_IN_SANDBOX       316
+
+
+
 #define EEPROM_DYNAMIC_TUNING       327
-#define EEPROM_SAM_ENABLE       328     // SAM demodulation enable
+#define EEPROM_SAM_ENABLE           328     // SAM demodulation enable
 #define EEPROM_FILTER_PATH_MAP_BASE 329 //
 #define EEPROM_FILTER_PATH_MAP_END (329 + FILTER_MODE_MAX*FILTER_PATH_MEM_MAX)   // this is currently 5*5 = 25
 #define EEPROM_FIRST_UNUSED 329+25  // change this if new value ids are introduced
