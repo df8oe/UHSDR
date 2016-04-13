@@ -23,8 +23,10 @@
 
 // Audio filter select enumeration
 //
-void    AudioFilter_CalcRxPhaseAdj(void);
-void    AudioFilter_CalcTxPhaseAdj(void);
+void 	AudioFilter_InitRxHilbertFIR(void);
+//void    AudioFilter_CalcRxPhaseAdj(void);
+void 	AudioFilter_InitTxHilbertFIR(void);
+//void    AudioFilter_CalcTxPhaseAdj(void);
 
 
 

@@ -1469,7 +1469,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		}
 		//
 		if(fchange)	{			// was the bandwidth changed?
-			AudioFilter_CalcRxPhaseAdj();			// yes - update the filters!
+			AudioFilter_InitRxHilbertFIR();
+//			AudioFilter_CalcRxPhaseAdj();			// yes - update the filters!
 			UiDriverChangeFilterDisplay();	// update display of filter bandwidth (numerical) on screen only
 		}
 		//
@@ -2666,7 +2667,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 								0,
 								1);
 			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
-				AudioFilter_CalcRxPhaseAdj();
+				AudioFilter_InitRxHilbertFIR();
+//				AudioFilter_CalcRxPhaseAdj();
 		}
 			else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2694,7 +2696,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 											0,
 											1);
 			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
-					AudioFilter_CalcRxPhaseAdj();
+				AudioFilter_InitRxHilbertFIR();
+//				AudioFilter_CalcRxPhaseAdj();
 		}
 		else		// Orange if not in RX and/or correct mode
 			clr = Orange;
@@ -2761,7 +2764,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 					0,
 					1);
 			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
-				AudioFilter_CalcTxPhaseAdj();
+				//				AudioFilter_CalcTxPhaseAdj();
+				AudioFilter_InitTxHilbertFIR();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;
@@ -2789,7 +2793,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 					0,
 					1);
 			if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
-				AudioFilter_CalcTxPhaseAdj();
+				AudioFilter_InitTxHilbertFIR();
+				//				AudioFilter_CalcTxPhaseAdj();
 		}
 		else		// Orange if not in TX and/or correct mode
 			clr = Orange;

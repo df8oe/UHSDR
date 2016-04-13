@@ -842,12 +842,13 @@ int main(void)
 	// Init the RX Hilbert transform/filter prior
 	// to initializing the audio!
 	//
-	AudioFilter_CalcRxPhaseAdj();
+	AudioFilter_InitRxHilbertFIR();
+//	AudioFilter_CalcRxPhaseAdj();
 	//
 	// Init TX Hilbert transform/filter
 	//
-	AudioFilter_CalcTxPhaseAdj();	//
-
+//	AudioFilter_CalcTxPhaseAdj();	//
+	AudioFilter_InitTxHilbertFIR();
 	// Audio HW init
 	// audio_driver_init();
 

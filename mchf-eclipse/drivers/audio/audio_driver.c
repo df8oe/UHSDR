@@ -518,7 +518,8 @@ void audio_driver_set_rx_audio_filter(void)
 	ads.af_disabled = 0;
 	ts.dsp_inhibit = dsp_inhibit_temp;
 	//
-	AudioFilter_CalcRxPhaseAdj(); // this switches the Hilbert/FIR-filters
+	AudioFilter_InitRxHilbertFIR();
+//	AudioFilter_CalcRxPhaseAdj(); // this switches the Hilbert/FIR-filters
 }
 //
 
@@ -1278,7 +1279,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 
 //
 //*----------------------------------------------------------------------------
-//* Function Name       : audio_snap_carrier
+//* Function Name       : audio_snap_carrier [DD4WH, march 2016]
 //* Object              :
 //* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes Rx to that freqeuency
 //* Input Parameters    :
@@ -1288,8 +1289,6 @@ static void audio_lms_noise_reduction(int16_t psize)
 
 static void audio_snap_carrier (void)
 {
-	if (!sc.snap) return; // button has not been pressed
-	if (!sc.state) return; // FFT samples have not yet been collected
 
 //	int Lbin, Ubin;
 //	uint16_t bw_LSB = 0;
@@ -1302,14 +1301,15 @@ static void audio_snap_carrier (void)
 //	int maxbin = 1;
 	int posbin = 0;
 	float32_t maxbin = 1.0;
-	float32_t bin_BW = (float32_t) (48000.0 * 2.0 / FFT_IQ_BUFF_LEN2); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-	int i;
+	float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN2;
+	float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	int i = 0;
 	float32_t delta1 = 0.0;
 	float32_t delta2 = 0.0;
 	float32_t help_freq = (float32_t)df.tune_new / 4.0;
 	ulong freq; //
 	float32_t bin1, bin2, bin3;
-	float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN2;
+
 	int buff_len_int = FFT_IQ_BUFF_LEN2;
 	// init of FFT structure has been moved to audio_driver_init()
 
@@ -1413,14 +1413,15 @@ static void audio_snap_carrier (void)
 //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
 		sc.state    = 0;
+		for(i = 0; i < (buff_len_int/2); i++)	{
+				sc.FFT_Samples[i] = 0.0;
+			}
+
         return;
 		} else
 		{
 // ######################################################
-//        if (sc.FFT_number != 1) {
-//        	sc.FFT_number = 1;
- //       	return;
- //       }
+
         // and now: fine-tuning:
         //	get amplitude values of the three bins around the carrier
 //	   		bin1 = sc.FFT_Samples[(int)maxbin-1];
@@ -1498,7 +1499,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			}
 		}
 		if(sc.state == 0 && sc.snap){
-			if (sc.counter == 100){
+//			if (sc.counter == 100){
 
 			// collect samples for snap carrier FFT
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for snap carrier
@@ -1510,9 +1511,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			{
 				sc.samp_ptr = 0;
 				sc.state    = 1;
-				sc.counter = 0;
+//				sc.counter = 0;
 			}
-			} else sc.counter = sc.counter +1;
+//			} else sc.counter = sc.counter +1;
 		}
 
 		//
@@ -1539,7 +1540,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		//
 	}
 
-	if (sc.snap && sc.counter == 0)
+	if (sc.snap && sc.state == 1)
 			audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
 	// if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
 	// if one or both are false, it immediately returns here
