@@ -3188,8 +3188,12 @@ void UiDriverChangeTuningStep(uchar is_up)
 static bool UiDriver_IsButtonPressed(ulong button_num)
 {
     bool retval = false;
+
+    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)		// check for touchscreen on every button check
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+    
 	if(button_num < BUTTON_NUM) {				// buttons 0-15 are the normal keypad buttons
-	    if(!ts.boot_halt_flag) {		// are we NOT in "boot halt" mode?
+	    if(!ts.boot_halt_flag) {				// are we NOT in "boot halt" mode?
 	      retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
 	    }
 	}
@@ -6265,7 +6269,7 @@ static bool UiDriver_TouchscreenCalibration()
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     //											// now do all of the warnings, blah, blah...
-    UiLcdHy28_PrintText(0,05," TOUCHSCREEN CALIBR.",clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(0,05,"  TOUCH CALIBRATION",clr_fg,clr_bg,1);
     UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,85," press POWER button to start normally.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,120," If you want to calibrate touchscreen",clr_fg,clr_bg,0);
@@ -6290,7 +6294,7 @@ static bool UiDriver_TouchscreenCalibration()
       retval = false;
     } else {
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-    UiLcdHy28_PrintText(2,70,"On the next screen will appear crosses.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,70,"On the next screen crosses will appear.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,82,"Touch as exact as you can on the middle",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,94,"   of each cross until it disappears.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);

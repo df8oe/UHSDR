@@ -498,9 +498,6 @@ unsigned short UiLcdHy28_ReadDataSpi(void)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
-   if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)	// touchscreen pressed -> read data
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-
    if(display_use_spi)
     {
      UiLcdHy28_WriteIndexSpi(LCD_Reg);
@@ -1324,8 +1321,6 @@ void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
     uchar i,x,y;
 
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
-    UiLcdHy28_SendByteSpi(144);
-    UiLcdHy28_ReadByteSpi();		// first read sometimes is corrupt
     UiLcdHy28_SendByteSpi(144);
     x = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
