@@ -397,7 +397,7 @@ const MenuDescriptor baseGroup[] = {
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE,"042","FM Sub Tone Det"},
     { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE,"043","FM Tone Burst"},
-    { MENU_BASE, MENU_ITEM, MENU_FM_RX_BANDWIDTH,"044","FM RX Bandwidth"},
+//    { MENU_BASE, MENU_ITEM, MENU_FM_RX_BANDWIDTH,"044","FM RX Bandwidth"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE,"045","FM Deviation"},
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE,"050","AGC Mode"},
     { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain"},
@@ -1447,7 +1447,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			clr = Orange;
 		break;
 	//
-	case MENU_FM_RX_BANDWIDTH:
+/*	case MENU_FM_RX_BANDWIDTH:
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fm_rx_bandwidth,
 						0,
 						FM_RX_BANDWIDTH_MAX,
@@ -1477,7 +1477,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		if(ts.dmod_mode != DEMOD_FM)	// make orange if we are NOT in FM
 			clr = Orange;
 		break;
-	//
+*/	//
 	case MENU_FM_DEV_MODE:	// Select +/- 2.5 or 5 kHz deviation on RX and TX
 		if(ts.iq_freq_mode)	{
 			temp_var = ts.misc_flags2 & MISC_FLAGS2_FM_MODE_DEVIATION_5KHZ;
