@@ -97,7 +97,8 @@ static void 	UiDriverHandleLoTemperature(void);
 static void 	UiDriverSwitchOffPtt(void);
 static void 	UiDriverInitMainFreqDisplay(void);
 
-static bool     UiDriver_LoadSavedConfigurationAtStartup();
+static bool	UiDriver_LoadSavedConfigurationAtStartup();
+static bool	UiDriver_TouchscreenCalibration();
 //
 //
 //
@@ -535,8 +536,8 @@ void ui_driver_init(void)
 	// Init frequency publics
 	UiDriverInitFrequency();
 
-	// Load stored data from eeprom
-	if (UiDriver_LoadSavedConfigurationAtStartup() == false) {
+	// Load stored data from eeprom or calibrate touchscreen
+	if (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false) {
 	  UiDriver_KeyTestScreen();
 	}
 
@@ -6238,3 +6239,105 @@ void UiDriver_KeyTestScreen()
 	}
 }
 
+/*
+ * @brief Touchscreen Calibration function
+ * @returns false if it is a normal startup, true if touchscreen has been calibrated
+ */
+
+static bool UiDriver_TouchscreenCalibration()
+{
+
+  uint16_t i;
+  bool retval = false;
+
+  if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+    {
+
+    uint32_t clr_fg, clr_bg;
+    char txt_buf[40];
+    clr_bg = Magenta;
+    clr_fg = White;
+
+    UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+    //											// now do all of the warnings, blah, blah...
+    UiLcdHy28_PrintText(0,05," TOUCHSCREEN CALIBR.",clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,85," press POWER button to start normally.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,120," If you want to calibrate touchscreen",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,135,"    press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
+    //
+    // On screen delay									// delay a bit...
+    for(i = 0; i < 100; i++) { non_os_delay(); }
+    //
+    // add this for emphasis
+    UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,207,"          to start calibration   ",clr_fg,clr_bg,0);
+
+    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
+
+
+    if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED)) {
+      UiLcdHy28_LcdClear(Black);							// clear the screen
+      UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+      for(i = 0; i < 100; i++)
+        non_os_delay();
+      retval = false;
+    } else {
+    UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+    UiLcdHy28_PrintText(2,70,"On the next screen will appear crosses.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,82,"Touch as exact as you can on the middle",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,94,"   of each cross until it disappears.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
+
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+    UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+    UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+
+    UiLcdHy28_LcdClear(clr_bg);
+	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(10,10,"                  +",clr_fg,clr_bg,1);
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+
+    UiLcdHy28_LcdClear(clr_bg);
+	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(10,210,"+",clr_fg,clr_bg,1);
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+
+    UiLcdHy28_LcdClear(clr_bg);
+	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(10,210,"                  +",clr_fg,clr_bg,1);
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+
+    UiLcdHy28_LcdClear(clr_bg);
+	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    UiLcdHy28_PrintText(10,110,"         +",clr_fg,clr_bg,1);
+    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+
+      for(i = 0; i < 100; i++)
+        non_os_delay();
+      retval = true;
+      ts.menu_var_changed = true;
+    	    }
+    }
+
+  return retval;
+}

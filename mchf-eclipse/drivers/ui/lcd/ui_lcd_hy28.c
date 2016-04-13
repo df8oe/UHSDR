@@ -1322,7 +1322,10 @@ uint8_t UiLcdHy28_Init(void)
 void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
 {
     uchar i,x,y;
+
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
+    UiLcdHy28_SendByteSpi(144);
+    UiLcdHy28_ReadByteSpi();		// first read sometimes is corrupt
     UiLcdHy28_SendByteSpi(144);
     x = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
