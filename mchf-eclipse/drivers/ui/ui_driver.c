@@ -551,9 +551,11 @@ void ui_driver_init(void)
 	//
 	AudioManagement_CalcRxIqGainAdj();		// Init RX IQ gain
 	//
-	AudioFilter_CalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
+	AudioFilter_InitRxHilbertFIR();
+//	AudioFilter_CalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
 	//
-	AudioFilter_CalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
+	AudioFilter_InitTxHilbertFIR();
+//	AudioFilter_CalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
 	//
 	AudioManagement_CalcTxIqGainAdj();		// Init TX IQ gain
 	//
@@ -1276,8 +1278,10 @@ void UiInitRxParms()
 	// I do not think we need the TX adjustments in RX ?! DD4WH
 	// not sure, I leave them here
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
-	AudioFilter_CalcTxPhaseAdj(); // dto.
-	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
+	AudioFilter_InitTxHilbertFIR();
+//	AudioFilter_CalcTxPhaseAdj(); // dto.
+	AudioFilter_InitRxHilbertFIR();// is already included in the void audio_driver_set_rx_audio_filter(void);
+//	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
 	Audio_TXFilter_Init();
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
 	// this is already included in the void audio_driver_set_rx_audio_filter(void);
@@ -3563,11 +3567,12 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 		softdds_setfreq(0.0,ts.samp_rate,0);
 
 
-
-	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
+	AudioFilter_InitRxHilbertFIR();
+//	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
 	AudioManagement_CalcRxIqGainAdj();
 	//
-	AudioFilter_CalcTxPhaseAdj();
+	AudioFilter_InitTxHilbertFIR();
+//	AudioFilter_CalcTxPhaseAdj();
 	AudioManagement_CalcTxIqGainAdj();
 	// FIXME: HACK: remove this after implementation
 	audio_driver_set_rx_audio_filter();
