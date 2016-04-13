@@ -16,10 +16,11 @@
 2016mmdd [DF8OE]
 - again bugfix "white screen issue" on some left LCDs
 - bugfix loading defaults
+- signal line in spectrum now always is in front of spectrum
 - added poweroff and reboot to "defaults loading screens"
 - expanding "button test function" to encoders
 - DSP NR has joined stable usage again!
-- added config "Cat In Sandbox" where CAT 'set'-commands do not affect actual band settings
+- added config "Cat In Sandbox" where CAT 'set'- commands do not affect actual band settings
 
 
 20160405 [DF8OE]

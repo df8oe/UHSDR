@@ -3689,10 +3689,7 @@ static void UiDriverChangeBand(uchar is_up)
 	    vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
 	    }
 	else
-	    {
-	    curr_band_index = ts.cat_band_index;
 	    ts.cat_band_index = 255;
-	    }
 	    
 	// Handle direction
 	if(is_up)
