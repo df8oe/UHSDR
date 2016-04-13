@@ -6007,7 +6007,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
     }
     //
     // add this for emphasis
-    UiLcdHy28_PrintText(2,195,"          Pess BAND+ and BAND-  ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,207,"           to confirm loading    ",clr_fg,clr_bg,0);
 
     while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
@@ -6176,7 +6176,7 @@ void UiDriver_KeyTestScreen()
 			txt = "         F5         ";
 			break;
 		case	BUTTON_BNDM_PRESSED:
-			txt = "        BNDM        ";
+			txt = "        BND-        ";
 			if(rbcount > 75)
 			{
 			txt = "    rebooting...    ";
@@ -6185,13 +6185,13 @@ void UiDriver_KeyTestScreen()
 			rbcount++;
 			break;
 		case	BUTTON_BNDP_PRESSED:
-			txt = "        BNDP        ";
+			txt = "        BND+        ";
 			break;
 		case	BUTTON_STEPM_PRESSED:
-			txt = "       STEPM        ";
+			txt = "       STEP-        ";
 			break;
 		case	BUTTON_STEPP_PRESSED:
-			txt = "      STEPP         ";
+			txt = "      STEP+         ";
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates(1);
