@@ -5995,10 +5995,10 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
     //													// now do all of the warnings, blah, blah...
     UiLcdHy28_PrintText(2,05,top_line,clr_fg,clr_bg,1);
     UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",clr_fg,clr_bg,1);
-    UiLcdHy28_PrintText(2,70,"      If you don't want to do this     ",clr_fg,clr_bg,0);
-    UiLcdHy28_PrintText(2,85," press POWER button to start normally. ",clr_fg,clr_bg,0);
-    UiLcdHy28_PrintText(2,120,"  If you want to load default settings",clr_fg,clr_bg,0);
-    UiLcdHy28_PrintText(2,135,"  press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,85," press POWER button to start normally.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,120," If you want to load default settings",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,135,"    press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
     //
     // On screen delay									// delay a bit...
@@ -6007,8 +6007,8 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
     }
     //
     // add this for emphasis
-    UiLcdHy28_PrintText(2,195,"          PRESS BAND+ and BAND-  ",clr_fg,clr_bg,0);
-    UiLcdHy28_PrintText(2,207,"           TO CONFIRM LOADING    ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,195,"          Pess BAND+ and BAND-  ",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,207,"           to confirm loading    ",clr_fg,clr_bg,0);
 
     while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false){ non_os_delay(); }
 
@@ -6083,8 +6083,8 @@ void UiDriver_KeyTestScreen()
 
 	//
 	UiLcdHy28_PrintText(10,35,"Input Elements Test",White,Blue,1);
-	UiLcdHy28_PrintText(15,70,"press & hold POWER-button to poweroff",White,Blue,0);
-	UiLcdHy28_PrintText(20,90,"press & hold BANDM-button to reboot",White,Blue,0);
+	UiLcdHy28_PrintText(15,70,"press & hold POWER button to poweroff",White,Blue,0);
+	UiLcdHy28_PrintText(20,90,"press & hold BAND- button to reboot",White,Blue,0);
 	//
 	for(;;)	{		// get stuck here for test duration
 		j = 99;		// load with flag value
