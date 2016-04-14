@@ -553,6 +553,7 @@ bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
 
+void UiDriver_DoCrossCheck(uchar cross[]);
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //

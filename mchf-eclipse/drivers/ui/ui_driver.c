@@ -406,7 +406,7 @@ void UiDriver_HandleTouchScreen()
 		    incr_wrap_uint8(&ts.digital_mode,0,7);
 			UiDriverChangeDigitalMode();
 		}
-		if(check_tp_coordinates(26,35,39,43))			// dynamic tuning activation
+		if(check_tp_coordinates(26,35,39,46))			// dynamic tuning activation
 		{
 			if (ts.dynamic_tuning_active)			// is it off??
 			{
@@ -6263,9 +6263,14 @@ static bool UiDriver_TouchscreenCalibration()
     {
 
     uint32_t clr_fg, clr_bg;
-    char txt_buf[40];
     clr_bg = Magenta;
     clr_fg = White;
+
+    uchar cross1[2] = {3,55};
+    uchar cross2[2] = {56,55};
+    uchar cross3[2] = {3,4};
+    uchar cross4[2] = {56,4};
+    uchar cross5[2] = {25,32};
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     //											// now do all of the warnings, blah, blah...
@@ -6296,50 +6301,39 @@ static bool UiDriver_TouchscreenCalibration()
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     UiLcdHy28_PrintText(2,70,"On the next screen crosses will appear.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(2,82,"Touch as exact as you can on the middle",clr_fg,clr_bg,0);
-    UiLcdHy28_PrintText(2,94,"   of each cross until it disappears.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,94,"    of each cross. After three valid",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,106,"  samples position of cross changes.",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,118," Repeat until the five test positions",clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText(2,130,"             are finished.",clr_fg,clr_bg,0);
     UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
 
     while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
-    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
-
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+    UiDriver_DoCrossCheck(cross1);
 
     UiLcdHy28_LcdClear(clr_bg);
-	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    clr_fg = White;
     UiLcdHy28_PrintText(10,10,"                  +",clr_fg,clr_bg,1);
-    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
-
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+    UiDriver_DoCrossCheck(cross2);
 
     UiLcdHy28_LcdClear(clr_bg);
-	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    clr_fg = White;
     UiLcdHy28_PrintText(10,210,"+",clr_fg,clr_bg,1);
-    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
-
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+    UiDriver_DoCrossCheck(cross3);
 
     UiLcdHy28_LcdClear(clr_bg);
-	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    clr_fg = White;
     UiLcdHy28_PrintText(10,210,"                  +",clr_fg,clr_bg,1);
-    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
-
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+    UiDriver_DoCrossCheck(cross4);
 
     UiLcdHy28_LcdClear(clr_bg);
-	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    clr_fg = White;
     UiLcdHy28_PrintText(10,110,"         +",clr_fg,clr_bg,1);
-    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+    UiDriver_DoCrossCheck(cross5);
 
-	UiLcdHy28_GetTouchscreenCoordinates(1);
-	sprintf(txt_buf,"%02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
-	UiLcdHy28_PrintText(10,50,txt_buf,clr_fg,clr_bg,1);
+    UiLcdHy28_LcdClear(clr_bg);
 
       for(i = 0; i < 100; i++)
         non_os_delay();
@@ -6349,4 +6343,38 @@ static bool UiDriver_TouchscreenCalibration()
     }
 
   return retval;
+}
+
+
+
+void UiDriver_DoCrossCheck(uchar cross[])
+{
+    uint32_t clr_fg, clr_bg;
+    char txt_buf[40];
+    clr_bg = Magenta;
+    clr_fg = White;
+    uchar datavalid = 0;
+
+    sprintf(txt_buf,"position should be  : %02d/%02d",cross[0],cross[1]);
+    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
+
+    do{
+	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+	UiLcdHy28_GetTouchscreenCoordinates(1);
+
+	if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
+	{
+	    datavalid++;
+	    clr_fg = Green;
+	sprintf(txt_buf,"touched position (%d): %02d/%02d",datavalid,ts.tp_x,ts.tp_y);	//show touched coordinates
+	}
+	else
+	{
+	    clr_fg = Red;
+	sprintf(txt_buf,"not a valid position: %02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+	}
+	UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
+
+	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == true){ non_os_delay(); }
+    }while(datavalid < 3);
 }
