@@ -1127,6 +1127,8 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
+				if (ts.notch_enabled) ts.notch_enabled = 0; // switch on/off notch filter
+				else ts.notch_enabled = 1;
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit

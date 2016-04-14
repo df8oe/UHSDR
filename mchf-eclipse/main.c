@@ -525,7 +525,7 @@ void TransceiverStateInit(void)
 	ts.audio_int_counter = 0;					// test DL2FW
 	ts.cat_band_index =255;						// no CAT command arrived
 	ts.sam_enabled = 0;						// demodulation mode SAM not enabled
-
+	ts.notch_enabled = 0;
 	//ts.filter_path = 52; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
 }
 

@@ -1077,6 +1077,7 @@ typedef struct TransceiverState
 	bool	cat_in_sandbox;				// CAT tuning in sandbox
 	uchar	cat_band_index;				// buffered bandindex before first CAT command arrived
 	bool	sam_enabled;				// demodulation mode SAM enabled
+	bool 	notch_enabled;			// notch_filter enabled
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;				// only debugging use

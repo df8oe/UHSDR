@@ -92,6 +92,12 @@ static arm_iir_lattice_instance_f32	IIR_PreFilter;
 static float32_t		iir_aa_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 //
+// variables for RX manual notch IIR filter
+static float32_t		iir_notch_state[8];
+static arm_biquad_casd_df1_inst_f32	IIR_Notch;
+
+
+//
 // variables for FM squelch IIR filters
 static float32_t		iir_squelch_rx_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
@@ -309,7 +315,7 @@ void audio_driver_set_rx_audio_filter(void)
 	    IIR_PreFilter.pvCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pvCoeffs; // point to ladder coefficients
 	    IIR_PreFilter.numStages = FilterPathInfo[ts.filter_path].pre_instance->numStages;        // number of stages
 	  } else {
-        // if we turn on a filter, set the number of members to 0 first
+        // if we turn off a filter, set the number of members to 0 first
 	    IIR_PreFilter.numStages = 0;        // number of stages
 	    IIR_PreFilter.pkCoeffs = NULL; // point to reflection coefficients
 	    IIR_PreFilter.pvCoeffs = NULL; // point to ladder coefficients
@@ -343,7 +349,67 @@ void audio_driver_set_rx_audio_filter(void)
     	iir_aa_state[i] = 0;
     }
 	IIR_AntiAlias.pState = (float32_t *)&iir_aa_state;					// point to state array for IIR filter
-//
+
+
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * Manual Notch init [DD4WH, april 2016]
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+	//
+	//	Initialize IIR biquad filter for manual notch
+	//
+	// it is only a lightweight filter with one stage (= 2nd order IIR)
+	// but nonetheless very effective
+	//
+	// now it is time for the DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
+	//
+	#define SAMPLING_FREQ 48000;
+/*	float32_t f0 = 2000.0; // notch frequency
+	float32_t Q = 100.0; // larger Q gives narrower notch
+	float32_t w0 = 2.0 * PI * f0 / SAMPLING_FREQ;
+	float32_t alpha = sin(w0) / (2.0 * Q);
+	float32_t a0 = 0.0;
+*/
+	float32_t b0,b1,b2,a1,a2;
+	/*
+	b0 = 1.0;
+	b1 = - 2.0 * cos(w0);
+	b2 = 1.0;
+	a0 = 1.0 + alpha;
+	a1 = 2.0 * cos(w0);
+	a2 = 1.0 - alpha;
+
+	b0 = b0/a0;
+	b1 = b1/a0;
+	b2 = b2/a0;
+	a1 = a1/a0;
+	a2 = a2/a0;
+
+
+	a1 =  1.146541271271349860;
+	a2 =  -0.414510330578965303;
+	b0 =  0.067632527732130063;
+	b1 =  0.132704003843355428;
+	b2 =  0.067632527732130063;
+*/
+
+	a1 = 0.0; a2 = 0.0;
+	b1 = 0.0; b2 = 0.0;
+	b0 = 1.0;
+	// order of coeffs: b0, b1, b2, a1, a2
+	//
+//	arm_biquad_cascade_df1_init_f32(&IIR_Notch, 1, (float32_t[]){b0,b1,b2,a1,a2}, (float32_t*)iir_notch_state);
+	IIR_Notch.pCoeffs = (float32_t[]){b0,b1,b2,a1,a2,1.0,0.0,0.0,0.0,0.0};
+	IIR_Notch.numStages = 2;
+
+    for(i = 0; i < 7; i++)	{	// initialize state buffer to zeroes
+    	iir_notch_state[i] = 0;
+    }
+	IIR_Notch.pState = (float32_t *)&iir_notch_state;					// point to state array for IIR filter
+
+	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 * End of Manual Notch init
+	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 	//
 	// Initialize high-pass filter used for the FM noise squelch
 	//
@@ -1741,6 +1807,15 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 		else		// it is 2.5 kHz FM mode:  Scale audio level accordingly
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_2K5, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 	}
+	//
+	/*
+	 * this would be the right place for a manual notch filter !? (in 48ksps)
+	 */
+	// calculate in b_buffer!
+	if (ts.notch_enabled){
+	arm_biquad_cascade_df1_f32 (&IIR_Notch, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
+	}
+
 	//
 	if((ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))	{	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
 		arm_fill_f32(0, (float32_t *)ads.a_buffer, size/2);
