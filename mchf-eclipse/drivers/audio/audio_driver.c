@@ -361,24 +361,36 @@ void audio_driver_set_rx_audio_filter(void)
 	// but nonetheless very effective
 	//
 	// now it is time for the DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
+	// www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
 	//
-//	#define SAMPLING_FREQ 48000;
-/*	float32_t f0 = 2000.0; // notch frequency
+//	#define SAMPLING_FREQ 48000; // should this become a global variable?
+/*	float32_t f0 = 2000.0; // notch frequency --> TODO: will be set by encoder2
 	float32_t Q = 100.0; // larger Q gives narrower notch
 	float32_t w0 = 2.0 * PI * f0 / SAMPLING_FREQ;
 	float32_t alpha = sin(w0) / (2.0 * Q);
-	float32_t a0 = 0.0;
+	float32_t a0 = 1.0; // gain scaling
 */
 	float32_t b0,b1,b2,a1,a2;
-	/*
+
+	//
+	// the ARM algorithm assumes the biquad form
+	// y[n] = b0 * x[n] + b1 * x[n-1] + b2 * x[n-2] + a1 * y[n-1] + a2 * y[n-2]
+	//
+	// However, the cookbook formulae by Robert Bristow-Johnson AND the Iowa Hills IIR Filter designer
+	// use this formula:
+	//
+	// y[n] = b0 * x[n] + b1 * x[n-1] + b2 * x[n-2] - a1 * y[n-1] - a2 * y[n-2]
+	//
+	// Therefore, we have to use negated a1 and a2 for use with the ARM function
+	/*// notch implementation
 	b0 = 1.0;
 	b1 = - 2.0 * cos(w0);
 	b2 = 1.0;
 	a0 = 1.0 + alpha;
-	a1 = 2.0 * cos(w0);
-	a2 = 1.0 - alpha;
+	a1 = 2.0 * cos(w0); // already negated!
+	a2 = alpha - 1.0; // already negated!
 
-// passthru
+// scaling the coefficients for gain
 	b0 = b0/a0;
 	b1 = b1/a0;
 	b2 = b2/a0;
