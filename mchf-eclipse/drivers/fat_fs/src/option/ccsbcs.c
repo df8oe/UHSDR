@@ -1,3 +1,4 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /*------------------------------------------------------------------------*/
 /* Unicode - Local code bidirectional converter  (C)ChaN, 2009            */
 /* (SBCS code pages)                                                      */

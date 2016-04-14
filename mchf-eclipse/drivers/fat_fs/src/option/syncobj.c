@@ -1,3 +1,4 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /*------------------------------------------------------------------------*/
 /* Sample code of OS dependent synchronization object controls            */
 /* for FatFs R0.07d  (C)ChaN, 2009                                        */
