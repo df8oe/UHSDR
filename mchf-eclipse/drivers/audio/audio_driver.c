@@ -1499,7 +1499,7 @@ static void audio_snap_carrier (void)
 //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
 		sc.state    = 0;
-		for(i = 0; i < (buff_len_int/2); i++)	{
+		for(i = 0; i < (buff_len_int); i++)	{
 				sc.FFT_Samples[i] = 0.0;
 			}
 
@@ -1568,6 +1568,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	// Split stereo channels
 	for(i = 0; i < size/2; i++)
 	{
+		if (sc.state == 0 && sc.snap) sc.counter = sc.counter + 1;
 		//
 		// Collect I/Q samples
 		if(sd.state == 0)
@@ -1584,8 +1585,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 				sd.state    = 1;
 			}
 		}
-		if(sc.state == 0 && sc.snap){
-//			if (sc.counter == 100){
+		if(sc.state == 0 && sc.snap && sc.counter >= 4864){ // wait for 4864 samples until you gather new data for the FFT
 
 			// collect samples for snap carrier FFT
 			sc.FFT_Samples[sc.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for snap carrier
@@ -1597,9 +1597,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			{
 				sc.samp_ptr = 0;
 				sc.state    = 1;
-//				sc.counter = 0;
+				sc.counter = 0;
 			}
-//			} else sc.counter = sc.counter +1;
 		}
 
 		//
