@@ -502,7 +502,7 @@ void TransceiverStateInit(void)
 	ts.fm_tone_burst_mode = 0;					// this is the setting for the tone burst generator
 	ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
 	ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
-	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
+//	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
 	ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
 	ts.beep_active = 1;						// TRUE if beep is active
 	ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
@@ -525,7 +525,7 @@ void TransceiverStateInit(void)
 	ts.audio_int_counter = 0;					// test DL2FW
 	ts.cat_band_index =255;						// no CAT command arrived
 	ts.sam_enabled = 0;						// demodulation mode SAM not enabled
-
+	ts.notch_enabled = 0;
 	//ts.filter_path = 52; // uncomment to use  filter path of given number -1 (hack, filter path is used all the time)
 }
 

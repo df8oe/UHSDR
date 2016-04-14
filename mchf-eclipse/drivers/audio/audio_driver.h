@@ -376,15 +376,16 @@ typedef struct SMeter
 //
 // FM RX bandwidth settings
 //
+/*
 enum	{
 	FM_RX_BANDWIDTH_7K2 = 0,
 	FM_RX_BANDWIDTH_10K,
 	FM_RX_BANDWIDTH_12K,
 //	FM_RX_BANDWIDTH_15K,		// 15K bandwidth has too much distortion with a "translation" frequency of + or - 6 kHz, likely due to the "Zero Hz Hole"
 	FM_RX_BANDWIDTH_MAX
-};
+}; */
 //
-#define	FM_BANDWIDTH_DEFAULT	FM_RX_BANDWIDTH_10K		// We will use the second-to-narrowest bandwidth as the "Default" FM RX bandwidth to be safe!
+//#define	FM_BANDWIDTH_DEFAULT	FM_RX_BANDWIDTH_10K		// We will use the second-to-narrowest bandwidth as the "Default" FM RX bandwidth to be safe!
 //
 #define	FM_SUBAUDIBLE_GOERTZEL_WINDOW	400				// this sets the overall number of samples involved in the Goertzel decode windows (this value * "size/2")
 #define	FM_TONE_DETECT_ALPHA	0.9						// setting for IIR filtering of ratiometric result from frequency-differential tone detection

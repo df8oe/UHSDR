@@ -1053,7 +1053,7 @@ typedef struct TransceiverState
 	uchar	fm_tone_burst_mode;			// this is the setting for the tone burst generator
 	ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
 	uchar	fm_sql_threshold;			// squelch threshold "dial" setting
-	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
+//	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
 	ulong	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
 	bool	beep_active;				// TRUE if beep is active
 	ulong	beep_frequency;				// beep frequency, in Hz
@@ -1077,6 +1077,7 @@ typedef struct TransceiverState
 	bool	cat_in_sandbox;				// CAT tuning in sandbox
 	uchar	cat_band_index;				// buffered bandindex before first CAT command arrived
 	bool	sam_enabled;				// demodulation mode SAM enabled
+	bool 	notch_enabled;			// notch_filter enabled
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
 //	uint16_t df8oe_test;				// only debugging use

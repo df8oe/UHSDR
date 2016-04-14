@@ -1127,6 +1127,8 @@ static void UiDriverProcessKeyboard(void)
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
+				if (ts.notch_enabled) ts.notch_enabled = 0; // switch on/off notch filter
+				else ts.notch_enabled = 1;
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
@@ -4820,9 +4822,10 @@ void UiDriverDisplayFilterBW(void)
 	  if (offset == 0) {
 	  offset = width/2;
 	}
-	//
+
+/*	  //
 	// Special case for FM
-	//
+	// --> we do not need a special case any longer, as bandwidths are treated the same for all bandwidths in audio_filter.c
 	if(ts.dmod_mode == DEMOD_FM)	{
 		if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_7K2)	{
 			offset = HILBERT3600;											// display bandwidth of +/-3.6 kHz = 7.2 kHz
@@ -4841,6 +4844,7 @@ void UiDriverDisplayFilterBW(void)
 			width = 5000;
 		}
 	}
+	*/
 	//
 	//
 	switch(ts.dmod_mode)	{	// determine if the receiver is set to LSB or USB or FM
