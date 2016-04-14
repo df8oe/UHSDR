@@ -502,7 +502,7 @@ void TransceiverStateInit(void)
 	ts.fm_tone_burst_mode = 0;					// this is the setting for the tone burst generator
 	ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
 	ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
-	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
+//	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
 	ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
 	ts.beep_active = 1;						// TRUE if beep is active
 	ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
