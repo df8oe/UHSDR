@@ -362,7 +362,7 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// now it is time for the DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
 	//
-	#define SAMPLING_FREQ 48000;
+//	#define SAMPLING_FREQ 48000;
 /*	float32_t f0 = 2000.0; // notch frequency
 	float32_t Q = 100.0; // larger Q gives narrower notch
 	float32_t w0 = 2.0 * PI * f0 / SAMPLING_FREQ;
@@ -378,30 +378,38 @@ void audio_driver_set_rx_audio_filter(void)
 	a1 = 2.0 * cos(w0);
 	a2 = 1.0 - alpha;
 
+// passthru
 	b0 = b0/a0;
 	b1 = b1/a0;
 	b2 = b2/a0;
 	a1 = a1/a0;
 	a2 = a2/a0;
 
-
-	a1 =  1.146541271271349860;
-	a2 =  -0.414510330578965303;
+// moderate lowpass filter
+	a1 =  -1.146541271271349860;
+	a2 =  0.414510330578965303;
 	b0 =  0.067632527732130063;
 	b1 =  0.132704003843355428;
 	b2 =  0.067632527732130063;
 */
-
+// notch filter 5kHz, width 100Hz
+	a1 =  1.576037749778233190;
+	a2 =  -0.986392502758464240;
+	b0  = 0.993196251379232065;
+	b1  = -1.576037749778233190;
+	b2 =  0.993196251379232065;
+/*	// passthru
 	a1 = 0.0; a2 = 0.0;
 	b1 = 0.0; b2 = 0.0;
-	b0 = 1.0;
+	b0 = 1.0; */
 	// order of coeffs: b0, b1, b2, a1, a2
 	//
 //	arm_biquad_cascade_df1_init_f32(&IIR_Notch, 1, (float32_t[]){b0,b1,b2,a1,a2}, (float32_t*)iir_notch_state);
-	IIR_Notch.pCoeffs = (float32_t[]){b0,b1,b2,a1,a2,1.0,0.0,0.0,0.0,0.0};
-	IIR_Notch.numStages = 2;
+	IIR_Notch.pCoeffs = (float32_t[]){b0,b1,b2,a1,a2};
+	IIR_Notch.numStages = 1;
 
-    for(i = 0; i < 7; i++)	{	// initialize state buffer to zeroes
+    for(i = 0; i < ((IIR_Notch.numStages * 4) -1); i++)	{	// no. of state variables = numStages * 4
+    	// initialize state buffer to zeroes
     	iir_notch_state[i] = 0;
     }
 	IIR_Notch.pState = (float32_t *)&iir_notch_state;					// point to state array for IIR filter

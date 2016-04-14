@@ -137,7 +137,7 @@ typedef struct FilterPathDescriptor_s {
   const arm_iir_lattice_instance_f32* pre_instance;
   const arm_fir_interpolate_instance_f32* interpolate;
   const arm_iir_lattice_instance_f32* iir_instance;
-  const arm_biquad_casd_df1_inst_f32* notch_instance;
+//  const arm_biquad_casd_df1_inst_f32* notch_instance;
 
   const uint16_t offset; // how much offset in Hz has the center frequency of the filter from base frequency.
                          // For most non-CW filters 0 is okay,

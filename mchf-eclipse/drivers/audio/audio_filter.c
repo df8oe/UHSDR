@@ -708,7 +708,7 @@ extern __IO arm_fir_instance_f32    FIR_Q_TX;
  * @brief Initialize RX Hilbert filters
  */
 void 	AudioFilter_InitRxHilbertFIR(void)
-//void AudioFilter_CalcRxPhaseAdj(void)
+//void AudioFilter_CalcRxPhaseAdj(void) // OLD NAME
 {
     ulong i;
 
@@ -717,6 +717,7 @@ void 	AudioFilter_InitRxHilbertFIR(void)
 
     // new filter_path method
     // take all info from FilterPathInfo
+    // phase adjustment is now done in audio_driver.c audio_rx_processor
     //
         fc.rx_q_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
         fc.rx_i_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
@@ -740,7 +741,7 @@ void 	AudioFilter_InitRxHilbertFIR(void)
 /*
  * @brief Initialize TX Hilbert filters
  */
-//void AudioFilter_CalcTxPhaseAdj(void)
+//void AudioFilter_CalcTxPhaseAdj(void) // OLD NAME
 void AudioFilter_InitTxHilbertFIR(void)
 {
 
@@ -752,6 +753,8 @@ void AudioFilter_InitTxHilbertFIR(void)
     // always make a fresh copy of the original Q and I coefficients
     // NOTE:  We are assuming that the I and Q filters are of the same length!
     //
+    // phase adjustment is now done in audio_driver.c audio_tx_processor
+
     fc.tx_q_num_taps = Q_TX_NUM_TAPS;
     fc.tx_i_num_taps = I_TX_NUM_TAPS;
     //
