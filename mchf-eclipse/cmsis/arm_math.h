@@ -5312,7 +5312,12 @@ extern "C"
 #else
 
     /* acc += A1 * x[n-1] + A2 * x[n-2]  */
+// disable compiler warnings, macro magic of ARM in action, restore original warnings after this line.
+// no harm done here, despite warning. With this we can keep the useful warnings in other places working.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
     acc = __SMLALD(S->A1, (q31_t) __SIMD32(S->state), acc);
+#pragma GCC diagnostic pop
 
 #endif
 

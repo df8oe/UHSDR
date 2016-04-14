@@ -20,6 +20,7 @@ GCC_LIB_VERSION = 4.8
 # choose what Keil-Library you want to use
 KEIL_LIB_VERSION = arm_cortexM4lf_math
 #KEIL_LIB_VERSION = arm_cortexM4lf_math_new
+#KEIL_LIB_VERSION = arm_cortexM4lf_math_r4p5
 
 # compilation options
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
