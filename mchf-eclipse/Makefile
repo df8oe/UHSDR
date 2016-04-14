@@ -17,6 +17,10 @@ LPRJ = mchf
 PREFIX = /usr
 GCC_LIB_VERSION = 4.8
 
+# choose what Keil-Library you want to use
+KEIL_LIB_VERSION = arm_cortexM4lf_math
+#KEIL_LIB_VERSION = arm_cortexM4lf_math_new
+
 # compilation options
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
           -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
@@ -25,12 +29,11 @@ CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
 
 LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 
-LIBS := -lm -lg -lc -lgcc -larm_cortexM4lf_math  \
-        -Llibs  \
+LIBS :=  	-lm -lg -lc -lgcc -l$(KEIL_LIB_VERSION) \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
-        -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu
-
-
+        -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu \
+	-Llibs
+	
 # Every subdirectory with header files must be mentioned here
 SUBDIRS :=  \
     .  \
