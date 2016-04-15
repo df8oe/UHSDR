@@ -49,7 +49,7 @@ void UiSpectrumReDrawScopeDisplay();
 #define SPECTRUM_SCOPE_SPEED_DEFAULT		5
 //
 #define SPECTRUM_SCOPE_FILTER_MIN			1	// minimum filter setting
-#define	SPECTRUM_SCOPE_FILTER_MAX			10	// maximum filter setting
+#define	SPECTRUM_SCOPE_FILTER_MAX			20	// maximum filter setting
 #define SPECTRUM_SCOPE_FILTER_DEFAULT		4	// default filter setting
 //
 #define	SPECTRUM_SCOPE_AGC_MIN				1	// minimum spectrum scope AGC rate setting

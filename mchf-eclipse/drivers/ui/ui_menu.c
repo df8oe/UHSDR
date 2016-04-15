@@ -432,6 +432,7 @@ const MenuDescriptor displayGroup[] = {
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Spec Scope Ampl."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Spectrum Light"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE,"111","Wfall Step Size"},
@@ -2143,6 +2144,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			UiMenu_MapColors(ts.scope_centre_grid_colour,options,&clr);
 						break;
 			//
+		case MENU_SCOPE_LIGHT_ENABLE:	// Spectrum light: no grid, larger, only points, no bars
+			temp_var = ts.spectrum_light;
+			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+			if(fchange)
+			    ts.spectrum_light = temp_var;
+			break;
 		case MENU_SCOPE_MODE:
 			temp_sel = (ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
 
