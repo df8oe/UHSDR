@@ -1,3 +1,4 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /*-----------------------------------------------------------------------*/
 /* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2007        */
 /*-----------------------------------------------------------------------*/

@@ -1,3 +1,4 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /**************************************************************************//**
  * @file     cmsis_armcc_V6.h
  * @brief    CMSIS Cortex-M Core Function/Instruction Header File

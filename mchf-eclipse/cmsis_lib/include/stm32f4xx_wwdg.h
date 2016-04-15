@@ -1,3 +1,4 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /**
   ******************************************************************************
   * @file    stm32f4xx_wwdg.h
