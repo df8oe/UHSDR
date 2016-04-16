@@ -14,6 +14,10 @@
 
 
 2016mmdd [DF8OE]
+- bugfix: when in syncAM-mode now AM is reported instead of SSB
+
+
+20160413 [DF8OE]
 - again bugfix "white screen issue" on some left LCDs
 - bugfix loading defaults
 - signal line in spectrum now always is in front of spectrum

@@ -1067,8 +1067,8 @@ typedef struct TransceiverState
 	uchar	ser_eeprom_in_use;			// 0xFF = not in use, 0x1 = in use
 	uint8_t* eeprombuf;				// pointer to copy of config in RAM
 	uchar 	tp_present;				// touchscreen present = 1, absent = 0
-	uint8_t tp_x;					// touchscreen x coordinate
-	uint8_t tp_y;					// touchscreen y coordinate
+	char 	tp_x;					// touchscreen x coordinate
+	char	tp_y;					// touchscreen y coordinate
 	bool	show_tp_coordinates;			// show coordinates on LCD
 	uchar	rfmod_present;				// 0 = not present
 	uchar	vhfuhfmod_present;			// 0 = not present

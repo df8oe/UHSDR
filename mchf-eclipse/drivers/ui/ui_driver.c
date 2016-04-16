@@ -6270,12 +6270,19 @@ static bool UiDriver_TouchscreenCalibration()
     uint32_t clr_fg, clr_bg;
     clr_bg = Magenta;
     clr_fg = White;
+//    char txt_buf[40];
 
-    uchar cross1[2] = {3,55};
-    uchar cross2[2] = {56,55};
-    uchar cross3[2] = {3,4};
-    uchar cross4[2] = {56,4};
-    uchar cross5[2] = {25,32};
+    char cross1[2] = {3,55};
+    char cross2[2] = {56,55};
+    char cross3[2] = {3,4};
+    char cross4[2] = {56,4};
+    char cross5[2] = {25,32};
+
+    char x_corr[1], y_corr[1];
+    float diffx,diffy;
+
+    *x_corr = 0;
+    *y_corr = 0;
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     //											// now do all of the warnings, blah, blah...
@@ -6316,29 +6323,53 @@ static bool UiDriver_TouchscreenCalibration()
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
-    UiDriver_DoCrossCheck(cross1);
+    UiDriver_DoCrossCheck(cross1, x_corr, y_corr);
 
     UiLcdHy28_LcdClear(clr_bg);
     clr_fg = White;
     UiLcdHy28_PrintText(10,10,"                  +",clr_fg,clr_bg,1);
-    UiDriver_DoCrossCheck(cross2);
+
+//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/3, *y_corr/3);
+//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+    UiDriver_DoCrossCheck(cross2, x_corr, y_corr);
 
     UiLcdHy28_LcdClear(clr_bg);
     clr_fg = White;
     UiLcdHy28_PrintText(10,210,"+",clr_fg,clr_bg,1);
-    UiDriver_DoCrossCheck(cross3);
+
+//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/6, *y_corr/6);
+//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+    UiDriver_DoCrossCheck(cross3, x_corr, y_corr);
 
     UiLcdHy28_LcdClear(clr_bg);
     clr_fg = White;
     UiLcdHy28_PrintText(10,210,"                  +",clr_fg,clr_bg,1);
-    UiDriver_DoCrossCheck(cross4);
+
+//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/9, *y_corr/9);
+//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+    UiDriver_DoCrossCheck(cross4, x_corr, y_corr);
 
     UiLcdHy28_LcdClear(clr_bg);
     clr_fg = White;
     UiLcdHy28_PrintText(10,110,"         +",clr_fg,clr_bg,1);
-    UiDriver_DoCrossCheck(cross5);
+
+//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/12, *y_corr/12);
+//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+    UiDriver_DoCrossCheck(cross5, x_corr, y_corr);
+
+    diffx = round(*x_corr / 15);
+    diffy = round(*y_corr / 15);
+    *x_corr = diffx;
+    *y_corr = diffy;
 
     UiLcdHy28_LcdClear(clr_bg);
+
+//    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
+//    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
 
       for(i = 0; i < 100; i++)
         non_os_delay();
@@ -6352,16 +6383,14 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 
-void UiDriver_DoCrossCheck(uchar cross[])
+void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 {
     uint32_t clr_fg, clr_bg;
     char txt_buf[40];
+    uchar i,datavalid = 0;
+
     clr_bg = Magenta;
     clr_fg = White;
-    uchar datavalid = 0;
-
-    sprintf(txt_buf,"position should be  : %02d/%02d",cross[0],cross[1]);
-    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
 
     do{
 	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
@@ -6370,16 +6399,21 @@ void UiDriver_DoCrossCheck(uchar cross[])
 	if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
 	{
 	    datavalid++;
+	    *xt_corr += (ts.tp_x - cross[0]);
+	    *yt_corr += (ts.tp_y - cross[1]);
 	    clr_fg = Green;
-	sprintf(txt_buf,"touched position (%d): %02d/%02d",datavalid,ts.tp_x,ts.tp_y);	//show touched coordinates
+	sprintf(txt_buf,"Try (%d) misadjust: x = %+d / y = %+d",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
 	}
 	else
 	{
 	    clr_fg = Red;
-	sprintf(txt_buf,"not a valid position: %02d/%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+	sprintf(txt_buf,"not a valid position at all!          ");	//show touched coordinates
 	}
 	UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
 
 	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == true){ non_os_delay(); }
     }while(datavalid < 3);
+
+    for(i = 0; i < 100; i++)
+	non_os_delay();
 }
