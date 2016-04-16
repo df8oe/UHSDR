@@ -5799,8 +5799,8 @@ static void UiDriverSwitchOffPtt(void)
 	if(kd.enabled)
 		goto unmute_only;
 
-	// PTT off
-	if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
+	// PTT off for all non-CW modes
+	if(ts.dmod_mode != DEMOD_CW)
 	{
 		// PTT flag on ?
 		if(ts.txrx_mode == TRX_MODE_TX)
@@ -6414,6 +6414,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == true){ non_os_delay(); }
     }while(datavalid < 3);
 
-    for(i = 0; i < 100; i++)
+    for(i = 0; i < 100; i++) {
 	non_os_delay();
+    }
 }
