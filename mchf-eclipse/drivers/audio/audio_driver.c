@@ -2241,7 +2241,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 	// -----------------------------
 	// TUNE mode handler for DIGIQ mode
 	//
-	if (!ts.tune && ts.tx_audio_source == TX_AUDIO_DIGIQ) {
+	if (!ts.tune && ts.tx_audio_source == TX_AUDIO_DIGIQ && ts.dmod_mode != DEMOD_CW) {
+	  // If in CW mode, DIQ audio input is ignored and the paddles provide the input so that
+	  // you can use your keyer etc.
 		// Output I and Q as stereo, fill buffer and leave
 		for(i = 0; i < size/2; i++)	{				// Copy to single buffer
 			ads.i_buffer[i] = (float)*src++;
