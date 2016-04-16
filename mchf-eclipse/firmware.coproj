@@ -35,7 +35,7 @@
         <Option name="nostartfiles" value="0"/>
         <LinkedLibraries>
           <Libset dir="libs\" libs="m"/>
-          <Libset dir="libs\" libs="arm_cortexm4lf_math"/>
+          <Libset dir="libs\" libs="arm_cortexm4lf_math_r4p5"/>
         </LinkedLibraries>
         <MemoryAreas debugInFlashNotRAM="1">
           <Memory name="IROM1" type="ReadOnly" size="0x00070000" startValue="0x08010000"/>

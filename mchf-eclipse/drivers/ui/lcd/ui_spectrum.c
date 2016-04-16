@@ -101,6 +101,8 @@ static void UiDriverFFTWindowFunction(char mode)
 //*----------------------------------------------------------------------------
 void UiSpectrumCreateDrawArea(void)
 {
+	if (ts.spectrum_light) return;
+
 	ulong i;
 	uint32_t clr;
 	char s[32];
@@ -378,7 +380,14 @@ static uint16_t UiSpectrum_Draw_GetCenterLineX() {
 //*----------------------------------------------------------------------------
 void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
-	static uint16_t pixel_buf[SPECTRUM_HEIGHT];
+	int spec_height = SPECTRUM_HEIGHT; //x
+	int spec_start_y = SPECTRUM_START_Y;
+
+	if (ts.spectrum_light){
+		spec_height = spec_height + 18;
+		spec_start_y = spec_start_y - 18;
+	}
+	static uint16_t pixel_buf[SPECTRUM_HEIGHT+18];
 
 	uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
 	uint16_t idx = 0;
@@ -398,34 +407,59 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 		for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++) {
 			y_new = fft_new[idx++];
 
-			if(y_new > (SPECTRUM_HEIGHT - 7))
-				y_new = (SPECTRUM_HEIGHT - 7);
-			y1_new  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y_new;
-			UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
-
+			if(y_new > (spec_height - 7))
+				y_new = (spec_height - 7);
+			y1_new  = (spec_start_y + spec_height - 1) - y_new;
+			if (!ts.spectrum_light)
+				UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
+			else
+				UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
 		}
 		sd.first_run--;
 	} else {
 
 		for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
 		{
-			y_old = *fft_old++;
-			y_new = *fft_new++;
+			if (ts.spectrum_light) {
+            if ((fft_old > 1) && (fft_old < 255)) {
+            // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
+            // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
+            	y_old = *fft_old *0.5 + *(fft_old-1)*0.18 + *(fft_old-2)*0.07 + *(fft_old+1)*0.18 + *(fft_old+2)*0.07;
+            }
+            else {
+                y_old = *fft_old;
+            }
+            if ((fft_new > 1) && (fft_new < 255))
+            	 y_new = *fft_new *0.5 + *(fft_new-1)*0.18 + *(fft_new-2)*0.07 + *(fft_new+1)*0.18 + *(fft_new+2)*0.07;
+            else y_new = *fft_new;
+            fft_old = fft_old + 1;
+            fft_new = fft_new + 1;
 
-			// Limit vertical
-			if(y_old > (SPECTRUM_HEIGHT - 7))
-				y_old = (SPECTRUM_HEIGHT - 7);
+			}
+			else {
+				y_old = *fft_old++;
+				y_new = *fft_new++;
+			}
 
-			if(y_new > (SPECTRUM_HEIGHT - 7))
-				y_new = (SPECTRUM_HEIGHT - 7);
+           	// Limit vertical
+			if(y_old > (spec_height - 7))
+				y_old = (spec_height - 7);
+
+			if(y_new > (spec_height - 7))
+				y_new = (spec_height - 7);
 
 			// Data to y position and length
-			y1_old  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y_old;
+			y1_old  = (spec_start_y + spec_height - 1) - y_old;
 			len_old = y_old;
 
-			y1_new  = (SPECTRUM_START_Y + SPECTRUM_HEIGHT - 1) - y_new;
+			y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
 
+			if (y_old != y_new && ts.spectrum_light) {
+			UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
+			UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
+			}
+			if (!ts.spectrum_light) {
 			if(y_old <= y_new) {
 				// is old line going to be overwritten by new line, anyway?
 				// ----------------------------------------------------------
@@ -486,6 +520,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 									ts.scope_centre_grid_colour_active);
 
 			}
+		}
 		}
 	}
 }
@@ -638,7 +673,10 @@ static void UiSpectrum_InitSpectrumDisplay()
 //
 void UiSpectrumReDrawScopeDisplay()
 {
-	ulong i, spec_width;
+	int spec_height = SPECTRUM_HEIGHT;
+	if (ts.spectrum_light)
+		spec_height = spec_height + 18;
+		ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 	float32_t	gcalc;
 	//
@@ -914,19 +952,19 @@ void UiSpectrumReDrawScopeDisplay()
 			//
 			// Vertically adjust spectrum scope so that the strongest signals are adjusted to the top
 			//
-			if(max1 > SPECTRUM_HEIGHT) {	// is result higher than display
+			if(max1 > spec_height) {	// is result higher than display
 				sd.display_offset -= sd.agc_rate;	// yes, adjust downwards quickly
-//				if(max1 > SPECTRUM_HEIGHT+(SPECTRUM_HEIGHT/2))			// is it WAY above top of screen?
+//				if(max1 > spec_height+(spec_height/2))			// is it WAY above top of screen?
 //					sd.display_offset -= sd.agc_rate*3;	// yes, adjust downwards REALLY quickly
 			}
 			//
 			// Prevent "empty" spectrum display from filling with "noise" by checking the peak/average of what was found
 			//
-			else if(((max1*10/mean1) <= (q15_t)ts.spectrum_scope_nosig_adjust) && (max1 < SPECTRUM_HEIGHT+(SPECTRUM_HEIGHT/2)))	{	// was "average" signal ratio below set threshold and average is not insanely strong??
+			else if(((max1*10/mean1) <= (q15_t)ts.spectrum_scope_nosig_adjust) && (max1 < spec_height+(spec_height/2)))	{	// was "average" signal ratio below set threshold and average is not insanely strong??
 				if((min1 > 2) && (max1 > 2))	{		// prevent the adjustment from going downwards, "into the weeds"
 					sd.display_offset -= sd.agc_rate;	// yes, adjust downwards
-		            if(sd.display_offset < (-(SPECTRUM_HEIGHT + SPECTRUM_SCOPE_ADJUST_OFFSET)))
-		               sd.display_offset = (-(SPECTRUM_HEIGHT + SPECTRUM_SCOPE_ADJUST_OFFSET));
+		            if(sd.display_offset < (-(spec_height + SPECTRUM_SCOPE_ADJUST_OFFSET)))
+		               sd.display_offset = (-(spec_height + SPECTRUM_SCOPE_ADJUST_OFFSET));
 				}
 			}
 			else
@@ -940,7 +978,7 @@ void UiSpectrumReDrawScopeDisplay()
 			// used for debugging
 //				char txt[32];
 //				sprintf(txt, " %d,%d,%d,%d ", (int)(max1*100/mean1), (int)(min1), (int)(max1),(int)mean1);
-//				sprintf(txt, " %d,%d,%d,%d ", (int)sd.display_offset*100, (int)min1*100,(int)max1*100,(int)SPECTRUM_HEIGHT);
+//				sprintf(txt, " %d,%d,%d,%d ", (int)sd.display_offset*100, (int)min1*100,(int)max1*100,(int)spec_height);
 //				UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
 
 			//
@@ -989,8 +1027,8 @@ void UiSpectrumReDrawScopeDisplay()
 			// After the above manipulation, clip the result to make sure that it is within the range of the palette table
 			//
 			for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{
-				if(sd.FFT_DspData[i] >= SPECTRUM_HEIGHT)	// is there an illegal height value?
-					sd.FFT_DspData[i] = SPECTRUM_HEIGHT - 1;	// yes - clip it
+				if(sd.FFT_DspData[i] >= spec_height)	// is there an illegal height value?
+					sd.FFT_DspData[i] = spec_height - 1;	// yes - clip it
 
 			}
 			//
