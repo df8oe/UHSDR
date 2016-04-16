@@ -101,7 +101,15 @@ static void UiDriverFFTWindowFunction(char mode)
 //*----------------------------------------------------------------------------
 void UiSpectrumCreateDrawArea(void)
 {
-	if (ts.spectrum_light) return;
+	// Draw Frequency bar text
+	UiDrawSpectrumScopeFrequencyBarText();
+
+	if (ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) {
+		// TODO: insert vertical line
+		return; // if spectrum display light enabled, do not draw anything!
+
+	}
+
 
 	ulong i;
 	uint32_t clr;
@@ -221,8 +229,6 @@ void UiSpectrumCreateDrawArea(void)
 	// Frequency bar separator
 	UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
-	// Draw Frequency bar text
-	UiDrawSpectrumScopeFrequencyBarText();
 
 
 	// Horizontal grid lines
