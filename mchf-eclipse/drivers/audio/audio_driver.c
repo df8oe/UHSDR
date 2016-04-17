@@ -1372,7 +1372,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 //* Function Name       : audio_snap_carrier [DD4WH, march 2016]
 //* Object              :
 //* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes Rx to that freqeuency
-//* Input Parameters    :
+//* Input Parameters    : uses the new arm_rfft_fast_f32 for the FFT, that is 10 times (!!!) more accurate than the old arm_rfft_f32
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
@@ -1528,7 +1528,7 @@ static void audio_snap_carrier (void)
 
    		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-   		// 10.5 is an empirically derived constant . . .
+
    		delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable with both delta frequencies
         help_freq = help_freq + delta2;
