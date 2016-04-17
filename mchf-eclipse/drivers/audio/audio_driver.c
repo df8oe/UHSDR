@@ -264,7 +264,10 @@ void audio_driver_init(void)
 	ads.af_disabled = 0;
 
 	// initialize FFT structure used for snap carrier
-	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
+//	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
+	arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
+
+
 
 #ifdef DEBUG_BUILD
 	printf("audio driver init ok\n\r");
@@ -1458,8 +1461,8 @@ static void audio_snap_carrier (void)
 		}
 
 		// run FFT
-		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
-//		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+//		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
+		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
 		//
 		// Calculate magnitude
 		// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
@@ -1526,7 +1529,7 @@ static void audio_snap_carrier (void)
    		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
    		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
    		// 10.5 is an empirically derived constant . . .
-   		delta2 = 10.5 + (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+   		delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
    		// set frequency variable with both delta frequencies
         help_freq = help_freq + delta2;
         help_freq = help_freq * 4.0;

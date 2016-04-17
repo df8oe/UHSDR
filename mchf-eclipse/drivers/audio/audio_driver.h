@@ -527,9 +527,10 @@ extern __IO FilterCoeffs        fc;
 typedef struct SnapCarrier
 {
     // FFT state
-    arm_rfft_instance_f32           S;
+//    arm_rfft_instance_f32           S;
+    arm_rfft_fast_instance_f32           S;
 
-    arm_cfft_radix4_instance_f32    S_CFFT;
+//    arm_cfft_radix4_instance_f32    S_CFFT;
 
     // Samples buffer
     //

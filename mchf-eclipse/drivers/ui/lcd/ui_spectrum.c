@@ -155,6 +155,7 @@ void UiSpectrumCreateDrawArea(void)
 
 	if (!ts.iq_freq_mode || sd.magnify)
 		c = 4;
+
 	ts.c_line = c;
 	UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
