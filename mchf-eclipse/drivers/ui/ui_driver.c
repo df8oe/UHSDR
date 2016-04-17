@@ -800,13 +800,15 @@ void ui_driver_toggle_tx(uint8_t mode)
 		}
 	}
 
-	if((reset_freq) || (ts.rit_value) || ((ts.iq_freq_mode) && (ts.dmod_mode == DEMOD_CW)))		// Re-set frequency if RIT is non-zero or in CW mode with translate OR if in SPLIT mode and we had to retune
-		UiDriverUpdateFrequencyFast();
+	if((reset_freq) || (ts.rit_value) || ((ts.iq_freq_mode) && (ts.dmod_mode == DEMOD_CW)))	{
+	  // Re-set frequency if RIT is non-zero or in CW mode with translate OR if in SPLIT mode and we had to retune
+	  UiDriverUpdateFrequencyFast(mode);
+	}
 
 	// Switch codec mode
 	Codec_RX_TX(mode);
-	//
-    ts.txrx_mode = mode;
+
+	ts.txrx_mode = mode;
  }
 
 //*----------------------------------------------------------------------------
@@ -2899,7 +2901,7 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverUpdateFrequencyFast()
+void UiDriverUpdateFrequencyFast(uint8_t mode)
 {
 	ulong		loc_tune_new,dial_freq;
 
@@ -2937,12 +2939,12 @@ void UiDriverUpdateFrequencyFast()
 	//
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
-	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
+	if(!((ts.dmod_mode == DEMOD_CW) && (mode == TRX_MODE_TX)))	{
 			ts.tune_freq += audio_driver_xlate_freq()*4;
 	}
 
 	// Extra tuning actions
-	if(ts.txrx_mode == TRX_MODE_RX)
+	if(mode == TRX_MODE_RX)
 	{
 		// Add RIT on receive
 		ts.tune_freq += (ts.rit_value*80);
@@ -2956,10 +2958,6 @@ void UiDriverUpdateFrequencyFast()
 
 	ts.tune_freq_old = ts.tune_freq;		// frequency change is required - save change detector
 
-
-	//printf("--------------------\n\r");
-	//printf("dial: %dHz, tune: %dHz\n\r",dial_freq,tune_freq);
-
 	// Set frequency
 	ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
 
@@ -2968,12 +2966,6 @@ void UiDriverUpdateFrequencyFast()
 
 	// Save current freq
 	df.tune_old = loc_tune_new;
-
-	// Save the tunning step used during the last dial update
-	// - really important so we know what segments to clear
-	// during tune step change
-//	df.last_tune_step = df.tuning_step;
-
 }
 
 static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
@@ -5632,7 +5624,7 @@ static void UiDriverHandleLoTemperature()
 	// Update frequency, without reflecting it on the LCD
 	if(comp != (-1)) {
 		df.temp_factor = comp;
-		UiDriverUpdateFrequencyFast();
+		UiDriverUpdateFrequencyFast(ts.txrx_mode);
 
 		// Save to public, to skip not needed update
 		// when we are in 1C range

@@ -517,7 +517,7 @@ void 	UiDriverChangeFilterDisplay(void);
 void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(char skip_encoder_check, uchar mode);
 void 	UiSpectrumCreateDrawArea(void);
-void 	UiDriverUpdateFrequencyFast(void);
+void 	UiDriverUpdateFrequencyFast(uint8_t mode);
 void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
 //
