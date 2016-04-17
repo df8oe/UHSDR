@@ -136,9 +136,34 @@ void UiSpectrumCreateDrawArea(void)
 	sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
 	UiDrawSpectrumScopeFrequencyBarText();
 
+	// draw centre line indicating the receive frequency
+	int8_t c = 4;
+	switch (ts.iq_freq_mode) {
+	case FREQ_IQ_CONV_P12KHZ:
+		c = 2;
+	break;
+	case FREQ_IQ_CONV_P6KHZ:
+		c = 3;
+	break;
+	case FREQ_IQ_CONV_M6KHZ:
+		c = 5;
+	break;
+	case FREQ_IQ_CONV_M12KHZ:
+		c = 6;
+	break;
+	}
+
+	if (!ts.iq_freq_mode || sd.magnify)
+		c = 4;
+	ts.c_line = c;
+	UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4), (POS_SPECTRUM_IND_H - 15), LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+
+	//	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
+//			LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+
 	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) || !ts.waterfall_speed) {
-		return; // if spectrum display light enabled, do not draw anything!
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE))) {
+		return; // if spectrum display light enabled, bail out here!
 	}
 
 	//
@@ -461,7 +486,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 			y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
 
-			if (y_old != y_new && ts.spectrum_light) {
+			if (y_old != y_new && ts.spectrum_light && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1)) { // y_pos of new point is different from old point AND
+																			// x position is not on vertical centre line (the one that indicates the receive frequency)
 			UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
 			UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
 			}
