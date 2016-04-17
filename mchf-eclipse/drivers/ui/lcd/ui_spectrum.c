@@ -93,7 +93,7 @@ static void UiDriverFFTWindowFunction(char mode)
 
 //
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateSpectrumScope
+//* Function Name       : UiSpectrumCreateDrawArea
 //* Object              : draw the spectrum scope control
 //* Input Parameters    :
 //* Output Parameters   :
@@ -101,17 +101,6 @@ static void UiDriverFFTWindowFunction(char mode)
 //*----------------------------------------------------------------------------
 void UiSpectrumCreateDrawArea(void)
 {
-	// Draw Frequency bar text
-	sd.dial_moved = 1;
-	UiDrawSpectrumScopeFrequencyBarText();
-	// Is NOT Waterfall enabled AND spectrum_light enabled?
-	if (ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) {
-		// TODO: insert vertical line
-		return; // if spectrum display light enabled, do not draw anything!
-
-	}
-
-
 	ulong i;
 	uint32_t clr;
 	char s[32];
@@ -139,6 +128,18 @@ void UiSpectrumCreateDrawArea(void)
 	// Clear screen where frequency information will be under graticule
 	//
 	UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
+
+	// Frequency bar separator
+	UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
+
+	// Draw Frequency bar text
+	sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
+	UiDrawSpectrumScopeFrequencyBarText();
+
+	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) || !ts.waterfall_speed) {
+		return; // if spectrum display light enabled, do not draw anything!
+	}
 
 	//
 	strcpy(s, "SPECTRUM SCOPE ");
@@ -180,7 +181,7 @@ void UiSpectrumCreateDrawArea(void)
 	slen += strlen(s);				// get width of entire banner string
 	slen /= 2;						// scale it for half the width of the string
 
-	// Draw top band
+	// Draw top band = grey box in which text is printed
 	for(i = 0; i < 16; i++)
 		UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
@@ -227,8 +228,6 @@ void UiSpectrumCreateDrawArea(void)
 									ts.scope_grid_colour_active);
 	}
 
-	// Frequency bar separator
-	UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
 
 
