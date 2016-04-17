@@ -51,52 +51,52 @@
 #include "ui_configuration.h"
 #include "cw_gen.h"
 
-static void 	UiDriverPublicsInit(void);
-static void 	UiDriverProcessKeyboard(void);
+static void 	UiDriverPublicsInit();
+static void 	UiDriverProcessKeyboard();
 static void 	UiDriverPressHoldStep(uchar is_up);
 static void 	UiDriverProcessFunctionKeyClick(ulong id);
 
 static void 	UiDriverShowBand(uchar band);
-static void 	UiDriverCreateDesktop(void);
+static void 	UiDriverCreateDesktop();
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
-static void     UiDriverDeleteSMeter(void);
-static void 	UiDriverCreateSMeter(void);
+static void     UiDriverDeleteSMeter();
+static void 	UiDriverCreateSMeter();
 static void 	UiDriverDrawSMeter(ushort color);
 //
 static void 	UiDriverUpdateTopMeterA(uchar val);
 static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 
-static void 	UiDriverInitFrequency(void);
+static void 	UiDriverInitFrequency();
 //
 static void 	UiDriver_SetHWFiltersForFrequency(ulong freq);
 uchar 			UiDriverCheckBand(ulong freq, ushort update);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
-static void		UiDriverTimeScheduler(void);				// Also handles audio gain and switching of audio on return from TX back to RX
+static void		UiDriverTimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriverChangeDemodMode(uchar noskip);
 static void 	UiDriverChangeBand(uchar is_up);
-static bool 	UiDriverCheckFrequencyEncoder(void);
-static void 	UiDriverCheckEncoderOne(void);
-static void 	UiDriverCheckEncoderTwo(void);
-static void 	UiDriverCheckEncoderThree(void);
+static bool 	UiDriverCheckFrequencyEncoder();
+static void 	UiDriverCheckEncoderOne();
+static void 	UiDriverCheckEncoderTwo();
+static void 	UiDriverCheckEncoderThree();
 static void 	UiDriverChangeEncoderOneMode(uchar skip);
 static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
 static void 	UiDriverChangeRit(uchar enabled);
-static void 	UiDriverChangeDSPMode(void);
-static void 	UiDriverChangeDigitalMode(void);
-static void 	UiDriverChangePowerLevel(void);
-static void 	UiDriverHandleSmeter(void);
-static void 	UiDriverHandleLowerMeter(void);
-static void 	UiDriverHandlePowerSupply(void);
+static void 	UiDriverChangeDSPMode();
+static void 	UiDriverChangeDigitalMode();
+static void 	UiDriverChangePowerLevel();
+static void 	UiDriverHandleSmeter();
+static void 	UiDriverHandleLowerMeter();
+static void 	UiDriverHandlePowerSupply();
 // LO TCXO routines
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
-static void 	UiDriverHandleLoTemperature(void);
-static void 	UiDriverSwitchOffPtt(void);
-static void 	UiDriverInitMainFreqDisplay(void);
+static void 	UiDriverHandleLoTemperature();
+static void 	UiDriverSwitchOffPtt();
+static void 	UiDriverInitMainFreqDisplay();
 
 static bool	UiDriver_LoadSavedConfigurationAtStartup();
 static bool	UiDriver_TouchscreenCalibration();
@@ -527,7 +527,7 @@ static void UiDriverFButton_F1MenuExit()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void ui_driver_init(void)
+void ui_driver_init()
 {
 	short res;
 
@@ -627,7 +627,7 @@ void ui_driver_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void ui_driver_thread(void)
+void ui_driver_thread()
 {
   if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE) {	// is waterfall mode enabled?
     UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
@@ -815,7 +815,7 @@ void ui_driver_toggle_tx(uint8_t mode)
 //* Input Parameters    :
 //* Output Parameters   :
 //*----------------------------------------------------------------------------
-static void UiDriverPublicsInit(void)
+static void UiDriverPublicsInit()
 {
 	// Button state structure init state
 	ks.button_id			= BUTTON_NONE;
@@ -905,7 +905,7 @@ void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverProcessKeyboard(void)
+static void UiDriverProcessKeyboard()
 {
 	uchar temp;
 
@@ -1272,11 +1272,11 @@ void UiInitRxParms()
 	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
 	AudioFilter_InitTxHilbertFIR();
 //	AudioFilter_CalcTxPhaseAdj(); // dto.
-	AudioFilter_InitRxHilbertFIR();// is already included in the void audio_driver_set_rx_audio_filter(void);
-//	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter(void);
+	AudioFilter_InitRxHilbertFIR();// is already included in the void audio_driver_set_rx_audio_filter();
+//	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter();
 	Audio_TXFilter_Init();
 	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-	// this is already included in the void audio_driver_set_rx_audio_filter(void);
+	// this is already included in the void audio_driver_set_rx_audio_filter();
 	//	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
 
 
@@ -1659,7 +1659,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverShowMode(void)	{
+void UiDriverShowMode()	{
 	// Clear control
 	char* txt = "???";
 	uint16_t clr_fg = White,clr_bg = Blue;
@@ -1923,7 +1923,7 @@ void UiDriverChangeBandFilter(uchar band)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverInitMainFreqDisplay(void)
+static void UiDriverInitMainFreqDisplay()
 {
 	if(!(is_splitmode()))	{	// are we in SPLIT mode?
 		if(!ts.vfo_mem_flag)	{	// update bottom of screen if in VFO (not memory) mode
@@ -1947,7 +1947,7 @@ static void UiDriverInitMainFreqDisplay(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverCreateDesktop(void)
+static void UiDriverCreateDesktop()
 {
 	//char temp[10];
 
@@ -2146,7 +2146,7 @@ static void UiDriverDrawSMeter(ushort color)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverDeleteSMeter(void)
+static void UiDriverDeleteSMeter()
 {
 	ulong i;
 
@@ -2163,7 +2163,7 @@ static void UiDriverDeleteSMeter(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverCreateSMeter(void)
+static void UiDriverCreateSMeter()
 {
 	uchar 	i,v_s;
 	char	num[20];
@@ -2474,7 +2474,7 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDrawSpectrumScopeFrequencyBarText(void)
+void UiDrawSpectrumScopeFrequencyBarText()
 {
 	ulong	freq_calc;
 	ulong	i, clr;
@@ -2589,7 +2589,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-/*static void UiDriverCreateDigiPanel(void)
+/*static void UiDriverCreateDigiPanel()
 {
 	ulong i;
 
@@ -2635,7 +2635,7 @@ void UiDrawSpectrumScopeFrequencyBarText(void)
 void dummy() {
 
 }
-static void UiDriverInitFrequency(void)
+static void UiDriverInitFrequency()
 {
 	ulong i;
 
@@ -2899,7 +2899,7 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverUpdateFrequencyFast(void)
+void UiDriverUpdateFrequencyFast()
 {
 	ulong		loc_tune_new,dial_freq;
 
@@ -3198,7 +3198,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverTimeScheduler(void)
+static void UiDriverTimeScheduler()
 {
 	ulong i;
 	static bool	 unmute_flag = 1;
@@ -3814,7 +3814,7 @@ static void UiDriverChangeBand(uchar is_up)
  *
  * @returns true if a frequency change was detected and a new tuning frequency was set in a global variable.
  */
-static bool UiDriverCheckFrequencyEncoder(void)
+static bool UiDriverCheckFrequencyEncoder()
 {
 	int 		pot_diff;
 	bool		retval = false;
@@ -3889,7 +3889,7 @@ static bool UiDriverCheckFrequencyEncoder(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverCheckEncoderOne(void)
+static void UiDriverCheckEncoderOne()
 {
 	int 	pot_diff;
 
@@ -3971,7 +3971,7 @@ static void UiDriverCheckEncoderOne(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverCheckEncoderTwo(void)
+static void UiDriverCheckEncoderTwo()
 {
   //char 	temp[10];
   int 	pot_diff;
@@ -4086,7 +4086,7 @@ static void UiDriverCheckEncoderTwo(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverCheckEncoderThree(void)
+static void UiDriverCheckEncoderThree()
 {
   int 	pot_diff;
 
@@ -4453,7 +4453,7 @@ void UiDriverChangeCmpLevel(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverChangeDSPMode(void)
+static void UiDriverChangeDSPMode()
 {
 	ushort color = White;
 	const char* txt;
@@ -4520,7 +4520,7 @@ const DigitalModeDescriptor digimodes[DigitalModeMax] =
 		{ "WSPR P", false },
 };
 
-static void UiDriverChangeDigitalMode(void)
+static void UiDriverChangeDigitalMode()
 {
 	ushort color = digimodes[ts.digital_mode].enabled?White:Grey2;
 	const char* txt = digimodes[ts.digital_mode].label;
@@ -4536,7 +4536,7 @@ static void UiDriverChangeDigitalMode(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverChangePowerLevel(void)
+static void UiDriverChangePowerLevel()
 {
 	ushort color = White;
 	const char* txt;
@@ -4590,7 +4590,7 @@ void UiDriverChangeKeyerSpeed(uchar enabled)
 
 	// Update CW gen module
 	if(enabled)
-		cw_gen_init();
+		cw_set_speed();
 }
 
 
@@ -4761,7 +4761,7 @@ static void UiDriverChangeRit(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriverChangeFilterDisplay(void)
+void UiDriverChangeFilterDisplay()
 {
 	// Do a filter re-load
 //	if(!ui_only_update) {
@@ -4800,7 +4800,7 @@ void UiDriverChangeFilterDisplay(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiDriverDisplayFilterBW(void)
+void UiDriverDisplayFilterBW()
 {
 	float	width, offset, calc;
 	ushort	lpos;
@@ -4923,7 +4923,7 @@ void UiDriverDisplayFilterBW(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-/*static void UiDriverUpdateUsbKeyboardStatus(void)
+/*static void UiDriverUpdateUsbKeyboardStatus()
 {
 	// No change, nothing to process
 	if(kbs.new_state == kbs.old_state)
@@ -4961,7 +4961,7 @@ void UiDriverDisplayFilterBW(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverHandleSmeter(void)
+static void UiDriverHandleSmeter()
 {
 	uchar 	val;
 	float 	rfg_calc;
@@ -5170,7 +5170,7 @@ static bool UiDriver_UpdatePowerAndVSWR() {
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverHandleLowerMeter(void)
+static void UiDriverHandleLowerMeter()
 {
   float	scale_calc;
   char txt[32];
@@ -5272,7 +5272,7 @@ static void UiDriverHandleLowerMeter(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverHandlePowerSupply(void)
+static void UiDriverHandlePowerSupply()
 {
 	ulong	val_p, calib;
 	int		col;
@@ -5545,7 +5545,7 @@ static void UiDriverRefreshTemperatureDisplay(uchar enabled,int temp)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverHandleLoTemperature(void)
+static void UiDriverHandleLoTemperature()
 {
 	int		temp = 0;
 	int		comp, comp_p;
@@ -5659,7 +5659,7 @@ static void UiDriverHandleLoTemperature(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-/*static void UiDriverEditMode(void)
+/*static void UiDriverEditMode()
 {
 	char symb[2];
 
@@ -5771,7 +5771,7 @@ static void UiDriverHandleLoTemperature(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 ulong ptt_break = 0;
-static void UiDriverSwitchOffPtt(void)
+static void UiDriverSwitchOffPtt()
 {
   // Not when tuning
   if(ts.tune)
@@ -5888,7 +5888,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiLCDBlankTiming(void)
+void UiLCDBlankTiming()
 {
 	ulong ltemp;
 
@@ -5909,7 +5909,7 @@ void UiLCDBlankTiming(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiCWSidebandMode(void)
+void UiCWSidebandMode()
 {
     switch(ts.cw_offset_mode)   {
         case CW_OFFSET_USB_TX:
