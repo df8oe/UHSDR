@@ -136,9 +136,37 @@ void UiSpectrumCreateDrawArea(void)
 	sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
 	UiDrawSpectrumScopeFrequencyBarText();
 
+	// draw centre line indicating the receive frequency
+	int8_t c = 4;
+	switch (ts.iq_freq_mode) {
+	case FREQ_IQ_CONV_P12KHZ:
+		c = 2;
+	break;
+	case FREQ_IQ_CONV_P6KHZ:
+		c = 3;
+	break;
+	case FREQ_IQ_CONV_M6KHZ:
+		c = 5;
+	break;
+	case FREQ_IQ_CONV_M12KHZ:
+		c = 6;
+	break;
+	}
+
+	if (!ts.iq_freq_mode || sd.magnify)
+		c = 4;
+
+	ts.c_line = c;
+	UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+
+	//	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
+//			LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+
+
+	//FIXME: do not use return, but put ifs at every instance . . . Otherwise variables will not be set, that should be set . .
 	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) || !ts.waterfall_speed) {
-		return; // if spectrum display light enabled, do not draw anything!
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE))) {
+		return; // if spectrum display light enabled, bail out here!
 	}
 
 	//
@@ -386,6 +414,9 @@ static uint16_t UiSpectrum_Draw_GetCenterLineX() {
 //*----------------------------------------------------------------------------
 void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
+//	q15_t * fft_old_begin = fft_old;
+//	q15_t * fft_new_begin = fft_new;
+
 	int spec_height = SPECTRUM_HEIGHT; //x
 	int spec_start_y = SPECTRUM_START_Y;
 
@@ -418,28 +449,42 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 			y1_new  = (spec_start_y + spec_height - 1) - y_new;
 			if (!ts.spectrum_light)
 				UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
-			else
-				UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
+//			else
+			//	UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
 		}
 		sd.first_run--;
 	} else {
 
+		idx = 0;
+
 		for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
 		{
 			if (ts.spectrum_light) {
-            if ((fft_old > 1) && (fft_old < 254)) {
+//	            if ((fft_old > fft_old_begin + 1) && (fft_old < fft_old_begin + 254)) {
+//                if ((fft_old > 1) && (fft_old < 254)) {
+	                if ((idx > 1) && (idx < 254)) {
             // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
             // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
-            	y_old = *fft_old *0.5 + *(fft_old-1)*0.18 + *(fft_old-2)*0.07 + *(fft_old+1)*0.18 + *(fft_old+2)*0.07;
+//                	y_old = *fft_old *0.5+ *(fft_old-1)*0.18 + *(fft_old-2)*0.07 + *(fft_old+1)*0.18 + *(fft_old+2)*0.07;
+                	y_old = fft_old[idx] *0.5+ fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
             }
             else {
-                y_old = *fft_old;
+                y_old = fft_old[idx];
             }
-            if ((fft_new > 1) && (fft_new < 254))
-            	 y_new = *fft_new *0.5 + *(fft_new-1)*0.18 + *(fft_new-2)*0.07 + *(fft_new+1)*0.18 + *(fft_new+2)*0.07;
-            else y_new = *fft_new;
-            fft_old = fft_old + 1;
-            fft_new = fft_new + 1;
+
+//	                if ((fft_new > fft_new_begin + 1) && (fft_new < fft_new_begin + 254)) {
+//	                    if ((fft_new > 1) && (fft_new < 254)) {
+	    	                if ((idx > 1) && (idx < 254)) {
+//	    	                	y_new = *fft_new *0.5 + *(fft_new-1)*0.18 + *(fft_new-2)*0.07 + *(fft_new+1)*0.18 + *(fft_new+2)*0.07;
+		                    	y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
+            }
+            else  {
+            	y_new = fft_new[idx];
+            }
+
+//            fft_old = fft_old + 1;
+//            fft_new = fft_new + 1;
+	    	  idx++;
 
 			}
 			else {
@@ -461,10 +506,13 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 			y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
 
-			if (y_old != y_new && ts.spectrum_light) {
+			if (y_old != y_new && ts.spectrum_light && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1)) {
+				// y_pos of new point is different from old point AND
+				// x position is not on vertical centre line (the one that indicates the receive frequency)
 			UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
 			UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
 			}
+
 			if (!ts.spectrum_light) {
 			if(y_old <= y_new) {
 				// is old line going to be overwritten by new line, anyway?
