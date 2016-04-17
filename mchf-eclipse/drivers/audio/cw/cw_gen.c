@@ -193,62 +193,56 @@ ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //*----------------------------------------------------------------------------
 ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 {
-	// Exit to RX
-	if(ps.key_timer == 0)
-	{
-		if(ps.break_timer == 0)
-		{
-			ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-			ui_driver_toggle_tx(TRX_MODE_RX);				// straight
-		}
-		if(ps.break_timer) ps.break_timer--;
+  uint32_t retval;
 
-		return 0;
-	}
+  // Exit to RX if key_timer is zero and break_timer is zero as well
+  if(ps.key_timer == 0) {
+    if(ps.break_timer == 0) {
+      ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
+      ui_driver_toggle_tx(TRX_MODE_RX);				// straight
+    }
+    if(ps.break_timer) { ps.break_timer--; }
+    retval = 0;
+  } else {
 
-	softdds_runf(i_buffer,q_buffer,size/2);
+    softdds_runf(i_buffer,q_buffer,size/2);
 
-	// ----------------------------------------------------------------
-	// Raising slope
-	//
-	// Smooth start of element
-	// key_timer set to 24 in Paddle DAH IRQ
-	// on every audio driver sample request shape the form
-	// then stop at key_timer = 12
-	if(ps.key_timer > 12)
-	{
-		cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
-		if(ps.key_timer) ps.key_timer--;
-	}
+    // ----------------------------------------------------------------
+    // Raising slope
+    //
+    // Smooth start of element
+    // key_timer set to 24 in Paddle DAH IRQ
+    // on every audio driver sample request shape the form
+    // then stop at key_timer = 12
+    if(ps.key_timer > 12) {
+      cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
+      if(ps.key_timer) { ps.key_timer--; }
+    }
 
-	// -----------------------------------------------------------------
-	// Middle of a symbol - no shaping, just
-	// pass soft DDS data (key_timer = 12)
-	// ..................
+    // -----------------------------------------------------------------
+    // Middle of a symbol - no shaping, just
+    // pass soft DDS data (key_timer = 12)
+    // ..................
 
-	// -----------------------------------------------------------------
-	// Failing edge
-	//
-	// Do smooth the falling edge
-	// key was released, so key_timer goes from 12 to zero
-	// then finally switch to RX is performed (here, but on next request)
-	if(ps.key_timer < 12)
-	{
-		cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,size/2);
-		if(ps.key_timer) ps.key_timer--;
-	}
+    // -----------------------------------------------------------------
+    // Failing edge
+    //
+    // Do smooth the falling edge
+    // key was released, so key_timer goes from 12 to zero
+    // then finally switch to RX is performed (here, but on next request)
+    if(ps.key_timer < 12) {
+      cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,size/2);
+      if(ps.key_timer) { ps.key_timer--; }
+    }
 
-	// Key released ?, then shape falling edge, on next 12 audio sample requests
-	// the audio driver
-	if((GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) && (ps.key_timer == 12))
-	{
-		// De-bounce checking here needed ???
-		// ...
-
-		if(ps.key_timer) ps.key_timer--;
-	}
-
-	return 1;
+    // Key released ?, then shape falling edge, on next 12 audio sample requests
+    // the audio driver
+    if((GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) && (ps.key_timer == 12)) {
+      if(ps.key_timer) { ps.key_timer--; }
+    }
+    retval = 1;
+  }
+  return retval;
 }
 
 //*----------------------------------------------------------------------------
@@ -261,69 +255,50 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //*----------------------------------------------------------------------------
 ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 {
-	//printf("%d ",ps.cw_state);
+    uint32_t retval = 0;
 	switch(ps.cw_state)
 	{
 		case CW_IDLE:
 		{
 			if( (!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) ||
 				(!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))	||
-				(ps.port_state & 3))
-			{
+				(ps.port_state & 3)) {
+
 				cw_gen_check_keyer_state();
 				ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
-			}
-			else
-			{
+			} else {
 				// Back to RX
 				ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
 				ui_driver_toggle_tx(TRX_MODE_RX);				// iambic
 			}
-
-			return 0;
 		}
-
+		break;
 		case CW_WAIT:		// This is an extra state called after detection of an element to allow the other state machines to settle.
 		{					// It is NECESSARY to eliminate a "glitch" at the beginning of the first Iambic Morse DIT element in a string!
 			ps.cw_state = CW_DIT_CHECK;
-			break;
 		}
-
+        break;
 		case CW_DIT_CHECK:
 		{
-			if (ps.port_state & CW_DIT_L)
-			{
+			if (ps.port_state & CW_DIT_L) {
 			     ps.port_state |= CW_DIT_PROC;
 			     ps.key_timer   = ps.dit_time;
 			     ps.cw_state    = CW_KEY_DOWN;
-
-			     // Change to TX already flagged in IRQ, lets do the real change here
-			     if(ts.ptt_req)
-			     	ui_driver_toggle_tx(TRX_MODE_TX);				// iambic
-			}
-			else
+			} else {
 			     ps.cw_state = CW_DAH_CHECK;
-
-			return 0;
+			}
 		}
-
+		break;
 		case CW_DAH_CHECK:
 		{
-			if (ps.port_state & CW_DAH_L)
-			{
+			if (ps.port_state & CW_DAH_L) {
 			     ps.key_timer = (ps.dit_time) * 3;
 			     ps.cw_state  = CW_KEY_DOWN;
-
-			     // Change to TX already flagged in IRQ, lets do the real change here
-			     if(ts.ptt_req)
-			     	ui_driver_toggle_tx(TRX_MODE_TX);			// iambic
-			}
-			else
+			} else {
 			     ps.cw_state  = CW_IDLE;
-
-			return 0;
+			}
 		}
-
+		break;
 		case CW_KEY_DOWN:
 		{
 			softdds_runf(i_buffer,q_buffer,size/2);
@@ -336,65 +311,53 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 			ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
 			ps.cw_state    = CW_KEY_UP;
 			ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-
-			return 1;
+			retval = 1;
 		}
-
+		break;
 		case CW_KEY_UP:
 		{
-			if(ps.key_timer == 0)
-			{
+			if(ps.key_timer == 0) {
 				ps.key_timer = ps.dit_time;
 				ps.cw_state  = CW_PAUSE;
-
-				return 0;
-			}
-			else
-			{
+			} else {
 				softdds_runf(i_buffer,q_buffer,size/2);
 				ps.key_timer--;
 
 				// Smooth start of element - continue
-				if(ps.key_timer > (ps.dit_time/2))
+				if(ps.key_timer > (ps.dit_time/2)) {
 					cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
-
+				}
 				// Smooth end of element
-				if(ps.key_timer < 12)
+				if(ps.key_timer < 12) {
 					cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,size/2);
-
-				if(ps.port_state & CW_IAMBIC_B)
+				}
+				if(ps.port_state & CW_IAMBIC_B) {
 					cw_gen_check_keyer_state();
-
-				return 1;
+				}
+				retval = 1;
 			}
 		}
-
+		break;
 		case CW_PAUSE:
 		{
 			cw_gen_check_keyer_state();
 
 			ps.key_timer--;
-			if(ps.key_timer == 0)
-			{
-				if (ps.port_state & CW_DIT_PROC)
-				{
+			if(ps.key_timer == 0) {
+				if (ps.port_state & CW_DIT_PROC) {
 					ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
 				    ps.cw_state    = CW_DAH_CHECK;
-				}
-				else
-				{
+				} else {
 				    ps.port_state &= ~(CW_DAH_L);
 				    ps.cw_state    = CW_IDLE;
 				}
 			}
-
-			return 0;
 		}
-
+		break;
 		default:
-			return 0;
+			break;
 	}
-	return 0;
+	return retval;
 }
 
 //*----------------------------------------------------------------------------
