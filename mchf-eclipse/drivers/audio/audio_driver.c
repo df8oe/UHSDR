@@ -2789,16 +2789,16 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 			to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
 			arm_fill_q15(0, dst, size);
 			arm_fill_q15(0, src, size);
-		}
-		else	{
+		} else {
 			if(!ts.dvmode) {
 				// TODO: HACK: simply overwrite input buffer with USB data instead of using data from I2S bus
 				// I2S just delivers the "timing".
 				// needs to be used only if USB digital line in is selected.
 				audio_tx_processor(src,dst,size);
 			}
-			else
+			else {
 				audio_dv_tx_processor(src,dst,size);
+			}
 		}
 		//
 		to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode

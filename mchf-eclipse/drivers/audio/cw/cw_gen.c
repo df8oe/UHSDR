@@ -190,9 +190,8 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 	{
 		if(ps.break_timer == 0)
 		{
-			ts.txrx_mode = TRX_MODE_RX;
 			ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-			ui_driver_toggle_tx();				// straight
+			ui_driver_toggle_tx(TRX_MODE_RX);				// straight
 		}
 		if(ps.break_timer) ps.break_timer--;
 
@@ -269,13 +268,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 			else
 			{
 				// Back to RX
-				if(ts.txrx_mode == TRX_MODE_TX)
-				{
-					ts.txrx_mode = TRX_MODE_RX;	{
-						ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-						ui_driver_toggle_tx();				// iambic
-					}
-				}
+				ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
+				ui_driver_toggle_tx(TRX_MODE_RX);				// iambic
 			}
 
 			return 0;
@@ -296,8 +290,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 			     ps.cw_state    = CW_KEY_DOWN;
 
 			     // Change to TX already flagged in IRQ, lets do the real change here
-			     if(ts.txrx_mode == TRX_MODE_TX)
-			     	ui_driver_toggle_tx();				// iambic
+			     if(ts.ptt_req)
+			     	ui_driver_toggle_tx(TRX_MODE_TX);				// iambic
 			}
 			else
 			     ps.cw_state = CW_DAH_CHECK;
@@ -313,8 +307,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 			     ps.cw_state  = CW_KEY_DOWN;
 
 			     // Change to TX already flagged in IRQ, lets do the real change here
-			     if(ts.txrx_mode == TRX_MODE_TX)
-			     	ui_driver_toggle_tx();			// iambic
+			     if(ts.ptt_req)
+			     	ui_driver_toggle_tx(TRX_MODE_TX);			// iambic
 			}
 			else
 			     ps.cw_state  = CW_IDLE;
@@ -405,13 +399,10 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //*----------------------------------------------------------------------------
 void cw_gen_dah_IRQ(void)
 {
-	if(ts.keyer_mode != CW_MODE_STRAIGHT)
-	{
-		// Just flag change - nothing to call
-		if(!ts.tx_disable)
-			ts.txrx_mode = TRX_MODE_TX;
-	}
-	else
+    ts.ptt_req = true;
+    // Just flag change - nothing to call
+
+	if(ts.keyer_mode == CW_MODE_STRAIGHT)
 	{
 		// Reset publics, but only when previous is sent
 		if(ps.key_timer == 0)
@@ -419,16 +410,6 @@ void cw_gen_dah_IRQ(void)
 			ps.sm_tbl_ptr  = 0;				// smooth table start
 			ps.key_timer   = 24;			// smooth steps * 2
 			ps.break_timer = CW_BREAK;		// break timer value
-		}
-
-		// Prevent re-entrance
-		if(ts.txrx_mode == TRX_MODE_RX)
-		{
-			// Direct switch here
-			if(!ts.tx_disable)	{
-				ts.txrx_mode = TRX_MODE_TX;
-				ui_driver_toggle_tx();			// straight
-			}
 		}
 	}
 }
@@ -446,8 +427,7 @@ void cw_gen_dit_IRQ(void)
 	// CW mode handler - no dit interrupt in straight key mode
 	if(ts.keyer_mode != CW_MODE_STRAIGHT)
 	{
+	    ts.ptt_req = true;
 		// Just flag change - nothing to call
-		if(!ts.tx_disable)
-			ts.txrx_mode = TRX_MODE_TX;
 	}
 }
