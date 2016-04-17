@@ -103,6 +103,9 @@ void UiSpectrumReDrawScopeDisplay();
 // Spectrum hight is bit lower that the whole control
 #define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
 //
+// How much larger than the standard spectrum display should the Spectrum light display be?
+#define SPEC_LIGHT_MORE_POINTS 15
+//
 // Dependent on FFT samples,but should be less than control width!
 #define SPECTRUM_WIDTH			256
 

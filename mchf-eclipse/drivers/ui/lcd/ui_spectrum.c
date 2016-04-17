@@ -93,7 +93,7 @@ static void UiDriverFFTWindowFunction(char mode)
 
 //
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateSpectrumScope
+//* Function Name       : UiSpectrumCreateDrawArea
 //* Object              : draw the spectrum scope control
 //* Input Parameters    :
 //* Output Parameters   :
@@ -101,16 +101,6 @@ static void UiDriverFFTWindowFunction(char mode)
 //*----------------------------------------------------------------------------
 void UiSpectrumCreateDrawArea(void)
 {
-	// Draw Frequency bar text
-	UiDrawSpectrumScopeFrequencyBarText();
-
-	if (ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) {
-		// TODO: insert vertical line
-		return; // if spectrum display light enabled, do not draw anything!
-
-	}
-
-
 	ulong i;
 	uint32_t clr;
 	char s[32];
@@ -138,6 +128,18 @@ void UiSpectrumCreateDrawArea(void)
 	// Clear screen where frequency information will be under graticule
 	//
 	UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
+
+	// Frequency bar separator
+	UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
+
+	// Draw Frequency bar text
+	sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
+	UiDrawSpectrumScopeFrequencyBarText();
+
+	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)) || !ts.waterfall_speed) {
+		return; // if spectrum display light enabled, do not draw anything!
+	}
 
 	//
 	strcpy(s, "SPECTRUM SCOPE ");
@@ -179,7 +181,7 @@ void UiSpectrumCreateDrawArea(void)
 	slen += strlen(s);				// get width of entire banner string
 	slen /= 2;						// scale it for half the width of the string
 
-	// Draw top band
+	// Draw top band = grey box in which text is printed
 	for(i = 0; i < 16; i++)
 		UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
@@ -226,8 +228,6 @@ void UiSpectrumCreateDrawArea(void)
 									ts.scope_grid_colour_active);
 	}
 
-	// Frequency bar separator
-	UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
 
 
@@ -390,10 +390,10 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 	int spec_start_y = SPECTRUM_START_Y;
 
 	if (ts.spectrum_light){
-		spec_height = spec_height + 18;
-		spec_start_y = spec_start_y - 18;
+		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
+		spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
 	}
-	static uint16_t pixel_buf[SPECTRUM_HEIGHT+18];
+	static uint16_t pixel_buf[SPECTRUM_HEIGHT+SPEC_LIGHT_MORE_POINTS];
 
 	uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
 	uint16_t idx = 0;
@@ -427,7 +427,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 		for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
 		{
 			if (ts.spectrum_light) {
-            if ((fft_old > 1) && (fft_old < 255)) {
+            if ((fft_old > 1) && (fft_old < 254)) {
             // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
             // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
             	y_old = *fft_old *0.5 + *(fft_old-1)*0.18 + *(fft_old-2)*0.07 + *(fft_old+1)*0.18 + *(fft_old+2)*0.07;
@@ -435,7 +435,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             else {
                 y_old = *fft_old;
             }
-            if ((fft_new > 1) && (fft_new < 255))
+            if ((fft_new > 1) && (fft_new < 254))
             	 y_new = *fft_new *0.5 + *(fft_new-1)*0.18 + *(fft_new-2)*0.07 + *(fft_new+1)*0.18 + *(fft_new+2)*0.07;
             else y_new = *fft_new;
             fft_old = fft_old + 1;
@@ -681,7 +681,7 @@ void UiSpectrumReDrawScopeDisplay()
 {
 	int spec_height = SPECTRUM_HEIGHT;
 	if (ts.spectrum_light)
-		spec_height = spec_height + 18;
+		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 	float32_t	gcalc;
