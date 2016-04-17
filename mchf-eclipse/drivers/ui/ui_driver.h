@@ -508,7 +508,7 @@ typedef struct EepromSave
 // Exports
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
-void 	ui_driver_toggle_tx(void);
+void 	ui_driver_toggle_tx(uint8_t mode);
 void 	UiDriverLoadFilterValue(void);
 void 	UiSpectrumClearDisplay(void);
 //
@@ -578,13 +578,13 @@ STATE_S_METER = 0,				//
 STATE_SWR_METER,				//
 STATE_HANDLE_POWERSUPPLY,		//
 STATE_LO_TEMPERATURE,			//
+STATE_SWITCH_OFF_PTT,            //
 STATE_TASK_CHECK,				//
 STATE_CHECK_ENC_ONE,			//
 STATE_CHECK_ENC_TWO,			//
 STATE_CHECK_ENC_THREE,			//
 STATE_UPDATE_FREQUENCY,			//
 STATE_PROCESS_KEYBOARD,			//
-STATE_SWITCH_OFF_PTT			//
 };
 //
 // Used for press-and-hold "temporary" step size adjust

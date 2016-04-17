@@ -1229,7 +1229,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
 		if(tchange)	{		// did something change?
 			UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
 			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-				Codec_SidetoneSetgain();				// adjust the sidetone gain
+				Codec_SidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
 		}
 	}
 	else	// not enabled
@@ -1703,7 +1703,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 							);
 		}
 		if(fchange)	{
-			Codec_MicBoostCheck();
+			Codec_MicBoostCheck(ts.txrx_mode);
 		}
 		//
 		if(fchange)	{		// update on-screen info if there was a change

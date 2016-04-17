@@ -460,7 +460,7 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
 		UiDriverChangePowerLevel();
 		if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
 			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-				Codec_SidetoneSetgain();
+				Codec_SidetoneSetgain(ts.txrx_mode);
 		//
 		if(ts.menu_mode)	// are we in menu mode?
 			UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change power setting
@@ -629,64 +629,62 @@ void ui_driver_init(void)
 //*----------------------------------------------------------------------------
 void ui_driver_thread(void)
 {
-//char txt[32];
+  if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE) {	// is waterfall mode enabled?
+    UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
+  } else {
+    UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
+  }
+  if(ts.thread_timer == 0)			// bail out if it is not time to do this task
+  {
 
-if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)	// is waterfall mode enabled?
-		UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
-	else
-		UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
+    ts.thread_timer = 1;		// reset flag to schedule next occurrence
 
-	if(ts.thread_timer)			// bail out if it is not time to do this task
-		return;
-
-	ts.thread_timer = 1;		// reset flag to schedule next occurrance
-	//
-
-	switch(drv_state)
-	{
-		case STATE_S_METER:
-			if(!ts.boot_halt_flag) { UiDriverHandleSmeter(); }
-			break;
-		case STATE_SWR_METER:
-			if(!ts.boot_halt_flag) { UiDriverHandleLowerMeter(); }
-			break;
-		case STATE_HANDLE_POWERSUPPLY:
-			UiDriverHandlePowerSupply();
-			break;
-		case STATE_LO_TEMPERATURE:
-			if(!ts.boot_halt_flag) { UiDriverHandleLoTemperature(); }
-			break;
-		case STATE_TASK_CHECK:
-			UiDriverTimeScheduler();
-			// Handles live update of Calibrate between TX/RX and volume control
-			break;
-		case STATE_CHECK_ENC_ONE:
-			if(!ts.boot_halt_flag) { UiDriverCheckEncoderOne(); }
-			break;
-		case STATE_CHECK_ENC_TWO:
-			if(!ts.boot_halt_flag) { UiDriverCheckEncoderTwo(); }
-			break;
-		case STATE_CHECK_ENC_THREE:
-			if(!ts.boot_halt_flag) { UiDriverCheckEncoderThree(); }
-			break;
-		case STATE_UPDATE_FREQUENCY:
-			if(!ts.boot_halt_flag) {
-			  if(UiDriverCheckFrequencyEncoder()) {
-			    UiDriverUpdateFrequency(1,0);
-			  }
-			}
-			break;
-		case STATE_PROCESS_KEYBOARD:
-			UiDriverProcessKeyboard();
-			break;
-		case STATE_SWITCH_OFF_PTT:
-			if(!ts.boot_halt_flag) { UiDriverSwitchOffPtt(); }
-			break;
-		default:
-			drv_state = 0;
-			return;
-	}
-	drv_state++;
+    switch(drv_state)
+    {
+    case STATE_S_METER:
+      if(!ts.boot_halt_flag) { UiDriverHandleSmeter(); }
+      break;
+    case STATE_SWR_METER:
+      if(!ts.boot_halt_flag) { UiDriverHandleLowerMeter(); }
+      break;
+    case STATE_HANDLE_POWERSUPPLY:
+      UiDriverHandlePowerSupply();
+      break;
+    case STATE_LO_TEMPERATURE:
+      if(!ts.boot_halt_flag) { UiDriverHandleLoTemperature(); }
+      break;
+    case STATE_TASK_CHECK:
+      UiDriverTimeScheduler();
+      // Handles live update of Calibrate between TX/RX and volume control
+      break;
+    case STATE_CHECK_ENC_ONE:
+      if(!ts.boot_halt_flag) { UiDriverCheckEncoderOne(); }
+      break;
+    case STATE_CHECK_ENC_TWO:
+      if(!ts.boot_halt_flag) { UiDriverCheckEncoderTwo(); }
+      break;
+    case STATE_CHECK_ENC_THREE:
+      if(!ts.boot_halt_flag) { UiDriverCheckEncoderThree(); }
+      break;
+    case STATE_UPDATE_FREQUENCY:
+      if(!ts.boot_halt_flag) {
+        if(UiDriverCheckFrequencyEncoder()) {
+          UiDriverUpdateFrequency(1,0);
+        }
+      }
+      break;
+    case STATE_PROCESS_KEYBOARD:
+      UiDriverProcessKeyboard();
+      break;
+    case STATE_SWITCH_OFF_PTT:
+      if(!ts.boot_halt_flag) { UiDriverSwitchOffPtt(); }
+      break;
+    default:
+      drv_state = 0;
+      return;
+    }
+    drv_state++;
+  }
 }
 
 //*----------------------------------------------------------------------------
@@ -697,22 +695,22 @@ if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)	// is waterfall mode enabled
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void ui_driver_toggle_tx(void)
+void ui_driver_toggle_tx(uint8_t mode)
 {
 
-	static bool was_menu = 0;		// used to detect if we *were* in the menu
 	static bool was_rx = 1;
 	static bool rx_muted = 0;
 	bool	reset_freq = 0;
 	ulong	calc_var;
 
-	if(ts.txrx_mode == TRX_MODE_TX)
+	if(mode == TRX_MODE_TX)
 	{
 		//
 		// Below, in VOICE modes we mute the audio BEFORE we activate the PTT.  This is necessary since U3 is switched the instant that we do so,
 		// rerouting audio paths and causing all sorts of disruption including CLICKs and squeaks.
 		// We restore TX audio levels in the function "Codec_RX_TX()" according to operating mode
 		//
+	    ts.tx_audio_muting_flag = 1; // let the audio being muted initially
 		ts.dsp_inhibit = 1;								// disable DSP when going into TX mode
 		//
 		UiDriver_HandlePowerLevelChange(ts.power_level);
@@ -770,7 +768,6 @@ void ui_driver_toggle_tx(void)
 		PTT_CNTR_PIO->BSRRH  	= PTT_CNTR;		// TX off
 		RED_LED_PIO->BSRRH 		= RED_LED;		// Red led off
 		//
-		UiDriverUpdateBtmMeter(0,0);		// clear bottom meter of any outstanding indication when going back to RX
 		//
 		rx_muted = 0;		// clear flag to indicate that we've muted the audio
 	}
@@ -780,7 +777,7 @@ void ui_driver_toggle_tx(void)
 	if(is_splitmode())	{				// is SPLIT mode active?
 		reset_freq = 1;							// yes - indicate that we WILL need to reset the synthesizer frequency
 		if(is_vfo_b())	{				// is VFO-B active?
-			if(ts.txrx_mode == TRX_MODE_TX)	{	// are we in TX mode?
+			if(mode == TRX_MODE_TX)	{	// are we in TX mode?
 				if(was_rx)	{						// did we just enter TX mode?
 					vfo[VFO_B].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (B)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
@@ -791,7 +788,7 @@ void ui_driver_toggle_tx(void)
 				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
 		}
 		else	{	// VFO-A is active
-			if(ts.txrx_mode == TRX_MODE_TX)	{				// are we in TX mode?
+			if(mode == TRX_MODE_TX)	{				// are we in TX mode?
 				if(was_rx)	{								// did we just enter TX mode?
 					vfo[VFO_A].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (A)
 					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
@@ -806,19 +803,11 @@ void ui_driver_toggle_tx(void)
 	if((reset_freq) || (ts.rit_value) || ((ts.iq_freq_mode) && (ts.dmod_mode == DEMOD_CW)))		// Re-set frequency if RIT is non-zero or in CW mode with translate OR if in SPLIT mode and we had to retune
 		UiDriverUpdateFrequencyFast();
 
-	if((ts.menu_mode) || (was_menu))	{			// update menu when we are (or WERE) in MENU mode
-		UiMenu_RenderMenu(MENU_RENDER_ONLY);
-		was_menu = 1;
-	}
-
-	if(was_menu)		// if we'd displayed the menu previously, clear the flag
-		was_menu = 0;
-	//
 	// Switch codec mode
-	Codec_RX_TX();
+	Codec_RX_TX(mode);
 	//
-
-}
+    ts.txrx_mode = mode;
+ }
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverPublicsInit
@@ -1629,8 +1618,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 					softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
 
 				// To TX
-				ts.txrx_mode = TRX_MODE_TX;
-				ui_driver_toggle_tx();				// tune ON
+				ui_driver_toggle_tx(TRX_MODE_TX);				// tune ON
 
 				UiDriverFButtonLabel(5,"TUNE",Red);
 				//
@@ -1650,8 +1638,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				}
 				//
 				// Back to RX
-				ts.txrx_mode = TRX_MODE_RX;
-				ui_driver_toggle_tx();				// tune OFF
+				ui_driver_toggle_tx(TRX_MODE_RX);				// tune OFF
 				UiDriverChangePowerLevel();			// former position was upper commented out position
 										// at this position display error in CW when using LCD in parallel
 										// mode and working power is FULL and TUNE power is 5W
@@ -3305,78 +3292,90 @@ static void UiDriverTimeScheduler(void)
 			ts.dsp_inhibit = 0;
 		}
 	}
+
+    if((was_rx) && (ts.txrx_mode == TRX_MODE_TX)) {
+
+      if((ts.dmod_mode != DEMOD_CW))    {   // did we just enter TX mode in voice mode?
+        ts.tx_audio_muting_timer = ts.tx_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
+        ts.tx_audio_muting_flag = 1;
+        ads.alc_val = 1;    // re-init AGC value
+        ads.peak_audio = 0; // clear peak reading of audio meter
+      }
+    }
+    //
+    // Did the TX muting expire?
+    //
+    if(ts.sysclock >= ts.tx_audio_muting_timer)  {
+        ts.tx_audio_muting_flag = 0;                // Yes, un-mute the transmit audio
+    }
+
+
 	//
 	if(!(ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI))	{			// If auto-switch on TX/RX is enabled
-		if(ts.txrx_mode == TRX_MODE_TX)	{
-			if(!was_tx)	{
-				was_tx = 1;		// set flag so that we only change this once, as entering
-				// change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
-				//
-				enc_one_mode = ts.enc_one_mode;
-				ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
-				UiDriverChangeAfGain(0);	// Audio gain disabled
-				//
-				if(ts.dmod_mode != DEMOD_CW)
-					UiDriverChangeCmpLevel(1);	// enable compression adjust if voice mode
-				else
-					UiDriverChangeStGain(1);	// enable sidetone gain if CW mode
+	  if(ts.txrx_mode == TRX_MODE_TX)	{
+	    if(!was_tx)	{
+	      was_tx = 1;		// set flag so that we only change this once, as entering
+	      // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
+	      //
+	      enc_one_mode = ts.enc_one_mode;
+	      ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+	      UiDriverChangeAfGain(0);	// Audio gain disabled
+	      //
+	      if(ts.dmod_mode != DEMOD_CW)
+	        UiDriverChangeCmpLevel(1);	// enable compression adjust if voice mode
+	      else
+	        UiDriverChangeStGain(1);	// enable sidetone gain if CW mode
 
-				//
-				// change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
-				//
-				enc_three_mode = ts.enc_thr_mode;
-				ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
-				UiDriverChangeRit(0);
-				if(ts.dmod_mode != DEMOD_CW)
-					UiDriverChangeAudioGain(1);		// enable audio gain
-				else
-					UiDriverChangeKeyerSpeed(1);	// enable keyer speed if it was CW mode
+	      //
+	      // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
+	      //
+	      enc_three_mode = ts.enc_thr_mode;
+	      ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
+	      UiDriverChangeRit(0);
+	      if(ts.dmod_mode != DEMOD_CW)
+	        UiDriverChangeAudioGain(1);		// enable audio gain
+	      else
+	        UiDriverChangeKeyerSpeed(1);	// enable keyer speed if it was CW mode
 
-			}
-		}
-		else	{	// In RX mode
-			if(was_tx)	{ 	// were we latched in TX mode?
-				//
-				// Yes, Switch to audio gain mode
-				//
-				ts.enc_one_mode = enc_one_mode;
-				if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)	{	// are we to switch back to audio mode?
-					UiDriverChangeAfGain(1);	// Yes, audio gain enabled
-					if(ts.dmod_mode != DEMOD_CW)
-						UiDriverChangeCmpLevel(0);	// disable compression level (if in voice mode)
-					else
-						UiDriverChangeStGain(0);	// disable sidetone gain (if in CW mode)
+	    }
+	  }
+	  else	{	// In RX mode
+	    if(was_tx)	{ 	// were we latched in TX mode?
+	      //
+	      // Yes, Switch to audio gain mode
+	      //
+	      ts.enc_one_mode = enc_one_mode;
+	      if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)	{	// are we to switch back to audio mode?
+	        UiDriverChangeAfGain(1);	// Yes, audio gain enabled
+	        if(ts.dmod_mode != DEMOD_CW)
+	          UiDriverChangeCmpLevel(0);	// disable compression level (if in voice mode)
+	        else
+	          UiDriverChangeStGain(0);	// disable sidetone gain (if in CW mode)
 
-				}
-				//
-				ts.enc_thr_mode = enc_three_mode;
-				if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	{		// are we to switch back to RIT mode?
-					UiDriverChangeRit(1);			// enable RIT
-					if(ts.dmod_mode != DEMOD_CW)
-						UiDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
-					else
-						UiDriverChangeKeyerSpeed(0);	// disable keyer speed if it was CW mode
+	      }
+	      //
+	      ts.enc_thr_mode = enc_three_mode;
+	      if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	{		// are we to switch back to RIT mode?
+	        UiDriverChangeRit(1);			// enable RIT
+	        if(ts.dmod_mode != DEMOD_CW)
+	          UiDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
+	        else
+	          UiDriverChangeKeyerSpeed(0);	// disable keyer speed if it was CW mode
 
-				}
-				was_tx = 0;		// clear flag indicating that we'd entered TX mode
-			}
-		}
+	      }
+	      was_tx = 0;		// clear flag indicating that we'd entered TX mode
+	    }
+	  }
 	}
 	//
 
-	//
-	if((was_rx) && (ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))	{	// did we just enter TX mode in voice mode?
-		was_rx = 0;		// yes - clear flag
-		ts.tx_audio_muting_timer = ts.tx_audio_muting_timing + ts.sysclock;				// calculate expiry time for audio muting
-		ts.tx_audio_muting_flag = 1;
-		ads.alc_val = 1;	// re-init AGC value
-		ads.peak_audio = 0;	// clear peak reading of audio meter
-	}
-	//
-	// Did the TX muting expire?
-	//
-	if(ts.sysclock > ts.tx_audio_muting_timer)	{
-		ts.tx_audio_muting_flag = 0;				// Yes, un-mute the transmit audio
+
+    if((was_rx) && (ts.txrx_mode == TRX_MODE_TX)) {
+      was_rx = 0;     // yes - clear flag
+      UiDriverUpdateBtmMeter(0,0);        // clear bottom meter of any outstanding indication when going back to RX
+      if((ts.menu_mode))  {           // update menu when we are (or WERE) in MENU mode
+        UiMenu_RenderMenu(MENU_RENDER_ONLY);
+      }
 	}
 
 	//
@@ -4171,7 +4170,7 @@ static void UiDriverCheckEncoderThree(void)
               ts.tx_gain[ts.tx_audio_source] = gain_max;
           }
           if (ts.tx_audio_source == TX_AUDIO_MIC) {
-            Codec_MicBoostCheck();
+            Codec_MicBoostCheck(ts.txrx_mode);
           }
           UiDriverChangeAudioGain(1);
         }
@@ -5774,61 +5773,52 @@ static void UiDriverHandleLoTemperature(void)
 ulong ptt_break = 0;
 static void UiDriverSwitchOffPtt(void)
 {
-	// Not when tuning
-	if(ts.tune)
-		return;
+  // Not when tuning
+  if(ts.tune)
+    return;
 
-	// PTT on
-	if(ts.ptt_req)
-	{
-		if(ts.txrx_mode == TRX_MODE_RX)
-		{
-			if(!ts.tx_disable)	{
-				ts.txrx_mode = TRX_MODE_TX;
-				ui_driver_toggle_tx();
-			}
-		}
+  // PTT on
+  if(ts.ptt_req)
+  {
+    if(ts.txrx_mode == TRX_MODE_RX)
+    {
+      if(!ts.tx_disable)	{
+        ui_driver_toggle_tx(TRX_MODE_TX);
+      }
+    }
 
-		ts.ptt_req = 0;
-		return;
-	}
+    ts.ptt_req = 0;
 
-	// When CAT driver is running
-	// skip auto return to RX, but do the
-	// delayed unmute
-	if(kd.enabled)
-		goto unmute_only;
+  } else if (!kd.enabled){
+    // When CAT driver is running
+    // skip auto return to RX
+    // PTT off for all non-CW modes
+    if(ts.dmod_mode != DEMOD_CW)
+    {
+      // PTT flag on ?
+      if(ts.txrx_mode == TRX_MODE_TX)
+      {
+        // PTT line released ?
+        if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+        {
+          // Lock to prevent IRQ re-entrance
+          //ts.txrx_lock = 1;
 
-	// PTT off for all non-CW modes
-	if(ts.dmod_mode != DEMOD_CW)
-	{
-		// PTT flag on ?
-		if(ts.txrx_mode == TRX_MODE_TX)
-		{
-			// PTT line released ?
-			if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
-			{
-				// Lock to prevent IRQ re-entrance
-				//ts.txrx_lock = 1;
+          ptt_break++;
+          if(ptt_break < 15)
+            return;
 
-				ptt_break++;
-				if(ptt_break < 15)
-					return;
+          ptt_break = 0;
 
-				ptt_break = 0;
+          // Back to RX
+          ui_driver_toggle_tx(TRX_MODE_RX);				// PTT
 
-				// Back to RX
-				ts.txrx_mode = TRX_MODE_RX;
-				ui_driver_toggle_tx();				// PTT
-
-				// Unlock
-				//ts.txrx_lock = 0;
-			}
-		}
-	}
-
-unmute_only:
-return;
+          // Unlock
+          //ts.txrx_lock = 0;
+        }
+      }
+    }
+  }
 }
 
 
