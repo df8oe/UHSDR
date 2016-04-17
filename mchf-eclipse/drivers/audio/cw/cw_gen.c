@@ -42,12 +42,20 @@ __IO PaddleState				ps;
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
+void cw_set_speed() {
+  ps.dit_time         = 1650/ts.keyer_speed;      //100;
+}
 void cw_gen_init(void)
 {
-	ps.cw_state			= CW_IDLE;
-	ps.dit_time	   		= 1650/ts.keyer_speed;		//100;
 
-	ps.key_timer		= 0;
+    cw_set_speed();
+
+	if (ts.txrx_mode != TRX_MODE_TX  ||  ts.dmod_mode != DEMOD_CW) {
+	  // do not change if currently in CW transmit
+	  ps.cw_state         = CW_IDLE;
+	  ps.key_timer		= 0;
+	}
 
 	switch(ts.keyer_mode)
 	{
@@ -70,7 +78,7 @@ void cw_gen_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void cw_gen_remove_click_on_rising_edge(float *i_buffer,float *q_buffer,ulong size)
+static void cw_gen_remove_click_on_rising_edge(float *i_buffer,float *q_buffer,ulong size)
 {
 	ulong i,j;
 
@@ -103,7 +111,7 @@ void cw_gen_remove_click_on_rising_edge(float *i_buffer,float *q_buffer,ulong si
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,ulong size)
+static void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,ulong size)
 {
 	ulong i,j;
 
@@ -140,7 +148,7 @@ void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,ulong s
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void cw_gen_check_keyer_state(void)
+static void cw_gen_check_keyer_state(void)
 {
 	if(!ts.paddle_reverse)	{	// Paddles NOT reversed
 		if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))

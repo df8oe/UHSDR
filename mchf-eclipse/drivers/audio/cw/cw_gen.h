@@ -59,12 +59,14 @@ typedef struct PaddleState
 } PaddleState;
 
 // Exports
-void 	cw_gen_init(void);
+void 	cw_gen_init();
+void    cw_set_speed();
+
 ulong	cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 ulong 	cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 ulong 	cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 
-void 	cw_gen_dah_IRQ(void);
-void 	cw_gen_dit_IRQ(void);
+void 	cw_gen_dah_IRQ();
+void 	cw_gen_dit_IRQ();
 
 #endif
