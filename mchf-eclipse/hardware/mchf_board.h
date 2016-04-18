@@ -968,6 +968,9 @@ typedef struct TransceiverState
 	bool	reset_dsp_nr;				// TRUE if DSP NR coefficients are to be reset when "audio_driver_set_rx_audio_filter()" is called
 	//
 	uchar	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
+
+#define LCD_BLANKING_ENABLE 0x80
+#define LCD_BLANKING_TIMEMASK 0x0f
 	uchar	lcd_backlight_blanking;		// for controlling backlight auto-off control
 	//
 	uchar	tune_step;					// Used for press-and-hold tune step adjustment
@@ -977,7 +980,7 @@ typedef struct TransceiverState
 	//
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
-    #define MISC_FLAGS1_TX_AUTOSWITCH_UI 0x01
+    #define MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE 0x01
 	#define MISC_FLAGS1_SWAP_BAND_BTN 0x02
     #define MISC_FLAGS1_MUTE_LINEOUT_TX 0x04
     #define MISC_FLAGS1_AM_TX_FILTER_DISABLE 0x08

@@ -539,7 +539,7 @@ void 	UiCWSidebandMode(void);
 void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
 //
-void	UiLCDBlankTiming(void);
+void	UiDriver_LcdBlankingStartTimer(void);
 void	UiDriverShowDebugText(char*);
 void 	UiDriverChangeTuningStep(uchar is_up);
 //
