@@ -114,8 +114,8 @@ void UiSpectrumReDrawScopeDisplay();
 typedef struct SpectrumDisplay
 {
     // FFT state
-    arm_rfft_instance_f32           S;
-//const	arm_cfft_instance_f32           *C;
+//    arm_rfft_instance_f32           S;
+	arm_cfft_instance_f32           C;
 //	arm_cfft_instance_f32 arm_cfft_sR_f32_len256;
     arm_cfft_radix4_instance_f32    S_CFFT;
 
