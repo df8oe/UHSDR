@@ -356,15 +356,28 @@ void UiDriver_HandleTouchScreen()
 	if(!ts.menu_mode)						// normal operational screen
 	{
 		if(check_tp_coordinates(30,57,27,31))			// wf/scope bar right part
-		{
-		  UiDriver_ToggleWaterfallScopeDisplay();
-		}
+		    {
+		    UiDriver_ToggleWaterfallScopeDisplay();
+		    }
 		if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
-		{
-			sd.magnify = !sd.magnify;
-			ts.menu_var_changed = 1;
-			UiSpectrumInitSpectrumDisplay();		// init spectrum scope
-		}
+		    {
+		    sd.magnify = !sd.magnify;
+		    ts.menu_var_changed = 1;
+		    UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+		    }
+		if(check_tp_coordinates(43,60,00,04))			// TUNE button
+		    {
+		    df.tune_new = floor(df.tune_new / 4000) * 4000;	// set last three digits to "0"
+		    ts.refresh_freq_disp = 1;			// update ALL digits
+		    if(is_splitmode())
+			{						// SPLIT mode
+			UiDriverUpdateFrequency(1,3);
+			UiDriverUpdateFrequency(1,2);
+			}
+		    else
+			UiDriverUpdateFrequency(1,0);		// no SPLIT mode
+		    ts.refresh_freq_disp = 0;			// update ALL digits
+		    }
 		if(check_tp_coordinates(8,60,5,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
 		{
 			int step = 2000;				// adjust to 500Hz
@@ -3171,7 +3184,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 {
     bool retval = false;
 
-    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) == 0)		// check for touchscreen on every button check
+    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_x == 0xff)		// check for touchscreen on every button check
 	UiLcdHy28_GetTouchscreenCoordinates(1);
     
 	if(button_num < BUTTON_NUM) {				// buttons 0-15 are the normal keypad buttons

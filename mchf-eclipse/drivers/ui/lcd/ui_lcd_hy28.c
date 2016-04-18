@@ -451,6 +451,9 @@ static inline void UiLcdHy28_WriteDataSpiStart()
 //*----------------------------------------------------------------------------
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
+//    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
+//	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
+
    if(display_use_spi)
    {
       UiLcdHy28_SendByteSpiFast((data >>   8));      /* Write D8..D15                */
@@ -1322,6 +1325,10 @@ void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
     uchar i,x,y;
 
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
+    UiLcdHy28_SendByteSpi(144);
+    x = UiLcdHy28_ReadByteSpi();
+    UiLcdHy28_SendByteSpi(208);
+    y = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(144);
     x = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
