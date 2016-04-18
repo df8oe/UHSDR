@@ -20,6 +20,7 @@
 #include "mchf_board.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
@@ -1322,20 +1323,42 @@ uint8_t UiLcdHy28_Init(void)
 
 void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
 {
-    uchar i,x,y;
+    uchar i,x,y,x1,y1,x2,y2,x3,y3;
+
+    x = y = 0xff;
 
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
     UiLcdHy28_SendByteSpi(144);
-    x = UiLcdHy28_ReadByteSpi();
+    x1 = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
-    y = UiLcdHy28_ReadByteSpi();
+    y1 = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(144);
-    x = UiLcdHy28_ReadByteSpi();
+    x2 = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
-    y = UiLcdHy28_ReadByteSpi();
+    y2 = UiLcdHy28_ReadByteSpi();
+    UiLcdHy28_SendByteSpi(144);
+    x3 = UiLcdHy28_ReadByteSpi();
+    UiLcdHy28_SendByteSpi(208);
+    y3 = UiLcdHy28_ReadByteSpi();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-    if(mode)
+    if( abs(x1-x2) < 2 && abs(y1-y2) < 2 )
+	{
+	x = x1;
+	y = y1;
+	}
+    if( abs(x1-x3) < 2 && abs(y1-y3) < 2 && x != 0xff)
+	{
+	x = x1;
+	y = y1;
+	}
+    if( abs(x3-x2) < 2 && abs(y3-y2) < 2 && x != 0xff)
+	{
+	x = x2;
+	y = y2;
+	}
+
+    if(mode && x != 0xff)
 	{
 	for(i=0; touchscreentable[i]<= x; i++)
 	    ;
