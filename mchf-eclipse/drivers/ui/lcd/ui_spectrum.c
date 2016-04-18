@@ -159,17 +159,9 @@ void UiSpectrumCreateDrawArea(void)
 	ts.c_line = c;
 	UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
-	//	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
-//			LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+//	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
+//	LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
-
-	//FIXME: do not use return, but put ifs at every instance . . . Otherwise variables will not be set, that should be set . .
-	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE))) {
-		return; // if spectrum display light enabled, bail out here!
-	}
-
-	//
 	strcpy(s, "SPECTRUM SCOPE ");
 	slen = 0;	// init string length variable
 	//
@@ -255,6 +247,10 @@ void UiSpectrumCreateDrawArea(void)
 //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
 									ts.scope_grid_colour_active);
 	}
+
+	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
+	    return; // if spectrum display light enabled, bail out here!
 
 
 
@@ -691,7 +687,7 @@ static void UiSpectrum_InitSpectrumDisplay()
 		sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
 		sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
 	}																	// waterfall larger, covering the word "Waterfall Display"
-	else if(ts.waterfall_size == WATERFALL_MEDIUM)	{
+	else if(ts.waterfall_size == WATERFALL_BIG)	{
 		sd.wfall_height = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
 		sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
 		sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;

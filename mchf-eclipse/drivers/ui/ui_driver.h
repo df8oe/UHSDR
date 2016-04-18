@@ -178,8 +178,7 @@ enum	{
 //
 enum	{
 	WATERFALL_NORMAL=0,
-	WATERFALL_MEDIUM,
-	WATERFALL_MAX
+	WATERFALL_BIG
 };
 //
 enum	{

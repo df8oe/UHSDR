@@ -2272,14 +2272,14 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		case MENU_WFALL_SIZE:	// set step size of of waterfall display?
 			UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_size,
 						0,
-						WATERFALL_MAX,
+						WATERFALL_BIG,
 						WATERFALL_SIZE_DEFAULT,
 						1
 						);
 			//
 			switch(ts.waterfall_size)	{
-				case WATERFALL_MEDIUM:
-					strcpy(options, "Medium");
+				case WATERFALL_BIG:
+					strcpy(options, "   Big");
 					break;
 				case WATERFALL_NORMAL:
 				default:
