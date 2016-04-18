@@ -703,10 +703,10 @@ static void UiSpectrum_InitSpectrumDisplay()
 //	const static arm_cfft_instance_f32 *S;
 //	sd.C = &arm_cfft_sR_f32_len256;
 
-//	if(a != ARM_MATH_SUCCESS)
-//	{
-//		return;
-//	}
+	if(a != ARM_MATH_SUCCESS)
+	{
+		return;
+	}
 
 	// Ready
 	sd.enabled		= 1;
