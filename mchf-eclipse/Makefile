@@ -18,9 +18,8 @@ PREFIX = /usr
 GCC_LIB_VERSION = 4.8
 
 # choose what Keil-Library you want to use
-#KEIL_LIB_VERSION = arm_cortexM4lf_math
-#KEIL_LIB_VERSION = arm_cortexM4lf_math_new
-KEIL_LIB_VERSION = arm_cortexM4lf_math_r4p5
+#SCMSIS_LIB_VERSION = arm_cortexM4lf_math
+CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 
 # compilation options
 CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
@@ -30,7 +29,7 @@ CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
 
 LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 
-LIBS :=  	-lm -lg -lc -lgcc -l$(KEIL_LIB_VERSION) \
+LIBS :=  	-lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
         -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu \
 	-Llibs
