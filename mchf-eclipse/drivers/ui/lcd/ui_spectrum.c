@@ -162,6 +162,10 @@ void UiSpectrumCreateDrawArea(void)
 //	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
 //	LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
+	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
+	    return; // if spectrum display light enabled, bail out here!
+
 	strcpy(s, "SPECTRUM SCOPE ");
 	slen = 0;	// init string length variable
 	//
@@ -248,11 +252,8 @@ void UiSpectrumCreateDrawArea(void)
 									ts.scope_grid_colour_active);
 	}
 
-	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
-	    return; // if spectrum display light enabled, bail out here!
 
-
+/////////////////////////////// was here /////////////////////////////////////
 
 
 	// Horizontal grid lines
