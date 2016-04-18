@@ -16,6 +16,7 @@
 #include "mchf_board.h"
 #include "mchf_types.h"
 #include "audio_driver.h"
+#include "arm_const_structs.h"
 
 void UiSpectrumInitSpectrumDisplay();
 void UiSpectrumClearDisplay();
@@ -114,7 +115,8 @@ typedef struct SpectrumDisplay
 {
     // FFT state
     arm_rfft_instance_f32           S;
-
+//const	arm_cfft_instance_f32           *C;
+//	arm_cfft_instance_f32 arm_cfft_sR_f32_len256;
     arm_cfft_radix4_instance_f32    S_CFFT;
 
     // Samples buffer

@@ -699,11 +699,14 @@ static void UiSpectrum_InitSpectrumDisplay()
 
 	// Init FFT structures
 	a = arm_rfft_init_f32((arm_rfft_instance_f32 *)&sd.S,(arm_cfft_radix4_instance_f32 *)&sd.S_CFFT,FFT_IQ_BUFF_LEN,FFT_QUADRATURE_PROC,1);
+//	arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,FFT_IQ_BUFF_LEN);
+//	const static arm_cfft_instance_f32 *S;
+//	sd.C = &arm_cfft_sR_f32_len256;
 
-	if(a != ARM_MATH_SUCCESS)
-	{
-		return;
-	}
+//	if(a != ARM_MATH_SUCCESS)
+//	{
+//		return;
+//	}
 
 	// Ready
 	sd.enabled		= 1;
@@ -771,6 +774,9 @@ void UiSpectrumReDrawScopeDisplay()
 			UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
 			//
 			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
+//			arm_cfft_f32((arm_cfft_instance_f32 *)&sd.C,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+
 			//
 		sd.state++;
 		break;
@@ -1172,6 +1178,9 @@ void UiSpectrumReDrawWaterfall()
 		case 2:		// Do FFT and calculate complex magnitude
 		{
 			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
+//			arm_cfft_f32((arm_cfft_instance_f32 *)&sd.C,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+
 			//
 			// Calculate magnitude
 			//
