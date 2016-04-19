@@ -401,7 +401,13 @@ void UiDriver_HandleTouchScreen()
 	    }
 	if(!ts.menu_mode)						// normal operational screen
 	{
-		if(check_tp_coordinates(30,57,27,31))			// wf/scope bar right part
+		if(check_tp_coordinates(19,60,44,60))			// S-Meter
+		    {
+			incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+			UiDriverDeleteSMeter();
+		  UiDriverCreateSMeter();	// redraw meter
+		    }
+		if(check_tp_coordinates(30,60,27,31))			// wf/scope bar right part
 		    {
 		    UiDriver_ToggleWaterfallScopeDisplay();
 		    }
