@@ -593,6 +593,8 @@ STATE_PROCESS_KEYBOARD,			//
 #define	STEP_PRESS_PLUS				2
 //
 
+#define VALID_TP_DATASETS			2	// number of sets that must be identical for marked as VALID
+
 // ------------------------------------------------
 // Keypad state
 extern __IO KeypadState				ks;

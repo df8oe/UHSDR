@@ -441,7 +441,7 @@ const MenuDescriptor displayGroup[] = {
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Wfall Size"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Scope/Wfall Size"},
     { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 

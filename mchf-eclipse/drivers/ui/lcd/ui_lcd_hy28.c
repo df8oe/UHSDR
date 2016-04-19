@@ -12,10 +12,6 @@
 **  Licence:      CC BY-NC-SA 3.0                                                  **
 ************************************************************************************/
 
-// Optimization disable for this file
-// #pragma GCC optimize "O0"
-
-
 // Common
 #include "mchf_board.h"
 
@@ -1321,58 +1317,57 @@ uint8_t UiLcdHy28_Init(void)
    return retval;
 }
 
+
 void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
 {
-    uchar i,x,y,x1,y1,x2,y2,x3,y3;
+    uchar i,x,y,xn,yn;
 
-    x = y = 0xff;
+/*
+statemachine stati:
+0 = no touchscreen action detected
+1 = first touchscreen data fetched
+>1 = x times valid data available
+0xff = data was already processed by calling function
+*/
 
-    GPIO_ResetBits(TP_CS_PIO, TP_CS);
-    UiLcdHy28_SendByteSpi(144);
-    x1 = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(208);
-    y1 = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(144);
-    x2 = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(208);
-    y2 = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(144);
-    x3 = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(208);
-    y3 = UiLcdHy28_ReadByteSpi();
-    GPIO_SetBits(TP_CS_PIO, TP_CS);
+	if(ts.tp_state < VALID_TP_DATASETS)	// no valid data ready or data ready to process
+	    {
+	    if(ts.tp_state > 0 && ts.tp_state < VALID_TP_DATASETS)	// first pass finished, get data
+		{
+		GPIO_ResetBits(TP_CS_PIO, TP_CS);
+		UiLcdHy28_SendByteSpi(144);
+		x = UiLcdHy28_ReadByteSpi();
+		UiLcdHy28_SendByteSpi(208);
+		y = UiLcdHy28_ReadByteSpi();
+		GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-    if( abs(x1-x2) < 2 && abs(y1-y2) < 2 )
-	{
-	x = x1;
-	y = y1;
-	}
-    if( abs(x1-x3) < 2 && abs(y1-y3) < 2 && x != 0xff)
-	{
-	x = x1;
-	y = y1;
-	}
-    if( abs(x3-x2) < 2 && abs(y3-y2) < 2 && x != 0xff)
-	{
-	x = x2;
-	y = y2;
-	}
-
-    if(mode && x != 0xff)
-	{
-	for(i=0; touchscreentable[i]<= x; i++)
-	    ;
-	ts.tp_x = 60-i;
-	for(i=0; touchscreentable[i]<= y; i++)
-	    ;
-	ts.tp_y = i--;
-	}
-    else
-	{
-	ts.tp_x = x;
-	ts.tp_y = y;
-	}
+		if(mode && x != 0xff)
+		    {
+		    for(i=0; touchscreentable[i]<= x; i++)
+			;
+		    xn = 60-i;
+		    for(i=0; touchscreentable[i]<= y; i++)
+			;
+		    yn = i--;
+		    }
+		else
+		    {
+		    xn = x;
+		    yn = y;
+		    }
+		if(xn == ts.tp_x && yn == ts.tp_y)	// second identical data
+		    ts.tp_state = VALID_TP_DATASETS;	// touch data valid
+		else
+		    {					// set new data
+		    ts.tp_x = xn;
+		    ts.tp_y = yn;
+		    }
+		}
+	    else
+		ts.tp_state = 1;			// do next first data read
+	    }
 }
+
 
 #pragma GCC optimize("O0")
 //*----------------------------------------------------------------------------

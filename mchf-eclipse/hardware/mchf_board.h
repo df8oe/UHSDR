@@ -1072,6 +1072,7 @@ typedef struct TransceiverState
 	uchar 	tp_present;				// touchscreen present = 1, absent = 0
 	char 	tp_x;					// touchscreen x coordinate
 	char	tp_y;					// touchscreen y coordinate
+	uchar	tp_state;				// touchscreen state machine
 	bool	show_tp_coordinates;			// show coordinates on LCD
 	uchar	rfmod_present;				// 0 = not present
 	uchar	vhfuhfmod_present;			// 0 = not present
@@ -1085,7 +1086,6 @@ typedef struct TransceiverState
 	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
-//	uint16_t df8oe_test;				// only debugging use
 
 	uint8_t display_type;           		// existence/identification of display type
 	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW

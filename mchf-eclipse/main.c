@@ -517,6 +517,7 @@ void TransceiverStateInit(void)
 	ts.tp_present = 0;						// default no touchscreen
 	ts.tp_x = 0xFF;							// invalid position
 	ts.tp_y = 0xFF;							// invalid position
+	ts.tp_state = 0;						// touchscreen state machine init
 	ts.show_tp_coordinates = 0;					// dont show coordinates on LCD
 	ts.rfmod_present = 0;						// rfmod not present
 	ts.vhfuhfmod_present = 0;					// VHF/UHF mod not present

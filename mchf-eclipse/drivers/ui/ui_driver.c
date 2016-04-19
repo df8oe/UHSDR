@@ -252,7 +252,7 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 
 
 inline bool is_touchscreen_pressed() {
-	return (ts.tp_x != 0xff);
+	return (ts.tp_state > 1 && ts.tp_state != 0xff);	// touchscreen data available
 }
 
 
@@ -494,7 +494,7 @@ void UiDriver_HandleTouchScreen()
 		if(ts.menu_mode)					// refresh menu
 		    UiMenu_RenderMenu(MENU_RENDER_ONLY);
 	}
-	ts.tp_x = 0xff;							// prepare tp data for next touchscreen event
+	ts.tp_state = 0xff;							// set statemachine to data fetched
 }
 
 
@@ -3211,9 +3211,15 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 {
     bool retval = false;
 
-    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_x == 0xff)		// check for touchscreen on every button check
+    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != 0xff)	// fetch touchscreen data if not already processed
 	UiLcdHy28_GetTouchscreenCoordinates(1);
-    
+
+    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state == 0xff)		// clear statemachine when data is processed
+	{
+	ts.tp_state = 0;
+	ts.tp_x = ts.tp_y = 0xff;
+	}
+
 	if(button_num < BUTTON_NUM) {				// buttons 0-15 are the normal keypad buttons
 	    if(!ts.boot_halt_flag) {				// are we NOT in "boot halt" mode?
 	      retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
@@ -6220,8 +6226,14 @@ void UiDriver_KeyTestScreen()
 			break;
 		case	TOUCHSCREEN_ACTIVE: ;
 			UiLcdHy28_GetTouchscreenCoordinates(1);
-			sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
-			txt = txt_buf;
+			if(ts.tp_state > 1 && ts.tp_state != 0xff)
+			    {
+			    sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+			    txt = txt_buf;
+			    ts.tp_state = 0;		// tp data processed
+			    }
+			else
+			    txt = "";
 			break;
 		case	18+ENC1:							// handle encoder event
 		case	18+ENC2:
@@ -6330,6 +6342,8 @@ static bool UiDriver_TouchscreenCalibration()
     UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
 
     while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+    UiLcdHy28_GetTouchscreenCoordinates(1);
+    ts.tp_state = 0;
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
     UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
@@ -6397,31 +6411,35 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 {
     uint32_t clr_fg, clr_bg;
     char txt_buf[40];
-    uchar i,datavalid = 0;
+    uchar i, datavalid = 0, samples = 0;
 
     clr_bg = Magenta;
     clr_fg = White;
 
     do{
 	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false){ non_os_delay(); }
+
 	UiLcdHy28_GetTouchscreenCoordinates(1);
 
-	if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
-	{
-	    datavalid++;
-	    *xt_corr += (ts.tp_x - cross[0]);
-	    *yt_corr += (ts.tp_y - cross[1]);
-	    clr_fg = Green;
-	sprintf(txt_buf,"Try (%d) misadjust: x = %+d / y = %+d",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
-	}
-	else
-	{
-	    clr_fg = Red;
-	sprintf(txt_buf,"not a valid position at all!          ");	//show touched coordinates
-	}
-	UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
-
-	while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == true){ non_os_delay(); }
+	if(ts.tp_state > 1 && ts.tp_state != 0xff)
+	    {
+	    if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
+		{
+		datavalid++;
+		*xt_corr += (ts.tp_x - cross[0]);
+		*yt_corr += (ts.tp_y - cross[1]);
+		clr_fg = Green;
+		sprintf(txt_buf,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+		}
+	    else
+		{
+		clr_fg = Red;
+		sprintf(txt_buf,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+		}
+	    samples++;
+	    UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
+	    ts.tp_state = 0xff;				// touchscreen data processed
+	    }
     }while(datavalid < 3);
 
     for(i = 0; i < 100; i++) {
