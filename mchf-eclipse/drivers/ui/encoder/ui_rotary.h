@@ -47,6 +47,7 @@ typedef struct DialFrequency
 
 	// TCXO routine factor/flag
 	int		temp_factor;
+	bool    temp_factor_changed;
 	uchar	temp_enabled;
 
 	// Virtual segments
