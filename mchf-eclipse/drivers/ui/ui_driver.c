@@ -89,13 +89,16 @@ static void 	UiDriverChangeDigitalMode();
 static void 	UiDriverChangePowerLevel();
 static void 	UiDriverHandleSmeter();
 static void 	UiDriverHandleLowerMeter();
-static void 	UiDriverHandlePowerSupply();
-// LO TCXO routines
+static void 	UiDriverHandl
+
+
+
+
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature();
-static void 	UiDriverSwitchOffPtt();
+static void 	UiDriver_HandlePttOnOff();
 static void 	UiDriverInitMainFreqDisplay();
 
 static bool	UiDriver_LoadSavedConfigurationAtStartup();
@@ -736,7 +739,7 @@ void ui_driver_thread()
       UiDriverProcessKeyboard();
       break;
     case STATE_SWITCH_OFF_PTT:
-      if(!ts.boot_halt_flag) { UiDriverSwitchOffPtt(); }
+      if(!ts.boot_halt_flag) { UiDriver_HandlePttOnOff(); }
       break;
     default:
       drv_state = 0;
@@ -3429,7 +3432,7 @@ static void UiDriverTimeScheduler()
       }
     }
 
-    if(!ts.unmute_delay_count)	{		//	// did timer hit zero
+    if(ts.unmute_delay_count == 1)	{		//	// did timer hit zero
       unmute_flag = 1;
       ts.buffer_clear = 0;
       ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
@@ -5816,7 +5819,7 @@ static void UiDriverHandleLoTemperature()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 ulong ptt_break = 0;
-static void UiDriverSwitchOffPtt()
+static void UiDriver_HandlePttOnOff()
 {
   // Not when tuning
   if(ts.tune)
@@ -6439,7 +6442,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 	    UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
 	    ts.tp_state = 0xff;				// touchscreen data processed
 	    }
-    }while(datavalid < 3);
+    } while(datavalid < 3);
 
     for(i = 0; i < 100; i++) {
 	non_os_delay();
