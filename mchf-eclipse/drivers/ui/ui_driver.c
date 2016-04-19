@@ -2089,7 +2089,7 @@ static void UiDriverCreateDesktop()
 
 	// Create voltage
 	UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-	UiLcdHy28_PrintTextCentered	(POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", Grey2, 	Blue, 0);
+	UiLcdHy28_PrintTextCentered	(POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", White, 	Blue, 0);
 	UiLcdHy28_PrintTextCentered	(POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 
 	// Create temperature
@@ -2937,7 +2937,7 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
     UiDriverUpdateLcdFreq(dial_freq,col, mode);
     //
     if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
-            UiDriverUpdateLcdFreq(second_freq/4,Grey,4);
+            UiDriverUpdateLcdFreq(second_freq/4,White,4);
             // set mode parameter to 4 to update secondary display
 
             UiDriverCheckBand(ts.tune_freq, 1);
