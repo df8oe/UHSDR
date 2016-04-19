@@ -378,7 +378,7 @@ void UiDriver_HandleTouchScreen()
 			UiDriverUpdateFrequency(1,0);		// no SPLIT mode
 		    ts.refresh_freq_disp = 0;			// update ALL digits
 		    }
-		if(check_tp_coordinates(8,60,5,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
+		if(check_tp_coordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
 		{
 			int step = 2000;				// adjust to 500Hz
 			if(ts.dmod_mode == DEMOD_AM)
