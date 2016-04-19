@@ -165,6 +165,9 @@ void UiSpectrumCreateDrawArea(void)
 //	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
 //	    return; // if spectrum display light enabled, bail out here!
 
+	if(ts.waterfall_size)		//don't draw text bar when size is BIG
+	    return;
+	
 	strcpy(s, "SPECTRUM SCOPE ");
 	slen = 0;	// init string length variable
 	//
