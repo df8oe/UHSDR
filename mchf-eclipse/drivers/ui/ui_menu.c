@@ -1961,7 +1961,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						1
 						);
 		//
-		if(lo.sensor_present)			// no sensor present
+		if(lo.sensor_absent)			// no sensor present
 			temp_sel = TCXO_OFF;	// force TCXO disabled
 		//
 		df.temp_enabled = temp_sel | (df.temp_enabled & 0xf0);	// overlay new temperature setting with old status of upper nibble

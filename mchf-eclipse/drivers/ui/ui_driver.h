@@ -323,12 +323,8 @@ typedef struct LoTcxo
 	// loaded to LO
 	int		comp;
 
-	uchar	sensor_present;
-
-	uchar	v1000;
-	uchar	v10000;
-	uchar	v100000;
-	uchar	v1000000;
+	bool	sensor_absent;
+	int   last;
 
 } LoTcxo;
 

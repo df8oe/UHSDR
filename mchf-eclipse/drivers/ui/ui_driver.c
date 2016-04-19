@@ -628,7 +628,7 @@ void ui_driver_init()
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
 	// Temp sensor setup
-	lo.sensor_present = ui_si570_init_temp_sensor();
+	lo.sensor_absent = ui_si570_init_temp_sensor();
 
 	// Read SI570 settings
 	res = ui_si570_get_configuration();
@@ -924,10 +924,7 @@ static void UiDriverPublicsInit()
 	// LO tcxo
 	lo.skip					= 0;
 	lo.comp					= 0;
-	lo.v1000000				= 0;
-	lo.v100000				= 0;
-	lo.v10000				= 0;
-	lo.v1000				= 0;
+	lo.last                 = -100;
 }
 
 // check if touched point is within rectange of valid action
@@ -2093,7 +2090,7 @@ static void UiDriverCreateDesktop()
 	UiLcdHy28_PrintTextCentered	(POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 
 	// Create temperature
-	if((lo.sensor_present == 0) && (df.temp_enabled & 0x0f))
+	if((lo.sensor_absent == 0) && (df.temp_enabled & 0x0f))
 		UiDriverCreateTemperatureDisplay(1,1);
 	else
 		UiDriverCreateTemperatureDisplay(0,1);
@@ -2711,6 +2708,7 @@ static void UiDriverInitFrequency()
 	df.selected_idx = 3; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.temp_factor	= 0;
+	df.temp_factor_changed = false;
 	df.temp_enabled = 0;		// startup state of TCXO
 
 	//if(ts.band == BAND_MODE_4)
@@ -2829,120 +2827,121 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 //FXIME: Use UiDriverUpdateFrequencyFast() instead of replicating code
 void UiDriverUpdateFrequency(char force_update, uchar mode)
 {
-	ulong		loc_tune_new, dial_freq, second_freq;
-	//uchar		old_rf_gain = ts.rf_gain;
-	ushort		col = White;
+    ulong		loc_tune_new, dial_freq, second_freq;
+    //uchar		old_rf_gain = ts.rf_gain;
+    ushort		col = White;
 
-	// Get value, while blocking update
+    // Get value, while blocking update
 
-	if(mode == 3)	{				// are we updating the TX frequency (small, lower display)?
-		if(is_vfo_b())					// yes are we receiving with VFO B?
-			loc_tune_new = vfo[VFO_A].band[ts.band].dial_value;		// yes - get VFO A frequency for TX
-		else									// we must be receiving with VFO A
-			loc_tune_new = vfo[VFO_B].band[ts.band].dial_value;		// get VFO B frequency for TX
-	}
-	else	// everything else uses main VFO frequency
-		loc_tune_new = df.tune_new;				// yes, get that frequency
+    if(mode == 3)	{				// are we updating the TX frequency (small, lower display)?
+        if(is_vfo_b())					// yes are we receiving with VFO B?
+            loc_tune_new = vfo[VFO_A].band[ts.band].dial_value;		// yes - get VFO A frequency for TX
+        else									// we must be receiving with VFO A
+            loc_tune_new = vfo[VFO_B].band[ts.band].dial_value;		// get VFO B frequency for TX
+    }
+    else	// everything else uses main VFO frequency
+        loc_tune_new = df.tune_new;				// yes, get that frequency
 
-	// Calculate display frequency
-	dial_freq = loc_tune_new/4;
+    // Calculate display frequency
+    dial_freq = loc_tune_new/4;
 
-	//
-	// Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
-	//
-	if(ts.dmod_mode == DEMOD_CW)	{		// In CW mode?
-		if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)	// Yes - USB?
-			dial_freq -= ts.sidetone_freq;				// lower LO by sidetone amount
-		else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT)	// LSB?
-			dial_freq += ts.sidetone_freq;				// raise LO by sidetone amount
-		else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	{	// Auto mode?  Check flag
-			if(ts.cw_lsb)
-				dial_freq += ts.sidetone_freq;			// it was LSB - raise by sidetone amount
-			else
-				dial_freq -= ts.sidetone_freq;			// it was USB - lower by sidetone amount
-		}
-	}
-
-	// Calculate actual tune frequency
-	ts.tune_freq = dial_freq*4;
-	second_freq = ts.tune_freq;					// get copy for secondary display
-	//
-	// Update second display for RIT offset
-	if(ts.txrx_mode == TRX_MODE_RX)		{
-		second_freq += (ts.rit_value*80);	// Add RIT on receive
-	}
-
-	//
-	// Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
-	//
-	if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
-		ts.tune_freq += audio_driver_xlate_freq()*4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
-	}
-
-	if(mode != 3)	{		// updating ONLY the TX frequency display?
-
-		// Extra tuning actions
-		if(ts.txrx_mode == TRX_MODE_RX)		{
-			ts.tune_freq += (ts.rit_value*80);	// Add RIT on receive
-		}
-
-		if((ts.tune_freq == ts.tune_freq_old) && (!ts.refresh_freq_disp) && (force_update != 2))	// has the frequency changed and full display refresh not requested AND we are in "AUTOMATIC" mode?
-			return;								// no - bail out - save time by NOT updating synthesizer!
-
-		ts.tune_freq_old = ts.tune_freq;		// frequency change required - update change detector
-
-		if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 1))	{	// did the tuning require that a large tuning step occur?
-			if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
-				ads.agc_holder = ads.agc_val;	// grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
-				ts.rx_muting = 1;				// yes - mute audio output
-				ts.dsp_inhibit_mute = ts.dsp_inhibit;		// get current status of DSP muting and save for later restoration
-				ts.dsp_inhibit = 1;				// disable DSP during tuning to avoid disruption
-				if(is_dsp_nr())	// is DSP active?
-					ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_ON;	// yes - schedule un-muting of audio when DSP is on
-				else
-					ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF;	// no - schedule un-muting of audio when DSP is off
-			}
-		}
-
-		if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	// prevention for SI570 crash due too fast frequency changes
-		    {
-		    // Set frequency
-		    if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
-			{
-			char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
-			if(test == 1)
-			    col = Red;	// Color in red if there was a problem setting frequency
-			if(test == 2)
-			    col = Yellow;	// Color in yellow if there was a problem setting frequency
-			}
-		    ts.last_tuning = ts.sysclock;
-		    }
-	}
-
-	//
-	//
-	if(mode != 3)	{		// do not check filters if we are updating TX frequency in SPLIT mode
-	   UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
-	}
-
-	// Save current freq
-	df.tune_old = loc_tune_new;
-
-	// ALL UI IN THIS FUNCTION BELOW THIS LINE
-	// new drawing of frequencyscale for WF / Scope
-	sd.dial_moved = 1;
-
-    // Update main frequency display
     //
-    UiDriverUpdateLcdFreq(dial_freq,col, mode);
+    // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     //
-    if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
+    if(ts.dmod_mode == DEMOD_CW)	{		// In CW mode?
+        if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)	// Yes - USB?
+            dial_freq -= ts.sidetone_freq;				// lower LO by sidetone amount
+        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT)	// LSB?
+            dial_freq += ts.sidetone_freq;				// raise LO by sidetone amount
+        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	{	// Auto mode?  Check flag
+            if(ts.cw_lsb)
+                dial_freq += ts.sidetone_freq;			// it was LSB - raise by sidetone amount
+            else
+                dial_freq -= ts.sidetone_freq;			// it was USB - lower by sidetone amount
+        }
+    }
+
+    // Calculate actual tune frequency
+    ts.tune_freq = dial_freq*4;
+    second_freq = ts.tune_freq;					// get copy for secondary display
+    //
+    // Update second display for RIT offset
+    if(ts.txrx_mode == TRX_MODE_RX)		{
+        second_freq += (ts.rit_value*80);	// Add RIT on receive
+    }
+
+    //
+    // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
+    //
+    if(!((ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == TRX_MODE_TX)))	{
+        ts.tune_freq += audio_driver_xlate_freq()*4;		// magnitude of shift is quadrupled at actual Si570 operating frequency
+    }
+
+    if(mode != 3)	{		// updating ONLY the TX frequency display?
+
+        // Extra tuning actions
+        if(ts.txrx_mode == TRX_MODE_RX)		{
+            ts.tune_freq += (ts.rit_value*80);	// Add RIT on receive
+        }
+
+        if((ts.tune_freq != ts.tune_freq_old) || (ts.refresh_freq_disp) || df.temp_factor_changed || (force_update == 2) )  // did the frequency NOT change and display refresh NOT requested??
+        {
+
+
+            if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 1))	{	// did the tuning require that a large tuning step occur?
+                if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
+                    ads.agc_holder = ads.agc_val;	// grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
+                    ts.rx_muting = 1;				// yes - mute audio output
+                    ts.dsp_inhibit_mute = ts.dsp_inhibit;		// get current status of DSP muting and save for later restoration
+                    ts.dsp_inhibit = 1;				// disable DSP during tuning to avoid disruption
+                    if(is_dsp_nr())	// is DSP active?
+                        ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_ON;	// yes - schedule un-muting of audio when DSP is on
+                    else
+                        ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF;	// no - schedule un-muting of audio when DSP is off
+                }
+            }
+            if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	// prevention for SI570 crash due too fast frequency changes
+            {
+                // Set frequency
+                if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
+                {
+                    char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+                    if(test == 1)
+                        col = Red;	// Color in red if there was a problem setting frequency
+                    if(test == 2)
+                        col = Yellow;	// Color in yellow if there was a problem setting frequency
+                }
+                df.temp_factor_changed = false;
+                ts.last_tuning = ts.sysclock;
+                ts.tune_freq_old = ts.tune_freq;        // frequency change required - update change detector
+            }
+        }
+
+        //
+        //
+        if(mode != 3)	{		// do not check filters if we are updating TX frequency in SPLIT mode
+            UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
+        }
+
+        // Save current freq
+        df.tune_old = loc_tune_new;
+
+        // ALL UI IN THIS FUNCTION BELOW THIS LINE
+        // new drawing of frequencyscale for WF / Scope
+        sd.dial_moved = 1;
+
+        // Update main frequency display
+        //
+        UiDriverUpdateLcdFreq(dial_freq,col, mode);
+        //
+        if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
             UiDriverUpdateLcdFreq(second_freq/4,White,4);
             // set mode parameter to 4 to update secondary display
 
             UiDriverCheckBand(ts.tune_freq, 1);
             // check which band in which we are currently tuning and update the display
-     }
+        }
+    }
 }
 
 
@@ -2997,19 +2996,20 @@ void UiDriverUpdateFrequencyFast(uint8_t trx_mode)
 	//
 	// detect - and eliminate - unnecessary synthesizer frequency changes
 	//
-	if((ts.tune_freq == ts.tune_freq_old) && (!ts.refresh_freq_disp))	// did the frequency NOT change and display refresh NOT requested??
-		return;		// yes - bail out - no need to do anything!
+	if((ts.tune_freq != ts.tune_freq_old) || (ts.refresh_freq_disp) || df.temp_factor_changed)	// did the frequency NOT change and display refresh NOT requested??
+	{
+	    ts.tune_freq_old = ts.tune_freq;		// frequency change is required - save change detector
+	    df.temp_factor_changed = false;
 
-	ts.tune_freq_old = ts.tune_freq;		// frequency change is required - save change detector
+	    // Set frequency
+	    ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
 
-	// Set frequency
-	ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+	    // Allow clear of spectrum display in its state machine
+	    sd.dial_moved = 1;
 
-	// Allow clear of spectrum display in its state machine
-	sd.dial_moved = 1;
-
-	// Save current freq
-	df.tune_old = loc_tune_new;
+	    // Save current freq
+	    df.tune_old = loc_tune_new;
+	}
 }
 
 static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
@@ -5407,8 +5407,8 @@ static void UiDriverHandlePowerSupply()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+// FIXME: DO NOT REDRAW UNCHANGED BOXES
 static void UiDriverUpdateLoMeter(uchar val,uchar active)
-
 {
   if (val < 26) {
     //  Only redraw if inside of the range
@@ -5470,7 +5470,6 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 	if (value_str) {
 		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
 	}
-
 	// Meter
 	UiDriverUpdateLoMeter(13,enabled);
 }
@@ -5485,107 +5484,33 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 //*----------------------------------------------------------------------------
 static void UiDriverRefreshTemperatureDisplay(uchar enabled,int temp)
 {
-	uchar	v1000,v10000,v100000,v1000000;
-	char	digit[2];
-	ulong	ttemp;
+    uint8_t temp_enabled = df.temp_enabled & 0x0f;
+    bool is_fahrenheit = (df.temp_enabled & 0xf0) != false;
 
-	if((df.temp_enabled & 0x0f) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), " ",Grey,Black,0);	// delete asterisk
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), "STOPPED",Grey,Black,0);
-		return;
-	}
+    if((temp_enabled) == TCXO_STOP)	{	// if temperature update is disabled, don't update display!
+        UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), " ",Grey,Black,0);	// delete asterisk
+        UiLcdHy28_PrintText((POS_TEMP_IND_X + 49),(POS_TEMP_IND_Y + 1), "STOPPED",Grey,Black,0);
+    } else
+    {
+        uint32_t clr = temp_enabled==TCXO_ON?Blue:Red;
+        UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
 
-	if((temp < 0) || (temp > 1000000))	{// is the temperature out of range?
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),"---",Grey,Black,0);
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*5),(POS_TEMP_IND_Y + 1),"-",Grey,Black,0);
-	}
-	else	{
+        if((temp < 0) || (temp > 1000))	{// is the temperature out of range?
+            UiLcdHy28_PrintText((POS_TEMP_IND_X + 49 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),"---.-",Grey,Black,0);
+        } else if (temp != lo.last) {
+            lo.last = temp;
+            char out[10];
 
-		//printf("temp: %i\n\r",temp);
-
-		// Terminate
-		digit[1] = 0;
-
-		ttemp = (ulong)temp;	// convert to long to make sure that our workspace is large enough
-
-		if(df.temp_enabled & 0xf0)	{	// Is it Fahrenheit mode?
-			ttemp *= 9;			// multiply by 1.8
-			ttemp /= 5;
-			ttemp += 320000;	// Add 32 degrees
-		}
-
-		// -----------------------
-		// See if 100 needs update
-		v1000000 = (ttemp%10000000)/1000000;
-		//	if(v1000000 != lo.v1000000)
-		//	{
-		//printf("100 diff: %d\n\r",v1000000);
-
-		// To string
-		digit[0] = 0x30 + (v1000000 & 0x0F);
-
-		// Update segment (optional)
-		if(v1000000)
-				UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),digit,Grey,Black,0);
-			else
-				UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),digit,Black,Black,0);
-
-		// Save value
-		lo.v1000000 = v1000000;
-		//	}
-
-		// -----------------------
-		// See if 10 needs update
-		v100000 = (ttemp%1000000)/100000;
-		//	if(v100000 != lo.v100000)
-		//	{
-		//printf("10C diff: %d\n\r",v100000);
-
-		// To string
-		digit[0] = 0x30 + (v100000 & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*2),(POS_TEMP_IND_Y + 1),digit,Grey,Black,0);
-
-		// Save value
-		lo.v100000 = v100000;
-		//	}
-
-		// -----------------------
-		// See if 1 needs update
-		v10000 = (ttemp%100000)/10000;
-		//	if(v10000 != lo.v10000)
-		//	{
-		//printf("1C diff: %d\n\r",v10000);
-
-		// To string
-		digit[0] = 0x30 + (v10000 & 0x0F);
-
-		// Update segment
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*3),(POS_TEMP_IND_Y + 1),digit,Grey,Black,0);
-
-		// Save value
-		lo.v10000 = v10000;
-		//	}
-
-		// -----------------------
-		// See if 0.1 needs update
-		v1000 = (ttemp%10000)/1000;
-		//	if(v1000 != lo.v1000)
-		//	{
-		//printf("0.1 diff: %d\n\r",v1000);
-
-		// To string
-		digit[0] = 0x30 + (v1000 & 0x0F);
-
-		// Save value
-		lo.v1000 = v1000;
-		//
-		// Update segment
-		UiLcdHy28_PrintText((POS_TEMP_IND_X + 50 + SMALL_FONT_WIDTH*5),(POS_TEMP_IND_Y + 1),digit,Grey,Black,0);
-	}
-
-//	}
+            int32_t ttemp = lo.last;
+            if(is_fahrenheit)	{
+                ttemp *= 9;			// multiply by 1.8
+                ttemp /= 5;
+                ttemp += 320;	// Add 32 degrees
+            }
+            snprintf(out,10,"%3ld.%1ld",ttemp/10,(ttemp)%10);
+            UiLcdHy28_PrintText((POS_TEMP_IND_X + 49 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),out,Grey,Black,0);
+        }
+    }
 }
 
 //*----------------------------------------------------------------------------
@@ -5597,110 +5522,83 @@ static void UiDriverRefreshTemperatureDisplay(uchar enabled,int temp)
 //*----------------------------------------------------------------------------
 static void UiDriverHandleLoTemperature()
 {
-	int		temp = 0;
-	int		comp, comp_p;
-	float	dtemp, remain, t_index;
-	uchar	tblp;
-	uint32_t clr;
+    int		temp = 0;
+    int		comp, comp_p;
+    float	dtemp, remain, t_index;
+    uchar	tblp;
 
-	// No need to process if no chip avail or updates are disabled
-	if((lo.sensor_present) || ((df.temp_enabled & 0x0f) == TCXO_STOP))
-		return;
+    uint8_t temp_enabled = df.temp_enabled & 0x0f;
 
-	lo.skip++;
-	if(lo.skip < LO_COMP_SKP)
-		return;
+    // No need to process if no chip avail or updates are disabled
+    if((lo.sensor_absent == false) &&(temp_enabled != TCXO_STOP))
+    {
+        lo.skip++;
+        if(lo.skip >= LO_COMP_SKP) {
+            lo.skip = 0;
+            // Get current temperature
+            if(ui_si570_read_temp(&temp) == 0) {
 
-	lo.skip = 0;
+                // Get temperature from sensor with its maximum precision
+                dtemp = (float)temp;	// get temperature
+                dtemp /= 10000;			// convert to decimal degrees
+                remain = truncf(dtemp);	// get integer portion of temperature
+                remain = dtemp - remain;	// get fractional portion
 
-	// Get current temperature
-	if(ui_si570_read_temp(&temp) != 0)
-		return;
+                // Compensate only if enabled
+                if((temp_enabled == TCXO_ON)) {
+                    // Temperature to unsigned table pointer
+                    t_index  = (uchar)((temp%1000000)/100000);
+                    t_index *= 10;
+                    t_index += (uchar)((temp%100000)/10000);
 
-	// Get temperature from sensor with its maximum precision
-	//
-	dtemp = (float)temp;	// get temperature
-	dtemp /= 10000;			// convert to decimal degrees
-	remain = truncf(dtemp);	// get integer portion of temperature
-	remain = dtemp - remain;	// get fractional portion
+                    // Check for overflow - keep within the lookup table
+                    if((t_index < 0) || (t_index > 150))	{	// the temperature sensor function "wraps around" below zero
+                        t_index = 0;						// point at the bottom of the temperature table
+                        dtemp = 0;							// zero out fractional calculations
+                        remain = 0;
+                    }
+                    else if(t_index > 98)	{				// High temperature - limit to maximum
+                        t_index = 98;						// Point to (near) top of table
+                        dtemp = 0;							// zero out fractional calculations
+                        remain = 0;
+                    }
 
-	// Refresh UI
-	UiDriverRefreshTemperatureDisplay(1,temp);
+                    tblp = (uchar)t_index;						// convert to index
+                    // Check for overflow
+                    if(tblp < 100)
+                    {
+                        // Value from freq table
+                        comp = tcxo_table_20m[tblp];				// get the first entry in the table
+                        comp_p = tcxo_table_20m[tblp + 1];			// get the next entry in the table to determine fraction of frequency step
 
-	// Compensate only if enabled
-	if(!(df.temp_enabled & 0x0f))
-		return;
+                        comp_p = comp_p - comp;	//					// get frequency difference between the two steps
 
-	//printf("temp: %i\n\r",temp);
+                        dtemp = (float)comp_p;	// change it to float for the calculation
+                        dtemp *= remain;		// get proportion of temperature difference between the two steps using the fraction
 
-	// Temperature to unsigned table pointer
-	t_index  = (uchar)((temp%1000000)/100000);
-	t_index *= 10;
-	t_index += (uchar)((temp%100000)/10000);
+                        comp += (int)dtemp;		// add the compensation value to the lower of the two frequency steps
 
-	// Check for overflow - keep within the lookup table
-	if((t_index < 0) || (t_index > 150))	{	// the temperature sensor function "wraps around" below zero
-		t_index = 0;						// point at the bottom of the temperature table
-		dtemp = 0;							// zero out fractional calculations
-		remain = 0;
-	}
-	else if(t_index > 98)	{				// High temperature - limit to maximum
-		t_index = 98;						// Point to (near) top of table
-		dtemp = 0;							// zero out fractional calculations
-		remain = 0;
-	}
-
-	tblp = (uchar)t_index;						// convert to index
-	//printf("ptr: %d\n\r",tblp);
-
-	// Update drift indicator, no overload
-	UiDriverUpdateLoMeter(tblp - 30,1);
-
-	// Check for overflow
-	if(tblp > 99)
-	{
-		//printf("out of range\n\r");
-		return;
-	}
-
-	// Value from freq table
-	comp = tcxo_table_20m[tblp];				// get the first entry in the table
-	comp_p = tcxo_table_20m[tblp + 1];			// get the next entry in the table to determine fraction of frequency step
-	//printf("comp:  %d - %i\n\r",tblp,comp);
-
-	comp_p = comp_p - comp;	//					// get frequency difference between the two steps
-
-	dtemp = (float)comp_p;	// change it to float for the calculation
-	dtemp *= remain;		// get proportion of temperature difference between the two steps using the fraction
-
-	comp += (int)dtemp;		// add the compensation value to the lower of the two frequency steps
-
-	// Change needed ?
-	if(lo.comp == comp)		// is it the same value?
-		return;				// yes - bail out, no change needed
-
-	// Update frequency, without reflecting it on the LCD
-	if(comp != (-1)) {
-		df.temp_factor = comp;
-		UiDriverUpdateFrequencyFast(ts.txrx_mode);
-
-		// Save to public, to skip not needed update
-		// when we are in 1C range
-		lo.comp = comp;
-
-		// Lock indicator
-		clr = Blue;
-	} else {
-		// No compensation - commented out - keep last compensation value
-		//df.temp_factor = 0;
-		//UiDriverUpdateFrequencyFast();
-
-		// Lock indicator
-	    clr = Red;
-	}
-    UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
-
+                        // Change needed ?
+                        if(lo.comp != comp) {		// is it there a difference?
+                            // Update frequency, without reflecting it on the LCD
+                                df.temp_factor = comp;
+                                df.temp_factor_changed = true;
+                                UiDriverUpdateFrequencyFast(ts.txrx_mode);
+                                lo.comp = comp;
+                        }
+                    }
+                    // FIXME: Move this close to UiDriverRefreshTemperatureDisplay. This should be
+                    // done once the called function is more efficient (i.e. if no change, no update)
+                    UiDriverUpdateLoMeter(tblp - 30,1);
+                 }
+                // Refresh UI
+                UiDriverRefreshTemperatureDisplay(1,temp/1000); // precision is 0.1 represent by lowest digit
+            }
+        }
+    }
 }
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverEditMode
