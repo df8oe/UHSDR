@@ -3072,7 +3072,7 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 
 	//
 	//
-	if(mode == 4 || ts.frequency_lock) {
+	if(ts.frequency_lock) {
 		// Frequency is locked - change color of display
 		color = Grey;
 	}
