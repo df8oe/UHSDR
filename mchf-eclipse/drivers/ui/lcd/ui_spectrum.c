@@ -27,7 +27,6 @@ __IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
 
-
 static void 	UiDriverFFTWindowFunction(char mode);
 
 
@@ -40,41 +39,41 @@ static void UiDriverFFTWindowFunction(char mode)
 
 	switch(mode)	{
 		case FFT_WINDOW_RECTANGULAR:	// No processing at all - copy from "Samples" buffer to "Windat" buffer
-			arm_copy_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_Windat,FFT_IQ_BUFF_LEN);	// use FFT data as-is
+			arm_copy_f32((float32_t *)sd.FFT_Windat, (float32_t *)sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
 			break;
 		case FFT_WINDOW_COSINE:			// Sine window function (a.k.a. "Cosine Window").  Kind of wide...
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Windat[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Windat[i];
 			}
 			break;
 		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Windat[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Windat[i];
 			}
 			break;
 		case FFT_WINDOW_WELCH:			// Parabolic window function, fairly wide, comparable to Bartlett
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Windat[i] = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Windat[i];
 			}
 			break;
 		case FFT_WINDOW_HANN:			// Raised Cosine Window (non zero-phase version) - This has the best sidelobe rejection of what is here, but not as narrow as Hamming.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+			    sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Windat[i]);
 			}
 			break;
 		case FFT_WINDOW_HAMMING:		// Another Raised Cosine window - This is the narrowest with reasonably good sidelobe rejection.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+			    sd.FFT_Samples[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Windat[i]);
 			}
 			break;
 		case FFT_WINDOW_BLACKMAN:		// Approx. same "narrowness" as Hamming but not as good sidelobe rejection - probably best for "default" use.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+			    sd.FFT_Samples[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Windat[i];
 			}
 			break;
 		case FFT_WINDOW_NUTTALL:		// Slightly wider than Blackman, comparable sidelobe rejection.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Windat[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+			    sd.FFT_Samples[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Windat[i];
 			}
 			break;
 	}
@@ -162,6 +161,10 @@ void UiSpectrumCreateDrawArea(void)
 //	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
 //	LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
+	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
+	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
+	    return; // if spectrum display light enabled, bail out here!
+
 	strcpy(s, "SPECTRUM SCOPE ");
 	slen = 0;	// init string length variable
 	//
@@ -248,11 +251,8 @@ void UiSpectrumCreateDrawArea(void)
 									ts.scope_grid_colour_active);
 	}
 
-	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
-	    return; // if spectrum display light enabled, bail out here!
 
-
+/////////////////////////////// was here /////////////////////////////////////
 
 
 	// Horizontal grid lines
@@ -589,7 +589,7 @@ return (FFT_IQ_BUFF_LEN/4 + idx)%(FFT_IQ_BUFF_LEN/2);
 static void UiSpectrum_InitSpectrumDisplay()
 {
 	ulong i;
-	arm_status	a;
+//	arm_status	a;
 
 	// Init publics
 	sd.state 		= 0;
@@ -698,12 +698,15 @@ static void UiSpectrum_InitSpectrumDisplay()
 	sd.wfall_contrast /= 100;
 
 	// Init FFT structures
-	a = arm_rfft_init_f32((arm_rfft_instance_f32 *)&sd.S,(arm_cfft_radix4_instance_f32 *)&sd.S_CFFT,FFT_IQ_BUFF_LEN,FFT_QUADRATURE_PROC,1);
+//	a = arm_rfft_init_f32((arm_rfft_instance_f32 *)&sd.S,(arm_cfft_radix4_instance_f32 *)&sd.S_CFFT,FFT_IQ_BUFF_LEN,FFT_QUADRATURE_PROC,1);
+//	arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,FFT_IQ_BUFF_LEN);
+//	const static arm_cfft_instance_f32 *S;
+//	C = &arm_cfft_sR_f32_len256;
 
-	if(a != ARM_MATH_SUCCESS)
-	{
-		return;
-	}
+//	if(a != ARM_MATH_SUCCESS)
+//	{
+//		return;
+//	}
 
 	// Ready
 	sd.enabled		= 1;
@@ -766,11 +769,15 @@ void UiSpectrumReDrawScopeDisplay()
 		//
 		case 1:
 		{
-			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+//			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 			//
 			UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
 			//
-			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
+			arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+
 			//
 		sd.state++;
 		break;
@@ -833,14 +840,15 @@ void UiSpectrumReDrawScopeDisplay()
 			float32_t	sig;
 			//
 			// De-linearize data with dB/division
-			//
+			// AND flip data round !
 			for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)	{
 				sig = log10(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
 				sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
 				if(sig > 1)											// is the value greater than 1?
-					sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
+//					sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
+					sd.FFT_DspData[FFT_IQ_BUFF_LEN/2 - i - 1] = (q15_t)sig;					// it was a useful value - save it
 				else
-					sd.FFT_DspData[i] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
+					sd.FFT_DspData[FFT_IQ_BUFF_LEN/2 - i - 1] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
 			}
 			//
 			arm_copy_q15((q15_t *)sd.FFT_DspData, (q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/2);
@@ -1162,7 +1170,8 @@ void UiSpectrumReDrawWaterfall()
 		//
 		case 1:		// Scale input according to A/D gain and apply Window function
 		{
-			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+//			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 			//
 			UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
 			//
@@ -1171,7 +1180,10 @@ void UiSpectrumReDrawWaterfall()
 		}
 		case 2:		// Do FFT and calculate complex magnitude
 		{
-			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
+//			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
+			arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+
 			//
 			// Calculate magnitude
 			//
@@ -1230,14 +1242,18 @@ void UiSpectrumReDrawWaterfall()
 			//
 			// Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
 			//
+
 			for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)	{
 				if(i < (SPECTRUM_WIDTH/2))	{		// build left half of spectrum data
-					sd.FFT_Samples[i] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
+//					sd.FFT_Samples[i] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
+					sd.FFT_Samples[(FFT_IQ_BUFF_LEN/2) - i - 1] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
 				}
 				else	{							// build right half of spectrum data
-					sd.FFT_Samples[i] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
+//					sd.FFT_Samples[i] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
+					sd.FFT_Samples[(FFT_IQ_BUFF_LEN/2) - i - 1] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
 				}
 			}
+
 			//
 			// Find peak and average to vertically adjust display
 			//
