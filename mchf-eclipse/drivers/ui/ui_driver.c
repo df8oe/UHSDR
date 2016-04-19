@@ -1056,33 +1056,27 @@ static void UiDriverProcessKeyboard()
 			// *******************************************************************************
 			//
 			switch(ks.button_id)	{
-			case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
-				if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
-					if(!ts.menu_mode)	{						// not in menu mode
-						UiSpectrumClearDisplay();			// clear display under spectrum scope
-						if(ts.ser_eeprom_in_use == 0xFF)
-							UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
-						if(ts.ser_eeprom_in_use == 0x00)
-							UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
-						UiConfiguration_SaveEepromValues();	// save settings to EEPROM
-						for(temp = 0; temp < 6; temp++)			// delay so that it may be read
-							non_os_delay();
-						//
-						UiSpectrumInitSpectrumDisplay();			// init spectrum scope
-						ts.menu_mode = 0;
-					}
-					else	// If in menu mode, just save data, but don't clear screen area
-						UiConfiguration_SaveEepromValues();	// save settings to EEPROM
-					//
-					ts.menu_var_changed = 0;					// clear "EEPROM SAVE IS NECESSARY" indicators
-				}
+			    case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
+			        if(ts.txrx_mode == TRX_MODE_RX)	{				// only allow EEPROM write in receive mode
+			            UiSpectrumClearDisplay();			// clear display under spectrum scope
+			            if(ts.ser_eeprom_in_use == 0xFF)
+			                UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
+			            if(ts.ser_eeprom_in_use == 0x00)
+			                UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
+			            UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+			            for(temp = 0; temp < 6; temp++)			// delay so that it may be read
+			                non_os_delay();
 
-                UiDriverFButton_F1MenuExit();
+	                    ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
+	                    UiDriverFButton_F1MenuExit();
 
-				if(ts.menu_mode) {	// are we in menu mode?
-					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// update menu display to remove indicator to do power-off to save EEPROM value
-				}
-				break;
+                        if(ts.menu_mode)   {
+                            UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
+                        } else {
+                            UiSpectrumInitSpectrumDisplay();          // not in menu mode, redraw spectrum scope
+                        }
+			        }
+			        break;
 			case BUTTON_F2_PRESSED:	// Press-and-hold button F2
 				// Move to the BEGINNING of the current menu structure
 				if(ts.menu_mode)	{		// Are we in menu mode?
