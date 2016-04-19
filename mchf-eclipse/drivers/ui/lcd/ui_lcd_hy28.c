@@ -1320,7 +1320,7 @@ uint8_t UiLcdHy28_Init(void)
 
 void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
 {
-    uchar i,x,y,xn,yn;
+    uchar i,x,y;
 
 /*
 statemachine stati:
@@ -1333,38 +1333,33 @@ statemachine stati:
 	if(ts.tp_state < VALID_TP_DATASETS)	// no valid data ready or data ready to process
 	    {
 	    if(ts.tp_state > 0 && ts.tp_state < VALID_TP_DATASETS)	// first pass finished, get data
-		{
-		GPIO_ResetBits(TP_CS_PIO, TP_CS);
-		UiLcdHy28_SendByteSpi(144);
-		x = UiLcdHy28_ReadByteSpi();
-		UiLcdHy28_SendByteSpi(208);
-		y = UiLcdHy28_ReadByteSpi();
-		GPIO_SetBits(TP_CS_PIO, TP_CS);
+		  {
+		  GPIO_ResetBits(TP_CS_PIO, TP_CS);
+		  UiLcdHy28_SendByteSpi(144);
+		  x = UiLcdHy28_ReadByteSpi();
+		  UiLcdHy28_SendByteSpi(208);
+		  y = UiLcdHy28_ReadByteSpi();
+		  GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-		if(mode && x != 0xff)
+		  if(mode)								//do translation with correction table
 		    {
 		    for(i=0; touchscreentable[i]<= x; i++)
-			;
-		    xn = 60-i;
+			  ;
+		    x = 60-i;
 		    for(i=0; touchscreentable[i]<= y; i++)
-			;
-		    yn = i--;
+			  ;
+		    y = i--;
 		    }
-		else
-		    {
-		    xn = x;
-		    yn = y;
-		    }
-		if(xn == ts.tp_x && yn == ts.tp_y)	// second identical data
-		    ts.tp_state = VALID_TP_DATASETS;	// touch data valid
-		else
+		  if(x == ts.tp_x && y == ts.tp_y)	// got identical data
+		    ts.tp_state++;						// touch data valid
+		  else
 		    {					// set new data
-		    ts.tp_x = xn;
-		    ts.tp_y = yn;
+		    ts.tp_x = x;
+		    ts.tp_y = y;
 		    }
-		}
+		  }
 	    else
-		ts.tp_state = 1;			// do next first data read
+		  ts.tp_state = 1;			// do next first data read
 	    }
 }
 

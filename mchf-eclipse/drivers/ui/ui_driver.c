@@ -1774,7 +1774,7 @@ void UiDriverShowStep(ulong step)
 	uint32_t 	stepsize_background;
 
 	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
-	stepsize_background = ts.dynamic_tuning_active?Grey3:Black;
+	stepsize_background = ts.dynamic_tuning_active?Blue:Black;
 	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
@@ -3445,7 +3445,7 @@ static void UiDriverTimeScheduler()
       ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
       Codec_Volume(0);
     }
-    else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || (unmute_flag) || ts.band_change)	{	// in normal mode - calculate volume normally
+    else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || (unmute_flag) || !ts.band_change)	{	// in normal mode - calculate volume normally
 
       ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
       ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
