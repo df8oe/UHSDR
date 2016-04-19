@@ -300,6 +300,53 @@ static void UiDriver_ToggleWaterfallScopeDisplay() {
   }
 }
 
+//
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiLCDBlankTiming
+//* Object              : Do LCD Auto-Blank timing
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+//
+void UiDriver_LcdBlankingStartTimer()
+{
+    ulong ltemp;
+
+    if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE) {   // is LCD blanking enabled?
+        ltemp = (ulong)(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK);      // get setting of LCD blanking timing
+        ltemp *= 100;       // multiply to convert to deciseconds
+        ts.lcd_blanking_time = ltemp + ts.sysclock;     // calculate future time at which LCD is to be turned off
+        ts.lcd_blanking_flag = 0;       // clear flag to make LCD turn on
+    }
+}
+
+
+static void   UiDriver_LcdBlankingProcessTimer() {
+  // Process LCD auto-blanking
+  if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)  {   // is LCD auto-blanking enabled?
+    if(ts.sysclock > ts.lcd_blanking_time)  {   // has the time expired and the LCD should be blanked?
+      ts.lcd_blanking_flag = 1;             // yes - blank the LCD
+    } else {                                    // time not expired
+      ts.lcd_blanking_flag = 0;             // un-blank the LCD
+    }
+  } else {                              // auto-blanking NOT enabled
+    ts.lcd_blanking_flag = 0;               // always un-blank the LCD in this case
+  }
+}
+
+static void UiDriver_LcdBlankingStealthSwitch() {
+  if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)         // Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
+    ts.lcd_backlight_blanking &= ~LCD_BLANKING_ENABLE;      // yes - clear that bit, turning off "stealth" mode
+  else
+  {
+    if(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK)    // bit NOT set AND the timing set to NON-zero?
+      ts.lcd_backlight_blanking |= LCD_BLANKING_ENABLE;       // no - turn on MSB to activate "stealth" mode
+  }
+}
+
+
 void UiDriver_HandleSwitchToNextDspMode()
 {
 	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
@@ -624,7 +671,7 @@ void ui_driver_init()
 	ts.refresh_freq_disp = 0;	// clear flag that causes frequency display function to update ALL digits
 	//
 	//
-	UiLCDBlankTiming();			// init timing for LCD blanking
+	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
 
 #ifdef DEBUG_BUILD
@@ -927,7 +974,7 @@ static void UiDriverProcessKeyboard()
 	if(ks.button_processed)	{
 		ts.nb_disable = 1;	// disable noise blanker if button is pressed or held
 		//
-		UiLCDBlankTiming();	// calculate/process LCD blanking timing
+		UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 		//
 		//printf("button process: %02x, debounce time: %d\n\r",ks.button_id,ks.debounce_time);
         //
@@ -1172,28 +1219,19 @@ static void UiDriverProcessKeyboard()
 				break;
 			case BUTTON_POWER_PRESSED:
 				if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	{	// was button BAND- pressed at the same time?
-					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
-						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
-					else
-					{
-						if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
-							ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
-					}
+				  UiDriver_LcdBlankingStealthSwitch();
 				}
 				else
 				{	// ONLY the POWER button was pressed
-					if(ts.txrx_mode == TRX_MODE_RX)		// only allow power-off in RX mode
+					if(ts.txrx_mode == TRX_MODE_RX) {		// only allow power-off in RX mode
 						mchf_board_power_off();
+					}
 				}
 				break;
 			case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
 				if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	{	// and POWER button pressed-and-held at the same time?
-					if(ts.lcd_backlight_blanking & 0x80)			// Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
-						ts.lcd_backlight_blanking &= 0x7f;		// yes - clear that bit, turning off "stealth" mode
-					else if(ts.lcd_backlight_blanking & 0x0f)	// bit NOT set AND the timing set to NON-zero?
-						ts.lcd_backlight_blanking |= 0x80;		// no - turn on MSB to activate "stealth" mode
-				}
-				else if(UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
+                  UiDriver_LcdBlankingStealthSwitch();
+				} else if(UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))	{	// and BAND-UP pressed at the same time?
 					if(!ts.menu_mode)	{			// do not do this in menu mode!
 					  UiDriver_ToggleWaterfallScopeDisplay();
 					}
@@ -2789,6 +2827,8 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
  * @param mode  =0 automatic, 1=force large, 2=force small, upper (RX), 3 = small, lower (TX)
  *                      WARNING:  If called with "mode = 3", you must ALWAYS call again with "mode = 2" to reset internal variables.
  */
+
+//FXIME: Use UiDriverUpdateFrequencyFast() instead of replicating code
 void UiDriverUpdateFrequency(char force_update, uchar mode)
 {
 	ulong		loc_tune_new, dial_freq, second_freq;
@@ -2907,14 +2947,13 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
      }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       :
-//* Object              : like upper, but no UI update
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiDriverUpdateFrequencyFast(uint8_t mode)
+
+/*
+ * @brief change LO freq to match df.tune_new freq according to mode without updating the ui
+ *
+ * @param trx_mode The mode which the frequency is being used for (TRX_MODE_TX/TRX_MODE_RX)
+ */
+void UiDriverUpdateFrequencyFast(uint8_t trx_mode)
 {
 	ulong		loc_tune_new,dial_freq;
 
@@ -2940,24 +2979,18 @@ void UiDriverUpdateFrequencyFast(uint8_t mode)
 		}
 	}
 
-
-	// Clear not used segments on display frequency
-/*	Commented out so that numbers to right of the selected step are NOT cleared - 20140906 KA7OEI
-	dial_freq /= df.tunning_step;
-	dial_freq *= df.tunning_step;
-*/
 	// Calculate actual tune frequency
 	ts.tune_freq = dial_freq*4;
 
 	//
 	// Offset dial frequency if the RX/TX frequency translation is active
 	//
-	if(!((ts.dmod_mode == DEMOD_CW) && (mode == TRX_MODE_TX)))	{
+	if(!((ts.dmod_mode == DEMOD_CW) && (trx_mode == TRX_MODE_TX)))	{
 			ts.tune_freq += audio_driver_xlate_freq()*4;
 	}
 
 	// Extra tuning actions
-	if(mode == TRX_MODE_RX)
+	if(trx_mode == TRX_MODE_RX)
 	{
 		// Add RIT on receive
 		ts.tune_freq += (ts.rit_value*80);
@@ -3194,6 +3227,147 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 	}
 	return retval;
 }
+
+
+void UiDriver_KeyboardProcessOldClicks() {
+  unsigned int i;
+
+  static uchar press_hold_release_delay = 0;
+
+  // State machine - processing old click
+  if(ks.button_processed == false) {
+    // State machine - click or release(debounce filter)
+    if(!ks.button_pressed)  {
+      // Scan inputs - 16 buttons in total, but on different ports
+      for(i = 0; i < 18; i++)   {       // button "17" is touchscreen
+        // Read each pin of the port, based on the declared pin map
+        if(UiDriver_IsButtonPressed(i)) {
+          // Change state to clicked
+          ks.button_id      = i;
+          ks.button_pressed = 1;
+          ks.button_released    = 0;
+          ks.button_just_pressed    = 0;
+          ks.debounce_time  = 0;
+          ks.debounce_check_complete    = 0;
+          ks.press_hold         = 0;
+          //printf("button_pressed %02x\n\r",ks.button_id);
+          // Exit, we process just one click at a time
+          break;
+        }
+      }
+    }
+    else if((ks.debounce_time >= BUTTON_PRESS_DEBOUNCE) && (!ks.debounce_check_complete))   {
+      if(UiDriver_IsButtonPressed(ks.button_id))    {   // button still pressed?
+        ks.button_just_pressed = 1; // yes!
+        ks.debounce_check_complete = 1; // indicate that the debounce check was completed
+      }
+      else
+        ks.button_pressed = 0;          // debounce incomplete, button released - cancel detection
+    }
+    else if((ks.debounce_time >= BUTTON_HOLD_TIME) && (!ks.press_hold)) {   // press-and-hold processing
+      ks.button_processed = 1;                      // indicate that a button was processed
+      ks.button_just_pressed = 0;                   // clear this flag so that the release (below) won't be detected
+      ks.press_hold = 1;
+      press_hold_release_delay = PRESS_HOLD_RELEASE_DELAY_TIME; // Set up a bit of delay for when press-and-hold is released
+    }
+    else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id))) {   // was there a press-and-hold and the button is now released?
+      if(press_hold_release_delay)                  // press-and-hold delay expired?
+        press_hold_release_delay--;                 // no - continue counting down before cancelling "press-and-hold" mode
+      else  {                           // Press-and-hold mode time expired!
+        ks.button_pressed = 0;          // reset and exit press-and-hold mode, this to prevent extraneous button-presses when using multiple buttons
+        ks.button_released = 0;
+        ks.press_hold = 0;
+        ks.button_just_pressed = 0;
+      }
+    }
+    else if(!UiDriver_IsButtonPressed(ks.button_id) && (!ks.press_hold))    {   // button released and had been debounced?
+      // Change state from click to released, and processing flag on - if the button had been held down adequately
+      ks.button_pressed     = 0;
+      ks.button_released    = 1;
+      ks.button_processed   = 1;
+      ks.button_just_pressed = 0;
+      //printf("button_released %02x\n\r",ks.button_id);
+    }
+    //
+    // Handle press-and-hold tuning step adjustment
+    //
+    if((ts.tune_step != 0) && (!ks.press_hold)) {   // are we in press-and-hold step size mode and did the button get released?
+      ts.tune_step = STEP_PRESS_OFF;                        // yes, cancel offset
+      df.selected_idx = ts.tune_step_idx_holder;            // restore previous setting
+      df.tuning_step    = tune_steps[df.selected_idx];
+      UiDriverShowStep(df.selected_idx);
+    }
+  }
+}
+
+
+enum TRX_States_t {
+  TRX_STATE_TX_TO_RX,
+  TRX_STATE_RX,
+  TRX_STATE_RX_TO_TX,
+  TRX_STATE_TX,
+};
+
+static void UiDriver_TxRxUiSwitch(enum TRX_States_t state) {
+  static uchar enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;  // stores modes of encoder when we enter TX
+  static uchar enc_three_mode = ENC_THREE_MODE_CW_SPEED;    // stores modes of encoder when we enter TX
+
+  if((ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)    {           // If auto-switch on TX/RX is enabled
+    if(state == TRX_STATE_RX_TO_TX)   {
+
+      // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
+      enc_one_mode = ts.enc_one_mode;
+      ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+      UiDriverChangeAfGain(0);    // Audio gain disabled
+
+      if(ts.dmod_mode != DEMOD_CW) {
+        UiDriverChangeCmpLevel(1);    // enable compression adjust if voice mode
+      } else {
+        UiDriverChangeStGain(1);  // enable sidetone gain if CW mode
+      }
+
+      // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
+      enc_three_mode = ts.enc_thr_mode;
+      ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
+      UiDriverChangeRit(0);
+      if(ts.dmod_mode != DEMOD_CW) {
+        UiDriverChangeAudioGain(1);       // enable audio gain
+      } else {
+        UiDriverChangeKeyerSpeed(1);  // enable keyer speed if it was CW mode
+      }
+    }
+    else if (state == TRX_STATE_TX_TO_RX) {
+
+      // were we latched in TX mode?
+      // Yes, Switch to audio gain mode
+      ts.enc_one_mode = enc_one_mode;
+      if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)  {   // are we to switch back to audio mode?
+        UiDriverChangeAfGain(1);  // Yes, audio gain enabled
+        if(ts.dmod_mode != DEMOD_CW) {
+          UiDriverChangeCmpLevel(0);  // disable compression level (if in voice mode)
+        } else {
+          UiDriverChangeStGain(0);    // disable sidetone gain (if in CW mode)
+        }
+      }
+
+      ts.enc_thr_mode = enc_three_mode;
+      if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)   {       // are we to switch back to RIT mode?
+        UiDriverChangeRit(1);         // enable RIT
+        if(ts.dmod_mode != DEMOD_CW) {
+          UiDriverChangeAudioGain(0);     // disable audio gain if it was voice mode
+        } else {
+          UiDriverChangeKeyerSpeed(0);    // disable keyer speed if it was CW mode
+        }
+      }
+    }
+  }
+
+  UiDriverUpdateBtmMeter(0,0);        // clear bottom meter of any outstanding indication when going back to RX
+  if((ts.menu_mode))  {           // update menu when we are (or WERE) in MENU mode
+    UiMenu_RenderMenu(MENU_RENDER_ONLY);
+  }
+}
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverKeypadCheck, adjust volume and return to RX from TX and other time-related functions
@@ -3205,355 +3379,222 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 //*----------------------------------------------------------------------------
 static void UiDriverTimeScheduler()
 {
-	ulong i;
-	static bool	 unmute_flag = 1;
-	static bool	 trx_timer_set = 0;
-	static bool was_tx = 0;			// used to detect if we have returned from TX (for switching main screen items)
-	static bool was_rx = 0;			// used to detect if we have entered TX from RX
-	static bool old_squelch = 0;	// used to detect change-of-state of squelch
-	static bool old_tone_det = 0;	// used to detect change-of-state of tone decoder
-	static bool old_tone_det_enable = 0;	// used to detect change-of-state of tone decoder enabling
-	static bool old_burst_active = 0;		// used to detect state of change of tone burst generator
-	static bool startup_flag = 0;
-	static uchar enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;	// stores modes of encoder when we enter TX
-	static uchar enc_three_mode = ENC_THREE_MODE_CW_SPEED;	// stores modes of encoder when we enter TX
-	static bool	dsp_rx_reenable_flag = 0;
-	static ulong dsp_rx_reenable_timer = 0;
-	static uchar dsp_crash_count = 0;
-	static uchar press_hold_release_delay = 0;
+  static bool	 unmute_flag = 1;
+  static bool old_squelch = 0;	// used to detect change-of-state of squelch
+  static bool old_tone_det = 0;	// used to detect change-of-state of tone decoder
+  static bool old_tone_det_enable = 0;	// used to detect change-of-state of tone decoder enabling
+  static bool old_burst_active = 0;		// used to detect state of change of tone burst generator
+  static bool startup_done_flag = 0;
+  static bool	dsp_rx_reenable_flag = 0;
+  static ulong dsp_rx_reenable_timer = 0;
+  static uchar dsp_crash_count = 0;
 
-	//
-	// TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
-	//
-	if(ts.audio_unmute)	{						// are we returning from TX with muted audio?
-		if(ts.dmod_mode == DEMOD_CW)	{		// yes - was it CW mode?
-			ts.unmute_delay_count = (ulong)ts.cw_rx_delay + 1;	// yes - get CW TX->RX delay timing
-			ts.unmute_delay_count++;
-			ts.unmute_delay_count *= 40;	// rescale value and limit minimum delay value
-			trx_timer_set = 1;				// indicate that tx->rx timer is set
-		}
-		else	{								// SSB mode
-			ts.unmute_delay_count = SSB_RX_DELAY;	// set time delay in SSB mode
-			ts.buffer_clear = 1;
-			trx_timer_set = 1;				// indicate that tx->rx timer is set
-		}
-		//
-		ts.audio_unmute = 0;					// clear flag that indicates return from CW mode
-	}
-	//
-	if(!ts.unmute_delay_count && trx_timer_set)	{		//	// did timer hit zero the first time?
-		unmute_flag = 1;
-		ts.buffer_clear = 0;
-		ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
-		trx_timer_set = 0;					// indicate that we've now finished the timeout
-	}
-	//
-	// Audio un-muting handler and volume control handler
-	//
-	if(ts.txrx_mode != TRX_MODE_TX)	{
-		was_rx = 1;			// set flag to indicate that we are in RX mode
-		if(ts.boot_halt_flag)	{	// are we halting boot?
-			ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
-			Codec_Volume(0);
-		}
-		else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || (unmute_flag) || ts.band_change)	{	// in normal mode - calculate volume normally
-			ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
-			ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
-			if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)				// Note:  Gain > 16 adjusted in audio_driver.c via software
-				Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5));
-			else	{	// are we in the "software amplification" range?
-				Codec_Volume((80));		// set to fixed "maximum" gain
-				ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
-				ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
-				ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
-			}
-			//
-			unmute_flag = 0;
-			if(ts.band_change)	{	// did we un-mute because of a band change
-				ts.band_change = 0;		// yes, reset the flag
-				ads.agc_val = ads.agc_holder;	// restore previously-stored AGC value before the band change (minimize "POP" desense)
-			}
-			//
-			dsp_rx_reenable_flag = 1;		// indicate that we need to re-enable the DSP soon
-			dsp_rx_reenable_timer = ts.sysclock + DSP_REENABLE_DELAY;	// establish time at which we re-enable the DSP
-		}
-	}
-	//
-	//
-	// Check to see if we need to re-enable DSP after return to RX
-	//
-	if(dsp_rx_reenable_flag)	{	// have we returned to RX after TX?
-		if(ts.sysclock > dsp_rx_reenable_timer)	{	// yes - is it time to re-enable DSP?
-			ts.dsp_inhibit = 0;		// yes - re-enable DSP
-			dsp_rx_reenable_flag = 0;	// clear flag so we don't do this again
-		}
-	}
-	//
-	// Check to see if we need to re-enabled DSP after disabling after a function that disables the DSP (e.g. band change)
-	//
-	if(ts.dsp_timed_mute)	{
-		if(ts.sysclock > ts.dsp_inhibit_timing)	{
-			ts.dsp_timed_mute = 0;
-			ts.dsp_inhibit = 0;
-		}
-	}
+  static enum TRX_States_t last_state = TRX_STATE_RX; // we assume everything is
+  enum TRX_States_t state;
 
-    if((was_rx) && (ts.txrx_mode == TRX_MODE_TX)) {
 
+  // let us figure out if we are in a stable state or if this
+  // is the first run after a mode change
+  if (ts.txrx_mode == TRX_MODE_TX) {
+    if (last_state != TRX_STATE_TX) {
+      state = TRX_STATE_RX_TO_TX;
+    } else {
+      state = TRX_STATE_TX;
+    }
+    last_state = TRX_STATE_TX;
+  } else {
+    if (last_state != TRX_STATE_RX) {
+      state = TRX_STATE_TX_TO_RX;
+    } else {
+      state = TRX_STATE_RX;
+    }
+    last_state = TRX_STATE_RX;
+  }
+
+  /*** RX MODE ***/
+  if(ts.txrx_mode == TRX_MODE_RX) {
+
+    if (state == TRX_STATE_RX_TO_TX) {
+
+      // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
+      if(ts.audio_unmute)	{						// are we returning from TX with muted audio?
+        if(ts.dmod_mode == DEMOD_CW)	{		// yes - was it CW mode?
+          ts.unmute_delay_count = (ulong)ts.cw_rx_delay + 1;	// yes - get CW TX->RX delay timing
+          ts.unmute_delay_count++;
+          ts.unmute_delay_count *= 40;	// rescale value and limit minimum delay value
+        } else {								// SSB mode
+          ts.unmute_delay_count = SSB_RX_DELAY;	// set time delay in SSB mode
+          ts.buffer_clear = 1;
+        }
+        ts.audio_unmute = 0;					// clear flag
+      }
+    }
+
+    if(!ts.unmute_delay_count)	{		//	// did timer hit zero
+      unmute_flag = 1;
+      ts.buffer_clear = 0;
+      ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
+    }
+
+    if(ts.band_change)    {   // did we un-mute because of a band change
+      ts.band_change = 0;     // yes, reset the flag
+      ads.agc_val = ads.agc_holder;   // restore previously-stored AGC value before the band change (minimize "POP" desense)
+    }
+
+
+    // Audio un-muting handler and volume control handler
+    if(ts.boot_halt_flag)	{	// are we halting boot?
+      ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
+      Codec_Volume(0);
+    }
+    else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || (unmute_flag) || ts.band_change)	{	// in normal mode - calculate volume normally
+
+      ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
+      ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
+      if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16) {				// Note:  Gain > 16 adjusted in audio_driver.c via software
+        Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5));
+      } else {	// are we in the "software amplification" range?
+        Codec_Volume((80));		// set to fixed "maximum" gain
+        ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
+        ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
+        ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
+      }
+
+      unmute_flag = 0;
+
+      dsp_rx_reenable_flag = 1;		// indicate that we need to re-enable the DSP soon
+      dsp_rx_reenable_timer = ts.sysclock + DSP_REENABLE_DELAY;	// establish time at which we re-enable the DSP
+    }
+
+    // Check to see if we need to re-enable DSP after return to RX
+    if(dsp_rx_reenable_flag)	{	// have we returned to RX after TX?
+      if(ts.sysclock > dsp_rx_reenable_timer)	{	// yes - is it time to re-enable DSP?
+        ts.dsp_inhibit = 0;		// yes - re-enable DSP
+        dsp_rx_reenable_flag = 0;	// clear flag so we don't do this again
+      }
+    }
+    // Check to see if we need to re-enabled DSP after disabling after a function that disables the DSP (e.g. band change)
+    if(ts.dsp_timed_mute) {
+      if(ts.sysclock > ts.dsp_inhibit_timing) {
+        ts.dsp_timed_mute = 0;
+        ts.dsp_inhibit = 0;
+      }
+    }
+
+    // update the on-screen indicator of squelch/tone detection (the "FM" mode text) if there is a change of state of squelch/tone detection
+    if(!ts.boot_halt_flag)    {   // do this only if not in "boot halt" mode
+      if((old_squelch != ads.fm_squelched)
+        || (old_tone_det != ads.fm_subaudible_tone_detected)
+        || (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select))   {   // did the squelch or tone detect state just change?
+
+        UiDriverShowMode();                           // yes - update on-screen indicator to show that squelch is open/closed
+        old_squelch = ads.fm_squelched;
+        old_tone_det = ads.fm_subaudible_tone_detected;
+        old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
+      }
+    }
+
+    // DSP crash detection
+    if(is_dsp_nr() && !is_dsp_nr_postagc() && !ads.af_disabled && !ts.dsp_inhibit) {  // Do this if enabled and "Pre-AGC" DSP NR enabled
+
+      if((ads.dsp_nr_sample > DSP_HIGH_LEVEL) || (ads.dsp_nr_sample == -1)) {     // is the DSP output very high, or wrapped around to -1?
+        dsp_crash_count+=2;           // yes - increase detect count quickly
+      } else {                        // not high level
+        if(dsp_crash_count) {         // decrease detect count more slowly
+          dsp_crash_count--;
+        }
+      }
+
+      if((ads.dsp_zero_count > DSP_ZERO_COUNT_ERROR) || (dsp_crash_count > DSP_CRASH_COUNT_THRESHOLD))    {   // is "zero" output count OR high level count exceeding threshold?
+        ts.reset_dsp_nr = 1;              // yes - DSP has likely crashed:  Set flag to reset DSP NR coefficients
+        audio_driver_set_rx_audio_filter();   // update DSP settings
+        ts.reset_dsp_nr = 0;              // clear "reset NR coefficients" flag
+        dsp_crash_count = 0;              // clear crash count flag
+      }
+    }
+
+    if((ts.sysclock >= ts.rx_blanking_time) && (ts.rx_muting) && (ts.rx_blanking_time> RX_MUTE_START_DELAY))  {
+      // is it time to un-mute audio AND have we NOT done it already AND is it long enough after start-up to allow muting?
+      ads.agc_val = ads.agc_holder;           // restore AGC setting
+      ts.dsp_inhibit = ts.dsp_inhibit_mute;   // restore previous state of DSP inhibit flag
+      ts.rx_muting = 0;                       // unmute receiver audio
+    }
+  }
+
+  /*** TX MODE ONLY ***/
+  if(ts.txrx_mode == TRX_MODE_TX) {
+
+    if((state == TRX_STATE_RX_TO_TX)) {
+      // we just switched to TX
       if((ts.dmod_mode != DEMOD_CW))    {   // did we just enter TX mode in voice mode?
         ts.tx_audio_muting_timer = ts.tx_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
         ts.tx_audio_muting_flag = 1;
         ads.alc_val = 1;    // re-init AGC value
         ads.peak_audio = 0; // clear peak reading of audio meter
       }
+
     }
-    //
     // Did the TX muting expire?
-    //
     if(ts.sysclock >= ts.tx_audio_muting_timer)  {
-        ts.tx_audio_muting_flag = 0;                // Yes, un-mute the transmit audio
+      ts.tx_audio_muting_flag = 0;                // Yes, un-mute the transmit audio
     }
 
 
-	//
-	if(!(ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI))	{			// If auto-switch on TX/RX is enabled
-	  if(ts.txrx_mode == TRX_MODE_TX)	{
-	    if(!was_tx)	{
-	      was_tx = 1;		// set flag so that we only change this once, as entering
-	      // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
-	      //
-	      enc_one_mode = ts.enc_one_mode;
-	      ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
-	      UiDriverChangeAfGain(0);	// Audio gain disabled
-	      //
-	      if(ts.dmod_mode != DEMOD_CW)
-	        UiDriverChangeCmpLevel(1);	// enable compression adjust if voice mode
-	      else
-	        UiDriverChangeStGain(1);	// enable sidetone gain if CW mode
+    // Has the timing for the tone burst expired?
+    if(ts.sysclock > ts.fm_tone_burst_timing) {
+      ads.fm_tone_burst_active = 0;               // yes, turn the tone off
+    }
 
-	      //
-	      // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
-	      //
-	      enc_three_mode = ts.enc_thr_mode;
-	      ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
-	      UiDriverChangeRit(0);
-	      if(ts.dmod_mode != DEMOD_CW)
-	        UiDriverChangeAudioGain(1);		// enable audio gain
-	      else
-	        UiDriverChangeKeyerSpeed(1);	// enable keyer speed if it was CW mode
+    if(ads.fm_tone_burst_active != old_burst_active)   {   // did the squelch or tone detect state just change?
+      UiDriverShowMode();                           // yes - update on-screen indicator to show that tone burst is on/off
+      old_burst_active = ads.fm_tone_burst_active;
+    }
+  }
 
-	    }
-	  }
-	  else	{	// In RX mode
-	    if(was_tx)	{ 	// were we latched in TX mode?
-	      //
-	      // Yes, Switch to audio gain mode
-	      //
-	      ts.enc_one_mode = enc_one_mode;
-	      if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)	{	// are we to switch back to audio mode?
-	        UiDriverChangeAfGain(1);	// Yes, audio gain enabled
-	        if(ts.dmod_mode != DEMOD_CW)
-	          UiDriverChangeCmpLevel(0);	// disable compression level (if in voice mode)
-	        else
-	          UiDriverChangeStGain(0);	// disable sidetone gain (if in CW mode)
-
-	      }
-	      //
-	      ts.enc_thr_mode = enc_three_mode;
-	      if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	{		// are we to switch back to RIT mode?
-	        UiDriverChangeRit(1);			// enable RIT
-	        if(ts.dmod_mode != DEMOD_CW)
-	          UiDriverChangeAudioGain(0);		// disable audio gain if it was voice mode
-	        else
-	          UiDriverChangeKeyerSpeed(0);	// disable keyer speed if it was CW mode
-
-	      }
-	      was_tx = 0;		// clear flag indicating that we'd entered TX mode
-	    }
-	  }
-	}
-	//
+  /*** TX+RX STATE CHANGE ONLY ***/
+  // if we do change modes, some visuals need an update
+  if(state == TRX_STATE_RX_TO_TX || state == TRX_STATE_TX_TO_RX) {
+    UiDriver_TxRxUiSwitch(state);
+  }
 
 
-    if((was_rx) && (ts.txrx_mode == TRX_MODE_TX)) {
-      was_rx = 0;     // yes - clear flag
-      UiDriverUpdateBtmMeter(0,0);        // clear bottom meter of any outstanding indication when going back to RX
-      if((ts.menu_mode))  {           // update menu when we are (or WERE) in MENU mode
-        UiMenu_RenderMenu(MENU_RENDER_ONLY);
+  /*** ALWAYS ***/
+  UiDriver_LcdBlankingProcessTimer();
+
+  UiDriver_KeyboardProcessOldClicks();
+
+  // This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
+  // and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
+
+  /*** ONCE AFTER STARTUP DELAY ***/
+  if((ts.sysclock > DSP_STARTUP_DELAY) && (!startup_done_flag))   {   // has it been long enough after startup?
+    startup_done_flag = 1;                  // set flag so that we do this only once
+
+    ts.dsp_inhibit = 0;                 // allow DSP to function
+    unmute_flag = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
+    Codec_Mute(0);                      // make sure that audio is un-muted
+
+
+    if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))    {   // Yes - check for new version
+
+      ts.version_number_build = TRX4M_VER_BUILD;    // save new F/W version
+      ts.version_number_release = TRX4M_VER_RELEASE;
+      ts.version_number_minor = TRX4M_VER_MINOR;
+
+      UiSpectrumClearDisplay();         // clear display under spectrum scope
+      UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
+      UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
+
+      {
+        int i;
+        for(i = 0; i < 6; i++) {            // delay so that it may be read
+          non_os_delay();
+        }
       }
-	}
+      UiSpectrumInitSpectrumDisplay();          // init spectrum scope
+    }
 
-	//
-	// Has the timing for the tone burst expired?
-	//
-	if(ts.sysclock > ts.fm_tone_burst_timing)	{
-		ads.fm_tone_burst_active = 0;				// yes, turn the tone off
-	}
-	//
-	//
-	// update the on-screen indicator of squelch/tone detection (the "FM" mode text) if there is a change of state of squelch/tone detection
-	//
-	if(!ts.boot_halt_flag)	{	// do this only if not in "boot halt" mode
-		if((old_squelch != ads.fm_squelched) || (old_tone_det != ads.fm_subaudible_tone_detected) || (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select) || ((ads.fm_tone_burst_active) != old_burst_active))	{	// did the squelch or tone detect state just change?
-			UiDriverShowMode();							// yes - update on-screen indicator to show that squelch is open/closed
-			old_squelch = ads.fm_squelched;
-			old_tone_det = ads.fm_subaudible_tone_detected;
-			old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
-			old_burst_active = ads.fm_tone_burst_active;
-		}
-	}
-	///
-	// DSP crash detection
-	//
-	if((is_dsp_nr()) && (!(is_dsp_nr_postagc())) && (!ads.af_disabled) && (!ts.dsp_inhibit))	{	// Do this if enabled and "Pre-AGC" DSP NR enabled
-		if((ads.dsp_nr_sample > DSP_HIGH_LEVEL)	|| (ads.dsp_nr_sample == -1)){		// is the DSP output very high, or wrapped around to -1?
-			dsp_crash_count+=2;			// yes - increase detect count quickly
-		}
-		else	{						// not high level
-			if(dsp_crash_count)			// decrease detect count more slowly
-				dsp_crash_count--;
-		}
-		if((ads.dsp_zero_count > DSP_ZERO_COUNT_ERROR) || (dsp_crash_count > DSP_CRASH_COUNT_THRESHOLD))	{	// is "zero" output count OR high level count exceeding threshold?
-			ts.reset_dsp_nr = 1;				// yes - DSP has likely crashed:  Set flag to reset DSP NR coefficients
-			audio_driver_set_rx_audio_filter();	// update DSP settings
-			ts.reset_dsp_nr = 0;				// clear "reset NR coefficients" flag
-			dsp_crash_count = 0;				// clear crash count flag
-		}
-	}
-	//
-	// This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
-	// and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
-	//
-
-	/* IMPORTANT
-	 * The code below is currently a functional "no operation"
-	 * It just informs the user of a detect change
-	 * The defaults of the new firmware have been enforced during loading of the
-	 * configuration already, so no additional task is necessary. And the previous
-	 * mandatory saving of the enforced changes is counter-productive in testing.
-	 * In normal operation all changes get saved when turning off anyway so no harm
-	 * is done.
-	 */
-	if((ts.sysclock > DSP_STARTUP_DELAY) && (!startup_flag))	{	// has it been long enough after startup?
-		if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))	{	// Yes - check for new version
-			ts.version_number_build = TRX4M_VER_BUILD;	// save new F/W version
-			ts.version_number_release = TRX4M_VER_RELEASE;
-			ts.version_number_minor = TRX4M_VER_MINOR;
-
-			UiSpectrumClearDisplay();			// clear display under spectrum scope
-			UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
-            UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
-
-			/*
-			UiLcdHy28_PrintText(110,168," Preparing EEPROM ",Cyan,Black,0);
-			UiConfiguration_SaveEepromValues();	// rewrite EEPROM values
-			Write_EEPROM(EEPROM_VERSION_NUMBER, ts.version_number_release);	// save version number information to EEPROM
-			Write_EEPROM(EEPROM_VERSION_BUILD, ts.version_number_build);	//
-			Write_EEPROM(EEPROM_VERSION_MINOR, ts.version_number_minor);	//
-			*/
-			for(i = 0; i < 6; i++)			// delay so that it may be read
-				non_os_delay();
-			/*
-			UiLcdHy28_PrintText(110,180,"      Done!       ",Cyan,Black,0);
-			for(i = 0; i < 6; i++)			// delay so that it may be read
-				non_os_delay();
-			*/
-			UiSpectrumInitSpectrumDisplay();			// init spectrum scope
-		}
-		//
-		ts.dsp_inhibit = 0;					// allow DSP to function
-		unmute_flag = 1;					// set unmute flag to force audio to be un-muted - just in case it starts up muted!
-		startup_flag = 1;					// set flag so that we do this only once
-		Codec_Mute(0);						// make sure that audio is un-muted
-	}
-
-	if((ts.sysclock >= ts.rx_blanking_time) && (ts.rx_muting) && (ts.rx_blanking_time> RX_MUTE_START_DELAY))	{
-			// is it time to un-mute audio AND have we NOT done it already AND is it long enough after start-up to allow muting?
-		ads.agc_val = ads.agc_holder;			// restore AGC setting
-		ts.dsp_inhibit = ts.dsp_inhibit_mute;	// restore previous state of DSP inhibit flag
-		ts.rx_muting = 0;						// unmute receiver audio
-	}
-
-
-	//
-	// Process LCD auto-blanking
-	if(ts.lcd_backlight_blanking & 0x80)	{	// is LCD auto-blanking enabled?
-		if(ts.sysclock > ts.lcd_blanking_time)	{	// has the time expired and the LCD should be blanked?
-			ts.lcd_blanking_flag = 1;				// yes - blank the LCD
-
-		}
-		else									// time not expired
-			ts.lcd_blanking_flag = 0;				// un-blank the LCD
-	}
-	else								// auto-blanking NOT enabled
-		ts.lcd_blanking_flag = 0;				// always un-blank the LCD in this case
-	//
-	//
-	// State machine - processing old click
-	if(ks.button_processed)
-		return;
-
-	// State machine - click or release(debounce filter)
-	if(!ks.button_pressed)	{
-		// Scan inputs - 16 buttons in total, but on different ports
-		for(i = 0; i < 18; i++)	{		// button "17" is touchscreen
-			// Read each pin of the port, based on the declared pin map
-			if(UiDriver_IsButtonPressed(i))	{
-				// Change state to clicked
-				ks.button_id		= i;
-				ks.button_pressed	= 1;
-				ks.button_released	= 0;
-				ks.button_just_pressed	= 0;
-				ks.debounce_time 	= 0;
-				ks.debounce_check_complete	= 0;
-				ks.press_hold 		= 0;
-				//printf("button_pressed %02x\n\r",ks.button_id);
-				// Exit, we process just one click at a time
-				break;
-			}
-		}
-	}
-	else if((ks.debounce_time >= BUTTON_PRESS_DEBOUNCE) && (!ks.debounce_check_complete))	{
-		if(UiDriver_IsButtonPressed(ks.button_id))	{	// button still pressed?
-			ks.button_just_pressed = 1;	// yes!
-			ks.debounce_check_complete = 1;	// indicate that the debounce check was completed
-		}
-		else
-			ks.button_pressed = 0;			// debounce incomplete, button released - cancel detection
-	}
-	else if((ks.debounce_time >= BUTTON_HOLD_TIME) && (!ks.press_hold))	{	// press-and-hold processing
-		ks.button_processed = 1;						// indicate that a button was processed
-		ks.button_just_pressed = 0;					// clear this flag so that the release (below) won't be detected
-		ks.press_hold = 1;
-		press_hold_release_delay = PRESS_HOLD_RELEASE_DELAY_TIME;	// Set up a bit of delay for when press-and-hold is released
-	}
-	else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id)))	{	// was there a press-and-hold and the button is now released?
-		if(press_hold_release_delay)					// press-and-hold delay expired?
-			press_hold_release_delay--;					// no - continue counting down before cancelling "press-and-hold" mode
-		else	{							// Press-and-hold mode time expired!
-			ks.button_pressed = 0;			// reset and exit press-and-hold mode, this to prevent extraneous button-presses when using multiple buttons
-			ks.button_released = 0;
-			ks.press_hold = 0;
-			ks.button_just_pressed = 0;
-		}
-	}
-	else if(!UiDriver_IsButtonPressed(ks.button_id) && (!ks.press_hold))	{	// button released and had been debounced?
-		// Change state from click to released, and processing flag on - if the button had been held down adequately
-		ks.button_pressed 	= 0;
-		ks.button_released 	= 1;
-		ks.button_processed	= 1;
-		ks.button_just_pressed = 0;
-		//printf("button_released %02x\n\r",ks.button_id);
-	}
-	//
-	// Handle press-and-hold tuning step adjustment
-	//
-	if((ts.tune_step != 0) && (!ks.press_hold))	{	// are we in press-and-hold step size mode and did the button get released?
-		ts.tune_step = STEP_PRESS_OFF;						// yes, cancel offset
-		df.selected_idx = ts.tune_step_idx_holder;			// restore previous setting
-		df.tuning_step	= tune_steps[df.selected_idx];
-		UiDriverShowStep(df.selected_idx);
-	}
+  }
 }
 
 
@@ -3836,7 +3877,7 @@ static bool UiDriverCheckFrequencyEncoder()
 		delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
 		ts.audio_int_counter = 0;		 //reset tick counter
 
-	    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+	    UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 
 	}
 	if (pot_diff != 0 &&
@@ -3901,7 +3942,7 @@ static void UiDriverCheckEncoderOne()
 	pot_diff = UiDriverEncoderRead(ENC1);
 
 	if (pot_diff) {
-		UiLCDBlankTiming();	// calculate/process LCD blanking timing
+		UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 		// Take appropriate action
 		switch(ts.enc_one_mode)
 		{
@@ -3984,7 +4025,7 @@ static void UiDriverCheckEncoderTwo()
   pot_diff = UiDriverEncoderRead(ENC2);
 
   if (pot_diff) {
-    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+    UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
     if (filter_path_change) {
       AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
       UiInitRxParms();
@@ -4098,7 +4139,7 @@ static void UiDriverCheckEncoderThree()
   pot_diff = UiDriverEncoderRead(ENC3);
 
   if (pot_diff) {
-    UiLCDBlankTiming();	// calculate/process LCD blanking timing
+    UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
     if (filter_path_change) {
       AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
       UiInitRxParms();
@@ -5883,27 +5924,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 	if((df.tune_new < 8000000 * 4) && (ts.misc_flags2 & MISC_FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
 	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLCDBlankTiming
-//* Object              : Do LCD Auto-Blank timing
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void UiLCDBlankTiming()
-{
-	ulong ltemp;
 
-	if(ts.lcd_backlight_blanking & 0x80)	{	// is LCD blanking enabled?
-		ltemp = (ulong)(ts.lcd_backlight_blanking & 0x0f);		// get setting of LCD blanking timing
-		ltemp *= 100;		// multiply to convert to deciseconds
-		ts.lcd_blanking_time = ltemp + ts.sysclock;		// calculate future time at which LCD is to be turned off
-		ts.lcd_blanking_flag = 0;		// clear flag to make LCD turn on
-	}
-}
 // TODO: MOVE TO AUDIO /RF Function
 //
 //*----------------------------------------------------------------------------

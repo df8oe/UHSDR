@@ -2437,13 +2437,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		}
 		break;
 	case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
-		temp_var = ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI;
+		temp_var = ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)	{
 			if(temp_var)	// change-on-tx is to be disabled
-				ts.misc_flags1 |= MISC_FLAGS1_TX_AUTOSWITCH_UI;		// set LSB
+				ts.misc_flags1 |= MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE;		// set LSB
 			else			// change-on-tx is to be enabled
-				ts.misc_flags1 &= ~MISC_FLAGS1_TX_AUTOSWITCH_UI;		// clear LSB
+				ts.misc_flags1 &= ~MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE;		// clear LSB
 		}
 		break;
 	case CONFIG_MUTE_LINE_OUT_TX:	// Enable/disable MUTE of TX audio on LINE OUT
@@ -2469,26 +2469,26 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		break;
 	case CONFIG_LCD_AUTO_OFF_MODE:	// LCD auto-off mode control
 		temp_var = ts.lcd_backlight_blanking;		// get control variable
-		temp_var &= 0x0f;							// mask off upper nybble
+		temp_var &= LCD_BLANKING_TIMEMASK;							// mask off upper nybble
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_var,
 				0,
-				0x0f,
+				LCD_BLANKING_TIMEMASK,
 				BACKLIGHT_BLANK_TIMING_DEFAULT,
 				1
 				);
 		if(tchange)			{					// timing has been changed manually
 			if(temp_var)	{				// is the time non-zero?
 				ts.lcd_backlight_blanking = temp_var;	// yes, copy current value into variable
-				ts.lcd_backlight_blanking |= 0x80;		// set MSB to enable auto-blanking
+				ts.lcd_backlight_blanking |= LCD_BLANKING_ENABLE;		// set MSB to enable auto-blanking
 			}
 			else {
 				ts.lcd_backlight_blanking = 0;			// zero out variable
 			}
-			UiLCDBlankTiming();		// update the LCD timing parameters
+			UiDriver_LcdBlankingStartTimer();		// update the LCD timing parameters
 		}
 		//
-		if(ts.lcd_backlight_blanking & 0x80)			// timed auto-blanking enabled?
-			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & 0x0f);	// yes - Update screen indicator with number of seconds
+		if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)			// timed auto-blanking enabled?
+			sprintf(options,"%02d sec",ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK);	// yes - Update screen indicator with number of seconds
 		else
 			sprintf(options,"   OFF");						// Or if turned off
 		break;
