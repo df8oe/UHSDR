@@ -2813,8 +2813,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 			audio_dv_rx_processor(src,dst,size);
 		//
 		to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
-	}
-	else	{			// Transmit mode
+	} else {			// Transmit mode
 		if((to_tx) || (ts.tx_audio_muting_flag))	{	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
 			to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
 			arm_fill_q15(0, dst, size);
@@ -2825,8 +2824,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 				// I2S just delivers the "timing".
 				// needs to be used only if USB digital line in is selected.
 				audio_tx_processor(src,dst,size);
-			}
-			else {
+			} else {
 				audio_dv_tx_processor(src,dst,size);
 			}
 		}
