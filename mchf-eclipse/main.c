@@ -352,6 +352,7 @@ void TransceiverStateInit(void)
 	//
 	ts.tune_freq		= 0;
 	ts.tune_freq_old	= 0;
+	ts.delay		= 0;					// flag for retune a few seconds after power on
 	//
 //	ts.calib_mode		= 0;					// calibrate mode
 	ts.menu_mode		= 0;					// menu mode

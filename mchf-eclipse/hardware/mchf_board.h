@@ -893,6 +893,7 @@ typedef struct TransceiverState
 
 	// Global tuning flag - in every demod mode
 	uchar 	tune;
+	uchar delay;
 
 	uint16_t ee_init_stat;
 

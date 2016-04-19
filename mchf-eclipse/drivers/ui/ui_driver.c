@@ -696,7 +696,6 @@ void ui_driver_thread()
   }
   if(ts.thread_timer == 0)			// bail out if it is not time to do this task
   {
-
     ts.thread_timer = 1;		// reset flag to schedule next occurrence
 
     switch(drv_state)
@@ -5394,6 +5393,12 @@ static void UiDriverHandlePowerSupply()
 		snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
 		UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
 	}
+
+	if(ts.delay == 0)		// retune after a few seconds after power on due to temperature correction
+	    {
+	    ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+	    ts.delay = 1;
+	    }
 }
 
 //*----------------------------------------------------------------------------
