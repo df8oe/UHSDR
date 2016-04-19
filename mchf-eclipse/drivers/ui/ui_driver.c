@@ -89,11 +89,7 @@ static void 	UiDriverChangeDigitalMode();
 static void 	UiDriverChangePowerLevel();
 static void 	UiDriverHandleSmeter();
 static void 	UiDriverHandleLowerMeter();
-static void 	UiDriverHandl
-
-
-
-
+static void     UiDriverHandlePowerSupply();
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
