@@ -33,47 +33,57 @@ static void 	UiDriverFFTWindowFunction(char mode);
 static void UiDriverFFTWindowFunction(char mode)
 {
 	ulong i;
+	float32_t gcalc;
+	gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
+	float32_t s;
 
 	// Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
 	// KA7OEI - 20150602
 
 	switch(mode)	{
 		case FFT_WINDOW_RECTANGULAR:	// No processing at all - copy from "Samples" buffer to "Windat" buffer
-			arm_copy_f32((float32_t *)sd.FFT_Windat, (float32_t *)sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
+//			arm_copy_f32((float32_t *)sd.FFT_Windat, (float32_t *)sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
 			break;
 		case FFT_WINDOW_COSINE:			// Sine window function (a.k.a. "Cosine Window").  Kind of wide...
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Samples[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Windat[i];
+				s = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Samples[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Windat[i];
+				s = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_WELCH:			// Parabolic window function, fairly wide, comparable to Bartlett
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-				sd.FFT_Samples[i] = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Windat[i];
+				s = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_HANN:			// Raised Cosine Window (non zero-phase version) - This has the best sidelobe rejection of what is here, but not as narrow as Hamming.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Windat[i]);
+			    s = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_HAMMING:		// Another Raised Cosine window - This is the narrowest with reasonably good sidelobe rejection.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Samples[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Windat[i]);
+			    s = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_BLACKMAN:		// Approx. same "narrowness" as Hamming but not as good sidelobe rejection - probably best for "default" use.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Samples[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Windat[i];
+			    s = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 		case FFT_WINDOW_NUTTALL:		// Slightly wider than Blackman, comparable sidelobe rejection.
 			for(i = 0; i < FFT_IQ_BUFF_LEN; i++){
-			    sd.FFT_Samples[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Windat[i];
+			    s = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+				sd.FFT_Samples[i] = s * gcalc;
 			}
 			break;
 	}
@@ -737,7 +747,7 @@ void UiSpectrumReDrawScopeDisplay()
 		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
-	float32_t	gcalc;
+//	float32_t	gcalc;
 	//
 
 	// Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
@@ -765,7 +775,7 @@ void UiSpectrumReDrawScopeDisplay()
 
 //	sd.skip_process = 0;
 
-	gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
+//	gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
 
 	// Process implemented as state machine
 	switch(sd.state)
@@ -775,14 +785,20 @@ void UiSpectrumReDrawScopeDisplay()
 		//
 		case 1:
 		{
+			// with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
+			// UiDriverFFTWindowFunction was changed
+			// new arm_cfft lib does not seem to need SCOPE_PREAMP_GAIN any more! Why?
+			// gain application of 1/ads.codec_gain_calc is now done in UiDriverFFTWindowFunction to save RAM
+			//
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+//			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+//			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 			//
 			UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
 			//
 //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
 //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
-			arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+			arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
 
 			//
 		sd.state++;
@@ -823,6 +839,9 @@ void UiSpectrumReDrawScopeDisplay()
 			    UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
 			    //
 			    }
+			// as I understand this, this calculates an IIR filter first order
+			// AVGData = filt_factor * Sample[t] + (1 - filt_factor) * Sample [t - 1]
+			//
 			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
 			arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
 			arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
@@ -846,7 +865,7 @@ void UiSpectrumReDrawScopeDisplay()
 			float32_t	sig;
 			//
 			// De-linearize data with dB/division
-			// AND flip data round !
+			// AND flip data round ! = mirror values from right to left and vice versa (had to be done because of the new FFT lib) DDD4WH april 2016
 			for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)	{
 				sig = log10(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
 				sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
@@ -1137,7 +1156,7 @@ void UiSpectrumReDrawWaterfall()
 {
 	ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval AND minval functions
-	float32_t	gcalc;
+//	float32_t	gcalc;
 	//
 
 	// Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
@@ -1166,7 +1185,7 @@ void UiSpectrumReDrawWaterfall()
 
 //	sd.skip_process = 0;
 
-	gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
+//	gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
 
 	// Process implemented as state machine
 	switch(sd.state)
@@ -1176,8 +1195,11 @@ void UiSpectrumReDrawWaterfall()
 		//
 		case 1:		// Scale input according to A/D gain and apply Window function
 		{
+			// with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
+			// UiDriverFFTWindowFunction was changed
+			// new arm_cfft lib does not seem to need SCOPE_PREAMP_GAIN any more! Why?
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
+//			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 			//
 			UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
 			//
