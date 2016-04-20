@@ -465,6 +465,7 @@ static uchar ui_si570_change_frequency(float new_freq, uchar test)
 //*----------------------------------------------------------------------------
 uchar ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test)
 {
+	uchar retval;
 	long double d;
 	float		si_freq, freq_calc, freq_scale, temp_scale, temp;
 
@@ -485,37 +486,31 @@ uchar ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test)
 	freq = (ulong)freq_calc;
 
 
-	// -----------------------------
-	// freq = freq + calib*4 + temp_factor;		// This is the old version - it does NOT scale calibration/temperature with operating frequency.
-	// -----------------------------
-
 	d = freq;								// convert to float
 	d = d / 1000000.0;						// Si570 set value = decimal MHz
 	si_freq = d;							// convert to float
 
 	// new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
-	if (si_freq <= SI570_MAX_FREQ / 1000000 && si_freq >= SI570_MIN_FREQ / 1000000)
-	{
+	if (si_freq <= SI570_MAX_FREQ / 1000000 && si_freq >= SI570_MIN_FREQ / 1000000)	{
 		// tuning inside specs, tuning ok, color white
-		return ui_si570_change_frequency(si_freq, test);
+		retval = ui_si570_change_frequency(si_freq, test);
 	}
-	else if (si_freq <= SI570_HARD_MAX_FREQ / 1000000 && si_freq >= SI570_HARD_MIN_FREQ / 1000000)
-	{
+	else if (si_freq <= SI570_HARD_MAX_FREQ / 1000000 && si_freq >= SI570_HARD_MIN_FREQ / 1000000)	{
 		// tuning outside specs, inside hard limits --> tuning with gaps, color yellow
 		ui_si570_change_frequency(si_freq, test);
-		return(2);
+		retval = 2;
 	}
-	else
-	{
+	else	{
 		// tuning outside hard limits, tuning bad, color red
 		if (si_freq > SI570_MAX_FREQ / 1000000)
 			si_freq = SI570_MAX_FREQ / 1000000;
 		if (si_freq < SI570_MIN_FREQ / 1000000)
 			si_freq = SI570_MIN_FREQ / 1000000;
-
 		ui_si570_change_frequency(si_freq, test);
-		return(1);
+		retval = 1;
 	}
+
+	return retval;
 }
 
 //*----------------------------------------------------------------------------

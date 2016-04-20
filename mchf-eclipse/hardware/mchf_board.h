@@ -1073,26 +1073,27 @@ typedef struct TransceiverState
 	char 	tp_x;					// touchscreen x coordinate
 	char	tp_y;					// touchscreen y coordinate
 	uchar	tp_state;				// touchscreen state machine
-	bool	show_tp_coordinates;			// show coordinates on LCD
-	uchar	rfmod_present;				// 0 = not present
-	uchar	vhfuhfmod_present;			// 0 = not present
+	bool	show_tp_coordinates;	// show coordinates on LCD
+	uchar	rfmod_present;			// 0 = not present
+	uchar	vhfuhfmod_present;		// 0 = not present
 	uchar	multi;					// actual translate factor
-	uchar	tune_power_level;			// TX power in antenna tuning function
+	uchar	tune_power_level;		// TX power in antenna tuning function
 	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
-	bool	cat_in_sandbox;				// CAT tuning in sandbox
-	uchar	cat_band_index;				// buffered bandindex before first CAT command arrived
-	bool	sam_enabled;				// demodulation mode SAM enabled
+	bool	cat_in_sandbox;			// CAT tuning in sandbox
+	uchar	cat_band_index;			// buffered bandindex before first CAT command arrived
+	bool	sam_enabled;			// demodulation mode SAM enabled
 	bool 	notch_enabled;			// notch_filter enabled
 	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
-	bool	dynamic_tuning_active;			// dynamic tuning active by estimating the encoder speed
+	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 
-	uint8_t display_type;           		// existence/identification of display type
-	uint32_t audio_int_counter;			// used for encoder timing - test DL2FW
-	unsigned short DeviceCode;			// LCD ident code
-	bool USE_NEW_PHASE_CORRECTION; // used to test new phase correction
+	uint8_t display_type;           // existence/identification of display type
+	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
+	unsigned short DeviceCode;		// LCD ident code
+	bool USE_NEW_PHASE_CORRECTION; 	// used to test new phase correction
 	bool encoder3state;
-	uchar c_line;			// position of center line
+	uchar c_line;					// position of center line
+	ushort old_freq_col;			// used in dynamic tuning to hold frequency color
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

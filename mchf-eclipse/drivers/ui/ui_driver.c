@@ -2851,6 +2851,12 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
             loc_tune_new = vfo[VFO_A].band[ts.band].dial_value;		// yes - get VFO A frequency for TX
         else									// we must be receiving with VFO A
             loc_tune_new = vfo[VFO_B].band[ts.band].dial_value;		// get VFO B frequency for TX
+
+        char test = ui_si570_set_frequency(loc_tune_new,ts.freq_cal,df.temp_factor, 1);
+      	  if(test == 1)
+            col = Red;	// Color in red if there was a problem setting frequency
+          if(test == 2)
+            col = Yellow;	// Color in yellow if there was a problem setting frequency
     }
     else	// everything else uses main VFO frequency
         loc_tune_new = df.tune_new;				// yes, get that frequency
@@ -2911,21 +2917,20 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
                         ts.rx_blanking_time = ts.sysclock + TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF;	// no - schedule un-muting of audio when DSP is off
                 }
             }
-            if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	// prevention for SI570 crash due too fast frequency changes
-            {
+            if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	{ // prevention for SI570 crash due too fast frequency changes
                 // Set frequency
-                if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0))
-                {
-                    char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
-                    if(test == 1)
-                        col = Red;	// Color in red if there was a problem setting frequency
-                    if(test == 2)
-                        col = Yellow;	// Color in yellow if there was a problem setting frequency
-                }
+                char test = ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 0);
+                if(test == 1)
+                    col = Red;	// Color in red if there was a problem setting frequency
+                if(test == 2)
+                    col = Yellow;	// Color in yellow if there was a problem setting frequency
                 df.temp_factor_changed = false;
                 ts.last_tuning = ts.sysclock;
                 ts.tune_freq_old = ts.tune_freq;        // frequency change required - update change detector
+                ts.old_freq_col = col;					// store actual color for use in dynmic tune
             }
+            else
+          		col = ts.old_freq_col;					// use last color before dynamic highspeed tuning started
         }
 
         //
@@ -2941,12 +2946,12 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
         // new drawing of frequencyscale for WF / Scope
         sd.dial_moved = 1;
     }
-    // Update main frequency display
-    //
+
+    // Update frequency display
     UiDriverUpdateLcdFreq(dial_freq,col, mode);
     //
-    if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
-        UiDriverUpdateLcdFreq(second_freq/4,White,4);
+    if(mode != 3)   {       // do not update second small upper display or check filters if we are updating TX frequency in SPLIT mode
+        UiDriverUpdateLcdFreq(second_freq/4,col, 4);
         // set mode parameter to 4 to update secondary display
         UiDriverCheckBand(ts.tune_freq, 1);
         // check which band in which we are currently tuning and update the display
@@ -3855,18 +3860,14 @@ static void UiDriverChangeBand(uchar is_up)
 
 	// Finally update public flag
 	ts.band = new_band_index;
+
 	// Display frequency update
-	//
-	ts.refresh_freq_disp = 1;	// make frequency display refresh all digits
-	//
 	if(is_splitmode())	{	// in SPLIT mode?
 		UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
 		UiDriverUpdateFrequency(1,2);	// update RX frequency
 	}
 	else	// not in SPLIT mode - standard update
 		UiDriverUpdateFrequency(1,0);
-	//
-	ts.refresh_freq_disp = 0;
 }
 
 /**
