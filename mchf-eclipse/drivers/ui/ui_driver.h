@@ -493,7 +493,7 @@ typedef struct EepromSave
 #define POS_PWRN_IND_Y				193
 #define POS_PWR_IND_X				4
 #define POS_PWR_IND_Y				(POS_PWRN_IND_Y + 15)
-#define COL_PWR_IND				Grey2
+#define COL_PWR_IND					White
 
 #define POS_TEMP_IND_X				0
 #define POS_TEMP_IND_Y				0
