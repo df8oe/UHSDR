@@ -5079,12 +5079,19 @@ static void UiDriverHandleSmeter()
 	sm.gain_calc = 1/sm.gain_calc;	// invert gain to convert to amount of attenuation
 	//
 	sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
-	//
+
 	sm.s_count = 0;		// Init S-meter search counter
+	//
 	while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	{	// find corresponding signal level
-		sm.s_count++;;
+		sm.s_count++;
 	}
 	val = (uchar)sm.s_count;
+
+	if(val > 8)		// DF8OE dirtyS-meter adjustment
+	  val -= 9;
+	else
+	  val = 1;
+
 	if(!val)	// make sure that the S meter always reads something!
 		val = 1;
 	//
