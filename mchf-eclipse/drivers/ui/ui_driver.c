@@ -3350,6 +3350,7 @@ static void UiDriverTimeScheduler()
   static bool startup_done_flag = 0;
   static bool	dsp_rx_reenable_flag = 0;
   static ulong dsp_rx_reenable_timer = 0;
+  static bool  unmute_delay_active = false;
   static uchar dsp_crash_count = 0;
 
   static enum TRX_States_t last_state = TRX_STATE_RX; // we assume everything is
@@ -3377,7 +3378,7 @@ static void UiDriverTimeScheduler()
   /*** RX MODE ***/
   if(ts.txrx_mode == TRX_MODE_RX) {
 
-    if (state == TRX_STATE_RX_TO_TX) {
+    if (state == TRX_STATE_TX_TO_RX) {
 
       // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
       if(ts.audio_unmute)	{						// are we returning from TX with muted audio?
@@ -3389,11 +3390,13 @@ static void UiDriverTimeScheduler()
           ts.unmute_delay_count = SSB_RX_DELAY;	// set time delay in SSB mode
           ts.buffer_clear = 1;
         }
+        unmute_delay_active = true;
         ts.audio_unmute = 0;					// clear flag
       }
     }
 
-    if(ts.unmute_delay_count == 1)	{		//	// did timer hit zero
+    if(unmute_delay_active  && !ts.unmute_delay_count)	{	// did timer hit zero
+      unmute_delay_active = false;
       unmute_flag = 1;
       ts.buffer_clear = 0;
       ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
