@@ -33,6 +33,7 @@
 #include "ui_rotary.h"
 #include "filters.h"
 #include "ui_lcd_hy28.h"
+#include "ui_configuration.h"
 
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
@@ -1429,6 +1430,7 @@ static void audio_snap_carrier (void)
 	ulong freq; //
 	float32_t bin1, bin2, bin3;
 	float32_t help_sample;
+	float32_t width, centre_f, offset;
 
 	int buff_len_int = FFT_IQ_BUFF_LEN2;
 	// init of FFT structure has been moved to audio_driver_init()
@@ -1451,27 +1453,65 @@ static void audio_snap_carrier (void)
 			posbin = (buff_len_int / 4) + (buff_len_int / 8);
 		}
 
+		width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+		centre_f = (float32_t)FilterPathInfo[ts.filter_path].offset;
+		offset = centre_f - (width/2.0);
+
 		//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
 		//	= determine bandwith separately for lower and upper sideband
 
 		if (ts.dmod_mode == DEMOD_LSB) {
 			bw_USB = 1000.0; // also "look" 1kHz away from carrier
-			bw_LSB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_LSB = width;
 		}
 
 		if (ts.dmod_mode == DEMOD_USB) {
 			bw_LSB = 1000.0; // also "look" 1kHz away from carrier
-			bw_USB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_USB = width;
 		}
 
+		if (ts.dmod_mode == DEMOD_CW) { // experimental feature for CW - morse code signals
+			if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT) {	// Yes - USB?
+	        	// set flag for USB-freq-correction
+	        	// set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
+	        	// Lbin = posbin + offset from 0Hz
+	        	// offset = centre_f - (width/2)
+	        	// Lbin = posbin + round (off/bin_BW)
+	        	// Ubin = posbin + round((off + width)/bin_BW)
+	        	bw_LSB = - 1.0 * offset;
+	        	bw_USB = offset + width;
+//	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+//	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
+	        }
+	        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT){	// LSB?
+	        	bw_USB = - 1.0 * offset;
+	        	bw_LSB = offset + width;
+//	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
+//		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+	        }
+	        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	{	// Auto mode?  Check flag
+	            if(ts.cw_lsb){
+		        	bw_USB = - 1.0 * offset;
+		        	bw_LSB = offset + width;
+//			        Ubin = (float32_t)posbin - round (offset / bin_BW);
+//			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+	            }
+	            else {
+		        	bw_LSB = - 1.0 * offset;
+		        	bw_USB = offset + width;
+//		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+//		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
+	            }
+	        }
+        }
+
 		if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM) {
-			bw_LSB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-			bw_USB = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+			bw_LSB = width;
+			bw_USB = width;
 		}
 
 		// calculate upper and lower limit for determination of maximum magnitude
-
-		Lbin = (float32_t)posbin - round(bw_LSB / bin_BW); // the bin on the lower sideband side
+		Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
 		Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
 
@@ -1528,6 +1568,9 @@ static void audio_snap_carrier (void)
         delta1 = (maxbin - (float32_t)posbin) * bin_BW;
 
         help_freq = help_freq + delta1;
+
+//        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
+
         help_freq = help_freq * 4.0;
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
@@ -1562,6 +1605,8 @@ static void audio_snap_carrier (void)
 
    		// set frequency variable with delta2
         help_freq = help_freq + delta2;
+ //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
+
         help_freq = help_freq * 4.0;
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
