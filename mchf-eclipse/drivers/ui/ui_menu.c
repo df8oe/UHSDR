@@ -262,14 +262,22 @@ void __attribute__ ((noinline)) UiMenu_MapColors(uint32_t color ,char* options,v
 	switch(color) {
 	case SPEC_WHITE: 	*clr_ptr = White;	clr_str = " Wht"; 	break;
 	case SPEC_BLUE:  	*clr_ptr = Blue; 	clr_str = " Blu"; 	break;
-	case SPEC_RED: 		*clr_ptr = Red; 	clr_str = " Red"; 	break;
-	case SPEC_MAGENTA: 	*clr_ptr = Magenta; 	clr_str = " Mag"; 	break;
+	case SPEC_RED1: 	*clr_ptr = Red; 	clr_str = "Red1"; 	break;
+	case SPEC_RED2: 	*clr_ptr = Red2; 	clr_str = "Red2"; 	break;
+	case SPEC_RED3: 	*clr_ptr = Red3; 	clr_str = "Red3"; 	break;
+	case SPEC_MAGENTA: 	*clr_ptr = Magenta; clr_str = " Mag"; 	break;
 	case SPEC_GREEN: 	*clr_ptr = Green; 	clr_str = " Grn"; 	break;
 	case SPEC_CYAN: 	*clr_ptr = Cyan; 	clr_str = " Cyn"; 	break;
 	case SPEC_YELLOW: 	*clr_ptr = Yellow; 	clr_str = " Yel"; 	break;
 	case SPEC_BLACK: 	*clr_ptr = Grid; 	clr_str = " Blk"; 	break;
 	case SPEC_ORANGE: 	*clr_ptr = Orange; 	clr_str = " Org"; 	break;
-	case SPEC_GREY2: 	*clr_ptr = Grey; 	clr_str = "GRY2"; 	break;
+	case SPEC_CREAM: 	*clr_ptr = Cream; 	clr_str = " Crm"; 	break;
+	case SPEC_GREY1: 	*clr_ptr = Grey1; 	clr_str = "Gry1"; 	break;
+	case SPEC_GREY2: 	*clr_ptr = Grey2; 	clr_str = "Gry2"; 	break;
+	case SPEC_GREY3: 	*clr_ptr = Grey3; 	clr_str = "Gry3"; 	break;
+	case SPEC_GREY4: 	*clr_ptr = Grey4; 	clr_str = "Gry4"; 	break;
+	case SPEC_GREY5: 	*clr_ptr = Grey6; 	clr_str = "Gry5"; 	break;
+	case SPEC_GREY6: 	*clr_ptr = Grey; 	clr_str = " Gry"; 	break;
 	default: 			*clr_ptr = Grey; 	clr_str = " Gry";
 	}
 	if (options != NULL) {
@@ -2051,7 +2059,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	case MENU_SCOPE_TRACE_COLOUR:	// spectrum scope trace colour
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_trace_colour,
 						0,
-						SPEC_ORANGE,
+						SPEC_MAX_COLOUR,
 						SPEC_COLOUR_TRACE_DEFAULT,
 						1
 						);
@@ -2061,7 +2069,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	case MENU_SCOPE_GRID_COLOUR:	// spectrum scope grid colour
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_grid_colour,
 						0,
-						SPEC_BLACK,
+						SPEC_MAX_COLOUR,
 						SPEC_COLOUR_GRID_DEFAULT,
 						1
 						);
@@ -2071,7 +2079,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 	case MENU_SCOPE_SCALE_COLOUR:	// spectrum scope/waterfall  scale colour
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_scale_colour,
 						0,
-						SPEC_BLACK,
+						SPEC_MAX_COLOUR,
 						SPEC_COLOUR_SCALE_DEFAULT,
 						1
 						);
