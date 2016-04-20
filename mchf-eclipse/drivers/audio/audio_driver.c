@@ -1428,6 +1428,7 @@ static void audio_snap_carrier (void)
 	float32_t help_freq = (float32_t)df.tune_new / 4.0;
 	ulong freq; //
 	float32_t bin1, bin2, bin3;
+	float32_t help_sample;
 
 	int buff_len_int = FFT_IQ_BUFF_LEN2;
 	// init of FFT structure has been moved to audio_driver_init()
@@ -1486,12 +1487,14 @@ static void audio_snap_carrier (void)
 			// Hamming 1.22
 			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
 			// Blackman 1.75
-			sc.FFT_Windat[i] = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
+			help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
+			sc.FFT_Samples[i] = help_sample;
 		}
 
 		// run FFT
 //		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
-		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+//		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
 		//
 		// Calculate magnitude
 		// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2

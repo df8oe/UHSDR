@@ -114,15 +114,15 @@ void UiSpectrumReDrawScopeDisplay();
 typedef struct SpectrumDisplay
 {
     // FFT state
-//    arm_rfft_instance_f32           S;
-	arm_cfft_instance_f32           C;
-//	arm_cfft_instance_f32 arm_cfft_sR_f32_len256;
-    arm_cfft_radix4_instance_f32    S_CFFT;
+//    arm_rfft_instance_f32           S;  // old, depricated FFT routine, do not use
+	arm_cfft_instance_f32           C; // new FFT routine for complex FFT
+
+//	arm_cfft_radix4_instance_f32    S_CFFT; // old, depricated FFT routine, do not use
 
     // Samples buffer
     //
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
-    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN];
+//    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[FFT_IQ_BUFF_LEN/2];
     q15_t   FFT_BkpData[FFT_IQ_BUFF_LEN];
     q15_t   FFT_DspData[FFT_IQ_BUFF_LEN];       // Rescaled and de-linearized display data
