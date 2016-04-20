@@ -46,7 +46,7 @@ enum {
 #define FILTER_MASK_SSBAMFM (FILTER_MASK_SSB|FILTER_MASK_AM|FILTER_MASK_FM)
 
 const FilterDescriptor FilterInfo[AUDIO_FILTER_NUM] =
-{ // 	id ,	name	 ,  width, allowed_modes, always_on_modes, configs_num, config_default, config[label, offset]
+{ // 	id ,	name	 ,  width
     {  AUDIO_300HZ,  "300Hz",   300},
     {  AUDIO_500HZ,  "500Hz",   500},
     {  AUDIO_1P4KHZ, "1.4k",  1400},

@@ -141,6 +141,7 @@ typedef struct FilterPathDescriptor_s {
 //  const arm_biquad_casd_df1_inst_f32* notch_instance;
 
   const uint16_t offset; // how much offset in Hz has the center frequency of the filter from base frequency.
+  	  	  	  	  	  	 // remark: this IS in fact IDENTICAL to the CENTRE FREQUENCY of the filter
                          // For most non-CW filters 0 is okay,
                          // in this case bandwidth/2 is being used here.
 } FilterPathDescriptor;
