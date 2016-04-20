@@ -7,7 +7,7 @@
 ##  DF8OE, Andreas                                                     ##
 ##  DB4PLE, Danilo                                                     ##
 ##  DD4WH, Frank                                                       ##
-##  and all other collaborateurs                                       ##
+##  and all other contributors                                         ##
 ##                                                                     ##
 #########################################################################
 #########################################################################
@@ -17,7 +17,13 @@
 - bugfix: when in syncAM-mode now AM is reported instead of SSB
 - minor and major bugfixes regarding CW TX
 - swapped to actual CMSIS-Libs: improvements in many places to more acurate DSP functions
-- added "reset of 100/10/1 Hz to ZERO" by touching on "TUNE" box
+- improved accuracy of SNAP function
+- added touchfunction: "reset of 100/10/1 Hz to ZERO": touching on "TUNE" box
+- added new graphic "Spectrum light"
+- improved accuracy of touchfunctions
+- bugfix continuos temperature compensation of LO
+- changed some colors for better readability
+- added touchfunction for METER change: touching on meters
 
 
 20160413 [DF8OE]
