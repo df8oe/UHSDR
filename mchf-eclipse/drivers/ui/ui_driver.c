@@ -86,7 +86,7 @@ static void 	UiDriverChangeSigProc(uchar enabled);
 static void 	UiDriverChangeRit(uchar enabled);
 static void 	UiDriverChangeDSPMode();
 static void 	UiDriverChangeDigitalMode();
-static void 	UiDriverChangePowerLevel();
+static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
 static void 	UiDriverHandleLowerMeter();
 static void     UiDriverHandlePowerSupply();
@@ -503,6 +503,33 @@ void UiDriver_HandleTouchScreen()
 }
 
 
+// TODO: RF Management, move out
+/** @brief API Function, implements application logic for changing the power level including display updates
+ * @param power_level The requested power level (as PA_LEVEL constants)
+ * @returns true if there was indeed a power level change
+ */
+bool RadioManagement_PowerLevelChange(uint8_t power_level) {
+    bool retval = false;
+
+    if(ts.dmod_mode == DEMOD_AM)    {           // in AM mode?
+        if(power_level >= PA_LEVEL_MAX_ENTRY)   // yes, power over 2 watts?
+            power_level = PA_LEVEL_2W;  // force to 2 watt mode when we "roll over"
+    }
+    else    {   // other modes, do not limit max power
+        if(power_level >= PA_LEVEL_MAX_ENTRY)
+            power_level = PA_LEVEL_FULL;
+    }
+
+    if (power_level != ts.power_level) {
+        retval = true;
+        ts.power_level = power_level;
+        if(ts.tune && !ts.iq_freq_mode) {       // recalculate sidetone gain only if transmitting/tune mode
+            Codec_SidetoneSetgain(ts.txrx_mode);
+        }
+    }
+    return retval;
+}
+
 /**
  * @brief API Function, implements application logic for changing the power level including display updates
  *
@@ -510,27 +537,13 @@ void UiDriver_HandleTouchScreen()
  * @param power_level The requested power level (as PA_LEVEL constants)
  */
 void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
-	//
-	if(ts.dmod_mode == DEMOD_AM)	{			// in AM mode?
-		if(power_level >= PA_LEVEL_MAX_ENTRY)	// yes, power over 2 watts?
-			power_level = PA_LEVEL_2W;	// force to 2 watt mode when we "roll over"
-	}
-	else	{	// other modes, do not limit max power
-		if(power_level >= PA_LEVEL_MAX_ENTRY)
-			power_level = PA_LEVEL_FULL;
-	}
-	//
-	if (power_level != ts.power_level) {
-		ts.power_level = power_level;
-		UiDriverChangePowerLevel();
-		if(ts.tune)		// recalculate sidetone gain only if transmitting/tune mode
-			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-				Codec_SidetoneSetgain(ts.txrx_mode);
-		//
-		if(ts.menu_mode)	// are we in menu mode?
-			UiMenu_RenderMenu(MENU_RENDER_ONLY);	// yes, update display when we change power setting
-		//
-	}
+    //
+    if (RadioManagement_PowerLevelChange(power_level)) {
+        UiDriver_DisplayPowerLevel();
+        if (ts.menu_mode) {
+            UiMenu_RenderMenu(MENU_RENDER_ONLY);
+        }
+    }
 }
 
 
@@ -866,7 +879,7 @@ void ui_driver_toggle_tx(uint8_t mode)
 
 	if((reset_freq) || (ts.rit_value) || ((ts.iq_freq_mode) && (ts.dmod_mode == DEMOD_CW)))	{
 	  // Re-set frequency if RIT is non-zero or in CW mode with translate OR if in SPLIT mode and we had to retune
-	  UiDriverUpdateFrequencyFast(mode);
+	  RadioManagement_UpdateFrequencyFast(mode);
 	}
 
 	// Switch codec mode
@@ -1657,7 +1670,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				    {
 				    ts.power_temp = ts.power_level;				//store tx level and set tune level
 				    ts.power_level = ts.tune_power_level;
-				    UiDriverChangePowerLevel();
+				    UiDriver_DisplayPowerLevel();
 				    }
 				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
 					softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);		// generate tone for setting TX IQ phase
@@ -1676,7 +1689,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
 				    {
 				    ts.power_level = ts.power_temp;					// restore tx level
-//				    UiDriverChangePowerLevel();
+//				    UiDriver_DisplayPowerLevel();
 				    }
 				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	// DDS off if voice mode
 					softdds_setfreq(0.0,ts.samp_rate,0);
@@ -1687,7 +1700,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				//
 				// Back to RX
 				ui_driver_toggle_tx(TRX_MODE_RX);				// tune OFF
-				UiDriverChangePowerLevel();			// former position was upper commented out position
+				UiDriver_DisplayPowerLevel();			// former position was upper commented out position
 										// at this position display error in CW when using LCD in parallel
 										// mode and working power is FULL and TUNE power is 5W
 										// WARNING THIS WORKAROUND IS UGLY
@@ -2071,7 +2084,7 @@ static void UiDriverCreateDesktop()
 	UiDriverChangeDigitalMode();
 
 	// Power level
-	UiDriverChangePowerLevel();
+	UiDriver_DisplayPowerLevel();
 
 	// FIR via keypad, not encoder mode
 	UiDriverChangeFilterDisplay();
@@ -2886,8 +2899,6 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
 
         if((ts.tune_freq != ts.tune_freq_old) || (ts.refresh_freq_disp) || df.temp_factor_changed || (force_update == 2) )  // did the frequency NOT change and display refresh NOT requested??
         {
-
-
             if(ui_si570_set_frequency(ts.tune_freq,ts.freq_cal,df.temp_factor, 1))	{	// did the tuning require that a large tuning step occur?
                 if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
                     ads.agc_holder = ads.agc_val;	// grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
@@ -2929,19 +2940,18 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
         // ALL UI IN THIS FUNCTION BELOW THIS LINE
         // new drawing of frequencyscale for WF / Scope
         sd.dial_moved = 1;
-
-        // Update main frequency display
-        //
-        UiDriverUpdateLcdFreq(dial_freq,col, mode);
-        //
-        if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
-            UiDriverUpdateLcdFreq(second_freq/4,White,4);
-            // set mode parameter to 4 to update secondary display
-
-            UiDriverCheckBand(ts.tune_freq, 1);
-            // check which band in which we are currently tuning and update the display
-        }
     }
+    // Update main frequency display
+    //
+    UiDriverUpdateLcdFreq(dial_freq,col, mode);
+    //
+    if(mode != 3)   {       // do not update second display or check filters if we are updating TX frequency in SPLIT mode
+        UiDriverUpdateLcdFreq(second_freq/4,White,4);
+        // set mode parameter to 4 to update secondary display
+        UiDriverCheckBand(ts.tune_freq, 1);
+        // check which band in which we are currently tuning and update the display
+    }
+
 }
 
 
@@ -2950,7 +2960,7 @@ void UiDriverUpdateFrequency(char force_update, uchar mode)
  *
  * @param trx_mode The mode which the frequency is being used for (TRX_MODE_TX/TRX_MODE_RX)
  */
-void UiDriverUpdateFrequencyFast(uint8_t trx_mode)
+void RadioManagement_UpdateFrequencyFast(uint8_t trx_mode)
 {
 	ulong		loc_tune_new,dial_freq;
 
@@ -4586,7 +4596,7 @@ static void UiDriverChangeDigitalMode()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverChangePowerLevel()
+static void UiDriver_DisplayPowerLevel()
 {
 	ushort color = White;
 	const char* txt;
@@ -5583,7 +5593,7 @@ static void UiDriverHandleLoTemperature()
                             // Update frequency, without reflecting it on the LCD
                                 df.temp_factor = comp;
                                 df.temp_factor_changed = true;
-                                UiDriverUpdateFrequencyFast(ts.txrx_mode);
+                                RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
                                 lo.comp = comp;
                         }
                     }
