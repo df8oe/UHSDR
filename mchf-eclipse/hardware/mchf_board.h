@@ -1101,7 +1101,7 @@ typedef struct TransceiverState
 	bool USE_NEW_PHASE_CORRECTION; 	// used to test new phase correction
 	bool encoder3state;
 	uchar c_line;					// position of center line
-	ushort old_freq_col;			// used in dynamic tuning to hold frequency color
+	ushort last_lo_result;			// used in dynamic tuning to hold frequency color
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

@@ -17,6 +17,16 @@
 
 #include "mchf_board.h"
 
+// used by UpdateFrequency* family of functions
+enum UpdateFrequencyMode_t {
+    UFM_AUTOMATIC = 0,
+    UFM_LARGE,
+    UFM_SMALL_RX,
+    UFM_SMALL_TX,
+    UFM_SECONDARY
+
+};
+
 
 // SI570 startup value (receive freq * 4)
 //#define 	STARTUP_FREQ					112000000
@@ -510,9 +520,11 @@ void 	UiSpectrumClearDisplay(void);
 void 	UiDriverChangeBandFilter(uchar band);
 void 	UiDriverChangeFilterDisplay(void);
 void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
-void 	UiDriverUpdateFrequency(char skip_encoder_check, uchar mode);
+void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 void 	UiSpectrumCreateDrawArea(void);
-void 	RadioManagement_UpdateFrequencyFast(uint8_t mode);
+
+void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
+void 	RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
 void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
 //

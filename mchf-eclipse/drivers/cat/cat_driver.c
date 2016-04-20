@@ -239,7 +239,7 @@ void CatDriverFT817CheckAndExecute() {
 				}
 				f *= 40;
 				df.tune_new = f - fdelta;
-				UiDriverUpdateFrequency(true,0);
+				UiDriver_FrequencyUpdateLOandDisplay(true);
 				resp[0] = 0;
 				bc = 1;
 			if(ts.cat_in_sandbox)			// if running in sandbox store active band
