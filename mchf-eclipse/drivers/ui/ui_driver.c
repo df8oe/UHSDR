@@ -1810,6 +1810,9 @@ static void UiDriverShowBand(uchar band)
 		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
 		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandInfo[band].name,Orange,Black,0);
 	}
+	// add indicator for broadcast bands here
+	// if frequency inside one of the broadcast bands, print name of the band
+
 }
 
 // TODO: Move out to RF HAL

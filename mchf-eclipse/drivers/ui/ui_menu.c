@@ -3297,7 +3297,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
 				0,
-				FFT_WINDOW_MAX,
+				FFT_WINDOW_MAX-1,
 				FFT_WINDOW_DEFAULT,
 				1);
 
