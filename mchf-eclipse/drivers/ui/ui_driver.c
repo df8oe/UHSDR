@@ -2823,11 +2823,16 @@ uint32_t UiDriver_DialFrequencyModeCorrections(uint32_t dial_freq) {
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     //
     if(ts.dmod_mode == DEMOD_CW)    {       // In CW mode?
-        if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)    // Yes - USB?
-            dial_freq -= ts.sidetone_freq;              // lower LO by sidetone amount
-        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT)   // LSB?
-            dial_freq += ts.sidetone_freq;              // raise LO by sidetone amount
-        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)  {   // Auto mode?  Check flag
+        switch(ts.cw_offset_mode) {
+        case CW_OFFSET_USB_SHIFT:    // Yes - USB?
+            dial_freq -= ts.sidetone_freq;
+            // lower LO by sidetone amount
+            break;
+        case CW_OFFSET_LSB_SHIFT:   // LSB?
+            dial_freq += ts.sidetone_freq;
+            // raise LO by sidetone amount
+            break;
+        case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
             if(ts.cw_lsb)
                 dial_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
             else
@@ -2888,12 +2893,12 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
     }
 
     // Calculate display frequency
-    dial_freq = UiDriver_DialFrequencyModeCorrections(loc_tune_new/4);
+    dial_freq = loc_tune_new/4;
 
     if(mode != UFM_SMALL_TX)	{		// updating ONLY the TX frequency display?
 
         // Calculate actual tune frequency
-        tune_freq = UiDriver_TuneFrequencyModeCorrections(dial_freq, ts.txrx_mode);
+        tune_freq = UiDriver_TuneFrequencyModeCorrections(UiDriver_DialFrequencyModeCorrections(dial_freq), ts.txrx_mode);
 
         if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
         {
@@ -2971,11 +2976,8 @@ void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 	// Get value, while blocking update
 	loc_tune_new = df.tune_new;
 
-    // Calculate display frequency
-    dial_freq = UiDriver_DialFrequencyModeCorrections(loc_tune_new/4);
-
 	// Calculate actual tune frequency
-    tune_freq = UiDriver_TuneFrequencyModeCorrections(dial_freq, txrx_mode);
+    tune_freq = UiDriver_TuneFrequencyModeCorrections(UiDriver_DialFrequencyModeCorrections(loc_tune_new/4), txrx_mode);
 
 	// detect - and eliminate - unnecessary synthesizer frequency changes
 	if((tune_freq != ts.tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed)	// did the frequency NOT change and display refresh NOT requested??
@@ -3082,21 +3084,26 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			color = Yellow;
 	}
 
-	//
 	// Handle frequency display offset in "CW RX" modes
-	//
 	if(ts.dmod_mode == DEMOD_CW)	{		// In CW mode?
-		if((ts.cw_offset_mode == CW_OFFSET_LSB_RX) || (ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT))	// Yes - In an LSB mode with display offset?
-			dial_freq -= ts.sidetone_freq;															// yes, lower display freq. by sidetone amount
-		else if((ts.cw_offset_mode == CW_OFFSET_USB_RX) || (ts.cw_offset_mode == CW_OFFSET_USB_SHIFT))	// In a USB mode with display offset?
-			dial_freq += ts.sidetone_freq;															// yes, raise display freq. by sidetone amount
-		else if((ts.cw_offset_mode == CW_OFFSET_AUTO_RX) || (ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT))	{	// in "auto" mode with display offset?
+	    switch(ts.cw_offset_mode) {
+	    case CW_OFFSET_LSB_RX:	// Yes - In an LSB mode with display offset?
+			dial_freq -= ts.sidetone_freq;
+			// yes, lower display freq. by sidetone amount
+			break;
+	    case CW_OFFSET_USB_RX:	// In a USB mode with display offset?
+			dial_freq += ts.sidetone_freq;
+			// yes, raise display freq. by sidetone amount
+			break;
+	    case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
 			if(ts.cw_lsb)
 				dial_freq -= ts.sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
 			else
 				dial_freq += ts.sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+			break;
 		}
 	}
+
 	switch(mode) {
 	case UFM_SMALL_RX:
 		digits_ptr  = df.dial_digits;
