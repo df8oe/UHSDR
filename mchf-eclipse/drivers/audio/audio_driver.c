@@ -1415,153 +1415,152 @@ static void audio_lms_noise_reduction(int16_t psize)
 static void audio_snap_carrier (void)
 {
 
-	float32_t  Lbin, Ubin;
-	float32_t bw_LSB = 0.0;
-	float32_t bw_USB = 0.0;
-	float32_t maximum = 0.0;
-	int posbin = 0;
-	float32_t maxbin = 1.0;
-	float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN2;
-	float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-	int i = 0;
-	float32_t delta1 = 0.0;
-	float32_t delta2 = 0.0;
-	float32_t help_freq = (float32_t)df.tune_new / 4.0;
-	ulong freq; //
-	float32_t bin1, bin2, bin3;
-	float32_t help_sample;
-	float32_t width, centre_f, offset;
+    float32_t  Lbin, Ubin;
+    float32_t bw_LSB = 0.0;
+    float32_t bw_USB = 0.0;
+    float32_t maximum = 0.0;
+    int posbin = 0;
+    float32_t maxbin = 1.0;
+    float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN2;
+    float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+    int i = 0;
+    float32_t delta1 = 0.0;
+    float32_t delta2 = 0.0;
+    float32_t help_freq = (float32_t)df.tune_old / 4.0;
+    float32_t bin1, bin2, bin3;
+    float32_t help_sample;
+    float32_t width, centre_f, offset;
 
-	int buff_len_int = FFT_IQ_BUFF_LEN2;
-	// init of FFT structure has been moved to audio_driver_init()
+    int buff_len_int = FFT_IQ_BUFF_LEN2;
+    // init of FFT structure has been moved to audio_driver_init()
 
-	//	determine posbin (where we receive at the moment) from ts.iq_freq_mode
+    //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
-		if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
-			posbin = buff_len_int / 4; // right in the middle!
-		} // frequency translation ON
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (buff_len_int / 4) - (buff_len_int / 16);
-		}
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (buff_len_int / 4) + (buff_len_int / 16);
-		}
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-			posbin = (buff_len_int / 4) - (buff_len_int / 8);
-		}
-		else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-			posbin = (buff_len_int / 4) + (buff_len_int / 8);
-		}
+    if(!ts.iq_freq_mode)	{	// frequency translation off, IF = 0 Hz
+        posbin = buff_len_int / 4; // right in the middle!
+    } // frequency translation ON
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+        posbin = (buff_len_int / 4) - (buff_len_int / 16);
+    }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+        posbin = (buff_len_int / 4) + (buff_len_int / 16);
+    }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
+        posbin = (buff_len_int / 4) - (buff_len_int / 8);
+    }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
+        posbin = (buff_len_int / 4) + (buff_len_int / 8);
+    }
 
-		width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-		centre_f = (float32_t)FilterPathInfo[ts.filter_path].offset;
-		offset = centre_f - (width/2.0);
+    width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+    centre_f = (float32_t)FilterPathInfo[ts.filter_path].offset;
+    offset = centre_f - (width/2.0);
 
-		//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
-		//	= determine bandwith separately for lower and upper sideband
+    //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
+    //	= determine bandwith separately for lower and upper sideband
 
-		if (ts.dmod_mode == DEMOD_LSB) {
-			bw_USB = 1000.0; // also "look" 1kHz away from carrier
-			bw_LSB = width;
-		}
+    if (ts.dmod_mode == DEMOD_LSB) {
+        bw_USB = 1000.0; // also "look" 1kHz away from carrier
+        bw_LSB = width;
+    }
 
-		if (ts.dmod_mode == DEMOD_USB) {
-			bw_LSB = 1000.0; // also "look" 1kHz away from carrier
-			bw_USB = width;
-		}
+    if (ts.dmod_mode == DEMOD_USB) {
+        bw_LSB = 1000.0; // also "look" 1kHz away from carrier
+        bw_USB = width;
+    }
 
-		if (ts.dmod_mode == DEMOD_CW) { // experimental feature for CW - morse code signals
-			if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT) {	// Yes - USB?
-	        	// set flag for USB-freq-correction
-	        	// set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
-	        	// Lbin = posbin + offset from 0Hz
-	        	// offset = centre_f - (width/2)
-	        	// Lbin = posbin + round (off/bin_BW)
-	        	// Ubin = posbin + round((off + width)/bin_BW)
-	        	bw_LSB = - 1.0 * offset;
-	        	bw_USB = offset + width;
-//	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-//	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-	        }
-	        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT){	// LSB?
-	        	bw_USB = - 1.0 * offset;
-	        	bw_LSB = offset + width;
-//	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
-//		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-	        }
-	        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	{	// Auto mode?  Check flag
-	            if(ts.cw_lsb){
-		        	bw_USB = - 1.0 * offset;
-		        	bw_LSB = offset + width;
-//			        Ubin = (float32_t)posbin - round (offset / bin_BW);
-//			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-	            }
-	            else {
-		        	bw_LSB = - 1.0 * offset;
-		        	bw_USB = offset + width;
-//		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-//		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-	            }
-	        }
+    if (ts.dmod_mode == DEMOD_CW) { // experimental feature for CW - morse code signals
+        if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT) {	// Yes - USB?
+            // set flag for USB-freq-correction
+            // set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
+            // Lbin = posbin + offset from 0Hz
+            // offset = centre_f - (width/2)
+            // Lbin = posbin + round (off/bin_BW)
+            // Ubin = posbin + round((off + width)/bin_BW)
+            bw_LSB = - 1.0 * offset;
+            bw_USB = offset + width;
+            //	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+            //	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
         }
+        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT){	// LSB?
+            bw_USB = - 1.0 * offset;
+            bw_LSB = offset + width;
+            //	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
+            //		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+        }
+        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	{	// Auto mode?  Check flag
+            if(ts.cw_lsb){
+                bw_USB = - 1.0 * offset;
+                bw_LSB = offset + width;
+                //			        Ubin = (float32_t)posbin - round (offset / bin_BW);
+                //			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+            }
+            else {
+                bw_LSB = - 1.0 * offset;
+                bw_USB = offset + width;
+                //		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+                //		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
+            }
+        }
+    }
 
-		if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM) {
-			bw_LSB = width;
-			bw_USB = width;
-		}
+    if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM) {
+        bw_LSB = width;
+        bw_USB = width;
+    }
 
-		// calculate upper and lower limit for determination of maximum magnitude
-		Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-		Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+    // calculate upper and lower limit for determination of maximum magnitude
+    Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+    Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
 
-		// 	FFT preparation
-		// we do not need to scale for this purpose !
-		// arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
-		//
-		// do windowing function on input data to get less "Bin Leakage" on FFT data
-		//
-		for(i = 0; i < buff_len_int; i++){
-			//	Hanning 1.36
-			//sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-			// Hamming 1.22
-			//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-			// Blackman 1.75
-			help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
-			sc.FFT_Samples[i] = help_sample;
-		}
+    // 	FFT preparation
+    // we do not need to scale for this purpose !
+    // arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
+    //
+    // do windowing function on input data to get less "Bin Leakage" on FFT data
+    //
+    for(i = 0; i < buff_len_int; i++){
+        //	Hanning 1.36
+        //sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+        // Hamming 1.22
+        //sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+        // Blackman 1.75
+        help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
+        sc.FFT_Samples[i] = help_sample;
+    }
 
-		// run FFT
-//		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
-//		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
-		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
-		//
-		// Calculate magnitude
-		// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
-		arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(buff_len_int/2));
-		//
-		// putting the bins in frequency-sequential order!
-		// it puts the Magnitude samples into FFT_Samples again
-		// the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
-		// when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
-		//
-			for(i = 0; i < (buff_len_int/2); i++)	{
-				if(i < (buff_len_int/4))	{		// build left half of magnitude data
-					sc.FFT_Samples[i] = sc.FFT_MagData[i + buff_len_int/4];	// get data
-				}
-				else	{							// build right half of magnitude data
-					sc.FFT_Samples[i] = sc.FFT_MagData[i - buff_len_int/4];	// get data
-				}
-			}
-//####################################################################
-		if (sc.FFT_number == 0){
-		// look for maximum value and save the bin # for frequency delta calculation
-		int c;
+    // run FFT
+    //		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
+    //		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+    arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+    //
+    // Calculate magnitude
+    // as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
+    arm_cmplx_mag_f32((float32_t *)(sc.FFT_Samples),(float32_t *)(sc.FFT_MagData),(buff_len_int/2));
+    //
+    // putting the bins in frequency-sequential order!
+    // it puts the Magnitude samples into FFT_Samples again
+    // the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
+    // when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
+    //
+    for(i = 0; i < (buff_len_int/2); i++)	{
+        if(i < (buff_len_int/4))	{		// build left half of magnitude data
+            sc.FFT_Samples[i] = sc.FFT_MagData[i + buff_len_int/4];	// get data
+        }
+        else	{							// build right half of magnitude data
+            sc.FFT_Samples[i] = sc.FFT_MagData[i - buff_len_int/4];	// get data
+        }
+    }
+    //####################################################################
+    if (sc.FFT_number == 0){
+        // look for maximum value and save the bin # for frequency delta calculation
+        int c;
         for (c = (int)Lbin; c <= (int)Ubin; c++) { // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-        if (maximum < sc.FFT_Samples[c]) {
-            maximum = sc.FFT_Samples[c];
-            maxbin = (float32_t)c;
-        }}
+            if (maximum < sc.FFT_Samples[c]) {
+                maximum = sc.FFT_Samples[c];
+                maxbin = (float32_t)c;
+            }}
         maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now save first delta frequency
@@ -1569,54 +1568,50 @@ static void audio_snap_carrier (void)
 
         help_freq = help_freq + delta1;
 
-//        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
+        //        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
 
         help_freq = help_freq * 4.0;
-        freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = freq;
-        UiDriver_FrequencyUpdateLOandDisplay(true);
-//        help_freq = (float32_t)df.tune_new / 4.0;
-        sc.FFT_number = 1;
-		sc.state    = 0;
-		for(i = 0; i < (buff_len_int); i++)	{
-				sc.FFT_Samples[i] = 0.0;
-			}
+        df.tune_new = help_freq;
+        // request a retune just by changing the frequency
 
-        return;
-		} else
-		{
-// ######################################################
+        //        help_freq = (float32_t)df.tune_new / 4.0;
+        sc.FFT_number = 1;
+        sc.state    = 0;
+        for(i = 0; i < (buff_len_int); i++)	{
+            sc.FFT_Samples[i] = 0.0;
+        }
+    } else  {
+        // ######################################################
 
         // and now: fine-tuning:
         //	get amplitude values of the three bins around the carrier
 
-			bin1 = sc.FFT_Samples[posbin-1];
-	   		bin2 = sc.FFT_Samples[posbin];
-	   		bin3 = sc.FFT_Samples[posbin+1];
+        bin1 = sc.FFT_Samples[posbin-1];
+        bin2 = sc.FFT_Samples[posbin];
+        bin3 = sc.FFT_Samples[posbin+1];
 
-   		if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
+        if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
-   		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
-   		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
+        // estimate frequency of carrier by three-point-interpolation of bins around maxbin
+        // formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
 
-   		delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
-   		if(delta2 > bin_BW) delta2 = 0.0;
+        delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+        if(delta2 > bin_BW) delta2 = 0.0;
 
-   		// set frequency variable with delta2
+        // set frequency variable with delta2
         help_freq = help_freq + delta2;
- //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
+        //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
 
         help_freq = help_freq * 4.0;
-        freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = freq;
-        UiDriver_FrequencyUpdateLOandDisplay(true);
+        df.tune_new = help_freq;
+        // request a retune just by changing the frequency
 
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
         sc.snap = 0; // reset flag for button press (used in ui_driver)
         sc.FFT_number = 0; // reset flag to first FFT
-}
+    }
 }
 
 //

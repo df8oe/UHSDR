@@ -745,7 +745,7 @@ void ui_driver_thread()
       break;
     case STATE_UPDATE_FREQUENCY:
       if(!ts.boot_halt_flag) {
-        if(UiDriverCheckFrequencyEncoder()) {
+        if(UiDriverCheckFrequencyEncoder() || (df.tune_new != df.tune_old)) {
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
       }
@@ -2846,6 +2846,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
     ulong		loc_tune_new, dial_freq;
     char       lo_result = 0;
     uint32_t    tune_freq;
+    bool        lo_change_executed = false;
 
     // Get value, while blocking update
 
@@ -2884,50 +2885,52 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 
             if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	{ // prevention for SI570 crash due too fast frequency changes
                 // Set frequency
-                lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+                ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
                 df.temp_factor_changed = false;
                 ts.last_tuning = ts.sysclock;
                 ts.tune_freq = tune_freq;        // frequency change required - update change detector
-                ts.last_lo_result = lo_result;					// store last lo result for later use during dynamic tuning
-            }
-            else {
-                lo_result = ts.last_lo_result;					// use last lo_result before dynamic highspeed tuning started
+                lo_change_executed = true;
+            } else {
+                lo_change_executed = false;
             }
         }
 
-        UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
+        lo_result = ts.last_lo_result;   // use last ts.lo_result
 
-        // Save current freq
-        df.tune_old = loc_tune_new;
+        if (lo_change_executed) {
 
-        // Inform Spectrum Display code that a frequency change has happened
-        sd.dial_moved = 1;
+            UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
+            // Save current freq
+            df.tune_old = loc_tune_new;
 
+            // Inform Spectrum Display code that a frequency change has happened
+            sd.dial_moved = 1;
+
+// ALL UI IN THIS FUNCTION BELOW THIS LINE
+            UiDriverCheckBand(ts.tune_freq, true);
+            // check which band in which we are currently tuning and update the display
+
+            UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
+            // set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
+            // color argument is not being used by secondary display
+        }
     }
 
-    // ALL UI IN THIS FUNCTION BELOW THIS LINE
-    switch(lo_result) {
-    case 1:
-        col = Red; // Color in red if there was a problem setting frequency
-        break;
-    case 2:
-        col = Yellow; // Color in yellow if there was a problem setting frequency exactly
-        break;
-    case 0:
-    default:
-        col = White;
+    if (lo_change_executed || mode == UFM_SMALL_TX) {
+        switch(lo_result) {
+        case 1:
+            col = Red; // Color in red if there was a problem setting frequency
+            break;
+        case 2:
+            col = Yellow; // Color in yellow if there was a problem setting frequency exactly
+            break;
+        case 0:
+        default:
+            col = White;
+        }
+        // Update frequency display
+        UiDriverUpdateLcdFreq(dial_freq, col, mode);
     }
-    // Update frequency display
-    UiDriverUpdateLcdFreq(dial_freq, col, mode);
-
-    if (mode != UFM_SMALL_TX) {
-        UiDriverCheckBand(ts.tune_freq, true);
-        // check which band in which we are currently tuning and update the display
-
-        UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,col, UFM_SECONDARY);
-        // set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
-    }
-
 }
 
 
@@ -3842,12 +3845,12 @@ static bool UiDriverCheckFrequencyEncoder()
 			&& ks.button_just_pressed == false
 			&& ts.frequency_lock == false)	{
 		// allow tuning only if in rx mode, no freq lock,
-		if (delta_t > 300) enc_speed_avg = 0; //when leaving speedy turning set avg_speed to 0
+		if (delta_t > 300) { enc_speed_avg = 0; } //when leaving speedy turning set avg_speed to 0
 
 		enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
 
-		if (enc_speed > 500) enc_speed = 500;   //limit calculated enc. speed
-		if (enc_speed < -500) enc_speed = -500;
+		if (enc_speed > 500) { enc_speed = 500; }   //limit calculated enc. speed
+		if (enc_speed < -500){ enc_speed = -500; }
 
 		enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
 
@@ -3855,11 +3858,11 @@ static bool UiDriverCheckFrequencyEncoder()
 
 		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
 		{
-			if ((enc_speed_avg > 80) || (enc_speed_avg < (-80))) enc_multiplier = 10; // turning medium speed -> increase speed by 10
-			if ((enc_speed_avg > 300) || (enc_speed_avg < (-300))) enc_multiplier = 100; //turning fast speed -> increase speed by 100
+			if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))   { enc_multiplier = 10; } // turning medium speed -> increase speed by 10
+			if ((enc_speed_avg > 300) || (enc_speed_avg < (-300))) { enc_multiplier = 100; } //turning fast speed -> increase speed by 100
 
-			if ((df.tuning_step == 10000) && (enc_multiplier > 10)) enc_multiplier = 10; //limit speed to 100000kHz/step
-			if ((df.tuning_step == 100000) && (enc_multiplier > 1)) enc_multiplier = 1; //limit speed to 100000kHz/step
+			if ((df.tuning_step == 10000) && (enc_multiplier > 10)) { enc_multiplier = 10; } //limit speed to 100000kHz/step
+			if ((df.tuning_step == 100000) && (enc_multiplier > 1)) { enc_multiplier = 1; } //limit speed to 100000kHz/step
 		}
 
 
@@ -3870,14 +3873,11 @@ static bool UiDriverCheckFrequencyEncoder()
 			//itoa(enc_speed,num,6);
 			//UiSpectrumClearDisplay();			// clear display under spectrum scope
 			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
-
-
 		} else {
 			df.tune_new -= (df.tuning_step * 4 * enc_multiplier);
 		}
 
-		if (enc_multiplier == 10) {  df.tune_new = 4*10 *df.tuning_step * div((df.tune_new/4),10* df.tuning_step).quot; } // keep last digit to zero
-		if (enc_multiplier == 100){ df.tune_new = 4*100*df.tuning_step * div((df.tune_new/4),100*df.tuning_step).quot;  }// keep last 2 digits to zero))
+		if (enc_multiplier != 1) {  df.tune_new = 4*enc_multiplier*df.tuning_step * div((df.tune_new/4),enc_multiplier*df.tuning_step).quot; } // keep last digit to zero
 
 		retval = true;
 	}
