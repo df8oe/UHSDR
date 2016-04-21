@@ -351,7 +351,7 @@ void TransceiverStateInit(void)
 	ts.tx_iq_fm_gain_balance = 0;
 	//
 	ts.tune_freq		= 0;
-	ts.tune_freq_old	= 0;
+	 //ts.tune_freq_old	= 0;
 	//
 //	ts.calib_mode		= 0;					// calibrate mode
 	ts.menu_mode		= 0;					// menu mode

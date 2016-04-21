@@ -815,7 +815,7 @@ typedef struct TransceiverState
 
 	// Frequency synthesizer
 	ulong	tune_freq;			// main synthesizer frequency
-	ulong	tune_freq_old;		// used to detect change of main synthesizer frequency
+	// ulong	tune_freq_old;		// used to detect change of main synthesizer frequency
 
 	// Transceiver calibration mode flag
 	//uchar	calib_mode;
