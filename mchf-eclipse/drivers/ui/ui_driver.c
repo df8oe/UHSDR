@@ -1808,11 +1808,32 @@ static void UiDriverShowBand(uchar band)
 	if (band < MAX_BAND_NUM) {
 	// Clear control
 		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
+		if (band == MAX_BANDS){ // MAX_BANDS = Gen band ! MAX_BAND_NUM = MAX_BANDS + 1
+			// Print name of BC band, if frequency is within a broadcast band
+		} else
 		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandInfo[band].name,Orange,Black,0);
 	}
 	// add indicator for broadcast bands here
-	// if frequency inside one of the broadcast bands, print name of the band
-
+	// if Band = "Gen" AND frequency inside one of the broadcast bands, print name of the band
+/*	{
+		{150000, 285000, " LW" },
+		{525000, 1605000, " MW" },
+		{2300000, 2495000, "120m" },
+		{3200000, 3400000, " 90m" },
+		{3900000, 4000000, " 75m" },
+		{4750000, 5060000, " 60m" },
+	    {5900000, 5900000, " 49m" },
+	    {7200000, 7350000, " 41m" },
+		{9400000, 9900000, " 31m" },
+		{11600000, 12100000, " 25m" },
+		{13570000, 13870000, " 22m" },
+		{15100000, 15800000, " 19m" },
+		{17480000, 17900000, " 16m" },
+		{18900000, 19020000, " 15m" },
+		{21450000, 21850000, " 13m" },
+		{25670000, 26100000, " 11m" },
+	}
+*/
 }
 
 // TODO: Move out to RF HAL
