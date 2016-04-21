@@ -5029,15 +5029,6 @@ static void UiDriverHandleSmeter()
 	}
 	val = (uchar)sm.s_count;
 
-	if(val <= 11 && val > 9)		// DF8OE dirty S-meter adjustment
-	  val -= 9;
-	else if (val < 9)
-	  val = 1;
-	else if (val > 11 && val < 14)
-	  val -= 6;
-	else if (val >= 14 && val < 17)
-	  val -= 3;
-
 	if(!val)	// make sure that the S meter always reads something!
 		val = 1;
 	//
