@@ -1575,7 +1575,7 @@ static void audio_snap_carrier (void)
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = freq;
-        UiDriverUpdateFrequency ( 2, 0);
+        UiDriver_FrequencyUpdateLOandDisplay(true);
 //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
 		sc.state    = 0;
@@ -1611,7 +1611,7 @@ static void audio_snap_carrier (void)
         freq = (ulong) help_freq;
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = freq;
-        UiDriverUpdateFrequency ( 2, 0);
+        UiDriver_FrequencyUpdateLOandDisplay(true);
 
         sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
         sc.snap = 0; // reset flag for button press (used in ui_driver)

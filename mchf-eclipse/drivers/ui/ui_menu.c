@@ -1508,10 +1508,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			strcpy(options, "  OFF");		// Say that it is OFF!
 			clr = Red;
 		}
-		//
-		// disp_shift = 1;
 		break;
-	//
 	case MENU_AGC_MODE:	// AGC mode
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_mode,
 						0,
@@ -1639,7 +1636,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						FREQ_IQ_CONV_MODE_DEFAULT,
 						1
 						);
-		// disp_shift = 1;
+
 		if(!ts.iq_freq_mode)	{
 			sprintf(options,">> OFF! <<");
 			clr = Red3;
@@ -1659,7 +1656,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		//
 		//
 		if(fchange)	{	// update parameters if changed
-			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
+		    UiDriver_FrequencyUpdateLOandDisplay(true);	// update frequency display without checking encoder, unconditionally updating synthesizer
 		}
 		//
 		break;
@@ -1889,7 +1886,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
 		if((ts.dmod_mode == DEMOD_CW) && (fchange))	{
 			softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
+			UiDriver_FrequencyUpdateLOandDisplay(false);
 		}
 		//
 		sprintf(options, "  %uHz", (uint)ts.sidetone_freq);
@@ -1949,17 +1946,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 				sprintf(options, "     ERROR!");
 				break;
 		}
-		//
+
 		if(fchange)	{	// update parameters if changed
 			UiCWSidebandMode();
 			UiDriverShowMode();
-			UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
+			UiDriver_FrequencyUpdateLOandDisplay(true);	// update frequency display and local oscillator
 		}
-		//
-		// disp_shift = 1;	// shift left to allow more room
-		//
 		break;
-	//
 	case MENU_TCXO_MODE:	// TCXO On/Off
 		temp_sel = (df.temp_enabled & 0x0f);		// get current setting without upper nibble
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &temp_sel,
@@ -1968,12 +1961,12 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						TCXO_OFF,
 						1
 						);
-		//
+
 		if(lo.sensor_absent)			// no sensor present
 			temp_sel = TCXO_OFF;	// force TCXO disabled
-		//
+
 		df.temp_enabled = temp_sel | (df.temp_enabled & 0xf0);	// overlay new temperature setting with old status of upper nibble
-		//
+
 		if(temp_sel == TCXO_OFF)	{
 			strcpy(options, " OFF");
 			if(fchange)
@@ -1998,7 +1991,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 			temp_sel = 1;	// yes - set to 1
 		else
 			temp_sel = 0;	// no - Celsius
-		//
+
 		if((df.temp_enabled & 0x0f) != TCXO_STOP)	{	// is temperature display enabled at all?
 			if(df.temp_enabled & 0xf0)	// Yes - Is Fahrenheit mode enabled?
 				temp_sel = 1;	// yes - set to 1
@@ -2012,7 +2005,6 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 							1
 							);
 
-			//
 			if(temp_sel)					// Fahrenheit mode?
 				df.temp_enabled |= 0xf0;	// set upper nybble
 			else							// Celsius mode?
@@ -2084,9 +2076,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						1
 						);
 		UiMenu_MapColors(ts.scope_scale_colour,options,&clr);
-		// disp_shift = 1;
 		break;
-		//
 	case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
 		UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
 		break;
@@ -2629,9 +2619,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 			ts.freq_cal = 0;
 			tchange = 1;
 		}
-		if(tchange)
-			UiDriverUpdateFrequency(2,0);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
-		// disp_shift = 1;
+		if(tchange) {
+			UiDriverUpdateFrequency(true,UFM_AUTOMATIC);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
+		}
 		sprintf(options, "   %d", ts.freq_cal);
 		break;
 		//
@@ -2974,15 +2964,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 				0,
 				1);
 		if(tchange)	{		// change?
-			ts.refresh_freq_disp = 1;	// cause frequency display to be completely refreshed
-			if(ts.vfo_mem_mode & 128)	{	// in SPLIT mode?
-				UiDriverUpdateFrequency(1,2);	// update RX frequency
-				UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
-			}
-			else	// not in SPLIT mode - standard update
-				UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
-			ts.refresh_freq_disp = 0;
-		}
+		    UiDriver_FrequencyUpdateLOandDisplay(true);		}
 		//
 		if(ts.xverter_mode)	{
 			sprintf(options, " ON x%u", ts.xverter_mode);	// Display on/multiplication factor
@@ -3017,21 +2999,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 		}
 		//
 		if(tchange)	{		// change?
-			ts.refresh_freq_disp = 1;	// cause frequency display to be completely refreshed
-			if(ts.vfo_mem_mode & 128)	{	// in SPLIT mode?
-				UiDriverUpdateFrequency(1,2);	// update RX frequency
-				UiDriverUpdateFrequency(1,3);	// force display of second (TX) VFO frequency
-			}
-			else	// not in SPLIT mode - standard update
-				UiDriverUpdateFrequency(2,0);	// update frequency display without checking encoder, unconditionally updating synthesizer
-			ts.refresh_freq_disp = 0;
-			tchange = 1;
+		    UiDriver_FrequencyUpdateLOandDisplay(true);
 		}
 		//
 		if(ts.xverter_mode)	// transvert mode active?
 			clr = Red;		// make number red to alert user of this!
-		//
-		// disp_shift = 1;		// cause display to be shifted to the left so that it will fit
+
 		sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
 		break;
 
@@ -3328,7 +3301,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 				FFT_WINDOW_DEFAULT,
 				1);
 
-		// disp_shift = 1;
 		switch(ts.fft_window_type)	{
 		case FFT_WINDOW_RECTANGULAR:
 			strcpy(options, "Rectangular");
