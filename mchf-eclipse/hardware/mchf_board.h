@@ -37,6 +37,7 @@
 #include "stm32f4xx.h"
 #include "mchf_types.h"
 #include "audio_filter.h"
+#include "ui_si570.h"
 //
 //
 //
@@ -1101,7 +1102,7 @@ typedef struct TransceiverState
 	bool USE_NEW_PHASE_CORRECTION; 	// used to test new phase correction
 	bool encoder3state;
 	uchar c_line;					// position of center line
-	ushort last_lo_result;			// used in dynamic tuning to hold frequency color
+	Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
@@ -1143,6 +1144,7 @@ uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
 void copy_virt2ser(void);
 void copy_ser2virt(void);
 void verify_servirt(void);
+void mchf_reboot();
 
 // in main.c
 void CriticalError(ulong error);

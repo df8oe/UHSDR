@@ -1018,3 +1018,9 @@ void verify_servirt(void)
 			ts.ser_eeprom_in_use = 0x05;	// mark data copy as faulty
 	}
 }
+
+void mchf_reboot() {
+    ui_si570_get_configuration();       // restore SI570 to factory default
+    *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+    NVIC_SystemReset();         // restart mcHF
+}
