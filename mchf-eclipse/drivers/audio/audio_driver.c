@@ -96,7 +96,7 @@ static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 //
 // variables for RX manual notch IIR filter
 //static float32_t		iir_notch_state[4];
-//static arm_biquad_casd_df1_inst_f32	IIR_Notch;
+static arm_biquad_casd_df1_inst_f32	IIR_Notch;
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Manual Notch init [DD4WH, april 2016]
@@ -196,19 +196,18 @@ IIR_Notch.pState = (float32_t *)&iir_notch_state;					// point to state array fo
 
 static arm_biquad_casd_df1_inst_f32 IIR_Notch = {
 		.numStages = 1,
-		.pCoeffs = (float32_t *)(const float32_t [])
-		{ 1,0,0,0,0
-
-/*
-			0.003467332208447815,
+		.pCoeffs = (float32_t *)(float32_t [])
+		{
+			1,0,0,0,0
+/*			0.003467332208447815,
 			   0.003219363651146496,
 			   0.003467332208447815,
 			   1.852573355019514480,
-			   -0.862727383087556587*/
+			   -0.862727383087556587 */
 		},
 
-		.pState = (float32_t *)(const float32_t [])
-			{0.0 ,0.0 ,0.0 ,0.0}
+		.pState = (float32_t *)(float32_t [])
+			{0 ,0 ,0 ,0}
 };
 
 //
@@ -467,7 +466,64 @@ void audio_driver_set_rx_audio_filter(void)
     }
 	IIR_AntiAlias.pState = (float32_t *)&iir_aa_state;					// point to state array for IIR filter
 
+	// ############################################
+	// initialize Notch_Filter
+	float32_t b0,b1,b2,a1,a2;
+	float32_t coef[5];
 
+	b0 =	0.003467332208447815;
+	b1 = 		   0.003219363651146496;
+	b2 = 		   0.003467332208447815;
+	a1 = 		   1.852573355019514480;
+	a2 =		   -0.862727383087556587;
+/*
+	b0 =  0.067632527732130063;
+	b1 =  0.132704003843355428;
+	b2 =  0.067632527732130063;
+	a1 =  -1.146541271271349860;
+	a2 =  0.414510330578965303;
+*/
+	coef[0] = b0;
+	coef[1] = b1;
+	coef[2] = b2;
+	coef[3] = a1;
+	coef[4] = a2;
+
+	IIR_Notch.pCoeffs = coef;
+
+//	IIR_Notch.pCoeffs = coef;
+
+/*			(float32_t *)(float32_t [])
+					{
+						0.003467332208447815,
+						   0.003219363651146496,
+						   0.003467332208447815,
+						   1.852573355019514480,
+						   -0.862727383087556587
+					};
+					*/
+//	IIR_Notch.pState = (float32_t *)(float32_t [])
+//		{0.0 ,0.0 ,0.0 ,0.0};
+//	IIR_Notch.numStages = 1;
+
+// #######################################################################
+
+/*	static arm_biquad_casd_df1_inst_f32 IIR_Notch = {
+			.numStages = 1,
+			.pCoeffs = (float32_t *)(const float32_t [])
+			{
+				0.003467332208447815,
+				   0.003219363651146496,
+				   0.003467332208447815,
+				   1.852573355019514480,
+				   -0.862727383087556587
+			},
+
+			.pState = (float32_t *)(float32_t [])
+				{0.0 ,0.0 ,0.0 ,0.0}
+	};
+*/
+// #######################################################################
 
 	//
 	// Initialize high-pass filter used for the FM noise squelch
