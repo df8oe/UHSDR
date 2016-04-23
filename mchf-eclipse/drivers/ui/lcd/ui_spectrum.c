@@ -272,10 +272,22 @@ void UiSpectrumCreateDrawArea(void)
 
 
 	// Horizontal grid lines
-	for(i = 1; i < 4; i++)
+	char upperline, y_add;
+	if(ts.waterfall_size)		//don't draw text bar when size is BIG
+	  {
+	  upperline = 6;
+	  y_add = 32;
+	  }
+	else
+	  {
+	  upperline = 4;
+	  y_add = 0;
+	  }
+
+	for(i = 1; i < upperline; i++)
 	{
 		// Save y position for repaint
-		sd.horz_grid_id[i - 1] = (POS_SPECTRUM_IND_Y - 5 + i*16);
+		sd.horz_grid_id[i - 1] = (POS_SPECTRUM_IND_Y - 5 - y_add + i*16);
 
 		// Draw
 		UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X,
@@ -334,8 +346,8 @@ void UiSpectrumCreateDrawArea(void)
 
 		// Draw
 		UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
-									(POS_SPECTRUM_IND_Y -  4),
-									(POS_SPECTRUM_IND_H - 15),
+									(POS_SPECTRUM_IND_Y -  4 - y_add/2),
+									(POS_SPECTRUM_IND_H - 15 + y_add/2),
 									LCD_DIR_VERTICAL,
 									clr);
 
