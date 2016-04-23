@@ -2994,6 +2994,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
             case SI570_TUNE_LIMITED:
                 clr = Yellow; // Color in yellow if there was a problem setting frequency exactly
                 break;
+            case SI570_LARGE_STEP:
             case SI570_OK:
                 clr = White;
                 break;
