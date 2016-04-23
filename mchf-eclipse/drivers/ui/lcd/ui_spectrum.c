@@ -444,7 +444,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 	int spec_height = SPECTRUM_HEIGHT; //x
 	int spec_start_y = SPECTRUM_START_Y;
 
-	if (ts.spectrum_light){
+	if (ts.spectrum_light && ts.waterfall_size == WATERFALL_BIG){
 		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
 	}
@@ -762,7 +762,7 @@ static void UiSpectrum_InitSpectrumDisplay()
 void UiSpectrumReDrawScopeDisplay()
 {
 	int spec_height = SPECTRUM_HEIGHT;
-	if (ts.spectrum_light)
+	if (ts.spectrum_light && ts.waterfall_size == WATERFALL_BIG)
 		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
