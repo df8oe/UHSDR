@@ -1624,6 +1624,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				UiDriverShowMode();
 				UiDriverSetDemodMode(ts.dmod_mode);
 				UiDriverChangeFilterDisplay();
+				UiInitRxParms();
 			}
 
 		}
@@ -3000,7 +3001,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
                 clr = Red; // a serious error happened, i.e. I2C not working etc.
             }
         } else {
-            // we did not execute the change, so we show the freq in Gray.
+            // we did not execute the change, so we show the freq in Blue.
             // this will turn into the appropriate color the moment the tuning
             // happens.
             clr = Blue;
