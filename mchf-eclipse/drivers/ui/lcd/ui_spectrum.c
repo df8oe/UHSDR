@@ -902,13 +902,13 @@ void UiSpectrumReDrawScopeDisplay()
 			if(sd.magnify)	{	// are we in magnify mode?  If so, find max/mean of only those portions of the spectrum magnified - which are NOT in the proper order, dammit!
 				//
 				if(!ts.iq_freq_mode)	{	// yes, are we NOT in translate mode?
-					arm_max_q15((q15_t *)&sd.FFT_TempData[192], 64, &max1, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[192], 64, &min1, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[192], 64, &mean1);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
 					//
-					arm_max_q15((q15_t *)sd.FFT_TempData, 64, &max2, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)sd.FFT_TempData, 64, &min2, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)sd.FFT_TempData, 64, &mean2);				// find mean value in center portion
+					arm_max_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &mean2);				// find mean value in center portion
 					//
 					if(max2 > max1)
 						max1 = max2;
@@ -920,13 +920,13 @@ void UiSpectrumReDrawScopeDisplay()
 						min1 = min2;
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-					arm_max_q15((q15_t *)&sd.FFT_TempData[160], 64, &max1, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[160], 64, &min1, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[160], 64, &mean1);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[224], 32, &max2, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[224], 32, &min2, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[224], 32, &mean2);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
 					//
 					if(max2 > max1)
 						max1 = max2;
@@ -937,9 +937,9 @@ void UiSpectrumReDrawScopeDisplay()
 					if(mean2 > mean1)
 						mean1 = mean2;
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max3, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min3, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean3);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean3);				// find mean value in center portion
 					//
 					if(max3 > max1)
 						max1 = max3;
@@ -951,13 +951,13 @@ void UiSpectrumReDrawScopeDisplay()
 						mean1 = mean3;
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-					arm_max_q15((q15_t *)&sd.FFT_TempData[224], 32, &max1, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[224], 32, &min1, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[224], 32, &mean1);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &mean1);				// find mean value in center portion
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max2, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min2, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean2);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
 					//
 					if(max2 > max1)
 						max1 = max2;
@@ -968,9 +968,9 @@ void UiSpectrumReDrawScopeDisplay()
 					if(mean2 > mean1)
 						mean1 = mean2;
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[32], 64, &max3, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[32], 64, &min3, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[32], 64, &mean3);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &mean3);				// find mean value in center portion
 					//
 					if(max3 > max1)
 						max1 = max3;
@@ -982,13 +982,13 @@ void UiSpectrumReDrawScopeDisplay()
 						mean1 = mean3;
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaa
-					arm_max_q15((q15_t *)&sd.FFT_TempData[128], 64, &max1, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[128], 64, &min1, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[128], 64, &mean1);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[192], 32, &max2, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[192], 32, &min2, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[192], 32, &mean2);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
 					//
 					if(max2 > max1)
 						max1 = max2;
@@ -999,9 +999,9 @@ void UiSpectrumReDrawScopeDisplay()
 					if(mean2 > mean1)
 						mean1 = mean2;
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max3, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min3, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean3);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean3);				// find mean value in center portion
 					//
 					if(max3 > max1)
 						max1 = max3;
@@ -1013,13 +1013,13 @@ void UiSpectrumReDrawScopeDisplay()
 						mean1 = mean3;
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-					arm_max_q15((q15_t *)&sd.FFT_TempData[0], 32, &max1, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[0], 32, &min1, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], 32, &mean1);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max1, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min1, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean1);				// find mean value in center portion
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[32], 32, &max2, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[32], 32, &min2, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[32], 32, &mean2);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
 					//
 					if(max2 > max1)
 						max1 = max2;
@@ -1030,9 +1030,9 @@ void UiSpectrumReDrawScopeDisplay()
 					if(mean2 > mean1)
 						mean1 = mean2;
 					//
-					arm_max_q15((q15_t *)&sd.FFT_TempData[64], 64, &max3, &max_ptr);		// find maximum element in center portion
-					arm_min_q15((q15_t *)&sd.FFT_TempData[64], 64, &min3, &max_ptr);		// find minimum element in center portion
-					arm_mean_q15((q15_t *)&sd.FFT_TempData[64], 64, &mean3);				// find mean value in center portion
+					arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &max3, &max_ptr);		// find maximum element in center portion
+					arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &min3, &max_ptr);		// find minimum element in center portion
+					arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &mean3);				// find mean value in center portion
 					//
 					if(max3 > max1)
 						max1 = max3;
@@ -1313,24 +1313,24 @@ void UiSpectrumReDrawWaterfall()
 					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &mean);				// find mean value in center portion
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)
-					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
-					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
-					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 32], spec_width, &mean);				// find mean value in center portion
+					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &mean);				// find mean value in center portion
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &max, &max_ptr);		// find maximum element in center portion
-					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &min, &max_ptr);		// find minimum element in center portion
-					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 32], spec_width, &mean);				// find mean value in center portion
+					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &mean);				// find mean value in center portion
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	{	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
-					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
-					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
-					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 - 64], spec_width, &mean);				// find mean value in center portion
+					arm_max_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &mean);				// find mean value in center portion
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// we are in RF LO LOW mode (tuning is above center of screen)
-					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &max, &max_ptr);		// find maximum element in center portion
-					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &min, &max_ptr);		// find minimum element in center portion
-					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8 + 64], spec_width, &mean);				// find mean value in center portion
+					arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &max, &max_ptr);		// find maximum element in center portion
+					arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &min, &max_ptr);		// find minimum element in center portion
+					arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &mean);				// find mean value in center portion
 				}
 			}
 			else	{
@@ -1395,7 +1395,7 @@ void UiSpectrumReDrawWaterfall()
 			if(sd.magnify)	{	// is magnify mode on?
 				if(!ts.iq_freq_mode)	{	// yes - frequency translate mode is off
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						ptr = (i/2)+64;
+						ptr = (i/2) + (FFT_IQ_BUFF_LEN/8);
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
 							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
 						}
@@ -1403,7 +1403,7 @@ void UiSpectrumReDrawWaterfall()
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	{	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						ptr = (i/2)+32;
+						ptr = (i/2) + (FFT_IQ_BUFF_LEN/16);
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
 							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
 						}
@@ -1411,7 +1411,7 @@ void UiSpectrumReDrawWaterfall()
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						ptr = (i/2)+96;
+						ptr = (i/2) + (FFT_IQ_BUFF_LEN*3/16);
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
 							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
 						}
@@ -1427,7 +1427,7 @@ void UiSpectrumReDrawWaterfall()
 				}
 				else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	{	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
 					for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{	// expand data to fill entire screen - get lower half
-						ptr = (i/2)+128;
+						ptr = (i/2) + (FFT_IQ_BUFF_LEN/4);
 						if(ptr < FFT_IQ_BUFF_LEN/2)	{
 							sd.wfall_temp[i] = sd.FFT_Samples[ptr];
 						}
@@ -1449,18 +1449,18 @@ void UiSpectrumReDrawWaterfall()
 			//
 			if(sd.magnify)	{
 				sd.waterfall_colours[NUMBER_WATERFALL_COLOURS] = (ushort)ts.scope_centre_grid_colour_active;	// for some reason it is necessary to reload this entry of the palette!
-				sd.waterfall[sd.wfall_line][128] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/4] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
 			}
 			else if(!ts.iq_freq_mode)	// is frequency translate off OR magnification mode on
-				sd.waterfall[sd.wfall_line][128] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/4] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
 			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// LO HIGH - set graticule below center
-				sd.waterfall[sd.wfall_line][96] = NUMBER_WATERFALL_COLOURS;
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*3/16] = NUMBER_WATERFALL_COLOURS;
 			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// LO LOW - set graticule above center
-				sd.waterfall[sd.wfall_line][160] = NUMBER_WATERFALL_COLOURS;
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*5/16] = NUMBER_WATERFALL_COLOURS;
 			else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// LO HIGH - set graticule below center
-				sd.waterfall[sd.wfall_line][64] = NUMBER_WATERFALL_COLOURS;
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/8] = NUMBER_WATERFALL_COLOURS;
 			else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// LO LOW - set graticule above center
-				sd.waterfall[sd.wfall_line][192] = NUMBER_WATERFALL_COLOURS;
+				sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*3/8] = NUMBER_WATERFALL_COLOURS;
 
 			//
 			sd.wfall_line++;		// bump to the next line in the circular buffer for next go-around
