@@ -517,6 +517,28 @@ void UiDriver_HandleTouchScreen()
  * @param power_level The requested power level (as PA_LEVEL constants)
  * @returns true if there was indeed a power level change
  */
+bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode) {
+    if(ts.dmod_mode != DEMOD_CW)    {               // are we in a voice mode?
+        if(ts.tx_audio_source != TX_AUDIO_MIC)  {   // yes - are we in LINE IN mode?
+            Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
+        }
+        else    {   // we are in MIC IN mode
+            Codec_Line_Gain_Adj(0);         // momentarily mute MIC IN audio until we switch modes because we will blast any connected LINE IN source until we switch
+            ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
+            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);    // Mute the microphone with the CODEC (this does so without a CLICK)
+        }
+        //
+        if((ts.iq_freq_mode) && (!rx_muted))    {   // Is translate mode active and we have NOT already muted the audio?
+            Codec_Volume(0,txrx_mode);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
+            rx_muted = 1;       // indicate that we've muted the audio so we don't do this every time through
+        }
+        //
+        non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
+    }
+    return rx_muted;
+}
+
+
 bool RadioManagement_PowerLevelChange(uint8_t power_level) {
     bool retval = false;
 
@@ -547,6 +569,258 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
  *
  * @param power_level The requested power level (as PA_LEVEL constants)
  */
+bool RadioManagement_Tune(bool tune) {
+    bool retval = tune;
+    if(ts.tx_disable ||  (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM)) {
+        retval = false;    // no TUNE mode in AM or FM!
+    } else {
+        if(tune)
+        {
+            if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+            {
+                ts.power_temp = ts.power_level;             //store tx level and set tune level
+                ts.power_level = ts.tune_power_level;
+            }
+            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
+                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
+            // DDS on
+            else
+                softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
+
+            // To TX
+            RadioManagement_SwitchTXRX(TRX_MODE_TX);                // tune ON
+            retval = (ts.txrx_mode == TRX_MODE_TX);
+        }
+        else
+        {
+            if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+            {
+                ts.power_level = ts.power_temp;                 // restore tx level
+                //                  UiDriver_DisplayPowerLevel();
+            }
+            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))  // DDS off if voice mode
+                softdds_setfreq(0.0,ts.samp_rate,0);
+            else if(ts.dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
+                cw_gen_init();
+                softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
+            }
+
+            RadioManagement_SwitchTXRX(TRX_MODE_RX);                // tune OFF
+            retval = false; // no longer tuning
+        }
+    }
+    return retval;
+}
+
+uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode) {
+    uint32_t tune_freq = dial_freq;
+
+    //
+    // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
+    //
+    if(ts.dmod_mode == DEMOD_CW)    {       // In CW mode?
+        switch(ts.cw_offset_mode) {
+        case CW_OFFSET_USB_SHIFT:    // Yes - USB?
+            tune_freq -= ts.sidetone_freq;
+            // lower LO by sidetone amount
+            break;
+        case CW_OFFSET_LSB_SHIFT:   // LSB?
+            tune_freq += ts.sidetone_freq;
+            // raise LO by sidetone amount
+            break;
+        case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
+            if(ts.cw_lsb)
+                tune_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
+            else
+                tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
+        }
+    }
+    // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
+
+    if(!((ts.dmod_mode == DEMOD_CW) && (txrx_mode == TRX_MODE_TX)))  {
+        tune_freq += audio_driver_xlate_freq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
+    }
+
+    // Extra tuning actions
+    if(txrx_mode == TRX_MODE_RX)        {
+        tune_freq += (ts.rit_value*20); // Add RIT on receive
+    }
+
+    return tune_freq*TUNE_MULT;
+}
+
+
+
+void RadioManagement_EnablePABias() {
+    uint32_t   calc_var;
+
+    if((ts.pa_cw_bias) && (ts.dmod_mode == DEMOD_CW))   {   // is CW PA bias non-zero AND are we in CW mode?
+        calc_var = ts.pa_cw_bias;       // use special CW-mode bias setting
+    } else {
+        calc_var = ts.pa_bias;      // use "default" bias setting
+    }
+    calc_var = calc_var *2 + BIAS_OFFSET;
+
+    if(calc_var > 255) {
+        calc_var = 255;
+    }
+    // Set DAC Channel 1 DHR12L register
+    DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);       // set PA bias
+}
+
+
+
+
+
+bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode) {
+    // everything else uses main VFO frequency
+     uint32_t    tune_freq;
+     bool lo_change_pending = false;
+
+     // Calculate actual tune frequency
+     tune_freq = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
+
+     if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
+     {
+         if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP) {   // did the tuning require that a large tuning step occur?
+             if(ts.sysclock > RX_MUTE_START_DELAY)   {   // has system start-up completed?
+                 ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
+                 ts.rx_muting = 1;               // yes - mute audio output
+                 ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
+                 ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
+                 ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
+             }
+         }
+
+         if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)   { // prevention for SI570 crash due too fast frequency changes
+             // Set frequency
+             ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+             df.temp_factor_changed = false;
+             ts.last_tuning = ts.sysclock;
+             ts.tune_freq = tune_freq;        // frequency change required - update change detector
+             // Save current freq
+             df.tune_old = dial_freq*TUNE_MULT;
+             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED) {
+                 ts.tx_disable &= ~TX_DISABLE_OUTOFRANGE;
+             } else {
+                 ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
+             }
+
+             UiDriver_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
+             // Inform Spectrum Display code that a frequency change has happened
+             sd.dial_moved = 1;
+         } else {
+             lo_change_pending = true;
+         }
+
+     }
+
+     // successfully executed the change
+     return lo_change_pending == false;
+}
+
+
+
+Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq) {
+     // we check with the si570 code if the frequency is tunable, we do not tune to it.
+     return ui_si570_set_frequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor, 1);
+}
+
+
+
+void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
+{
+	// Calculate actual tune frequency
+    RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode);
+}
+
+
+
+void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
+{
+
+    static bool rx_muted = 0;
+    uint32_t tune_new;
+    bool tx_ok = false;
+
+    if(is_splitmode())  {               // is SPLIT mode active?
+        uint8_t vfo_tx,vfo_rx;
+        if (is_vfo_b()) {
+            vfo_rx = VFO_B;
+            vfo_tx = VFO_A;
+        } else {
+            vfo_rx = VFO_A;
+            vfo_tx = VFO_B;
+        }
+        if(txrx_mode == TRX_MODE_TX) {   // are we in TX mode?
+            if(ts.txrx_mode == TRX_MODE_RX) {                       // did we want to enter TX mode?
+                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in VFO location (B)
+            }
+            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+        }
+        else {                  // we are in RX mode
+            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-B frequency
+        }
+    } else {
+        // we just take the current one if not in split mode
+        tune_new = df.tune_new;
+    }
+
+    if(txrx_mode == TRX_MODE_TX)
+    {
+
+        // FIXME: Not very robust code
+        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != SI570_TUNE_IMPOSSIBLE;
+
+        if (tx_ok) {
+            //
+            // Below, in VOICE modes we mute the audio BEFORE we activate the PTT.  This is necessary since U3 is switched the instant that we do so,
+            // rerouting audio paths and causing all sorts of disruption including CLICKs and squeaks.
+            // We restore TX audio levels in the function "Codec_RX_TX()" according to operating mode
+            //
+            ts.tx_audio_muting_flag = 1; // let the audio being muted initially
+            ts.dsp_inhibit = 1;                             // disable DSP when going into TX mode
+            //
+            UiDriver_HandlePowerLevelChange(ts.power_level);
+            // make sure that power level and mode fit together
+
+            rx_muted = Codec_PrepareTx(rx_muted, txrx_mode);
+
+            PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
+            RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
+
+            //  initialize everything in CW mode
+            if(ts.dmod_mode == DEMOD_CW)    {
+                softdds_setfreq((float)ts.sidetone_freq, ts.samp_rate,0);   // set sidetone frequency in CW mode (this also set TX shift)
+            }
+            RadioManagement_EnablePABias();
+        }
+    }
+
+    // only switch mode if tx was permitted or rx was requested
+    if (txrx_mode == TRX_MODE_RX || tx_ok == true) {
+        df.tune_new = tune_new;
+        RadioManagement_UpdateFrequencyFast(txrx_mode);
+    }
+
+    if (txrx_mode == TRX_MODE_RX || tx_ok == false) {
+        PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
+        RED_LED_PIO->BSRRH      = RED_LED;      // Red led off
+        rx_muted = 0;       // clear flag to indicate that we've muted the audio
+    }
+
+
+    if (tx_ok == true || (txrx_mode == TRX_MODE_RX  && ts.txrx_mode != TRX_MODE_RX)) {
+        // Switch codec mode
+        Codec_RX_TX(txrx_mode);
+        ts.txrx_mode = txrx_mode;
+    }
+
+}
+
+
+
+
 void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
     //
     if (RadioManagement_PowerLevelChange(power_level)) {
@@ -673,7 +947,7 @@ void ui_driver_init()
 	// Update codec volume
 	//  0 - 16: via codec command
 	// 17 - 30: soft gain after decoder
-	Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*8));		// This is only approximate - it will be properly set later
+	Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*8),ts.txrx_mode);		// This is only approximate - it will be properly set later
 
 	// Set TX power factor
 	UiDriverSetBandPowerFactor(ts.band);
@@ -697,6 +971,12 @@ void ui_driver_init()
 	printf("ui driver init ok\n\r");
 #endif
 }
+/*
+ * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
+ * I.e. it is not possible to tune on an unsupported frequency
+ * @param tune  true if tune is to be enabled
+ * @returns true if has been enabled, false if tune is disabled now
+ */
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_thread
@@ -772,130 +1052,9 @@ void ui_driver_thread()
   }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_driver_toggle_tx
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void ui_driver_toggle_tx(uint8_t mode)
-{
-
-	static bool was_rx = 1;
-	static bool rx_muted = 0;
-	bool	reset_freq = 0;
-	ulong	calc_var;
-
-	if(mode == TRX_MODE_TX)
-	{
-		//
-		// Below, in VOICE modes we mute the audio BEFORE we activate the PTT.  This is necessary since U3 is switched the instant that we do so,
-		// rerouting audio paths and causing all sorts of disruption including CLICKs and squeaks.
-		// We restore TX audio levels in the function "Codec_RX_TX()" according to operating mode
-		//
-	    ts.tx_audio_muting_flag = 1; // let the audio being muted initially
-		ts.dsp_inhibit = 1;								// disable DSP when going into TX mode
-		//
-		UiDriver_HandlePowerLevelChange(ts.power_level);
-		// make sure that power level and mode fit together
-		//
-		if(ts.dmod_mode != DEMOD_CW)	{				// are we in a voice mode?
-			if(ts.tx_audio_source != TX_AUDIO_MIC)	{	// yes - are we in LINE IN mode?
-				Codec_Line_Gain_Adj(0);	// yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
-			}
-			else	{	// we are in MIC IN mode
-				Codec_Line_Gain_Adj(0);			// momentarily mute LINE IN audio until we switch modes because we will blast any connected LINE IN source until we switch
-				ts.tx_mic_gain_mult = 0;		// momentarily set the mic gain to zero while we go to TX
-				Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);	// Mute the microphone with the CODEC (this does so without a CLICK)
-			}
-			//
-			if((ts.iq_freq_mode) && (!rx_muted))	{	// Is translate mode active and we have NOT already muted the audio?
-				Codec_Volume(0);	// yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
-				rx_muted = 1;		// indicate that we've muted the audio so we don't do this every time through
-			}
-			//
-			non_os_delay();		// pause an instant because the codec chip has its own delay before tasks complete!
-		}
-		//
-		PTT_CNTR_PIO->BSRRL  	= PTT_CNTR;		// TX on and switch CODEC audio paths
-		RED_LED_PIO->BSRRL 		= RED_LED;		// Red led on
-		//
-		// Set the PA bias according to mode
-		//
-		if((ts.pa_cw_bias) && (ts.dmod_mode == DEMOD_CW))	{	// is CW PA bias non-zero AND are we in CW mode?
-			calc_var = BIAS_OFFSET + (ts.pa_cw_bias * 2);		// use special CW-mode bias setting
-			if(calc_var > 255)
-				calc_var = 255;
-			//
-			// Set DAC Channel 1 DHR12L register
-			DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);		// set PA bias
-		}
-		else	{
-			calc_var = BIAS_OFFSET + (ts.pa_bias * 2);		// use "default" bias setting
-			if(calc_var > 255)
-				calc_var = 255;
-			//
-			// Set DAC Channel 1 DHR12L register
-			DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);		// set PA bias
-		}
-		//
-		//	initialize everything in CW mode
-		if(ts.dmod_mode == DEMOD_CW)	{
-			softdds_setfreq((float)ts.sidetone_freq, ts.samp_rate,0);	// set sidetone frequency in CW mode (this also set TX shift)
-		}
-	}
-	// RX Mode
-	else
-	{
-		was_rx = 1;								// indicate that we WERE in RX mode
-		PTT_CNTR_PIO->BSRRH  	= PTT_CNTR;		// TX off
-		RED_LED_PIO->BSRRH 		= RED_LED;		// Red led off
-		//
-		//
-		rx_muted = 0;		// clear flag to indicate that we've muted the audio
-	}
-
-	reset_freq = 0;		// clear flag that indicates that we should reset the frequency
-
-	if(is_splitmode())	{				// is SPLIT mode active?
-		reset_freq = 1;							// yes - indicate that we WILL need to reset the synthesizer frequency
-		if(is_vfo_b())	{				// is VFO-B active?
-			if(mode == TRX_MODE_TX)	{	// are we in TX mode?
-				if(was_rx)	{						// did we just enter TX mode?
-					vfo[VFO_B].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (B)
-					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
-				}
-				df.tune_new = vfo[VFO_A].band[ts.band].dial_value;	// load with VFO-A frequency
-			}
-			else					// we are in RX mode
-				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
-		}
-		else	{	// VFO-A is active
-			if(mode == TRX_MODE_TX)	{				// are we in TX mode?
-				if(was_rx)	{								// did we just enter TX mode?
-					vfo[VFO_A].band[ts.band].dial_value = df.tune_new;	// yes - save current RX frequency in VFO location (A)
-					was_rx = 0;						// indicate that we are now in transmit mode to prevent re-loading of frequency
-				}
-				df.tune_new = vfo[VFO_B].band[ts.band].dial_value;	// load with VFO-B frequency
-			}
-			else							// we are in RX mode
-				df.tune_new = vfo[VFO_A].band[ts.band].dial_value;	// load with VFO-A frequency
-		}
-	}
-
-	if((reset_freq) || (ts.rit_value) || ((ts.iq_freq_mode) && (ts.dmod_mode == DEMOD_CW)))	{
-	  // Re-set frequency if RIT is non-zero or in CW mode with translate OR if in SPLIT mode and we had to retune
-	  RadioManagement_UpdateFrequencyFast(mode);
-	}
-
-	// Switch codec mode
-	Codec_RX_TX(mode);
-
-	ts.txrx_mode = mode;
- }
-
+/*
+ * @brief Set the PA bias according to mode
+ */
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverPublicsInit
 //* Object              :
@@ -1652,59 +1811,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	// F5 process
 	if(id == BUTTON_F5_PRESSED)
 	{
-		if(!ts.tx_disable)	{	// Allow TUNE mode only if TX is NOT disabled
-			// Toggle tune
-			ts.tune = !ts.tune;
-
-			if((ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
-				ts.tune = 0;	// no TUNE mode in AM or FM!
-
-			// Enter TUNE mode
-			if(ts.tune)
-			{
-				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
-				    {
-				    ts.power_temp = ts.power_level;				//store tx level and set tune level
-				    ts.power_level = ts.tune_power_level;
-				    UiDriver_DisplayPowerLevel();
-				    }
-				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
-					softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);		// generate tone for setting TX IQ phase
-				// DDS on
-				else
-					softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
-
-				// To TX
-				ui_driver_toggle_tx(TRX_MODE_TX);				// tune ON
-
-				UiDriverFButtonLabel(5,"TUNE",Red);
-				//
-			}
-			else
-			{
-				if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
-				    {
-				    ts.power_level = ts.power_temp;					// restore tx level
-//				    UiDriver_DisplayPowerLevel();
-				    }
-				if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))	// DDS off if voice mode
-					softdds_setfreq(0.0,ts.samp_rate,0);
-				else if(ts.dmod_mode == DEMOD_CW)	{	// DDS reset to proper sidetone freq. if CW mode
-					cw_gen_init();
-					softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-				}
-				//
-				// Back to RX
-				ui_driver_toggle_tx(TRX_MODE_RX);				// tune OFF
-				UiDriver_DisplayPowerLevel();			// former position was upper commented out position
-										// at this position display error in CW when using LCD in parallel
-										// mode and working power is FULL and TUNE power is 5W
-										// WARNING THIS WORKAROUND IS UGLY
-
-				UiDriverFButtonLabel(5,"TUNE",White);
-				//
-			}
-		}
+	    ts.tune = RadioManagement_Tune(!ts.tune);
+	    UiDriver_DisplayPowerLevel();           // former position was upper commented out position
+        UiDriverFButtonLabel(5,"TUNE",ts.tune?Red:White);
 	}
 }
 
@@ -2866,96 +2975,15 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 
 
 
-uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode) {
-    uint32_t tune_freq = dial_freq;
-
-    //
-    // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
-    //
-    if(ts.dmod_mode == DEMOD_CW)    {       // In CW mode?
-        switch(ts.cw_offset_mode) {
-        case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            tune_freq -= ts.sidetone_freq;
-            // lower LO by sidetone amount
-            break;
-        case CW_OFFSET_LSB_SHIFT:   // LSB?
-            tune_freq += ts.sidetone_freq;
-            // raise LO by sidetone amount
-            break;
-        case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
-            if(ts.cw_lsb)
-                tune_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
-            else
-                tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
-        }
-    }
-    // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
-
-    if(!((ts.dmod_mode == DEMOD_CW) && (txrx_mode == TRX_MODE_TX)))  {
-        tune_freq += audio_driver_xlate_freq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
-    }
-
-    // Extra tuning actions
-    if(txrx_mode == TRX_MODE_RX)        {
-        tune_freq += (ts.rit_value*20); // Add RIT on receive
-    }
-
-    return tune_freq*TUNE_MULT;
-}
-
 /*
  * @brief Changes the tune frequency according to mode and other settings
  * @param dial_freq The desired dial frequency in Hz (not the tune frequency of the LO)
  * @returns true if the change was executed  (even if it is not tunable freq), false if the change is pending
  */
-bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode) {
-    // everything else uses main VFO frequency
-     uint32_t    tune_freq;
-     bool lo_change_pending = false;
-
-     // Calculate actual tune frequency
-     tune_freq = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
-
-     if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
-     {
-         if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP) {   // did the tuning require that a large tuning step occur?
-             if(ts.sysclock > RX_MUTE_START_DELAY)   {   // has system start-up completed?
-                 ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
-                 ts.rx_muting = 1;               // yes - mute audio output
-                 ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
-                 ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
-                 ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
-             }
-         }
-
-         if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)   { // prevention for SI570 crash due too fast frequency changes
-             // Set frequency
-             ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
-             df.temp_factor_changed = false;
-             ts.last_tuning = ts.sysclock;
-             ts.tune_freq = tune_freq;        // frequency change required - update change detector
-             // Save current freq
-             df.tune_old = dial_freq*TUNE_MULT;
-             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED) {
-                 ts.tx_disable &= ~TX_DISABLE_OUTOFRANGE;
-             } else {
-                 ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
-             }
-
-             UiDriver_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
-             // Inform Spectrum Display code that a frequency change has happened
-             sd.dial_moved = 1;
-         } else {
-             lo_change_pending = true;
-         }
-
-     }
-
-     // successfully executed the change
-     return lo_change_pending == false;
-}
-
-
+/*
+ * @brief Check if a frequency is tunable
+ * @returns SI570_OK, SI570_LARGE_STEP, SI570_TUNE_LIMITED if ok, SI570_TUNE_IMPOSSIBLE if not OK
+ */
 /*
  * @brief Used to update the individual vfo displays, not meant to be called directly except when changing LO
  * @brief parameters (in this case use (true,0)), use UiDriver_FrequencyUpdateLOandDisplay(full_update) instead
@@ -2965,8 +2993,19 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
  *
  * WARNING:  If called with "mode = 3", you must ALWAYS call again with "mode = 2" to reset internal variables.
  */
-
-//FXIME: Merge non UI part with RadioManagement_UpdateFrequencyFast() instead of replicating code
+/*
+ * @brief change LO freq to match df.tune_new freq according to mode without updating the ui
+ *
+ * @param trx_mode The mode which the frequency is being used for (TRX_MODE_TX/TRX_MODE_RX)
+ */
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_driver_toggle_tx
+//* Object              :
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
 void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 {
 
@@ -2981,7 +3020,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
         dial_freq = vfo[tx_vfo].band[ts.band].dial_value / TUNE_MULT;
 
         // we check with the si570 code if the frequency is tunable, we do not tune to it.
-        lo_result = ui_si570_set_frequency(RadioManagement_Dial2TuneFrequency(dial_freq, ts.txrx_mode),ts.freq_cal,df.temp_factor, 1);
+        lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
 
     } else {
         dial_freq = df.tune_new/TUNE_MULT;
@@ -3030,16 +3069,6 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 }
 
 
-/*
- * @brief change LO freq to match df.tune_new freq according to mode without updating the ui
- *
- * @param trx_mode The mode which the frequency is being used for (TRX_MODE_TX/TRX_MODE_RX)
- */
-void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
-{
-	// Calculate actual tune frequency
-    RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode);
-}
 
 static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
 {
@@ -3490,16 +3519,16 @@ static void UiDriverTimeScheduler()
     // Audio un-muting handler and volume control handler
     if(ts.boot_halt_flag)	{	// are we halting boot?
       ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
-      Codec_Volume(0);
+      Codec_Volume(0,ts.txrx_mode);
     }
     else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || unmute_flag)	{	// in normal mode - calculate volume normally
 
       ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
       ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
       if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16) {				// Note:  Gain > 16 adjusted in audio_driver.c via software
-        Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5));
+        Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5),ts.txrx_mode);
       } else {	// are we in the "software amplification" range?
-        Codec_Volume((80));		// set to fixed "maximum" gain
+        Codec_Volume((80),ts.txrx_mode);		// set to fixed "maximum" gain
         ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
         ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
         ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
@@ -3762,132 +3791,133 @@ static void UiDriverChangeDemodMode(uchar noskip)
 //*----------------------------------------------------------------------------
 static void UiDriverChangeBand(uchar is_up)
 {
-	ulong 	curr_band_index;	// index in band table of currently selected band
-	ulong	new_band_index;		// index of the new selected band
+    ulong 	curr_band_index;	// index in band table of currently selected band
+    ulong	new_band_index;		// index of the new selected band
 
-	ulong 	new_band_freq;		// new dial frequency
+    ulong 	new_band_freq;		// new dial frequency
 
-	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
+    uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
-	//printf("-----------> change band\n\r");
+    //printf("-----------> change band\n\r");
 
-	// Do not allow band change during TX
-	if(ts.txrx_mode == TRX_MODE_TX)
-		return;
+    // Do not allow band change during TX
+    if(ts.txrx_mode != TRX_MODE_TX)
+    {
 
-	Codec_Volume(0);		// Turn volume down to suppress click
-	ts.band_change = 1;		// indicate that we need to turn the volume back up after band change
-	ads.agc_holder = ads.agc_val;	// save the current AGC value to reload after the band change so that we can better recover
-									// from the loud "POP" that will occur when we change bands
+        Codec_Volume(0,ts.txrx_mode);		// Turn volume down to suppress click
+        ts.band_change = 1;		// indicate that we need to turn the volume back up after band change
+        ads.agc_holder = ads.agc_val;	// save the current AGC value to reload after the band change so that we can better recover
+        // from the loud "POP" that will occur when we change bands
 
-	curr_band_index = ts.band;
+        curr_band_index = ts.band;
 
-	//printf("current index: %d and freq: %d\n\r",curr_band_index,tune_bands[ts.band]);
+        //printf("current index: %d and freq: %d\n\r",curr_band_index,tune_bands[ts.band]);
 
-	// Save old band values
-	if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
-	    {
-	    // Save dial
-	    vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
-	    vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
-	    }
-	else
-	    ts.cat_band_index = 255;
-	    
-	// Handle direction
-	if(is_up)
-	{
-		if(curr_band_index < (MAX_BANDS - 1))
-		{
-			//printf("going up band\n\r");
+        // Save old band values
+        if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
+        {
+            // Save dial
+            vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
+            vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
+        }
+        else
+            ts.cat_band_index = 255;
 
-			// Increase
-			new_band_index = curr_band_index + 1;
-			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
-			{						// jump 10m --> 160m
-				new_band_index = MAX_BANDS-1;
-			}
-			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 8)
-			{						// jump 10m --> 2m
-				new_band_index = 11;
-			}
-			if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 13)
-			{						// jump 2200m --> 16m
-				new_band_index = 16;
-			}
-			if(ts.rfmod_present == 1 && ts.vhfuhfmod_present == 0 && curr_band_index == 10)
-			{						// jump 4m --> 2200m
-				new_band_index = 14;
-			}
+        // Handle direction
+        if(is_up)
+        {
+            if(curr_band_index < (MAX_BANDS - 1))
+            {
+                //printf("going up band\n\r");
 
-		}
-		else	{	// wrap around to the lowest band
-			new_band_index = MIN_BANDS;
-		}
-	}
-	else
-	{
-		if(curr_band_index)
-		{
-			// Decrease
-			new_band_index = curr_band_index - 1;
-			if(ts.rfmod_present == 0 && curr_band_index == MAX_BANDS-1)
-			{		// jump 160m --> 23cm
-				new_band_index = 13;
-			}
-			if(ts.vhfuhfmod_present == 0 && new_band_index == 13)
-			{		// jump 2200m --> 6m
-				new_band_index = 10;
-			}
-			if(ts.rfmod_present == 0 && new_band_index == 10)
-			{		// jump 2m --> 10m
-				new_band_index = 8;
-			}
-		}
-		else
-		{	// wrap around to the highest band
-			new_band_index = MAX_BANDS-1;
-		}
-	}
-	new_band_freq  = bandInfo[curr_band_index].tune;
+                // Increase
+                new_band_index = curr_band_index + 1;
+                if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
+                {						// jump 10m --> 160m
+                    new_band_index = MAX_BANDS-1;
+                }
+                if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 8)
+                {						// jump 10m --> 2m
+                    new_band_index = 11;
+                }
+                if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 13)
+                {						// jump 2200m --> 16m
+                    new_band_index = 16;
+                }
+                if(ts.rfmod_present == 1 && ts.vhfuhfmod_present == 0 && curr_band_index == 10)
+                {						// jump 4m --> 2200m
+                    new_band_index = 14;
+                }
 
-	// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
-	// Load frequency value - either from memory or default for
-	// the band if this is first band selection
-	if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
-	    df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
-	else
-	    df.tune_new = new_band_freq; 					// Load new frequency from startup
+            }
+            else	{	// wrap around to the lowest band
+                new_band_index = MIN_BANDS;
+            }
+        }
+        else
+        {
+            if(curr_band_index)
+            {
+                // Decrease
+                new_band_index = curr_band_index - 1;
+                if(ts.rfmod_present == 0 && curr_band_index == MAX_BANDS-1)
+                {		// jump 160m --> 23cm
+                    new_band_index = 13;
+                }
+                if(ts.vhfuhfmod_present == 0 && new_band_index == 13)
+                {		// jump 2200m --> 6m
+                    new_band_index = 10;
+                }
+                if(ts.rfmod_present == 0 && new_band_index == 10)
+                {		// jump 2m --> 10m
+                    new_band_index = 8;
+                }
+            }
+            else
+            {	// wrap around to the highest band
+                new_band_index = MAX_BANDS-1;
+            }
+        }
+        new_band_freq  = bandInfo[curr_band_index].tune;
 
-//	UiDriverUpdateFrequency(1,0);
+        // TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
+        // Load frequency value - either from memory or default for
+        // the band if this is first band selection
+        if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
+            df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
+        else
+            df.tune_new = new_band_freq; 					// Load new frequency from startup
 
-//	// Also reset second freq display
-//	UiDriverUpdateSecondLcdFreq(df.tune_new/TUNE_MULT);
+        //	UiDriverUpdateFrequency(1,0);
 
-	// Change decode mode if need to
-	if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
-	{
-		// Update mode
-		ts.dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+        //	// Also reset second freq display
+        //	UiDriverUpdateSecondLcdFreq(df.tune_new/TUNE_MULT);
 
-		// Update Decode Mode (USB/LSB/AM/FM/CW)
-		UiDriverShowMode();
-	}
+        // Change decode mode if need to
+        if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
+        {
+            // Update mode
+            ts.dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+
+            // Update Decode Mode (USB/LSB/AM/FM/CW)
+            UiDriverShowMode();
+        }
 
 
-	// Create Band value
-	UiDriverShowBand(new_band_index);
+        // Create Band value
+        UiDriverShowBand(new_band_index);
 
-	// Set TX power factor
-	UiDriverSetBandPowerFactor(new_band_index);
+        // Set TX power factor
+        UiDriverSetBandPowerFactor(new_band_index);
 
-	// Set filters
-	UiDriverChangeBandFilter(new_band_index);
+        // Set filters
+        UiDriverChangeBandFilter(new_band_index);
 
-	// Finally update public flag
-	ts.band = new_band_index;
+        // Finally update public flag
+        ts.band = new_band_index;
 
-	UiDriver_FrequencyUpdateLOandDisplay(false);
+        UiDriver_FrequencyUpdateLOandDisplay(false);
+    }
 }
 
 /**
@@ -5832,7 +5862,7 @@ static void UiDriver_HandlePttOnOff()
     if(ts.txrx_mode == TRX_MODE_RX)
     {
       if(!ts.tx_disable)	{
-        ui_driver_toggle_tx(TRX_MODE_TX);
+        RadioManagement_SwitchTXRX(TRX_MODE_TX);
       }
     }
 
@@ -5860,7 +5890,7 @@ static void UiDriver_HandlePttOnOff()
           ptt_break = 0;
 
           // Back to RX
-          ui_driver_toggle_tx(TRX_MODE_RX);				// PTT
+          RadioManagement_SwitchTXRX(TRX_MODE_RX);				// PTT
 
           // Unlock
           //ts.txrx_lock = 0;
