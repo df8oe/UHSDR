@@ -513,7 +513,7 @@ typedef struct EepromSave
 // Exports
 void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
-void 	ui_driver_toggle_tx(uint8_t mode);
+
 void 	UiDriverLoadFilterValue(void);
 void 	UiSpectrumClearDisplay(void);
 //
@@ -524,7 +524,6 @@ void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 void 	UiSpectrumCreateDrawArea(void);
 
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
-void 	RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
 void 	UiDriverSetBandPowerFactor(uchar band);
 void 	UiDrawSpectrumScopeFrequencyBarText(void);
 //
@@ -558,6 +557,9 @@ void	UiInitRxParms();
 void    UiDriver_KeyTestScreen();
 
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
+
+void RadioManagement_SwitchTXRX(uint8_t txrx_mode);
+void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
 

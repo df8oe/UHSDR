@@ -79,7 +79,7 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
 	// Reg 03: Right Headphone out (0dB)
 	//Codec_WriteRegister(0x03,0x0079);
 
-	Codec_Volume(0);
+	Codec_Volume(0,ts.txrx_mode);
 
 	// Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
 	Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0012);
@@ -158,7 +158,7 @@ void Codec_RX_TX(uint8_t mode)
 	if(mode == TRX_MODE_RX)
 	{
 		// First step - mute sound
-		Codec_Volume(0);
+		Codec_Volume(0,mode);
 
 		// Mute line input
 		Codec_Line_Gain_Adj(0);
@@ -187,7 +187,7 @@ void Codec_RX_TX(uint8_t mode)
 	}
 	else		// It is transmit
 	{
-		Codec_Volume(0);	// Mute sound
+		Codec_Volume(0,mode);	// Mute sound
 		//
 		ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
 		//
@@ -203,7 +203,7 @@ void Codec_RX_TX(uint8_t mode)
 		else	{	// Not CW or TUNE mode
 			//
 			for(mute_count = 0; mute_count < 8; mute_count++) {		// Doing this seems to suppress the loud CLICK
-				Codec_Volume(0);	// that occurs when going from RX to TX in modes other than CW
+				Codec_Volume(0,mode);	// that occurs when going from RX to TX in modes other than CW
 			}
 				// This is probably because of the delay between the mute command, above, and the
 			//
@@ -263,7 +263,7 @@ float vcalc, vcalc1;
     else {						// mute if zero value
       vcalc = 0;
     }
-    Codec_Volume((uchar)vcalc);		// set the calculated sidetone volume
+    Codec_Volume((uchar)vcalc,mode);		// set the calculated sidetone volume
   }
 }
 
@@ -278,7 +278,7 @@ float vcalc, vcalc1;
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-void Codec_Volume(uchar vol)
+void Codec_Volume(uchar vol, uint8_t txrx_mode)
 {
 //	ts.codec_vol = vol;		// copy codec volume for global use
 	ulong lv = vol;
@@ -299,7 +299,7 @@ void Codec_Volume(uchar vol)
 	//
 	// Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
 	//
-	if(ts.txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
+	if(txrx_mode == TRX_MODE_TX)	{	// in transmit mode?
 		if(ts.iq_freq_mode || (ts.misc_flags1& MISC_FLAGS1_MUTE_LINEOUT_TX))	// is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
 			Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);	// yes - mute LINE OUT during transmit
 		else							// audio is NOT to be muted during transmit
