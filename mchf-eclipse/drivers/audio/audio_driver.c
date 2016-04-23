@@ -370,16 +370,8 @@ void audio_driver_set_rx_audio_filter(void)
 	// it is only a lightweight filter with one stage (= 2nd order IIR)
 	// but nonetheless very effective
 	//
-	// now it is time for the DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
+	// DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
 	// www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
-	//
-	float32_t FS = 48000; // should this become a global variable?
-	float32_t f0 = 2000; // notch frequency --> TODO: will be set by encoder2
-	float32_t Q = 200; // larger Q gives narrower notch
-	float32_t w0 = 2 * PI * f0 / FS;
-	float32_t alpha = sin(w0) / (2 * Q);
-	float32_t a0 = 1; // gain scaling
-	float32_t b0,b1,b2,a1,a2;
 	//
 	// the ARM algorithm assumes the biquad form
 	// y[n] = b0 * x[n] + b1 * x[n-1] + b2 * x[n-2] + a1 * y[n-1] + a2 * y[n-2]
@@ -392,6 +384,15 @@ void audio_driver_set_rx_audio_filter(void)
 	// Therefore, we have to use negated a1 and a2 for use with the ARM function
 	// notch implementation
 	//
+	float32_t FS = 48000; // should this become a global variable?
+//	float32_t f0 = 2000; // notch frequency --> TODO: will be set by encoder2
+	float32_t f0 = ts.notch_frequency;
+	float32_t Q = 1; // larger Q gives narrower notch
+	float32_t w0 = 2 * PI * f0 / FS;
+	float32_t alpha = sin(w0) / (2 * Q);
+	float32_t a0 = 1; // gain scaling
+	float32_t b0,b1,b2,a1,a2;
+
 	b0 = 1;
 	b1 = - 2 * cos(w0);
 	b2 = 1;
@@ -406,6 +407,8 @@ void audio_driver_set_rx_audio_filter(void)
 	a1 = a1/a0;
 	a2 = a2/a0;
 
+	// setting the Coefficients in the notch filter instance
+	// while not using pointers
 	IIR_Notch.pCoeffs[0] = b0;
 	IIR_Notch.pCoeffs[1] = b1;
 	IIR_Notch.pCoeffs[2] = b2;

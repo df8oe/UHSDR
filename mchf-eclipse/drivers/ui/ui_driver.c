@@ -83,6 +83,7 @@ static void 	UiDriverChangeEncoderOneMode(uchar skip);
 static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
+static void 	UiDriverDisplayNotch(uchar enabled);
 static void 	UiDriverChangeRit(uchar enabled);
 static void 	UiDriverChangeDSPMode();
 static void 	UiDriverChangeDigitalMode();
@@ -1189,8 +1190,14 @@ static void UiDriverProcessKeyboard()
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
-				if (ts.notch_enabled) ts.notch_enabled = 0; // switch on/off notch filter
-				else ts.notch_enabled = 1;
+				if (ts.notch_enabled) {
+					ts.notch_enabled = 0; // switch off notch filter
+					UiDriverDisplayNotch(0); // display
+				}
+					else {
+						ts.notch_enabled = 1;
+						UiDriverDisplayNotch(1); //display
+					}
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
@@ -1348,7 +1355,7 @@ void UiInitRxParms()
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
     UiDriverChangeRfGain(1);    // update RFG/SQL on screen
-
+    UiDriverDisplayNotch(0);
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 
@@ -4040,9 +4047,12 @@ static void UiDriverCheckEncoderTwo()
 
   if (pot_diff) {
     UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
+
     if (filter_path_change) {
-      AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-      UiInitRxParms();
+      if(!ts.notch_enabled){
+    	AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+    	UiInitRxParms();
+      }
     } else  if(ts.menu_mode)    {
       UiMenu_RenderChangeItem(pot_diff);
     } else {
@@ -4129,7 +4139,23 @@ static void UiDriverCheckEncoderTwo()
           UiDriverChangeSigProc(1);
           break;
         }
-
+        case ENC_TWO_MODE_NOTCH_F: {
+        	if (ts.notch_enabled) { // notch f is only adjustable when notch is enabled
+        	if(pot_diff < 0) {
+        		ts.notch_frequency = ts.notch_frequency - 10;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.notch_frequency = ts.notch_frequency + 10;
+        	}
+        	if (ts.notch_frequency < 200) ts.notch_frequency = 200;
+        	if (ts.notch_frequency > 12000) ts.notch_frequency = 12000;
+        	// display notch frequency
+        	UiDriverDisplayNotch(1);
+        	// set notch filter instance
+        	audio_driver_set_rx_audio_filter();
+        }
+        	break;
+        }
         default:
           break;
         }
@@ -4372,6 +4398,19 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 			break;
 		}
 
+		case ENC_TWO_MODE_NOTCH_F:
+		{
+			// RF gain
+			UiDriverChangeRfGain(0);
+
+			// DSP/Noise Blanker
+			UiDriverChangeSigProc(0);
+
+			UiDriverDisplayNotch(1);
+
+			break;
+		}
+
 		// Disable all
 		default:
 		{
@@ -4380,7 +4419,7 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 
 			// DSP/Noise Blanker
 			UiDriverChangeSigProc(0);
-
+			UiDriverDisplayNotch(0);
 			break;
 		}
 	}
@@ -4787,6 +4826,28 @@ static void UiDriverChangeSigProc(uchar enabled)
 
 	UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
 }
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverDisplayNotch
+//* Object              : Display settings related to manual notch filter
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void UiDriverDisplayNotch(uchar enabled) {
+
+	uint32_t label_color = enabled?Black:Grey1;
+	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
+	                      label_color, Grey, 0);
+	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+
+	  char temp[6];
+	  uint32_t color = enabled?White:Grey;
+	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
+	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+	  	                           color, Black, 0);
+} // end void UiDriverDisplayNotch
 
 
 //
