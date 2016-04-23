@@ -4856,7 +4856,9 @@ static void UiDriverChangeSigProc(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverDisplayNotch(uchar enabled) {
 
-	uint32_t label_color = enabled?Black:Grey1;
+	if(enabled)
+	  {
+	  uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
 	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
 	                      label_color, Grey, 0);
@@ -4870,6 +4872,10 @@ static void UiDriverDisplayNotch(uchar enabled) {
 	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
 	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
 	  	                           color, Black, 0);
+	  }
+	else
+	  UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+
 } // end void UiDriverDisplayNotch
 
 
