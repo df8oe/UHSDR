@@ -529,7 +529,7 @@ void TransceiverStateInit(void)
 	ts.sam_enabled = 0;						// demodulation mode SAM not enabled
 	ts.notch_enabled = 0;
 	ts.spectrum_light = 0;					// light spectrum display without grid and points instead of bars
-	ts.notch_frequency = 2000;				// notch start frequency for manual notch filter
+	ts.notch_frequency = 800;				// notch start frequency for manual notch filter
 }
 
 //*----------------------------------------------------------------------------

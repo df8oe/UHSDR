@@ -387,7 +387,7 @@ void audio_driver_set_rx_audio_filter(void)
 	float32_t FS = 48000; // should this become a global variable?
 //	float32_t f0 = 2000; // notch frequency --> TODO: will be set by encoder2
 	float32_t f0 = ts.notch_frequency;
-	float32_t Q = 1; // larger Q gives narrower notch
+	float32_t Q = 10; // larger Q gives narrower notch
 	float32_t w0 = 2 * PI * f0 / FS;
 	float32_t alpha = sin(w0) / (2 * Q);
 	float32_t a0 = 1; // gain scaling

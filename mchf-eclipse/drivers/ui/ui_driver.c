@@ -1192,11 +1192,21 @@ static void UiDriverProcessKeyboard()
 				UiInitRxParms();			// generate "reference" for sidetone frequency
 				if (ts.notch_enabled) {
 					ts.notch_enabled = 0; // switch off notch filter
+					UiDriverChangeRfGain(1);
+					// DSP/Noise Blanker
+					UiDriverChangeSigProc(0);
+					ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 					UiDriverDisplayNotch(0); // display
 				}
 					else {
 						ts.notch_enabled = 1;
-						UiDriverDisplayNotch(1); //display
+						// RF gain
+						UiDriverChangeRfGain(0);
+						// DSP/Noise Blanker
+						UiDriverChangeSigProc(0);
+						// notch display
+						UiDriverDisplayNotch(1);
+						ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
 					}
 				break;
 			}
@@ -1500,6 +1510,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				// FIXME: Call twice since the function TOGGLES, not just enables (need to fix this at some point!)
 				UiDriverChangeEncoderOneMode(0);
 				UiDriverChangeEncoderTwoMode(0);
+				UiDriverChangeEncoderTwoMode(0); // we have three different things: RFG/NB/NOTCH !
 				UiDriverChangeEncoderThreeMode(0);
 				UiDriverChangeFilterDisplay();	// update bandwidth display
 				// Label for Button F1
@@ -4048,12 +4059,16 @@ static void UiDriverCheckEncoderTwo()
   if (pot_diff) {
     UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 
-    if (filter_path_change) {
+    // I have taken the freedom to free encoder 2 from filter path
+    // in order to free it for the notch frequency adjustment
+/*    if (filter_path_change) {
       if(!ts.notch_enabled){
     	AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
     	UiInitRxParms();
       }
-    } else  if(ts.menu_mode)    {
+    } else
+  */
+    	if(ts.menu_mode)    {
       UiMenu_RenderChangeItem(pot_diff);
     } else {
       if(ts.txrx_mode == TRX_MODE_RX)	{
@@ -4365,6 +4380,10 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 	if(!skip)
 	{
 		ts.enc_two_mode++;
+		// only switch to notch frequency adjustment, if notch enabled!
+		if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && !ts.notch_enabled) ts.enc_two_mode++;
+
+		// flip round
 		if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
 			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 
@@ -4382,9 +4401,10 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 		{
 			// RF gain
 			UiDriverChangeRfGain(1);
-
 			// DSP/Noise Blanker
 			UiDriverChangeSigProc(0);
+			// notch display
+			UiDriverDisplayNotch(0);
 			break;
 		}
 
@@ -4392,9 +4412,10 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 		{
 			// RF gain
 			UiDriverChangeRfGain(0);
-
 			// DSP/Noise Blanker
 			UiDriverChangeSigProc(1);
+			// notch display
+			UiDriverDisplayNotch(0);
 			break;
 		}
 
@@ -4402,10 +4423,9 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 		{
 			// RF gain
 			UiDriverChangeRfGain(0);
-
 			// DSP/Noise Blanker
 			UiDriverChangeSigProc(0);
-
+			// notch display
 			UiDriverDisplayNotch(1);
 
 			break;
@@ -4838,12 +4858,15 @@ static void UiDriverDisplayNotch(uchar enabled) {
 
 	uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
-	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 2), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
 	                      label_color, Grey, 0);
+	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
+
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
 
 	  char temp[6];
 	  uint32_t color = enabled?White:Grey;
+	  if(ts.notch_enabled) color = Yellow;
 	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
 	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
 	  	                           color, Black, 0);
