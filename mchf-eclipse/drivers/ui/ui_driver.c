@@ -206,7 +206,7 @@ extern __IO	SpectrumDisplay		sd;
 
 uchar drv_state = 0;
 
-bool filter_path_change = false;
+bool filter_path_change = true;
 //
 
 
