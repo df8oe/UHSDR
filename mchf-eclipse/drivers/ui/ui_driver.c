@@ -4858,7 +4858,7 @@ static void UiDriverDisplayNotch(uchar enabled) {
 
 	uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
-	  UiLcdHy28_PrintText((POS_AG_IND_X + 2), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
 	                      label_color, Grey, 0);
 	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
 
