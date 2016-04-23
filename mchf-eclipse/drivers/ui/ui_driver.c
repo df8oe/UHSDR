@@ -440,7 +440,7 @@ void UiDriver_HandleTouchScreen()
 		    }
 		if(check_tp_coordinates(43,60,00,04))			// TUNE button
 		    {
-		    df.tune_new = floor(df.tune_new / 4000) * 4000;	// set last three digits to "0"
+		    df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
 		    UiDriver_FrequencyUpdateLOandDisplay(true);
 		    }
 		if(check_tp_coordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
@@ -468,7 +468,7 @@ void UiDriver_HandleTouchScreen()
 					line = 29;
 				}
 			}
-			uint tunediff = ((1000)/(sd.magnify+1))*(ts.tp_x-line)*4;
+			uint tunediff = ((1000)/(sd.magnify+1))*(ts.tp_x-line)*TUNE_MULT;
 			df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 			UiDriver_FrequencyUpdateLOandDisplay(true);
 		}
@@ -1150,12 +1150,13 @@ static void UiDriverProcessKeyboard()
 				}
 				break;
 			case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
-				if(ts.txrx_mode == TRX_MODE_RX && ts.tx_disable != 1)			// do NOT allow mode change in TUNE mode or transmit mode or disbled in config
+				if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
 				{
-				  if(!ts.tx_disable)
-				    ts.tx_disable = 2;
-				  else
-				    ts.tx_disable = 0;
+				  if( (ts.tx_disable&TX_DISABLE_USER) == false) {
+				    ts.tx_disable |= TX_DISABLE_USER;
+				  } else {
+				    ts.tx_disable &= ~TX_DISABLE_USER;
+				  }
 				  UiDriverFButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);		// Set TUNE button color according to ts.tx_disable
 				}
 				break;
@@ -1848,7 +1849,7 @@ static void UiDriverShowBand(uchar band)
 		if (band == MAX_BANDS){ // MAX_BANDS = Gen band ! MAX_BAND_NUM = MAX_BANDS + 1
 		    int idx;
 		    for (idx = 0; bandGenInfo[idx].start !=0; idx++) {
-		        if (df.tune_old/4 >= bandGenInfo[idx].start && df.tune_old/4 < bandGenInfo[idx].end) {
+		        if (df.tune_old/TUNE_MULT >= bandGenInfo[idx].start && df.tune_old/TUNE_MULT < bandGenInfo[idx].end) {
 		            break; // found match
 		        }
 		    }
@@ -2570,7 +2571,7 @@ void UiDrawSpectrumScopeFrequencyBarText()
 	UiMenu_MapColors(ts.scope_scale_colour,NULL, &clr);
 
 
-	freq_calc = df.tune_new/4;		// get current frequency in Hz
+	freq_calc = df.tune_new/TUNE_MULT;		// get current frequency in Hz
 
 	if(!sd.magnify)	{		// if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
 		freq_calc += audio_driver_xlate_freq();
@@ -2795,11 +2796,10 @@ static void UiDriver_SetHWFiltersForFrequency(ulong freq)
 {
 	int idx;
 	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
-		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for the 160 meter filter?
+		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for this band filter?
 			if(ts.filter_band != bandFilters[idx].filter_band)	{
-				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to 160 meters
+				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to desired band configuration
 				ts.filter_band = bandFilters[idx].filter_band;
-
 			}
 			break;
 		}
@@ -2824,7 +2824,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	band_scan = 0;
 	flag = 0;
 
-	freq -= audio_driver_xlate_freq()*4;
+	freq -= audio_driver_xlate_freq()*TUNE_MULT;
 
 	while((!flag) && (band_scan < MAX_BANDS))	{
 		if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size))) {	// Is this frequency within this band?
@@ -2846,7 +2846,9 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 }
 
 
-uint32_t UiDriver_DialFrequencyModeCorrections(uint32_t dial_freq) {
+
+uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode) {
+    uint32_t tune_freq = dial_freq;
 
     //
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
@@ -2854,27 +2856,22 @@ uint32_t UiDriver_DialFrequencyModeCorrections(uint32_t dial_freq) {
     if(ts.dmod_mode == DEMOD_CW)    {       // In CW mode?
         switch(ts.cw_offset_mode) {
         case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            dial_freq -= ts.sidetone_freq;
+            tune_freq -= ts.sidetone_freq;
             // lower LO by sidetone amount
             break;
         case CW_OFFSET_LSB_SHIFT:   // LSB?
-            dial_freq += ts.sidetone_freq;
+            tune_freq += ts.sidetone_freq;
             // raise LO by sidetone amount
             break;
         case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
             if(ts.cw_lsb)
-                dial_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
+                tune_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
             else
-                dial_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
+                tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
         }
     }
-    return dial_freq;
-}
-
-uint32_t UiDriver_TuneFrequencyModeCorrections(uint32_t dial_freq, uint8_t txrx_mode) {
-    uint32_t tune_freq = dial_freq;
     // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
-    //
+
     if(!((ts.dmod_mode == DEMOD_CW) && (txrx_mode == TRX_MODE_TX)))  {
         tune_freq += audio_driver_xlate_freq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
     }
@@ -2883,8 +2880,64 @@ uint32_t UiDriver_TuneFrequencyModeCorrections(uint32_t dial_freq, uint8_t txrx_
     if(txrx_mode == TRX_MODE_RX)        {
         tune_freq += (ts.rit_value*20); // Add RIT on receive
     }
-    return tune_freq*4;
+
+    return tune_freq*TUNE_MULT;
 }
+
+/*
+ * @brief Changes the tune frequency according to mode and other settings
+ * @param dial_freq The desired dial frequency in Hz (not the tune frequency of the LO)
+ * @returns true if the change was executed  (even if it is not tunable freq), false if the change is pending
+ */
+bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode) {
+    // everything else uses main VFO frequency
+     uint32_t    tune_freq;
+     bool lo_change_pending = false;
+
+     // Calculate actual tune frequency
+     tune_freq = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
+
+     if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
+     {
+         // If the tune_freq remains identical and only adjustments due to temp_factor or freq_cal are made
+         // muting is causing unwanted audible audio interrupts
+         if((ts.tune_freq != tune_freq) && ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP) {   // did the tuning require that a large tuning step occur?
+             if(ts.sysclock > RX_MUTE_START_DELAY)   {   // has system start-up completed?
+                 ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
+                 ts.rx_muting = 1;               // yes - mute audio output
+                 ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
+                 ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
+                 ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
+             }
+         }
+
+         if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)   { // prevention for SI570 crash due too fast frequency changes
+             // Set frequency
+             ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+             df.temp_factor_changed = false;
+             ts.last_tuning = ts.sysclock;
+             ts.tune_freq = tune_freq;        // frequency change required - update change detector
+             // Save current freq
+             df.tune_old = dial_freq*TUNE_MULT;
+             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED) {
+                 ts.tx_disable &= ~TX_DISABLE_OUTOFRANGE;
+             } else {
+                 ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
+             }
+
+             UiDriver_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
+             // Inform Spectrum Display code that a frequency change has happened
+             sd.dial_moved = 1;
+         } else {
+             lo_change_pending = true;
+         }
+
+     }
+
+     // successfully executed the change
+     return lo_change_pending == false;
+}
+
 
 /*
  * @brief Used to update the individual vfo displays, not meant to be called directly except when changing LO
@@ -2899,105 +2952,63 @@ uint32_t UiDriver_TuneFrequencyModeCorrections(uint32_t dial_freq, uint8_t txrx_
 //FXIME: Merge non UI part with RadioManagement_UpdateFrequencyFast() instead of replicating code
 void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 {
-    ushort      col;
 
-    ulong		loc_tune_new, dial_freq;
+    uint32_t		dial_freq;
     Si570_ResultCodes       lo_result = SI570_OK;
-    uint32_t    tune_freq;
-    bool        lo_change_executed = false;
-
-    // Get value, while blocking update
+    bool        lo_change_not_pending = true;
 
     if(mode == UFM_SMALL_TX)	{				// are we updating the TX frequency (small, lower display)?
         uint8_t tx_vfo = is_vfo_b()?VFO_A:VFO_B;
 
         // TX uses the other VFO; RX == A -> TX == B and vice versa
-        loc_tune_new = vfo[tx_vfo].band[ts.band].dial_value;
+        dial_freq = vfo[tx_vfo].band[ts.band].dial_value / TUNE_MULT;
 
         // we check with the si570 code if the frequency is tunable, we do not tune to it.
-        lo_result = ui_si570_set_frequency(loc_tune_new,ts.freq_cal,df.temp_factor, 1);
+        lo_result = ui_si570_set_frequency(RadioManagement_Dial2TuneFrequency(dial_freq, ts.txrx_mode),ts.freq_cal,df.temp_factor, 1);
 
-    } else {	// everything else uses main VFO frequency
-        loc_tune_new = df.tune_new;				// yes, get that frequency
-    }
-
-    // Calculate display frequency
-    dial_freq = loc_tune_new/4;
-
-    if(mode != UFM_SMALL_TX)	{		// updating ONLY the TX frequency display?
-
-        // Calculate actual tune frequency
-        tune_freq = UiDriver_TuneFrequencyModeCorrections(UiDriver_DialFrequencyModeCorrections(dial_freq), ts.txrx_mode);
-
-        if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
-        {
-            if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)	{	// did the tuning require that a large tuning step occur?
-                if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
-                    ads.agc_holder = ads.agc_val;	// grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
-                    ts.rx_muting = 1;				// yes - mute audio output
-                    ts.dsp_inhibit_mute = ts.dsp_inhibit;		// get current status of DSP muting and save for later restoration
-                    ts.dsp_inhibit = 1;				// disable DSP during tuning to avoid disruption
-                    ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);	// yes - schedule un-muting of audio when DSP is on
-                }
-            }
-
-            if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)	{ // prevention for SI570 crash due too fast frequency changes
-                // Set frequency
-                ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
-                df.temp_factor_changed = false;
-                ts.last_tuning = ts.sysclock;
-                ts.tune_freq = tune_freq;        // frequency change required - update change detector
-                // Save current freq
-                df.tune_old = loc_tune_new;
-
-                lo_change_executed = true;
-            } else {
-                lo_change_executed = false;
-            }
-        }
-
-        lo_result = ts.last_lo_result;   // use last ts.lo_result
-
-        if (lo_change_executed) {
-
-            UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
-
-            // Inform Spectrum Display code that a frequency change has happened
-            sd.dial_moved = 1;
-
-// ALL UI IN THIS FUNCTION BELOW THIS LINE
-            UiDriverCheckBand(ts.tune_freq, true);
-            // check which band in which we are currently tuning and update the display
-
-            UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
-            // set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
-            // color argument is not being used by secondary display
-        }
-    }
-
-    if (lo_change_executed || mode == UFM_SMALL_TX){
-        switch(lo_result) {
-        case SI570_TUNE_IMPOSSIBLE:
-            col = Orange; // Color in orange if there was a problem setting frequency
-            break;
-        case SI570_TUNE_LIMITED:
-            col = Yellow; // Color in yellow if there was a problem setting frequency exactly
-            break;
-        case SI570_OK:
-            col = White;
-            break;
-        default:
-            col = Red; // a serious error happened, i.e. I2C not working etc.
-        }
     } else {
-        // we did not execute the change, so we show the freq in Gray.
-        // this will turn into the appropriate color the moment the tuning
-        // happens.
-        col = Grey;
+        dial_freq = df.tune_new/TUNE_MULT;
+        lo_change_not_pending =  RadioManagement_ChangeFrequency(force_update, dial_freq, ts.txrx_mode);
+        lo_result = ts.last_lo_result;   // use last ts.lo_result
     }
-    // Update frequency display
-    UiDriverUpdateLcdFreq(dial_freq, col, mode);
 
+    // ALL UI CODE BELOW
+    {
+        uint32_t clr;
+
+        if (lo_change_not_pending){
+
+            if (mode != UFM_SMALL_TX) {
+                UiDriverCheckBand(ts.tune_freq, true);
+                // check which band in which we are currently tuning and update the display
+
+                UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
+                // set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
+                // color argument is not being used by secondary display
+            }
+
+            switch(lo_result) {
+            case SI570_TUNE_IMPOSSIBLE:
+                clr = Orange; // Color in orange if there was a problem setting frequency
+                break;
+            case SI570_TUNE_LIMITED:
+                clr = Yellow; // Color in yellow if there was a problem setting frequency exactly
+                break;
+            case SI570_OK:
+                clr = White;
+                break;
+            default:
+                clr = Red; // a serious error happened, i.e. I2C not working etc.
+            }
+        } else {
+            // we did not execute the change, so we show the freq in Gray.
+            // this will turn into the appropriate color the moment the tuning
+            // happens.
+            clr = Blue;
+        }
+        // Update frequency display
+        UiDriverUpdateLcdFreq(dial_freq, clr, mode);
+    }
 }
 
 
@@ -3008,38 +3019,8 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
  */
 void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 {
-	ulong		loc_tune_new;
-	uint32_t    tune_freq;
-
-	// Get value, while blocking update
-	loc_tune_new = df.tune_new;
-
 	// Calculate actual tune frequency
-    tune_freq = UiDriver_TuneFrequencyModeCorrections(UiDriver_DialFrequencyModeCorrections(loc_tune_new/4), txrx_mode);
-
-    if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)   { // prevention for SI570 crash due too fast frequency changes
-
-	// detect - and eliminate - unnecessary synthesizer frequency changes
-        if((tune_freq != ts.tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed)	// did the frequency NOT change and display refresh NOT requested??
-        {
-            ts.tune_freq =  tune_freq;		// frequency change is required - save change detector
-            df.temp_factor_changed = false; // we compensate for temp_factor_changed since we will set a new frequency
-
-            // Set frequency
-            ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
-
-            UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);  // check the filter status with the new frequency update
-
-            // remember when we tuned last, do not tune to fast
-            ts.last_tuning = ts.sysclock;
-
-            // Save current freq
-            df.tune_old = loc_tune_new;
-
-            // Inform Spectrum Display code that a frequency change has happened
-            sd.dial_moved = 1;
-        }
-    }
+    RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode);
 }
 
 static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
@@ -3863,7 +3844,7 @@ static void UiDriverChangeBand(uchar is_up)
 //	UiDriverUpdateFrequency(1,0);
 
 //	// Also reset second freq display
-//	UiDriverUpdateSecondLcdFreq(df.tune_new/4);
+//	UiDriverUpdateSecondLcdFreq(df.tune_new/TUNE_MULT);
 
 	// Change decode mode if need to
 	if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
@@ -3945,15 +3926,15 @@ static bool UiDriverCheckFrequencyEncoder()
 		// Finaly convert to frequency incr/decr
 
 		if(pot_diff>0) {
-			df.tune_new += (df.tuning_step * 4 * enc_multiplier);
+			df.tune_new += (df.tuning_step * TUNE_MULT * enc_multiplier);
 			//itoa(enc_speed,num,6);
 			//UiSpectrumClearDisplay();			// clear display under spectrum scope
 			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
 		} else {
-			df.tune_new -= (df.tuning_step * 4 * enc_multiplier);
+			df.tune_new -= (df.tuning_step * TUNE_MULT * enc_multiplier);
 		}
 
-		if (enc_multiplier != 1) {  df.tune_new = 4*enc_multiplier*df.tuning_step * div((df.tune_new/4),enc_multiplier*df.tuning_step).quot; } // keep last digit to zero
+		if (enc_multiplier != 1) {  df.tune_new = TUNE_MULT*enc_multiplier*df.tuning_step * div((df.tune_new/TUNE_MULT),enc_multiplier*df.tuning_step).quot; } // keep last digit to zero
 
 		retval = true;
 	}

@@ -101,12 +101,12 @@ typedef struct OscillatorState
 
 
 typedef enum {
-    SI570_OK = 0,
-    SI570_LARGE_STEP,
-    SI570_TUNE_IMPOSSIBLE,
-    SI570_TUNE_LIMITED,
-    SI570_I2C_ERROR,
-    SI570_ERROR_VERIFY
+    SI570_OK = 0, // tuning ok
+    SI570_TUNE_LIMITED, // tuning to freq close to desired freq, still ok
+    SI570_TUNE_IMPOSSIBLE, // did not tune, tune freq unknown
+    SI570_I2C_ERROR, // could not talk to Si570, tune freq unknown
+    SI570_ERROR_VERIFY, // register do not match, tune freq unknown
+    SI570_LARGE_STEP, // did not tune, just checking
 
 } Si570_ResultCodes;
 
