@@ -595,7 +595,8 @@ extern const ButtonMap  bm[BUTTON_NUM];
 // encoder two
 #define ENC_TWO_MODE_RF_GAIN		0
 #define ENC_TWO_MODE_SIG_PROC		1
-#define ENC_TWO_MAX_MODE		2
+#define ENC_TWO_MODE_NOTCH_F		2
+#define ENC_TWO_MAX_MODE		3
 //
 // encoder three
 #define ENC_THREE_MODE_RIT		0
