@@ -1622,6 +1622,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				// Update Decode Mode (USB/LSB/AM/FM/CW)
 				UiDriverShowMode();
 				UiDriverSetDemodMode(ts.dmod_mode);
+				UiDriverChangeFilterDisplay();
 			}
 
 		}
