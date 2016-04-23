@@ -1101,6 +1101,7 @@ typedef struct TransceiverState
 	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
+	ulong	notch_frequency;		// frequency of the manual notch filter
 
 	uint8_t display_type;           // existence/identification of display type
 	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
