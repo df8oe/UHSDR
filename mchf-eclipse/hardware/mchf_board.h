@@ -595,7 +595,8 @@ extern const ButtonMap  bm[BUTTON_NUM];
 // encoder two
 #define ENC_TWO_MODE_RF_GAIN		0
 #define ENC_TWO_MODE_SIG_PROC		1
-#define ENC_TWO_MAX_MODE		2
+#define ENC_TWO_MODE_NOTCH_F		2
+#define ENC_TWO_MAX_MODE		3
 //
 // encoder three
 #define ENC_THREE_MODE_RIT		0
@@ -1101,6 +1102,7 @@ typedef struct TransceiverState
 	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
+	ulong	notch_frequency;		// frequency of the manual notch filter
 
 	uint8_t display_type;           // existence/identification of display type
 	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
