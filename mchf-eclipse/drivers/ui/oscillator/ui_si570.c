@@ -439,7 +439,7 @@ static Si570_ResultCodes ui_si570_change_frequency(float new_freq, uchar test)
             }
         }
     }
-    if (SI570_ERROR_VERIFY) {
+    if (retval == SI570_ERROR_VERIFY) {
         // make sure to generate a large step
         // in order to recover on next tune attempt
         os.rfreq_old = 0.0;

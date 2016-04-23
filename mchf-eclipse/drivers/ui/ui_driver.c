@@ -2899,9 +2899,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
      if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
      {
-         // If the tune_freq remains identical and only adjustments due to temp_factor or freq_cal are made
-         // muting is causing unwanted audible audio interrupts
-         if((ts.tune_freq != tune_freq) && ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP) {   // did the tuning require that a large tuning step occur?
+         if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP) {   // did the tuning require that a large tuning step occur?
              if(ts.sysclock > RX_MUTE_START_DELAY)   {   // has system start-up completed?
                  ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
                  ts.rx_muting = 1;               // yes - mute audio output
