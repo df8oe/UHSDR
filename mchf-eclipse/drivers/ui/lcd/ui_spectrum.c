@@ -175,8 +175,8 @@ void UiSpectrumCreateDrawArea(void)
 //	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
 //	    return; // if spectrum display light enabled, bail out here!
 
-	if(ts.waterfall_size)		//don't draw text bar when size is BIG
-	    return;
+	if(!ts.waterfall_size)		//don't draw text bar when size is BIG
+	{
 	
 	strcpy(s, "SPECTRUM SCOPE ");
 	slen = 0;	// init string length variable
@@ -264,7 +264,7 @@ void UiSpectrumCreateDrawArea(void)
 									ts.scope_grid_colour_active);
 	}
 
-
+  }
 /////////////////////////////// was here /////////////////////////////////////
 	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
 	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
