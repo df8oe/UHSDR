@@ -744,11 +744,18 @@ void ui_driver_thread()
       if(!ts.boot_halt_flag) { UiDriverCheckEncoderThree(); }
       break;
     case STATE_UPDATE_FREQUENCY:
-      if(!ts.boot_halt_flag) {
-        if(UiDriverCheckFrequencyEncoder() || (df.tune_new != df.tune_old)) {
-            UiDriver_FrequencyUpdateLOandDisplay(false);
+        if(!ts.boot_halt_flag) {
+            UiDriverCheckFrequencyEncoder();
+
+            /* at this point we handle request for changing the frequency
+             * either from a difference in dial freq or a temp change
+             *  */
+            if((df.tune_new != df.tune_old)) {
+                UiDriver_FrequencyUpdateLOandDisplay(false);
+            } else if (df.temp_factor_changed) {
+                RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
+            }
         }
-      }
       break;
     case STATE_PROCESS_KEYBOARD:
       UiDriverProcessKeyboard();
@@ -1796,6 +1803,34 @@ void UiDriverShowStep(ulong step)
 
 }
 
+
+typedef struct {
+    uint32_t start;
+    uint32_t end;
+    const char* name;
+} BandGenInfo;
+
+const BandGenInfo bandGenInfo[] =  {
+        {150000, 285000, "LW" },
+        {525000, 1605000, "MW" },
+        {2300000, 2495000, "120m" },
+        {3200000, 3400000, "90m" },
+        {3900000, 4000000, "75m" },
+        {4750000, 5060000, "60m" },
+        {5900000, 5900000, "49m" },
+        {7200000, 7350000, "41m" },
+        {9400000, 9900000, "31m" },
+        {11600000, 12100000, "25m" },
+        {13570000, 13870000, "22m" },
+        {15100000, 15800000, "19m" },
+        {17480000, 17900000, "16m" },
+        {18900000, 19020000, "15m" },
+        {21450000, 21850000, "13m" },
+        {25670000, 26100000, "11m" },
+        { 0,  0,             "Gen" }
+    };
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverShowBand
 //* Object              :
@@ -1805,35 +1840,27 @@ void UiDriverShowStep(ulong step)
 //*----------------------------------------------------------------------------
 static void UiDriverShowBand(uchar band)
 {
+    const char* bandName;
 	if (band < MAX_BAND_NUM) {
 	// Clear control
-		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
 		if (band == MAX_BANDS){ // MAX_BANDS = Gen band ! MAX_BAND_NUM = MAX_BANDS + 1
+		    int idx;
+		    for (idx = 0; bandGenInfo[idx].start !=0; idx++) {
+		        if (df.tune_old/4 >= bandGenInfo[idx].start && df.tune_old/4 < bandGenInfo[idx].end) {
+		            break; // found match
+		        }
+		    }
 			// Print name of BC band, if frequency is within a broadcast band
-		} else
-		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandInfo[band].name,Orange,Black,0);
+		    bandName = bandGenInfo[idx].name;
+		} else {
+		    bandName = bandInfo[band].name;
+		}
+
+		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
+		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandName,Orange,Black,0);
 	}
 	// add indicator for broadcast bands here
 	// if Band = "Gen" AND frequency inside one of the broadcast bands, print name of the band
-/*	{
-		{150000, 285000, " LW" },
-		{525000, 1605000, " MW" },
-		{2300000, 2495000, "120m" },
-		{3200000, 3400000, " 90m" },
-		{3900000, 4000000, " 75m" },
-		{4750000, 5060000, " 60m" },
-	    {5900000, 5900000, " 49m" },
-	    {7200000, 7350000, " 41m" },
-		{9400000, 9900000, " 31m" },
-		{11600000, 12100000, " 25m" },
-		{13570000, 13870000, " 22m" },
-		{15100000, 15800000, " 19m" },
-		{17480000, 17900000, " 16m" },
-		{18900000, 19020000, " 15m" },
-		{21450000, 21850000, " 13m" },
-		{25670000, 26100000, " 11m" },
-	}
-*/
 }
 
 // TODO: Move out to RF HAL
@@ -2873,7 +2900,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
     ushort      col;
 
     ulong		loc_tune_new, dial_freq;
-    char       lo_result = 0;
+    Si570_ResultCodes       lo_result = SI570_OK;
     uint32_t    tune_freq;
     bool        lo_change_executed = false;
 
@@ -2902,7 +2929,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 
         if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
         {
-            if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1))	{	// did the tuning require that a large tuning step occur?
+            if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)	{	// did the tuning require that a large tuning step occur?
                 if(ts.sysclock > RX_MUTE_START_DELAY)	{	// has system start-up completed?
                     ads.agc_holder = ads.agc_val;	// grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
                     ts.rx_muting = 1;				// yes - mute audio output
@@ -2918,6 +2945,9 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
                 df.temp_factor_changed = false;
                 ts.last_tuning = ts.sysclock;
                 ts.tune_freq = tune_freq;        // frequency change required - update change detector
+                // Save current freq
+                df.tune_old = loc_tune_new;
+
                 lo_change_executed = true;
             } else {
                 lo_change_executed = false;
@@ -2929,8 +2959,6 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
         if (lo_change_executed) {
 
             UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);	// check the filter status with the new frequency update
-            // Save current freq
-            df.tune_old = loc_tune_new;
 
             // Inform Spectrum Display code that a frequency change has happened
             sd.dial_moved = 1;
@@ -2945,21 +2973,29 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
         }
     }
 
-    if (lo_change_executed || mode == UFM_SMALL_TX) {
+    if (lo_change_executed || mode == UFM_SMALL_TX){
         switch(lo_result) {
-        case 1:
-            col = Red; // Color in red if there was a problem setting frequency
+        case SI570_TUNE_IMPOSSIBLE:
+            col = Orange; // Color in orange if there was a problem setting frequency
             break;
-        case 2:
+        case SI570_TUNE_LIMITED:
             col = Yellow; // Color in yellow if there was a problem setting frequency exactly
             break;
-        case 0:
-        default:
+        case SI570_OK:
             col = White;
+            break;
+        default:
+            col = Red; // a serious error happened, i.e. I2C not working etc.
         }
-        // Update frequency display
-        UiDriverUpdateLcdFreq(dial_freq, col, mode);
+    } else {
+        // we did not execute the change, so we show the freq in Gray.
+        // this will turn into the appropriate color the moment the tuning
+        // happens.
+        col = Grey;
     }
+    // Update frequency display
+    UiDriverUpdateLcdFreq(dial_freq, col, mode);
+
 }
 
 
@@ -2970,7 +3006,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
  */
 void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 {
-	ulong		loc_tune_new,dial_freq;
+	ulong		loc_tune_new;
 	uint32_t    tune_freq;
 
 	// Get value, while blocking update
@@ -2979,23 +3015,29 @@ void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 	// Calculate actual tune frequency
     tune_freq = UiDriver_TuneFrequencyModeCorrections(UiDriver_DialFrequencyModeCorrections(loc_tune_new/4), txrx_mode);
 
+    if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)   { // prevention for SI570 crash due too fast frequency changes
+
 	// detect - and eliminate - unnecessary synthesizer frequency changes
-	if((tune_freq != ts.tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed)	// did the frequency NOT change and display refresh NOT requested??
-	{
-	    ts.tune_freq =  tune_freq;		// frequency change is required - save change detector
-	    df.temp_factor_changed = false; // we compensate for temp_factor_changed since we will set a new frequency
+        if((tune_freq != ts.tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed)	// did the frequency NOT change and display refresh NOT requested??
+        {
+            ts.tune_freq =  tune_freq;		// frequency change is required - save change detector
+            df.temp_factor_changed = false; // we compensate for temp_factor_changed since we will set a new frequency
 
-	    // Set frequency
-	    ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+            // Set frequency
+            ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
 
-        UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);  // check the filter status with the new frequency update
+            UiDriver_SetHWFiltersForFrequency(ts.tune_freq/4);  // check the filter status with the new frequency update
 
-        // Save current freq
-        df.tune_old = loc_tune_new;
+            // remember when we tuned last, do not tune to fast
+            ts.last_tuning = ts.sysclock;
 
-	    // Inform Spectrum Display code that a frequency change has happened
-	    sd.dial_moved = 1;
-	}
+            // Save current freq
+            df.tune_old = loc_tune_new;
+
+            // Inform Spectrum Display code that a frequency change has happened
+            sd.dial_moved = 1;
+        }
+    }
 }
 
 static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
@@ -3014,7 +3056,7 @@ static void UiDriverUpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_di
         digit[1] = 0;
         // calculate the digits
         dial_freq_temp = dial_freq;
-        for (idx = 0;idx < 9;idx++){
+        for (idx = 0;idx < MAX_DIGITS;idx++){
             digits[idx] = dial_freq_temp % 10;
             dial_freq_temp /= 10;
             if (digits[idx] != 0) last_non_zero = idx;
@@ -3072,15 +3114,16 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		}
 	}
 
-	if (mode != UFM_SECONDARY) {
+
+	// if (mode != UFM_SECONDARY) {
 		ts.refresh_freq_disp = true; //because of coloured digits...
-	}
+	// }
 	if(ts.xverter_mode)	{	// transverter mode active?
 		dial_freq *= (ulong)ts.xverter_mode;	// yes - scale by LO multiplier
 		dial_freq += ts.xverter_offset;	// add transverter frequency offset
 		if(dial_freq > 1000000000)		// over 1000 MHz?
 			dial_freq -= 1000000000;		// yes, offset to prevent overflow of display
-		if(ts.xverter_mode && mode != 4)	// if in transverter mode, frequency is yellow unless we do the secondary display
+		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is yellow unless we do the secondary display
 			color = Yellow;
 	}
 
@@ -5578,7 +5621,6 @@ static void UiDriverHandleLoTemperature()
                             // Update frequency, without reflecting it on the LCD
                                 df.temp_factor = comp;
                                 df.temp_factor_changed = true;
-                                RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
                                 lo.comp = comp;
                         }
                     }
@@ -6164,9 +6206,7 @@ void UiDriver_KeyTestScreen()
 		{
 			if(j != BUTTON_BNDM_PRESSED)
 			{
-				ui_si570_get_configuration();			// restore SI570 to factory default
-				*(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-				NVIC_SystemReset();
+			    mchf_reboot();
 			}
 		}
 	}

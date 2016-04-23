@@ -2311,9 +2311,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
 			    UiMenu_DisplayValue("Working",Red,opt_pos);
 			    copy_virt2ser();
-			    ui_si570_get_configuration();		// restore SI570 to factory default
-			    *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-			    NVIC_SystemReset();			// restart mcHF
+			    mchf_reboot();
 			  }
 			}
 			break;

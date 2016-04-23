@@ -99,12 +99,24 @@ typedef struct OscillatorState
 
 } OscillatorState;
 
+
+typedef enum {
+    SI570_OK = 0,
+    SI570_LARGE_STEP,
+    SI570_TUNE_IMPOSSIBLE,
+    SI570_TUNE_LIMITED,
+    SI570_I2C_ERROR,
+    SI570_ERROR_VERIFY
+
+} Si570_ResultCodes;
+
 // -------------------------------------------------------------------------------------
 // Exports
 // ------------------
 
+
 uchar 	ui_si570_get_configuration(void);
-uchar 	ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test);
+Si570_ResultCodes 	ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test);
 
 uchar 	ui_si570_init_temp_sensor(void);
 uchar 	ui_si570_read_temp(int *temp);
