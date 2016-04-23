@@ -484,7 +484,10 @@ extern const ButtonMap  bm[BUTTON_NUM];
 #define	MAX_BANDS			17		// Highest band number:  17 = General coverage (RX only) band
 #define	MAX_BAND_NUM		(MAX_BANDS+1)		// Number of Bands
 
-#define	KHZ_MULT			4000	// multiplier to convert oscillator frequency or band size to display kHz, used below
+//  multiplier to convert between dial_freq and tune_freq
+#define TUNE_MULT 4
+
+#define	KHZ_MULT			(TUNE_MULT*1000)	// multiplier to convert oscillator frequency or band size to display kHz, used below
 //
 // Bands definition
 // - ID
@@ -987,6 +990,9 @@ typedef struct TransceiverState
 	//
 	bool	frequency_lock;				// TRUE if frequency knob is locked
 	//
+#define TX_DISABLE_ALWAYS       1
+#define TX_DISABLE_USER         2
+#define TX_DISABLE_OUTOFRANGE	4
 	uchar	tx_disable;					// TRUE if transmit is to be disabled
 	//
     #define MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE 0x01

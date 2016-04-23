@@ -253,7 +253,7 @@ void CatDriverFT817CheckAndExecute() {
 			
 			if(ts.xlat == 0)
 			    {
-			    fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*4:0;
+			    fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?audio_driver_xlate_freq()*TUNE_MULT:0;
 			    // If we are in DIGITAL IQ Output mode, send real tune frequency frequency instead
 			    // translated RX frequency
 			    }
