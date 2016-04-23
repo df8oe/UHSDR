@@ -139,7 +139,7 @@ typedef struct SpectrumDisplay
     ushort  vert_grid_id[7];
 
     // Addresses of horizontal grid lines on x axis
-    ushort  horz_grid_id[3];
+    ushort  horz_grid_id[5];
 
     // State machine current state
     uchar   state;

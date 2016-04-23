@@ -273,7 +273,7 @@ void UiSpectrumCreateDrawArea(void)
 
 	// Horizontal grid lines
 	char upperline, y_add;
-	if(ts.waterfall_size)		//don't draw text bar when size is BIG
+	if(ts.waterfall_size)		//set range big/normal
 	  {
 	  upperline = 6;
 	  y_add = 32;
@@ -571,7 +571,13 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 						// This code does not make sense to me: it should check if the CURRENT y value (stored in i) is a horizontal
 						// grid, not the y1_old.
 						// Enumerate all saved y positions
-						for(k = 0; k < 3; k++)
+					char upperline;
+					if(ts.waterfall_size)		//set range big/normal for redraw
+					  upperline = 5;
+					else
+					  upperline = 3;
+
+						for(k = 0; k < upperline; k++)
 						{
 							if(y1_old == sd.horz_grid_id[k])
 							{
@@ -579,6 +585,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 								break;
 							}
 						}
+
 					}
 
 					pixel_buf[idx++] = clr;
