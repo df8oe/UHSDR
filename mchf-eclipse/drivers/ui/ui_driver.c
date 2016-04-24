@@ -1978,6 +1978,7 @@ static void UiDriverShowBand(uchar band)
 			print_bc_name = true;
 			col = Orange;
 		    bandName = bandInfo[band].name;
+			ts.bc_band = 0xff;
 		}
 		if (print_bc_name)
 		  {
