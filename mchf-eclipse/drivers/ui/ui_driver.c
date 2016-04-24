@@ -84,6 +84,7 @@ static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
 static void 	UiDriverDisplayNotch(uchar enabled);
+static void 	UiDriverDisplayBass();
 static void 	UiDriverChangeRit(uchar enabled);
 static void 	UiDriverChangeDSPMode();
 static void 	UiDriverChangeDigitalMode();
@@ -349,7 +350,110 @@ static void UiDriver_LcdBlankingStealthSwitch() {
 void UiDriver_HandleSwitchToNextDspMode()
 {
 	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
-		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
+		//
+		// I think we should alter this to use a counter
+		// What do we want to switch here:
+		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
+		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
+		// Manual Notch		ts.notch_enabled = 1; // ts.notch_enabled = 0;
+		// BASS				ts.bass // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
+		// TREBLE			ts.treble // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
+
+		ts.dsp_mode ++; // switch mode
+		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+		//
+		// prevent certain modes to prevent CPU crash
+		//
+		// prevent NR AND NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NR AND NOTCH, when in AM and filter-bandwidth > 4k8 (= decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ)) ts.dsp_mode++;
+
+		// display all as inactive (and then activate the right one, see below)
+		UiDriverChangeRfGain(0);
+	    // DSP/Noise Blanker
+	    UiDriverChangeSigProc(0);
+
+	    UiDriverDisplayNotch(0); // display
+
+
+		switch (ts.dsp_mode) {
+
+		case DSP_SWITCH_OFF: // switch off everything
+			ts.dsp_active &= ~DSP_NR_ENABLE;
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE;
+			ts.notch_enabled = 0;
+			ts.peak_enabled = 0;				//off
+			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			UiDriverChangeRfGain(1);
+			break;
+		case DSP_SWITCH_NR:
+			ts.dsp_active |= DSP_NR_ENABLE; 	//on
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
+		    UiDriverChangeSigProc(1);
+		    ts.enc_two_mode = ENC_TWO_MODE_SIG_PROC;
+			break;
+		case DSP_SWITCH_NOTCH:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
+			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
+			break;
+		case DSP_SWITCH_NR_AND_NOTCH:
+			ts.dsp_active |= DSP_NR_ENABLE; 	//on
+			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
+			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
+			break;
+		case DSP_SWITCH_NOTCH_MANUAL:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 1;				//on
+			ts.peak_enabled = 0;				//off
+			ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+		    UiDriverDisplayNotch(1);
+			break;
+		case DSP_SWITCH_PEAK_FILTER:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 1;				//on
+			ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
+		    UiDriverDisplayNotch(1);
+			break;
+		case DSP_SWITCH_BASS:
+			break;
+		case DSP_SWITCH_TREBLE:
+			break;
+		}
+/*
+		if (ts.notch_enabled) {
+			    ts.notch_enabled = 0; // switch off notch filter
+			    UiDriverChangeRfGain(1);
+			    // DSP/Noise Blanker
+			    UiDriverChangeSigProc(0);
+			    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			    UiDriverDisplayNotch(0); // display
+			}
+			else {
+			    ts.notch_enabled = 1;
+			    // RF gain
+			    UiDriverChangeRfGain(0);
+			    // DSP/Noise Blanker
+			    UiDriverChangeSigProc(0);
+			    // notch display
+			    UiDriverDisplayNotch(1);
+			    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+			}
+*/
+
+
+/*		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
 		{
 		ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
 		}
@@ -373,6 +477,8 @@ void UiDriver_HandleSwitchToNextDspMode()
 		else	{
 			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
 		}
+		*/
+
 		//
 		ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
 		//
@@ -383,10 +489,12 @@ void UiDriver_HandleSwitchToNextDspMode()
 		//
 		// Update DSP/NB/RFG control display
 		//
-		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
+		// put all displays here??
+		//
+/*		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
 			UiDriverChangeSigProc(0);
 		else
-			UiDriverChangeSigProc(1);
+			UiDriverChangeSigProc(1); */
 	}
 }
 
@@ -1330,7 +1438,7 @@ static void UiDriverProcessKeyboard()
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
-				if (ts.notch_enabled) {
+/*				if (ts.notch_enabled) {
 				    ts.notch_enabled = 0; // switch off notch filter
 				    UiDriverChangeRfGain(1);
 				    // DSP/Noise Blanker
@@ -1348,6 +1456,7 @@ static void UiDriverProcessKeyboard()
 				    UiDriverDisplayNotch(1);
 				    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
 				}
+				*/
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
@@ -1499,6 +1608,7 @@ void UiInitRxParms()
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
     UiDriverChangeRfGain(1);    // update RFG/SQL on screen
     UiDriverDisplayNotch(0);
+    //UiDriverDisplayBass();
 
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
@@ -4043,6 +4153,53 @@ static void UiDriverCheckEncoderTwo()
         }
         	break;
         }
+        case ENC_TWO_MODE_BASS_GAIN: {
+        	if(pot_diff < 0) {
+        		ts.bass_gain = ts.bass_gain - 1;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.bass_gain = ts.bass_gain + 1;
+        	}
+        	if (ts.bass_gain < -12) ts.bass_gain = -12;
+        	if (ts.bass_gain > 12) ts.bass_gain = 12;
+        	// display bass gain
+        	UiDriverDisplayBass();
+        	// set filter instance
+        	audio_driver_set_rx_audio_filter();
+        	break;
+        }
+        case ENC_TWO_MODE_TREBLE_GAIN: {
+        	if(pot_diff < 0) {
+        		ts.treble_gain = ts.treble_gain - 1;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.treble_gain = ts.treble_gain + 1;
+        	}
+        	if (ts.treble_gain < -12) ts.treble_gain = -12;
+        	if (ts.treble_gain > 12) ts.treble_gain = 12;
+        	// display treble gain
+        	UiDriverDisplayBass();
+        	// set filter instance
+        	audio_driver_set_rx_audio_filter();
+        	break;
+        }
+        case ENC_TWO_MODE_PEAK_F: {
+        	if (ts.peak_enabled) { // peak f is only adjustable when peak is enabled
+        	if(pot_diff < 0) {
+        		ts.peak_frequency = ts.peak_frequency - 10;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.peak_frequency = ts.peak_frequency + 10;
+        	}
+        	if (ts.peak_frequency < 200) ts.peak_frequency = 200;
+        	if (ts.peak_frequency > 12000) ts.peak_frequency = 12000;
+        	// display peak frequency
+        	UiDriverDisplayNotch(1);
+        	// set notch filter instance
+        	audio_driver_set_rx_audio_filter();
+        }
+        	break;
+        }
         default:
           break;
         }
@@ -4302,6 +4459,40 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 
 			break;
 		}
+		case ENC_TWO_MODE_PEAK_F:
+			{
+				// RF gain
+				UiDriverChangeRfGain(0);
+				// DSP/Noise Blanker
+				UiDriverChangeSigProc(0);
+				// notch display
+				UiDriverDisplayNotch(1);
+
+			break;
+		}
+		case ENC_TWO_MODE_BASS_GAIN:
+			{
+				// RF gain
+				UiDriverChangeRfGain(0);
+				// DSP/Noise Blanker
+				UiDriverChangeSigProc(0);
+				// notch display
+				UiDriverDisplayNotch(0);
+				UiDriverDisplayBass();
+
+			break;
+		}
+		case ENC_TWO_MODE_TREBLE_GAIN:
+			{
+				// RF gain
+				UiDriverChangeRfGain(0);
+				// DSP/Noise Blanker
+				UiDriverChangeSigProc(0);
+				// notch display
+				UiDriverDisplayNotch(0);
+				UiDriverDisplayBass();
+			break;
+		}
 
 		// Disable all
 		default:
@@ -4312,6 +4503,7 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 			// DSP/Noise Blanker
 			UiDriverChangeSigProc(0);
 			UiDriverDisplayNotch(0);
+			//UiDriverDisplayBass();
 			break;
 		}
 	}
@@ -4449,7 +4641,46 @@ static void UiDriverChangeDSPMode()
 	ushort color = White;
 	const char* txt;
 
-	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
+	switch (ts.dsp_mode) {
+	case DSP_SWITCH_OFF: //
+		color = Grey2;
+		txt = "DSP-OFF";
+		break;
+	case DSP_SWITCH_NR:
+		txt = "NR";
+		color = White;
+		break;
+	case DSP_SWITCH_NOTCH:
+		color = White;
+		txt = "NOTCH";
+		break;
+	case DSP_SWITCH_NR_AND_NOTCH:
+		color = White;
+		txt = "NR+NOTC";
+		break;
+	case DSP_SWITCH_NOTCH_MANUAL:
+		color = White;
+		txt = "M-NOTCH";
+		break;
+	case DSP_SWITCH_PEAK_FILTER:
+		color = White;
+		txt = "PEAK";
+		break;
+	case DSP_SWITCH_BASS:
+		color = White;
+		txt = "BASS";
+		break;
+	case DSP_SWITCH_TREBLE:
+		color = White;
+		txt = "TREBLE";
+		break;
+	default:
+		color = Grey2;
+		txt = "DSP-OFF";
+		break;
+	}
+
+/*	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
 		color = White;
 	} else	// DSP not active
 		color = Grey2;
@@ -4467,7 +4698,7 @@ static void UiDriverChangeDSPMode()
 	} else {
 		txt = "DSP-OFF";
 	}
-
+*/
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
@@ -4719,6 +4950,99 @@ static void UiDriverChangeSigProc(uchar enabled)
 	UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
 }
 
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverDisplayBass
+//* Object              : Display settings related to bass & treble filter
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void UiDriverDisplayBass(void) {
+
+	UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+
+//	ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN;
+
+	bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
+	uint32_t col_bass = enable?Black:Grey1;
+
+	char temp[5];
+			snprintf(temp,5,"%2d", ts.bass_gain);
+
+			UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+			UiLcdHy28_PrintText((POS_AG_IND_X + 1 ), (POS_AG_IND_Y + 1 + 3 * 16), "BAS",
+		                      col_bass, Grey, 0);
+			col_bass = enable?Orange:Grey1;
+			UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+		                           col_bass, Black, 0);
+
+			enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
+			uint32_t col_treble = enable?Black:Grey1;
+
+		  snprintf(temp,5,"%2d", ts.treble_gain);
+
+		  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3* 16, 13, 53, Grey);
+		  UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56), (POS_AG_IND_Y + 1 + 3 * 16), "TRB",
+		                      col_treble, Grey, 0);
+		  col_treble = enable?Orange:Grey1;
+
+		  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+		                           col_treble, Black, 0);
+
+/*
+		  uint32_t label_color = enabled?Black:Grey1;
+	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+
+	  if (ts.notch_enabled)
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
+	                      label_color, Grey, 0);
+	  else
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "PEAK-F",
+	                      label_color, Grey, 0);
+
+	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
+
+	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+
+	  char temp[6];
+	  uint32_t color = enabled?White:Grey;
+	  if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
+	  if (ts.notch_enabled)
+	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
+	  else 	  snprintf(temp,6,"%5lu", (ulong)ts.peak_frequency);
+	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+	  	                           color, Black, 0); */
+
+
+} // end void UiDriverDisplayBass
+
+
+/*##################
+void UiDriverEncoderDisplay(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+                            char temp[5], uint32_t color) {
+
+  uint32_t label_color = enabled?Black:Grey1;
+
+  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56 * column, POS_AG_IND_Y + row * 16, 13, 53, Grey);
+  UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), label,
+                      label_color, Grey, 0);
+  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), temp,
+                           color, Black, 0);
+}
+
+void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+                            uint32_t value) {
+
+	char temp[5];
+	uint32_t color = enabled?White:Grey;
+
+	snprintf(temp,5,"%2lu",value);
+	UiDriverEncoderDisplay(column, row, label, enabled,
+	                            temp, color);
+
+##################*/
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverDisplayNotch
 //* Object              : Display settings related to manual notch filter
@@ -4728,20 +5052,29 @@ static void UiDriverChangeSigProc(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverDisplayNotch(uchar enabled) {
 
-	if(enabled || ts.notch_enabled)
+	if(enabled || ts.notch_enabled || ts.peak_enabled)
 	  {
-	  uint32_t label_color = enabled?Black:Grey1;
+		UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+	uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+
+	  if (ts.notch_enabled)
 	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
 	                      label_color, Grey, 0);
+	  else
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "PEAK-F",
+	                      label_color, Grey, 0);
+
 	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
 
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
 
 	  char temp[6];
 	  uint32_t color = enabled?White:Grey;
-	  if(ts.notch_enabled) color = Yellow;
+	  if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
+	  if (ts.notch_enabled)
 	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
+	  else 	  snprintf(temp,6,"%5lu", (ulong)ts.peak_frequency);
 	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
 	  	                           color, Black, 0);
 	  }
@@ -4749,7 +5082,6 @@ static void UiDriverDisplayNotch(uchar enabled) {
 	  UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
 
 } // end void UiDriverDisplayNotch
-
 
 //
 //*----------------------------------------------------------------------------

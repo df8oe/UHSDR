@@ -590,24 +590,27 @@ extern const ButtonMap  bm[BUTTON_NUM];
 // encoder one
 #define ENC_ONE_MODE_AUDIO_GAIN		0
 #define ENC_ONE_MODE_ST_GAIN		1
-#define ENC_ONE_MAX_MODE		1
+#define ENC_ONE_MAX_MODE			1
 //
 // encoder two
 #define ENC_TWO_MODE_RF_GAIN		0
 #define ENC_TWO_MODE_SIG_PROC		1
 #define ENC_TWO_MODE_NOTCH_F		2
-#define ENC_TWO_MAX_MODE		3
+#define ENC_TWO_MODE_PEAK_F			3
+#define ENC_TWO_MODE_BASS_GAIN		4
+#define ENC_TWO_MODE_TREBLE_GAIN	5
+#define ENC_TWO_MAX_MODE			6
 //
 // encoder three
-#define ENC_THREE_MODE_RIT		0
+#define ENC_THREE_MODE_RIT			0
 #define ENC_THREE_MODE_CW_SPEED		1
-#define ENC_THREE_MAX_MODE		2
+#define ENC_THREE_MAX_MODE			2
 //
 //
-#define CW_MODE_IAM_B			0
-#define CW_MODE_IAM_A			1
-#define CW_MODE_STRAIGHT		2
-#define CW_MAX_MODE			3
+#define CW_MODE_IAM_B				0
+#define CW_MODE_IAM_A				1
+#define CW_MODE_STRAIGHT			2
+#define CW_MAX_MODE					3
 
 // PA power level setting enumeration
 enum {
@@ -966,7 +969,8 @@ typedef struct TransceiverState
 										// LSB+2 = 1 if DSP Notch mode is on (| 4)
 										// LSB+3 = 0 if DSP is to be displayed on screen instead of NB (| 8)
 										// MSB	 = 1 if button G2 toggle NOT initialized (| 128)
-	uchar digital_mode;					// holds actual digital mode
+	uchar	dsp_mode;					// holds the mode chosen in the DSP
+	uchar 	digital_mode;				// holds actual digital mode
 	uchar	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting
 	uchar	dsp_nr_strength;			// "Strength" of DSP Noise reduction - to be converted to "Mu" factor
 	ulong	dsp_nr_delaybuf_len;		// size of DSP noise reduction delay buffer
@@ -1103,6 +1107,10 @@ typedef struct TransceiverState
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 	ulong	notch_frequency;		// frequency of the manual notch filter
+	bool 	peak_enabled;			// indicates whether peak filter is enabled or not
+	ulong	peak_frequency;			// frequency of the manual peak filter
+	int		bass_gain;				// gain of the low shelf EQ filter
+	int		treble_gain;			// gain of the high shelf EQ filter
 
 	uint8_t display_type;           // existence/identification of display type
 	uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
