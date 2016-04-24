@@ -28,6 +28,7 @@ __IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
 
 static void 	UiDriverFFTWindowFunction(char mode);
+static void     UiSpectrum_FrequencyBarText(void);
 
 
 static void UiDriverFFTWindowFunction(char mode)
@@ -143,7 +144,7 @@ void UiSpectrumCreateDrawArea(void)
 
 	// Draw Frequency bar text
 	sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
-	UiDrawSpectrumScopeFrequencyBarText();
+	UiSpectrum_FrequencyBarText();
 
 	// draw centre line indicating the receive frequency
 	int8_t c = 4;
@@ -855,7 +856,7 @@ void UiSpectrumReDrawScopeDisplay()
 			    {
 			    sd.dial_moved = 0;	// Dial moved - reset indicator
 			    //
-			    UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
+			    UiSpectrum_FrequencyBarText();	// redraw frequency bar on the bottom of the display
 			    //
 			    }
 			// as I understand this, this calculates an IIR filter first order
@@ -1253,7 +1254,7 @@ void UiSpectrumReDrawWaterfall()
 			    {
 			    sd.dial_moved = 0;	// Dial moved - reset indicator
 			    //
-			    UiDrawSpectrumScopeFrequencyBarText();	// redraw frequency bar on the bottom of the display
+			    UiSpectrum_FrequencyBarText();	// redraw frequency bar on the bottom of the display
 			    //
 			    }
 			arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
@@ -1537,4 +1538,87 @@ void UiSpectrumInitSpectrumDisplay()
 	UiSpectrumCreateDrawArea();
 	UiSpectrum_InitSpectrumDisplay();
 	UiDriverDisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+}
+
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDrawSpectrumScopeFrequencyBarText
+//* Object              : Draw the frequency information on the frequency bar at the bottom of the spectrum scope based on the current frequency
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void UiSpectrum_FrequencyBarText()
+{
+    ulong   freq_calc;
+    ulong   i, clr;
+    char    txt[16], *c;
+    ulong   grat;
+    int centerIdx;
+
+    if(ts.scope_scale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
+        return;
+
+    grat = 6;   // Default - Magnify mode OFF, graticules spaced 6 kHz
+    //
+    if(sd.magnify)          // magnify mode on - only available when NOT in translate mode
+        grat = 3;   // graticules spaced 3 kHz
+
+    //
+    // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
+    // (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)
+    //
+    // get color for frequency scale
+    //
+    UiMenu_MapColors(ts.scope_scale_colour,NULL, &clr);
+
+
+    freq_calc = df.tune_new/TUNE_MULT;      // get current frequency in Hz
+
+    if(!sd.magnify) {       // if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
+        freq_calc += audio_driver_xlate_freq();
+    }
+    freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
+
+    // defaults, used for (ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || sd.magnify
+    centerIdx = 0;
+    // now handle the special cases
+    if(sd.magnify == false) {
+        switch(ts.iq_freq_mode) {
+        case FREQ_IQ_CONV_P6KHZ:
+            centerIdx = -1;
+            break;
+        case FREQ_IQ_CONV_P12KHZ:
+            centerIdx = -2;
+            break;
+        case FREQ_IQ_CONV_M6KHZ:
+            centerIdx = 1;
+            break;
+        case FREQ_IQ_CONV_M12KHZ:
+            centerIdx = 2;
+            break;
+        }
+    }
+
+    {
+        // remainder of frequency/graticule markings
+        const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
+        const static int centerIdx2pos[] = {62,94,130,160,192};
+
+        sprintf(txt, "  %lu  ", freq_calc+(centerIdx*grat)); // build string for center frequency
+        i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
+        UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
+
+
+        int idx;
+        for (idx = -4; idx < 5; idx++) {
+            int pos = idx2pos[idx+4];
+            if (idx != centerIdx) {
+                sprintf(txt, " %lu ", freq_calc+(idx*grat));   // build string for middle-left frequency
+                c = &txt[strlen(txt)-3];  // point at 2nd character from the end
+                UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+            }
+        }
+    }
+
 }

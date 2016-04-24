@@ -842,19 +842,6 @@ int main(void)
 	// test if touchscreen is present
 	CheckIsTouchscreenPresent();
 
-	// Init the RX Hilbert transform/filter prior
-	// to initializing the audio!
-	//
-	AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj();
-	//
-	// Init TX Hilbert transform/filter
-	//
-//	AudioFilter_CalcTxPhaseAdj();	//
-	AudioFilter_InitTxHilbertFIR();
-	// Audio HW init
-	// audio_driver_init();
-
 	// Usb Host driver init
 	//keyb_driver_init();
 

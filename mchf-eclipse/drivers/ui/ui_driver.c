@@ -563,6 +563,25 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
     return retval;
 }
 
+void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
+    //
+    if (RadioManagement_PowerLevelChange(power_level)) {
+        UiDriver_DisplayPowerLevel();
+        if (ts.menu_mode) {
+            UiMenu_RenderMenu(MENU_RENDER_ONLY);
+        }
+    }
+}
+
+
+void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode) {
+    if(dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
+        softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
+    } else {
+        softdds_setfreq(0.0,ts.samp_rate,0);
+    }
+}
+
 /**
  * @brief API Function, implements application logic for changing the power level including display updates
  *
@@ -571,9 +590,7 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
  */
 bool RadioManagement_Tune(bool tune) {
     bool retval = tune;
-    if(ts.tx_disable ||  (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM)) {
-        retval = false;    // no TUNE mode in AM or FM!
-    } else {
+    if(ts.tx_disable == false &&  ((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))) {
         if(tune)
         {
             if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
@@ -581,13 +598,13 @@ bool RadioManagement_Tune(bool tune) {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
                 ts.power_level = ts.tune_power_level;
             }
-            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
-                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
-            // DDS on
-            else
+            if(ts.dmod_mode == DEMOD_CW) {
                 softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
+            } else {
+                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
+            }
 
-            // To TX
+            // DDS on
             RadioManagement_SwitchTXRX(TRX_MODE_TX);                // tune ON
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
@@ -598,16 +615,14 @@ bool RadioManagement_Tune(bool tune) {
                 ts.power_level = ts.power_temp;                 // restore tx level
                 //                  UiDriver_DisplayPowerLevel();
             }
-            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))  // DDS off if voice mode
-                softdds_setfreq(0.0,ts.samp_rate,0);
-            else if(ts.dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
-                cw_gen_init();
-                softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-            }
+
+            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
             RadioManagement_SwitchTXRX(TRX_MODE_RX);                // tune OFF
             retval = false; // no longer tuning
         }
+    } else {
+        retval = false;    // no TUNE mode in AM or FM or with disabled TX!
     }
     return retval;
 }
@@ -769,7 +784,7 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
     if(txrx_mode == TRX_MODE_TX)
     {
 
-        // FIXME: Not very robust code
+        // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
         tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != SI570_TUNE_IMPOSSIBLE;
 
         if (tx_ok) {
@@ -780,7 +795,8 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
             //
             ts.tx_audio_muting_flag = 1; // let the audio being muted initially
             ts.dsp_inhibit = 1;                             // disable DSP when going into TX mode
-            //
+
+            // FIXME: UI Level Interaction in RadioManagement
             UiDriver_HandlePowerLevelChange(ts.power_level);
             // make sure that power level and mode fit together
 
@@ -789,10 +805,7 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
             PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
             RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
 
-            //  initialize everything in CW mode
-            if(ts.dmod_mode == DEMOD_CW)    {
-                softdds_setfreq((float)ts.sidetone_freq, ts.samp_rate,0);   // set sidetone frequency in CW mode (this also set TX shift)
-            }
+            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
             RadioManagement_EnablePABias();
         }
     }
@@ -821,15 +834,6 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
 
 
 
-void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
-    //
-    if (RadioManagement_PowerLevelChange(power_level)) {
-        UiDriver_DisplayPowerLevel();
-        if (ts.menu_mode) {
-            UiMenu_RenderMenu(MENU_RENDER_ONLY);
-        }
-    }
-}
 
 
 void UiDriver_HandleBandButtons(uint16_t button) {
@@ -892,8 +896,6 @@ static void UiDriverFButton_F1MenuExit()
 //*----------------------------------------------------------------------------
 void ui_driver_init()
 {
-	short res;
-
 	// Driver publics init
 	UiDriverPublicsInit();
 
@@ -905,44 +907,29 @@ void ui_driver_init()
 	  UiDriver_KeyTestScreen();
 	}
 
-	//
 	AudioManagement_CalcTxCompLevel();		// calculate current settings for TX speech compressor
-	//
+
 	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
-	//
+
 	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
-	//
+
 	AudioManagement_CalcRxIqGainAdj();		// Init RX IQ gain
-	//
 	AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
-	//
 	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
-	//
 	AudioManagement_CalcTxIqGainAdj();		// Init TX IQ gain
-	//
+
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
 	// Temp sensor setup
 	lo.sensor_absent = ui_si570_init_temp_sensor();
 
 	// Read SI570 settings
-	res = ui_si570_get_configuration();
-	if(res != 0)
-	{
-		//printf("err I2C: %d\n\r",res);
-	}
+	lo.lo_error = 0 != ui_si570_get_configuration();
 
-	// Create desktop screen
-	UiDriverCreateDesktop();
 
-	// Set SoftDDS in CW mode
-	if(ts.dmod_mode == DEMOD_CW)
-		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);	// set sidetone - and CW TX offset from carrier
-	else
-		softdds_setfreq(0.0,ts.samp_rate,0);						// no "DDS" in non-CW modes
+
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
 	// Update codec volume
 	//  0 - 16: via codec command
@@ -960,16 +947,11 @@ void ui_driver_init()
 	// Extra HW init
 	mchf_board_post_init();
 
+    // Create desktop screen
+    UiDriverCreateDesktop();
 
-	// Do update of frequency display
-	UiDriver_FrequencyUpdateLOandDisplay(true);	//
-	//
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
-
-#ifdef DEBUG_BUILD
-	printf("ui driver init ok\n\r");
-#endif
 }
 /*
  * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
@@ -1350,23 +1332,23 @@ static void UiDriverProcessKeyboard()
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
 				if (ts.notch_enabled) {
-					ts.notch_enabled = 0; // switch off notch filter
-					UiDriverChangeRfGain(1);
-					// DSP/Noise Blanker
-					UiDriverChangeSigProc(0);
-					ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-					UiDriverDisplayNotch(0); // display
+				    ts.notch_enabled = 0; // switch off notch filter
+				    UiDriverChangeRfGain(1);
+				    // DSP/Noise Blanker
+				    UiDriverChangeSigProc(0);
+				    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+				    UiDriverDisplayNotch(0); // display
 				}
-					else {
-						ts.notch_enabled = 1;
-						// RF gain
-						UiDriverChangeRfGain(0);
-						// DSP/Noise Blanker
-						UiDriverChangeSigProc(0);
-						// notch display
-						UiDriverDisplayNotch(1);
-						ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-					}
+				else {
+				    ts.notch_enabled = 1;
+				    // RF gain
+				    UiDriverChangeRfGain(0);
+				    // DSP/Noise Blanker
+				    UiDriverChangeSigProc(0);
+				    // notch display
+				    UiDriverDisplayNotch(1);
+				    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+				}
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
@@ -1490,15 +1472,9 @@ void UiInitRxParms()
 	UiCWSidebandMode();
 	// I do not think we need the TX adjustments in RX ?! DD4WH
 	// not sure, I leave them here
-	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
-	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj(); // dto.
-	AudioFilter_InitRxHilbertFIR();// is already included in the void audio_driver_set_rx_audio_filter();
-//	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter();
-	Audio_TXFilter_Init();
-	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-	// this is already included in the void audio_driver_set_rx_audio_filter();
-	//	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
+
+	UiDriverSetDemodMode(ts.dmod_mode);
+	UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
 
     if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
@@ -1522,9 +1498,9 @@ void UiInitRxParms()
     UiDriverChangeDigitalMode();    // Change Dgital display setting as well
     UiDriverChangeDSPMode();  // Change DSP display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
-    UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
     UiDriverChangeRfGain(1);    // update RFG/SQL on screen
     UiDriverDisplayNotch(0);
+
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 
@@ -1786,10 +1762,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			// do frequency/display update
 			if(is_splitmode())	{	// in SPLIT mode?
                 UiDriverDisplaySplitFreqLabels();
-                UiDriver_FrequencyUpdateLOandDisplay(true);
 			}
-			else	// not in SPLIT mode - standard update
-			    UiDriver_FrequencyUpdateLOandDisplay(false);
 
 			// Change decode mode if need to
 			if(ts.dmod_mode != vfo[vfo_active].band[ts.band].decod_mode)
@@ -1798,10 +1771,11 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.dmod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 
 				// Update Decode Mode (USB/LSB/AM/FM/CW)
-				UiDriverShowMode();
 				UiDriverSetDemodMode(ts.dmod_mode);
-				UiDriverChangeFilterDisplay();
+				UiDriverChangeFilterDisplay(); // YES
 				UiInitRxParms();
+			} else {
+			    UiDriver_FrequencyUpdateLOandDisplay(true);
 			}
 
 		}
@@ -1995,14 +1969,14 @@ static void UiDriverShowBand(uchar band)
 }
 
 // TODO: Move out to RF HAL
-void UiDriverChangeBandFilterPulseRelays() {
+static void RadioManagement_BandFilterPulseRelays() {
 	BAND2_PIO->BSRRH = BAND2;
 	non_os_delay();
 	BAND2_PIO->BSRRL = BAND2;
 }
 
 // TODO: Move out to RF HAL
-void UiDriverChangeBandFilter(uchar band)
+void RadioManagement_ChangeBandFilter(uchar band)
 {
 	// -------------------------------------------
 	// 	 BAND		BAND0		BAND1		BAND2
@@ -2033,13 +2007,13 @@ void UiDriverChangeBandFilter(uchar band)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// External group -Set(High/High)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// BPF
 			BAND0_PIO->BSRRL = BAND0;
@@ -2055,13 +2029,13 @@ void UiDriverChangeBandFilter(uchar band)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// External group - Reset(Low/High)
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// BPF
 			BAND0_PIO->BSRRL = BAND0;
@@ -2077,13 +2051,13 @@ void UiDriverChangeBandFilter(uchar band)
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// External group - Reset(Low/High)
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// BPF
 			BAND0_PIO->BSRRH = BAND0;
@@ -2103,13 +2077,13 @@ void UiDriverChangeBandFilter(uchar band)
 			BAND0_PIO->BSRRH = BAND0;
 			BAND1_PIO->BSRRH = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// External group - Set(High/High)
 			BAND0_PIO->BSRRL = BAND0;
 			BAND1_PIO->BSRRL = BAND1;
 
-			UiDriverChangeBandFilterPulseRelays();
+			RadioManagement_BandFilterPulseRelays();
 
 			// BPF
 			BAND0_PIO->BSRRH = BAND0;
@@ -2171,7 +2145,7 @@ static void UiDriverCreateDesktop()
 	UiDriverShowBand(ts.band);
 
 	// Set filters
-	UiDriverChangeBandFilter(ts.band);
+	RadioManagement_ChangeBandFilter(ts.band);
 
 	// Create Decode Mode (USB/LSB/AM/FM/CW)
 	UiDriverShowMode();
@@ -2667,120 +2641,6 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
   UiDriverUpdateMeter(val,warn,Cyan,METER_BTM);
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDrawSpectrumScopeFrequencyBarText
-//* Object              : Draw the frequency information on the frequency bar at the bottom of the spectrum scope based on the current frequency
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiDrawSpectrumScopeFrequencyBarText()
-{
-	ulong	freq_calc;
-	ulong	i, clr;
-	char	txt[16], *c;
-	ulong	grat;
-
-	if(ts.scope_scale_colour == SPEC_BLACK)		// don't bother updating frequency scale if it is black (invisible)!
-		return;
-
-	grat = 6;	// Default - Magnify mode OFF, graticules spaced 6 kHz
-	//
-	if(sd.magnify)			// magnify mode on - only available when NOT in translate mode
-		grat = 3;	// graticules spaced 3 kHz
-
-	//
-	// This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
-	// (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)
-	//
-	// get color for frequency scale
-	//
-	UiMenu_MapColors(ts.scope_scale_colour,NULL, &clr);
-
-
-	freq_calc = df.tune_new/TUNE_MULT;		// get current frequency in Hz
-
-	if(!sd.magnify)	{		// if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
-		freq_calc += audio_driver_xlate_freq();
-	}
-	freq_calc = (freq_calc + 500)/1000;	// round graticule frequency to the nearest kHz
-
-	//
-
-	if((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || (sd.magnify))	{	// Translate mode is OFF or magnify is on
-		sprintf(txt, "  %u  ", (unsigned)freq_calc);	// build string for center frequency
-		i = 130-((strlen(txt)-2)*4);	// calculate position of center frequency text
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
-
-		sprintf(txt, " %u ", (unsigned)freq_calc-(unsigned)grat);	// build string for left-of-center frequency
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  90),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-		//
-
-		sprintf(txt, " %u ", (unsigned)freq_calc+(unsigned)grat);	// build string for marker right of center
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	}
-	else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
-		sprintf(txt, "  %u  ", (unsigned)freq_calc-(unsigned)grat);	// build string for center frequency
-		i = 94-((strlen(txt)-2)*4);	// calculate position of center frequency text
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
-
-		sprintf(txt, " %u ", (unsigned)freq_calc);	// build string for center marker
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  122),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-		//
-		sprintf(txt, " %u ", (unsigned)freq_calc+(unsigned)grat);	// build string for marker right of center
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 154),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	}
-	else if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (!sd.magnify))	{	// Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
-		sprintf(txt, "  %u  ", (unsigned)freq_calc+(unsigned)grat);	// build string for center frequency
-		i = 160-((strlen(txt)-2)*4);	// calculate position of center frequency text
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
-
-		sprintf(txt, " %u ", (unsigned)freq_calc-(unsigned)grat);	// build string for left-of-center frequency
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  90),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-		//
-
-		sprintf(txt, " %u ", (unsigned)freq_calc);	// build string for frequency in center of display
-		c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-		UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 122),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	}
-
-	// remainder of frequency/graticule markings
-
-	sprintf(txt, " %u ", (unsigned)freq_calc-(2*(unsigned)grat));	// build string for middle-left frequency
-	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  58),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	//
-
-	sprintf(txt, " %u ", (unsigned)freq_calc+(2*(unsigned)grat));	// build string for middle-right frequency
-	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 186),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-	sprintf(txt, "%u ", (unsigned)freq_calc-(4*(unsigned)grat));	// build string for left-most frequency
-	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X ),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	//
-
-	sprintf(txt, "%u ", (unsigned)freq_calc-(3*(unsigned)grat));	// build string for right of left-most frequency
-	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +   26),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	//
-
-	sprintf(txt, " %u ", (unsigned)freq_calc+(3*(unsigned)grat));	// build string for left of far-right frequency
-	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 218),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-	//
-
-	sprintf(txt, " %u", (unsigned)freq_calc+(4*(unsigned)grat));	// build string for far-right frequency
-	c = &txt[strlen(txt)-2];  // point at 2nd character from the end
-	UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 242),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-}
 
 //
 //*----------------------------------------------------------------------------
@@ -2926,7 +2786,7 @@ static void UiDriver_SetHWFiltersForFrequency(ulong freq)
 	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
 		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for this band filter?
 			if(ts.filter_band != bandFilters[idx].filter_band)	{
-				UiDriverChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to desired band configuration
+				RadioManagement_ChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to desired band configuration
 				ts.filter_band = bandFilters[idx].filter_band;
 			}
 			break;
@@ -3144,7 +3004,6 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		}
 	}
 
-
 	// if (mode != UFM_SECONDARY) {
 		ts.refresh_freq_disp = true; //because of coloured digits...
 	// }
@@ -3169,10 +3028,11 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			// yes, raise display freq. by sidetone amount
 			break;
 	    case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
-			if(ts.cw_lsb)
+			if(ts.cw_lsb) {
 				dial_freq -= ts.sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
-			else
-				dial_freq += ts.sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+			} else {
+ 				dial_freq += ts.sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+			}
 			break;
 		}
 	}
@@ -3220,55 +3080,27 @@ static void UiDriverUpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 void UiDriverChangeTuningStep(uchar is_up)
 {
 	ulong 	idx = df.selected_idx;
+	uint8_t idx_limit = T_STEP_MAX_STEPS -1;
 
-	if(is_up)
-	{
-		// Increase step index or reset
-			idx++;
-			if(idx >= T_STEP_MAX_STEPS)
-				idx = 0;
+    if(ts.freq_cal_adjust_flag) {
+        idx_limit = T_STEP_1KHZ_IDX;
+    }   else if((!ts.freq_cal_adjust_flag) && (!ts.xvtr_adjust_flag) && (!ts.xverter_mode)) {
+        // are we NOT in "transverter adjust" or "frequency calibrate adjust" or transverter mode *NOT* on?
+        idx_limit = T_STEP_100KHZ_IDX;
+    }
 
-	}
-	else
-	{
-		// Decrease step index or reset
-		if(idx)
-			idx--;
-		else
-			idx = (T_STEP_MAX_STEPS - 1);
-	}
-
-	// Update publics
-	if(ts.freq_cal_adjust_flag)	{		// are we in "calibrate" mode?
-		if(idx > T_STEP_1KHZ_IDX)	{	// yes - limit to 1 kHz steps, maximum
-			if(is_up)	// did we get there via an increase?
-				idx = 0;	// yes - wrap back around to minimum step size
-			else		// we go there via a decrease
-				idx = T_STEP_1KHZ_IDX;
-		}
-	}
-	//	if ts.freq_cal_adjust_flag is set, do NOTHING
-	//
-	else if((!ts.freq_cal_adjust_flag) && (!ts.xvtr_adjust_flag) && (!ts.xverter_mode))	{			// are we NOT in "transverter adjust" or "frequency calibrate adjust" or transverter mode *NOT* on?
-		if(idx > T_STEP_100KHZ_IDX)	{	// yes - limit to 100 kHz steps, maximum
-			if(is_up)	// did we get ther via an increase?
-				idx = 0;	// yes - wrap back around to minimum step size
-			else
-				idx = T_STEP_100KHZ_IDX;
-		}
-		// Allow 1 and 10 MHz steps if the above "else-if" condition is NOT true.
+	if(is_up) {
+        idx= (idx>=idx_limit)?0:idx+1;
+	} else {
+		idx= (idx==0)?idx_limit:idx-1;
 	}
 
 	df.tuning_step	= tune_steps[idx];
 	df.selected_idx = idx;
 
-	//printf("step_n: %d\n\r",  df.tunning_step);
-
 	// Update step on screen
 	UiDriverShowStep(idx);
 
-	// Save to Eeprom
-	//TRX4M_VE_WriteStep(idx);
 }
 
 /*----------------------------------------------------------------------------
@@ -3686,29 +3518,16 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 	// Finally update public flag
 	ts.dmod_mode = new_mode;
 
-	// Set SoftDDS in CW mode
-	if(ts.dmod_mode == DEMOD_CW)
-		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-	else
-		softdds_setfreq(0.0,ts.samp_rate,0);
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
-
-	AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
-	AudioManagement_CalcRxIqGainAdj();
-	//
-	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj();
+	Audio_TXFilter_Init();
+    AudioManagement_CalcRxIqGainAdj();
 	AudioManagement_CalcTxIqGainAdj();
-	// FIXME: HACK: remove this after implementation
+
 	audio_driver_set_rx_audio_filter();
 
     // Update Decode Mode (USB/LSB/AM/FM/CW)
-
     UiDriverShowMode();
-
-	// Change function buttons caption
-	//UiDriverCreateFunctionButtons(false);
 }
 
 
@@ -3911,7 +3730,7 @@ static void UiDriverChangeBand(uchar is_up)
         UiDriverSetBandPowerFactor(new_band_index);
 
         // Set filters
-        UiDriverChangeBandFilter(new_band_index);
+        RadioManagement_ChangeBandFilter(new_band_index);
 
         // Finally update public flag
         ts.band = new_band_index;
