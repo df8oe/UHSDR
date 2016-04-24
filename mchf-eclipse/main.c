@@ -800,11 +800,11 @@ void ConfigurationStorage_Init() {
 
 void CheckIsTouchscreenPresent(void)
 {
-	UiLcdHy28_GetTouchscreenCoordinates(0);				// initial reading of XPT2046
+	UiLcdHy28_ReadTcData();
 	if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
 	    ts.tp_present = 1;						// yes - touchscreen present!
-	else
-	    ts.tp_x = ts.tp_y = 0xff;
+
+	ts.tp_state = 0xff;
 }
 
 int main(void)

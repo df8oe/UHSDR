@@ -113,5 +113,6 @@ void 	UiLcdHy28_CloseBulkWrite(void);
 uint8_t 	UiLcdHy28_Init(void);
 
 void 	UiLcdHy28_GetTouchscreenCoordinates(bool);	// 1 == corrected data, 0 == raw data
+void	UiLcdHy28_ReadTcData(void);
 
 #endif

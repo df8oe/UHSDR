@@ -1364,6 +1364,17 @@ statemachine stati:
 }
 
 
+void UiLcdHy28_ReadTcData()
+{
+		  GPIO_ResetBits(TP_CS_PIO, TP_CS);
+		  UiLcdHy28_SendByteSpi(144);
+		  ts.tp_x = UiLcdHy28_ReadByteSpi();
+		  UiLcdHy28_SendByteSpi(208);
+		  ts.tp_y = UiLcdHy28_ReadByteSpi();
+		  GPIO_SetBits(TP_CS_PIO, TP_CS);
+}
+
+
 #pragma GCC optimize("O0")
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_Delay
