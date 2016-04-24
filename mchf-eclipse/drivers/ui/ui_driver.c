@@ -1332,23 +1332,23 @@ static void UiDriverProcessKeyboard()
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
 				if (ts.notch_enabled) {
-					ts.notch_enabled = 0; // switch off notch filter
-					UiDriverChangeRfGain(1);
-					// DSP/Noise Blanker
-					UiDriverChangeSigProc(0);
-					ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-					UiDriverDisplayNotch(0); // display
+				    ts.notch_enabled = 0; // switch off notch filter
+				    UiDriverChangeRfGain(1);
+				    // DSP/Noise Blanker
+				    UiDriverChangeSigProc(0);
+				    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+				    UiDriverDisplayNotch(0); // display
 				}
-					else {
-						ts.notch_enabled = 1;
-						// RF gain
-						UiDriverChangeRfGain(0);
-						// DSP/Noise Blanker
-						UiDriverChangeSigProc(0);
-						// notch display
-						UiDriverDisplayNotch(1);
-						ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-					}
+				else {
+				    ts.notch_enabled = 1;
+				    // RF gain
+				    UiDriverChangeRfGain(0);
+				    // DSP/Noise Blanker
+				    UiDriverChangeSigProc(0);
+				    // notch display
+				    UiDriverDisplayNotch(1);
+				    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+				}
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit

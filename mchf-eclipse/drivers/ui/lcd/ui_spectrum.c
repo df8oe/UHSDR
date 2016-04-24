@@ -1554,8 +1554,7 @@ static void UiSpectrum_FrequencyBarText()
     ulong   i, clr;
     char    txt[16], *c;
     ulong   grat;
-
-    uint16_t center,left,right;
+    int centerIdx;
 
     if(ts.scope_scale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
         return;
@@ -1582,59 +1581,44 @@ static void UiSpectrum_FrequencyBarText()
     freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
 
     // defaults, used for (ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || sd.magnify
-    center = 130;
-    left = 90;
-    right = 154;
-
+    centerIdx = 0;
     // now handle the special cases
     if(sd.magnify == false) {
-        if (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)    {   // Translate mode is ON (LO is HIGH, center is left of middle of display) AND magnify is off
-            center = 94;
-            left = 122;
-            right = 154;
-        } else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)  {   // Translate mode is ON (LO is LOW, center is to the right of middle of display) AND magnify is off
-            center = 160;
-            left = 90;
-            right = 122;
+        switch(ts.iq_freq_mode) {
+        case FREQ_IQ_CONV_P6KHZ:
+            centerIdx = -1;
+            break;
+        case FREQ_IQ_CONV_P12KHZ:
+            centerIdx = -2;
+            break;
+        case FREQ_IQ_CONV_M6KHZ:
+            centerIdx = 1;
+            break;
+        case FREQ_IQ_CONV_M12KHZ:
+            centerIdx = 2;
+            break;
         }
     }
 
-    sprintf(txt, "  %u  ", (unsigned)freq_calc+(unsigned)grat); // build string for center frequency
-    i = center -((strlen(txt)-2)*4);    // calculate position of center frequency text
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
+    {
+        // remainder of frequency/graticule markings
+        const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
+        const static int centerIdx2pos[] = {62,94,130,160,192};
 
-    sprintf(txt, " %u ", (unsigned)freq_calc-(unsigned)grat);   // build string for left-of-center frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  left),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+        sprintf(txt, "  %lu  ", freq_calc+(centerIdx*grat)); // build string for center frequency
+        i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
+        UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
 
-    sprintf(txt, " %u ", (unsigned)freq_calc);  // build string for frequency in center of display
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + right),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
 
-    // remainder of frequency/graticule markings
-
-    sprintf(txt, " %u ", (unsigned)freq_calc-(2*(unsigned)grat));   // build string for middle-left frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  58),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-    sprintf(txt, " %u ", (unsigned)freq_calc+(2*(unsigned)grat));   // build string for middle-right frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 186),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-    sprintf(txt, "%u ", (unsigned)freq_calc-(4*(unsigned)grat));    // build string for left-most frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X ),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-    sprintf(txt, "%u ", (unsigned)freq_calc-(3*(unsigned)grat));    // build string for right of left-most frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +   26),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-    sprintf(txt, " %u ", (unsigned)freq_calc+(3*(unsigned)grat));   // build string for left of far-right frequency
-    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 218),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-
-    sprintf(txt, " %u", (unsigned)freq_calc+(4*(unsigned)grat));    // build string for far-right frequency
-    c = &txt[strlen(txt)-2];  // point at 2nd character from the end
-    UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + 242),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+        int idx;
+        for (idx = -4; idx < 5; idx++) {
+            int pos = idx2pos[idx+4];
+            if (idx != centerIdx) {
+                sprintf(txt, " %lu ", freq_calc+(idx*grat));   // build string for middle-left frequency
+                c = &txt[strlen(txt)-3];  // point at 2nd character from the end
+                UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+            }
+        }
+    }
 
 }
