@@ -96,18 +96,14 @@ static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 //
 // variables for RX manual notch IIR filter
 static arm_biquad_casd_df1_inst_f32 IIR_Notch = {
-		.numStages = 1,
+		.numStages = 4,
 		.pCoeffs = (float32_t *)(float32_t [])
 		{
-			0.003467332208447815,
-			   0.003219363651146496,
-			   0.003467332208447815,
-			   1.852573355019514480,
-			   -0.862727383087556587
-		},
+			1,0,0,0,0,1,0,0,0,0	,		1,0,0,0,0,1,0,0,0,0
+		}, // 4 x 5 = 20 coefficients
 
 		.pState = (float32_t *)(float32_t [])
-			{0 ,0 ,0 ,0}
+			{0 ,0 ,0 ,0,0,0,0,0,0 ,0 ,0 ,0,0,0,0,0} // 4 x 4 = 16 state variables
 };
 //
 // variables for FM squelch IIR filters
@@ -385,13 +381,13 @@ void audio_driver_set_rx_audio_filter(void)
 	// notch implementation
 	//
 	float32_t FS = 48000; // should this become a global variable?
-//	float32_t f0 = 2000; // notch frequency --> TODO: will be set by encoder2
 	float32_t f0 = ts.notch_frequency;
 	float32_t Q = 10; // larger Q gives narrower notch
 	float32_t w0 = 2 * PI * f0 / FS;
 	float32_t alpha = sin(w0) / (2 * Q);
 	float32_t a0 = 1; // gain scaling
 	float32_t b0,b1,b2,a1,a2;
+	float32_t A, S;
 
 	b0 = 1;
 	b1 = - 2 * cos(w0);
@@ -409,11 +405,103 @@ void audio_driver_set_rx_audio_filter(void)
 
 	// setting the Coefficients in the notch filter instance
 	// while not using pointers
+	if (ts.notch_enabled) {
 	IIR_Notch.pCoeffs[0] = b0;
 	IIR_Notch.pCoeffs[1] = b1;
 	IIR_Notch.pCoeffs[2] = b2;
 	IIR_Notch.pCoeffs[3] = a1;
 	IIR_Notch.pCoeffs[4] = a2;
+	}
+	else { // passthru
+		IIR_Notch.pCoeffs[0] = 1;
+		IIR_Notch.pCoeffs[1] = 0;
+		IIR_Notch.pCoeffs[2] = 0;
+		IIR_Notch.pCoeffs[3] = 0;
+		IIR_Notch.pCoeffs[4] = 0;
+	}
+
+	if(ts.peak_enabled) {
+	// peak filter
+	f0 = ts.peak_frequency;
+	Q = 10; //
+	w0 = 2 * PI * f0 / FS;
+	alpha = sin(w0) / (2 * Q);
+	A = 2.371; // 10^(10/40); 15dB gain
+
+	b0 = 1 + (alpha * A);
+	b1 = - 2 * cos(w0);
+	b2 = 1 - (alpha * A);
+	a0 = 1 + (alpha / A);
+	a1 = 2 * cos(w0); // already negated!
+	a2 = (alpha/A) - 1; // already negated!
+
+	// scaling the coefficients for gain
+	b0 = b0/a0;
+	b1 = b1/a0;
+	b2 = b2/a0;
+	a1 = a1/a0;
+	a2 = a2/a0;
+
+	IIR_Notch.pCoeffs[5] = b0;
+	IIR_Notch.pCoeffs[6] = b1;
+	IIR_Notch.pCoeffs[7] = b2;
+	IIR_Notch.pCoeffs[8] = a1;
+	IIR_Notch.pCoeffs[9] = a2;
+	}
+	else { //passthru
+		IIR_Notch.pCoeffs[5] = 1;
+		IIR_Notch.pCoeffs[6] = 0;
+		IIR_Notch.pCoeffs[7] = 0;
+		IIR_Notch.pCoeffs[8] = 0;
+		IIR_Notch.pCoeffs[9] = 0;
+	}
+
+	// EQ shelving filters
+	//
+	// Bass
+	//
+	f0 = 200;
+	A = 10^(ts.bass_gain/40); // gain ranges from -12 to 12
+	S = 0.5; // shelf slope, 1 is maximum value
+	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+	float32_t cosw0 = cos(w0);
+	float32_t twoAa = 2 * sqrt(A) * alpha;
+	// lowShelf
+	//
+	b0 = A * 		( (A + 1) - (A - 1) * cosw0 + twoAa );
+	b1 = 2 * A * 	( (A - 1) - (A + 1) * cosw0 		);
+	b2 = A * 		( (A + 1) - (A - 1) * cosw0 - twoAa );
+	a0 = 	 		  (A + 1) + (A - 1) * cosw0 + twoAa ;
+	a1 = 2 *  		( (A - 1) + (A + 1) * cosw0 		); // already negated!
+	a2 = twoAa 		- (A + 1) - (A - 1) * cosw0; // already negated!
+
+	// scaling the coefficients for gain
+	b0 = b0/a0;
+	b1 = b1/a0;
+	b2 = b2/a0;
+	a1 = a1/a0;
+	a2 = a2/a0;
+/*
+	IIR_Notch.pCoeffs[10] = b0;
+	IIR_Notch.pCoeffs[11] = b1;
+	IIR_Notch.pCoeffs[12] = b2;
+	IIR_Notch.pCoeffs[13] = a1;
+	IIR_Notch.pCoeffs[14] = a2;
+*/
+	IIR_Notch.pCoeffs[10] = 1;
+	IIR_Notch.pCoeffs[11] = 0;
+	IIR_Notch.pCoeffs[12] = 0;
+	IIR_Notch.pCoeffs[13] = 0;
+	IIR_Notch.pCoeffs[14] = 0;
+
+	IIR_Notch.pCoeffs[15] = 1;
+	IIR_Notch.pCoeffs[16] = 0;
+	IIR_Notch.pCoeffs[17] = 0;
+	IIR_Notch.pCoeffs[18] = 0;
+	IIR_Notch.pCoeffs[19] = 0;
+
+
+
 
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	 * End of Manual Notch coefficient calculation and setting
@@ -1855,9 +1943,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 	 * this would be the right place for a manual notch filter !? (in 48ksps)
 	 */
 	// calculate in b_buffer!
-	if (ts.notch_enabled){
+	// this is the biquad filter, a cascade of notch filter, peak filter and low shelf, highshelf filter sections
 	arm_biquad_cascade_df1_f32 (&IIR_Notch, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
-	}
 
 	//
 	if((ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))	{	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
