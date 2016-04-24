@@ -966,7 +966,8 @@ typedef struct TransceiverState
 										// LSB+2 = 1 if DSP Notch mode is on (| 4)
 										// LSB+3 = 0 if DSP is to be displayed on screen instead of NB (| 8)
 										// MSB	 = 1 if button G2 toggle NOT initialized (| 128)
-	uchar digital_mode;					// holds actual digital mode
+	uchar	dsp_mode;					// holds the mode chosen in the DSP
+	uchar 	digital_mode;				// holds actual digital mode
 	uchar	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting
 	uchar	dsp_nr_strength;			// "Strength" of DSP Noise reduction - to be converted to "Mu" factor
 	ulong	dsp_nr_delaybuf_len;		// size of DSP noise reduction delay buffer

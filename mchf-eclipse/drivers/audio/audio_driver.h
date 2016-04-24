@@ -467,6 +467,15 @@ enum	{
 //
 #define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
 #define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
+
+#define DSP_SWITCH_OFF				0
+#define DSP_SWITCH_NR				1
+#define DSP_SWITCH_NOTCH			2
+#define DSP_SWITCH_NR_AND_NOTCH		3
+#define DSP_SWITCH_NOTCH_MANUAL		4
+#define DSP_SWITCH_BASS				5
+#define DSP_SWITCH_TREBLE			6
+#define DSP_SWITCH_MAX				7
 //
 #define	AGC_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 											// This is divided by the decimation rate so that the time delay is constant.

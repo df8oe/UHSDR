@@ -349,7 +349,63 @@ static void UiDriver_LcdBlankingStealthSwitch() {
 void UiDriver_HandleSwitchToNextDspMode()
 {
 	if(ts.dmod_mode != DEMOD_FM)	{ // allow selection/change of DSP only if NOT in FM
-		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
+		//
+		// I think we should alter this to use a counter
+		// What do we want to switch here:
+		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
+		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
+		// Manual Notch		ts.notch_enabled = 1; // ts.notch_enabled = 0;
+		// BASS				ts.bass // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
+		// TREBLE			ts.treble // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
+
+		ts.dsp_mode ++; // switch mode
+		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+		//
+		// prevent certain modes to prevent CPU crash
+		//
+		// prevent NR AND NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NR AND NOTCH, when in AM and filter-bandwidth > 4k8 (= decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ)) ts.dsp_mode++;
+
+
+		switch (ts.dsp_mode) {
+
+		case DSP_SWITCH_OFF: // switch off everything
+			ts.dsp_active &= ~DSP_NR_ENABLE;
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE;
+			ts.notch_enabled = 0;
+			break;
+		case DSP_SWITCH_NR:
+			ts.dsp_active |= DSP_NR_ENABLE; 	//on
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 0;				//off
+			break;
+		case DSP_SWITCH_NOTCH:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
+			ts.notch_enabled = 0;				//off
+			break;
+		case DSP_SWITCH_NR_AND_NOTCH:
+			ts.dsp_active |= DSP_NR_ENABLE; 	//on
+			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
+			ts.notch_enabled = 0;				//off
+			break;
+		case DSP_SWITCH_NOTCH_MANUAL:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 1;				//on
+			break;
+		case DSP_SWITCH_BASS:
+			break;
+		case DSP_SWITCH_TREBLE:
+			break;
+		}
+
+/*		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
 		{
 		ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
 		}
@@ -373,6 +429,8 @@ void UiDriver_HandleSwitchToNextDspMode()
 		else	{
 			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
 		}
+		*/
+
 		//
 		ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
 		//
@@ -4449,7 +4507,42 @@ static void UiDriverChangeDSPMode()
 	ushort color = White;
 	const char* txt;
 
-	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
+	switch (ts.dsp_mode) {
+	case DSP_SWITCH_OFF: //
+		color = Grey2;
+		txt = "DSP-OFF";
+		break;
+	case DSP_SWITCH_NR:
+		txt = "NR";
+		color = White;
+		break;
+	case DSP_SWITCH_NOTCH:
+		color = White;
+		txt = "NOTCH";
+		break;
+	case DSP_SWITCH_NR_AND_NOTCH:
+		color = White;
+		txt = "NR+NOTC";
+		break;
+	case DSP_SWITCH_NOTCH_MANUAL:
+		color = White;
+		txt = "M-NOTCH";
+		break;
+	case DSP_SWITCH_BASS:
+		color = White;
+		txt = "BASS";
+		break;
+	case DSP_SWITCH_TREBLE:
+		color = White;
+		txt = "TREBLE";
+		break;
+	default:
+		color = Grey2;
+		txt = "DSP-OFF";
+		break;
+	}
+
+/*	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
 		color = White;
 	} else	// DSP not active
 		color = Grey2;
@@ -4467,7 +4560,7 @@ static void UiDriverChangeDSPMode()
 	} else {
 		txt = "DSP-OFF";
 	}
-
+*/
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
