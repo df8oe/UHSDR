@@ -563,6 +563,15 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
     return retval;
 }
 
+
+void AudioManagement_SetSidetoneForDemodMode(dmod_mode) {
+    if(dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
+        softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
+    } else {
+        softdds_setfreq(0.0,ts.samp_rate,0);
+    }
+}
+
 /**
  * @brief API Function, implements application logic for changing the power level including display updates
  *
@@ -571,9 +580,7 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
  */
 bool RadioManagement_Tune(bool tune) {
     bool retval = tune;
-    if(ts.tx_disable ||  (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM)) {
-        retval = false;    // no TUNE mode in AM or FM!
-    } else {
+    if(ts.tx_disable == false &&  ((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))) {
         if(tune)
         {
             if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
@@ -581,13 +588,13 @@ bool RadioManagement_Tune(bool tune) {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
                 ts.power_level = ts.tune_power_level;
             }
-            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))
-                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
-            // DDS on
-            else
+            if(ts.dmod_mode == DEMOD_CW) {
                 softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
+            } else {
+                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
+            }
 
-            // To TX
+            // DDS on
             RadioManagement_SwitchTXRX(TRX_MODE_TX);                // tune ON
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
@@ -598,16 +605,14 @@ bool RadioManagement_Tune(bool tune) {
                 ts.power_level = ts.power_temp;                 // restore tx level
                 //                  UiDriver_DisplayPowerLevel();
             }
-            if((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB))  // DDS off if voice mode
-                softdds_setfreq(0.0,ts.samp_rate,0);
-            else if(ts.dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
-                cw_gen_init();
-                softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-            }
+
+            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
             RadioManagement_SwitchTXRX(TRX_MODE_RX);                // tune OFF
             retval = false; // no longer tuning
         }
+    } else {
+        retval = false;    // no TUNE mode in AM or FM or with disabled TX!
     }
     return retval;
 }
@@ -789,10 +794,7 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
             PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
             RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
 
-            //  initialize everything in CW mode
-            if(ts.dmod_mode == DEMOD_CW)    {
-                softdds_setfreq((float)ts.sidetone_freq, ts.samp_rate,0);   // set sidetone frequency in CW mode (this also set TX shift)
-            }
+            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
             RadioManagement_EnablePABias();
         }
     }
@@ -892,8 +894,6 @@ static void UiDriverFButton_F1MenuExit()
 //*----------------------------------------------------------------------------
 void ui_driver_init()
 {
-	short res;
-
 	// Driver publics init
 	UiDriverPublicsInit();
 
@@ -905,44 +905,29 @@ void ui_driver_init()
 	  UiDriver_KeyTestScreen();
 	}
 
-	//
 	AudioManagement_CalcTxCompLevel();		// calculate current settings for TX speech compressor
-	//
+
 	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
-	//
+
 	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
-	//
+
 	AudioManagement_CalcRxIqGainAdj();		// Init RX IQ gain
-	//
 	AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj();			// Init RX IQ Phase (Hilbert transform/filter)
-	//
 	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj();			// Init TX IQ Phase (Hilbert transform)
-	//
 	AudioManagement_CalcTxIqGainAdj();		// Init TX IQ gain
-	//
+
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
 	// Temp sensor setup
 	lo.sensor_absent = ui_si570_init_temp_sensor();
 
 	// Read SI570 settings
-	res = ui_si570_get_configuration();
-	if(res != 0)
-	{
-		//printf("err I2C: %d\n\r",res);
-	}
+	lo.lo_error = 0 != ui_si570_get_configuration();
 
-	// Create desktop screen
-	UiDriverCreateDesktop();
 
-	// Set SoftDDS in CW mode
-	if(ts.dmod_mode == DEMOD_CW)
-		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);	// set sidetone - and CW TX offset from carrier
-	else
-		softdds_setfreq(0.0,ts.samp_rate,0);						// no "DDS" in non-CW modes
+
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
 	// Update codec volume
 	//  0 - 16: via codec command
@@ -960,16 +945,11 @@ void ui_driver_init()
 	// Extra HW init
 	mchf_board_post_init();
 
+    // Create desktop screen
+    UiDriverCreateDesktop();
 
-	// Do update of frequency display
-	UiDriver_FrequencyUpdateLOandDisplay(true);	//
-	//
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
-
-#ifdef DEBUG_BUILD
-	printf("ui driver init ok\n\r");
-#endif
 }
 /*
  * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
@@ -1490,15 +1470,9 @@ void UiInitRxParms()
 	UiCWSidebandMode();
 	// I do not think we need the TX adjustments in RX ?! DD4WH
 	// not sure, I leave them here
-	AudioManagement_CalcTxIqGainAdj();		// update gain and phase values when changing modes
-	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj(); // dto.
-	AudioFilter_InitRxHilbertFIR();// is already included in the void audio_driver_set_rx_audio_filter();
-//	AudioFilter_CalcRxPhaseAdj(); // is already included in the void audio_driver_set_rx_audio_filter();
-	Audio_TXFilter_Init();
-	audio_driver_set_rx_audio_filter();	// update DSP/filter settings
-	// this is already included in the void audio_driver_set_rx_audio_filter();
-	//	AudioFilter_CalcRxPhaseAdj();           // We may have changed something in the RX filtering as well - do an update
+
+	UiDriverSetDemodMode(ts.dmod_mode);
+	UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
 
     if(ts.dmod_mode == DEMOD_CW)	{		// update on-screen adjustments
@@ -1522,9 +1496,9 @@ void UiInitRxParms()
     UiDriverChangeDigitalMode();    // Change Dgital display setting as well
     UiDriverChangeDSPMode();  // Change DSP display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
-    UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
     UiDriverChangeRfGain(1);    // update RFG/SQL on screen
     UiDriverDisplayNotch(0);
+
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 
@@ -1786,10 +1760,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 			// do frequency/display update
 			if(is_splitmode())	{	// in SPLIT mode?
                 UiDriverDisplaySplitFreqLabels();
-                UiDriver_FrequencyUpdateLOandDisplay(true);
 			}
-			else	// not in SPLIT mode - standard update
-			    UiDriver_FrequencyUpdateLOandDisplay(false);
 
 			// Change decode mode if need to
 			if(ts.dmod_mode != vfo[vfo_active].band[ts.band].decod_mode)
@@ -1798,10 +1769,11 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 				ts.dmod_mode = vfo[vfo_active].band[ts.band].decod_mode;
 
 				// Update Decode Mode (USB/LSB/AM/FM/CW)
-				UiDriverShowMode();
 				UiDriverSetDemodMode(ts.dmod_mode);
-				UiDriverChangeFilterDisplay();
+				UiDriverChangeFilterDisplay(); // YES
 				UiInitRxParms();
+			} else {
+			    UiDriver_FrequencyUpdateLOandDisplay(true);
 			}
 
 		}
@@ -3686,29 +3658,16 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 	// Finally update public flag
 	ts.dmod_mode = new_mode;
 
-	// Set SoftDDS in CW mode
-	if(ts.dmod_mode == DEMOD_CW)
-		softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-	else
-		softdds_setfreq(0.0,ts.samp_rate,0);
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
 
-
-	AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj();		// set gain and phase values according to mode
-	AudioManagement_CalcRxIqGainAdj();
-	//
-	AudioFilter_InitTxHilbertFIR();
-//	AudioFilter_CalcTxPhaseAdj();
+	Audio_TXFilter_Init();
+    AudioManagement_CalcRxIqGainAdj();
 	AudioManagement_CalcTxIqGainAdj();
-	// FIXME: HACK: remove this after implementation
+
 	audio_driver_set_rx_audio_filter();
 
     // Update Decode Mode (USB/LSB/AM/FM/CW)
-
     UiDriverShowMode();
-
-	// Change function buttons caption
-	//UiDriverCreateFunctionButtons(false);
 }
 
 

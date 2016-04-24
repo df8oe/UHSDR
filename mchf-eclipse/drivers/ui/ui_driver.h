@@ -334,6 +334,7 @@ typedef struct LoTcxo
 	int		comp;
 
 	bool	sensor_absent;
+	bool    lo_error;
 	int   last;
 
 } LoTcxo;
