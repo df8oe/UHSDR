@@ -377,9 +377,6 @@ void UiDriver_HandleSwitchToNextDspMode()
 	    // DSP/Noise Blanker
 	    UiDriverChangeSigProc(0);
 
-	    UiDriverDisplayNotch(0); // display
-
-
 		switch (ts.dsp_mode) {
 
 		case DSP_SWITCH_OFF: // switch off everything
@@ -389,6 +386,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 			ts.peak_enabled = 0;				//off
 			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 			UiDriverChangeRfGain(1);
+			UiDriverDisplayNotch(0); // display
 			break;
 		case DSP_SWITCH_NR:
 			ts.dsp_active |= DSP_NR_ENABLE; 	//on
@@ -1417,9 +1415,15 @@ static void UiDriverProcessKeyboard()
 				break;
 			case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
 				if(ts.dmod_mode != DEMOD_FM)	{		// do not allow change of mode when in FM
-					if(is_dsp_nr()|| is_dsp_notch())	{			// is DSP NR or NOTCH active?
+					if(is_dsp_nr()|| is_dsp_notch() || ts.notch_enabled || ts.peak_enabled)	{			// is DSP NR or NOTCH active?
 						ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
 						ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// turn off NR and notch
+						ts.dsp_mode = DSP_SWITCH_OFF;
+						ts.notch_enabled = 0;
+						ts.peak_enabled = 0;				//off
+						ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+						UiDriverChangeRfGain(1);
+						UiDriverDisplayNotch(0); // display
 					}
 					else	{		// neither notch or NR was active
 						if(ts.dsp_active_toggle != 0xff)	{	// has this holder been used before?
@@ -1435,6 +1439,7 @@ static void UiDriverProcessKeyboard()
 					else
 						UiDriverChangeSigProc(1);
 				}
+					UiDriverChangeDSPMode();			// update on-screen display
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
@@ -5054,8 +5059,8 @@ static void UiDriverDisplayNotch(uchar enabled) {
 
 	if(enabled || ts.notch_enabled || ts.peak_enabled)
 	  {
-		UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
-	uint32_t label_color = enabled?Black:Grey1;
+	  UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+	  uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
 
 	  if (ts.notch_enabled)
