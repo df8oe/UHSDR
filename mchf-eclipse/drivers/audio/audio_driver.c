@@ -361,7 +361,7 @@ void audio_driver_set_rx_audio_filter(void)
 	IIR_AntiAlias.pState = (float32_t *)&iir_aa_state;					// point to state array for IIR filter
 
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	 * Manual Notch [DD4WH, april 2016]
+	 * Cascaded biquad (notch, peak, lowShelf, highShelf) [DD4WH, april 2016]
 	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	// it is only a lightweight filter with one stage (= 2nd order IIR)
 	// but nonetheless very effective
@@ -461,7 +461,7 @@ void audio_driver_set_rx_audio_filter(void)
 	// Bass
 	//
 	f0 = 200;
-	A = 10^(ts.bass_gain/40); // gain ranges from -12 to 12
+	A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
 	S = 0.5; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	float32_t cosw0 = cos(w0);
@@ -481,30 +481,57 @@ void audio_driver_set_rx_audio_filter(void)
 	b2 = b2/a0;
 	a1 = a1/a0;
 	a2 = a2/a0;
-/*
+
 	IIR_Notch.pCoeffs[10] = b0;
 	IIR_Notch.pCoeffs[11] = b1;
 	IIR_Notch.pCoeffs[12] = b2;
 	IIR_Notch.pCoeffs[13] = a1;
 	IIR_Notch.pCoeffs[14] = a2;
-*/
+	/*
 	IIR_Notch.pCoeffs[10] = 1;
 	IIR_Notch.pCoeffs[11] = 0;
 	IIR_Notch.pCoeffs[12] = 0;
 	IIR_Notch.pCoeffs[13] = 0;
 	IIR_Notch.pCoeffs[14] = 0;
+*/
+	// Treble
+	//
+	f0 = 6000;
+	A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
+	S = 0.5; // shelf slope, 1 is maximum value
+	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+	cosw0 = cos(w0);
+	twoAa = 2 * sqrt(A) * alpha;
+	// highShelf
+	//
+	b0 = A * 		( (A + 1) + (A - 1) * cosw0 + twoAa );
+	b1 = - 2 * A * 	( (A - 1) + (A + 1) * cosw0 		);
+	b2 = A * 		( (A + 1) + (A - 1) * cosw0 - twoAa );
+	a0 = 	 		  (A + 1) - (A - 1) * cosw0 + twoAa ;
+	a1 = - 2 * 		( (A - 1) - (A + 1) * cosw0 		); // already negated!
+	a2 = twoAa 		- (A + 1) + (A - 1) * cosw0; // already negated!
 
-	IIR_Notch.pCoeffs[15] = 1;
-	IIR_Notch.pCoeffs[16] = 0;
-	IIR_Notch.pCoeffs[17] = 0;
-	IIR_Notch.pCoeffs[18] = 0;
-	IIR_Notch.pCoeffs[19] = 0;
+	// scaling the coefficients for gain
+	b0 = b0/a0;
+	b1 = b1/a0;
+	b2 = b2/a0;
+	a1 = a1/a0;
+	a2 = a2/a0;
 
+	IIR_Notch.pCoeffs[15] = b0;
+	IIR_Notch.pCoeffs[16] = b1;
+	IIR_Notch.pCoeffs[17] = b2;
+	IIR_Notch.pCoeffs[18] = a1;
+	IIR_Notch.pCoeffs[19] = a2;
 
-
-
+	/*	IIR_Notch.pCoeffs[15] = 1;
+		IIR_Notch.pCoeffs[16] = 0;
+		IIR_Notch.pCoeffs[17] = 0;
+		IIR_Notch.pCoeffs[18] = 0;
+		IIR_Notch.pCoeffs[19] = 0;
+	*/
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	 * End of Manual Notch coefficient calculation and setting
+	 * End of coefficient calculation and setting for cascaded biquad
 	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 	//
 	// Initialize high-pass filter used for the FM noise squelch
