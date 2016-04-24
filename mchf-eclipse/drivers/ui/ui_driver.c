@@ -387,6 +387,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 			UiDriverChangeRfGain(1);
 			UiDriverDisplayNotch(0); // display
+//			UiDriverDisplayBass();
 			break;
 		case DSP_SWITCH_NR:
 			ts.dsp_active |= DSP_NR_ENABLE; 	//on
