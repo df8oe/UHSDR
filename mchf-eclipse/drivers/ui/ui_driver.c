@@ -299,7 +299,6 @@ static void UiDriver_ToggleWaterfallScopeDisplay() {
     UiSpectrumInitSpectrumDisplay();   // init spectrum scope
   }
 }
-
 //
 //
 //*----------------------------------------------------------------------------
@@ -1922,16 +1921,17 @@ const BandGenInfo bandGenInfo[] =  {
         {3200000, 3400000, "90m" },
         {3900000, 4000000, "75m" },
         {4750000, 5060000, "60m" },
-        {5900000, 5900000, "49m" },
-        {7200000, 7350000, "41m" },
+        {5950000, 6200000, "49m" },
+        {7300000, 7350000, "41m" },
         {9400000, 9900000, "31m" },
         {11600000, 12100000, "25m" },
         {13570000, 13870000, "22m" },
         {15100000, 15800000, "19m" },
         {17480000, 17900000, "16m" },
         {18900000, 19020000, "15m" },
-        {21450000, 21850000, "13m" },
+        {21450000, 21750000, "13m" },
         {25670000, 26100000, "11m" },
+        {26965000, 27405000, "11m" },
         { 0,  0,             "Gen" }
     };
 
@@ -1946,23 +1946,45 @@ const BandGenInfo bandGenInfo[] =  {
 static void UiDriverShowBand(uchar band)
 {
     const char* bandName;
+	bool print_bc_name = true;
+	int idx;
+	
 	if (band < MAX_BAND_NUM) {
-	// Clear control
-		if (band == MAX_BANDS){ // MAX_BANDS = Gen band ! MAX_BAND_NUM = MAX_BANDS + 1
-		    int idx;
+		ulong col;
+		// Clear control
+		if (band == BAND_MODE_GEN){
 		    for (idx = 0; bandGenInfo[idx].start !=0; idx++) {
 		        if (df.tune_old/TUNE_MULT >= bandGenInfo[idx].start && df.tune_old/TUNE_MULT < bandGenInfo[idx].end) {
 		            break; // found match
 		        }
 		    }
-			// Print name of BC band, if frequency is within a broadcast band
-		    bandName = bandGenInfo[idx].name;
+
+			if (bandGenInfo[idx].start !=0)
+			  // Print name of BC band in yellow, if frequency is within a broadcast band
+			  col = Yellow;
+		  	else
+			  col = Orange;
+
+			if  (bandGenInfo[idx].start == 26965000)
+			  col = Blue;		// CB radio == blue
+
+		  	
+		  	if (idx == ts.bc_band)
+		  	  print_bc_name = false;
+		  	ts.bc_band =idx;
+		  	  
+		  	bandName = bandGenInfo[idx].name;
 		} else {
+			print_bc_name = true;
+			col = Orange;
 		    bandName = bandInfo[band].name;
 		}
+		if (print_bc_name)
+		  {
+		  UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
+		  UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandName,col,Black,0);
+		  }
 
-		UiLcdHy28_DrawFullRect(POS_BAND_MODE_MASK_X,POS_BAND_MODE_MASK_Y,POS_BAND_MODE_MASK_H,POS_BAND_MODE_MASK_W,Black);
-		UiLcdHy28_PrintTextRight(POS_BAND_MODE_X + 5*8,POS_BAND_MODE_Y,bandName,Orange,Black,0);
 	}
 	// add indicator for broadcast bands here
 	// if Band = "Gen" AND frequency inside one of the broadcast bands, print name of the band
@@ -2823,7 +2845,7 @@ uchar UiDriverCheckBand(ulong freq, ushort update)
 	}
 
 	if(update)	{		// are we to update the display?
-		if(band_scan != band_scan_old) {		// yes, did the band actually change?
+		if(band_scan != band_scan_old || band_scan == BAND_MODE_GEN) {		// yes, did the band actually change?
 			UiDriverShowBand(band_scan);	// yes, update the display with the current band
 		}
 	}

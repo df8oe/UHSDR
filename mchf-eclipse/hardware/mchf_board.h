@@ -1109,6 +1109,7 @@ typedef struct TransceiverState
 	unsigned short DeviceCode;		// LCD ident code
 	bool USE_NEW_PHASE_CORRECTION; 	// used to test new phase correction
 	bool encoder3state;
+	int bc_band;
 	uchar c_line;					// position of center line
 	Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 } TransceiverState;
