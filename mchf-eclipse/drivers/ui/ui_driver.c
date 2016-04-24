@@ -4101,6 +4101,53 @@ static void UiDriverCheckEncoderTwo()
         }
         	break;
         }
+        case ENC_TWO_MODE_BASS_GAIN: {
+        	if(pot_diff < 0) {
+        		ts.bass_gain = ts.bass_gain - 1;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.bass_gain = ts.bass_gain + 1;
+        	}
+        	if (ts.bass_gain < -12) ts.bass_gain = -12;
+        	if (ts.bass_gain > 12) ts.bass_gain = 12;
+        	// display bass gain
+        	UiDriverDisplayNotch(1);
+        	// set notch filter instance
+        	audio_driver_set_rx_audio_filter();
+        	break;
+        }
+        case ENC_TWO_MODE_TREBLE_GAIN: {
+        	if(pot_diff < 0) {
+        		ts.treble_gain = ts.treble_gain - 1;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.treble_gain = ts.treble_gain + 1;
+        	}
+        	if (ts.treble_gain < -12) ts.treble_gain = -12;
+        	if (ts.treble_gain > 12) ts.treble_gain = 12;
+        	// display treble gain
+        	UiDriverDisplayNotch(1);
+        	// set notch filter instance
+        	audio_driver_set_rx_audio_filter();
+        	break;
+        }
+        case ENC_TWO_MODE_PEAK_F: {
+        	if (ts.peak_enabled) { // peak f is only adjustable when peak is enabled
+        	if(pot_diff < 0) {
+        		ts.peak_frequency = ts.peak_frequency - 10;
+        		    	}
+        	if(pot_diff > 0) {
+        		ts.peak_frequency = ts.peak_frequency + 10;
+        	}
+        	if (ts.peak_frequency < 200) ts.peak_frequency = 200;
+        	if (ts.peak_frequency > 12000) ts.peak_frequency = 12000;
+        	// display peak frequency
+        	//UiDriverDisplayNotch(1);
+        	// set notch filter instance
+        	audio_driver_set_rx_audio_filter();
+        }
+        	break;
+        }
         default:
           break;
         }

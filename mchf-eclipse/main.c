@@ -530,6 +530,9 @@ void TransceiverStateInit(void)
 	ts.notch_enabled = 0;
 	ts.spectrum_light = 0;					// light spectrum display without grid and points instead of bars
 	ts.notch_frequency = 800;				// notch start frequency for manual notch filter
+	ts.peak_frequency = 750;				// peak start frequency
+	ts.bass_gain = 2;						// gain of the low shelf EQ filter
+	ts.treble_gain = 0;						// gain of the high shelf EQ filter
 }
 
 //*----------------------------------------------------------------------------
