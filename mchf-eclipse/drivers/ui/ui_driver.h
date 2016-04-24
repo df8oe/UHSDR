@@ -516,17 +516,15 @@ void 	ui_driver_init(void);
 void 	ui_driver_thread(void);
 
 void 	UiDriverLoadFilterValue(void);
-void 	UiSpectrumClearDisplay(void);
 //
-void 	UiDriverChangeBandFilter(uchar band);
+void 	RadioManagement_ChangeBandFilter(uchar band);
 void 	UiDriverChangeFilterDisplay(void);
 void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
-void 	UiSpectrumCreateDrawArea(void);
 
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void 	UiDriverSetBandPowerFactor(uchar band);
-void 	UiDrawSpectrumScopeFrequencyBarText(void);
+
 //
 //void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	UiDriverSetBandPowerFactor(uchar band);
