@@ -356,8 +356,8 @@ void UiDriver_HandleSwitchToNextDspMode()
 		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
 		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
 		// Manual Notch		ts.notch_enabled = 1; // ts.notch_enabled = 0;
-		// BASS				ts.bass // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
-		// TREBLE			ts.treble // always "ON", gain ranges from -12 to +12 dB, "OFF" = 0dB
+		// BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
+		// TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 
 		ts.dsp_mode ++; // switch mode
 		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
@@ -4166,8 +4166,8 @@ static void UiDriverCheckEncoderTwo()
         	if(pot_diff > 0) {
         		ts.bass_gain = ts.bass_gain + 1;
         	}
-        	if (ts.bass_gain < -12) ts.bass_gain = -12;
-        	if (ts.bass_gain > 12) ts.bass_gain = 12;
+        	if (ts.bass_gain < -20) ts.bass_gain = -20;
+        	if (ts.bass_gain > 20) ts.bass_gain = 20;
         	// display bass gain
         	UiDriverDisplayBass();
         	// set filter instance
@@ -4181,8 +4181,8 @@ static void UiDriverCheckEncoderTwo()
         	if(pot_diff > 0) {
         		ts.treble_gain = ts.treble_gain + 1;
         	}
-        	if (ts.treble_gain < -12) ts.treble_gain = -12;
-        	if (ts.treble_gain > 12) ts.treble_gain = 12;
+        	if (ts.treble_gain < -20) ts.treble_gain = -20;
+        	if (ts.treble_gain > 20) ts.treble_gain = 20;
         	// display treble gain
         	UiDriverDisplayBass();
         	// set filter instance
