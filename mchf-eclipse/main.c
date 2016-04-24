@@ -528,6 +528,7 @@ void TransceiverStateInit(void)
 	ts.cat_band_index =255;						// no CAT command arrived
 	ts.sam_enabled = 0;						// demodulation mode SAM not enabled
 	ts.notch_enabled = 0;
+	ts.peak_enabled = 0;
 	ts.spectrum_light = 0;					// light spectrum display without grid and points instead of bars
 	ts.notch_frequency = 800;				// notch start frequency for manual notch filter
 	ts.peak_frequency = 750;				// peak start frequency

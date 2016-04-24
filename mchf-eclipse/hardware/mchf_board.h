@@ -1107,6 +1107,7 @@ typedef struct TransceiverState
 	uchar	xlat;					// CAT <> IQ-Audio
 	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 	ulong	notch_frequency;		// frequency of the manual notch filter
+	bool 	peak_enabled;			// indicates whether peak filter is enabled or not
 	ulong	peak_frequency;			// frequency of the manual peak filter
 	int		bass_gain;				// gain of the low shelf EQ filter
 	int		treble_gain;			// gain of the high shelf EQ filter

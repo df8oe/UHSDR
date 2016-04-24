@@ -371,6 +371,13 @@ void UiDriver_HandleSwitchToNextDspMode()
 		// prevent NR AND NOTCH, when in AM and filter-bandwidth > 4k8 (= decimation rate equals 2 --> high CPU load)
 		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ)) ts.dsp_mode++;
 
+		// display all as inactive (and then activate the right one, see below)
+		UiDriverChangeRfGain(0);
+	    // DSP/Noise Blanker
+	    UiDriverChangeSigProc(0);
+
+	    UiDriverDisplayNotch(0); // display
+
 
 		switch (ts.dsp_mode) {
 
@@ -378,32 +385,72 @@ void UiDriver_HandleSwitchToNextDspMode()
 			ts.dsp_active &= ~DSP_NR_ENABLE;
 			ts.dsp_active &= ~DSP_NOTCH_ENABLE;
 			ts.notch_enabled = 0;
+			ts.peak_enabled = 0;				//off
+			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			UiDriverChangeRfGain(1);
 			break;
 		case DSP_SWITCH_NR:
 			ts.dsp_active |= DSP_NR_ENABLE; 	//on
 			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
 			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
+		    UiDriverChangeSigProc(1);
+		    ts.enc_two_mode = ENC_TWO_MODE_SIG_PROC;
 			break;
 		case DSP_SWITCH_NOTCH:
 			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
 			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
 			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
 			break;
 		case DSP_SWITCH_NR_AND_NOTCH:
 			ts.dsp_active |= DSP_NR_ENABLE; 	//on
 			ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
 			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 0;				//off
 			break;
 		case DSP_SWITCH_NOTCH_MANUAL:
 			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
 			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
 			ts.notch_enabled = 1;				//on
+			ts.peak_enabled = 0;				//off
+			ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+		    UiDriverDisplayNotch(1);
+			break;
+		case DSP_SWITCH_PEAK_FILTER:
+			ts.dsp_active &= ~DSP_NR_ENABLE;	//off
+			ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
+			ts.notch_enabled = 0;				//off
+			ts.peak_enabled = 1;				//on
+			ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
+		    UiDriverDisplayNotch(1);
 			break;
 		case DSP_SWITCH_BASS:
 			break;
 		case DSP_SWITCH_TREBLE:
 			break;
 		}
+/*
+		if (ts.notch_enabled) {
+			    ts.notch_enabled = 0; // switch off notch filter
+			    UiDriverChangeRfGain(1);
+			    // DSP/Noise Blanker
+			    UiDriverChangeSigProc(0);
+			    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			    UiDriverDisplayNotch(0); // display
+			}
+			else {
+			    ts.notch_enabled = 1;
+			    // RF gain
+			    UiDriverChangeRfGain(0);
+			    // DSP/Noise Blanker
+			    UiDriverChangeSigProc(0);
+			    // notch display
+			    UiDriverDisplayNotch(1);
+			    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+			}
+*/
+
 
 /*		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
 		{
@@ -441,10 +488,12 @@ void UiDriver_HandleSwitchToNextDspMode()
 		//
 		// Update DSP/NB/RFG control display
 		//
-		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
+		// put all displays here??
+		//
+/*		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
 			UiDriverChangeSigProc(0);
 		else
-			UiDriverChangeSigProc(1);
+			UiDriverChangeSigProc(1); */
 	}
 }
 
@@ -1388,7 +1437,7 @@ static void UiDriverProcessKeyboard()
 				break;
 			case BUTTON_G3_PRESSED:		{	// Press-and-hold button G3
 				UiInitRxParms();			// generate "reference" for sidetone frequency
-				if (ts.notch_enabled) {
+/*				if (ts.notch_enabled) {
 				    ts.notch_enabled = 0; // switch off notch filter
 				    UiDriverChangeRfGain(1);
 				    // DSP/Noise Blanker
@@ -1406,6 +1455,7 @@ static void UiDriverProcessKeyboard()
 				    UiDriverDisplayNotch(1);
 				    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
 				}
+				*/
 				break;
 			}
 			case BUTTON_G4_PRESSED:		{	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
@@ -4111,8 +4161,8 @@ static void UiDriverCheckEncoderTwo()
         	if (ts.bass_gain < -12) ts.bass_gain = -12;
         	if (ts.bass_gain > 12) ts.bass_gain = 12;
         	// display bass gain
-        	UiDriverDisplayNotch(1);
-        	// set notch filter instance
+        	//UiDriverDisplayBass(1);
+        	// set filter instance
         	audio_driver_set_rx_audio_filter();
         	break;
         }
@@ -4126,8 +4176,8 @@ static void UiDriverCheckEncoderTwo()
         	if (ts.treble_gain < -12) ts.treble_gain = -12;
         	if (ts.treble_gain > 12) ts.treble_gain = 12;
         	// display treble gain
-        	UiDriverDisplayNotch(1);
-        	// set notch filter instance
+        	//UiDriverDisplayBass(1);
+        	// set filter instance
         	audio_driver_set_rx_audio_filter();
         	break;
         }
@@ -4142,7 +4192,7 @@ static void UiDriverCheckEncoderTwo()
         	if (ts.peak_frequency < 200) ts.peak_frequency = 200;
         	if (ts.peak_frequency > 12000) ts.peak_frequency = 12000;
         	// display peak frequency
-        	//UiDriverDisplayNotch(1);
+        	UiDriverDisplayNotch(1);
         	// set notch filter instance
         	audio_driver_set_rx_audio_filter();
         }
@@ -4575,6 +4625,10 @@ static void UiDriverChangeDSPMode()
 		color = White;
 		txt = "M-NOTCH";
 		break;
+	case DSP_SWITCH_PEAK_FILTER:
+		color = White;
+		txt = "PEAK";
+		break;
 	case DSP_SWITCH_BASS:
 		color = White;
 		txt = "BASS";
@@ -4868,20 +4922,28 @@ static void UiDriverChangeSigProc(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverDisplayNotch(uchar enabled) {
 
-	if(enabled || ts.notch_enabled)
+	if(enabled || ts.notch_enabled || ts.peak_enabled)
 	  {
 	  uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+
+	  if (ts.notch_enabled)
 	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
 	                      label_color, Grey, 0);
+	  else
+	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "PEAK-F",
+	                      label_color, Grey, 0);
+
 	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
 
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
 
 	  char temp[6];
 	  uint32_t color = enabled?White:Grey;
-	  if(ts.notch_enabled) color = Yellow;
+	  if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
+	  if (ts.notch_enabled)
 	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
+	  else 	  snprintf(temp,6,"%5lu", (ulong)ts.peak_frequency);
 	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
 	  	                           color, Black, 0);
 	  }
@@ -4889,7 +4951,6 @@ static void UiDriverDisplayNotch(uchar enabled) {
 	  UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
 
 } // end void UiDriverDisplayNotch
-
 
 //
 //*----------------------------------------------------------------------------
