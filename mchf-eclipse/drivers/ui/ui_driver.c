@@ -206,7 +206,7 @@ extern __IO	SpectrumDisplay		sd;
 
 uchar drv_state = 0;
 
-bool filter_path_change = false;
+bool filter_path_change = true;
 //
 
 
@@ -4886,7 +4886,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 //*----------------------------------------------------------------------------
 static void UiDriverDisplayNotch(uchar enabled) {
 
-	if(enabled)
+	if(enabled || ts.notch_enabled)
 	  {
 	  uint32_t label_color = enabled?Black:Grey1;
 	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);

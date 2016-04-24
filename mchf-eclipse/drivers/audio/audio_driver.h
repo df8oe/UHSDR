@@ -28,7 +28,7 @@
 // (48kHz sampling - USB)
 //
 // -----------------------------
-// FFT buffer (128, 512 or 2048)
+// FFT buffer, this is double the size of the length of the FFT used for spectrum display and waterfall spectrum
 #define FFT_IQ_BUFF_LEN		512
 
 
