@@ -1328,7 +1328,7 @@ static void UiDriverProcessKeyboard()
 			            if(ts.ser_eeprom_in_use == 0xFF)
 			                UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
 			            if(ts.ser_eeprom_in_use == 0x00)
-			                UiLcdHy28_PrintText(60,160,"Saving settings to serial EEPROM",Cyan,Black,0);
+			                UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
 			            UiConfiguration_SaveEepromValues();	// save settings to EEPROM
 			            for(temp = 0; temp < 6; temp++)			// delay so that it may be read
 			                non_os_delay();
