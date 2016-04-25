@@ -1690,7 +1690,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 				}
 		}
 
-		if((!ts.cat_mode_active) && ts.tx_audio_source == TX_AUDIO_DIG) {
+		if((!(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)) && ts.tx_audio_source == TX_AUDIO_DIG) {
 			// RED if CAT is not enabled
 			clr = Red;
 		}
@@ -2583,12 +2583,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	// If you change CAT mode, THINGS MAY GET "BROKEN" - for example, you may not be able to reliably save to EEPROM!
 	// This needs to be investigated!
 	//
-	case CONFIG_CAT_ENABLE:	// CAT mode	 - not saved in EEPROM, does not trigger "save" indicator
+	case CONFIG_CAT_ENABLE:
 		temp_var = ts.cat_mode_active;
+//		temp_var = (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)? 1 : 0;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		ts.cat_mode_active = temp_var;
+//		if (temp_var)
+//		  ts.flags1 |= FLAGS1_CAT_MODE_ACTIVE;
+//		else
+//		  ts.flags1 &= ~FLAGS1_CAT_MODE_ACTIVE;
 		if (tchange) {
-			if(ts.cat_mode_active)	{
+			if(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)	{
 				cat_driver_init();
 			}
 			else	{
