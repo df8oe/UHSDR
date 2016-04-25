@@ -68,8 +68,8 @@ static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 
 static void 	UiDriverInitFrequency();
 //
-static void 	UiDriver_SetHWFiltersForFrequency(ulong freq);
-uchar 			UiDriverCheckBand(ulong freq, ushort update);
+static void 	RadioManagement_SetHWFiltersForFrequency(ulong freq);
+uchar 			UiDriver_ShowBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriverTimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
@@ -643,7 +643,7 @@ bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode) {
 }
 
 
-bool RadioManagement_PowerLevelChange(uint8_t power_level) {
+bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level) {
     bool retval = false;
 
     if(ts.dmod_mode == DEMOD_AM)    {           // in AM mode?
@@ -653,7 +653,7 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
     }
     else    {   // other modes, do not limit max power
         if(power_level >= PA_LEVEL_MAX_ENTRY) {
-            power_level = PA_LEVEL_FULL;
+            power_level = PA_LEVEL_FULL; //  0 == full power
         }
     }
 
@@ -663,13 +663,15 @@ bool RadioManagement_PowerLevelChange(uint8_t power_level) {
         if(ts.tune && !ts.iq_freq_mode) {       // recalculate sidetone gain only if transmitting/tune mode
             Codec_SidetoneSetgain(ts.txrx_mode);
         }
+        // Set TX power factor - to reflect changed power
+        RadioManagement_SetBandPowerFactor(band);
     }
     return retval;
 }
 
 void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
     //
-    if (RadioManagement_PowerLevelChange(power_level)) {
+    if (RadioManagement_PowerLevelChange(ts.band,power_level)) {
         UiDriver_DisplayPowerLevel();
         if (ts.menu_mode) {
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
@@ -678,12 +680,16 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level) {
 }
 
 
-void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode) {
-    if(dmod_mode == DEMOD_CW)   {   // DDS reset to proper sidetone freq. if CW mode
-        softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
-    } else {
-        softdds_setfreq(0.0,ts.samp_rate,0);
+void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode) {
+    float tonefreq = 0;
+    switch(dmod_mode) {
+    case DEMOD_CW:
+            tonefreq = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
+            break;
+    default:
+            tonefreq = tune_mode?SSB_TUNE_FREQ:0.0;
     }
+    softdds_setfreq(tonefreq,ts.samp_rate,0);
 }
 
 /**
@@ -700,29 +706,20 @@ bool RadioManagement_Tune(bool tune) {
             if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
             {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
-                ts.power_level = ts.tune_power_level;
+                ts.power_level =ts.tune_power_level;
             }
-            if(ts.dmod_mode == DEMOD_CW) {
-                softdds_setfreq(CW_SIDETONE_FREQ_DEFAULT,ts.samp_rate,0);
-            } else {
-                softdds_setfreq(SSB_TUNE_FREQ, ts.samp_rate,0);     // generate tone for setting TX IQ phase
-            }
-
             // DDS on
-            RadioManagement_SwitchTXRX(TRX_MODE_TX);                // tune ON
+            RadioManagement_SwitchTxRx(TRX_MODE_TX,true);                // tune ON
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
         else
         {
             if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
             {
-                ts.power_level = ts.power_temp;                 // restore tx level
-                //                  UiDriver_DisplayPowerLevel();
+                ts.power_level = ts.power_temp; // restore tx level
             }
 
-            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
-
-            RadioManagement_SwitchTXRX(TRX_MODE_RX);                // tune OFF
+            RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
             retval = false; // no longer tuning
         }
     } else {
@@ -824,8 +821,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
              } else {
                  ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
              }
-
-             UiDriver_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
+             RadioManagement_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
              // Inform Spectrum Display code that a frequency change has happened
              sd.dial_moved = 1;
          } else {
@@ -855,7 +851,7 @@ void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 
 
 
-void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
+void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
 
     static bool rx_muted = 0;
@@ -900,16 +896,12 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
             ts.tx_audio_muting_flag = 1; // let the audio being muted initially
             ts.dsp_inhibit = 1;                             // disable DSP when going into TX mode
 
-            // FIXME: UI Level Interaction in RadioManagement
-            UiDriver_HandlePowerLevelChange(ts.power_level);
-            // make sure that power level and mode fit together
 
             rx_muted = Codec_PrepareTx(rx_muted, txrx_mode);
 
             PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
             RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
 
-            AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
             RadioManagement_EnablePABias();
         }
     }
@@ -918,6 +910,15 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
     if (txrx_mode == TRX_MODE_RX || tx_ok == true) {
         df.tune_new = tune_new;
         RadioManagement_UpdateFrequencyFast(txrx_mode);
+        // there might have been a band change between the modes, make sure to have the power settings fitting the mode
+        if (txrx_mode == TRX_MODE_TX) {
+            uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
+            if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false) {
+                RadioManagement_SetBandPowerFactor(tx_band);
+            }
+        }
+        AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode == TRX_MODE_RX?false:tune_mode);
+        // make sure the audio is set properly according to txrx and tune modes
     }
 
     if (txrx_mode == TRX_MODE_RX || tx_ok == false) {
@@ -937,6 +938,276 @@ void RadioManagement_SwitchTXRX(uint8_t txrx_mode)
 
 
 
+
+
+
+void RadioManagement_CalculateCWSidebandMode()
+{
+    switch(ts.cw_offset_mode)   {
+    case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
+    case CW_OFFSET_AUTO_RX:
+    case CW_OFFSET_AUTO_SHIFT:
+        if(df.tune_new >= USB_FREQ_THRESHOLD)   // is the current frequency above the USB threshold?
+            ts.cw_lsb = 0;                      // yes - indicate that it is USB
+        else
+            ts.cw_lsb = 1;                      // no - LSB
+        break;
+    case CW_OFFSET_LSB_TX:
+    case CW_OFFSET_LSB_RX:
+    case CW_OFFSET_LSB_SHIFT:
+        ts.cw_lsb = 1;              // It is LSB
+        break;
+    case CW_OFFSET_USB_TX:
+    case CW_OFFSET_USB_RX:
+    case CW_OFFSET_USB_SHIFT:
+    default:
+        ts.cw_lsb = 0;
+        break;
+    }
+}
+
+
+
+
+
+static void RadioManagement_BandFilterPulseRelays() {
+	BAND2_PIO->BSRRH = BAND2;
+	non_os_delay();
+	BAND2_PIO->BSRRL = BAND2;
+}
+
+
+
+void RadioManagement_ChangeBandFilter(uchar band)
+{
+	// -------------------------------------------
+	// 	 BAND		BAND0		BAND1		BAND2
+	//
+	//	 80m		1			1			x
+	//	 40m		1			0			x
+	//	 20/30m		0			0			x
+	//	 15-10m		0			1			x
+	//
+	// ---------------------------------------------
+	// Set LPFs:
+	// Set relays in groups, internal first, then external group
+	// state change via two pulses on BAND2 line, then idle
+	//
+	// then
+	//
+	// Set BPFs
+	// Constant line states for the BPF filter,
+	// always last - after LPF change
+	switch(band)
+	{
+		case BAND_MODE_2200:
+		case BAND_MODE_630:
+		case BAND_MODE_160:
+		case BAND_MODE_80:
+		{
+			// Internal group - Set(High/Low)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// External group -Set(High/High)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			break;
+		}
+
+		case BAND_MODE_60:
+		case BAND_MODE_40:
+		{
+			// Internal group - Set(High/Low)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// External group - Reset(Low/High)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			break;
+		}
+
+		case BAND_MODE_30:
+		case BAND_MODE_20:
+		{
+			// Internal group - Reset(Low/Low)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// External group - Reset(Low/High)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			break;
+		}
+
+		case BAND_MODE_17:
+		case BAND_MODE_15:
+		case BAND_MODE_12:
+		case BAND_MODE_10:
+		case BAND_MODE_6:
+		case BAND_MODE_4:
+		{
+			// Internal group - Reset(Low/Low)
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRH = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// External group - Set(High/High)
+			BAND0_PIO->BSRRL = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			RadioManagement_BandFilterPulseRelays();
+
+			// BPF
+			BAND0_PIO->BSRRH = BAND0;
+			BAND1_PIO->BSRRL = BAND1;
+
+			break;
+		}
+
+		default:
+			break;
+	}
+
+}
+typedef struct BandFilterDescriptor {
+    uint32_t upper;
+    uint16_t filter_band;
+    uint16_t band_mode;
+} BandFilterDescriptor;
+
+#define BAND_FILTER_NUM 7
+
+// The descriptor array below has to be ordered from the lowest BPF frequency filter
+// to the highest.
+static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
+        { BAND_FILTER_UPPER_160, COUPLING_160M, BAND_MODE_160 },
+        { BAND_FILTER_UPPER_80,  COUPLING_80M, BAND_MODE_80 },
+        { BAND_FILTER_UPPER_40,  COUPLING_40M, BAND_MODE_40 },
+        { BAND_FILTER_UPPER_20,  COUPLING_20M, BAND_MODE_20 },
+        { BAND_FILTER_UPPER_10,  COUPLING_15M, BAND_MODE_10 },
+        { BAND_FILTER_UPPER_6,  COUPLING_6M, BAND_MODE_6 }
+};
+
+
+
+
+static void RadioManagement_SetHWFiltersForFrequency(ulong freq)
+{
+	int idx;
+	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
+		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for this band filter?
+			if(ts.filter_band != bandFilters[idx].filter_band)	{
+				RadioManagement_ChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to desired band configuration
+				ts.filter_band = bandFilters[idx].filter_band;
+			}
+			break;
+		}
+	}
+}
+
+
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverSetBandPowerFactor
+//* Object              : TX chain gain is not const for the 3-30 Mhz range
+//* Input Parameters    : so adjust here
+//* Output Parameters   :
+
+/* Depends on globals: ts.pwr_adj, ts.power_level, df.tune_new, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
+ * Impacts globals:    ts.tx_power_factor
+ */
+
+void RadioManagement_SetBandPowerFactor(uchar band)
+{
+	float	pf_temp;	// used as a holder for percentage of power output scaling
+
+	if (band >= MAX_BANDS) {
+		pf_temp = 3; // use very low value in case of wrong call to this function
+	} else {
+		pf_temp = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
+	}
+	//
+	ts.tx_power_factor = pf_temp/100;	// preliminarily scale to percent, which is the default for 5 watts
+
+	// now rescale to power levels <5 watts, is so-configured
+
+	switch(ts.power_level)	{
+		case	PA_LEVEL_0_5W:
+			pf_temp = 0.316;		// rescale for 10% of 5 watts (0.5 watts)
+			break;
+		case	PA_LEVEL_1W:
+			pf_temp = 0.447;		// rescale for 20% of 5 watts (1.0 watts)
+			break;
+		case	PA_LEVEL_2W:
+			pf_temp = 0.6324;		// rescale for 40% of 5 watts (2 watts)
+			break;
+		default:					// 100% is 5 watts or full power!!
+			pf_temp = 1;
+			break;
+	}
+
+	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
+
+	if((df.tune_new < 8000000 * 4) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
+	    ts.tx_power_factor = ts.tx_power_factor / 4;
+}
+
+
+
+
+
+uint8_t RadioManagement_GetBand(ulong freq)
+{
+    static uint8_t band_scan_old = 99;
+    uchar   band_scan;
+
+    band_scan = 0;
+
+    freq -= audio_driver_xlate_freq();
+    freq *= TUNE_MULT;
+
+    // first try the last band, and see if it is an match
+    if (band_scan_old != 99 && freq >= bandInfo[band_scan_old].tune && freq <= (bandInfo[band_scan_old].tune + bandInfo[band_scan_old].size)){
+        band_scan = band_scan_old;
+    } else {
+        for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)  {
+            if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size))) { // Is this frequency within this band?
+                break;  // yes - stop the scan
+            }
+        }
+    }
+    band_scan_old = band_scan;  // update band change detector
+    return band_scan;       // return with the band
+}
 
 
 
@@ -1016,7 +1287,7 @@ void ui_driver_init()
 	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = df.tune_new;
 
-	UiCWSidebandMode();			// determine CW sideband mode from the restored frequency
+	RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
 
 	AudioManagement_CalcRxIqGainAdj();		// Init RX IQ gain
 	AudioFilter_InitRxHilbertFIR();
@@ -1033,7 +1304,7 @@ void ui_driver_init()
 
 
 
-	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
 
 	// Update codec volume
 	//  0 - 16: via codec command
@@ -1041,7 +1312,7 @@ void ui_driver_init()
 	Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*8),ts.txrx_mode);		// This is only approximate - it will be properly set later
 
 	// Set TX power factor
-	UiDriverSetBandPowerFactor(ts.band);
+	RadioManagement_SetBandPowerFactor(ts.band);
 
 	// Reset inter driver requests flag
 	ts.LcdRefreshReq	= 0;
@@ -1581,7 +1852,7 @@ void UiInitRxParms()
 {
 
     // Init / Functional changes to operation in RX path
-	UiCWSidebandMode();
+	RadioManagement_CalculateCWSidebandMode();
 	// I do not think we need the TX adjustments in RX ?! DD4WH
 	// not sure, I leave them here
 
@@ -1899,7 +2170,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 	if(id == BUTTON_F5_PRESSED)
 	{
 	    ts.tune = RadioManagement_Tune(!ts.tune);
-	    UiDriver_DisplayPowerLevel();           // former position was upper commented out position
+	    UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
         UiDriverFButtonLabel(5,"TUNE",ts.tune?Red:White);
 	}
 }
@@ -2106,137 +2377,7 @@ static void UiDriverShowBand(uchar band)
 }
 
 // TODO: Move out to RF HAL
-static void RadioManagement_BandFilterPulseRelays() {
-	BAND2_PIO->BSRRH = BAND2;
-	non_os_delay();
-	BAND2_PIO->BSRRL = BAND2;
-}
-
 // TODO: Move out to RF HAL
-void RadioManagement_ChangeBandFilter(uchar band)
-{
-	// -------------------------------------------
-	// 	 BAND		BAND0		BAND1		BAND2
-	//
-	//	 80m		1			1			x
-	//	 40m		1			0			x
-	//	 20/30m		0			0			x
-	//	 15-10m		0			1			x
-	//
-	// ---------------------------------------------
-	// Set LPFs:
-	// Set relays in groups, internal first, then external group
-	// state change via two pulses on BAND2 line, then idle
-	//
-	// then
-	//
-	// Set BPFs
-	// Constant line states for the BPF filter,
-	// always last - after LPF change
-	switch(band)
-	{
-		case BAND_MODE_2200:
-		case BAND_MODE_630:
-		case BAND_MODE_160:
-		case BAND_MODE_80:
-		{
-			// Internal group - Set(High/Low)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// External group -Set(High/High)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// BPF
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			break;
-		}
-
-		case BAND_MODE_60:
-		case BAND_MODE_40:
-		{
-			// Internal group - Set(High/Low)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// External group - Reset(Low/High)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// BPF
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			break;
-		}
-
-		case BAND_MODE_30:
-		case BAND_MODE_20:
-		{
-			// Internal group - Reset(Low/Low)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// External group - Reset(Low/High)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// BPF
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			break;
-		}
-
-		case BAND_MODE_17:
-		case BAND_MODE_15:
-		case BAND_MODE_12:
-		case BAND_MODE_10:
-		case BAND_MODE_6:
-		case BAND_MODE_4:
-		{
-			// Internal group - Reset(Low/Low)
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRH = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// External group - Set(High/High)
-			BAND0_PIO->BSRRL = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			RadioManagement_BandFilterPulseRelays();
-
-			// BPF
-			BAND0_PIO->BSRRH = BAND0;
-			BAND1_PIO->BSRRL = BAND1;
-
-			break;
-		}
-
-		default:
-			break;
-	}
-
-}
-
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitMainFreqDisplay
 //* Object              :
@@ -2889,24 +3030,6 @@ static void UiDriverInitFrequency()
 
 
 
-typedef struct BandFilterDescriptor {
-	uint32_t upper;
-	uint16_t filter_band;
-	uint16_t band_mode;
-} BandFilterDescriptor;
-
-#define BAND_FILTER_NUM 7
-
-// The descriptor array below has to be ordered from the lowest BPF frequency filter
-// to the highest.
-static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
-		{ BAND_FILTER_UPPER_160, COUPLING_160M, BAND_MODE_160 },
-		{ BAND_FILTER_UPPER_80,  COUPLING_80M, BAND_MODE_80 },
-		{ BAND_FILTER_UPPER_40,  COUPLING_40M, BAND_MODE_40 },
-		{ BAND_FILTER_UPPER_20,  COUPLING_20M, BAND_MODE_20 },
-		{ BAND_FILTER_UPPER_10,  COUPLING_15M, BAND_MODE_10 },
-		{ BAND_FILTER_UPPER_6,  COUPLING_6M, BAND_MODE_6 }
-};
 
 
 /**
@@ -2917,58 +3040,27 @@ static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] = {
  *
  * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
  */
-static void UiDriver_SetHWFiltersForFrequency(ulong freq)
-{
-	int idx;
-	for (idx = 0; idx < BAND_FILTER_NUM; idx++) {
-		if(freq < bandFilters[idx].upper)	{	// are we low enough if frequency for this band filter?
-			if(ts.filter_band != bandFilters[idx].filter_band)	{
-				RadioManagement_ChangeBandFilter(bandFilters[idx].band_mode);	// yes - set to desired band configuration
-				ts.filter_band = bandFilters[idx].filter_band;
-			}
-			break;
-		}
-	}
-}
-
-
 // TODO: Split into RF HAL Part and UI Part
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckBand
 //* Object              : Checks in which band the current frequency lies
-//* Input Parameters    : frequency in Hz * 4, update = TRUE if display should be updated
+//* Input Parameters    : frequency in Hz
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-uchar UiDriverCheckBand(ulong freq, ushort update)
+
+uchar UiDriver_ShowBandForFreq(ulong freq)
 {
-	uchar	band_scan;
-	bool flag;
-	static	uchar band_scan_old = 99;
-
-	band_scan = 0;
-	flag = 0;
-
-	freq -= audio_driver_xlate_freq()*TUNE_MULT;
-
-	while((!flag) && (band_scan < MAX_BANDS))	{
-		if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size))) {	// Is this frequency within this band?
-			flag = 1;	// yes - stop the scan
-		} else {	// no - not in this band
-			band_scan++;	// scan the next band
-		}
-	}
-
-	if(update)	{		// are we to update the display?
-		if(band_scan != band_scan_old || band_scan == BAND_MODE_GEN) {		// yes, did the band actually change?
-			UiDriverShowBand(band_scan);	// yes, update the display with the current band
-		}
-	}
-	band_scan_old = band_scan;	// update band change detector
-
-	return band_scan;		// return with the band
-
+    // here we maintain our local state of the last band shown
+    static uint8_t ui_band_scan_old = 99;
+    uint8_t band_scan = RadioManagement_GetBand(freq);
+    if(band_scan != ui_band_scan_old || band_scan == BAND_MODE_GEN) {      // yes, did the band actually change?
+            UiDriverShowBand(band_scan);    // yes, update the display with the current band
+    }
+    ui_band_scan_old = band_scan;
+    return band_scan;
 }
+
 
 
 
@@ -3032,7 +3124,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
         if (lo_change_not_pending){
 
             if (mode != UFM_SMALL_TX) {
-                UiDriverCheckBand(ts.tune_freq, true);
+                UiDriver_ShowBandForFreq(ts.tune_freq/TUNE_MULT);
                 // check which band in which we are currently tuning and update the display
 
                 UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
@@ -3655,7 +3747,7 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 	// Finally update public flag
 	ts.dmod_mode = new_mode;
 
-	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode);
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
 
 	Audio_TXFilter_Init();
     AudioManagement_CalcRxIqGainAdj();
@@ -3864,7 +3956,7 @@ static void UiDriverChangeBand(uchar is_up)
         UiDriverShowBand(new_band_index);
 
         // Set TX power factor
-        UiDriverSetBandPowerFactor(new_band_index);
+        RadioManagement_SetBandPowerFactor(new_band_index);
 
         // Set filters
         RadioManagement_ChangeBandFilter(new_band_index);
@@ -4770,9 +4862,6 @@ static void UiDriver_DisplayPowerLevel()
 			txt = "FULL";
 			break;
 	}
-    // Set TX power factor - to reflect changed power
-    UiDriverSetBandPowerFactor(ts.band);
-
     // Draw top line
     UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
@@ -6001,7 +6090,7 @@ static void UiDriver_HandlePttOnOff()
     if(ts.txrx_mode == TRX_MODE_RX)
     {
       if(!ts.tx_disable)	{
-        RadioManagement_SwitchTXRX(TRX_MODE_TX);
+        RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
       }
     }
 
@@ -6029,7 +6118,7 @@ static void UiDriver_HandlePttOnOff()
           ptt_break = 0;
 
           // Back to RX
-          RadioManagement_SwitchTXRX(TRX_MODE_RX);				// PTT
+          RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
 
           // Unlock
           //ts.txrx_lock = 0;
@@ -6055,48 +6144,8 @@ void uiCodecMute(uchar val)
 
 
 
+
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverSetBandPowerFactor
-//* Object              : TX chain gain is not const for the 3-30 Mhz range
-//* Input Parameters    : so adjust here
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiDriverSetBandPowerFactor(uchar band)
-{
-	float	pf_temp;	// used as a holder for percentage of power output scaling
-
-	if (band >= MAX_BANDS) {
-		pf_temp = 3; // use very low value in case of wrong call to this function
-	} else {
-		pf_temp = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
-	}
-	//
-	ts.tx_power_factor = pf_temp/100;	// preliminarily scale to percent, which is the default for 5 watts
-
-	// now rescale to power levels <5 watts, is so-configured
-
-	switch(ts.power_level)	{
-		case	PA_LEVEL_0_5W:
-			pf_temp = 0.316;		// rescale for 10% of 5 watts (0.5 watts)
-			break;
-		case	PA_LEVEL_1W:
-			pf_temp = 0.447;		// rescale for 20% of 5 watts (1.0 watts)
-			break;
-		case	PA_LEVEL_2W:
-			pf_temp = 0.6324;		// rescale for 40% of 5 watts (2 watts)
-			break;
-		default:					// 100% is 5 watts or full power!!
-			pf_temp = 1;
-			break;
-	}
-	//
-	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
-
-	if((df.tune_new < 8000000 * 4) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
-	    ts.tx_power_factor = ts.tx_power_factor / 4;
-}
-
 // TODO: MOVE TO AUDIO /RF Function
 //
 //*----------------------------------------------------------------------------
@@ -6107,47 +6156,6 @@ void UiDriverSetBandPowerFactor(uchar band)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiCWSidebandMode()
-{
-    switch(ts.cw_offset_mode)   {
-        case CW_OFFSET_USB_TX:
-        case CW_OFFSET_USB_RX:
-        case CW_OFFSET_USB_SHIFT:
-            ts.cw_lsb = 0;              // Not LSB!
-            break;
-        case CW_OFFSET_LSB_TX:
-        case CW_OFFSET_LSB_RX:
-        case CW_OFFSET_LSB_SHIFT:
-            ts.cw_lsb = 1;              // It is LSB
-            break;
-        case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
-        case CW_OFFSET_AUTO_RX:
-        case CW_OFFSET_AUTO_SHIFT:
-            if(df.tune_new >= USB_FREQ_THRESHOLD)   // is the current frequency above the USB threshold?
-                ts.cw_lsb = 0;                      // yes - indicate that it is USB
-            else
-                ts.cw_lsb = 1;                      // no - LSB
-            break;
-        default:
-            ts.cw_lsb = 0;
-            break;
-    }
-}
-
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCheckForEEPROMLoadDefaultRequest
-//* Object              : Cause default values to be loaded instead of EEPROM-stored values, show informational/warning splash screen, pause
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//* Comments            : The user MUST make a decision at that point, anyway:  To disconnect power
-//  Comments            : preserve "old" settings or to power down using the POWER button to the new, default settings to EEPROM.
-//  Comments            : WARNING:  Do *NOT* do this (press the buttons on power-up) when first loading a new firmware version as the EEPROM will be automatically be written over at startup!!!  [KA7OEI October, 2015]
-//*----------------------------------------------------------------------------
-//
-
 enum CONFIG_DEFAULTS{
 CONFIG_DEFAULTS_KEEP = 0,
 CONFIG_DEFAULTS_LOAD_FREQ,
@@ -6156,10 +6164,9 @@ CONFIG_DEFAULTS_LOAD_ALL
 
 
 /*
- * @brief Handles the loading of the configuration at startup (including the load of defaults if requested);
+ * @brief Handles the loading of the configuration at startup (including the load of defaults if requested)
  * @returns false if it is a normal startup, true if defaults have been loaded
  */
-
 static bool UiDriver_LoadSavedConfigurationAtStartup()
 {
 
@@ -6195,7 +6202,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 
 
     UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-    //													// now do all of the warnings, blah, blah...
+    // now do all of the warnings, blah, blah...
     UiLcdHy28_PrintText(2,05,top_line,clr_fg,clr_bg,1);
     UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",clr_fg,clr_bg,1);
     UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);

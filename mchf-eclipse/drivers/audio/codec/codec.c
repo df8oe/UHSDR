@@ -191,25 +191,19 @@ void Codec_RX_TX(uint8_t mode)
 		//
 		ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
 		//
-		if((ts.dmod_mode == DEMOD_CW) || ((ts.dmod_mode == DEMOD_CW) && ts.tune))	{	// Turn sidetone on for CW or TUNE mode in CW mode
-			//
+		if((ts.dmod_mode == DEMOD_CW)
+		   || (ts.tune && ((ts.dmod_mode == DEMOD_CW) || !ts.iq_freq_mode))
+		  )	{	// Turn sidetone on for CW or TUNE mode in CW mode
+
 			Codec_SidetoneSetgain(mode);	// set sidetone level
-			//
-		}
-		else if(ts.tune)	{	// Not in CW mode - but in TUNE mode
-			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-				Codec_SidetoneSetgain(mode);	// yes, turn on sidetone in SSB-TUNE mode
 		}
 		else	{	// Not CW or TUNE mode
-			//
 			for(mute_count = 0; mute_count < 8; mute_count++) {		// Doing this seems to suppress the loud CLICK
 				Codec_Volume(0,mode);	// that occurs when going from RX to TX in modes other than CW
 			}
-				// This is probably because of the delay between the mute command, above, and the
-			//
+			// This is probably because of the delay between the mute command, above, and the
 			non_os_delay();
 
-			//
 			// Select source or leave it as it is
 			// PHONE out is muted, normal exit routed to TX modulator
 			// input audio is routed via 4066 switch
