@@ -321,7 +321,7 @@ void CatDriverFT817CheckAndExecute() {
 				}
 				if  (new_mode != ts.dmod_mode) {
 				    if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
-					ts.cat_band_index = ts.band;
+					  ts.cat_band_index = ts.band;
 				UiDriverSetDemodMode(new_mode);
 				UiDriverDisplayFilterBW();
 				UiInitRxParms();

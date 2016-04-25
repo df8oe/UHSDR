@@ -961,21 +961,23 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         ts.ser_eeprom_in_use = 0xAA;
       }
 
-      // TODO: move value to a static variable, so that it can be read/written with standard approach
-      UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
+	if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
+	    {
+    	// save current band/frequency/mode settings
+    	vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
+    	// Save decode mode
+    	vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+
+    	// TODO: move value to a static variable, so that it can be read/written with standard approach
+    	UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
           (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
           (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
 
-      // TODO: move value to a static variable, so that it can be read/written with standard approach
-      UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
-
-	if(ts.cat_band_index == 255)			// not in a sandbox
-	    {
-    	    // save current band/frequency/mode settings
-    	    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
-    	    // Save decode mode
-    	    vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+    	// TODO: move value to a static variable, so that it can be read/written with standard approach
+    	UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
 	    }
+	else
+	  ts.cat_band_index = 255;
 
       // Save stored band/mode/frequency memory from RAM
       for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
