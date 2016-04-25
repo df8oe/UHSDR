@@ -523,11 +523,11 @@ void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
-void 	UiDriverSetBandPowerFactor(uchar band);
+void 	RadioManagement_SetBandPowerFactor(uchar band);
 
 //
 //void 	UiDriverChangeFilter(uchar ui_only_update);
-void 	UiDriverSetBandPowerFactor(uchar band);
+void 	RadioManagement_SetBandPowerFactor(uchar band);
 //
 void    UiDriverChangeAudioGain(uchar enabled);
 void 	UiDriverChangeStGain(uchar enabled);
@@ -541,7 +541,7 @@ void    UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t lab
 //
 void 	UiDriverShowStep(ulong step);
 //
-void 	UiCWSidebandMode(void);
+void 	RadioManagement_CalculateCWSidebandMode(void);
 void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
 //
@@ -557,8 +557,9 @@ void    UiDriver_KeyTestScreen();
 
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
-void RadioManagement_SwitchTXRX(uint8_t txrx_mode);
+void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
 void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
+uint8_t RadioManagement_GetBand(ulong freq);
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
 

@@ -1226,7 +1226,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
 	adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
 
 	bool tchange = false;
-	if((ts.band == band_mode) && (ts.power_level == pa_level))	{
+	if((ts.band == RadioManagement_GetBand(df.tune_old/TUNE_MULT)) && (ts.power_level == pa_level))	{
 		tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
 				TX_POWER_FACTOR_MIN,
 				TX_POWER_FACTOR_MAX,
@@ -1235,7 +1235,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
 		);
 
 		if(tchange)	{		// did something change?
-			UiDriverSetBandPowerFactor(ts.band);	// yes, update the power factor
+			RadioManagement_SetBandPowerFactor(ts.band);	// yes, update the power factor
 			if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
 				Codec_SidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
 		}
@@ -1953,7 +1953,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		}
 
 		if(fchange)	{	// update parameters if changed
-			UiCWSidebandMode();
+			RadioManagement_CalculateCWSidebandMode();
 			UiDriverShowMode();
 			UiDriver_FrequencyUpdateLOandDisplay(true);	// update frequency display and local oscillator
 		}

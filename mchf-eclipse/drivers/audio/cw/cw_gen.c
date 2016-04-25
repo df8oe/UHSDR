@@ -199,7 +199,7 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
   if(ps.key_timer == 0) {
     if(ps.break_timer == 0) {
       ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-      RadioManagement_SwitchTXRX(TRX_MODE_RX);				// straight
+      RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// straight
     }
     if(ps.break_timer) { ps.break_timer--; }
     retval = 0;
@@ -269,7 +269,7 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 			} else {
 				// Back to RX
 				ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-				RadioManagement_SwitchTXRX(TRX_MODE_RX);				// iambic
+				RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// iambic
 			}
 		}
 		break;
