@@ -327,7 +327,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_RX_IQ_AM_GAIN_BALANCE    168     // IQ Gain balance for AM reception
 //
 #define EEPROM_TX_DISABLE       169     // TRUE of transmit is to be disabled
-#define EEPROM_MISC_FLAGS1      170     // Miscellaneous status flag, saved in EEPROM - see variable "misc_flags1"
+#define EEPROM_FLAGS1      170     // Miscellaneous status flag, saved in EEPROM - see variable "flags1"
 #define EEPROM_VERSION_NUMBER       171     // Storage of current version release - used to detect change of firmware
 #define EEPROM_NB_AGC_TIME_CONST    172     // Noise blanker AGC time constant setting
 #define EEPROM_CW_OFFSET_MODE       173     // CW Offset mode
@@ -468,7 +468,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_WATERFALL_SIZE       295     // size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 #define EEPROM_FFT_WINDOW       296     // FFT Window information (lower nybble currently used - upper nybble reserved)
 #define EEPROM_TX_PTT_AUDIO_MUTE    297     // timer used for muting TX audio when keying PTT to suppress "click" or "thump"
-#define EEPROM_MISC_FLAGS2      298     // Miscellaneous status flag, saved in EEPROM - see variable "misc_flags2"
+#define EEPROM_FLAGS2      298     // Miscellaneous status flag, saved in EEPROM - see variable "flags2"
 #define EEPROM_FILTER_DISP_COLOUR   299     // This contains the color of the line under the spectrum/waterfall display
 #define EEPROM_TX_IQ_AM_GAIN_BALANCE    300     // IQ Gain balance for AM transmission
 #define EEPROM_TX_IQ_FM_GAIN_BALANCE    301     // IQ Gain balance for FM transmission

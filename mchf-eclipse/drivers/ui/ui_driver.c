@@ -289,14 +289,14 @@ UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
 }
 
 static void UiDriver_ToggleWaterfallScopeDisplay() {
-  if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)
+  if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)
   {                       // is the waterfall mode active?
-    ts.misc_flags1 &=  ~MISC_FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
+    ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
     UiSpectrumInitSpectrumDisplay();   // init spectrum scope
   }
   else
   {                       // waterfall mode was turned off
-    ts.misc_flags1 |=  MISC_FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
+    ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
     UiSpectrumInitSpectrumDisplay();   // init spectrum scope
   }
 }
@@ -960,7 +960,7 @@ void UiDriver_HandleBandButtons(uint16_t button) {
 	ts.dsp_inhibit = 1;
 	ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
 	//
-	if(ts.misc_flags1 & MISC_FLAGS1_SWAP_BAND_BTN)		// band up/down button swapped?
+	if(ts.flags1 & FLAGS1_SWAP_BAND_BTN)		// band up/down button swapped?
 		UiDriverChangeBand(swapped);	// yes - go up
 	else
 		UiDriverChangeBand(normal);	// not swapped, go down
@@ -1076,7 +1076,7 @@ void ui_driver_init()
 //*----------------------------------------------------------------------------
 void ui_driver_thread()
 {
-  if(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE) {	// is waterfall mode enabled?
+  if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) {	// is waterfall mode enabled?
     UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
   } else {
     UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
@@ -3353,7 +3353,7 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state) {
   static uchar enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;  // stores modes of encoder when we enter TX
   static uchar enc_three_mode = ENC_THREE_MODE_CW_SPEED;    // stores modes of encoder when we enter TX
 
-  if((ts.misc_flags1 & MISC_FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)    {           // If auto-switch on TX/RX is enabled
+  if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)    {           // If auto-switch on TX/RX is enabled
     if(state == TRX_STATE_RX_TO_TX)   {
 
       // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
@@ -3699,7 +3699,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 				loc_mode++;				// yes - go to next mode
 		}
 		if(loc_mode == DEMOD_FM)	{	// is this FM mode?
-			if((!(ts.misc_flags2 & MISC_FLAGS2_FM_MODE_ENABLE)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
+			if((!(ts.flags2 & FLAGS2_FM_MODE_ENABLE)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
 				loc_mode++;				// yes - go to next mode
 		}
 	}
@@ -5475,7 +5475,7 @@ static bool UiDriver_UpdatePowerAndVSWR() {
     if(swrm.p_curr < SWR_SAMPLES_CNT)
     {
       // Get next sample
-      if(!(ts.misc_flags1 & MISC_FLAGS1_SWAP_FWDREV_SENSE))   {   // is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
+      if(!(ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE))   {   // is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
         val_p = ADC_GetConversionValue(ADC2); // forward
         val_s = ADC_GetConversionValue(ADC3); // return
       }
@@ -6134,7 +6134,7 @@ void UiDriverSetBandPowerFactor(uchar band)
 	//
 	ts.tx_power_factor *= pf_temp;	// rescale this for the actual power level
 
-	if((df.tune_new < 8000000 * 4) && (ts.misc_flags2 & MISC_FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
+	if((df.tune_new < 8000000 * 4) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))		// reduction for frequencies < 8 MHz
 	    ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 

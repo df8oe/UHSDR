@@ -330,7 +330,7 @@ void AudioManagement_LoadBeepFreq(void)
 {
     float calc;
 
-    if(ts.misc_flags2 & MISC_FLAGS2_KEY_BEEP_ENABLE)  {   // is beep enabled?
+    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)  {   // is beep enabled?
         ads.beep_word = ts.beep_frequency * 65536;      // yes - calculated/load frequency
         ads.beep_word /= 48000;
     }

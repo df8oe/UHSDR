@@ -450,36 +450,36 @@ void TransceiverStateInit(void)
 	ts.dsp_timed_mute	= 0;					// TRUE if DSP is to be muted for a timed amount
 	ts.dsp_inhibit_timing = 0;					// used to time inhibiting of DSP when it must be turned off for some reason
 	ts.reset_dsp_nr		= 0;					// TRUE if DSP NR coefficients are to be reset when "audio_driver_set_rx_audio_filter()" is called
-	ts.lcd_backlight_brightness = 0;				// = 0 full brightness
-	ts.lcd_backlight_blanking = 0;					// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
+	ts.lcd_backlight_brightness = 0;			// = 0 full brightness
+	ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
 	//
 	ts.tune_step		= 0;					// Used for press-and-hold step size changing mode
 	ts.frequency_lock	= 0;					// TRUE if frequency knob is locked
 	//
 	ts.tx_disable		= 0;					// TRUE if transmitter is to be disabled
-	ts.misc_flags1		= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS1"
-	ts.misc_flags2		= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_MISC_FLAGS2"
-	ts.sysclock			= 0;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
-									// is NEVER reset and is used for timing certain events.
-	ts.version_number_release	= 0;				// version release - used to detect firmware change
-	ts.version_number_build = 0;					// version build - used to detect firmware change
-	ts.nb_agc_time_const	= 0;					// used to calculate the AGC time constant
+	ts.flags1			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS1"
+	ts.flags2			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
+	ts.sysclock			= 0;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
+												// is NEVER reset and is used for timing certain events.
+	ts.version_number_release	= 0;			// version release - used to detect firmware change
+	ts.version_number_build = 0;				// version build - used to detect firmware change
+	ts.nb_agc_time_const	= 0;				// used to calculate the AGC time constant
 	ts.cw_offset_mode	= 0;					// CW offset mode (USB, LSB, etc.)
-	ts.cw_lsb			= 0;				// Flag that indicates CW operates in LSB mode when TRUE
+	ts.cw_lsb			= 0;					// Flag that indicates CW operates in LSB mode when TRUE
 	ts.iq_freq_mode		= 0;					// used to set/configure the I/Q frequency/conversion mode
 	ts.conv_sine_flag	= 0;					// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
-	ts.lsb_usb_auto_select	= 0;					// holds setting of LSB/USB auto-select above/below 10 MHz
+	ts.lsb_usb_auto_select	= 0;				// holds setting of LSB/USB auto-select above/below 10 MHz
 	ts.last_tuning		= 0;					// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
 	ts.lcd_blanking_time = 0;					// this holds the system time after which the LCD is blanked - if blanking is enabled
 	ts.lcd_blanking_flag = 0;					// if TRUE, the LCD is blanked completely (e.g. backlight is off)
-	ts.freq_cal_adjust_flag = 0;					// set TRUE if frequency calibration is in process
+	ts.freq_cal_adjust_flag = 0;				// set TRUE if frequency calibration is in process
 	ts.xvtr_adjust_flag = 0;					// set TRUE if transverter offset adjustment is in process
-	ts.rx_muting = 0;						// set TRUE if audio output is to be muted
+	ts.rx_muting = 0;							// set TRUE if audio output is to be muted
 	ts.rx_blanking_time = 0;					// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
 	ts.vfo_mem_mode = 0;						// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
-									// LSB+6 (0x40) = 0:  VFO A,  1 = VFO B
-									// LSB+7 (0x80) = 0:  Normal mode, 1 = SPLIT mode
-									// Other bits are currently reserved
+	// LSB+6 (0x40) = 0:  VFO A,  1 = VFO B
+	// LSB+7 (0x80) = 0:  Normal mode, 1 = SPLIT mode
+	// Other bits are currently reserved
 	ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
 	ts.thread_timer = 0;						// used to time thread
 	ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display

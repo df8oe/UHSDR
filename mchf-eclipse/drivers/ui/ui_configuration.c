@@ -493,8 +493,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     { ConfigEntry_UInt8, EEPROM_MAX_RX_GAIN,&ts.max_rf_gain,MAX_RF_GAIN_DEFAULT,0,MAX_RF_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,0,TX_AUDIO_COMPRESSION_MAX},
     { ConfigEntry_UInt8, EEPROM_TX_DISABLE,&ts.tx_disable,0,0,1},
-    { ConfigEntry_UInt8, EEPROM_MISC_FLAGS1,&ts.misc_flags1,0,0,255},
-    { ConfigEntry_UInt8, EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255},
+    { ConfigEntry_UInt16, EEPROM_FLAGS1,&ts.flags1,0,0,255},
+    { ConfigEntry_UInt16, EEPROM_FLAGS2,&ts.flags2,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_MINOR,&ts.version_number_minor,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_NUMBER,&ts.version_number_release,0,0,255},
     { ConfigEntry_UInt16, EEPROM_VERSION_BUILD,&ts.version_number_build,0,0,255},
@@ -697,7 +697,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
         {
             vforeg->dial_value = value32;
         }
-        else if((ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
+        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
         {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
             vforeg->dial_value = value32;
         }
@@ -833,7 +833,7 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
     // Let's use location zero - which may not work reliably, anyway!
     //
-    UiReadSettingEEPROM_UInt8(EEPROM_MISC_FLAGS2,&ts.misc_flags2,0,0,255);
+    UiReadSettingEEPROM_UInt16(EEPROM_FLAGS2,&ts.flags2,0,0,255);
     // ------------------------------------------------------------------------------------
     // Try to read Band and Mode saved values, but read freq-limit-settings before
     UiReadSettingEEPROM_UInt16(EEPROM_BAND_MODE,&value16,0,0,0xffff);
@@ -859,7 +859,7 @@ void UiConfiguration_LoadEepromValues(void)
         {
             df.tune_new = value32;
         }
-        else if((ts.misc_flags2 & MISC_FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))   {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))   {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
             df.tune_new = value32;
         }
         else

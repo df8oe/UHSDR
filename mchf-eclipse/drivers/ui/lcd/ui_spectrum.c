@@ -173,7 +173,7 @@ void UiSpectrumCreateDrawArea(void)
 //	LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
 //	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-//	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
+//	if ((ts.spectrum_light && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
 //	    return; // if spectrum display light enabled, bail out here!
 
 	if(!ts.waterfall_size)		//don't draw text bar when size is BIG
@@ -222,7 +222,7 @@ void UiSpectrumCreateDrawArea(void)
 	for(i = 0; i < 16; i++)
 		UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
-	if(!(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE))	{	// Display Spectrum Scope banner if enabled
+	if(!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE))	{	// Display Spectrum Scope banner if enabled
 
 	// Top band text - middle caption
 	UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + slen),
@@ -268,7 +268,7 @@ void UiSpectrumCreateDrawArea(void)
   }
 /////////////////////////////// was here /////////////////////////////////////
 	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE)))
+	if ((ts.spectrum_light && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
 	    return; // if spectrum display light enabled, bail out here!
 
 
@@ -355,7 +355,7 @@ void UiSpectrumCreateDrawArea(void)
 		//printf("vx: %d\n\r",sd.vert_grid_id[i - 1]);
 	}
 
-	if (((ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall_speed)) || (!(ts.misc_flags1 & MISC_FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))	{
+	if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall_speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))	{
 			// print "disabled" in the middle of the screen if the waterfall or scope was disabled
 			UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
 												(POS_SPECTRUM_IND_Y + 18),
