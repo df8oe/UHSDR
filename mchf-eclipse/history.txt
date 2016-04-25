@@ -24,6 +24,9 @@
 - bugfix continuos temperature compensation of LO
 - changed some colors for better readability
 - added touchfunction for METER change: touching on meters
+- added manual notch filter
+- added peak filter
+- added bass/treble adjustment
 
 
 20160413 [DF8OE]

@@ -324,6 +324,7 @@ void CatDriverFT817CheckAndExecute() {
 					ts.cat_band_index = ts.band;
 				UiDriverSetDemodMode(new_mode);
 				UiDriverDisplayFilterBW();
+				UiInitRxParms();
 				}
 			}
 			break;
