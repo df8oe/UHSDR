@@ -442,7 +442,7 @@ void audio_driver_set_rx_audio_filter(void)
 	if(ts.peak_enabled) {
 	// peak filter
 	f0 = ts.peak_frequency;
-	Q = 20; //
+	Q = 15; //
 	w0 = 2 * PI * f0 / FSdec;
 	alpha = sin(w0) / (2 * Q);
 	A = 3; // 10^(10/40); 15dB gain
@@ -481,10 +481,10 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Bass
 	//
-	f0 = 200;
+	f0 = 400;
 	w0 = 2 * PI * f0 / FSdec;
 	A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
-	S = 0.7; // shelf slope, 1 is maximum value
+	S = 0.9; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	float32_t cosw0 = cos(w0);
 	float32_t twoAa = 2 * sqrt(A) * alpha;
@@ -523,7 +523,7 @@ void audio_driver_set_rx_audio_filter(void)
 	FS = 48000;
 	w0 = 2 * PI * f0 / FS;
 	A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
-	S = 0.7; // shelf slope, 1 is maximum value
+	S = 0.9; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	cosw0 = cos(w0);
 	twoAa = 2 * sqrt(A) * alpha;
