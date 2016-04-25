@@ -369,8 +369,8 @@ void UiDriver_HandleSwitchToNextDspMode()
 		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
 		// prevent NOTCH, when in CW
 		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NR AND NOTCH, when in AM and filter-bandwidth > 4k8 (= decimation rate equals 2 --> high CPU load)
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ)) ts.dsp_mode++;
+		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
 
 		// display all as inactive (and then activate the right one, see below)
 		UiDriverChangeRfGain(0);
@@ -430,7 +430,8 @@ void UiDriver_HandleSwitchToNextDspMode()
 		case DSP_SWITCH_TREBLE:
 			break;
 		}
-/*
+
+/*		OLD VERSION
 		if (ts.notch_enabled) {
 			    ts.notch_enabled = 0; // switch off notch filter
 			    UiDriverChangeRfGain(1);
@@ -589,7 +590,7 @@ void UiDriver_HandleTouchScreen()
 			if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
 				ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
 			else
-				ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
+				ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it off
 
 			UiDriverShowStep(df.selected_idx);
 		}
@@ -4415,6 +4416,10 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
 		// only switch to notch frequency adjustment, if notch enabled!
 		if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && !ts.notch_enabled) ts.enc_two_mode++;
 
+		// only switch to peak frequency adjustment, if peak enabled!
+		if(ts.enc_two_mode == ENC_TWO_MODE_PEAK_F && !ts.peak_enabled) ts.enc_two_mode++;
+
+
 		// flip round
 		if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
 			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
@@ -4683,25 +4688,6 @@ static void UiDriverChangeDSPMode()
 		break;
 	}
 
-/*	if(((is_dsp_nr()) || (is_dsp_notch()))) {	// DSP active and NOT in FM mode?
-		color = White;
-	} else	// DSP not active
-		color = Grey2;
-	if(ts.dmod_mode == DEMOD_FM)	{		// Grey out and display "off" if in FM mode
-		txt = "DSP-OFF";
-		color = Grey2;
-	} else if((is_dsp_nr()) && (is_dsp_notch()) && (ts.dmod_mode != DEMOD_CW))	{
-		txt = "NR+NOTC";
-	} else if(is_dsp_nr())	{
-		txt = "NR";
-	} else if(is_dsp_notch())	{
-		txt = "NOTCH";
-		if(ts.dmod_mode == DEMOD_CW)
-			color = Grey2;
-	} else {
-		txt = "DSP-OFF";
-	}
-*/
 	UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
 	UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
@@ -4965,8 +4951,6 @@ static void UiDriverDisplayBass(void) {
 
 	UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
 
-//	ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN;
-
 	bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
 	uint32_t col_bass = enable?Black:Grey1;
 
@@ -5180,28 +5164,6 @@ void UiDriverDisplayFilterBW()
 	  offset = width/2;
 	}
 
-/*	  //
-	// Special case for FM
-	// --> we do not need a special case any longer, as bandwidths are treated the same for all bandwidths in audio_filter.c
-	if(ts.dmod_mode == DEMOD_FM)	{
-		if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_7K2)	{
-			offset = HILBERT3600;											// display bandwidth of +/-3.6 kHz = 7.2 kHz
-			width = HILBERT_3600HZ_WIDTH;
-		}
-		else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_12K)	{
-			offset = 3000;												// display bandwidth of +/- 6 kHz = 12 kHz
-			width = 6000;
-		}
-//		else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_15K)	{
-//			offset = FILT7500;												// display bandwidth of +/- 7.5 kHz = 15 kHz
-//			width = FILTER_7500HZ_WIDTH;
-//		}
-		else	{			// this will be the 10 kHz BW mode - I hope!
-			offset = 2500;												// display bandwidth of +/- 5 kHz = 10 kHz
-			width = 5000;
-		}
-	}
-	*/
 	//
 	//
 	switch(ts.dmod_mode)	{	// determine if the receiver is set to LSB or USB or FM

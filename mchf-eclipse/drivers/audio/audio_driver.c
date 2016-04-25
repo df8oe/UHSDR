@@ -363,9 +363,9 @@ void audio_driver_set_rx_audio_filter(void)
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	 * Cascaded biquad (notch, peak, lowShelf, highShelf) [DD4WH, april 2016]
 	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	// it is only a lightweight filter with one stage (= 2nd order IIR)
-	// but nonetheless very effective
-	//
+	// filter with four stages (= 8th order IIR)
+	// TODO: put notch & peak-filter into decimated path and dynamically react to different decimation rates
+	// bass can also be put into decimated part, treble stays at 48kHz, because of high f0 and associated problems with aliasing
 	// DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
 	// www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
 	//
@@ -460,7 +460,7 @@ void audio_driver_set_rx_audio_filter(void)
 	//
 	// Bass
 	//
-	f0 = 200;
+	f0 = 300;
 	A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
 	S = 0.5; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
@@ -496,9 +496,9 @@ void audio_driver_set_rx_audio_filter(void)
 */
 	// Treble
 	//
-	f0 = 6000;
+	f0 = 7000;
 	A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
-	S = 0.5; // shelf slope, 1 is maximum value
+	S = 0.6; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	cosw0 = cos(w0);
 	twoAa = 2 * sqrt(A) * alpha;
@@ -524,7 +524,8 @@ void audio_driver_set_rx_audio_filter(void)
 	IIR_Notch.pCoeffs[18] = a1;
 	IIR_Notch.pCoeffs[19] = a2;
 
-	/*	IIR_Notch.pCoeffs[15] = 1;
+	/*	// pass-thru-coefficients
+	  	IIR_Notch.pCoeffs[15] = 1;
 		IIR_Notch.pCoeffs[16] = 0;
 		IIR_Notch.pCoeffs[17] = 0;
 		IIR_Notch.pCoeffs[18] = 0;
@@ -792,7 +793,7 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 	static	uchar	nb_delay = 0;
 	static float	nb_agc = 0;
 	//
-	if((!ts.nb_setting) || (ts.nb_disable) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ))	{	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
+	if((!ts.nb_setting) || (ts.nb_disable) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ ))	{	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
 		return;
 	}
 
@@ -1478,6 +1479,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 
 static void audio_snap_carrier (void)
 {
+//	ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;
 
     float32_t  Lbin, Ubin;
     float32_t bw_LSB = 0.0;
