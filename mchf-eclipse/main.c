@@ -405,8 +405,6 @@ void TransceiverStateInit(void)
 	//
 	ts.radio_config_menu_enable = 0;				// TRUE if radio configuration menu is to be enabled
 	//
-	ts.cat_mode_active	= 0;					// TRUE if CAT mode is active
-	//
 	ts.xverter_mode		= 0;					// TRUE if transverter mode is active (e.g. offset of display)
 	ts.xverter_offset	= 0;					// Frequency offset in transverter mode (added to frequency display)
 	//
@@ -872,7 +870,7 @@ int main(void)
 	uiCodecMute(0);					// make cure codec is un-muted
 
 
-	if (ts.cat_mode_active)
+	if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
 		cat_driver_init();
 
 	// Transceiver main loop

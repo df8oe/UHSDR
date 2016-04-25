@@ -485,13 +485,13 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DETECTOR_COUPLING_COEFF_160M 311 // Calibration coupling coefficient for FWD/REV power sensor for 160 meters
 #define EEPROM_DETECTOR_COUPLING_COEFF_6M   312 // Calibration coupling coefficient for FWD/REV power sensor for 6 meters
 #define EEPROM_TUNE_POWER_LEVEL     313
-#define EEPROM_CAT_MODE_ACTIVE      314
+// #define EEPROM_CAT_MODE_ACTIVE      314
 #define EEPROM_CAT_XLAT             315
 #define EEPROM_CAT_IN_SANDBOX       316
 
 
 
-#define EEPROM_DYNAMIC_TUNING       327
+// #define EEPROM_DYNAMIC_TUNING       327
 #define EEPROM_SAM_ENABLE           328     // SAM demodulation enable
 #define EEPROM_FILTER_PATH_MAP_BASE 329 //
 #define EEPROM_FILTER_PATH_MAP_END (329 + FILTER_MODE_MAX*FILTER_PATH_MEM_MAX)   // this is currently 5*5 = 25

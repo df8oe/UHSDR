@@ -2584,14 +2584,12 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	// This needs to be investigated!
 	//
 	case CONFIG_CAT_ENABLE:
-		temp_var = ts.cat_mode_active;
-//		temp_var = (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)? 1 : 0;
+		temp_var = (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)? 1 : 0;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
-		ts.cat_mode_active = temp_var;
-//		if (temp_var)
-//		  ts.flags1 |= FLAGS1_CAT_MODE_ACTIVE;
-//		else
-//		  ts.flags1 &= ~FLAGS1_CAT_MODE_ACTIVE;
+		if (temp_var)
+		  ts.flags1 |= FLAGS1_CAT_MODE_ACTIVE;
+		else
+		  ts.flags1 &= ~FLAGS1_CAT_MODE_ACTIVE;
 		if (tchange) {
 			if(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)	{
 				cat_driver_init();

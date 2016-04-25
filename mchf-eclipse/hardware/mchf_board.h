@@ -933,8 +933,6 @@ typedef struct TransceiverState
 	//
 	bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
 	//
-	bool	cat_mode_active;	// TRUE if CAT mode is on
-	//
 	uchar	xverter_mode;		// TRUE if transverter mode active
 	ulong	xverter_offset;		// frequency offset for transverter (added to frequency display)
 
@@ -1011,7 +1009,7 @@ typedef struct TransceiverState
 	#define FLAGS1_SSB_TX_FILTER_DISABLE	0x40
 	#define FLAGS1_WFALL_SCOPE_TOGGLE		0x80
 	#define FLAGS1_CAT_MODE_ACTIVE			0x100
-	#define FLAGS1_DYN_TUNE_ENABLED			0x200
+	#define FLAGS1_DYN_TUNE_ENABLE			0x200
 	#define FLAGS1_SAM_ENABLE				0x400
 	#define FLAGS1_CAT_IN_SANDBOX			0x800
 	#define FLAGS1_SPECTRUM_LIGHT_ENABLE	0x1000
@@ -1115,7 +1113,6 @@ typedef struct TransceiverState
 	bool 	notch_enabled;			// notch_filter enabled
 	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
-	bool	dynamic_tuning_active;	// dynamic tuning active by estimating the encoder speed
 	ulong	notch_frequency;		// frequency of the manual notch filter
 	bool 	peak_enabled;			// indicates whether peak filter is enabled or not
 	ulong	peak_frequency;			// frequency of the manual peak filter

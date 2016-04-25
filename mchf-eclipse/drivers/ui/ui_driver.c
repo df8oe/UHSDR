@@ -586,14 +586,11 @@ void UiDriver_HandleTouchScreen()
 		}
 		if(check_tp_coordinates(26,35,39,46))			// dynamic tuning activation
 		{
-			if (ts.dynamic_tuning_active)			// is it off??
-			{
-				ts.dynamic_tuning_active = false;	// then turn it on
-			}
+			if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
+				ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
 			else
-			{
-				ts.dynamic_tuning_active = true;	// if already on, turn it off
-			}
+				ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
+
 			UiDriverShowStep(df.selected_idx);
 		}
 	}
@@ -1984,7 +1981,7 @@ void UiDriverShowStep(ulong step)
 	uint32_t 	stepsize_background;
 
 	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
-	stepsize_background = ts.dynamic_tuning_active?Blue:Black;
+	stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
 	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	{	// Remove underline indicating step size if one had been drawn
@@ -3919,7 +3916,7 @@ static bool UiDriverCheckFrequencyEncoder()
 
 		enc_multiplier = 1; //set standard speed
 
-		if (ts.dynamic_tuning_active)   // check if dynamic tuning has been activated by touchscreen
+		if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
 		{
 			if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))   { enc_multiplier = 10; } // turning medium speed -> increase speed by 10
 			if ((enc_speed_avg > 300) || (enc_speed_avg < (-300))) { enc_multiplier = 100; } //turning fast speed -> increase speed by 100
