@@ -390,13 +390,14 @@ void audio_driver_set_rx_audio_filter(void)
 	// Therefore, we have to use negated a1 and a2 for use with the ARM function
 	// notch implementation
 	//
-	float32_t FSdec;
+	//
+	float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
 	if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
 		FSdec = 24000;
 	if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
 		FSdec = 12000;
 
-	float32_t FS = 48000; // should this become a global variable?
+	float32_t FS = 48000; // we need this for the treble filter
 
 	// the notch filter is in biquad 1 and works at the decimated sample rate FSdec
 	float32_t f0 = ts.notch_frequency;

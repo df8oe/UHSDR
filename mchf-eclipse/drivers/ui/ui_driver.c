@@ -4131,6 +4131,10 @@ static void UiDriverCheckEncoderTwo()
 {
   //char 	temp[10];
   int 	pot_diff;
+  int max;
+  if (ads.decimation_rate == RX_DECIMATION_RATE_12KHZ)
+		max = 5000;
+	else max = 10000;
 
   pot_diff = UiDriverEncoderRead(ENC2);
 
@@ -4241,7 +4245,7 @@ static void UiDriverCheckEncoderTwo()
         		ts.notch_frequency = ts.notch_frequency + 10;
         	}
         	if (ts.notch_frequency < 200) ts.notch_frequency = 200;
-        	if (ts.notch_frequency > 12000) ts.notch_frequency = 12000;
+        	if (ts.notch_frequency > max) ts.notch_frequency = max;
         	// display notch frequency
         	UiDriverDisplayNotch(1);
         	// set notch filter instance
@@ -4288,7 +4292,7 @@ static void UiDriverCheckEncoderTwo()
         		ts.peak_frequency = ts.peak_frequency + 10;
         	}
         	if (ts.peak_frequency < 200) ts.peak_frequency = 200;
-        	if (ts.peak_frequency > 12000) ts.peak_frequency = 12000;
+        	if (ts.peak_frequency > max) ts.peak_frequency = max;
         	// display peak frequency
         	UiDriverDisplayNotch(1);
         	// set notch filter instance
