@@ -20,8 +20,8 @@ enum {
   ConfigEntry_UInt8,
   ConfigEntry_UInt16,
   ConfigEntry_UInt32_16,
-  ConfigEntry_Int32_16,
-  ConfigEntry_Bool,
+  ConfigEntry_Int32_16
+//  ConfigEntry_Bool,
 };
 
 typedef struct {
@@ -487,15 +487,15 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TUNE_POWER_LEVEL     313
 // #define EEPROM_CAT_MODE_ACTIVE      314
 #define EEPROM_CAT_XLAT             315
-#define EEPROM_CAT_IN_SANDBOX       316
+//#define EEPROM_CAT_IN_SANDBOX       316
 
 
 
 // #define EEPROM_DYNAMIC_TUNING       327
-#define EEPROM_SAM_ENABLE           328     // SAM demodulation enable
+// #define EEPROM_SAM_ENABLE           328     // SAM demodulation enable
 #define EEPROM_FILTER_PATH_MAP_BASE 329 //
 #define EEPROM_FILTER_PATH_MAP_END (329 + FILTER_MODE_MAX*FILTER_PATH_MEM_MAX)   // this is currently 5*5 = 25
-#define EEPROM_SPECTRUM_LIGHT_ENABLE 355
+//#define EEPROM_SPECTRUM_LIGHT_ENABLE 355
 #define EEPROM_FIRST_UNUSED 		356  // change this if new value ids are introduced
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you

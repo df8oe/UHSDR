@@ -242,7 +242,7 @@ void CatDriverFT817CheckAndExecute() {
 				UiDriver_FrequencyUpdateLOandDisplay(true);
 				resp[0] = 0;
 				bc = 1;
-			if(ts.cat_in_sandbox)			// if running in sandbox store active band
+			if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
 			    ts.cat_band_index = ts.band;
 			}
 			break;
@@ -320,7 +320,7 @@ void CatDriverFT817CheckAndExecute() {
 					break;
 				}
 				if  (new_mode != ts.dmod_mode) {
-				    if(ts.cat_in_sandbox)			// if running in sandbox store active band
+				    if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
 					ts.cat_band_index = ts.band;
 				UiDriverSetDemodMode(new_mode);
 				UiDriverDisplayFilterBW();

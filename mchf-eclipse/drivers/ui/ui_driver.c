@@ -3706,7 +3706,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
 	}
 
 	if(loc_mode == DEMOD_SAM)	{	// yes - is this SAM mode?
-		if(!ts.sam_enabled)		// is SAM to be disabled?
+		if(!(ts.flags1 & FLAGS1_SAM_ENABLE))		// is SAM to be disabled?
 			loc_mode++;				// yes - go to next mode
 	}
 

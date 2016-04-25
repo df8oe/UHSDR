@@ -1107,11 +1107,8 @@ typedef struct TransceiverState
 	uchar	multi;					// actual translate factor
 	uchar	tune_power_level;		// TX power in antenna tuning function
 	uchar	power_temp;				// temporary tx power if tune is different from actual tx power
-	bool	cat_in_sandbox;			// CAT tuning in sandbox
 	uchar	cat_band_index;			// buffered bandindex before first CAT command arrived
-	bool	sam_enabled;			// demodulation mode SAM enabled
 	bool 	notch_enabled;			// notch_filter enabled
-	bool	spectrum_light;			// light-weight spectrum display
 	uchar	xlat;					// CAT <> IQ-Audio
 	ulong	notch_frequency;		// frequency of the manual notch filter
 	bool 	peak_enabled;			// indicates whether peak filter is enabled or not

@@ -532,9 +532,6 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     { ConfigEntry_UInt8, EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS},
     { ConfigEntry_UInt8, EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_MAX_ENTRY,PA_LEVEL_FULL,PA_LEVEL_MAX_ENTRY},
     { ConfigEntry_UInt8, EEPROM_CAT_XLAT,&ts.xlat,1,0,1},
-    { ConfigEntry_Bool, EEPROM_SAM_ENABLE,&ts.sam_enabled,0,0,1},
-    { ConfigEntry_Bool, EEPROM_CAT_IN_SANDBOX,&ts.cat_in_sandbox,0,0,1},
-    { ConfigEntry_Bool, EEPROM_SPECTRUM_LIGHT_ENABLE,&ts.spectrum_light ,0,0,1},
 	UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
     UI_C_EEPROM_BAND_5W_PF(2,40,m)
@@ -588,7 +585,7 @@ const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id) {
 }
 
 
-
+/*
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, volatile bool* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
@@ -599,6 +596,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, v
         }
     }
 }
+*/
 
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
     uint16_t value;
@@ -707,9 +705,11 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
 
 }
 
+/*
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Bool(uint16_t addr, bool set_val, bool default_val ) {
     UiWriteSettingEEPROM_UInt16(addr,(uint16_t)set_val,(uint16_t)default_val);
 }
+*/
 
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val, uint16_t default_val ) {
     UiWriteSettingEEPROM_UInt16(addr,set_val,default_val);
@@ -766,9 +766,9 @@ void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr) {
   case ConfigEntry_Int32_16:
     UiReadSettingEEPROM_Int32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
     break;
-  case ConfigEntry_Bool:
-    UiReadSettingEEPROM_Bool(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
-    break;
+//  case ConfigEntry_Bool:
+//    UiReadSettingEEPROM_Bool(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+//    break;
 
   }
 }
@@ -787,9 +787,9 @@ void UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_ptr) 
   case ConfigEntry_Int32_16:
     UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
     break;
-  case ConfigEntry_Bool:
-    UiWriteSettingEEPROM_Bool(ced_ptr->id,*(bool*)ced_ptr->val_ptr,ced_ptr->val_default);
-    break;
+//  case ConfigEntry_Bool:
+//    UiWriteSettingEEPROM_Bool(ced_ptr->id,*(bool*)ced_ptr->val_ptr,ced_ptr->val_default);
+//    break;
   }
 }
 

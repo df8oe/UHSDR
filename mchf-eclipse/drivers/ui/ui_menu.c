@@ -1334,10 +1334,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 		break;
 		//
 	case MENU_DEMOD_SAM:	// Enable demodulation mode SAM
-		temp_var = ts.sam_enabled;
-		fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+		temp_sel = (ts.flags1 & FLAGS1_SAM_ENABLE)? 1 : 0;
+		fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_sel,0,options,&clr);
 		if(fchange)
-		    ts.sam_enabled = temp_var;
+			{
+			if (temp_sel)
+			  ts.flags1 |= FLAGS1_SAM_ENABLE;
+			else
+			  ts.flags1 &= ~FLAGS1_SAM_ENABLE;
+			}
 		break;
 	case MENU_SSB_AUTO_MODE_SELECT:		// Enable/Disable auto LSB/USB select
 		fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.lsb_usb_auto_select,
@@ -2143,10 +2148,15 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 						break;
 			//
 		case MENU_SCOPE_LIGHT_ENABLE:	// Spectrum light: no grid, larger, only points, no bars
-			temp_var = ts.spectrum_light;
+			temp_var = (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE)? 1 : 0;
 			fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 			if(fchange)
-			    ts.spectrum_light = temp_var;
+			  {
+			  if (temp_var)
+				ts.flags1 |= FLAGS1_SPECTRUM_LIGHT_ENABLE;
+			  else
+				ts.flags1 &= ~FLAGS1_SPECTRUM_LIGHT_ENABLE;
+			  }
 			break;
 		case MENU_SCOPE_MODE:
 			temp_sel = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
@@ -3376,12 +3386,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 	case    MENU_FP_SAM_04:
 	    UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
 	    break;
-        case CONFIG_CAT_IN_SANDBOX:
-		temp_var = ts.cat_in_sandbox;
+    case CONFIG_CAT_IN_SANDBOX:
+		temp_var = (ts.flags1 & FLAGS1_CAT_IN_SANDBOX)? 1 : 0;
 		tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
 		if(tchange)
-		    ts.cat_in_sandbox = temp_var;
-		if(!ts.cat_in_sandbox)
+			{
+			if (temp_var)
+			  ts.flags1 |= FLAGS1_CAT_IN_SANDBOX;
+			else
+			  ts.flags1 &= ~FLAGS1_CAT_IN_SANDBOX;
+			}
+		if(!(ts.flags1 & FLAGS1_CAT_IN_SANDBOX))
 		    ts.cat_band_index = 255;
 		break;
 	case CONFIG_CAT_XLAT:	// CAT xlat reporting

@@ -169,13 +169,6 @@ void UiSpectrumCreateDrawArea(void)
 	ts.c_line = c;
 	UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
-//	UiLcdHy28_DrawStraightLine (ts.c_line, (POS_SPECTRUM_IND_Y -4), (POS_SPECTRUM_IND_H - 15),
-//	LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
-
-//	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-//	if ((ts.spectrum_light && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
-//	    return; // if spectrum display light enabled, bail out here!
-
 	if(!ts.waterfall_size)		//don't draw text bar when size is BIG
 	{
 	
@@ -268,7 +261,7 @@ void UiSpectrumCreateDrawArea(void)
   }
 /////////////////////////////// was here /////////////////////////////////////
 	// Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-	if ((ts.spectrum_light && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
+	if (((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
 	    return; // if spectrum display light enabled, bail out here!
 
 
@@ -445,7 +438,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 	int spec_height = SPECTRUM_HEIGHT; //x
 	int spec_start_y = SPECTRUM_START_Y;
 
-	if (ts.spectrum_light && ts.waterfall_size == WATERFALL_BIG){
+	if ((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && ts.waterfall_size == WATERFALL_BIG){
 		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
 	}
@@ -472,7 +465,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 			if(y_new > (spec_height - 7))
 				y_new = (spec_height - 7);
 			y1_new  = (spec_start_y + spec_height - 1) - y_new;
-			if (!ts.spectrum_light)
+			if (!(ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE))
 				UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
 //			else
 			//	UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
@@ -484,7 +477,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
 		for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
 		{
-			if (ts.spectrum_light) {
+			if (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) {
 //	            if ((fft_old > fft_old_begin + 1) && (fft_old < fft_old_begin + 254)) {
 //                if ((fft_old > 1) && (fft_old < 254)) {
 	                if ((idx > 1) && (idx < 254)) {
@@ -531,14 +524,14 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 			y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
 
-			if (y_old != y_new && ts.spectrum_light && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1)) {
+			if (y_old != y_new && (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1)) {
 				// y_pos of new point is different from old point AND
 				// x position is not on vertical centre line (the one that indicates the receive frequency)
 			UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
 			UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
 			}
 
-			if (!ts.spectrum_light) {
+			if (!(ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE)) {
 			if(y_old <= y_new) {
 				// is old line going to be overwritten by new line, anyway?
 				// ----------------------------------------------------------
@@ -763,7 +756,7 @@ static void UiSpectrum_InitSpectrumDisplay()
 void UiSpectrumReDrawScopeDisplay()
 {
 	int spec_height = SPECTRUM_HEIGHT;
-	if (ts.spectrum_light && ts.waterfall_size == WATERFALL_BIG)
+	if ((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && ts.waterfall_size == WATERFALL_BIG)
 		spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
 		ulong i, spec_width;
 	uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
