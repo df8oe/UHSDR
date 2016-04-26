@@ -17,22 +17,22 @@ extern  USBH_Usr_cb_TypeDef USR_Callbacks;
 // Keyboard Status
 typedef struct KeyBoardStatus
 {
-	// UI public state
-	uchar old_state;
-	uchar new_state;
+    // UI public state
+    uchar old_state;
+    uchar new_state;
 
-	// Edit mode
-	uchar set_mode;
+    // Edit mode
+    uchar set_mode;
 
-	// Last key pressed value
-	uchar last_char;
+    // Last key pressed value
+    uchar last_char;
 
-	uchar edit_item_id;
-	uchar edit_item_hor;
+    uchar edit_item_id;
+    uchar edit_item_hor;
 
-	uchar item_0[16];
-	uchar item_1[16];
-	uchar item_2[16];
+    uchar item_0[16];
+    uchar item_1[16];
+    uchar item_2[16];
 
 } KeyBoardStatus;
 
@@ -44,12 +44,12 @@ void USBH_USR_DeviceAttached(void);
 void USBH_USR_ResetDevice(void);
 void USBH_USR_DeviceDisconnected (void);
 void USBH_USR_OverCurrentDetected (void);
-void USBH_USR_DeviceSpeedDetected(uint8_t DeviceSpeed); 
+void USBH_USR_DeviceSpeedDetected(uint8_t DeviceSpeed);
 void USBH_USR_Device_DescAvailable(void *);
 void USBH_USR_DeviceAddressAssigned(void);
 void USBH_USR_Configuration_DescAvailable(USBH_CfgDesc_TypeDef * cfgDesc,
-                                          USBH_InterfaceDesc_TypeDef *itfDesc,
-                                          USBH_EpDesc_TypeDef *epDesc);
+        USBH_InterfaceDesc_TypeDef *itfDesc,
+        USBH_EpDesc_TypeDef *epDesc);
 void USBH_USR_Manufacturer_String(void *);
 void USBH_USR_Product_String(void *);
 void USBH_USR_SerialNum_String(void *);

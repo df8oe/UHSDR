@@ -17,14 +17,14 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 
@@ -40,18 +40,18 @@
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
-  
+
 /** @defgroup USBD_REQ
   * @brief header file for the usbd_ioreq.c file
   * @{
-  */ 
+  */
 
 /** @defgroup USBD_REQ_Exported_Defines
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBD_REQ_Exported_Types
@@ -59,51 +59,51 @@
   */
 /**
   * @}
-  */ 
+  */
 
 
 
 /** @defgroup USBD_REQ_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_REQ_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_REQ_Exported_FunctionsPrototype
   * @{
-  */ 
+  */
 
 USBD_Status  USBD_StdDevReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req);
 USBD_Status  USBD_StdItfReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req);
 USBD_Status  USBD_StdEPReq (USB_OTG_CORE_HANDLE  *pdev, USB_SETUP_REQ  *req);
 void USBD_ParseSetupRequest( USB_OTG_CORE_HANDLE  *pdev,
-                                    USB_SETUP_REQ *req);
+                             USB_SETUP_REQ *req);
 
 void USBD_CtlError( USB_OTG_CORE_HANDLE  *pdev,
-                            USB_SETUP_REQ *req);
+                    USB_SETUP_REQ *req);
 
 void USBD_GetString(uint8_t *desc, uint8_t *unicode, uint16_t *len);
 /**
   * @}
-  */ 
+  */
 
 #endif /* __USB_REQUEST_H_ */
 
 /**
   * @}
-  */ 
+  */
 
 /**
 * @}
-*/ 
+*/
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

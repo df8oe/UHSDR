@@ -15,22 +15,24 @@
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "mchf_board.h"
 
-enum {
-  ConfigEntry_Stop,
-  ConfigEntry_UInt8,
-  ConfigEntry_UInt16,
-  ConfigEntry_UInt32_16,
-  ConfigEntry_Int32_16
+enum
+{
+    ConfigEntry_Stop,
+    ConfigEntry_UInt8,
+    ConfigEntry_UInt16,
+    ConfigEntry_UInt32_16,
+    ConfigEntry_Int32_16
 //  ConfigEntry_Bool,
 };
 
-typedef struct {
-  int typeId;
-  uint16_t id;
-  volatile void* val_ptr;
-  int32_t val_default;
-  int32_t val_min;
-  int32_t val_max;
+typedef struct
+{
+    int typeId;
+    uint16_t id;
+    volatile void* val_ptr;
+    int32_t val_default;
+    int32_t val_min;
+    int32_t val_max;
 } ConfigEntryDescriptor;
 
 const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);

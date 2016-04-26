@@ -24,8 +24,8 @@
 //	- ARM FIR/IIR algorithms require time reverse-order coefficients!!!
 //
 //	6th order Elliptic highpass filter
-//	
-//	
+//
+//
 //	-6dB point:  14.9 kHz
 //	-20dB point:  14.5 kHz
 //	-40dB point:  13.8 kHz
@@ -67,28 +67,29 @@ const arm_iir_lattice_instance_f32 IIR_15k_hpf = {
 
 #define IIR_15k_hpf_numStages 6
 #define IIR_15k_numStages 6
-const arm_iir_lattice_instance_f32 IIR_15k_hpf = {
-  .numStages = IIR_15k_numStages,
-  .pkCoeffs  = (float*) (const float[])
+const arm_iir_lattice_instance_f32 IIR_15k_hpf =
 {
-		0.08584448365242,
-		0.298455698329,
-		0.6057782760185,
-		0.7115173863477,
-		0.7698117813539,
-		0.7879540958152
-},
+    .numStages = IIR_15k_numStages,
+    .pkCoeffs  = (float*) (const float[])
+    {
+        0.08584448365242,
+        0.298455698329,
+        0.6057782760185,
+        0.7115173863477,
+        0.7698117813539,
+        0.7879540958152
+    },
 
-  .pvCoeffs = (float*) (const float[])
-{
-		0.00561889294652,
-		-0.02629790457241,
-		0.0684050306275,
-		-0.1143219836396,
-		0.1169486269215,
-		-0.07287150832503,
-		0.02534743920497
-}
+    .pvCoeffs = (float*) (const float[])
+    {
+        0.00561889294652,
+        -0.02629790457241,
+        0.0684050306275,
+        -0.1143219836396,
+        0.1169486269215,
+        -0.07287150832503,
+        0.02534743920497
+    }
 };
 
 

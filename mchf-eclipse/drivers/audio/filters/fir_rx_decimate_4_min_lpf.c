@@ -42,15 +42,16 @@ Min. -13.8dB @ 23.6 kHz
 
 ***************************************************************/
 
-const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF = {
-  .numTaps = 4,
-
-  .pCoeffs = (float*) (const float[]) 
+const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF =
 {
-		-0.1848172721704,
-		0.135814345129,
-		0.5586516940301,
-		0.4419794765896
-}
+    .numTaps = 4,
+
+    .pCoeffs = (float*) (const float[])
+    {
+        -0.1848172721704,
+        0.135814345129,
+        0.5586516940301,
+        0.4419794765896
+    }
 };
 

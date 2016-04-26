@@ -7,6 +7,6 @@
 
 DWORD get_fattime (void)
 {
-  return 0;
+    return 0;
 }
 

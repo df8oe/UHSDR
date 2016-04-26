@@ -17,19 +17,19 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef _FLASH_ACCESS_LAYER_H
 #define _FLASH_ACCESS_LAYER_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
-   
+
 /* Exported types ------------------------------------------------------------*/
 typedef  void (*pFunction)(void);
 /* Exported constants --------------------------------------------------------*/
@@ -41,7 +41,7 @@ extern const char* author; */
 
 /* Define the address from where user application will be loaded.
    Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
-#define APPLICATION_ADDRESS        (uint32_t)0x08010000 
+#define APPLICATION_ADDRESS        (uint32_t)0x08010000
 
 /* End of the Flash address */
 #define USER_FLASH_END_ADDRESS     ((uint32_t)0x080FFFFF)
@@ -64,7 +64,7 @@ extern const char* author; */
 #define ADDR_FLASH_SECTOR_11    ((uint32_t)0x080E0000) /* Base @ of Sector 11, 128 Kbyte */
 
 /* Exported macros -----------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */ 
+/* Exported functions ------------------------------------------------------- */
 void FLASH_If_FlashUnlock(void);
 FlagStatus FLASH_If_ReadOutProtectionStatus(void);
 uint32_t FLASH_If_EraseSectors(uint32_t Address);

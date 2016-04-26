@@ -1,7 +1,7 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /**************************************************************************//*****
  * @file     printf.c
- * @brief    Implementation of several stdio.h methods, such as printf(), 
+ * @brief    Implementation of several stdio.h methods, such as printf(),
  *           sprintf() and so on. This reduces the memory footprint of the
  *           binary when using those methods, compared to the libc implementation.
  ********************************************************************************/
@@ -18,7 +18,7 @@
 
 
 /**
- * @brief  Transmit a char, if you want to use printf(), 
+ * @brief  Transmit a char, if you want to use printf(),
  *         you need implement this function
  *
  * @param  pStr	Storage string.
@@ -26,13 +26,13 @@
  */
 void PrintChar(char c)
 {
-	/* Send a char like: 
-	   while(Transfer not completed);
-	   Transmit a char;
-	*/	
+    /* Send a char like:
+       while(Transfer not completed);
+       Transmit a char;
+    */
 #ifdef DEBUG_BUILD
-	USART_SendData(DEBUG_COM, (uint8_t) c);
-	while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
+    USART_SendData(DEBUG_COM, (uint8_t) c);
+    while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
 #endif
 }
 
@@ -68,7 +68,8 @@ signed int PutString(char *pStr, const char *pSource)
 {
     signed int num = 0;
 
-    while (*pSource != 0) {
+    while (*pSource != 0)
+    {
 
         *pStr++ = *pSource++;
         num++;
@@ -85,14 +86,14 @@ signed int PutString(char *pStr, const char *pSource)
  * @param  pStr  Storage string.
  * @param  fill  Fill character.
  * @param  width  Minimum integer width.
- * @param  value  Integer value.   
+ * @param  value  Integer value.
  */
 signed int PutUnsignedInt(
     char *pStr,
     char fill,
     signed int width,
     unsigned int value,
-	bool signboth)
+    bool signboth)
 {
     signed int num = 0;
 
@@ -100,16 +101,19 @@ signed int PutUnsignedInt(
     width--;
 
     /* Recursively write upper digits */
-    if ((value / 10) > 0) {
+    if ((value / 10) > 0)
+    {
 
         num = PutUnsignedInt(pStr, fill, width, value / 10,false);
         pStr += num;
     }
-    
-    /* Write filler characters */
-    else {
 
-        while (width > 0) {
+    /* Write filler characters */
+    else
+    {
+
+        while (width > 0)
+        {
 
             PutChar(pStr, fill);
             pStr++;
@@ -139,17 +143,19 @@ signed int PutSignedInt(
     char fill,
     signed int width,
     signed int value,
-	bool signboth)
+    bool signboth)
 {
     signed int num = 0;
     unsigned int absolute;
 
     /* Compute absolute value */
-    if (value < 0) {
+    if (value < 0)
+    {
 
         absolute = -value;
     }
-    else {
+    else
+    {
 
         absolute = value;
     }
@@ -158,28 +164,34 @@ signed int PutSignedInt(
     width--;
 
     /* Recursively write upper digits */
-    if ((absolute / 10) > 0) {
+    if ((absolute / 10) > 0)
+    {
 
-        if (value < 0) {
-        
+        if (value < 0)
+        {
+
             num = PutSignedInt(pStr, fill, width, -(absolute / 10),false);
         }
-        else {
+        else
+        {
 
             num = PutSignedInt(pStr, fill, width, absolute / 10,false);
         }
         pStr += num;
     }
-    else {
+    else
+    {
 
         /* Reserve space for sign */
-        if (value < 0 || signboth) {
+        if (value < 0 || signboth)
+        {
 
             width--;
         }
 
         /* Write filler characters */
-        while (width > 0) {
+        while (width > 0)
+        {
 
             PutChar(pStr, fill);
             pStr++;
@@ -188,13 +200,16 @@ signed int PutSignedInt(
         }
 
         /* Write sign */
-        if (value < 0) {
+        if (value < 0)
+        {
 
             num += PutChar(pStr, '-');
             pStr++;
-        } else if (signboth == true) {
-        	num += PutChar(pStr, '+');
-        	pStr++;
+        }
+        else if (signboth == true)
+        {
+            num += PutChar(pStr, '+');
+            pStr++;
         }
     }
 
@@ -230,15 +245,18 @@ signed int PutHexa(
     width--;
 
     /* Recursively output upper digits */
-    if ((value >> 4) > 0) {
+    if ((value >> 4) > 0)
+    {
 
         num += PutHexa(pStr, fill, width, maj, value >> 4);
         pStr += num;
     }
     /* Write filler chars */
-    else {
+    else
+    {
 
-        while (width > 0) {
+        while (width > 0)
+        {
 
             PutChar(pStr, fill);
             pStr++;
@@ -248,15 +266,18 @@ signed int PutHexa(
     }
 
     /* Write current digit */
-    if ((value & 0xF) < 10) {
+    if ((value & 0xF) < 10)
+    {
 
         PutChar(pStr, (value & 0xF) + '0');
     }
-    else if (maj) {
+    else if (maj)
+    {
 
         PutChar(pStr, (value & 0xF) - 10 + 'A');
     }
-    else {
+    else
+    {
 
         PutChar(pStr, (value & 0xF) - 10 + 'a');
     }
@@ -290,29 +311,34 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
     signed int    size = 0;
 
     /* Clear the string */
-    if (pStr) {
+    if (pStr)
+    {
 
         *pStr = 0;
     }
 
     /* Phase string */
-    while (*pFormat != 0 && size < length) {
+    while (*pFormat != 0 && size < length)
+    {
 
         /* Normal character */
-        if (*pFormat != '%') {
+        if (*pFormat != '%')
+        {
 
             *pStr++ = *pFormat++;
             size++;
         }
         /* Escaped '%' */
-        else if (*(pFormat+1) == '%') {
+        else if (*(pFormat+1) == '%')
+        {
 
             *pStr++ = '%';
             pFormat += 2;
             size++;
         }
         /* Token delimiter */
-        else {
+        else
+        {
 
             fill = ' ';
             signboth = false;
@@ -321,45 +347,63 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
 
 
             /* Parse sign */
-            if (*pFormat == '+') {
+            if (*pFormat == '+')
+            {
                 signboth = true;
                 pFormat++;
             }
 
             /* Parse filler */
-            if (*pFormat == '0') {
+            if (*pFormat == '0')
+            {
 
                 fill = '0';
                 pFormat++;
             }
 
             /* Parse width */
-            while ((*pFormat >= '0') && (*pFormat <= '9')) {
-        
+            while ((*pFormat >= '0') && (*pFormat <= '9'))
+            {
+
                 width = (width*10) + *pFormat-'0';
                 pFormat++;
             }
 
             /* Check if there is enough space */
-            if (size + width > length) {
+            if (size + width > length)
+            {
 
                 width = length - size;
             }
             // we ignore an 'l' since l equal 32 bits aka int
-            if (*pFormat == 'l') {
+            if (*pFormat == 'l')
+            {
                 pFormat++;
             }
 
 
             /* Parse type */
-            switch (*pFormat) {
-            case 'd': 
-            case 'i': num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int),signboth); break;
-            case 'u': num = PutUnsignedInt(pStr, fill, width, va_arg(ap, unsigned int),signboth); break;
-            case 'x': num = PutHexa(pStr, fill, width, 0, va_arg(ap, unsigned int)); break;
-            case 'X': num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int)); break;
-            case 's': num = PutString(pStr, va_arg(ap, char *)); break;
-            case 'c': num = PutChar(pStr, va_arg(ap, unsigned int)); break;
+            switch (*pFormat)
+            {
+            case 'd':
+            case 'i':
+                num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int),signboth);
+                break;
+            case 'u':
+                num = PutUnsignedInt(pStr, fill, width, va_arg(ap, unsigned int),signboth);
+                break;
+            case 'x':
+                num = PutHexa(pStr, fill, width, 0, va_arg(ap, unsigned int));
+                break;
+            case 'X':
+                num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int));
+                break;
+            case 's':
+                num = PutString(pStr, va_arg(ap, char *));
+                break;
+            case 'c':
+                num = PutChar(pStr, va_arg(ap, unsigned int));
+                break;
             default:
                 return EOF;
             }
@@ -371,11 +415,13 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
     }
 
     /* NULL-terminated (final \0 is not counted) */
-    if (size < length) {
+    if (size < length)
+    {
 
         *pStr = 0;
     }
-    else {
+    else
+    {
 
         *(--pStr) = 0;
         size--;
@@ -422,7 +468,7 @@ signed int snprintf(char *pString, size_t length, const char *pFormat, ...)
  */
 signed int vsprintf(char *pString, const char *pFormat, va_list ap)
 {
-   return vsnprintf(pString, MAX_STRING_SIZE, pFormat, ap);
+    return vsnprintf(pString, MAX_STRING_SIZE, pFormat, ap);
 }
 
 /**
@@ -431,7 +477,7 @@ signed int vsprintf(char *pString, const char *pFormat, va_list ap)
  *
  * @param pStream  Output stream.
  * @param pFormat  Format string
- * @param ap       Argument list. 
+ * @param ap       Argument list.
  */
 signed int vfprintf(FILE *pStream, const char *pFormat, va_list ap)
 {
@@ -439,7 +485,8 @@ signed int vfprintf(FILE *pStream, const char *pFormat, va_list ap)
     char pError[] = "stdio.c: increase MAX_STRING_SIZE\n\r";
 
     /* Write formatted string in buffer */
-    if (vsprintf(pStr, pFormat, ap) >= MAX_STRING_SIZE) {
+    if (vsprintf(pStr, pFormat, ap) >= MAX_STRING_SIZE)
+    {
 
         fputs(pError, stderr);
         while (1); /* Increase MAX_STRING_SIZE */
@@ -464,7 +511,7 @@ signed int vprintf(const char *pFormat, va_list ap)
 
 
 /**
- * @brief  Outputs a formatted string on the given stream, using a variable 
+ * @brief  Outputs a formatted string on the given stream, using a variable
  *         number of arguments.
  *
  * @param pStream  Output stream.
@@ -527,7 +574,7 @@ signed int sprintf(char *pStr, const char *pFormat, ...)
 /**
  * @brief  Outputs a string on stdout.
  *
- * @param pStr  String to output. 
+ * @param pStr  String to output.
  */
 signed int puts(const char *pStr)
 {
@@ -546,13 +593,15 @@ signed int puts(const char *pStr)
  */
 signed int fputc(signed int c, FILE *pStream)
 {
-    if ((pStream == stdout) || (pStream == stderr)) {
+    if ((pStream == stdout) || (pStream == stderr))
+    {
 
-    	PrintChar(c);
+        PrintChar(c);
 
         return c;
     }
-    else {
+    else
+    {
 
         return EOF;
     }
@@ -573,9 +622,11 @@ signed int fputs(const char *pStr, FILE *pStream)
 {
     signed int num = 0;
 
-    while (*pStr != 0) {
+    while (*pStr != 0)
+    {
 
-        if (fputc(*pStr, pStream) == -1) {
+        if (fputc(*pStr, pStream) == -1)
+        {
 
             return -1;
         }

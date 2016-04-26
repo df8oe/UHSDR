@@ -18,7 +18,8 @@
 #include "mchf_board.h"
 
 // used by UpdateFrequency* family of functions
-enum UpdateFrequencyMode_t {
+enum UpdateFrequencyMode_t
+{
     UFM_AUTOMATIC = 0,
     UFM_LARGE,
     UFM_SMALL_RX,
@@ -42,17 +43,18 @@ enum UpdateFrequencyMode_t {
 #define		T_STEP_1MHZ					1000000		// Used for transverter offset adjust
 #define		T_STEP_10MHZ					10000000	// Used for transverter offset adjust
 //
-enum {
-	T_STEP_1HZ_IDX = 0,
-	T_STEP_10HZ_IDX,
-	T_STEP_100HZ_IDX,
-	T_STEP_1KHZ_IDX,
-	T_STEP_5KHZ_IDX,
-	T_STEP_10KHZ_IDX,
-	T_STEP_100KHZ_IDX,
-	T_STEP_1MHZ_IDX,
-	T_STEP_10MHZ_IDX,
-	T_STEP_MAX_STEPS
+enum
+{
+    T_STEP_1HZ_IDX = 0,
+    T_STEP_10HZ_IDX,
+    T_STEP_100HZ_IDX,
+    T_STEP_1KHZ_IDX,
+    T_STEP_5KHZ_IDX,
+    T_STEP_10KHZ_IDX,
+    T_STEP_100KHZ_IDX,
+    T_STEP_1MHZ_IDX,
+    T_STEP_10MHZ_IDX,
+    T_STEP_MAX_STEPS
 };
 
 //#define 	MAX_STEPS					6
@@ -75,31 +77,31 @@ enum {
 
 typedef struct KeypadState
 {
-	// Actual time the button is pressed
-	ulong	debounce_time;
+    // Actual time the button is pressed
+    ulong	debounce_time;
 
-	// ID of button as GPIO bit
-	ulong	button_id;
+    // ID of button as GPIO bit
+    ulong	button_id;
 
-	// Flag to indicate click event
-	bool	button_pressed;
+    // Flag to indicate click event
+    bool	button_pressed;
 
-	// Flag to indicate release event
-	bool	button_released;
+    // Flag to indicate release event
+    bool	button_released;
 
-	// Flag to indicate under process
-	bool	button_processed;
+    // Flag to indicate under process
+    bool	button_processed;
 
-	// Flag to indicate that the button had been continued to be pressed during debounce
-	bool	button_just_pressed;
+    // Flag to indicate that the button had been continued to be pressed during debounce
+    bool	button_just_pressed;
 
-	// Flag to indicate that debounce check was complete
-	bool	debounce_check_complete;
+    // Flag to indicate that debounce check was complete
+    bool	debounce_check_complete;
 
-	// Flag to indicate a "press-and-hold" condition
-	bool	press_hold;
+    // Flag to indicate a "press-and-hold" condition
+    bool	press_hold;
 
-	uchar	dummy;
+    uchar	dummy;
 
 } KeypadState;
 
@@ -110,16 +112,17 @@ typedef struct KeypadState
 //
 // Settings for dB/division for spectrum display
 //
-enum	{
-	DB_DIV_DEFAULT = 0,
-	DB_DIV_5,
-	DB_DIV_7,
-	DB_DIV_10,
-	DB_DIV_15,
-	DB_DIV_20,
-	S_1_DIV,
-	S_2_DIV,
-	S_3_DIV
+enum
+{
+    DB_DIV_DEFAULT = 0,
+    DB_DIV_5,
+    DB_DIV_7,
+    DB_DIV_10,
+    DB_DIV_15,
+    DB_DIV_20,
+    S_1_DIV,
+    S_2_DIV,
+    S_3_DIV
 };
 //
 #define	DB_DIV_ADJUST_MIN	DB_DIV_DEFAULT
@@ -139,13 +142,14 @@ enum	{
 //
 // Enumeration to select which waterfall palette to use
 //
-enum	{
-	WFALL_GRAY = 0,
-	WFALL_HOT_COLD,
-	WFALL_RAINBOW,
-	WFALL_BLUE,
-	WFALL_GRAY_INVERSE,
-	WFALL_MAXVAL
+enum
+{
+    WFALL_GRAY = 0,
+    WFALL_HOT_COLD,
+    WFALL_RAINBOW,
+    WFALL_BLUE,
+    WFALL_GRAY_INVERSE,
+    WFALL_MAXVAL
 };
 //
 #define	WATERFALL_COLOR_MIN			0
@@ -186,21 +190,23 @@ enum	{
 //
 // Constants for waterfall size settings
 //
-enum	{
-	WATERFALL_NORMAL=0,
-	WATERFALL_BIG
+enum
+{
+    WATERFALL_NORMAL=0,
+    WATERFALL_BIG
 };
 //
-enum	{
-	FFT_WINDOW_RECTANGULAR=0,
-	FFT_WINDOW_COSINE,
-	FFT_WINDOW_BARTLETT,
-	FFT_WINDOW_WELCH,
-	FFT_WINDOW_HANN,
-	FFT_WINDOW_HAMMING,
-	FFT_WINDOW_BLACKMAN,
-	FFT_WINDOW_NUTTALL,
-	FFT_WINDOW_MAX
+enum
+{
+    FFT_WINDOW_RECTANGULAR=0,
+    FFT_WINDOW_COSINE,
+    FFT_WINDOW_BARTLETT,
+    FFT_WINDOW_WELCH,
+    FFT_WINDOW_HANN,
+    FFT_WINDOW_HAMMING,
+    FFT_WINDOW_BLACKMAN,
+    FFT_WINDOW_NUTTALL,
+    FFT_WINDOW_MAX
 };
 //
 #define	FFT_WINDOW_DEFAULT			FFT_WINDOW_BLACKMAN
@@ -213,40 +219,41 @@ enum	{
 //
 #define	SD_DB_DIV_SCALING			0.0316	// Scaling factor for number of dB/Division	0.0316 = 10dB/Division
 
-enum {
-  COUPLING_2200M = 0,
-  COUPLING_630M,
-  COUPLING_160M,
-  COUPLING_80M,
-  COUPLING_40M,
-  COUPLING_20M,
-  COUPLING_15M,
-  COUPLING_6M,
-  COUPLING_2M,
-  COUPLING_70CM,
-  COUPLING_23CM,
-  COUPLING_MAX
- };
+enum
+{
+    COUPLING_2200M = 0,
+    COUPLING_630M,
+    COUPLING_160M,
+    COUPLING_80M,
+    COUPLING_40M,
+    COUPLING_20M,
+    COUPLING_15M,
+    COUPLING_6M,
+    COUPLING_2M,
+    COUPLING_70CM,
+    COUPLING_23CM,
+    COUPLING_MAX
+};
 
 // SWR and RF power meter public
 typedef struct SWRMeter
 {
-	ulong	skip;
+    ulong	skip;
 
-	float fwd_calc;			// forward power readings in A/D units
-	float rev_calc;			// reverse power readings in A/D units
-	float fwd_pwr;			// forward power in watts
-	float rev_pwr;			// reverse power in watts
-	float fwd_dbm;			// forward power in dBm
-	float rev_dbm;			// reverse power in dBm
-	float vswr;			// vswr
-	float vswr_dampened;		// dampened VSWR reading
-	bool  pwr_meter_disp;		// TRUE if numerical FWD/REV power metering (in milliwatts) is to be displayed
-	bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
-	uchar	p_curr;			// count used to update power meter
-	uchar	sensor_null;		// used to null out the sensor offset voltage
+    float fwd_calc;			// forward power readings in A/D units
+    float rev_calc;			// reverse power readings in A/D units
+    float fwd_pwr;			// forward power in watts
+    float rev_pwr;			// reverse power in watts
+    float fwd_dbm;			// forward power in dBm
+    float rev_dbm;			// reverse power in dBm
+    float vswr;			// vswr
+    float vswr_dampened;		// dampened VSWR reading
+    bool  pwr_meter_disp;		// TRUE if numerical FWD/REV power metering (in milliwatts) is to be displayed
+    bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
+    uchar	p_curr;			// count used to update power meter
+    uchar	sensor_null;		// used to null out the sensor offset voltage
 
-	uint8_t coupling_calc[COUPLING_MAX];
+    uint8_t coupling_calc[COUPLING_MAX];
 
 } SWRMeter;
 
@@ -313,13 +320,13 @@ typedef struct SWRMeter
 // Power supply
 typedef struct PowerMeter
 {
-	ulong	 skip;
+    ulong	 skip;
 
-	ulong	 pwr_aver;
-	uchar	 p_curr;
+    ulong	 pwr_aver;
+    uchar	 p_curr;
 
-	uint32_t voltage;
-	char	 digits[6]; // voltage in millivolt upto 99.000 volt
+    uint32_t voltage;
+    char	 digits[6]; // voltage in millivolt upto 99.000 volt
 } PowerMeter;
 
 #define LO_COMP_SKP				50		//50000
@@ -327,15 +334,15 @@ typedef struct PowerMeter
 // LO temperature compensation
 typedef struct LoTcxo
 {
-	ulong	skip;
+    ulong	skip;
 
-	// Current compensation value
-	// loaded to LO
-	int		comp;
+    // Current compensation value
+    // loaded to LO
+    int		comp;
 
-	bool	sensor_absent;
-	bool    lo_error;
-	int   last;
+    bool	sensor_absent;
+    bool    lo_error;
+    int   last;
 
 } LoTcxo;
 
@@ -345,7 +352,7 @@ typedef struct LoTcxo
 // Eeprom saving routine
 typedef struct EepromSave
 {
-	ulong	skip;
+    ulong	skip;
 
 } EepromSave;
 
@@ -581,19 +588,20 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 //
 //
 // UI Driver State machine definitions
-enum {
+enum
+{
 //STATE_SPECTRUM_DISPLAY = 0,	//
-STATE_S_METER = 0,				//
-STATE_SWR_METER,				//
-STATE_HANDLE_POWERSUPPLY,		//
-STATE_LO_TEMPERATURE,			//
-STATE_SWITCH_OFF_PTT,            //
-STATE_TASK_CHECK,				//
-STATE_CHECK_ENC_ONE,			//
-STATE_CHECK_ENC_TWO,			//
-STATE_CHECK_ENC_THREE,			//
-STATE_UPDATE_FREQUENCY,			//
-STATE_PROCESS_KEYBOARD,			//
+    STATE_S_METER = 0,				//
+    STATE_SWR_METER,				//
+    STATE_HANDLE_POWERSUPPLY,		//
+    STATE_LO_TEMPERATURE,			//
+    STATE_SWITCH_OFF_PTT,            //
+    STATE_TASK_CHECK,				//
+    STATE_CHECK_ENC_ONE,			//
+    STATE_CHECK_ENC_TWO,			//
+    STATE_CHECK_ENC_THREE,			//
+    STATE_UPDATE_FREQUENCY,			//
+    STATE_PROCESS_KEYBOARD,			//
 };
 //
 // Used for press-and-hold "temporary" step size adjust

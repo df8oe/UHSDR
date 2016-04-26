@@ -37,11 +37,11 @@ void UiSpectrumCreateDrawArea(void);
 #define	SPECTRUM_SCOPE_AGC_DECAY			0.166//0.1	// Decay rate for spectrum scope FFT AGC/gain
 //
 #define	SPECTRUM_SCOPE_LPF_FACTOR			4	// IIR Factor for spectrum scope low-pass filtering
-	// Higher = slower response.  3 = 33% input; 66% feedback, 4 = 25% input, 75% feedback, 5 = 20% input, 80% feedback
+// Higher = slower response.  3 = 33% input; 66% feedback, 4 = 25% input, 75% feedback, 5 = 20% input, 80% feedback
 #define	SPECTRUM_SCOPE_LPF_FACTOR_SPI		2	// IIR Factor for spectrum scope low-pass filtering using SPI display (update rate is slower, use faster filter)
 //
 #define PK_AVG_RESCALE_THRESH		3		// This sets the minimum peak-to-average ratio of the spectrum display before it starts to rescale the peak
-		// value from the top.  This prevents it from going completely "white" on noise/no-signal conditions.
+// value from the top.  This prevents it from going completely "white" on noise/no-signal conditions.
 //
 #define	SPECTRUM_SCOPE_RESCALE_ATTACK_RATE	0.1	// Rate at which scaling of spectrum scope adapts to strong signals within its passband
 #define	SPECTRUM_SCOPE_RESCALE_DECAY_RATE	0.033	// Rate at which scaling of spectrum scope decays after strong signals disappear from its passband
@@ -116,7 +116,7 @@ typedef struct SpectrumDisplay
 {
     // FFT state
 //    arm_rfft_instance_f32           S;  // old, depricated FFT routine, do not use
-	arm_cfft_instance_f32           C; // new FFT routine for complex FFT
+    arm_cfft_instance_f32           C; // new FFT routine for complex FFT
 
 //	arm_cfft_radix4_instance_f32    S_CFFT; // old, depricated FFT routine, do not use
 

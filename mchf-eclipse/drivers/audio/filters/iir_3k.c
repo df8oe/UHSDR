@@ -32,10 +32,11 @@
 //
 
 #define IIR_3k_numStages 10
-const arm_iir_lattice_instance_f32 IIR_3k = {
-  .numStages = IIR_3k_numStages,
-  .pkCoeffs  = (float*) (const float[])
+const arm_iir_lattice_instance_f32 IIR_3k =
 {
+    .numStages = IIR_3k_numStages,
+    .pkCoeffs  = (float*) (const float[])
+    {
         0.00289573666141589550,
         0.02895736661415895100,
         0.13030814976371530000,
@@ -47,10 +48,10 @@ const arm_iir_lattice_instance_f32 IIR_3k = {
         0.13030814976371530000,
         0.02895736661415895100,
         0.00289573666141589550
-},
+    },
 
-  .pvCoeffs = (float*) (const float[])
-{
+    .pvCoeffs = (float*) (const float[])
+    {
         1.00000000000000000000,
         0.00000000000000008232,
         1.34038326769903440000,
@@ -62,6 +63,6 @@ const arm_iir_lattice_instance_f32 IIR_3k = {
         0.00316548154834338670,
         -0.00000000000000000004,
         0.00001677879772667541
-}
+    }
 };
 

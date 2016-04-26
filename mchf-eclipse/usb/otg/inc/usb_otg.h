@@ -17,8 +17,8 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
@@ -34,16 +34,16 @@
 /** @addtogroup USB_OTG_DRIVER
   * @{
   */
-  
+
 /** @defgroup USB_OTG
-  * @brief This file is the 
+  * @brief This file is the
   * @{
-  */ 
+  */
 
 
 /** @defgroup USB_OTG_Exported_Defines
   * @{
-  */ 
+  */
 
 
 void USB_OTG_InitiateSRP(void);
@@ -53,37 +53,37 @@ void USB_OTG_InitiateHNP(uint8_t state , uint8_t mode);
 
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USB_OTG_Exported_Types
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USB_OTG_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_OTG_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_OTG_Exported_FunctionsPrototype
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 #endif //__USB_OTG__
@@ -91,10 +91,10 @@ void USB_OTG_InitiateHNP(uint8_t state , uint8_t mode);
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

@@ -22,15 +22,15 @@
 
 DSTATUS disk_initialize (BYTE drv)    /* Physical drive nmuber (0..) */
 {
-  DSTATUS stat = STA_NOINIT;
-  
-  if(HCD_IsDeviceConnected(&USB_OTG_Core_dev))
-  {  
-    stat &= ~STA_NOINIT;
-  }
-  
-  return stat;
-  
+    DSTATUS stat = STA_NOINIT;
+
+    if(HCD_IsDeviceConnected(&USB_OTG_Core_dev))
+    {
+        stat &= ~STA_NOINIT;
+    }
+
+    return stat;
+
 }
 
 
@@ -39,32 +39,33 @@ DSTATUS disk_initialize (BYTE drv)    /* Physical drive nmuber (0..) */
 /* Return Disk Status                                                    */
 
 DSTATUS disk_status (
-	BYTE drv		/* Physical drive nmuber (0..) */
+    BYTE drv		/* Physical drive nmuber (0..) */
 )
 {
-	DSTATUS stat;
-	int result;
+    DSTATUS stat;
+    int result;
 
-	switch (drv) {
-	case ATA :
-		result = ATA_disk_status();
-		// translate the reslut code here
+    switch (drv)
+    {
+    case ATA :
+        result = ATA_disk_status();
+        // translate the reslut code here
 
-		return stat;
+        return stat;
 
-	case MMC :
-		result = MMC_disk_status();
-		// translate the reslut code here
+    case MMC :
+        result = MMC_disk_status();
+        // translate the reslut code here
 
-		return stat;
+        return stat;
 
-	case USB :
-		result = USB_disk_status();
-		// translate the reslut code here
+    case USB :
+        result = USB_disk_status();
+        // translate the reslut code here
 
-		return stat;
-	}
-	return STA_NOINIT;
+        return stat;
+    }
+    return STA_NOINIT;
 }
 
 
@@ -73,35 +74,36 @@ DSTATUS disk_status (
 /* Read Sector(s)                                                        */
 
 DRESULT disk_read (
-	BYTE drv,		/* Physical drive nmuber (0..) */
-	BYTE *buff,		/* Data buffer to store read data */
-	DWORD sector,	/* Sector address (LBA) */
-	BYTE count		/* Number of sectors to read (1..255) */
+    BYTE drv,		/* Physical drive nmuber (0..) */
+    BYTE *buff,		/* Data buffer to store read data */
+    DWORD sector,	/* Sector address (LBA) */
+    BYTE count		/* Number of sectors to read (1..255) */
 )
 {
-	DRESULT res;
-	int result;
+    DRESULT res;
+    int result;
 
-	switch (drv) {
-	case ATA :
-		result = ATA_disk_read(buff, sector, count);
-		// translate the reslut code here
+    switch (drv)
+    {
+    case ATA :
+        result = ATA_disk_read(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
+        return res;
 
-	case MMC :
-		result = MMC_disk_read(buff, sector, count);
-		// translate the reslut code here
+    case MMC :
+        result = MMC_disk_read(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
+        return res;
 
-	case USB :
-		result = USB_disk_read(buff, sector, count);
-		// translate the reslut code here
+    case USB :
+        result = USB_disk_read(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
-	}
-	return RES_PARERR;
+        return res;
+    }
+    return RES_PARERR;
 }
 
 
@@ -111,35 +113,36 @@ DRESULT disk_read (
 
 #if _READONLY == 0
 DRESULT disk_write (
-	BYTE drv,			/* Physical drive nmuber (0..) */
-	const BYTE *buff,	/* Data to be written */
-	DWORD sector,		/* Sector address (LBA) */
-	BYTE count			/* Number of sectors to write (1..255) */
+    BYTE drv,			/* Physical drive nmuber (0..) */
+    const BYTE *buff,	/* Data to be written */
+    DWORD sector,		/* Sector address (LBA) */
+    BYTE count			/* Number of sectors to write (1..255) */
 )
 {
-	DRESULT res;
-	int result;
+    DRESULT res;
+    int result;
 
-	switch (drv) {
-	case ATA :
-		result = ATA_disk_write(buff, sector, count);
-		// translate the reslut code here
+    switch (drv)
+    {
+    case ATA :
+        result = ATA_disk_write(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
+        return res;
 
-	case MMC :
-		result = MMC_disk_write(buff, sector, count);
-		// translate the reslut code here
+    case MMC :
+        result = MMC_disk_write(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
+        return res;
 
-	case USB :
-		result = USB_disk_write(buff, sector, count);
-		// translate the reslut code here
+    case USB :
+        result = USB_disk_write(buff, sector, count);
+        // translate the reslut code here
 
-		return res;
-	}
-	return RES_PARERR;
+        return res;
+    }
+    return RES_PARERR;
 }
 #endif /* _READONLY */
 
@@ -149,39 +152,40 @@ DRESULT disk_write (
 /* Miscellaneous Functions                                               */
 
 DRESULT disk_ioctl (
-	BYTE drv,		/* Physical drive nmuber (0..) */
-	BYTE ctrl,		/* Control code */
-	void *buff		/* Buffer to send/receive control data */
+    BYTE drv,		/* Physical drive nmuber (0..) */
+    BYTE ctrl,		/* Control code */
+    void *buff		/* Buffer to send/receive control data */
 )
 {
-	DRESULT res;
-	int result;
+    DRESULT res;
+    int result;
 
-	switch (drv) {
-	case ATA :
-		// pre-process here
+    switch (drv)
+    {
+    case ATA :
+        // pre-process here
 
-		result = ATA_disk_ioctl(ctrl, buff);
-		// post-process here
+        result = ATA_disk_ioctl(ctrl, buff);
+        // post-process here
 
-		return res;
+        return res;
 
-	case MMC :
-		// pre-process here
+    case MMC :
+        // pre-process here
 
-		result = MMC_disk_ioctl(ctrl, buff);
-		// post-process here
+        result = MMC_disk_ioctl(ctrl, buff);
+        // post-process here
 
-		return res;
+        return res;
 
-	case USB :
-		// pre-process here
+    case USB :
+        // pre-process here
 
-		result = USB_disk_ioctl(ctrl, buff);
-		// post-process here
+        result = USB_disk_ioctl(ctrl, buff);
+        // post-process here
 
-		return res;
-	}
-	return RES_PARERR;
+        return res;
+    }
+    return RES_PARERR;
 }
 

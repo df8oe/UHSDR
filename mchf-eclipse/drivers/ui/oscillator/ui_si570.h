@@ -78,29 +78,30 @@
 
 typedef struct OscillatorState
 {
-	long double			rfreq;
-	long double 		rfreq_old;
+    long double			rfreq;
+    long double 		rfreq_old;
 
-	float 				fxtal;
+    float 				fxtal;
 
-	uchar				regs[6];
+    uchar				regs[6];
 
-	float				fout;		// contains startup frequency info of Si570
+    float				fout;		// contains startup frequency info of Si570
 
-	unsigned short		si570_address;
-	
-	uchar				base_reg;
+    unsigned short		si570_address;
+
+    uchar				base_reg;
 
 #ifdef LOWER_PRECISION
-	uchar 				init_n1;
-	uchar				init_hsdiv;
-	ulong 				init_rfreq;
+    uchar 				init_n1;
+    uchar				init_hsdiv;
+    ulong 				init_rfreq;
 #endif
 
 } OscillatorState;
 
 
-typedef enum {
+typedef enum
+{
     SI570_OK = 0, // tuning ok
     SI570_TUNE_LIMITED, // tuning to freq close to desired freq, still ok
     SI570_TUNE_IMPOSSIBLE, // did not tune, tune freq unknown

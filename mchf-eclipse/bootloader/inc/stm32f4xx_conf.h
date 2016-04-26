@@ -17,7 +17,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F4xx_CONF_H
@@ -25,8 +25,8 @@
 
 #if defined  (HSE_VALUE)
 /* Redefine the HSE value; it's equal to 16 MHz on the mchf */
- #undef HSE_VALUE
- #define HSE_VALUE    ((uint32_t)16000000) 
+#undef HSE_VALUE
+#define HSE_VALUE    ((uint32_t)16000000)
 #endif /* HSE_VALUE */
 
 /* Includes ------------------------------------------------------------------*/
@@ -52,13 +52,13 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-/* If an external clock source is used, then the value of the following define 
-   should be set to the value of the external clock source, else, if no external 
+/* If an external clock source is used, then the value of the following define
+   should be set to the value of the external clock source, else, if no external
    clock is used, keep this define commented */
 /*#define I2S_EXTERNAL_CLOCK_VAL   12288000 */ /* Value of the external clock in Hz */
 
 
-/* Uncomment the line below to expanse the "assert_param" macro in the 
+/* Uncomment the line below to expanse the "assert_param" macro in the
    Standard Peripheral Library drivers code */
 /* #define USE_FULL_ASSERT    1 */
 

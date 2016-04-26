@@ -36,7 +36,7 @@ __ALIGN_BEGIN USBH_HOST                     USB_Host __ALIGN_END ;
 //*----------------------------------------------------------------------------
 void TIM2_IRQHandler(void)
 {
-	USBH_OTG_BSP_TimerIRQ();
+    USBH_OTG_BSP_TimerIRQ();
 }
 
 //*----------------------------------------------------------------------------
@@ -49,29 +49,29 @@ void TIM2_IRQHandler(void)
 //*----------------------------------------------------------------------------
 void OTG_HS_IRQHandler(void)
 {
-	// Interrupt here even if driver not enabled, when the cat driver works
-	//  to fix!
-	//USBH_OTG_ISR_Handler(&USB_OTG_Core_dev);
+    // Interrupt here even if driver not enabled, when the cat driver works
+    //  to fix!
+    //USBH_OTG_ISR_Handler(&USB_OTG_Core_dev);
 }
 
 void keyb_driver_init(void)
 {
 #if 0
-	printf("keyb driver init...\n\r");
+    printf("keyb driver init...\n\r");
 
-	// Init Host Library
-	USBH_Init(	&USB_OTG_Core_dev,
-				USB_OTG_HS_CORE_ID,
-	            &USB_Host,
-	            &HID_cb,
-	            &USR_Callbacks);
+    // Init Host Library
+    USBH_Init(	&USB_OTG_Core_dev,
+                USB_OTG_HS_CORE_ID,
+                &USB_Host,
+                &HID_cb,
+                &USR_Callbacks);
 
-	printf("keyb driver init ok\n\r");
+    printf("keyb driver init ok\n\r");
 #endif
 }
 
 void keyb_driver_thread(void)
 {
-	// Host Task handler
-	USBH_Process(&USB_OTG_Core_dev , &USB_Host);
+    // Host Task handler
+    USBH_Process(&USB_OTG_Core_dev , &USB_Host);
 }

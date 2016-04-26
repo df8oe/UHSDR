@@ -38,20 +38,20 @@ ulong 	step;
 //*----------------------------------------------------------------------------
 void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
 {
-	float f = (float)(samp_rate);
+    float f = (float)(samp_rate);
 
-	//printf("freq %d\n\r",(int)freq);
+    //printf("freq %d\n\r",(int)freq);
 
-	// Reset accumulator, if need smooth tone
-	// transition, do not reset it (e.g. wspr)
-	if(!smooth)
-		softdds.acc = 0;
+    // Reset accumulator, if need smooth tone
+    // transition, do not reset it (e.g. wspr)
+    if(!smooth)
+        softdds.acc = 0;
 
-	// Calculate new step
-	f   	 /= 65536.0;
-	step   = (ulong)(freq / f);
+    // Calculate new step
+    f   	 /= 65536.0;
+    step   = (ulong)(freq / f);
 
-	//printf("step %d\n\r",step);
+    //printf("step %d\n\r",step);
 }
 
 //*----------------------------------------------------------------------------
@@ -64,31 +64,31 @@ void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
 //*----------------------------------------------------------------------------
 void softdds_runf(float *i_buff,float *q_buff,ushort size)
 {
-	ulong 	i,k;
+    ulong 	i,k;
 
-	for(i = 0; i < size; i++)
-	{
-		// Calculate next sample
-		softdds.acc += step;
-		k    = softdds.acc >> DDS_ACC_SHIFT;
+    for(i = 0; i < size; i++)
+    {
+        // Calculate next sample
+        softdds.acc += step;
+        k    = softdds.acc >> DDS_ACC_SHIFT;
 
-		// Fix ptr overload
-		k &= (DDS_TBL_SIZE - 1);
+        // Fix ptr overload
+        k &= (DDS_TBL_SIZE - 1);
 
-		// Load I value
-		*i_buff = (float)(DDS_TABLE[k]);
+        // Load I value
+        *i_buff = (float)(DDS_TABLE[k]);
 
-		// 90 degrees shift
-		k += (DDS_TBL_SIZE/4);
+        // 90 degrees shift
+        k += (DDS_TBL_SIZE/4);
 
-		// Fix ptr overload
-		k &= (DDS_TBL_SIZE - 1);
+        // Fix ptr overload
+        k &= (DDS_TBL_SIZE - 1);
 
-		// Load Q value
-		*q_buff = (float)(DDS_TABLE[k]);
+        // Load Q value
+        *q_buff = (float)(DDS_TABLE[k]);
 
-		// Next ptr
-		i_buff++;
-		q_buff++;
-	}
+        // Next ptr
+        i_buff++;
+        q_buff++;
+    }
 }

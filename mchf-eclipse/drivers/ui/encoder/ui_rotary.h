@@ -28,33 +28,33 @@
 // Frequency public structure
 typedef struct DialFrequency
 {
-	// pot values
-	//
-	// SI570 actual frequency
-	ulong	tune_old;			// previous value
-	ulong	tune_new;			// most current value
+    // pot values
+    //
+    // SI570 actual frequency
+    ulong	tune_old;			// previous value
+    ulong	tune_new;			// most current value
 
-	// Current tuning step
-	ulong	tuning_step;		// selected step by user
-	ulong	selected_idx;		// id of step
+    // Current tuning step
+    ulong	tuning_step;		// selected step by user
+    ulong	selected_idx;		// id of step
 //	ulong	last_tune_step;		// last tunning step used during dial rotation
-	ulong	step_new;			// Eth driver req step
+    ulong	step_new;			// Eth driver req step
 
-	ulong	update_skip;
+    ulong	update_skip;
 
-	// Shift used on TX
-	//int		tx_shift;
+    // Shift used on TX
+    //int		tx_shift;
 
-	// TCXO routine factor/flag
-	int		temp_factor;
-	bool    temp_factor_changed;
-	uchar	temp_enabled;
+    // TCXO routine factor/flag
+    int		temp_factor;
+    bool    temp_factor_changed;
+    uchar	temp_enabled;
 
-	// Virtual segments
-	uint8_t	dial_digits[9];
-	// Second display
-	uint8_t	sdial_digits[9];
-				
+    // Virtual segments
+    uint8_t	dial_digits[9];
+    // Second display
+    uint8_t	sdial_digits[9];
+
 } DialFrequency;
 
 // --------------------------------
@@ -67,12 +67,12 @@ typedef struct DialFrequency
 // Audio Gain public structure
 typedef struct EncoderSelection
 {
-	// pot values
-	//
-	ulong	value_old;			// previous value
-	ulong	value_new;			// most current value
-	uchar	de_detent;			// sw de-detent flag
-	TIM_TypeDef* tim;
+    // pot values
+    //
+    ulong	value_old;			// previous value
+    ulong	value_new;			// most current value
+    uchar	de_detent;			// sw de-detent flag
+    TIM_TypeDef* tim;
 
 } EncoderSelection;
 
@@ -82,12 +82,13 @@ void UiRotaryFreqEncoderInit(void);
 void UiRotaryEncoderOneInit(void);
 void UiRotaryEncoderTwoInit(void);
 void UiRotaryEncoderThreeInit(void);
-enum EncoderId {
-	ENC1 = 0,
-	ENC2,
-	ENC3,
-	ENCFREQ,
-	ENC_MAX // this needs to be the last entry
+enum EncoderId
+{
+    ENC1 = 0,
+    ENC2,
+    ENC3,
+    ENCFREQ,
+    ENC_MAX // this needs to be the last entry
 };
 
 int UiDriverEncoderRead(const uint32_t encId);

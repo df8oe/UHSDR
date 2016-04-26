@@ -26,7 +26,7 @@
 
 
 #ifndef HY28BHISPEED
-  #define HY28BHISPEED false
+#define HY28BHISPEED false
 #endif
 
 #define SPI_START   (0x70)              /* Start byte for SPI transfer        */

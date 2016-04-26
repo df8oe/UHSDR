@@ -15,23 +15,25 @@
 #ifndef __CAT_DRIVER_H
 #define __CAT_DRIVER_H
 
-typedef enum CatInterfaceState {
-	DISCONNECTED = 0,
-	CONNECTED
+typedef enum CatInterfaceState
+{
+    DISCONNECTED = 0,
+    CONNECTED
 } CatInterfaceState;
 
-typedef enum {
-	UNKNOWN = 0,
-	FT817 = 1
+typedef enum
+{
+    UNKNOWN = 0,
+    FT817 = 1
 } CatInterfaceProtocol;
 
 
 // CAT driver public structure
 typedef struct CatDriver
 {
-	uchar	enabled;
-	CatInterfaceState state;
-	CatInterfaceProtocol protocol;
+    uchar	enabled;
+    CatInterfaceState state;
+    CatInterfaceProtocol protocol;
 
 } CatDriver;
 

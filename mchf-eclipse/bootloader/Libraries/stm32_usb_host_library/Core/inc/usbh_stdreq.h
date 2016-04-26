@@ -18,7 +18,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive  ----------------------------------------------*/
 #ifndef __USBH_STDREQ_H
@@ -38,11 +38,11 @@
 /** @addtogroup USBH_LIB_CORE
 * @{
 */
-  
+
 /** @defgroup USBH_STDREQ
-  * @brief This file is the 
+  * @brief This file is the
   * @{
-  */ 
+  */
 
 
 /** @defgroup USBH_STDREQ_Exported_Defines
@@ -62,87 +62,87 @@
 
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBH_STDREQ_Exported_Types
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBH_STDREQ_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_STDREQ_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_STDREQ_Exported_FunctionsPrototype
   * @{
   */
-USBH_Status USBH_GetDescriptor(USB_OTG_CORE_HANDLE *pdev, 
-                               USBH_HOST           *phost,                                
+USBH_Status USBH_GetDescriptor(USB_OTG_CORE_HANDLE *pdev,
+                               USBH_HOST           *phost,
                                uint8_t  req_type,
-                               uint16_t value_idx, 
-                               uint8_t* buff, 
+                               uint16_t value_idx,
+                               uint8_t* buff,
                                uint16_t length );
 
 USBH_Status USBH_Get_DevDesc(USB_OTG_CORE_HANDLE *pdev,
                              USBH_HOST *phost,
                              uint8_t length);
 
-USBH_Status USBH_Get_StringDesc(USB_OTG_CORE_HANDLE *pdev, 
-                                USBH_HOST           *phost,                                 
-                                uint8_t string_index, 
-                                uint8_t *buff, 
+USBH_Status USBH_Get_StringDesc(USB_OTG_CORE_HANDLE *pdev,
+                                USBH_HOST           *phost,
+                                uint8_t string_index,
+                                uint8_t *buff,
                                 uint16_t length);
 
-USBH_Status USBH_SetCfg(USB_OTG_CORE_HANDLE *pdev, 
+USBH_Status USBH_SetCfg(USB_OTG_CORE_HANDLE *pdev,
                         USBH_HOST *phost,
                         uint16_t configuration_value);
 
 USBH_Status USBH_Get_CfgDesc(USB_OTG_CORE_HANDLE *pdev,
-                             USBH_HOST           *phost,                                 
+                             USBH_HOST           *phost,
                              uint16_t length);
 
-USBH_Status USBH_SetAddress(USB_OTG_CORE_HANDLE *pdev, 
-                            USBH_HOST           *phost,                             
+USBH_Status USBH_SetAddress(USB_OTG_CORE_HANDLE *pdev,
+                            USBH_HOST           *phost,
                             uint8_t DeviceAddress);
 
 USBH_Status USBH_ClrFeature(USB_OTG_CORE_HANDLE *pdev,
-                            USBH_HOST           *phost,                             
-                            uint8_t ep_num, uint8_t hc_num); 
+                            USBH_HOST           *phost,
+                            uint8_t ep_num, uint8_t hc_num);
 
-USBH_Status USBH_Issue_ClrFeature(USB_OTG_CORE_HANDLE *pdev, 
-                                  USBH_HOST           *phost, 
+USBH_Status USBH_Issue_ClrFeature(USB_OTG_CORE_HANDLE *pdev,
+                                  USBH_HOST           *phost,
                                   uint8_t ep_num);
 /**
   * @}
-  */ 
+  */
 
 #endif /* __USBH_STDREQ_H */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /**
 * @}
-*/ 
+*/
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
 

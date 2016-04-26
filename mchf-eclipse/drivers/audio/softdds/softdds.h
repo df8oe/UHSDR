@@ -29,11 +29,11 @@
 // Soft DDS public structure
 typedef struct SoftDds
 {
-	// DDS accumulator
-	ulong 	acc;
+    // DDS accumulator
+    ulong 	acc;
 
-	// DDS step - not working if part of the structure
-	ulong 	step;
+    // DDS step - not working if part of the structure
+    ulong 	step;
 
 } SoftDds;
 

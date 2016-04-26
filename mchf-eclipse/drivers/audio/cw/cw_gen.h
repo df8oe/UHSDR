@@ -42,19 +42,19 @@
 //
 typedef struct PaddleState
 {
-	// State machine and port states
-	ulong 	port_state;
-	ulong	cw_state;
+    // State machine and port states
+    ulong 	port_state;
+    ulong	cw_state;
 
-	// Smallest element duration
-	ulong   dit_time;
+    // Smallest element duration
+    ulong   dit_time;
 
-	// Timers
-	ulong   key_timer;
-	ulong 	break_timer;
+    // Timers
+    ulong   key_timer;
+    ulong 	break_timer;
 
-	// Key clicks smoothing table current ptr
-	ulong	sm_tbl_ptr;
+    // Key clicks smoothing table current ptr
+    ulong	sm_tbl_ptr;
 
 } PaddleState;
 

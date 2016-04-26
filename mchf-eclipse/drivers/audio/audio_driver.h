@@ -61,99 +61,99 @@
 // Audio driver publics
 typedef struct AudioDriverState
 {
-	// Stereo buffers
-	float32_t					i_buffer[IQ_BUFSZ+1];
-	float32_t 					q_buffer[IQ_BUFSZ+1];
-	float32_t 					a_buffer[IQ_BUFSZ+1];
-	float32_t 					a2_buffer[IQ_BUFSZ+1];
-	float32_t 					a3_buffer[IQ_BUFSZ+1];
-	float32_t 					b_buffer[(IQ_BUFSZ*2)+1];	// this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
-	float32_t					c_buffer[IQ_BUFSZ+1];
-	float32_t					d_buffer[IQ_BUFSZ+1];
-	float32_t					e_buffer[IQ_BUFSZ+1];
-	float32_t					f_buffer[IQ_BUFSZ+1];
-	float32_t					e2_buffer[IQ_BUFSZ+1];
-	float32_t					f2_buffer[IQ_BUFSZ+1];
-	float32_t					e3_buffer[IQ_BUFSZ+1];
-	float32_t					f3_buffer[IQ_BUFSZ+1];
-	//
-	float32_t					Osc_I_buffer[IQ_BUFSZ+1];
-	float32_t					Osc_Q_buffer[IQ_BUFSZ+1];
-	//
-	// Lock audio filter flag
-	//
-	bool					af_disabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
-	bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
+    // Stereo buffers
+    float32_t					i_buffer[IQ_BUFSZ+1];
+    float32_t 					q_buffer[IQ_BUFSZ+1];
+    float32_t 					a_buffer[IQ_BUFSZ+1];
+    float32_t 					a2_buffer[IQ_BUFSZ+1];
+    float32_t 					a3_buffer[IQ_BUFSZ+1];
+    float32_t 					b_buffer[(IQ_BUFSZ*2)+1];	// this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
+    float32_t					c_buffer[IQ_BUFSZ+1];
+    float32_t					d_buffer[IQ_BUFSZ+1];
+    float32_t					e_buffer[IQ_BUFSZ+1];
+    float32_t					f_buffer[IQ_BUFSZ+1];
+    float32_t					e2_buffer[IQ_BUFSZ+1];
+    float32_t					f2_buffer[IQ_BUFSZ+1];
+    float32_t					e3_buffer[IQ_BUFSZ+1];
+    float32_t					f3_buffer[IQ_BUFSZ+1];
+    //
+    float32_t					Osc_I_buffer[IQ_BUFSZ+1];
+    float32_t					Osc_Q_buffer[IQ_BUFSZ+1];
+    //
+    // Lock audio filter flag
+    //
+    bool					af_disabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
+    bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
 
-	// AGC and audio related variables
+    // AGC and audio related variables
 
-	float 					agc_val;			// "live" receiver AGC value
-	float					agc_var;
-	float					agc_calc;
-	float					agc_valbuf[BUFF_LEN];	// holder for "running" AGC value
-	float					agc_holder;			// used to hold AGC value during transmit and tuning
-	float					agc_decay;			// decay rate (speed) of AGC
-	float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
-	float					agc_knee;			// "knee" for AGC operation
-	float					agc_val_max;		// maximum AGC gain (at minimum signal)
-	float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
-	float					fm_sql_avg;			// averaged squelch level (for FM)
-	bool					fm_squelched;		// TRUE if FM receiver audio is to be squelched
-	//
-	uchar					codec_gain;
-	float					codec_gain_calc;
-	bool					adc_clip;
-	bool					adc_half_clip;
-	bool					adc_quarter_clip;
-	float					peak_audio;			// used for audio metering to detect the peak audio level
+    float 					agc_val;			// "live" receiver AGC value
+    float					agc_var;
+    float					agc_calc;
+    float					agc_valbuf[BUFF_LEN];	// holder for "running" AGC value
+    float					agc_holder;			// used to hold AGC value during transmit and tuning
+    float					agc_decay;			// decay rate (speed) of AGC
+    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
+    float					agc_knee;			// "knee" for AGC operation
+    float					agc_val_max;		// maximum AGC gain (at minimum signal)
+    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
+    float					fm_sql_avg;			// averaged squelch level (for FM)
+    bool					fm_squelched;		// TRUE if FM receiver audio is to be squelched
+    //
+    uchar					codec_gain;
+    float					codec_gain_calc;
+    bool					adc_clip;
+    bool					adc_half_clip;
+    bool					adc_quarter_clip;
+    float					peak_audio;			// used for audio metering to detect the peak audio level
 
-	float					alc_val;			// "live" transmitter ALC value
-	float					alc_decay;			// decay rate (speed) of ALC
-	float					post_agc_gain;		// post AGC gain scaling
-	//
-	uchar					decimation_rate;		// current decimation/interpolation rate
-	ulong					agc_delay_buflen;		// AGC delay buffer length
-	float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
-	//
-	float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
-	float					nb_sig_filt;
-	ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
-	float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
-	//
-	float					fm_subaudible_tone_gen_freq;	// frequency, in Hz, of currently-selected subaudible tone for generation
-	ulong					fm_subaudible_tone_word;	// actively-used variable in producing the tone
-	//
-	ulong					fm_tone_burst_word;			// this is the actively-used DDS tone word in the frequency generator
-	bool					fm_tone_burst_active;		// this is TRUE if the tone burst is actively being generated
-	//
-	float					fm_subaudible_tone_det_freq;	// frequency, in Hz, of currently-selected subaudible tone for detection
-	bool					fm_subaudible_tone_detected;	// TRUE if subaudible tone has been detected
-	//
-	ulong					beep_word;				// this is the actively-used DDS tone word for the radio's beep generator
-	float					beep_loudness_factor;	// this is used to set the beep loudness
-	//
-	// The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
-	//
-	float					fm_goertzel_high_a;
-	float					fm_goertzel_high_b;
-	float					fm_goertzel_high_sin;
-	float					fm_goertzel_high_cos;
-	float					fm_goertzel_high_r;
-	//
-	float					fm_goertzel_low_a;
-	float					fm_goertzel_low_b;
-	float					fm_goertzel_low_sin;
-	float					fm_goertzel_low_cos;
-	float					fm_goertzel_low_r;
-	//
-	float					fm_goertzel_ctr_a;
-	float					fm_goertzel_ctr_b;
-	float					fm_goertzel_ctr_sin;
-	float					fm_goertzel_ctr_cos;
-	float					fm_goertzel_ctr_r;
-	//
-	ulong					fm_goertzel_size;
-	//
+    float					alc_val;			// "live" transmitter ALC value
+    float					alc_decay;			// decay rate (speed) of ALC
+    float					post_agc_gain;		// post AGC gain scaling
+    //
+    uchar					decimation_rate;		// current decimation/interpolation rate
+    ulong					agc_delay_buflen;		// AGC delay buffer length
+    float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
+    //
+    float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
+    float					nb_sig_filt;
+    ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
+    float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
+    //
+    float					fm_subaudible_tone_gen_freq;	// frequency, in Hz, of currently-selected subaudible tone for generation
+    ulong					fm_subaudible_tone_word;	// actively-used variable in producing the tone
+    //
+    ulong					fm_tone_burst_word;			// this is the actively-used DDS tone word in the frequency generator
+    bool					fm_tone_burst_active;		// this is TRUE if the tone burst is actively being generated
+    //
+    float					fm_subaudible_tone_det_freq;	// frequency, in Hz, of currently-selected subaudible tone for detection
+    bool					fm_subaudible_tone_detected;	// TRUE if subaudible tone has been detected
+    //
+    ulong					beep_word;				// this is the actively-used DDS tone word for the radio's beep generator
+    float					beep_loudness_factor;	// this is used to set the beep loudness
+    //
+    // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
+    //
+    float					fm_goertzel_high_a;
+    float					fm_goertzel_high_b;
+    float					fm_goertzel_high_sin;
+    float					fm_goertzel_high_cos;
+    float					fm_goertzel_high_r;
+    //
+    float					fm_goertzel_low_a;
+    float					fm_goertzel_low_b;
+    float					fm_goertzel_low_sin;
+    float					fm_goertzel_low_cos;
+    float					fm_goertzel_low_r;
+    //
+    float					fm_goertzel_ctr_a;
+    float					fm_goertzel_ctr_b;
+    float					fm_goertzel_ctr_sin;
+    float					fm_goertzel_ctr_cos;
+    float					fm_goertzel_ctr_r;
+    //
+    ulong					fm_goertzel_size;
+    //
 //	float					Osc_Cos;
 //	float					Osc_Sin;
 //	float					Osc_Vect_Q;
@@ -180,11 +180,11 @@ typedef struct AudioDriverState
 // S meter public
 typedef struct SMeter
 {
-	ulong	skip;
+    ulong	skip;
 
-	ulong	s_count;
-	float	gain_calc;
-	int		curr_max;
+    ulong	s_count;
+    float	gain_calc;
+    int		curr_max;
 
 } SMeter;
 //
@@ -221,7 +221,7 @@ typedef struct SMeter
 #define AGC_PREFILTER_MAX_SIGNAL	1		// maximum level of pre-filtered signal
 //
 #define POST_AGC_GAIN_SCALING	1.333//0.333	// Used to rescale the post-filter audio level to a value suitable for the codec.  This sets the line level output
-									// to approx. 1000mV peak-peak.
+// to approx. 1000mV peak-peak.
 //
 #define	POST_AGC_GAIN_SCALING_DECIMATE_4	3.46	// Used to scale audio from the decimation/interpolation-by-4 process (based square root of decimation factor)
 //
@@ -479,7 +479,7 @@ enum	{
 #define DSP_SWITCH_MAX				6 // bass & treble not used here
 //
 #define	AGC_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
-											// This is divided by the decimation rate so that the time delay is constant.
+// This is divided by the decimation rate so that the time delay is constant.
 //
 #define	ALC_DELAY_BUFSIZE		(BUFF_LEN/2)*5		// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 //

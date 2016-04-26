@@ -17,14 +17,14 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -41,16 +41,16 @@
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
-  
+
 /** @defgroup usbd_audio
   * @brief This file is the Header file for USBD_audio.c
   * @{
-  */ 
+  */
 
 
 /** @defgroup usbd_audio_Exported_Defines
   * @{
-  */ 
+  */
 #define USBD_AUDIO_FREQ 48000
 // this is fixed to match the I2S Frequency
 #define USBD_AUDIO_OUT_CHANNELS 2
@@ -78,11 +78,11 @@
 #define TOTAL_OUT_BUF_SIZE                           ((uint32_t)(AUDIO_OUT_PACKET * OUT_PACKET_NUM))
 #define AUDIO_BOTH
 #if  defined(AUDIO_BOTH)
-	#define AUDIO_IN
-	#define AUDIO_OUT
-	#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8 + 66 + 9 +7)
+#define AUDIO_IN
+#define AUDIO_OUT
+#define AUDIO_CONFIG_DESC_SIZE                        (9+101+73 + 8 + 66 + 9 +7)
 #elif defined(AUDIO_OUT)
-	#define AUDIO_CONFIG_DESC_SIZE                        (109 + 8)
+#define AUDIO_CONFIG_DESC_SIZE                        (109 + 8)
 #endif
 #define AUDIO_INTERFACE_DESC_SIZE                     9
 #define USB_AUDIO_DESC_SIZ                            0x09
@@ -130,28 +130,30 @@
 #define AUDIO_OUT_STREAMING_CTRL                      0x02
 
 
-typedef struct UsbAudioUnit_s {
-	uint8_t cs;
-	uint8_t cn;
-	int16_t min;
-	int16_t max;
-	uint16_t res;
-	int16_t cur;
-	__IO uint8_t* ptr; // pointer to data structure which is used elsewhere to store volume
+typedef struct UsbAudioUnit_s
+{
+    uint8_t cs;
+    uint8_t cn;
+    int16_t min;
+    int16_t max;
+    uint16_t res;
+    int16_t cur;
+    __IO uint8_t* ptr; // pointer to data structure which is used elsewhere to store volume
 } UsbAudioUnit;
 
 // In / Out Volume;
 
-enum {
-	UnitVolumeTX = 0,
-	UnitVolumeRX,
-	UnitMax
+enum
+{
+    UnitVolumeTX = 0,
+    UnitVolumeRX,
+    UnitMax
 };
 extern UsbAudioUnit usbUnits[UnitMax];
 
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBD_CORE_Exported_TypesDefinitions
@@ -166,16 +168,16 @@ typedef struct _Audio_Fops
     uint8_t  (*MuteCtl)      (uint8_t cmd);
     uint8_t  (*PeriodicTC)   (uint8_t cmd);
     uint8_t  (*GetState)     (void);
-}AUDIO_FOPS_TypeDef;
+} AUDIO_FOPS_TypeDef;
 /**
   * @}
-  */ 
+  */
 
 
 
 /** @defgroup USBD_CORE_Exported_Macros
   * @{
-  */ 
+  */
 // this works only for 2channel 16 bit audio
 #define AUDIO_PACKET_SZE(frq,channels)          (uint8_t)(((frq * channels * 2)/1000) & 0xFF), \
                                        (uint8_t)((((frq * channels * 2)/1000) >> 8) & 0xFF)
@@ -185,17 +187,17 @@ extern void audio_in_put_buffer(int16_t sample);
 extern void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len);
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_CORE_Exported_Variables
   * @{
-  */ 
+  */
 
 extern USBD_Class_cb_TypeDef  AUDIO_cb;
 
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_CORE_Exported_Functions
   * @{
@@ -204,17 +206,17 @@ extern USBD_Class_cb_TypeDef  AUDIO_cb;
 
 /**
   * @}
-  */ 
+  */
 
 #endif  // __USB_AUDIO_CORE_H_
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
-  
+  */
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
 

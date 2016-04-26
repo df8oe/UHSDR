@@ -17,8 +17,8 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
@@ -36,19 +36,19 @@
 /** @addtogroup USB_OTG_DRIVER
   * @{
   */
-  
+
 /** @defgroup USB_DEFINES
-  * @brief This file is the 
+  * @brief This file is the
   * @{
-  */ 
+  */
 
 
 /** @defgroup USB_DEFINES_Exported_Defines
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup _CORE_DEFINES_
@@ -184,38 +184,38 @@
 
 /** @defgroup USB_DEFINES_Exported_Types
   * @{
-  */ 
+  */
 
 typedef enum
 {
-  USB_OTG_HS_CORE_ID = 0,
-  USB_OTG_FS_CORE_ID = 1
-}USB_OTG_CORE_ID_TypeDef;
+    USB_OTG_HS_CORE_ID = 0,
+    USB_OTG_FS_CORE_ID = 1
+} USB_OTG_CORE_ID_TypeDef;
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USB_DEFINES_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_DEFINES_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_DEFINES_Exported_FunctionsPrototype
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup Internal_Macro's
@@ -229,11 +229,12 @@ typedef enum
 /********************************************************************************
                               ENUMERATION TYPE
 ********************************************************************************/
-enum USB_OTG_SPEED {
-  USB_SPEED_UNKNOWN = 0,
-  USB_SPEED_LOW,
-  USB_SPEED_FULL,
-  USB_SPEED_HIGH
+enum USB_OTG_SPEED
+{
+    USB_SPEED_UNKNOWN = 0,
+    USB_SPEED_LOW,
+    USB_SPEED_FULL,
+    USB_SPEED_HIGH
 };
 
 #endif //__USB_DEFINES__H__
@@ -241,10 +242,10 @@ enum USB_OTG_SPEED {
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

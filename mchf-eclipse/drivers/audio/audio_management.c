@@ -27,7 +27,8 @@ void AudioManagement_CalcAGCDecay(void)
         ads.agc_decay = AGC_SLOW_DECAY;
     else if(ts.agc_mode == AGC_FAST)
         ads.agc_decay = AGC_FAST_DECAY;
-    else if(ts.agc_mode == AGC_CUSTOM)  {   // calculate custom AGC setting
+    else if(ts.agc_mode == AGC_CUSTOM)      // calculate custom AGC setting
+    {
         tcalc = (float)ts.agc_custom_decay;
         tcalc += 30;
         tcalc /= 10;
@@ -94,12 +95,14 @@ void AudioManagement_CalcRFGain(void)
 //
 void AudioManagement_CalcAGCVals(void)
 {
-    if(ts.max_rf_gain <= MAX_RF_GAIN_MAX)   {
+    if(ts.max_rf_gain <= MAX_RF_GAIN_MAX)
+    {
         ads.agc_knee = AGC_KNEE_REF * (float)(ts.max_rf_gain + 1);
         ads.agc_val_max = AGC_VAL_MAX_REF / ((float)(ts.max_rf_gain + 1));
         ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
     }
-    else    {
+    else
+    {
         ads.agc_knee = AGC_KNEE_REF * MAX_RF_GAIN_DEFAULT+1;
         ads.agc_val_max = AGC_VAL_MAX_REF / MAX_RF_GAIN_DEFAULT+1;
         ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF /  (float)(ts.max_rf_gain + 1);
@@ -190,12 +193,14 @@ void AudioManagement_CalcTxIqGainAdj(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-typedef struct AlcParams_s {
+typedef struct AlcParams_s
+{
     uint32_t tx_postfilt_gain;
     uint32_t alc_decay;
 } AlcParams;
 
-static const AlcParams alc_params[] = {
+static const AlcParams alc_params[] =
+{
     { 1, 15},
     { 2, 12},
     { 4, 10},
@@ -215,16 +220,20 @@ void AudioManagement_CalcTxCompLevel(void)
     float tcalc;
     if (ts.tx_comp_level < 13)
     {
-      ts.alc_tx_postfilt_gain_var = alc_params[ts.tx_comp_level].tx_postfilt_gain;      // restore "pristine" EEPROM values
-      ts.alc_decay_var = alc_params[ts.tx_comp_level].alc_decay;
+        ts.alc_tx_postfilt_gain_var = alc_params[ts.tx_comp_level].tx_postfilt_gain;      // restore "pristine" EEPROM values
+        ts.alc_decay_var = alc_params[ts.tx_comp_level].alc_decay;
 
-    } else if (ts.tx_comp_level == 13)  {               // get the speech compressor setting
+    }
+    else if (ts.tx_comp_level == 13)                    // get the speech compressor setting
+    {
         // read saved values from EEPROM
-            ts.alc_tx_postfilt_gain_var = ts.alc_tx_postfilt_gain;      // restore "pristine" EEPROM values
-            ts.alc_decay_var = ts.alc_decay;
-    } else {
-            ts.alc_tx_postfilt_gain_var = 4;
-            ts.alc_decay_var = 10;
+        ts.alc_tx_postfilt_gain_var = ts.alc_tx_postfilt_gain;      // restore "pristine" EEPROM values
+        ts.alc_decay_var = ts.alc_decay;
+    }
+    else
+    {
+        ts.alc_tx_postfilt_gain_var = 4;
+        ts.alc_decay_var = 10;
     }
     //
     tcalc = (float)ts.alc_decay_var;    // use temp var "tcalc" as audio function
@@ -304,16 +313,17 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
 //*----------------------------------------------------------------------------
 void AudioManagement_LoadToneBurstMode(void)
 {
-    switch(ts.fm_tone_burst_mode)   {
-        case FM_TONE_BURST_1750_MODE:
-            ads.fm_tone_burst_word = FM_TONE_BURST_1750;
-            break;
-        case FM_TONE_BURST_2135_MODE:
-            ads.fm_tone_burst_word = FM_TONE_BURST_2135;
-            break;
-        default:
-            ads.fm_tone_burst_word = 0;
-            break;
+    switch(ts.fm_tone_burst_mode)
+    {
+    case FM_TONE_BURST_1750_MODE:
+        ads.fm_tone_burst_word = FM_TONE_BURST_1750;
+        break;
+    case FM_TONE_BURST_2135_MODE:
+        ads.fm_tone_burst_word = FM_TONE_BURST_2135;
+        break;
+    default:
+        ads.fm_tone_burst_word = 0;
+        break;
     }
 
 }
@@ -330,7 +340,8 @@ void AudioManagement_LoadBeepFreq(void)
 {
     float calc;
 
-    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)  {   // is beep enabled?
+    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
+    {
         ads.beep_word = ts.beep_frequency * 65536;      // yes - calculated/load frequency
         ads.beep_word /= 48000;
     }

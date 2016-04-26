@@ -17,14 +17,14 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive  ----------------------------------------------*/
 #ifndef __USBH_HCS_H
@@ -40,11 +40,11 @@
 /** @addtogroup USBH_LIB_CORE
 * @{
 */
-  
+
 /** @defgroup USBH_HCS
   * @brief This file is the header file for usbh_hcs.c
   * @{
-  */ 
+  */
 
 /** @defgroup USBH_HCS_Exported_Defines
   * @{
@@ -57,29 +57,29 @@
 #define HC_USED_MASK     0x7FFF
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_HCS_Exported_Types
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBH_HCS_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_HCS_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_HCS_Exported_FunctionsPrototype
   * @{
@@ -99,14 +99,14 @@ uint8_t USBH_Open_Channel  (USB_OTG_CORE_HANDLE *pdev,
                             uint16_t mps);
 
 uint8_t USBH_Modify_Channel (USB_OTG_CORE_HANDLE *pdev,
-                            uint8_t hc_num,
-                            uint8_t dev_address,
-                            uint8_t speed,
-                            uint8_t ep_type,
-                            uint16_t mps);
+                             uint8_t hc_num,
+                             uint8_t dev_address,
+                             uint8_t speed,
+                             uint8_t ep_type,
+                             uint16_t mps);
 /**
   * @}
-  */ 
+  */
 
 
 
@@ -115,15 +115,15 @@ uint8_t USBH_Modify_Channel (USB_OTG_CORE_HANDLE *pdev,
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /**
 * @}
-*/ 
+*/
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

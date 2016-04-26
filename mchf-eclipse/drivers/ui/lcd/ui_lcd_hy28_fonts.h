@@ -17,9 +17,9 @@
 
 typedef struct tFont
 {
-  const unsigned short *table;
-  unsigned short Width;
-  unsigned short Height;
+    const unsigned short *table;
+    unsigned short Width;
+    unsigned short Height;
 } sFONT;
 
-#endif 
+#endif

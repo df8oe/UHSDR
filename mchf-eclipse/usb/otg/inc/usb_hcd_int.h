@@ -17,8 +17,8 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
@@ -37,42 +37,42 @@
 /** @addtogroup USB_OTG_DRIVER
   * @{
   */
-  
+
 /** @defgroup USB_HCD_INT
-  * @brief This file is the 
+  * @brief This file is the
   * @{
-  */ 
+  */
 
 
 /** @defgroup USB_HCD_INT_Exported_Defines
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USB_HCD_INT_Exported_Types
   * @{
-  */ 
+  */
 
 typedef struct _USBH_HCD_INT
 {
-  uint8_t (* SOF) (USB_OTG_CORE_HANDLE *pdev);
-  uint8_t (* DevConnected) (USB_OTG_CORE_HANDLE *pdev);
-  uint8_t (* DevDisconnected) (USB_OTG_CORE_HANDLE *pdev);   
-  
-}USBH_HCD_INT_cb_TypeDef;
+    uint8_t (* SOF) (USB_OTG_CORE_HANDLE *pdev);
+    uint8_t (* DevConnected) (USB_OTG_CORE_HANDLE *pdev);
+    uint8_t (* DevDisconnected) (USB_OTG_CORE_HANDLE *pdev);
+
+} USBH_HCD_INT_cb_TypeDef;
 
 extern USBH_HCD_INT_cb_TypeDef *USBH_HCD_INT_fops;
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USB_HCD_INT_Exported_Macros
   * @{
-  */ 
+  */
 
 #define CLEAR_HC_INT(HC_REGS, intr) \
   {\
@@ -81,7 +81,7 @@ extern USBH_HCD_INT_cb_TypeDef *USBH_HCD_INT_fops;
   hcint_clear.b.intr = 1; \
   USB_OTG_WRITE_REG32(&((HC_REGS)->HCINT), hcint_clear.d32);\
   }\
-
+ 
 #define MASK_HOST_INT_CHH(hc_num) { USB_OTG_HCINTMSK_TypeDef  INTMSK; \
     INTMSK.d32 = USB_OTG_READ_REG32(&pdev->regs.HC_REGS[hc_num]->HCINTMSK); \
     INTMSK.b.chhltd = 0; \
@@ -104,18 +104,18 @@ extern USBH_HCD_INT_cb_TypeDef *USBH_HCD_INT_fops;
 
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_HCD_INT_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_HCD_INT_Exported_FunctionsPrototype
   * @{
-  */ 
+  */
 /* Callbacks handler */
 void ConnectCallback_Handler(USB_OTG_CORE_HANDLE *pdev);
 void Disconnect_Callback_Handler(USB_OTG_CORE_HANDLE *pdev);
@@ -124,7 +124,7 @@ uint32_t USBH_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev);
 
 /**
   * @}
-  */ 
+  */
 
 
 
@@ -133,10 +133,10 @@ uint32_t USBH_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev);
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

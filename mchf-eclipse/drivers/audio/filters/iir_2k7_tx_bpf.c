@@ -56,36 +56,37 @@
 #define IIR_TX_numStages 10
 #define IIR_TX_2k7_numStages 10
 
-const arm_iir_lattice_instance_f32 IIR_TX_2k7 = {
-  .numStages = IIR_TX_numStages,
-  .pkCoeffs  = (float*) (const float[])
+const arm_iir_lattice_instance_f32 IIR_TX_2k7 =
 {
-		0.6869176968793,
-		-0.9512054401742,
-		0.9748233658729,
-		-0.9886769453802,
-		0.9699856293614,
-		-0.976965264625,
-		0.9989051081887,
-		-0.9994482291916,
-		0.9999677314304,
-		-0.9993834480784
-},
+    .numStages = IIR_TX_numStages,
+    .pkCoeffs  = (float*) (const float[])
+    {
+        0.6869176968793,
+        -0.9512054401742,
+        0.9748233658729,
+        -0.9886769453802,
+        0.9699856293614,
+        -0.976965264625,
+        0.9989051081887,
+        -0.9994482291916,
+        0.9999677314304,
+        -0.9993834480784
+    },
 
-  .pvCoeffs = (float*) (const float[])
-{
-		-0.01873226419377,
-		-0.0351077314033,
-		-0.01181875664072,
-		-0.0100003360675,
-		-0.0005123880132686,
-		-0.0002827366407254,
-		6.374826243116e-05,
-		3.655128410718e-06,
-		-1.949876071716e-08,
-		-5.55178847339e-10,
-		3.472732518217e-12
-}
+    .pvCoeffs = (float*) (const float[])
+    {
+        -0.01873226419377,
+        -0.0351077314033,
+        -0.01181875664072,
+        -0.0100003360675,
+        -0.0005123880132686,
+        -0.0002827366407254,
+        6.374826243116e-05,
+        3.655128410718e-06,
+        -1.949876071716e-08,
+        -5.55178847339e-10,
+        3.472732518217e-12
+    }
 };
 /*
 
@@ -101,7 +102,7 @@ const arm_iir_lattice_instance_f32 IIR_TX_2k7 = {
 //	-20dB points:  270, 2845 Hz
 //	-30dB points:  <265, >2915 Hz
 //
-#define IIR_TX_2k7_numStages 10 
+#define IIR_TX_2k7_numStages 10
 const arm_iir_lattice_instance_f32 IIR_TX_2k7 = {
   .numStages = IIR_TX_numStages,
   .pkCoeffs  = (float*) (const float[])

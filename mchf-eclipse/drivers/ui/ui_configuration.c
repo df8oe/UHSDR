@@ -32,389 +32,389 @@
 
 const uint16_t VirtAddVarTab[NB_OF_VAR] =
 {
-        VAR_ADDR_1,
-        VAR_ADDR_2,
-        VAR_ADDR_3,
-        VAR_ADDR_4,
-        VAR_ADDR_5,
-        VAR_ADDR_6,
-        VAR_ADDR_7,
-        VAR_ADDR_8,
-        VAR_ADDR_9,
-        VAR_ADDR_10,
-        VAR_ADDR_11,
-        VAR_ADDR_12,
-        VAR_ADDR_13,
-        VAR_ADDR_14,
-        VAR_ADDR_15,
-        VAR_ADDR_16,
-        VAR_ADDR_17,
-        VAR_ADDR_18,
-        VAR_ADDR_19,
-        VAR_ADDR_20,
-        VAR_ADDR_21,
-        VAR_ADDR_22,
-        VAR_ADDR_23,
-        VAR_ADDR_24,
-        VAR_ADDR_25,
-        VAR_ADDR_26,
-        VAR_ADDR_27,
-        VAR_ADDR_28,
-        VAR_ADDR_29,
-        VAR_ADDR_30,
-        VAR_ADDR_31,
-        VAR_ADDR_32,
-        VAR_ADDR_33,
-        VAR_ADDR_34,
-        VAR_ADDR_35,
-        VAR_ADDR_36,
-        VAR_ADDR_37,
-        VAR_ADDR_38,
-        VAR_ADDR_39,
-        VAR_ADDR_40,
-        VAR_ADDR_41,
-        VAR_ADDR_42,
-        VAR_ADDR_43,
-        VAR_ADDR_44,
-        VAR_ADDR_45,
-        VAR_ADDR_46,
-        VAR_ADDR_47,
-        VAR_ADDR_48,
-        VAR_ADDR_49,
-        VAR_ADDR_50,
-        VAR_ADDR_51,
-        VAR_ADDR_52,
-        VAR_ADDR_53,
-        VAR_ADDR_54,
-        VAR_ADDR_55,
-        VAR_ADDR_56,
-        VAR_ADDR_57,
-        VAR_ADDR_58,
-        VAR_ADDR_59,
-        VAR_ADDR_60,
-        VAR_ADDR_61,
-        VAR_ADDR_62,
-        VAR_ADDR_63,
-        VAR_ADDR_64,
-        VAR_ADDR_65,
-        VAR_ADDR_66,
-        VAR_ADDR_67,
-        VAR_ADDR_68,
-        VAR_ADDR_69,
-        VAR_ADDR_70,
-        VAR_ADDR_71,
-        VAR_ADDR_72,
-        VAR_ADDR_73,
-        VAR_ADDR_74,
-        VAR_ADDR_75,
-        VAR_ADDR_76,
-        VAR_ADDR_77,
-        VAR_ADDR_78,
-        VAR_ADDR_79,
-        VAR_ADDR_80,
-        VAR_ADDR_81,
-        VAR_ADDR_82,
-        VAR_ADDR_83,
-        VAR_ADDR_84,
-        VAR_ADDR_85,
-        VAR_ADDR_86,
-        VAR_ADDR_87,
-        VAR_ADDR_88,
-        VAR_ADDR_89,
-        VAR_ADDR_90,
-        VAR_ADDR_91,
-        VAR_ADDR_92,
-        VAR_ADDR_93,
-        VAR_ADDR_94,
-        VAR_ADDR_95,
-        VAR_ADDR_96,
-        VAR_ADDR_97,
-        VAR_ADDR_98,
-        VAR_ADDR_99,
-        VAR_ADDR_100,
-        VAR_ADDR_101,
-        VAR_ADDR_102,
-        VAR_ADDR_103,
-        VAR_ADDR_104,
-        VAR_ADDR_105,
-        VAR_ADDR_106,
-        VAR_ADDR_107,
-        VAR_ADDR_108,
-        VAR_ADDR_109,
-        VAR_ADDR_110,
-        VAR_ADDR_111,
-        VAR_ADDR_112,
-        VAR_ADDR_113,
-        VAR_ADDR_114,
-        VAR_ADDR_115,
-        VAR_ADDR_116,
-        VAR_ADDR_117,
-        VAR_ADDR_118,
-        VAR_ADDR_119,
-        VAR_ADDR_120,
-        VAR_ADDR_121,
-        VAR_ADDR_122,
-        VAR_ADDR_123,
-        VAR_ADDR_124,
-        VAR_ADDR_125,
-        VAR_ADDR_126,
-        VAR_ADDR_127,
-        VAR_ADDR_128,
-        VAR_ADDR_129,
-        VAR_ADDR_130,
-        VAR_ADDR_131,
-        VAR_ADDR_132,
-        VAR_ADDR_133,
-        VAR_ADDR_134,
-        VAR_ADDR_135,
-        VAR_ADDR_136,
-        VAR_ADDR_137,
-        VAR_ADDR_138,
-        VAR_ADDR_139,
-        VAR_ADDR_140,
-        VAR_ADDR_141,
-        VAR_ADDR_142,
-        VAR_ADDR_143,
-        VAR_ADDR_144,
-        VAR_ADDR_145,
-        VAR_ADDR_146,
-        VAR_ADDR_147,
-        VAR_ADDR_148,
-        VAR_ADDR_149,
-        VAR_ADDR_150,
-        VAR_ADDR_151,
-        VAR_ADDR_152,
-        VAR_ADDR_153,
-        VAR_ADDR_154,
-        VAR_ADDR_155,
-        VAR_ADDR_156,
-        VAR_ADDR_157,
-        VAR_ADDR_158,
-        VAR_ADDR_159,
-        VAR_ADDR_160,
-        VAR_ADDR_161,
-        VAR_ADDR_162,
-        VAR_ADDR_163,
-        VAR_ADDR_164,
-        VAR_ADDR_165,
-        VAR_ADDR_166,
-        VAR_ADDR_167,
-        VAR_ADDR_168,
-        VAR_ADDR_169,
-        VAR_ADDR_170,
-        VAR_ADDR_171,
-        VAR_ADDR_172,
-        VAR_ADDR_173,
-        VAR_ADDR_174,
-        VAR_ADDR_175,
-        VAR_ADDR_176,
-        VAR_ADDR_177,
-        VAR_ADDR_178,
-        VAR_ADDR_179,
-        VAR_ADDR_180,
-        VAR_ADDR_181,
-        VAR_ADDR_182,
-        VAR_ADDR_183,
-        VAR_ADDR_184,
-        VAR_ADDR_185,
-        VAR_ADDR_186,
-        VAR_ADDR_187,
-        VAR_ADDR_188,
-        VAR_ADDR_189,
-        VAR_ADDR_190,
-        VAR_ADDR_191,
-        VAR_ADDR_192,
-        VAR_ADDR_193,
-        VAR_ADDR_194,
-        VAR_ADDR_195,
-        VAR_ADDR_196,
-        VAR_ADDR_197,
-        VAR_ADDR_198,
-        VAR_ADDR_199,
-        VAR_ADDR_200,
-        VAR_ADDR_201,
-        VAR_ADDR_202,
-        VAR_ADDR_203,
-        VAR_ADDR_204,
-        VAR_ADDR_205,
-        VAR_ADDR_206,
-        VAR_ADDR_207,
-        VAR_ADDR_208,
-        VAR_ADDR_209,
-        VAR_ADDR_210,
-        VAR_ADDR_211,
-        VAR_ADDR_212,
-        VAR_ADDR_213,
-        VAR_ADDR_214,
-        VAR_ADDR_215,
-        VAR_ADDR_216,
-        VAR_ADDR_217,
-        VAR_ADDR_218,
-        VAR_ADDR_219,
-        VAR_ADDR_220,
-        VAR_ADDR_221,
-        VAR_ADDR_222,
-        VAR_ADDR_223,
-        VAR_ADDR_224,
-        VAR_ADDR_225,
-        VAR_ADDR_226,
-        VAR_ADDR_227,
-        VAR_ADDR_228,
-        VAR_ADDR_229,
-        VAR_ADDR_230,
-        VAR_ADDR_231,
-        VAR_ADDR_232,
-        VAR_ADDR_233,
-        VAR_ADDR_234,
-        VAR_ADDR_235,
-        VAR_ADDR_236,
-        VAR_ADDR_237,
-        VAR_ADDR_238,
-        VAR_ADDR_239,
-        VAR_ADDR_240,
-        VAR_ADDR_241,
-        VAR_ADDR_242,
-        VAR_ADDR_243,
-        VAR_ADDR_244,
-        VAR_ADDR_245,
-        VAR_ADDR_246,
-        VAR_ADDR_247,
-        VAR_ADDR_248,
-        VAR_ADDR_249,
-        VAR_ADDR_250,
-        VAR_ADDR_251,
-        VAR_ADDR_252,
-        VAR_ADDR_253,
-        VAR_ADDR_254,
-        VAR_ADDR_255,
-        VAR_ADDR_256,
-        VAR_ADDR_257,
-        VAR_ADDR_258,
-        VAR_ADDR_259,
-        VAR_ADDR_260,
-        VAR_ADDR_261,
-        VAR_ADDR_262,
-        VAR_ADDR_263,
-        VAR_ADDR_264,
-        VAR_ADDR_265,
-        VAR_ADDR_266,
-        VAR_ADDR_267,
-        VAR_ADDR_268,
-        VAR_ADDR_269,
-        VAR_ADDR_270,
-        VAR_ADDR_271,
-        VAR_ADDR_272,
-        VAR_ADDR_273,
-        VAR_ADDR_274,
-        VAR_ADDR_275,
-        VAR_ADDR_276,
-        VAR_ADDR_277,
-        VAR_ADDR_278,
-        VAR_ADDR_279,
-        VAR_ADDR_280,
-        VAR_ADDR_281,
-        VAR_ADDR_282,
-        VAR_ADDR_283,
-        VAR_ADDR_284,
-        VAR_ADDR_285,
-        VAR_ADDR_286,
-        VAR_ADDR_287,
-        VAR_ADDR_288,
-        VAR_ADDR_289,
-        VAR_ADDR_290,
-        VAR_ADDR_291,
-        VAR_ADDR_292,
-        VAR_ADDR_293,
-        VAR_ADDR_294,
-        VAR_ADDR_295,
-        VAR_ADDR_296,
-        VAR_ADDR_297,
-        VAR_ADDR_298,
-        VAR_ADDR_299,
-        VAR_ADDR_300,
-        VAR_ADDR_301,
-        VAR_ADDR_302,
-        VAR_ADDR_303,
-        VAR_ADDR_304,
-        VAR_ADDR_305,
-        VAR_ADDR_306,
-        VAR_ADDR_307,
-        VAR_ADDR_308,
-        VAR_ADDR_309,
-        VAR_ADDR_310,
-        VAR_ADDR_311,
-        VAR_ADDR_312,
-        VAR_ADDR_313,
-        VAR_ADDR_314,
-        VAR_ADDR_315,
-        VAR_ADDR_316,
-        VAR_ADDR_317,
-        VAR_ADDR_318,
-        VAR_ADDR_319,
-        VAR_ADDR_320,
-        VAR_ADDR_321,
-        VAR_ADDR_322,
-        VAR_ADDR_323,
-        VAR_ADDR_324,
-        VAR_ADDR_325,
-        VAR_ADDR_326,
-        VAR_ADDR_327,
-        VAR_ADDR_328,
-        VAR_ADDR_329,
-        VAR_ADDR_330,
-        VAR_ADDR_331,
-        VAR_ADDR_332,
-        VAR_ADDR_333,
-        VAR_ADDR_334,
-        VAR_ADDR_335,
-        VAR_ADDR_336,
-        VAR_ADDR_337,
-        VAR_ADDR_338,
-        VAR_ADDR_339,
-        VAR_ADDR_340,
-        VAR_ADDR_341,
-        VAR_ADDR_342,
-        VAR_ADDR_343,
-        VAR_ADDR_344,
-        VAR_ADDR_345,
-        VAR_ADDR_346,
-        VAR_ADDR_347,
-        VAR_ADDR_348,
-        VAR_ADDR_349,
-        VAR_ADDR_350,
-        VAR_ADDR_351,
-        VAR_ADDR_352,
-        VAR_ADDR_353,
-        VAR_ADDR_354,
-        VAR_ADDR_355,
-        VAR_ADDR_356,
-        VAR_ADDR_357,
-        VAR_ADDR_358,
-        VAR_ADDR_359,
-        VAR_ADDR_360,
-        VAR_ADDR_361,
-        VAR_ADDR_362,
-        VAR_ADDR_363,
-        VAR_ADDR_364,
-        VAR_ADDR_365,
-        VAR_ADDR_366,
-        VAR_ADDR_367,
-        VAR_ADDR_368,
-        VAR_ADDR_369,
-        VAR_ADDR_370,
-        VAR_ADDR_371,
-        VAR_ADDR_372,
-        VAR_ADDR_373,
-        VAR_ADDR_374,
-        VAR_ADDR_375,
-        VAR_ADDR_376,
-        VAR_ADDR_377,
-        VAR_ADDR_378,
-        VAR_ADDR_379,
-        VAR_ADDR_380,
-        VAR_ADDR_381,
-        VAR_ADDR_382,
-        VAR_ADDR_383
+    VAR_ADDR_1,
+    VAR_ADDR_2,
+    VAR_ADDR_3,
+    VAR_ADDR_4,
+    VAR_ADDR_5,
+    VAR_ADDR_6,
+    VAR_ADDR_7,
+    VAR_ADDR_8,
+    VAR_ADDR_9,
+    VAR_ADDR_10,
+    VAR_ADDR_11,
+    VAR_ADDR_12,
+    VAR_ADDR_13,
+    VAR_ADDR_14,
+    VAR_ADDR_15,
+    VAR_ADDR_16,
+    VAR_ADDR_17,
+    VAR_ADDR_18,
+    VAR_ADDR_19,
+    VAR_ADDR_20,
+    VAR_ADDR_21,
+    VAR_ADDR_22,
+    VAR_ADDR_23,
+    VAR_ADDR_24,
+    VAR_ADDR_25,
+    VAR_ADDR_26,
+    VAR_ADDR_27,
+    VAR_ADDR_28,
+    VAR_ADDR_29,
+    VAR_ADDR_30,
+    VAR_ADDR_31,
+    VAR_ADDR_32,
+    VAR_ADDR_33,
+    VAR_ADDR_34,
+    VAR_ADDR_35,
+    VAR_ADDR_36,
+    VAR_ADDR_37,
+    VAR_ADDR_38,
+    VAR_ADDR_39,
+    VAR_ADDR_40,
+    VAR_ADDR_41,
+    VAR_ADDR_42,
+    VAR_ADDR_43,
+    VAR_ADDR_44,
+    VAR_ADDR_45,
+    VAR_ADDR_46,
+    VAR_ADDR_47,
+    VAR_ADDR_48,
+    VAR_ADDR_49,
+    VAR_ADDR_50,
+    VAR_ADDR_51,
+    VAR_ADDR_52,
+    VAR_ADDR_53,
+    VAR_ADDR_54,
+    VAR_ADDR_55,
+    VAR_ADDR_56,
+    VAR_ADDR_57,
+    VAR_ADDR_58,
+    VAR_ADDR_59,
+    VAR_ADDR_60,
+    VAR_ADDR_61,
+    VAR_ADDR_62,
+    VAR_ADDR_63,
+    VAR_ADDR_64,
+    VAR_ADDR_65,
+    VAR_ADDR_66,
+    VAR_ADDR_67,
+    VAR_ADDR_68,
+    VAR_ADDR_69,
+    VAR_ADDR_70,
+    VAR_ADDR_71,
+    VAR_ADDR_72,
+    VAR_ADDR_73,
+    VAR_ADDR_74,
+    VAR_ADDR_75,
+    VAR_ADDR_76,
+    VAR_ADDR_77,
+    VAR_ADDR_78,
+    VAR_ADDR_79,
+    VAR_ADDR_80,
+    VAR_ADDR_81,
+    VAR_ADDR_82,
+    VAR_ADDR_83,
+    VAR_ADDR_84,
+    VAR_ADDR_85,
+    VAR_ADDR_86,
+    VAR_ADDR_87,
+    VAR_ADDR_88,
+    VAR_ADDR_89,
+    VAR_ADDR_90,
+    VAR_ADDR_91,
+    VAR_ADDR_92,
+    VAR_ADDR_93,
+    VAR_ADDR_94,
+    VAR_ADDR_95,
+    VAR_ADDR_96,
+    VAR_ADDR_97,
+    VAR_ADDR_98,
+    VAR_ADDR_99,
+    VAR_ADDR_100,
+    VAR_ADDR_101,
+    VAR_ADDR_102,
+    VAR_ADDR_103,
+    VAR_ADDR_104,
+    VAR_ADDR_105,
+    VAR_ADDR_106,
+    VAR_ADDR_107,
+    VAR_ADDR_108,
+    VAR_ADDR_109,
+    VAR_ADDR_110,
+    VAR_ADDR_111,
+    VAR_ADDR_112,
+    VAR_ADDR_113,
+    VAR_ADDR_114,
+    VAR_ADDR_115,
+    VAR_ADDR_116,
+    VAR_ADDR_117,
+    VAR_ADDR_118,
+    VAR_ADDR_119,
+    VAR_ADDR_120,
+    VAR_ADDR_121,
+    VAR_ADDR_122,
+    VAR_ADDR_123,
+    VAR_ADDR_124,
+    VAR_ADDR_125,
+    VAR_ADDR_126,
+    VAR_ADDR_127,
+    VAR_ADDR_128,
+    VAR_ADDR_129,
+    VAR_ADDR_130,
+    VAR_ADDR_131,
+    VAR_ADDR_132,
+    VAR_ADDR_133,
+    VAR_ADDR_134,
+    VAR_ADDR_135,
+    VAR_ADDR_136,
+    VAR_ADDR_137,
+    VAR_ADDR_138,
+    VAR_ADDR_139,
+    VAR_ADDR_140,
+    VAR_ADDR_141,
+    VAR_ADDR_142,
+    VAR_ADDR_143,
+    VAR_ADDR_144,
+    VAR_ADDR_145,
+    VAR_ADDR_146,
+    VAR_ADDR_147,
+    VAR_ADDR_148,
+    VAR_ADDR_149,
+    VAR_ADDR_150,
+    VAR_ADDR_151,
+    VAR_ADDR_152,
+    VAR_ADDR_153,
+    VAR_ADDR_154,
+    VAR_ADDR_155,
+    VAR_ADDR_156,
+    VAR_ADDR_157,
+    VAR_ADDR_158,
+    VAR_ADDR_159,
+    VAR_ADDR_160,
+    VAR_ADDR_161,
+    VAR_ADDR_162,
+    VAR_ADDR_163,
+    VAR_ADDR_164,
+    VAR_ADDR_165,
+    VAR_ADDR_166,
+    VAR_ADDR_167,
+    VAR_ADDR_168,
+    VAR_ADDR_169,
+    VAR_ADDR_170,
+    VAR_ADDR_171,
+    VAR_ADDR_172,
+    VAR_ADDR_173,
+    VAR_ADDR_174,
+    VAR_ADDR_175,
+    VAR_ADDR_176,
+    VAR_ADDR_177,
+    VAR_ADDR_178,
+    VAR_ADDR_179,
+    VAR_ADDR_180,
+    VAR_ADDR_181,
+    VAR_ADDR_182,
+    VAR_ADDR_183,
+    VAR_ADDR_184,
+    VAR_ADDR_185,
+    VAR_ADDR_186,
+    VAR_ADDR_187,
+    VAR_ADDR_188,
+    VAR_ADDR_189,
+    VAR_ADDR_190,
+    VAR_ADDR_191,
+    VAR_ADDR_192,
+    VAR_ADDR_193,
+    VAR_ADDR_194,
+    VAR_ADDR_195,
+    VAR_ADDR_196,
+    VAR_ADDR_197,
+    VAR_ADDR_198,
+    VAR_ADDR_199,
+    VAR_ADDR_200,
+    VAR_ADDR_201,
+    VAR_ADDR_202,
+    VAR_ADDR_203,
+    VAR_ADDR_204,
+    VAR_ADDR_205,
+    VAR_ADDR_206,
+    VAR_ADDR_207,
+    VAR_ADDR_208,
+    VAR_ADDR_209,
+    VAR_ADDR_210,
+    VAR_ADDR_211,
+    VAR_ADDR_212,
+    VAR_ADDR_213,
+    VAR_ADDR_214,
+    VAR_ADDR_215,
+    VAR_ADDR_216,
+    VAR_ADDR_217,
+    VAR_ADDR_218,
+    VAR_ADDR_219,
+    VAR_ADDR_220,
+    VAR_ADDR_221,
+    VAR_ADDR_222,
+    VAR_ADDR_223,
+    VAR_ADDR_224,
+    VAR_ADDR_225,
+    VAR_ADDR_226,
+    VAR_ADDR_227,
+    VAR_ADDR_228,
+    VAR_ADDR_229,
+    VAR_ADDR_230,
+    VAR_ADDR_231,
+    VAR_ADDR_232,
+    VAR_ADDR_233,
+    VAR_ADDR_234,
+    VAR_ADDR_235,
+    VAR_ADDR_236,
+    VAR_ADDR_237,
+    VAR_ADDR_238,
+    VAR_ADDR_239,
+    VAR_ADDR_240,
+    VAR_ADDR_241,
+    VAR_ADDR_242,
+    VAR_ADDR_243,
+    VAR_ADDR_244,
+    VAR_ADDR_245,
+    VAR_ADDR_246,
+    VAR_ADDR_247,
+    VAR_ADDR_248,
+    VAR_ADDR_249,
+    VAR_ADDR_250,
+    VAR_ADDR_251,
+    VAR_ADDR_252,
+    VAR_ADDR_253,
+    VAR_ADDR_254,
+    VAR_ADDR_255,
+    VAR_ADDR_256,
+    VAR_ADDR_257,
+    VAR_ADDR_258,
+    VAR_ADDR_259,
+    VAR_ADDR_260,
+    VAR_ADDR_261,
+    VAR_ADDR_262,
+    VAR_ADDR_263,
+    VAR_ADDR_264,
+    VAR_ADDR_265,
+    VAR_ADDR_266,
+    VAR_ADDR_267,
+    VAR_ADDR_268,
+    VAR_ADDR_269,
+    VAR_ADDR_270,
+    VAR_ADDR_271,
+    VAR_ADDR_272,
+    VAR_ADDR_273,
+    VAR_ADDR_274,
+    VAR_ADDR_275,
+    VAR_ADDR_276,
+    VAR_ADDR_277,
+    VAR_ADDR_278,
+    VAR_ADDR_279,
+    VAR_ADDR_280,
+    VAR_ADDR_281,
+    VAR_ADDR_282,
+    VAR_ADDR_283,
+    VAR_ADDR_284,
+    VAR_ADDR_285,
+    VAR_ADDR_286,
+    VAR_ADDR_287,
+    VAR_ADDR_288,
+    VAR_ADDR_289,
+    VAR_ADDR_290,
+    VAR_ADDR_291,
+    VAR_ADDR_292,
+    VAR_ADDR_293,
+    VAR_ADDR_294,
+    VAR_ADDR_295,
+    VAR_ADDR_296,
+    VAR_ADDR_297,
+    VAR_ADDR_298,
+    VAR_ADDR_299,
+    VAR_ADDR_300,
+    VAR_ADDR_301,
+    VAR_ADDR_302,
+    VAR_ADDR_303,
+    VAR_ADDR_304,
+    VAR_ADDR_305,
+    VAR_ADDR_306,
+    VAR_ADDR_307,
+    VAR_ADDR_308,
+    VAR_ADDR_309,
+    VAR_ADDR_310,
+    VAR_ADDR_311,
+    VAR_ADDR_312,
+    VAR_ADDR_313,
+    VAR_ADDR_314,
+    VAR_ADDR_315,
+    VAR_ADDR_316,
+    VAR_ADDR_317,
+    VAR_ADDR_318,
+    VAR_ADDR_319,
+    VAR_ADDR_320,
+    VAR_ADDR_321,
+    VAR_ADDR_322,
+    VAR_ADDR_323,
+    VAR_ADDR_324,
+    VAR_ADDR_325,
+    VAR_ADDR_326,
+    VAR_ADDR_327,
+    VAR_ADDR_328,
+    VAR_ADDR_329,
+    VAR_ADDR_330,
+    VAR_ADDR_331,
+    VAR_ADDR_332,
+    VAR_ADDR_333,
+    VAR_ADDR_334,
+    VAR_ADDR_335,
+    VAR_ADDR_336,
+    VAR_ADDR_337,
+    VAR_ADDR_338,
+    VAR_ADDR_339,
+    VAR_ADDR_340,
+    VAR_ADDR_341,
+    VAR_ADDR_342,
+    VAR_ADDR_343,
+    VAR_ADDR_344,
+    VAR_ADDR_345,
+    VAR_ADDR_346,
+    VAR_ADDR_347,
+    VAR_ADDR_348,
+    VAR_ADDR_349,
+    VAR_ADDR_350,
+    VAR_ADDR_351,
+    VAR_ADDR_352,
+    VAR_ADDR_353,
+    VAR_ADDR_354,
+    VAR_ADDR_355,
+    VAR_ADDR_356,
+    VAR_ADDR_357,
+    VAR_ADDR_358,
+    VAR_ADDR_359,
+    VAR_ADDR_360,
+    VAR_ADDR_361,
+    VAR_ADDR_362,
+    VAR_ADDR_363,
+    VAR_ADDR_364,
+    VAR_ADDR_365,
+    VAR_ADDR_366,
+    VAR_ADDR_367,
+    VAR_ADDR_368,
+    VAR_ADDR_369,
+    VAR_ADDR_370,
+    VAR_ADDR_371,
+    VAR_ADDR_372,
+    VAR_ADDR_373,
+    VAR_ADDR_374,
+    VAR_ADDR_375,
+    VAR_ADDR_376,
+    VAR_ADDR_377,
+    VAR_ADDR_378,
+    VAR_ADDR_379,
+    VAR_ADDR_380,
+    VAR_ADDR_381,
+    VAR_ADDR_382,
+    VAR_ADDR_383
 };
 
 
@@ -430,7 +430,8 @@ const uint16_t VirtAddVarTab[NB_OF_VAR] =
 // It is also important to use the matching typeId otherwise data will not be (re)store in a number of cases
 // Some configuration values are currently not in this structure since saving them is more complex. See LoadEeprom/SaveEeprom functions.
 
-const ConfigEntryDescriptor ConfigEntryInfo[] = {
+const ConfigEntryDescriptor ConfigEntryInfo[] =
+{
     { ConfigEntry_UInt8, EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX},
     { ConfigEntry_UInt32_16, EEPROM_FREQ_STEP,&df.selected_idx,3,0,T_STEP_MAX_STEPS-2},
     { ConfigEntry_UInt8, EEPROM_TX_AUDIO_SRC,&ts.tx_audio_source,0,0,TX_AUDIO_MAX_ITEMS},
@@ -532,7 +533,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     { ConfigEntry_UInt8, EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS},
     { ConfigEntry_UInt8, EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_MAX_ENTRY,PA_LEVEL_FULL,PA_LEVEL_MAX_ENTRY},
     { ConfigEntry_UInt8, EEPROM_CAT_XLAT,&ts.xlat,1,0,1},
-	UI_C_EEPROM_BAND_5W_PF( 0,80,m)
+    UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
     UI_C_EEPROM_BAND_5W_PF(2,40,m)
     UI_C_EEPROM_BAND_5W_PF(3,30,m)
@@ -567,19 +568,24 @@ const ConfigEntryDescriptor ConfigEntryInfo[] = {
     UI_C_EEPROM_BAND_FULL_PF(15,630,m)
     UI_C_EEPROM_BAND_FULL_PF(16,160,m)
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
-    {ConfigEntry_Stop}
+    {
+        ConfigEntry_Stop
+    }
 };
 
 // TODO: LINEAR SEARCH IS VERY BAD FOR LARGER SETS, replace with more clever strategy.
 // for use case in menu this acceptable, however
-const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id) {
-  int idx;
-  const ConfigEntryDescriptor* retval = NULL;
-    for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop; idx++) {
-      if (ConfigEntryInfo[idx].id == id) {
-        retval = &ConfigEntryInfo[idx];
-        break;
-      }
+const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id)
+{
+    int idx;
+    const ConfigEntryDescriptor* retval = NULL;
+    for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop; idx++)
+    {
+        if (ConfigEntryInfo[idx].id == id)
+        {
+            retval = &ConfigEntryInfo[idx];
+            break;
+        }
     }
     return retval;
 }
@@ -598,52 +604,61 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, v
 }
 */
 
-static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
+{
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
     {
         *val_ptr = value;
-        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
             *val_ptr = default_val;
         }
     }
 }
 
-static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
+{
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
     {
         *val_ptr = value;
-        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
             *val_ptr = default_val;
         }
     }
 }
 
 
-static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t addr, volatile uint32_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val ) {
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t addr, volatile uint32_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
+{
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
     {
         *val_ptr = value;
-        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
             *val_ptr = default_val;
         }
     }
 }
 
-static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int32_16(uint16_t addr, volatile int32_t* val_ptr, int default_val, int min_val, int max_val ) {
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int32_16(uint16_t addr, volatile int32_t* val_ptr, int default_val, int min_val, int max_val )
+{
     uint16_t value;
     if(Read_EEPROM(addr, &value) == 0)
     {
         *val_ptr = (int16_t)value;
-        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
             *val_ptr = default_val;
         }
     }
 }
 
-static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile uint32_t* val_ptr, uint32_t default_val, uint32_t min_val, uint32_t max_val) {
+static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile uint32_t* val_ptr, uint32_t default_val, uint32_t min_val, uint32_t max_val)
+{
     uint16_t valueH,valueL;
     if(Read_EEPROM(addrH, &valueH) == 0 && Read_EEPROM(addrL, &valueL) == 0)
     {
@@ -652,22 +667,26 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
         *val_ptr <<=16;
         *val_ptr |= valueL;
 
-        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults) {
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
             *val_ptr = default_val;
         }
     }
 }
 
-static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val ) {
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val )
+{
     Write_EEPROM(addr, set_val);
 }
 
-static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val ) {
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val )
+{
     Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
     Write_EEPROM(addrL, (uint16_t)(set_val));
 }
 
-void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg) {
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg)
+{
     uint32_t value32;
     uint16_t value16;
 
@@ -693,7 +712,8 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
             vforeg->dial_value = value32;
         }
         else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-        {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        {
+            // xxxx relax memory-save frequency restrictions and is it within the allowed range?
             vforeg->dial_value = value32;
         }
         else
@@ -711,100 +731,116 @@ static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Bool(uint16_t addr, 
 }
 */
 
-static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val, uint16_t default_val ) {
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val, uint16_t default_val )
+{
     UiWriteSettingEEPROM_UInt16(addr,set_val,default_val);
 }
 
-static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Int32_16(uint16_t addr, int32_t set_val, int32_t default_val ) {
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Int32_16(uint16_t addr, int32_t set_val, int32_t default_val )
+{
     UiWriteSettingEEPROM_UInt16(addr,(uint16_t)(int16_t)set_val,default_val);
 }
 
 
-static void UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg) {
+static void UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg)
+{
 
     // ------------------------------------------------------------------------------------
     // Read Band and Mode saved values - update if changed
     UiWriteSettingEEPROM_UInt16(band_mode + i,
-            (vforeg->decod_mode << 8),
-            ((vforeg->decod_mode & 0x0f) << 8)
-    );
+                                (vforeg->decod_mode << 8),
+                                ((vforeg->decod_mode & 0x0f) << 8)
+                               );
     // Try to read Freq saved values - update if changed
     UiWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
 }
 
-void UiWriteSettingEEPROM_Filter() {
-  int idx, mem_idx;
-  for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-    for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
-      UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+void UiWriteSettingEEPROM_Filter()
+{
+    int idx, mem_idx;
+    for (idx = 0; idx < FILTER_MODE_MAX; idx++)
+    {
+        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX; mem_idx++)
+        {
+            UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+        }
     }
-  }
 }
 
 void UiReadSettingEEPROM_Filter()
 {
-  int idx, mem_idx;
-  for (idx = 0; idx < FILTER_MODE_MAX;idx++) {
-    for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX;mem_idx++) {
-      UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,AUDIO_FILTER_PATH_NUM-1);
+    int idx, mem_idx;
+    for (idx = 0; idx < FILTER_MODE_MAX; idx++)
+    {
+        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX; mem_idx++)
+        {
+            UiReadSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,&(ts.filter_path_mem[idx][mem_idx]),0,0,AUDIO_FILTER_PATH_NUM-1);
+        }
     }
-  }
 }
 
-void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr) {
-  switch(ced_ptr->typeId) {
+void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
+{
+    switch(ced_ptr->typeId)
+    {
 
-  case ConfigEntry_UInt8:
-    UiReadSettingEEPROM_UInt8(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
-    break;
-  case ConfigEntry_UInt16:
-    UiReadSettingEEPROM_UInt16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
-    break;
-  case ConfigEntry_UInt32_16:
-    UiReadSettingEEPROM_UInt32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
-    break;
-  case ConfigEntry_Int32_16:
-    UiReadSettingEEPROM_Int32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
-    break;
+    case ConfigEntry_UInt8:
+        UiReadSettingEEPROM_UInt8(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+        break;
+    case ConfigEntry_UInt16:
+        UiReadSettingEEPROM_UInt16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+        break;
+    case ConfigEntry_UInt32_16:
+        UiReadSettingEEPROM_UInt32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+        break;
+    case ConfigEntry_Int32_16:
+        UiReadSettingEEPROM_Int32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+        break;
 //  case ConfigEntry_Bool:
 //    UiReadSettingEEPROM_Bool(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
 //    break;
 
-  }
+    }
 }
-void UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_ptr) {
-  switch(ced_ptr->typeId) {
+void UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
+{
+    switch(ced_ptr->typeId)
+    {
 
-  case ConfigEntry_UInt8:
-    UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint8_t*)ced_ptr->val_ptr,ced_ptr->val_default);
-    break;
-  case ConfigEntry_UInt16:
-    UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
-    break;
-  case ConfigEntry_UInt32_16:
-    UiWriteSettingEEPROM_UInt32_16(ced_ptr->id,*(uint32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
-    break;
-  case ConfigEntry_Int32_16:
-    UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
-    break;
+    case ConfigEntry_UInt8:
+        UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint8_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        break;
+    case ConfigEntry_UInt16:
+        UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        break;
+    case ConfigEntry_UInt32_16:
+        UiWriteSettingEEPROM_UInt32_16(ced_ptr->id,*(uint32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        break;
+    case ConfigEntry_Int32_16:
+        UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        break;
 //  case ConfigEntry_Bool:
 //    UiWriteSettingEEPROM_Bool(ced_ptr->id,*(bool*)ced_ptr->val_ptr,ced_ptr->val_default);
 //    break;
-  }
+    }
 }
 
-void UiConfiguration_WriteConfigEntries() {
-  int idx;
-  for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop ;idx++) {
-    UiConfiguration_WriteConfigEntryData(&ConfigEntryInfo[idx]);
-  }
+void UiConfiguration_WriteConfigEntries()
+{
+    int idx;
+    for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop ; idx++)
+    {
+        UiConfiguration_WriteConfigEntryData(&ConfigEntryInfo[idx]);
+    }
 }
 
-static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries() {
-  int idx;
-  for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop ;idx++) {
-    UiConfiguration_ReadConfigEntryData(&ConfigEntryInfo[idx]);
-  }
+static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries()
+{
+    int idx;
+    for (idx = 0; ConfigEntryInfo[idx].typeId != ConfigEntry_Stop ; idx++)
+    {
+        UiConfiguration_ReadConfigEntryData(&ConfigEntryInfo[idx]);
+    }
 }
 
 
@@ -856,7 +892,8 @@ void UiConfiguration_LoadEepromValues(void)
         {
             df.tune_new = value32;
         }
-        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))   {   // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        {
             df.tune_new = value32;
         }
         else
@@ -873,7 +910,8 @@ void UiConfiguration_LoadEepromValues(void)
     uint8_t i;
     //
     for(i = 0; i < MAX_BANDS; i++)
-    {   // read from stored bands
+    {
+        // read from stored bands
         // UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, &vfo[VFO_WORK].band[i]);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
@@ -905,8 +943,9 @@ void UiConfiguration_LoadEepromValues(void)
 
     ts.alc_tx_postfilt_gain_var =  ts.alc_tx_postfilt_gain; // "working" copy of variable
 
-    if(!ts.version_number_release) {			// set xlate to -12KHz at first start
-      ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
+    if(!ts.version_number_release)  			// set xlate to -12KHz at first start
+    {
+        ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
     }
 
     ts.dsp_inhibit = dspmode;       // restore setting
@@ -929,76 +968,81 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     bool dspmode;
     uchar demodmode;
 
-    if(ts.txrx_mode != TRX_MODE_RX) {
-      retval = 0xFF00;
-    } else {
-      // disable DSP during write because it decreases speed tremendous
-      dspmode = ts.dsp_inhibit;
-      ts.dsp_inhibit = 1;
-      //  ts.dsp_active &= 0xfa;  // turn off DSP
+    if(ts.txrx_mode != TRX_MODE_RX)
+    {
+        retval = 0xFF00;
+    }
+    else
+    {
+        // disable DSP during write because it decreases speed tremendous
+        dspmode = ts.dsp_inhibit;
+        ts.dsp_inhibit = 1;
+        //  ts.dsp_active &= 0xfa;  // turn off DSP
 
-      // switch to SSB during write when in FM because it decreases speed tremendous
-      demodmode = ts.dmod_mode;
-      if(ts.dmod_mode == DEMOD_FM)
-        ts.dmod_mode = DEMOD_USB;   // if FM switch to USB during write
+        // switch to SSB during write when in FM because it decreases speed tremendous
+        demodmode = ts.dmod_mode;
+        if(ts.dmod_mode == DEMOD_FM)
+            ts.dmod_mode = DEMOD_USB;   // if FM switch to USB during write
 
-      if(ts.ser_eeprom_in_use == 0)
-      {
-        static uint8_t p[MAX_VAR_ADDR*2+2];
-        ts.eeprombuf = p;
-
-        uint16_t i, data;
-
-        ts.eeprombuf[0] = ts.ser_eeprom_type;
-        ts.eeprombuf[1] = ts.ser_eeprom_in_use;
-        for(i=1; i <= MAX_VAR_ADDR; i++)
+        if(ts.ser_eeprom_in_use == 0)
         {
-          Read_SerEEPROM(i, &data);
-          ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
-          data = data>>8;
-          ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+            static uint8_t p[MAX_VAR_ADDR*2+2];
+            ts.eeprombuf = p;
+
+            uint16_t i, data;
+
+            ts.eeprombuf[0] = ts.ser_eeprom_type;
+            ts.eeprombuf[1] = ts.ser_eeprom_in_use;
+            for(i=1; i <= MAX_VAR_ADDR; i++)
+            {
+                Read_SerEEPROM(i, &data);
+                ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
+                data = data>>8;
+                ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
+            }
+            ts.ser_eeprom_in_use = 0xAA;
         }
-        ts.ser_eeprom_in_use = 0xAA;
-      }
 
-	if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
-	    {
-    	// save current band/frequency/mode settings
-    	vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
-    	// Save decode mode
-    	vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
+        if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
+        {
+            // save current band/frequency/mode settings
+            vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
+            // Save decode mode
+            vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
 
-    	// TODO: move value to a static variable, so that it can be read/written with standard approach
-    	UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
-          (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
-          (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
+            // TODO: move value to a static variable, so that it can be read/written with standard approach
+            UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
+                                        (uint16_t)((uint16_t)ts.band| ((uint16_t)ts.dmod_mode << 8)),
+                                        (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8) ));
 
-    	// TODO: move value to a static variable, so that it can be read/written with standard approach
-    	UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
-	    }
-	else
-	  ts.cat_band_index = 255;
+            // TODO: move value to a static variable, so that it can be read/written with standard approach
+            UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
+        }
+        else
+            ts.cat_band_index = 255;
 
-      // Save stored band/mode/frequency memory from RAM
-      for(i = 0; i < MAX_BANDS; i++)  {   // scan through each band's frequency/mode data
-        // UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
-        UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
-        UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
-      }
+        // Save stored band/mode/frequency memory from RAM
+        for(i = 0; i < MAX_BANDS; i++)      // scan through each band's frequency/mode data
+        {
+            // UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW,  &vfo[VFO_WORK].band[i]);
+            UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i]);
+            UiWriteSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
+        }
 
-      UiConfiguration_WriteConfigEntries();
+        UiConfiguration_WriteConfigEntries();
 
-      UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
+        UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
 
-      UiWriteSettingEEPROM_Filter();
+        UiWriteSettingEEPROM_Filter();
 
-      if(ts.ser_eeprom_in_use == 0xAA) {
-        Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-        ts.ser_eeprom_in_use = 0;
-      }
+        if(ts.ser_eeprom_in_use == 0xAA)
+        {
+            Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+            ts.ser_eeprom_in_use = 0;
+        }
 
-      ts.dsp_inhibit = dspmode;   // restore DSP mode
-      ts.dmod_mode = demodmode;   // restore active mode
+        ts.dsp_inhibit = dspmode;   // restore DSP mode
+        ts.dmod_mode = demodmode;   // restore active mode
     }
     return retval;
 }

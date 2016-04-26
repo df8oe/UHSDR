@@ -31,34 +31,34 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Hard Fault exception occurs */
+    while (1)
+    {
+    }
 }
 
 void MemManage_Handler(void)
 {
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Memory Manage exception occurs */
+    while (1)
+    {
+    }
 }
 
 void BusFault_Handler(void)
 {
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Bus Fault exception occurs */
+    while (1)
+    {
+    }
 }
 
 void UsageFault_Handler(void)
 {
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Usage Fault exception occurs */
+    while (1)
+    {
+    }
 }
 
 void SVC_Handler(void)
@@ -75,64 +75,64 @@ void PendSV_Handler(void)
 
 void SysTick_Handler(void)
 {
-  if (UploadCondition != 0x00)
-  {
-    /* Check if User button Pressed */
-    if (STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET)
+    if (UploadCondition != 0x00)
     {
-      if (TimingDelay != 0x00)
-      { 
-        TimingDelay--;
-      }
-      else
-      {
-        if (Counter < 100)
+        /* Check if User button Pressed */
+        if (STM_EVAL_PBGetState(BUTTON_BANDM) == Bit_RESET)
         {
-          Counter++;
+            if (TimingDelay != 0x00)
+            {
+                TimingDelay--;
+            }
+            else
+            {
+                if (Counter < 100)
+                {
+                    Counter++;
+                }
+                else
+                {
+                    Counter = 0x00;
+                }
+            }
         }
         else
         {
-          Counter = 0x00;
+            if (TimingDelay != 0x00)
+            {
+                UploadCondition = 0x00;
+            }
         }
-      }
     }
     else
     {
-      if (TimingDelay != 0x00)
-      { 
-        UploadCondition = 0x00;
-      }
+        TimingDelay_Decrement();
     }
-  }
-  else
-  {
-    TimingDelay_Decrement();
-  }
 }
 
 void EXTI1_IRQHandler(void)
 {
-  if (EXTI_GetITStatus(EXTI_Line1) != RESET)
-  {
-    USB_Host.usr_cb->OverCurrentDetected();
-    EXTI_ClearITPendingBit(EXTI_Line1);
-  }
+    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
+    {
+        USB_Host.usr_cb->OverCurrentDetected();
+        EXTI_ClearITPendingBit(EXTI_Line1);
+    }
 }
 
 void EXTI0_IRQHandler(void)
 {
-  if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-  {
-    EXTI_ClearITPendingBit(EXTI_Line0);
-  }
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+    {
+        EXTI_ClearITPendingBit(EXTI_Line0);
+    }
 }
 
 void TIM2_IRQHandler(void)
 {
-  USB_OTG_BSP_TimerIRQ();
+    USB_OTG_BSP_TimerIRQ();
 }
 
 void OTG_FS_IRQHandler(void)
 {
-  USBH_OTG_ISR_Handler(&USB_OTG_Core);
+    USBH_OTG_ISR_Handler(&USB_OTG_Core);
 }

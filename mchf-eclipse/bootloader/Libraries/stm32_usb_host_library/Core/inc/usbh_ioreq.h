@@ -18,7 +18,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive  ----------------------------------------------*/
 #ifndef __USBH_IOREQ_H
@@ -37,11 +37,11 @@
 /** @addtogroup USBH_LIB_CORE
 * @{
 */
-  
+
 /** @defgroup USBH_IOREQ
   * @brief This file is the header file for usbh_ioreq.c
   * @{
-  */ 
+  */
 
 
 /** @defgroup USBH_IOREQ_Exported_Defines
@@ -52,81 +52,81 @@
 #define USBH_MAX_PACKET_SIZE  0x40
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBH_IOREQ_Exported_Types
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBH_IOREQ_Exported_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_IOREQ_Exported_Variables
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBH_IOREQ_Exported_FunctionsPrototype
   * @{
   */
-USBH_Status USBH_CtlSendSetup ( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
+USBH_Status USBH_CtlSendSetup ( USB_OTG_CORE_HANDLE *pdev,
+                                uint8_t *buff,
                                 uint8_t hc_num);
 
-USBH_Status USBH_CtlSendData ( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint8_t length,
-                                uint8_t hc_num);
+USBH_Status USBH_CtlSendData ( USB_OTG_CORE_HANDLE *pdev,
+                               uint8_t *buff,
+                               uint8_t length,
+                               uint8_t hc_num);
 
-USBH_Status USBH_CtlReceiveData( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint8_t length,
-                                uint8_t hc_num);
+USBH_Status USBH_CtlReceiveData( USB_OTG_CORE_HANDLE *pdev,
+                                 uint8_t *buff,
+                                 uint8_t length,
+                                 uint8_t hc_num);
 
-USBH_Status USBH_BulkReceiveData( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
+USBH_Status USBH_BulkReceiveData( USB_OTG_CORE_HANDLE *pdev,
+                                  uint8_t *buff,
+                                  uint16_t length,
+                                  uint8_t hc_num);
+
+USBH_Status USBH_BulkSendData ( USB_OTG_CORE_HANDLE *pdev,
+                                uint8_t *buff,
                                 uint16_t length,
                                 uint8_t hc_num);
 
-USBH_Status USBH_BulkSendData ( USB_OTG_CORE_HANDLE *pdev, 
-                                uint8_t *buff, 
-                                uint16_t length,
-                                uint8_t hc_num);
-
-USBH_Status USBH_InterruptReceiveData( USB_OTG_CORE_HANDLE *pdev, 
-                                       uint8_t             *buff, 
+USBH_Status USBH_InterruptReceiveData( USB_OTG_CORE_HANDLE *pdev,
+                                       uint8_t             *buff,
                                        uint8_t             length,
                                        uint8_t             hc_num);
 
-USBH_Status USBH_InterruptSendData( USB_OTG_CORE_HANDLE *pdev, 
-                                    uint8_t *buff, 
+USBH_Status USBH_InterruptSendData( USB_OTG_CORE_HANDLE *pdev,
+                                    uint8_t *buff,
                                     uint8_t length,
                                     uint8_t hc_num);
 
 USBH_Status USBH_CtlReq (USB_OTG_CORE_HANDLE *pdev,
-                         USBH_HOST *phost, 
+                         USBH_HOST *phost,
                          uint8_t             *buff,
                          uint16_t            length);
 /**
   * @}
-  */ 
+  */
 
 #endif /* __USBH_IOREQ_H */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
@@ -134,7 +134,7 @@ USBH_Status USBH_CtlReq (USB_OTG_CORE_HANDLE *pdev,
 
 /**
 * @}
-*/ 
+*/
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
 
