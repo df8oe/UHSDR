@@ -32,6 +32,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_menu.h"
 #include "ui_si570.h"
+#include "codec.h"
 
 // Keyboard Driver
 // #include "keyb_driver.h"
@@ -197,32 +198,29 @@ void SysTick_Handler(void)
 //*----------------------------------------------------------------------------
 void EXTI0_IRQHandler(void)
 {
-    // Checks whether the User Button EXTI line is asserted
-    //
-    // WARNING:
-    // Due to an apparent HARDWARE bug in the MCU this interrupt seems to be occasionally triggered by transitions
-    // of lines OTHER than the PADDLE_DAH (PE0) line, specifically the PC4 and PC5 (Step- and Step+) lines.
-    //
-    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-    {
-        // Call handler
-        if(ts.dmod_mode == DEMOD_CW)
-        {
-            if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	 	// was DAH line low?
-            {
-                cw_gen_dah_IRQ();		// Yes - go to CW state machine
-            }
-        }
-        //
-        // PTT activate
-        else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
-        {
-            if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	 	// was PTT line low?
-            {
-                ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-            }
-        }
-    }
+	// Checks whether the User Button EXTI line is asserted
+	//
+	// WARNING:
+	// Due to an apparent HARDWARE bug in the MCU this interrupt seems to be occasionally triggered by transitions
+	// of lines OTHER than the PADDLE_DAH (PE0) line, specifically the PC4 and PC5 (Step- and Step+) lines.
+	//
+	if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+	{
+		// Call handler
+		if(ts.dmod_mode == DEMOD_CW)	{
+			if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	{	// was DAH line low?
+				cw_gen_dah_IRQ();		// Yes - go to CW state machine
+			}
+		}
+
+		// PTT activate
+		else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
+		{
+			if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	{	// was PTT line low?
+				ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+			}
+		}
+	}
 
     // Clears the EXTI's line pending bit
     EXTI_ClearITPendingBit(EXTI_Line0);
@@ -862,24 +860,20 @@ int main(void)
     // UI HW init
     ui_driver_init();
 
-    // Audio HW init - again, using EEPROM-loaded values
-    audio_driver_init();
-    //
-    //
-    AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
-    //
-    AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
-    //
-    AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
-    //
-    AudioManagement_LoadBeepFreq();		// load/set beep frequency
+	// Audio HW init
+	audio_driver_init();
+
+	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
+	AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
+	AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
+	AudioManagement_LoadBeepFreq();		// load/set beep frequency
 
     AudioFilter_SetDefaultMemories();
 
-    UiInitRxParms();
-    //
-    ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
-    uiCodecMute(0);					// make cure codec is un-muted
+	UiInitRxParms();
+
+	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
+	Codec_Mute(0);					// make sure codec is un-muted
 
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
