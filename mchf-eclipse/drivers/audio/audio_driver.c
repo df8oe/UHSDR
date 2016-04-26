@@ -95,15 +95,26 @@ static float32_t		iir_aa_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 //
 // variables for RX manual notch IIR filter
-static arm_biquad_casd_df1_inst_f32 IIR_Notch = {
-		.numStages = 4,
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 = {
+		.numStages = 3,
 		.pCoeffs = (float32_t *)(float32_t [])
 		{
-			1,0,0,0,0,1,0,0,0,0	,		1,0,0,0,0,1,0,0,0,0
-		}, // 4 x 5 = 20 coefficients
+			1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0
+		}, // 3 x 5 = 15 coefficients
 
 		.pState = (float32_t *)(float32_t [])
-			{0 ,0 ,0 ,0,0,0,0,0,0 ,0 ,0 ,0,0,0,0,0} // 4 x 4 = 16 state variables
+			{0,0,0,0,   0,0,0,0,   0,0,0,0   } // 3 x 4 = 12 state variables
+};
+// variables for RX manual notch IIR filter
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 = {
+		.numStages = 1,
+		.pCoeffs = (float32_t *)(float32_t [])
+		{
+			1,0,0,0,0
+		}, // 1 x 5 = 5 coefficients
+
+		.pState = (float32_t *)(float32_t [])
+			{0,0,0,0     } // 1 x 4 = 4 state variables
 };
 //
 // variables for FM squelch IIR filters
@@ -363,9 +374,8 @@ void audio_driver_set_rx_audio_filter(void)
 	/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	 * Cascaded biquad (notch, peak, lowShelf, highShelf) [DD4WH, april 2016]
 	 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	// filter with four stages (= 8th order IIR)
-	// TODO: put notch & peak-filter into decimated path and dynamically react to different decimation rates
-	// bass can also be put into decimated part, treble stays at 48kHz, because of high f0 and associated problems with aliasing
+	// biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
+	// biquad 2 :   Treble in the 48kHz path
 	// DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
 	// www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
 	//
@@ -380,10 +390,19 @@ void audio_driver_set_rx_audio_filter(void)
 	// Therefore, we have to use negated a1 and a2 for use with the ARM function
 	// notch implementation
 	//
-	float32_t FS = 48000; // should this become a global variable?
+	//
+	float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
+	if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+		FSdec = 24000;
+	if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+		FSdec = 12000;
+
+	float32_t FS = 48000; // we need this for the treble filter
+
+	// the notch filter is in biquad 1 and works at the decimated sample rate FSdec
 	float32_t f0 = ts.notch_frequency;
 	float32_t Q = 10; // larger Q gives narrower notch
-	float32_t w0 = 2 * PI * f0 / FS;
+	float32_t w0 = 2 * PI * f0 / FSdec;
 	float32_t alpha = sin(w0) / (2 * Q);
 	float32_t a0 = 1; // gain scaling
 	float32_t b0,b1,b2,a1,a2;
@@ -406,27 +425,28 @@ void audio_driver_set_rx_audio_filter(void)
 	// setting the Coefficients in the notch filter instance
 	// while not using pointers
 	if (ts.notch_enabled) {
-	IIR_Notch.pCoeffs[0] = b0;
-	IIR_Notch.pCoeffs[1] = b1;
-	IIR_Notch.pCoeffs[2] = b2;
-	IIR_Notch.pCoeffs[3] = a1;
-	IIR_Notch.pCoeffs[4] = a2;
+	IIR_biquad_1.pCoeffs[0] = b0;
+	IIR_biquad_1.pCoeffs[1] = b1;
+	IIR_biquad_1.pCoeffs[2] = b2;
+	IIR_biquad_1.pCoeffs[3] = a1;
+	IIR_biquad_1.pCoeffs[4] = a2;
 	}
 	else { // passthru
-		IIR_Notch.pCoeffs[0] = 1;
-		IIR_Notch.pCoeffs[1] = 0;
-		IIR_Notch.pCoeffs[2] = 0;
-		IIR_Notch.pCoeffs[3] = 0;
-		IIR_Notch.pCoeffs[4] = 0;
+		IIR_biquad_1.pCoeffs[0] = 1;
+		IIR_biquad_1.pCoeffs[1] = 0;
+		IIR_biquad_1.pCoeffs[2] = 0;
+		IIR_biquad_1.pCoeffs[3] = 0;
+		IIR_biquad_1.pCoeffs[4] = 0;
 	}
 
+	// the peak filter is in biquad 1 and works at the decimated sample rate FSdec
 	if(ts.peak_enabled) {
 	// peak filter
 	f0 = ts.peak_frequency;
-	Q = 10; //
-	w0 = 2 * PI * f0 / FS;
+	Q = 15; //
+	w0 = 2 * PI * f0 / FSdec;
 	alpha = sin(w0) / (2 * Q);
-	A = 2.371; // 10^(10/40); 15dB gain
+	A = 3; // 10^(10/40); 15dB gain
 
 	b0 = 1 + (alpha * A);
 	b1 = - 2 * cos(w0);
@@ -442,27 +462,30 @@ void audio_driver_set_rx_audio_filter(void)
 	a1 = a1/a0;
 	a2 = a2/a0;
 
-	IIR_Notch.pCoeffs[5] = b0;
-	IIR_Notch.pCoeffs[6] = b1;
-	IIR_Notch.pCoeffs[7] = b2;
-	IIR_Notch.pCoeffs[8] = a1;
-	IIR_Notch.pCoeffs[9] = a2;
+	IIR_biquad_1.pCoeffs[5] = b0;
+	IIR_biquad_1.pCoeffs[6] = b1;
+	IIR_biquad_1.pCoeffs[7] = b2;
+	IIR_biquad_1.pCoeffs[8] = a1;
+	IIR_biquad_1.pCoeffs[9] = a2;
 	}
 	else { //passthru
-		IIR_Notch.pCoeffs[5] = 1;
-		IIR_Notch.pCoeffs[6] = 0;
-		IIR_Notch.pCoeffs[7] = 0;
-		IIR_Notch.pCoeffs[8] = 0;
-		IIR_Notch.pCoeffs[9] = 0;
+		IIR_biquad_1.pCoeffs[5] = 1;
+		IIR_biquad_1.pCoeffs[6] = 0;
+		IIR_biquad_1.pCoeffs[7] = 0;
+		IIR_biquad_1.pCoeffs[8] = 0;
+		IIR_biquad_1.pCoeffs[9] = 0;
 	}
 
 	// EQ shelving filters
 	//
+	// the bass filter is in biquad 1 and works at the decimated sample rate FSdec
+	//
 	// Bass
 	//
-	f0 = 300;
+	f0 = 400;
+	w0 = 2 * PI * f0 / FSdec;
 	A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
-	S = 0.5; // shelf slope, 1 is maximum value
+	S = 0.9; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	float32_t cosw0 = cos(w0);
 	float32_t twoAa = 2 * sqrt(A) * alpha;
@@ -482,11 +505,11 @@ void audio_driver_set_rx_audio_filter(void)
 	a1 = a1/a0;
 	a2 = a2/a0;
 
-	IIR_Notch.pCoeffs[10] = b0;
-	IIR_Notch.pCoeffs[11] = b1;
-	IIR_Notch.pCoeffs[12] = b2;
-	IIR_Notch.pCoeffs[13] = a1;
-	IIR_Notch.pCoeffs[14] = a2;
+	IIR_biquad_1.pCoeffs[10] = b0;
+	IIR_biquad_1.pCoeffs[11] = b1;
+	IIR_biquad_1.pCoeffs[12] = b2;
+	IIR_biquad_1.pCoeffs[13] = a1;
+	IIR_biquad_1.pCoeffs[14] = a2;
 	/*
 	IIR_Notch.pCoeffs[10] = 1;
 	IIR_Notch.pCoeffs[11] = 0;
@@ -496,9 +519,12 @@ void audio_driver_set_rx_audio_filter(void)
 */
 	// Treble
 	//
-	f0 = 7000;
+	// the treble filter is in biquad 2 and works at 48000ksps
+	f0 = 6000;
+	FS = 48000;
+	w0 = 2 * PI * f0 / FS;
 	A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
-	S = 0.6; // shelf slope, 1 is maximum value
+	S = 0.9; // shelf slope, 1 is maximum value
 	alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
 	cosw0 = cos(w0);
 	twoAa = 2 * sqrt(A) * alpha;
@@ -518,11 +544,11 @@ void audio_driver_set_rx_audio_filter(void)
 	a1 = a1/a0;
 	a2 = a2/a0;
 
-	IIR_Notch.pCoeffs[15] = b0;
-	IIR_Notch.pCoeffs[16] = b1;
-	IIR_Notch.pCoeffs[17] = b2;
-	IIR_Notch.pCoeffs[18] = a1;
-	IIR_Notch.pCoeffs[19] = a2;
+	IIR_biquad_2.pCoeffs[0] = b0;
+	IIR_biquad_2.pCoeffs[1] = b1;
+	IIR_biquad_2.pCoeffs[2] = b2;
+	IIR_biquad_2.pCoeffs[3] = a1;
+	IIR_biquad_2.pCoeffs[4] = a2;
 
 	/*	// pass-thru-coefficients
 	  	IIR_Notch.pCoeffs[15] = 1;
@@ -1948,6 +1974,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING)), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 		else		// Not AM
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+
+		// this is the biquad filter, a notch, peak, and lowshelf filter
+		arm_biquad_cascade_df1_f32 (&IIR_biquad_1, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, psize/2);
 		//
 		// resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
 		//
@@ -1968,12 +1997,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 			arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_2K5, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 	}
 	//
-	/*
-	 * this would be the right place for a manual notch filter !? (in 48ksps)
-	 */
-	// calculate in b_buffer!
-	// this is the biquad filter, a cascade of notch filter, peak filter and low shelf, highshelf filter sections
-	arm_biquad_cascade_df1_f32 (&IIR_Notch, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
+	// this is the biquad filter, a highshelf filter
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_2, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
 
 	//
 	if((ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))	{	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
