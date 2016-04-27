@@ -414,6 +414,9 @@ void audio_driver_set_rx_audio_filter(void)
     // Therefore, we have to use negated a1 and a2 for use with the ARM function
     // notch implementation
     //
+    // we also have to divide every coefficient by a0 !
+    // y[n] = b0/a0 * x[n] + b1/a0 * x[n-1] + b2/a0 * x[n-2] - a1/a0 * y[n-1] - a2/a0 * y[n-2]
+    //
     //
     float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
@@ -439,7 +442,7 @@ void audio_driver_set_rx_audio_filter(void)
     a1 = 2 * cos(w0); // already negated!
     a2 = alpha - 1; // already negated!
 
-    // scaling the coefficients for gain
+    // scaling the coefficients
     b0 = b0/a0;
     b1 = b1/a0;
     b2 = b2/a0;
@@ -485,7 +488,9 @@ void audio_driver_set_rx_audio_filter(void)
         a2 = (alpha/A) - 1; // already negated!
 */
         // test the BPF coefficients, because actually we want a "peak" filter without gain!
-        f0 = ts.peak_frequency;
+    	// Bandpass filter 0dB gain
+    	// = CW peak filter = APF
+    	f0 = ts.peak_frequency;
         Q = 20; //
         w0 = 2 * PI * f0 / FSdec;
         alpha = sin(w0) / (2 * Q);
@@ -529,7 +534,7 @@ void audio_driver_set_rx_audio_filter(void)
     //
     // Bass
     //
-    f0 = 400;
+    f0 = 300;
     w0 = 2 * PI * f0 / FSdec;
     A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
     S = 0.9; // shelf slope, 1 is maximum value
@@ -551,6 +556,17 @@ void audio_driver_set_rx_audio_filter(void)
     b2 = b2/a0;
     a1 = a1/a0;
     a2 = a2/a0;
+
+    // scaling the feedforward coefficients for gain adjustment !
+    // "DC gain of an IIR filter is the sum of the filters´ feedforward coeffs divided by
+    // 1 minus the sum of the filters´ feedback coeffs" (Lyons 2011)
+    //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
+    // does not work for some reason?
+    // I take a divide by a constant instead !
+    float32_t DCgain = 3; //
+    b0 = b0 / DCgain;
+    b1 = b1 / DCgain;
+    b2 = b2 / DCgain;
 
     IIR_biquad_1.pCoeffs[10] = b0;
     IIR_biquad_1.pCoeffs[11] = b1;
@@ -590,6 +606,12 @@ void audio_driver_set_rx_audio_filter(void)
     b2 = b2/a0;
     a1 = a1/a0;
     a2 = a2/a0;
+
+
+    DCgain = 3; //
+    b0 = b0 / DCgain;
+    b1 = b1 / DCgain;
+    b2 = b2 / DCgain;
 
     IIR_biquad_2.pCoeffs[0] = b0;
     IIR_biquad_2.pCoeffs[1] = b1;
