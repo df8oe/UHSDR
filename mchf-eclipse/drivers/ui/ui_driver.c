@@ -378,13 +378,15 @@ static void   UiDriver_LcdBlankingProcessTimer()
 
 static void UiDriver_LcdBlankingStealthSwitch()
 {
-    if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)         // Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
-        ts.lcd_backlight_blanking &= ~LCD_BLANKING_ENABLE;      // yes - clear that bit, turning off "stealth" mode
-    else
-    {
-        if(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK)    // bit NOT set AND the timing set to NON-zero?
-            ts.lcd_backlight_blanking |= LCD_BLANKING_ENABLE;       // no - turn on MSB to activate "stealth" mode
-    }
+	if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)
+	{         // Yes - is MSB set, indicating "stealth" (backlight timed-off) mode?
+		ts.lcd_backlight_blanking &= ~LCD_BLANKING_ENABLE;
+	} // yes - clear that bit, turning off "stealth" mode
+	else
+	{
+		if(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK)    // bit NOT set AND the timing set to NON-zero?
+			ts.lcd_backlight_blanking |= LCD_BLANKING_ENABLE;       // no - turn on MSB to activate "stealth" mode
+	}
 }
 
 
@@ -516,7 +518,6 @@ void UiDriver_HandleSwitchToNextDspMode()
         			{
         			ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
         			}
-        		//
         		else	{
         			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
         		}
@@ -6266,116 +6267,118 @@ static void UiDriverHandleLowerMeter()
 //*----------------------------------------------------------------------------
 static void UiDriverHandlePowerSupply()
 {
-    ulong	val_p, calib;
-    int		col;
+	ulong	val_p, calib;
+	int		col;
 
-//	char txt[32];
+	static ulong	powerdown_delay = 0;
 
-    static ulong	powerdown_delay = 0;
+	if(ts.powering_down)	 	// are we powering down?
+	{
+		powerdown_delay++;		// yes - do the powerdown delay
+		if(powerdown_delay > POWERDOWN_DELAY_COUNT)	 	// is it time to power down
+		{
+			POWER_DOWN_PIO->BSRRL = POWER_DOWN;			// yes - kill the power
+			powerdown_delay = POWERDOWN_DELAY_COUNT;	// limit count if power button is being held down/stuck for a while
+		}
+	}
 
-    if(ts.powering_down)	 	// are we powering down?
-    {
-        powerdown_delay++;		// yes - do the powerdown delay
-        if(powerdown_delay > POWERDOWN_DELAY_COUNT)	 	// is it time to power down
-        {
-            POWER_DOWN_PIO->BSRRL = POWER_DOWN;			// yes - kill the power
-            powerdown_delay = POWERDOWN_DELAY_COUNT;	// limit count if power button is being held down/stuck for a while
-        }
-    }
+	if(!ts.boot_halt_flag)		// bail out now if we are in "boot halt" mode
+	{
+		pwmt.skip++;
+		if(pwmt.skip >= POWER_SAMPLES_SKP)
+		{
 
-    if(ts.boot_halt_flag)		// bail out now if we are in "boot halt" mode
-        return;
+			pwmt.skip = 0;
 
-    pwmt.skip++;
-    if(pwmt.skip < POWER_SAMPLES_SKP)
-        return;
+			// Collect samples
+			if(pwmt.p_curr < POWER_SAMPLES_CNT)
+			{
+				val_p = ADC_GetConversionValue(ADC1);
 
-    pwmt.skip = 0;
+				// Add to accumulator
+				pwmt.pwr_aver = pwmt.pwr_aver + val_p;
+				pwmt.p_curr++;
+			}
+			else
+			{
 
-    // Collect samples
-    if(pwmt.p_curr < POWER_SAMPLES_CNT)
-    {
-        val_p = ADC_GetConversionValue(ADC1);
+				// Get average
+				val_p  = pwmt.pwr_aver/POWER_SAMPLES_CNT;
 
-        // Add to accumulator
-        pwmt.pwr_aver = pwmt.pwr_aver + val_p;
-        pwmt.p_curr++;
+				calib = (ulong)ts.voltmeter_calibrate;	// get local copy of calibration factor
+				calib += 900;					// offset to 1000 (nominal)
+				val_p = (calib) * val_p;		// multiply by calibration factor, sample count and A/D scale full scale count
+				val_p /= (1000);				// divide by 1000 (unity calibration factor), sample count and A/D full scale count
 
-        return;
-    }
+				// Correct for divider
+				//val_p -= 550;
+				val_p *= 4;
 
+				// Reset accumulator
+				pwmt.p_curr     = 0;
+				pwmt.pwr_aver   = 0;
 
-    // Get average
-    val_p  = pwmt.pwr_aver/POWER_SAMPLES_CNT;
+				col = COL_PWR_IND;	// Assume normal voltage, so Set normal color
 
-    calib = (ulong)ts.voltmeter_calibrate;	// get local copy of calibration factor
-    calib += 900;					// offset to 1000 (nominal)
-    val_p = (calib) * val_p;		// multiply by calibration factor, sample count and A/D scale full scale count
-    val_p /= (1000);				// divide by 1000 (unity calibration factor), sample count and A/D full scale count
+				if(val_p < 9500)		// below 9.5 volts
+					col = Red;			// display red digits
+				else if(val_p < 10500)	// below 10.5 volts
+					col = Orange;		// make them orange
+				else if(val_p < 11000)	// below 11.0 volts
+					col = Yellow;		// make them yellow
 
-    // Correct for divider
-    //val_p -= 550;
-    val_p *= 4;
-
-    // Reset accumulator
-    pwmt.p_curr     = 0;
-    pwmt.pwr_aver   = 0;
-
-
-
-    //
-    col = COL_PWR_IND;	// Assume normal voltage, so Set normal color
-    //
-    if(val_p < 9500)		// below 9.5 volts
-        col = Red;			// display red digits
-    else if(val_p < 10500)	// below 10.5 volts
-        col = Orange;		// make them orange
-    else if(val_p < 11000)	// below 11.0 volts
-        col = Yellow;		// make them yellow
-
-    //
-    // did we detect a voltage change?
-    //
-    if(pwmt.voltage != val_p)	 	// Time to update - or was this the first time it was called?
-    {
-        char digits[6];
-        val_p /= 10;
-        snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
-        UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
-    }
+				// did we detect a voltage change?
+				if(pwmt.voltage != val_p)	 	// Time to update - or was this the first time it was called?
+				{
+					char digits[6];
+					val_p /= 10;
+					snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
+					UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+				}
+			}
+		}
+	}
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateLoMeter
-//* Object              : LO temperature compensation indicator
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-// FIXME: DO NOT REDRAW UNCHANGED BOXES
+/*
+ * @brief Displays temp compensation value in a bar
+ */
 static void UiDriverUpdateLoMeter(uchar val,uchar active)
 {
-    if (val < 26)
-    {
-        //  Only redraw if inside of the range
+	static int last_active = 99;
+	static uint32_t last_active_val = 99;
+	uchar 	i,v_s = 3;
+	int		clr = White;
 
-        uchar 	i,v_s = 3;
-        int		clr = White;
-
-        // Draw first indicator
-        for(i = 1; i < 26; i++)
-        {
-            if (active)
-            {
-                clr = val==i?Blue:White;
-            }
-            else
-            {
-                clr = Grey;
-            }
-            UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,clr);
-        }
-    }
+	if (last_active != active)
+	{
+		last_active = active;
+		last_active_val = val;
+		// Full redraw
+		for(i = 1; i < 26; i++)
+		{
+			if (active)
+			{
+				clr = val==i?Blue:White;
+			}
+			else
+			{
+				clr = Grey;
+			}
+			UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + i*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,clr);
+		}
+	}
+	else if (active && (last_active_val != val))
+	{
+		// Partial redraw
+		if (val>1 && val < 26) {
+			UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + val*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,Blue);
+		}
+		if (last_active_val>1 && last_active_val < 26) {
+			UiLcdHy28_DrawStraightLineTriple(((POS_TEMP_IND_X + 1) + last_active_val*4),((POS_TEMP_IND_Y + 21) - v_s),v_s,LCD_DIR_VERTICAL,White);
+		}
+		last_active_val = val;
+	}
 }
 
 //*----------------------------------------------------------------------------
