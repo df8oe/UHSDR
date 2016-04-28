@@ -451,7 +451,7 @@ void audio_driver_set_rx_audio_filter(void)
     // while not using pointers
     if (ts.notch_enabled)
     {
-        IIR_biquad_1.pCoeffs[0] = b0;
+    	IIR_biquad_1.pCoeffs[0] = b0;
         IIR_biquad_1.pCoeffs[1] = b1;
         IIR_biquad_1.pCoeffs[2] = b2;
         IIR_biquad_1.pCoeffs[3] = a1;
@@ -472,13 +472,14 @@ void audio_driver_set_rx_audio_filter(void)
        // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
     	f0 = ts.peak_frequency;
-        Q = 15; //
-        w0 = 2 * PI * f0 / FSdec;
-        alpha = sin(w0) / (2 * Q);
-        //A = 1; // gain = 1
-        //        A = 3; // 10^(10/40); 15dB gain
-//        A = 1.4125; // 10^(6/40); 6dB gain
-        A = 2.0;
+        //Q = 15; //
+        // bandwidth in octaves between midpoint (Gain / 2) gain frequencies
+        float32_t BW = 0.05;
+    	w0 = 2 * PI * f0 / FSdec;
+        //alpha = sin(w0) / (2 * Q);
+        alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) );
+    	float32_t Gain = 12;
+        A = powf(10.0, (Gain/40.0));
         b0 = 1 + (alpha * A);
         b1 = - 2 * cos(w0);
         b2 = 1 - (alpha * A);
@@ -504,6 +505,22 @@ void audio_driver_set_rx_audio_filter(void)
         a1 = 2 * cos(w0); // already negated!
         a2 = alpha - 1; // already negated!
 */
+        //
+    	f0 = ts.peak_frequency;
+        Q = 20; //
+        w0 = 2 * PI * f0 / FSdec;
+        alpha = sin(w0) / (2 * Q);
+//        A = 1; // gain = 1
+        //        A = 3; // 10^(10/40); 15dB gain
+
+        b0 = alpha;
+        b1 = 0;
+        b2 = - alpha;
+        a0 = 1 + alpha;
+        a1 = 2 * cos(w0); // already negated!
+        a2 = alpha - 1; // already negated!
+
+
 
 
         // scaling the coefficients for gain
@@ -574,11 +591,13 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_biquad_1.pCoeffs[13] = a1;
     IIR_biquad_1.pCoeffs[14] = a2;
     /*
-    IIR_Notch.pCoeffs[10] = 1;
-    IIR_Notch.pCoeffs[11] = 0;
-    IIR_Notch.pCoeffs[12] = 0;
-    IIR_Notch.pCoeffs[13] = 0;
-    IIR_Notch.pCoeffs[14] = 0;
+      else {
+    IIR_biquad_1.pCoeffs[10] = 1;
+    IIR_biquad_1.pCoeffs[11] = 0;
+    IIR_biquad_1.pCoeffs[12] = 0;
+    IIR_biquad_1.pCoeffs[13] = 0;
+    IIR_biquad_1.pCoeffs[14] = 0;
+    }
     */
     // Treble
     //
@@ -620,11 +639,13 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_biquad_2.pCoeffs[4] = a2;
 
     /*	// pass-thru-coefficients
-      	IIR_Notch.pCoeffs[15] = 1;
-    	IIR_Notch.pCoeffs[16] = 0;
-    	IIR_Notch.pCoeffs[17] = 0;
-    	IIR_Notch.pCoeffs[18] = 0;
-    	IIR_Notch.pCoeffs[19] = 0;
+     	else {
+      	IIR_biquad_2.pCoeffs[0] = 1;
+    	IIR_biquad_2.pCoeffs[1] = 0;
+    	IIR_biquad_2.pCoeffs[2] = 0;
+    	IIR_biquad_2.pCoeffs[3] = 0;
+    	IIR_biquad_2.pCoeffs[4] = 0;
+    	}
     */
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
