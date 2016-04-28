@@ -188,6 +188,13 @@ typedef struct SMeter
 
 } SMeter;
 //
+//
+#define MAX_BASS 		 	20
+#define MIN_BASS 			-20
+#define MAX_TREBLE 			20
+#define MIN_TREBLE			-20
+#define MIN_PEAK_NOTCH_FREQ 200
+//
 // AGC Time constants
 // C. Turner, KA7OEI
 //
@@ -227,8 +234,8 @@ typedef struct SMeter
 //
 #define	POST_AGC_GAIN_SCALING_DECIMATE_2	(POST_AGC_GAIN_SCALING_DECIMATE_4 * 0.6)	// Scales audio from decimation/interpolation-by-2 process
 //
-#define	AM_SCALING		2		// Amount of gain multiplication to apply to audio and AGC to make recovery equal to that of SSB
-#define	AM_AUDIO_SCALING	1.4	// Additional correction factor applied to audio demodulation to make amplitude equal to that of SSB demodulation
+#define	AM_SCALING		1.0		// was 2.0 // Amount of gain multiplication to apply to audio and AGC to make recovery equal to that of SSB
+#define	AM_AUDIO_SCALING	1.4	// was 1.4 // Additional correction factor applied to audio demodulation to make amplitude equal to that of SSB demodulation
 //
 #define	AGC_GAIN_CAL	155000//22440		// multiplier value (linear, not DB) to calibrate the S-Meter reading to the AGC value
 //

@@ -532,6 +532,7 @@ void TransceiverStateInit(void)
     ts.peak_frequency = 750;				// peak start frequency
     ts.bass_gain = 2;						// gain of the low shelf EQ filter
     ts.treble_gain = 0;						// gain of the high shelf EQ filter
+    ts.AM_experiment = 0;					// for AM demodulation experiments, not for "public" use
 }
 
 //*----------------------------------------------------------------------------

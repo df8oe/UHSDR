@@ -419,13 +419,11 @@ void audio_driver_set_rx_audio_filter(void)
     //
     //
     float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
-        FSdec = 24000;
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
-        FSdec = 12000;
-
     float32_t FS = 48000; // we need this for the treble filter
-
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+        FSdec = 24000.0;
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+        FSdec = 12000.0;
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
     float32_t f0 = ts.notch_frequency;
     float32_t Q = 10; // larger Q gives narrower notch
@@ -471,25 +469,27 @@ void audio_driver_set_rx_audio_filter(void)
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.peak_enabled)
     {
- /*       // peak filter
+       // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
-        f0 = ts.peak_frequency;
-        Q = 10; //
+    	f0 = ts.peak_frequency;
+        Q = 15; //
         w0 = 2 * PI * f0 / FSdec;
         alpha = sin(w0) / (2 * Q);
-        A = 1; // gain = 1
+        //A = 1; // gain = 1
         //        A = 3; // 10^(10/40); 15dB gain
-
+//        A = 1.4125; // 10^(6/40); 6dB gain
+        A = 2.0;
         b0 = 1 + (alpha * A);
         b1 = - 2 * cos(w0);
         b2 = 1 - (alpha * A);
         a0 = 1 + (alpha / A);
         a1 = 2 * cos(w0); // already negated!
         a2 = (alpha/A) - 1; // already negated!
-*/
-        // test the BPF coefficients, because actually we want a "peak" filter without gain!
+
+/*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
     	// Bandpass filter 0dB gain
     	// = CW peak filter = APF
+    	// this filter was tested: "should have more gain and less Q"
     	f0 = ts.peak_frequency;
         Q = 20; //
         w0 = 2 * PI * f0 / FSdec;
@@ -503,7 +503,7 @@ void audio_driver_set_rx_audio_filter(void)
         a0 = 1 + alpha;
         a1 = 2 * cos(w0); // already negated!
         a2 = alpha - 1; // already negated!
-
+*/
 
 
         // scaling the coefficients for gain
@@ -534,10 +534,10 @@ void audio_driver_set_rx_audio_filter(void)
     //
     // Bass
     //
-    f0 = 300;
+    f0 = 250;
     w0 = 2 * PI * f0 / FSdec;
-    A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
-    S = 0.9; // shelf slope, 1 is maximum value
+    A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -20 to 20
+    S = 0.7; // shelf slope, 1 is maximum value
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     float32_t cosw0 = cos(w0);
     float32_t twoAa = 2 * sqrt(A) * alpha;
@@ -583,10 +583,10 @@ void audio_driver_set_rx_audio_filter(void)
     // Treble
     //
     // the treble filter is in biquad 2 and works at 48000ksps
-    f0 = 6000;
+    f0 = 4500;
     FS = 48000;
     w0 = 2 * PI * f0 / FS;
-    A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
+    A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -20 to 20
     S = 0.9; // shelf slope, 1 is maximum value
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     cosw0 = cos(w0);
@@ -815,8 +815,8 @@ void audio_driver_set_rx_audio_filter(void)
     //
     // Unlock - re-enable filtering
     //
-    ads.af_disabled = 0;
-    ts.dsp_inhibit = dsp_inhibit_temp;
+   ads.af_disabled = 0;
+   ts.dsp_inhibit = dsp_inhibit_temp;
     //
     AudioFilter_InitRxHilbertFIR();
 //	AudioFilter_CalcRxPhaseAdj(); // this switches the Hilbert/FIR-filters
@@ -1195,7 +1195,7 @@ static void audio_rx_agc_processor(int16_t psize)
         if(ts.agc_mode != AGC_OFF)
         {
             if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
-                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+            	ads.agc_calc = ads.am_fm_agc * ads.agc_val;
             else	 							// not AM - get the amplitude of the recovered audio
             {
                 ads.agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
@@ -1522,7 +1522,7 @@ static void audio_demod_fm(int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_am(int16_t size)
+ static void audio_demod_am(int16_t size)
 {
     ulong i, j;
     bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
@@ -1558,9 +1558,43 @@ static void audio_demod_am(int16_t size)
     arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
     ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
+}
+
+
+//
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : audio_demod_am_exp  (experimental! rewritten to eliminate the need for interleaving, DD4WH april 2016)
+//* Object              : AM demodulator
+//* Object              :
+//* Input Parameters    : size - size of buffer on which to operate
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void audio_demod_am_exp(int16_t size)
+{
+    ulong i;
+    float32_t sqrt;
+        //
+        // uses optimized ARM sqrt function, but not the arm_cmplx_mag, because the latter needs the data in interleaved format!
+        // this could possibly make this even faster than first interleaving and then calculating magnitude
+    	// (because arm_cmplx_mag uses the same sqrt function )
+
+    for(i = 0; i < size/2; i++) {
+    	 arm_sqrt_f32 (ads.i_buffer[i] * ads.i_buffer[i] + ads.q_buffer[i] * ads.q_buffer[i], &sqrt);
+    	 ads.a_buffer[i] = sqrt;
+    }
+
+    //
+    // Now produce signal/carrier level for AGC
+    //
+    arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+    //
+    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
 }
-//
+
+////
 //
 //
 //*----------------------------------------------------------------------------
@@ -1634,7 +1668,7 @@ static void audio_lms_noise_reduction(int16_t psize)
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_snap_carrier [DD4WH, march 2016]
 //* Object              :
-//* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes Rx to that freqeuency
+//* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes RX to that frequency
 //* Input Parameters    : uses the new arm_rfft_fast_f32 for the FFT, that is 10 times (!!!) more accurate than the old arm_rfft_f32
 //* Output Parameters   :
 //* Functions called    :
@@ -1642,7 +1676,6 @@ static void audio_lms_noise_reduction(int16_t psize)
 
 static void audio_snap_carrier (void)
 {
-//	ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;
 
     float32_t  Lbin, Ubin;
     float32_t bw_LSB = 0.0;
@@ -1898,6 +1931,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     for(i = 0; i < size/2; i++)
     {
         if (sc.state == 0 && sc.snap) sc.counter = sc.counter + 1;
+
         //
         // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
         if(sd.state == 0)
@@ -1960,12 +1994,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     }
 
     if (sc.snap && sc.state == 1)
-        audio_snap_carrier(); // this function checks whether the snap button was pressed & whether enough FFT samples have been collected
-    // if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
-    // if one or both are false, it immediately returns here
-
-    if (ts.USE_NEW_PHASE_CORRECTION)   // FIXME: delete this, when tested
-    {
+        audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
         //
         // the phase adjustment is done by mixing a little bit of I into Q or vice versa
         // this is justified because the phase shift between two signals of equal frequency can
@@ -2046,7 +2075,6 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             // copy e3 buffer into I
             arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
         }
-    } // FIXME: end test variable
 
     //
     // Apply gain corrections for I/Q amplitude correction
@@ -2087,7 +2115,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q - LSB
         break;
     case DEMOD_AM:
-        audio_demod_am(size);
+    	if (ts.AM_experiment)
+        	audio_demod_am_exp(size);
+    	else audio_demod_am(size);
         break;
     case DEMOD_SAM:
         arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a3_buffer, size/2);	// difference of I and Q - LSB
@@ -2165,7 +2195,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 
         // this is the biquad filter, a notch, peak, and lowshelf filter
-        arm_biquad_cascade_df1_f32 (&IIR_biquad_1, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, psize/2);
+        if (!ads.af_disabled)
+        	arm_biquad_cascade_df1_f32 (&IIR_biquad_1, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, psize/2);
         //
         // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
         //
@@ -2190,10 +2221,13 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     }
     //
     // this is the biquad filter, a highshelf filter
-    arm_biquad_cascade_df1_f32 (&IIR_biquad_2, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
+    if (!ads.af_disabled)
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_2, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
 
     //
-    if((ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))	 	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
+    if((ads.af_disabled) || (ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))
+    	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
+    	// or when filters are switched
     {
         arm_fill_f32(0, (float32_t *)ads.a_buffer, size/2);
         arm_fill_f32(0, (float32_t *)ads.b_buffer, size/2);

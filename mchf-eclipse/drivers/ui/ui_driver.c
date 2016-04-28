@@ -1917,6 +1917,8 @@ static void UiDriverProcessKeyboard()
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
                 UiInitRxParms();			// generate "reference" for sidetone frequency
+                if(ts.AM_experiment) ts.AM_experiment = 0;
+                else ts.AM_experiment = 1;
                 /*				if (ts.notch_enabled) {
                 				    ts.notch_enabled = 0; // switch off notch filter
                 				    UiDriverChangeRfGain(1);
@@ -4479,6 +4481,12 @@ static bool UiDriverCheckFrequencyEncoder()
             {
                 enc_multiplier = 10;    // turning medium speed -> increase speed by 10
             }
+
+            if ((enc_speed_avg > 160) || (enc_speed_avg < (-160)))
+            {
+                enc_multiplier = 40;    //turning fast speed -> increase speed by 100
+            }
+
             if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
             {
                 enc_multiplier = 100;    //turning fast speed -> increase speed by 100
@@ -4618,23 +4626,60 @@ static void UiDriverCheckEncoderOne()
 static void UiDriverCheckEncoderTwo()
 {
     //char 	temp[10];
-    int 	pot_diff;
+	float32_t MAX_FREQ;
+	int 	pot_diff;
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+        MAX_FREQ = 10000.0;
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+        MAX_FREQ = 5000.0;
 
     pot_diff = UiDriverEncoderRead(ENC2);
+// +++++++++++++++++++++++++++++++++++
+    int		enc_multiplier;
+    static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
+    int		delta_t, enc_speed;
 
-    if (pot_diff)
+    if (pot_diff != 0)
     {
+        delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
+        ts.audio_int_counter = 0;		 //reset tick counter
+
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 
-        // I have taken the freedom to free encoder 2 from filter path
-        // in order to free it for the notch frequency adjustment
-        /*    if (filter_path_change) {
-              if(!ts.notch_enabled){
-            	AudioFilter_NextApplicableFilterPath(PATH_NEXT_BANDWIDTH | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-            	UiInitRxParms();
-              }
-            } else
-          */
+    if (delta_t > 300)
+    {
+        enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
+    }
+
+    enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+
+    if (enc_speed > 500)
+    {
+        enc_speed = 500;    //limit calculated enc. speed
+    }
+    if (enc_speed < -500)
+    {
+        enc_speed = -500;
+    }
+
+    enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
+
+    enc_multiplier = 1; //set standard speed
+
+        if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
+        {
+            enc_multiplier = 20;    // turning medium speed -> increase speed by 10
+        }
+        if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
+        {
+            enc_multiplier = 80;    //turning fast speed -> increase speed by 100
+        }
+        if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
+        {
+            enc_multiplier = 200;    //turning fast speed -> increase speed by 100
+        }
+
+
         if(ts.menu_mode)
         {
             UiMenu_RenderChangeItem(pot_diff);
@@ -4735,14 +4780,14 @@ static void UiDriverCheckEncoderTwo()
                     {
                         if(pot_diff < 0)
                         {
-                            ts.notch_frequency = ts.notch_frequency - 10;
+                            ts.notch_frequency = ts.notch_frequency - 5 * enc_multiplier;
                         }
                         if(pot_diff > 0)
                         {
-                            ts.notch_frequency = ts.notch_frequency + 10;
+                            ts.notch_frequency = ts.notch_frequency + 5 * enc_multiplier;
                         }
-                        if (ts.notch_frequency < 200) ts.notch_frequency = 200;
-                        if (ts.notch_frequency > 12000) ts.notch_frequency = 12000;
+                        if(ts.notch_frequency > MAX_FREQ) ts.notch_frequency = MAX_FREQ;
+                        if(ts.notch_frequency < MIN_PEAK_NOTCH_FREQ) ts.notch_frequency = MIN_PEAK_NOTCH_FREQ;
                         // display notch frequency
                         UiDriverDisplayNotch(1);
                         // set notch filter instance
@@ -4760,8 +4805,8 @@ static void UiDriverCheckEncoderTwo()
                     {
                         ts.bass_gain = ts.bass_gain + 1;
                     }
-                    if (ts.bass_gain < -20) ts.bass_gain = -20;
-                    if (ts.bass_gain > 20) ts.bass_gain = 20;
+                    if (ts.bass_gain < MIN_BASS) ts.bass_gain = MIN_BASS;
+                    if (ts.bass_gain > MAX_BASS) ts.bass_gain = MAX_BASS;
                     // display bass gain
                     UiDriverDisplayBass();
                     // set filter instance
@@ -4778,8 +4823,8 @@ static void UiDriverCheckEncoderTwo()
                     {
                         ts.treble_gain = ts.treble_gain + 1;
                     }
-                    if (ts.treble_gain < -20) ts.treble_gain = -20;
-                    if (ts.treble_gain > 20) ts.treble_gain = 20;
+                    if (ts.treble_gain < MIN_TREBLE) ts.treble_gain = MIN_TREBLE;
+                    if (ts.treble_gain > MAX_TREBLE) ts.treble_gain = MAX_TREBLE;
                     // display treble gain
                     UiDriverDisplayBass();
                     // set filter instance
@@ -4792,14 +4837,14 @@ static void UiDriverCheckEncoderTwo()
                     {
                         if(pot_diff < 0)
                         {
-                            ts.peak_frequency = ts.peak_frequency - 10;
+                            ts.peak_frequency = ts.peak_frequency - 5 * enc_multiplier;
                         }
                         if(pot_diff > 0)
                         {
-                            ts.peak_frequency = ts.peak_frequency + 10;
+                            ts.peak_frequency = ts.peak_frequency + 5 * enc_multiplier;
                         }
-                        if (ts.peak_frequency < 200) ts.peak_frequency = 200;
-                        if (ts.peak_frequency > 12000) ts.peak_frequency = 12000;
+                        if(ts.peak_frequency > MAX_FREQ) ts.peak_frequency = MAX_FREQ;
+                        if(ts.peak_frequency < MIN_PEAK_NOTCH_FREQ) ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
                         // display peak frequency
                         UiDriverDisplayNotch(1);
                         // set notch filter instance
@@ -4858,13 +4903,13 @@ static void UiDriverCheckEncoderThree()
                     if(pot_diff < 0)
                     {
                         ts.rit_value -= 1;
-                        if(ts.rit_value < -50)
+                        if(ts.rit_value < MIN_RIT_VALUE)
                             ts.rit_value = MIN_RIT_VALUE;
                     }
                     else
                     {
                         ts.rit_value += 1;
-                        if(ts.rit_value > 50)
+                        if(ts.rit_value > MAX_RIT_VALUE)
                             ts.rit_value = MAX_RIT_VALUE;
                     }
 
@@ -4892,7 +4937,7 @@ static void UiDriverCheckEncoderThree()
                     else
                     {
                         ts.keyer_speed++;
-                        if(ts.keyer_speed > 48)
+                        if(ts.keyer_speed > MAX_KEYER_SPEED)
                             ts.keyer_speed = MAX_KEYER_SPEED;
                     }
 
