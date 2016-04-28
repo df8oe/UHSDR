@@ -536,10 +536,10 @@ void audio_driver_set_rx_audio_filter(void)
     //
     // Bass
     //
-    f0 = 300;
+    f0 = 250;
     w0 = 2 * PI * f0 / FSdec;
     A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
-    S = 0.9; // shelf slope, 1 is maximum value
+    S = 0.7; // shelf slope, 1 is maximum value
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     float32_t cosw0 = cos(w0);
     float32_t twoAa = 2 * sqrt(A) * alpha;
@@ -585,7 +585,7 @@ void audio_driver_set_rx_audio_filter(void)
     // Treble
     //
     // the treble filter is in biquad 2 and works at 48000ksps
-    f0 = 6000;
+    f0 = 4500;
     FS = 48000;
     w0 = 2 * PI * f0 / FS;
     A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
@@ -1197,7 +1197,7 @@ static void audio_rx_agc_processor(int16_t psize)
         if(ts.agc_mode != AGC_OFF)
         {
             if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
-                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+            	ads.agc_calc = ads.am_fm_agc * ads.agc_val;
             else	 							// not AM - get the amplitude of the recovered audio
             {
                 ads.agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
@@ -1524,7 +1524,7 @@ static void audio_demod_fm(int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_am(int16_t size)
+/* static void audio_demod_am(int16_t size)
 {
     ulong i, j;
     bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
@@ -1562,7 +1562,42 @@ static void audio_demod_am(int16_t size)
 
 
 }
+*/
+
 //
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : audio_demod_am_exp  (experimental! rewritten to eliminate the need for interleaving, DD4WH april 2016)
+//* Object              : AM demodulator
+//* Object              :
+//* Input Parameters    : size - size of buffer on which to operate
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void audio_demod_am_exp(int16_t size)
+{
+    ulong i;
+    float32_t sqrt;
+        //
+        // uses optimized ARM sqrt function, but not the arm_cmplx_mag, because the latter needs the data in interleaved format!
+        // this could possibly make this even faster than first interleaving and then calculating magnitude
+    	// (because arm_cmplx_mag uses the same sqrt function )
+
+    for(i = 0; i < size/2; i++) {
+    	 arm_sqrt_f32 (ads.i_buffer[i] * ads.i_buffer[i] + ads.q_buffer[i] * ads.q_buffer[i], &sqrt);
+    	 ads.a_buffer[i] = sqrt;
+    }
+
+    //
+    // Now produce signal/carrier level for AGC
+    //
+    arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+    //
+    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
+
+}
+
+////
 //
 //
 //*----------------------------------------------------------------------------
@@ -1966,8 +2001,6 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     // if both is true, it tunes the mcHF to the largest carrier in the RX filter bandwidth
     // if one or both are false, it immediately returns here
 
-    if (ts.USE_NEW_PHASE_CORRECTION)   // FIXME: delete this, when tested
-    {
         //
         // the phase adjustment is done by mixing a little bit of I into Q or vice versa
         // this is justified because the phase shift between two signals of equal frequency can
@@ -2048,7 +2081,6 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             // copy e3 buffer into I
             arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
         }
-    } // FIXME: end test variable
 
     //
     // Apply gain corrections for I/Q amplitude correction
@@ -2089,7 +2121,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q - LSB
         break;
     case DEMOD_AM:
-        audio_demod_am(size);
+    	//        audio_demod_am(size);
+    	audio_demod_am_exp(size);
         break;
     case DEMOD_SAM:
         arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a3_buffer, size/2);	// difference of I and Q - LSB
