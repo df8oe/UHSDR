@@ -419,13 +419,11 @@ void audio_driver_set_rx_audio_filter(void)
     //
     //
     float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
-        FSdec = 24000;
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
-        FSdec = 12000;
-
     float32_t FS = 48000; // we need this for the treble filter
-
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+        FSdec = 24000.0;
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+        FSdec = 12000.0;
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
     float32_t f0 = ts.notch_frequency;
     float32_t Q = 10; // larger Q gives narrower notch
@@ -473,7 +471,7 @@ void audio_driver_set_rx_audio_filter(void)
     {
        // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
-        f0 = ts.peak_frequency;
+    	f0 = ts.peak_frequency;
         Q = 10; //
         w0 = 2 * PI * f0 / FSdec;
         alpha = sin(w0) / (2 * Q);
@@ -538,7 +536,7 @@ void audio_driver_set_rx_audio_filter(void)
     //
     f0 = 250;
     w0 = 2 * PI * f0 / FSdec;
-    A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -12 to 12
+    A = powf(10.0,(ts.bass_gain/40.0)); // gain ranges from -20 to 20
     S = 0.7; // shelf slope, 1 is maximum value
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     float32_t cosw0 = cos(w0);
@@ -588,7 +586,7 @@ void audio_driver_set_rx_audio_filter(void)
     f0 = 4500;
     FS = 48000;
     w0 = 2 * PI * f0 / FS;
-    A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -12 to 12
+    A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -20 to 20
     S = 0.9; // shelf slope, 1 is maximum value
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     cosw0 = cos(w0);

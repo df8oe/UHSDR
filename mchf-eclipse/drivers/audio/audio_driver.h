@@ -188,6 +188,13 @@ typedef struct SMeter
 
 } SMeter;
 //
+//
+#define MAX_BASS 		 	20
+#define MIN_BASS 			-20
+#define MAX_TREBLE 			20
+#define MIN_TREBLE			-20
+#define MIN_PEAK_NOTCH_FREQ 200
+//
 // AGC Time constants
 // C. Turner, KA7OEI
 //
