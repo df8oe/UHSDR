@@ -588,13 +588,13 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     },
 
     {
-        AUDIO_2P1KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        AUDIO_2P1KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_3k6_LPF,
         &FirRxInterpolate_4_5k, &IIR_aa_5k
     },
 
     {
-        AUDIO_2P3KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        AUDIO_2P3KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
         &FirRxInterpolate_4_5k, &IIR_aa_5k
     },
@@ -630,7 +630,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     },
 
     {
-        AUDIO_3P6KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+        AUDIO_3P6KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
         RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
         &FirRxInterpolate10KHZ, NULL
     },
