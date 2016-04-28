@@ -748,11 +748,6 @@ void audio_driver_set_rx_audio_filter(void)
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
     //
     // Adjust decimation rate based on selected filter
-    //
-    // TODO: Review FilterPath Code
-    // DONE: DD4WH 2016_03_13
-    //    if (ts.filter_path != 0) {
-
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
@@ -791,9 +786,7 @@ void audio_driver_set_rx_audio_filter(void)
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     //
     INTERPOLATE_RX.L = ads.decimation_rate;			// Interpolation factor, L  (12 kHz * 4 = 48 kHz)
-    // TODO: Review FilterPath Code
-    // DONE: DD4WH 2016_03_13
-//	if (ts.filter_path != 0) {
+
     if (FilterPathInfo[ts.filter_path].interpolate != NULL)
     {
         INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
