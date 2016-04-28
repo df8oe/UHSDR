@@ -1917,6 +1917,8 @@ static void UiDriverProcessKeyboard()
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
                 UiInitRxParms();			// generate "reference" for sidetone frequency
+                if(ts.AM_experiment) ts.AM_experiment = 0;
+                else ts.AM_experiment = 1;
                 /*				if (ts.notch_enabled) {
                 				    ts.notch_enabled = 0; // switch off notch filter
                 				    UiDriverChangeRfGain(1);
