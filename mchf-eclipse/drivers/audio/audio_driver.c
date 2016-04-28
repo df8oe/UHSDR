@@ -469,7 +469,7 @@ void audio_driver_set_rx_audio_filter(void)
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.peak_enabled)
     {
-       // peak filter
+/*       // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
     	f0 = ts.peak_frequency;
         //Q = 15; //
@@ -486,7 +486,7 @@ void audio_driver_set_rx_audio_filter(void)
         a0 = 1 + (alpha / A);
         a1 = 2 * cos(w0); // already negated!
         a2 = (alpha/A) - 1; // already negated!
-
+*/
 /*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
     	// Bandpass filter 0dB gain
     	// = CW peak filter = APF
@@ -505,23 +505,20 @@ void audio_driver_set_rx_audio_filter(void)
         a1 = 2 * cos(w0); // already negated!
         a2 = alpha - 1; // already negated!
 */
-        //
+        // BPF: constant skirt gain, peak gain = Q
     	f0 = ts.peak_frequency;
-        Q = 20; //
+        Q = 4; //
         w0 = 2 * PI * f0 / FSdec;
-        alpha = sin(w0) / (2 * Q);
 //        A = 1; // gain = 1
         //        A = 3; // 10^(10/40); 15dB gain
-
-        b0 = alpha;
+        float32_t BW = 0.03;
+        alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) ); //
+        b0 = Q * alpha;
         b1 = 0;
-        b2 = - alpha;
+        b2 = - Q * alpha;
         a0 = 1 + alpha;
         a1 = 2 * cos(w0); // already negated!
         a2 = alpha - 1; // already negated!
-
-
-
 
         // scaling the coefficients for gain
         b0 = b0/a0;
