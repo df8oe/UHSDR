@@ -1494,7 +1494,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
     adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
 
     bool tchange = false;
-    if((ts.band == RadioManagement_GetBand(df.tune_old/TUNE_MULT)) && (ts.power_level == pa_level))
+    if((band_mode == RadioManagement_GetBand(df.tune_old/TUNE_MULT)) && (ts.power_level == pa_level))
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
