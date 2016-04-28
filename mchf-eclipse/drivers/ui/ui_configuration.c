@@ -1008,13 +1008,13 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             // save current band/frequency/mode settings
             vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
             // Save decode mode
-            vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = demodmode;
+            vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
             // use the "real" demod mode, instead of the possibly changed one (FM gets USB during save)
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
-                                        (uint16_t)((uint16_t)ts.band| ((uint16_t)demodmode & 0x0f << 8)),
-                                        (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode & 0x0f << 8)));
+                                        (uint16_t)((uint16_t)ts.band| ((uint16_t)demodmode << 8)),
+                                        (uint16_t)((uint16_t)ts.band |((uint16_t)demodmode << 8)));
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
