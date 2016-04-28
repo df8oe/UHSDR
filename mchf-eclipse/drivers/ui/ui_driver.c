@@ -1019,7 +1019,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         if (txrx_mode == TRX_MODE_TX)
         {
             uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
-            if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false)
+            // if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false)
+            RadioManagement_PowerLevelChange(tx_band,ts.power_level);
             {
                 RadioManagement_SetBandPowerFactor(tx_band);
             }
