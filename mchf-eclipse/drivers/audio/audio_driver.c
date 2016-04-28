@@ -472,13 +472,13 @@ void audio_driver_set_rx_audio_filter(void)
        // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
     	f0 = ts.peak_frequency;
-        Q = 10; //
+        Q = 15; //
         w0 = 2 * PI * f0 / FSdec;
         alpha = sin(w0) / (2 * Q);
         //A = 1; // gain = 1
         //        A = 3; // 10^(10/40); 15dB gain
-        A = 1.4125; // 10^(6/40); 6dB gain
-
+//        A = 1.4125; // 10^(6/40); 6dB gain
+        A = 2.0;
         b0 = 1 + (alpha * A);
         b1 = - 2 * cos(w0);
         b2 = 1 - (alpha * A);
