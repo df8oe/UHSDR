@@ -4635,7 +4635,7 @@ static void UiDriverCheckEncoderTwo()
 
     pot_diff = UiDriverEncoderRead(ENC2);
 // +++++++++++++++++++++++++++++++++++
-    int		enc_multiplier;
+    float32_t	enc_multiplier;
     static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
     int		delta_t, enc_speed;
 
@@ -4668,15 +4668,15 @@ static void UiDriverCheckEncoderTwo()
 
         if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
         {
-            enc_multiplier = 20;    // turning medium speed -> increase speed by 10
+            enc_multiplier = 10;    // turning medium speed -> increase speed by 10
         }
         if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
         {
-            enc_multiplier = 80;    //turning fast speed -> increase speed by 100
+            enc_multiplier = 30;    //turning fast speed -> increase speed by 100
         }
         if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
         {
-            enc_multiplier = 200;    //turning fast speed -> increase speed by 100
+            enc_multiplier = 100;    //turning fast speed -> increase speed by 100
         }
 
 
@@ -4780,11 +4780,11 @@ static void UiDriverCheckEncoderTwo()
                     {
                         if(pot_diff < 0)
                         {
-                            ts.notch_frequency = ts.notch_frequency - 5 * enc_multiplier;
+                            ts.notch_frequency = ts.notch_frequency - 5.0 * enc_multiplier;
                         }
                         if(pot_diff > 0)
                         {
-                            ts.notch_frequency = ts.notch_frequency + 5 * enc_multiplier;
+                            ts.notch_frequency = ts.notch_frequency + 5.0 * enc_multiplier;
                         }
                         if(ts.notch_frequency > MAX_FREQ) ts.notch_frequency = MAX_FREQ;
                         if(ts.notch_frequency < MIN_PEAK_NOTCH_FREQ) ts.notch_frequency = MIN_PEAK_NOTCH_FREQ;
@@ -4837,11 +4837,11 @@ static void UiDriverCheckEncoderTwo()
                     {
                         if(pot_diff < 0)
                         {
-                            ts.peak_frequency = ts.peak_frequency - 5 * enc_multiplier;
+                            ts.peak_frequency = ts.peak_frequency - 5.0 * enc_multiplier;
                         }
                         if(pot_diff > 0)
                         {
-                            ts.peak_frequency = ts.peak_frequency + 5 * enc_multiplier;
+                            ts.peak_frequency = ts.peak_frequency + 5.0 * enc_multiplier;
                         }
                         if(ts.peak_frequency > MAX_FREQ) ts.peak_frequency = MAX_FREQ;
                         if(ts.peak_frequency < MIN_PEAK_NOTCH_FREQ) ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;

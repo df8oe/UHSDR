@@ -451,7 +451,7 @@ void audio_driver_set_rx_audio_filter(void)
     // while not using pointers
     if (ts.notch_enabled)
     {
-        IIR_biquad_1.pCoeffs[0] = b0;
+    	IIR_biquad_1.pCoeffs[0] = b0;
         IIR_biquad_1.pCoeffs[1] = b1;
         IIR_biquad_1.pCoeffs[2] = b2;
         IIR_biquad_1.pCoeffs[3] = a1;
@@ -469,23 +469,24 @@ void audio_driver_set_rx_audio_filter(void)
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.peak_enabled)
     {
-       // peak filter
+/*       // peak filter
   	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
     	f0 = ts.peak_frequency;
-        Q = 15; //
-        w0 = 2 * PI * f0 / FSdec;
-        alpha = sin(w0) / (2 * Q);
-        //A = 1; // gain = 1
-        //        A = 3; // 10^(10/40); 15dB gain
-//        A = 1.4125; // 10^(6/40); 6dB gain
-        A = 2.0;
+        //Q = 15; //
+        // bandwidth in octaves between midpoint (Gain / 2) gain frequencies
+        float32_t BW = 0.05;
+    	w0 = 2 * PI * f0 / FSdec;
+        //alpha = sin(w0) / (2 * Q);
+        alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) );
+    	float32_t Gain = 12;
+        A = powf(10.0, (Gain/40.0));
         b0 = 1 + (alpha * A);
         b1 = - 2 * cos(w0);
         b2 = 1 - (alpha * A);
         a0 = 1 + (alpha / A);
         a1 = 2 * cos(w0); // already negated!
         a2 = (alpha/A) - 1; // already negated!
-
+*/
 /*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
     	// Bandpass filter 0dB gain
     	// = CW peak filter = APF
@@ -504,7 +505,20 @@ void audio_driver_set_rx_audio_filter(void)
         a1 = 2 * cos(w0); // already negated!
         a2 = alpha - 1; // already negated!
 */
-
+        // BPF: constant skirt gain, peak gain = Q
+    	f0 = ts.peak_frequency;
+        Q = 4; //
+        w0 = 2 * PI * f0 / FSdec;
+//        A = 1; // gain = 1
+        //        A = 3; // 10^(10/40); 15dB gain
+        float32_t BW = 0.03;
+        alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) ); //
+        b0 = Q * alpha;
+        b1 = 0;
+        b2 = - Q * alpha;
+        a0 = 1 + alpha;
+        a1 = 2 * cos(w0); // already negated!
+        a2 = alpha - 1; // already negated!
 
         // scaling the coefficients for gain
         b0 = b0/a0;
@@ -574,11 +588,13 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_biquad_1.pCoeffs[13] = a1;
     IIR_biquad_1.pCoeffs[14] = a2;
     /*
-    IIR_Notch.pCoeffs[10] = 1;
-    IIR_Notch.pCoeffs[11] = 0;
-    IIR_Notch.pCoeffs[12] = 0;
-    IIR_Notch.pCoeffs[13] = 0;
-    IIR_Notch.pCoeffs[14] = 0;
+      else {
+    IIR_biquad_1.pCoeffs[10] = 1;
+    IIR_biquad_1.pCoeffs[11] = 0;
+    IIR_biquad_1.pCoeffs[12] = 0;
+    IIR_biquad_1.pCoeffs[13] = 0;
+    IIR_biquad_1.pCoeffs[14] = 0;
+    }
     */
     // Treble
     //
@@ -620,11 +636,13 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_biquad_2.pCoeffs[4] = a2;
 
     /*	// pass-thru-coefficients
-      	IIR_Notch.pCoeffs[15] = 1;
-    	IIR_Notch.pCoeffs[16] = 0;
-    	IIR_Notch.pCoeffs[17] = 0;
-    	IIR_Notch.pCoeffs[18] = 0;
-    	IIR_Notch.pCoeffs[19] = 0;
+     	else {
+      	IIR_biquad_2.pCoeffs[0] = 1;
+    	IIR_biquad_2.pCoeffs[1] = 0;
+    	IIR_biquad_2.pCoeffs[2] = 0;
+    	IIR_biquad_2.pCoeffs[3] = 0;
+    	IIR_biquad_2.pCoeffs[4] = 0;
+    	}
     */
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
@@ -748,11 +766,6 @@ void audio_driver_set_rx_audio_filter(void)
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
     //
     // Adjust decimation rate based on selected filter
-    //
-    // TODO: Review FilterPath Code
-    // DONE: DD4WH 2016_03_13
-    //    if (ts.filter_path != 0) {
-
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
@@ -791,9 +804,7 @@ void audio_driver_set_rx_audio_filter(void)
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     //
     INTERPOLATE_RX.L = ads.decimation_rate;			// Interpolation factor, L  (12 kHz * 4 = 48 kHz)
-    // TODO: Review FilterPath Code
-    // DONE: DD4WH 2016_03_13
-//	if (ts.filter_path != 0) {
+
     if (FilterPathInfo[ts.filter_path].interpolate != NULL)
     {
         INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
