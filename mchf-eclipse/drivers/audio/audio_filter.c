@@ -726,17 +726,20 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
         &FirRxInterpolate, NULL
     },
-
+	// measurements with Spectrum Lab have shown, that there was considerable, but only barely
+	// audible aliasing in the SAM 4k2 and 4k8 filters (you could hear it when treble gain was 20dB)
+	// now I have implemented the IIR_aa_5k antialiasing filter and all the aliases
+	// are gone at least 60dB deep
     {
         AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
     },
 
     {
-        AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
+        AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_5k_coeffs, q_rx_5k_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
     },
 
     {
