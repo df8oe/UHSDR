@@ -1010,6 +1010,8 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             // Save decode mode
             vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = ts.dmod_mode;
             // use the "real" demod mode, instead of the possibly changed one (FM gets USB during save)
+            // FIXME: Either we use demod_mode also here or we remove the special FM handling and use ts.dmod_mode everywehre
+            // FIXME: Right now it is inconsistent and should be left like this.
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,

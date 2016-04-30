@@ -1305,7 +1305,11 @@ void RadioManagement_SetBandPowerFactor(uchar band)
 
 
 
-
+/*
+ * @brief returns the band according to the given frequency
+ * @param freq  frequency to get band for. Unit is Hertz. This value is used without any further adjustments and should be the intended RX/TX frequency and NOT the IQ center frequency
+ *
+ */
 uint8_t RadioManagement_GetBand(ulong freq)
 {
     static uint8_t band_scan_old = 99;
@@ -1313,7 +1317,6 @@ uint8_t RadioManagement_GetBand(ulong freq)
 
     band_scan = 0;
 
-    freq -= audio_driver_xlate_freq();
     freq *= TUNE_MULT;
 
     // first try the last band, and see if it is an match
