@@ -383,6 +383,10 @@ static Si570_ResultCodes ui_si570_change_frequency(float new_freq, uchar test)
     }
     else
     {
+        uint8_t n1_regVal = n1 - 1;
+        uint8_t hsdiv_regVal = hsdiv - 4;
+        // the written value is n1 - 1, hsdiv -4 according to the datasheet
+
         // New RFREQ calculation
         os.rfreq = ((long double)new_freq * (long double)(n1 * hsdiv)) / os.fxtal;
         is_large = ui_si570_is_large_change();
@@ -401,20 +405,10 @@ static Si570_ResultCodes ui_si570_change_frequency(float new_freq, uchar test)
                 os.regs[i] = 0;
             }
 
-            hsdiv = hsdiv - 4;
-            os.regs[0] = (hsdiv << 5);
+            os.regs[0] = (hsdiv_regVal << 5);
 
-            if(n1 == 1)
-            {
-                n1 = 0;
-            }
-            else if((n1 & 1) == 0)
-            {
-                n1 = n1 - 1;
-            }
-
-            os.regs[0] = ui_si570_setbits(os.regs[0], 0xE0, (n1 >> 2));
-            os.regs[1] = (n1 & 3) << 6;
+            os.regs[0] = ui_si570_setbits(os.regs[0], 0xE0, (n1_regVal >> 2));
+            os.regs[1] = (n1_regVal & 3) << 6;
 
 #ifdef LOWER_PRECISION
             os.regs[1] = os.regs[1] | (final_rfreq_long >> 30);
