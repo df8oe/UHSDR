@@ -23,13 +23,73 @@
 #include "mchf_hw_i2c.h"
 #include "ui_si570.h"
 
-const uchar	hs_div[6]	= {11, 9, 7, 6, 5, 4};
-const float	fdco_max	= FDCO_MAX;
-const float	fdco_min	= FDCO_MIN;
+// -------------------------------------------------------------------------------------
+// Local Oscillator
+// ------------------
 
-// unsigned short si570_address;
+// The SI570 Min/Max frequencies are 4x the actual tuning frequencies
+#define SI570_MIN_FREQ          10000000    // 10=2.5 MHz
+#define SI570_MAX_FREQ          160000000   // 160=40 Mhz
+//
+// These are "hard limit" frequencies below/above which the synthesizer cannot be adjusted or else the system may crash
+#define SI570_HARD_MIN_FREQ     3500000     // 3.5=  0.875 MHz
+#define SI570_HARD_MAX_FREQ     220000000   // 220=55 MHz
 
-// All publics as struct, so eventually could be malloc-ed and in CCM for faster access!!
+#define SI570_RECALL            (1<<0)
+#define SI570_FREEZE_DCO        (1<<4)
+#define SI570_FREEZE_M          (1<<5)
+#define SI570_NEW_FREQ          (1<<6)
+
+#define SI570_REG_135           135
+#define SI570_REG_137           137
+
+#define FACTORY_FXTAL           114.285
+
+// VCO range
+#define FDCO_MAX                5670
+#define FDCO_MIN                4850
+
+#define POW_2_28                268435456.0
+// -------------------------------------------------------------------------------------
+// Temperature sensor
+// ------------------
+#define MCP_ADDR                (0x90)
+
+// MCP registers
+#define MCP_TEMP                (0x00)
+#define MCP_CONFIG              (0x01)
+#define MCP_HYSTR               (0x02)
+#define MCP_LIMIT               (0x03)
+
+// MCP CONFIG register bits
+#define MCP_ONE_SHOT            (7)
+#define MCP_ADC_RES             (5)
+#define MCP_FAULT_QUEUE         (3)
+#define MCP_ALERT_POL           (2)
+#define MCP_INT_MODE            (1)
+#define MCP_SHUTDOWN            (0)
+#define R_BIT                   (1)
+#define W_BIT                   (0)
+
+#define MCP_ADC_RES_9           0
+#define MCP_ADC_RES_10          1
+#define MCP_ADC_RES_11          2
+#define MCP_ADC_RES_12          3
+
+#define MCP_POWER_UP            0
+#define MCP_POWER_DOWN          1
+
+
+#define SMOOTH_DELTA (0.0030)
+// Datasheet says 0.0035  == 3500PPM but there have been issues if we get close to that value.
+// to play it safe, we make the delta range a little smaller.
+// if you want to play with it, tune to the end of the 10m band, set 100 khz step width and dial around
+// sooner or later jumps with delta close to 0.0035 (actually a calculated delta of 0.00334) cause a "crash" of Si570
+
+static const uchar	hs_div[6]	= {11, 9, 7, 6, 5, 4};
+static const float	fdco_max	= FDCO_MAX;
+static const float	fdco_min	= FDCO_MIN;
+
 __IO OscillatorState os;
 
 /*
@@ -37,10 +97,6 @@ __IO OscillatorState os;
  *
  * @returns Startup frequency in Mhz
  */
-float   ui_si570_get_startup_frequency()
-{
-    return os.fout;
-}
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_si570_setbits
 //* Object              :
@@ -48,7 +104,7 @@ float   ui_si570_get_startup_frequency()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static uchar ui_si570_setbits(unsigned char original, unsigned char reset_mask, unsigned char new_val)
+static uchar Si570_SetBits(unsigned char original, unsigned char reset_mask, unsigned char new_val)
 {
     return ((original & reset_mask) | new_val);
 }
@@ -57,7 +113,7 @@ static uchar ui_si570_setbits(unsigned char original, unsigned char reset_mask, 
  * @brief reads Si570 registers and verifies match with local copy of settings
  * @returns SI570_OK if matching, SI570_I2C_ERROR if I2C is not working, SI570_ERROR otherwise
  */
-static Si570_ResultCodes ui_si570_verify_frequency(void)
+static Si570_ResultCodes Si570_VerifyFrequencyRegisters()
 {
     Si570_ResultCodes retval = SI570_OK;
     uchar	i, res;
@@ -89,6 +145,25 @@ static Si570_ResultCodes ui_si570_verify_frequency(void)
     return retval;
 }
 
+static uint16_t Si570_SetRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
+    uint16_t retval = mchf_hw_i2c_ReadRegister(si570_address, regaddr, reg_ptr);
+    if (retval == 0)
+    {
+        retval = mchf_hw_i2c_WriteRegister(si570_address, regaddr, (*reg_ptr|val));
+    }
+    return retval;
+}
+static uint16_t Si570_ClearRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
+    uint16_t retval = mchf_hw_i2c_ReadRegister(si570_address, regaddr, reg_ptr);
+    if (retval == 0)
+    {
+        retval = mchf_hw_i2c_WriteRegister(si570_address, regaddr, (*reg_ptr & ~val));
+    }
+    return retval;
+}
+
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_si570_small_frequency_change
 //* Object              : small frequency changes handling
@@ -96,36 +171,28 @@ static Si570_ResultCodes ui_si570_verify_frequency(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static Si570_ResultCodes ui_si570_small_frequency_change(void)
+static Si570_ResultCodes Si570_SmallFrequencyChange()
 {
     uint16_t ret;
     Si570_ResultCodes retval = SI570_OK;
     uchar reg_135;
 
     // Read current
-    ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
-
+    ret = Si570_SetRegisterBits(os.si570_address, SI570_REG_135, &reg_135, SI570_FREEZE_M);
     if (ret == 0)
     {
-        // Write to freeze M bit
-        ret = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, (reg_135|SI570_FREEZE_M));
+        // Write as block, registers 7-12
+        ret = mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
         if (ret == 0)
         {
-
-            // Write as block, registers 7-12
-            ret = mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
-            if (ret == 0)
-            {
-                retval = ui_si570_verify_frequency();
-            }
-            else
-            {
-                retval = SI570_I2C_ERROR;
-            }
+            retval = Si570_VerifyFrequencyRegisters();
+        }
+        else
+        {
+            retval = SI570_I2C_ERROR;
         }
     }
-    mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, (reg_135 & ~SI570_FREEZE_M));
-
+    Si570_ClearRegisterBits(os.si570_address, SI570_REG_135, &reg_135, SI570_FREEZE_M);
     return retval;
 }
 
@@ -136,65 +203,34 @@ static Si570_ResultCodes ui_si570_small_frequency_change(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static Si570_ResultCodes ui_si570_large_frequency_change(void)
+static Si570_ResultCodes Si570_LargeFrequencyChange()
 {
     uint16_t ret;
     uint8_t reg_135, reg_137;
-    bool unfreeze = false;
-    Si570_ResultCodes retval = SI570_OK;
+    Si570_ResultCodes retval = SI570_I2C_ERROR;
 
-    // Read the current state of Register 137
-    ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_137, &reg_137);
-    if (ret == 0)
+    if (Si570_SetRegisterBits(os.si570_address, SI570_REG_137, &reg_137, SI570_FREEZE_DCO) == 0)
     {
-        // Set the Freeze DCO bit
-        ret = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_137, (reg_137|SI570_FREEZE_DCO));
-        if (ret == 0)
+        // Write as block, registers 7-12
+        if(mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6) == 0)
         {
-            // Write as block, registers 7-12
-            ret = mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
-            if(ret)
-            {
-                unfreeze = 1;
-            }
-            else
-            {
-                retval = ui_si570_verify_frequency();
-                if(retval != SI570_OK)
-                {
-                    unfreeze = 1;
-                }
-                else
-                {
-                    // Clear the Freeze DCO bit
-                    ret = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_137, (reg_137 & ~SI570_FREEZE_DCO));
-                    if (ret == 0)
-                    {
-                        // Read current
-                        ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
-                        if (ret == 0)
-                        {
-                            // Set the NewFreq bit
-                            ret = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, (reg_135|SI570_NEW_FREQ));
-                            if (ret == 0)
-                            {
-                                // Wait for action completed
-                                reg_135 = SI570_NEW_FREQ;
-                                while(ret == 0 && (reg_135 & SI570_NEW_FREQ))
-                                {
-                                    ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            retval = Si570_VerifyFrequencyRegisters();
         }
     }
 
-    if(unfreeze)
+    // no matter what happened, try to unfreeze the Si570
+    ret = Si570_ClearRegisterBits(os.si570_address, SI570_REG_137, &reg_137, SI570_FREEZE_DCO);
+
+    if (ret == 0 && retval == SI570_OK)
     {
-        mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_137, (reg_137 & ~SI570_FREEZE_DCO));
+        if (Si570_SetRegisterBits(os.si570_address, SI570_REG_135, &reg_135, SI570_NEW_FREQ) == 0)
+        {
+            // Wait for action completed
+            do
+            {
+                ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
+            } while(ret == 0 && (reg_135 & SI570_NEW_FREQ));
+        }
     }
     return ret!=0?SI570_I2C_ERROR:retval;
 }
@@ -229,7 +265,7 @@ static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* 
         fdiff = -fdiff;
     }
 
-    if (fdiff <= 0.0035 && Si570_FDCO_InRange(fdco))
+    if (fdiff <= SMOOTH_DELTA && Si570_FDCO_InRange(fdco))
     {
         new_config->rfreq = fdco / os.fxtal;
         new_config->fdco = fdco;
@@ -312,7 +348,7 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
 
     os.regs[0] = (hsdiv_regVal << 5);
 
-    os.regs[0] = ui_si570_setbits(os.regs[0], 0xE0, (n1_regVal >> 2));
+    os.regs[0] = Si570_SetBits(os.regs[0], 0xE0, (n1_regVal >> 2));
     os.regs[1] = (n1_regVal & 3) << 6;
 
     whole = floorf(config->rfreq);
@@ -324,17 +360,17 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
         frac_bits = frac_bits >> 8;
     }
 
-    os.regs[2] = ui_si570_setbits(os.regs[2], 0xF0, (frac_bits & 0xF));
-    os.regs[2] = ui_si570_setbits(os.regs[2], 0x0F, (whole & 0xF) << 4);
-    os.regs[1] = ui_si570_setbits(os.regs[1], 0xC0, (whole >> 4) & 0x3F);
+    os.regs[2] = Si570_SetBits(os.regs[2], 0xF0, (frac_bits & 0xF));
+    os.regs[2] = Si570_SetBits(os.regs[2], 0x0F, (whole & 0xF) << 4);
+    os.regs[1] = Si570_SetBits(os.regs[1], 0xC0, (whole >> 4) & 0x3F);
 
     if(is_small)
     {
-        retval = ui_si570_small_frequency_change();
+        retval = Si570_SmallFrequencyChange();
     }
     else
     {
-        retval = ui_si570_large_frequency_change();
+        retval = Si570_LargeFrequencyChange();
     }
     if(retval == SI570_OK)
     {
@@ -342,7 +378,7 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
         // Verify second time - we might be transmitting, so
         // it is absolutely unacceptable to be on startup
         // SI570 frequency if any I2C error or chip reset occurs!
-        retval = ui_si570_verify_frequency();
+        retval = Si570_VerifyFrequencyRegisters();
     }
     return retval;
 }
@@ -354,83 +390,6 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-uchar ui_si570_get_configuration(void)
-{
-    int i;
-    uchar   ret;
-    short   res;
-
-    ulong   rfreq_frac;
-    ulong   rfreq_int;
-
-    uchar   hsdiv_curr;
-    uchar   n1_curr;
-    // uchar    sig[10];
-
-    // Reset publics
-    os.fxtal        = FACTORY_FXTAL;
-
-    res = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
-    if(res != 0)
-    {
-        return 1;
-    }
-
-    ret = SI570_RECALL;
-    i = 0;
-    while(ret & SI570_RECALL)
-    {
-        res = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &ret);
-        if(res != 0)
-        {
-            return 2;
-        }
-
-        i++;
-
-        if(i == 30)
-        {
-            return 3;
-        }
-    }
-
-    for(i = 0; i < 6; i++)
-    {
-        res = mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg + i), (uchar*)&(os.regs[i]));
-        if(res != 0)
-        {
-            return 4;
-        }
-    }
-
-    hsdiv_curr = ((os.regs[0] & 0xE0) >> 5) + 4;
-
-    n1_curr = ((os.regs[0] & 0x1F) << 2) + ((os.regs[1] & 0xC0) >> 6);
-    if(n1_curr == 0)
-        n1_curr = 1;
-    else if((n1_curr & 1) != 0)
-        n1_curr = n1_curr + 1;
-
-
-    rfreq_int = (os.regs[1] & 0x3F);
-    rfreq_int = (rfreq_int << 4) + ((os.regs[2] & 0xF0) >> 4);
-
-    rfreq_frac = (os.regs[2] & 0x0F);
-    rfreq_frac = (rfreq_frac << 8) + os.regs[3];
-    rfreq_frac = (rfreq_frac << 8) + os.regs[4];
-    rfreq_frac = (rfreq_frac << 8) + os.regs[5];
-
-    float64_t rfreq = rfreq_int + rfreq_frac / POW_2_28;
-    os.fxtal = (os.fout * n1_curr * hsdiv_curr) / rfreq;
-
-    os.cur_config.rfreq = rfreq;
-    os.cur_config.n1 = n1_curr;
-    os.cur_config.hsdiv = hsdiv_curr;
-    os.cur_config.fdco = Si570_GetFDCOForFreq(os.fout,n1_curr,hsdiv_curr);
-
-    return 0;
-}
-
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_si570_change_frequency
 //* Object              :
@@ -438,7 +397,7 @@ uchar ui_si570_get_configuration(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static Si570_ResultCodes ui_si570_change_frequency(float new_freq, uchar test)
+static Si570_ResultCodes Si570_ChangeFrequency(float new_freq, uchar test)
 {
     Si570_ResultCodes retval = SI570_OK;
     Si570_FreqConfig new_config;
@@ -479,112 +438,10 @@ static Si570_ResultCodes ui_si570_change_frequency(float new_freq, uchar test)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-Si570_ResultCodes ui_si570_set_frequency(ulong freq, int calib, int temp_factor, uchar test)
+static void Si570_ConvExternalTemp(uchar *temp, int *dtemp)
 {
-    Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
-
-    float		freq_calc, freq_scale, temp_scale, temp;
-
-    freq_scale = (float)freq;		// get frequency
-    freq_calc = freq_scale;		// copy frequency
-    freq_scale /= 14000000;		// get scaling factor since our calibrations are referenced to 14.000 MHz
-
-    temp = (float)calib;			// get calibration factor
-    temp *= (freq_scale);		// scale calibration for operating frequency but double magnitude of calibration factor
-
-    freq_calc -= temp;				// subtract calibration factor
-
-    temp_scale = (float)temp_factor;	// get temperature factor
-    temp_scale /= 14000000;		// calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
-
-    freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
-
-    // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
-    if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
-    {
-        // tuning inside known working spec
-        retval = ui_si570_change_frequency((float64_t)freq_calc/1000000.0, test);
-        if (freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ)
-        {
-            // outside official spec but known to work
-            if (retval == SI570_OK)
-            {
-                retval = SI570_TUNE_LIMITED;
-            }
-        }
-    }
-    return retval;
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_init_temp_sensor
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-uchar ui_si570_init_temp_sensor(void)
-{
-    uchar config, res;
-
-    // Read config reg
-    res = mchf_hw_i2c_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
-    if(res != 0)
-        return 1;
-
-    // Modify resolution
-    config &= ~(3 << MCP_ADC_RES);
-    config |= (MCP_ADC_RES_12 << MCP_ADC_RES);
-
-    // Modify power mode
-    config &= ~(1 << MCP_SHUTDOWN);
-    config |= (MCP_POWER_UP << MCP_SHUTDOWN);
-
-    // Write config reg
-    res = mchf_hw_i2c_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
-    if(res != 0)
-        return 2;
-
-    return 0;
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_read_temp
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-uchar ui_si570_read_temp(int *temp)
-{
-    uchar	res;
-    uchar	data[10];
-
-    if(data == NULL)
-        return 1;
-
-    // Read temperature
-    res = mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2);
-    if(res != 0)
-        return 2;
-
-    // Convert to decimal
-    ui_si570_conv_temp(data, temp);
-
-    return 0;
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_conv_temp
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void ui_si570_conv_temp(uchar *temp, int *dtemp)
-{
-    ushort	ts;
-    int		t = 0, d = 0;
+    ushort  ts;
+    int     t = 0, d = 0;
 
     if(dtemp == NULL)
         return;
@@ -606,18 +463,31 @@ void ui_si570_conv_temp(uchar *temp, int *dtemp)
     *dtemp = (t * 10000) + d;
 }
 
+
 //
 // by DF8OE
 //
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_calc_startupfrequency
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void ui_si570_calculate_startup_frequency(void)
+// startupfrequency-subroutine
+static void Si570_CalcSufHelper()
+{
+    uchar si_regs[7];
+    int hs_div;
+    int n1;
+    float rsfreq;
+    mchf_hw_i2c_ReadData(os.si570_address, (os.base_reg), si_regs, 6);
+    // calculate startup frequency
+    rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
+    hs_div = (si_regs[0] & 0xE0) / 32 + 4;
+    n1 = (si_regs[1] & 0xC0) / 64 + (si_regs[0] & 0x1F) *4 + 1;
+    if (n1 %2 != 0 && n1 != 1)
+    {
+        n1++;
+    }
+    os.fout = roundf((1142850 * rsfreq) / (hs_div * n1)) / 10000;
+}
+
+
+void Si570_CalculateStartupFrequency()
 {
     if(os.fout < 5)
     {
@@ -632,13 +502,16 @@ void ui_si570_calculate_startup_frequency(void)
             mchf_hw_i2c_reset();
         }
 
-        calc_suf_sub();
+        non_os_delay();
+        // make sure everything is cleared and in initial state
+        Si570_ResetConfiguration();
+        Si570_CalcSufHelper();
 
         if(os.fout > 39.2 && os.fout < 39.3)
         {
             // its a 20 or 50 ppm device, use regs 7+
             os.base_reg = 7;
-            calc_suf_sub();
+            Si570_CalcSufHelper();
         }
 
         // all known startup frequencies
@@ -677,21 +550,174 @@ void ui_si570_calculate_startup_frequency(void)
     }
 }
 
-// startupfrequency-subroutine
-void calc_suf_sub(void)
+
+float   Si570_GetStartupFrequency()
 {
-    uchar si_regs[7];
-    int hs_div;
-    int n1;
-    float rsfreq;
-    mchf_hw_i2c_ReadData(os.si570_address, (os.base_reg), si_regs, 6);
-    // calculate startup frequency
-    rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
-    hs_div = (si_regs[0] & 0xE0) / 32 + 4;
-    n1 = (si_regs[1] & 0xC0) / 64 + (si_regs[0] & 0x1F) *4 + 1;
-    if (n1 %2 != 0 && n1 != 1)
-    {
-        n1++;
-    }
-    os.fout = roundf((1142850 * rsfreq) / (hs_div * n1)) / 10000;
+    return os.fout;
 }
+
+uint8_t   Si570_GeTI2CAddress()
+{
+    return os.si570_address;
+}
+
+
+uchar Si570_ResetConfiguration()
+{
+    int i;
+    uchar   ret;
+    short   res;
+
+    ulong   rfreq_frac;
+    ulong   rfreq_int;
+
+    uchar   hsdiv_curr;
+    uchar   n1_curr;
+
+    // Reset publics
+    os.fxtal        = FACTORY_FXTAL;
+
+    res = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
+    if(res != 0)
+    {
+        return 1;
+    }
+
+    i = 0;
+    do
+    {
+        res = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &ret);
+        if(res != 0)
+        {
+            return 2;
+        }
+
+        i++;
+
+        if(i == 30)
+        {
+            return 3;
+        }
+    }  while(ret & SI570_RECALL);
+
+
+    for(i = 0; i < 6; i++)
+    {
+        res = mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg + i), (uchar*)&(os.regs[i]));
+        if(res != 0)
+        {
+            return 4;
+        }
+    }
+
+    hsdiv_curr = ((os.regs[0] & 0xE0) >> 5) + 4;
+
+    n1_curr = 1 + ((os.regs[0] & 0x1F) << 2) + ((os.regs[1] & 0xC0) >> 6);
+
+
+    rfreq_int = (os.regs[1] & 0x3F);
+    rfreq_int = (rfreq_int << 4) + ((os.regs[2] & 0xF0) >> 4);
+
+    rfreq_frac = (os.regs[2] & 0x0F);
+    rfreq_frac = (rfreq_frac << 8) + os.regs[3];
+    rfreq_frac = (rfreq_frac << 8) + os.regs[4];
+    rfreq_frac = (rfreq_frac << 8) + os.regs[5];
+
+    float64_t rfreq = rfreq_int + (float64_t)rfreq_frac / POW_2_28;
+    os.fxtal = (os.fout * n1_curr * hsdiv_curr) / rfreq;
+
+    os.cur_config.rfreq = rfreq;
+    os.cur_config.n1 = n1_curr;
+    os.cur_config.hsdiv = hsdiv_curr;
+    os.cur_config.fdco = Si570_GetFDCOForFreq(os.fout,n1_curr,hsdiv_curr);
+
+    return 0;
+}
+
+
+Si570_ResultCodes Si570_SetFrequency(ulong freq, int calib, int temp_factor, uchar test)
+{
+    Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
+
+    float		freq_calc, freq_scale, temp_scale, temp;
+
+    freq_scale = (float)freq;		// get frequency
+    freq_calc = freq_scale;		// copy frequency
+    freq_scale /= 14000000;		// get scaling factor since our calibrations are referenced to 14.000 MHz
+
+    temp = (float)calib;			// get calibration factor
+    temp *= (freq_scale);		// scale calibration for operating frequency but double magnitude of calibration factor
+
+    freq_calc -= temp;				// subtract calibration factor
+
+    temp_scale = (float)temp_factor;	// get temperature factor
+    temp_scale /= 14000000;		// calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
+
+    freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
+
+    // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
+    if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
+    {
+        // tuning inside known working spec
+        retval = Si570_ChangeFrequency((float64_t)freq_calc/1000000.0, test);
+        if (freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ)
+        {
+            // outside official spec but known to work
+            if (retval == SI570_OK)
+            {
+                retval = SI570_TUNE_LIMITED;
+            }
+        }
+    }
+    return retval;
+}
+
+
+uchar Si570_InitExternalTempSensor()
+{
+    uchar config, res;
+
+    // Read config reg
+    res = mchf_hw_i2c_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
+    if(res != 0)
+        return 1;
+
+    // Modify resolution
+    config &= ~(3 << MCP_ADC_RES);
+    config |= (MCP_ADC_RES_12 << MCP_ADC_RES);
+
+    // Modify power mode
+    config &= ~(1 << MCP_SHUTDOWN);
+    config |= (MCP_POWER_UP << MCP_SHUTDOWN);
+
+    // Write config reg
+    res = mchf_hw_i2c_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
+    if(res != 0)
+        return 2;
+
+    return 0;
+}
+
+
+
+
+uchar Si570_ReadExternalTempSensor(int *temp)
+{
+    uchar	res;
+    uchar	data[10];
+
+    if(data == NULL)
+        return 1;
+
+    // Read temperature
+    res = mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2);
+    if(res != 0)
+        return 2;
+
+    // Convert to decimal
+    Si570_ConvExternalTemp(data, temp);
+
+    return 0;
+}
+
+

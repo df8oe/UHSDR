@@ -804,7 +804,7 @@ void mchf_board_init(void)
     mchf_hw_i2c_init();
 
     // Get startup frequency of Si570, by DF8OE, 201506
-    ui_si570_calculate_startup_frequency();
+    Si570_CalculateStartupFrequency();
 
 
     // Codec control interface
@@ -1021,7 +1021,7 @@ void verify_servirt(void)
 
 void mchf_reboot()
 {
-    ui_si570_get_configuration();       // restore SI570 to factory default
+    Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
     NVIC_SystemReset();         // restart mcHF
 }

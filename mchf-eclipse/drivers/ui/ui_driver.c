@@ -17,7 +17,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "codec.h"
 #include "ui_menu.h"
 //
 //
@@ -883,7 +882,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
     if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
-        if(ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
+        if(Si570_SetFrequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
         {
             if(ts.sysclock > RX_MUTE_START_DELAY)       // has system start-up completed?
             {
@@ -898,7 +897,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
         if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
             // Set frequency
-            ts.last_lo_result = ui_si570_set_frequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+            ts.last_lo_result = Si570_SetFrequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
             df.temp_factor_changed = false;
             ts.last_tuning = ts.sysclock;
             ts.tune_freq = tune_freq;        // frequency change required - update change detector
@@ -932,7 +931,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
     // we check with the si570 code if the frequency is tunable, we do not tune to it.
-    return ui_si570_set_frequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor, 1);
+    return Si570_SetFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor, 1);
 }
 
 
@@ -1442,10 +1441,10 @@ void ui_driver_init()
     sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
     // Temp sensor setup
-    lo.sensor_absent = ui_si570_init_temp_sensor();
+    lo.sensor_absent = Si570_InitExternalTempSensor();
 
     // Read SI570 settings
-    lo.lo_error = 0 != ui_si570_get_configuration();
+    lo.lo_error = 0 != Si570_ResetConfiguration();
 
 
     // Update codec volume
@@ -6546,7 +6545,7 @@ static void UiDriverHandleLoTemperature()
         {
             lo.skip = 0;
             // Get current temperature
-            if(ui_si570_read_temp(&temp) == 0)
+            if(Si570_ReadExternalTempSensor(&temp) == 0)
             {
 
                 // Get temperature from sensor with its maximum precision
@@ -7290,4 +7289,112 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
     {
         non_os_delay();
     }
+}
+void UiDriver_ShowStartUpScreen(ulong hold_time)
+{
+    uint16_t    i;
+    //  uint16_t    t, s, u, v;
+    char   tx[100];
+
+    // Clear all
+    UiLcdHy28_LcdClear(Black);
+
+    non_os_delay();
+    // Show first line
+    sprintf(tx,"%s",DEVICE_STRING);
+    UiLcdHy28_PrintText(0,30,tx,Cyan,Black,1);       // Position with original text size:  78,40
+    //
+
+    // Show second line
+    sprintf(tx,"%s",AUTHOR_STRING);
+    UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
+
+    // Show third line
+    sprintf(tx,"v %d.%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD);
+    UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
+
+    // Show fourth line
+    sprintf(tx,"Build on %s%s%s",__DATE__," at ",__TIME__);
+    UiLcdHy28_PrintText(35,100,tx,Yellow,Black,0);
+
+    Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
+
+    if(!(i & 0xff))
+    {
+        sprintf(tx,"WARNING:  Freq. Translation is OFF!!!");
+        UiLcdHy28_PrintText(16,120,tx,Black,Red3,0);
+        sprintf(tx,"Translation is STRONGLY recommended!!");
+        UiLcdHy28_PrintText(16,135,tx,Black,Red3,0);
+    }
+    else
+    {
+        sprintf(tx," Freq. Translate On ");
+        UiLcdHy28_PrintText(80,120,tx,Grey3,Black,0);
+    }
+
+    // Display the mode of the display interface
+    //
+    switch(ts.display_type)
+    {
+    case DISPLAY_HY28B_PARALLEL:
+        sprintf(tx,"LCD: Parallel Mode");
+        break;
+    case DISPLAY_HY28A_SPI:
+        sprintf(tx,"LCD: HY28A SPI Mode");
+        break;
+    case DISPLAY_HY28B_SPI:
+        sprintf(tx,"LCD: HY28B SPI Mode");
+        break;
+    default:
+        sprintf(tx,"LCD: None Detected ");
+        // Yes, this is pointless, no display, no boot splash :-)
+    }
+
+    //
+    UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
+
+    // Display startup frequency of Si570, By DF8OE, 201506
+    float suf = Si570_GetStartupFrequency();
+    int vorkomma = (int)(suf);
+    int nachkomma = (int) roundf((suf-vorkomma)*10000);
+
+    sprintf(tx,"SI570 startup frequency: %u.%04u MHz",vorkomma,nachkomma);
+    UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
+    //
+
+    if(ts.ee_init_stat != FLASH_COMPLETE)        // Show error code if problem with EEPROM init
+    {
+        sprintf(tx, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
+        UiLcdHy28_PrintText(60,180,tx,White,Black,0);
+    }
+    else
+    {
+        ushort adc2, adc3;
+        adc2 = ADC_GetConversionValue(ADC2);
+        adc3 = ADC_GetConversionValue(ADC3);
+        if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
+        {
+            sprintf(tx, "SWR Bridge resistor mod NOT completed!");
+            UiLcdHy28_PrintText(8,180,tx,Red3,Black,0);
+        }
+    }
+
+    // Additional Attrib line 1
+    sprintf(tx,"%s",ATTRIB_STRING1);
+    UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
+
+    // Additional Attrib line 2
+    sprintf(tx,"%s",ATTRIB_STRING2);
+    UiLcdHy28_PrintText(42,210,tx,Grey1,Black,0);
+
+    // Additional Attrib line 3
+    sprintf(tx,"%s",ATTRIB_STRING3);
+    UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
+
+    // Backlight on
+    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
+
+    // On screen delay - decrease if drivers init takes longer
+    for(i = 0; i < hold_time; i++)
+        non_os_delay();
 }

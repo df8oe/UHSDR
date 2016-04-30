@@ -12,7 +12,6 @@
 **  Last Modified:                                                                 **
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
-#define NEWMENU
 // Common
 //
 #include "mchf_board.h"
@@ -24,9 +23,7 @@
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
-//
-//
-//
+
 // LCD
 #include "ui_lcd_hy28.h"
 
@@ -35,7 +32,7 @@
 
 // Encoders
 #include "ui_rotary.h"
-//
+
 // Codec control
 #include "codec.h"
 #include "softdds.h"
@@ -44,33 +41,19 @@
 #include "audio_filter.h"
 #include "audio_management.h"
 #include "ui_driver.h"
-//#include "usbh_usr.h"
-//
-#include "ui_si570.h"
 
+#include "ui_si570.h"
 #include "cat_driver.h"
 
-// Virtual eeprom
-#include "eeprom.h"
-//
 // CW generation
 #include "cw_gen.h"
-//
-#include "mchf_hw_i2c2.h"
 
 
 static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos);
 static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos);
 static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos);
 static void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos);
-//
-//
-// Public data structures
-//
-// ------------------------------------------------
-// Transceiver state public structure
-extern __IO TransceiverState 	ts;
-extern __IO OscillatorState os;
+
 
 
 
@@ -1335,10 +1318,10 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
         break;
     case INFO_SI570:
     {
-        float suf = ui_si570_get_startup_frequency();
+        float suf = Si570_GetStartupFrequency();
         int vorkomma = (int)(suf);
         int nachkomma = (int) roundf((suf-vorkomma)*10000);
-        snprintf(out,32,"%xh / %u.%04u MHz",(os.si570_address >> 1),vorkomma,nachkomma);
+        snprintf(out,32,"%xh / %u.%04u MHz",(Si570_GeTI2CAddress() >> 1),vorkomma,nachkomma);
         outs = out;
     }
     break;
@@ -2313,7 +2296,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             strcpy(options, "  ON");
             if(fchange)
             {
-                ui_si570_init_temp_sensor();
+                Si570_InitExternalTempSensor();
                 UiDriverCreateTemperatureDisplay(1,1);
             }
         }
@@ -3792,7 +3775,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                 UiMenu_DisplayValue("Working",Red,opt_pos);
                 Write_24Cxx(0,0xFF,16);
                 Write_24Cxx(1,0xFF,16);
-                ui_si570_get_configuration();		// restore SI570 to factory default
+                Si570_ResetConfiguration();		// restore SI570 to factory default
                 *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
                 NVIC_SystemReset();			// restart mcHF
             }

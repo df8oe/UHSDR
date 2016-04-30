@@ -561,6 +561,7 @@ void 	uiCodecMute(uchar val);
 void	UiInitRxParms();
 
 void    UiDriver_KeyTestScreen();
+void UiDriver_ShowStartUpScreen(ulong hold_time);
 
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
