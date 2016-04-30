@@ -3450,7 +3450,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 
             if (mode != UFM_SMALL_TX)
             {
-                UiDriver_ShowBandForFreq(ts.tune_freq/TUNE_MULT);
+                UiDriver_ShowBandForFreq(dial_freq);
                 // check which band in which we are currently tuning and update the display
 
                 UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);

@@ -26,11 +26,9 @@
 #define SI570_MIN_FREQ			10000000	// 10=2.5 MHz
 #define SI570_MAX_FREQ			160000000	// 160=40 Mhz
 //
-// These are "hard limit" frequencies below/above which the synthesizer/algorithms must not be adjusted or else the system may crash
-#define SI570_HARD_MIN_FREQ		1000000		// 1.0=0.25 MHz
+// These are "hard limit" frequencies below/above which the synthesizer cannot be adjusted or else the system may crash
+#define SI570_HARD_MIN_FREQ		3500000		// 3.5=  0.875 MHz
 #define SI570_HARD_MAX_FREQ		220000000	// 220=55 MHz
-
-#define	LARGE_STEP_HYSTERESIS	10000		//0.01	// size, in MHz, of hysteresis in large tuning step at output frequency (4x tuning freq)
 
 #define SI570_RECALL			(1<<0)
 #define SI570_FREEZE_DCO		(1<<4)
@@ -76,26 +74,26 @@
 #define	MCP_POWER_UP			0
 #define	MCP_POWER_DOWN			1
 
+typedef struct {
+    uint8_t hsdiv;
+    uint8_t n1;
+    float64_t fdco;
+    float64_t rfreq;
+} Si570_FreqConfig;
+
 typedef struct OscillatorState
 {
-    long double			rfreq;
-    long double 		rfreq_old;
+    Si570_FreqConfig    cur_config;
 
     float 				fxtal;
 
-    uchar				regs[6];
+    uint8_t				regs[6];
 
     float				fout;		// contains startup frequency info of Si570
 
     unsigned short		si570_address;
 
-    uchar				base_reg;
-
-#ifdef LOWER_PRECISION
-    uchar 				init_n1;
-    uchar				init_hsdiv;
-    ulong 				init_rfreq;
-#endif
+    uint8_t				base_reg;
 
 } OscillatorState;
 
