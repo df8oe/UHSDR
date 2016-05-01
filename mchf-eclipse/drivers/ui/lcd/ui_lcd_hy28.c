@@ -21,6 +21,7 @@
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
+#define USE_SPI_DMA
 
 // Saved fonts
 extern sFONT GL_Font8x8;
@@ -147,6 +148,76 @@ void UiLcdHy28_SpiInit(bool hispeed)
     GPIO_SetBits(lcd_cs_pio, lcd_cs);
 }
 
+static DMA_InitTypeDef DMA_InitStructure;
+
+void UiLcdHy28_SpiDmaPrepare()
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    //Enable the Direct Memory Access peripheral clocks
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
+
+    DMA_DeInit(DMA1_Stream4);
+    DMA_Cmd(DMA1_Stream4, DISABLE);
+    DMA_StructInit(&DMA_InitStructure);
+    DMA_InitStructure.DMA_Channel = DMA_Channel_0;                                          //SPI2 Tx DMA is DMA1/Stream4/Channel0
+    DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32_t)&(SPI2->DR);                      //Set the SPI2 Tx
+    DMA_InitStructure.DMA_DIR  = DMA_DIR_MemoryToPeripheral;                                //Sending data from memory to the peripheral's Tx register
+    DMA_InitStructure.DMA_PeripheralInc  = DMA_PeripheralInc_Disable;                       //Don't increment the peripheral 'memory'
+    DMA_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Enable;                                //Increment the memory location
+    DMA_InitStructure.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_Byte;                //Byte size memory transfers
+    DMA_InitStructure.DMA_MemoryDataSize  = DMA_MemoryDataSize_Byte;                        //Byte size memory transfers
+    DMA_InitStructure.DMA_Mode  = DMA_Mode_Normal;                                          //Normal mode (not circular)
+    DMA_InitStructure.DMA_Priority  = DMA_Priority_High;                                    //Priority is high to avoid saturating the FIFO since we are in direct mode
+    DMA_InitStructure.DMA_FIFOMode  = DMA_FIFOMode_Disable;                                 //Operate in 'direct mode' without FIFO
+    DMA_InitStructure.DMA_BufferSize  = 0;                                               //Define the number of bytes to send
+    DMA_InitStructure.DMA_Memory0BaseAddr  = (uint32_t)0;                              //Set the memory location
+
+    DMA_Init(DMA1_Stream4, &DMA_InitStructure);
+
+    SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);        //Enable the DMA Transmit Request
+
+    //Enable the transfer complete interrupt for DMA1 Stream4
+    DMA_ITConfig(DMA1_Stream4, DMA_IT_TC, ENABLE);                                       //Enable the Transfer Complete interrupt
+
+    NVIC_InitStructure.NVIC_IRQChannel = DMA1_Stream4_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+
+    DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
+}
+
+void DMA1_Stream4_IRQHandler(void)
+{
+    //Check if the transfer complete interrupt flag has been set
+    if(DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) == SET)
+    {
+        //Clear the DMA1 Stream4 Transfer Complete flag
+        DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
+    }
+}
+
+inline void UiLcdHy28_SpiDmaStop()
+{
+    while (DMA1_Stream4->CR & DMA_SxCR_EN) { asm(""); }
+}
+void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint16_t size)
+{
+
+    // do busy waiting here. This is just for testing if everything goes according to plan
+    // if this works okay, we can let SPI DMA running while doing something else
+    // and just check before next transfer if DMA is being done.
+    // and finally we can move that into an interrupt, of course.
+
+    UiLcdHy28_SpiDmaStop();
+    DMA1_Stream4->M0AR = (uint32_t)buffer;
+    DMA_SetCurrDataCounter(DMA1_Stream4,size);
+
+    DMA_Cmd(DMA1_Stream4, ENABLE);                          //Enable the DMA stream assigned to SPI2
+    UiLcdHy28_SpiDmaStop();
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_SpiInit
 //* Object              :
@@ -441,13 +512,6 @@ static inline void UiLcdHy28_WriteDataSpiStart()
     UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteDataOnly
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
 //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
@@ -825,11 +889,32 @@ void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
 //*----------------------------------------------------------------------------
 void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
-    uint32_t i = len;
-    for (; i; i--)
-    {
-        UiLcdHy28_WriteDataOnly(*(pixel++));
+    uint32_t i;
+
+    if (display_use_spi == 0) {
+        uint32_t i = len;
+        for (; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(*(pixel++));
+        }
     }
+    else {
+#ifdef USE_SPI_DMA
+        for (i = 0; i < len; i++)
+        {
+            pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
+        }
+        UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
+#else
+        uint32_t i = len;
+        for (; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(*(pixel++));
+        }
+#endif
+    }
+
+
 }
 
 void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
@@ -843,43 +928,22 @@ void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_CloseBulk
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_CloseBulkWrite(void)
 {
 
     if(display_use_spi)	 		// SPI enabled?
     {
-
+#ifdef USE_SPI_DMA
+        UiLcdHy28_SpiDmaStop();
+#endif
         GPIO_SetBits(lcd_cs_pio, lcd_cs);	// bulk-write complete!
-
     }
-    //
     UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
     UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
     UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
     UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-    //
     UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
-
 }
-
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawChar
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
@@ -1359,6 +1423,9 @@ uint8_t UiLcdHy28_Init(void)
         retval = UiLcdHy28_InitA() != 0?DISPLAY_NONE:DISPLAY_HY28B_PARALLEL;   // on error here
     }
 
+    if (display_use_spi != 0) {
+        UiLcdHy28_SpiDmaPrepare();
+    }
     return retval;
 }
 
