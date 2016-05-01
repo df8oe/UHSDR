@@ -400,7 +400,7 @@ void audio_driver_set_rx_audio_filter(void)
      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
     // biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
     // biquad 2 :   Treble in the 48kHz path
-    // DSP Audio-EQ-cookbook for generating the coeffs of the notch filter on the fly
+    // DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
     // www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
     //
     // the ARM algorithm assumes the biquad form
@@ -419,11 +419,12 @@ void audio_driver_set_rx_audio_filter(void)
     //
     //
     float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
-    float32_t FS = 48000; // we need this for the treble filter
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
         FSdec = 24000.0;
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
         FSdec = 12000.0;
+    float32_t FS = 48000; // we need this for the treble filter
+
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
     float32_t f0 = ts.notch_frequency;
     float32_t Q = 10; // larger Q gives narrower notch
@@ -469,8 +470,7 @@ void audio_driver_set_rx_audio_filter(void)
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.peak_enabled)
     {
-/*       // peak filter
-  	  	 // the shape is fine, but we want 0dB gain! --> BPF, see below
+/*       // peak filter = peaking EQ
     	f0 = ts.peak_frequency;
         //Q = 15; //
         // bandwidth in octaves between midpoint (Gain / 2) gain frequencies
@@ -488,8 +488,7 @@ void audio_driver_set_rx_audio_filter(void)
         a2 = (alpha/A) - 1; // already negated!
 */
 /*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
-    	// Bandpass filter 0dB gain
-    	// = CW peak filter = APF
+    	// Bandpass filter constant 0dB peak gain
     	// this filter was tested: "should have more gain and less Q"
     	f0 = ts.peak_frequency;
         Q = 20; //
@@ -508,11 +507,10 @@ void audio_driver_set_rx_audio_filter(void)
         // BPF: constant skirt gain, peak gain = Q
     	f0 = ts.peak_frequency;
         Q = 4; //
-        w0 = 2 * PI * f0 / FSdec;
-//        A = 1; // gain = 1
-        //        A = 3; // 10^(10/40); 15dB gain
         float32_t BW = 0.03;
+        w0 = 2 * PI * f0 / FSdec;
         alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) ); //
+
         b0 = Q * alpha;
         b1 = 0;
         b2 = - Q * alpha;
@@ -547,6 +545,7 @@ void audio_driver_set_rx_audio_filter(void)
     // the bass filter is in biquad 1 and works at the decimated sample rate FSdec
     //
     // Bass
+    // lowShelf
     //
     f0 = 250;
     w0 = 2 * PI * f0 / FSdec;
@@ -555,8 +554,8 @@ void audio_driver_set_rx_audio_filter(void)
     alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
     float32_t cosw0 = cos(w0);
     float32_t twoAa = 2 * sqrt(A) * alpha;
+
     // lowShelf
-    //
     b0 = A * 		( (A + 1) - (A - 1) * cosw0 + twoAa );
     b1 = 2 * A * 	( (A - 1) - (A + 1) * cosw0 		);
     b2 = A * 		( (A + 1) - (A - 1) * cosw0 - twoAa );
@@ -577,7 +576,8 @@ void audio_driver_set_rx_audio_filter(void)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
-    float32_t DCgain = 3; //
+//    float32_t DCgain = 3; //
+    float32_t DCgain = 2; //
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -596,7 +596,7 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_biquad_1.pCoeffs[14] = 0;
     }
     */
-    // Treble
+    // Treble = highShelf
     //
     // the treble filter is in biquad 2 and works at 48000ksps
     f0 = 4500;
@@ -623,8 +623,8 @@ void audio_driver_set_rx_audio_filter(void)
     a1 = a1/a0;
     a2 = a2/a0;
 
-
-    DCgain = 3; //
+//    DCgain = 3; //
+    DCgain = 2; //
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
