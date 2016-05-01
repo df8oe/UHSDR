@@ -252,7 +252,7 @@ static float64_t Si570_FDCO_InRange(float64_t fdco){
 }
 
 static float64_t Si570_GetFDCOForFreq(float new_freq, uint8_t n1, uint8_t hsdiv){
-    return ((long double)new_freq * (long double)(n1 * hsdiv));
+    return ((float64_t)new_freq * (float64_t)(n1 * hsdiv));
 }
 
 static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
@@ -267,7 +267,7 @@ static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* 
 
     if (fdiff <= SMOOTH_DELTA && Si570_FDCO_InRange(fdco))
     {
-        new_config->rfreq = fdco / os.fxtal;
+        new_config->rfreq = fdco / (float64_t)os.fxtal;
         new_config->fdco = fdco;
         new_config->n1 = cur_config->n1;
         new_config->hsdiv = cur_config->hsdiv;
@@ -383,13 +383,7 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
     return retval;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_get_configuration
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_si570_change_frequency
 //* Object              :
@@ -413,8 +407,20 @@ static Si570_ResultCodes Si570_ChangeFrequency(float new_freq, uchar test)
             }
         }
         retval = Si570_WriteConfig(&new_config,is_small);
-        if (retval == SI570_OK)
+        if (retval == SI570_ERROR_VERIFY && is_small == true)
         {
+            // sometimes the small change simply does not work
+            // for unknown reasons, so we execute a large step
+            // instead to recover.
+            // TODO: Maybe this should be handled on  the application layer
+            // as this introduces some noise without muting
+            // The frequencies are not random, i.e. it is possible to reproduce the issue
+            // e.g. going from higher frequencies towards 33.901 Mhz in 100 khz steps
+            // shows this problem (from a 1 mhz distance, e.g. 34.901 Mhz).
+            // but it also happens at much smaller step width.
+            retval = Si570_WriteConfig(&new_config,false);
+        }
+        if (retval == SI570_OK) {
             Si570_CopyConfig(&new_config,cur_config_ptr);
         }
         else
