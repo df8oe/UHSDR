@@ -1,16 +1,16 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:      CC BY-NC-SA 3.0                                                  **
-************************************************************************************/
+ **                                                                                 **
+ **                               mcHF QRP Transceiver                              **
+ **                             K Atanassov - M0NKA 2014                            **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:      CC BY-NC-SA 3.0                                                  **
+ ************************************************************************************/
 
 // Common
 #include "mchf_board.h"
@@ -32,11 +32,11 @@ extern sFONT GL_Font16x24;
 
 static sFONT *fontList[] =
 {
-    &GL_Font8x12_bold,
-    &GL_Font16x24,
-    &GL_Font12x12,
-    &GL_Font8x12,
-    &GL_Font8x8,
+        &GL_Font8x12_bold,
+        &GL_Font16x24,
+        &GL_Font12x12,
+        &GL_Font8x12,
+        &GL_Font8x8,
 };
 
 
@@ -50,9 +50,9 @@ GPIO_TypeDef* lcd_cs_pio;
 uint16_t display_use_spi;
 
 const uint8_t touchscreentable [] = {0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,0x1c,0x1d,0x1e,0x1f,0x22,
-                                     0x23,0x24,0x25,0x26,0x27,0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,0x40,0x42,0x44,0x45,0x46,0x47,0x4c,
-                                     0x4d,0x4e,0x52,0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,0x80
-                                    };
+        0x23,0x24,0x25,0x26,0x27,0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,0x40,0x42,0x44,0x45,0x46,0x47,0x4c,
+        0x4d,0x4e,0x52,0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,0x80
+};
 
 
 static void UiLcdHy28_Delay(ulong delay);
@@ -268,11 +268,11 @@ void UiLcdHy28_ParallelInit()
     // Port D usage - data and control
     // SRAM Data lines,  NOE, NE1, A16 and NWE configuration
     GPIO_InitStructure.GPIO_Pin =    LCD_D2 |LCD_D3 |
-                                     LCD_RD |LCD_WR |
-                                     LCD_CSA|LCD_D15|
-                                     LCD_D16|LCD_D17|
-                                     LCD_RS |LCD_D0 |
-                                     LCD_D1;
+            LCD_RD |LCD_WR |
+            LCD_CSA|LCD_D15|
+            LCD_D16|LCD_D17|
+            LCD_RS |LCD_D0 |
+            LCD_D1;
 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -294,10 +294,10 @@ void UiLcdHy28_ParallelInit()
 
     // Data port on port E
     GPIO_InitStructure.GPIO_Pin =    LCD_D4 |LCD_D5 |
-                                     LCD_D6 |LCD_D7 |
-                                     LCD_D10|LCD_D11|
-                                     LCD_D12|LCD_D13|
-                                     LCD_D14;
+            LCD_D6 |LCD_D7 |
+            LCD_D10|LCD_D11|
+            LCD_D12|LCD_D13|
+            LCD_D14;
 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -441,7 +441,7 @@ uint8_t UiLcdHy28_ReadByteSpi(void)
     ulong timeout;
     uchar byte = 0;
 
-    /* Loop while DR register in not emplty */
+    /* Loop while DR register in not empty */
     timeout = 0x1000;
     while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET)
     {
@@ -514,8 +514,8 @@ static inline void UiLcdHy28_WriteDataSpiStart()
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
-//    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
-//	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
+    //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
+    //	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
 
     if(display_use_spi)
     {
@@ -1259,7 +1259,7 @@ uchar UiLcdHy28_InitA(void)
     // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
     if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
     {
-//      UiLcdHy28_WriteReg(0x00e5,0x78f0);	// special testing
+        //      UiLcdHy28_WriteReg(0x00e5,0x78f0);	// special testing
         UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
         UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion
         UiLcdHy28_WriteReg(0x0004,0x0000);	// resize register
@@ -1423,28 +1423,63 @@ uint8_t UiLcdHy28_Init(void)
         retval = UiLcdHy28_InitA() != 0?DISPLAY_NONE:DISPLAY_HY28B_PARALLEL;   // on error here
     }
 
-    if (display_use_spi != 0) {
+    if (display_use_spi != 0)
+    {
         UiLcdHy28_SpiDmaPrepare();
     }
     return retval;
 }
 
 
-void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
+/*
+ * @brief Called to run the touch detection state machine, results are stored in ts structure
+ */
+void UiLcdHy28_TouchscreenDetectPress()
+{
+    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
+        UiLcdHy28_TouchscreenReadCoordinates(true);
+
+    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+    {
+        ts.tp_state = 0;
+        ts.tp_x = ts.tp_y = 0xff;
+    }
+}
+/*
+ * @brief tells you that touchscreen coordinates are ready for processing and marks them as processed
+ * @returns true if coordinates for processing are available and have been marked as processed, false otherwise
+ */
+bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
+    bool retval = false;
+    UiLcdHy28_TouchscreenReadCoordinates(true);
+    if(ts.tp_state > TP_DATASETS_WAIT && ts.tp_state != TP_DATASETS_PROCESSED)
+    {
+        ts.tp_state = TP_DATASETS_NONE;     // tp data processed
+        retval = true;
+    }
+    return retval;
+}
+
+
+/*
+ * @brief Extracts touchscreen touch coordinates, counts how often same position is being read consecutively
+ * @param do_translate false -> raw coordinates, true -> mapped coordinates according to calibration data
+ */
+void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
 {
     uchar i,x,y;
 
     /*
     statemachine stati:
-    0 = no touchscreen action detected
-    1 = first touchscreen data fetched
+    TP_DATASETS_NONE = no touchscreen action detected
+    TP_DATASETS_WAIT 1 = first touchscreen press
     >1 = x times valid data available
-    0xff = data was already processed by calling function
-    */
+    TP_DATASETS_PROCESSED 0xff = data was already processed by calling function
+     */
 
-    if(ts.tp_state < VALID_TP_DATASETS)	// no valid data ready or data ready to process
+    if(ts.tp_state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
     {
-        if(ts.tp_state > 0 && ts.tp_state < VALID_TP_DATASETS)	// first pass finished, get data
+        if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
             GPIO_ResetBits(TP_CS_PIO, TP_CS);
             UiLcdHy28_SendByteSpi(144);
@@ -1453,17 +1488,19 @@ void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
             y = UiLcdHy28_ReadByteSpi();
             GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-            if(mode)								//do translation with correction table
+            if(do_translate)								//do translation with correction table
             {
                 for(i=0; touchscreentable[i]<= x; i++)
-                    ;
+                {}
                 x = 60-i;
                 for(i=0; touchscreentable[i]<= y; i++)
-                    ;
+                {}
                 y = i--;
             }
             if(x == ts.tp_x && y == ts.tp_y)	// got identical data
+            {
                 ts.tp_state++;						// touch data valid
+            }
             else
             {
                 // set new data
@@ -1472,12 +1509,13 @@ void UiLcdHy28_GetTouchscreenCoordinates(bool mode)
             }
         }
         else
-            ts.tp_state = 1;			// do next first data read
+        {
+            ts.tp_state = TP_DATASETS_WAIT;			// do next first data read
+        }
     }
 }
 
-
-void UiLcdHy28_ReadTcData()
+static void UiLcdHy28_TouchscreenReadData()
 {
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
     UiLcdHy28_SendByteSpi(144);
@@ -1486,6 +1524,18 @@ void UiLcdHy28_ReadTcData()
     ts.tp_y = UiLcdHy28_ReadByteSpi();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
+
+void UiLcdHy28_TouchscreenPresenceDetection(void)
+{
+    UiLcdHy28_TouchscreenReadData();
+    if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0)
+    {// touchscreen data valid?
+        ts.tp_present = 1;                      // yes - touchscreen present!
+    }
+
+    ts.tp_state = TP_DATASETS_PROCESSED;
+}
+
 
 
 #pragma GCC optimize("O0")
