@@ -112,7 +112,8 @@ const ulong tune_steps[T_STEP_MAX_STEPS] =
     T_STEP_100HZ,
     T_STEP_1KHZ,
     T_STEP_5KHZ,
-    T_STEP_10KHZ,
+    T_STEP_9KHZ,
+	T_STEP_10KHZ,
     T_STEP_100KHZ,
     T_STEP_1MHZ,
     T_STEP_10MHZ
@@ -3668,10 +3669,14 @@ void UiDriverChangeTuningStep(uchar is_up)
     if(is_up)
     {
         idx= (idx>=idx_limit)?0:idx+1;
+       if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/4) > 1600001))
+       		idx ++;
     }
     else
     {
         idx= (idx==0)?idx_limit:idx-1;
+       if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/4) > 1600001))
+       		idx --;
     }
 
     df.tuning_step	= tune_steps[idx];
