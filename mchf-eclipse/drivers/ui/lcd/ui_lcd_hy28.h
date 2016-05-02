@@ -110,9 +110,16 @@ void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
 void 	UiLcdHy28_BulkWriteColor(uint16_t color, uint32_t len);
 void 	UiLcdHy28_CloseBulkWrite(void);
 
-uint8_t 	UiLcdHy28_Init(void);
+uint8_t 	UiLcdHy28_Init();
 
-void 	UiLcdHy28_GetTouchscreenCoordinates(bool);	// 1 == corrected data, 0 == raw data
-void	UiLcdHy28_ReadTcData(void);
+#define TP_DATASETS_VALID     0x08   // number of sets that must be identical for marked as VALID
+#define TP_DATASETS_WAIT    0x01   // number of sets that must be identical for marked as VALID
+#define TP_DATASETS_PROCESSED 0xff
+#define TP_DATASETS_NONE      0x00
+
+void    UiLcdHy28_TouchscreenDetectPress();
+void    UiLcdHy28_TouchscreenPresenceDetection();
+void 	UiLcdHy28_TouchscreenReadCoordinates(bool do_translate);	// true == corrected data, false == raw data
+bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
 
 #endif

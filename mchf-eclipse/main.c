@@ -693,14 +693,6 @@ void ConfigurationStorage_Init()
     //	    }
 }
 
-void CheckIsTouchscreenPresent(void)
-{
-    UiLcdHy28_ReadTcData();
-    if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0) // touchscreen data valid?
-        ts.tp_present = 1;						// yes - touchscreen present!
-
-    ts.tp_state = 0xff;
-}
 
 int main(void)
 {
@@ -735,7 +727,7 @@ int main(void)
     MiscInit();
 
     // test if touchscreen is present
-    CheckIsTouchscreenPresent();
+    UiLcdHy28_TouchscreenPresenceDetection();
 
     // Usb Host driver init
     //keyb_driver_init();

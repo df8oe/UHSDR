@@ -612,7 +612,6 @@ enum
 #define	STEP_PRESS_PLUS				2
 //
 
-#define VALID_TP_DATASETS			8	// number of sets that must be identical for marked as VALID
 
 // ------------------------------------------------
 // Keypad state

@@ -3682,6 +3682,7 @@ void UiDriverChangeTuningStep(uchar is_up)
 
 }
 
+
 /*----------------------------------------------------------------------------
  * @brief Scans buttons 0-16:  0-15 are normal buttons, 16 is power button, 17 touch
  * @param button_num - 0-17
@@ -3692,14 +3693,9 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 {
     bool retval = false;
 
-    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != 0xff)	// fetch touchscreen data if not already processed
-        UiLcdHy28_GetTouchscreenCoordinates(1);
-
-    if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state == 0xff)		// clear statemachine when data is processed
-    {
-        ts.tp_state = 0;
-        ts.tp_x = ts.tp_y = 0xff;
-    }
+    // TODO: This is fragile code, as it depends on being called multiple times in short periods (ms)
+    // This works, since regularily the button matrix is queried.
+    UiLcdHy28_TouchscreenDetectPress();
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
@@ -7051,16 +7047,16 @@ void UiDriver_KeyTestScreen()
 				txt = "      STEP+         ";
 				break;
 			case	TOUCHSCREEN_ACTIVE:
-				;
-				UiLcdHy28_GetTouchscreenCoordinates(1);
-				if(ts.tp_state > 1 && ts.tp_state != 0xff)
-				{
+
+			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
+			    {
 					sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
 					txt = txt_buf;
-					ts.tp_state = 0;		// tp data processed
 				}
 				else
+				{
 					txt = "";
+				}
 				break;
 			case	18+ENC1:							// handle encoder event
 			case	18+ENC2:
@@ -7070,7 +7066,9 @@ void UiDriver_KeyTestScreen()
 			break;
 			default:
 				if(!enccount)
+				{
 					txt = "       <none>       ";				// no button pressed
+				}
 				else
 				{
 					txt = "";
@@ -7081,7 +7079,9 @@ void UiDriver_KeyTestScreen()
 			}
 			//
 			if(txt[0])
+			{
 				UiLcdHy28_PrintText(10,120,txt,White,Blue,1);			// identify button on screen
+			}
 			sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
 
@@ -7180,8 +7180,8 @@ static bool UiDriver_TouchscreenCalibration()
             {
                 non_os_delay();
             }
-            UiLcdHy28_GetTouchscreenCoordinates(1);
-            ts.tp_state = 0;
+            UiLcdHy28_TouchscreenReadCoordinates(true);
+            ts.tp_state = TP_DATASETS_NONE;
 
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
             UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
@@ -7261,9 +7261,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
             non_os_delay();
         }
 
-        UiLcdHy28_GetTouchscreenCoordinates(1);
-
-        if(ts.tp_state > 1 && ts.tp_state != 0xff)
+        if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
         {
             if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
             {
@@ -7280,7 +7278,6 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
             }
             samples++;
             UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
-            ts.tp_state = 0xff;				// touchscreen data processed
         }
     }
     while(datavalid < 3);
