@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #define HY28BHISPEED true
+
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
@@ -174,8 +176,8 @@ void UiLcdHy28_SpiDmaPrepare()
     DMA_InitStructure.DMA_Memory0BaseAddr  = (uint32_t)0;                              //Set the memory location
 
     DMA_Init(DMA1_Stream4, &DMA_InitStructure);
-
     SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);        //Enable the DMA Transmit Request
+
 
     //Enable the transfer complete interrupt for DMA1 Stream4
     DMA_ITConfig(DMA1_Stream4, DMA_IT_TC, ENABLE);                                       //Enable the Transfer Complete interrupt
@@ -203,20 +205,22 @@ inline void UiLcdHy28_SpiDmaStop()
 {
     while (DMA1_Stream4->CR & DMA_SxCR_EN) { asm(""); }
 }
-void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint16_t size)
+
+
+
+void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint32_t size)
 {
 
     // do busy waiting here. This is just for testing if everything goes according to plan
     // if this works okay, we can let SPI DMA running while doing something else
     // and just check before next transfer if DMA is being done.
     // and finally we can move that into an interrupt, of course.
-
-    UiLcdHy28_SpiDmaStop();
-    DMA1_Stream4->M0AR = (uint32_t)buffer;
-    DMA_SetCurrDataCounter(DMA1_Stream4,size);
-
-    DMA_Cmd(DMA1_Stream4, ENABLE);                          //Enable the DMA stream assigned to SPI2
-    UiLcdHy28_SpiDmaStop();
+    if (size > 0)  {
+        UiLcdHy28_SpiDmaStop();
+        DMA1_Stream4->M0AR = (uint32_t)buffer;
+        DMA_SetCurrDataCounter(DMA1_Stream4,size);
+        DMA_Cmd(DMA1_Stream4, ENABLE);                          //Enable the DMA stream assigned to SPI2
+    }
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiLcdHy28_SpiInit
@@ -252,6 +256,13 @@ void UiLcdHy28_SpiDeInit()
     // Configure GPIO PIN for Chip select
     GPIO_InitStructure.GPIO_Pin		= lcd_cs;
     GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
+}
+
+inline void UiLcdHy28_SpiLcdCsDisable() {
+    GPIO_SetBits(lcd_cs_pio, lcd_cs);
+}
+inline void UiLcdHy28_SpiLcdCsEnable() {
+    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
 }
 
 //*----------------------------------------------------------------------------
@@ -398,44 +409,37 @@ void UiLcdHy28_FSMCConfig(void)
     FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM1, ENABLE);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_SendByteSpi
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static inline void UiLcdHy28_SendByteSpi(uint8_t byte)
 {
-    // while ((SPI2>SR & (SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
-    // SPI2->DR = Data;
-    while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)  == RESET);
+    while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)  == RESET) {}
     SPI_I2S_SendData(SPI2, byte);
 
-    while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET);
+    while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET) {}
     SPI_I2S_ReceiveData(SPI2);
 
 }
+
 static inline void UiLcdHy28_SendByteSpiFast(uint8_t byte)
 {
 
-    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET);
+    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET) {}
     SPI2->DR = byte;
-    while ((SPI2->SR & (SPI_I2S_FLAG_RXNE)) == (uint16_t)RESET);
+    while ((SPI2->SR & (SPI_I2S_FLAG_RXNE)) == (uint16_t)RESET) {}
     byte = SPI2->DR;
 }
-static void UiLcdHy28_FinishSpiTransfer()
+
+static inline void UiLcdHy28_FinishSpiTransfer()
 {
-    while (SPI2->SR & SPI_I2S_FLAG_BSY);
+    while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET) {}
+    while (SPI2->SR & SPI_I2S_FLAG_BSY) {}
+}
+
+static void UiLcdHy28_LcdFinishSpiTransfer()
+{
+    UiLcdHy28_FinishSpiTransfer();
     GPIO_SetBits(lcd_cs_pio, lcd_cs);
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_ReadByteSpi
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 uint8_t UiLcdHy28_ReadByteSpi(void)
 {
     ulong timeout;
@@ -464,40 +468,26 @@ uint8_t UiLcdHy28_ReadByteSpi(void)
     return (uint8_t)SPI_I2S_ReceiveData(SPI2);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteIndexSpi
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
-    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
+    UiLcdHy28_SpiLcdCsEnable();
 
     UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
     UiLcdHy28_SendByteSpiFast(0);
     UiLcdHy28_SendByteSpiFast(index);
 
-    UiLcdHy28_FinishSpiTransfer();
+    UiLcdHy28_LcdFinishSpiTransfer();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteDataSpi
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_WriteDataSpi( unsigned short data)
 {
-    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
+    UiLcdHy28_SpiLcdCsEnable();
 
     UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
     UiLcdHy28_SendByteSpiFast((data >>   8));                    /* Write D8..D15                */
     UiLcdHy28_SendByteSpiFast((data & 0xFF));                    /* Write D0..D7                 */
 
-    UiLcdHy28_FinishSpiTransfer();
+    UiLcdHy28_LcdFinishSpiTransfer();
 }
 
 //*----------------------------------------------------------------------------
@@ -509,6 +499,7 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 //*----------------------------------------------------------------------------
 static inline void UiLcdHy28_WriteDataSpiStart()
 {
+    UiLcdHy28_SpiLcdCsEnable();
     UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
 
@@ -538,7 +529,7 @@ unsigned short UiLcdHy28_ReadDataSpi(void)
     unsigned short value = 0;
     uchar y,z;
 
-    GPIO_ResetBits(lcd_cs_pio, lcd_cs);
+    UiLcdHy28_SpiLcdCsEnable();
 
     UiLcdHy28_SendByteSpi(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
 
@@ -551,7 +542,7 @@ unsigned short UiLcdHy28_ReadDataSpi(void)
 
     value  |= z;
 
-    UiLcdHy28_FinishSpiTransfer();
+    UiLcdHy28_LcdFinishSpiTransfer();
 
     return value;
 }
@@ -627,7 +618,6 @@ static void UiLcdHy28_WriteRAM_Prepare(void)
     if(display_use_spi)
     {
         UiLcdHy28_WriteIndexSpi(0x0022);
-        GPIO_ResetBits(lcd_cs_pio, lcd_cs);
         UiLcdHy28_WriteDataSpiStart();
     }
     else
@@ -638,46 +628,59 @@ static inline void UiLcdHy28_WriteRAM_Finish(void)
 {
     if(display_use_spi)
     {
-        GPIO_SetBits(lcd_cs_pio, lcd_cs);
+        UiLcdHy28_LcdFinishSpiTransfer();
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_LcdClear
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_LcdClear(ushort Color)
-{
-    UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
-    UiLcdHy28_BulkWriteColor(Color,MAX_X * MAX_Y);
-    UiLcdHy28_CloseBulkWrite();
-}
 
 #define PIXELBUFFERSIZE 256
-static uint16_t   pixelbuffer[PIXELBUFFERSIZE];
+#define PIXELBUFFERCOUNT 2
+static uint16_t   pixelbuffer[PIXELBUFFERCOUNT][PIXELBUFFERSIZE];
 static uint16_t pixelcount = 0;
+static uint16_t pixelbufidx = 0;
 
 static inline void UiLcdHy28_BulkPixel_BufferInit()
 {
+    pixelbufidx= (pixelbufidx+1)%PIXELBUFFERCOUNT;
     pixelcount = 0;
 }
 
 static inline void UiLcdHy28_BulkPixel_BufferFlush()
 {
-    UiLcdHy28_BulkWrite(pixelbuffer,pixelcount);
-    pixelcount = 0;
+    UiLcdHy28_BulkWrite(pixelbuffer[pixelbufidx],pixelcount);
+    UiLcdHy28_BulkPixel_BufferInit();
 }
 
 inline void UiLcdHy28_BulkPixel_Put(uint16_t pixel)
 {
-    pixelbuffer[pixelcount++] = pixel;
+    pixelbuffer[pixelbufidx][pixelcount++] = pixel;
     if (pixelcount == PIXELBUFFERSIZE)
     {
         UiLcdHy28_BulkPixel_BufferFlush();
     }
+}
+
+void UiLcdHy28_LcdClear(ushort Color)
+{
+    UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
+#ifdef USE_SPI_DMA
+    if (display_use_spi > 0) {
+        int idx;
+
+        UiLcdHy28_BulkPixel_BufferInit();
+
+        for (idx = 0; idx < MAX_X * MAX_Y; idx++)
+        {
+            UiLcdHy28_BulkPixel_Put(Color);
+        }
+        UiLcdHy28_BulkPixel_BufferFlush();
+    }
+    else
+#endif
+    {
+        UiLcdHy28_BulkWriteColor(Color,MAX_X * MAX_Y);
+    }
+    UiLcdHy28_CloseBulkWrite();
 }
 
 //*----------------------------------------------------------------------------
@@ -873,7 +876,7 @@ void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
     UiLcdHy28_WriteReg(0x51, y + height -1);    // Vertical GRAM End Address	-1
     UiLcdHy28_WriteReg(0x52, x);    // Horizontal GRAM Start Address
     UiLcdHy28_WriteReg(0x53, x + width -1);    // Horizontal GRAM End Address  -1
-    //
+
     UiLcdHy28_WriteRAM_Prepare();					// prepare for bulk-write to character window
 
 
@@ -919,10 +922,27 @@ void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 
 void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 {
-    uint32_t i = len;
-    for (; i; i--)
+
+#ifdef USE_SPI_DMA
+    if (display_use_spi > 0) {
+        int idx;
+
+        UiLcdHy28_BulkPixel_BufferInit();
+
+        for (idx = 0; idx < len; idx++)
+        {
+            UiLcdHy28_BulkPixel_Put(Color);
+        }
+        UiLcdHy28_BulkPixel_BufferFlush();
+    }
+    else
+#endif
     {
-        UiLcdHy28_WriteDataOnly(Color);
+        uint32_t i = len;
+        for (; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(Color);
+        }
     }
 }
 
@@ -936,8 +956,9 @@ void UiLcdHy28_CloseBulkWrite(void)
 #ifdef USE_SPI_DMA
         UiLcdHy28_SpiDmaStop();
 #endif
-        GPIO_SetBits(lcd_cs_pio, lcd_cs);	// bulk-write complete!
+        UiLcdHy28_LcdFinishSpiTransfer();
     }
+
     UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
     UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
     UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
@@ -1515,14 +1536,27 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
     }
 }
 
-static void UiLcdHy28_TouchscreenReadData()
+static inline void UiLcdHy28_TouchscreenCsEnable()
 {
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
+}
+
+static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
+{
+    UiLcdHy28_FinishSpiTransfer();
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
+}
+
+
+static void UiLcdHy28_TouchscreenReadData()
+{
+
+    UiLcdHy28_TouchscreenCsEnable();
     UiLcdHy28_SendByteSpi(144);
     ts.tp_x = UiLcdHy28_ReadByteSpi();
     UiLcdHy28_SendByteSpi(208);
     ts.tp_y = UiLcdHy28_ReadByteSpi();
-    GPIO_SetBits(TP_CS_PIO, TP_CS);
+    UiLcdHy28_TouchscreenFinishSpiTransfer();
 }
 
 void UiLcdHy28_TouchscreenPresenceDetection(void)
