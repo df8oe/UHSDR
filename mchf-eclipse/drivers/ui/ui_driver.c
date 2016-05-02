@@ -5636,7 +5636,7 @@ static void UiDriverDisplayBass(void)
     UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
     UiLcdHy28_PrintText((POS_AG_IND_X + 1 ), (POS_AG_IND_Y + 1 + 3 * 16), "BAS",
                         col_bass, Grey, 0);
-    col_bass = enable?Orange:Grey1;
+    col_bass = enable?Orange:Grey;
     UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52), (POS_AG_IND_Y + 1 + 3 * 16), temp,
                              col_bass, Black, 0);
 
@@ -5648,7 +5648,7 @@ static void UiDriverDisplayBass(void)
     UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3* 16, 13, 53, Grey);
     UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56), (POS_AG_IND_Y + 1 + 3 * 16), "TRB",
                         col_treble, Grey, 0);
-    col_treble = enable?Orange:Grey1;
+    col_treble = enable?Orange:Grey;
 
     UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
                              col_treble, Black, 0);
@@ -5680,31 +5680,6 @@ static void UiDriverDisplayBass(void)
 
 } // end void UiDriverDisplayBass
 
-
-/*##################
-void UiDriverEncoderDisplay(const uint8_t column, const uint8_t row, const char *label, bool enabled,
-                            char temp[5], uint32_t color) {
-
-  uint32_t label_color = enabled?Black:Grey1;
-
-  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56 * column, POS_AG_IND_Y + row * 16, 13, 53, Grey);
-  UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), label,
-                      label_color, Grey, 0);
-  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), temp,
-                           color, Black, 0);
-}
-
-void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool enabled,
-                            uint32_t value) {
-
-	char temp[5];
-	uint32_t color = enabled?White:Grey;
-
-	snprintf(temp,5,"%2lu",value);
-	UiDriverEncoderDisplay(column, row, label, enabled,
-	                            temp, color);
-
-##################*/
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverDisplayNotch
