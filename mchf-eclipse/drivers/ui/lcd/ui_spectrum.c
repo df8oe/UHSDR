@@ -1593,16 +1593,16 @@ void UiSpectrumReDrawWaterfall()
             //
             UiLcdHy28_OpenBulkWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
             //
-            ushort spectrumLine[SPECTRUM_WIDTH];
+            uint16_t spectrumLine[2][SPECTRUM_WIDTH];
 
             while(lcnt < sd.wfall_size)	 				// set up counter for number of lines defining height of waterfall
             {
                 for(i = 0; i < (SPECTRUM_WIDTH); i++)	 	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
                 {
-                    spectrumLine[i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
+                    spectrumLine[lcnt%2][i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
                 }
 
-                UiLcdHy28_BulkWrite(spectrumLine,SPECTRUM_WIDTH);
+                UiLcdHy28_BulkWrite(spectrumLine[lcnt%2],SPECTRUM_WIDTH);
 
                 lcnt++;									// update count of lines we have done
                 lptr++;									// point to next line in circular display buffer
