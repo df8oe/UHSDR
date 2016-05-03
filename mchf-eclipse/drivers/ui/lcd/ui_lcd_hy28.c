@@ -18,12 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define HY28BHISPEED true
-
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
-#define USE_SPI_DMA
+// #define USE_SPI_DMA
+// #define HY28BHISPEED true
+
 
 // Saved fonts
 extern sFONT GL_Font8x8;
