@@ -650,12 +650,12 @@ void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Directi
 
 void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-    UUiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
+    UiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
 }
 
 void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-    UUiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
+    UiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
 }
 
 
