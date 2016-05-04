@@ -60,13 +60,6 @@ const uint8_t touchscreentable [] = {0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x1
 static void UiLcdHy28_Delay(ulong delay);
 static void UiLcdHy28_Test(void);
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_BacklightInit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_BacklightInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -83,13 +76,7 @@ void UiLcdHy28_BacklightInit(void)
     LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_SpiInit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 void UiLcdHy28_SpiInit(bool hispeed)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -222,13 +209,7 @@ void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint32_t size)
         DMA_Cmd(DMA1_Stream4, ENABLE);                          //Enable the DMA stream assigned to SPI2
     }
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_SpiInit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 void UiLcdHy28_SpiDeInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -265,13 +246,6 @@ inline void UiLcdHy28_SpiLcdCsEnable() {
     GPIO_ResetBits(lcd_cs_pio, lcd_cs);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_ParallelInit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_ParallelInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -334,13 +308,7 @@ void UiLcdHy28_ParallelInit()
     GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_Reset
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 void UiLcdHy28_Reset()
 {
     // Reset
@@ -354,13 +322,7 @@ void UiLcdHy28_Reset()
     UiLcdHy28_Delay(100000);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_FSMCConfig
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 void UiLcdHy28_FSMCConfig(void)
 {
     FSMC_NORSRAMInitTypeDef        FSMC_NORSRAMInitStructure;
@@ -409,7 +371,7 @@ void UiLcdHy28_FSMCConfig(void)
     FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM1, ENABLE);
 }
 
-static inline void UiLcdHy28_SendByteSpi(uint8_t byte)
+static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 {
     while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)  == RESET) {}
     SPI_I2S_SendData(SPI2, byte);
@@ -419,7 +381,7 @@ static inline void UiLcdHy28_SendByteSpi(uint8_t byte)
 
 }
 
-static inline void UiLcdHy28_SendByteSpiFast(uint8_t byte)
+static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
 {
 
     while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET) {}
@@ -428,19 +390,19 @@ static inline void UiLcdHy28_SendByteSpiFast(uint8_t byte)
     byte = SPI2->DR;
 }
 
-static inline void UiLcdHy28_FinishSpiTransfer()
+static inline void UiLcdHy28_SpiFinishTransfer()
 {
     while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET) {}
     while (SPI2->SR & SPI_I2S_FLAG_BSY) {}
 }
 
-static void UiLcdHy28_LcdFinishSpiTransfer()
+static void UiLcdHy28_LcdSpiFinishTransfer()
 {
-    UiLcdHy28_FinishSpiTransfer();
+    UiLcdHy28_SpiFinishTransfer();
     GPIO_SetBits(lcd_cs_pio, lcd_cs);
 }
 
-uint8_t UiLcdHy28_ReadByteSpi(void)
+uint8_t UiLcdHy28_SpiReadByte(void)
 {
     ulong timeout;
     uchar byte = 0;
@@ -472,35 +434,28 @@ void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
-    UiLcdHy28_SendByteSpiFast(0);
-    UiLcdHy28_SendByteSpiFast(index);
+    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+    UiLcdHy28_SpiSendByteFast(0);
+    UiLcdHy28_SpiSendByteFast(index);
 
-    UiLcdHy28_LcdFinishSpiTransfer();
+    UiLcdHy28_LcdSpiFinishTransfer();
 }
 
 void UiLcdHy28_WriteDataSpi( unsigned short data)
 {
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
-    UiLcdHy28_SendByteSpiFast((data >>   8));                    /* Write D8..D15                */
-    UiLcdHy28_SendByteSpiFast((data & 0xFF));                    /* Write D0..D7                 */
+    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+    UiLcdHy28_SpiSendByteFast((data >>   8));                    /* Write D8..D15                */
+    UiLcdHy28_SpiSendByteFast((data & 0xFF));                    /* Write D0..D7                 */
 
-    UiLcdHy28_LcdFinishSpiTransfer();
+    UiLcdHy28_LcdSpiFinishTransfer();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteDataSpiStart
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static inline void UiLcdHy28_WriteDataSpiStart()
 {
     UiLcdHy28_SpiLcdCsEnable();
-    UiLcdHy28_SendByteSpiFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
@@ -510,50 +465,36 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 
     if(display_use_spi)
     {
-        UiLcdHy28_SendByteSpiFast((data >>   8));      /* Write D8..D15                */
-        UiLcdHy28_SendByteSpiFast((data & 0xFF));      /* Write D0..D7                 */
+        UiLcdHy28_SpiSendByteFast((data >>   8));      /* Write D8..D15                */
+        UiLcdHy28_SpiSendByteFast((data & 0xFF));      /* Write D0..D7                 */
     }
     else
         LCD_RAM = data;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_ReadDataSpi
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-unsigned short UiLcdHy28_ReadDataSpi(void)
+unsigned short UiLcdHy28_LcdReadDataSpi()
 {
     unsigned short value = 0;
     uchar y,z;
 
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SendByteSpi(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
 
-    UiLcdHy28_ReadByteSpi();                                /* Dummy read 1                 */
+    UiLcdHy28_SpiReadByte();                                /* Dummy read 1                 */
 
-    y   = UiLcdHy28_ReadByteSpi();                      /* Read D8..D15                 */
+    y   = UiLcdHy28_SpiReadByte();                      /* Read D8..D15                 */
     value = y;
     value <<= 8;
-    z = UiLcdHy28_ReadByteSpi();                      /* Read D0..D7                  */
+    z = UiLcdHy28_SpiReadByte();                      /* Read D0..D7                  */
 
     value  |= z;
 
-    UiLcdHy28_LcdFinishSpiTransfer();
+    UiLcdHy28_LcdSpiFinishTransfer();
 
     return value;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteReg
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
     if(display_use_spi)
@@ -568,13 +509,6 @@ void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_ReadReg
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
     if(display_use_spi)
@@ -583,7 +517,7 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
 
         // Read 16-bit Reg
-        return UiLcdHy28_ReadDataSpi();
+        return UiLcdHy28_LcdReadDataSpi();
     }
 
     // Write 16-bit Index (then Read Reg)
@@ -593,26 +527,12 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
     return (LCD_RAM);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_SetCursorA
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 {
     UiLcdHy28_WriteReg(0x0020, Ypos );
     UiLcdHy28_WriteReg(0x0021, Xpos );
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_WriteRAM_Prepare
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiLcdHy28_WriteRAM_Prepare(void)
 {
     if(display_use_spi)
@@ -628,7 +548,7 @@ static inline void UiLcdHy28_WriteRAM_Finish(void)
 {
     if(display_use_spi)
     {
-        UiLcdHy28_LcdFinishSpiTransfer();
+        UiLcdHy28_LcdSpiFinishTransfer();
     }
 }
 
@@ -683,57 +603,29 @@ void UiLcdHy28_LcdClear(ushort Color)
     UiLcdHy28_CloseBulkWrite();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_SetPoint
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_SetPoint( unsigned short Xpos, unsigned short Ypos, unsigned short point)
+void UiLcdHy28_DrawColorPoint( unsigned short Xpos, unsigned short Ypos, unsigned short point)
 {
-    if( Xpos >= MAX_X || Ypos >= MAX_Y )
-        return;
+    if( Xpos < MAX_X && Ypos < MAX_Y )
+    {
+        UiLcdHy28_SetCursorA(Xpos,Ypos);
+        UiLcdHy28_WriteReg(0x0022,point);
+    }
+}
 
-    UiLcdHy28_SetCursorA(Xpos,Ypos);
-    UiLcdHy28_WriteReg(0x0022,point);
+void UiLcdHy28_DrawFullRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width ,ushort color)
+{
+    UiLcdHy28_OpenBulkWrite(Xpos, Width, Ypos, Height);
+    UiLcdHy28_BulkWriteColor(color,(uint32_t)Height * (uint32_t)Width);
+    UiLcdHy28_CloseBulkWrite();
 }
 
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawColorPoint
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color)
-{
-
-    UiLcdHy28_SetCursorA(x, y);
-
-    UiLcdHy28_WriteRAM_Prepare();
-
-    UiLcdHy28_WriteDataOnly(color);
-
-    UiLcdHy28_WriteRAM_Finish();
-}
-//
-//
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawStraightLine
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
+void UiLcdHy28_DrawStraightLineWidth(ushort x, ushort y, ushort Length, uint16_t Width, uchar Direction,ushort color)
 {
     if(Direction == LCD_DIR_VERTICAL)
     {
+        UiLcdHy28_DrawFullRect(x,y,Length,1,color);
+#if 0
         // here we use the "manual" approach instead of using bulk write
         // since  we need less setup bytes and vertical lines are mostly short
         // and vertical mode is default, we save some time in most cases.
@@ -741,52 +633,32 @@ void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Directi
         UiLcdHy28_WriteRAM_Prepare();
         UiLcdHy28_BulkWriteColor(color,Length);
         UiLcdHy28_WriteRAM_Finish();
+#endif
+
     }
     else
     {
-        UiLcdHy28_OpenBulkWrite(x,Length,y,1);
-        UiLcdHy28_BulkWriteColor(color,Length);
-        UiLcdHy28_CloseBulkWrite();
+        UiLcdHy28_DrawFullRect(x,y,1,Length,color);
     }
 }
 
-// FIXME: DrawRectangle should be used
+
+void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
+{
+    UiLcdHy28_DrawStraightLineWidth(x, y, Length, 1, Direction, color);
+}
+
 void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-    UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
-    if(Direction == LCD_DIR_VERTICAL)
-    {
-        UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
-    }
-    else
-    {
-        UiLcdHy28_DrawStraightLine(x, y+1, Length, Direction,color);
-    }
+    UUiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
 }
 
-// FIXME: DrawRectangle should be used
 void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-    UiLcdHy28_DrawStraightLine(x, y, Length, Direction,color);
-    if(Direction == LCD_DIR_VERTICAL)
-    {
-        UiLcdHy28_DrawStraightLine(x+1, y, Length, Direction,color);
-        UiLcdHy28_DrawStraightLine(x+2, y, Length, Direction,color);
-    }
-    else
-    {
-        UiLcdHy28_DrawStraightLineDouble(x, y+1, Length, Direction,color);
-        UiLcdHy28_DrawStraightLine(x, y+2, Length, Direction,color);
-    }
+    UUiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawHorizLineWithGrad
-//* Object              : draq horizontal line with gradient, most bright in
-//* Object              : the middle
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
+
 void UiLcdHy28_DrawHorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gradient_start)
 {
     uint32_t i = 0,j = 0;
@@ -812,13 +684,6 @@ void UiLcdHy28_DrawHorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gr
     UiLcdHy28_CloseBulkWrite();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawEmptyRect
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_DrawEmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width,ushort color)
 {
 
@@ -829,13 +694,6 @@ void UiLcdHy28_DrawEmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Wid
 
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawBottomButton
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort Width,ushort color)
 {
     UiLcdHy28_DrawStraightLine(Xpos, (Ypos),        Width, LCD_DIR_HORIZONTAL,color);
@@ -843,27 +701,7 @@ void UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort 
     UiLcdHy28_DrawStraightLine((Xpos + Width), Ypos,Height,LCD_DIR_VERTICAL,  color);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawFullRect
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiLcdHy28_DrawFullRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width ,ushort color)
-{
-    UiLcdHy28_OpenBulkWrite(Xpos, Width, Ypos, Height);
-    UiLcdHy28_BulkWriteColor(color,(uint32_t)Height * (uint32_t)Width);
-    UiLcdHy28_CloseBulkWrite();
-}
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_OpenBulk
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
 {
 
@@ -883,13 +721,6 @@ void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_BulkWrite
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
     uint32_t i;
@@ -956,7 +787,7 @@ void UiLcdHy28_CloseBulkWrite(void)
 #ifdef USE_SPI_DMA
         UiLcdHy28_SpiDmaStop();
 #endif
-        UiLcdHy28_LcdFinishSpiTransfer();
+        UiLcdHy28_LcdSpiFinishTransfer();
     }
 
     UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
@@ -1007,13 +838,6 @@ const sFONT   *UiLcdHy28_Font(uint8_t font)
     return cf;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_PrintText
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uchar font)
 {
     uint8_t    TempChar;
@@ -1122,16 +946,6 @@ void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uin
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_InitA
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-// Note:  Delays in this function doubled to make initialization more reliable
-// (e.g. prevent "white screen") - KA7OEI, 20140919
-//
 uchar UiLcdHy28_InitA(void)
 {
 
@@ -1329,19 +1143,10 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x0007,0x0133);
     }
 
-    // Test LCD
-    UiLcdHy28_Test();
-
     return 0;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_Test
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+#if 0
 static void UiLcdHy28_Test(void)
 {
     // Backlight on - only when all is drawn
@@ -1376,13 +1181,14 @@ static void UiLcdHy28_Test(void)
     //UiLcdHy28_PrintText(0,210,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,4);
 }
 
+#endif
+
+
 /*
  * brief Identifies and initializes to HY28x display family
  *
  * @returns 0 if no display detected, DISPLAY_HY28x_xxx otherwise, see header
  */
-
-
 uint8_t UiLcdHy28_Init(void)
 {
     uint8_t retval = DISPLAY_HY28A_SPI;
@@ -1390,7 +1196,7 @@ uint8_t UiLcdHy28_Init(void)
     UiLcdHy28_BacklightInit();
 
     // Select interface, spi HY28A first
-    display_use_spi = 1;
+    display_use_spi = DISPLAY_HY28A_SPI;
 
     lcd_cs = LCD_D11;
     lcd_cs_pio = LCD_D11_PIO;
@@ -1412,7 +1218,7 @@ uint8_t UiLcdHy28_Init(void)
         UiLcdHy28_SpiDeInit();
 
         // Select interface, spi HY28B second
-        display_use_spi = 2;
+        display_use_spi = DISPLAY_HY28B_SPI;
 
         lcd_cs = LCD_CS;
         lcd_cs_pio = LCD_CS_PIO;
@@ -1503,10 +1309,10 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
         if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
             GPIO_ResetBits(TP_CS_PIO, TP_CS);
-            UiLcdHy28_SendByteSpi(144);
-            x = UiLcdHy28_ReadByteSpi();
-            UiLcdHy28_SendByteSpi(208);
-            y = UiLcdHy28_ReadByteSpi();
+            UiLcdHy28_SpiSendByte(144);
+            x = UiLcdHy28_SpiReadByte();
+            UiLcdHy28_SpiSendByte(208);
+            y = UiLcdHy28_SpiReadByte();
             GPIO_SetBits(TP_CS_PIO, TP_CS);
 
             if(do_translate)								//do translation with correction table
@@ -1543,7 +1349,7 @@ static inline void UiLcdHy28_TouchscreenCsEnable()
 
 static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 {
-    UiLcdHy28_FinishSpiTransfer();
+    UiLcdHy28_SpiFinishTransfer();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
@@ -1552,10 +1358,10 @@ static void UiLcdHy28_TouchscreenReadData()
 {
 
     UiLcdHy28_TouchscreenCsEnable();
-    UiLcdHy28_SendByteSpi(144);
-    ts.tp_x = UiLcdHy28_ReadByteSpi();
-    UiLcdHy28_SendByteSpi(208);
-    ts.tp_y = UiLcdHy28_ReadByteSpi();
+    UiLcdHy28_SpiSendByte(144);
+    ts.tp_x = UiLcdHy28_SpiReadByte();
+    UiLcdHy28_SpiSendByte(208);
+    ts.tp_y = UiLcdHy28_SpiReadByte();
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 }
 

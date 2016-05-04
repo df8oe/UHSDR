@@ -720,14 +720,15 @@ int main(void)
 
     ConfigurationStorage_Init();
 
+    // test if touchscreen is present
+    UiLcdHy28_TouchscreenPresenceDetection();
+
     // Show logo
     UiDriver_ShowStartUpScreen(100);
 
     // Extra init
     MiscInit();
 
-    // test if touchscreen is present
-    UiLcdHy28_TouchscreenPresenceDetection();
 
     // Usb Host driver init
     //keyb_driver_init();
