@@ -860,12 +860,12 @@ void UiConfiguration_LoadEepromValues(void)
 
     uint16_t value16;
     uint32_t value32;
+
     // Do a sample reads to "prime the pump" before we start...
     // This is to make the function work reliabily after boot-up
-    //
     UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
     // Let's use location zero - which may not work reliably, anyway!
-    //
+
     UiReadSettingEEPROM_UInt16(EEPROM_FLAGS2,&ts.flags2,0,0,255);
     // ------------------------------------------------------------------------------------
     // Try to read Band and Mode saved values, but read freq-limit-settings before
@@ -902,13 +902,10 @@ void UiConfiguration_LoadEepromValues(void)
             df.tune_new = bandInfo[ts.band].tune;
         }
     }
-    //
     // Try to read saved per-band values for frequency, mode and filter
-    //
 
 
     uint8_t i;
-    //
     for(i = 0; i < MAX_BANDS; i++)
     {
         // read from stored bands
@@ -936,7 +933,6 @@ void UiConfiguration_LoadEepromValues(void)
 
         // Set DAC Channel1 DHR12L register with bias value
         DAC_SetChannel2Data(DAC_Align_8b_R,bias_val);
-        //printf("-->PA BIAS loaded: %d\n\r",ts.pa_bias);
     }
 
     ts.alc_decay_var = ts.alc_decay;
@@ -960,7 +956,6 @@ void UiConfiguration_LoadEepromValues(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-//
 
 uint16_t UiConfiguration_SaveEepromValues(void)
 {

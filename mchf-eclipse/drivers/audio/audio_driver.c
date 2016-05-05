@@ -571,8 +571,8 @@ void audio_driver_set_rx_audio_filter(void)
     a2 = a2/a0;
 
     // scaling the feedforward coefficients for gain adjustment !
-    // "DC gain of an IIR filter is the sum of the filters´ feedforward coeffs divided by
-    // 1 minus the sum of the filters´ feedback coeffs" (Lyons 2011)
+    // "DC gain of an IIR filter is the sum of the filtersï¿½ feedforward coeffs divided by
+    // 1 minus the sum of the filtersï¿½ feedback coeffs" (Lyons 2011)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
@@ -2156,7 +2156,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         }
         //
         //
-        if((!ads.af_disabled) && (ts.dsp_active & 4) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	 	// No notch in CW
+        if((!ads.af_disabled) && (ts.dsp_active & DSP_NOTCH_ENABLE) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	 	// No notch in CW
         {
             audio_lms_notch_filter(psize);		// Do notch filter
         }
@@ -2165,7 +2165,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         // DSP noise reduction using LMS (Least Mean Squared) algorithm
         // This is the pre-filter/AGC instance
         //
-        if((ts.dsp_active & 1) && (!(ts.dsp_active & 2)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do this if enabled and "Pre-AGC" DSP NR enabled
+        if((ts.dsp_active & DSP_NR_ENABLE) && (!(ts.dsp_active & DSP_NR_POSTAGC_ENABLE)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do this if enabled and "Pre-AGC" DSP NR enabled
         {
             audio_lms_noise_reduction(psize);
         }
@@ -2186,7 +2186,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         // DSP noise reduction using LMS (Least Mean Squared) algorithm
         // This is the post-filter, post-AGC instance
         //
-        if((ts.dsp_active & 1) && (ts.dsp_active & 2) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do DSP NR if enabled and if post-DSP NR enabled
+        if((ts.dsp_active & DSP_NR_ENABLE) && (ts.dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do DSP NR if enabled and if post-DSP NR enabled
         {
             //
             audio_lms_noise_reduction(psize);

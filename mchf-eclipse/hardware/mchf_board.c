@@ -31,10 +31,7 @@
 //
 // Eeprom items
 #include "eeprom.h"
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
 
-// Transceiver state public structure
-extern __IO TransceiverState ts;
 
 //
 __IO	FilterCoeffs		fc;
@@ -43,14 +40,6 @@ __IO	FilterCoeffs		fc;
 // Frequency public
 __IO DialFrequency 				df;
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_led_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void mchf_board_led_init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -67,14 +56,8 @@ static void mchf_board_led_init(void)
     GPIO_Init(RED_LED_PIO, &GPIO_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_debug_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+// DO NOT ENABLE UNLESS ALL TOUCHSCREEN SETUP CODE IS DISABLED
+// TOUCHSCREEN AND USART SHARE PA9 Pin
 static void mchf_board_debug_init(void)
 {
 #ifdef DEBUG_BUILD
@@ -116,14 +99,6 @@ static void mchf_board_debug_init(void)
 #endif
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_keypad_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 // -------------------------------------------------------
 // Constant declaration of the buttons map across ports
 // - update if moving buttons around !!!
@@ -170,14 +145,6 @@ static void mchf_board_keypad_init(void)
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_ptt_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void mchf_board_ptt_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -192,14 +159,6 @@ static void mchf_board_ptt_init(void)
     GPIO_Init(PTT_CNTR_PIO, &GPIO_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_keyer_irq_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void mchf_board_keyer_irq_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -260,14 +219,6 @@ static void mchf_board_keyer_irq_init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_power_button_irq_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void mchf_board_power_button_irq_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -302,14 +253,6 @@ static void mchf_board_power_button_irq_init(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_dac0_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 #if 0
 // this function is commented out because it is static (i.e. local only) and not used
 // just remove #if 0 if function needs to be used. Reason is to include only used code
@@ -629,14 +572,6 @@ static void mchf_board_touchscreen_init(void)
 // --WWDG_Enable(WD_REFRESH_COUNTER);
 //}
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_set_system_tick_value
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void mchf_board_set_system_tick_value(void)
 {
     RCC_ClocksTypeDef 	RCC_Clocks;
@@ -658,14 +593,6 @@ static void mchf_board_set_system_tick_value(void)
 //	NVIC_Init(&NVIC_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_green_led
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void mchf_board_green_led(int state)
 {
     switch(state)
@@ -682,80 +609,61 @@ void mchf_board_green_led(int state)
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_power_off
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void mchf_board_power_off(void)
 {
-    ulong i;
-    char	tx[40];
+    const char*	txp;
     // Power off all - high to disable main regulator
 
     UiSpectrumClearDisplay();	// clear display under spectrum scope
 
     Codec_Mute(1);	// mute audio when powering down
 
-    sprintf(tx,"                           ");
-    UiLcdHy28_PrintText(80,148,tx,Black,Black,0);
+    txp = "                           ";
+    UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
 
-    sprintf(tx,"       Powering off...     ");
-    UiLcdHy28_PrintText(80,156,tx,Blue2,Black,0);
+    txp = "       Powering off...     ";
+    UiLcdHy28_PrintText(80,156,txp,Blue2,Black,0);
 
-    sprintf(tx,"                           ");
-    UiLcdHy28_PrintText(80,168,tx,Blue2,Black,0);
-
-    if(ts.ser_eeprom_in_use == 0xff)
-    {
-        sprintf(tx,"Saving settings to virt. EEPROM");
-        UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
-    }
-    if(ts.ser_eeprom_in_use == 0x0)
-    {
-        sprintf(tx,"Saving settings to serial EEPROM");
-        UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
-    }
-    if(ts.ser_eeprom_in_use == 0x20)
-    {
-        sprintf(tx," ...without saving settings...  ");
-        UiLcdHy28_PrintText(60,176,tx,Blue,Black,0);
-        for(i = 0; i < 20; i++)
-            non_os_delay();
-    }
+    txp = "                           ";
+    UiLcdHy28_PrintText(80,168,txp,Blue2,Black,0);
 
     if(ts.ser_eeprom_in_use == 0xff)
     {
-        sprintf(tx,"            2              ");
-        UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
+        txp = "Saving settings to virt. EEPROM";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+    }
+    else if(ts.ser_eeprom_in_use == 0x0)
+    {
+        txp = "Saving settings to serial EEPROM";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+    }
+    else if(ts.ser_eeprom_in_use == 0x20)
+    {
+        txp = " ...without saving settings...  ";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+        non_os_delay_multi(20);
+    }
+    else if(ts.ser_eeprom_in_use == 0xff)
+    {
+        txp = "            2              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
 
-        sprintf(tx,"                           ");
-        UiLcdHy28_PrintText(80,200,tx,Black,Black,0);
+        txp = "                           ";
+        UiLcdHy28_PrintText(80,200,txp,Black,Black,0);
+        non_os_delay_multi(10);
 
+        txp = "            1              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
+        non_os_delay_multi(10);
 
-        // Delay before killing power to allow EEPROM write to finish
-        for(i = 0; i < 10; i++)
-            non_os_delay();
-
-        sprintf(tx,"            1              ");
-        UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
-
-        for(i = 0; i < 10; i++)
-            non_os_delay();
-
-        sprintf(tx,"            0              ");
-        UiLcdHy28_PrintText(80,188,tx,Blue,Black,0);
-
-        for(i = 0; i < 10; i++)
-            non_os_delay();
+        txp = "            0              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
+        non_os_delay_multi(10);
     }
     ts.powering_down = 1;	// indicate that we should be powering down
 
     if(ts.ser_eeprom_in_use != 0x20)
-        UiConfiguration_SaveEepromValues();		// save EEPROM values again - to make sure...
+        UiConfiguration_SaveEepromValues();		// save EEPROM values
 
     //
     // Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
@@ -765,14 +673,6 @@ void mchf_board_power_off(void)
     // POWER_DOWN_PIO->BSRRL = POWER_DOWN;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void mchf_board_init(void)
 {
     // Enable clock on all ports

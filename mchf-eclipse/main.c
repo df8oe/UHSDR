@@ -84,118 +84,49 @@ void CriticalError(ulong error)
     NVIC_SystemReset();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : NMI_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void NMI_Handler(void)
 {
     CriticalError(1);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : HardFault_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void HardFault_Handler(void)
 {
     CriticalError(2);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : MemManage_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void MemManage_Handler(void)
 {
     CriticalError(3);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : BusFault_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void BusFault_Handler(void)
 {
     CriticalError(4);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UsageFault_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UsageFault_Handler(void)
 {
     CriticalError(5);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : SVC_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void SVC_Handler(void)
 {
     CriticalError(6);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : DebugMon_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void DebugMon_Handler(void)
 {
     CriticalError(7);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : SysTick_Handler
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
 
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI0_IRQHandler
-//* Object              : paddles dah
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/*
+ * @brief Interrupt Handler for Paddles DAH and/or PTT
+ */
 void EXTI0_IRQHandler(void)
 {
 	// Checks whether the User Button EXTI line is asserted
@@ -226,14 +157,9 @@ void EXTI0_IRQHandler(void)
     EXTI_ClearITPendingBit(EXTI_Line0);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI1_IRQHandler
-//* Object              : paddles dit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/*
+ * @brief Interrupt Handler for Paddles DIT
+ */
 void EXTI1_IRQHandler(void)
 {
     // Checks whether the User Button EXTI line (paddle DIT) is asserted
@@ -249,14 +175,9 @@ void EXTI1_IRQHandler(void)
     EXTI_ClearITPendingBit(EXTI_Line1);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI15_10_IRQHandler
-//* Object              : power button irq here
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/*
+ * @brief Interrupt Handler for Power Button Press
+ */
 void EXTI15_10_IRQHandler(void)
 {
     // power button interrupt
@@ -287,14 +208,6 @@ void EXTI15_10_IRQHandler(void)
   }
 }*/
 
-//*----------------------------------------------------------------------------
-//* Function Name       : TransceiverStateInit
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void TransceiverStateInit(void)
 {
     // Defaults always
@@ -577,20 +490,6 @@ static void wd_reset(void)
 }
 */
 
-
-
-
-
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : main
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 
 void ConfigurationStorage_Init()
 {

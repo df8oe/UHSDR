@@ -73,6 +73,7 @@
 //#define NB_OF_VAR             ((uint8_t)0x1ff)
 #define NB_OF_VAR             ((uint16_t)0x1ff)		// to allow memories >
 
+
 // EEPROM Variable locations - MAKE ABSOLUTELY CERTAIN that there are corresponding definitions in "main.c"!!!
 enum
 {
@@ -460,6 +461,9 @@ enum
     VAR_ADDR_382,
     VAR_ADDR_383
 };
+
+extern const uint16_t VirtAddVarTab[NB_OF_VAR];
+
 //
 //
 /* Exported types ------------------------------------------------------------*/
