@@ -21,8 +21,8 @@
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
-// #define USE_SPI_DMA
-// #define HY28BHISPEED true
+#define USE_SPI_DMA
+// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
 
 // Saved fonts
@@ -51,9 +51,14 @@ GPIO_TypeDef* lcd_cs_pio;
 
 uint16_t display_use_spi;
 
-const uint8_t touchscreentable [] = {0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,0x1c,0x1d,0x1e,0x1f,0x22,
-        0x23,0x24,0x25,0x26,0x27,0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,0x40,0x42,0x44,0x45,0x46,0x47,0x4c,
-        0x4d,0x4e,0x52,0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,0x80
+const uint8_t touchscreentable [] = {
+        0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,
+        0x1c,0x1d,0x1e,0x1f,0x22,0x23,0x24,0x25,0x26,0x27,
+        0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,
+        0x40,0x42,0x44,0x45,0x46,0x47,0x4c,0x4d,0x4e,0x52,
+        0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,
+        0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,
+        0x80,0xff
 };
 
 
@@ -390,10 +395,14 @@ static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
     byte = SPI2->DR;
 }
 
+uint8_t spi_dr_dummy; // used to make sure that DR is being read
 static inline void UiLcdHy28_SpiFinishTransfer()
 {
     while ((SPI2->SR & (SPI_I2S_FLAG_TXE)) == (uint16_t)RESET) {}
     while (SPI2->SR & SPI_I2S_FLAG_BSY) {}
+    if (SPI2->SR & SPI_I2S_FLAG_RXNE) {
+        spi_dr_dummy = SPI2->DR;
+    }
 }
 
 static void UiLcdHy28_LcdSpiFinishTransfer()
@@ -533,7 +542,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
     UiLcdHy28_WriteReg(0x0021, Xpos );
 }
 
-static void UiLcdHy28_WriteRAM_Prepare(void)
+static void UiLcdHy28_WriteRAM_Prepare()
 {
     if(display_use_spi)
     {
@@ -541,17 +550,10 @@ static void UiLcdHy28_WriteRAM_Prepare(void)
         UiLcdHy28_WriteDataSpiStart();
     }
     else
-        LCD_REG = 0x22;
-}
-
-static inline void UiLcdHy28_WriteRAM_Finish(void)
-{
-    if(display_use_spi)
     {
-        UiLcdHy28_LcdSpiFinishTransfer();
+        LCD_REG = 0x22;
     }
 }
-
 
 #define PIXELBUFFERSIZE 256
 #define PIXELBUFFERCOUNT 2
@@ -624,21 +626,11 @@ void UiLcdHy28_DrawStraightLineWidth(ushort x, ushort y, ushort Length, uint16_t
 {
     if(Direction == LCD_DIR_VERTICAL)
     {
-        UiLcdHy28_DrawFullRect(x,y,Length,1,color);
-#if 0
-        // here we use the "manual" approach instead of using bulk write
-        // since  we need less setup bytes and vertical lines are mostly short
-        // and vertical mode is default, we save some time in most cases.
-        UiLcdHy28_SetCursorA(x, y);
-        UiLcdHy28_WriteRAM_Prepare();
-        UiLcdHy28_BulkWriteColor(color,Length);
-        UiLcdHy28_WriteRAM_Finish();
-#endif
-
+        UiLcdHy28_DrawFullRect(x,y,Length,Width,color);
     }
     else
     {
-        UiLcdHy28_DrawFullRect(x,y,1,Length,color);
+        UiLcdHy28_DrawFullRect(x,y,Width,Length,color);
     }
 }
 
@@ -655,7 +647,7 @@ void UiLcdHy28_DrawStraightLineDouble(ushort x, ushort y, ushort Length, uchar D
 
 void UiLcdHy28_DrawStraightLineTriple(ushort x, ushort y, ushort Length, uchar Direction,ushort color)
 {
-    UiLcdHy28_DrawStraightLineWidth(x, y, Length, 2, Direction, color);
+    UiLcdHy28_DrawStraightLineWidth(x, y, Length, 3, Direction, color);
 }
 
 
@@ -723,7 +715,6 @@ void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
 
 void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
-    uint32_t i;
 
     if (display_use_spi == 0) {
         uint32_t i = len;
@@ -734,6 +725,7 @@ void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
     }
     else {
 #ifdef USE_SPI_DMA
+        uint32_t i;
         for (i = 0; i < len; i++)
         {
             pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
@@ -918,7 +910,7 @@ void UiLcdHy28_PrintTextRight(uint16_t Xpos, uint16_t Ypos, const char *str,cons
     uint16_t Xwidth = UiLcdHy28_TextWidth(str, font);
     if (Xpos < Xwidth )
     {
-        Xpos = 0; // TODO: Overflow is not handled too good, just start at beginning of line and draw over the end.
+        Xpos = 0; // TODO: Overflow is not handled too well, just start at beginning of line and draw over the end.
     }
     else
     {
@@ -1288,10 +1280,35 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
 }
 
 
+static inline void UiLcdHy28_TouchscreenCsEnable()
+{
+    GPIO_ResetBits(TP_CS_PIO, TP_CS);
+}
+
+static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
+{
+    UiLcdHy28_SpiFinishTransfer();
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
+}
+
+
 /*
  * @brief Extracts touchscreen touch coordinates, counts how often same position is being read consecutively
  * @param do_translate false -> raw coordinates, true -> mapped coordinates according to calibration data
  */
+#define XPT2046_PD_NONE 0x03
+#define XPT2046_PD_FULL 0x00
+#define XPT2046_PD_FULL 0x00
+#define XPT2046_PD_REF  0x01
+#define XPT2046_PD_ADC  0x02
+
+#define XPT2046_MODE_12BIT 0x00
+#define XPT2046_MODE_8BIT  0x08
+
+#define XPT2046_CH_DFR_Y    0x50
+#define XPT2046_CH_DFR_X    0x10
+#define XPT2046_CONV_START  0x80
+
 void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
 {
     uchar i,x,y;
@@ -1308,17 +1325,22 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
     {
         if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
-            GPIO_ResetBits(TP_CS_PIO, TP_CS);
-            UiLcdHy28_SpiSendByte(144);
+            UiLcdHy28_TouchscreenCsEnable();
+            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
             x = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_SpiSendByte(208);
+            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
             y = UiLcdHy28_SpiReadByte();
-            GPIO_SetBits(TP_CS_PIO, TP_CS);
+            UiLcdHy28_TouchscreenFinishSpiTransfer();
+
 
             if(do_translate)								//do translation with correction table
             {
                 for(i=0; touchscreentable[i]<= x; i++)
                 {}
+                if (i>60)
+                {
+                    i = 60;
+                }
                 x = 60-i;
                 for(i=0; touchscreentable[i]<= y; i++)
                 {}
@@ -1342,17 +1364,6 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
     }
 }
 
-static inline void UiLcdHy28_TouchscreenCsEnable()
-{
-    GPIO_ResetBits(TP_CS_PIO, TP_CS);
-}
-
-static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
-{
-    UiLcdHy28_SpiFinishTransfer();
-    GPIO_SetBits(TP_CS_PIO, TP_CS);
-}
-
 
 static void UiLcdHy28_TouchscreenReadData()
 {
@@ -1367,6 +1378,7 @@ static void UiLcdHy28_TouchscreenReadData()
 
 void UiLcdHy28_TouchscreenPresenceDetection(void)
 {
+    UiLcdHy28_TouchscreenReadData();
     UiLcdHy28_TouchscreenReadData();
     if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0)
     {// touchscreen data valid?

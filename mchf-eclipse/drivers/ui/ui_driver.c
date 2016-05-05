@@ -7272,6 +7272,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     uint16_t    i;
     //  uint16_t    t, s, u, v;
     char   tx[100];
+    const char* txp;
 
     // Clear all
     UiLcdHy28_LcdClear(Black);
@@ -7298,10 +7299,10 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
     if(!(i & 0xff))
     {
-        sprintf(tx,"WARNING:  Freq. Translation is OFF!!!");
-        UiLcdHy28_PrintText(16,120,tx,Black,Red3,0);
-        sprintf(tx,"Translation is STRONGLY recommended!!");
-        UiLcdHy28_PrintText(16,135,tx,Black,Red3,0);
+        txp = "WARNING:  Freq. Translation is OFF!!!";
+        UiLcdHy28_PrintText(16,120,txp,Black,Red3,0);
+        txp ="Translation is STRONGLY recommended!!";
+        UiLcdHy28_PrintText(16,135,txp,Black,Red3,0);
     }
     else
     {
@@ -7314,21 +7315,24 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     switch(ts.display_type)
     {
     case DISPLAY_HY28B_PARALLEL:
-        sprintf(tx,"LCD: Parallel Mode");
+        txp = "LCD: Parallel Mode";
         break;
     case DISPLAY_HY28A_SPI:
-        sprintf(tx,"LCD: HY28A SPI Mode");
+        txp = "LCD: HY28A SPI Mode";
         break;
     case DISPLAY_HY28B_SPI:
-        sprintf(tx,"LCD: HY28B SPI Mode");
+        txp = "LCD: HY28B SPI Mode";
         break;
     default:
-        sprintf(tx,"LCD: None Detected ");
+        txp = "LCD: None Detected ";
         // Yes, this is pointless, no display, no boot splash :-)
     }
 
     //
-    UiLcdHy28_PrintText(88,150,tx,Grey1,Black,0);
+    UiLcdHy28_PrintText(88,150,txp,Grey1,Black,0);
+
+    txp = ts.tp_present?"Touchscreen: Yes":"Touchscreen: No";
+    UiLcdHy28_PrintText(88,135,txp,Grey1,Black,0);
 
     // Display startup frequency of Si570, By DF8OE, 201506
     float suf = Si570_GetStartupFrequency();
@@ -7351,22 +7355,19 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
         adc3 = ADC_GetConversionValue(ADC3);
         if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
         {
-            sprintf(tx, "SWR Bridge resistor mod NOT completed!");
-            UiLcdHy28_PrintText(8,180,tx,Red3,Black,0);
+            txp = "SWR Bridge resistor mod NOT completed!";
+            UiLcdHy28_PrintText(8,180,txp,Red3,Black,0);
         }
     }
 
     // Additional Attrib line 1
-    sprintf(tx,"%s",ATTRIB_STRING1);
-    UiLcdHy28_PrintText(54,195,tx,Grey1,Black,0);
+    UiLcdHy28_PrintText(54,195,ATTRIB_STRING1,Grey1,Black,0);
 
     // Additional Attrib line 2
-    sprintf(tx,"%s",ATTRIB_STRING2);
-    UiLcdHy28_PrintText(42,210,tx,Grey1,Black,0);
+    UiLcdHy28_PrintText(42,210,ATTRIB_STRING2,Grey1,Black,0);
 
     // Additional Attrib line 3
-    sprintf(tx,"%s",ATTRIB_STRING3);
-    UiLcdHy28_PrintText(50,225,tx,Grey1,Black,0);
+    UiLcdHy28_PrintText(50,225,ATTRIB_STRING3,Grey1,Black,0);
 
     // Backlight on
     LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
