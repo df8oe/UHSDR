@@ -63,7 +63,6 @@ const uint8_t touchscreentable [] = {
 
 
 static void UiLcdHy28_Delay(ulong delay);
-static void UiLcdHy28_Test(void);
 
 void UiLcdHy28_BacklightInit(void)
 {

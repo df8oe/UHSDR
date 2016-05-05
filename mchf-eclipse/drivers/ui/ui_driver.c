@@ -1678,8 +1678,6 @@ void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const
 //*----------------------------------------------------------------------------
 static void UiDriverProcessKeyboard()
 {
-    uchar temp;
-
     if(ks.button_processed)
     {
         ts.nb_disable = 1;	// disable noise blanker if button is pressed or held
@@ -1786,9 +1784,7 @@ static void UiDriverProcessKeyboard()
                     if(ts.ser_eeprom_in_use == 0x00)
                         UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
                     UiConfiguration_SaveEepromValues();	// save settings to EEPROM
-                    for(temp = 0; temp < 6; temp++)			// delay so that it may be read
-                        non_os_delay();
-
+                    non_os_delay_multi(6);
                     ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
                     UiDriverFButton_F1MenuExit();
 
@@ -1858,8 +1854,7 @@ static void UiDriverProcessKeyboard()
                     UiDriver_FrequencyUpdateLOandDisplay(true);
                     UiSpectrumClearDisplay();			// clear display under spectrum scope
                     UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
-                    for(temp = 0; temp < 18; temp++)			// delay so that it may be read
-                        non_os_delay();
+                    non_os_delay_multi(18);
 
                     UiSpectrumInitSpectrumDisplay();			// init spectrum scope
                 }
@@ -4149,13 +4144,7 @@ static void UiDriverTimeScheduler()
             UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
             UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
 
-            {
-                int i;
-                for(i = 0; i < 6; i++)              // delay so that it may be read
-                {
-                    non_os_delay();
-                }
-            }
+            non_os_delay_multi(6);
             UiSpectrumInitSpectrumDisplay();          // init spectrum scope
         }
 
@@ -6776,7 +6765,6 @@ enum CONFIG_DEFAULTS
 static bool UiDriver_LoadSavedConfigurationAtStartup()
 {
 
-    uint16_t i;
     bool retval = false;
     uint8_t load_mode = CONFIG_DEFAULTS_KEEP;
 
@@ -6823,11 +6811,8 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
         //
         // On screen delay									// delay a bit...
-        for(i = 0; i < 100; i++)
-        {
-            non_os_delay();
-        }
-        //
+        non_os_delay_multi(100);
+
         // add this for emphasis
         UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
         UiLcdHy28_PrintText(2,207,"           to confirm loading    ",clr_fg,clr_bg,0);
@@ -6842,8 +6827,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         {
             UiLcdHy28_LcdClear(Black);							// clear the screen
             UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-            for(i = 0; i < 100; i++)
-                non_os_delay();
+            non_os_delay_multi(100);
             load_mode = CONFIG_DEFAULTS_KEEP;
             retval = false;
         }
@@ -6851,8 +6835,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         {
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
             UiLcdHy28_PrintText(2,108,"     loading defaults in progress...",clr_fg,clr_bg,0);
-            for(i = 0; i < 100; i++)
-                non_os_delay();
+            non_os_delay_multi(100);
             // call function to load values - default instead of EEPROM
             retval = true;
             ts.menu_var_changed = true;
@@ -6875,8 +6858,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 
     return retval;
 }
-//
-//
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCheckForPressedKey
 //* Object              : Used for testing keys on the front panel
@@ -6887,8 +6869,6 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 //  Comments            : is being pressed.  If multiple keys are being pressed, only the one with the highest precedence is displayed.  The order of decreasing
 //  Comments            : precedence is:  M2, G3, G2, BNDM, G4, M3, STEPM, STEPP, M1, M3, F1, F2, F4, BNDP, F5, G1 and POWER.  [KA7OEI October, 2015]
 //*----------------------------------------------------------------------------
-//
-//
 void UiDriver_KeyTestScreen()
 {
 	ushort i, j, k, p_o_state, rb_state, new_state;
@@ -6914,7 +6894,6 @@ void UiDriver_KeyTestScreen()
 		UiLcdHy28_PrintText(10,35,"Input Elements Test",White,Blue,1);
 		UiLcdHy28_PrintText(15,70,"press & hold POWER button to poweroff",White,Blue,0);
 		UiLcdHy28_PrintText(20,90,"press & hold BAND- button to reboot",White,Blue,0);
-		//
 		for(;;)	 		// get stuck here for test duration
 		{
 			j = 99;		// load with flag value
@@ -7122,11 +7101,8 @@ static bool UiDriver_TouchscreenCalibration()
         UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
         //
         // On screen delay									// delay a bit...
-        for(i = 0; i < 100; i++)
-        {
-            non_os_delay();
-        }
-        //
+        non_os_delay_multi(100);
+
         // add this for emphasis
         UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
         UiLcdHy28_PrintText(2,207,"          to start calibration   ",clr_fg,clr_bg,0);
@@ -7213,13 +7189,11 @@ static bool UiDriver_TouchscreenCalibration()
 //    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
 //    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
 
-            for(i = 0; i < 100; i++)
-                non_os_delay();
+            non_os_delay_multi(100);
             retval = true;
             ts.menu_var_changed = true;
         }
     }
-
     return retval;
 }
 
@@ -7229,7 +7203,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 {
     uint32_t clr_fg, clr_bg;
     char txt_buf[40];
-    uchar i, datavalid = 0, samples = 0;
+    uchar datavalid = 0, samples = 0;
 
     clr_bg = Magenta;
     clr_fg = White;
@@ -7262,15 +7236,11 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
     }
     while(datavalid < 3);
 
-    for(i = 0; i < 100; i++)
-    {
-        non_os_delay();
-    }
+    non_os_delay_multi(100);
 }
 void UiDriver_ShowStartUpScreen(ulong hold_time)
 {
     uint16_t    i;
-    //  uint16_t    t, s, u, v;
     char   tx[100];
     const char* txp;
 
@@ -7281,7 +7251,6 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     // Show first line
     sprintf(tx,"%s",DEVICE_STRING);
     UiLcdHy28_PrintText(0,30,tx,Cyan,Black,1);       // Position with original text size:  78,40
-    //
 
     // Show second line
     sprintf(tx,"%s",AUTHOR_STRING);
@@ -7306,12 +7275,11 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     }
     else
     {
-        sprintf(tx," Freq. Translate On ");
-        UiLcdHy28_PrintText(80,120,tx,Grey3,Black,0);
+        txp = " Freq. Translate On ";
+        UiLcdHy28_PrintText(80,120,txp,Grey3,Black,0);
     }
 
     // Display the mode of the display interface
-    //
     switch(ts.display_type)
     {
     case DISPLAY_HY28B_PARALLEL:
@@ -7328,7 +7296,6 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
         // Yes, this is pointless, no display, no boot splash :-)
     }
 
-    //
     UiLcdHy28_PrintText(88,150,txp,Grey1,Black,0);
 
     txp = ts.tp_present?"Touchscreen: Yes":"Touchscreen: No";
@@ -7339,13 +7306,13 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     int vorkomma = (int)(suf);
     int nachkomma = (int) roundf((suf-vorkomma)*10000);
 
-    sprintf(tx,"SI570 startup frequency: %u.%04u MHz",vorkomma,nachkomma);
+    snprintf(tx,100,"SI570 startup frequency: %u.%04u MHz",vorkomma,nachkomma);
     UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
     //
 
     if(ts.ee_init_stat != FLASH_COMPLETE)        // Show error code if problem with EEPROM init
     {
-        sprintf(tx, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
+        snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
         UiLcdHy28_PrintText(60,180,tx,White,Black,0);
     }
     else

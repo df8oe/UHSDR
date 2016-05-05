@@ -1158,6 +1158,15 @@ do {							\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
 
+#define non_os_delay_multi(count)                        \
+{ int idx; for (idx = 0; idx < count; idx++) {                            \
+  register unsigned int i;              \
+  for (i = 0; i < 10000000; ++i)                \
+    __asm__ __volatile__ ("nop\n\t":::"memory");    \
+} }
+
+
+
 // ------------------------------------------------------------------
 // Exports
 

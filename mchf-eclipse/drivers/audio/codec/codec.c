@@ -220,7 +220,6 @@ void Codec_RX_TX(uint8_t mode)
             // PHONE out is muted, normal exit routed to TX modulator
             // input audio is routed via 4066 switch
 
-            // TODO: MicBoost Code exists three times identical
             if(ts.tx_audio_source == TX_AUDIO_MIC)
             {
                 Codec_MicBoostCheck(mode);
@@ -229,7 +228,6 @@ void Codec_RX_TX(uint8_t mode)
             {
                 Codec_Line_Gain_Adj(ts.tx_gain[ts.tx_audio_source]);	// set LINE input gain if in LINE in mode
             }
-
         }
     }
 }
@@ -367,16 +365,11 @@ void Codec_Mute(uchar state)
 uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
 {
     uchar 	res;
-    //ushort 	msg;
 
     // Assemble 2-byte data in WM8731 format
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
 
-    // Combine spi msg
-    //msg = (Byte1 << 8) | Byte2;
-
-    //printf("codec write, reg = %02x,val = %02x\n\r",Byte1,Byte2);
 
     res = mchf_hw_i2c2_WriteRegister(CODEC_ADDRESS,Byte1,Byte2);
     if(res)
@@ -420,14 +413,6 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     I2S_FullDuplexConfig(CODEC_I2S_EXT, &I2S_InitStructure);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : Codec_GPIO_Init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void Codec_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -464,15 +449,7 @@ void Codec_GPIO_Init(void)
     GPIO_PinAFConfig(CODEC_I2S_SDO_PIO,	CODEC_I2S_SDO_SOURCE, CODEC_I2S_GPIO_AF);
     GPIO_PinAFConfig(CODEC_I2S_SDO_PIO, CODEC_I2S_SDI_SOURCE, CODEC_I2S_GPIO_AF);
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : Codec_Line_Gain_Adj
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 void Codec_Line_Gain_Adj(uchar gain)
 {
     uint16_t l_gain;
