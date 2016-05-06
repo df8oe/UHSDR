@@ -276,7 +276,7 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 
 inline bool is_touchscreen_pressed()
 {
-    return (ts.tp_state > 1 && ts.tp_state != 0xff);	// touchscreen data available
+    return (ts.tp_state > TP_DATASETS_WAIT && ts.tp_state != TP_DATASETS_PROCESSED);	// touchscreen data available
 }
 
 
@@ -665,7 +665,7 @@ void UiDriver_HandleTouchScreen()
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
     }
-    ts.tp_state = 0xff;							// set statemachine to data fetched
+    ts.tp_state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
 }
 
 
@@ -1779,9 +1779,9 @@ static void UiDriverProcessKeyboard()
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
                     UiSpectrumClearDisplay();			// clear display under spectrum scope
-                    if(ts.ser_eeprom_in_use == 0xFF)
+                    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
                         UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
-                    if(ts.ser_eeprom_in_use == 0x00)
+                    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
                         UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
                     UiConfiguration_SaveEepromValues();	// save settings to EEPROM
                     non_os_delay_multi(6);
@@ -2014,7 +2014,7 @@ static void UiDriverProcessKeyboard()
                 }
                 if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
                 {
-                    ts.ser_eeprom_in_use = 0x20;			// power down without saving settings
+                    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_DONT_SAVE;			// power down without saving settings
                     mchf_board_power_off();
                 }
                 break;
