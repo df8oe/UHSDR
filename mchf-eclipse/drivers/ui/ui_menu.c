@@ -488,7 +488,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu"},
     { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
-    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","Power Adjust" },
+    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","PA Configuration" },
     { MENU_TOP, MENU_GROUP, MENU_HWINFO,"INF","Hardware Info"},
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
@@ -530,25 +530,26 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE,"090","LCD Auto Blank"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"091","Step Size Marker"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Spectrum Light"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MAGNIFY,"105","Spec/Wfall 2x Magn"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Scope/Wfall Size"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spec/Wfall Filter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SCALE_COLOUR,"104","Spec/Wfall ScaleClr"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Spec. Trace Colour"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Spec. Grid Colour"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SCALE_COLOUR,"104","Spec/Wfall ScaleClr"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MAGNIFY,"105","Spec/Wfall 2x Magn"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Spec Scope Ampl."},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Spectrum Light"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE,"111","Wfall Step Size"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Scope/Wfall Size"},
     { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -580,6 +581,8 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_FREQ,"213","Beep Frequency"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_LOUDNESS,"214","Beep Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_ENABLE,"220","CAT Mode"},
+    { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX,"530","CAT Running In Sandbox"},
+    { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT"},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE,"230","Freq. Calibrate"},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_LIMIT_RELAX,"231","Freq. Limit Disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_MEM_LIMIT_RELAX,"232","MemFreq Lim Disable"},
@@ -596,21 +599,8 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_PHASE_BAL,"253","USB TX IQ Phase"},
     { MENU_CONF, MENU_ITEM, CONFIG_AM_TX_GAIN_BAL,"254","AM  TX IQ Bal."},
     { MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_CW_PA_BIAS,"260","CW PA Bias (If >0 )"},
-    { MENU_CONF, MENU_ITEM, CONFIG_PA_BIAS,"261","PA Bias"},
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)"},
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL,"271","Pwr. Det. Null"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_2200M_ADJ,"C01","2200m Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_630M_ADJ,"C02","630m Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_160M_ADJ,"C03","160m Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_80M_ADJ,"C04","80m  Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_40M_ADJ,"C05","40m  Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_20M_ADJ,"C06","20m  Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_15M_ADJ,"C07","15m  Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_6M_ADJ,"C08","6m   Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_2M_ADJ,"C09","2m   Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_70CM_ADJ,"C10","70cm Coupling Adj."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_COUPLING_23CM_ADJ,"C11","23cm Coupling Adj."},
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","FWD/REV ADC Swap."},
     { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult"},
     { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset"},
@@ -621,10 +611,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap"},
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB  AGC T/C (<=Slow)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Ser EEPROM"},
-    { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX,"530","CAT Running In Sandbox"},
-    { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT"},
     { MENU_CONF, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -632,6 +619,8 @@ const MenuDescriptor powGroup[] =
 {
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"P00","Tune Power Level"},
     { MENU_POW, MENU_ITEM, CONFIG_REDUCE_POWER_ON_LOW_BANDS,"P0A","Reduce Power on Low Bands"},
+    { MENU_CONF, MENU_ITEM, CONFIG_CW_PA_BIAS,"260","CW PA Bias (If >0 )"},
+    { MENU_CONF, MENU_ITEM, CONFIG_PA_BIAS,"261","PA Bias"},
     { MENU_POW, MENU_ITEM, CONFIG_2200M_5W_ADJUST,"P01","2200m 5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_630M_5W_ADJUST,"P02","630m  5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_160M_5W_ADJUST,"P03","160m  5W PWR Adjust"},
@@ -666,6 +655,18 @@ const MenuDescriptor powGroup[] =
     { MENU_POW, MENU_ITEM, CONFIG_2M_FULL_POWER_ADJUST,"O15","2m    Full PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_70CM_FULL_POWER_ADJUST,"O16","70cm  Full PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_23CM_FULL_POWER_ADJUST,"O17","23cm  Full PWR Adjust"},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_2200M_ADJ,"C01","2200m Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_630M_ADJ,"C02","630m Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_160M_ADJ,"C03","160m Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_80M_ADJ,"C04","80m  Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_40M_ADJ,"C05","40m  Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_20M_ADJ,"C06","20m  Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_15M_ADJ,"C07","15m  Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_6M_ADJ,"C08","6m   Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_2M_ADJ,"C09","2m   Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_70CM_ADJ,"C10","70cm Coupling Adj."},
+    { MENU_POW, MENU_ITEM, CONFIG_FWD_REV_COUPLING_23CM_ADJ,"C11","23cm Coupling Adj."},
+
     { MENU_POW, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -1371,11 +1372,11 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
         sprintf(out,"%s%s","Serial EEPROM: ",outs);
         switch(ts.ser_eeprom_in_use)
         {
-        case 0:
+        case SER_EEPROM_IN_USE_I2C:
             m_clr = Green;
             break; // in use & ok
-        case 0x05: // not ok
-        case 0x10: // too small
+        case SER_EEPROM_IN_USE_ERROR: // not ok
+        case SER_EEPROM_IN_USE_TOO_SMALL: // too small
             m_clr = Red;
         }
     }
@@ -2640,7 +2641,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         break;
     case MENU_BACKUP_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == 0)
+        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         {
             txt_ptr = " Do it!";
             clr = White;
@@ -2655,7 +2656,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         break;
     case MENU_RESTORE_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == 0)
+        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         {
             txt_ptr = "Do it!";
             clr = White;

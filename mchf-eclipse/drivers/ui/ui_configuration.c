@@ -979,7 +979,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         if(ts.dmod_mode == DEMOD_FM)
             ts.dmod_mode = DEMOD_USB;   // if FM switch to USB during write
 
-        if(ts.ser_eeprom_in_use == 0)
+        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         {
             static uint8_t p[MAX_VAR_ADDR*2+2];
             ts.eeprombuf = p;
@@ -995,7 +995,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
                 data = data>>8;
                 ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
             }
-            ts.ser_eeprom_in_use = 0xAA;
+            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_FLASH;
         }
 
         if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
@@ -1033,10 +1033,10 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
         UiWriteSettingEEPROM_Filter();
 
-        if(ts.ser_eeprom_in_use == 0xAA)
+        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
         {
             Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-            ts.ser_eeprom_in_use = 0;
+            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_I2C;
         }
 
         ts.dsp_inhibit = dspmode;   // restore DSP mode

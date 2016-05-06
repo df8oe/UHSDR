@@ -1104,7 +1104,15 @@ typedef struct TransceiverState
     bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
     bool	mic_bias;				// TRUE = mic bias on
     uchar	ser_eeprom_type;			// serial eeprom type
-    uchar	ser_eeprom_in_use;			// 0xFF = not in use, 0x1 = in use
+
+#define SER_EEPROM_IN_USE_I2C         0x00
+#define SER_EEPROM_IN_USE_ERROR       0x05
+#define SER_EEPROM_IN_USE_TOO_SMALL   0x10
+#define SER_EEPROM_IN_USE_DONT_SAVE   0x20
+#define SER_EEPROM_IN_USE_FLASH       0xAA
+#define SER_EEPROM_IN_USE_NO          0xFF
+
+    uchar	ser_eeprom_in_use;	    // use to determine non-volatile memory configuration
     uint8_t* eeprombuf;				// pointer to copy of config in RAM
     uchar 	tp_present;				// touchscreen present = 1, absent = 0
     char 	tp_x;					// touchscreen x coordinate

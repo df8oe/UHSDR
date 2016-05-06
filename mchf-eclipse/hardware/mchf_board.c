@@ -627,23 +627,23 @@ void mchf_board_power_off(void)
     txp = "                           ";
     UiLcdHy28_PrintText(80,168,txp,Blue2,Black,0);
 
-    if(ts.ser_eeprom_in_use == 0xff)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
     {
         txp = "Saving settings to virt. EEPROM";
         UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
     }
-    else if(ts.ser_eeprom_in_use == 0x0)
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
     {
         txp = "Saving settings to serial EEPROM";
         UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
     }
-    else if(ts.ser_eeprom_in_use == 0x20)
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_DONT_SAVE)
     {
         txp = " ...without saving settings...  ";
         UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
         non_os_delay_multi(20);
     }
-    else if(ts.ser_eeprom_in_use == 0xff)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
     {
         txp = "            2              ";
         UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
@@ -662,10 +662,10 @@ void mchf_board_power_off(void)
     }
     ts.powering_down = 1;	// indicate that we should be powering down
 
-    if(ts.ser_eeprom_in_use != 0x20)
+    if(ts.ser_eeprom_in_use != SER_EEPROM_IN_USE_DONT_SAVE)
         UiConfiguration_SaveEepromValues();		// save EEPROM values
 
-    //
+
     // Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
     // so that EEPROM write could complete without non_os_delay
     // using the constant "POWERDOWN_DELAY_COUNT" as the last "second" of the delay
@@ -767,11 +767,11 @@ void mchf_board_post_init(void)
 // otherwise use virtual EEPROM
 uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
 {
-    if(ts.ser_eeprom_in_use == 0)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         return Read_SerEEPROM(addr, value);
-    if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
         return(EE_ReadVariable(VirtAddVarTab[addr], value));
-    if(ts.ser_eeprom_in_use == 0xAA)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
     {
         uint8_t lowbyte;
         uint8_t highbyte;
@@ -797,16 +797,16 @@ uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
 {
     FLASH_Status status = FLASH_ERROR_OPERATION;
-    if(ts.ser_eeprom_in_use == 0)
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
     {
         Write_SerEEPROM(addr, value);
         status = FLASH_COMPLETE;
     }
-    else if(ts.ser_eeprom_in_use == 0xFF || ts.ser_eeprom_in_use == 0x10)
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
     {
         status = (EE_WriteVariable(VirtAddVarTab[addr], value));
     }
-    else if(ts.ser_eeprom_in_use == 0xAA)
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
     {
         uint8_t lowbyte;
         uint8_t highbyte;
@@ -888,7 +888,7 @@ void copy_virt2ser(void)
         Write_24Cxxseq(0, p, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
         Write_24Cxx(0x180, p[0x180], ts.ser_eeprom_type);
     }
-    ts.ser_eeprom_in_use = 0;		// serial EEPROM in use now
+    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_I2C;		// serial EEPROM in use now
 }
 
 // copy data from serial to virtual EEPROM
@@ -915,7 +915,7 @@ void verify_servirt(void)
         Read_SerEEPROM(count, &data1);
         EE_ReadVariable(VirtAddVarTab[count], &data2);
         if(data1 != data2)
-            ts.ser_eeprom_in_use = 0x05;	// mark data copy as faulty
+            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR;	// mark data copy as faulty
     }
 }
 
