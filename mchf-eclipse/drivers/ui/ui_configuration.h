@@ -225,7 +225,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_SPECTRUM_SCALE_COLOUR    87      // Custom setting for spectrum scope frequency scale colour
 #define EEPROM_PADDLE_REVERSE       88      // TRUE if paddle is to be reversed
 #define EEPROM_CW_RX_DELAY      89      // Delay after last CW element before returning to receive
-#define EEPROM_SPECTRUM_CENTRE_GRID_COLOUR  90  // Custom setting for spectrum scope grid center marker colour
+#define EEPROM_SPECTRUM_CENTRE_LINE_COLOUR  90  // Custom setting for spectrum scope grid center marker colour
 //
 #define EEPROM_DETECTOR_COUPLING_COEFF_2200M    91  // Calibration coupling coefficient for FWD/REV power sensor for 80 meters
 #define EEPROM_DETECTOR_COUPLING_COEFF_630M 92  // Calibration coupling coefficient for FWD/REV power sensor for 80 meters
@@ -467,7 +467,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_SPECTRUM_SCOPE_NOSIG_ADJUST  292 // adjustment for no-signal conditions of spectrum scope
 #define EEPROM_WATERFALL_NOSIG_ADJUST   293     // adjustment for no-signal conditions of waterfall
 #define EEPROM_DSP_NOTCH_FFT_NUMTAPS    294     // DSP Notch FFT number of taps
-#define EEPROM_WATERFALL_SIZE       295     // size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
+#define EEPROM_SPECTRUM_SIZE       295     // size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 #define EEPROM_FFT_WINDOW       296     // FFT Window information (lower nybble currently used - upper nybble reserved)
 #define EEPROM_TX_PTT_AUDIO_MUTE    297     // timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 #define EEPROM_FLAGS2      298     // Miscellaneous status flag, saved in EEPROM - see variable "flags2"

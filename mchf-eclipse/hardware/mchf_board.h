@@ -932,9 +932,9 @@ typedef struct TransceiverState
     uchar	scope_trace_colour;	// color of spectrum scope trace;
     uchar	scope_grid_colour;	// saved color of spectrum scope grid;
     ulong	scope_grid_colour_active;	// active color of spectrum scope grid;
-    uchar	scope_centre_grid_colour;	// color of center line of scope grid
+    uchar	spectrum_centre_line_colour;	// color of center line of scope grid
     ulong	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
-    uchar	scope_scale_colour;	// color of spectrum scope frequency scale
+    uchar	spectrum_freqscale_colour;	// color of spectrum scope frequency scale
     uchar	scope_rescale_rate;	// rescale rate on the 'scope
     uchar	scope_agc_rate;		// agc rate on the 'scope
     uchar	spectrum_db_scale;	// db/Division scale setting on spectrum scope
@@ -1021,7 +1021,7 @@ typedef struct TransceiverState
 #define FLAGS1_DYN_TUNE_ENABLE			0x200
 #define FLAGS1_SAM_ENABLE				0x400
 #define FLAGS1_CAT_IN_SANDBOX			0x800
-#define FLAGS1_SPECTRUM_LIGHT_ENABLE	0x1000
+#define FLAGS1_SCOPE_LIGHT_ENABLE	0x1000
     // LSB   = 0 if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
     // LSB+1 = 1 if BAND-/BAND+ buttons are to be swapped in their positions
     // LSB+2 = 1 if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled when translate mode is DISABLED
@@ -1080,7 +1080,7 @@ typedef struct TransceiverState
     uchar	spectrum_scope_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
     uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
     uchar	waterfall_nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
-    uchar	waterfall_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
+    uchar	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
     uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uchar	tx_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"

@@ -530,19 +530,19 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE,"090","LCD Auto Blank"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"091","Step Size Marker"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MODE,"109","Scope/Waterfall"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Spectrum Light"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_MAGNIFY,"105","Spec/Wfall 2x Magn"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SIZE,"117","Scope/Wfall Size"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spec/Wfall Filter"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SCALE_COLOUR,"104","Spec/Wfall ScaleClr"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_CENTER_LINE_COLOUR,"108","Spec/Wfall Line"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Spec/Wfall AGC Adj."},
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","FFT Windowing"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPEC_SCOPE_SPEED,"100","Spec Scope 1/Speed"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Spec. Trace Colour"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Spec. Grid Colour"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Spec Scope Ampl."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE,"109","Spectrum Type"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum 2x Magn"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE,"117","Spectrum Size"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spectrum Filter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR,"104","Spec FreqScaleClr"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR,"108","Spectrum LineClr"},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","Spectrum FFT"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Scope Light"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED,"100","Scope 1/Speed"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Scope AGC Adj."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Scope Trace Colour"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Scope Grid Colour"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Scope Ampl."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
@@ -2372,7 +2372,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         txt_ptr =temp_sel?"F":"C";
         break;
-    case MENU_SPEC_SCOPE_SPEED:	// spectrum scope speed
+    case MENU_SCOPE_SPEED:	// spectrum scope speed
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_speed,
                                               0,
                                               SPECTRUM_SCOPE_SPEED_MAX,
@@ -2415,16 +2415,16 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                                              );
         UiMenu_MapColors(ts.scope_grid_colour,options,&clr);
         break;
-    case MENU_SCOPE_SCALE_COLOUR:	// spectrum scope/waterfall  scale colour
-        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_scale_colour,
+    case MENU_SPECTRUM_FREQSCALE_COLOUR:	// spectrum scope/waterfall  scale colour
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_freqscale_colour,
                                               0,
                                               SPEC_MAX_COLOUR,
                                               SPEC_COLOUR_SCALE_DEFAULT,
                                               1
                                              );
-        UiMenu_MapColors(ts.scope_scale_colour,options,&clr);
+        UiMenu_MapColors(ts.spectrum_freqscale_colour,options,&clr);
         break;
-    case MENU_SCOPE_MAGNIFY:	// Spectrum 2x magnify mode on/off
+    case MENU_SPECTRUM_MAGNIFY:	// Spectrum 2x magnify mode on/off
         UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
         break;
     case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
@@ -2479,31 +2479,31 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         }
         break;
 
-    case MENU_SCOPE_CENTER_LINE_COLOUR:	// spectrum scope grid center line colour
-        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_centre_grid_colour,
+    case MENU_SPECTRUM_CENTER_LINE_COLOUR:	// spectrum scope grid center line colour
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_centre_line_colour,
                                               0,
                                               SPEC_GREY2,
                                               SPEC_COLOUR_GRID_DEFAULT,
                                               1
                                              );
-        UiMenu_MapColors(ts.scope_centre_grid_colour,options,&clr);
+        UiMenu_MapColors(ts.spectrum_centre_line_colour,options,&clr);
         break;
     case MENU_SCOPE_LIGHT_ENABLE:	// Spectrum light: no grid, larger, only points, no bars
-        temp_var = (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE)? 1 : 0;
+        temp_var = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)? 1 : 0;
         fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
         if(fchange)
         {
             if (temp_var)
             {
-                ts.flags1 |= FLAGS1_SPECTRUM_LIGHT_ENABLE;
+                ts.flags1 |= FLAGS1_SCOPE_LIGHT_ENABLE;
             }
             else
             {
-                ts.flags1 &= ~FLAGS1_SPECTRUM_LIGHT_ENABLE;
+                ts.flags1 &= ~FLAGS1_SCOPE_LIGHT_ENABLE;
             }
         }
         break;
-    case MENU_SCOPE_MODE:
+    case MENU_SPECTRUM_MODE:
         temp_sel = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
 
         UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_sel,0,options,&clr);
@@ -2620,20 +2620,20 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                                    );
         sprintf(options, "  %u", ts.waterfall_nosig_adjust);
         break;
-    case MENU_WFALL_SIZE:	// set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_size,
+    case MENU_SPECTRUM_SIZE:	// set step size of of waterfall display?
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_size,
                                     0,
-                                    WATERFALL_BIG,
-                                    WATERFALL_SIZE_DEFAULT,
+                                    SPECTRUM_BIG,
+                                    SPECTRUM_SIZE_DEFAULT,
                                     1
                                    );
         //
-        switch(ts.waterfall_size)
+        switch(ts.spectrum_size)
         {
-        case WATERFALL_BIG:
+        case SPECTRUM_BIG:
             txt_ptr = "   Big";
             break;
-        case WATERFALL_NORMAL:
+        case SPECTRUM_NORMAL:
         default:
             txt_ptr = "Normal";
             break;
