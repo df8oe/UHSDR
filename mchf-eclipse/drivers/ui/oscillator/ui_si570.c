@@ -28,8 +28,8 @@
 // ------------------
 
 // The SI570 Min/Max frequencies are 4x the actual tuning frequencies
-#define SI570_MIN_FREQ          10000000    // 10=2.5 MHz
-#define SI570_MAX_FREQ          160000000   // 160=40 Mhz
+#define SI570_MIN_FREQ          3500000    // 10=2.5 MHz
+#define SI570_MAX_FREQ          216000000   // 160=40 Mhz
 //
 // These are "hard limit" frequencies below/above which the synthesizer cannot be adjusted or else the system may crash
 #define SI570_HARD_MIN_FREQ     3500000     // 3.5=  0.875 MHz
