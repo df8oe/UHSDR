@@ -662,7 +662,7 @@ Si570_ResultCodes Si570_SetFrequency(ulong freq, int calib, int temp_factor, uch
     freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
 
     // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
-    if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
+    if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ && *(__IO uint32_t*)(SRAM2_BASE + 5) != 0x29)
     {
         // tuning inside known working spec
         retval = Si570_ChangeFrequency((float64_t)freq_calc/1000000.0, test);

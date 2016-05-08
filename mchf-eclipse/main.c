@@ -580,8 +580,8 @@ uint8_t EEPROM_24Cxx_Detect() {
                 }
             }
         }
-        return ser_eeprom_type;
     }
+        return ser_eeprom_type;
 }
 
 void ConfigurationStorage_Init()
