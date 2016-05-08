@@ -108,6 +108,25 @@ static void UiDriverFFTWindowFunction(char mode)
 //
 
 
+static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
+    int8_t c = 0;
+    switch (ts.iq_freq_mode)
+    {
+    case FREQ_IQ_CONV_P12KHZ:
+        c = -2;
+        break;
+    case FREQ_IQ_CONV_P6KHZ:
+        c = -1;
+        break;
+    case FREQ_IQ_CONV_M6KHZ:
+        c = 1;
+        break;
+    case FREQ_IQ_CONV_M12KHZ:
+        c = 2;
+        break;
+    }
+    return c + reference;
+}
 
 //
 //*----------------------------------------------------------------------------
@@ -122,7 +141,7 @@ void UiSpectrumCreateDrawArea(void)
     ulong i;
     uint32_t clr;
     char s[32];
-    ulong slen;
+    char* div_txt_ptr = NULL;
 
     //
     // get grid colour of all but center line
@@ -140,13 +159,13 @@ void UiSpectrumCreateDrawArea(void)
     //
     // Get color of center vertical line of spectrum scope
     //
-    if(ts.scope_centre_grid_colour == SPEC_GREY)
+    if(ts.spectrum_centre_line_colour == SPEC_GREY)
     {
         ts.scope_centre_grid_colour_active = Grid;
     }
     else
     {
-        UiMenu_MapColors(ts.scope_centre_grid_colour,NULL, &ts.scope_centre_grid_colour_active);
+        UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &ts.scope_centre_grid_colour_active);
     }
 
     // Clear screen where frequency information will be under graticule
@@ -161,95 +180,74 @@ void UiSpectrumCreateDrawArea(void)
     UiSpectrum_FrequencyBarText();
 
     // draw centre line indicating the receive frequency
-    int8_t c = 4;
-    switch (ts.iq_freq_mode)
-    {
-    case FREQ_IQ_CONV_P12KHZ:
-        c = 2;
-        break;
-    case FREQ_IQ_CONV_P6KHZ:
-        c = 3;
-        break;
-    case FREQ_IQ_CONV_M6KHZ:
-        c = 5;
-        break;
-    case FREQ_IQ_CONV_M12KHZ:
-        c = 6;
-        break;
-    }
 
-    if (!ts.iq_freq_mode || sd.magnify)
-        c = 4;
+    ts.c_line = UiSpectrum_GetGridCenterLine(4);
 
-    ts.c_line = c;
-    UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*c + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+    UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*ts.c_line + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
-    if(!ts.waterfall_size)		//don't draw text bar when size is BIG
+    if(!ts.spectrum_size)		//don't draw text bar when size is BIG
     {
 
-        strcpy(s, "SPECTRUM SCOPE ");
-        slen = 0;	// init string length variable
-        //
         switch(ts.spectrum_db_scale)	 	// convert variable to setting
         {
         case DB_DIV_5:
-            strcat(s, "(5dB/div)");
-            slen = 30;	// fine-tune horizontal position (not sure why this is needed - look at this later)
+            div_txt_ptr = "(5dB/div)";
             break;
         case DB_DIV_7:
-            strcat(s, "(7.5dB/div)");
-            slen = 24;	// fine-tune horizontal position (not sure why this is needed - look at this later)
+            div_txt_ptr = "(7.5dB/div)";
             break;
         case DB_DIV_15:
-            strcat(s, "(15dB/div)");
-            slen = 28;	// fine-tune horizontal position (not sure why this is needed - look at this later)
+            div_txt_ptr = "(15dB/div)";
             break;
         case DB_DIV_20:
-            strcat(s, "(20dB/div)");
-            slen = 28;	// fine-tune horizontal position (not sure why this is needed - look at this later)
+            div_txt_ptr = "(20dB/div)";
             break;
         case S_1_DIV:
-            strcat(s, "(1S-Unit/div)");
+            div_txt_ptr = "(1S-Unit/div)";
             break;
         case S_2_DIV:
-            strcat(s, "(2S-Unit/div)");
+            div_txt_ptr = "(2S-Unit/div)";
             break;
         case S_3_DIV:
-            strcat(s, "(3S-Unit/div)");
+            div_txt_ptr = "(3S-Unit/div)";
             break;
         case DB_DIV_10:
         default:
-            strcat(s, "(10dB/div)");
-            slen = 28;	// fine-tune horizontal position (not sure why this is needed - look at this later)
+            div_txt_ptr = "(10dB/div)";
             break;
         }
         //
-        slen += strlen(s);				// get width of entire banner string
-        slen /= 2;						// scale it for half the width of the string
+        snprintf(s,32,"SPECTRUM SCOPE %s",div_txt_ptr);
 
         // Draw top band = grey box in which text is printed
         for(i = 0; i < 16; i++)
+        {
             UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
+        }
 
         if(!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE))	 	// Display Spectrum Scope banner if enabled
         {
 
             // Top band text - middle caption
-            UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + slen),
-                                            (POS_SPECTRUM_IND_Y - 18),
-                                            s,
-                                            Grey,
-                                            RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+            UiLcdHy28_PrintTextCentered(
+                    POS_SPECTRUM_IND_X,
+                    (POS_SPECTRUM_IND_Y - 18),
+                    POS_SPECTRUM_IND_W,
+                    s,
+                    Grey,
+                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
         }
         else	 			// Waterfall Mode banner if that is enabled
         {
 
             // Top band text - middle caption
-            UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 68),
-                                            (POS_SPECTRUM_IND_Y - 18),
-                                            "WATERFALL DISPLAY",
-                                            Grey,
-                                            RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+            UiLcdHy28_PrintTextCentered(
+                    POS_SPECTRUM_IND_X,
+                    (POS_SPECTRUM_IND_Y - 18),
+                    POS_SPECTRUM_IND_W,
+                    "WATERFALL DISPLAY",
+                    Grey,
+                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
         }
         // Top band text - grid size
         //UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X +  2),
@@ -262,120 +260,87 @@ void UiSpectrumCreateDrawArea(void)
         for(i = 0; i < 2; i++)
         {
             UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X - 2 + i),
-                                        (POS_SPECTRUM_IND_Y - 20),
-                                        (POS_SPECTRUM_IND_H + 12),
-                                        LCD_DIR_VERTICAL,
-//									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                                        ts.scope_grid_colour_active);
+                    (POS_SPECTRUM_IND_Y - 20),
+                    (POS_SPECTRUM_IND_H + 12),
+                    LCD_DIR_VERTICAL,
+                    //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+                    ts.scope_grid_colour_active);
 
             UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2 + i),
-                                        (POS_SPECTRUM_IND_Y - 20),
-                                        (POS_SPECTRUM_IND_H + 12),
-                                        LCD_DIR_VERTICAL,
-//									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                                        ts.scope_grid_colour_active);
+                    (POS_SPECTRUM_IND_Y - 20),
+                    (POS_SPECTRUM_IND_H + 12),
+                    LCD_DIR_VERTICAL,
+                    //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+                    ts.scope_grid_colour_active);
         }
 
     }
-/////////////////////////////// was here /////////////////////////////////////
-    // Is (spectrum_light enabled AND NOT Waterfall enabled) OR display OFF ?
-    if (((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && !(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
-        return; // if spectrum display light enabled, bail out here!
+    /////////////////////////////// was here /////////////////////////////////////
+    // Is (scope enabled AND NOT scope light) or Waterfall?
+    if (!((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) || (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
+    { // if spectrum display light enabled, bail out here!
 
 
-    // Horizontal grid lines
-    char upperline, y_add;
-    if(ts.waterfall_size)		//set range big/normal
-    {
-        upperline = 6;
-        y_add = 32;
-    }
-    else
-    {
-        upperline = 4;
-        y_add = 0;
-    }
-
-    for(i = 1; i < upperline; i++)
-    {
-        // Save y position for repaint
-        sd.horz_grid_id[i - 1] = (POS_SPECTRUM_IND_Y - 5 - y_add + i*16);
-
-        // Draw
-        UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X,
-                                    sd.horz_grid_id[i - 1],
-                                    POS_SPECTRUM_IND_W,
-                                    LCD_DIR_HORIZONTAL,
-//									RGB((COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD)));
-                                    ts.scope_grid_colour_active);
-        //printf("vy: %d\n\r",sd.horz_grid_id[i - 1]);
-    }
-
-    // Vertical grid lines
-    for(i = 1; i < 8; i++)
-    {
-
-        // determine if we are drawing the "center" line on the spectrum  display
-        if(!sd.magnify)
+        // Horizontal grid lines
+        char upperline, y_add;
+        if(ts.spectrum_size)		//set range big/normal
         {
-            if((ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && (i == 5))			// is it frequency translate RF LOW mode?  If so, shift right of center
-            {
-                clr = ts.scope_centre_grid_colour_active;
-                ts.c_line = i;
-            }
-            else if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ) && (i == 3))		// shift left of center if RF HIGH translate mode
-            {
-                clr = ts.scope_centre_grid_colour_active;
-                ts.c_line = i;
-            }
-            else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ) && (i == 2))		// shift left of center if RF HIGH translate mode
-            {
-                clr = ts.scope_centre_grid_colour_active;
-                ts.c_line = i;
-            }
-            else if((ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && (i == 6))		// shift right of center if RF HIGH translate mode
-            {
-                clr = ts.scope_centre_grid_colour_active;
-                ts.c_line = i;
-            }
-            else if ((ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) && (i == 4))	// center if translate mode not active
-            {
-                clr = ts.scope_centre_grid_colour_active;
-                ts.c_line = i;
-            }
-            else
-                clr = ts.scope_grid_colour_active;								// normal color if other lines
-        }
-        else if(i == 4)
-        {
-            clr = ts.scope_centre_grid_colour_active;
-            ts.c_line = i;
+            upperline = 6;
+            y_add = 32;
         }
         else
+        {
+            upperline = 4;
+            y_add = 0;
+        }
 
-            clr = ts.scope_grid_colour_active;								// normal color if other lines
+        for(i = 1; i < upperline; i++)
+        {
+            // Save y position for repaint
+            sd.horz_grid_id[i - 1] = (POS_SPECTRUM_IND_Y - 5 - y_add + i*16);
 
-        // Save x position for repaint
-        sd.vert_grid_id[i - 1] = (POS_SPECTRUM_IND_X + 32*i + 1);
+            // Draw
+            UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X,
+                    sd.horz_grid_id[i - 1],
+                    POS_SPECTRUM_IND_W,
+                    LCD_DIR_HORIZONTAL,
+                    ts.scope_grid_colour_active);
+        }
 
-        // Draw
-        UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
-                                    (POS_SPECTRUM_IND_Y -  4 - y_add/2),
-                                    (POS_SPECTRUM_IND_H - 15 + y_add/2),
-                                    LCD_DIR_VERTICAL,
-                                    clr);
+        ts.c_line = UiSpectrum_GetGridCenterLine(4);
+        // Vertical grid lines
+        for(i = 1; i < 8; i++)
+        {
 
-        //printf("vx: %d\n\r",sd.vert_grid_id[i - 1]);
-    }
+            if (i == ts.c_line)
+            {
+                clr = ts.scope_centre_grid_colour_active;
+            }
+            else
+            {
+                clr = ts.scope_grid_colour_active;								// normal color if other lines
+            }
+            // Save x position for repaint
+            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_IND_X + 32*i + 1);
 
-    if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall_speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
-    {
-        // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-        UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
-                                        (POS_SPECTRUM_IND_Y + 18),
-                                        "   DISABLED   ",
-                                        Grey,
-                                        RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+            // Draw
+            UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
+                    (POS_SPECTRUM_IND_Y -  4 - y_add/2),
+                    (POS_SPECTRUM_IND_H - 15 + y_add/2),
+                    LCD_DIR_VERTICAL,
+                    clr);
+
+        }
+
+        if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall_speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
+        {
+            // print "disabled" in the middle of the screen if the waterfall or scope was disabled
+            UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
+                    (POS_SPECTRUM_IND_Y + 18),
+                    "   DISABLED   ",
+                    Grey,
+                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+        }
     }
 }
 
@@ -453,13 +418,6 @@ static uint16_t UiSpectrum_Draw_GetCenterLineX()
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_DrawSpectrum_Interleaved
-//* Object              : repaint spectrum scope control
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
 //	q15_t * fft_old_begin = fft_old;
@@ -468,7 +426,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
     int spec_height = SPECTRUM_HEIGHT; //x
     int spec_start_y = SPECTRUM_START_Y;
 
-    if ((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && ts.waterfall_size == WATERFALL_BIG)
+    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
     {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
         spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
@@ -498,7 +456,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             if(y_new > (spec_height - 7))
                 y_new = (spec_height - 7);
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
-            if (!(ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE))
+            if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
                 UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
 //			else
             //	UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
@@ -512,7 +470,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
         for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
         {
-            if (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE)
+            if (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
             {
 //	            if ((fft_old > fft_old_begin + 1) && (fft_old < fft_old_begin + 254)) {
 //                if ((fft_old > 1) && (fft_old < 254)) {
@@ -565,7 +523,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
 
-            if (y_old != y_new && (ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+            if (y_old != y_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
                 // y_pos of new point is different from old point AND
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
@@ -573,7 +531,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                 UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
             }
 
-            if (!(ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE))
+            if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
             {
                 if(y_old <= y_new)
                 {
@@ -613,7 +571,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                             // grid, not the y1_old.
                             // Enumerate all saved y positions
                             char upperline;
-                            if(ts.waterfall_size)		//set range big/normal for redraw
+                            if(ts.spectrum_size)		//set range big/normal for redraw
                                 upperline = 5;
                             else
                                 upperline = 3;
@@ -762,13 +720,13 @@ static void UiSpectrum_InitSpectrumDisplay()
         break;
     }
     //
-    if(ts.waterfall_size == WATERFALL_NORMAL)	 						// waterfall the same size as spectrum scope
+    if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
         sd.wfall_height = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
         sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
         sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
     }																	// waterfall larger, covering the word "Waterfall Display"
-    else if(ts.waterfall_size == WATERFALL_BIG)
+    else if(ts.spectrum_size == SPECTRUM_BIG)
     {
         sd.wfall_height = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
         sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
@@ -809,7 +767,7 @@ static void UiSpectrum_InitSpectrumDisplay()
 void UiSpectrumReDrawScopeDisplay()
 {
     int spec_height = SPECTRUM_HEIGHT;
-    if ((ts.flags1 & FLAGS1_SPECTRUM_LIGHT_ENABLE) && ts.waterfall_size == WATERFALL_BIG)
+    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
     ulong i, spec_width;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
@@ -1657,7 +1615,7 @@ static void UiSpectrum_FrequencyBarText()
     ulong   grat;
     int centerIdx;
 
-    if(ts.scope_scale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
+    if(ts.spectrum_freqscale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
         return;
 
     grat = 6;   // Default - Magnify mode OFF, graticules spaced 6 kHz
@@ -1671,7 +1629,7 @@ static void UiSpectrum_FrequencyBarText()
     //
     // get color for frequency scale
     //
-    UiMenu_MapColors(ts.scope_scale_colour,NULL, &clr);
+    UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
 
     freq_calc = df.tune_new/TUNE_MULT;      // get current frequency in Hz
@@ -1682,27 +1640,7 @@ static void UiSpectrum_FrequencyBarText()
     }
     freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
 
-    // defaults, used for (ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF) || sd.magnify
-    centerIdx = 0;
-    // now handle the special cases
-    if(sd.magnify == false)
-    {
-        switch(ts.iq_freq_mode)
-        {
-        case FREQ_IQ_CONV_P6KHZ:
-            centerIdx = -1;
-            break;
-        case FREQ_IQ_CONV_P12KHZ:
-            centerIdx = -2;
-            break;
-        case FREQ_IQ_CONV_M6KHZ:
-            centerIdx = 1;
-            break;
-        case FREQ_IQ_CONV_M12KHZ:
-            centerIdx = 2;
-            break;
-        }
-    }
+    centerIdx = UiSpectrum_GetGridCenterLine(0);
 
     {
         // remainder of frequency/graticule markings
