@@ -305,7 +305,7 @@ void TransceiverStateInit(void)
 
     ts.waterfall_speed	= WATERFALL_SPEED_DEFAULT_SPI;		// default speed of update of the waterfall for parallel displays
     //
-    ts.scope_filter		= SPECTRUM_SCOPE_FILTER_DEFAULT;	// default filter strength for spectrum scope
+    ts.spectrum_filter		= SPECTRUM_FILTER_DEFAULT;	// default filter strength for spectrum scope
     ts.scope_trace_colour	= SPEC_COLOUR_TRACE_DEFAULT;		// default colour for the spectrum scope trace
     ts.scope_grid_colour	= SPEC_COLOUR_GRID_DEFAULT;		// default colour for the spectrum scope grid
     ts.scope_grid_colour_active = Grid;
@@ -589,7 +589,7 @@ uint8_t EEPROM_24Cxx_Detect() {
             }
         }
     }
-        return ser_eeprom_type;
+    return ser_eeprom_type;
 }
 
 void ConfigurationStorage_Init()

@@ -927,7 +927,7 @@ typedef struct TransceiverState
 
     uchar	scope_speed;	// update rate for spectrum scope
 
-    uchar	scope_filter;	// strength of filter in spectrum scope
+    uchar	spectrum_filter;	// strength of filter in spectrum scope
 
     uchar	scope_trace_colour;	// color of spectrum scope trace;
     uchar	scope_grid_colour;	// saved color of spectrum scope grid;

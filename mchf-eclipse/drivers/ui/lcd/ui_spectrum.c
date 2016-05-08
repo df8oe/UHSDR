@@ -853,7 +853,7 @@ void UiSpectrumReDrawScopeDisplay()
         uint32_t i;
         float32_t		filt_factor;
         //
-        filt_factor = (float)ts.scope_filter;		// use stored filter setting
+        filt_factor = (float)ts.spectrum_filter;		// use stored filter setting
         filt_factor = 1/filt_factor;		// invert filter factor to allow multiplication
         //
         if(sd.dial_moved)
@@ -1269,7 +1269,7 @@ void UiSpectrumReDrawWaterfall()
         uint32_t i;
         float32_t		filt_factor;
         //
-        filt_factor = (float)ts.scope_filter;		// use stored filter setting
+        filt_factor = (float)ts.spectrum_filter;		// use stored filter setting
         filt_factor = 1/filt_factor;		// invert filter factor to allow multiplication
         //
         if(sd.dial_moved)
