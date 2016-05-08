@@ -32,6 +32,7 @@ int main(void)
 
     double i,border;
 
+// *(__IO uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE Beta-Testing
 // *(__IO uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for DG9BFC Beta-Testing
     if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
         border = 300000;
