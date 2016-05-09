@@ -92,7 +92,9 @@ static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
 static void 	UiDriverHandleLowerMeter();
 static void     UiDriverHandlePowerSupply();
+#if 0
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
+#endif
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature();
@@ -2885,86 +2887,40 @@ static void UiDriverDrawSMeter(ushort color)
 //*----------------------------------------------------------------------------
 static void UiDriverDeleteSMeter()
 {
-    ulong i;
-
-    for(i = POS_SM_IND_Y; i < POS_SM_IND_Y + 72; i+=8)	 	// Y coordinate of blanking line
-    {
-        UiLcdHy28_PrintText(POS_SM_IND_X + 6,((POS_SM_IND_Y + 5) +  i),"                                ",  White,Black,4);
-    }
+    // W/H ratio ~ 3.5
+    UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,70,200,Black);
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateSMeter
-//* Object              : draw the S meter
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverCreateSMeter()
+static void UiDriverDeleteSMeterLabels()
 {
-    uchar 	i,v_s;
-    char	num[20];
-    int		col;
-
     // W/H ratio ~ 3.5
-    UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,72,202,Grey);
+    UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,21,200,Black);
+}
 
-    // Draw top line
-    UiLcdHy28_DrawFullRect((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),2,92,White);
-    UiLcdHy28_DrawFullRect((POS_SM_IND_X +  113),(POS_SM_IND_Y + 20),2,75,Green);
 
+static void UiDriver_DrawPowerMeterLabels()
+{
+    uchar   i;
+    char    num[20];
+
+    // MinX  = + 6
+    // MinY  = + 32
+    // MaxY  = +36 + 12 = +48?
+    // MaxX  = 18+178 = +196?
+    // Bounding Box = +6,+32,++190,++16
     // Leading text
-    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y +  5),"S",  White,Black,4);
-    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 36),"P",  White,Black,4);
+    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 5),"P",  White,Black,4);
 
-    // Trailing text
-    UiLcdHy28_PrintText((POS_SM_IND_X + 185),(POS_SM_IND_Y + 5), "dB",Green,Black,4);
-    UiLcdHy28_PrintText((POS_SM_IND_X + 185),(POS_SM_IND_Y + 36)," W",White,Black,4);
-
-    // Draw s markers on top white line
-    for(i = 0; i < 10; i++)
-    {
-        num[0] = i + 0x30;
-        num[1] = 0;
-
-        // Draw s text, only odd numbers
-        if(i%2)
-        {
-            UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 4 + i*10),(POS_SM_IND_Y + 5),num,White,Black,4);
-            v_s = 5;
-        }
-        else
-            v_s = 3;
-
-        // Lines
-        UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
-    }
-
-    // Draw s markers on top green line
-    for(i = 0; i < 4; i++)
-    {
-        // Prepare text
-        num[0] = i*2 + 0x30;
-        num[1] = 0x30;
-        num[2] = 0x00;
-
-        if(i)
-        {
-            // Draw text
-            UiLcdHy28_PrintText(((POS_SM_IND_X + 113) - 6 + i*20),(POS_SM_IND_Y + 5),num,Green,Black,4);
-
-            // Draw vert lines
-            UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 113) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
-        }
-    }
+    UiLcdHy28_PrintText((POS_SM_IND_X + 185),(POS_SM_IND_Y + 5)," W",White,Black,4);
 
     // Draw middle line
-    UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 32),170,LCD_DIR_HORIZONTAL,White);
+    UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 20),170,LCD_DIR_HORIZONTAL,White);
+    // S Meter -> Y + 20
 
     // Draw s markers on middle white line
     for(i = 0; i < 12; i++)
     {
+        uint8_t v_s;
         if(i < 10)
         {
             num[0] = i + 0x30;
@@ -2981,28 +2937,91 @@ static void UiDriverCreateSMeter()
         if(!(i%2))
         {
             // Text
-            UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*15),(POS_SM_IND_Y + 36),num,White,Black,4);
-
-            // Lines
-            if(i)
-            {
-                UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 2),2,LCD_DIR_VERTICAL,White);
-            }
-            else
-            {
-                UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 32) - 7),7,LCD_DIR_VERTICAL,White);
-            }
+            UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*15),(POS_SM_IND_Y + 5),num,White,Black,4);
         }
+        // Lines
+        v_s=(i%2)?3:5;
+        UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*15),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
     }
 
 
+}
+static void UiDriver_DrawSMeterLabels()
+{
+    uchar   i,v_s;
+    char    num[20];
+
+    // Draw top line
+     UiLcdHy28_DrawFullRect((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),2,92,White);
+     UiLcdHy28_DrawFullRect((POS_SM_IND_X +  113),(POS_SM_IND_Y + 20),2,75,Green);
+
+    // Leading text
+    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y +  5),"S",  White,Black,4);
+
+    // Trailing text
+    UiLcdHy28_PrintText((POS_SM_IND_X + 185),(POS_SM_IND_Y + 5), "dB",Green,Black,4);
+
+
+    num[1] = 0;
+    // Draw s markers on top white line
+    for(i = 0; i < 10; i++)
+    {
+        num[0] = i + 0x30;
+
+        // Draw s text, only odd numbers
+        if(i%2)
+        {
+            UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 4 + i*10),(POS_SM_IND_Y + 5),num,White,Black,4);
+            v_s = 5;
+        }
+        else
+            v_s = 3;
+
+        // Lines
+        UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
+    }
+
+    num[1] = 0x30;
+    num[2] = 0x00;
+    // Draw s markers on top green line
+    for(i = 0; i < 4; i++)
+    {
+        // Prepare text
+        num[0] = i*2 + 0x30;
+
+        if(i)
+        {
+            // Draw text
+            UiLcdHy28_PrintText(((POS_SM_IND_X + 113) - 6 + i*20),(POS_SM_IND_Y + 5),num,Green,Black,4);
+
+            // Draw vert lines
+            UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 113) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
+        }
+    }
+
+}
+
+
+#define BTM_MINUS 14
+
+static void UiDriverCreateSMeter()
+{
+    uchar 	i;
+    char	num[20];
+    int		col;
+
+    // W/H ratio ~ 3.5
+    UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,72 - BTM_MINUS,202,Grey);
+
+    UiDriver_DrawSMeterLabels();
+    // UiDriver_DrawPowerMeterLabels();
     if(ts.tx_meter_mode == METER_SWR)
     {
-        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59),"SWR",Red2,Black,4);
+        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59 - BTM_MINUS),"SWR",Red2,Black,4);
 
         // Draw bottom line for SWR indicator
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55 - BTM_MINUS), 62,LCD_DIR_HORIZONTAL,White);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55 - BTM_MINUS),105,LCD_DIR_HORIZONTAL,Red);
         col = White;
 
         // Draw S markers on middle white line
@@ -3018,29 +3037,24 @@ static void UiDriverCreateSMeter()
                     num[1] = 0;
 
                     // Text
-                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
+                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59 - BTM_MINUS),num,White,Black,4);
 
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 2),2,LCD_DIR_VERTICAL,col);
                 }
                 else
                 {
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 7),7,LCD_DIR_VERTICAL,col);
                 }
             }
         }
     }
     else if(ts.tx_meter_mode == METER_ALC)
     {
-        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59),"ALC",Yellow,Black,4);
+        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59 - BTM_MINUS),"ALC",Yellow,Black,4);
 
-        // Draw bottom line for SWR indicator
-//		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 108,LCD_DIR_HORIZONTAL,White);
-//		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 18),(POS_SM_IND_Y + 56), 108,LCD_DIR_HORIZONTAL,White);
-//		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55),59,LCD_DIR_HORIZONTAL,Red);
-//		UiLcdHy28_DrawStraightLine((POS_SM_IND_X + 129),(POS_SM_IND_Y + 56),59,LCD_DIR_HORIZONTAL,Red);
 
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 62,LCD_DIR_HORIZONTAL,White);
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55),105,LCD_DIR_HORIZONTAL,Red);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55 - BTM_MINUS), 62,LCD_DIR_HORIZONTAL,White);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 83),(POS_SM_IND_Y + 55 - BTM_MINUS),105,LCD_DIR_HORIZONTAL,Red);
 
         col = White;
 
@@ -3054,24 +3068,24 @@ static void UiDriverCreateSMeter()
                 {
                     sprintf(num,"%d",(i*2));
                     // Text
-                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
+                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59 - BTM_MINUS),num,White,Black,4);
 
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 2),2,LCD_DIR_VERTICAL,col);
                 }
                 else
                 {
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 7),7,LCD_DIR_VERTICAL,col);
                 }
             }
         }
     }
     else if(ts.tx_meter_mode == METER_AUDIO)
     {
-        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59),"AUD",Cyan,Black,4);
+        UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59 - BTM_MINUS),"AUD",Cyan,Black,4);
 
         // Draw bottom line for SWR indicator
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55), 108,LCD_DIR_HORIZONTAL,White);
-        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55),59,LCD_DIR_HORIZONTAL,Red);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 18),(POS_SM_IND_Y + 55 - BTM_MINUS), 108,LCD_DIR_HORIZONTAL,White);
+        UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X + 129),(POS_SM_IND_Y + 55 - BTM_MINUS),59,LCD_DIR_HORIZONTAL,Red);
         col = White;
 
         // Draw markers on middle line
@@ -3084,13 +3098,13 @@ static void UiDriverCreateSMeter()
                 {
                     sprintf(num,"%d",(i*2)-20);
                     // Text
-                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59),num,White,Black,4);
+                    UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59 - BTM_MINUS),num,White,Black,4);
 
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 2),2,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 2),2,LCD_DIR_VERTICAL,col);
                 }
                 else
                 {
-                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55) - 7),7,LCD_DIR_VERTICAL,col);
+                    UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 55 - BTM_MINUS) - 7),7,LCD_DIR_VERTICAL,col);
                 }
             }
         }
@@ -3142,7 +3156,7 @@ static void UiDriverUpdateMeter(uchar val, uchar warn, uint32_t color_norm, uint
     uint8_t from, to;
     uint8_t from_warn = 255;
 
-    uint16_t ypos = meterId==METER_TOP?(POS_SM_IND_Y + 28):(POS_SM_IND_Y + 51);
+    uint16_t ypos = meterId==METER_TOP?(POS_SM_IND_Y + 28):(POS_SM_IND_Y + 51 - BTM_MINUS);
 
     // limit meter
     if(val > SMETER_MAX_LEVEL)
@@ -3810,6 +3824,8 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
         if(state == TRX_STATE_RX_TO_TX)
         {
 
+            UiDriverDeleteSMeterLabels();
+            UiDriver_DrawPowerMeterLabels();
             // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
             enc_one_mode = ts.enc_one_mode;
             ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
@@ -3840,6 +3856,8 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
         else if (state == TRX_STATE_TX_TO_RX)
         {
 
+            UiDriverDeleteSMeterLabels();
+            UiDriver_DrawSMeterLabels();
             // were we latched in TX mode?
             // Yes, Switch to audio gain mode
             ts.enc_one_mode = enc_one_mode;
@@ -6178,7 +6196,7 @@ static void UiDriverHandleLowerMeter()
     }
     else if (UiDriver_UpdatePowerAndVSWR())
     {
-        // FIXME: SCALCULATION ENDS HERE, NOW WE DO DISPLAY, SEPARATE
+        // FIXME: S CALCULATION ENDS HERE, NOW WE DO DISPLAY, SEPARATE
 
         // display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
         if(swrm.pwr_meter_disp)
@@ -6353,6 +6371,7 @@ static void UiDriverHandlePowerSupply()
 	}
 }
 
+#if 0
 /*
  * @brief Displays temp compensation value in a bar
  */
@@ -6393,7 +6412,7 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 		last_active_val = val;
 	}
 }
-
+#endif
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCreateTemperatureDisplay
 //* Object              : draw ui
@@ -6415,10 +6434,11 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     {
         // Top part - name and temperature display
         UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,14,109,Grey);
-
+#if 0
         // LO tracking indicator
         UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
         // Temperature - initial draw
+#endif
         value_str = (df.temp_enabled & 0xf0)?"  --.-F":"  --.-C";
     }
 
@@ -6437,8 +6457,10 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     {
         UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
     }
+#if 0
     // Meter
     UiDriverUpdateLoMeter(13,enabled);
+#endif
 }
 
 // FIXME: This can be simplified, see FreqDisplay Code
@@ -6567,7 +6589,9 @@ static void UiDriverHandleLoTemperature()
                     }
                     // FIXME: Move this close to UiDriverRefreshTemperatureDisplay. This should be
                     // done once the called function is more efficient (i.e. if no change, no update)
+#if 0
                     UiDriverUpdateLoMeter(tblp - 30,1);
+#endif
                 }
                 // Refresh UI
                 UiDriverRefreshTemperatureDisplay(1,temp/1000); // precision is 0.1 represent by lowest digit
