@@ -6811,7 +6811,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
         //
         // On screen delay									// delay a bit...
-        non_os_delay_multi(100);
+        non_os_delay_multi(20);
 
         // add this for emphasis
         UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
@@ -7101,7 +7101,7 @@ static bool UiDriver_TouchscreenCalibration()
         UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
         //
         // On screen delay									// delay a bit...
-        non_os_delay_multi(100);
+        non_os_delay_multi(20);
 
         // add this for emphasis
         UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
@@ -7189,7 +7189,7 @@ static bool UiDriver_TouchscreenCalibration()
 //    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
 //    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
 
-            non_os_delay_multi(100);
+            non_os_delay_multi(10);
             retval = true;
             ts.menu_var_changed = true;
         }
@@ -7232,12 +7232,15 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
             }
             samples++;
             UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
+			ts.tp_state = TP_DATASETS_PROCESSED;
         }
     }
     while(datavalid < 3);
 
-    non_os_delay_multi(100);
+    non_os_delay_multi(10);
 }
+
+
 void UiDriver_ShowStartUpScreen(ulong hold_time)
 {
     uint16_t    i;

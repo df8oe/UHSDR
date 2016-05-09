@@ -641,7 +641,7 @@ void mchf_board_power_off(void)
     {
         txp = " ...without saving settings...  ";
         UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
-        non_os_delay_multi(20);
+        non_os_delay_multi(5);
     }
     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
     {
@@ -650,15 +650,15 @@ void mchf_board_power_off(void)
 
         txp = "                           ";
         UiLcdHy28_PrintText(80,200,txp,Black,Black,0);
-        non_os_delay_multi(10);
+        non_os_delay_multi(5);
 
         txp = "            1              ";
         UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(10);
+        non_os_delay_multi(5);
 
         txp = "            0              ";
         UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(10);
+        non_os_delay_multi(5);
     }
     ts.powering_down = 1;	// indicate that we should be powering down
 
