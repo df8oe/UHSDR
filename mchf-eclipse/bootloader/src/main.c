@@ -32,12 +32,12 @@ int main(void)
 
     double i,border;
 
-// *(__IO uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE Beta-Testing
-// *(__IO uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for DG9BFC Beta-Testing
-    if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
+// *(__IO uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
+// *(__IO uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+    if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)		// reboot requested?
         border = 300000;
     else
-        border = 1000;
+        border = 1000;								// yes: only short delay so that power is hold
 
     for (i = 0; i < border; i++)
         ;

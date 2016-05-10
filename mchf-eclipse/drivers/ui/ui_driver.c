@@ -7460,8 +7460,8 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
 
     // Show fourth line
-    sprintf(tx,"Build on %s%s%s",__DATE__," at ",__TIME__);
-    UiLcdHy28_PrintText(35,100,tx,Yellow,Black,0);
+    sprintf(tx,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
+    UiLcdHy28_PrintText(15,100,tx,Yellow,Black,0);
 
     Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
 
