@@ -1,5 +1,2 @@
-# first line: <bootloader testing>,<firmware testing>
-# second line: <bootloader stable>,<firmware stable>
-,
-0.0.1.0.0,0.219.27.14,
-0.0.1.0.0,0.219.27.0
+<bootloader testing> <firmware testing> <bootloader stable> <firmware stable>
+,0.0.1.0.0,0.219.27.14,0.0.1.0.0,0.219.27.0
