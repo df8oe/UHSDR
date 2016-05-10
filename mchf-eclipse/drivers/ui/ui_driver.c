@@ -278,7 +278,7 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 
 inline bool is_touchscreen_pressed()
 {
-    return (ts.tp_state > TP_DATASETS_WAIT && ts.tp_state != TP_DATASETS_PROCESSED);	// touchscreen data available
+    return (ts.tp_state == TP_DATASETS_VALID);	// touchscreen data available
 }
 
 

@@ -112,10 +112,10 @@ void 	UiLcdHy28_CloseBulkWrite(void);
 
 uint8_t 	UiLcdHy28_Init();
 
-#define TP_DATASETS_VALID     0x08   // number of sets that must be identical for marked as VALID
-#define TP_DATASETS_WAIT    0x01   // number of sets that must be identical for marked as VALID
-#define TP_DATASETS_PROCESSED 0xff
-#define TP_DATASETS_NONE      0x00
+#define TP_DATASETS_VALID		0x08   // number of sets that must be identical for marked as VALID
+#define TP_DATASETS_WAIT		0x01   // first dataset received
+#define TP_DATASETS_PROCESSED	0xff
+#define TP_DATASETS_NONE		0x00
 
 void    UiLcdHy28_TouchscreenDetectPress();
 void    UiLcdHy28_TouchscreenPresenceDetection();
