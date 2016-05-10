@@ -1,4 +1,4 @@
-<div align="center"><h1><b>mcHF firmware and bootloader - sources</b></h1></div><br>
+<div align="center"><h1><b>MCHF Firmware and Bootloader</b></h1></div>
 
 If you want binaries, you can find them for stable releases and
 pre-releases in "GitHub Releases".<br>
