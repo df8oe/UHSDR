@@ -1,9 +1,9 @@
-<h1><b>mcHF firmware and bootloader - sources</b></h1><br>
+<div align="center"><h1><b>mcHF firmware and bootloader - sources</b></h1></div><br>
 
 If you want binaries, you can find them for stable releases and
 pre-releases in "GitHub Releases".<br>
 
-Binaries of actual devel versions are available as "daily snapshots".<br>
+Binaries of actual development are available as "daily snapshots". Versioning is only done in RELEASES. For identifying daily snapshots you must use build time stamp which is shown in splash screen.<br>
 
 All this is bundled in <a href="http://df8oe.github.io">startup page</a>.<br>
 
