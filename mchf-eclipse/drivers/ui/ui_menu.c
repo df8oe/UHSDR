@@ -533,16 +533,16 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE,"109","Spectrum Type"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum 2x Magn"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE,"117","Spectrum Size"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_FILTER_STRENGTH,"101","Spectrum Filter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH,"101","Spectrum Filter"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR,"104","Spec FreqScaleClr"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR,"108","Spectrum LineClr"},
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_FFT_WINDOW_TYPE,"340","Spectrum FFT"},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE,"340","Spectrum FFT"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Scope Light"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED,"100","Scope 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Scope AGC Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR,"102","Scope Trace Colour"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR,"103","Scope Grid Colour"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Scope Ampl."},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION,"107","Scope Div."},
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST,"115","Scope NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED,"114","Wfall 1/Speed"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME,"110","Wfall Colours"},
@@ -579,7 +579,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE,"212","Key Beep"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_FREQ,"213","Beep Frequency"},
-    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_LOUDNESS,"214","Beep Volume"},
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_VOLUME,"214","Beep Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_ENABLE,"220","CAT Mode"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX,"530","CAT Running In Sandbox"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT"},
@@ -1369,7 +1369,7 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
             outs = "unknown";
             break;
         }
-        sprintf(out,"%s%s","Serial EEPROM: ",outs);
+        sprintf(out,"Serial EEPROM: %s",outs);
         switch(ts.ser_eeprom_in_use)
         {
         case SER_EEPROM_IN_USE_I2C:
@@ -2388,14 +2388,14 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             strcpy(options, "OFF");
         }
         break;
-    case MENU_SCOPE_FILTER_STRENGTH:	// spectrum filter strength
-        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_filter,
-                                              SPECTRUM_SCOPE_FILTER_MIN,
-                                              SPECTRUM_SCOPE_FILTER_MAX,
-                                              SPECTRUM_SCOPE_FILTER_DEFAULT,
+    case MENU_SPECTRUM_FILTER_STRENGTH:	// spectrum filter strength
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_filter,
+                                              SPECTRUM_FILTER_MIN,
+                                              SPECTRUM_FILTER_MAX,
+                                              SPECTRUM_FILTER_DEFAULT,
                                               1
                                              );
-        sprintf(options, "  %u", ts.scope_filter);
+        sprintf(options, "  %u", ts.spectrum_filter);
         break;
     case MENU_SCOPE_TRACE_COLOUR:	// spectrum scope trace colour
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_trace_colour,
@@ -2941,7 +2941,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         sprintf(options, "   %uHz", (uint)ts.beep_frequency);	// casted to int because display errors if uint32_t
         break;
     //
-    case CONFIG_BEEP_LOUDNESS:	// beep loudness
+    case CONFIG_BEEP_VOLUME:	// beep loudness
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.beep_loudness,
                                               0,
                                               MAX_BEEP_LOUDNESS,
@@ -3762,7 +3762,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             break;
         }
         break;
-    case CONFIG_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
+    case CONFIG_SPECTRUM_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
                                               0,
                                               FFT_WINDOW_MAX-1,

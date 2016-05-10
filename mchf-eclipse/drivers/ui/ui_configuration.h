@@ -217,7 +217,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_LINE_GAIN        79      // Line gain setting
 #define EEPROM_SIDETONE_FREQ        80      // Sidetone frequency (Hz)
 #define EEPROM_SPEC_SCOPE_SPEED     81      // Spectrum Scope Speed
-#define EEPROM_SPEC_SCOPE_FILTER    82      // Spectrum Scope filter strength
+#define EEPROM_SPECTRUM_FILTER    82      // Spectrum Scope filter strength
 #define EEPROM_RX_GAIN          83      // RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
 #define EEPROM_AGC_CUSTOM_DECAY     84      // Custom setting for AGC decay rate
 #define EEPROM_SPECTRUM_TRACE_COLOUR    85      // Custom setting for spectrum scope trace colour
