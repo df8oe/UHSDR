@@ -125,6 +125,10 @@ static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
         c = 2;
         break;
     }
+
+    if(sd.magnify)
+  	  c = 0;
+
     return c + reference;
 }
 
@@ -307,7 +311,7 @@ void UiSpectrumCreateDrawArea(void)
                     ts.scope_grid_colour_active);
         }
 
-        ts.c_line = UiSpectrum_GetGridCenterLine(4);
+//        ts.c_line = UiSpectrum_GetGridCenterLine(4);
         // Vertical grid lines
         for(i = 1; i < 8; i++)
         {

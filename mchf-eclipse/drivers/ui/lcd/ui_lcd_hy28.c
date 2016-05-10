@@ -1354,6 +1354,7 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
                 // set new data
                 ts.tp_x = x;
                 ts.tp_y = y;
+                ts.tp_state = TP_DATASETS_WAIT;		// restart machine
             }
         }
         else
