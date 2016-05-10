@@ -13,6 +13,9 @@
 #########################################################################
 
 
+2016mmdd [DF8OE]
+
+
 20160510 [DF8OE]
 - bugfix: when in syncAM-mode now AM is reported instead of SSB
 - minor and major bugfixes regarding CW TX
