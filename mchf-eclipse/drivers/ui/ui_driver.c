@@ -87,7 +87,7 @@ static void 	UiDriverChangeEncoderTwoMode(uchar skip);
 static void 	UiDriverChangeEncoderThreeMode(uchar skip);
 static void 	UiDriverChangeSigProc(uchar enabled);
 static void 	UiDriverDisplayNotch(uchar enabled);
-static void 	UiDriverDisplayBass();
+static void 	UiDriverDisplayTone();
 static void 	UiDriverChangeRit(uchar enabled);
 static void 	UiDriverChangeDSPMode();
 static void 	UiDriverChangeDigitalMode();
@@ -188,28 +188,8 @@ static bool	UiDriver_TouchscreenCalibration();
 // Encoder one controls indicator
 // audio gain
 #define POS_AG_IND_X                0
-#define POS_AG_IND_Y                27
-// sidetone gain
-#define POS_SG_IND_X                60
-#define POS_SG_IND_Y                27
+#define POS_AG_IND_Y                16
 
-// --------------------------------------------------
-// Encoder two controls indicator
-// RF Gain indicator
-#define POS_RF_IND_X                0
-#define POS_RF_IND_Y                43
-// RF attenuator
-#define POS_RA_IND_X                60
-#define POS_RA_IND_Y                43
-
-// --------------------------------------------------
-// Encoder three controls indicator
-// RIT indicator
-#define POS_RIT_IND_X               0
-#define POS_RIT_IND_Y               59
-// keyer speed
-#define POS_KS_IND_X                60
-#define POS_KS_IND_Y                59
 
 // --------------------------------------------------
 // Calibration mode
@@ -1814,17 +1794,20 @@ void UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_
                                 label_color, Black, 0);
 }
 
+#define ENC_COL_W 37
+#define ENC_ROW_H (16+12+2)
+#define ENC_ROW_2ND_OFF 14
 
-void UiDriverEncoderDisplay(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char *label, bool enabled,
                             char temp[5], uint32_t color)
 {
 
     uint32_t label_color = enabled?Black:Grey1;
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56 * column, POS_AG_IND_Y + row * 16, 13, 53, Grey);
-    UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), label,
+    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + ENC_COL_W * column, POS_AG_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, Grey);
+    UiLcdHy28_PrintTextCentered((POS_AG_IND_X + 1 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
                         label_color, Grey, 0);
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56 * column), (POS_AG_IND_Y + 1 + row * 16), temp,
+    UiLcdHy28_PrintTextRight((POS_AG_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
                              color, Black, 0);
 }
 
@@ -4983,7 +4966,7 @@ static void UiDriverCheckEncoderTwo()
                     if (ts.bass_gain < MIN_BASS) ts.bass_gain = MIN_BASS;
                     if (ts.bass_gain > MAX_BASS) ts.bass_gain = MAX_BASS;
                     // display bass gain
-                    UiDriverDisplayBass();
+                    UiDriverDisplayTone();
                     // set filter instance
                     audio_driver_set_rx_audio_filter();
                     break;
@@ -5001,7 +4984,7 @@ static void UiDriverCheckEncoderTwo()
                     if (ts.treble_gain < MIN_TREBLE) ts.treble_gain = MIN_TREBLE;
                     if (ts.treble_gain > MAX_TREBLE) ts.treble_gain = MAX_TREBLE;
                     // display treble gain
-                    UiDriverDisplayBass();
+                    UiDriverDisplayTone();
                     // set filter instance
                     audio_driver_set_rx_audio_filter();
                     break;
@@ -5322,7 +5305,7 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
         UiDriverChangeSigProc(0);
         // notch display
         UiDriverDisplayNotch(0);
-        UiDriverDisplayBass();
+        UiDriverDisplayTone();
 
         break;
     }
@@ -5334,7 +5317,7 @@ static void UiDriverChangeEncoderTwoMode(uchar skip)
         UiDriverChangeSigProc(0);
         // notch display
         UiDriverDisplayNotch(0);
-        UiDriverDisplayBass();
+        UiDriverDisplayTone();
         break;
     }
 
@@ -5786,6 +5769,7 @@ static void UiDriverChangeSigProc(uchar enabled)
     UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
 }
 
+#define NOTCH_DELTA_Y (2*ENC_ROW_H)
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverDisplayBass
@@ -5794,10 +5778,10 @@ static void UiDriverChangeSigProc(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverDisplayBass(void)
+static void UiDriverDisplayTone(void)
 {
 
-    UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+    UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
 
     bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
     uint32_t col_bass = enable?Black:Grey1;
@@ -5805,11 +5789,11 @@ static void UiDriverDisplayBass(void)
     char temp[5];
     snprintf(temp,5,"%2d", ts.bass_gain);
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
-    UiLcdHy28_PrintText((POS_AG_IND_X + 1 ), (POS_AG_IND_Y + 1 + 3 * 16), "BAS",
+    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
+    UiLcdHy28_PrintText((POS_AG_IND_X + 1 ), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), "BAS",
                         col_bass, Grey, 0);
     col_bass = enable?Orange:Grey;
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
                              col_bass, Black, 0);
 
     enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
@@ -5817,12 +5801,12 @@ static void UiDriverDisplayBass(void)
 
     snprintf(temp,5,"%2d", ts.treble_gain);
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3* 16, 13, 53, Grey);
-    UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56), (POS_AG_IND_Y + 1 + 3 * 16), "TRB",
+    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
+    UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), "TRB",
                         col_treble, Grey, 0);
     col_treble = enable?Orange:Grey;
 
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
+    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
                              col_treble, Black, 0);
 
     /*
@@ -5860,39 +5844,34 @@ static void UiDriverDisplayBass(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+
 static void UiDriverDisplayNotch(uchar enabled)
 {
 
     if(enabled || ts.notch_enabled || ts.peak_enabled)
     {
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
+        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
         uint32_t label_color = enabled?Black:Grey1;
-        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
 
-        if (ts.notch_enabled)
-            UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
-                                label_color, Grey, 0);
-        else
-            UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "PEAK-F",
-                                label_color, Grey, 0);
+        UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), ts.notch_enabled?"NOTCH ":"PEAK-F",
+                label_color, Grey, 0);
+        UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 7, Grey);
 
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
-
-        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
+        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
 
         char temp[6];
         uint32_t color = enabled?White:Grey;
         if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
-        if (ts.notch_enabled)
-            snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
-        else 	  snprintf(temp,6,"%5lu", (ulong)ts.peak_frequency);
-        UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
-                                 color, Black, 0);
+        snprintf(temp,6,"%5lu", (ulong)(ts.notch_enabled?ts.notch_frequency:ts.peak_frequency));
+        UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
+                color, Black, 0);
     }
     else
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 16, 112, Black);
-
-} // end void UiDriverDisplayNotch
+    {
+        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
+    }
+}
 
 //
 //*----------------------------------------------------------------------------
