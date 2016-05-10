@@ -796,7 +796,7 @@ void UiDriver_HandleTouchScreen()
             df.tune_new = lround((df.tune_new + tunediff)/step) * step;
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
-        if(check_tp_coordinates(0,7,31,33))			// toggle digital modes
+        if(check_tp_coordinates(0,7,10,13))			// toggle digital modes
         {
             incr_wrap_uint8(&ts.digital_mode,0,7);
             UiDriverChangeDigitalMode();
