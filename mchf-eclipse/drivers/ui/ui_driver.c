@@ -69,6 +69,9 @@ static void 	UiDriverInitFrequency();
 //
 static void 	RadioManagement_SetHWFiltersForFrequency(ulong freq);
 static void RadioManagement_SetDemodMode(uint32_t new_mode);
+
+static void PowerManagement_HandlePowerDown();
+
 uchar 			UiDriver_ShowBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
@@ -91,11 +94,13 @@ static void 	UiDriverChangeDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
 static void 	UiDriverHandleLowerMeter();
-static void     UiDriverHandlePowerSupply();
+static void     UiDriver_HandleVoltage();
 #if 0
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 #endif
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
+static void UiDriver_CreateVoltageDisplay();
+
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriverHandleLoTemperature();
 static void 	UiDriver_HandlePttOnOff();
@@ -104,6 +109,165 @@ static void 	UiDriverInitMainFreqDisplay();
 static bool	UiDriver_LoadSavedConfigurationAtStartup();
 static bool	UiDriver_TouchscreenCalibration();
 //
+// --------------------------------------------------------------------------
+// Controls positions and some related colours
+// --------------------
+#define SMALL_FONT_WIDTH            8
+#define LARGE_FONT_WIDTH            16
+
+// Frequency display control
+#define POS_TUNE_FREQ_X             116
+#define POS_TUNE_FREQ_Y             100
+//
+#define POS_TUNE_SPLIT_FREQ_X           POS_TUNE_FREQ_X+72
+#define POS_TUNE_SPLIT_MARKER_X         POS_TUNE_FREQ_X+40
+#define POS_TUNE_SPLIT_FREQ_Y_TX        POS_TUNE_FREQ_Y+12
+
+//
+#define SPLIT_ACTIVE_COLOUR         Yellow      // colour of "SPLIT" indicator when active
+#define SPLIT_INACTIVE_COLOUR           Grey        // colour of "SPLIT" indicator when NOT active
+
+// Second frequency display control
+#define POS_TUNE_SFREQ_X            (POS_TUNE_FREQ_X + 120)
+#define POS_TUNE_SFREQ_Y            (POS_TUNE_FREQ_Y - 20)
+
+// Band selection control
+#define POS_BAND_MODE_X             (POS_TUNE_FREQ_X + 160)
+#define POS_BAND_MODE_Y             (POS_TUNE_FREQ_Y + 7)
+#define POS_BAND_MODE_MASK_X            (POS_BAND_MODE_X - 1)
+#define POS_BAND_MODE_MASK_Y            (POS_BAND_MODE_Y - 1)
+#define POS_BAND_MODE_MASK_H            13
+#define POS_BAND_MODE_MASK_W            33
+
+// Demodulator mode control
+#define POS_DEMOD_MODE_X            (POS_TUNE_FREQ_X + 1)
+#define POS_DEMOD_MODE_Y            (POS_TUNE_FREQ_Y - 20)
+#define POS_DEMOD_MODE_MASK_X           (POS_DEMOD_MODE_X - 1)
+#define POS_DEMOD_MODE_MASK_Y           (POS_DEMOD_MODE_Y - 1)
+#define POS_DEMOD_MODE_MASK_H           13
+#define POS_DEMOD_MODE_MASK_W           41
+
+// Tunning step control
+#define POS_TUNE_STEP_X             (POS_TUNE_FREQ_X + 50)
+#define POS_TUNE_STEP_Y             (POS_TUNE_FREQ_Y - 20)
+#define POS_TUNE_STEP_MASK_X            (POS_TUNE_STEP_X - 1)
+#define POS_TUNE_STEP_MASK_Y            (POS_TUNE_STEP_Y - 1)
+#define POS_TUNE_STEP_MASK_H            17
+#define POS_TUNE_STEP_MASK_W            49
+
+#define POS_RADIO_MODE_X            4
+#define POS_RADIO_MODE_Y            5
+
+// Bottom bar
+#define POS_BOTTOM_BAR_X            0
+#define POS_BOTTOM_BAR_Y            228
+#define POS_BOTTOM_BAR_BUTTON_W         62
+#define POS_BOTTOM_BAR_BUTTON_H         16
+
+// Virtual Button 1
+#define POS_BOTTOM_BAR_F1_X         (POS_BOTTOM_BAR_X + 2)
+#define POS_BOTTOM_BAR_F1_Y         POS_BOTTOM_BAR_Y
+
+// Virtual Button 2
+#define POS_BOTTOM_BAR_F2_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*1 +  4)
+#define POS_BOTTOM_BAR_F2_Y         POS_BOTTOM_BAR_Y
+
+// Virtual Button 3
+#define POS_BOTTOM_BAR_F3_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*2 +  6)
+#define POS_BOTTOM_BAR_F3_Y         POS_BOTTOM_BAR_Y
+
+// Virtual Button 4
+#define POS_BOTTOM_BAR_F4_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*3 +  8)
+#define POS_BOTTOM_BAR_F4_Y         POS_BOTTOM_BAR_Y
+
+// Virtual Button 5
+#define POS_BOTTOM_BAR_F5_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*4 + 10)
+#define POS_BOTTOM_BAR_F5_Y         POS_BOTTOM_BAR_Y
+
+// --------------------------------------------------
+// Encoder one controls indicator
+// audio gain
+#define POS_AG_IND_X                0
+#define POS_AG_IND_Y                27
+// sidetone gain
+#define POS_SG_IND_X                60
+#define POS_SG_IND_Y                27
+
+// --------------------------------------------------
+// Encoder two controls indicator
+// RF Gain indicator
+#define POS_RF_IND_X                0
+#define POS_RF_IND_Y                43
+// RF attenuator
+#define POS_RA_IND_X                60
+#define POS_RA_IND_Y                43
+
+// --------------------------------------------------
+// Encoder three controls indicator
+// RIT indicator
+#define POS_RIT_IND_X               0
+#define POS_RIT_IND_Y               59
+// keyer speed
+#define POS_KS_IND_X                60
+#define POS_KS_IND_Y                59
+
+// --------------------------------------------------
+// Calibration mode
+//
+// PA bias
+#define POS_PB_IND_X                0
+#define POS_PB_IND_Y                78
+// IQ gain balance
+#define POS_BG_IND_X                0
+#define POS_BG_IND_Y                94
+// IQ phase balance
+#define POS_BP_IND_X                0
+#define POS_BP_IND_Y                110
+// Frequency Calibrate
+#define POS_FC_IND_X                0
+#define POS_FC_IND_Y                78
+
+#define UI_LEFT_BOX_WIDTH 56 // used for the lower left side controls
+// --------------------------------------------------
+// Standalone controls
+//
+// DSP mode
+// Lower DSP box
+#define POS_DSPL_IND_X              0
+#define POS_DSPL_IND_Y              131
+
+// Power level
+#define POS_PW_IND_X                0
+#define POS_PW_IND_Y                147
+// Filter indicator
+#define POS_FIR_IND_X               0
+#define POS_FIR_IND_Y               163
+
+// Upper DSP box
+#define POS_DIGMODE_IND_X              0
+#define POS_DIGMODE_IND_Y              (POS_FIR_IND_Y + 16+12)
+
+// ETH position
+#define POS_ETH_IND_X               220
+#define POS_ETH_IND_Y               2
+
+// USB Keyboard position
+#define POS_KBD_IND_X               220
+#define POS_KBD_IND_Y               18
+
+// S meter position
+#define POS_SM_IND_X                116
+#define POS_SM_IND_Y                0
+
+// Supply Voltage indicator
+#define POS_PWRN_IND_X              0
+#define POS_PWRN_IND_Y              193
+#define POS_PWR_IND_X               4
+#define POS_PWR_IND_Y               (POS_PWRN_IND_Y + 15)
+#define COL_PWR_IND                 White
+
+#define POS_TEMP_IND_X              0
+#define POS_TEMP_IND_Y              0
 //
 //
 // Tuning steps
@@ -1513,7 +1677,11 @@ void ui_driver_thread()
             }
             break;
         case STATE_HANDLE_POWERSUPPLY:
-            UiDriverHandlePowerSupply();
+            PowerManagement_HandlePowerDown();
+            if(!ts.boot_halt_flag)
+            {
+                UiDriver_HandleVoltage();
+            }
             break;
         case STATE_LO_TEMPERATURE:
             if(!ts.boot_halt_flag)
@@ -2781,10 +2949,7 @@ static void UiDriverCreateDesktop()
     // Create RX/TX indicator
     //UiLcdHy28_PrintText(POS_TX_IND_X,POS_TX_IND_Y,	"RX", Green,Black,0);
 
-    // Create voltage
-    UiLcdHy28_DrawStraightLine	(POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered	(POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", White, 	Blue, 0);
-    UiLcdHy28_PrintTextCentered	(POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
+    UiDriver_CreateVoltageDisplay();
 
     // Create temperature
     if((lo.sensor_absent == 0) && (df.temp_enabled & 0x0f))
@@ -5413,8 +5578,8 @@ static void UiDriverChangeDigitalMode()
     const char* txt = digimodes[ts.digital_mode].label;
 
     // Draw line for box
-    UiLcdHy28_DrawStraightLine(POS_DSPU_IND_X,(POS_DSPU_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_DSPU_IND_X),(POS_DSPU_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
+    UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+    UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel
@@ -6289,86 +6454,93 @@ static void UiDriverHandleLowerMeter()
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverHandlePowerSupply
-//* Object              : display external voltage and to handle final power-off and delay
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverHandlePowerSupply()
+static void UiDriver_CreateVoltageDisplay() {
+    // Create voltage
+    // UiLcdHy28_DrawStraightLine   (POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+    // UiLcdHy28_PrintTextCentered  (POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", White,     Blue, 0);
+    UiLcdHy28_PrintTextCentered (POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
+}
+
+/*
+ * @brief  handle final power-off and delay
+ */
+static void PowerManagement_HandlePowerDown() {
+    static ulong    powerdown_delay = 0;
+
+    if(ts.powering_down)        // are we powering down?
+    {
+        powerdown_delay++;      // yes - do the powerdown delay
+        if(powerdown_delay > POWERDOWN_DELAY_COUNT)     // is it time to power down
+        {
+            POWER_DOWN_PIO->BSRRL = POWER_DOWN;         // yes - kill the power
+            powerdown_delay = POWERDOWN_DELAY_COUNT;    // limit count if power button is being held down/stuck for a while
+        }
+    }
+}
+
+/*
+ * @brief measures and display external voltage
+ */
+
+static void UiDriver_HandleVoltage()
 {
-	ulong	val_p, calib;
-	int		col;
+    ulong	val_p, calib;
 
-	static ulong	powerdown_delay = 0;
+    pwmt.skip++;
+    if(pwmt.skip >= POWER_SAMPLES_SKP)
+    {
 
-	if(ts.powering_down)	 	// are we powering down?
-	{
-		powerdown_delay++;		// yes - do the powerdown delay
-		if(powerdown_delay > POWERDOWN_DELAY_COUNT)	 	// is it time to power down
-		{
-			POWER_DOWN_PIO->BSRRL = POWER_DOWN;			// yes - kill the power
-			powerdown_delay = POWERDOWN_DELAY_COUNT;	// limit count if power button is being held down/stuck for a while
-		}
-	}
+        pwmt.skip = 0;
 
-	if(!ts.boot_halt_flag)		// bail out now if we are in "boot halt" mode
-	{
-		pwmt.skip++;
-		if(pwmt.skip >= POWER_SAMPLES_SKP)
-		{
+        // Collect samples
+        if(pwmt.p_curr < POWER_SAMPLES_CNT)
+        {
+            val_p = ADC_GetConversionValue(ADC1);
 
-			pwmt.skip = 0;
+            // Add to accumulator
+            pwmt.pwr_aver = pwmt.pwr_aver + val_p;
+            pwmt.p_curr++;
+        }
+        else
+        {
 
-			// Collect samples
-			if(pwmt.p_curr < POWER_SAMPLES_CNT)
-			{
-				val_p = ADC_GetConversionValue(ADC1);
+            // Get average
+            val_p  = pwmt.pwr_aver/POWER_SAMPLES_CNT;
 
-				// Add to accumulator
-				pwmt.pwr_aver = pwmt.pwr_aver + val_p;
-				pwmt.p_curr++;
-			}
-			else
-			{
+            calib = (ulong)ts.voltmeter_calibrate;	// get local copy of calibration factor
+            calib += 900;					// offset to 1000 (nominal)
+            val_p = (calib) * val_p;		// multiply by calibration factor, sample count and A/D scale full scale count
+            val_p /= (1000);				// divide by 1000 (unity calibration factor), sample count and A/D full scale count
 
-				// Get average
-				val_p  = pwmt.pwr_aver/POWER_SAMPLES_CNT;
+            // Correct for divider
+            //val_p -= 550;
+            val_p *= 4;
 
-				calib = (ulong)ts.voltmeter_calibrate;	// get local copy of calibration factor
-				calib += 900;					// offset to 1000 (nominal)
-				val_p = (calib) * val_p;		// multiply by calibration factor, sample count and A/D scale full scale count
-				val_p /= (1000);				// divide by 1000 (unity calibration factor), sample count and A/D full scale count
+            // Reset accumulator
+            pwmt.p_curr     = 0;
+            pwmt.pwr_aver   = 0;
 
-				// Correct for divider
-				//val_p -= 550;
-				val_p *= 4;
 
-				// Reset accumulator
-				pwmt.p_curr     = 0;
-				pwmt.pwr_aver   = 0;
+            // did we detect a voltage change?
+            if(pwmt.voltage != val_p)	 	// Time to update - or was this the first time it was called?
+            {
+                char digits[6];
 
-				col = COL_PWR_IND;	// Assume normal voltage, so Set normal color
+                uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
 
-				if(val_p < 9500)		// below 9.5 volts
-					col = Red;			// display red digits
-				else if(val_p < 10500)	// below 10.5 volts
-					col = Orange;		// make them orange
-				else if(val_p < 11000)	// below 11.0 volts
-					col = Yellow;		// make them yellow
+                if(val_p < 9500)        // below 9.5 volts
+                    col = Red;          // display red digits
+                else if(val_p < 10500)  // below 10.5 volts
+                    col = Orange;       // make them orange
+                else if(val_p < 11000)  // below 11.0 volts
+                    col = Yellow;       // make them yellow
 
-				// did we detect a voltage change?
-				if(pwmt.voltage != val_p)	 	// Time to update - or was this the first time it was called?
-				{
-					char digits[6];
-					val_p /= 10;
-					snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
-					UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
-				}
-			}
-		}
-	}
+                val_p /= 10;
+                snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
+                UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+            }
+        }
+    }
 }
 
 #if 0
@@ -6425,7 +6597,7 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     const char *label, *txt, *value_str = NULL;
     uint32_t label_color, txt_color;
 
-    label = "TCXO ";
+    label = "TCXO";
     label_color = Black;
     txt = "*";
     txt_color = enabled?Red:Grey;
@@ -6433,7 +6605,7 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     if(create)
     {
         // Top part - name and temperature display
-        UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,14,109,Grey);
+        UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,13,109,Grey);
 #if 0
         // LO tracking indicator
         UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
