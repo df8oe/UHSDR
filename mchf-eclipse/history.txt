@@ -27,6 +27,8 @@
 - added manual notch filter
 - added peak filter
 - added bass/treble adjustment
+- again improvement of LCD SPI speed
+- started LCD layout simplifications
 
 
 20160413 [DF8OE]
