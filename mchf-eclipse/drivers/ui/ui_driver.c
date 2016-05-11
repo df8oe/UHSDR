@@ -3631,7 +3631,8 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
             // we did not execute the change, so we show the freq in Blue.
             // this will turn into the appropriate color the moment the tuning
             // happens.
-            clr = Blue;
+            // Use white in releases, many complained about the  Blue digits
+            clr = White; // Blue;
         }
         // Update frequency display
         UiDriverUpdateLcdFreq(dial_freq, clr, mode);
