@@ -23,13 +23,13 @@ We love pull requests. Here's a quick guide:
   * Fork it in GitHub
   * Clone it locally to your PC (`github clone ...`)
   * Add the main repository as "main" (`git remote add main https://github.com/df8oe/mchf-github.git`)
-  * Checkout the branch you want to modify (`git checkout devel-DF8OE`)
+  * Checkout the branch you want to modify (`git checkout active-devel`)
   * Create your feature branch (`git branch my-new-feature`)
   * Commit your changes and provide good explaination in the commit message (`git commit -m`)
-  * If it took a while to complete the changes, consider rebasing (`git fetch main; git rebase main/devel-DF8OE`) before pushing
+  * If it took a while to complete the changes, consider rebasing (`git fetch main; git rebase main/active-devel`) before pushing
   * Push the branch to your GitHub repository (`git push`)
   * It is strongly recommended that you do an operational test using a mcHF before you start a pull request.
-  * Create new pull request at http://www.github.com/df8oe/mchf-github . Make sure to select the right branch (devel-DF8OE) as target.
+  * Create new pull request at http://www.github.com/df8oe/mchf-github . Make sure to select the right branch (active-devel) as target.
   
 ### Bugs
 If you found an error, mistype or any other flawback in the project, please report about it using Issues. The more details you provide, the easier it can be reproduced and the faster it can be fixed.<br><br>

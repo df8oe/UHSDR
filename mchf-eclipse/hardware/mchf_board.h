@@ -470,7 +470,7 @@ extern const ButtonMap  bm[BUTTON_NUM];
 #define	TCXO_OFF			0		// TXCO temperature compensation off
 #define	TCXO_ON				1		// TCXO temperature compensation on
 #define	TCXO_STOP			2		// Stop reading of temperature sensor
-#define	TCXO_TEMP_STATE_MAX		2		// Maximum setting for TCXO setting state
+#define	TCXO_TEMP_STATE_MAX		0xff		// Maximum setting for TCXO setting state
 
 // Transverter oscillator adds shift
 #define		TRANSVT_FREQ_A	 	42000000
