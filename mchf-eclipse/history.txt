@@ -13,7 +13,9 @@
 #########################################################################
 
 
-2016mmdd [DF8OE]
+20160511 [DF8OE]
+- bugfix: temperature C/F not stored
+- bugfix: Encoder2 state corrected when leaving menu
 
 
 20160510 [DF8OE]
