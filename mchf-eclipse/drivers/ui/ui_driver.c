@@ -5285,7 +5285,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
             UiDriverChangeSigProc(0);
             // notch display
             UiDriverDisplayNotch(0);
-            UiDriverDisplayBass();
+            UiDriverDisplayTone();
 
             break;
         }
@@ -5297,7 +5297,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
             UiDriverChangeSigProc(0);
             // notch display
             UiDriverDisplayNotch(0);
-            UiDriverDisplayBass();
+            UiDriverDisplayTone();
             break;
         }
         // Disable all
