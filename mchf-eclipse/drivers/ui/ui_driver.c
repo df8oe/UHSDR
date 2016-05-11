@@ -82,9 +82,9 @@ static bool 	UiDriverCheckFrequencyEncoder();
 static void 	UiDriverCheckEncoderOne();
 static void 	UiDriverCheckEncoderTwo();
 static void 	UiDriverCheckEncoderThree();
-static void 	UiDriverChangeEncoderOneMode(uchar skip);
-static void 	UiDriverChangeEncoderTwoMode(uchar skip);
-static void 	UiDriverChangeEncoderThreeMode(uchar skip);
+static void 	UiDriverChangeEncoderOneMode(bool just_display_no_change);
+static void 	UiDriverChangeEncoderTwoMode(bool just_display_no_change);
+static void 	UiDriverChangeEncoderThreeMode(bool just_display_no_change);
 static void 	UiDriverChangeSigProc(uchar enabled);
 static void 	UiDriverDisplayNotch(uchar enabled);
 static void 	UiDriverDisplayTone();
@@ -1883,13 +1883,13 @@ static void UiDriverProcessKeyboard()
                 break;
             }
             case BUTTON_M1_PRESSED:		// BUTTON_M1
-                UiDriverChangeEncoderOneMode(0);
+                UiDriverChangeEncoderOneMode(false);
                 break;
             case BUTTON_M2_PRESSED:		// BUTTON_M2
-                UiDriverChangeEncoderTwoMode(0);
+                UiDriverChangeEncoderTwoMode(false);
                 break;
             case BUTTON_M3_PRESSED:		// BUTTON_M3
-                UiDriverChangeEncoderThreeMode(0);
+                UiDriverChangeEncoderThreeMode(false);
                 break;
             case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
                 if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	// button swap NOT enabled
@@ -2421,14 +2421,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 UiSpectrumInitSpectrumDisplay();			// init spectrum scope
                 //
                 // Restore encoder displays to previous modes
-                UiDriverChangeEncoderOneMode(0);
-                UiDriverChangeEncoderTwoMode(0);
-                UiDriverChangeEncoderThreeMode(0);
-                // FIXME: Call twice since the function TOGGLES, not just enables (need to fix this at some point!)
-                UiDriverChangeEncoderOneMode(0);
-                UiDriverChangeEncoderTwoMode(0);
-                UiDriverChangeEncoderTwoMode(0); // we have three different things: RFG/NB/NOTCH !
-                UiDriverChangeEncoderThreeMode(0);
+                UiDriverChangeEncoderOneMode(true);
+                UiDriverChangeEncoderTwoMode(true);
+                UiDriverChangeEncoderThreeMode(true);
                 UiDriverChangeFilterDisplay();	// update bandwidth display
                 // Label for Button F1
                 UiDriverFButton_F1MenuExit();
@@ -5138,273 +5133,248 @@ static void UiDriverCheckEncoderThree()
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeEncoderOneMode
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverChangeEncoderOneMode(uchar skip)
+static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
 {
     uchar l_mode;
 
-    if(ts.menu_mode)	// bail out if in menu mode
-        return;
-
-    if(!skip)
+    if(ts.menu_mode == false)	// bail out if in menu mode
     {
-        ts.enc_one_mode++;
-        if(ts.enc_one_mode > ENC_ONE_MAX_MODE)
-            ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
 
+        if(just_display_no_change == false)
+        {
+            ts.enc_one_mode++;
+            if(ts.enc_one_mode > ENC_ONE_MAX_MODE)
+            {
+                ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
+            }
+
+        }
         l_mode = ts.enc_one_mode;
-    }
-    else
-    {
-        ts.enc_one_mode = ENC_ONE_MAX_MODE + 1;
-        l_mode 			= 100;
-    }
 
-    switch(l_mode)
-    {
-    case ENC_ONE_MODE_AUDIO_GAIN:
-    {
-        // Audio gain enabled
-        UiDriverChangeAfGain(1);
+        switch(l_mode)
+        {
+        case ENC_ONE_MODE_AUDIO_GAIN:
+        {
+            // Audio gain enabled
+            UiDriverChangeAfGain(1);
 
-        // Sidetone disabled
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeStGain(0);
-        else
-            UiDriverChangeCmpLevel(0);
-        //
+            // Sidetone disabled
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeStGain(0);
+            else
+                UiDriverChangeCmpLevel(0);
+            //
 
-        break;
-    }
+            break;
+        }
 
-    case ENC_ONE_MODE_ST_GAIN:
-    {
-        // Audio gain disabled
-        UiDriverChangeAfGain(0);
+        case ENC_ONE_MODE_ST_GAIN:
+        {
+            // Audio gain disabled
+            UiDriverChangeAfGain(0);
 
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeStGain(1);
-        else
-            UiDriverChangeCmpLevel(1);
-        //
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeStGain(1);
+            else
+                UiDriverChangeCmpLevel(1);
+            //
 
-        break;
-    }
+            break;
+        }
 
-    // Disable all
-    default:
-    {
-        // Audio gain disabled
-        UiDriverChangeAfGain(0);
+        // Disable all
+        default:
+        {
+            // Audio gain disabled
+            UiDriverChangeAfGain(0);
 
-        // Sidetone enabled
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeStGain(0);
-        else
-            UiDriverChangeCmpLevel(0);
-        //
+            // Sidetone enabled
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeStGain(0);
+            else
+                UiDriverChangeCmpLevel(0);
+            //
 
-        break;
-    }
+            break;
+        }
+        }
     }
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeEncoderTwoMode
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverChangeEncoderTwoMode(uchar skip)
+
+static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
 {
     uchar 	l_mode;
 
-    if(ts.menu_mode)	// bail out if in menu mode
-        return;
-
-    if(!skip)
+    if(ts.menu_mode == false)	// bail out if in menu mode
     {
-        ts.enc_two_mode++;
-        // only switch to notch frequency adjustment, if notch enabled!
-        if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && !ts.notch_enabled) ts.enc_two_mode++;
 
-        // only switch to peak frequency adjustment, if peak enabled!
-        if(ts.enc_two_mode == ENC_TWO_MODE_PEAK_F && !ts.peak_enabled) ts.enc_two_mode++;
+        if(just_display_no_change == false)
+        {
+            ts.enc_two_mode++;
+            // only switch to notch frequency adjustment, if notch enabled!
+            if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && !ts.notch_enabled)
+            {
+                ts.enc_two_mode++;
+            }
+
+            // only switch to peak frequency adjustment, if peak enabled!
+            if(ts.enc_two_mode == ENC_TWO_MODE_PEAK_F && !ts.peak_enabled)
+            {
+                ts.enc_two_mode++;
+            }
 
 
-        // flip round
-        if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
-            ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-
+            // flip round
+            if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
+            {
+                ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+            }
+        }
         l_mode = ts.enc_two_mode;
-    }
-    else
-    {
-        ts.enc_two_mode = ENC_TWO_MAX_MODE;
-        l_mode 			= 100;
-    }
 
-    switch(l_mode)
-    {
-    case ENC_TWO_MODE_RF_GAIN:
-    {
-        // RF gain
-        UiDriverChangeRfGain(1);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        // notch display
-        UiDriverDisplayNotch(0);
-        break;
-    }
+        switch(l_mode)
+        {
+        case ENC_TWO_MODE_RF_GAIN:
+        {
+            // RF gain
+            UiDriverChangeRfGain(1);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            // notch display
+            UiDriverDisplayNotch(0);
+            break;
+        }
 
-    case ENC_TWO_MODE_SIG_PROC:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(1);
-        // notch display
-        UiDriverDisplayNotch(0);
-        break;
-    }
+        case ENC_TWO_MODE_SIG_PROC:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(1);
+            // notch display
+            UiDriverDisplayNotch(0);
+            break;
+        }
 
-    case ENC_TWO_MODE_NOTCH_F:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        // notch display
-        UiDriverDisplayNotch(1);
+        case ENC_TWO_MODE_NOTCH_F:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            // notch display
+            UiDriverDisplayNotch(1);
 
-        break;
-    }
-    case ENC_TWO_MODE_PEAK_F:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        // notch display
-        UiDriverDisplayNotch(1);
+            break;
+        }
+        case ENC_TWO_MODE_PEAK_F:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            // notch display
+            UiDriverDisplayNotch(1);
+            break;
+        }
+        case ENC_TWO_MODE_BASS_GAIN:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            // notch display
+            UiDriverDisplayNotch(0);
+            UiDriverDisplayBass();
 
-        break;
-    }
-    case ENC_TWO_MODE_BASS_GAIN:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        // notch display
-        UiDriverDisplayNotch(0);
-        UiDriverDisplayTone();
+            break;
+        }
+        case ENC_TWO_MODE_TREBLE_GAIN:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            // notch display
+            UiDriverDisplayNotch(0);
+            UiDriverDisplayBass();
+            break;
+        }
+        // Disable all
+        default:
+        {
+            // RF gain
+            UiDriverChangeRfGain(0);
 
-        break;
-    }
-    case ENC_TWO_MODE_TREBLE_GAIN:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        // notch display
-        UiDriverDisplayNotch(0);
-        UiDriverDisplayTone();
-        break;
-    }
-
-    // Disable all
-    default:
-    {
-        // RF gain
-        UiDriverChangeRfGain(0);
-
-        // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
-        UiDriverDisplayNotch(0);
-        //UiDriverDisplayBass();
-        break;
-    }
+            // DSP/Noise Blanker
+            UiDriverChangeSigProc(0);
+            UiDriverDisplayNotch(0);
+            //UiDriverDisplayBass();
+            break;
+        }
+        }
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeEncoderThreeMode
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverChangeEncoderThreeMode(uchar skip)
+static void UiDriverChangeEncoderThreeMode(bool just_display_no_change)
 {
     uchar 	l_mode;
 
-    if(ts.menu_mode)	// bail out if in menu mode
-        return;
-
-    if(!skip)
+    if(ts.menu_mode == false)	// bail out if in menu mode
     {
-        ts.enc_thr_mode++;
-        if(ts.enc_thr_mode >= ENC_THREE_MAX_MODE)
-            ts.enc_thr_mode = ENC_THREE_MODE_RIT;
 
+        if(just_display_no_change == false)
+        {
+            ts.enc_thr_mode++;
+            if(ts.enc_thr_mode >= ENC_THREE_MAX_MODE)
+            {
+                ts.enc_thr_mode = ENC_THREE_MODE_RIT;
+            }
+        }
         l_mode = ts.enc_thr_mode;
-    }
-    else
-    {
-        ts.enc_thr_mode = ENC_THREE_MAX_MODE;
-        l_mode 			= 100;
-    }
 
-    switch(l_mode)
-    {
-    case ENC_THREE_MODE_RIT:
-    {
-        // RIT
-        UiDriverChangeRit(1);
+        switch(l_mode)
+        {
+        case ENC_THREE_MODE_RIT:
+        {
+            // RIT
+            UiDriverChangeRit(1);
 
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeKeyerSpeed(0);
-        else
-            UiDriverChangeAudioGain(0);
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeKeyerSpeed(0);
+            else
+                UiDriverChangeAudioGain(0);
 
-        break;
-    }
+            break;
+        }
 
-    case ENC_THREE_MODE_CW_SPEED:
-    {
-        // RIT
-        UiDriverChangeRit(0);
+        case ENC_THREE_MODE_CW_SPEED:
+        {
+            // RIT
+            UiDriverChangeRit(0);
 
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeKeyerSpeed(1);
-        else
-            UiDriverChangeAudioGain(1);
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeKeyerSpeed(1);
+            else
+                UiDriverChangeAudioGain(1);
 
-        break;
-    }
+            break;
+        }
 
-    // Disable all
-    default:
-    {
-        // RIT
-        UiDriverChangeRit(0);
+        // Disable all
+        default:
+        {
+            // RIT
+            UiDriverChangeRit(0);
 
-        if(ts.dmod_mode == DEMOD_CW)
-            UiDriverChangeKeyerSpeed(0);
-        else
-            UiDriverChangeAudioGain(0);
+            if(ts.dmod_mode == DEMOD_CW)
+                UiDriverChangeKeyerSpeed(0);
+            else
+                UiDriverChangeAudioGain(0);
 
-        break;
-    }
+            break;
+        }
+        }
     }
 }
 
