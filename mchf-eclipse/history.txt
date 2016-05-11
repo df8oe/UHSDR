@@ -16,6 +16,7 @@
 20160511 [DF8OE]
 - bugfix: temperature C/F not stored
 - bugfix: Encoder2 state corrected when leaving menu
+- disabled blue digits when tuning is faster than SI570 can follow
 
 
 20160510 [DF8OE]
