@@ -1180,19 +1180,28 @@ do {							\
 
 void mchf_board_green_led(int state);
 
-void mchf_board_power_off(void);
+void mchf_HandlePowerDown();
+
 
 void mchf_board_init(void);
 void mchf_board_post_init(void);
+void mchf_reboot();
+void mchf_powerdown();
 
+
+// TODO: Rename and move to configuration code file
 uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_EEPROM(uint16_t addr, uint16_t value);
 uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
 uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
+
+// TODO: Rename and move to configuration code file
 void copy_virt2ser(void);
 void copy_ser2virt(void);
 void verify_servirt(void);
-void mchf_reboot();
+
+
+
 
 // in main.c
 void CriticalError(ulong error);

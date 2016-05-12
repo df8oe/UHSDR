@@ -609,69 +609,6 @@ void mchf_board_green_led(int state)
     }
 }
 
-void mchf_board_power_off(void)
-{
-    const char*	txp;
-    // Power off all - high to disable main regulator
-
-    UiSpectrumClearDisplay();	// clear display under spectrum scope
-
-    Codec_Mute(1);	// mute audio when powering down
-
-    txp = "                           ";
-    UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
-
-    txp = "       Powering off...     ";
-    UiLcdHy28_PrintText(80,156,txp,Blue2,Black,0);
-
-    txp = "                           ";
-    UiLcdHy28_PrintText(80,168,txp,Blue2,Black,0);
-
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
-    {
-        txp = "Saving settings to virt. EEPROM";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
-    }
-    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
-    {
-        txp = "Saving settings to serial EEPROM";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
-    }
-    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_DONT_SAVE)
-    {
-        txp = " ...without saving settings...  ";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-    }
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
-    {
-        txp = "            2              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-
-        txp = "                           ";
-        UiLcdHy28_PrintText(80,200,txp,Black,Black,0);
-        non_os_delay_multi(5);
-
-        txp = "            1              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-
-        txp = "            0              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-    }
-    ts.powering_down = 1;	// indicate that we should be powering down
-
-    if(ts.ser_eeprom_in_use != SER_EEPROM_IN_USE_DONT_SAVE)
-        UiConfiguration_SaveEepromValues();		// save EEPROM values
-
-
-    // Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
-    // so that EEPROM write could complete without non_os_delay
-    // using the constant "POWERDOWN_DELAY_COUNT" as the last "second" of the delay
-    //
-    // POWER_DOWN_PIO->BSRRL = POWER_DOWN;
-}
 
 void mchf_board_init(void)
 {
@@ -734,6 +671,31 @@ void mchf_board_init(void)
     //mchf_board_watchdog_init();
 }
 
+/*
+ * @brief  handle final power-off and delay
+ */
+void mchf_HandlePowerDown() {
+    static ulong    powerdown_delay = 0;
+
+    if(ts.powering_down)        // are we powering down?
+    {
+        powerdown_delay++;      // yes - do the powerdown delay
+        if(powerdown_delay > POWERDOWN_DELAY_COUNT)     // is it time to power down
+        {
+            POWER_DOWN_PIO->BSRRL = POWER_DOWN;         // yes - kill the power
+            powerdown_delay = POWERDOWN_DELAY_COUNT;    // limit count if power button is being held down/stuck for a while
+        }
+    }
+}
+/*
+ * @brief kills power hold immediately and waits for user to release power button
+ * @returns never returns
+ */
+void mchf_powerdown()
+{
+    GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
+    for(;;) {}
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_post_init
 //* Object              : Extra init, which requires full boot up first
