@@ -284,7 +284,7 @@ static bool Si570_FindConfigForFreq(float new_freq,Si570_FreqConfig* config) {
     bool retval = false;
 
     bool    n1_found = false;
-    uint8_t   n1;
+    uint8_t   n1 = 1; // this is to shut up gcc 4.9.x regarding uninitalized variable
     uint8_t   hsdiv;
     float64_t fdco;
 
