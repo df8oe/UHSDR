@@ -70,7 +70,6 @@ static void 	UiDriverInitFrequency();
 static void 	RadioManagement_SetHWFiltersForFrequency(ulong freq);
 static void RadioManagement_SetDemodMode(uint32_t new_mode);
 
-static void PowerManagement_HandlePowerDown();
 
 uchar 			UiDriver_ShowBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
@@ -108,6 +107,10 @@ static void 	UiDriverInitMainFreqDisplay();
 
 static bool	UiDriver_LoadSavedConfigurationAtStartup();
 static bool	UiDriver_TouchscreenCalibration();
+
+static void UiDriver_PowerDownCleanup(void);
+
+
 //
 // --------------------------------------------------------------------------
 // Controls positions and some related colours
@@ -458,7 +461,7 @@ inline bool is_dsp_notch()
     return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
 }
 
-void UiDriverShowDebugText(char* text)
+void UiDriverShowDebugText(const char* text)
 {
     UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
 }
@@ -1657,7 +1660,7 @@ void ui_driver_thread()
             }
             break;
         case STATE_HANDLE_POWERSUPPLY:
-            PowerManagement_HandlePowerDown();
+            mchf_HandlePowerDown();
             if(!ts.boot_halt_flag)
             {
                 UiDriver_HandleVoltage();
@@ -2140,7 +2143,7 @@ static void UiDriverProcessKeyboard()
                     // ONLY the POWER button was pressed
                     if(ts.txrx_mode == TRX_MODE_RX)  		// only allow power-off in RX mode
                     {
-                        mchf_board_power_off();
+                        UiDriver_PowerDownCleanup();
                     }
                 }
                 break;
@@ -2168,7 +2171,7 @@ static void UiDriverProcessKeyboard()
                 if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
                 {
                     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_DONT_SAVE;			// power down without saving settings
-                    mchf_board_power_off();
+                    UiDriver_PowerDownCleanup();
                 }
                 break;
             case BUTTON_STEPM_PRESSED:
@@ -6411,22 +6414,72 @@ static void UiDriver_CreateVoltageDisplay() {
     UiLcdHy28_PrintTextCentered (POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 }
 
-/*
- * @brief  handle final power-off and delay
- */
-static void PowerManagement_HandlePowerDown() {
-    static ulong    powerdown_delay = 0;
 
-    if(ts.powering_down)        // are we powering down?
+static void UiDriver_PowerDownCleanup(void)
+{
+    const char* txp;
+    // Power off all - high to disable main regulator
+
+    UiSpectrumClearDisplay();   // clear display under spectrum scope
+
+    Codec_Mute(1);  // mute audio when powering down
+
+    txp = "                           ";
+    UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
+
+    txp = "       Powering off...     ";
+    UiLcdHy28_PrintText(80,156,txp,Blue2,Black,0);
+
+    txp = "                           ";
+    UiLcdHy28_PrintText(80,168,txp,Blue2,Black,0);
+
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
     {
-        powerdown_delay++;      // yes - do the powerdown delay
-        if(powerdown_delay > POWERDOWN_DELAY_COUNT)     // is it time to power down
-        {
-            POWER_DOWN_PIO->BSRRL = POWER_DOWN;         // yes - kill the power
-            powerdown_delay = POWERDOWN_DELAY_COUNT;    // limit count if power button is being held down/stuck for a while
-        }
+        txp = "Saving settings to virt. EEPROM";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
     }
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+    {
+        txp = "Saving settings to serial EEPROM";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+    }
+    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_DONT_SAVE)
+    {
+        txp = " ...without saving settings...  ";
+        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+        non_os_delay_multi(5);
+    }
+    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
+    {
+        txp = "            2              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
+
+        txp = "                           ";
+        UiLcdHy28_PrintText(80,200,txp,Black,Black,0);
+        non_os_delay_multi(5);
+
+        txp = "            1              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
+        non_os_delay_multi(5);
+
+        txp = "            0              ";
+        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
+        non_os_delay_multi(5);
+    }
+    ts.powering_down = 1;   // indicate that we should be powering down
+
+    if(ts.ser_eeprom_in_use != SER_EEPROM_IN_USE_DONT_SAVE)
+        UiConfiguration_SaveEepromValues();     // save EEPROM values
+
+
+    // Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
+    // so that EEPROM write could complete without non_os_delay
+    // using the constant "POWERDOWN_DELAY_COUNT" as the last "second" of the delay
+    //
+    // POWER_DOWN_PIO->BSRRL = POWER_DOWN;
 }
+
+
 
 /*
  * @brief measures and display external voltage
@@ -7192,8 +7245,8 @@ void UiDriver_KeyTestScreen()
 
 			if(p_o_state == 1)
 			{
-				GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
-				for(;;);
+			    mchf_powerdown();
+			    // never reached
 			}
 			if(rb_state == 1)
 			{
