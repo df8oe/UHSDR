@@ -7458,9 +7458,28 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     sprintf(tx,"%s",AUTHOR_STRING);
     UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
 
+	// looking for bootloader version, only works or DF8OE bootloader
+    char bootloader[12];
+    bootloader[0] = 0;								// clearing string
+	uint32_t begin = 0x8000000;
+
+    for(i=0; i < 32768; i++)
+  	  {
+  	  if( *(__IO uint8_t*)(begin+i) == 0x56 && *(__IO uint8_t*)(begin+i+1) == 0x65 && *(__IO uint8_t*)(begin+i+2) == 0x72
+  	  && *(__IO uint8_t*)(begin+i+3) == 0x73 && *(__IO uint8_t*)(begin+i+4) == 0x69 && *(__IO uint8_t*)(begin+i+5) == 0x6f
+  	  && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
+  		{
+  		sprintf(bootloader, "%s", (__IO char*)(begin+i+9));
+  		}
+  	  }
+  	  if(bootloader[0] == 0)
+  		{
+  		sprintf(bootloader, "%s", "no DF8OE BL");
+  		}
+
     // Show third line
-    sprintf(tx,"v %d.%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD);
-    UiLcdHy28_PrintText(110,80,tx,Grey3,Black,0);
+    sprintf(tx,"FW: %d.%d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD,bootloader);
+    UiLcdHy28_PrintText(50,80,tx,Grey3,Black,0);
 
     // Show fourth line
     sprintf(tx,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
