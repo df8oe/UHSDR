@@ -2216,7 +2216,10 @@ static void UiDriverProcessKeyboard()
                         ts.notch_enabled = 0;
                         ts.peak_enabled = 0;				//off
                         ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+                        UiDriverChangeEncoderTwoMode(true);
+#if 0
                         UiDriverChangeRfGain(1);
+#endif
                         UiDriverDisplayNotch(0); // display
                     }
                     else	 		// neither notch or NR was active
@@ -2229,11 +2232,14 @@ static void UiDriverProcessKeyboard()
                     audio_driver_set_rx_audio_filter();	// update DSP settings
                     UiDriverChangeDSPMode();			// update on-screen display
 
+                    UiDriverChangeEncoderTwoMode(true);
+#if 0
                     // Update DSP/NB/RFG control display
                     if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
                         UiDriverChangeSigProc(0);
                     else
                         UiDriverChangeSigProc(1);
+#endif
                 }
                 UiDriverChangeDSPMode();			// update on-screen display
                 break;
@@ -2285,21 +2291,27 @@ static void UiDriverProcessKeyboard()
             }
             case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
                 ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
-                //
+                UiDriverChangeEncoderTwoMode(true);
+#if 0
                 if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
                     UiDriverChangeSigProc(0);
                 else
                     UiDriverChangeSigProc(1);
+#endif
+
                 break;
             case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
                 if(ts.dmod_mode != DEMOD_CW)
                 {
                     incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
-                    //
+
+                    UiDriverChangeEncoderThreeMode(true);
+#if 0
                     if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
                         UiDriverChangeAudioGain(0);
                     else									// not RIT mode - don't grey out
                         UiDriverChangeAudioGain(1);
+#endif
                 }
                 break;
             case BUTTON_POWER_PRESSED:
@@ -2394,9 +2406,14 @@ static void UiDriverProcessKeyboard()
         ks.debounce_time	= 0;
     }
 }
-//
-//
-//
+
+void UiDriver_RefreshEncoderDisplay()
+{
+    UiDriverChangeEncoderOneMode(true);
+    UiDriverChangeEncoderTwoMode(true);
+    UiDriverChangeEncoderThreeMode(true);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiInitRxParms
 //* Object              : Initializes/sets all of the crap associated with filters, DSP, band settings, etc.
@@ -2417,33 +2434,16 @@ void UiInitRxParms()
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
     UiDriverShowMode();
-
-    if(ts.dmod_mode == DEMOD_CW)	 		// update on-screen adjustments
-    {
-
-        // FIXME: Separate Display Update and Function Change
-        // Mixed Display Update and Function Change Code
-        UiDriverChangeKeyerSpeed(0);		// emplace keyer speed (WPM) and
-
-        // display only code
-        UiDriverChangeStGain(0);			// sidetone gain when in CW mode
-    }
-    else
-    {
-        // display only code
-        UiDriverChangeAudioGain(0);			// display Line/Mic gain and
-        UiDriverChangeCmpLevel(0);			// Compression level when in voice mode
-    }
-
     // Update Display Only Code
     UiDriverChangeFilterDisplay();    // make certain that numerical on-screen bandwidth indicator is updated
 //    audio_driver_set_rx_audio_filter();
-    UiDriverChangeDigitalMode();    // Change Dgital display setting as well
+    UiDriverChangeDigitalMode();    // Change Digital display setting as well
     UiDriverChangeDSPMode();  // Change DSP display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
-    UiDriverChangeRfGain(1);    // update RFG/SQL on screen
-    UiDriverDisplayNotch(0);
-    //UiDriverDisplayBass();
+
+    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+    UiDriver_RefreshEncoderDisplay();
+        //UiDriverDisplayBass();
 
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
@@ -2562,6 +2562,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 //
                 // Grey out adjustments and put encoders in known states
                 //
+#if 0
                 if(ts.dmod_mode == DEMOD_CW)
                     UiDriverChangeStGain(0);
                 else
@@ -2579,7 +2580,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 // Enable volume control when in MENU mode
                 //
                 UiDriverChangeAfGain(1);
-                //
+#endif
+                UiDriver_RefreshEncoderDisplay();
+
                 ts.menu_var = 0;
                 //
                 UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
@@ -2593,9 +2596,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 UiSpectrumInitSpectrumDisplay();			// init spectrum scope
                 //
                 // Restore encoder displays to previous modes
-                UiDriverChangeEncoderOneMode(true);
-                UiDriverChangeEncoderTwoMode(true);
-                UiDriverChangeEncoderThreeMode(true);
+                UiDriver_RefreshEncoderDisplay();
                 UiDriverChangeFilterDisplay();	// update bandwidth display
                 // Label for Button F1
                 UiDriverFButton_F1MenuExit();
@@ -3046,6 +3047,8 @@ static void UiDriverCreateDesktop()
 //	UiDriverCreateSpectrumScope();
 //	UiDriverInitSpectrumDisplay();
 
+    UiDriver_RefreshEncoderDisplay();
+#if 0
     // -----------------
     // Encoder one modes
     // -----------------
@@ -3076,7 +3079,7 @@ static void UiDriverCreateDesktop()
         UiDriverChangeKeyerSpeed(0);
     else
         UiDriverChangeAudioGain(0);
-    //
+#endif
     cw_gen_init();
 
     // DSP mode change
@@ -4145,6 +4148,8 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
             enc_one_mode = ts.enc_one_mode;
             ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+            UiDriverChangeEncoderOneMode(true);
+#if 0
             UiDriverChangeAfGain(0);    // Audio gain disabled
 
             if(ts.dmod_mode != DEMOD_CW)
@@ -4155,10 +4160,12 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             {
                 UiDriverChangeStGain(1);  // enable sidetone gain if CW mode
             }
-
+#endif
             // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
             enc_three_mode = ts.enc_thr_mode;
             ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
+            UiDriverChangeEncoderThreeMode(true);
+#if 0
             UiDriverChangeRit(0);
             if(ts.dmod_mode != DEMOD_CW)
             {
@@ -4168,6 +4175,7 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             {
                 UiDriverChangeKeyerSpeed(1);  // enable keyer speed if it was CW mode
             }
+#endif
         }
         else if (state == TRX_STATE_TX_TO_RX)
         {
@@ -4177,6 +4185,8 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             // were we latched in TX mode?
             // Yes, Switch to audio gain mode
             ts.enc_one_mode = enc_one_mode;
+            UiDriverChangeEncoderOneMode(true);
+#if 0
             if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)      // are we to switch back to audio mode?
             {
                 UiDriverChangeAfGain(1);  // Yes, audio gain enabled
@@ -4189,8 +4199,10 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
                     UiDriverChangeStGain(0);    // disable sidetone gain (if in CW mode)
                 }
             }
-
+#endif
             ts.enc_thr_mode = enc_three_mode;
+            UiDriverChangeEncoderThreeMode(true);
+#if 0
             if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)           // are we to switch back to RIT mode?
             {
                 UiDriverChangeRit(1);         // enable RIT
@@ -4203,6 +4215,7 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
                     UiDriverChangeKeyerSpeed(0);    // disable keyer speed if it was CW mode
                 }
             }
+#endif
         }
     }
 
@@ -5116,10 +5129,16 @@ static void UiDriverCheckEncoderTwo()
                     {
                         ts.bass_gain = ts.bass_gain + 1;
                     }
-                    if (ts.bass_gain < MIN_BASS) ts.bass_gain = MIN_BASS;
-                    if (ts.bass_gain > MAX_BASS) ts.bass_gain = MAX_BASS;
+                    if (ts.bass_gain < MIN_BASS)
+                    {
+                        ts.bass_gain = MIN_BASS;
+                    }
+                    if (ts.bass_gain > MAX_BASS)
+                    {
+                        ts.bass_gain = MAX_BASS;
+                    }
                     // display bass gain
-                    UiDriverDisplayTone();
+                    UiDriverDisplayTone(true);
                     // set filter instance
                     audio_driver_set_rx_audio_filter();
                     break;
@@ -5134,10 +5153,16 @@ static void UiDriverCheckEncoderTwo()
                     {
                         ts.treble_gain = ts.treble_gain + 1;
                     }
-                    if (ts.treble_gain < MIN_TREBLE) ts.treble_gain = MIN_TREBLE;
-                    if (ts.treble_gain > MAX_TREBLE) ts.treble_gain = MAX_TREBLE;
+                    if (ts.treble_gain < MIN_TREBLE)
+                    {
+                        ts.treble_gain = MIN_TREBLE;
+                    }
+                    if (ts.treble_gain > MAX_TREBLE)
+                    {
+                        ts.treble_gain = MAX_TREBLE;
+                    }
                     // display treble gain
-                    UiDriverDisplayTone();
+                    UiDriverDisplayTone(true);
                     // set filter instance
                     audio_driver_set_rx_audio_filter();
                     break;
@@ -5154,8 +5179,14 @@ static void UiDriverCheckEncoderTwo()
                         {
                             ts.peak_frequency = ts.peak_frequency + 5.0 * enc_multiplier;
                         }
-                        if(ts.peak_frequency > MAX_FREQ) ts.peak_frequency = MAX_FREQ;
-                        if(ts.peak_frequency < MIN_PEAK_NOTCH_FREQ) ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
+                        if(ts.peak_frequency > MAX_FREQ)
+                        {
+                            ts.peak_frequency = MAX_FREQ;
+                        }
+                        if(ts.peak_frequency < MIN_PEAK_NOTCH_FREQ)
+                        {
+                            ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
+                        }
                         // display peak frequency
                         UiDriverDisplayNotch(1);
                         // set notch filter instance
@@ -5293,9 +5324,7 @@ static void UiDriverCheckEncoderThree()
 
 static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
 {
-    uchar l_mode;
-
-    if(ts.menu_mode == false)	// bail out if in menu mode
+    if(ts.menu_mode == false)	// changes only when not in menu mode
     {
 
         if(just_display_no_change == false)
@@ -5307,63 +5336,62 @@ static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
             }
 
         }
-        l_mode = ts.enc_one_mode;
+    }
+    switch(ts.enc_one_mode)
+    {
+    case ENC_ONE_MODE_AUDIO_GAIN:
+    {
+        // Audio gain enabled
+        UiDriverChangeAfGain(1);
 
-        switch(l_mode)
-        {
-        case ENC_ONE_MODE_AUDIO_GAIN:
-        {
-            // Audio gain enabled
-            UiDriverChangeAfGain(1);
+        // Sidetone disabled
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeStGain(0);
+        else
+            UiDriverChangeCmpLevel(0);
+        //
 
-            // Sidetone disabled
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeStGain(0);
-            else
-                UiDriverChangeCmpLevel(0);
-            //
+        break;
+    }
 
-            break;
-        }
+    case ENC_ONE_MODE_ST_GAIN:
+    {
+        // Audio gain disabled
+        UiDriverChangeAfGain(0);
 
-        case ENC_ONE_MODE_ST_GAIN:
-        {
-            // Audio gain disabled
-            UiDriverChangeAfGain(0);
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeStGain(1);
+        else
+            UiDriverChangeCmpLevel(1);
+        //
 
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeStGain(1);
-            else
-                UiDriverChangeCmpLevel(1);
-            //
+        break;
+    }
 
-            break;
-        }
+    // Disable all
+    default:
+    {
+        // Audio gain disabled
+        UiDriverChangeAfGain(0);
 
-        // Disable all
-        default:
-        {
-            // Audio gain disabled
-            UiDriverChangeAfGain(0);
+        // Sidetone enabled
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeStGain(0);
+        else
+            UiDriverChangeCmpLevel(0);
+        //
 
-            // Sidetone enabled
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeStGain(0);
-            else
-                UiDriverChangeCmpLevel(0);
-            //
-
-            break;
-        }
-        }
+        break;
+    }
     }
 }
 
 static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
 {
-    uchar 	l_mode;
+    uint8_t inactive_mult = ts.menu_mode?0:1;
+    // we use this to disable all active displays once in menu mode
 
-    if(ts.menu_mode == false)	// bail out if in menu mode
+    if(ts.menu_mode == false )	// changes only when not in menu mode
     {
 
         if(just_display_no_change == false)
@@ -5388,97 +5416,100 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
                 ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             }
         }
-        l_mode = ts.enc_two_mode;
 
-        switch(l_mode)
-        {
-        case ENC_TWO_MODE_RF_GAIN:
-        {
-            // RF gain
-            UiDriverChangeRfGain(1);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            // notch display
-            UiDriverDisplayNotch(0);
-            break;
-        }
-
-        case ENC_TWO_MODE_SIG_PROC:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(1);
-            // notch display
-            UiDriverDisplayNotch(0);
-            break;
-        }
-
-        case ENC_TWO_MODE_NOTCH_F:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            // notch display
-            UiDriverDisplayNotch(1);
-
-            break;
-        }
-        case ENC_TWO_MODE_PEAK_F:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            // notch display
-            UiDriverDisplayNotch(1);
-            break;
-        }
-        case ENC_TWO_MODE_BASS_GAIN:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            // notch display
-            UiDriverDisplayNotch(0);
-            UiDriverDisplayTone();
-
-            break;
-        }
-        case ENC_TWO_MODE_TREBLE_GAIN:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            // notch display
-            UiDriverDisplayNotch(0);
-            UiDriverDisplayTone();
-            break;
-        }
-        // Disable all
-        default:
-        {
-            // RF gain
-            UiDriverChangeRfGain(0);
-
-            // DSP/Noise Blanker
-            UiDriverChangeSigProc(0);
-            UiDriverDisplayNotch(0);
-            //UiDriverDisplayBass();
-            break;
-        }
-        }
     }
+
+    switch(ts.enc_two_mode)
+    {
+    case ENC_TWO_MODE_RF_GAIN:
+    {
+        // RF gain
+        UiDriverChangeRfGain(1*inactive_mult);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+
+
+        // notch display
+        UiDriverDisplayNotch(0);
+        break;
+    }
+
+    case ENC_TWO_MODE_SIG_PROC:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(1*inactive_mult);
+        // notch display
+        UiDriverDisplayNotch(0);
+        break;
+    }
+
+    case ENC_TWO_MODE_NOTCH_F:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+        // notch display
+        UiDriverDisplayNotch(1*inactive_mult);
+
+        break;
+    }
+    case ENC_TWO_MODE_PEAK_F:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+        // notch display
+        UiDriverDisplayNotch(1*inactive_mult);
+        break;
+    }
+    case ENC_TWO_MODE_BASS_GAIN:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+        // notch display
+        UiDriverDisplayNotch(0);
+        UiDriverDisplayTone(1*inactive_mult);
+
+        break;
+    }
+    case ENC_TWO_MODE_TREBLE_GAIN:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+        // notch display
+        UiDriverDisplayNotch(0);
+        UiDriverDisplayTone(1*inactive_mult);
+        break;
+    }
+    // Disable all
+    default:
+    {
+        // RF gain
+        UiDriverChangeRfGain(0);
+
+        // DSP/Noise Blanker
+        UiDriverChangeSigProc(0);
+        UiDriverDisplayNotch(0);
+        break;
+    }
+    }
+
 }
 
 static void UiDriverChangeEncoderThreeMode(bool just_display_no_change)
 {
-    uchar 	l_mode;
+    uint8_t inactive_mult = ts.menu_mode?0:1;
+    // we use this to disable all active displays once in menu mode
 
-    if(ts.menu_mode == false)	// bail out if in menu mode
+    if(ts.menu_mode == false)	// changes only when not in menu mode
     {
 
         if(just_display_no_change == false)
@@ -5489,50 +5520,48 @@ static void UiDriverChangeEncoderThreeMode(bool just_display_no_change)
                 ts.enc_thr_mode = ENC_THREE_MODE_RIT;
             }
         }
-        l_mode = ts.enc_thr_mode;
+    }
+    switch(ts.enc_thr_mode)
+    {
+    case ENC_THREE_MODE_RIT:
+    {
+        // RIT
+        UiDriverChangeRit(1*inactive_mult);
 
-        switch(l_mode)
-        {
-        case ENC_THREE_MODE_RIT:
-        {
-            // RIT
-            UiDriverChangeRit(1);
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeKeyerSpeed(0);
+        else
+            UiDriverChangeAudioGain(0);
 
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeKeyerSpeed(0);
-            else
-                UiDriverChangeAudioGain(0);
+        break;
+    }
 
-            break;
-        }
+    case ENC_THREE_MODE_CW_SPEED:
+    {
+        // RIT
+        UiDriverChangeRit(0);
 
-        case ENC_THREE_MODE_CW_SPEED:
-        {
-            // RIT
-            UiDriverChangeRit(0);
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeKeyerSpeed(1*inactive_mult);
+        else
+            UiDriverChangeAudioGain(1*inactive_mult);
 
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeKeyerSpeed(1);
-            else
-                UiDriverChangeAudioGain(1);
+        break;
+    }
 
-            break;
-        }
+    // Disable all
+    default:
+    {
+        // RIT
+        UiDriverChangeRit(0);
 
-        // Disable all
-        default:
-        {
-            // RIT
-            UiDriverChangeRit(0);
+        if(ts.dmod_mode == DEMOD_CW)
+            UiDriverChangeKeyerSpeed(0);
+        else
+            UiDriverChangeAudioGain(0);
 
-            if(ts.dmod_mode == DEMOD_CW)
-                UiDriverChangeKeyerSpeed(0);
-            else
-                UiDriverChangeAudioGain(0);
-
-            break;
-        }
-        }
+        break;
+    }
     }
 }
 
@@ -5867,7 +5896,7 @@ static void UiDriverChangeSigProc(uchar enabled)
             else
                 color = White;		// Otherwise, make it white
         }
-        label = "NB ";
+        label = "NB";
         value = ts.nb_setting;
     }
     //
@@ -5875,7 +5904,8 @@ static void UiDriverChangeSigProc(uchar enabled)
     //
     else	 			// DSP settings are to be displayed
     {
-        if(enabled && (is_dsp_nr()))	 	// if this menu is enabled AND the DSP NR is also enabled...
+        // if(enabled && (is_dsp_nr()))	 	// if this menu is enabled AND the DSP NR is also enabled...
+        if(enabled)     // if this menu is enabled AND the DSP NR is also enabled...
         {
             color = White;		// Make it white by default
             //
@@ -5907,7 +5937,7 @@ static void UiDriverChangeSigProc(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverDisplayTone(void)
+static void UiDriverDisplayTone(bool enabled)
 {
 
     // UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16 + 12 , 112, Black);
@@ -5917,7 +5947,7 @@ static void UiDriverDisplayTone(void)
     snprintf(temp,5,"%2d", ts.bass_gain);
 
     // use 2,1 for placement below existing boxes
-    UiDriverEncoderDisplay(0,1,"BAS", enable, temp, White);
+    UiDriverEncoderDisplay(0,1,"BAS", enable && enabled, temp, White);
 
 
     enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
@@ -5925,7 +5955,7 @@ static void UiDriverDisplayTone(void)
     snprintf(temp,5,"%2d", ts.treble_gain);
 
     // use 2,2 for placement below existing boxes
-    UiDriverEncoderDisplay(1,1,"TRB", enable, temp, White);
+    UiDriverEncoderDisplay(1,1,"TRB", enable && enabled, temp, White);
 
 } // end void UiDriverDisplayBass
 
