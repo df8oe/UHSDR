@@ -101,8 +101,8 @@ void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 static void UiDriver_CreateVoltageDisplay();
 
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
-static void 	UiDriverHandleLoTemperature();
-static void 	UiDriver_HandlePttOnOff();
+static void 	UiDriver_HandleLoTemperature();
+static void 	RadioManagement_HandlePttOnOff();
 static void 	UiDriverInitMainFreqDisplay();
 
 static bool	UiDriver_LoadSavedConfigurationAtStartup();
@@ -883,20 +883,6 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
     return retval;
 }
 
-void UiDriver_HandlePowerLevelChange(uint8_t power_level)
-{
-    //
-    if (RadioManagement_PowerLevelChange(ts.band,power_level))
-    {
-        UiDriver_DisplayPowerLevel();
-        if (ts.menu_mode)
-        {
-            UiMenu_RenderMenu(MENU_RENDER_ONLY);
-        }
-    }
-}
-
-
 void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
 {
     float tonefreq = 0;
@@ -1459,6 +1445,22 @@ void RadioManagement_SetBandPowerFactor(uchar band)
  * @param freq  frequency to get band for. Unit is Hertz. This value is used without any further adjustments and should be the intended RX/TX frequency and NOT the IQ center frequency
  *
  */
+void RadioManagement_SetDemodMode(uint32_t new_mode)
+{
+
+    // Finally update public flag
+    ts.dmod_mode = new_mode;
+
+    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
+
+    Audio_TXFilter_Init();
+    AudioManagement_CalcRxIqGainAdj();
+    AudioManagement_CalcTxIqGainAdj();
+
+    audio_driver_set_rx_audio_filter();
+}
+
+
 uint8_t RadioManagement_GetBand(ulong freq)
 {
     static uint8_t band_scan_old = 99;
@@ -1485,6 +1487,164 @@ uint8_t RadioManagement_GetBand(ulong freq)
     }
     band_scan_old = band_scan;  // update band change detector
     return band_scan;       // return with the band
+}
+
+
+
+
+static bool RadioManagement_HandleLoTemperatureDrift()
+{
+    int     temp = 0;
+    int     comp, comp_p;
+    float   dtemp, remain, t_index;
+    uchar   tblp;
+
+    uint8_t temp_enabled = df.temp_enabled & 0x0f;
+
+    bool retval = false;
+
+    // No need to process if no chip avail or updates are disabled
+    if((lo.sensor_absent == false) &&(temp_enabled != TCXO_STOP))
+    {
+        lo.skip++;
+        if(lo.skip >= LO_COMP_SKP)
+        {
+            lo.skip = 0;
+            // Get current temperature
+            if(Si570_ReadExternalTempSensor(&temp) == 0)
+            {
+
+                // Get temperature from sensor with its maximum precision
+                dtemp = (float)temp;    // get temperature
+                dtemp /= 10000;         // convert to decimal degrees
+                remain = truncf(dtemp); // get integer portion of temperature
+                remain = dtemp - remain;    // get fractional portion
+
+                // Compensate only if enabled
+                if((temp_enabled == TCXO_ON))
+                {
+                    // Temperature to unsigned table pointer
+                    t_index  = (uchar)((temp%1000000)/100000);
+                    t_index *= 10;
+                    t_index += (uchar)((temp%100000)/10000);
+
+                    // Check for overflow - keep within the lookup table
+                    if((t_index < 0) || (t_index > 150))        // the temperature sensor function "wraps around" below zero
+                    {
+                        t_index = 0;                        // point at the bottom of the temperature table
+                        dtemp = 0;                          // zero out fractional calculations
+                        remain = 0;
+                    }
+                    else if(t_index > 98)                   // High temperature - limit to maximum
+                    {
+                        t_index = 98;                       // Point to (near) top of table
+                        dtemp = 0;                          // zero out fractional calculations
+                        remain = 0;
+                    }
+
+                    tblp = (uchar)t_index;                      // convert to index
+                    // Check for overflow
+                    if(tblp < 100)
+                    {
+                        // Value from freq table
+                        comp = tcxo_table_20m[tblp];                // get the first entry in the table
+                        comp_p = tcxo_table_20m[tblp + 1];          // get the next entry in the table to determine fraction of frequency step
+
+                        comp_p = comp_p - comp; //                  // get frequency difference between the two steps
+
+                        dtemp = (float)comp_p;  // change it to float for the calculation
+                        dtemp *= remain;        // get proportion of temperature difference between the two steps using the fraction
+
+                        comp += (int)dtemp;     // add the compensation value to the lower of the two frequency steps
+
+                        // Change needed ?
+                        if(lo.comp != comp)         // is it there a difference?
+                        {
+                            // Update frequency, without reflecting it on the LCD
+                            df.temp_factor = comp;
+                            df.temp_factor_changed = true;
+                            lo.comp = comp;
+                        }
+                    }
+                }
+                // Refresh UI
+                retval = true;
+                lo.temp = temp;
+            }
+        }
+    }
+    return retval;
+}
+
+
+
+
+static void RadioManagement_HandlePttOnOff()
+{
+    static uint32_t ptt_break = 0;
+    // Not when tuning
+    if(ts.tune)
+        return;
+
+    // PTT on
+    if(ts.ptt_req)
+    {
+        if(ts.txrx_mode == TRX_MODE_RX)
+        {
+            if(!ts.tx_disable)
+            {
+                RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
+            }
+        }
+
+        ts.ptt_req = 0;
+
+    }
+    else if (!kd.enabled)
+    {
+        // When CAT driver is running
+        // skip auto return to RX
+        // PTT off for all non-CW modes
+        if(ts.dmod_mode != DEMOD_CW)
+        {
+            // PTT flag on ?
+            if(ts.txrx_mode == TRX_MODE_TX)
+            {
+                // PTT line released ?
+                if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                {
+                    // Lock to prevent IRQ re-entrance
+                    //ts.txrx_lock = 1;
+
+                    ptt_break++;
+                    if(ptt_break < 15)
+                        return;
+
+                    ptt_break = 0;
+
+                    // Back to RX
+                    RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
+
+                    // Unlock
+                    //ts.txrx_lock = 0;
+                }
+            }
+        }
+    }
+}
+
+
+void UiDriver_HandlePowerLevelChange(uint8_t power_level)
+{
+    //
+    if (RadioManagement_PowerLevelChange(ts.band,power_level))
+    {
+        UiDriver_DisplayPowerLevel();
+        if (ts.menu_mode)
+        {
+            UiMenu_RenderMenu(MENU_RENDER_ONLY);
+        }
+    }
 }
 
 
@@ -1669,7 +1829,7 @@ void ui_driver_thread()
         case STATE_LO_TEMPERATURE:
             if(!ts.boot_halt_flag)
             {
-                UiDriverHandleLoTemperature();
+                UiDriver_HandleLoTemperature();
             }
             break;
         case STATE_TASK_CHECK:
@@ -1718,7 +1878,7 @@ void ui_driver_thread()
         case STATE_SWITCH_OFF_PTT:
             if(!ts.boot_halt_flag)
             {
-                UiDriver_HandlePttOnOff();
+                RadioManagement_HandlePttOnOff();
             }
             break;
         default:
@@ -4326,21 +4486,6 @@ static void UiDriverTimeScheduler()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-void RadioManagement_SetDemodMode(uint32_t new_mode)
-{
-
-    // Finally update public flag
-    ts.dmod_mode = new_mode;
-
-    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
-
-    Audio_TXFilter_Init();
-    AudioManagement_CalcRxIqGainAdj();
-    AudioManagement_CalcTxIqGainAdj();
-
-    audio_driver_set_rx_audio_filter();
-}
-
 void UiDriverSetDemodMode(uint32_t new_mode)
 {
     RadioManagement_SetDemodMode(new_mode);
@@ -6683,6 +6828,11 @@ static void UiDriverRefreshTemperatureDisplay(uchar enabled,int temp)
     }
 }
 
+// TODO: remove internal timer code and control time of measurement externally
+/*
+ * @brief measure local oscillator temperature and calculates compensation value
+ * @return true if the temperature value has been measured
+ */
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverHandleLoTemperature
 //* Object              : display LO temperature and compensate drift
@@ -6690,88 +6840,12 @@ static void UiDriverRefreshTemperatureDisplay(uchar enabled,int temp)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverHandleLoTemperature()
+static void UiDriver_HandleLoTemperature()
 {
-    int		temp = 0;
-    int		comp, comp_p;
-    float	dtemp, remain, t_index;
-    uchar	tblp;
-
-    uint8_t temp_enabled = df.temp_enabled & 0x0f;
-
-    // No need to process if no chip avail or updates are disabled
-    if((lo.sensor_absent == false) &&(temp_enabled != TCXO_STOP))
+    if (RadioManagement_HandleLoTemperatureDrift())
     {
-        lo.skip++;
-        if(lo.skip >= LO_COMP_SKP)
-        {
-            lo.skip = 0;
-            // Get current temperature
-            if(Si570_ReadExternalTempSensor(&temp) == 0)
-            {
-
-                // Get temperature from sensor with its maximum precision
-                dtemp = (float)temp;	// get temperature
-                dtemp /= 10000;			// convert to decimal degrees
-                remain = truncf(dtemp);	// get integer portion of temperature
-                remain = dtemp - remain;	// get fractional portion
-
-                // Compensate only if enabled
-                if((temp_enabled == TCXO_ON))
-                {
-                    // Temperature to unsigned table pointer
-                    t_index  = (uchar)((temp%1000000)/100000);
-                    t_index *= 10;
-                    t_index += (uchar)((temp%100000)/10000);
-
-                    // Check for overflow - keep within the lookup table
-                    if((t_index < 0) || (t_index > 150))	 	// the temperature sensor function "wraps around" below zero
-                    {
-                        t_index = 0;						// point at the bottom of the temperature table
-                        dtemp = 0;							// zero out fractional calculations
-                        remain = 0;
-                    }
-                    else if(t_index > 98)	 				// High temperature - limit to maximum
-                    {
-                        t_index = 98;						// Point to (near) top of table
-                        dtemp = 0;							// zero out fractional calculations
-                        remain = 0;
-                    }
-
-                    tblp = (uchar)t_index;						// convert to index
-                    // Check for overflow
-                    if(tblp < 100)
-                    {
-                        // Value from freq table
-                        comp = tcxo_table_20m[tblp];				// get the first entry in the table
-                        comp_p = tcxo_table_20m[tblp + 1];			// get the next entry in the table to determine fraction of frequency step
-
-                        comp_p = comp_p - comp;	//					// get frequency difference between the two steps
-
-                        dtemp = (float)comp_p;	// change it to float for the calculation
-                        dtemp *= remain;		// get proportion of temperature difference between the two steps using the fraction
-
-                        comp += (int)dtemp;		// add the compensation value to the lower of the two frequency steps
-
-                        // Change needed ?
-                        if(lo.comp != comp)  		// is it there a difference?
-                        {
-                            // Update frequency, without reflecting it on the LCD
-                            df.temp_factor = comp;
-                            df.temp_factor_changed = true;
-                            lo.comp = comp;
-                        }
-                    }
-                    // FIXME: Move this close to UiDriverRefreshTemperatureDisplay. This should be
-                    // done once the called function is more efficient (i.e. if no change, no update)
-#if 0
-                    UiDriverUpdateLoMeter(tblp - 30,1);
-#endif
-                }
-                // Refresh UI
-                UiDriverRefreshTemperatureDisplay(1,temp/1000); // precision is 0.1 represent by lowest digit
-            }
-        }
+        // Refresh UI
+        UiDriverRefreshTemperatureDisplay(1,lo.temp/1000); // precision is 0.1 represent by lowest digit
     }
 }
 
@@ -6895,60 +6969,6 @@ static void UiDriverHandleLoTemperature()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-ulong ptt_break = 0;
-static void UiDriver_HandlePttOnOff()
-{
-    // Not when tuning
-    if(ts.tune)
-        return;
-
-    // PTT on
-    if(ts.ptt_req)
-    {
-        if(ts.txrx_mode == TRX_MODE_RX)
-        {
-            if(!ts.tx_disable)
-            {
-                RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
-            }
-        }
-
-        ts.ptt_req = 0;
-
-    }
-    else if (!kd.enabled)
-    {
-        // When CAT driver is running
-        // skip auto return to RX
-        // PTT off for all non-CW modes
-        if(ts.dmod_mode != DEMOD_CW)
-        {
-            // PTT flag on ?
-            if(ts.txrx_mode == TRX_MODE_TX)
-            {
-                // PTT line released ?
-                if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
-                {
-                    // Lock to prevent IRQ re-entrance
-                    //ts.txrx_lock = 1;
-
-                    ptt_break++;
-                    if(ptt_break < 15)
-                        return;
-
-                    ptt_break = 0;
-
-                    // Back to RX
-                    RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
-
-                    // Unlock
-                    //ts.txrx_lock = 0;
-                }
-            }
-        }
-    }
-}
-
 enum CONFIG_DEFAULTS
 {
     CONFIG_DEFAULTS_KEEP = 0,
