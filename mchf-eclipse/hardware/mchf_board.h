@@ -1142,6 +1142,7 @@ typedef struct TransceiverState
     int bc_band;
     uchar c_line;					// position of center line
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
+	uint8_t test;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

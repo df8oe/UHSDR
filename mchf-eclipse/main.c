@@ -634,6 +634,11 @@ int main(void)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
+//	FLASH_OB_Unlock();
+//	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
+//	FLASH_OB_Launch();
+//	ts.test = FLASH_OB_GetWRP();
+//	ts.test = FLASH_OB_GetRDP();
     // Set unbuffered mode for stdout (newlib)
     //setvbuf( stdout, 0, _IONBF, 0 );
 
