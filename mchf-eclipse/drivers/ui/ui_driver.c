@@ -566,9 +566,9 @@ void UiDriver_HandleSwitchToNextDspMode()
         if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
 
         // display all as inactive (and then activate the right one, see below)
-        UiDriverChangeRfGain(0);
+        // UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
-        UiDriverChangeSigProc(0);
+        // UiDriverChangeSigProc(0);
 
         switch (ts.dsp_mode)
         {
@@ -579,16 +579,15 @@ void UiDriver_HandleSwitchToNextDspMode()
             ts.notch_enabled = 0;
             ts.peak_enabled = 0;				//off
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-            UiDriverChangeRfGain(1);
+            // UiDriverChangeRfGain(1);
             UiDriverDisplayNotch(0); // display
-//			UiDriverDisplayBass();
             break;
         case DSP_SWITCH_NR:
             ts.dsp_active |= DSP_NR_ENABLE; 	//on
             ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
             ts.notch_enabled = 0;				//off
             ts.peak_enabled = 0;				//off
-            UiDriverChangeSigProc(1);
+            // UiDriverChangeSigProc(1);
             ts.enc_two_mode = ENC_TWO_MODE_SIG_PROC;
             break;
         case DSP_SWITCH_NOTCH:
