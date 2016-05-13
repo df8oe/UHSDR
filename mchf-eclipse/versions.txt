@@ -1,2 +1,2 @@
 <bootloader testing> <firmware testing> <bootloader stable> <firmware stable>
-,0.0.1.1.0,0.219.27.16,0.0.1.0.0,0.219.27.0
+,0.0.1.1.0,0.219.27.17,0.0.1.0.0,0.219.27.0
