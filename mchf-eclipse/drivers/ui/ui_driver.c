@@ -1967,9 +1967,19 @@ void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char 
 
     uint32_t label_color = enabled?Black:Grey1;
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + ENC_COL_W * column, POS_AG_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, Grey);
+#if 0
+    // old style
+    uint32_t bg_color = Grey;
+    uint32_t brdr_color = Grey;
+#else
+    // max visibility of active element
+    uint32_t bg_color = enabled?Orange:Grey;
+    uint32_t brdr_color = enabled?Orange:Grey;
+#endif
+
+    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + ENC_COL_W * column, POS_AG_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
     UiLcdHy28_PrintTextCentered((POS_AG_IND_X + 1 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
-                        label_color, Grey, 0);
+                        label_color, bg_color, 0);
     UiLcdHy28_PrintTextRight((POS_AG_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
                              color, Black, 0);
 }
@@ -5900,58 +5910,22 @@ static void UiDriverChangeSigProc(uchar enabled)
 static void UiDriverDisplayTone(void)
 {
 
-    UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
+    // UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16 + 12 , 112, Black);
 
     bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
-    uint32_t col_bass = enable?Black:Grey1;
-
     char temp[5];
     snprintf(temp,5,"%2d", ts.bass_gain);
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
-    UiLcdHy28_PrintText((POS_AG_IND_X + 1 ), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), "BAS",
-                        col_bass, Grey, 0);
-    col_bass = enable?Orange:Grey;
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
-                             col_bass, Black, 0);
+    // use 2,1 for placement below existing boxes
+    UiDriverEncoderDisplay(0,1,"BAS", enable, temp, White);
+
 
     enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
-    uint32_t col_treble = enable?Black:Grey1;
 
     snprintf(temp,5,"%2d", ts.treble_gain);
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
-    UiLcdHy28_PrintText((POS_AG_IND_X + 1 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), "TRB",
-                        col_treble, Grey, 0);
-    col_treble = enable?Orange:Grey;
-
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
-                             col_treble, Black, 0);
-
-    /*
-    		  uint32_t label_color = enabled?Black:Grey1;
-    	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
-
-    	  if (ts.notch_enabled)
-    	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "NOTCH ",
-    	                      label_color, Grey, 0);
-    	  else
-    	  UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + 3 * 16), "PEAK-F",
-    	                      label_color, Grey, 0);
-
-    	  UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + 3 * 16, 13, 7, Grey);
-
-    	  UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + 3 * 16, 13, 53, Grey);
-
-    	  char temp[6];
-    	  uint32_t color = enabled?White:Grey;
-    	  if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
-    	  if (ts.notch_enabled)
-    	  snprintf(temp,6,"%5lu", (ulong)ts.notch_frequency);
-    	  else 	  snprintf(temp,6,"%5lu", (ulong)ts.peak_frequency);
-    	  UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + 3 * 16), temp,
-    	  	                           color, Black, 0); */
-
+    // use 2,2 for placement below existing boxes
+    UiDriverEncoderDisplay(1,1,"TRB", enable, temp, White);
 
 } // end void UiDriverDisplayBass
 
