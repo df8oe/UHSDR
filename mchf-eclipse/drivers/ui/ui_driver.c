@@ -3196,6 +3196,9 @@ static void UiDriverDrawSMeter(ushort color)
 //
 
 
+
+#define BTM_MINUS 14
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverDeleteSMeter
 //* Object              : delete the S meter
@@ -3206,7 +3209,7 @@ static void UiDriverDrawSMeter(ushort color)
 static void UiDriverDeleteSMeter()
 {
     // W/H ratio ~ 3.5
-    UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,70,200,Black);
+    UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,72 - BTM_MINUS ,200,Black);
 }
 
 static void UiDriverDeleteSMeterLabels()
@@ -3319,8 +3322,6 @@ static void UiDriver_DrawSMeterLabels()
 
 }
 
-
-#define BTM_MINUS 14
 
 static void UiDriverCreateSMeter()
 {
