@@ -342,6 +342,8 @@ typedef struct LoTcxo
     // loaded to LO
     int		comp;
 
+    int32_t temp;
+
     bool	sensor_absent;
     bool    lo_error;
     int   last;
