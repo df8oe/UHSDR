@@ -367,6 +367,20 @@ bool filter_path_change = false;
 //__IO   SnapCarrier     sc;
 
 
+inline int32_t change_and_limit_int(volatile int32_t val, int32_t change, int32_t min, int32_t max)
+{
+    val +=change;
+    if (val< min)
+    {
+        val = min;
+    }
+    else if (val>  max)
+    {
+        val = max;
+    }
+    return val;
+}
+
 
 inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
 {
@@ -2051,6 +2065,7 @@ static void UiDriverProcessKeyboard()
                     }
                     // Change filter
                     UiInitRxParms();		// re-init for change of filter including display updates
+                    UiDriverChangeEncoderThreeMode(true);
                 }
                 break;
             }
@@ -2277,6 +2292,7 @@ static void UiDriverProcessKeyboard()
                     // ts.filter_path = AudioFilter_NextApplicableFilterPath(ALL_APPLICABLE_PATHS,ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
                     filter_path_change = true;
                     UiDriverChangeFilterDisplay();
+                    UiDriverChangeEncoderThreeMode(true);
                     // UiInitRxParms();            // update rx internals accordingly including the necessary display updates
                 }
                 else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))
@@ -4853,6 +4869,7 @@ static bool UiDriverCheckFrequencyEncoder()
 }
 
 
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckEncoderOne
 //* Object              :
@@ -4866,78 +4883,40 @@ static void UiDriverCheckEncoderOne()
 
     pot_diff = UiDriverEncoderRead(ENC1);
 
+
     if (pot_diff)
     {
+        int8_t pot_diff_step = pot_diff < 0?-1:1;
+
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
         // Take appropriate action
         switch(ts.enc_one_mode)
         {
         // Update audio volume
         case ENC_ONE_MODE_AUDIO_GAIN:
-        {
-            // Convert to Audio Gain incr/decr
-            if(pot_diff < 0)
-            {
-                if(ts.rx_gain[RX_AUDIO_SPKR].value)
-                    ts.rx_gain[RX_AUDIO_SPKR].value -= 1;
-            }
-            else
-            {
-                ts.rx_gain[RX_AUDIO_SPKR].value += 1;
-                if(ts.rx_gain[RX_AUDIO_SPKR].value > ts.rx_gain[RX_AUDIO_SPKR].max)
-                    ts.rx_gain[RX_AUDIO_SPKR].value = ts.rx_gain[RX_AUDIO_SPKR].max;
-            }
-
+            ts.rx_gain[RX_AUDIO_SPKR].value = change_and_limit_uint(ts.rx_gain[RX_AUDIO_SPKR].value,pot_diff_step,0,ts.rx_gain[RX_AUDIO_SPKR].max);
             UiDriverChangeAfGain(1);
             break;
-        }
-
-        // Sidetone gain or compression level
+            // Sidetone gain or compression level
         case ENC_ONE_MODE_ST_GAIN:
-        {
             if(ts.dmod_mode == DEMOD_CW)	 	// In CW mode - adjust sidetone gain
             {
                 // Convert to Audio Gain incr/decr
-                if(pot_diff < 0)
-                {
-                    if(ts.st_gain)
-                        ts.st_gain -= 1;
-                }
-                else
-                {
-                    ts.st_gain += 1;
-                    if(ts.st_gain > SIDETONE_MAX_GAIN)		// limit value to proper range
-                        ts.st_gain = SIDETONE_MAX_GAIN;
-                }
+                ts.st_gain = change_and_limit_uint(ts.st_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
                 UiDriverChangeStGain(1);
             }
             else	 		// In voice mode - adjust audio compression level
             {
                 // Convert to Audio Gain incr/decr
-                if(pot_diff < 0)
-                {
-                    if(ts.tx_comp_level)	// Do not allow setting below 1 from main screen
-                        ts.tx_comp_level--;
-                }
-                else
-                {
-                    ts.tx_comp_level++;
-                    if(ts.tx_comp_level > TX_AUDIO_COMPRESSION_MAX)		// limit value to proper range
-                        ts.tx_comp_level = TX_AUDIO_COMPRESSION_MAX;
-                }
+                ts.tx_comp_level = change_and_limit_uint(ts.tx_comp_level,pot_diff_step,0,TX_AUDIO_COMPRESSION_MAX);
                 AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
                 UiDriverChangeCmpLevel(1);	// update on-screen display
             }
-
             break;
-        }
 
         default:
             break;
         }
-
-        // Updated
-
     }
 }
 //
@@ -4951,15 +4930,24 @@ static void UiDriverCheckEncoderOne()
 static void UiDriverCheckEncoderTwo()
 {
     //char 	temp[10];
-	float32_t MAX_FREQ;
-	int 	pot_diff;
+    float32_t MAX_FREQ = 5000.0;
+    int 	pot_diff;
+
+
+
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+    {
         MAX_FREQ = 10000.0;
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+    }
+    else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+    {
         MAX_FREQ = 5000.0;
+    }
 
     pot_diff = UiDriverEncoderRead(ENC2);
-// +++++++++++++++++++++++++++++++++++
+
+
+    // +++++++++++++++++++++++++++++++++++
     float32_t	enc_multiplier;
     static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
     int		delta_t, enc_speed;
@@ -4971,25 +4959,25 @@ static void UiDriverCheckEncoderTwo()
 
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 
-    if (delta_t > 300)
-    {
-        enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
-    }
+        if (delta_t > 300)
+        {
+            enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
+        }
 
-    enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+        enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
 
-    if (enc_speed > 500)
-    {
-        enc_speed = 500;    //limit calculated enc. speed
-    }
-    if (enc_speed < -500)
-    {
-        enc_speed = -500;
-    }
+        if (enc_speed > 500)
+        {
+            enc_speed = 500;    //limit calculated enc. speed
+        }
+        if (enc_speed < -500)
+        {
+            enc_speed = -500;
+        }
 
-    enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
+        enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
 
-    enc_multiplier = 1; //set standard speed
+        enc_multiplier = 1; //set standard speed
 
         if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
         {
@@ -5011,6 +4999,7 @@ static void UiDriverCheckEncoderTwo()
         }
         else
         {
+            int8_t pot_diff_step = pot_diff < 0?-1:1;
             if(ts.txrx_mode == TRX_MODE_RX)
             {
                 //
@@ -5018,89 +5007,34 @@ static void UiDriverCheckEncoderTwo()
                 switch(ts.enc_two_mode)
                 {
                 case ENC_TWO_MODE_RF_GAIN:
-                {
                     if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
                     {
                         // Convert to Audio Gain incr/decr
-                        if(pot_diff < 0)
-                        {
-                            if(ts.rf_gain)
-                                ts.rf_gain -= 1;
-                        }
-                        else
-                        {
-                            ts.rf_gain += 1;
-                            if(ts.rf_gain > MAX_RF_GAIN)
-                                ts.rf_gain = MAX_RF_GAIN;
-                        }
-                        //
-                        // get RF gain value and calculate new value
-                        //
+                        ts.rf_gain = change_and_limit_int(ts.rf_gain,pot_diff_step,0,MAX_RF_GAIN);
                         AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
-                        UiDriverChangeRfGain(1);	// change on screen
-                        break;
                     }
                     else	 		// it is FM - change squelch setting
                     {
-                        if(pot_diff < 0)
-                        {
-                            if(ts.fm_sql_threshold)
-                                ts.fm_sql_threshold -= 1;
-                        }
-                        else
-                        {
-                            ts.fm_sql_threshold += 1;
-                            if(ts.fm_sql_threshold > FM_SQUELCH_MAX)
-                                ts.fm_sql_threshold = FM_SQUELCH_MAX;
-                        }
-                        //
-                        // get RF gain value and calculate new value
-                        //
-                        UiDriverChangeRfGain(1);	// change on screen
-                        break;
+                        ts.fm_sql_threshold = change_and_limit_uint(ts.fm_sql_threshold,pot_diff_step,0,FM_SQUELCH_MAX);
                     }
-                }
+                    UiDriverChangeRfGain(1);    // change on screen
+                    break;
 
-                // Update DSP/NB setting
+                    // Update DSP/NB setting
                 case ENC_TWO_MODE_SIG_PROC:
-                {
                     if(is_dsp_nb())	 	// is it in noise blanker mode?
                     {
-                        // Convert to NB incr/decr
-                        if(pot_diff < 0)
-                        {
-                            if(ts.nb_setting)
-                                ts.nb_setting -= 1;
-                        }
-                        else
-                        {
-                            ts.nb_setting += 1;
-                            if(ts.nb_setting > MAX_NB_SETTING)
-                                ts.nb_setting = MAX_NB_SETTING;
-                        }
+                        ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
                     }
                     else if(is_dsp_nr())	 	// only allow adjustment if DSP NR is active
                     {
-                        // Convert to NB incr/decr
-                        if(pot_diff < 0)
-                        {
-                            if(ts.dsp_nr_strength)
-                                ts.dsp_nr_strength -= 1;
-                        }
-                        else
-                        {
-                            ts.dsp_nr_strength += 1;
-                            if(ts.dsp_nr_strength > DSP_NR_STRENGTH_MAX)
-                                ts.dsp_nr_strength = DSP_NR_STRENGTH_MAX;
-                        }
+                        ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step,0,DSP_NR_STRENGTH_MAX);
                         audio_driver_set_rx_audio_filter();
                     }
                     // Signal processor setting
                     UiDriverChangeSigProc(1);
                     break;
-                }
                 case ENC_TWO_MODE_NOTCH_F:
-                {
                     if (ts.notch_enabled)   // notch f is only adjustable when notch is enabled
                     {
                         if(pot_diff < 0)
@@ -5111,65 +5045,35 @@ static void UiDriverCheckEncoderTwo()
                         {
                             ts.notch_frequency = ts.notch_frequency + 5.0 * enc_multiplier;
                         }
-                        if(ts.notch_frequency > MAX_FREQ) ts.notch_frequency = MAX_FREQ;
-                        if(ts.notch_frequency < MIN_PEAK_NOTCH_FREQ) ts.notch_frequency = MIN_PEAK_NOTCH_FREQ;
+                        if(ts.notch_frequency > MAX_FREQ)
+                        {
+                            ts.notch_frequency = MAX_FREQ;
+                        }
+                        if(ts.notch_frequency < MIN_PEAK_NOTCH_FREQ)
+                        {
+                            ts.notch_frequency = MIN_PEAK_NOTCH_FREQ;
+                        }
                         // display notch frequency
-                        UiDriverDisplayNotch(1);
                         // set notch filter instance
                         audio_driver_set_rx_audio_filter();
+                        UiDriverDisplayNotch(1);
                     }
                     break;
-                }
                 case ENC_TWO_MODE_BASS_GAIN:
-                {
-                    if(pot_diff < 0)
-                    {
-                        ts.bass_gain = ts.bass_gain - 1;
-                    }
-                    if(pot_diff > 0)
-                    {
-                        ts.bass_gain = ts.bass_gain + 1;
-                    }
-                    if (ts.bass_gain < MIN_BASS)
-                    {
-                        ts.bass_gain = MIN_BASS;
-                    }
-                    if (ts.bass_gain > MAX_BASS)
-                    {
-                        ts.bass_gain = MAX_BASS;
-                    }
+                    ts.bass_gain = change_and_limit_int(ts.bass_gain,pot_diff_step,MIN_BASS,MAX_BASS);
+                    // set filter instance
+                    audio_driver_set_rx_audio_filter();
                     // display bass gain
                     UiDriverDisplayTone(true);
+                    break;
+                case ENC_TWO_MODE_TREBLE_GAIN:
+                    ts.treble_gain = change_and_limit_int(ts.treble_gain,pot_diff_step,MIN_TREBLE,MAX_TREBLE);
                     // set filter instance
                     audio_driver_set_rx_audio_filter();
-                    break;
-                }
-                case ENC_TWO_MODE_TREBLE_GAIN:
-                {
-                    if(pot_diff < 0)
-                    {
-                        ts.treble_gain = ts.treble_gain - 1;
-                    }
-                    if(pot_diff > 0)
-                    {
-                        ts.treble_gain = ts.treble_gain + 1;
-                    }
-                    if (ts.treble_gain < MIN_TREBLE)
-                    {
-                        ts.treble_gain = MIN_TREBLE;
-                    }
-                    if (ts.treble_gain > MAX_TREBLE)
-                    {
-                        ts.treble_gain = MAX_TREBLE;
-                    }
                     // display treble gain
                     UiDriverDisplayTone(true);
-                    // set filter instance
-                    audio_driver_set_rx_audio_filter();
                     break;
-                }
                 case ENC_TWO_MODE_PEAK_F:
-                {
                     if (ts.peak_enabled)   // peak f is only adjustable when peak is enabled
                     {
                         if(pot_diff < 0)
@@ -5188,13 +5092,12 @@ static void UiDriverCheckEncoderTwo()
                         {
                             ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
                         }
-                        // display peak frequency
-                        UiDriverDisplayNotch(1);
                         // set notch filter instance
                         audio_driver_set_rx_audio_filter();
+                        // display peak frequency
+                        UiDriverDisplayNotch(1);
                     }
                     break;
-                }
                 default:
                     break;
                 }
@@ -5217,8 +5120,11 @@ static void UiDriverCheckEncoderThree()
 
     pot_diff = UiDriverEncoderRead(ENC3);
 
+
     if (pot_diff)
     {
+        int8_t pot_diff_step = pot_diff < 0?-1:1;
+
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
         if (filter_path_change)
         {
@@ -5231,59 +5137,26 @@ static void UiDriverCheckEncoderThree()
         }
         else
         {
-
-
-
             // Take appropriate action
             switch(ts.enc_thr_mode)
             {
             // Update RIT value
             case ENC_THREE_MODE_RIT:
-            {
                 if(ts.txrx_mode == TRX_MODE_RX)
                 {
-                    // Convert to RIT incr/decr
-                    if(pot_diff < 0)
-                    {
-                        ts.rit_value -= 1;
-                        if(ts.rit_value < MIN_RIT_VALUE)
-                            ts.rit_value = MIN_RIT_VALUE;
-                    }
-                    else
-                    {
-                        ts.rit_value += 1;
-                        if(ts.rit_value > MAX_RIT_VALUE)
-                            ts.rit_value = MAX_RIT_VALUE;
-                    }
-
+                    ts.rit_value = change_and_limit_int(ts.rit_value,pot_diff_step,MIN_RIT_VALUE,MAX_RIT_VALUE);
                     // Update RIT
                     UiDriverChangeRit(1);
-
                     // Change frequency
                     UiDriver_FrequencyUpdateLOandDisplay(false);
                 }
                 break;
-            }
-
-            // Keyer speed
+                // Keyer speed
             case ENC_THREE_MODE_CW_SPEED:
-            {
                 if(ts.dmod_mode == DEMOD_CW)	 		// in CW mode, adjust keyer speed
                 {
                     // Convert to Audio Gain incr/decr
-                    if(pot_diff < 0)
-                    {
-                        ts.keyer_speed--;
-                        if(ts.keyer_speed < MIN_KEYER_SPEED)
-                            ts.keyer_speed = MIN_KEYER_SPEED;
-                    }
-                    else
-                    {
-                        ts.keyer_speed++;
-                        if(ts.keyer_speed > MAX_KEYER_SPEED)
-                            ts.keyer_speed = MAX_KEYER_SPEED;
-                    }
-
+                    ts.keyer_speed = change_and_limit_int(ts.keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
                     UiDriverChangeKeyerSpeed(1);
                 }
                 else	 	// in voice mode, adjust audio gain
@@ -5292,20 +5165,8 @@ static void UiDriverCheckEncoderThree()
                     uint16_t gain_max = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MAX:LINE_GAIN_MAX;
                     uint16_t gain_min = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MIN:LINE_GAIN_MIN;
 
-                    if(pot_diff < 0)	 						// yes, adjust line gain
-                    {
-                        ts.tx_gain[ts.tx_audio_source]--;
-                        if(ts.tx_gain[ts.tx_audio_source] < gain_min)
-                        {
-                            ts.tx_gain[ts.tx_audio_source] = gain_min;
-                        }
-                    }
-                    else
-                    {
-                        ts.tx_gain[ts.tx_audio_source]++;
-                        if(ts.tx_gain[ts.tx_audio_source] > gain_max)
-                            ts.tx_gain[ts.tx_audio_source] = gain_max;
-                    }
+                    ts.tx_gain[ts.tx_audio_source] = change_and_limit_int(ts.tx_gain[ts.tx_audio_source],pot_diff_step,gain_min,gain_max);
+
                     if (ts.tx_audio_source == TX_AUDIO_MIC)
                     {
                         Codec_MicBoostCheck(ts.txrx_mode);
@@ -5313,12 +5174,9 @@ static void UiDriverCheckEncoderThree()
                     UiDriverChangeAudioGain(1);
                 }
                 break;
-            }
-
             default:
                 break;
             }
-
         }
     }
 }
@@ -5327,7 +5185,6 @@ static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
 {
     if(ts.menu_mode == false)	// changes only when not in menu mode
     {
-
         if(just_display_no_change == false)
         {
             ts.enc_one_mode++;
@@ -5335,55 +5192,53 @@ static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
             {
                 ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
             }
-
         }
     }
     switch(ts.enc_one_mode)
     {
     case ENC_ONE_MODE_AUDIO_GAIN:
-    {
         // Audio gain enabled
         UiDriverChangeAfGain(1);
 
         // Sidetone disabled
         if(ts.dmod_mode == DEMOD_CW)
+        {
             UiDriverChangeStGain(0);
+        }
         else
+        {
             UiDriverChangeCmpLevel(0);
-        //
-
+        }
         break;
-    }
 
     case ENC_ONE_MODE_ST_GAIN:
-    {
         // Audio gain disabled
         UiDriverChangeAfGain(0);
 
         if(ts.dmod_mode == DEMOD_CW)
+        {
             UiDriverChangeStGain(1);
+        }
         else
+        {
             UiDriverChangeCmpLevel(1);
-        //
-
+        }
         break;
-    }
-
-    // Disable all
+        // Disable all
     default:
-    {
         // Audio gain disabled
         UiDriverChangeAfGain(0);
 
         // Sidetone enabled
         if(ts.dmod_mode == DEMOD_CW)
+        {
             UiDriverChangeStGain(0);
+        }
         else
+        {
             UiDriverChangeCmpLevel(0);
-        //
-
+        }
         break;
-    }
     }
 }
 
@@ -5409,34 +5264,25 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
             {
                 ts.enc_two_mode++;
             }
-
-
             // flip round
             if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
             {
                 ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             }
         }
-
     }
 
     switch(ts.enc_two_mode)
     {
     case ENC_TWO_MODE_RF_GAIN:
-    {
         // RF gain
         UiDriverChangeRfGain(1*inactive_mult);
         // DSP/Noise Blanker
         UiDriverChangeSigProc(0);
-
-
         // notch display
         UiDriverDisplayNotch(0);
         break;
-    }
-
     case ENC_TWO_MODE_SIG_PROC:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
@@ -5444,10 +5290,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         // notch display
         UiDriverDisplayNotch(0);
         break;
-    }
-
     case ENC_TWO_MODE_NOTCH_F:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
@@ -5456,9 +5299,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriverDisplayNotch(1*inactive_mult);
 
         break;
-    }
     case ENC_TWO_MODE_PEAK_F:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
@@ -5466,9 +5307,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         // notch display
         UiDriverDisplayNotch(1*inactive_mult);
         break;
-    }
     case ENC_TWO_MODE_BASS_GAIN:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
@@ -5478,9 +5317,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriverDisplayTone(1*inactive_mult);
 
         break;
-    }
     case ENC_TWO_MODE_TREBLE_GAIN:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
         // DSP/Noise Blanker
@@ -5489,10 +5326,8 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriverDisplayNotch(0);
         UiDriverDisplayTone(1*inactive_mult);
         break;
-    }
-    // Disable all
+        // Disable all
     default:
-    {
         // RF gain
         UiDriverChangeRfGain(0);
 
@@ -5500,7 +5335,6 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriverChangeSigProc(0);
         UiDriverDisplayNotch(0);
         break;
-    }
     }
 
 }
