@@ -220,8 +220,8 @@ static void UiDriver_PowerDownCleanup(void);
 #define POS_DSPL_IND_Y              131
 
 // Power level
-#define POS_PW_IND_X                0
-#define POS_PW_IND_Y                147
+#define POS_PW_IND_X                POS_DEMOD_MODE_X -1
+#define POS_PW_IND_Y                POS_DEMOD_MODE_Y - 16
 // Filter indicator
 #define POS_FIR_IND_X               0
 #define POS_FIR_IND_Y               163
@@ -5597,50 +5597,51 @@ void UiDriverChangeCmpLevel(uchar enabled)
 static void UiDriverChangeDSPMode()
 {
     ushort color = White;
-    const char* txt;
+    const char* txt[2] = { "DSP", NULL };
 
     switch (ts.dsp_mode)
     {
     case DSP_SWITCH_OFF: //
         color = Grey2;
-        txt = "DSP-OFF";
+        txt[1] = "OFF";
         break;
     case DSP_SWITCH_NR:
-        txt = "NR";
+        txt[1] = "NR";
         color = White;
         break;
     case DSP_SWITCH_NOTCH:
         color = White;
-        txt = "NOTCH";
+        txt[1] = "NOTCH";
         break;
     case DSP_SWITCH_NR_AND_NOTCH:
         color = White;
-        txt = "NR+NOTC";
+        txt[1] = "NR+NOTC";
         break;
     case DSP_SWITCH_NOTCH_MANUAL:
         color = White;
-        txt = "M-NOTCH";
+        txt[1] = "M-NOTCH";
         break;
     case DSP_SWITCH_PEAK_FILTER:
         color = White;
-        txt = "PEAK";
+        txt[1] = "PEAK";
         break;
     case DSP_SWITCH_BASS:
         color = White;
-        txt = "BASS";
+        txt[1] = "BASS";
         break;
     case DSP_SWITCH_TREBLE:
         color = White;
-        txt = "TREBLE";
+        txt[1] = "TREBLE";
         break;
     default:
         color = Grey2;
-        txt = "DSP-OFF";
+        txt[1] = "OFF";
         break;
     }
 
     UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
+    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt[0],color,Blue,0);
+    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y+12),UI_LEFT_BOX_WIDTH,txt[1],color,Blue,0);
 }
 //
 //*----------------------------------------------------------------------------
@@ -5724,8 +5725,8 @@ static void UiDriver_DisplayPowerLevel()
         break;
     }
     // Draw top line
-    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
+    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),POS_DEMOD_MODE_MASK_W,LCD_DIR_HORIZONTAL,Blue);
+    UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),POS_DEMOD_MODE_MASK_W,txt,color,Blue,0);
 }
 
 //*----------------------------------------------------------------------------
