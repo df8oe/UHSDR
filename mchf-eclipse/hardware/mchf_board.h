@@ -49,7 +49,7 @@
 #define 	TRX4M_VER_MINOR			219
 #define 	TRX4M_VER_RELEASE		27
 //
-#define 	TRX4M_VER_BUILD			16
+#define 	TRX4M_VER_BUILD			17
 //
 
 #define		ATTRIB_STRING1			"Additional Contributions by"
