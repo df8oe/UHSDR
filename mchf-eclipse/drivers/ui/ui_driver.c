@@ -88,6 +88,12 @@ static void 	UiDriver_DisplaySigProc(uchar enabled);
 static void 	UiDriver_DisplayNotch(uchar enabled);
 static void 	UiDriver_DisplayTone(bool enabled);
 static void 	UiDriver_DisplayRit(uchar enabled);
+static void UiDriver_DisplayAfGain(uchar enabled);
+static void UiDriver_DisplayRfGain(uchar enabled);
+static void UiDriver_DisplaySidetoneGain(uchar enabled);
+static void UiDriver_DisplayCmpLevel(uchar enabled);
+static void UiDriver_DisplayKeyerSpeed(uchar enabled);
+static void UiDriver_DisplayLineInModeAndGain(uchar enabled);
 static void 	UiDriver_DisplayDSPMode();
 static void 	UiDriver_DisplayDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
@@ -5346,7 +5352,7 @@ static void UiDriverChangeEncoderThreeMode(bool just_display_no_change)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplayAfGain(uchar enabled)
+static void UiDriver_DisplayAfGain(uchar enabled)
 {
     UiDriverEncoderDisplaySimple(0,0,"AFG", enabled, ts.rx_gain[RX_AUDIO_SPKR].value);
 }
@@ -5358,7 +5364,7 @@ void UiDriver_DisplayAfGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplaySidetoneGain(uchar enabled)
+static void UiDriver_DisplaySidetoneGain(uchar enabled)
 {
     UiDriverEncoderDisplaySimple(1,0,"STG", enabled, ts.st_gain);
 }
@@ -5370,7 +5376,7 @@ void UiDriver_DisplaySidetoneGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplayCmpLevel(uchar enabled)
+static void UiDriver_DisplayCmpLevel(uchar enabled)
 {
     ushort 	color = enabled?White:Grey;
     char	temp[5];
@@ -5537,7 +5543,7 @@ static void UiDriver_DisplayPowerLevel()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplayKeyerSpeed(uchar enabled)
+static void UiDriver_DisplayKeyerSpeed(uchar enabled)
 {
     ushort 	color = enabled?White:Grey;
     const char* txt;
@@ -5560,7 +5566,7 @@ void UiDriver_DisplayKeyerSpeed(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplayLineInModeAndGain(uchar enabled)
+static void UiDriver_DisplayLineInModeAndGain(uchar enabled)
 {
     ushort 	color = enabled?White:Grey;
     const char* txt;
@@ -5599,7 +5605,7 @@ void UiDriver_DisplayLineInModeAndGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_DisplayRfGain(uchar enabled)
+static void UiDriver_DisplayRfGain(uchar enabled)
 {
     uint32_t color = enabled?White:Grey;
 
@@ -5713,7 +5719,7 @@ static void UiDriver_DisplayTone(bool enabled)
 
     bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
     char temp[5];
-    snprintf(temp,5,"%2d", ts.bass_gain);
+    snprintf(temp,5,"%3d", ts.bass_gain);
 
     // use 2,1 for placement below existing boxes
     UiDriverEncoderDisplay(0,1,"BAS", enable && enabled, temp, White);
@@ -5721,7 +5727,7 @@ static void UiDriver_DisplayTone(bool enabled)
 
     enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
 
-    snprintf(temp,5,"%2d", ts.treble_gain);
+    snprintf(temp,5,"%3d", ts.treble_gain);
 
     // use 2,2 for placement below existing boxes
     UiDriverEncoderDisplay(1,1,"TRB", enable && enabled, temp, White);
