@@ -384,11 +384,11 @@ inline int32_t change_and_limit_int(volatile int32_t val, int32_t change, int32_
 
 inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
 {
-    if (change  > (val - min))
+    if (change < 0 && ( -change  > (val - min)))
     {
         val = min;
     }
-    else if (change >  max - val)
+    else if (change > 0 && change >  max - val)
     {
         val = max;
     }
@@ -6205,6 +6205,10 @@ void UiDriver_PowerFromADCValue(float val, float sensor_null, float coupling_cal
     *dbm_ptr = dbm;
 }
 
+/*
+ * @brief Measures and calculates TX Power Output and SWR, has to be called regularily
+ * @returns true if new values have been calculated
+ */
 static bool UiDriver_UpdatePowerAndVSWR()
 {
 
@@ -6298,7 +6302,6 @@ static void UiDriverHandleLowerMeter()
     }
     else if (UiDriver_UpdatePowerAndVSWR())
     {
-        // FIXME: S CALCULATION ENDS HERE, NOW WE DO DISPLAY, SEPARATE
 
         // display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
         if(swrm.pwr_meter_disp)
@@ -6399,6 +6402,9 @@ static void UiDriver_CreateVoltageDisplay() {
 }
 
 
+/*
+ * @brief displays the visual information that power down is being executed and saves EEPROM if requested
+ */
 static void UiDriver_PowerDownCleanup(void)
 {
     const char* txp;
@@ -6572,13 +6578,13 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 	}
 }
 #endif
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateTemperatureDisplay
-//* Object              : draw ui
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
+/**
+ * \brief draws the the TCXO temperature display, has to be called once
+ *
+ * @param create set to true in order to draw the static parts of the UI too.
+ * @param enabled set to true in order to enable actual display of temperature
+ */
 void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
 {
     const char *label, *txt, *value_str = NULL;
