@@ -1867,7 +1867,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(fchange)		// did RFGain get changed?
         {
-            UiDriverChangeRfGain(0);	// yes, change on-screen RF gain setting
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
         snprintf(options, 32, "  %d", ts.rf_gain);
         break;
@@ -2005,7 +2005,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dmod_mode != DEMOD_CW)
             {
-                UiDriverChangeAudioGain(0);
+                UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
             }
         }
 
@@ -2032,7 +2032,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
             if(ts.dmod_mode != DEMOD_CW)
             {
-                UiDriverChangeAudioGain(0);
+                UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
             }
         }
 
@@ -2061,7 +2061,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dmod_mode != DEMOD_CW)
             {
-                UiDriverChangeAudioGain(0);
+                UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
                 if(ts.txrx_mode == TRX_MODE_TX)		// in transmit mode?
                 {
                     // TODO: Think about this, this is a hack
@@ -2121,7 +2121,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             {
                 if(ts.dmod_mode != DEMOD_CW)	// In voice mode?
                 {
-                    UiDriverChangeCmpLevel(0);	// update on-screen display of compression level
+                    UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
                 }
             }
         }
@@ -2151,7 +2151,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
             if(ts.dmod_mode != DEMOD_CW)	// In voice mode?
             {
-                UiDriverChangeCmpLevel(0);	// update on-screen display of compression level
+                UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
             }
         }
 
@@ -2196,7 +2196,8 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(fchange && ts.dmod_mode == DEMOD_CW)         // did it change?
         {
-            UiDriverChangeKeyerSpeed(0);
+            cw_set_speed(); // make sure keyerspeed is being used
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
         sprintf(options, "  %u", ts.keyer_speed);
         break;
@@ -2209,7 +2210,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                                              );
         if(fchange && ts.dmod_mode == DEMOD_CW)	 		// did it change?
         {
-            UiDriverChangeStGain(0);		// update on-screen display of sidetone gain
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
         sprintf(options, "  %u", ts.st_gain);
         break;
@@ -2888,7 +2889,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(ts.rx_gain[RX_AUDIO_SPKR].value > ts.rx_gain[RX_AUDIO_SPKR].max)	 			// is the volume currently higher than the new setting?
         {
             ts.rx_gain[RX_AUDIO_SPKR].value = ts.rx_gain[RX_AUDIO_SPKR].max;		// yes - force the volume to the new value
-            UiDriverChangeAfGain(0);
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
         sprintf(options, "    %u", ts.rx_gain[RX_AUDIO_SPKR].max);
         //

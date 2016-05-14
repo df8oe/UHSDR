@@ -350,16 +350,6 @@ typedef struct LoTcxo
 
 } LoTcxo;
 
-// Once every 25s - 0xFFFFF
-#define EEPROM_SAVE_SKP				0xFFFFF
-
-// Eeprom saving routine
-typedef struct EepromSave
-{
-    ulong	skip;
-
-} EepromSave;
-
 //
 // --------------------------------------------------------------------------
 // Exports
@@ -369,7 +359,7 @@ void 	ui_driver_thread(void);
 void 	UiDriverLoadFilterValue(void);
 //
 void 	RadioManagement_ChangeBandFilter(uchar band);
-void 	UiDriverChangeFilterDisplay(void);
+void 	UiDriver_DisplayFilter(void);
 void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 
@@ -379,13 +369,8 @@ void 	RadioManagement_SetBandPowerFactor(uchar band);
 //
 //void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	RadioManagement_SetBandPowerFactor(uchar band);
-//
-void    UiDriverChangeAudioGain(uchar enabled);
-void 	UiDriverChangeStGain(uchar enabled);
-void 	UiDriverChangeCmpLevel(uchar enabled);
-void 	UiDriverChangeKeyerSpeed(uchar enabled);
-void 	UiDriverChangeRfGain(uchar enabled);
-void    UiDriverChangeAfGain(uchar enabled);
+
+void    UiDriver_RefreshEncoderDisplay();
 
 void    UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
 //
