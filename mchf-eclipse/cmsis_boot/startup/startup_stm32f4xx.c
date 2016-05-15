@@ -134,7 +134,7 @@ extern unsigned long _sdata;     /*!< Start address for the .data section     */
 extern unsigned long _edata;     /*!< End address for the .data section       */
 extern unsigned long _sbss;      /*!< Start address for the .bss section      */
 extern unsigned long _ebss;      /*!< End address for the .bss section        */
-extern void _eram;               /*!< End address for ram                     */
+// extern void _eram;               /*!< End address for ram                     */
 extern void* __stack;
 
 /*----------Function prototypes-----------------------------------------------*/
