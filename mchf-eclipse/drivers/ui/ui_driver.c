@@ -5565,7 +5565,7 @@ static void UiDriver_DisplaySigProc(uchar enabled)
 {
     uint32_t 	color = enabled?White:Grey;
     char	temp[5];
-    const char *label, *val_txt;
+    char *label, *val_txt;
     int32_t value;
     bool is_active = false;
     label = "NB";
