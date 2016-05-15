@@ -939,8 +939,9 @@ void UiConfiguration_LoadEepromValues(void)
 
     ts.alc_tx_postfilt_gain_var =  ts.alc_tx_postfilt_gain; // "working" copy of variable
 
-    if(!ts.version_number_release)  			// set xlate to -12KHz at first start
-    {
+    // set xlate to -12KHz at first start
+    if(ts.version_number_release == 0 && ts.version_number_minor == 0 && ts.version_number_major == 0 )
+         {
         ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
     }
 
