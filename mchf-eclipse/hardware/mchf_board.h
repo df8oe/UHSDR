@@ -46,7 +46,7 @@
 #define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2016"
 //
 #define 	TRX4M_VER_MAJOR			1
-#define 	TRX4M_VER_MINOR			0
+#define 	TRX4M_VER_MINOR			1
 #define 	TRX4M_VER_RELEASE		0
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
