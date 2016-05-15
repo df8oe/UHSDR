@@ -45,13 +45,10 @@
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
 #define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2016"
 //
-#define 	TRX4M_VER_MAJOR			0
-#define 	TRX4M_VER_MINOR			219
-#define 	TRX4M_VER_RELEASE		27
+#define 	TRX4M_VER_MAJOR			1
+#define 	TRX4M_VER_MINOR			0
+#define 	TRX4M_VER_RELEASE		0
 //
-#define 	TRX4M_VER_BUILD			20
-//
-
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE and others."
 #define		ATTRIB_STRING3			"Licensed under CC BY-NC-SA 3.0"
@@ -1050,7 +1047,7 @@ typedef struct TransceiverState
     ulong	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.
     uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
-    uint16_t	version_number_build;		// version number - build - used to hold version number and detect change
+    uint16_t	version_number_major;		// version number - build - used to hold version number and detect change
     uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
     uchar	nb_agc_time_const;			// used to calculate the AGC time constant
     uchar	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)

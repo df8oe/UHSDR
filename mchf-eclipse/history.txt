@@ -12,6 +12,9 @@
 #########################################################################
 #########################################################################
 
+20160515 [DF8OE]
+-released first stable following new versioning scheme
+
 
 20160511 [DF8OE]
 - bugfix: temperature C/F not stored

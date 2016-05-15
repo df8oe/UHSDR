@@ -375,7 +375,7 @@ void TransceiverStateInit(void)
     ts.sysclock			= 0;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.
     ts.version_number_release	= 0;			// version release - used to detect firmware change
-    ts.version_number_build = 0;				// version build - used to detect firmware change
+    ts.version_number_major = 0;				// version build - used to detect firmware change
     ts.nb_agc_time_const	= 0;				// used to calculate the AGC time constant
     ts.cw_offset_mode	= 0;					// CW offset mode (USB, LSB, etc.)
     ts.cw_lsb			= 0;					// Flag that indicates CW operates in LSB mode when TRUE

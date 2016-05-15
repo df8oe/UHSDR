@@ -4508,10 +4508,10 @@ static void UiDriverTimeScheduler()
         Codec_Mute(0);                      // make sure that audio is un-muted
 
 
-        if((ts.version_number_build != TRX4M_VER_BUILD) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))        // Yes - check for new version
+        if((ts.version_number_major != TRX4M_VER_MAJOR) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))        // Yes - check for new version
         {
 
-            ts.version_number_build = TRX4M_VER_BUILD;    // save new F/W version
+            ts.version_number_major = TRX4M_VER_MAJOR;    // save new F/W version
             ts.version_number_release = TRX4M_VER_RELEASE;
             ts.version_number_minor = TRX4M_VER_MINOR;
 
@@ -7283,8 +7283,8 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
   		}
 
     // Show third line
-    sprintf(tx,"FW: %d.%d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,TRX4M_VER_BUILD,bootloader);
-    UiLcdHy28_PrintText(50,80,tx,Grey3,Black,0);
+    sprintf(tx,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,bootloader);
+    UiLcdHy28_PrintText(80,80,tx,Grey3,Black,0);
 
     // Show fourth line
     sprintf(tx,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
