@@ -216,14 +216,14 @@ static void UiDriver_PowerDownCleanup(void);
 #define POS_FC_IND_X                0
 #define POS_FC_IND_Y                78
 
-#define UI_LEFT_BOX_WIDTH 56 // used for the lower left side controls
+#define UI_LEFT_BOX_WIDTH 58 // used for the lower left side controls
 // --------------------------------------------------
 // Standalone controls
 //
 // DSP mode
 // Lower DSP box
 #define POS_DSPL_IND_X              0
-#define POS_DSPL_IND_Y              131
+#define POS_DSPL_IND_Y              130
 
 // Power level
 #define POS_PW_IND_X                POS_DEMOD_MODE_X -1
@@ -585,11 +585,6 @@ void UiDriver_HandleSwitchToNextDspMode()
         // prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
         if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
 
-        // display all as inactive (and then activate the right one, see below)
-        // UiDriverChangeRfGain(0);
-        // DSP/Noise Blanker
-        // UiDriverChangeSigProc(0);
-
         switch (ts.dsp_mode)
         {
 
@@ -599,15 +594,12 @@ void UiDriver_HandleSwitchToNextDspMode()
             ts.notch_enabled = 0;
             ts.peak_enabled = 0;				//off
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-            // UiDriverChangeRfGain(1);
-            UiDriver_DisplayNotch(0); // display
             break;
         case DSP_SWITCH_NR:
             ts.dsp_active |= DSP_NR_ENABLE; 	//on
             ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
             ts.notch_enabled = 0;				//off
             ts.peak_enabled = 0;				//off
-            // UiDriverChangeSigProc(1);
             ts.enc_two_mode = ENC_TWO_MODE_SIG_PROC;
             break;
         case DSP_SWITCH_NOTCH:
@@ -628,7 +620,6 @@ void UiDriver_HandleSwitchToNextDspMode()
             ts.notch_enabled = 1;				//on
             ts.peak_enabled = 0;				//off
             ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-            UiDriver_DisplayNotch(1);
             break;
         case DSP_SWITCH_PEAK_FILTER:
             ts.dsp_active &= ~DSP_NR_ENABLE;	//off
@@ -636,7 +627,6 @@ void UiDriver_HandleSwitchToNextDspMode()
             ts.notch_enabled = 0;				//off
             ts.peak_enabled = 1;				//on
             ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
-            UiDriver_DisplayNotch(1);
             break;
         case DSP_SWITCH_BASS:
             break;
@@ -644,69 +634,12 @@ void UiDriver_HandleSwitchToNextDspMode()
             break;
         }
 
-        /*		OLD VERSION
-        		if (ts.notch_enabled) {
-        			    ts.notch_enabled = 0; // switch off notch filter
-        			    UiDriverChangeRfGain(1);
-        			    // DSP/Noise Blanker
-        			    UiDriverChangeSigProc(0);
-        			    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-        			    UiDriverDisplayNotch(0); // display
-        			}
-        			else {
-        			    ts.notch_enabled = 1;
-        			    // RF gain
-        			    UiDriverChangeRfGain(0);
-        			    // DSP/Noise Blanker
-        			    UiDriverChangeSigProc(0);
-        			    // notch display
-        			    UiDriverDisplayNotch(1);
-        			    ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-        			}
-        */
-
-
-        /*		if((!(is_dsp_nr())) && (!(is_dsp_notch())))	// both NR and notch are inactive
-        		{
-        		ts.dsp_active |= DSP_NR_ENABLE;					// turn on NR
-        		}
-        		else if((is_dsp_nr()) && (!(is_dsp_notch()))) {	// NR active, notch inactive
-        			if(ts.dmod_mode != DEMOD_CW)	{	// NOT in CW mode
-        				ts.dsp_active |= DSP_NOTCH_ENABLE;									// turn on notch
-        				ts.dsp_active &= ~DSP_NR_ENABLE;								// turn off NR
-        			}
-        			else	{	// CW mode - do not select notches, skip directly to "off"
-        				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);	// turn off NR and notch
-        			}
-        		}
-        		else if((!(is_dsp_nr())) && (is_dsp_notch()))	//	NR inactive, notch active
-        			if((ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].id > AUDIO_4P8KHZ))		// was it AM with a filter > 4k8 selected?
-        				ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);			// it was AM + wide - turn off NR and notch
-        			else
-        			{
-        			ts.dsp_active |= DSP_NR_ENABLE;				// no - turn on NR
-        			}
-        		else	{
-        			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);								// turn off NR and notch
-        		}
-        		*/
-
-        //
-        ts.dsp_active_toggle = ts.dsp_active;	// save update in "toggle" variable
-        //
-        ts.reset_dsp_nr = 1;				// reset DSP NR coefficients
-        audio_driver_set_rx_audio_filter();		// update DSP/filter settings
+        ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
+        ts.reset_dsp_nr = 1;               // reset DSP NR coefficients
+        audio_driver_set_rx_audio_filter();        // update DSP/filter settings
         ts.reset_dsp_nr = 0;
-        UiDriver_DisplayDSPMode();			// update on-screen display
-        //
-        // Update DSP/NB/RFG control display
-        //
-        // put all displays here??
-        //
-        /*		if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-        			UiDriverChangeSigProc(0);
-        		else
-        			UiDriverChangeSigProc(1); */
+        // UiDriver_DisplayDSPMode(false);         // update on-screen display
+        UiDriverChangeEncoderTwoMode(true);         // DSP control is mapped to column 2
     }
 }
 
@@ -2008,6 +1941,38 @@ void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char 
                              color, Black, 0);
 }
 
+#define LEFTBOX_ROW_H  (14+12+2)
+#define LEFTBOX_ROW_2ND_OFF  (13)
+static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool enabled,
+                            const char* text, uint32_t color, bool text_is_value)
+{
+
+    uint32_t label_color = enabled?Black:color;
+
+    // max visibility of active element
+    uint32_t bg_color = enabled?Orange:Blue;
+    uint32_t brdr_color = enabled?Orange:Blue;
+
+
+    UiLcdHy28_DrawEmptyRect(POS_DSPL_IND_X, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H), LEFTBOX_ROW_H - 2, UI_LEFT_BOX_WIDTH - 2, brdr_color);
+    UiLcdHy28_PrintTextCentered(POS_DSPL_IND_X + 1, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1,UI_LEFT_BOX_WIDTH - 3, label,
+                        label_color, bg_color, 0);
+
+    // this causes flicker, but I am too lazy to fix that now
+    UiLcdHy28_DrawFullRect(POS_DSPL_IND_X + 1, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + 12, LEFTBOX_ROW_H - 4 - 11, UI_LEFT_BOX_WIDTH - 3, text_is_value?Black:bg_color);
+    if (text_is_value)
+    {
+        UiLcdHy28_PrintTextRight((POS_DSPL_IND_X + UI_LEFT_BOX_WIDTH - 4), (POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
+                color, text_is_value?Black:bg_color, 0);
+    }
+    else
+    {
+        UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X + 1), (POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF),UI_LEFT_BOX_WIDTH - 3, text,
+                color, bg_color, 0);
+    }
+}
+
+
 void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool enabled,
                                   uint32_t value)
 {
@@ -2242,11 +2207,6 @@ static void UiDriverProcessKeyboard()
                         ts.notch_enabled = 0;
                         ts.peak_enabled = 0;				//off
                         ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-                        UiDriverChangeEncoderTwoMode(true);
-#if 0
-                        UiDriver_DisplayRfGain(1);
-#endif
-                        UiDriver_DisplayNotch(0); // display
                     }
                     else	 		// neither notch or NR was active
                     {
@@ -2256,18 +2216,8 @@ static void UiDriverProcessKeyboard()
                         }
                     }
                     audio_driver_set_rx_audio_filter();	// update DSP settings
-                    UiDriver_DisplayDSPMode();			// update on-screen display
-
                     UiDriverChangeEncoderTwoMode(true);
-#if 0
-                    // Update DSP/NB/RFG control display
-                    if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-                        UiDriver_DisplaySigProc(0);
-                    else
-                        UiDriver_DisplaySigProc(1);
-#endif
                 }
-                UiDriver_DisplayDSPMode();			// update on-screen display
                 break;
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
@@ -2319,13 +2269,6 @@ static void UiDriverProcessKeyboard()
             case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
                 ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
                 UiDriverChangeEncoderTwoMode(true);
-#if 0
-                if(ts.enc_two_mode == ENC_TWO_MODE_RF_GAIN)
-                    UiDriver_DisplaySigProc(0);
-                else
-                    UiDriver_DisplaySigProc(1);
-#endif
-
                 break;
             case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
                 if(ts.dmod_mode != DEMOD_CW)
@@ -2333,12 +2276,6 @@ static void UiDriverProcessKeyboard()
                     incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
 
                     UiDriverChangeEncoderThreeMode(true);
-#if 0
-                    if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)	// if encoder in RIT mode, grey out audio gain control
-                        UiDriver_DisplayLineInModeAndGain(0);
-                    else									// not RIT mode - don't grey out
-                        UiDriver_DisplayLineInModeAndGain(1);
-#endif
                 }
                 break;
             case BUTTON_POWER_PRESSED:
@@ -2465,12 +2402,13 @@ void UiInitRxParms()
     UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
 //    audio_driver_set_rx_audio_filter();
     UiDriver_DisplayDigitalMode();    // Change Digital display setting as well
-    UiDriver_DisplayDSPMode();  // Change DSP display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
+
+    // embedded in UiDriver_RefreshEncoderDisplay()
+    // UiDriver_DisplayDSPMode(false);  // Change DSP display setting as well
 
     ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
     UiDriver_RefreshEncoderDisplay();
-        //UiDriverDisplayBass();
 
     if(ts.menu_mode)    // are we in menu mode?
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
@@ -3075,42 +3013,11 @@ static void UiDriverCreateDesktop()
 //	UiDriverInitSpectrumDisplay();
 
     UiDriver_RefreshEncoderDisplay();
-#if 0
-    // -----------------
-    // Encoder one modes
-    // -----------------
-    //  Audio gain
-    UiDriver_DisplayAfGain(1);
-    //
-    if(ts.dmod_mode == DEMOD_CW)
-        UiDriver_DisplaySidetoneGain(0);
-    else
-        UiDriver_DisplayCmpLevel(0);
-    //
-
-    // -----------------
-    // Encoder two modes
-    // -----------------
-    // RF gain
-    UiDriver_DisplayRfGain(1);
-    // RF Attenuator
-    UiDriver_DisplaySigProc(0);
-
-    // -----------------
-    // Encoder three modes
-    // -----------------
-    // RIT
-    UiDriver_DisplayRit(1);
-    //
-    if(ts.dmod_mode == DEMOD_CW)
-        UiDriver_DisplayKeyerSpeed(0);
-    else
-        UiDriver_DisplayLineInModeAndGain(0);
-#endif
     cw_gen_init();
 
     // DSP mode change
-    UiDriver_DisplayDSPMode();
+    // embedded in UiDriver_RefreshEncoderDisplay() call
+    // UiDriver_DisplayDSPMode(false);
 
     // Digital mode change
     UiDriver_DisplayDigitalMode();
@@ -5401,54 +5308,60 @@ static void UiDriver_DisplayCmpLevel(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayDSPMode()
+static void UiDriver_DisplayDSPMode(bool enabled)
 {
-    ushort color = White;
+    uint32_t clr = White;
+
+    char val_txt[7] = { 0x0 };
+    bool txt_is_value = false;
     const char* txt[2] = { "DSP", NULL };
 
     switch (ts.dsp_mode)
     {
     case DSP_SWITCH_OFF: //
-        color = Grey2;
+        clr = Grey2;
         txt[1] = "OFF";
         break;
     case DSP_SWITCH_NR:
         txt[1] = "NR";
-        color = White;
         break;
     case DSP_SWITCH_NOTCH:
-        color = White;
-        txt[1] = "NOTCH";
+        txt[1] = "A-NOTCH";
         break;
     case DSP_SWITCH_NR_AND_NOTCH:
-        color = White;
         txt[1] = "NR+NOTC";
         break;
     case DSP_SWITCH_NOTCH_MANUAL:
-        color = White;
-        txt[1] = "M-NOTCH";
+        txt[0] = "M-NOTCH";
+        snprintf(val_txt,7,"%5lu", ts.notch_frequency);
+        txt[1] = val_txt;
+        txt_is_value = true;
         break;
     case DSP_SWITCH_PEAK_FILTER:
-        color = White;
-        txt[1] = "PEAK";
+        txt[0] = "PEAK";
+        snprintf(val_txt,7,"%5lu", ts.peak_frequency);
+        txt[1] = val_txt;
+        txt_is_value = true;
         break;
     case DSP_SWITCH_BASS:
-        color = White;
         txt[1] = "BASS";
         break;
     case DSP_SWITCH_TREBLE:
-        color = White;
         txt[1] = "TREBLE";
         break;
     default:
-        color = Grey2;
+        clr = Grey2;
         txt[1] = "OFF";
         break;
     }
 
-    UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt[0],color,Blue,0);
-    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y+12),UI_LEFT_BOX_WIDTH,txt[1],color,Blue,0);
+#if 0
+    UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,bg_clr);
+    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt[0],clr,bg_clr,0);
+    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y+12),UI_LEFT_BOX_WIDTH,txt[1],clr,bg_clr,0);
+#else
+    UiDriver_LeftBoxDisplay(0,txt[0],enabled,txt[1],clr,txt_is_value);
+#endif
 }
 //
 //*----------------------------------------------------------------------------
@@ -5652,8 +5565,10 @@ static void UiDriver_DisplaySigProc(uchar enabled)
 {
     uint32_t 	color = enabled?White:Grey;
     char	temp[5];
-    const char* label;
+    const char *label, *val_txt;
     int32_t value;
+    bool is_active = false;
+    label = "NB";
 
     //
     // Noise blanker settings display
@@ -5673,11 +5588,12 @@ static void UiDriver_DisplaySigProc(uchar enabled)
         }
         label = "NB";
         value = ts.nb_setting;
+        is_active = true;
     }
     //
     // DSP settings display
     //
-    else	 			// DSP settings are to be displayed
+    else if (is_dsp_nr())	 			// DSP settings are to be displayed
     {
         // if(enabled && (is_dsp_nr()))	 	// if this menu is enabled AND the DSP NR is also enabled...
         if(enabled)     // if this menu is enabled AND the DSP NR is also enabled...
@@ -5691,16 +5607,23 @@ static void UiDriver_DisplaySigProc(uchar enabled)
             else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
                 color = Yellow;
         }
-        label = "DSP";
         value = ts.dsp_nr_strength;
+        is_active = true;
+        label = "NR";
     }
 
-    //
-    // display numerical value
-    //
-    sprintf(temp,"%02ld",value);
 
-    UiDriverEncoderDisplay(1,1,label, enabled, temp, color);
+    if (is_active == false)
+    {
+        val_txt = "off";
+    }
+    else
+    {
+        snprintf(temp,5,"%3ld",value);
+        val_txt = temp;
+    }
+
+    UiDriverEncoderDisplay(1,1,label, is_active & enabled, val_txt, color);
 }
 
 #define NOTCH_DELTA_Y (2*ENC_ROW_H)
@@ -5746,6 +5669,8 @@ static void UiDriver_DisplayTone(bool enabled)
 static void UiDriver_DisplayNotch(uchar enabled)
 {
 
+    UiDriver_DisplayDSPMode(enabled);
+#if 0
     if(enabled || ts.notch_enabled || ts.peak_enabled)
     {
         UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
@@ -5769,6 +5694,7 @@ static void UiDriver_DisplayNotch(uchar enabled)
     {
         UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
     }
+#endif
 }
 
 //
@@ -5805,35 +5731,22 @@ static void UiDriver_DisplayRit(uchar enabled)
 //*----------------------------------------------------------------------------
 void UiDriver_DisplayFilter()
 {
-    // Do a filter re-load
-//	if(!ui_only_update) {
-//		audio_driver_set_rx_audio_filter();
-//	}
     const char* filter_ptr;
-    uint32_t bg_clr = Blue;
-    uint32_t font_clr = White;
+    uint32_t font_clr= filter_path_change?Black:White;
 
+    const char *filter_names[2];
+
+    AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
+    if (filter_names[1] != NULL)
     {
-        const char *filter_names[2];
-
-        bg_clr = filter_path_change?Orange:Blue;
-        font_clr= filter_path_change?Black:White;
-
-        AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
-        UiLcdHy28_PrintTextCentered(POS_FIR_IND_X,POS_FIR_IND_Y,UI_LEFT_BOX_WIDTH,filter_names[0],font_clr,bg_clr,0);
-        if (filter_names[1] != NULL)
-        {
-            filter_ptr = filter_names[1];
-        }
-        else
-        {
-            filter_ptr = " ";
-        }
+        filter_ptr = filter_names[1];
     }
-    // Draw top line
-    UiLcdHy28_DrawStraightLine(POS_FIR_IND_X,(POS_FIR_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,bg_clr);
-    UiLcdHy28_PrintTextCentered(POS_FIR_IND_X,POS_FIR_IND_Y+12,UI_LEFT_BOX_WIDTH,filter_ptr,font_clr,bg_clr,0);
+    else
+    {
+        filter_ptr = " ";
+    }
 
+    UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr,false);
 }
 //
 //
