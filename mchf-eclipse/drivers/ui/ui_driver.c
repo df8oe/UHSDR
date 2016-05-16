@@ -77,6 +77,8 @@ static void		UiDriverTimeScheduler();				// Also handles audio gain and switchin
 static void 	UiDriverChangeDemodMode(uchar noskip);
 static void 	UiDriverChangeBand(uchar is_up);
 static bool 	UiDriverCheckFrequencyEncoder();
+
+
 static void 	UiDriverCheckEncoderOne();
 static void 	UiDriverCheckEncoderTwo();
 static void 	UiDriverCheckEncoderThree();
@@ -93,6 +95,8 @@ static void     UiDriver_DisplaySidetoneGain(bool encoder_active);
 static void     UiDriver_DisplayCmpLevel(bool encoder_active);
 static void     UiDriver_DisplayKeyerSpeed(bool encoder_active);
 static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
+
+
 static void 	UiDriver_DisplayDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
