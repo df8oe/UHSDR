@@ -266,7 +266,15 @@ void CatDriverFT817CheckAndExecute()
                 }
                 f *= 40;
                 df.tune_new = f - fdelta;
+
+                // FIXME: Remove disabled code below once proper operations has been verified
+                // Code below disabled since frequency change is executed in main loop.
+                // this introduces some milliseconds delay but this may happen anyway since too quick
+                // changes of frequency are blocked by frequency change code. It also prevents
+                // overload  by rapid stream of frequency change requests from CAT
+#if 0
                 UiDriver_FrequencyUpdateLOandDisplay(true);
+#endif
                 resp[0] = 0;
                 bc = 1;
                 if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
