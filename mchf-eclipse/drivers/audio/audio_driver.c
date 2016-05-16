@@ -26,7 +26,7 @@
 
 #include "audio_driver.h"
 #include "audio_management.h"
-#include "fm_dds_table.h"
+#include "dds_table.h"
 #include "ui_driver.h"
 #include "usbd_audio_core.h"
 #include "ui_spectrum.h"
@@ -2267,8 +2267,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             beep_accum += ads.beep_word;	// generate tone using frequency word, calculating next sample
             beep_accum &= 0xffff;				// limit to 16 Meg range
             beep_idx    = beep_accum >> DDS_ACC_SHIFT;	// shift accumulator to index sine table
-            beep_idx &= (FM_DDS_TBL_SIZE-1);		// limit lookup to range of sine table
-            ads.b_buffer[i] += (float32_t)(FM_DDS_TABLE[beep_idx] * ads.beep_loudness_factor);	// load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+            beep_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
+            ads.b_buffer[i] += (float32_t)(DDS_TABLE[beep_idx] * ads.beep_loudness_factor);	// load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
         }
         else					// beep not active - force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
             beep_accum = 0;
@@ -3053,8 +3053,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
                 fm_tone_accum += ads.fm_subaudible_tone_word;	// generate tone using frequency word, calculating next sample
                 fm_tone_accum &= 0xffffff;				// limit to 16 Meg range
                 fm_tone_idx    = fm_tone_accum >> FM_TONE_DDS_ACC_SHIFT;	// shift accumulator to index sine table
-                fm_tone_idx &= (FM_DDS_TBL_SIZE-1);		// limit lookup to range of sine table
-                ads.a_buffer[i] += ((float32_t)(FM_DDS_TABLE[fm_tone_idx]) * FM_TONE_AMPLITUDE_SCALING * fm_mod_mult);	// load indexed sine wave value, adding it to audio
+                fm_tone_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
+                ads.a_buffer[i] += ((float32_t)(DDS_TABLE[fm_tone_idx]) * FM_TONE_AMPLITUDE_SCALING * fm_mod_mult);	// load indexed sine wave value, adding it to audio
             }
         }
         //
@@ -3068,8 +3068,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
                 fm_tone_burst_accum += ads.fm_tone_burst_word;	// generate tone using frequency word, calculating next sample
                 fm_tone_burst_accum &= 0xffffff;				// limit to 16 Meg range
                 fm_tone_burst_idx    = fm_tone_burst_accum >> FM_TONE_DDS_ACC_SHIFT;	// shift accumulator to index sine table
-                fm_tone_burst_idx &= (FM_DDS_TBL_SIZE-1);		// limit lookup to range of sine table
-                ads.a_buffer[i] += ((float32_t)((FM_DDS_TABLE[fm_tone_burst_idx]) * FM_MOD_SCALING * fm_mod_mult) / FM_TONE_BURST_MOD_SCALING);	// load indexed sine wave value, adding it to audio
+                fm_tone_burst_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
+                ads.a_buffer[i] += ((float32_t)((DDS_TABLE[fm_tone_burst_idx]) * FM_MOD_SCALING * fm_mod_mult) / FM_TONE_BURST_MOD_SCALING);	// load indexed sine wave value, adding it to audio
             }
         }
         //
@@ -3081,11 +3081,11 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (ads.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));	// change frequency using scaled audio
             fm_mod_accum &= 0xffff;				// limit to 64k range
             fm_mod_idx    = fm_mod_accum >> DDS_ACC_SHIFT;
-            fm_mod_idx &= (FM_DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
-            ads.i_buffer[i] = (float32_t)(FM_DDS_TABLE[fm_mod_idx]);				// Load I value
-            fm_mod_idx += (FM_DDS_TBL_SIZE/4);	// do 90 degree shift by indexing 1/4 into sine table
-            fm_mod_idx &= (FM_DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
-            ads.q_buffer[i] = (float32_t)(FM_DDS_TABLE[fm_mod_idx]);	// Load Q value
+            fm_mod_idx &= (DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
+            ads.i_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);				// Load I value
+            fm_mod_idx += (DDS_TBL_SIZE/4);	// do 90 degree shift by indexing 1/4 into sine table
+            fm_mod_idx &= (DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
+            ads.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);	// Load Q value
         }
         //
         // Equalize based on band and simultaneously apply I/Q gain adjustments

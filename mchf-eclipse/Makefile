@@ -153,6 +153,7 @@ SRC =  \
     drivers/audio/filters/iq_rx_filter_7k5.c  \
     drivers/audio/filters/iq_rx_filter_am.c  \
     drivers/audio/softdds/softdds.c  \
+    drivers/audio/softdds/dds_table.c  \
     \
     drivers/cat/cat_driver.c  \
     drivers/cat/usb/usbd_bsp.c  \

@@ -8,17 +8,13 @@
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
-**  Last Modified:  October 2015 for FM Modulator by KA7OEI based on "dds_table.h" **
-**                  Also used for subaudible tone, burst and keyboard beep         **
-**  License:		CC BY-NC-SA 3.0                                                **
+**  Last Modified:                                                                 **
+**  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-#ifndef __FM_DDS_TABLE_H
-#define __FM_DDS_TABLE_H
+#include "dds_table.h"
 
-#define FM_DDS_TBL_SIZE		1024
-
-const short FM_DDS_TABLE[FM_DDS_TBL_SIZE] =
+const short DDS_TABLE[DDS_TBL_SIZE] =
 {
 
     // 1024 points
@@ -89,5 +85,3 @@ const short FM_DDS_TABLE[FM_DDS_TBL_SIZE] =
     -6392, -6195, -5997, -5799, -5601, -5403, -5205, -5006, -4807, -4608, -4409, -4210, -4011, -3811, -3611, -3411,
     -3211, -3011, -2811, -2610, -2410, -2209, -2009, -1808, -1607, -1406, -1206, -1005, -804, -603, -402, -201
 };
-
-#endif

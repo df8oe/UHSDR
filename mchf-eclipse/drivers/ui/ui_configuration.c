@@ -982,6 +982,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
         if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         {
+            // TODO: Look if less memory intensive approach is possible
             static uint8_t p[MAX_VAR_ADDR*2+2];
             ts.eeprombuf = p;
 

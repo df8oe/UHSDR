@@ -798,16 +798,34 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 
 void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
 {
-    float tonefreq = 0;
+    float tonefreq[2] = {0.0, 0.0};
     switch(dmod_mode)
     {
     case DEMOD_CW:
-        tonefreq = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
+        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
         break;
     default:
-        tonefreq = tune_mode?SSB_TUNE_FREQ:0.0;
+        tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
+
+// FIXME: Needs a menu entry for tune mode (single/two tone)
+        if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
+        {
+            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
+        }
     }
-    softdds_setfreq(tonefreq,ts.samp_rate,0);
+
+    if (tonefreq[1] != 0.0)
+    {
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+        softdds_setfreq(0.0,ts.samp_rate,0);
+    }
+    else
+    {
+        softdds_setfreq(tonefreq[0],ts.samp_rate,0);
+
+        tonefreq[0] = 0.0;
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+    }
 }
 
 /**
