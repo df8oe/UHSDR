@@ -104,7 +104,7 @@ signed int PutUnsignedInt(
     if ((value / 10) > 0)
     {
 
-        num = PutUnsignedInt(pStr, fill, width, value / 10,false);
+        num = PutUnsignedInt(pStr, fill, width, value / 10,signboth);
         pStr += num;
     }
 
@@ -170,12 +170,12 @@ signed int PutSignedInt(
         if (value < 0)
         {
 
-            num = PutSignedInt(pStr, fill, width, -(absolute / 10),false);
+            num = PutSignedInt(pStr, fill, width, -(absolute / 10),signboth);
         }
         else
         {
 
-            num = PutSignedInt(pStr, fill, width, absolute / 10,false);
+            num = PutSignedInt(pStr, fill, width, absolute / 10,signboth);
         }
         pStr += num;
     }

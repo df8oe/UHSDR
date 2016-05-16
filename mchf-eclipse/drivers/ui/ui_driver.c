@@ -55,7 +55,7 @@ static void 	UiDriverProcessKeyboard();
 static void 	UiDriverPressHoldStep(uchar is_up);
 static void 	UiDriverProcessFunctionKeyClick(ulong id);
 
-static void 	UiDriverShowBand(uchar band);
+static void 	UiDriver_DisplayBand(uchar band);
 static void 	UiDriverCreateDesktop();
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
 static void     UiDriverDeleteSMeter();
@@ -68,33 +68,35 @@ static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 static void 	UiDriverInitFrequency();
 //
 static void 	RadioManagement_SetHWFiltersForFrequency(ulong freq);
-static void RadioManagement_SetDemodMode(uint32_t new_mode);
+static void     RadioManagement_SetDemodMode(uint32_t new_mode);
 
-
-uchar 			UiDriver_ShowBandForFreq(ulong freq);
+uchar 			UiDriver_DisplayBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriverTimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriverChangeDemodMode(uchar noskip);
 static void 	UiDriverChangeBand(uchar is_up);
 static bool 	UiDriverCheckFrequencyEncoder();
+
+
 static void 	UiDriverCheckEncoderOne();
 static void 	UiDriverCheckEncoderTwo();
 static void 	UiDriverCheckEncoderThree();
 static void 	UiDriverChangeEncoderOneMode(bool just_display_no_change);
 static void 	UiDriverChangeEncoderTwoMode(bool just_display_no_change);
 static void 	UiDriverChangeEncoderThreeMode(bool just_display_no_change);
-static void 	UiDriver_DisplaySigProc(uchar enabled);
-static void 	UiDriver_DisplayNotch(uchar enabled);
-static void 	UiDriver_DisplayTone(bool enabled);
-static void 	UiDriver_DisplayRit(uchar enabled);
-static void UiDriver_DisplayAfGain(uchar enabled);
-static void UiDriver_DisplayRfGain(uchar enabled);
-static void UiDriver_DisplaySidetoneGain(uchar enabled);
-static void UiDriver_DisplayCmpLevel(uchar enabled);
-static void UiDriver_DisplayKeyerSpeed(uchar enabled);
-static void UiDriver_DisplayLineInModeAndGain(uchar enabled);
-static void 	UiDriver_DisplayDSPMode();
+static void 	UiDriver_DisplaySigProc(bool encoder_active);
+static void 	UiDriver_DisplayDSPMode(bool encoder_active);
+static void 	UiDriver_DisplayTone(bool encoder_active);
+static void 	UiDriver_DisplayRit(bool encoder_active);
+static void     UiDriver_DisplayAfGain(bool encoder_active);
+static void     UiDriver_DisplayRfGain(bool encoder_active);
+static void     UiDriver_DisplaySidetoneGain(bool encoder_active);
+static void     UiDriver_DisplayCmpLevel(bool encoder_active);
+static void     UiDriver_DisplayKeyerSpeed(bool encoder_active);
+static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
+
+
 static void 	UiDriver_DisplayDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
@@ -177,72 +179,29 @@ static void UiDriver_PowerDownCleanup(void);
 #define POS_BOTTOM_BAR_F1_X         (POS_BOTTOM_BAR_X + 2)
 #define POS_BOTTOM_BAR_F1_Y         POS_BOTTOM_BAR_Y
 
-// Virtual Button 2
-#define POS_BOTTOM_BAR_F2_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*1 +  4)
-#define POS_BOTTOM_BAR_F2_Y         POS_BOTTOM_BAR_Y
-
-// Virtual Button 3
-#define POS_BOTTOM_BAR_F3_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*2 +  6)
-#define POS_BOTTOM_BAR_F3_Y         POS_BOTTOM_BAR_Y
-
-// Virtual Button 4
-#define POS_BOTTOM_BAR_F4_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*3 +  8)
-#define POS_BOTTOM_BAR_F4_Y         POS_BOTTOM_BAR_Y
-
-// Virtual Button 5
-#define POS_BOTTOM_BAR_F5_X         (POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*4 + 10)
-#define POS_BOTTOM_BAR_F5_Y         POS_BOTTOM_BAR_Y
-
-// --------------------------------------------------
-// Encoder one controls indicator
-// audio gain
-#define POS_AG_IND_X                0
-#define POS_AG_IND_Y                16
 
 
 // --------------------------------------------------
-// Calibration mode
-//
-// PA bias
-#define POS_PB_IND_X                0
-#define POS_PB_IND_Y                78
-// IQ gain balance
-#define POS_BG_IND_X                0
-#define POS_BG_IND_Y                94
-// IQ phase balance
-#define POS_BP_IND_X                0
-#define POS_BP_IND_Y                110
-// Frequency Calibrate
-#define POS_FC_IND_X                0
-#define POS_FC_IND_Y                78
+// Encoder controls indicator
+#define POS_ENCODER_IND_X                0
+#define POS_ENCODER_IND_Y                16
 
-#define UI_LEFT_BOX_WIDTH 58 // used for the lower left side controls
+
+#define LEFTBOX_WIDTH 58 // used for the lower left side controls
 // --------------------------------------------------
 // Standalone controls
 //
 // DSP mode
 // Lower DSP box
-#define POS_DSPL_IND_X              0
-#define POS_DSPL_IND_Y              130
+#define POS_LEFTBOXES_IND_X              0
+#define POS_LEFTBOXES_IND_Y              130
 
 // Power level
 #define POS_PW_IND_X                POS_DEMOD_MODE_X -1
 #define POS_PW_IND_Y                POS_DEMOD_MODE_Y - 16
-// Filter indicator
-#define POS_FIR_IND_X               0
-#define POS_FIR_IND_Y               163
 
-// Upper DSP box
 #define POS_DIGMODE_IND_X              0
-#define POS_DIGMODE_IND_Y              (POS_FIR_IND_Y + 16+12)
-
-// ETH position
-#define POS_ETH_IND_X               220
-#define POS_ETH_IND_Y               2
-
-// USB Keyboard position
-#define POS_KBD_IND_X               220
-#define POS_KBD_IND_Y               18
+#define POS_DIGMODE_IND_Y              (163 + 16+12)
 
 // S meter position
 #define POS_SM_IND_X                116
@@ -251,10 +210,12 @@ static void UiDriver_PowerDownCleanup(void);
 // Supply Voltage indicator
 #define POS_PWRN_IND_X              0
 #define POS_PWRN_IND_Y              193
+
 #define POS_PWR_IND_X               4
 #define POS_PWR_IND_Y               (POS_PWRN_IND_Y + 15)
 #define COL_PWR_IND                 White
 
+// Temperature Indicator
 #define POS_TEMP_IND_X              0
 #define POS_TEMP_IND_Y              0
 //
@@ -1918,70 +1879,64 @@ void UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_
 #define ENC_ROW_H (16+12+2)
 #define ENC_ROW_2ND_OFF 14
 
-void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char *label, bool enabled,
-                            char temp[5], uint32_t color)
+void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char *label, bool encoder_active,
+                            const char temp[5], uint32_t color)
 {
 
-    uint32_t label_color = enabled?Black:Grey1;
+    uint32_t label_color = encoder_active?Black:Grey1;
 
-#if 0
-    // old style
-    uint32_t bg_color = Grey;
-    uint32_t brdr_color = Grey;
-#else
     // max visibility of active element
-    uint32_t bg_color = enabled?Orange:Grey;
-    uint32_t brdr_color = enabled?Orange:Grey;
-#endif
+    uint32_t bg_color = encoder_active?Orange:Grey;
+    uint32_t brdr_color = encoder_active?Orange:Grey;
 
-    UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + ENC_COL_W * column, POS_AG_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
-    UiLcdHy28_PrintTextCentered((POS_AG_IND_X + 1 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
+    UiLcdHy28_DrawEmptyRect(POS_ENCODER_IND_X + ENC_COL_W * column, POS_ENCODER_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
+    UiLcdHy28_PrintTextCentered((POS_ENCODER_IND_X + 1 + ENC_COL_W * column), (POS_ENCODER_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
                         label_color, bg_color, 0);
-    UiLcdHy28_PrintTextRight((POS_AG_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (POS_AG_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
+    UiLcdHy28_PrintTextRight((POS_ENCODER_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (POS_ENCODER_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
                              color, Black, 0);
 }
 
 #define LEFTBOX_ROW_H  (14+12+2)
 #define LEFTBOX_ROW_2ND_OFF  (13)
-static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool enabled,
+static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
                             const char* text, uint32_t color, bool text_is_value)
 {
 
-    uint32_t label_color = enabled?Black:color;
+    uint32_t label_color = encoder_active?Black:color;
 
     // max visibility of active element
-    uint32_t bg_color = enabled?Orange:Blue;
-    uint32_t brdr_color = enabled?Orange:Blue;
+    uint32_t bg_color = encoder_active?Orange:Blue;
+    uint32_t brdr_color = encoder_active?Orange:Blue;
 
 
-    UiLcdHy28_DrawEmptyRect(POS_DSPL_IND_X, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H), LEFTBOX_ROW_H - 2, UI_LEFT_BOX_WIDTH - 2, brdr_color);
-    UiLcdHy28_PrintTextCentered(POS_DSPL_IND_X + 1, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1,UI_LEFT_BOX_WIDTH - 3, label,
+    UiLcdHy28_DrawEmptyRect(POS_LEFTBOXES_IND_X, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H), LEFTBOX_ROW_H - 2, LEFTBOX_WIDTH - 2, brdr_color);
+    UiLcdHy28_PrintTextCentered(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1,LEFTBOX_WIDTH - 3, label,
                         label_color, bg_color, 0);
 
     // this causes flicker, but I am too lazy to fix that now
-    UiLcdHy28_DrawFullRect(POS_DSPL_IND_X + 1, POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + 12, LEFTBOX_ROW_H - 4 - 11, UI_LEFT_BOX_WIDTH - 3, text_is_value?Black:bg_color);
+    UiLcdHy28_DrawFullRect(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + 12, LEFTBOX_ROW_H - 4 - 11, LEFTBOX_WIDTH - 3, text_is_value?Black:bg_color);
     if (text_is_value)
     {
-        UiLcdHy28_PrintTextRight((POS_DSPL_IND_X + UI_LEFT_BOX_WIDTH - 4), (POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
+        UiLcdHy28_PrintTextRight((POS_LEFTBOXES_IND_X + LEFTBOX_WIDTH - 4), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
                 color, text_is_value?Black:bg_color, 0);
     }
     else
     {
-        UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X + 1), (POS_DSPL_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF),UI_LEFT_BOX_WIDTH - 3, text,
+        UiLcdHy28_PrintTextCentered((POS_LEFTBOXES_IND_X + 1), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF),LEFTBOX_WIDTH - 3, text,
                 color, bg_color, 0);
     }
 }
 
 
-void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool enabled,
+void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool encoder_active,
                                   uint32_t value)
 {
 
     char temp[5];
-    uint32_t color = enabled?White:Grey;
+    uint32_t color = encoder_active?White:Grey;
 
     snprintf(temp,5,"%2lu",value);
-    UiDriverEncoderDisplay(column, row, label, enabled,
+    UiDriverEncoderDisplay(column, row, label, encoder_active,
                            temp, color);
 }
 //*----------------------------------------------------------------------------
@@ -2527,25 +2482,6 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 //
                 // Grey out adjustments and put encoders in known states
                 //
-#if 0
-                if(ts.dmod_mode == DEMOD_CW)
-                    UiDriver_DisplaySidetoneGain(0);
-                else
-                    UiDriver_DisplayCmpLevel(0);
-                //
-                UiDriver_DisplaySigProc(0);
-                UiDriver_DisplayRfGain(0);
-                if(ts.dmod_mode == DEMOD_CW)
-                    UiDriver_DisplayKeyerSpeed(0);
-                else
-                    UiDriver_DisplayLineInModeAndGain(0);
-                //
-                UiDriver_DisplayRit(0);
-                //
-                // Enable volume control when in MENU mode
-                //
-                UiDriver_DisplayAfGain(1);
-#endif
                 UiDriver_RefreshEncoderDisplay();
 
                 ts.menu_var = 0;
@@ -2885,7 +2821,7 @@ const BandGenInfo bandGenInfo[] =
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverShowBand(uchar band)
+static void UiDriver_DisplayBand(uchar band)
 {
     const char* bandName;
     bool print_bc_name = true;
@@ -2987,7 +2923,7 @@ static void UiDriverCreateDesktop()
     UiLcdHy28_LcdClear(Black);
 
     // Create Band value
-    UiDriverShowBand(ts.band);
+    UiDriver_DisplayBand(ts.band);
 
     // Set filters
     RadioManagement_ChangeBandFilter(ts.band);
@@ -3550,11 +3486,6 @@ static void UiDriverUpdateBtmMeter(uchar val, uchar warn)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-
-void dummy()
-{
-
-}
 static void UiDriverInitFrequency()
 {
     ulong i;
@@ -3584,15 +3515,10 @@ static void UiDriverInitFrequency()
     df.temp_factor_changed = false;
     df.temp_enabled = 0;		// startup state of TCXO
 
-    //if(ts.band == BAND_MODE_4)
-    //	df.transv_freq = TRANSVT_FREQ_A;
-    //else
-//	df.transv_freq	= 0;	// LO freq, zero on HF, 42 Mhz on 4m
-
     // Set virtual segments initial value (diff than zero!)
     df.dial_digits[8]	= 0;
-    df.dial_digits[7]	= 1;
-    df.dial_digits[6]	= 4;
+    df.dial_digits[7]	= 0;
+    df.dial_digits[6]	= 0;
     df.dial_digits[5]	= 0;
     df.dial_digits[4]	= 0;
     df.dial_digits[3]	= 0;
@@ -3600,19 +3526,6 @@ static void UiDriverInitFrequency()
     df.dial_digits[1]	= 0;
     df.dial_digits[0]	= 0;
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckFilter
-//* Object              : Sets the filter appropriate for the currently-tuned frequency
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-
-
-
 
 /**
  * @brief Select and activate the correct BPF for the frequency given in @p freq
@@ -3622,7 +3535,7 @@ static void UiDriverInitFrequency()
  *
  * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
  */
-// TODO: Split into RF HAL Part and UI Part
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverCheckBand
 //* Object              : Checks in which band the current frequency lies
@@ -3631,14 +3544,14 @@ static void UiDriverInitFrequency()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-uchar UiDriver_ShowBandForFreq(ulong freq)
+uchar UiDriver_DisplayBandForFreq(ulong freq)
 {
     // here we maintain our local state of the last band shown
     static uint8_t ui_band_scan_old = 99;
     uint8_t band_scan = RadioManagement_GetBand(freq);
     if(band_scan != ui_band_scan_old || band_scan == BAND_MODE_GEN)        // yes, did the band actually change?
     {
-        UiDriverShowBand(band_scan);    // yes, update the display with the current band
+        UiDriver_DisplayBand(band_scan);    // yes, update the display with the current band
     }
     ui_band_scan_old = band_scan;
     return band_scan;
@@ -3712,7 +3625,7 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 
             if (mode != UFM_SMALL_TX)
             {
-                UiDriver_ShowBandForFreq(dial_freq);
+                UiDriver_DisplayBandForFreq(dial_freq);
                 // check which band in which we are currently tuning and update the display
 
                 UiDriverUpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
@@ -4084,33 +3997,10 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             enc_one_mode = ts.enc_one_mode;
             ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
             UiDriverChangeEncoderOneMode(true);
-#if 0
-            UiDriver_DisplayAfGain(0);    // Audio gain disabled
-
-            if(ts.dmod_mode != DEMOD_CW)
-            {
-                UiDriver_DisplayCmpLevel(1);    // enable compression adjust if voice mode
-            }
-            else
-            {
-                UiDriver_DisplaySidetoneGain(1);  // enable sidetone gain if CW mode
-            }
-#endif
             // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
             enc_three_mode = ts.enc_thr_mode;
             ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
             UiDriverChangeEncoderThreeMode(true);
-#if 0
-            UiDriver_DisplayRit(0);
-            if(ts.dmod_mode != DEMOD_CW)
-            {
-                UiDriver_DisplayLineInModeAndGain(1);       // enable audio gain
-            }
-            else
-            {
-                UiDriver_DisplayKeyerSpeed(1);  // enable keyer speed if it was CW mode
-            }
-#endif
         }
         else if (state == TRX_STATE_TX_TO_RX)
         {
@@ -4121,36 +4011,8 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             // Yes, Switch to audio gain mode
             ts.enc_one_mode = enc_one_mode;
             UiDriverChangeEncoderOneMode(true);
-#if 0
-            if(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN)      // are we to switch back to audio mode?
-            {
-                UiDriver_DisplayAfGain(1);  // Yes, audio gain enabled
-                if(ts.dmod_mode != DEMOD_CW)
-                {
-                    UiDriver_DisplayCmpLevel(0);  // disable compression level (if in voice mode)
-                }
-                else
-                {
-                    UiDriver_DisplaySidetoneGain(0);    // disable sidetone gain (if in CW mode)
-                }
-            }
-#endif
             ts.enc_thr_mode = enc_three_mode;
             UiDriverChangeEncoderThreeMode(true);
-#if 0
-            if(ts.enc_thr_mode == ENC_THREE_MODE_RIT)           // are we to switch back to RIT mode?
-            {
-                UiDriver_DisplayRit(1);         // enable RIT
-                if(ts.dmod_mode != DEMOD_CW)
-                {
-                    UiDriver_DisplayLineInModeAndGain(0);     // disable audio gain if it was voice mode
-                }
-                else
-                {
-                    UiDriver_DisplayKeyerSpeed(0);    // disable keyer speed if it was CW mode
-                }
-            }
-#endif
         }
     }
 
@@ -4161,15 +4023,10 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
     }
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverKeypadCheck, adjust volume and return to RX from TX and other time-related functions
-//* Object              : implemented as state machine, to avoid (additional) interrupts
-//* Object              : and stall of app loop
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * adjust volume and return to RX from TX and other time-related functions,
+ * has to be called regularly
+ */
 static void UiDriverTimeScheduler()
 {
     static bool	 unmute_flag = 1;
@@ -4646,14 +4503,13 @@ static void UiDriverChangeBand(uchar is_up)
         // Load frequency value - either from memory or default for
         // the band if this is first band selection
         if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
+        {
             df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
+        }
         else
+        {
             df.tune_new = new_band_freq; 					// Load new frequency from startup
-
-        //	UiDriverUpdateFrequency(1,0);
-
-        //	// Also reset second freq display
-        //	UiDriverUpdateSecondLcdFreq(df.tune_new/TUNE_MULT);
+        }
 
         // Change decode mode if need to
         if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
@@ -4667,7 +4523,7 @@ static void UiDriverChangeBand(uchar is_up)
 
 
         // Create Band value
-        UiDriverShowBand(new_band_index);
+        UiDriver_DisplayBand(new_band_index);
 
         // Set TX power factor
         RadioManagement_SetBandPowerFactor(new_band_index);
@@ -4974,7 +4830,7 @@ static void UiDriverCheckEncoderTwo()
                         // display notch frequency
                         // set notch filter instance
                         audio_driver_set_rx_audio_filter();
-                        UiDriver_DisplayNotch(1);
+                        UiDriver_DisplayDSPMode(1);
                     }
                     break;
                 case ENC_TWO_MODE_BASS_GAIN:
@@ -5013,7 +4869,7 @@ static void UiDriverCheckEncoderTwo()
                         // set notch filter instance
                         audio_driver_set_rx_audio_filter();
                         // display peak frequency
-                        UiDriver_DisplayNotch(1);
+                        UiDriver_DisplayDSPMode(1);
                     }
                     break;
                 default:
@@ -5176,35 +5032,35 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
     case ENC_TWO_MODE_RF_GAIN:
         UiDriver_DisplayRfGain(1*inactive_mult);
         UiDriver_DisplaySigProc(0);
-        UiDriver_DisplayNotch(0);
+        UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_SIG_PROC:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplaySigProc(1*inactive_mult);
-        UiDriver_DisplayNotch(0);
+        UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_NOTCH_F:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplaySigProc(0);
-        UiDriver_DisplayNotch(1*inactive_mult);
+        UiDriver_DisplayDSPMode(1*inactive_mult);
         break;
     case ENC_TWO_MODE_PEAK_F:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplaySigProc(0);
-        UiDriver_DisplayNotch(1*inactive_mult);
+        UiDriver_DisplayDSPMode(1*inactive_mult);
         break;
     case ENC_TWO_MODE_BASS_GAIN:
-        UiDriver_DisplayNotch(0);
+        UiDriver_DisplayDSPMode(0);
         UiDriver_DisplayTone(1*inactive_mult);
         break;
     case ENC_TWO_MODE_TREBLE_GAIN:
-        UiDriver_DisplayNotch(0);
+        UiDriver_DisplayDSPMode(0);
         UiDriver_DisplayTone(1*inactive_mult);
         break;
     default:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplaySigProc(0);
-        UiDriver_DisplayNotch(0);
+        UiDriver_DisplayDSPMode(0);
         break;
     }
 
@@ -5259,9 +5115,9 @@ static void UiDriverChangeEncoderThreeMode(bool just_display_no_change)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayAfGain(uchar enabled)
+static void UiDriver_DisplayAfGain(bool encoder_active)
 {
-    UiDriverEncoderDisplaySimple(0,0,"AFG", enabled, ts.rx_gain[RX_AUDIO_SPKR].value);
+    UiDriverEncoderDisplaySimple(0,0,"AFG", encoder_active, ts.rx_gain[RX_AUDIO_SPKR].value);
 }
 
 //*----------------------------------------------------------------------------
@@ -5271,9 +5127,9 @@ static void UiDriver_DisplayAfGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplaySidetoneGain(uchar enabled)
+static void UiDriver_DisplaySidetoneGain(bool encoder_active)
 {
-    UiDriverEncoderDisplaySimple(1,0,"STG", enabled, ts.st_gain);
+    UiDriverEncoderDisplaySimple(1,0,"STG", encoder_active, ts.st_gain);
 }
 
 //*----------------------------------------------------------------------------
@@ -5283,9 +5139,9 @@ static void UiDriver_DisplaySidetoneGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayCmpLevel(uchar enabled)
+static void UiDriver_DisplayCmpLevel(bool encoder_active)
 {
-    ushort 	color = enabled?White:Grey;
+    ushort 	color = encoder_active?White:Grey;
     char	temp[5];
 
     if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
@@ -5298,7 +5154,7 @@ static void UiDriver_DisplayCmpLevel(uchar enabled)
         color = Yellow;	// Stored value - use yellow
     }
 
-    UiDriverEncoderDisplay(1,0,"CMP" , enabled, temp, color);
+    UiDriverEncoderDisplay(1,0,"CMP" , encoder_active, temp, color);
 }
 //
 //*----------------------------------------------------------------------------
@@ -5308,7 +5164,7 @@ static void UiDriver_DisplayCmpLevel(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayDSPMode(bool enabled)
+static void UiDriver_DisplayDSPMode(bool encoder_active)
 {
     uint32_t clr = White;
 
@@ -5355,13 +5211,7 @@ static void UiDriver_DisplayDSPMode(bool enabled)
         break;
     }
 
-#if 0
-    UiLcdHy28_DrawStraightLine(POS_DSPL_IND_X,(POS_DSPL_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,bg_clr);
-    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y),UI_LEFT_BOX_WIDTH,txt[0],clr,bg_clr,0);
-    UiLcdHy28_PrintTextCentered((POS_DSPL_IND_X),(POS_DSPL_IND_Y+12),UI_LEFT_BOX_WIDTH,txt[1],clr,bg_clr,0);
-#else
-    UiDriver_LeftBoxDisplay(0,txt[0],enabled,txt[1],clr,txt_is_value);
-#endif
+    UiDriver_LeftBoxDisplay(0,txt[0],encoder_active,txt[1],clr,txt_is_value);
 }
 //
 //*----------------------------------------------------------------------------
@@ -5411,8 +5261,8 @@ static void UiDriver_DisplayDigitalMode()
     const char* txt = digimodes[ts.digital_mode].label;
 
     // Draw line for box
-    UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),UI_LEFT_BOX_WIDTH,txt,color,Blue,0);
+    UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
+    UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,Blue,0);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel
@@ -5456,19 +5306,19 @@ static void UiDriver_DisplayPowerLevel()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayKeyerSpeed(uchar enabled)
+static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
 {
-    ushort 	color = enabled?White:Grey;
+    ushort 	color = encoder_active?White:Grey;
     const char* txt;
     char  txt_buf[5];
 
-    if(enabled)
+    if(encoder_active)
         color = White;
 
     txt = "WPM";
     sprintf(txt_buf,"%2d",ts.keyer_speed);
 
-    UiDriverEncoderDisplay(1,2,txt, enabled, txt_buf, color);
+    UiDriverEncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
 
 
@@ -5479,9 +5329,9 @@ static void UiDriver_DisplayKeyerSpeed(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayLineInModeAndGain(uchar enabled)
+static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
 {
-    ushort 	color = enabled?White:Grey;
+    ushort 	color = encoder_active?White:Grey;
     const char* txt;
     char  txt_buf[5];
 
@@ -5508,7 +5358,7 @@ static void UiDriver_DisplayLineInModeAndGain(uchar enabled)
 
     sprintf(txt_buf,"%2d",ts.tx_gain[ts.tx_audio_source]);
 
-    UiDriverEncoderDisplay(1,2,txt, enabled, txt_buf, color);
+    UiDriverEncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
 
 //*----------------------------------------------------------------------------
@@ -5518,9 +5368,9 @@ static void UiDriver_DisplayLineInModeAndGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayRfGain(uchar enabled)
+static void UiDriver_DisplayRfGain(bool encoder_active)
 {
-    uint32_t color = enabled?White:Grey;
+    uint32_t color = encoder_active?White:Grey;
 
     char	temp[5];
     const char* label = ts.dmod_mode==DEMOD_FM?"SQL":"RFG";
@@ -5529,7 +5379,7 @@ static void UiDriver_DisplayRfGain(uchar enabled)
 
     if(ts.dmod_mode != DEMOD_FM)	 	// If not FM, use RF gain
     {
-        if(enabled)
+        if(encoder_active)
         {
             //
             // set color as warning that RX sensitivity is reduced
@@ -5550,7 +5400,7 @@ static void UiDriver_DisplayRfGain(uchar enabled)
 
     sprintf(temp," %02ld",value);
 
-    UiDriverEncoderDisplay(0,1,label, enabled, temp, color);
+    UiDriverEncoderDisplay(0,1,label, encoder_active, temp, color);
 
 }
 
@@ -5561,11 +5411,11 @@ static void UiDriver_DisplayRfGain(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplaySigProc(uchar enabled)
+static void UiDriver_DisplaySigProc(bool encoder_active)
 {
-    uint32_t 	color = enabled?White:Grey;
+    uint32_t 	color = encoder_active?White:Grey;
     char	temp[5];
-    char *label, *val_txt;
+    const char *label, *val_txt;
     int32_t value;
     bool is_active = false;
     label = "NB";
@@ -5575,7 +5425,7 @@ static void UiDriver_DisplaySigProc(uchar enabled)
     //
     if(is_dsp_nb())	 	// is noise blanker to be displayed
     {
-        if(enabled)
+        if(encoder_active)
         {
             if(ts.nb_setting >= NB_WARNING3_SETTING)
                 color = Red;		// above this value, make it red
@@ -5596,7 +5446,7 @@ static void UiDriver_DisplaySigProc(uchar enabled)
     else if (is_dsp_nr())	 			// DSP settings are to be displayed
     {
         // if(enabled && (is_dsp_nr()))	 	// if this menu is enabled AND the DSP NR is also enabled...
-        if(enabled)     // if this menu is enabled AND the DSP NR is also enabled...
+        if(encoder_active)     // if this menu is enabled AND the DSP NR is also enabled...
         {
             color = White;		// Make it white by default
             //
@@ -5623,7 +5473,7 @@ static void UiDriver_DisplaySigProc(uchar enabled)
         val_txt = temp;
     }
 
-    UiDriverEncoderDisplay(1,1,label, is_active & enabled, val_txt, color);
+    UiDriverEncoderDisplay(1,1,label, is_active & encoder_active, val_txt, color);
 }
 
 #define NOTCH_DELTA_Y (2*ENC_ROW_H)
@@ -5635,7 +5485,7 @@ static void UiDriver_DisplaySigProc(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayTone(bool enabled)
+static void UiDriver_DisplayTone(bool encoder_active)
 {
 
     // UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16 + 12 , 112, Black);
@@ -5645,7 +5495,7 @@ static void UiDriver_DisplayTone(bool enabled)
     snprintf(temp,5,"%3d", ts.bass_gain);
 
     // use 2,1 for placement below existing boxes
-    UiDriverEncoderDisplay(0,1,"BAS", enable && enabled, temp, White);
+    UiDriverEncoderDisplay(0,1,"BAS", enable && encoder_active, temp, White);
 
 
     enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
@@ -5653,49 +5503,9 @@ static void UiDriver_DisplayTone(bool enabled)
     snprintf(temp,5,"%3d", ts.treble_gain);
 
     // use 2,2 for placement below existing boxes
-    UiDriverEncoderDisplay(1,1,"TRB", enable && enabled, temp, White);
+    UiDriverEncoderDisplay(1,1,"TRB", enable && encoder_active, temp, White);
 
 } // end void UiDriverDisplayBass
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDisplayNotch
-//* Object              : Display settings related to manual notch filter
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-static void UiDriver_DisplayNotch(uchar enabled)
-{
-
-    UiDriver_DisplayDSPMode(enabled);
-#if 0
-    if(enabled || ts.notch_enabled || ts.peak_enabled)
-    {
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
-        uint32_t label_color = enabled?Black:Grey1;
-        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
-
-        UiLcdHy28_PrintText((POS_AG_IND_X + 1), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), ts.notch_enabled?"NOTCH ":"PEAK-F",
-                label_color, Grey, 0);
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X + 47, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 7, Grey);
-
-        UiLcdHy28_DrawEmptyRect(POS_AG_IND_X + 56, POS_AG_IND_Y + NOTCH_DELTA_Y, 13, 53, Grey);
-
-        char temp[6];
-        uint32_t color = enabled?White:Grey;
-        if(ts.notch_enabled || ts.peak_enabled) color = Yellow;
-        snprintf(temp,6,"%5lu", (ulong)(ts.notch_enabled?ts.notch_frequency:ts.peak_frequency));
-        UiLcdHy28_PrintTextRight((POS_AG_IND_X + 52 + 56), (POS_AG_IND_Y + 1 + NOTCH_DELTA_Y), temp,
-                color, Black, 0);
-    }
-    else
-    {
-        UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16, 112, Black);
-    }
-#endif
-}
 
 //
 //*----------------------------------------------------------------------------
@@ -5705,21 +5515,21 @@ static void UiDriver_DisplayNotch(uchar enabled)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplayRit(uchar enabled)
+static void UiDriver_DisplayRit(bool encoder_active)
 {
     char	temp[5];
     uint32_t color;
     if(ts.rit_value)
         color = Green;
     else
-        color = enabled?White:Grey;
+        color = encoder_active?White:Grey;
 
     if(ts.rit_value)
         sprintf(temp,"%+3i", ts.rit_value);
     else
         sprintf(temp,"%3i", ts.rit_value);
 
-    UiDriverEncoderDisplay(0,2,"RIT", enabled, temp, color);
+    UiDriverEncoderDisplay(0,2,"RIT", encoder_active, temp, color);
 }
 
 //*----------------------------------------------------------------------------
@@ -6251,7 +6061,7 @@ static void UiDriver_CreateVoltageDisplay() {
     // Create voltage
     // UiLcdHy28_DrawStraightLine   (POS_PWRN_IND_X,(POS_PWRN_IND_Y - 1),UI_LEFT_BOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
     // UiLcdHy28_PrintTextCentered  (POS_PWRN_IND_X, POS_PWRN_IND_Y,UI_LEFT_BOX_WIDTH,"VCC", White,     Blue, 0);
-    UiLcdHy28_PrintTextCentered (POS_PWR_IND_X,POS_PWR_IND_Y,UI_LEFT_BOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
+    UiLcdHy28_PrintTextCentered (POS_PWR_IND_X,POS_PWR_IND_Y,LEFTBOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 }
 
 
