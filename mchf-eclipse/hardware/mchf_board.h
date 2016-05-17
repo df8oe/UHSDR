@@ -735,6 +735,15 @@ enum
     DISPLAY_HY28B_PARALLEL
 };
 
+// Enumeration of transmit tune  modes
+typedef enum
+{
+    TUNE_TONE_SINGLE = 0,
+    TUNE_TONE_TWO,
+    TUNE_TONE_MAX,
+} TuneToneMode;
+
+
 typedef struct Gain_s
 {
     uint8_t value;
@@ -1140,6 +1149,7 @@ typedef struct TransceiverState
     uchar c_line;					// position of center line
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 	uint8_t test;
+	TuneToneMode tune_tone_mode;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

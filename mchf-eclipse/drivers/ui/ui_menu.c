@@ -618,6 +618,7 @@ const MenuDescriptor confGroup[] =
 const MenuDescriptor powGroup[] =
 {
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"P00","Tune Power Level"},
+    { MENU_POW, MENU_ITEM, CONFIG_TUNE_TONE_MODE,"P99","Tune Tone (SSB)"},
     { MENU_POW, MENU_ITEM, CONFIG_REDUCE_POWER_ON_LOW_BANDS,"P0A","Reduce Power on Low Bands"},
     { MENU_CONF, MENU_ITEM, CONFIG_CW_PA_BIAS,"260","CW PA Bias (If >0 )"},
     { MENU_CONF, MENU_ITEM, CONFIG_PA_BIAS,"261","PA Bias"},
@@ -3735,34 +3736,57 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Red;					// warn user that filter is off!
         }
         break;
-    case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
-        tchange = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tune_power_level,
-                                              0,
-                                              PA_LEVEL_MAX_ENTRY,
-                                              PA_LEVEL_MAX_ENTRY,
+    case CONFIG_TUNE_TONE_MODE: // set power for antenne tuning
+        temp_var = ts.menu_var_changed;
+        // this is not save, so no need to mark as dirty,
+        // we just remember the state and restore it
+        tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tune_tone_mode,
+                                              TUNE_TONE_SINGLE,
+                                              TUNE_TONE_TWO,
+                                              TUNE_TONE_SINGLE,
                                               1);
-        switch(ts.tune_power_level)
+        switch(ts.tune_tone_mode)
         {
-        case PA_LEVEL_FULL:
-            txt_ptr = "FULL POWER";
+        case TUNE_TONE_SINGLE:
+            txt_ptr = "  Single";
             break;
-        case PA_LEVEL_5W:
-            txt_ptr = "        5W";
+        case TUNE_TONE_TWO:
+            txt_ptr = "Two Tone";
             break;
-        case PA_LEVEL_2W:
-            txt_ptr = "        2W";
-            break;
-        case PA_LEVEL_1W:
-            txt_ptr = "        1W";
-            break;
-        case PA_LEVEL_0_5W:
-            txt_ptr = "      0.5W";
-            break;
-        case PA_LEVEL_MAX_ENTRY:
-            txt_ptr = " as TX PWR";
+        default:
             break;
         }
+        ts.menu_var_changed = temp_var;
         break;
+        case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
+            tchange = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tune_power_level,
+                                                  0,
+                                                  PA_LEVEL_MAX_ENTRY,
+                                                  PA_LEVEL_MAX_ENTRY,
+                                                  1);
+            switch(ts.tune_power_level)
+            {
+            case PA_LEVEL_FULL:
+                txt_ptr = "FULL POWER";
+                break;
+            case PA_LEVEL_5W:
+                txt_ptr = "        5W";
+                break;
+            case PA_LEVEL_2W:
+                txt_ptr = "        2W";
+                break;
+            case PA_LEVEL_1W:
+                txt_ptr = "        1W";
+                break;
+            case PA_LEVEL_0_5W:
+                txt_ptr = "      0.5W";
+                break;
+            case PA_LEVEL_MAX_ENTRY:
+                txt_ptr = " as TX PWR";
+                break;
+            }
+            break;
+
     case CONFIG_SPECTRUM_FFT_WINDOW_TYPE:	// set step size of of waterfall display?
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
                                               0,
