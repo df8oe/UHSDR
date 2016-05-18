@@ -807,7 +807,6 @@ void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
     default:
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
 
-// FIXME: Needs a menu entry for tune mode (single/two tone)
         if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
         {
             tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
