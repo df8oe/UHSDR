@@ -3250,6 +3250,9 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     static bool to_tx = 0;	// used as a flag to clear the TX buffer
     static uchar lcd_dim = 0, lcd_dim_prescale = 0;
     static ulong tcount = 0;
+    
+    if(ts.show_tp_coordinates)
+  	  mchf_board_green_led(1);
 
     if((ts.txrx_mode == TRX_MODE_RX))
     {
@@ -3340,4 +3343,9 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     //
     if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
         ts.spectrum_scope_scheduler--;
+
+
+    if(ts.show_tp_coordinates)
+  	  mchf_board_green_led(0);
+
 }
