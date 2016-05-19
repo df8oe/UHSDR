@@ -586,23 +586,31 @@ extern const ButtonMap  bm[BUTTON_NUM];
 #define	DEFAULT_FREQ_OFFSET		4000				// Amount of offset (at LO freq) when loading "default" frequency
 //
 // encoder one
-#define ENC_ONE_MODE_AUDIO_GAIN		0
-#define ENC_ONE_MODE_ST_GAIN		1
-#define ENC_ONE_MAX_MODE			1
+typedef enum {
+    ENC_ONE_MODE_AUDIO_GAIN	 = 0,
+    ENC_ONE_MODE_ST_GAIN,
+    ENC_ONE_NUM_MODES
+} EncoderOneModes;
 //
 // encoder two
-#define ENC_TWO_MODE_RF_GAIN		0
-#define ENC_TWO_MODE_SIG_PROC		1
-#define ENC_TWO_MODE_NOTCH_F		2
-#define ENC_TWO_MODE_PEAK_F			3
-#define ENC_TWO_MODE_BASS_GAIN		4
-#define ENC_TWO_MODE_TREBLE_GAIN	5
-#define ENC_TWO_MAX_MODE			6
+typedef enum {
+    ENC_TWO_MODE_RF_GAIN =		0,
+    ENC_TWO_MODE_SIG_PROC,
+    ENC_TWO_MODE_NR,
+    ENC_TWO_MODE_NOTCH_F,
+    ENC_TWO_MODE_PEAK_F,
+    ENC_TWO_MODE_BASS_GAIN,
+    ENC_TWO_MODE_TREBLE_GAIN,
+    ENC_TWO_NUM_MODES
+} EncoderTwoModes;
 //
 // encoder three
-#define ENC_THREE_MODE_RIT			0
-#define ENC_THREE_MODE_CW_SPEED		1
-#define ENC_THREE_MAX_MODE			2
+typedef enum {
+    ENC_THREE_MODE_RIT =			0,
+    ENC_THREE_MODE_CW_SPEED,
+    ENC_THREE_MAX_MODE
+} EncoderThreeModes;
+
 //
 //
 #define CW_MODE_IAM_B				0
@@ -795,6 +803,12 @@ typedef struct TransceiverState
     Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
 
     int 	rf_gain;			// RF gain control
+
+
+#define MAX_RF_CODEC_GAIN_VAL       9       // Maximum RF gain setting
+#define DEFAULT_RF_CODEC_GAIN_VAL   9       // Default RF gain setting (9 = AUTO mode)
+#define RF_CODEC_GAIN_AUTO   9       // Default RF gain setting (9 = AUTO mode)
+
     uchar	rf_codec_gain;		// gain for codec (A/D converter) in receive mode
     uchar 	nb_setting;
     uchar	st_gain;
@@ -974,7 +988,8 @@ typedef struct TransceiverState
 #define DSP_NR_POSTAGC_ENABLE 	  0x02
 #define DSP_NOTCH_ENABLE 0x04
 #define DSP_NB_ENABLE 0x08
-
+#define DSP_MNOTCH_ENABLE 0x10
+#define DSP_MPEAK_ENABLE 0x20
 
     uchar	dsp_active;					// Used to hold various aspects of DSP mode selection
     // LSB = 1 if DSP NR mode is on (| 1)
@@ -1131,10 +1146,8 @@ typedef struct TransceiverState
     uchar	tune_power_level;		// TX power in antenna tuning function
     uchar	power_temp;				// temporary tx power if tune is different from actual tx power
     uchar	cat_band_index;			// buffered bandindex before first CAT command arrived
-    bool 	notch_enabled;			// notch_filter enabled
     uchar	xlat;					// CAT <> IQ-Audio
     ulong	notch_frequency;		// frequency of the manual notch filter
-    bool 	peak_enabled;			// indicates whether peak filter is enabled or not
     ulong	peak_frequency;			// frequency of the manual peak filter
     int		bass_gain;				// gain of the low shelf EQ filter
     int		treble_gain;			// gain of the high shelf EQ filter

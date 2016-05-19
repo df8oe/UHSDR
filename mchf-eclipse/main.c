@@ -439,8 +439,6 @@ void TransceiverStateInit(void)
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
     ts.audio_int_counter = 0;					// test DL2FW
     ts.cat_band_index =255;						// no CAT command arrived
-    ts.notch_enabled = 0;
-    ts.peak_enabled = 0;
     ts.notch_frequency = 800;				// notch start frequency for manual notch filter
     ts.peak_frequency = 750;				// peak start frequency
     ts.bass_gain = 2;						// gain of the low shelf EQ filter

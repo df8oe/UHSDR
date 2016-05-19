@@ -450,7 +450,7 @@ void audio_driver_set_rx_audio_filter(void)
 
     // setting the Coefficients in the notch filter instance
     // while not using pointers
-    if (ts.notch_enabled)
+    if (ts.dsp_active & DSP_MNOTCH_ENABLE)
     {
     	IIR_biquad_1.pCoeffs[0] = b0;
         IIR_biquad_1.pCoeffs[1] = b1;
@@ -468,7 +468,7 @@ void audio_driver_set_rx_audio_filter(void)
     }
 
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
-    if(ts.peak_enabled)
+    if(ts.dsp_active & DSP_MPEAK_ENABLE)
     {
 /*       // peak filter = peaking EQ
     	f0 = ts.peak_frequency;
