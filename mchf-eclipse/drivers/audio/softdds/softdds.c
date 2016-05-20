@@ -75,15 +75,36 @@ void softdds_setfreq_dbl(float freq[2],ulong samp_rate,uchar smooth)
     dbldds[1].step   = (ulong)(freq[1] / f);
 }
 
+/**
+ * Execute a single step in the sinus generation
+ */
+static inline uint32_t softdds_step(__IO SoftDds* dds)
+{
+    dds->acc += dds->step;
 
-//*----------------------------------------------------------------------------
-//* Function Name       : softdds_runf
-//* Object              : use two float buffer
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+    // now scale down precision and  make sure that
+    // index wraps around properly
+    return (dds->acc >> DDS_ACC_SHIFT)%DDS_TBL_SIZE;
+}
+
+/*
+ * Get the index which represents a -90 degree shift compared to
+ * k, i.e. get  k = sin(a) => cos(a)
+ */
+static inline uint32_t softdds_phase_shift90(uint32_t k)
+{
+    // make sure that
+    // index wraps around properly
+    return (k+(3*DDS_TBL_SIZE/4))%DDS_TBL_SIZE;
+}
+
+
+
+/*
+ * Generates the sinus frequencies as IQ data stream
+ * min/max value is +/-2^15-1
+ * Frequency needs to be configured using softdds_setfreq
+ */
 void softdds_runf(float *i_buff,float *q_buff,ushort size)
 {
     ulong 	i,k;
@@ -97,23 +118,14 @@ void softdds_runf(float *i_buff,float *q_buff,ushort size)
         for(i = 0; i < size; i++)
         {
             // Calculate next sample
-            softdds.acc += softdds.step;
-            k    = softdds.acc >> DDS_ACC_SHIFT;
+            k    = softdds_step(&softdds);
 
-            // Fix ptr overload
-            k &= (DDS_TBL_SIZE - 1);
-
-            // Load I value
+            // Load I value (sin)
             *i_buff = DDS_TABLE[k];
 
-            // 90 degrees shift
-            k += (DDS_TBL_SIZE/4);
-
-            // Fix ptr overload
-            k &= (DDS_TBL_SIZE - 1);
-
+            // -90 degrees shift (cos)
             // Load Q value
-            *q_buff = DDS_TABLE[k];
+            *q_buff = DDS_TABLE[softdds_phase_shift90(k)];
 
             // Next ptr
             i_buff++;
@@ -122,6 +134,11 @@ void softdds_runf(float *i_buff,float *q_buff,ushort size)
     }
 }
 
+/*
+ * Generates the addition  of two sinus frequencies as IQ data stream
+ * min/max value is +/-2^15-1
+ * Frequencies need to be configured using softdds_setfreq_dbl
+ */
 void softdds_runf_dbl(float *i_buff,float *q_buff,ushort size)
 {
     ulong   i,k[2];
@@ -129,28 +146,13 @@ void softdds_runf_dbl(float *i_buff,float *q_buff,ushort size)
     for(i = 0; i < size; i++)
     {
         // Calculate next sample
-        dbldds[0].acc += dbldds[0].step;
-        k[0]    = dbldds[0].acc >> DDS_ACC_SHIFT;
-        dbldds[1].acc += dbldds[1].step;
-        k[1]    = dbldds[1].acc >> DDS_ACC_SHIFT;
+        k[0]    = softdds_step(&dbldds[0]);
+        k[1]    = softdds_step(&dbldds[1]);
 
-        // Fix ptr overload
-        k[0] &= (DDS_TBL_SIZE - 1);
-        k[1] &= (DDS_TBL_SIZE - 1);
-
-        // Load I value
+        // Load I value 0.5*(sin(a)+sin(b))
         *i_buff = ((int32_t)DDS_TABLE[k[0]] + (int32_t)DDS_TABLE[k[1]])/2;
 
-        // 90 degrees shift
-        k[0] += (DDS_TBL_SIZE/4);
-        k[1] += (DDS_TBL_SIZE/4);
-
-        // Fix ptr overload
-        k[0] &= (DDS_TBL_SIZE - 1);
-        k[1] &= (DDS_TBL_SIZE - 1);
-
-        // Load Q value
-        *q_buff = ((int32_t)DDS_TABLE[k[0]] + (int32_t)DDS_TABLE[k[1]])/2;
+        *q_buff = ((int32_t)DDS_TABLE[softdds_phase_shift90(k[0])] + (int32_t)DDS_TABLE[softdds_phase_shift90(k[1])])/2;
 
         // Next ptr
         i_buff++;

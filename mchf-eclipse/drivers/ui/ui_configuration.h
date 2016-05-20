@@ -72,8 +72,6 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MAX_RF_GAIN         50      // Maximum RF gain setting
 #define DEFAULT_RF_GAIN     50      // Default RF gain setting
 //
-#define MAX_RF_CODEC_GAIN_VAL       9       // Maximum RF gain setting
-#define DEFAULT_RF_CODEC_GAIN_VAL   9       // Default RF gain setting (9 = AUTO mode)
 //
 #define MAX_AUDIO_GAIN      30      // Maximum audio gain setting
 #define MAX_DIG_GAIN      31      // Maximum audio gain setting

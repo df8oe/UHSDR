@@ -442,6 +442,17 @@ inline bool is_dsp_notch()
     return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
 }
 
+inline bool is_dsp_mnotch()
+{
+    return (ts.dsp_active & DSP_MNOTCH_ENABLE) != 0;
+}
+
+inline bool is_dsp_mpeak()
+{
+    return (ts.dsp_active & DSP_MPEAK_ENABLE) != 0;
+}
+
+
 void UiDriverShowDebugText(const char* text)
 {
     UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
@@ -529,7 +540,7 @@ void UiDriver_HandleSwitchToNextDspMode()
         // What do we want to switch here:
         // NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
         // NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
-        // Manual Notch		ts.notch_enabled = 1; // ts.notch_enabled = 0;
+        // Manual Notch		ts.dsp_active |= DSP_MNOTCH_ENABLE
         // BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
         // TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 
@@ -550,48 +561,30 @@ void UiDriver_HandleSwitchToNextDspMode()
         {
 
         case DSP_SWITCH_OFF: // switch off everything
-            ts.dsp_active &= ~DSP_NR_ENABLE;
-            ts.dsp_active &= ~DSP_NOTCH_ENABLE;
-            ts.notch_enabled = 0;
-            ts.peak_enabled = 0;				//off
+            ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             break;
         case DSP_SWITCH_NR:
-            ts.dsp_active |= DSP_NR_ENABLE; 	//on
-            ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
-            ts.notch_enabled = 0;				//off
-            ts.peak_enabled = 0;				//off
-            ts.enc_two_mode = ENC_TWO_MODE_SIG_PROC;
+            ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.enc_two_mode = ENC_TWO_MODE_NR;
             break;
         case DSP_SWITCH_NOTCH:
-            ts.dsp_active &= ~DSP_NR_ENABLE;	//off
-            ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
-            ts.notch_enabled = 0;				//off
-            ts.peak_enabled = 0;				//off
+            ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             break;
         case DSP_SWITCH_NR_AND_NOTCH:
-            ts.dsp_active |= DSP_NR_ENABLE; 	//on
-            ts.dsp_active |= DSP_NOTCH_ENABLE;	//on
-            ts.notch_enabled = 0;				//off
-            ts.peak_enabled = 0;				//off
+            ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.enc_two_mode = ENC_TWO_MODE_NR;
             break;
         case DSP_SWITCH_NOTCH_MANUAL:
-            ts.dsp_active &= ~DSP_NR_ENABLE;	//off
-            ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
-            ts.notch_enabled = 1;				//on
-            ts.peak_enabled = 0;				//off
+            ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
             break;
         case DSP_SWITCH_PEAK_FILTER:
-            ts.dsp_active &= ~DSP_NR_ENABLE;	//off
-            ts.dsp_active &= ~DSP_NOTCH_ENABLE; //off
-            ts.notch_enabled = 0;				//off
-            ts.peak_enabled = 1;				//on
+            ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
             break;
-        case DSP_SWITCH_BASS:
-            break;
-        case DSP_SWITCH_TREBLE:
+        default:
             break;
         }
 
@@ -807,7 +800,6 @@ void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
     default:
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
 
-// FIXME: Needs a menu entry for tune mode (single/two tone)
         if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
         {
             tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
@@ -1917,7 +1909,7 @@ void UiDriverEncoderDisplay(const uint8_t row, const uint8_t column, const char 
 #define LEFTBOX_ROW_H  (14+12+2)
 #define LEFTBOX_ROW_2ND_OFF  (13)
 static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
-                            const char* text, uint32_t color, bool text_is_value)
+                            const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
 {
 
     uint32_t label_color = encoder_active?Black:color;
@@ -1936,7 +1928,7 @@ static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool e
     if (text_is_value)
     {
         UiLcdHy28_PrintTextRight((POS_LEFTBOXES_IND_X + LEFTBOX_WIDTH - 4), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
-                color, text_is_value?Black:bg_color, 0);
+                clr_val, text_is_value?Black:bg_color, 0);
     }
     else
     {
@@ -2172,13 +2164,12 @@ static void UiDriverProcessKeyboard()
             case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
                 if(ts.dmod_mode != DEMOD_FM)	 		// do not allow change of mode when in FM
                 {
-                    if(is_dsp_nr()|| is_dsp_notch() || ts.notch_enabled || ts.peak_enabled)	 			// is DSP NR or NOTCH active?
+                    if(is_dsp_nr()|| is_dsp_notch() || is_dsp_mnotch() || is_dsp_mpeak())	 			// is any DSP function active?
                     {
                         ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
-                        ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE);				// turn off NR and notch
-                        ts.dsp_mode = DSP_SWITCH_OFF;
-                        ts.notch_enabled = 0;
-                        ts.peak_enabled = 0;				//off
+
+                        ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE |DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);				// turn off NR and notch
+
                         ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
                     }
                     else	 		// neither notch or NR was active
@@ -2195,8 +2186,14 @@ static void UiDriverProcessKeyboard()
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
                 UiInitRxParms();			// generate "reference" for sidetone frequency
-                if(ts.AM_experiment) ts.AM_experiment = 0;
-                else ts.AM_experiment = 1;
+                if(ts.AM_experiment)
+                {
+                    ts.AM_experiment = 0;
+                }
+                else
+                {
+                    ts.AM_experiment = 1;
+                }
                 /*				if (ts.notch_enabled) {
                 				    ts.notch_enabled = 0; // switch off notch filter
                 				    UiDriverChangeRfGain(1);
@@ -4818,16 +4815,20 @@ static void UiDriverCheckEncoderTwo()
                     {
                         ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
                     }
-                    else if(is_dsp_nr())	 	// only allow adjustment if DSP NR is active
+                    // Signal processor setting
+                    UiDriver_DisplaySigProc(1);
+                    break;
+                case ENC_TWO_MODE_NR:
+                    if (is_dsp_nr())        // only allow adjustment if DSP NR is active
                     {
                         ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step,0,DSP_NR_STRENGTH_MAX);
                         audio_driver_set_rx_audio_filter();
                     }
                     // Signal processor setting
-                    UiDriver_DisplaySigProc(1);
+                    UiDriver_DisplayDSPMode(1);
                     break;
                 case ENC_TWO_MODE_NOTCH_F:
-                    if (ts.notch_enabled)   // notch f is only adjustable when notch is enabled
+                    if (is_dsp_mnotch())   // notch f is only adjustable when notch is enabled
                     {
                         if(pot_diff < 0)
                         {
@@ -4866,7 +4867,7 @@ static void UiDriverCheckEncoderTwo()
                     UiDriver_DisplayTone(true);
                     break;
                 case ENC_TWO_MODE_PEAK_F:
-                    if (ts.peak_enabled)   // peak f is only adjustable when peak is enabled
+                    if (is_dsp_mpeak())   // peak f is only adjustable when peak is enabled
                     {
                         if(pot_diff < 0)
                         {
@@ -4984,7 +4985,7 @@ static void UiDriverChangeEncoderOneMode(bool just_display_no_change)
         if(just_display_no_change == false)
         {
             ts.enc_one_mode++;
-            if(ts.enc_one_mode > ENC_ONE_MAX_MODE)
+            if(ts.enc_one_mode >= ENC_ONE_NUM_MODES)
             {
                 ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
             }
@@ -5027,18 +5028,18 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         {
             ts.enc_two_mode++;
             // only switch to notch frequency adjustment, if notch enabled!
-            if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && !ts.notch_enabled)
+            if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && is_dsp_mnotch() == false)
             {
                 ts.enc_two_mode++;
             }
 
             // only switch to peak frequency adjustment, if peak enabled!
-            if(ts.enc_two_mode == ENC_TWO_MODE_PEAK_F && !ts.peak_enabled)
+            if(ts.enc_two_mode == ENC_TWO_MODE_PEAK_F && is_dsp_mpeak() == false)
             {
                 ts.enc_two_mode++;
             }
             // flip round
-            if(ts.enc_two_mode >= ENC_TWO_MAX_MODE)
+            if(ts.enc_two_mode >= ENC_TWO_NUM_MODES)
             {
                 ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             }
@@ -5057,12 +5058,9 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriver_DisplaySigProc(1*inactive_mult);
         UiDriver_DisplayDSPMode(0);
         break;
-    case ENC_TWO_MODE_NOTCH_F:
-        UiDriver_DisplayRfGain(0);
-        UiDriver_DisplaySigProc(0);
-        UiDriver_DisplayDSPMode(1*inactive_mult);
-        break;
     case ENC_TWO_MODE_PEAK_F:
+    case ENC_TWO_MODE_NOTCH_F:
+    case ENC_TWO_MODE_NR:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplaySigProc(0);
         UiDriver_DisplayDSPMode(1*inactive_mult);
@@ -5174,6 +5172,21 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 
     UiDriverEncoderDisplay(1,0,"CMP" , encoder_active, temp, color);
 }
+
+uint32_t dsp_nr_color_map()
+{
+    uint32_t color = White;      // Make it white by default
+    //
+    if(ts.dsp_nr_strength >= DSP_STRENGTH_RED)
+        color = Red;
+    else if(ts.dsp_nr_strength >= DSP_STRENGTH_ORANGE)
+        color = Orange;
+    else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
+        color = Yellow;
+
+    return color;
+}
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeDSPMode
@@ -5185,51 +5198,57 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 static void UiDriver_DisplayDSPMode(bool encoder_active)
 {
     uint32_t clr = White;
+    uint32_t clr_val = White;
 
     char val_txt[7] = { 0x0 };
     bool txt_is_value = false;
     const char* txt[2] = { "DSP", NULL };
 
-    switch (ts.dsp_mode)
+    uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+
+
+    switch (dsp_functions_active)
     {
-    case DSP_SWITCH_OFF: //
+    case 0: // all off
         clr = Grey2;
         txt[1] = "OFF";
         break;
-    case DSP_SWITCH_NR:
-        txt[1] = "NR";
+    case DSP_NR_ENABLE:
+        txt[0] = "NR";
+        snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
+        clr_val = dsp_nr_color_map();
+        txt[1] = val_txt;
+        txt_is_value = true;
         break;
-    case DSP_SWITCH_NOTCH:
+    case DSP_NOTCH_ENABLE:
         txt[1] = "A-NOTCH";
         break;
-    case DSP_SWITCH_NR_AND_NOTCH:
-        txt[1] = "NR+NOTC";
+    case DSP_NOTCH_ENABLE|DSP_NR_ENABLE:
+        txt[0] = "NR+NOTC";
+        snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
+        clr_val = dsp_nr_color_map();
+        txt[1] = val_txt;
+        txt_is_value = true;
         break;
-    case DSP_SWITCH_NOTCH_MANUAL:
+    case DSP_MNOTCH_ENABLE:
         txt[0] = "M-NOTCH";
         snprintf(val_txt,7,"%5lu", ts.notch_frequency);
         txt[1] = val_txt;
         txt_is_value = true;
         break;
-    case DSP_SWITCH_PEAK_FILTER:
+    case DSP_MPEAK_ENABLE:
         txt[0] = "PEAK";
         snprintf(val_txt,7,"%5lu", ts.peak_frequency);
         txt[1] = val_txt;
         txt_is_value = true;
         break;
-    case DSP_SWITCH_BASS:
-        txt[1] = "BASS";
-        break;
-    case DSP_SWITCH_TREBLE:
-        txt[1] = "TREBLE";
-        break;
-    default:
+    default: // unsupported combination of DSP functions yield error display now
         clr = Grey2;
-        txt[1] = "OFF";
+        txt[1] = "ERROR";
         break;
     }
 
-    UiDriver_LeftBoxDisplay(0,txt[0],encoder_active,txt[1],clr,txt_is_value);
+    UiDriver_LeftBoxDisplay(0,txt[0],encoder_active,txt[1],clr,clr_val,txt_is_value);
 }
 //
 //*----------------------------------------------------------------------------
@@ -5458,28 +5477,6 @@ static void UiDriver_DisplaySigProc(bool encoder_active)
         value = ts.nb_setting;
         is_active = true;
     }
-    //
-    // DSP settings display
-    //
-    else if (is_dsp_nr())	 			// DSP settings are to be displayed
-    {
-        // if(enabled && (is_dsp_nr()))	 	// if this menu is enabled AND the DSP NR is also enabled...
-        if(encoder_active)     // if this menu is enabled AND the DSP NR is also enabled...
-        {
-            color = White;		// Make it white by default
-            //
-            if(ts.dsp_nr_strength >= DSP_STRENGTH_RED)
-                color = Red;
-            else if(ts.dsp_nr_strength >= DSP_STRENGTH_ORANGE)
-                color = Orange;
-            else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
-                color = Yellow;
-        }
-        value = ts.dsp_nr_strength;
-        is_active = true;
-        label = "NR";
-    }
-
 
     if (is_active == false)
     {
@@ -5574,7 +5571,7 @@ void UiDriver_DisplayFilter()
         filter_ptr = " ";
     }
 
-    UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr,false);
+    UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr, font_clr,false);
 }
 //
 //
@@ -5758,8 +5755,10 @@ static void UiDriverHandleSmeter()
     // Calculate attenuation of "RF Codec Gain" setting so that S-meter reading can be compensated.
     // for input RF attenuation setting
     //
-    if(ts.rf_codec_gain == 9)		// Is RF gain in "AUTO" mode?
+    if(ts.rf_codec_gain == RF_CODEC_GAIN_AUTO)		// Is RF gain in "AUTO" mode?
+    {
         rfg_calc = auto_rfg;
+    }
     else	 				// not in "AUTO" mode
     {
         rfg_calc = (float)ts.rf_codec_gain;		// get copy of RF gain setting
@@ -5771,7 +5770,9 @@ static void UiDriverHandleSmeter()
     rfg_calc *= 2;	// double the range of adjustment
     rfg_calc += 13;	// offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
     if(rfg_calc >31)	// limit calc to hardware range
+    {
         rfg_calc = 31;
+    }
     Codec_Line_Gain_Adj((uchar)rfg_calc);	// set the RX gain on the codec
     //
     // Now calculate the RF gain setting
@@ -5798,7 +5799,9 @@ static void UiDriverHandleSmeter()
     val = (uchar)sm.s_count;
 
     if(!val)	// make sure that the S meter always reads something!
+    {
         val = 1;
+    }
     //
     UiDriverUpdateTopMeterA(val);
     //
@@ -5806,7 +5809,9 @@ static void UiDriverHandleSmeter()
     //
     rfg_timer++;	// bump RFG timer
     if(rfg_timer > 10000)	// limit count of RFG timer
+    {
         rfg_timer = 10000;
+    }
     //
     if(ads.adc_half_clip)	 	// did clipping almost occur?
     {
@@ -5815,8 +5820,6 @@ static void UiDriverHandleSmeter()
             if(auto_rfg)	 	// yes - is this NOT zero?
             {
                 auto_rfg -= 0.5;	// decrease gain one step, 1.5dB (it is multiplied by 2, above)
-                //sprintf(temp, " %d ", auto_rfg);		// Display auto RFG for debug
-                //UiLcdHy28_PrintText((POS_BG_IND_X + 82),(POS_BG_IND_Y + 1), temp,White,Black,0);
                 rfg_timer = 0;	// reset the adjustment timer
             }
         }
@@ -5828,9 +5831,9 @@ static void UiDriverHandleSmeter()
             auto_rfg += 0.5;	// increase gain by one step, 1.5dB (it is multiplied by 2, above)
             rfg_timer = 0;	// reset the timer to prevent this from executing too often
             if(auto_rfg > 8)	// limit it to 8
+            {
                 auto_rfg = 8;
-            //sprintf(temp, " %d ", auto_rfg);		// Display auto RFG for debug
-            //UiLcdHy28_PrintText((POS_BG_IND_X + 82),(POS_BG_IND_Y + 1), temp,White,Black,0);
+            }
         }
     }
     ads.adc_half_clip = 0;		// clear "half clip" indicator that tells us that we should decrease gain
