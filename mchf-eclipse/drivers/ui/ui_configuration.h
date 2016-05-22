@@ -62,7 +62,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define CW_OFFSET_MAX       8       // Maximum menu setting
 #define CW_OFFSET_MODE_DEFAULT  0   // Default CW offset setting
 //
-#define USB_FREQ_THRESHOLD  (10000000*TUNE_MULT)    // LO frequency at and above which the default is USB, Hz*4  (e.g. 10 MHz = 40 MHz)
+#define USB_FREQ_THRESHOLD  (10000000)    // dial frequency at and above which the default is USB, Hz
 //
 #define MAX_RF_ATTEN        15      // Maximum setting for RF attenuation
 //
