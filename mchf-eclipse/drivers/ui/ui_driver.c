@@ -85,7 +85,7 @@ static void 	UiDriverCheckEncoderThree();
 static void 	UiDriverChangeEncoderOneMode(bool just_display_no_change);
 static void 	UiDriverChangeEncoderTwoMode(bool just_display_no_change);
 static void 	UiDriverChangeEncoderThreeMode(bool just_display_no_change);
-static void 	UiDriver_DisplaySigProc(bool encoder_active);
+static void 	UiDriver_DisplayNoiseBlanker(bool encoder_active);
 static void 	UiDriver_DisplayDSPMode(bool encoder_active);
 static void 	UiDriver_DisplayTone(bool encoder_active);
 static void 	UiDriver_DisplayRit(bool encoder_active);
@@ -729,6 +729,38 @@ void UiDriver_HandleTouchScreen()
  * @param power_level The requested power level (as PA_LEVEL constants)
  * @returns true if there was indeed a power level change
  */
+void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
+{
+    float tonefreq[2] = {0.0, 0.0};
+    switch(dmod_mode)
+    {
+    case DEMOD_CW:
+        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
+        break;
+    default:
+        tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
+
+        if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
+        {
+            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
+        }
+    }
+
+    if (tonefreq[1] != 0.0)
+    {
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+        softdds_setfreq(0.0,ts.samp_rate,0);
+    }
+    else
+    {
+        softdds_setfreq(tonefreq[0],ts.samp_rate,0);
+
+        tonefreq[0] = 0.0;
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+    }
+}
+
+
 bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)
 {
     if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
@@ -787,37 +819,6 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
         RadioManagement_SetBandPowerFactor(band);
     }
     return retval;
-}
-
-void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
-{
-    float tonefreq[2] = {0.0, 0.0};
-    switch(dmod_mode)
-    {
-    case DEMOD_CW:
-        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
-        break;
-    default:
-        tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
-
-        if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
-        {
-            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
-        }
-    }
-
-    if (tonefreq[1] != 0.0)
-    {
-        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
-        softdds_setfreq(0.0,ts.samp_rate,0);
-    }
-    else
-    {
-        softdds_setfreq(tonefreq[0],ts.samp_rate,0);
-
-        tonefreq[0] = 0.0;
-        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
-    }
 }
 
 /**
@@ -1121,10 +1122,15 @@ void RadioManagement_CalculateCWSidebandMode()
     case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
     case CW_OFFSET_AUTO_RX:
     case CW_OFFSET_AUTO_SHIFT:
-        if(df.tune_new >= USB_FREQ_THRESHOLD)   // is the current frequency above the USB threshold?
+        // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
+        if (df.tune_new/TUNE_MULT < USB_FREQ_THRESHOLD)   // is the current frequency above the USB threshold?
+        {
             ts.cw_lsb = 0;                      // yes - indicate that it is USB
+        }
         else
+        {
             ts.cw_lsb = 1;                      // no - LSB
+        }
         break;
     case CW_OFFSET_LSB_TX:
     case CW_OFFSET_LSB_RX:
@@ -1873,7 +1879,7 @@ static void UiDriverPublicsInit()
     lo.last                 = -100;
 }
 
-// check if touched point is within rectange of valid action
+// check if touched point is within rectangle of valid action
 inline bool check_tp_coordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
 {
     return (ts.tp_x <= x_right && ts.tp_x >= x_left && ts.tp_y >= y_down && ts.tp_y <= y_up);
@@ -4321,6 +4327,26 @@ void UiDriverSetDemodMode(uint32_t new_mode)
     UiDriverShowMode();
 }
 
+/*
+ * Tells you which SSB Demod Mode is the preferred one for a given frequency in Hertz
+ */
+uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
+    uint32_t retval;
+
+    if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((freq < USB_FREQ_THRESHOLD) && (RadioManagement_GetBand(freq) != BAND_MODE_60)))       // are we <10 MHz and NOT on 60 meters?
+    {
+        retval = DEMOD_LSB;
+    }
+    else if((ts.lsb_usb_auto_select == AUTO_LSB_USB_ON) && (freq < USB_FREQ_THRESHOLD))      // are we <10 MHz (not in 60 meter mode)
+    {
+        retval = DEMOD_LSB;
+    }
+    else        // we must be > 10 MHz OR on 60 meters
+    {
+        retval = DEMOD_USB;
+    }
+    return retval;
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeDemodMode
@@ -4376,31 +4402,12 @@ static void UiDriverChangeDemodMode(uchar noskip)
         loc_mode = DEMOD_USB;
 
 
-    if((ts.lsb_usb_auto_select) && (!noskip))	 	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+    if((ts.lsb_usb_auto_select) && ((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB)) && (!noskip))	 	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
     {
-        if((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB))	 	// is this a voice mode, subject to "auto" LSB/USB select?
+        if(RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) != loc_mode)	 	// is this a voice mode, subject to "auto" LSB/USB select?
         {
-            if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((df.tune_new < USB_FREQ_THRESHOLD) && (ts.band != BAND_MODE_60)))	 	// are we <10 MHz and NOT on 60 meters?
-            {
-                if(loc_mode == DEMOD_USB)	 		// are we in USB mode?
-                {
-                    loc_mode++;					// yes - bump to the next mode
-                }
-            }
-            else if((ts.lsb_usb_auto_select == AUTO_LSB_USB_ON) && (df.tune_new < USB_FREQ_THRESHOLD))	 	// are we <10 MHz (not in 60 meter mode)
-            {
-                if(loc_mode == DEMOD_USB)	 		// are we in USB mode?
-                {
-                    loc_mode++;					// yes - bump to the next mode
-                }
-            }
-            else	 	// we must be > 10 MHz OR on 60 meters
-            {
-                if(loc_mode == DEMOD_LSB)	 		// are we in LSB mode?
-                {
-                    loc_mode++;				// yes - bump to the next mode
-                }
-            }
+            // if we are not one the right sideband demod mode, skip it.
+            loc_mode++;
         }
     }
     RadioManagement_SetDemodMode(loc_mode);
@@ -4816,7 +4823,7 @@ static void UiDriverCheckEncoderTwo()
                         ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
                     }
                     // Signal processor setting
-                    UiDriver_DisplaySigProc(1);
+                    UiDriver_DisplayNoiseBlanker(1);
                     break;
                 case ENC_TWO_MODE_NR:
                     if (is_dsp_nr())        // only allow adjustment if DSP NR is active
@@ -5050,19 +5057,19 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
     {
     case ENC_TWO_MODE_RF_GAIN:
         UiDriver_DisplayRfGain(1*inactive_mult);
-        UiDriver_DisplaySigProc(0);
+        UiDriver_DisplayNoiseBlanker(0);
         UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_SIG_PROC:
         UiDriver_DisplayRfGain(0);
-        UiDriver_DisplaySigProc(1*inactive_mult);
+        UiDriver_DisplayNoiseBlanker(1*inactive_mult);
         UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_PEAK_F:
     case ENC_TWO_MODE_NOTCH_F:
     case ENC_TWO_MODE_NR:
         UiDriver_DisplayRfGain(0);
-        UiDriver_DisplaySigProc(0);
+        UiDriver_DisplayNoiseBlanker(0);
         UiDriver_DisplayDSPMode(1*inactive_mult);
         break;
     case ENC_TWO_MODE_BASS_GAIN:
@@ -5075,7 +5082,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         break;
     default:
         UiDriver_DisplayRfGain(0);
-        UiDriver_DisplaySigProc(0);
+        UiDriver_DisplayNoiseBlanker(0);
         UiDriver_DisplayDSPMode(0);
         break;
     }
@@ -5265,7 +5272,7 @@ typedef struct DigitalModeDescriptor_s
 } DigitalModeDescriptor;
 
 
-enum
+typedef enum
 {
     Digital = 0,
     FreeDV1,
@@ -5275,12 +5282,12 @@ enum
     SSTV,
     WSPR_A,
     WSPR_P,
-    DigitalModeMax
-};
+    DigitalModeNum
+} DigitalModes;
 // The following descriptor table has to be in the order of the enum above
 // This table is stored in flash (due to const) and cannot be written to
 // for operational data per mode [r/w], use a different table with order of modes
-const DigitalModeDescriptor digimodes[DigitalModeMax] =
+const DigitalModeDescriptor digimodes[DigitalModeNum] =
 {
     { "DIGITAL", false	},
     { "FREEDV1", false },
@@ -5448,7 +5455,7 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DisplaySigProc(bool encoder_active)
+static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 {
     uint32_t 	color = encoder_active?White:Grey;
     char	temp[5];
@@ -6498,12 +6505,12 @@ static void UiDriver_HandleLoTemperature()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-enum CONFIG_DEFAULTS
+typedef enum
 {
     CONFIG_DEFAULTS_KEEP = 0,
     CONFIG_DEFAULTS_LOAD_FREQ,
     CONFIG_DEFAULTS_LOAD_ALL
-};
+} CONFIG_DEFAULTS;
 
 
 /*
@@ -6514,7 +6521,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 {
 
     bool retval = false;
-    uint8_t load_mode = CONFIG_DEFAULTS_KEEP;
+    CONFIG_DEFAULTS load_mode = CONFIG_DEFAULTS_KEEP;
 
     if (UiDriver_IsButtonPressed(BUTTON_F1_PRESSED) && UiDriver_IsButtonPressed(BUTTON_F3_PRESSED) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
     {
@@ -6544,6 +6551,8 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
             clr_bg = Yellow;
             clr_fg = Black;
             top_line = " FREQ/MODE DEFAULTS";
+            break;
+        default:
             break;
         }
 
@@ -6597,6 +6606,8 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         break;
     case CONFIG_DEFAULTS_LOAD_FREQ:
         ts.load_freq_mode_defaults = true;
+        break;
+    default:
         break;
     }
 
