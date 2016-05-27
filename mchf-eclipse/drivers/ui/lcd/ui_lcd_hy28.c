@@ -80,6 +80,52 @@ void UiLcdHy28_BacklightInit(void)
     LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;
 }
 
+void UiLcdHy28_BacklightEnable(bool on)
+{
+    if (on)
+    {
+        LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
+    }
+    else
+    {
+        LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;
+    }
+}
+/*
+ * This handler creates a software pwm for the LCD backlight. It needs to be called
+ * very regular to work properly. Right now it is activated from the audio interrupt
+ * at a rate of 1.5khz The rate itself is not too critical,
+ * just needs to be high and very regular.
+ */
+void UiLcdHy28_BacklightDimHandler()
+{
+    static uchar lcd_dim = 0, lcd_dim_prescale = 0;
+
+    if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
+    {
+
+        if(!lcd_dim_prescale)       // Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
+        {
+            if(lcd_dim < ts.lcd_backlight_brightness)
+            {
+                UiLcdHy28_BacklightEnable(false);   // LCD backlight off
+            }
+            else
+            {
+                UiLcdHy28_BacklightEnable(true);   // LCD backlight on
+            }
+            //
+            lcd_dim++;
+            lcd_dim &= 3;   // limit brightness PWM count to 0-3
+        }
+        lcd_dim_prescale++;
+        lcd_dim_prescale &= 3;  // limit prescale count to 0-3
+    }
+    else if(!ts.menu_mode)
+    { // LCD is to be blanked - if NOT in menu mode
+        UiLcdHy28_BacklightEnable(false);
+    }
+}
 
 void UiLcdHy28_SpiInit(bool hispeed)
 {

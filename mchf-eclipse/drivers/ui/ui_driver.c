@@ -2876,7 +2876,7 @@ static void UiDriverCreateDesktop()
     //char temp[10];
 
     // Backlight off - hide startup logo
-    LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;
+    UiLcdHy28_BacklightEnable(false);
 
     // Clear display
     UiLcdHy28_LcdClear(Black);
@@ -2944,7 +2944,7 @@ static void UiDriverCreateDesktop()
     UiDriver_FrequencyUpdateLOandDisplay(true);
 
     // Backlight on - only when all is drawn
-    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
+    UiLcdHy28_BacklightEnable(true);
 }
 
 //*----------------------------------------------------------------------------
@@ -7056,7 +7056,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_PrintText(50,225,ATTRIB_STRING3,Grey1,Black,0);
 
     // Backlight on
-    LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
+    UiLcdHy28_BacklightEnable(true);
 
     // On screen delay - decrease if drivers init takes longer
     for(i = 0; i < hold_time; i++)
