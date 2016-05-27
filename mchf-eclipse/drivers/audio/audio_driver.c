@@ -3248,7 +3248,6 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 {
     static bool to_rx = 0;	// used as a flag to clear the RX buffer
     static bool to_tx = 0;	// used as a flag to clear the TX buffer
-    static uchar lcd_dim = 0, lcd_dim_prescale = 0;
     static ulong tcount = 0;
     
     if(ts.show_tp_coordinates)
@@ -3305,23 +3304,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     //
     // Perform LCD backlight PWM brightness function
     //
-    if(!ts.lcd_blanking_flag)	 	// is LCD *NOT* blanked?
-    {
-        if(!lcd_dim_prescale)	 	// Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
-        {
-            if(lcd_dim < ts.lcd_backlight_brightness)
-                LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;	// LCD backlight off
-            else
-                LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;	// LCD backlight on
-            //
-            lcd_dim++;
-            lcd_dim &= 3;	// limit brightness PWM count to 0-3
-        }
-        lcd_dim_prescale++;
-        lcd_dim_prescale &= 3;	// limit prescale count to 0-3
-    }
-    else if(!ts.menu_mode)	// LCD is to be blanked - if NOT in menu mode
-        LCD_BACKLIGHT_PIO->BSRRH = LCD_BACKLIGHT;	// LCD backlight off
+    UiLcdHy28_BacklightDimHandler();
     //
     //
     tcount+=CLOCKS_PER_DMA_CYCLE;		// add the number of clock cycles that would have passed between DMA cycles

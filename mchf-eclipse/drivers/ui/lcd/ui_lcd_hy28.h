@@ -112,6 +112,10 @@ void 	UiLcdHy28_CloseBulkWrite(void);
 
 uint8_t 	UiLcdHy28_Init();
 
+void    UiLcdHy28_BacklightEnable(bool on);
+void    UiLcdHy28_BacklightDimHandler();
+
+
 #define TP_DATASETS_VALID		0x04   // number of sets that must be identical for marked as VALID
 #define TP_DATASETS_WAIT		0x01   // first dataset received
 #define TP_DATASETS_PROCESSED	0xff
@@ -121,5 +125,6 @@ void    UiLcdHy28_TouchscreenDetectPress();
 void    UiLcdHy28_TouchscreenPresenceDetection();
 void 	UiLcdHy28_TouchscreenReadCoordinates(bool do_translate);	// true == corrected data, false == raw data
 bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
+
 
 #endif
