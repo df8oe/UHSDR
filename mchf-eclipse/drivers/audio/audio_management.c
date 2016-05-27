@@ -5,6 +5,7 @@
 #include "arm_math.h"
 #include "math.h"
 #include "audio_driver.h"
+#include "softdds.h"
 
 //
 //
@@ -368,4 +369,39 @@ void AudioManagement_KeyBeep(void)
     AudioManagement_LoadBeepFreq();       // load and calculate beep frequency
     ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
     ts.beep_active = 1;                                 // activate tone
+}
+
+/** @brief API Function, implements application logic for changing the power level including display updates
+ * @param power_level The requested power level (as PA_LEVEL constants)
+ * @returns true if there was indeed a power level change
+ */
+void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
+{
+    float tonefreq[2] = {0.0, 0.0};
+    switch(dmod_mode)
+    {
+    case DEMOD_CW:
+        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
+        break;
+    default:
+        tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
+
+        if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
+        {
+            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
+        }
+    }
+
+    if (tonefreq[1] != 0.0)
+    {
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+        softdds_setfreq(0.0,ts.samp_rate,0);
+    }
+    else
+    {
+        softdds_setfreq(tonefreq[0],ts.samp_rate,0);
+
+        tonefreq[0] = 0.0;
+        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+    }
 }

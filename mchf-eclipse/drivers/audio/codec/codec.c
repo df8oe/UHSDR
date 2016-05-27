@@ -465,3 +465,29 @@ void Codec_Line_Gain_Adj(uchar gain)
 
 
 }
+
+bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)
+{
+    if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
+    {
+        if(ts.tx_audio_source != TX_AUDIO_MIC)      // yes - are we in LINE IN mode?
+        {
+            Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
+        }
+        else        // we are in MIC IN mode
+        {
+            Codec_Line_Gain_Adj(0);         // momentarily mute MIC IN audio until we switch modes because we will blast any connected LINE IN source until we switch
+            ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
+            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);    // Mute the microphone with the CODEC (this does so without a CLICK)
+        }
+        //
+        if((ts.iq_freq_mode) && (!rx_muted))        // Is translate mode active and we have NOT already muted the audio?
+        {
+            Codec_Volume(0,txrx_mode);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
+            rx_muted = 1;       // indicate that we've muted the audio so we don't do this every time through
+        }
+        //
+        non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
+    }
+    return rx_muted;
+}
