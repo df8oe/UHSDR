@@ -37,7 +37,6 @@
 
 // Codec control
 #include "codec.h"
-#include "softdds.h"
 
 #include "audio_driver.h"
 #include "audio_management.h"
@@ -464,14 +463,13 @@ static void UiDriver_ToggleWaterfallScopeDisplay()
     {
         // is the waterfall mode active?
         ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
-        UiSpectrumInitSpectrumDisplay();   // init spectrum scope
     }
     else
     {
         // waterfall mode was turned off
         ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
-        UiSpectrumInitSpectrumDisplay();   // init spectrum scope
     }
+    UiSpectrumInitSpectrumDisplay();   // init spectrum display
 }
 //
 //
@@ -724,68 +722,8 @@ void UiDriver_HandleTouchScreen()
 }
 
 
-// TODO: RF Management, move out
-/** @brief API Function, implements application logic for changing the power level including display updates
- * @param power_level The requested power level (as PA_LEVEL constants)
- * @returns true if there was indeed a power level change
- */
-void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
-{
-    float tonefreq[2] = {0.0, 0.0};
-    switch(dmod_mode)
-    {
-    case DEMOD_CW:
-        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
-        break;
-    default:
-        tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
-
-        if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
-        {
-            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
-        }
-    }
-
-    if (tonefreq[1] != 0.0)
-    {
-        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
-        softdds_setfreq(0.0,ts.samp_rate,0);
-    }
-    else
-    {
-        softdds_setfreq(tonefreq[0],ts.samp_rate,0);
-
-        tonefreq[0] = 0.0;
-        softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
-    }
-}
 
 
-bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)
-{
-    if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
-    {
-        if(ts.tx_audio_source != TX_AUDIO_MIC)      // yes - are we in LINE IN mode?
-        {
-            Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
-        }
-        else        // we are in MIC IN mode
-        {
-            Codec_Line_Gain_Adj(0);         // momentarily mute MIC IN audio until we switch modes because we will blast any connected LINE IN source until we switch
-            ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
-            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);    // Mute the microphone with the CODEC (this does so without a CLICK)
-        }
-        //
-        if((ts.iq_freq_mode) && (!rx_muted))        // Is translate mode active and we have NOT already muted the audio?
-        {
-            Codec_Volume(0,txrx_mode);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
-            rx_muted = 1;       // indicate that we've muted the audio so we don't do this every time through
-        }
-        //
-        non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
-    }
-    return rx_muted;
-}
 
 
 bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
