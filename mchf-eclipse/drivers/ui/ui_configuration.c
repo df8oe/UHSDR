@@ -469,6 +469,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_RX_IQ_LSB_PHASE_BALANCE,&ts.rx_iq_lsb_phase_balance,0,  MIN_RX_IQ_PHASE_BALANCE, MAX_RX_IQ_PHASE_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_RX_IQ_USB_PHASE_BALANCE,&ts.rx_iq_usb_phase_balance,0,  MIN_RX_IQ_PHASE_BALANCE, MAX_RX_IQ_PHASE_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_RX_IQ_AM_GAIN_BALANCE,&ts.rx_iq_am_gain_balance,0,  MIN_RX_IQ_GAIN_BALANCE, MAX_RX_IQ_GAIN_BALANCE},
+    { ConfigEntry_Int32_16, EEPROM_RX_IQ_AM_PHASE_BALANCE,&ts.rx_iq_am_phase_balance,0,  MIN_RX_IQ_PHASE_BALANCE, MAX_RX_IQ_PHASE_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_RX_IQ_FM_GAIN_BALANCE,&ts.rx_iq_fm_gain_balance,0,  MIN_RX_IQ_GAIN_BALANCE, MAX_RX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_AM_GAIN_BALANCE,&ts.tx_iq_am_gain_balance,0, MIN_TX_IQ_GAIN_BALANCE, MAX_TX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_FM_GAIN_BALANCE,&ts.tx_iq_fm_gain_balance,0, MIN_TX_IQ_PHASE_BALANCE, MAX_TX_IQ_GAIN_BALANCE},
