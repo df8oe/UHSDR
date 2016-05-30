@@ -33,6 +33,8 @@ typedef struct
     int32_t val_default;
     int32_t val_min;
     int32_t val_max;
+    uint16_t item_count; // 0 or 1 indicates single value; higher values indicate arrays
+    uint16_t  item_data_spacing; // only used for 32bit values; indicates the distance of the higher 16 bits from the lower 16bits
 } ConfigEntryDescriptor;
 
 const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);
@@ -498,7 +500,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //#define EEPROM_SPECTRUM_LIGHT_ENABLE 355
 #define EEPROM_MANUAL_NOTCH				356
 #define EEPROM_MANUAL_PEAK				357
-#define EEPROM_FIRST_UNUSED 			358  // change this if new value ids are introduced
+#define EEPROM_RX_IQ_AM_PHASE_BALANCE   358     // IQ Gain balance for AM reception
+#define EEPROM_FIRST_UNUSED 			359  // change this if new value ids are introduced
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
 // need to modify virtual EEPROM routines otherwise system may crash
