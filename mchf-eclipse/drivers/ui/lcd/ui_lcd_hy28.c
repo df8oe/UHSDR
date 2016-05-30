@@ -24,6 +24,7 @@
 #define USE_SPI_DMA
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
+// #define CHRISINIT
 
 // Saved fonts
 extern sFONT GL_Font8x8;
@@ -996,19 +997,16 @@ uchar UiLcdHy28_InitA(void)
     if(ts.DeviceCode == 0x9320)
     {
         // Start Initial Sequence
-//      UiLcdHy28_WriteReg(0xE5,0x8000);   // Set the internal vcore voltage
-        UiLcdHy28_WriteReg(0xE5,0x78F0);   // Set the internal vcore voltage
+        UiLcdHy28_WriteReg(0xE5,0x8000);   // Set the internal vcore voltage
         UiLcdHy28_WriteReg(0x00,  0x0001);    // Start internal OSC.
 
-        // Direction related/
-//        UiLcdHy28_WriteReg(0x01,  0x0100);    // set SS and SM bit
-        UiLcdHy28_WriteReg(0x01,  0x0000);    // set SS and SM bit
+        // Direction related
+        UiLcdHy28_WriteReg(0x01,  0x0100);    // set SS and SM bit
 
         UiLcdHy28_WriteReg(0x02,  0x0700);    // set 1 line inversion
         UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1.
         UiLcdHy28_WriteReg(0x04,  0x0000);    // Resize register
-//        UiLcdHy28_WriteReg(0x08,  0x0202);    // set the back porch and front porch
-        UiLcdHy28_WriteReg(0x08,  0x0207);    // set the back porch and front porch
+        UiLcdHy28_WriteReg(0x08,  0x0202);    // set the back porch and front porch
         UiLcdHy28_WriteReg(0x09,  0x0000);    // set non-display area refresh cycle ISC[3:0]
         UiLcdHy28_WriteReg(0x0A, 0x0000);    // FMARK function
         UiLcdHy28_WriteReg(0x0C, 0x0000);    // RGB interface setting
@@ -1020,21 +1018,14 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x11, 0x0000);    // DC1[2:0], DC0[2:0], VC[2:0]
         UiLcdHy28_WriteReg(0x12, 0x0000);    // VREG1OUT voltage
         UiLcdHy28_WriteReg(0x13, 0x0000);    // VDV[4:0] for VCOM amplitude
-        UiLcdHy28_WriteReg(0x07,  0x0001);    							// newly added
         UiLcdHy28_Delay(300000);            // Dis-charge capacitor power voltage (300ms)
-//       UiLcdHy28_WriteReg(0x10, 0x17B0);    // SAP, BT[3:0], AP, DSTB, SLP, STB
-//       UiLcdHy28_WriteReg(0x11, 0x0137);    // DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_WriteReg(0x10, 0x1090);    // SAP, BT[3:0], AP, DSTB, SLP, STB
-        UiLcdHy28_WriteReg(0x11, 0x0227);    // DC1[2:0], DC0[2:0], VC[2:0]
+        UiLcdHy28_WriteReg(0x10, 0x17B0);    // SAP, BT[3:0], AP, DSTB, SLP, STB
+        UiLcdHy28_WriteReg(0x11, 0x0137);    // DC1[2:0], DC0[2:0], VC[2:0]
         UiLcdHy28_Delay(100000);             // Delay 100 ms
-//       UiLcdHy28_WriteReg(0x12, 0x0139);    // VREG1OUT voltage
-        UiLcdHy28_WriteReg(0x12, 0x001F);    // VREG1OUT voltage
+        UiLcdHy28_WriteReg(0x12, 0x0139);    // VREG1OUT voltage
         UiLcdHy28_Delay(100000);             // Delay 100 ms
-//       UiLcdHy28_WriteReg(0x13, 0x1d00);    // VDV[4:0] for VCOM amplitude
-//       UiLcdHy28_WriteReg(0x29, 0x0013);    // VCM[4:0] for VCOMH
-        UiLcdHy28_WriteReg(0x13, 0x1500);    // VDV[4:0] for VCOM amplitude
-        UiLcdHy28_WriteReg(0x29, 0x0027);    // VCM[4:0] for VCOMH
-        UiLcdHy28_WriteReg(0x2B, 0x000D);    // VCM[4:0] for VCOMH
+        UiLcdHy28_WriteReg(0x13, 0x1d00);    // VDV[4:0] for VCOM amplitude
+        UiLcdHy28_WriteReg(0x29, 0x0013);    // VCM[4:0] for VCOMH
         UiLcdHy28_Delay(100000);             // Delay 100 ms
         UiLcdHy28_WriteReg(0x20, 0x0000);    // GRAM horizontal Address
         UiLcdHy28_WriteReg(0x21, 0x0000);    // GRAM Vertical Address
@@ -1073,20 +1064,18 @@ uchar UiLcdHy28_InitA(void)
 
         // Panel Control
         UiLcdHy28_WriteReg(0x90, 0x0010);
-//       UiLcdHy28_WriteReg(0x92, 0x0000);
-        UiLcdHy28_WriteReg(0x92, 0x0600);
-//       UiLcdHy28_WriteReg(0x93, 0x0003);
-//       UiLcdHy28_WriteReg(0x95, 0x0110);
-//       UiLcdHy28_WriteReg(0x97, 0x0000);
-//       UiLcdHy28_WriteReg(0x98, 0x0000);
+        UiLcdHy28_WriteReg(0x92, 0x0000);
+        UiLcdHy28_WriteReg(0x93, 0x0003);
+        UiLcdHy28_WriteReg(0x95, 0x0110);
+        UiLcdHy28_WriteReg(0x97, 0x0000);
+        UiLcdHy28_WriteReg(0x98, 0x0000);
 
         // Set GRAM write direction
         //UiLcdHy28_WriteReg(0x03, 0x1028);
-//       UiLcdHy28_WriteReg(0x03, 0x1030);
+        UiLcdHy28_WriteReg(0x03, 0x1030);
 
         // 262K color and display ON
-//       UiLcdHy28_WriteReg(0x07, 0x0173);
-        UiLcdHy28_WriteReg(0x07, 0x0133);
+        UiLcdHy28_WriteReg(0x07, 0x0173);
 
         // delay 50 ms
         UiLcdHy28_Delay(50000);
@@ -1143,7 +1132,88 @@ uchar UiLcdHy28_InitA(void)
     // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
     if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
     {
-        //      UiLcdHy28_WriteReg(0x00e5,0x78f0);	// special testing
+      #ifdef CHRISINIT
+		{
+		UiLcdHy28_WriteReg(0xE5, 0x78F0); /* set SRAM internal timing */
+		UiLcdHy28_WriteReg(0x01, 0x0000); /* set Driver Output Control */
+		UiLcdHy28_WriteReg(0x02, 0x0700); /* set 1 line inversion */
+		UiLcdHy28_WriteReg(0x03, 0x1030); /* set GRAM write direction and BGR=1 */
+		UiLcdHy28_WriteReg(0x04, 0x0000); /* Resize register */
+		UiLcdHy28_WriteReg(0x08, 0x0207); /* set the back porch and front porch */
+		UiLcdHy28_WriteReg(0x09, 0x0000); /* set non-display area refresh cycle ISC[3:0] */
+		UiLcdHy28_WriteReg(0x0A, 0x0000); /* FMARK function */
+		UiLcdHy28_WriteReg(0x0C, 0x0000); /* RGB interface setting */
+		UiLcdHy28_WriteReg(0x0D, 0x0000); /* Frame marker Position */
+		UiLcdHy28_WriteReg(0x0F, 0x0000); /* RGB interface polarity */
+
+		/*************Power On sequence ****************/
+		UiLcdHy28_WriteReg(0x10, 0x0000); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
+		UiLcdHy28_WriteReg(0x11, 0x0007); /* DC1[2:0], DC0[2:0], VC[2:0] */
+		UiLcdHy28_WriteReg(0x12, 0x0000); /* VREG1OUT voltage */
+		UiLcdHy28_WriteReg(0x13, 0x0000); /* VDV[4:0] for VCOM amplitude */
+		UiLcdHy28_WriteReg(0x07, 0x0001);
+
+		//delay_ms(200);
+		UiLcdHy28_Delay(200000);
+
+		/* Dis-charge capacitor power voltage */
+		UiLcdHy28_WriteReg(0x10, 0x1090); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
+		UiLcdHy28_WriteReg(0x11, 0x0227); /* Set DC1[2:0], DC0[2:0], VC[2:0] */
+
+		//delay_ms(50); /* Delay 50ms */
+		UiLcdHy28_Delay(50000);
+
+		UiLcdHy28_WriteReg(0x12, 0x001F);
+
+		//delay_ms(50); /* Delay 50ms */
+		UiLcdHy28_Delay(50000);
+
+		UiLcdHy28_WriteReg(0x13, 0x1500); /* VDV[4:0] for VCOM amplitude */
+		UiLcdHy28_WriteReg(0x29, 0x0027); /* 04 VCM[5:0] for VCOMH */
+		UiLcdHy28_WriteReg(0x2B, 0x000D); /* Set Frame Rate */
+
+		//delay_ms(50); /* Delay 50ms */
+		UiLcdHy28_Delay(50000);
+
+		UiLcdHy28_WriteReg(0x20, 0x0000); /* GRAM horizontal Address */
+		UiLcdHy28_WriteReg(0x21, 0x0000); /* GRAM Vertical Address */
+
+		/* ----------- Adjust the Gamma Curve ---------- */
+		UiLcdHy28_WriteReg(0x30, 0x0000);
+		UiLcdHy28_WriteReg(0x31, 0x0707);
+		UiLcdHy28_WriteReg(0x32, 0x0307);
+		UiLcdHy28_WriteReg(0x35, 0x0200);
+		UiLcdHy28_WriteReg(0x36, 0x0008);
+		UiLcdHy28_WriteReg(0x37, 0x0004);
+		UiLcdHy28_WriteReg(0x38, 0x0000);
+		UiLcdHy28_WriteReg(0x39, 0x0707);
+		UiLcdHy28_WriteReg(0x3C, 0x0002);
+		UiLcdHy28_WriteReg(0x3D, 0x1D04);
+
+		/* ------------------ Set GRAM area --------------- */
+		UiLcdHy28_WriteReg(0x50, 0x0000); /* Horizontal GRAM Start Address */
+		UiLcdHy28_WriteReg(0x51, 0x00EF); /* Horizontal GRAM End Address */
+		UiLcdHy28_WriteReg(0x52, 0x0000); /* Vertical GRAM Start Address */
+		UiLcdHy28_WriteReg(0x53, 0x013F); /* Vertical GRAM Start Address */
+		UiLcdHy28_WriteReg(0x60, 0xA700); /* Gate Scan Line */
+		UiLcdHy28_WriteReg(0x61, 0x0001); /* NDL,VLE, REV */
+		UiLcdHy28_WriteReg(0x6A, 0x0000); /* set scrolling line */
+
+		/* -------------- Partial Display Control --------- */
+		UiLcdHy28_WriteReg(0x80, 0x0000);
+		UiLcdHy28_WriteReg(0x81, 0x0000);
+		UiLcdHy28_WriteReg(0x82, 0x0000);
+		UiLcdHy28_WriteReg(0x83, 0x0000);
+		UiLcdHy28_WriteReg(0x84, 0x0000);
+		UiLcdHy28_WriteReg(0x85, 0x0000);
+
+		/* -------------- Panel Control ------------------- */
+		UiLcdHy28_WriteReg(0x90, 0x0010);
+		UiLcdHy28_WriteReg(0x92, 0x0600);
+		UiLcdHy28_WriteReg(0x07, 0x0133); /* 262K color and display ON */
+		}
+      #else
+        {
         UiLcdHy28_WriteReg(0x0001,0x0000);	// set SS and SM bit
         UiLcdHy28_WriteReg(0x0002,0x0700);	// set 1 line inversion
         UiLcdHy28_WriteReg(0x0004,0x0000);	// resize register
@@ -1162,13 +1232,13 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_Delay(200000);			// delay 200 ms
         UiLcdHy28_WriteReg(0x0010,0x1590);	// SAP, BT[3:0], AP, DSTB, SLP, STB
         UiLcdHy28_WriteReg(0x0011,0x0227);	// set DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_Delay(50000);			// delay 50 ms
+        UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x0012,0x009c);	// internal reference voltage init
-        UiLcdHy28_Delay(50000);			// delay 50 ms
+        UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x0013,0x1900);	// set VDV[4:0] for VCOM amplitude
         UiLcdHy28_WriteReg(0x0029,0x0023);	// VCM[5:0] for VCOMH
         UiLcdHy28_WriteReg(0x002b,0x000d);	// set frame rate: changed from 0e to 0d on 03/28/2016
-        UiLcdHy28_Delay(50000);			// delay 50 ms
+        UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x0020,0x0000);	// GRAM horizontal address
         UiLcdHy28_WriteReg(0x0021,0x0000);	// GRAM vertical address
         UiLcdHy28_WriteReg(0x0050,0x0000);	// horizontal GRAM start address
@@ -1190,6 +1260,8 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x0092,0x0000);
         // activate display using 262k colours
         UiLcdHy28_WriteReg(0x0007,0x0133);
+	}
+      #endif
     }
 
     return 0;
