@@ -1000,10 +1000,12 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             rx_muted = Codec_PrepareTx(rx_muted, txrx_mode);
 
-            PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
-            RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
-
-            RadioManagement_EnablePABias();
+			if(ts.tx_disable == false)
+			  {
+          	  PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
+          	  RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
+          	  RadioManagement_EnablePABias();
+          	  }
         }
     }
 
@@ -1463,10 +1465,7 @@ static void RadioManagement_HandlePttOnOff()
     {
         if(ts.txrx_mode == TRX_MODE_RX)
         {
-            if(!ts.tx_disable)
-            {
-                RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
-            }
+        RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
         }
 
         ts.ptt_req = 0;
