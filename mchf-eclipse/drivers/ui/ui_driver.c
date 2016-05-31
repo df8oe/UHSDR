@@ -1463,7 +1463,7 @@ static void RadioManagement_HandlePttOnOff()
     // PTT on
     if(ts.ptt_req)
     {
-        if(ts.txrx_mode == TRX_MODE_RX)
+        if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
         {
         RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
         }
