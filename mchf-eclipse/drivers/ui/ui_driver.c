@@ -805,7 +805,6 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
 
     //
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
-    //
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
         switch(ts.cw_offset_mode)
@@ -825,7 +824,10 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
                 tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
         }
     }
+
+
     // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
+    // In CW TX mode we do not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
 
     if(!((ts.dmod_mode == DEMOD_CW) && (txrx_mode == TRX_MODE_TX)))
     {
