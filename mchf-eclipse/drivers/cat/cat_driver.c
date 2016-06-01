@@ -436,6 +436,10 @@ void CatDriverFT817CheckAndExecute()
                 // This differs from KA7OEI description but has been verified
                 // with the real thing.
                 resp[0]=ts.txrx_mode == TRX_MODE_TX?0x00:0xFF;
+                if(ts.tx_disable)
+              	  {
+              	  resp[0] =0xFF;
+              	  }
                 bc = 1;
                 break;
             case 255: /* FF sent out by HRD */
