@@ -1142,10 +1142,28 @@ void UiSpectrumReDrawScopeDisplay()
                 ptr = FFT_IQ_BUFF_LEN/8; // FFT_IQ_BUFF_LEN/8  = -12khz = -12khz <-> + 12khz
             }
             end_range = ptr+FFT_IQ_BUFF_LEN/4; // exclusive
+
+            // this would be the right place to interpolate between two FFT values in sd.FFT_TempData in order
+            // to make the mcHF user think that in magnify mode we have 256 different FFT values for the spectrum display
+            // when IN FACT we only have 128 values and interpolate between them to expand to 256 pixels, DD4WH June 2016
+            // when i = 2 * ptr, take same value
+            // in all other cases:
+            /*
+             *   sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)];  each entry from fft is used twice
+             *   sd.FFT_DspData[FftIdx2BufMap(i++)] = (sd.FFT_TempData[FftIdx2BufMap(ptr)] + sd.FFT_TempData[FftIdx2BufMap(ptr + 1)]) / 2 ;  each entry from fft is used twice
+             *
+             *
+             * */
             for(i=0; ptr < end_range; ptr++)	 	// expand data to fill entire screen - get lower half
             {
                 sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* each entry from fft is used twice */
-                sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* each entry from fft is used twice */
+                if (i != ptr * 2) {
+                	sd.FFT_DspData[FftIdx2BufMap(i++)] = (sd.FFT_TempData[FftIdx2BufMap(ptr)] + sd.FFT_TempData[FftIdx2BufMap(ptr + 1)]) / 2 ;
+                	// interpolated value of FFT [ptr] and FFT [ptr + 1]
+                }
+                else {
+                		sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* same entry from fft */
+                }
             }
         }
         else
