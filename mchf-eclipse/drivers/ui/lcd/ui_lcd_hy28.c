@@ -128,8 +128,13 @@ void UiLcdHy28_BacklightDimHandler()
     }
 }
 
+static uint16_t lcd_spi_prescaler;
+
 void UiLcdHy28_SpiInit(bool hispeed)
 {
+
+    lcd_spi_prescaler = hispeed?SPI_BaudRatePrescaler_2:SPI_BaudRatePrescaler_4;
+
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
 
@@ -166,7 +171,7 @@ void UiLcdHy28_SpiInit(bool hispeed)
     SPI_InitStructure.SPI_CPOL			= SPI_CPOL_High;
     SPI_InitStructure.SPI_CPHA			= SPI_CPHA_2Edge;
     SPI_InitStructure.SPI_NSS			= SPI_NSS_Soft;
-    SPI_InitStructure.SPI_BaudRatePrescaler	= hispeed?SPI_BaudRatePrescaler_2:SPI_BaudRatePrescaler_4;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
+    SPI_InitStructure.SPI_BaudRatePrescaler	= lcd_spi_prescaler;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
     SPI_InitStructure.SPI_FirstBit		= SPI_FirstBit_MSB;
     SPI_InitStructure.SPI_Mode			= SPI_Mode_Master;
     SPI_Init(SPI2, &SPI_InitStructure);
@@ -1408,9 +1413,20 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
     return retval;
 }
 
-
-static inline void UiLcdHy28_TouchscreenCsEnable()
+static inline void UiLcdHy28_SetSpiPrescaler(const uint16_t baudrate_prescaler)
 {
+    /*---------------------------- SPIx CR1 Configuration ------------------------*/
+    /* Get the SPIx CR1 value */
+    uint16_t tmpreg = SPI2->CR1;
+    tmpreg &= ~(uint16_t)((uint32_t) (SPI_BaudRatePrescaler_256));
+    tmpreg |= (uint16_t)((uint32_t) (baudrate_prescaler));
+    /* Write to SPIx CR1 */
+    SPI2->CR1 = tmpreg;
+}
+
+static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
+{
+    UiLcdHy28_SetSpiPrescaler(SPI_BaudRatePrescaler_4);
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
 }
 
@@ -1418,6 +1434,7 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 {
     UiLcdHy28_SpiFinishTransfer();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
+    UiLcdHy28_SetSpiPrescaler(lcd_spi_prescaler);
 }
 
 
@@ -1454,7 +1471,7 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
     {
         if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
-            UiLcdHy28_TouchscreenCsEnable();
+            UiLcdHy28_TouchscreenStartSpiTransfer();
             UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
             x = UiLcdHy28_SpiReadByte();
             UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
@@ -1498,10 +1515,10 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
 static void UiLcdHy28_TouchscreenReadData()
 {
 
-    UiLcdHy28_TouchscreenCsEnable();
-    UiLcdHy28_SpiSendByte(144);
+    UiLcdHy28_TouchscreenStartSpiTransfer();
+    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
     ts.tp_x = UiLcdHy28_SpiReadByte();
-    UiLcdHy28_SpiSendByte(208);
+    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
     ts.tp_y = UiLcdHy28_SpiReadByte();
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 }

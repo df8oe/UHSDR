@@ -316,9 +316,16 @@ void Codec_Volume(uchar vol, uint8_t txrx_mode)
     if(txrx_mode == TRX_MODE_TX)	 	// in transmit mode?
     {
         if(ts.iq_freq_mode || (ts.flags1& FLAGS1_MUTE_LINEOUT_TX))	// is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
+        {
             Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);	// yes - mute LINE OUT during transmit
-        else							// audio is NOT to be muted during transmit
+        }
+        else
+        {
+            // audio is NOT to be muted during transmit
+            // this is used for generating the CW Tone since a single channel (I or Q)
+            // will have a sine waveform with the frequency of the CW sidetone if we do not translate frequency
             Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0x78);	// value selected for 0.5VRMS at AGC setting
+        }
     }
     else	// receive mode - LINE OUT always enabled
         Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0x78);	// value selected for 0.5VRMS at AGC setting
