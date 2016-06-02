@@ -12,13 +12,21 @@
 #########################################################################
 #########################################################################
 
+
+201606xx [DF8OE]
+- minor changes in LCD init for parallel use
+- new ui for encoder boxes
+- CW sidetone now available when TX is disabled
+- smoother magnified spectrum display
+
+
 20160515 [DF8OE]
 -released first stable following new versioning scheme
 
 
 20160511 [DF8OE]
 - bugfix: temperature C/F not stored
-- bugfix: Encoder2 state corrected when leaving menu
+- bugfix: encoder2 state corrected when leaving menu
 - disabled blue digits when tuning is faster than SI570 can follow
 
 
