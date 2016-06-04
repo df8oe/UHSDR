@@ -3156,10 +3156,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
+            {
                 AudioManagement_CalcTxIqGainAdj();
+            }
         }
         else		// Orange if not in TX and/or correct mode
+        {
             clr = Orange;
+        }
         sprintf(options, "   %d", ts.tx_iq_lsb_gain_balance);
         break;
     case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
@@ -3171,8 +3175,10 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
+            {
                 //				AudioFilter_CalcTxPhaseAdj();
                 AudioFilter_InitTxHilbertFIR();
+            }
         }
         else		// Orange if not in TX and/or correct mode
             clr = Orange;
@@ -3187,10 +3193,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
+            {
                 AudioManagement_CalcTxIqGainAdj();
+            }
         }
         else		// Orange if not in TX and/or correct mode
+        {
             clr = Orange;
+        }
         sprintf(options, "   %d", ts.tx_iq_usb_gain_balance);
         break;
     case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
@@ -3202,11 +3212,15 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange && !ts.USE_NEW_PHASE_CORRECTION)
+            {
                 AudioFilter_InitTxHilbertFIR();
+            }
             //				AudioFilter_CalcTxPhaseAdj();
         }
         else		// Orange if not in TX and/or correct mode
+        {
             clr = Orange;
+        }
         //
         sprintf(options, "   %d", ts.tx_iq_usb_phase_balance);
         break;
@@ -3220,10 +3234,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
+            {
                 AudioManagement_CalcTxIqGainAdj();
+            }
         }
         else		// Orange if not in TX and/or correct mode
+        {
             clr = Orange;
+        }
         sprintf(options, "   %d", ts.tx_iq_am_gain_balance);
         break;
     case 	CONFIG_FM_TX_GAIN_BAL:		// FM TX IQ Phase balance
@@ -3235,10 +3253,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
+            {
                 AudioManagement_CalcTxIqGainAdj();
+            }
         }
         else		// Orange if not in TX and/or correct mode
+        {
             clr = Orange;
+        }
         sprintf(options, "   %d", ts.tx_iq_fm_gain_balance);
         break;
     case CONFIG_CW_PA_BIAS:		// CW PA Bias adjust
@@ -3252,28 +3274,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
             if(tchange)
             {
-                if((ts.dmod_mode == DEMOD_CW) && (ts.pa_cw_bias))	 	// in CW mode and bias NONZERO?
-                {
-                    calc_var = BIAS_OFFSET + (ts.pa_cw_bias * 2);
-                    if(calc_var > 255)
-                        calc_var = 255;
-                    //
-                    DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
-                }
-                else
-                {
-                    calc_var = BIAS_OFFSET + (ts.pa_bias * 2);	// if it is zero, use the "other" value
-                    if(calc_var > 255)
-                        calc_var = 255;
-                    //
-                    DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);	// Set DAC Channel 1 DHR12L register
-                }
+                RadioManagement_EnablePABias();
             }
             if(ts.pa_cw_bias < MIN_BIAS_SETTING)
+            {
                 clr = Yellow;
+            }
         }
         else		// Orange if not in TUNE or TX mode
+        {
             clr = Orange;
+        }
         sprintf(options, "  %u", ts.pa_cw_bias);
         break;
     case CONFIG_PA_BIAS:		// PA Bias adjust (Including CW if CW bias == 0)
@@ -3287,21 +3298,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
             if(tchange)
             {
-                if(ts.dmod_mode != DEMOD_CW || ts.pa_cw_bias == 0)	 	// is it NOT in CW mode, or is it in CW mode and the CW bias set to zero?
-                {
-                    calc_var = BIAS_OFFSET + (ts.pa_bias * 2);
-                    if(calc_var > 255)
-                        calc_var = 255;
-                    //
-                    // Set DAC Channel 1 DHR12L register
-                    DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);
-                }
+                RadioManagement_EnablePABias();
             }
             if(ts.pa_bias < MIN_BIAS_SETTING)
+            {
                 clr = Yellow;
+            }
         }
         else		// Orange if not in TUNE or TX mode
+        {
             clr = Orange;
+        }
         sprintf(options, "  %u", ts.pa_bias);
         break;
     case CONFIG_FWD_REV_PWR_DISP:	// Enable/disable swap of FWD/REV A/D inputs on power sensor
@@ -3318,10 +3325,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                   SWR_CAL_DEFAULT,
                                                   1);
             if(ts.txrx_mode != TRX_MODE_TX)	// Orange if not in TX mode
+            {
                 clr = Orange;
+            }
         }
         else	// numerical display NOT active
+        {
             clr = Orange;		// make it red to indicate that adjustment is NOT available
+        }
         sprintf(options, "  %u", swrm.sensor_null);
         break;
     case CONFIG_FWD_REV_COUPLING_2200M_ADJ:		// RF power sensor coupling adjust (2200m)
@@ -3363,9 +3374,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(tchange)		 	// did the status change and is translate mode NOT active?
         {
             if(temp_var)	// swapping of FWD/REV is enabled
+            {
                 ts.flags1 |= FLAGS1_SWAP_FWDREV_SENSE;		// set bit
+            }
             else			// swapping of FWD/REV bit is disabled
+            {
                 ts.flags1 &= ~FLAGS1_SWAP_FWDREV_SENSE;		// clear bit
+            }
         }
         if(ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE)	 			// Display status FWD/REV swapping
         {
@@ -3389,7 +3404,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Red;
         }
         else
+        {
             strcpy(options, "    OFF");
+        }
         break;
     case CONFIG_XVTR_FREQUENCY_OFFSET:		// Adjust transverter Frequency offset
         if(var >= 1)	 	// setting increase?
@@ -3402,9 +3419,13 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             ts.menu_var_changed = 1;	// indicate that a change has occurred
             if(ts.xverter_offset >= df.tuning_step)	// subtract only if we have room to do so
+            {
                 ts.xverter_offset -= df.tuning_step;
+            }
             else
+            {
                 ts.xverter_offset = 0;				// else set to zero
+            }
             //
             tchange = 1;
         }
@@ -3424,7 +3445,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
 
         if(ts.xverter_mode)	// transvert mode active?
+        {
             clr = Red;		// make number red to alert user of this!
+        }
 
         sprintf(options, " %9uHz", (uint)ts.xverter_offset);	// print with nine digits
         break;

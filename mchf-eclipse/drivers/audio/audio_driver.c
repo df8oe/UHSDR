@@ -1912,6 +1912,18 @@ static void audio_snap_carrier (void)
     }
 }
 
+
+AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, float32_t scaling, uint16_t size)
+{
+    float32_t                   e3_buffer[IQ_BUFSZ+1];
+    float32_t                   f3_buffer[IQ_BUFSZ+1];
+
+    arm_copy_f32((float32_t *)src, e3_buffer, size);
+    arm_scale_f32(e3_buffer, scaling, e3_buffer, size);
+    arm_add_f32((float32_t *)dst, e3_buffer, f3_buffer, size);
+    arm_copy_f32(f3_buffer, (float32_t *)dst, size);
+}
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -2020,26 +2032,22 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         {
             if (ts.rx_iq_lsb_phase_balance > 0)
             {
-                scaling_I_in_Q = 0;
                 scaling_Q_in_I = (float32_t) ts.rx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
             }
             else
             {
                 scaling_I_in_Q = (float32_t)ts.rx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
-                scaling_Q_in_I = 0;
             }
         }
         else if (ts.dmod_mode == DEMOD_USB)
         {
             if (ts.rx_iq_usb_phase_balance > 0)
             {
-                scaling_I_in_Q = 0;
                 scaling_Q_in_I = (float32_t)ts.rx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
             }
             else
             {
                 scaling_I_in_Q = (float32_t)ts.rx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
-                scaling_Q_in_I = 0;
             }
 
         }
@@ -2047,44 +2055,23 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         {
             if (ts.rx_iq_am_phase_balance > 0)
             {
-                scaling_I_in_Q = 0;
                 scaling_Q_in_I = (float32_t) ts.rx_iq_am_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
             }
             else
             {
                 scaling_I_in_Q = (float32_t)ts.rx_iq_am_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
-                scaling_Q_in_I = 0;
             }
 
         }
-        else     // just to make Eclipse happy ;-)
-        {
-            scaling_I_in_Q = 0;
-            scaling_Q_in_I = 0;
-        }
+
         // this saves half of the CPU time for the adjustment ;-)
         if (scaling_I_in_Q)   // phase adjustment > 0: we only need to deal with I and put a little bit of it into Q
         {
-            // copy I into e2 buffer
-            arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e2_buffer, size/2);
-            // scale e2 with scaling_I_in_Q
-            arm_scale_f32((float32_t *)ads.e2_buffer, (float32_t)scaling_I_in_Q, (float32_t *)ads.e2_buffer, size/2);
-            // Add Q plus a little bit of I (= e2) and put into f3 buffer
-            arm_add_f32((float32_t *)ads.q_buffer, (float32_t *)ads.e2_buffer, (float32_t *)ads.f3_buffer, size/2);
-            // copy f3 buffer into Q
-            arm_copy_f32((float32_t *)ads.f3_buffer, (float32_t *)ads.q_buffer, size/2);
+            AudioDriver_Mix(ads.i_buffer,ads.q_buffer, scaling_I_in_Q , size/2);
         }
         else   // phase adjustment <0: we only need to deal with Q and put a little bit of it into I
         {
-            // copy Q into f2 buffer
-            arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f2_buffer, size/2);
-            // scale f2 with scaling_Q_in_I
-            arm_scale_f32((float32_t *)ads.f2_buffer, (float32_t)scaling_Q_in_I, (float32_t *)ads.f2_buffer, size/2);
-            // this is I + a little bit of Q --> f2
-            // Add I plus a little bit of Q (= f2) and put into e3 buffer
-            arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.f2_buffer, (float32_t *)ads.e3_buffer, size/2);
-            // copy e3 buffer into I
-            arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
+            AudioDriver_Mix(ads.q_buffer,ads.i_buffer, scaling_Q_in_I , size/2);
         }
 
     //
@@ -2515,10 +2502,14 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
                 alc_var /= ALC_KNEE;			// calculate ratio of difference between knee value and this value
                 ads.alc_val -= ads.alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
                 if(ads.alc_val <= ALC_VAL_MIN)	// Prevent zero or "negative" gain values
+                {
                     ads.alc_val = ALC_VAL_MIN;
+                }
             }
             if(ads.alc_val >= ALC_VAL_MAX)	// limit to fixed values within the code
+            {
                 ads.alc_val = ALC_VAL_MAX;
+            }
         }
         else	 	// are we in TUNE mode?
         {
@@ -2572,57 +2563,32 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
         {
             if (ts.tx_iq_lsb_phase_balance > 0)
             {
-                scaling_I_in_Q_2 = 0;
                 scaling_Q_in_I_2 = (float32_t) ts.tx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
             }
             else
             {
                 scaling_I_in_Q_2 = (float32_t)ts.tx_iq_lsb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
-                scaling_Q_in_I_2 = 0;
             }
         }
         else if (ts.dmod_mode == DEMOD_USB)
         {
             if (ts.tx_iq_usb_phase_balance > 0)
             {
-                scaling_I_in_Q_2 = 0;
                 scaling_Q_in_I_2 = (float32_t)ts.tx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
             }
             else
             {
                 scaling_I_in_Q_2 = (float32_t)ts.tx_iq_usb_phase_balance/SCALING_FACTOR_IQ_PHASE_ADJUST;
-                scaling_Q_in_I_2 = 0;
             }
-
-        }
-        else   // just to make Eclipse happy ;-)
-        {
-            scaling_I_in_Q_2 = 0;
-            scaling_Q_in_I_2 = 0;
         }
         //
         if (scaling_I_in_Q_2)   // we only need to deal with I and put a little bit of it into Q
         {
-            // copy I into e2 buffer
-            arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e2_buffer, size/2);
-            // scale e2 with scaling_I_in_Q
-            arm_scale_f32((float32_t *)ads.e2_buffer, (float32_t)scaling_I_in_Q_2, (float32_t *)ads.e2_buffer, size/2);
-            // Add Q plus a little bit of I (= e2) and put into f3 buffer
-            arm_add_f32((float32_t *)ads.q_buffer, (float32_t *)ads.e2_buffer, (float32_t *)ads.f3_buffer, size/2);
-            // copy f3 buffer into Q
-            arm_copy_f32((float32_t *)ads.f3_buffer, (float32_t *)ads.q_buffer, size/2);
+            AudioDriver_Mix(ads.i_buffer,ads.q_buffer, scaling_I_in_Q_2 , size/2);
         }
         else   // we only need to deal with Q and put a little bit of it into I
         {
-            // copy Q into f2 buffer
-            arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f2_buffer, size/2);
-            // scale f2 with scaling_Q_in_I
-            arm_scale_f32((float32_t *)ads.f2_buffer, (float32_t)scaling_Q_in_I_2, (float32_t *)ads.f2_buffer, size/2);
-            // this is I + a little bit of Q --> f2
-            // Add I plus a little bit of Q (= f2) and put into e3 buffer
-            arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.f2_buffer, (float32_t *)ads.e3_buffer, size/2);
-            // copy e3 buffer into I
-            arm_copy_f32((float32_t *)ads.e3_buffer, (float32_t *)ads.i_buffer, size/2);
+            AudioDriver_Mix(ads.q_buffer,ads.i_buffer, scaling_Q_in_I_2 , size/2);
         }
     } // FIXME: end test variable
 
@@ -2696,10 +2662,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         // Equalize based on band and simultaneously apply I/Q gain adjustments
         //
         audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
-
-        return;
     }
-
     // -----------------------------
     // CW handler
     //
@@ -2750,7 +2713,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         }
         //
         if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)		// Are we in LINE IN mode?
+        {
             gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
+        }
         else if (ts.tx_audio_source == TX_AUDIO_MIC)
         {
             gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
@@ -2761,30 +2726,30 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             gain_calc = 1;
         }
         //
-        // Apply gain if not in TUNE mode
         if(!ts.tune)
         {
+            // Apply gain if not in TUNE mode
             arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);	// apply gain
             //
             arm_max_f32((float32_t *)ads.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
             arm_min_f32((float32_t *)ads.a_buffer, size/2, &min, &pindex);
             min = fabs(min);
             if(min > max)
+            {
                 max = min;
+            }
             ads.peak_audio = max;
-        }
-        //
-        //	TX audio filtering
-        //
-        if(!ts.tune)	 	// NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
-        {
+
+            // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
             // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
             // and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
             // over the 275-2500 Hz range.
             //
             if(!(ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
+            {
                 arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);
+            }
         }
         //
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering

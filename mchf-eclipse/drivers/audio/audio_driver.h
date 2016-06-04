@@ -57,7 +57,7 @@
 #define SCALING_FACTOR_IQ_PHASE_ADJUST 3000.0
 #define SCALING_FACTOR_IQ_AMPLITUDE_ADJUST 4096.0
 
-//
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
@@ -72,10 +72,6 @@ typedef struct AudioDriverState
     float32_t					d_buffer[IQ_BUFSZ+1];
     float32_t					e_buffer[IQ_BUFSZ+1];
     float32_t					f_buffer[IQ_BUFSZ+1];
-    float32_t					e2_buffer[IQ_BUFSZ+1];
-    float32_t					f2_buffer[IQ_BUFSZ+1];
-    float32_t					e3_buffer[IQ_BUFSZ+1];
-    float32_t					f3_buffer[IQ_BUFSZ+1];
     //
     float32_t					Osc_I_buffer[IQ_BUFSZ+1];
     float32_t					Osc_Q_buffer[IQ_BUFSZ+1];
