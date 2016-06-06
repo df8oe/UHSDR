@@ -78,10 +78,10 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 
     RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA , ENABLE);
 
-    /* Configure SOF VBUS ID DM DP Pins */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9  |
-                                  GPIO_Pin_11 |
-                                  GPIO_Pin_12;
+    /* Configure VBUS DM DP Pins */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9  |				// VBUS
+                                  GPIO_Pin_11 |				// Data-
+                                  GPIO_Pin_12;				// Data+
 
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -96,7 +96,7 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
     /* this for ID line debug */
 
 
-    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10;		// ID
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -109,12 +109,16 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 #else // USE_USB_OTG_HS 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin = 	GPIO_Pin_14 | GPIO_Pin_15;  // Data - / +
+    /* Configure VBUS DM DP Pins */
+    GPIO_InitStructure.GPIO_Pin = 	GPIO_Pin_13 |	// VBUS
+  									GPIO_Pin_14 |	// Data-
+  									GPIO_Pin_15;	// Data+
 
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_12;		// ID
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;	// was _PP
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	// was _NOPULL
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_OTG2_FS);
