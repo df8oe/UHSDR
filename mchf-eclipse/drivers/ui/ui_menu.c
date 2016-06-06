@@ -2703,7 +2703,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
     ulong opt_pos;					// y position of option
     uchar select;
     ulong	clr;
-    ulong	calc_var;
     uchar	temp_var;
     int var;
     bool tchange = 0;		// used to indicate a parameter change

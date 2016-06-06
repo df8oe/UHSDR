@@ -365,7 +365,7 @@ void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void 	RadioManagement_SetBandPowerFactor(uchar band);
-
+void 	RadioManagement_EnablePABias(void);
 //
 //void 	UiDriverChangeFilter(uchar ui_only_update);
 void 	RadioManagement_SetBandPowerFactor(uchar band);
