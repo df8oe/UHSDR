@@ -2536,14 +2536,14 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
     arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.q_buffer, size/2);
 }
 
-// Equalize based on band and simultaneously apply I/Q gain adjustments
+// Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
 void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size)
 {
     int16_t i;
-
+    // this is the IQ gain / amplitude adjustment
     arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
     arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
-
+    // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
 
     // ------------------------
@@ -2593,7 +2593,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     if (ts.tx_audio_source == TX_AUDIO_DIGIQ && ts.dmod_mode != DEMOD_CW && !ts.tune)
     {
         // If in CW mode or Tune  DIQ audio input is ignored
-        // Output I and Q as stereo, fill buffer and leave
+        // Output I and Q as stereo, fill buffer
         for(i = 0; i < size/2; i++)	 				// Copy to single buffer
         {
             ads.i_buffer[i] = (float)*src++;
@@ -2692,8 +2692,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         //
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
-        // FIXME: delete USE_NEW_PHASE_CORRECTION after testing
-        if(!ads.tx_filter_adjusting || ts.USE_NEW_PHASE_CORRECTION)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+        if(!ads.tx_filter_adjusting)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
         {
             // yes - apply transformation AND audio filtering to buffer data
             // + 0 deg to I data
