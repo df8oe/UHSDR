@@ -563,23 +563,23 @@ void UiDriver_HandleSwitchToNextDspMode()
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             break;
         case DSP_SWITCH_NR:
-            ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_NR;
             break;
         case DSP_SWITCH_NOTCH:
-            ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
             break;
         case DSP_SWITCH_NR_AND_NOTCH:
-            ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_NR;
             break;
         case DSP_SWITCH_NOTCH_MANUAL:
-            ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
             break;
         case DSP_SWITCH_PEAK_FILTER:
-            ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+            ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
             ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
             break;
         default:
@@ -1905,7 +1905,8 @@ static void UiDriverProcessKeyboard()
 {
     if(ks.button_processed)
     {
-        ts.nb_disable = 1;	// disable noise blanker if button is pressed or held
+//  		ts.dsp_active |= DSP_NB_ENABLE;
+//        ts.nb_disable = 1;	// disable noise blanker if button is pressed or held
         //
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
         //
@@ -2278,7 +2279,8 @@ static void UiDriverProcessKeyboard()
             }
         }
         //
-        ts.nb_disable = 0;	// re-enable noise blanker when done processing buttons
+//		ts.dsp_active |= ~DSP_NB_ENABLE;
+//        ts.nb_disable = 0;	// re-enable noise blanker when done processing buttons
         //
         // Reset flag, allow other buttons to be checked
         ks.button_processed = 0;

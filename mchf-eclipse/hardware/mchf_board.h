@@ -981,7 +981,7 @@ typedef struct TransceiverState
 #define FREQ_STEP_SWAP_BTN	0xf0
     uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
     //
-    bool	nb_disable;					// TRUE if noise blanker is to be disabled
+//    bool	nb_disable;					// TRUE if noise blanker is to be disabled
     //
 
 #define DSP_NR_ENABLE 	  0x01

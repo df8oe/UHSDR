@@ -348,7 +348,7 @@ void TransceiverStateInit(void)
     //
     ts.freq_step_config		= 0;				// disabled both marker line under frequency and swapping of STEP buttons
     //
-    ts.nb_disable		= 0;					// TRUE if noise blanker is to be disabled
+//    ts.nb_disable		= 0;					// TRUE if noise blanker is to be disabled
     //
     ts.dsp_active		= 0;					// TRUE if DSP noise reduction is to be enabled
     ts.digital_mode		= 0;					// digital modes OFF by default
@@ -676,6 +676,7 @@ int main(void)
     ui_driver_init();
 
 	// Audio HW init
+	ts.reset_dsp_nr = 1;
 	audio_driver_init();
 
 	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
