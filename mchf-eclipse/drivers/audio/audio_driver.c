@@ -903,9 +903,11 @@ static void Audio_Init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#define AUDIO_RX_NB_DELAY_BUFFER_ITEMS (16)
+#define AUDIO_RX_NB_DELAY_BUFFER_SIZE (AUDIO_RX_NB_DELAY_BUFFER_ITEMS*2)
 static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 {
-    static int16_t	delay_buf[34];
+    static int16_t	delay_buf[AUDIO_RX_NB_DELAY_BUFFER_SIZE];
     static uchar	delbuf_inptr = 0, delbuf_outptr = 2;
     ulong	i;
     float	sig;
@@ -913,163 +915,51 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 //	static float avg_sig;
     static	uchar	nb_delay = 0;
     static float	nb_agc = 0;
-    //
-    if((!ts.nb_setting) || (!(ts.dsp_active & DSP_NB_ENABLE)) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ ))	 	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
-    {
-        return;
-    }
 
-    nb_short_setting = (float)ts.nb_setting;		// convert and rescale NB1 setting for higher resolution in adjustment
-    nb_short_setting /= 2;
-
-    for(i = 0; i < size/2; i+=4)	 		// Noise blanker function - "Unrolled" 4x for maximum execution speed
+    if((ts.nb_setting > 0) &&  (ts.dsp_active & DSP_NB_ENABLE)
+        && (ts.dmod_mode != DEMOD_AM && ts.dmod_mode != DEMOD_FM)
+        && (FilterPathInfo[ts.filter_path].sample_rate_dec != RX_DECIMATION_RATE_24KHZ ))
+        // bail out if noise blanker disabled, in AM/FM mode, or set to 10 kHz
     {
-        //
-        sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
-        sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
-        //
-//		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
-        //
-        delay_buf[delbuf_inptr++] = *src;	// copy first byte into delay buffer
-        delay_buf[delbuf_inptr++] = *(src+1);	// copy second byte into delay buffer
-        //
-        nb_agc = (ads.nb_agc_filt * nb_agc) + (ads.nb_sig_filt * sig);		// IIR-filtered "AGC" of current overall signal level
-        //
-        if(((sig) > (nb_agc * (((MAX_NB_SETTING/2) + 1.75) - nb_short_setting))) && (nb_delay == 0))	 	// did a pulse exceed the threshold?
+
+        nb_short_setting = (float)ts.nb_setting;		// convert and rescale NB1 setting for higher resolution in adjustment
+        nb_short_setting /= 2;
+
+        for(i = 0; i < size/2; i++)	 		// Noise blanker function
         {
-            nb_delay = 16;		// yes - set the blanking duration counter
+            sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
+            sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
+            //		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
+            delay_buf[delbuf_inptr++] = *src;	    // copy first byte into delay buffer
+            delay_buf[delbuf_inptr++] = *(src+1);	// copy second byte into delay buffer
+
+            nb_agc = (ads.nb_agc_filt * nb_agc) + (ads.nb_sig_filt * sig);		// IIR-filtered "AGC" of current overall signal level
+
+            if(((sig) > (nb_agc * (((MAX_NB_SETTING/2) + 1.75) - nb_short_setting))) && (nb_delay == 0))	 	// did a pulse exceed the threshold?
+            {
+                nb_delay = AUDIO_RX_NB_DELAY_BUFFER_ITEMS;		// yes - set the blanking duration counter
+            }
+
+            if(!nb_delay)	 		// blank counter not active
+            {
+                *src = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
+                *(src+1) = delay_buf[delbuf_outptr++];
+            }
+            else	 	// It is within the blanking pulse period
+            {
+                *src = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
+                *(src+1) = 0; //(int16_t)avg_sig;
+                nb_delay--;						// count down the number of samples that we are to blank
+            }
+
+            // RINGBUFFER
+            delbuf_outptr %= AUDIO_RX_NB_DELAY_BUFFER_SIZE;
+            delbuf_inptr %= AUDIO_RX_NB_DELAY_BUFFER_SIZE;
+
+            src+=2;
+            // update pointer to source material
+            // (the I/Q pair of audio data)
         }
-        //
-        if(!nb_delay)	 		// blank counter not active
-        {
-            *src = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
-            *(src+1) = delay_buf[delbuf_outptr++];
-        }
-        else	 	// It is within the blanking pulse period
-        {
-            *src = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
-            *(src+1) = 0; //(int16_t)avg_sig;
-            nb_delay--;						// count down the number of samples that we are to blank
-        }
-        //
-//		delbuf_inptr += 2;					// update count of input of circular delay buffer
-//		delbuf_outptr = delbuf_inptr + 2;	// output is always just "after" output of delay buffer
-        delbuf_outptr &= 0x1e;				// set limit to count, forcing lsb of pointer to zero.
-        delbuf_inptr &= 0x1e;
-        //
-        src++;								// update pointer to source material
-        src++;								// (the I/Q pair of audio data)
-        //
-        // Next "unrolled" instance
-        //
-        sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
-        sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
-        //
-//		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
-        //
-        delay_buf[delbuf_inptr++] = *src;	// copy first byte into delay buffer
-        delay_buf[delbuf_inptr++] = *(src+1);	// copy second byte into delay buffer
-        //
-        nb_agc = (NB_AGC_FILT * nb_agc) + (NB_SIG_FILT * sig);		// IIR-filtered "AGC" of current overall signal level
-        //
-        if(((sig) > (nb_agc * (((MAX_NB_SETTING/2) + 1.75) - nb_short_setting))) && (nb_delay == 0))	 	// did a pulse exceed the threshold?
-        {
-            nb_delay = 16;		// yes - set the blanking duration counter
-        }
-        //
-        if(!nb_delay)	 		// blank counter not active
-        {
-            *src = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
-            *(src+1) = delay_buf[delbuf_outptr++];
-        }
-        else	 	// It is within the blanking pulse period
-        {
-            *src = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
-            *(src+1) = 0; //(int16_t)avg_sig;
-            nb_delay--;						// count down the number of samples that we are to blank
-        }
-        //
-//		delbuf_inptr += 2;					// update count of input of circular delay buffer
-//		delbuf_outptr = delbuf_inptr + 2;	// output is always just "after" output of delay buffer
-        delbuf_outptr &= 0x1e;				// set limit to count, forcing lsb of pointer to zero.
-        delbuf_inptr &= 0x1e;
-        //
-        src++;								// update pointer to source material
-        src++;								// (the I/Q pair of audio data)
-        //
-        // Next "unrolled" instance
-        //
-        sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
-        sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
-        //
-//		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
-        //
-        delay_buf[delbuf_inptr++] = *src;	// copy first byte into delay buffer
-        delay_buf[delbuf_inptr++] = *(src+1);	// copy second byte into delay buffer
-        //
-        nb_agc = (NB_AGC_FILT * nb_agc) + (NB_SIG_FILT * sig);		// IIR-filtered "AGC" of current overall signal level
-        //
-        if(((sig) > (nb_agc * (((MAX_NB_SETTING/2) + 1.75) - nb_short_setting))) && (nb_delay == 0))	 	// did a pulse exceed the threshold?
-        {
-            nb_delay = 16;		// yes - set the blanking duration counter
-        }
-        //
-        if(!nb_delay)	 		// blank counter not active
-        {
-            *src = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
-            *(src+1) = delay_buf[delbuf_outptr++];
-        }
-        else	 	// It is within the blanking pulse period
-        {
-            *src = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
-            *(src+1) = 0; //(int16_t)avg_sig;
-            nb_delay--;						// count down the number of samples that we are to blank
-        }
-        //
-//		delbuf_inptr += 2;					// update count of input of circular delay buffer
-//		delbuf_outptr = delbuf_inptr + 2;	// output is always just "after" output of delay buffer
-        delbuf_outptr &= 0x1e;				// set limit to count, forcing lsb of pointer to zero.
-        delbuf_inptr &= 0x1e;
-        //
-        src++;								// update pointer to source material
-        src++;								// (the I/Q pair of audio data)
-        //
-        // Last "unrolled" instance
-        //
-        sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
-        sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
-        //
-//		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
-        //
-        delay_buf[delbuf_inptr++] = *src;	// copy first byte into delay buffer
-        delay_buf[delbuf_inptr++] = *(src+1);	// copy second byte into delay buffer
-        //
-        nb_agc = (NB_AGC_FILT * nb_agc) + (NB_SIG_FILT * sig);		// IIR-filtered "AGC" of current overall signal level
-        //
-        if(((sig) > (nb_agc * (((MAX_NB_SETTING/2) + 1.75) - nb_short_setting))) && (nb_delay == 0))	 	// did a pulse exceed the threshold?
-        {
-            nb_delay = 16;		// yes - set the blanking duration counter
-        }
-        //
-        if(!nb_delay)	 		// blank counter not active
-        {
-            *src = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
-            *(src+1) = delay_buf[delbuf_outptr++];
-        }
-        else	 	// It is within the blanking pulse period
-        {
-            *src = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
-            *(src+1) = 0; //(int16_t)avg_sig;
-            nb_delay--;						// count down the number of samples that we are to blank
-        }
-        //
-//		delbuf_inptr += 2;					// update count of input of circular delay buffer
-//		delbuf_outptr = delbuf_inptr + 2;	// output is always just "after" output of delay buffer
-        delbuf_outptr &= 0x1e;				// set limit to count, forcing lsb of pointer to zero.
-        delbuf_inptr &= 0x1e;
-        //
-        src++;								// update pointer to source material
-        src++;								// (the I/Q pair of audio data)
     }
 }
 
