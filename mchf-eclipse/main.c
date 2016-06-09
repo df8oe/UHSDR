@@ -237,8 +237,6 @@ void TransceiverStateInit(void)
     ts.agc_mode			= AGC_DEFAULT;			// AGC setting
     ts.agc_custom_decay	= AGC_CUSTOM_DEFAULT;			// Default setting for AGC custom setting - higher = slower
 
-    ts.USE_NEW_PHASE_CORRECTION = 1; // just for testing new phase correction path
-
     ts.st_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
     ts.keyer_mode		= CW_MODE_IAM_B;			// CW keyer mode
     ts.keyer_speed		= DEFAULT_KEYER_SPEED;			// CW keyer speed
