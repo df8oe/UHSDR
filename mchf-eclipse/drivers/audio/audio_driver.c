@@ -97,11 +97,11 @@ __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
 __IO float32_t			interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 // variables for RX IIR filters
-static float32_t		iir_rx_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_PreFilter;
 //
 // variables for RX antialias IIR filter
-static float32_t		iir_aa_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 //
 // variables for RX manual notch IIR filter
@@ -134,14 +134,14 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
 };
 //
 // variables for FM squelch IIR filters
-static float32_t		iir_squelch_rx_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
 //
 //
 //
 // variables for TX IIR filter
 //
-float32_t		iir_tx_state[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t		iir_tx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 arm_iir_lattice_instance_f32	IIR_TXFilter;
 //
 //
@@ -364,8 +364,7 @@ void audio_driver_set_rx_audio_filter(void)
 
     //
     // Initialize IIR filter state buffer
-    //
-    for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	 	// initialize state buffer to zeroes
+    for(i = 0; i < IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES; i++)	 	// initialize state buffer to zeroes
     {
         iir_rx_state[i] = 0;
     }
@@ -388,8 +387,7 @@ void audio_driver_set_rx_audio_filter(void)
         IIR_AntiAlias.pvCoeffs = NULL;
     }
 
-
-    for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	 	// initialize state buffer to zeroes
+    for(i = 0; i < IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES; i++)	 	// initialize state buffer to zeroes
     {
         iir_aa_state[i] = 0;
     }
@@ -654,7 +652,7 @@ void audio_driver_set_rx_audio_filter(void)
     IIR_Squelch_HPF.pvCoeffs = IIR_15k_hpf.pvCoeffs;   // point to ladder coefficients
     IIR_Squelch_HPF.numStages = IIR_15k_hpf.numStages;      // number of stages
     //
-    for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	 	// initialize state buffer to zeroes
+    for(i = 0; i < IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES; i++)	 	// initialize state buffer to zeroes
     {
         iir_squelch_rx_state[i] = 0;
     }
@@ -829,8 +827,7 @@ void audio_driver_set_rx_audio_filter(void)
    ads.af_disabled = 0;
    ts.dsp_inhibit = dsp_inhibit_temp;
     //
-    AudioFilter_InitRxHilbertFIR();
-//	AudioFilter_CalcRxPhaseAdj(); // this switches the Hilbert/FIR-filters
+    AudioFilter_InitRxHilbertFIR(); // this switches the Hilbert/FIR-filters
 }
 //
 
@@ -866,7 +863,7 @@ void Audio_TXFilter_Init(void)
         IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
     }
 
-    for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE+FIR_RXAUDIO_NUM_TAPS-1; i++)	 	// initialize state buffer to zeroes
+    for(i = 0; i < IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES-1; i++)	 	// initialize state buffer to zeroes
     {
         iir_tx_state[i] = 0;
     }
@@ -2081,8 +2078,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     //	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
     //
     arm_fir_f32((arm_fir_instance_f32 *)&FIR_I,(float32_t *)(ads.i_buffer),(float32_t *)(ads.i_buffer),size/2);	// shift 0 degree FIR+LPF
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(ads.q_buffer),(float32_t *)(ads.q_buffer),size/2);	// shift +90 degrees FIR+LPF (plus RX IQ phase adjustment) - unless its AM, where it's just an LPF!
-
+    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(ads.q_buffer),(float32_t *)(ads.q_buffer),size/2);	// shift -90 degrees FIR+LPF
 
     //	Demodulation, optimized using fast ARM math functions as much as possible
     switch(ts.dmod_mode)
@@ -2536,14 +2532,14 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
     arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.q_buffer, size/2);
 }
 
-// Equalize based on band and simultaneously apply I/Q gain adjustments
+// Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
 void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size)
 {
     int16_t i;
-
+    // this is the IQ gain / amplitude adjustment
     arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
     arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
-
+    // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
 
     // ------------------------
@@ -2593,7 +2589,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     if (ts.tx_audio_source == TX_AUDIO_DIGIQ && ts.dmod_mode != DEMOD_CW && !ts.tune)
     {
         // If in CW mode or Tune  DIQ audio input is ignored
-        // Output I and Q as stereo, fill buffer and leave
+        // Output I and Q as stereo, fill buffer
         for(i = 0; i < size/2; i++)	 				// Copy to single buffer
         {
             ads.i_buffer[i] = (float)*src++;
@@ -2692,8 +2688,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         //
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
-        // FIXME: delete USE_NEW_PHASE_CORRECTION after testing
-        if(!ads.tx_filter_adjusting || ts.USE_NEW_PHASE_CORRECTION)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+        if(!ads.tx_filter_adjusting)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
         {
             // yes - apply transformation AND audio filtering to buffer data
             // + 0 deg to I data

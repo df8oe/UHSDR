@@ -46,8 +46,10 @@
 #define	IQ_BUFSZ 	(BUFF_LEN/2)
 
 // Audio filter
-#define FIR_RXAUDIO_BLOCK_SIZE		1
-#define FIR_RXAUDIO_NUM_TAPS		48
+#define FIR_RXAUDIO_BLOCK_SIZE		32 // block size is 64, but size/2 is used in audio_rx_driver
+#define FIR_RXAUDIO_NUM_TAPS		16 // maximum number of taps in the decimation and interpolation FIR filters
+#define IIR_RXAUDIO_BLOCK_SIZE		32 // block size is 64, but size/2 is used in audio_rx_driver
+#define IIR_RXAUDIO_NUM_STAGES		12 // we use a maximum stage number of 10 at the moment, so this is 12 just to be safe
 //
 #define CODEC_DEFAULT_GAIN		0x1F	// Gain of line input to start with
 #define	ADC_CLIP_WARN_THRESHOLD	4096	// This is at least 12dB below the clipping threshold of the A/D converter itself
@@ -543,8 +545,9 @@ typedef struct SnapCarrier
     // FFT state
 //    arm_rfft_instance_f32           S; // old, depricated FFT routine, do not use
 //    arm_cfft_radix4_instance_f32    S_CFFT;  // old, depricated FFT routine, do not use
+// 	  this was responsible for the initial inaccuracy of the snap carrier routine!
 
-    arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
+	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
 
     // Samples buffer
     //
