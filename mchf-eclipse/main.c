@@ -653,6 +653,8 @@ int main(void)
 //	    ts.dsp_enabled = 1;
 //	    }
 
+
+	audio_driver_init();
     ConfigurationStorage_Init();
 
     // test if touchscreen is present
@@ -672,8 +674,7 @@ int main(void)
     ui_driver_init();
 
 	// Audio HW init
-	ts.reset_dsp_nr = 1;
-	audio_driver_init();
+//	audio_driver_init();
 
 	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
 	AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
@@ -687,6 +688,7 @@ int main(void)
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	Codec_Mute(0);					// make sure codec is un-muted
 
+//	audio_driver_set_rx_audio_filter();
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
         cat_driver_init();
