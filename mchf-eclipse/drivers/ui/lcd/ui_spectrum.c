@@ -888,25 +888,34 @@ void UiSpectrumReDrawScopeDisplay()
 
         //###########################################################################################################################################
         //###########################################################################################################################################
-        // here I would like to insert the dBm/Hz-display
-        // this will be renewed every 100ms, that means when modulus (ts.sysclock/10) == 0
+        // dBm/Hz-display DD4WH June, 9th 2016
+        // this will be renewed every 50ms, that means when modulus (ts.sysclock/20) == 0
         // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
-        // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated),
+        // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
         // so the additional processor load and additional RAM usage should be close to zero
-        if(ts.sysclock%20 == 0)
+        //
+        // TODO: very accurate calibration of this measurement
+        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosible bandwidth
+        //
+        // TODO: insert the same code into the waterfall void --> make a void out of this code . . .
+        //
+        // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
+        // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
+        //
+        if(ts.sysclock%20 == 0 && ts.dBm_Hz_Test)
         {
-        char txt[9];
+        char txt[12];
         float32_t  Lbin, Ubin;
         float32_t bw_LSB = 0.0;
         float32_t bw_USB = 0.0;
         float32_t sum_db = 0.0;
         int posbin = 0;
         float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
-        float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+        float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
+        // width of a 256 tap FFT bin = 187.5Hz
         float32_t width; //, centre_f;
 
         int buff_len_int = FFT_IQ_BUFF_LEN;
-        // init of FFT structure has been moved to audio_driver_init()
 
         //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
@@ -992,9 +1001,7 @@ void UiSpectrumReDrawScopeDisplay()
         }
 
             // determine the sum of all the bin values in the passband
-        	// log10 and
-        	// then divide by bin_BW --> then we have the dBm/Hz value in the passband!
-
+        	// log10
             int c;
             for (c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
             {
@@ -1010,10 +1017,10 @@ void UiSpectrumReDrawScopeDisplay()
 //            float32_t dH = (float32_t)(log10(sum_db) / ((float32_t)((int)Ubin-(int)Lbin) * bin_BW));
             long dbm_Hz = (long) dbm;
 //            long dbm_Hz = -87;
-            // print sum_db
-            snprintf(txt,9,"%4ld dBm", dbm_Hz);
-//            snprintf(txt,9,"%4ld bins", (long)(Ubin-Lbin));
-            UiLcdHy28_PrintTextCentered(168,64,41,txt,White,Blue,0);
+            snprintf(txt,12,"%4ld dBm/Hz", dbm_Hz);
+//            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
+            // TODO: make coordinates constant variables
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         }
         //###########################################################################################################################################
         //###########################################################################################################################################
