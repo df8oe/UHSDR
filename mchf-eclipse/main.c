@@ -654,7 +654,6 @@ int main(void)
 //	    }
 
 
-	audio_driver_init();
     ConfigurationStorage_Init();
 
     // test if touchscreen is present
@@ -674,7 +673,7 @@ int main(void)
     ui_driver_init();
 
 	// Audio HW init
-//	audio_driver_init();
+	audio_driver_init();
 
 	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
 	AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
