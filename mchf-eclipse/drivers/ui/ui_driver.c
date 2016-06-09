@@ -1905,9 +1905,6 @@ static void UiDriverProcessKeyboard()
 {
     if(ks.button_processed)
     {
-//  		ts.dsp_active |= DSP_NB_ENABLE;
-//        ts.nb_disable = 1;	// disable noise blanker if button is pressed or held
-        //
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
         //
         //printf("button process: %02x, debounce time: %d\n\r",ks.button_id,ks.debounce_time);
@@ -2278,10 +2275,6 @@ static void UiDriverProcessKeyboard()
                 break;
             }
         }
-        //
-//		ts.dsp_active |= ~DSP_NB_ENABLE;
-//        ts.nb_disable = 0;	// re-enable noise blanker when done processing buttons
-        //
         // Reset flag, allow other buttons to be checked
         ks.button_processed = 0;
         ks.debounce_time	= 0;
