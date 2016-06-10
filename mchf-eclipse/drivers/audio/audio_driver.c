@@ -1865,6 +1865,24 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     float				post_agc_gain_scaling;
     //
     psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
+
+#define PRENB
+#ifdef PRENB
+    for(i = 0; i < size/2; i++)
+    {
+        //
+        // 16 bit format - convert to float and increment
+        // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+        if (ts.tx_audio_source == TX_AUDIO_DIGIQ)
+        {
+            if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
+            {
+                audio_in_put_buffer(src[2*i]);
+                audio_in_put_buffer(src[2*i+1]);
+            }
+        }
+    }
+#endif
     //
     audio_rx_noise_blanker(src, size);		// do noise blanker function
     //
@@ -1921,6 +1939,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
                 }
             }
         }
+#ifndef DEBUGNB
         //
         // 16 bit format - convert to float and increment
         // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
@@ -1932,6 +1951,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
                 audio_in_put_buffer(*(src+1));
             }
         }
+#endif
         ads.i_buffer[i] = (float32_t)*src++;
         ads.q_buffer[i] = (float32_t)*src++;
         // HACK: we have 48 khz sample frequency
