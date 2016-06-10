@@ -1837,5 +1837,7 @@ static void calculate_dBm(void)
         ts.sysclock = 0;				// reset timer
         }
     	else
-        ts.sysclock++;
+    	  {
+      	  ts.sysclock++;
+      	  }
 }
