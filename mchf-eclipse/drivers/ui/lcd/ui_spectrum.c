@@ -27,6 +27,9 @@ __IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
 
+float32_t dbm = 0.0;
+float32_t dbm_old = 0.0;
+
 static void 	UiDriverFFTWindowFunction(char mode);
 static void     UiSpectrum_FrequencyBarText(void);
 
@@ -882,6 +885,147 @@ void UiSpectrumReDrawScopeDisplay()
                 sd.FFT_AVGData[i] = 1;
         }
         sd.state++;
+
+        //###########################################################################################################################################
+        //###########################################################################################################################################
+        // dBm/Hz-display DD4WH June, 9th 2016
+        // this will be renewed every 50ms, that means when modulus (ts.sysclock/20) == 0
+        // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
+        // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
+        // so the additional processor load and additional RAM usage should be close to zero
+        //
+        // TODO: very accurate calibration of this measurement
+        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosible bandwidth
+        //
+        // TODO: insert the same code into the waterfall void --> make a void out of this code . . .
+        //
+        // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
+        // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
+        //
+        if(ts.sysclock%20 == 0 && ts.dBm_Hz_Test)
+        {
+        char txt[12];
+        float32_t  Lbin, Ubin;
+        float32_t bw_LSB = 0.0;
+        float32_t bw_USB = 0.0;
+        float32_t sum_db = 0.0;
+        int posbin = 0;
+        float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
+        float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
+        // width of a 256 tap FFT bin = 187.5Hz
+        float32_t width; //, centre_f;
+
+        int buff_len_int = FFT_IQ_BUFF_LEN;
+
+        //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
+
+        if(!ts.iq_freq_mode)	 	// frequency translation off, IF = 0 Hz
+        {
+            posbin = buff_len_int / 4; // right in the middle!
+        } // frequency translation ON
+        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+        {
+            posbin = (buff_len_int / 4) - (buff_len_int / 16);
+        }
+        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+        {
+            posbin = (buff_len_int / 4) + (buff_len_int / 16);
+        }
+        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+        {
+            posbin = (buff_len_int / 4) - (buff_len_int / 8);
+        }
+        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+        {
+            posbin = (buff_len_int / 4) + (buff_len_int / 8);
+        }
+
+        width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+//        centre_f = (float32_t)FilterPathInfo[ts.filter_path].offset;
+//        offset = centre_f - (width/2.0);
+
+        //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
+        //	= determine bandwith separately for lower and upper sideband
+
+        if (ts.dmod_mode == DEMOD_LSB)
+        {
+            bw_USB = 0.0;
+            bw_LSB = width;
+        }
+
+        if (ts.dmod_mode == DEMOD_USB)
+        {
+            bw_LSB = 0.0;
+            bw_USB = width;
+        }
+
+        if (ts.dmod_mode == DEMOD_CW)
+        {
+        	//
+            if(ts.cw_lsb)
+            {
+                bw_USB = 0.0;
+                bw_LSB = width;
+            }
+            else
+            {
+                bw_LSB = 0.0;
+                bw_USB = width;
+             }
+        }
+
+        if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM)
+        {
+            bw_LSB = width;
+            bw_USB = width;
+        }
+
+        // calculate upper and lower limit for determination of signal strength
+        // = filter passband is between the lower bin Lbin and the upper bin Ubin
+        Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+        Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+
+
+        i=0;
+        for(i = 0; i < (buff_len_int/2); i++)
+        {
+            if(i < (buff_len_int/4))	 		// build left half of magnitude data
+            {
+            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]; //*SCOPE_PREAMP_GAIN;	// get data
+            }
+            else	 							// build right half of magnitude data
+            {
+            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]; //*SCOPE_PREAMP_GAIN;	// get data
+
+            }
+        }
+
+            // determine the sum of all the bin values in the passband
+        	// log10
+            int c;
+            for (c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+            {
+            	sum_db = sum_db + sd.FFT_Samples[c];
+            }
+            // lowpass IIR filter !
+            dbm = 0.1 * dbm + 0.9 * dbm_old;
+            // these values have to be carefully empirically adjusted
+            dbm = 25.0 * log10 (sum_db) - 210.0;
+            dbm_old = dbm;
+            //            sum_db = log10 (sum_db);
+            // this divides sum_db by the passband width rounded to bin_BWs . . .
+//            float32_t dH = (float32_t)(log10(sum_db) / ((float32_t)((int)Ubin-(int)Lbin) * bin_BW));
+            long dbm_Hz = (long) dbm;
+//            long dbm_Hz = -87;
+            snprintf(txt,12,"%4ld dBm/Hz", dbm_Hz);
+//            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
+            // TODO: make coordinates constant variables
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
+        }
+        //###########################################################################################################################################
+        //###########################################################################################################################################
+        //###########################################################################################################################################
+        //###########################################################################################################################################
         break;
     }
     //
