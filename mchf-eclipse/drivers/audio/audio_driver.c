@@ -1866,8 +1866,8 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
 
-#define PRENB
-#ifdef PRENB
+#define DEBUGNB
+#ifdef DEBUGNB
     for(i = 0; i < size/2; i++)
     {
         //
