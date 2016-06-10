@@ -1152,6 +1152,7 @@ typedef struct TransceiverState
     int		treble_gain;			// gain of the high shelf EQ filter
     bool	AM_experiment;			// for AM demodulation experiments, not for "public" use
     bool	dBm_Hz_Test;			// for testing only
+	uchar	dBm_count;				// timer for calculating RX dBm
 
     uint8_t display_type;           // existence/identification of display type
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW

@@ -1715,7 +1715,7 @@ static void calculate_dBm(void)
         // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
-        if(ts.sysclock%20 == 0 && ts.dBm_Hz_Test)
+        if(ts.sysclock > 19 && ts.dBm_Hz_Test)
         {
         char txt[12];
         ulong i;
@@ -1834,9 +1834,8 @@ static void calculate_dBm(void)
 //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
             // TODO: make coordinates constant variables
         UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
-    	}
-        //###########################################################################################################################################
-        //###########################################################################################################################################
-        //###########################################################################################################################################
-        //###########################################################################################################################################
+        ts.sysclock = 0;				// reset timer
+        }
+    	else
+        ts.sysclock++;
 }
