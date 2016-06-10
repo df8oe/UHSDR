@@ -1803,12 +1803,9 @@ static void audio_snap_carrier (void)
 static void AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, float32_t scaling, uint16_t size)
 {
     float32_t                   e3_buffer[IQ_BUFSZ+1];
-    float32_t                   f3_buffer[IQ_BUFSZ+1];
 
-    arm_copy_f32((float32_t *)src, e3_buffer, size);
-    arm_scale_f32(e3_buffer, scaling, e3_buffer, size);
-    arm_add_f32((float32_t *)dst, e3_buffer, f3_buffer, size);
-    arm_copy_f32(f3_buffer, (float32_t *)dst, size);
+    arm_scale_f32((float32_t *)src, scaling, e3_buffer, size);
+    arm_add_f32((float32_t *)dst, e3_buffer, (float32_t *)dst, size);
 }
 
 static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int size)
