@@ -457,7 +457,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
     if (sd.first_run>0)
     {
-        int idx = 0;
+        idx = 0;
         for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
         {
             y_new = fft_new[idx++];
