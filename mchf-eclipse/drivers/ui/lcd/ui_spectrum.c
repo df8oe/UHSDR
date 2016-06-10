@@ -441,6 +441,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
     static uint16_t pixel_buf[SPECTRUM_HEIGHT+SPEC_LIGHT_MORE_POINTS];
 
     uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
+	uint16_t 	  y1_new_minus = 0;
+	uint16_t	  y1_old_minus = 0;
     uint16_t idx = 0;
     bool      repaint_v_grid = false;
     clr = color_new;
@@ -464,9 +466,13 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                 y_new = (spec_height - 7);
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
             if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
+            {
                 UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
-//			else
+            }
+            //			else
             //	UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
+//            y1_new_minus = y1_new;
+//            y1_old_minus = y1_new;
         }
         sd.first_run--;
     }
@@ -479,34 +485,19 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
         {
             if (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
             {
-//	            if ((fft_old > fft_old_begin + 1) && (fft_old < fft_old_begin + 254)) {
-//                if ((fft_old > 1) && (fft_old < 254)) {
                 if ((idx > 1) && (idx < 254))
                 {
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
-//                	y_old = *fft_old *0.5+ *(fft_old-1)*0.18 + *(fft_old-2)*0.07 + *(fft_old+1)*0.18 + *(fft_old+2)*0.07;
-                    y_old = fft_old[idx] *0.5+ fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
-                }
-                else
-                {
-                    y_old = fft_old[idx];
-                }
-
-//	                if ((fft_new > fft_new_begin + 1) && (fft_new < fft_new_begin + 254)) {
-//	                    if ((fft_new > 1) && (fft_new < 254)) {
-                if ((idx > 1) && (idx < 254))
-                {
-//	    	                	y_new = *fft_new *0.5 + *(fft_new-1)*0.18 + *(fft_new-2)*0.07 + *(fft_new+1)*0.18 + *(fft_new+2)*0.07;
+                    y_old = fft_old[idx] *0.5 + fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
                     y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                 }
                 else
                 {
+                    y_old = fft_old[idx];
                     y_new = fft_new[idx];
                 }
 
-//            fft_old = fft_old + 1;
-//            fft_new = fft_new + 1;
                 idx++;
 
             }
@@ -529,14 +520,46 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
-
-            if (y_old != y_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+            //            if (y1_old != y1_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
-                // y_pos of new point is different from old point AND
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
-                UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
-                UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
+
+            	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
+            	// makes the spectrum display look more complete . . .
+            	//
+
+            	if(y1_old - y1_old_minus > 1 && x !=(SPECTRUM_START_X + sh + 0))
+            	 { // plot line upwards
+            		UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
+            	 }
+            	else if (y1_old - y1_old_minus < -1 && x !=(SPECTRUM_START_X + sh + 0))
+            	 { // plot line downwards
+            		UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
+            	 }
+            	else
+            	 {
+            		  UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
+            	 }
+
+            	if(y1_new - y1_new_minus > 1 && x !=(SPECTRUM_START_X + sh + 0))
+            	 { // plot line upwards
+                     UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
+
+            	 }
+            	else if (y1_new - y1_new_minus < -1 && x !=(SPECTRUM_START_X + sh + 0))
+            	 { // plot line downwards
+                     UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
+
+            	 }
+            	 else {
+            		  UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
+            	 }
+
             }
+            y1_new_minus = y1_new;
+            y1_old_minus = y1_old;
+
 
             if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
             {
@@ -775,7 +798,9 @@ void UiSpectrumReDrawScopeDisplay()
 {
     int spec_height = SPECTRUM_HEIGHT;
     if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
+    }
     ulong i, spec_width;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 //	float32_t	gcalc;
@@ -1710,7 +1735,7 @@ static void calculate_dBm(void)
         // so the additional processor load and additional RAM usage should be close to zero
         //
         // TODO: very accurate calibration of this measurement
-        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosible bandwidth
+        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosable bandwidth
         //
         // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
