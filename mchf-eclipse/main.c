@@ -446,6 +446,7 @@ void TransceiverStateInit(void)
 	if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
 	  {
 	  ts.rfmod_present = 1;					// activate rfmod-board handling
+	  ts.dBm_Hz_Test = 1;					// for testing only
 	  }
 
 
