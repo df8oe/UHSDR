@@ -914,7 +914,7 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
     static	uchar	nb_delay = 0;
     static float	nb_agc = 0;
     //
-    if((!ts.nb_setting) || !(ts.dsp_active & DSP_NB_ENABLE) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ ))	 	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
+    if((!ts.nb_setting) || (!(ts.dsp_active & DSP_NB_ENABLE)) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM) || (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ ))	 	// bail out if noise blanker disabled, in AM mode, or set to 10 kHz
     {
         return;
     }

@@ -672,6 +672,9 @@ int main(void)
     // UI HW init
     ui_driver_init();
 
+	ts.temp_nb = ts.nb_setting;
+	ts.nb_setting = 0;
+
 	// Audio HW init
 	audio_driver_init();
 
@@ -704,5 +707,10 @@ int main(void)
 
         // Reset WD - not working
         //wd_reset();
+	if(ts.temp_nb < 0x80 && ts.sysclock > 50)		// load NB setting after processing first audio data
+	  {
+	  ts.nb_setting = ts.temp_nb;
+	  ts.temp_nb = 0xff;
+	  }
     }
 }

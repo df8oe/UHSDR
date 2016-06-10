@@ -2279,6 +2279,13 @@ static void UiDriverProcessKeyboard()
         ks.button_processed = 0;
         ks.debounce_time	= 0;
     }
+
+  if(ts.temp_nb == 0xff)		// set NB to actual value after restoring from cold start
+	{
+    UiDriverChangeEncoderTwoMode(true);
+	ts.temp_nb = 0xf0;
+	}
+
 }
 
 void UiDriver_RefreshEncoderDisplay()
@@ -4757,7 +4764,7 @@ static void UiDriverCheckEncoderTwo()
                 case ENC_TWO_MODE_SIG_PROC:
                     if(is_dsp_nb())	 	// is it in noise blanker mode?
                     {
-                        ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
+                        ts.nb_setting = (uchar)change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
                     }
                     // Signal processor setting
                     UiDriver_DisplayNoiseBlanker(1);
