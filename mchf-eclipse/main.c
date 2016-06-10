@@ -687,8 +687,6 @@ int main(void)
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
 	Codec_Mute(0);					// make sure codec is un-muted
 
-//	audio_driver_set_rx_audio_filter();
-
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
         cat_driver_init();
 
