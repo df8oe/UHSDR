@@ -489,19 +489,12 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                 {
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
-                    y_old = fft_old[idx] *0.5+ fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
-                }
-                else
-                {
-                    y_old = fft_old[idx];
-                }
-
-                if ((idx > 1) && (idx < 254))
-                {
+                    y_old = fft_old[idx] *0.5 + fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
                     y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                 }
                 else
                 {
+                    y_old = fft_old[idx];
                     y_new = fft_new[idx];
                 }
 
@@ -527,11 +520,9 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
-
             //            if (y1_old != y1_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
-                // y_pos of new point is different from old point AND
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
 
             	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
@@ -807,7 +798,9 @@ void UiSpectrumReDrawScopeDisplay()
 {
     int spec_height = SPECTRUM_HEIGHT;
     if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
+    }
     ulong i, spec_width;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 //	float32_t	gcalc;
@@ -1742,7 +1735,7 @@ static void calculate_dBm(void)
         // so the additional processor load and additional RAM usage should be close to zero
         //
         // TODO: very accurate calibration of this measurement
-        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosible bandwidth
+        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosable bandwidth
         //
         // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
