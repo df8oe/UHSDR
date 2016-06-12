@@ -425,7 +425,7 @@ void Codec_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_StructInit(GPIO_InitStructure);
+    GPIO_StructInit(&GPIO_InitStructure);
 
     // CODEC_I2S output pins configuration: WS, SCK SD0 and SDI pins
     GPIO_InitStructure.GPIO_Pin 	= CODEC_I2S_SCK | CODEC_I2S_SDO | CODEC_I2S_SDI;

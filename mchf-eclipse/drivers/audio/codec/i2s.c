@@ -38,11 +38,11 @@ void I2S_Block_Init(void)
     RCC_AHB1PeriphClockCmd(AUDIO_I2S_DMA_CLOCK, ENABLE);
 
     // Configure the TX DMA Stream
-    DMAö_Cmd(AUDIO_I2S_DMA_STREAM, DISABLE);
+    DMA_Cmd(AUDIO_I2S_DMA_STREAM, DISABLE);
     DMA_DeInit(AUDIO_I2S_DMA_STREAM);
 
     // Set the parameters to be configured
-    DMA_StructInit(DMA_InitStructure);
+    DMA_StructInit(&DMA_InitStructure);
 
     DMA_InitStructure.DMA_Channel = AUDIO_I2S_DMA_CHANNEL;
     DMA_InitStructure.DMA_PeripheralBaseAddr = AUDIO_I2S_DMA_DREG;
@@ -75,7 +75,7 @@ void I2S_Block_Init(void)
     DMA_Cmd(AUDIO_I2S_EXT_DMA_STREAM, DISABLE);
     DMA_DeInit(AUDIO_I2S_EXT_DMA_STREAM);
 
-    DMA_StructInit(DMA_InitStructure2);
+    DMA_StructInit(&DMA_InitStructure2);
 
     // Set the parameters to be configured
     DMA_InitStructure2.DMA_Channel = AUDIO_I2S_EXT_DMA_CHANNEL;
