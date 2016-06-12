@@ -404,6 +404,7 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     // Enable the CODEC_I2S peripheral clock
     RCC_APB1PeriphClockCmd(CODEC_I2S_CLK, ENABLE);
 
+
     // CODEC_I2S peripheral configuration for master TX
     SPI_I2S_DeInit(CODEC_I2S);
     I2S_InitStructure.I2S_AudioFreq = AudioFreq;
@@ -423,6 +424,8 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
 void Codec_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     // CODEC_I2S output pins configuration: WS, SCK SD0 and SDI pins
     GPIO_InitStructure.GPIO_Pin 	= CODEC_I2S_SCK | CODEC_I2S_SDO | CODEC_I2S_SDI;
