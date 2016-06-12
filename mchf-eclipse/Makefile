@@ -14,8 +14,14 @@
 # set these environent to your individual values
 PRJ  = mchf
 LPRJ = mchf
-PREFIX = /usr
-GCC_LIB_VERSION = 4.8
+
+# prefix for use of system-built-in toolchain
+
+ifdef OPT_GCC_ARM
+  PREFIX = $(OPT_GCC_ARM)
+else
+  PREFIX = /usr
+endif
 
 # choose what Keil-Library you want to use
 #SCMSIS_LIB_VERSION = arm_cortexM4lf_math
@@ -31,7 +37,6 @@ LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 
 LIBS :=  	-lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
-        -L$(PREFIX)/lib/gcc/arm-none-eabi/$(GCC_LIB_VERSION)/armv7e-m/fpu \
 	-Llibs
 	
 # Every subdirectory with header files must be mentioned here
