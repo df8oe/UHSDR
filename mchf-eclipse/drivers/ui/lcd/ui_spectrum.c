@@ -443,7 +443,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
     uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
 	uint16_t 	  y1_new_minus = 0;
 	uint16_t	  y1_old_minus = 0;
-    uint16_t idx = 0;
+    uint16_t 	  idx = 0;
     bool      repaint_v_grid = false;
     clr = color_new;
 
@@ -490,11 +490,19 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
                     y_old = fft_old[idx] *0.5 + fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
-                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                 }
                 else
                 {
                     y_old = fft_old[idx];
+
+                }
+
+                if ((idx > 1) && (idx < 254))
+                 {
+                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
+                 }
+                else
+                {
                     y_new = fft_new[idx];
                 }
 
@@ -909,9 +917,8 @@ void UiSpectrumReDrawScopeDisplay()
             if(sd.FFT_AVGData[i] < 1)
                 sd.FFT_AVGData[i] = 1;
         }
-        sd.state++;
-
 		calculate_dBm();
+        sd.state++;
 
         break;
     }
@@ -1342,9 +1349,10 @@ void UiSpectrumReDrawWaterfall()
             if(sd.FFT_AVGData[i] < 1)
                 sd.FFT_AVGData[i] = 1;
         }
-        sd.state++;
 
 		calculate_dBm();
+		sd.state++;
+
 
         break;
     }
@@ -1846,7 +1854,7 @@ static void calculate_dBm(void)
           sum_db = sum_db + sd.FFT_Samples[c];
           }
         // lowpass IIR filter !
-        dbm = 0.1 * dbm + 0.9 * dbm_old;
+        dbm = 0.01 * dbm + 0.99 * dbm_old;
         // these values have to be carefully empirically adjusted
         dbm = 25.0 * log10 (sum_db) - 210.0;
         dbm_old = dbm;
