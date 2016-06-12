@@ -8,14 +8,21 @@
 #
 # Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
 # Rev. 2016-04-06 cleanup - Stephan HB9ocq
-
-
+# Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
 
 # set these environent to your individual values
 PRJ  = mchf
 LPRJ = mchf
 
-# prefix for use of system-built-in toolchain
+# If you want to hold different toolchains on Linux in /opt you can get them from
+# https://launchpad.net/gcc-arm-embedded . Copy unpacked files as 'root' to /opt .
+# If you want to use other toolchain than system-wide  installed proceed as following:
+# Type on a terminal
+# OPT_GCC_ARM=/opt/folder-of-your-toolchain
+# export OPT_GCC_ARM
+# Now 'make all' uses choosen toolchain instead of system wide installed.
+# If yu want to switch back to system wide type
+# OPT_GCC_ARM=
 
 ifdef OPT_GCC_ARM
   PREFIX = $(OPT_GCC_ARM)
