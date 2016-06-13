@@ -1853,10 +1853,10 @@ static void calculate_dBm(void)
           {
           sum_db = sum_db + sd.FFT_Samples[c];
           }
-        // lowpass IIR filter !
-//        dbm = 0.001 * dbm + 0.999 * dbm_old;
         // these values have to be carefully empirically adjusted
-        dbm = 50.0 * log10 (sum_db/(float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 190.0;
+        // these preliminary values have been calibrated with Perseus SDR
+        dbm = 22.0 * log10 (sum_db/(float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
+        // lowpass IIR filter !
         dbm = 0.1 * dbm + 0.9 * dbm_old;
         dbm_old = dbm;
         //            sum_db = log10 (sum_db);

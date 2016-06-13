@@ -441,7 +441,7 @@ void TransceiverStateInit(void)
     ts.bass_gain = 2;						// gain of the low shelf EQ filter
     ts.treble_gain = 0;						// gain of the high shelf EQ filter
     ts.AM_experiment = 0;					// for AM demodulation experiments, not for "public" use
-    ts.dBm_Hz_Test = 0;						// for testing only
+    ts.dBm_Hz_Test = 1;						// for testing only
 	ts.dBm_count = 0;						// timer start
 
 // development setting for DF8OE
