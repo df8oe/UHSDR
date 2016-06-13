@@ -44,6 +44,8 @@ static void mchf_board_led_init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -127,7 +129,11 @@ const ButtonMap bm[18] =
 static void mchf_board_keypad_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
+
     ulong i;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
 
     // Common init
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
@@ -149,6 +155,9 @@ static void mchf_board_ptt_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
+
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
@@ -164,6 +173,9 @@ static void mchf_board_keyer_irq_init(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
 
     // Enable the BUTTON Clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -224,6 +236,9 @@ static void mchf_board_power_button_irq_init(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
 
     // Enable the BUTTON Clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -300,6 +315,9 @@ static void mchf_board_dac1_init(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     DAC_InitTypeDef  DAC_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
+
     // DAC Periph clock enable
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
 
@@ -335,6 +353,9 @@ static void mchf_board_adc1_init(void)
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
 
     // Enable ADC3 clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
@@ -385,6 +406,9 @@ static void mchf_board_adc2_init(void)
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
+
     // Enable ADC3 clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
 
@@ -434,6 +458,9 @@ static void mchf_board_adc3_init(void)
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
+
     // Enable ADC3 clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
 
@@ -482,6 +509,8 @@ static void mchf_board_power_down_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -509,6 +538,8 @@ static void mchf_board_power_down_init(void)
 static void mchf_board_band_cntr_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;

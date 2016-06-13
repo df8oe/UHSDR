@@ -69,6 +69,8 @@ void UiLcdHy28_BacklightInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
     // Set as output
     GPIO_InitStructure.GPIO_Pin = LCD_BACKLIGHT;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -137,6 +139,8 @@ void UiLcdHy28_SpiInit(bool hispeed)
 
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     // Enable the SPI periph
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
@@ -270,6 +274,8 @@ void UiLcdHy28_SpiDeInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
     SPI_Cmd(SPI2, DISABLE);
     SPI_I2S_DeInit(SPI2);
 
@@ -305,6 +311,8 @@ inline void UiLcdHy28_SpiLcdCsEnable() {
 void UiLcdHy28_ParallelInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     // Port D usage - data and control
     // SRAM Data lines,  NOE, NE1, A16 and NWE configuration

@@ -1459,47 +1459,48 @@ static void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break = 0;
     // Not when tuning
-    if(ts.tune)
-        return;
-
-    // PTT on
-    if(ts.ptt_req)
+    if(ts.tune == false)
     {
-        if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
-        {
-        RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
-        }
 
-        ts.ptt_req = 0;
-
-    }
-    else if (!kd.enabled)
-    {
-        // When CAT driver is running
-        // skip auto return to RX
-        // PTT off for all non-CW modes
-        if(ts.dmod_mode != DEMOD_CW)
+        // PTT on
+        if(ts.ptt_req)
         {
-            // PTT flag on ?
-            if(ts.txrx_mode == TRX_MODE_TX)
+            if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
             {
-                // PTT line released ?
-                if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
+            }
+
+            ts.ptt_req = 0;
+
+        }
+        else if (!kd.enabled)
+        {
+            // When CAT driver is running
+            // skip auto return to RX
+            // PTT off for all non-CW modes
+            if(ts.dmod_mode != DEMOD_CW)
+            {
+                // PTT flag on ?
+                if(ts.txrx_mode == TRX_MODE_TX)
                 {
-                    // Lock to prevent IRQ re-entrance
-                    //ts.txrx_lock = 1;
+                    // PTT line released ?
+                    if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                    {
+                        // Lock to prevent IRQ re-entrance
+                        //ts.txrx_lock = 1;
 
-                    ptt_break++;
-                    if(ptt_break < 15)
-                        return;
+                        ptt_break++;
+                        if(ptt_break < 15)
+                            return;
 
-                    ptt_break = 0;
+                        ptt_break = 0;
 
-                    // Back to RX
-                    RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
+                        // Back to RX
+                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
 
-                    // Unlock
-                    //ts.txrx_lock = 0;
+                        // Unlock
+                        //ts.txrx_lock = 0;
+                    }
                 }
             }
         }

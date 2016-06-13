@@ -39,6 +39,8 @@ void UiRotaryFreqEncoderInit(void)
     TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
     GPIO_InitTypeDef 			GPIO_InitStructure;
 
+    GPIO_StructInit(&GPIO_InitStructure);
+
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
@@ -83,6 +85,8 @@ void UiRotaryEncoderOneInit(void)
 
     TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
     GPIO_InitTypeDef 			GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
@@ -174,6 +178,8 @@ void UiRotaryEncoderThreeInit(void)
 
     TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
     GPIO_InitTypeDef 			GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
