@@ -3064,10 +3064,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 MAX_RX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
-            if(tchange) {
-                AudioFilter_InitRxHilbertFIR();
-//				AudioFilter_CalcRxPhaseAdj();
-            }
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3096,11 +3092,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 MAX_RX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
-            if(tchange) {
-                AudioFilter_InitRxHilbertFIR();
-//				AudioFilter_CalcRxPhaseAdj();
-
-            }
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3176,11 +3167,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 MAX_TX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
-            if(tchange)
-            {
-                //				AudioFilter_CalcTxPhaseAdj();
-                AudioFilter_InitTxHilbertFIR();
-            }
         }
         else		// Orange if not in TX and/or correct mode
             clr = Orange;
@@ -3213,11 +3199,6 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 MAX_TX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
-            if(tchange)
-            {
-                AudioFilter_InitTxHilbertFIR();
-            }
-            //				AudioFilter_CalcTxPhaseAdj();
         }
         else		// Orange if not in TX and/or correct mode
         {
