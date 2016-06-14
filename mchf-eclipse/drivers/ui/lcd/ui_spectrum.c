@@ -1748,14 +1748,14 @@ static void calculate_dBm(void)
         // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
-        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test)
+        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX)
         {
         char txt[12];
         ulong i;
         float32_t  Lbin, Ubin;
         float32_t bw_LSB = 0.0;
         float32_t bw_USB = 0.0;
-        float32_t sum_db = 0.0;
+        float64_t sum_db = 0.0;
         int posbin = 0;
         float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
         float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
@@ -1855,7 +1855,14 @@ static void calculate_dBm(void)
           }
         // these values have to be carefully empirically adjusted
         // these preliminary values have been calibrated with Perseus SDR
-        dbm = 22.0 * log10 (sum_db/(float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
+        if (sum_db > 0)
+		{
+        	dbm = 22.0 * log10 (sum_db/(float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
+		}
+        else
+        {
+        	dbm = -145;
+        }
         // lowpass IIR filter !
         dbm = 0.1 * dbm + 0.9 * dbm_old;
         dbm_old = dbm;
