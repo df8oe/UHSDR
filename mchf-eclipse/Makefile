@@ -271,6 +271,8 @@ help:
 
 all:  $(LPRJ).elf $(PRJ).bin
 	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
+	@echo "using \c"
+	$(CC) --version | grep gcc
 
 # compilation
 $(LPRJ).elf:  $(OBJS) $(SRC)
@@ -295,6 +297,10 @@ handy:
 	# rm all .o (but not executables, .map and .dmp)
 	$(RM) $(call FixPath,$(OBJS))
 	$(RM) $(call FixPath,*~)
+
+gcc-version:  
+	# the build will be done using
+	$(CC) --version | grep gcc
 
 docs:  
 	# generate source docs as per "Doxyfile"
