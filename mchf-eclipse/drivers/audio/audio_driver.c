@@ -1834,7 +1834,7 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int 
     }
     if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
-        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, (float32_t)(-iq_phase_balance)/SCALING_FACTOR_IQ_PHASE_ADJUST, size/2);
+        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, (float32_t)(iq_phase_balance)/SCALING_FACTOR_IQ_PHASE_ADJUST, size/2);
     }
     else if (iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
     {

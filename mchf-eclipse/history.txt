@@ -18,6 +18,7 @@
 - new ui for encoder boxes
 - CW sidetone now available when TX is disabled
 - smoother magnified spectrum display
+- added dBm/Hz displayfor RX signals
 
 
 20160515 [DF8OE]
