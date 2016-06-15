@@ -104,6 +104,9 @@ void USBH_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
 
 #else // USE_STM322xG_EVAL  
     GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
 #ifdef USE_USB_OTG_FS
 
     RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA , ENABLE);

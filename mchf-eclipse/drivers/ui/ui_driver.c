@@ -1002,12 +1002,12 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             rx_muted = Codec_PrepareTx(rx_muted, txrx_mode);
 
-			if(ts.tx_disable == false)
-			  {
-          	  PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
-          	  RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
-          	  RadioManagement_EnablePABias();
-          	  }
+            if(ts.tx_disable == false)
+            {
+                PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
+                RED_LED_PIO->BSRRL      = RED_LED;      // Red led on
+                RadioManagement_EnablePABias();
+            }
         }
     }
 
@@ -1035,21 +1035,21 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // make sure the audio is set properly according to txrx and tune modes
     }
 
-    if (txrx_mode == TRX_MODE_RX || tx_ok == false)
+    uint8_t txrx_mode_final = tx_ok?txrx_mode:TRX_MODE_RX;
+
+    if (txrx_mode_final == TRX_MODE_RX)
     {
         PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
         RED_LED_PIO->BSRRH      = RED_LED;      // Red led off
         rx_muted = 0;       // clear flag to indicate that we've muted the audio
     }
 
-
-    if (tx_ok == true || (txrx_mode == TRX_MODE_RX  && ts.txrx_mode != TRX_MODE_RX))
+    if (ts.txrx_mode != txrx_mode_final)
     {
         // Switch codec mode
-        Codec_RX_TX(txrx_mode);
-        ts.txrx_mode = txrx_mode;
+        Codec_RX_TX(txrx_mode_final);
+        ts.txrx_mode = txrx_mode_final;
     }
-
 }
 
 
@@ -1459,47 +1459,48 @@ static void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break = 0;
     // Not when tuning
-    if(ts.tune)
-        return;
-
-    // PTT on
-    if(ts.ptt_req)
+    if(ts.tune == false)
     {
-        if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
-        {
-        RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
-        }
 
-        ts.ptt_req = 0;
-
-    }
-    else if (!kd.enabled)
-    {
-        // When CAT driver is running
-        // skip auto return to RX
-        // PTT off for all non-CW modes
-        if(ts.dmod_mode != DEMOD_CW)
+        // PTT on
+        if(ts.ptt_req)
         {
-            // PTT flag on ?
-            if(ts.txrx_mode == TRX_MODE_TX)
+            if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
             {
-                // PTT line released ?
-                if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
+            }
+
+            ts.ptt_req = 0;
+
+        }
+        else if (!kd.enabled)
+        {
+            // When CAT driver is running
+            // skip auto return to RX
+            // PTT off for all non-CW modes
+            if(ts.dmod_mode != DEMOD_CW)
+            {
+                // PTT flag on ?
+                if(ts.txrx_mode == TRX_MODE_TX)
                 {
-                    // Lock to prevent IRQ re-entrance
-                    //ts.txrx_lock = 1;
+                    // PTT line released ?
+                    if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                    {
+                        // Lock to prevent IRQ re-entrance
+                        //ts.txrx_lock = 1;
 
-                    ptt_break++;
-                    if(ptt_break < 15)
-                        return;
+                        ptt_break++;
+                        if(ptt_break < 15)
+                            return;
 
-                    ptt_break = 0;
+                        ptt_break = 0;
 
-                    // Back to RX
-                    RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
+                        // Back to RX
+                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
 
-                    // Unlock
-                    //ts.txrx_lock = 0;
+                        // Unlock
+                        //ts.txrx_lock = 0;
+                    }
                 }
             }
         }

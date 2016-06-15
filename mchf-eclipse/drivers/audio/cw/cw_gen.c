@@ -285,7 +285,7 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
     {
         if( (!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) ||
                 (!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))	||
-                (ps.port_state & 3))
+                (ps.port_state & (CW_DAH_L|CW_DIT_L)))
         {
 
             cw_gen_check_keyer_state();

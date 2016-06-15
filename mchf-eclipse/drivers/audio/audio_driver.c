@@ -294,6 +294,7 @@ void audio_driver_init(void)
     // Start DMA transfers
     I2S_Block_Process((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
+    Codec_Reset(ts.samp_rate,word_size);
     // Audio filter enabled
     ads.af_disabled = 0;
 
@@ -1752,7 +1753,7 @@ static void audio_snap_carrier (void)
 
         //        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
 
-        help_freq = help_freq * 4.0;
+        help_freq = help_freq * ((float32_t)TUNE_MULT);
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = help_freq;
         // request a retune just by changing the frequency
@@ -1788,7 +1789,7 @@ static void audio_snap_carrier (void)
         help_freq = help_freq + delta2;
         //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
 
-        help_freq = help_freq * 4.0;
+        help_freq = help_freq * ((float32_t)TUNE_MULT);
         // set frequency of Si570 with 4 * dialfrequency
         df.tune_new = help_freq;
         // request a retune just by changing the frequency
