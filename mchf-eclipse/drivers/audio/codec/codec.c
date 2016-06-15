@@ -47,10 +47,11 @@ uint32_t Codec_Init(uint32_t AudioFreq,ulong word_size)
     Codec_AudioInterface_Init(AudioFreq);
 
     // Reset the Codec Registers
-    Codec_Reset(AudioFreq,word_size);
+    // Codec_Reset(AudioFreq,word_size);
 
     return 0;
 }
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : Codec_Reset
@@ -95,11 +96,24 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     // Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
     Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);
 
+#define W8731_DIGI_AU_INTF_FORMAT_PHILIPS 0x02
+#define W8731_DIGI_AU_INTF_FORMAT_PCM     0x00
+#define W8731_DIGI_AU_INTF_FORMAT_16B     (0x00 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_20B     (0x01 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_24B     (0x10 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_32B     (0x11 << 2)
+
+#define W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO W8731_DIGI_AU_INTF_FORMAT_PHILIPS
+
     // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
     if(word_size == WORD_SIZE_16)
-        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,0x0002);
+    {
+        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_16B);
+    }
     else
-        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,0x000E);
+    {
+        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_32B);
+    }
 
     // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
     // master clock: 12.5 Mhz
@@ -408,11 +422,12 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     // CODEC_I2S peripheral configuration for master TX
     SPI_I2S_DeInit(CODEC_I2S);
     I2S_InitStructure.I2S_AudioFreq = AudioFreq;
-    I2S_InitStructure.I2S_Standard = I2S_STANDARD;
+    I2S_InitStructure.I2S_Standard = I2S_Standard_Phillips;
     I2S_InitStructure.I2S_DataFormat = I2S_DataFormat_16b;
     I2S_InitStructure.I2S_CPOL = I2S_CPOL_Low;
     I2S_InitStructure.I2S_Mode = I2S_Mode_MasterTx;
     I2S_InitStructure.I2S_MCLKOutput = I2S_MCLKOutput_Disable;	// using MCO2
+
 
     // Initialise the I2S main channel for TX
     I2S_Init(CODEC_I2S, &I2S_InitStructure);

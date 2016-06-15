@@ -264,7 +264,7 @@ void CatDriverFT817CheckAndExecute()
                     f *= 100;
                     f +=  (ft817.req[fidx] >> 4) * 10 + (ft817.req[fidx] & 0x0f);
                 }
-                f *= 40;
+                f *= TUNE_MULT*10;
                 df.tune_new = f - fdelta;
 
                 // FIXME: Remove disabled code below once proper operations has been verified
@@ -295,7 +295,7 @@ void CatDriverFT817CheckAndExecute()
                 else
                     fdelta = 0;
 
-                ulong f = (df.tune_new + fdelta  + 20)/ 40 ;
+                ulong f = (df.tune_new + fdelta  + (TUNE_MULT*10/2))/ (TUNE_MULT*10);
                 ulong fbcd = 0;
                 int fidx;
                 for (fidx = 0; fidx < 8; fidx++)
