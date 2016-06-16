@@ -2444,6 +2444,9 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size)
 {
     int16_t i;
+    // this is the IQ gain / amplitude adjustment
+    arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
+    arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
     // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
 
@@ -2451,7 +2454,12 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
-        for(i = 0; i < size/2; i++)
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
+        // this is the IQ phase adjustment
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+         for(i = 0; i < size/2; i++)
         {
             // Prepare data for DAC
             *dst++ = (int16_t)ads.i_buffer[i];	// save left channel
@@ -2460,6 +2468,12 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     }
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.i_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.q_buffer, size/2);
+        // this is the IQ phase adjustment
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+
         for(i = 0; i < size/2; i++)
         {
             // Prepare data for DAC
@@ -2467,9 +2481,6 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
             *dst++ = (int16_t)ads.i_buffer[i];	// save right channel
         }
     }
-    // this is the IQ gain / amplitude adjustment
-    arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
-    arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_processor
