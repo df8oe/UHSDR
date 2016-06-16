@@ -427,8 +427,6 @@ static uint16_t UiSpectrum_Draw_GetCenterLineX()
 
 void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
-//	q15_t * fft_old_begin = fft_old;
-//	q15_t * fft_new_begin = fft_new;
 
     int spec_height = SPECTRUM_HEIGHT; //x
     int spec_start_y = SPECTRUM_START_Y;
@@ -484,6 +482,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
         for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
         {
             if (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
+
             {
                 if ((idx > 1) && (idx < 254))
                 {
@@ -560,7 +559,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                      UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
 
             	 }
-            	 else {
+            	 else
+            	 {
             		  UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
             	 }
 
