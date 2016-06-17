@@ -47,6 +47,12 @@ void cw_set_speed()
 {
     ps.dit_time         = 1650/ts.keyer_speed;      //100;
 }
+
+void cw_gen_set_break_time()
+{
+    ps.break_timer = ts.cw_rx_delay*50;      // break timer value
+}
+
 void cw_gen_init(void)
 {
 
@@ -56,7 +62,7 @@ void cw_gen_init(void)
     {
         // do not change if currently in CW transmit
         ps.cw_state         = CW_IDLE;
-        ps.break_timer = CW_BREAK;      // break timer value
+        cw_gen_set_break_time();
         ps.key_timer		= 0;
     }
 
@@ -361,8 +367,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
         }
         else
         {
-            ps.break_timer = CW_BREAK;      // break timer value
             ps.cw_state  = CW_IDLE;
+            cw_gen_set_break_time();
         }
     }
     break;
@@ -426,8 +432,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
             else
             {
                 ps.port_state &= ~(CW_DAH_L);
-                ps.break_timer = CW_BREAK;      // break timer value
                 ps.cw_state    = CW_IDLE;
+                cw_gen_set_break_time();
             }
         }
     }
@@ -458,7 +464,7 @@ void cw_gen_dah_IRQ(void)
         {
             ps.sm_tbl_ptr  = 0;				// smooth table start
             ps.key_timer   = 24;			// smooth steps * 2
-            ps.break_timer = CW_BREAK;		// break timer value
+            cw_gen_set_break_time();
         }
     }
 }
