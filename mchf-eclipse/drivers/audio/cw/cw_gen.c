@@ -56,6 +56,7 @@ void cw_gen_init(void)
     {
         // do not change if currently in CW transmit
         ps.cw_state         = CW_IDLE;
+        ps.break_timer = CW_BREAK;      // break timer value
         ps.key_timer		= 0;
     }
 
@@ -317,10 +318,17 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
         }
         else
         {
-            // Back to RX
-            ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-            // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// iambic
-            ts.tx_stop_req = true;
+            if(ps.break_timer == 0)
+             {
+                 ts.audio_unmute = 1;        // Assure that TX->RX timer gets reset at the end of an element
+                 // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);               // straight
+                 ts.tx_stop_req = true;
+             }
+             if(ps.break_timer)
+             {
+                 ps.break_timer--;
+             }
+             retval = 0;
         }
     }
     break;
@@ -353,6 +361,7 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
         }
         else
         {
+            ps.break_timer = CW_BREAK;      // break timer value
             ps.cw_state  = CW_IDLE;
         }
     }
@@ -417,6 +426,7 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
             else
             {
                 ps.port_state &= ~(CW_DAH_L);
+                ps.break_timer = CW_BREAK;      // break timer value
                 ps.cw_state    = CW_IDLE;
             }
         }
@@ -438,11 +448,9 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //*----------------------------------------------------------------------------
 void cw_gen_dah_IRQ(void)
 {
-    if (ts.txrx_mode == TRX_MODE_RX)
-    {
-        ts.ptt_req = true;
-        // Just flag change - nothing to call
-    }
+    ts.ptt_req = true;
+    // Just flag change - nothing to call
+
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
     {
         // Reset publics, but only when previous is sent
@@ -466,7 +474,7 @@ void cw_gen_dah_IRQ(void)
 void cw_gen_dit_IRQ(void)
 {
     // CW mode handler - no dit interrupt in straight key mode
-    if(ts.keyer_mode != CW_MODE_STRAIGHT  && ts.txrx_mode == TRX_MODE_RX)
+    if(ts.keyer_mode != CW_MODE_STRAIGHT)
     {
         ts.ptt_req = true;
         // Just flag change - nothing to call

@@ -1464,7 +1464,6 @@ static void RadioManagement_HandlePttOnOff()
     // Not when tuning
     if(ts.tune == false)
     {
-
         // PTT on
         if(ts.ptt_req)
         {
@@ -1473,8 +1472,10 @@ static void RadioManagement_HandlePttOnOff()
                 RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
             }
 
-            ts.ptt_req = 0;
-
+            // if we have a ptt request, all stop requests are cancelled
+            ts.tx_stop_req = false;
+            // the ptt request has been processed
+            ts.ptt_req = false;
         }
         else if (!kd.enabled)
         {
@@ -1495,9 +1496,10 @@ static void RadioManagement_HandlePttOnOff()
                         // Back to RX
                         RadioManagement_SwitchTxRx(TRX_MODE_RX,false);              // PTT
                         ptt_break_timer = ptt_break_time;
-                        ts.tx_stop_req = false;
                     }
                 }
+                // if we are here the stop request has been processed
+                ts.tx_stop_req = false;
             }
         }
     }
