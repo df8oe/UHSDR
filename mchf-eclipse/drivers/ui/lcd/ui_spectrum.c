@@ -1821,7 +1821,7 @@ static void calculate_dBm(void)
             }
       	  }
 
-        if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM)
+        if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_FM)
       	  {
           bw_LSB = width;
           bw_USB = width;
