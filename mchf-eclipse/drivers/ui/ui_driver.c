@@ -951,6 +951,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     uint32_t tune_new;
     bool tx_ok = false;
 
+	ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
+
     if(is_splitmode())                  // is SPLIT mode active?
     {
         uint8_t vfo_tx,vfo_rx;
