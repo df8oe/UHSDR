@@ -874,7 +874,8 @@ typedef struct TransceiverState
 
     // TX/RX IRQ lock, to prevent reentrance
     //uchar	txrx_lock;
-    uchar	ptt_req;
+    bool	ptt_req;
+    bool tx_stop_req;
 
 
     // Demodulator mode public flag
@@ -1221,6 +1222,19 @@ void copy_virt2ser(void);
 void copy_ser2virt(void);
 void verify_servirt(void);
 
+/**
+ * Is the hardware contact named DAH pressed
+ */
+inline bool mchf_ptt_dah_line_pressed() {
+    return  !GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH);
+}
+
+/**
+ * Is the hardware contact named DIT pressed
+ */
+inline bool mchf_dit_line_pressed() {
+    return  !GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT);
+}
 
 
 

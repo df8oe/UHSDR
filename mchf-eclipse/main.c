@@ -138,16 +138,15 @@ void EXTI0_IRQHandler(void)
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
 		// Call handler
-		if(ts.dmod_mode == DEMOD_CW)	{
-			if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	{	// was DAH line low?
+		if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
+		{	// was DAH line low?
 				cw_gen_dah_IRQ();		// Yes - go to CW state machine
-			}
 		}
-
 		// PTT activate
 		else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
 		{
-			if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))	{	// was PTT line low?
+			if(mchf_ptt_dah_line_pressed())
+			{	// was PTT line low?
 				ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
 			}
 		}
@@ -166,9 +165,11 @@ void EXTI1_IRQHandler(void)
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         // Call handler
-        if(ts.dmod_mode == DEMOD_CW)
-            if(!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))	// was Dit line low?  (Validate to prevent extraneous interrupts)
-                cw_gen_dit_IRQ();
+        // was Dit line low?  (Validate to prevent extraneous interrupts)
+        if(ts.dmod_mode == DEMOD_CW && mchf_dit_line_pressed())
+        {
+            cw_gen_dit_IRQ();
+        }
     }	// do nothing if not in CW mode!
 
     // Clears the EXTI's line pending bit
