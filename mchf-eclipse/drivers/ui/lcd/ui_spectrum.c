@@ -1737,22 +1737,26 @@ static void calculate_dBm(void)
         //###########################################################################################################################################
         //###########################################################################################################################################
         // dBm/Hz-display DD4WH June, 9th 2016
-        // this will be renewed every 50ms, that means when modulus (ts.sysclock/20) == 0
+        // this will be renewed every 20ms
         // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
         // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
         // so the additional processor load and additional RAM usage should be close to zero
         //
-        // TODO: very accurate calibration of this measurement
-        // I will use the Perseus SDR for this purpose, that SDR can accurately measure +-0.5 dB in every user-choosable bandwidth
+		// TODO: would it be nice to have the possibility to switch between dBm (dependent on filter bandwidth!) and dBm/Hz ?
+		// implemented
         //
-        // this same code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
+        // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
         if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX)
         {
         char txt[12];
         ulong i;
+        float32_t slope = 19.6;
+        float32_t cons = - 227.0;
+//        bool display_dBm = false;
         float32_t  Lbin, Ubin;
+//        float32_t  divide;
         float32_t bw_LSB = 0.0;
         float32_t bw_USB = 0.0;
         float64_t sum_db = 0.0;
@@ -1838,11 +1842,11 @@ static void calculate_dBm(void)
       	  {
           if(i < (buff_len_int/4))	 		// build left half of magnitude data
             {
-            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]; //*SCOPE_PREAMP_GAIN;	// get data
+            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
             }
           else	 							// build right half of magnitude data
             {
-            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]; //*SCOPE_PREAMP_GAIN;	// get data
+            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
             }
       	  }
 
@@ -1854,15 +1858,25 @@ static void calculate_dBm(void)
           sum_db = sum_db + sd.FFT_Samples[c];
           }
         // these values have to be carefully empirically adjusted
+        // slope 22, offset -127
         // these preliminary values have been calibrated with Perseus SDR
         if (sum_db > 0)
-		{
-        	dbm = 22.0 * log10 (sum_db/(float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
-		}
+        {
+        	if (ts.display_dbm)
+        	{
+        		dbm = slope * log10 (sum_db) + cons;
+        	}
+        	else
+        	{
+        		//        	dbm = 22 * log10 (sum_db / (float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
+        		dbm = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
+        	}
+        }
         else
         {
-        	dbm = -145;
+        	dbm = -145.0;
         }
+
         // lowpass IIR filter !
         dbm = 0.1 * dbm + 0.9 * dbm_old;
         dbm_old = dbm;
@@ -1871,7 +1885,15 @@ static void calculate_dBm(void)
 //        float32_t dH = dbm - log10((float32_t)((int)Ubin-(int)Lbin) * bin_BW);
         long dbm_Hz = (long) dbm;
 //            long dbm_Hz = -87;
-        snprintf(txt,12,"%4ld dBm/Hz", dbm_Hz);
+        if (ts.display_dbm)
+        {
+            snprintf(txt,12,"%4ld dBm   ", dbm_Hz);
+        }
+        else
+        {
+            snprintf(txt,12,"%4ld dBm/Hz", dbm_Hz);
+        }
+
 //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
             // TODO: make coordinates constant variables
         UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);

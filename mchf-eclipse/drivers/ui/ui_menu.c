@@ -550,7 +550,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
+	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
 const MenuDescriptor cwGroup[] =
@@ -2552,6 +2553,23 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             break;
         }
         break;
+
+    case    MENU_DBM_DISPLAY:
+        UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.display_dbm,0,options,&clr);
+       switch(ts.display_dbm)
+        {
+        case true:		//
+            txt_ptr = "    dBm";		//
+            break;
+        case false:	//
+            txt_ptr = " dBm/Hz";		//
+            break;
+        default:
+        txt_ptr =  " dBm/Hz";		//
+        	break;
+        }
+        break;
+
     case MENU_WFALL_STEP_SIZE:	// set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,
                                     WATERFALL_STEP_SIZE_MIN,
