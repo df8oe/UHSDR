@@ -4044,6 +4044,7 @@ static void UiDriverTimeScheduler()
             // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
             if(ts.audio_unmute)	 						// are we returning from TX with muted audio?
             {
+#if 0
                 if(ts.dmod_mode == DEMOD_CW)	 		// yes - was it CW mode?
                 {
                     ts.unmute_delay_count = (ulong)ts.cw_rx_delay + 1;	// yes - get CW TX->RX delay timing
@@ -4051,6 +4052,7 @@ static void UiDriverTimeScheduler()
                     ts.unmute_delay_count *= 40;	// rescale value and limit minimum delay value
                 }
                 else  								// SSB mode
+#endif
                 {
                     ts.unmute_delay_count = SSB_RX_DELAY;	// set time delay in SSB mode
                     ts.buffer_clear = 1;

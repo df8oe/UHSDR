@@ -18,9 +18,6 @@
 #ifndef __CW_GEN_H
 #define __UI_GEN_H
 
-// Break timeout on straight key
-#define CW_BREAK			800
-
 // States
 #define	CW_IDLE				0
 #define	CW_DIT_CHECK		1
