@@ -2444,10 +2444,7 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
 void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size)
 {
     int16_t i;
-    // this is the IQ gain / amplitude adjustment
-    arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
-    arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
-    // this is the IQ phase adjustment
+
     AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
 
     // ------------------------

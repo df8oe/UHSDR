@@ -148,9 +148,9 @@ void AudioManagement_CalcRxIqGainAdj(void)
     if(ts.dmod_mode == DEMOD_FM)
         ts.rx_adj_gain_var_i = (float)ts.rx_iq_fm_gain_balance;         // get current gain adjustment for FM
     else if(ts.dmod_mode == DEMOD_LSB)
-        ts.rx_adj_gain_var_i = (float)ts.rx_iq_lsb_gain_balance;        // get current gain adjustment setting for LSB
+        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_lsb_gain_balance;        // get current gain adjustment setting for LSB
     else
-        ts.rx_adj_gain_var_i = (float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
+        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
     //
     ts.rx_adj_gain_var_i /= SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
     ts.rx_adj_gain_var_q = -ts.rx_adj_gain_var_i;               // get "invert" of it
