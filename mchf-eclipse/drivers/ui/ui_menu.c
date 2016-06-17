@@ -2555,17 +2555,25 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         break;
 
     case    MENU_DBM_DISPLAY:
-        UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.display_dbm,0,options,&clr);
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.display_dbm,
+                                              0,
+                                              2,
+                                              0,
+                                              1
+                                             );
+
+
+//    	UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.display_dbm,0,options,&clr);
        switch(ts.display_dbm)
         {
-        case true:		//
+        case 1:		//
             txt_ptr = "    dBm";		//
             break;
-        case false:	//
+        case 2:	//
             txt_ptr = " dBm/Hz";		//
             break;
         default:
-        txt_ptr =  " dBm/Hz";		//
+        txt_ptr =  "  OFF";		//
         	break;
         }
         break;

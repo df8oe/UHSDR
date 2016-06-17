@@ -1748,7 +1748,7 @@ static void calculate_dBm(void)
         // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
-        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX)
+        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX && ts.display_dbm != 0)
         {
         char txt[12];
         ulong i;
@@ -1862,12 +1862,12 @@ static void calculate_dBm(void)
         // these preliminary values have been calibrated with Perseus SDR
         if (sum_db > 0)
         {
-        	if (ts.display_dbm)
-        	{
+        	if (ts.display_dbm == 1)
+        	{ // display signal strength in dBm
         		dbm = slope * log10 (sum_db) + cons;
         	}
         	else
-        	{
+        	{ // display signal strength in dBm/Hz
         		//        	dbm = 22 * log10 (sum_db / (float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
         		dbm = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
         	}
@@ -1885,7 +1885,7 @@ static void calculate_dBm(void)
 //        float32_t dH = dbm - log10((float32_t)((int)Ubin-(int)Lbin) * bin_BW);
         long dbm_Hz = (long) dbm;
 //            long dbm_Hz = -87;
-        if (ts.display_dbm)
+        if (ts.display_dbm == 1)
         {
             snprintf(txt,12,"%4ld dBm   ", dbm_Hz);
         }
@@ -1898,5 +1898,9 @@ static void calculate_dBm(void)
             // TODO: make coordinates constant variables
         UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         ts.dBm_count = ts.sysclock;				// reset timer
+        }
+        if (ts.display_dbm == 0)
+        {
+        	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
         }
 }
