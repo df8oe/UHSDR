@@ -142,6 +142,41 @@ static void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,
     }
 }
 
+
+/**
+ * Is the logically DIT pressed (may reverse logic of HW contacts)
+ */
+static bool cw_dit_requested() {
+    bool retval;
+    if(ts.paddle_reverse)      // Paddles ARE reversed
+    {
+        retval =  mchf_ptt_dah_line_pressed();
+    }
+    else        // Paddles NOT reversed
+    {
+        retval =  mchf_dit_line_pressed();
+    }
+    return retval;
+}
+
+/**
+ * Is the logically DAH pressed (may reverse logic of HW contacts)
+ */
+static bool cw_dah_requested() {
+    bool retval;
+    if(!ts.paddle_reverse)      // Paddles NOT reversed
+    {
+        retval =  mchf_ptt_dah_line_pressed();
+    }
+    else        // Paddles ARE reversed
+    {
+        retval =  mchf_dit_line_pressed();
+    }
+    return retval;
+}
+
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : cw_gen_check_keyer_state
 //* Object              :
@@ -152,23 +187,12 @@ static void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,
 //*----------------------------------------------------------------------------
 static void cw_gen_check_keyer_state(void)
 {
-    if(!ts.paddle_reverse)	 	// Paddles NOT reversed
-    {
-        if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
-            ps.port_state |= CW_DAH_L;
-
-        if(!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))
-            ps.port_state |= CW_DIT_L;
-    }
-    else	 	// Paddles ARE reversed
-    {
-        if(!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
-            ps.port_state |= CW_DIT_L;
-
-        if(!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))
+    if (cw_dah_requested()) {
             ps.port_state |= CW_DAH_L;
     }
-
+    if (cw_dit_requested()) {
+            ps.port_state |= CW_DIT_L;
+    }
 }
 
 //*----------------------------------------------------------------------------
@@ -205,7 +229,8 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
         if(ps.break_timer == 0)
         {
             ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-            RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// straight
+            // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// straight
+            ts.tx_stop_req = true;
         }
         if(ps.break_timer)
         {
@@ -256,7 +281,7 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 
         // Key released ?, then shape falling edge, on next 12 audio sample requests
         // the audio driver
-        if((GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) && (ps.key_timer == 12))
+        if(mchf_ptt_dah_line_pressed() == false && (ps.key_timer == 12))
         {
             if(ps.key_timer)
             {
@@ -283,11 +308,10 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
     {
     case CW_IDLE:
     {
-        if( (!GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH)) ||
-                (!GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT))	||
-                (ps.port_state & (CW_DAH_L|CW_DIT_L)))
+        // at least one paddle is still or has been recently pressed
+        if( mchf_dit_line_pressed() || mchf_ptt_dah_line_pressed()	||
+            (ps.port_state & (CW_DAH_L|CW_DIT_L)))
         {
-
             cw_gen_check_keyer_state();
             ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
         }
@@ -295,7 +319,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
         {
             // Back to RX
             ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-            RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// iambic
+            // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// iambic
+            ts.tx_stop_req = true;
         }
     }
     break;
@@ -413,9 +438,11 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //*----------------------------------------------------------------------------
 void cw_gen_dah_IRQ(void)
 {
-    ts.ptt_req = true;
-    // Just flag change - nothing to call
-
+    if (ts.txrx_mode == TRX_MODE_RX)
+    {
+        ts.ptt_req = true;
+        // Just flag change - nothing to call
+    }
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
     {
         // Reset publics, but only when previous is sent
@@ -439,7 +466,7 @@ void cw_gen_dah_IRQ(void)
 void cw_gen_dit_IRQ(void)
 {
     // CW mode handler - no dit interrupt in straight key mode
-    if(ts.keyer_mode != CW_MODE_STRAIGHT)
+    if(ts.keyer_mode != CW_MODE_STRAIGHT  && ts.txrx_mode == TRX_MODE_RX)
     {
         ts.ptt_req = true;
         // Just flag change - nothing to call

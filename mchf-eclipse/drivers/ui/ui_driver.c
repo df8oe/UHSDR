@@ -1456,10 +1456,11 @@ static bool RadioManagement_HandleLoTemperatureDrift()
 
 
 
+const int ptt_break_time = 15;
 
 static void RadioManagement_HandlePttOnOff()
 {
-    static uint32_t ptt_break = 0;
+    static uint32_t ptt_break_timer = ptt_break_time;
     // Not when tuning
     if(ts.tune == false)
     {
@@ -1480,28 +1481,21 @@ static void RadioManagement_HandlePttOnOff()
             // When CAT driver is running
             // skip auto return to RX
             // PTT off for all non-CW modes
-            if(ts.dmod_mode != DEMOD_CW)
+            if(ts.dmod_mode != DEMOD_CW || ts.tx_stop_req == true)
             {
                 // PTT flag on ?
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
                     // PTT line released ?
-                    if(GPIO_ReadInputDataBit(PADDLE_DAH_PIO,PADDLE_DAH))
+                    if(mchf_ptt_dah_line_pressed() == false)
                     {
-                        // Lock to prevent IRQ re-entrance
-                        //ts.txrx_lock = 1;
-
-                        ptt_break++;
-                        if(ptt_break < 15)
-                            return;
-
-                        ptt_break = 0;
-
+                        ptt_break_timer--;
+                    }
+                    if(ptt_break_timer == 0 || ts.tx_stop_req == true) {
                         // Back to RX
-                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// PTT
-
-                        // Unlock
-                        //ts.txrx_lock = 0;
+                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);              // PTT
+                        ptt_break_timer = ptt_break_time;
+                        ts.tx_stop_req = false;
                     }
                 }
             }
