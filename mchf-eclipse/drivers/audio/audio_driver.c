@@ -2454,7 +2454,12 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
-        for(i = 0; i < size/2; i++)
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
+        // this is the IQ phase adjustment
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+         for(i = 0; i < size/2; i++)
         {
             // Prepare data for DAC
             *dst++ = (int16_t)ads.i_buffer[i];	// save left channel
@@ -2463,6 +2468,12 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     }
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.i_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.q_buffer, size/2);
+        // this is the IQ phase adjustment
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+
         for(i = 0; i < size/2; i++)
         {
             // Prepare data for DAC
@@ -2511,7 +2522,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         if (ts.tune)
         {
             softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size/2);      // generate tone/modulation for TUNE
-            // Equalize based on band and simultaneously apply I/Q gain adjustments
+            // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
             audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
         }
         else
@@ -2528,7 +2539,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             }
             else
             {
-                // Equalize based on band and simultaneously apply I/Q gain adjustments
+                // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
+            	// Wouldn´t it be necessary to include IF conversion here? DD4WH June 16th, 2016
+            	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
                 audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
             }
         }
@@ -2621,6 +2634,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
         if(ts.iq_freq_mode)	 		// is transmit frequency conversion to be done?
+        	// USB && (-6kHz || -12kHz) --> false, else true
+        	// LSB && (+6kHz || +12kHz) --> false, else true
         {
 
             bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
@@ -2628,8 +2643,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             audio_rx_freq_conv(size, swap);
         }
         //
-        // Equalize based on band and simultaneously apply I/Q gain adjustments
-        //
+        // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
         audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, size);
     }
     // -----------------------------
