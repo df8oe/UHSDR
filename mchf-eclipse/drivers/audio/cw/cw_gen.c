@@ -23,16 +23,92 @@
 
 #include "ui_driver.h"
 #include "softdds.h"
-#include "cw_sm_tbl.h"
 #include "codec.h"
 
 #include "cw_gen.h"
 
-// Transceiver state public structure
-extern __IO TransceiverState 	ts;
+// States
+#define CW_IDLE             0
+#define CW_DIT_CHECK        1
+#define CW_DAH_CHECK        3
+#define CW_KEY_DOWN         4
+#define CW_KEY_UP           5
+#define CW_PAUSE            6
+#define CW_WAIT             7
+
+#define CW_DIT_L            0x01
+#define CW_DAH_L            0x02
+#define CW_DIT_PROC         0x04
+
+#define CW_IAMBIC_A         0x00
+#define CW_IAMBIC_B         0x10
+
+#define CW_SMOOTH_LEN       16
+//
+//
+typedef struct PaddleState
+{
+    // State machine and port states
+    ulong   port_state;
+    ulong   cw_state;
+
+    // Smallest element duration
+    ulong   dit_time;
+
+    // Timers
+    ulong   key_timer;
+    ulong   break_timer;
+
+    // Key clicks smoothing table current ptr
+    ulong   sm_tbl_ptr;
+
+} PaddleState;
 
 // Public paddle state
-__IO PaddleState				ps;
+__IO PaddleState                ps;
+
+static ulong   cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+static ulong   cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+
+
+#define CW_SMOOTH_TBL_SIZE  32
+
+static const float sm_table[CW_SMOOTH_TBL_SIZE] =
+{
+    0,
+    0.0323949034866865,
+    0.0664377813382162,
+    0.1021744106202792,
+    0.1394369420920119,
+    0.1780727855344472,
+    0.2178988326848249,
+    0.2587167162584878,
+    0.3003585870145724,
+    0.3425955596246281,
+    0.3852292668039979,
+    0.4280308232242313,
+    0.4707866025787747,
+    0.5132677195391775,
+    0.5552605477988861,
+    0.5965362020294499,
+    0.6368657969024186,
+    0.6760204470893416,
+    0.7138170443274586,
+    0.7500114442664225,
+    0.784420538643473,
+    0.8168459601739528,
+    0.8471046005951019,
+    0.8750286106660563,
+    0.9004654001678492,
+    0.9232623788815137,
+    0.9432822156099794,
+    0.9604180971999695,
+    0.9745784695201038,
+    0.9856717784390021,
+    0.9936369878690776,
+    0.9984283207446403
+};
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : cw_gen_init
@@ -226,7 +302,7 @@ ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
+static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 {
     uint32_t retval;
 
@@ -308,7 +384,7 @@ ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
+static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 {
     uint32_t retval = 0;
     switch(ps.cw_state)
@@ -486,3 +562,5 @@ void cw_gen_dit_IRQ(void)
         // Just flag change - nothing to call
     }
 }
+
+

@@ -399,7 +399,6 @@
     <File name="hardware" path="" type="2"/>
     <File name="usb/otg/src" path="" type="2"/>
     <File name="usb/usbh/core" path="" type="2"/>
-    <File name="drivers/audio/cw/cw_sm_tbl.h" path="drivers/audio/cw/cw_sm_tbl.h" type="1"/>
     <File name="drivers/audio/filters/iir_500hz.c" path="drivers/audio/filters/iir_500hz.c" type="1"/>
     <File name="usb/usbd/class/audio/src/usbd_audio_core.c" path="usb/usbd/class/audio/src/usbd_audio_core.c" type="1"/>
     <File name="drivers/audio/filters/iir_2k7_tx_bpf_fm.c" path="drivers/audio/filters/iir_2k7_tx_bpf_fm.c" type="1"/>
