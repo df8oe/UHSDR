@@ -30,7 +30,9 @@ typedef struct DialFrequency
 {
     // pot values
     //
-    // SI570 actual frequency
+    // user visible frequency AKA dial frequency
+    // NOT the always LO frequency since we have an IQ TRX which
+    // uses frequency translation in many cases.
     ulong	tune_old;			// current value
     ulong	tune_new;			// requested value
 

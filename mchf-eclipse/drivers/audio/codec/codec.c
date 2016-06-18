@@ -23,9 +23,6 @@
 #include "mchf_hw_i2c2.h"
 #include "codec.h"
 
-// Transceiver state public structure
-extern __IO TransceiverState ts;
-
 // Public Audio
 extern __IO		AudioDriverState	ads;
 

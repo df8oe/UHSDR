@@ -21,6 +21,11 @@
 // Encoder 1-4 Array
 __IO EncoderSelection		encSel[4];
 
+// ------------------------------------------------
+// Frequency public
+__IO DialFrequency              df;
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiRotaryFreqEncoderInit
 //* Object              :

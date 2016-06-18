@@ -105,17 +105,17 @@ static void     UiDriver_HandleVoltage();
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 #endif
 void 			UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
-static void UiDriver_CreateVoltageDisplay();
+static void     UiDriver_CreateVoltageDisplay();
 
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriver_HandleLoTemperature();
 static void 	RadioManagement_HandlePttOnOff();
 static void 	UiDriverInitMainFreqDisplay();
 
-static bool	UiDriver_LoadSavedConfigurationAtStartup();
-static bool	UiDriver_TouchscreenCalibration();
+static bool	    UiDriver_LoadSavedConfigurationAtStartup();
+static bool	    UiDriver_TouchscreenCalibration();
 
-static void UiDriver_PowerDownCleanup(void);
+static void     UiDriver_PowerDownCleanup(void);
 
 
 //
@@ -280,12 +280,6 @@ const float S_Meter_Cal[S_Meter_Cal_Size] =
 };
 
 __IO BandRegs vfo[VFO_MAX];
-
-
-// ------------------------------------------------
-// Frequency public
-__IO DialFrequency 				df;
-
 
 // ------------------------------------------------
 // Keypad state
@@ -1734,7 +1728,7 @@ void ui_driver_thread()
                 /* at this point we handle request for changing the frequency
                  * either from a difference in dial freq or a temp change
                  *  */
-                if((df.tune_new != df.tune_old))
+                if((df.tune_old != df.tune_new))
                 {
                     UiDriver_FrequencyUpdateLOandDisplay(false);
                 }

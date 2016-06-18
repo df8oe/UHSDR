@@ -169,8 +169,6 @@ struct FT817
 #include "ui_rotary.h"
 #include "mchf_board.h"
 
-extern __IO DialFrequency 				df;
-extern __IO TransceiverState ts;
 // FT817 Emulation
 #if 0
 // list of commands supported by hamlib

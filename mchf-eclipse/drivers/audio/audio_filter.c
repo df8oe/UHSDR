@@ -24,6 +24,8 @@
 #include "filters/q_tx_filter.h"
 #include "filters/i_tx_filter.h"
 
+//
+static __IO    FilterCoeffs        fc;
 
 enum
 {

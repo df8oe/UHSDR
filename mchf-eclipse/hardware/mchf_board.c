@@ -33,12 +33,9 @@
 #include "eeprom.h"
 
 
-//
-__IO	FilterCoeffs		fc;
+// Transceiver state public structure
+__IO TransceiverState ts;
 
-// ------------------------------------------------
-// Frequency public
-__IO DialFrequency 				df;
 
 static void mchf_board_led_init(void)
 {
