@@ -31,8 +31,8 @@ typedef struct DialFrequency
     // pot values
     //
     // SI570 actual frequency
-    ulong	tune_old;			// previous value
-    ulong	tune_new;			// most current value
+    ulong	tune_old;			// current value
+    ulong	tune_new;			// requested value
 
     // Current tuning step
     ulong	tuning_step;		// selected step by user

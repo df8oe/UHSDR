@@ -874,15 +874,15 @@ void RadioManagement_EnablePABias()
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode)
 {
     // everything else uses main VFO frequency
-    uint32_t    tune_freq;
+    // uint32_t    tune_freq;
     bool lo_change_pending = false;
 
     // Calculate actual tune frequency
-    tune_freq = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
+    ts.tune_freq_req = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
 
-    if((ts.tune_freq != tune_freq) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
+    if((ts.tune_freq != ts.tune_freq_req) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
-        if(Si570_SetFrequency(tune_freq,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
+        if(Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
         {
             if(ts.sysclock > RX_MUTE_START_DELAY)       // has system start-up completed?
             {
@@ -897,10 +897,10 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
         if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
             // Set frequency
-            ts.last_lo_result = Si570_SetFrequency(tune_freq,ts.freq_cal,df.temp_factor, 0);
+            ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
             df.temp_factor_changed = false;
             ts.last_tuning = ts.sysclock;
-            ts.tune_freq = tune_freq;        // frequency change required - update change detector
+            ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
             // Save current freq
             df.tune_old = dial_freq*TUNE_MULT;
             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED)
@@ -1738,8 +1738,10 @@ void ui_driver_thread()
                 {
                     UiDriver_FrequencyUpdateLOandDisplay(false);
                 }
-                else if (df.temp_factor_changed)
+                else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
                 {
+                    // this handles the cases where the dial frequency remains the same but the
+                    // LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
                     RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
                 }
             }
