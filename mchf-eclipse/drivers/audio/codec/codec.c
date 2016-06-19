@@ -447,14 +447,14 @@ void Codec_GPIO_Init(void)
     GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_NOPULL;
+    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_UP;
     GPIO_Init(CODEC_I2S_SDO_PIO, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = CODEC_I2S_WS;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(CODEC_I2S_WS_PIO, &GPIO_InitStructure);
 
     // Configure MCO2 (PC9)
@@ -462,7 +462,7 @@ void Codec_GPIO_Init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(CODEC_CLOCK_PIO, &GPIO_InitStructure);
 
     // Output I2S PLL via MCO2 pin - 12.288 Mhz

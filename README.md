@@ -4,7 +4,7 @@ If you want binaries, you can find them for stable releases and pre-releases in 
 
 Binaries of actual development are available as "daily snapshots". Versioning is only done in RELEASES. For identifying daily snapshots you must use build time stamp which is shown in splash screen.<br>
 
-All this is bundled in <a href="http://df8oe.github.io">startup page</a>.<br>
+All this is bundled in <a href="http://df8oe.github.io/mchf-github/">startup page</a>.<br>
 
 Have fun - Open-Source opens possibilities!<br><br>
 
