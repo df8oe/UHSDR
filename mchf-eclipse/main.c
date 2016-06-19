@@ -46,8 +46,6 @@
 //
 //
 #include "cat_driver.h"
-// Transceiver state public structure
-__IO TransceiverState ts;
 
 // ----------------------------------------------------
 // Create a time reference incremented by 1 mS and 10mS

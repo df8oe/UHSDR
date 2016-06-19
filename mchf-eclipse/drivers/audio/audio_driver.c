@@ -155,9 +155,6 @@ __IO	arm_fir_instance_f32	FIR_I_TX;
 __IO	arm_fir_instance_f32	FIR_Q_TX;
 // ---------------------------------
 
-// Transceiver state public structure
-extern __IO TransceiverState 	ts;
-
 // Audio driver publics
 __IO	AudioDriverState		ads;
 
@@ -167,6 +164,8 @@ __IO	SMeter					sm;
 // Keypad driver publics
 extern __IO	KeypadState				ks;
 //
+
+
 
 //
 // THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
@@ -2537,7 +2536,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             else
             {
                 // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
-            	// Wouldn´t it be necessary to include IF conversion here? DD4WH June 16th, 2016
+            	// Wouldnï¿½t it be necessary to include IF conversion here? DD4WH June 16th, 2016
             	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
                 audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
             }

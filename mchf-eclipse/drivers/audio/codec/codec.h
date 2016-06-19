@@ -95,10 +95,11 @@ void 	 Codec_Mute(uchar state);
 
 void     Codec_AudioInterface_Init(uint32_t AudioFreq);
 void     Codec_Reset(uint32_t AudioFreq,ulong word_size);
+void    Codec_RestartI2S();
 uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue);
 void     Codec_GPIO_Init(void);
-void Codec_SidetoneSetgain(uint8_t mode);
-void Codec_MicBoostCheck(uint8_t mode);
-bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode);
+void    Codec_SidetoneSetgain(uint8_t mode);
+void    Codec_MicBoostCheck(uint8_t mode);
+bool    Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode);
 
 #endif

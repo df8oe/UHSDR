@@ -43,10 +43,6 @@ static sFONT *fontList[] =
 };
 
 
-// Transceiver state public structure
-extern __IO TransceiverState ts;
-
-
 int16_t lcd_cs;
 GPIO_TypeDef* lcd_cs_pio;
 
