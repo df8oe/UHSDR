@@ -50,14 +50,6 @@ uint32_t Codec_Init(uint32_t AudioFreq,ulong word_size)
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : Codec_Reset
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void Codec_Reset(uint32_t AudioFreq,ulong word_size)
 {
     //printf("codec init, freq = %d\n\r",AudioFreq);
@@ -121,6 +113,17 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     // Reg 09: Active Control
     Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
 }
+
+
+void Codec_RestartI2S()
+{
+    // Reg 09: Active Control
+    Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0000);
+    non_os_delay();
+    // Reg 09: Active Control
+    Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
+}
+
 
 void Codec_MicBoostCheck(uint8_t mode)
 {

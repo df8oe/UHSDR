@@ -105,6 +105,7 @@ enum
     MENU_DUMMY_LINE_4,
     MENU_DUMMY_LINE_5,
     MENU_CONFIG_ENABLE,
+    MENU_RESTART_CODEC,
     //
     MAX_MENU_ITEM	// Number of menu items - This must ALWAYS remain as the LAST item!
 };

@@ -522,6 +522,7 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)"},
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config"},
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG,"198","Restore Config"},
+    { MENU_BASE, MENU_ITEM, MENU_RESTART_CODEC,"198","Restart Codec"},
     { MENU_BASE, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -2695,6 +2696,17 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                 copy_virt2ser();
                 mchf_reboot();
             }
+        }
+        break;
+    case MENU_RESTART_CODEC:
+        txt_ptr = "Do it!";
+        clr = White;
+        if(var>=1)
+        {
+
+            UiMenu_DisplayValue("Restart",Red,opt_pos);
+            Codec_RestartI2S();
+            var = 0;
         }
         break;
     default:						// Move to this location if we get to the bottom of the table!
