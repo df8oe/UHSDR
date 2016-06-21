@@ -647,6 +647,10 @@ void UiDriver_HandleTouchScreen()
             df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
+        if(check_tp_coordinates(00,07,21,30))			// DSP box
+        {
+		Codec_RestartI2S();
+        }
         if(check_tp_coordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
         {
             int step = 2000;				// adjust to 500Hz

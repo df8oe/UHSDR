@@ -43,9 +43,6 @@ uint32_t Codec_Init(uint32_t AudioFreq,ulong word_size)
     // Configure the I2S peripheral
     Codec_AudioInterface_Init(AudioFreq);
 
-    // Reset the Codec Registers
-    // Codec_Reset(AudioFreq,word_size);
-
     return 0;
 }
 
@@ -111,7 +108,7 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     if(AudioFreq == I2S_AudioFreq_8k ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
 
     // Reg 09: Active Control
-// #define TWINPEAKS_ON
+//#define TWINPEAKS_ON
 #ifdef TWINPEAKS_ON
     // first we wait for Right Channel
     while ((CODEC_I2S->SR & I2S_FLAG_CHSIDE) != 0) {asm(""); }
@@ -461,14 +458,14 @@ void Codec_GPIO_Init(void)
     GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_DOWN;
+    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_NOPULL;
     GPIO_Init(CODEC_I2S_SDO_PIO, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = CODEC_I2S_WS;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(CODEC_I2S_WS_PIO, &GPIO_InitStructure);
 
     // Configure MCO2 (PC9)
@@ -476,7 +473,7 @@ void Codec_GPIO_Init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(CODEC_CLOCK_PIO, &GPIO_InitStructure);
 
     // Output I2S PLL via MCO2 pin - 12.288 Mhz
