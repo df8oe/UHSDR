@@ -29,6 +29,13 @@ __IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
 
 float32_t dbm = 0.0;
 float32_t dbm_old = 0.0;
+float32_t m_AttackAve = 0.0;
+float32_t m_DecayAve = 0.0;
+float32_t m_AverageMag = 0.0;
+float32_t m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
+									// Tau = 10ms = 0.01s attack time
+float32_t m_DecayAlpha = 0.0392; // 500ms decay time
+
 
 static void 	UiDriverFFTWindowFunction(char mode);
 static void     UiSpectrum_FrequencyBarText(void);
@@ -1878,12 +1885,27 @@ static void calculate_dBm(void)
         }
 
         // lowpass IIR filter !
-        dbm = 0.1 * dbm + 0.9 * dbm_old;
-        dbm_old = dbm;
+//        dbm = 0.25 * dbm + 0.75 * dbm_old;
+//        dbm_old = dbm;
+
+        // Wheatley 2011: two averagers with two time constants
+        m_AttackAve = (1.0 - m_AttackAlpha) * m_AttackAve + m_AttackAlpha * dbm;
+        m_DecayAve = (1.0 - m_DecayAlpha) * m_DecayAve + m_DecayAlpha * dbm;
+
+        if (m_AttackAve > m_DecayAve)
+        {
+        	m_AverageMag = m_AttackAve;
+        	m_DecayAve = m_AttackAve;
+        }
+        else
+        {
+        	m_AverageMag = m_DecayAve;
+        }
         //            sum_db = log10 (sum_db);
             // this divides sum_db by the passband width rounded to bin_BWs . . .
 //        float32_t dH = dbm - log10((float32_t)((int)Ubin-(int)Lbin) * bin_BW);
-        long dbm_Hz = (long) dbm;
+//        long dbm_Hz = (long) dbm;
+        long dbm_Hz = (long) m_AverageMag;
 //            long dbm_Hz = -87;
         if (ts.display_dbm == 1)
         {
