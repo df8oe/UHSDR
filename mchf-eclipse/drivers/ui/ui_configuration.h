@@ -14,6 +14,7 @@
 #ifndef DRIVERS_UI_UI_CONFIGURATION_H_
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "mchf_board.h"
+#include "eeprom.h"
 
 enum
 {
@@ -118,16 +119,22 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define AUTO_LSB_USB_MAX        2
 #define AUTO_LSB_USB_DEFAULT    AUTO_LSB_USB_60M
 
-#define MAX_VAR_ADDR 383
 //
 // *************************************************************************************************************************
 //
-// Eeprom items IDs - if updating, make sure eeprom.h list
-// is updated as well!!!
+// EEPROM Items IDs
 //
-// These do NOT use "enum" as it is important that the number *NOT* change by the ineration of new variables:  All NEW variable should be placed at the END of the
-// list to maintain compatibility with older versions and the settings!
+// These do NOT use "enum" as it is important that the number *NOT* change
+// by the insertion of new variables:  All NEW variable should be placed at
+// the END of the list to maintain compatibility with older versions and the settings!
+// If a firmware no longer uses an ID, do not delete the ID entry, just comment it out!
+// This allows to track former use of an ID for a particular purpose.
+// DO NOT REUSE PREVIOUSLY USED IDs without thinking twice. Old entries from former
+// use may cause unexpected behavior with the new firmware and vice versa
+// if downgrading from a new one to an old firmware.
 //
+//
+
 #define EEPROM_ZERO_LOC_UNRELIABLE  0       // DO NOT USE LOCATION ZERO AS IT MAY BE UNRELIABLE!!!!
 #define EEPROM_BAND_MODE        1
 #define EEPROM_FREQ_HIGH        2
@@ -503,6 +510,13 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_RX_IQ_AM_PHASE_BALANCE   358     // IQ Gain balance for AM reception
 #define EEPROM_DISPLAY_DBM				359		// dbm display & S-Meter configuration
 #define EEPROM_FIRST_UNUSED 			360  // change this if new value ids are introduced
+
+#define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
+
+
+#if (MAX_VAR_ADDR > NB_OF_VAR)
+    #error "Too many eeprom variables defined in ui_configuration.h (MAX_VAR_ADDR > NB_OF_VAR ). Please change maximum number of vars in eeprom.h"
+#endif
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
 // need to modify virtual EEPROM routines otherwise system may crash
