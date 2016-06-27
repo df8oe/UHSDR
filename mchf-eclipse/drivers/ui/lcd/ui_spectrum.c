@@ -27,11 +27,15 @@ __IO    SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
 
-float32_t dbm = 0.0;
-float32_t dbm_old = 0.0;
-float32_t m_AttackAve = 0.0;
-float32_t m_DecayAve = 0.0;
-float32_t m_AverageMag = 0.0;
+// Variables for dbm display --> void calculate_dBm
+// float32_t dbm = 0.0;
+//float32_t dbm_old = 0.0;
+float32_t m_AttackAvedbm = 0.0;
+float32_t m_DecayAvedbm = 0.0;
+float32_t m_AverageMagdbm = 0.0;
+float32_t m_AttackAvedbmhz = 0.0;
+float32_t m_DecayAvedbmhz = 0.0;
+float32_t m_AverageMagdbmhz = 0.0;
 float32_t m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
 									// Tau = 10ms = 0.01s attack time
 float32_t m_DecayAlpha = 0.0392; // 500ms decay time
@@ -1749,9 +1753,6 @@ static void calculate_dBm(void)
         // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
         // so the additional processor load and additional RAM usage should be close to zero
         //
-		// TODO: would it be nice to have the possibility to switch between dBm (dependent on filter bandwidth!) and dBm/Hz ?
-		// implemented
-        //
         // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
@@ -1869,51 +1870,60 @@ static void calculate_dBm(void)
         // these preliminary values have been calibrated with Perseus SDR
         if (sum_db > 0)
         {
-        	if (ts.display_dbm == 1)
-        	{ // display signal strength in dBm
-        		dbm = slope * log10 (sum_db) + cons;
-        	}
-        	else
-        	{ // display signal strength in dBm/Hz
-        		//        	dbm = 22 * log10 (sum_db / (float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) - 127.0;
-        		dbm = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
-        	}
-        }
+    		sm.dbm = slope * log10 (sum_db) + cons;
+    		sm.dbmhz = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
+    	}
         else
         {
-        	dbm = -145.0;
+        	sm.dbm = -145.0;
+        	sm.dbmhz = -145.0;
         }
 
-        // lowpass IIR filter !
-//        dbm = 0.25 * dbm + 0.75 * dbm_old;
-//        dbm_old = dbm;
-
+        // lowpass IIR filter
         // Wheatley 2011: two averagers with two time constants
-        m_AttackAve = (1.0 - m_AttackAlpha) * m_AttackAve + m_AttackAlpha * dbm;
-        m_DecayAve = (1.0 - m_DecayAlpha) * m_DecayAve + m_DecayAlpha * dbm;
+        // IIR filter with one element analog to 1st order RC filter
+        // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
+        // whether the signal is increasing (attack) or decreasing (decay)
+        // m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
+		// Tau = 10ms = 0.01s attack time
+        // m_DecayAlpha = 0.0392; // 500ms decay time
+        //
+        m_AttackAvedbm = (1.0 - m_AttackAlpha) * m_AttackAvedbm + m_AttackAlpha * sm.dbm;
+        m_DecayAvedbm = (1.0 - m_DecayAlpha) * m_DecayAvedbm + m_DecayAlpha * sm.dbm;
+        m_AttackAvedbmhz = (1.0 - m_AttackAlpha) * m_AttackAvedbmhz + m_AttackAlpha * sm.dbmhz;
+        m_DecayAvedbmhz = (1.0 - m_DecayAlpha) * m_DecayAvedbmhz + m_DecayAlpha * sm.dbmhz;
 
-        if (m_AttackAve > m_DecayAve)
-        {
-        	m_AverageMag = m_AttackAve;
-        	m_DecayAve = m_AttackAve;
+        if (m_AttackAvedbm > m_DecayAvedbm)
+        { // if attack average is larger than it must be an increasing signal
+        	m_AverageMagdbm = m_AttackAvedbm; // use attack average value for output
+        	m_DecayAvedbm = m_AttackAvedbm; // set decay average to attack average value for next time
         }
         else
-        {
-        	m_AverageMag = m_DecayAve;
+        { // signal is decreasing, so use decay average value
+        	m_AverageMagdbm = m_DecayAvedbm;
         }
-        //            sum_db = log10 (sum_db);
-            // this divides sum_db by the passband width rounded to bin_BWs . . .
-//        float32_t dH = dbm - log10((float32_t)((int)Ubin-(int)Lbin) * bin_BW);
-//        long dbm_Hz = (long) dbm;
-        long dbm_Hz = (long) m_AverageMag;
-//            long dbm_Hz = -87;
-        if (ts.display_dbm == 1)
-        {
-            snprintf(txt,12,"%4ld dBm   ", dbm_Hz);
+
+        if (m_AttackAvedbmhz > m_DecayAvedbmhz)
+        { // if attack average is larger than it must be an increasing signal
+        	m_AverageMagdbmhz = m_AttackAvedbmhz; // use attack average value for output
+        	m_DecayAvedbmhz = m_AttackAvedbmhz; // set decay average to attack average value for next time
         }
         else
+        { // signal is decreasing, so use decay average value
+        	m_AverageMagdbmhz = m_DecayAvedbmhz;
+        }
+
+//        long dbm_Hz = (long) m_AverageMag;
+        sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
+        sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
+
+        if (ts.display_dbm == 1 || ts.display_dbm == 3)
         {
-            snprintf(txt,12,"%4ld dBm/Hz", dbm_Hz);
+            snprintf(txt,12,"%4ld dBm   ", (long)m_AverageMagdbm);
+        }
+        else if (ts.display_dbm == 2 || ts.display_dbm == 4 || ts.display_dbm == 5)
+        {
+            snprintf(txt,12,"%4ld dBm/Hz", (long)m_AverageMagdbmhz);
         }
 
 //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
@@ -1921,7 +1931,7 @@ static void calculate_dBm(void)
         UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         ts.dBm_count = ts.sysclock;				// reset timer
         }
-        if (ts.display_dbm == 0)
+        if (ts.display_dbm == 0 || ts.display_dbm == 6)
         {
         	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
         }
