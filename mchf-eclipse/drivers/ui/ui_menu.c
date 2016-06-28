@@ -19,6 +19,7 @@
 #include "ui_menu.h"
 #include "ui_configuration.h"
 #include "config_storage.h"
+#include "serial_eeprom.h"
 
 #include <stdio.h>
 #include "arm_math.h"
@@ -3878,7 +3879,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
         break;
     case CONFIG_RESET_SER_EEPROM:
-        if(Read_24Cxx(0,8) == 0xFE00)
+        if(SerialEEPROM_Exists() == false)
         {
             txt_ptr = "   n/a";
             clr = Red;
@@ -3891,8 +3892,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             {
                 // clear EEPROM
                 UiMenu_DisplayValue("Working",Red,opt_pos);
-                Write_24Cxx(0,0xFF,16);
-                Write_24Cxx(1,0xFF,16);
+                SerialEEPROM_Clear();
                 Si570_ResetConfiguration();		// restore SI570 to factory default
                 *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
                 NVIC_SystemReset();			// restart mcHF
