@@ -551,7 +551,7 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm displ./S-Meter"},
 	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -2558,23 +2558,33 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
     case    MENU_DBM_DISPLAY:
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.display_dbm,
                                               0,
-                                              2,
+                                              6,
                                               0,
                                               1
                                              );
 
-
-//    	UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.display_dbm,0,options,&clr);
        switch(ts.display_dbm)
         {
         case 1:		//
-            txt_ptr = "    dBm";		//
+            txt_ptr = "   dBm / os";		// dbm display and old school S-Meter
             break;
         case 2:	//
-            txt_ptr = " dBm/Hz";		//
+            txt_ptr = " dBmHz / os";		// dbm/Hz display and old school S-Meter
+            break;
+        case 3:	//
+            txt_ptr = "  dBm / dBm";		// dbm display and dbm S-Meter
+            break;
+        case 4:	//
+            txt_ptr = " dBmHz /dBm";		// dbm/Hz display and dbm S-Meter
+            break;
+        case 5:	//
+            txt_ptr = "dBmHz/dBmHz";		// dbm/Hz display and dbm/Hz S-Meter
+            break;
+        case 6:	//
+            txt_ptr = "  OFF / dBm";		// dbm display OFF and dbm S-Meter
             break;
         default:
-        txt_ptr =  "  OFF";		//
+        txt_ptr =  "   OFF / os";		// dbm display off and oldschool S-Meter
         	break;
         }
         break;

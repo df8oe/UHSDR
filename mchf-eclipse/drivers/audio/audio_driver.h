@@ -183,6 +183,8 @@ typedef struct SMeter
     ulong	s_count;
     float	gain_calc;
     int		curr_max;
+    float32_t dbm;
+    float32_t dbmhz;
 
 } SMeter;
 //

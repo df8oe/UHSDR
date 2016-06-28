@@ -269,7 +269,7 @@ const float S_Meter_Cal[S_Meter_Cal_Size] =
     89125.1,	//8912.51,	//23, +25, 79dB
     158489.3,	//15848.93,	//24, +30, 84dB
     281838.2,	//28183.82,	//25, +35, 89dB
-    501187.2,	//50118.72,	//26, +35, 94dB
+    501187.2,	//50118.72,	//26, +35, 94dB; TODO: there seems to be something wrong here, +35 occurs twice
     891250.9,	//89125.09,	//27, +40, 99dB
     1585893.2,	//158489.32,	//28, +45, 104dB
     2818382.9,	//281838.29,	//29, +50, 109dB
@@ -279,6 +279,44 @@ const float S_Meter_Cal[S_Meter_Cal_Size] =
     28183829.3,	//2818382.93	//33, +70, 129dB
 };
 
+// if S-meter is based on FFT / dBm calculation
+const float S_Meter_Cal_dbm[S_Meter_Cal_Size] =
+{
+// dBm vs. S-value
+    -124.0,	// S0.5
+    -121.0,		// S1
+    -118.0,	// S1.5
+    -115.0,		// S2
+    -112.0,	// S2.5
+    -109.0,	// S3
+    -106.0,	// S3.5
+    -103.0,	// S4
+    -100.0,	// S4.5
+    -97.0,	// S5
+    -94.0,	// S5.5
+    -91.0,	// S6
+    -88.0,	// S6.5
+    -85.0,	// S7
+    -82.0,	// S7.5
+    -79.0,	// S8
+    -76.0,	// S8.5
+    -73.0,	// S9
+    -68.0,	// S9+5
+    -63.0,	// +10
+    -58.0,	// +15
+    -53.0,	// +20
+    -48.0,	// +25
+    -43.0,	// +30
+    -38.0,	// +35
+    -33.0,	// +40
+    -28.0,	// +45
+    -23.0,	// +50
+	-18.0,	// +55
+    -13.0,	// +60
+    -8.0,	// +65
+    -3.0,	// +70
+	2.0, // +75
+};
 __IO BandRegs vfo[VFO_MAX];
 
 // ------------------------------------------------
@@ -5734,19 +5772,39 @@ static void UiDriverHandleSmeter()
     gcalc -= 34.5;	// offset codec setting by 34.5db (full gain = 12dB)
     gcalc = pow10(gcalc/10);	// convert to power ratio
     ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
+
     //
+    if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2) // oldschool (os) S-meter scheme
+    {
     sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
     sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
     //
     sm.gain_calc = 1/sm.gain_calc;	// invert gain to convert to amount of attenuation
     //
     sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
-
+    }
+    else if (ts.display_dbm == 3 || ts.display_dbm == 4 || ts.display_dbm == 6) // based on dBm calculation
+    {
+    	sm.gain_calc = sm.dbm;
+    }
+    else // based on dBm/Hz calculation
+    {
+    	sm.gain_calc = sm.dbmhz;
+    }
     sm.s_count = 0;		// Init S-meter search counter
     //
+    if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2)// oldschool (os) S-meter scheme
+    {
     while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
     {
         sm.s_count++;
+    }
+    } else
+    {
+        while ((sm.gain_calc >= S_Meter_Cal_dbm[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
+        {
+            sm.s_count++;
+        }
     }
     val = (uchar)sm.s_count;
 
