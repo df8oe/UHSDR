@@ -59,6 +59,9 @@
 // hardware specific switches
 //#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
+#define CODEC_I2C                       I2C2
+#define SERIALEEPROM_I2C                I2C2
+
 
 #define		WD_REFRESH_WINDOW		80
 #define		WD_REFRESH_COUNTER		127
