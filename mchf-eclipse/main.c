@@ -15,7 +15,7 @@
 // Common
 #include "mchf_board.h"
 #include "ui_configuration.h"
-
+#include "config_storage.h"
 #include <stdio.h>
 
 // serial EEPROM driver
@@ -422,7 +422,6 @@ void TransceiverStateInit(void)
     ts.mic_bias = 1;						// mic bias on
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
-    ts.eeprombuf = 0x00;						// pointer to RAM - dynamically loaded
     ts.tp_present = 0;						// default no touchscreen
     ts.tp_x = 0xFF;							// invalid position
     ts.tp_y = 0xFF;							// invalid position
@@ -495,137 +494,6 @@ static void wd_reset(void)
 	}
 }
 */
-#define EEPROM_SER_NONE 0
-
-uint8_t EEPROM_24Cxx_Detect() {
-
-    uint8_t ser_eeprom_type = 0xFF;
-
-    // serial EEPROM init
-    //  Write_24Cxx(0,0xFF,16);     //enable to reset EEPROM and force new copyvirt2ser
-    if(Read_24Cxx(0,8) > 0xFF)  // Issue with Ser EEPROM, either not available or other problems
-        ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM availbale
-    else
-    {
-        if(Read_24Cxx(0,16) != 0xFF)
-        {
-            if(Read_24Cxx(0,8) > 6 && Read_24Cxx(0,8) < 9 && Read_24Cxx(1,8) == 0x10)
-            {
-                ser_eeprom_type = Read_24Cxx(0,8);
-            }
-            else
-            {
-                ser_eeprom_type = Read_24Cxx(0,16);
-            }
-        }
-        else
-        {
-            {
-                Write_24Cxx(10,0xdd,8);
-                if(Read_24Cxx(10,8) == 0xdd)
-                {
-                    // 8 bit addressing
-                    Write_24Cxx(3,0x99,8);              // write testsignature
-                    ser_eeprom_type = 7;             // smallest possible 8 bit EEPROM
-                    if(Read_24Cxx(0x83,8) != 0x99)
-                    {
-                        ser_eeprom_type = 8;
-                    }
-                    Write_24Cxx(0,ser_eeprom_type,8);
-                    Write_24Cxx(1,0x10,8);
-                }
-                else
-                {
-                    // 16 bit addressing
-                    if(Read_24Cxx(0x10000,17) < 0x100)
-                    {
-                        ser_eeprom_type = 17;            // 24LC1025
-                        Write_24Cxx(0,17,16);
-                    }
-                    if(Read_24Cxx(0x10000,18) < 0x100)
-                    {
-                        ser_eeprom_type = 18;            // 24LC1026
-                        Write_24Cxx(0,18,16);
-                    }
-                    if(Read_24Cxx(0x10000,19) < 0x100)
-                    {
-                        ser_eeprom_type = 19;            // 24CM02
-                        Write_24Cxx(0,19,16);
-                    }
-                    if(ser_eeprom_type < 17)
-                    {
-                        Write_24Cxx(3,0x66,16);         // write testsignature 1
-                        Write_24Cxx(0x103,0x77,16);         // write testsignature 2
-                        if(Read_24Cxx(3,16) == 0x66 && Read_24Cxx(0x103,16) == 0x77)
-                        {
-                            // 16 bit addressing
-                            ser_eeprom_type = 9;         // smallest possible 16 bit EEPROM
-                            if(Read_24Cxx(0x803,16) != 0x66)
-                            {
-                                ser_eeprom_type = 12;
-                            }
-                            if(Read_24Cxx(0x1003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 13;
-                            }
-                            if(Read_24Cxx(0x2003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 14;
-                            }
-                            if(Read_24Cxx(0x4003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 15;
-                            }
-                            if(Read_24Cxx(0x8003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 16;
-                            }
-                            Write_24Cxx(0,ser_eeprom_type,16);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return ser_eeprom_type;
-}
-
-void ConfigurationStorage_Init()
-{
-    // virtual Eeprom init
-    ts.ee_init_stat = EE_Init();	// get status of EEPROM initialization
-
-    ts.ser_eeprom_type = EEPROM_24Cxx_Detect();
-
-    if (ts.ser_eeprom_type != EEPROM_SER_NONE)
-    {
-        ts.ser_eeprom_in_use = Read_24Cxx(1,ts.ser_eeprom_type);
-    }
-    else
-    {
-        ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;
-    }
-
-    if(ts.ser_eeprom_type < 16)				// incompatible EEPROMs
-    {
-        ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_TOO_SMALL;			// serial EEPROM too small
-    }
-    else {
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO) // empty EEPROM
-        {
-            copy_virt2ser();				// copy data from virtual to serial EEPROM
-            verify_servirt();				// just 4 debug purposes
-            Write_24Cxx(1, 0, ts.ser_eeprom_type);		// serial EEPROM in use now
-        }
-    }
-    //	    ts.ser_eeprom_in_use = 0xFF;			// serial EEPROM use disable 4 debug
-
-    //	if(ts.ser_eeprom_in_use == 0x00)
-    //	    {
-    //	    static uint8_t serbuf[MAX_VAR_ADDR*2];		// mirror of serial eeprom in RAM
-    //	    ts.eeprombuf = serbuf;
-    //	    }
-}
 
 
 int main(void)
@@ -658,7 +526,7 @@ int main(void)
 //	    }
 
 
-    ConfigurationStorage_Init();
+    ConfigStorage_Init();
 
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
@@ -711,10 +579,14 @@ int main(void)
 
         // Reset WD - not working
         //wd_reset();
-	if(ts.temp_nb < 0x80 && ts.sysclock > 50)		// load NB setting after processing first audio data
-	  {
-	  ts.nb_setting = ts.temp_nb;
-	  ts.temp_nb = 0xff;
-	  }
+
+        // TODO: Make that nicer and move out from here
+        // The observation is that enabling the NB too early somehow made it not working properly
+        // Maybe that can be fixed at some point
+        if(ts.temp_nb < 0x80 && ts.sysclock > 50)		// load NB setting after processing first audio data
+        {
+            ts.nb_setting = ts.temp_nb;
+            ts.temp_nb = 0xff;
+        }
     }
 }

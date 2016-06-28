@@ -47,6 +47,8 @@
 
 
 #include "ui_configuration.h"
+#include "config_storage.h"
+
 #include "cw_gen.h"
 
 static void 	UiDriverPublicsInit();
@@ -7049,7 +7051,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     sprintf(tx,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
     UiLcdHy28_PrintText(15,100,tx,Yellow,Black,0);
 
-    Read_EEPROM(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
+    ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
 
     if(!(i & 0xff))
     {
