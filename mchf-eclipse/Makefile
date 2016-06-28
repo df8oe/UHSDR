@@ -191,6 +191,7 @@ SRC =  \
     hardware/mchf_hw_i2c2.c  \
     \
     misc/v_eprom/eeprom.c  \
+    misc/config_storage.c  \
     \
     stdio/printf.c  \
     syscalls/syscalls.c  \
