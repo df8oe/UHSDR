@@ -18,6 +18,7 @@
 #include "ui.h"
 #include "ui_menu.h"
 #include "ui_configuration.h"
+#include "config_storage.h"
 
 #include <stdio.h>
 #include "arm_math.h"
@@ -2687,7 +2688,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             if(var>=1)
             {
                 UiMenu_DisplayValue("Working",Red,opt_pos);
-                copy_ser2virt();
+                ConfigStorage_CopySerial2Flash();
                 txt_ptr = " Done...";
                 clr = Green;
             }
@@ -2703,7 +2704,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             {
 
                 UiMenu_DisplayValue("Working",Red,opt_pos);
-                copy_virt2ser();
+                ConfigStorage_CopyFlash2Serial();
                 mchf_reboot();
             }
         }

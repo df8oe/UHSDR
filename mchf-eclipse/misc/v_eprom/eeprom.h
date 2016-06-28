@@ -81,11 +81,10 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-uint16_t EE_Init(void);
-uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data);
-uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data);
-uint16_t EE_UpdateVariable(uint16_t VirtAddress, uint16_t Data);
-uint16_t EE_GetVirtAddrForId(uint16_t id);
+uint16_t Flash_Init();
+uint16_t Flash_ReadVariable(uint16_t addr, uint16_t* value);
+uint16_t Flash_WriteVariable(uint16_t addr, uint16_t value);
+uint16_t Flash_UpdateVariable(uint16_t addr, uint16_t value);
 
 #endif /* __EEPROM_H */
 

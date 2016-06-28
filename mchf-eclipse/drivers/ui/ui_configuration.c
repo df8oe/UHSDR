@@ -12,6 +12,7 @@
 **  Licence:        CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 #include "ui_configuration.h"
+#include "config_storage.h"
 
 #include "ui_driver.h"
 
@@ -223,7 +224,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_Bool(uint16_t addr, v
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, volatile uint8_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
 {
     uint16_t value;
-    if(Read_EEPROM(addr, &value) == 0)
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
     {
         *val_ptr = value;
         if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
@@ -236,7 +237,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, 
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
 {
     uint16_t value;
-    if(Read_EEPROM(addr, &value) == 0)
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
     {
         *val_ptr = value;
         if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
@@ -250,7 +251,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr,
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t addr, volatile uint32_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
 {
     uint16_t value;
-    if(Read_EEPROM(addr, &value) == 0)
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
     {
         *val_ptr = value;
         if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
@@ -263,7 +264,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t ad
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int32_16(uint16_t addr, volatile int32_t* val_ptr, int default_val, int min_val, int max_val )
 {
     uint16_t value;
-    if(Read_EEPROM(addr, &value) == 0)
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
     {
         *val_ptr = (int16_t)value;
         if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
@@ -276,7 +277,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int32_16(uint16_t add
 static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile uint32_t* val_ptr, uint32_t default_val, uint32_t min_val, uint32_t max_val)
 {
     uint16_t valueH,valueL;
-    if(Read_EEPROM(addrH, &valueH) == 0 && Read_EEPROM(addrL, &valueL) == 0)
+    if(ConfigStorage_ReadVariable(addrH, &valueH) == 0 && ConfigStorage_ReadVariable(addrL, &valueL) == 0)
     {
 
         *val_ptr = valueH;
@@ -292,13 +293,13 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
 
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val )
 {
-    Write_EEPROM(addr, set_val);
+    ConfigStorage_WriteVariable(addr, set_val);
 }
 
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val )
 {
-    Write_EEPROM(addrH, (uint16_t)(set_val >> 16));
-    Write_EEPROM(addrL, (uint16_t)(set_val));
+    ConfigStorage_WriteVariable(addrH, (uint16_t)(set_val >> 16));
+    ConfigStorage_WriteVariable(addrL, (uint16_t)(set_val));
 }
 
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg)
@@ -596,24 +597,13 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         if(ts.dmod_mode == DEMOD_FM)
             ts.dmod_mode = DEMOD_USB;   // if FM switch to USB during write
 
+        // TODO: THIS IS UGLY: We are switching to RAM based storage in order to gain speed
+        // because we then can bulk write the data into the I2C later.
+        // we don't do this for flash, since we cannot gain anything here.
+
         if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         {
-            // TODO: Look if less memory intensive approach is possible
-            static uint8_t p[MAX_VAR_ADDR*2+2];
-            ts.eeprombuf = p;
-
-            uint16_t i, data;
-
-            ts.eeprombuf[0] = ts.ser_eeprom_type;
-            ts.eeprombuf[1] = ts.ser_eeprom_in_use;
-            for(i=1; i <= MAX_VAR_ADDR; i++)
-            {
-                Read_SerEEPROM(i, &data);
-                ts.eeprombuf[i*2+1] = (uint8_t)((0x00FF)&data);
-                data = data>>8;
-                ts.eeprombuf[i*2] = (uint8_t)((0x00FF)&data);
-            }
-            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_FLASH;
+            ConfigStorage_CopySerial2RAMCache();
         }
 
         if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
@@ -651,10 +641,9 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
         UiWriteSettingEEPROM_Filter();
 
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
+        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_RAMCACHE)
         {
-            Write_24Cxxseq(0, ts.eeprombuf, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
-            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_I2C;
+            ConfigStorage_CopyRAMCache2Serial();
         }
 
         ts.dsp_inhibit = dspmode;   // restore DSP mode

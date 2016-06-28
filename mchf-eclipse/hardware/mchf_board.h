@@ -1124,17 +1124,19 @@ typedef struct TransceiverState
     bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
     bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
     bool	mic_bias;				// TRUE = mic bias on
+
+#define EEPROM_SER_NONE 0
+
     uchar	ser_eeprom_type;			// serial eeprom type
 
 #define SER_EEPROM_IN_USE_I2C         0x00
 #define SER_EEPROM_IN_USE_ERROR       0x05
 #define SER_EEPROM_IN_USE_TOO_SMALL   0x10
 #define SER_EEPROM_IN_USE_DONT_SAVE   0x20
-#define SER_EEPROM_IN_USE_FLASH       0xAA
+#define SER_EEPROM_IN_USE_RAMCACHE    0xAA
 #define SER_EEPROM_IN_USE_NO          0xFF
 
     uchar	ser_eeprom_in_use;	    // use to determine non-volatile memory configuration
-    uint8_t* eeprombuf;				// pointer to copy of config in RAM
     uchar 	tp_present;				// touchscreen present = 1, absent = 0
     char 	tp_x;					// touchscreen x coordinate
     char	tp_y;					// touchscreen y coordinate
@@ -1211,17 +1213,6 @@ void mchf_board_post_init(void);
 void mchf_reboot();
 void mchf_powerdown();
 
-
-// TODO: Rename and move to configuration code file
-uint16_t Read_EEPROM(uint16_t addr, uint16_t *value);
-uint16_t Write_EEPROM(uint16_t addr, uint16_t value);
-uint16_t Read_SerEEPROM(uint16_t addr, uint16_t *value);
-uint16_t Write_SerEEPROM(uint16_t addr, uint16_t value);
-
-// TODO: Rename and move to configuration code file
-void copy_virt2ser(void);
-void copy_ser2virt(void);
-void verify_servirt(void);
 
 /**
  * Is the hardware contact named DAH pressed
