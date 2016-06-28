@@ -374,6 +374,8 @@
     <File name="drivers/audio/filters/iir_6_5k.c" path="drivers/audio/filters/iir_6_5k.c" type="1"/>
     <File name="misc/config_storage.h" path="misc/config_storage.h" type="1"/>
     <File name="misc/config_storage.c" path="misc/config_storage.c" type="1"/>
+    <File name="misc/serial_eeprom.h" path="misc/serial_eeprom.h" type="1"/>
+    <File name="misc/serial_eeprom.c" path="misc/serial_eeprom.c" type="1"/>
     <File name="misc/v_eprom/eeprom.h" path="misc/v_eprom/eeprom.h" type="1"/>
     <File name="drivers/ui/ui_configuration.h" path="drivers/ui/ui_configuration.h" type="1"/>
     <File name="drivers/ui/oscillator/ui_si570.h" path="drivers/ui/oscillator/ui_si570.h" type="1"/>

@@ -7,30 +7,22 @@
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
-**  Description:                                                                   **
+**  Description: Serial EEPROM Functions by DF8OE                                                                  **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
+**  Licence:        CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-#ifndef __MCHF_HW_I2C2_H
-#define __MCHF_HW_I2C2_H
+#ifndef __SERIAL_EEPROM_H
+#define __SERIAL_EEPROM_H
 
-#include "mchf_hw_i2c.h"
+void     SerialEEPROM_Clear();
+bool     SerialEEPROM_Exists();
 
-void 		mchf_hw_i2c2_init(void);
-
-#define I2C2_FLAG_TIMEOUT               ((uint32_t)0x500)
-#define I2C2_LONG_TIMEOUT               ((uint32_t)(300 * I2C2_FLAG_TIMEOUT))
-
-#define I2C_FlagStatusOrReturn(BUS, FLAG, RETURN) { \
-        uint32_t timeout = BUS##_FLAG_TIMEOUT;\
-        while(I2C_GetFlagStatus(BUS, (FLAG)))\
-        { if ((timeout--) == 0) { return (RETURN); } } }
-
-#define I2C_EventCompleteOrReturn(BUS,EVENT, RETURN) { \
-        uint32_t timeout = BUS##_LONG_TIMEOUT;\
-        while(!I2C_CheckEvent(BUS, (EVENT)))\
-        { if ((timeout--) == 0) { return (RETURN); } } }
-
+// low level interface
+uint16_t SerialEEPROM_24Cxx_Write(uint32_t, uint8_t, uint8_t);
+uint16_t SerialEEPROM_24Cxx_Read(uint32_t, uint8_t);
+uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
+uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
+uint8_t  SerialEEPROM_24Cxx_Detect();
 
 #endif

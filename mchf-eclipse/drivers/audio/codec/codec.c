@@ -19,7 +19,6 @@
 
 #include <stdio.h>
 
-//#include "mchf_sw_i2c.h"
 #include "mchf_hw_i2c2.h"
 #include "codec.h"
 
@@ -390,7 +389,9 @@ uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
     uint8_t Byte2 = RegisterValue&0xFF;
 
 
-    res = mchf_hw_i2c2_WriteRegister(CODEC_ADDRESS,Byte1,Byte2);
+    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, &Byte1, 1, Byte2);
+
+
     if(res)
     {
 #ifdef DEBUG_BUILD
