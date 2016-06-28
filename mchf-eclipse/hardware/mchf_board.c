@@ -760,7 +760,7 @@ uint16_t Read_EEPROM(uint16_t addr, uint16_t *value)
     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
         return Read_SerEEPROM(addr, value);
     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
-        return(EE_ReadVariable(VirtAddVarTab[addr], value));
+        return(EE_ReadVariable(EE_GetVirtAddrForId(addr), value));
     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
     {
         uint8_t lowbyte;
@@ -794,7 +794,7 @@ uint16_t Write_EEPROM(uint16_t addr, uint16_t value)
     }
     else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
     {
-        status = (EE_WriteVariable(VirtAddVarTab[addr], value));
+        status = (EE_UpdateVariable(EE_GetVirtAddrForId(addr), value));
     }
     else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_FLASH)
     {
@@ -856,7 +856,7 @@ void copy_virt2ser(void)
 // copy virtual EEPROM to RAM, this reads out 383 values and stores them in  2 bytes
     for(i=1; i <= MAX_VAR_ADDR; i++)
     {
-        EE_ReadVariable(VirtAddVarTab[i], &data);
+        EE_ReadVariable(EE_GetVirtAddrForId(i), &data);
         p[i*2+1] = (uint8_t)((0x00FF)&data);
         data = data>>8;
         p[i*2] = (uint8_t)((0x00FF)&data);
@@ -890,7 +890,7 @@ void copy_ser2virt(void)
     for(count=1; count <= MAX_VAR_ADDR; count++)
     {
         Read_SerEEPROM(count, &data);
-        EE_WriteVariable(VirtAddVarTab[count], data);
+        EE_UpdateVariable(EE_GetVirtAddrForId(count), data);
     }
 }
 
@@ -903,7 +903,7 @@ void verify_servirt(void)
     for(count=1; count <= MAX_VAR_ADDR; count++)
     {
         Read_SerEEPROM(count, &data1);
-        EE_ReadVariable(VirtAddVarTab[count], &data2);
+        EE_ReadVariable(EE_GetVirtAddrForId(count), &data2);
         if(data1 != data2)
             ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR;	// mark data copy as faulty
     }

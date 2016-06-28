@@ -1494,6 +1494,25 @@ static bool RadioManagement_HandleLoTemperatureDrift()
 
 const int ptt_break_time = 15;
 
+uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
+    uint32_t retval;
+
+    if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((freq < USB_FREQ_THRESHOLD) && (RadioManagement_GetBand(freq) != BAND_MODE_60)))       // are we <10 MHz and NOT on 60 meters?
+    {
+        retval = DEMOD_LSB;
+    }
+    else if((ts.lsb_usb_auto_select == AUTO_LSB_USB_ON) && (freq < USB_FREQ_THRESHOLD))      // are we <10 MHz (not in 60 meter mode)
+    {
+        retval = DEMOD_LSB;
+    }
+    else        // we must be > 10 MHz OR on 60 meters
+    {
+        retval = DEMOD_USB;
+    }
+    return retval;
+}
+
+
 static void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break_timer = ptt_break_time;
@@ -4312,24 +4331,6 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 /*
  * Tells you which SSB Demod Mode is the preferred one for a given frequency in Hertz
  */
-uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
-    uint32_t retval;
-
-    if((ts.lsb_usb_auto_select == AUTO_LSB_USB_60M) && ((freq < USB_FREQ_THRESHOLD) && (RadioManagement_GetBand(freq) != BAND_MODE_60)))       // are we <10 MHz and NOT on 60 meters?
-    {
-        retval = DEMOD_LSB;
-    }
-    else if((ts.lsb_usb_auto_select == AUTO_LSB_USB_ON) && (freq < USB_FREQ_THRESHOLD))      // are we <10 MHz (not in 60 meter mode)
-    {
-        retval = DEMOD_LSB;
-    }
-    else        // we must be > 10 MHz OR on 60 meters
-    {
-        retval = DEMOD_USB;
-    }
-    return retval;
-}
-
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeDemodMode
 //* Object              : change demodulator mode

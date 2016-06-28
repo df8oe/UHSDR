@@ -46,9 +46,9 @@ void I2S_Block_Init(void)
 
     DMA_InitStructure.DMA_Channel = AUDIO_I2S_DMA_CHANNEL;
     DMA_InitStructure.DMA_PeripheralBaseAddr = AUDIO_I2S_DMA_DREG;
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)0;
+    DMA_InitStructure.DMA_Memory0BaseAddr = 0;
     DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-    DMA_InitStructure.DMA_BufferSize = (uint32_t)0xFFFE;
+    DMA_InitStructure.DMA_BufferSize = 0;
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 
@@ -62,7 +62,7 @@ void I2S_Block_Init(void)
 
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-    DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+    DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
     DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
     DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -80,9 +80,9 @@ void I2S_Block_Init(void)
     // Set the parameters to be configured
     DMA_InitStructure2.DMA_Channel = AUDIO_I2S_EXT_DMA_CHANNEL;
     DMA_InitStructure2.DMA_PeripheralBaseAddr = AUDIO_I2S_EXT_DMA_DREG;
-    DMA_InitStructure2.DMA_Memory0BaseAddr = (uint32_t)0;
+    DMA_InitStructure2.DMA_Memory0BaseAddr = 0;
     DMA_InitStructure2.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStructure2.DMA_BufferSize = (uint32_t)0xFFFE;
+    DMA_InitStructure2.DMA_BufferSize = 0;
     DMA_InitStructure2.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure2.DMA_MemoryInc = DMA_MemoryInc_Enable;
 
@@ -96,7 +96,7 @@ void I2S_Block_Init(void)
 
     DMA_InitStructure2.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure2.DMA_Priority = DMA_Priority_High;
-    DMA_InitStructure2.DMA_FIFOMode = DMA_FIFOMode_Disable;
+    DMA_InitStructure2.DMA_FIFOMode = DMA_FIFOMode_Enable;
     DMA_InitStructure2.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
     DMA_InitStructure2.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     DMA_InitStructure2.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
