@@ -108,19 +108,6 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     if(AudioFreq == I2S_AudioFreq_8k ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
 
     // Reg 09: Active Control
-//#define TWINPEAKS_ON
-#ifdef TWINPEAKS_ON
-    // first we wait for Right Channel
-    while ((CODEC_I2S->SR & I2S_FLAG_CHSIDE) != 0) {asm(""); }
-    // then we wait for Left Channel
-    while ((CODEC_I2S->SR & I2S_FLAG_CHSIDE) == 0) {asm(""); }
-#else
-    // first we wait for Left Channel
-    while ((CODEC_I2S->SR & I2S_FLAG_CHSIDE) == 0) {asm(""); }
-    // then we wait for Right Channel
-    while ((CODEC_I2S->SR & I2S_FLAG_CHSIDE) != 0) {asm(""); }
-
-#endif
     // and now we start the Codec Digital Interface
     Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
 }
