@@ -5,6 +5,12 @@
 
 static uint8_t config_ramcache[MAX_VAR_ADDR*2+2];
 
+static uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value);
+static uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value);
+static uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value);
+
+static void ConfigStorage_CheckSameContentSerialAndFlash(void);
+
 //
 // Interface for all EEPROM (ser/virt) functions and our code
 //
@@ -31,7 +37,6 @@ uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value)
     return 0;
 }
 
-static uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value);
 //*----------------------------------------------------------------------------
 //* Function Name       : Write_EEPROM
 //* Object              :
@@ -71,7 +76,7 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
 //
 // Interface for serial EEPROM functions
 //
-uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value)      // reference to serial EEPROM read function
+static uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value)      // reference to serial EEPROM read function
 {
     uint16_t data;
 
@@ -82,7 +87,7 @@ uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value)      // refer
     return 0;
 }
 
-uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value)
+static uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value)
 {
         uint16_t value_read = 0;
         uint16_t status = SerialEEPROM_ReadVariable(addr,&value_read);
@@ -106,20 +111,6 @@ uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value)      // refer
 }
 
 
-// verify data serial / virtual EEPROM
-void ConfigStorage_CheckSameContentSerialAndFlash(void)
-{
-    uint16_t count;
-    uint16_t data1, data2;
-
-    for(count=1; count <= MAX_VAR_ADDR; count++)
-    {
-        SerialEEPROM_ReadVariable(count, &data1);
-        Flash_ReadVariable(count, &data2);
-        if(data1 != data2)
-            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR; // mark data copy as faulty
-    }
-}
 
 // TODO: This is not the best location, it belongs to
 // the low level I2C EEPROM Code currently located elsewhere
@@ -266,17 +257,11 @@ void ConfigStorage_CopyFlash2RAMCache()
 
 void ConfigStorage_CopySerial2RAMCache()
 {
-    uint16_t i, data;
+    Read_24Cxxseq(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
 
     config_ramcache[0] = ts.ser_eeprom_type;
     config_ramcache[1] = ts.ser_eeprom_in_use;
-    for(i=1; i <= MAX_VAR_ADDR; i++)
-    {
-        SerialEEPROM_ReadVariable(i, &data);
-        config_ramcache[i*2+1] = (uint8_t)((0x00FF)&data);
-        data = data>>8;
-        config_ramcache[i*2] = (uint8_t)((0x00FF)&data);
-    }
+
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_RAMCACHE;
 }
 
@@ -303,5 +288,25 @@ void ConfigStorage_CopySerial2Flash(void)
     {
         SerialEEPROM_ReadVariable(count, &data);
         Flash_UpdateVariable(count, data);
+    }
+}
+
+/**
+ * verify data serial / virtual EEPROM
+ * sets ts.ser_eeprom_in_use to SER_EEPROM_IN_USE_ERROR if
+ * it encounters a difference between flash and I2C
+ * Used only for debugging
+ */
+static void ConfigStorage_CheckSameContentSerialAndFlash(void)
+{
+    uint16_t count;
+    uint16_t data1, data2;
+
+    for(count=1; count <= MAX_VAR_ADDR; count++)
+    {
+        SerialEEPROM_ReadVariable(count, &data1);
+        Flash_ReadVariable(count, &data2);
+        if(data1 != data2)
+            ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR; // mark data copy as faulty
     }
 }

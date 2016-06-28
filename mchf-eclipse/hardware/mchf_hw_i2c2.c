@@ -267,9 +267,35 @@ uint16_t Read_24Cxx(uint32_t Addr, uint8_t Mem_Type)
     return retVal;
 }
 
-uint16_t Read_24Cxxseq(uint32_t start, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
+uint16_t Read_24Cxxseq(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
-    return(0xFFFF);
+    uint32_t page, count;
+    uint16_t retVal = 0xFFFF;
+    count = 0;
+
+    if(Mem_Type == 12)
+        page = 64;
+    if(Mem_Type == 13)
+        page = 32;
+    if(Mem_Type == 14 || Mem_Type == 15)
+        page = 64;
+    if(Mem_Type > 15 && Mem_Type < 19)
+        page = 128;
+    if(Mem_Type == 19)
+        page = 256;
+
+
+    while(count < length)
+    {
+        EEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&eeprom_desc);
+        retVal = MCHF_I2C_ReadBlock(CODEC_I2C,eeprom_desc.devaddr,&eeprom_desc.addr[0],eeprom_desc.addr_size,&buffer[count],page);
+        count+=page;
+        if (retVal)
+        {
+            break;
+        }
+    }
+    return retVal;
 }
 
 uint16_t Write_24Cxxseq(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)

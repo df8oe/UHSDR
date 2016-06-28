@@ -22,12 +22,8 @@ void ConfigStorage_Init();
 uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value);
 uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value);
 
-uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value);
-uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value);
-
 void ConfigStorage_CopyFlash2Serial(void);
 void ConfigStorage_CopySerial2Flash(void);
-void ConfigStorage_CheckSameContentSerialAndFlash(void);
 
 void ConfigStorage_CopySerial2RAMCache();
 void ConfigStorage_CopyRAMCache2Serial();
