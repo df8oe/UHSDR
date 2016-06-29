@@ -1,3 +1,17 @@
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
+/************************************************************************************
+ **                                                                                 **
+ **                               mcHF QRP Transceiver                              **
+ **                             K Atanassov - M0NKA 2014                            **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:       CC BY-NC-SA 3.0                                                **
+ ************************************************************************************/
+
 #include "config_storage.h"
 #include "ui_configuration.h"
 #include "serial_eeprom.h"
