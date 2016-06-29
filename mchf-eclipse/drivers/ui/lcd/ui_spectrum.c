@@ -460,7 +460,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
 
     if(shift)
-        sh = (SPECTRUM_WIDTH/2)-1;   // Shift to fill gap in center
+//        sh = (SPECTRUM_WIDTH/2)-1;   // Shift to fill gap in center
+    	sh = (SPECTRUM_WIDTH/2) + 1;   // Shift to fill gap in center
     else
         sh = 1;                  // Shift to fill gap in center
 
@@ -495,7 +496,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             if (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
 
             {
-                if ((idx > 1) && (idx < 254))
+                if ((idx > 1) && (idx < 126)) //
                 {
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
@@ -507,7 +508,7 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
 
                 }
 
-                if ((idx > 1) && (idx < 254))
+                if ((idx > 1) && (idx < 126)) //
                  {
                     y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                  }
@@ -546,12 +547,16 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
             	// makes the spectrum display look more complete . . .
             	//
+            	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
+            	{
+            		y1_old_minus = sd.FFT_BkpData[255];
+            	}
 
-            	if(y1_old - y1_old_minus > 1 && x !=(SPECTRUM_START_X + sh + 0))
+            	if(y1_old - y1_old_minus > 1 && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
             		UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
             	 }
-            	else if (y1_old - y1_old_minus < -1 && x !=(SPECTRUM_START_X + sh + 0))
+            	else if (y1_old - y1_old_minus < -1 && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
             		UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
             	 }
@@ -560,12 +565,12 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             		  UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
             	 }
 
-            	if(y1_new - y1_new_minus > 1 && x !=(SPECTRUM_START_X + sh + 0))
+            	if(y1_new - y1_new_minus > 1 && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
                      UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
 
             	 }
-            	else if (y1_new - y1_new_minus < -1 && x !=(SPECTRUM_START_X + sh + 0))
+            	else if (y1_new - y1_new_minus < -1 && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
                      UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
 
@@ -873,6 +878,7 @@ void UiSpectrumReDrawScopeDisplay()
         //
 //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
 //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
+        //        arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
         arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
 
         //
@@ -1240,9 +1246,17 @@ void UiSpectrumReDrawScopeDisplay()
         uint32_t	clr;
         UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
         // Left part of screen(mask and update in one operation to minimize flicker)
+/*        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
+        // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
+        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
+*/
+        // Left part of screen(mask and update in one operation to minimize flicker)
         UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
         UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
+
+
+
         sd.state = 0;   // Stage 0 - collection of data by the Audio driver
         break;
     }
