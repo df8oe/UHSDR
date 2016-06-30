@@ -102,7 +102,7 @@ static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
 static void 	UiDriver_DisplayDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
 static void 	UiDriverHandleSmeter();
-static void 	UiDriverHandleLowerMeter();
+static void 	UiDriverHandleTXMeters();
 static void     UiDriver_HandleVoltage();
 #if 0
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
@@ -1423,11 +1423,11 @@ static bool RadioManagement_HandleLoTemperatureDrift()
     // No need to process if no chip avail or updates are disabled
     if((lo.sensor_absent == false) &&(temp_enabled != TCXO_STOP))
     {
-        lo.skip++;
-        if(lo.skip >= LO_COMP_SKP)
+        // lo.skip++;
+        // if(lo.skip >= LO_COMP_SKP)
         {
             profileEvent(EnterLO);
-            lo.skip = 0;
+            // lo.skip = 0;
             // Get current temperature
             if(Si570_ReadExternalTempSensor(&temp) == 0)
             {
@@ -1716,8 +1716,6 @@ void ui_driver_init()
  * @returns true if has been enabled, false if tune is disabled now
  */
 
-uint32_t last_sysclock_seen;
-
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_thread
 //* Object              : non urgent, time taking operations
@@ -1726,126 +1724,6 @@ uint32_t last_sysclock_seen;
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void ui_driver_thread()
-{
-    profileEvent(EnterDriverThread);
-    uint32_t now = ts.sysclock;
-    if (last_sysclock_seen != now)
-    {
-        // 10ms have elapsed. Now process events which should be handled regularly
-        if(!ts.boot_halt_flag)
-        {
-            UiDriverCheckEncoderOne();
-            UiDriverCheckEncoderTwo();
-            UiDriverCheckEncoderThree();
-            UiDriverCheckFrequencyEncoder();
-            UiDriver_KeyboardProcessOldClicks();
-        }
-
-
-        // ok, done with it, wait for next change
-        last_sysclock_seen = now;
-    }
-
-    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
-    {
-        UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
-    }
-    else
-    {
-        UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
-    }
-    if(ts.thread_timer == 0)			// bail out if it is not time to do this task
-    {
-        ts.thread_timer = 1;		// reset flag to schedule next occurrence
-
-        switch(drv_state)
-        {
-        case STATE_S_METER:
-            if(!ts.boot_halt_flag)
-            {
-                profileEvent(EnterSMeter);
-                UiDriverHandleSmeter();
-            }
-            break;
-        case STATE_SWR_METER:
-            if(!ts.boot_halt_flag)
-            {
-                UiDriverHandleLowerMeter();
-            }
-            break;
-        case STATE_HANDLE_POWERSUPPLY:
-            mchf_HandlePowerDown();
-            if(!ts.boot_halt_flag)
-            {
-                UiDriver_HandleVoltage();
-            }
-            break;
-        case STATE_LO_TEMPERATURE:
-            if(!ts.boot_halt_flag)
-            {
-                UiDriver_HandleLoTemperature();
-            }
-            break;
-        case STATE_TASK_CHECK:
-            UiDriverTimeScheduler();
-            // Handles live update of Calibrate between TX/RX and volume control
-            break;
-        case STATE_CHECK_ENC_ONE:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderOne();
-            }
-            break;
-        case STATE_CHECK_ENC_TWO:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderTwo();
-            }
-            break;
-        case STATE_CHECK_ENC_THREE:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderThree();
-            }
-            break;
-        case STATE_UPDATE_FREQUENCY:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckFrequencyEncoder();
-
-                /* at this point we handle request for changing the frequency
-                 * either from a difference in dial freq or a temp change
-                 *  */
-                if((df.tune_old != df.tune_new))
-                {
-                    UiDriver_FrequencyUpdateLOandDisplay(false);
-                }
-                else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
-                {
-                    // this handles the cases where the dial frequency remains the same but the
-                    // LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
-                    RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
-                }
-            }
-            break;
-        case STATE_PROCESS_KEYBOARD:
-            UiDriverProcessKeyboard();
-            break;
-        case STATE_SWITCH_OFF_PTT:
-            if(!ts.boot_halt_flag)
-            {
-                RadioManagement_HandlePttOnOff();
-            }
-            break;
-        default:
-            drv_state = 0;
-            return;
-        }
-        drv_state++;
-    }
-}
-
 /*
  * @brief Set the PA bias according to mode
  */
@@ -5753,147 +5631,148 @@ static void UiDriverHandleSmeter()
     static bool 		clip_indicate = 0;
     static	float		auto_rfg = 8;
     static	uint16_t 	rfg_timer= 0;	// counter used for timing RFG control decay
-//	char temp[10];
+    //	char temp[10];
     //
 
     // Only in RX mode
-    if(ts.txrx_mode != TRX_MODE_RX)
-        return;
+    if(ts.txrx_mode == TRX_MODE_RX)
+    {
+#if 0
+        sm.skip++;
+        if(sm.skip < S_MET_UPD_SKIP)
+            return;
 
-    sm.skip++;
-    if(sm.skip < S_MET_UPD_SKIP)
-        return;
-
-    sm.skip = 0;
-
-    // ************************
-    // Update S-Meter and control the input gain of the codec to maximize A/D and receiver dynamic range
-    // ************************
-    //
-    // Calculate attenuation of "RF Codec Gain" setting so that S-meter reading can be compensated.
-    // for input RF attenuation setting
-    //
-    if(ts.rf_codec_gain == RF_CODEC_GAIN_AUTO)		// Is RF gain in "AUTO" mode?
-    {
-        rfg_calc = auto_rfg;
-    }
-    else	 				// not in "AUTO" mode
-    {
-        rfg_calc = (float)ts.rf_codec_gain;		// get copy of RF gain setting
-        auto_rfg = rfg_calc;		// keep "auto" variable updated with manual setting when in manual mode
-        rfg_timer = 0;
-    }
-    //
-    rfg_calc += 1;	// offset to prevent zero
-    rfg_calc *= 2;	// double the range of adjustment
-    rfg_calc += 13;	// offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
-    if(rfg_calc >31)	// limit calc to hardware range
-    {
-        rfg_calc = 31;
-    }
-    Codec_Line_Gain_Adj((uchar)rfg_calc);	// set the RX gain on the codec
-    //
-    // Now calculate the RF gain setting
-    //
-    gcalc = (float)rfg_calc;
-    gcalc *= 1.5;	// codec has 1.5 dB/step
-    gcalc -= 34.5;	// offset codec setting by 34.5db (full gain = 12dB)
-    gcalc = pow10(gcalc/10);	// convert to power ratio
-    ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
-
-    //
-    if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2) // oldschool (os) S-meter scheme
-    {
-    sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
-    sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
-    //
-    sm.gain_calc = 1/sm.gain_calc;	// invert gain to convert to amount of attenuation
-    //
-    sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
-    }
-    else if (ts.display_dbm == 3 || ts.display_dbm == 4 || ts.display_dbm == 6) // based on dBm calculation
-    {
-    	sm.gain_calc = sm.dbm;
-    }
-    else // based on dBm/Hz calculation
-    {
-    	sm.gain_calc = sm.dbmhz;
-    }
-    sm.s_count = 0;		// Init S-meter search counter
-    //
-    if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2)// oldschool (os) S-meter scheme
-    {
-    while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
-    {
-        sm.s_count++;
-    }
-    } else
-    {
-        while ((sm.gain_calc >= S_Meter_Cal_dbm[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
+        sm.skip = 0;
+#endif
+        // ************************
+        // Update S-Meter and control the input gain of the codec to maximize A/D and receiver dynamic range
+        // ************************
+        //
+        // Calculate attenuation of "RF Codec Gain" setting so that S-meter reading can be compensated.
+        // for input RF attenuation setting
+        //
+        if(ts.rf_codec_gain == RF_CODEC_GAIN_AUTO)		// Is RF gain in "AUTO" mode?
         {
-            sm.s_count++;
+            rfg_calc = auto_rfg;
         }
-    }
-    val = (uchar)sm.s_count;
-
-    if(!val)	// make sure that the S meter always reads something!
-    {
-        val = 1;
-    }
-    //
-    UiDriverUpdateTopMeterA(val);
-    //
-    // Now handle automatic A/D input gain control timing
-    //
-    rfg_timer++;	// bump RFG timer
-    if(rfg_timer > 10000)	// limit count of RFG timer
-    {
-        rfg_timer = 10000;
-    }
-    //
-    if(ads.adc_half_clip)	 	// did clipping almost occur?
-    {
-        if(rfg_timer >=	AUTO_RFG_DECREASE_LOCKOUT)	 	// has enough time passed since the last gain decrease?
+        else	 				// not in "AUTO" mode
         {
-            if(auto_rfg)	 	// yes - is this NOT zero?
+            rfg_calc = (float)ts.rf_codec_gain;		// get copy of RF gain setting
+            auto_rfg = rfg_calc;		// keep "auto" variable updated with manual setting when in manual mode
+            rfg_timer = 0;
+        }
+        //
+        rfg_calc += 1;	// offset to prevent zero
+        rfg_calc *= 2;	// double the range of adjustment
+        rfg_calc += 13;	// offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
+        if(rfg_calc >31)	// limit calc to hardware range
+        {
+            rfg_calc = 31;
+        }
+        Codec_Line_Gain_Adj((uchar)rfg_calc);	// set the RX gain on the codec
+        //
+        // Now calculate the RF gain setting
+        //
+        gcalc = (float)rfg_calc;
+        gcalc *= 1.5;	// codec has 1.5 dB/step
+        gcalc -= 34.5;	// offset codec setting by 34.5db (full gain = 12dB)
+        gcalc = pow10(gcalc/10);	// convert to power ratio
+        ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
+
+        //
+        if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2) // oldschool (os) S-meter scheme
+        {
+            sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
+            sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
+            //
+            sm.gain_calc = 1/sm.gain_calc;	// invert gain to convert to amount of attenuation
+            //
+            sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
+        }
+        else if (ts.display_dbm == 3 || ts.display_dbm == 4 || ts.display_dbm == 6) // based on dBm calculation
+        {
+            sm.gain_calc = sm.dbm;
+        }
+        else // based on dBm/Hz calculation
+        {
+            sm.gain_calc = sm.dbmhz;
+        }
+        sm.s_count = 0;		// Init S-meter search counter
+        //
+        if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2)// oldschool (os) S-meter scheme
+        {
+            while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
             {
-                auto_rfg -= 0.5;	// decrease gain one step, 1.5dB (it is multiplied by 2, above)
-                rfg_timer = 0;	// reset the adjustment timer
+                sm.s_count++;
+            }
+        } else
+        {
+            while ((sm.gain_calc >= S_Meter_Cal_dbm[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
+            {
+                sm.s_count++;
             }
         }
-    }
-    else if(!ads.adc_quarter_clip)	 	// no clipping occurred
-    {
-        if(rfg_timer >= AUTO_RFG_INCREASE_TIMER)	 	// has it been long enough since the last increase?
+        val = (uchar)sm.s_count;
+
+        if(!val)	// make sure that the S meter always reads something!
         {
-            auto_rfg += 0.5;	// increase gain by one step, 1.5dB (it is multiplied by 2, above)
-            rfg_timer = 0;	// reset the timer to prevent this from executing too often
-            if(auto_rfg > 8)	// limit it to 8
+            val = 1;
+        }
+        //
+        UiDriverUpdateTopMeterA(val);
+        //
+        // Now handle automatic A/D input gain control timing
+        //
+        rfg_timer++;	// bump RFG timer
+        if(rfg_timer > 10000)	// limit count of RFG timer
+        {
+            rfg_timer = 10000;
+        }
+        //
+        if(ads.adc_half_clip)	 	// did clipping almost occur?
+        {
+            if(rfg_timer >=	AUTO_RFG_DECREASE_LOCKOUT)	 	// has enough time passed since the last gain decrease?
             {
-                auto_rfg = 8;
+                if(auto_rfg)	 	// yes - is this NOT zero?
+                {
+                    auto_rfg -= 0.5;	// decrease gain one step, 1.5dB (it is multiplied by 2, above)
+                    rfg_timer = 0;	// reset the adjustment timer
+                }
             }
         }
-    }
-    ads.adc_half_clip = 0;		// clear "half clip" indicator that tells us that we should decrease gain
-    ads.adc_quarter_clip = 0;	// clear indicator that, if not triggered, indicates that we can increase gain
-    //
-    // This makes a portion of the S-meter go red if A/D clipping occurs
-    //
-    if(ads.adc_clip)	 		// did clipping occur?
-    {
-        if(!clip_indicate)	 	// have we seen it clip before?
+        else if(!ads.adc_quarter_clip)	 	// no clipping occurred
         {
-            UiDriverDrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
-            clip_indicate = 1;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
+            if(rfg_timer >= AUTO_RFG_INCREASE_TIMER)	 	// has it been long enough since the last increase?
+            {
+                auto_rfg += 0.5;	// increase gain by one step, 1.5dB (it is multiplied by 2, above)
+                rfg_timer = 0;	// reset the timer to prevent this from executing too often
+                if(auto_rfg > 8)	// limit it to 8
+                {
+                    auto_rfg = 8;
+                }
+            }
         }
-        ads.adc_clip = 0;		// reset clip detect flag
-    }
-    else	 		// clipping NOT occur?
-    {
-        if(clip_indicate)	 	// had clipping occurred since we last visited this code?
+        ads.adc_half_clip = 0;		// clear "half clip" indicator that tells us that we should decrease gain
+        ads.adc_quarter_clip = 0;	// clear indicator that, if not triggered, indicates that we can increase gain
+        //
+        // This makes a portion of the S-meter go red if A/D clipping occurs
+        //
+        if(ads.adc_clip)	 		// did clipping occur?
         {
-            UiDriverDrawSMeter(White);					// yes - restore the S meter to a white condition
-            clip_indicate = 0;							// clear the flag that indicated that clipping had occurred
+            if(!clip_indicate)	 	// have we seen it clip before?
+            {
+                UiDriverDrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
+                clip_indicate = 1;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
+            }
+            ads.adc_clip = 0;		// reset clip detect flag
+        }
+        else	 		// clipping NOT occur?
+        {
+            if(clip_indicate)	 	// had clipping occurred since we last visited this code?
+            {
+                UiDriverDrawSMeter(White);					// yes - restore the S meter to a white condition
+                clip_indicate = 0;							// clear the flag that indicated that clipping had occurred
+            }
         }
     }
 }
@@ -6001,14 +5880,11 @@ static bool UiDriver_UpdatePowerAndVSWR()
     return retval;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverHandleLowerMeter
-//* Object              : Power, SWR, ALC and Audio indicator
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriverHandleLowerMeter()
+/**
+ *
+ * Power, SWR, ALC and Audio indicator handling
+ */
+static void UiDriverHandleTXMeters()
 {
     float	scale_calc;
     char txt[32];
@@ -6201,11 +6077,11 @@ static void UiDriver_HandleVoltage()
 {
     ulong	val_p, calib;
 
-    pwmt.skip++;
-    if(pwmt.skip >= POWER_SAMPLES_SKP)
+    // pwmt.skip++;
+    // if(pwmt.skip >= POWER_SAMPLES_SKP)
     {
         profileEvent(EnterVoltage);
-        pwmt.skip = 0;
+        // pwmt.skip = 0;
 
         // Collect samples
         if(pwmt.p_curr < POWER_SAMPLES_CNT)
@@ -6321,11 +6197,6 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     {
         // Top part - name and temperature display
         UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,13,109,Grey);
-#if 0
-        // LO tracking indicator
-        UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y + 14,10,109,Grey);
-        // Temperature - initial draw
-#endif
         value_str = (df.temp_enabled & 0xf0)?"  --.-F":"  --.-C";
     }
 
@@ -6344,10 +6215,6 @@ void UiDriverCreateTemperatureDisplay(uchar enabled,uchar create)
     {
         UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
     }
-#if 0
-    // Meter
-    UiDriverUpdateLoMeter(13,enabled);
-#endif
 }
 
 // FIXME: This can be simplified, see FreqDisplay Code
@@ -7155,3 +7022,199 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     for(i = 0; i < hold_time; i++)
         non_os_delay();
 }
+
+typedef enum {
+    SCTimer_ENCODER_KEYS =0, // 10ms
+    SCTimer_LODRIFT, // 64 * 10ms
+    SCTimer_VOLTAGE, // 8 * 10ms
+    SCTimer_SMETER, // 4 * 10ms
+    SCTimer_MAIN, // 4 * 10ms
+    SCTimer_NUM
+} SysClockTimers;
+
+uint32_t last_sysclock_seen[SCTimer_NUM];
+
+
+/*
+ * Implements a simple timeout timer.
+ * Returns true if the current sysclock differs by equal or more than divider cycles.
+ * Dividers should be powers of 2 to generate optimal code
+ */
+bool UiDriver_TimerIsExpired(SysClockTimers sct,uint32_t now, uint32_t divider)
+{
+    return (last_sysclock_seen[sct] != now/divider);
+}
+
+/*
+ * Implements a simple timeout timer.
+ * Sets the time to now/divider, so it will expire in now+divider cycles
+ * Dividers should be powers of 2 to generate optimal code
+ */
+void UiDriver_TimerRewind(SysClockTimers sct,uint32_t now, uint32_t divider)
+{
+    last_sysclock_seen[sct] = now/divider;
+}
+
+/*
+ * Implements a simple timeout timer.
+ * Returns true if the current sysclock differs by equal or more than divider cycles.
+ * Dividers should be powers of 2 to generate optimal code
+ */
+bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t divider)
+{
+    bool retval = UiDriver_TimerIsExpired(sct, now, divider);
+    if (retval) {
+        UiDriver_TimerRewind(sct, now, divider);
+    }
+    return retval;
+}
+
+
+void ui_driver_thread()
+{
+    profileEvent(EnterDriverThread);
+    uint32_t now = ts.sysclock;
+    if (UiDriver_TimerExpireAndRewind(SCTimer_ENCODER_KEYS,now,1))
+    {
+        // 10ms have elapsed.
+        // Now process events which should be handled regularly at a rate of 100 Hz
+        // Remember to keep this as short as possible since this is executed in addition
+        // to all other processing below.
+        if(!ts.boot_halt_flag)
+        {
+            UiDriverCheckEncoderOne();
+            UiDriverCheckEncoderTwo();
+            UiDriverCheckEncoderThree();
+            UiDriverCheckFrequencyEncoder();
+            UiDriver_KeyboardProcessOldClicks();
+        }
+        // ok, done with it, wait for next change
+        last_sysclock_seen[SCTimer_ENCODER_KEYS] = now;
+    }
+
+    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
+    {
+        UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
+    }
+    else
+    {
+        UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
+    }
+
+    // Expect the code below to be executed around every 40 - 80ms.
+    // The exact time between two calls is unknown and varies with different
+    // display options  (waterfall/scope, DSP settings etc.)
+    // Nothing with short intervals < 100ms  and/or need for very regular intervals between calls
+    // should be placed in here.
+
+    // if(ts.thread_timer == 0)			// bail out if it is not time to do this task
+    if(UiDriver_TimerIsExpired(SCTimer_MAIN,now,1))            // bail out if it is not time to do this task
+    {
+        ts.thread_timer = 1;		// reset flag to schedule next occurrence
+
+
+        switch(drv_state)
+        {
+        case STATE_S_METER:
+            if(!ts.boot_halt_flag)
+            {
+                if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4)){
+                    profileEvent(EnterSMeter);
+                    UiDriverHandleSmeter();
+                }
+            }
+            break;
+        case STATE_SWR_METER:
+            if(!ts.boot_halt_flag)
+            {
+                UiDriverHandleTXMeters();
+            }
+            break;
+        case STATE_HANDLE_POWERSUPPLY:
+            mchf_HandlePowerDown();
+            if(!ts.boot_halt_flag)
+            {
+                if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8)){
+                    UiDriver_HandleVoltage();
+                }
+            }
+            break;
+        case STATE_LO_TEMPERATURE:
+            if(!ts.boot_halt_flag)
+            {
+                if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64)){
+                    UiDriver_HandleLoTemperature();
+                }
+            }
+            break;
+        case STATE_TASK_CHECK:
+            UiDriverTimeScheduler();
+            // Handles live update of Calibrate between TX/RX and volume control
+            break;
+#if 0
+        case STATE_CHECK_ENC_ONE:
+            if(!ts.boot_halt_flag)
+            {
+                // UiDriverCheckEncoderOne();
+            }
+            break;
+        case STATE_CHECK_ENC_TWO:
+            if(!ts.boot_halt_flag)
+            {
+                // UiDriverCheckEncoderTwo();
+            }
+            break;
+        case STATE_CHECK_ENC_THREE:
+            if(!ts.boot_halt_flag)
+            {
+                // UiDriverCheckEncoderThree();
+            }
+            break;
+#endif
+        case STATE_UPDATE_FREQUENCY:
+            if(!ts.boot_halt_flag)
+            {
+                // UiDriverCheckFrequencyEncoder();
+
+                /* at this point we handle request for changing the frequency
+                 * either from a difference in dial freq or a temp change
+                 *  */
+                if((df.tune_old != df.tune_new))
+                {
+                    UiDriver_FrequencyUpdateLOandDisplay(false);
+                }
+                else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
+                {
+                    // this handles the cases where the dial frequency remains the same but the
+                    // LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
+                    RadioManagement_UpdateFrequencyFast(ts.txrx_mode);
+                }
+            }
+            break;
+        case STATE_PROCESS_KEYBOARD:
+            UiDriverProcessKeyboard();
+            break;
+        case STATE_SWITCH_OFF_PTT:
+            if(!ts.boot_halt_flag)
+            {
+                RadioManagement_HandlePttOnOff();
+            }
+            break;
+        default:
+            break;
+        }
+        if (drv_state < STATE_MAX)
+        {
+            // advance to next state
+            drv_state++;
+        }
+        else
+        {
+            UiDriver_TimerRewind(SCTimer_MAIN,now,1);
+            // wrap state to first state
+            drv_state = 0;
+        }
+    }
+}
+
+

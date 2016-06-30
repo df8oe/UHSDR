@@ -1071,7 +1071,7 @@ typedef struct TransceiverState
     // LSB+2 = 1 if key/button beep is enabled
     // LSB+3 = 1 if bias values for lower bands  below 8Mhz have lower influence factor
     // LSB+4 = 1 if memory-save versus frequency restrictions are to be relaxed
-    ulong	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
+    uint32_t	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.
     uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
     uint16_t	version_number_major;		// version number - build - used to hold version number and detect change

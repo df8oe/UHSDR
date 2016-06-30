@@ -432,6 +432,7 @@ enum
     STATE_CHECK_ENC_THREE,			//
     STATE_UPDATE_FREQUENCY,			//
     STATE_PROCESS_KEYBOARD,			//
+    STATE_MAX
 };
 //
 // Used for press-and-hold "temporary" step size adjust
