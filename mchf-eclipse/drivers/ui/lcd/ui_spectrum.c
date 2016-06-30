@@ -501,19 +501,11 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
                     y_old = fft_old[idx] *0.5 + fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
+                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                 }
                 else
                 {
                     y_old = fft_old[idx];
-
-                }
-
-                if ((idx > 1) && (idx < 126)) //
-                 {
-                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
-                 }
-                else
-                {
                     y_new = fft_new[idx];
                 }
 
@@ -540,6 +532,19 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
             //            if (y1_old != y1_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+
+            if (x == SPECTRUM_START_X + 1) // special case of first x position of spectrum
+            {
+            	y1_old_minus = y1_old;
+            	y1_new_minus = y1_new;
+            }
+
+        	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
+        	{
+        		y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[255];
+        		y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[255];
+        	}
+
             if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
@@ -547,16 +552,13 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
             	// makes the spectrum display look more complete . . .
             	//
-            	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
-            	{
-            		y1_old_minus = sd.FFT_BkpData[255];
-            	}
 
-            	if(y1_old - y1_old_minus > 1 && x !=(SPECTRUM_START_X + sh))
+
+            	if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
             		UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
             	 }
-            	else if (y1_old - y1_old_minus < -1 && x !=(SPECTRUM_START_X + sh))
+            	else if (y1_old - y1_old_minus < -1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
             		UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
             	 }
@@ -565,12 +567,12 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             		  UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
             	 }
 
-            	if(y1_new - y1_new_minus > 1 && x !=(SPECTRUM_START_X + sh))
+            	if(y1_new - y1_new_minus > 1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
                      UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
 
             	 }
-            	else if (y1_new - y1_new_minus < -1 && x !=(SPECTRUM_START_X + sh))
+            	else if (y1_new - y1_new_minus < -1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
                      UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
 
