@@ -442,7 +442,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
     int spec_height = SPECTRUM_HEIGHT; //x
     int spec_start_y = SPECTRUM_START_Y;
 
-    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    //    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    if (ts.spectrum_size == SPECTRUM_BIG)
     {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
         spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
