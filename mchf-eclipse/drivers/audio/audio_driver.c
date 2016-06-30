@@ -14,6 +14,7 @@
 
 // Common
 #include "mchf_board.h"
+#include "profiling.h"
 
 #include <stdio.h>
 
@@ -3065,10 +3066,13 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     static bool to_rx = 0;	// used as a flag to clear the RX buffer
     static bool to_tx = 0;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
-    
-    if(ts.show_tp_coordinates)
-  	  mchf_board_green_led(1);
 
+    profileEvent(EnterAudioInterrupt);
+
+    if(ts.show_tp_coordinates)
+    {
+  	  mchf_board_green_led(1);
+    }
     if((ts.txrx_mode == TRX_MODE_RX))
     {
         if((to_rx) || (ts.buffer_clear))	 	// the first time back to RX, clear the buffers to reduce the "crash"
