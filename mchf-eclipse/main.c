@@ -439,15 +439,16 @@ void TransceiverStateInit(void)
     ts.bass_gain = 2;						// gain of the low shelf EQ filter
     ts.treble_gain = 0;						// gain of the high shelf EQ filter
     ts.AM_experiment = 0;					// for AM demodulation experiments, not for "public" use
-    ts.dBm_Hz_Test = 1;						// for testing only
-    ts.display_dbm = 2;						// displays dbm if true, else dbm/Hz
+//    ts.dBm_Hz_Test = 1;						// for testing only
+    ts.s_meter = 0;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
+    ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
 	ts.dBm_count = 0;						// timer start
 
 // development setting for DF8OE
 	if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
 	  {
 	  ts.rfmod_present = 1;					// activate rfmod-board handling
-	  ts.dBm_Hz_Test = 1;					// for testing only
+//	  ts.dBm_Hz_Test = 1;					// for testing only
 	  }
 
 

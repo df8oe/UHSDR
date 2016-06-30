@@ -1770,13 +1770,12 @@ static void calculate_dBm(void)
         // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
-        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX && ts.display_dbm != 0)
+        if(ts.sysclock > ts.dBm_count + 19 && ts.txrx_mode == TRX_MODE_RX && (ts.s_meter == 1 || ts.s_meter == 2 || ts.display_dbm != 0))
         {
         char txt[12];
         ulong i;
         float32_t slope = 19.6;
         float32_t cons = - 227.0;
-//        bool display_dBm = false;
         float32_t  Lbin, Ubin;
 //        float32_t  divide;
         float32_t bw_LSB = 0.0;
@@ -1931,21 +1930,23 @@ static void calculate_dBm(void)
         sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
         sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
 
-        if (ts.display_dbm == 1 || ts.display_dbm == 3)
+        if (ts.display_dbm == 1)
         {
             snprintf(txt,12,"%4ld dBm   ", (long)m_AverageMagdbm);
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         }
-        else if (ts.display_dbm == 2 || ts.display_dbm == 4 || ts.display_dbm == 5)
+        else if (ts.display_dbm == 2)
         {
             snprintf(txt,12,"%4ld dBm/Hz", (long)m_AverageMagdbmhz);
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         }
 
 //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
             // TODO: make coordinates constant variables
-        UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
+
         ts.dBm_count = ts.sysclock;				// reset timer
         }
-        if (ts.display_dbm == 0 || ts.display_dbm == 6)
+        if (ts.display_dbm == 0)
         {
         	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
         }

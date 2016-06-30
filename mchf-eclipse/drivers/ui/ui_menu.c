@@ -553,7 +553,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET,"112","Wfall Brightness"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm displ./S-Meter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
 	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -2560,7 +2561,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
     case    MENU_DBM_DISPLAY:
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.display_dbm,
                                               0,
-                                              6,
+                                              2,
                                               0,
                                               1
                                              );
@@ -2568,28 +2569,38 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
        switch(ts.display_dbm)
         {
         case 1:		//
-            txt_ptr = "   dBm / os";		// dbm display and old school S-Meter
+            txt_ptr = "     dBm";		// dbm display
             break;
         case 2:	//
-            txt_ptr = " dBmHz / os";		// dbm/Hz display and old school S-Meter
-            break;
-        case 3:	//
-            txt_ptr = "  dBm / dBm";		// dbm display and dbm S-Meter
-            break;
-        case 4:	//
-            txt_ptr = " dBmHz /dBm";		// dbm/Hz display and dbm S-Meter
-            break;
-        case 5:	//
-            txt_ptr = "dBmHz/dBmHz";		// dbm/Hz display and dbm/Hz S-Meter
-            break;
-        case 6:	//
-            txt_ptr = "  OFF / dBm";		// dbm display OFF and dbm S-Meter
+            txt_ptr = "  dBm/Hz";		// dbm/Hz display
             break;
         default:
-        txt_ptr =  "   OFF / os";		// dbm display off and oldschool S-Meter
+        txt_ptr =  "     OFF";		// dbm display off
         	break;
         }
         break;
+
+       case    MENU_S_METER:
+           fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.s_meter,
+                                                 0,
+                                                 2,
+                                                 0,
+                                                 1
+                                                );
+
+          switch(ts.s_meter)
+           {
+           case 1:		//
+               txt_ptr = "    based on dBm";		// dbm S-Meter
+               break;
+           case 2:	//
+               txt_ptr = " based on dBm/Hz";		// dbm/Hz display and old school S-Meter
+               break;
+           default:
+           txt_ptr =  "old school style";		// oldschool S-Meter
+           	break;
+           }
+           break;
 
     case MENU_WFALL_STEP_SIZE:	// set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,
