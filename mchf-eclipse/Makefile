@@ -193,6 +193,7 @@ SRC =  \
     misc/v_eprom/eeprom.c  \
     misc/config_storage.c  \
     misc/serial_eeprom.c  \
+    misc/profiling.c  \
     \
     stdio/printf.c  \
     syscalls/syscalls.c  \

@@ -14,6 +14,7 @@
 
 // Common
 #include "mchf_board.h"
+#include "profiling.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1425,6 +1426,7 @@ static bool RadioManagement_HandleLoTemperatureDrift()
         lo.skip++;
         if(lo.skip >= LO_COMP_SKP)
         {
+            profileEvent(EnterLO);
             lo.skip = 0;
             // Get current temperature
             if(Si570_ReadExternalTempSensor(&temp) == 0)
@@ -1519,6 +1521,8 @@ static void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break_timer = ptt_break_time;
     // Not when tuning
+    profileEvent(EnterPTT);
+
     if(ts.tune == false)
     {
         // PTT on
@@ -1712,6 +1716,8 @@ void ui_driver_init()
  * @returns true if has been enabled, false if tune is disabled now
  */
 
+uint32_t last_sysclock_seen;
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_thread
 //* Object              : non urgent, time taking operations
@@ -1722,6 +1728,25 @@ void ui_driver_init()
 //*----------------------------------------------------------------------------
 void ui_driver_thread()
 {
+    profileEvent(EnterDriverThread);
+    uint32_t now = ts.sysclock;
+    if (last_sysclock_seen != now)
+    {
+        // 10ms have elapsed. Now process events which should be handled regularly
+        if(!ts.boot_halt_flag)
+        {
+            UiDriverCheckEncoderOne();
+            UiDriverCheckEncoderTwo();
+            UiDriverCheckEncoderThree();
+            UiDriverCheckFrequencyEncoder();
+            UiDriver_KeyboardProcessOldClicks();
+        }
+
+
+        // ok, done with it, wait for next change
+        last_sysclock_seen = now;
+    }
+
     if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
     {
         UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
@@ -1739,6 +1764,7 @@ void ui_driver_thread()
         case STATE_S_METER:
             if(!ts.boot_halt_flag)
             {
+                profileEvent(EnterSMeter);
                 UiDriverHandleSmeter();
             }
             break;
@@ -1768,25 +1794,25 @@ void ui_driver_thread()
         case STATE_CHECK_ENC_ONE:
             if(!ts.boot_halt_flag)
             {
-                UiDriverCheckEncoderOne();
+                // UiDriverCheckEncoderOne();
             }
             break;
         case STATE_CHECK_ENC_TWO:
             if(!ts.boot_halt_flag)
             {
-                UiDriverCheckEncoderTwo();
+                // UiDriverCheckEncoderTwo();
             }
             break;
         case STATE_CHECK_ENC_THREE:
             if(!ts.boot_halt_flag)
             {
-                UiDriverCheckEncoderThree();
+                // UiDriverCheckEncoderThree();
             }
             break;
         case STATE_UPDATE_FREQUENCY:
             if(!ts.boot_halt_flag)
             {
-                UiDriverCheckFrequencyEncoder();
+                // UiDriverCheckFrequencyEncoder();
 
                 /* at this point we handle request for changing the frequency
                  * either from a difference in dial freq or a temp change
@@ -4281,7 +4307,6 @@ static void UiDriverTimeScheduler()
     /*** ALWAYS ***/
     UiDriver_LcdBlankingProcessTimer();
 
-    UiDriver_KeyboardProcessOldClicks();
 
     // This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
     // and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
@@ -4626,7 +4651,7 @@ static bool UiDriverCheckFrequencyEncoder()
         }
 
 
-        // Finaly convert to frequency incr/decr
+        // Finally convert to frequency incr/decr
 
         if(pot_diff>0)
         {
@@ -6179,7 +6204,7 @@ static void UiDriver_HandleVoltage()
     pwmt.skip++;
     if(pwmt.skip >= POWER_SAMPLES_SKP)
     {
-
+        profileEvent(EnterVoltage);
         pwmt.skip = 0;
 
         // Collect samples
