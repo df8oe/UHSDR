@@ -754,3 +754,45 @@ void mchf_reboot()
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
     NVIC_SystemReset();         // restart mcHF
 }
+
+
+#define TEST_ADDR_192 (0x20000000 + 0x0001FFFC)
+#define TEST_ADDR_256 (0x20000000 + 0x0002FFFC)
+
+/*
+ * Tests if there is ram at the specified location
+ * It is non-destructive but temporarily changes the ram content.
+ * Use with care and with 4byte aligned addresses.
+ */
+bool is_ram_at(volatile uint32_t* where) {
+    bool retval = false;
+
+    uint32_t oldval = *where;
+    if (++*where == oldval+1) {
+        retval = true;
+        *where = oldval;
+    }
+    return retval;
+}
+/**
+ * Determines the available RAM. Only supports 192 and 256 STM32F4 models
+ * Approach works but makes some assumptions. Do not change if you don't know
+ * what you are doing!
+ * USE WITH CARE!
+ */
+void mchf_board_detect_ramsize() {
+    // we enable the bus fault
+    // we now get bus faults if we access not  available  memory
+    // instead of hard faults
+    // this will run our very special bus fault handler in case no memory
+    // is at the defined location
+    SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
+    if (is_ram_at(TEST_ADDR_256)){
+        ts.ramsize=256;
+    } else if (is_ram_at(TEST_ADDR_192)){
+        ts.ramsize=192;
+    }
+    // now we disable it
+    // we'll get hard faults as usual if we access wrong addresses
+    SCB->SHCSR &= ~SCB_SHCSR_BUSFAULTENA_Msk;
+}
