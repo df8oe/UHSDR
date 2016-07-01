@@ -1769,18 +1769,15 @@ static void calculate_dBm(void)
         // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
         // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
         // so the additional processor load and additional RAM usage should be close to zero
-        //
-        // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
-        // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
+		// this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
         //
         if(ts.sysclock > ts.dBm_count + 19 && ts.txrx_mode == TRX_MODE_RX && (ts.s_meter == 1 || ts.s_meter == 2 || ts.display_dbm != 0))
         {
         char txt[12];
         ulong i;
-        float32_t slope = 19.6;
-        float32_t cons = - 227.0;
+        float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
+        float32_t cons = -225; //- 227.0;
         float32_t  Lbin, Ubin;
-//        float32_t  divide;
         float32_t bw_LSB = 0.0;
         float32_t bw_USB = 0.0;
         float64_t sum_db = 0.0;
@@ -1788,7 +1785,7 @@ static void calculate_dBm(void)
         float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
         float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
         // width of a 256 tap FFT bin = 187.5Hz
-        float32_t width; //, centre_f;
+        float32_t width;
 
         int buff_len_int = FFT_IQ_BUFF_LEN;
 
@@ -1816,8 +1813,6 @@ static void calculate_dBm(void)
       	  }
 
         width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-//        centre_f = (float32_t)FilterPathInfo[ts.filter_path].offset;
-//        offset = centre_f - (width/2.0);
 
         //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
         //	= determine bandwith separately for lower and upper sideband
@@ -1875,15 +1870,12 @@ static void calculate_dBm(void)
       	  }
 
           // determine the sum of all the bin values in the passband
-      	  // log10
         int c;
         for (c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
           {
           sum_db = sum_db + sd.FFT_Samples[c];
           }
-        // these values have to be carefully empirically adjusted
-        // slope 22, offset -127
-        // these preliminary values have been calibrated with Perseus SDR
+
         if (sum_db > 0)
         {
     		sm.dbm = slope * log10 (sum_db) + cons;
@@ -1910,7 +1902,7 @@ static void calculate_dBm(void)
         m_DecayAvedbmhz = (1.0 - m_DecayAlpha) * m_DecayAvedbmhz + m_DecayAlpha * sm.dbmhz;
 
         if (m_AttackAvedbm > m_DecayAvedbm)
-        { // if attack average is larger than it must be an increasing signal
+        { // if attack average is larger then it must be an increasing signal
         	m_AverageMagdbm = m_AttackAvedbm; // use attack average value for output
         	m_DecayAvedbm = m_AttackAvedbm; // set decay average to attack average value for next time
         }
@@ -1920,7 +1912,7 @@ static void calculate_dBm(void)
         }
 
         if (m_AttackAvedbmhz > m_DecayAvedbmhz)
-        { // if attack average is larger than it must be an increasing signal
+        { // if attack average is larger then it must be an increasing signal
         	m_AverageMagdbmhz = m_AttackAvedbmhz; // use attack average value for output
         	m_DecayAvedbmhz = m_AttackAvedbmhz; // set decay average to attack average value for next time
         }
