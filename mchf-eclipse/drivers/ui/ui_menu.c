@@ -710,9 +710,10 @@ enum MENU_INFO_ITEM
     INFO_SI570,
     INFO_TP,
     INFO_RFMOD,
-    INFO_VHFUHFMOD
-
-
+    INFO_VHFUHFMOD,
+    INFO_CPU,
+    INFO_FLASH,
+    INFO_RAM,
 };
 
 const MenuDescriptor infoGroup[] =
@@ -723,6 +724,9 @@ const MenuDescriptor infoGroup[] =
     { MENU_HWINFO, MENU_INFO, INFO_TP,"I04","Touchscreen"},
     { MENU_HWINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
     { MENU_HWINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
+    { MENU_HWINFO, MENU_INFO, INFO_CPU,"I07","CPU"},
+    { MENU_HWINFO, MENU_INFO, INFO_FLASH,"I07","Flash Size (kB)"},
+    { MENU_HWINFO, MENU_INFO, INFO_RAM,"I08","RAM Size (kB)"},
     { MENU_HWINFO, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -1341,6 +1345,18 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
     case INFO_VHFUHFMOD:
         outs = (ts.vhfuhfmod_present == 0)?"n/a":"present";
         break;
+    case INFO_FLASH:
+            snprintf(out,32,"%d",(STM32_GetFlashSize()));
+            outs = out;
+            break;
+    case INFO_CPU:
+            snprintf(out,32,"%xh",(STM32_GetSignature()));
+            outs = out;
+            break;
+    case INFO_RAM:
+            snprintf(out,32,"%d",(ts.ramsize));
+            outs = out;
+            break;
     case INFO_EEPROM:
     {
         switch (ts.ser_eeprom_type)

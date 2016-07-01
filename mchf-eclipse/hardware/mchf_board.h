@@ -1171,6 +1171,8 @@ typedef struct TransceiverState
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 	uint8_t test;
 	TuneToneMode tune_tone_mode;
+
+	uint16_t ramsize; // in KB, this is used to distinguish  between 192 and 256 kB models.
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
@@ -1232,11 +1234,22 @@ inline bool mchf_dit_line_pressed() {
     return  !GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT);
 }
 
-
+void mchf_board_detect_ramsize();
 
 // in main.c
 void CriticalError(ulong error);
 
 bool is_vfo_b();
+
+#define STM32_DBGMCU_IDCODE        0xE0042000
+#define STM32_FLASH_ADDRESS        0x1FFF7A22
+#define STM32_UNIQUE_ADDRESS       0x1FFF7A10
+
+#define STM32_GetRevision()     (*(uint16_t *) (STM32_DBGMCU_IDCODE + 2))
+#define STM32_GetSignature()    ((*(uint16_t *) (STM32_DBGMCU_IDCODE)) & 0x0FFF)
+#define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
+#define STM32_UUID ((uint32_t *)STM32_UNIQUE_ADDRESS)
+
+
 
 #endif
