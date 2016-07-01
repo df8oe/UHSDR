@@ -508,10 +508,11 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_MANUAL_NOTCH				356
 #define EEPROM_MANUAL_PEAK				357
 #define EEPROM_RX_IQ_AM_PHASE_BALANCE   358     // IQ Gain balance for AM reception
-#define EEPROM_DISPLAY_DBM				359		// dbm display & S-Meter configuration
+#define EEPROM_DISPLAY_DBM				359		// dbm display
 #define EEPROM_BASS_GAIN				360		// bass gain lowShelf filter
 #define EEPROM_TREBLE_GAIN				361		// treble gain highShelf filter
-#define EEPROM_FIRST_UNUSED 			362  // change this if new value ids are introduced
+#define	EEPROM_S_METER					362		// S-Meter configuration
+#define EEPROM_FIRST_UNUSED 			363  // change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

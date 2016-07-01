@@ -442,7 +442,8 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
     int spec_height = SPECTRUM_HEIGHT; //x
     int spec_start_y = SPECTRUM_START_Y;
 
-    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    //    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
+    if (ts.spectrum_size == SPECTRUM_BIG)
     {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
         spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
@@ -501,19 +502,11 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
                     y_old = fft_old[idx] *0.5 + fft_old[idx-1]*0.18 + fft_old[idx-2]*0.07 + fft_old[idx+1]*0.18 + fft_old[idx+2]*0.07;
+                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
                 }
                 else
                 {
                     y_old = fft_old[idx];
-
-                }
-
-                if ((idx > 1) && (idx < 126)) //
-                 {
-                    y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
-                 }
-                else
-                {
                     y_new = fft_new[idx];
                 }
 
@@ -540,6 +533,19 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
 
             //            if (y1_old != y1_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+
+            if (x == SPECTRUM_START_X + 1) // special case of first x position of spectrum
+            {
+            	y1_old_minus = y1_old;
+            	y1_new_minus = y1_new;
+            }
+
+        	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
+        	{
+        		y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[255];
+        		y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[255];
+        	}
+
             if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
@@ -547,16 +553,13 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
             	// makes the spectrum display look more complete . . .
             	//
-            	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
-            	{
-            		y1_old_minus = sd.FFT_BkpData[255];
-            	}
 
-            	if(y1_old - y1_old_minus > 1 && x !=(SPECTRUM_START_X + sh))
+
+            	if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
             		UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
             	 }
-            	else if (y1_old - y1_old_minus < -1 && x !=(SPECTRUM_START_X + sh))
+            	else if (y1_old - y1_old_minus < -1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
             		UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
             	 }
@@ -565,12 +568,12 @@ void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort colo
             		  UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
             	 }
 
-            	if(y1_new - y1_new_minus > 1 && x !=(SPECTRUM_START_X + sh))
+            	if(y1_new - y1_new_minus > 1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line upwards
                      UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
 
             	 }
-            	else if (y1_new - y1_new_minus < -1 && x !=(SPECTRUM_START_X + sh))
+            	else if (y1_new - y1_new_minus < -1) // && x !=(SPECTRUM_START_X + sh))
             	 { // plot line downwards
                      UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
 
@@ -1770,13 +1773,12 @@ static void calculate_dBm(void)
         // similar code could be used to make the S-Meter an accurate instrument, at the moment S-Meter values are
         // heavily dependent on gain and AGC settings, making the S-Meter measurements unreliable and unpredictable
         //
-        if(ts.sysclock > ts.dBm_count + 19 && ts.dBm_Hz_Test && ts.txrx_mode == TRX_MODE_RX && ts.display_dbm != 0)
+        if(ts.sysclock > ts.dBm_count + 19 && ts.txrx_mode == TRX_MODE_RX && (ts.s_meter == 1 || ts.s_meter == 2 || ts.display_dbm != 0))
         {
         char txt[12];
         ulong i;
         float32_t slope = 19.6;
         float32_t cons = - 227.0;
-//        bool display_dBm = false;
         float32_t  Lbin, Ubin;
 //        float32_t  divide;
         float32_t bw_LSB = 0.0;
@@ -1931,21 +1933,23 @@ static void calculate_dBm(void)
         sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
         sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
 
-        if (ts.display_dbm == 1 || ts.display_dbm == 3)
+        if (ts.display_dbm == 1)
         {
             snprintf(txt,12,"%4ld dBm   ", (long)m_AverageMagdbm);
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         }
-        else if (ts.display_dbm == 2 || ts.display_dbm == 4 || ts.display_dbm == 5)
+        else if (ts.display_dbm == 2)
         {
             snprintf(txt,12,"%4ld dBm/Hz", (long)m_AverageMagdbmhz);
+            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
         }
 
 //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
             // TODO: make coordinates constant variables
-        UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
+
         ts.dBm_count = ts.sysclock;				// reset timer
         }
-        if (ts.display_dbm == 0 || ts.display_dbm == 6)
+        if (ts.display_dbm == 0)
         {
         	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
         }

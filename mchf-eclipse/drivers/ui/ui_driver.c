@@ -5631,19 +5631,10 @@ static void UiDriverHandleSmeter()
     static bool 		clip_indicate = 0;
     static	float		auto_rfg = 8;
     static	uint16_t 	rfg_timer= 0;	// counter used for timing RFG control decay
-    //	char temp[10];
-    //
 
     // Only in RX mode
     if(ts.txrx_mode == TRX_MODE_RX)
     {
-#if 0
-        sm.skip++;
-        if(sm.skip < S_MET_UPD_SKIP)
-            return;
-
-        sm.skip = 0;
-#endif
         // ************************
         // Update S-Meter and control the input gain of the codec to maximize A/D and receiver dynamic range
         // ************************
@@ -5680,7 +5671,7 @@ static void UiDriverHandleSmeter()
         ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
 
         //
-        if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2) // oldschool (os) S-meter scheme
+        if (ts.s_meter == 0) // oldschool (os) S-meter scheme
         {
             sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
             sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
@@ -5689,7 +5680,7 @@ static void UiDriverHandleSmeter()
             //
             sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
         }
-        else if (ts.display_dbm == 3 || ts.display_dbm == 4 || ts.display_dbm == 6) // based on dBm calculation
+        else if (ts.s_meter == 1) // based on dBm calculation
         {
             sm.gain_calc = sm.dbm;
         }
@@ -5699,7 +5690,7 @@ static void UiDriverHandleSmeter()
         }
         sm.s_count = 0;		// Init S-meter search counter
         //
-        if (ts.display_dbm == 0 || ts.display_dbm == 1 || ts.display_dbm == 2)// oldschool (os) S-meter scheme
+        if (ts.s_meter == 0)// oldschool (os) S-meter scheme
         {
             while ((sm.gain_calc >= S_Meter_Cal[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size))	 	// find corresponding signal level
             {
@@ -5776,6 +5767,7 @@ static void UiDriverHandleSmeter()
         }
     }
 }
+
 
 void UiDriver_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
