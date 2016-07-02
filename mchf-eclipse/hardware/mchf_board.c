@@ -755,25 +755,63 @@ void mchf_reboot()
     NVIC_SystemReset();         // restart mcHF
 }
 
+#pragma GCC optimize("O0")
 
 #define TEST_ADDR_192 (0x20000000 + 0x0001FFFC)
 #define TEST_ADDR_256 (0x20000000 + 0x0002FFFC)
+
+// http://stackoverflow.com/questions/23411824/determining-arm-cortex-m3-ram-size-at-run-time
+__attribute__ ((naked)) void BusFault_Handler(void) {
+  /* NAKED function so we can be sure that SP is correct when we
+   * run our asm code below */
+
+  // DO NOT clear the busfault active flag - it causes a hard fault!
+
+  /* Instead, we must increase the value of the PC, so that when we
+   * return, we don't return to the same instruction.
+   *
+   * Registers are stacked as follows: r0,r1,r2,r3,r12,lr,pc,xPSR
+   * http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337e/Babedgea.html
+   *
+   * So we want PC - the 6th down * 4 bytes = 24
+   *
+   * Then we add 2 - which IS DANGEROUS because we're assuming that the op
+   * is 2 bytes, but it COULD be 4.
+   */
+  __asm__(
+      "ldr r0, [sp, #24]\n"  // load the PC
+      "add r0, #2\n"         // increase by 2 - dangerous, see above
+      "mov r4, #0\n"         // WE LEAVE 0 in r7 -> if we have a busfault there is no memory here.
+      "str r0, [sp, #24]\n"  // save the PC back
+      "bx lr\n"              // Return (function is naked so we must do this explicitly)
+  );
+}
+
 
 /*
  * Tests if there is ram at the specified location
  * It is non-destructive but temporarily changes the ram content.
  * Use with care and with 4byte aligned addresses.
+ * IT NEEDS A MATCHING BUSFAULT HANDLER!!!!
+ * Otherwise the function returns true all the time.
  */
-bool is_ram_at(volatile uint32_t* where) {
-    bool retval = false;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile-register-var"
+
+__attribute__ ((noinline)) bool is_ram_at(volatile uint32_t* where) {
+    volatile register bool retval asm("r4") = true;
+    // we rely on the BusFault_Handler setting r4 to 0 (aka false) if a busfault occurs.
+    // this is truly bad code as it can be broken easily. The function cannot be optimize
+    // this this breaks the approach.
 
     uint32_t oldval = *where;
     if (++*where == oldval+1) {
-        retval = true;
         *where = oldval;
     }
     return retval;
 }
+#pragma GCC diagnostic pop
+
 /**
  * Determines the available RAM. Only supports 192 and 256 STM32F4 models
  * Approach works but makes some assumptions. Do not change if you don't know
@@ -787,9 +825,9 @@ void mchf_board_detect_ramsize() {
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
     SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
-    if (is_ram_at(TEST_ADDR_256)){
+    if (is_ram_at((volatile uint32_t*)TEST_ADDR_256)){
         ts.ramsize=256;
-    } else if (is_ram_at(TEST_ADDR_192)){
+    } else if (is_ram_at((volatile uint32_t*)TEST_ADDR_192)){
         ts.ramsize=192;
     }
     // now we disable it
