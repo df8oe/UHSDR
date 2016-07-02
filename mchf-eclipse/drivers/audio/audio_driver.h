@@ -565,7 +565,7 @@ typedef struct SnapCarrier
 
 } SnapCarrier;
 
-__IO SnapCarrier sc;
+extern SnapCarrier sc;
 
 
 #endif

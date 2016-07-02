@@ -39,8 +39,115 @@
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-// all filter file definitions moved to audio_filter.c
+// ---------------------------------
+// DMA buffers for I2S
+__IO int16_t 	tx_buffer[BUFF_LEN+1];
+__IO int16_t    rx_buffer[BUFF_LEN+1];
 
+
+typedef struct
+{
+
+    float32_t   errsig1[64+10];
+    float32_t   errsig2[64+10];
+
+    // LMS Filters for RX
+    arm_lms_norm_instance_f32	lms1Norm_instance;
+    arm_lms_instance_f32	    lms1_instance;
+    float32_t	                lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
+    float32_t	                lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
+    float32_t                   lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
+
+    arm_lms_norm_instance_f32	lms2Norm_instance;
+    arm_lms_instance_f32	    lms2_instance;
+    float32_t	                lms2StateF32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
+    float32_t	                lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
+    float32_t	                lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
+} LMSData;
+
+
+float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
+//
+// Audio RX - Decimator
+static	arm_fir_decimate_instance_f32	DECIMATE_RX;
+__IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+
+// Audio RX - Interpolator
+static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
+__IO float32_t			interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+
+// variables for RX IIR filters
+static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+static arm_iir_lattice_instance_f32	IIR_PreFilter;
+
+// variables for RX antialias IIR filter
+static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+static arm_iir_lattice_instance_f32	IIR_AntiAlias;
+
+// variables for RX manual notch IIR filter
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
+{
+    .numStages = 3,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+        1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0
+    }, // 3 x 5 = 15 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0,   0,0,0,0
+    } // 3 x 4 = 12 state variables
+};
+
+// variables for RX manual notch IIR filter
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
+{
+    .numStages = 1,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+        1,0,0,0,0
+    }, // 1 x 5 = 5 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0
+    } // 1 x 4 = 4 state variables
+};
+
+
+// variables for FM squelch IIR filters
+static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
+
+// variables for TX IIR filter
+float32_t		iir_tx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+arm_iir_lattice_instance_f32	IIR_TXFilter;
+
+// RX Hilbert transform (90 degree) FIR filters
+__IO	arm_fir_instance_f32 	FIR_I;
+__IO	arm_fir_instance_f32 	FIR_Q;
+
+__IO	arm_fir_instance_f32	FIR_I_TX;
+__IO	arm_fir_instance_f32	FIR_Q_TX;
+
+
+// S meter public
+__IO	SMeter					sm;
+
+// Keypad driver publics
+extern __IO	KeypadState				ks;
+//
+
+// ATTENTION: These data structures have been placed in CCM Memory (64k)
+// IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
+// Be careful! Check mchf-eclipse.map for current allocation
+__IO AudioDriverState   __attribute__ ((section (".ccm")))  ads;
+SnapCarrier             __attribute__ ((section (".ccm")))   sc;
+LMSData                 __attribute__ ((section (".ccm"))) lmsData;
+
+/*
+ * @return offset frequency in Hz for current frequency translate mode
+ */
 uint32_t audio_driver_xlate_freq()
 {
     uint32_t fdelta = 0;
@@ -63,111 +170,6 @@ uint32_t audio_driver_xlate_freq()
 }
 
 static void Audio_Init(void);
-
-// ---------------------------------
-// DMA buffers for I2S
-__IO int16_t 	tx_buffer[BUFF_LEN+1];
-__IO int16_t		rx_buffer[BUFF_LEN+1];
-
-float32_t	lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
-//
-float32_t errsig1[64+10];
-float32_t errsig2[64+10];
-float32_t result[64+10];
-//
-// LMS Filters for RX
-arm_lms_norm_instance_f32	lms1Norm_instance;
-arm_lms_instance_f32	lms1_instance;
-float32_t	lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
-float32_t	lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
-//
-arm_lms_norm_instance_f32	lms2Norm_instance;
-arm_lms_instance_f32	lms2_instance;
-float32_t	lms2StateF32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
-float32_t	lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
-//
-float32_t	lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
-//
-float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
-//
-// Audio RX - Decimator
-static	arm_fir_decimate_instance_f32	DECIMATE_RX;
-__IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
-//
-// Audio RX - Interpolator
-static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
-__IO float32_t			interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
-// variables for RX IIR filters
-static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
-static arm_iir_lattice_instance_f32	IIR_PreFilter;
-//
-// variables for RX antialias IIR filter
-static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
-static arm_iir_lattice_instance_f32	IIR_AntiAlias;
-//
-// variables for RX manual notch IIR filter
-static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
-{
-    .numStages = 3,
-    .pCoeffs = (float32_t *)(float32_t [])
-    {
-        1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0
-    }, // 3 x 5 = 15 coefficients
-
-    .pState = (float32_t *)(float32_t [])
-    {
-        0,0,0,0,   0,0,0,0,   0,0,0,0
-    } // 3 x 4 = 12 state variables
-};
-// variables for RX manual notch IIR filter
-static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
-{
-    .numStages = 1,
-    .pCoeffs = (float32_t *)(float32_t [])
-    {
-        1,0,0,0,0
-    }, // 1 x 5 = 5 coefficients
-
-    .pState = (float32_t *)(float32_t [])
-    {
-        0,0,0,0
-    } // 1 x 4 = 4 state variables
-};
-//
-// variables for FM squelch IIR filters
-static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
-static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
-//
-//
-//
-// variables for TX IIR filter
-//
-float32_t		iir_tx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
-arm_iir_lattice_instance_f32	IIR_TXFilter;
-//
-//
-// RX Hilbert transform (90 degree) FIR filters
-//
-
-__IO	arm_fir_instance_f32 	FIR_I;
-__IO	arm_fir_instance_f32 	FIR_Q;
-//
-__IO	arm_fir_instance_f32	FIR_I_TX;
-__IO	arm_fir_instance_f32	FIR_Q_TX;
-// ---------------------------------
-
-// Audio driver publics
-__IO	AudioDriverState		ads;
-
-// S meter public
-__IO	SMeter					sm;
-//
-// Keypad driver publics
-extern __IO	KeypadState				ks;
-//
-
-
-
 //
 // THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
 //*----------------------------------------------------------------------------
@@ -675,9 +677,9 @@ void audio_driver_set_rx_audio_filter(void)
     // LMS instance 1 is pre-AGC DSP NR
     // LMS instance 3 is post-AGC DSP NR
     //
-    lms1Norm_instance.numTaps = calc_taps;
-    lms1Norm_instance.pCoeffs = lms1NormCoeff_f32;
-    lms1Norm_instance.pState = lms1StateF32;
+    lmsData.lms1Norm_instance.numTaps = calc_taps;
+    lmsData.lms1Norm_instance.pCoeffs = lmsData.lms1NormCoeff_f32;
+    lmsData.lms1Norm_instance.pState = lmsData.lms1StateF32;
     //
     // Calculate "mu" (convergence rate) from user "DSP Strength" setting.  This needs to be significantly de-linearized to
     // squeeze a wide range of adjustment (e.g. several magnitudes) into a fairly small numerical range.
@@ -701,7 +703,7 @@ void audio_driver_set_rx_audio_filter(void)
     mu_calc /= 10;	// convert from "bels" to "deci-bels"
     mu_calc = powf(10,mu_calc);		// convert to ratio
     mu_calc = 1/mu_calc;			// invert to fraction
-    lms1Norm_instance.mu = mu_calc;
+    lmsData.lms1Norm_instance.mu = mu_calc;
 
     // Debug display of mu calculation
 //	char txt[16];
@@ -711,21 +713,21 @@ void audio_driver_set_rx_audio_filter(void)
 //
     for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)	 		// clear LMS delay buffers
     {
-        lms1_nr_delay[i] = 0;
+        lmsData.lms1_nr_delay[i] = 0;
     }
     //
     for(i = 0; i < DSP_NR_NUMTAPS_MAX + BUFF_LEN; i++)	 		// clear LMS state buffer
     {
-        lms1StateF32[i] = 0;			// zero state buffer
+        lmsData.lms1StateF32[i] = 0;			// zero state buffer
         if(ts.reset_dsp_nr)	 			// are we to reset the coefficient buffer as well?
         {
-            lms1NormCoeff_f32[i] = 0;		// yes - zero coefficient buffers
+            lmsData.lms1NormCoeff_f32[i] = 0;		// yes - zero coefficient buffers
         }
     }
     //
     // use "canned" init to initialize the filter coefficients
     //
-    arm_lms_norm_init_f32(&lms1Norm_instance, calc_taps, &lms1NormCoeff_f32[0], &lms1StateF32[0], (float32_t)mu_calc, 64);
+    arm_lms_norm_init_f32(&lmsData.lms1Norm_instance, calc_taps, &lmsData.lms1NormCoeff_f32[0], &lmsData.lms1StateF32[0], (float32_t)mu_calc, 64);
     //
     //
     if((ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX) || (ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN))
@@ -734,9 +736,9 @@ void audio_driver_set_rx_audio_filter(void)
     // LMS instance 2 - Automatic Notch Filter
     //
     calc_taps = (uint16_t)ts.dsp_notch_numtaps;
-    lms2Norm_instance.numTaps = calc_taps;
-    lms2Norm_instance.pCoeffs = lms2NormCoeff_f32;
-    lms2Norm_instance.pState = lms2StateF32;
+    lmsData.lms2Norm_instance.numTaps = calc_taps;
+    lmsData.lms2Norm_instance.pCoeffs = lmsData.lms2NormCoeff_f32;
+    lmsData.lms2Norm_instance.pState = lmsData.lms2StateF32;
     //
     // Calculate "mu" (convergence rate) from user "Notch ConvRate" setting
     //
@@ -748,17 +750,17 @@ void audio_driver_set_rx_audio_filter(void)
     //
     // use "canned" init to initialize the filter coefficients
     //
-    arm_lms_norm_init_f32(&lms2Norm_instance, calc_taps, &lms2NormCoeff_f32[0], &lms2StateF32[0], (float32_t)mu_calc, 64);
+    arm_lms_norm_init_f32(&lmsData.lms2Norm_instance, calc_taps, &lmsData.lms2NormCoeff_f32[0], &lmsData.lms2StateF32[0], (float32_t)mu_calc, 64);
 
     //
     for(i = 0; i < LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
-        lms2_nr_delay[i] = 0;
+        lmsData.lms2_nr_delay[i] = 0;
     //
     for(i = 0; i < DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN; i++)	 		// clear LMS state and coefficient buffers
     {
-        lms2StateF32[i] = 0;			// zero state buffer
+        lmsData.lms2StateF32[i] = 0;			// zero state buffer
         if(ts.reset_dsp_nr)				// are we to reset the coefficient buffer?
-            lms2NormCoeff_f32[i] = 0;		// yes - zero coefficient buffer
+            lmsData.lms2NormCoeff_f32[i] = 0;		// yes - zero coefficient buffer
     }
     //
     if((ts.dsp_notch_delaybuf_len > DSP_NOTCH_BUFLEN_MAX) || (ts.dsp_notch_delaybuf_len < DSP_NOTCH_BUFLEN_MIN))
@@ -1511,9 +1513,9 @@ static void audio_lms_notch_filter(int16_t psize)
 
     // DSP Automatic Notch Filter using LMS (Least Mean Squared) algorithm
     //
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lms2_nr_delay[lms2_inbuf], psize/2);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_inbuf], psize/2);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lms2Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lms2_nr_delay[lms2_outbuf], (float32_t *)errsig2, (float32_t *)ads.a_buffer, psize/2);	// do automatic notch
+    arm_lms_norm_f32(&lmsData.lms2Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_outbuf], (float32_t *)lmsData.errsig2, (float32_t *)ads.a_buffer, psize/2);	// do automatic notch
     // Desired (notched) audio comes from the "error" term - "errsig2" is used to hold the discarded ("non-error") audio data
     //
     lms2_inbuf += psize/2;				// update circular de-correlation delay buffer
@@ -1536,9 +1538,9 @@ static void audio_lms_noise_reduction(int16_t psize)
 {
     static ulong		lms1_inbuf = 0, lms1_outbuf = 0;
 
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lms1_nr_delay[lms1_inbuf], psize/2);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_inbuf], psize/2);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lms1Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lms1_nr_delay[lms1_outbuf], (float32_t *)ads.a_buffer, (float32_t *)errsig1 ,psize/2);	// do noise reduction
+    arm_lms_norm_f32(&lmsData.lms1Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_outbuf], (float32_t *)ads.a_buffer, (float32_t *)lmsData.errsig1 ,psize/2);	// do noise reduction
     //
     // Detect if the DSP output has gone to (near) zero output - a sign of it crashing!
     //

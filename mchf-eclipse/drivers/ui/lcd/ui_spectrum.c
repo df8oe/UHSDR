@@ -1522,100 +1522,68 @@ void UiSpectrumReDrawWaterfall()
         arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)sd.wfall_contrast, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);
         //
         ushort ptr;
-        //
-        if(sd.magnify)	 	// is magnify mode on?
+        uint16_t center_pixel_pos;
+        // determine the pixel location for center line
+
+        uint16_t magnify_offset;
+        // only used if magnify is on
+
+        switch (ts.iq_freq_mode) {
+        case FREQ_IQ_CONV_P6KHZ:
+            center_pixel_pos = FFT_IQ_BUFF_LEN*3/16;
+            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
+            break;
+        case FREQ_IQ_CONV_M6KHZ:
+            center_pixel_pos = FFT_IQ_BUFF_LEN*5/16;
+            magnify_offset = FFT_IQ_BUFF_LEN/16;
+            break;
+        case FREQ_IQ_CONV_P12KHZ:
+            center_pixel_pos = FFT_IQ_BUFF_LEN*2/16;
+            magnify_offset = 0;
+            break;
+        case FREQ_IQ_CONV_M12KHZ:
+            center_pixel_pos = FFT_IQ_BUFF_LEN*6/16;
+            magnify_offset = FFT_IQ_BUFF_LEN/4;
+            break;
+        default:
+            center_pixel_pos = FFT_IQ_BUFF_LEN*4/16;
+            magnify_offset = FFT_IQ_BUFF_LEN/8;
+            break;
+        }
+
+        if (sd.magnify)
         {
-            if(!ts.iq_freq_mode)	 	// yes - frequency translate mode is off
+            center_pixel_pos = FFT_IQ_BUFF_LEN*4/16;
+            // position of center is always in the middle if
+            // in magnify mode, so we fix that position here
+
+            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
             {
-                for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
+                ptr = (i/2) + magnify_offset;
+                if(ptr < FFT_IQ_BUFF_LEN/2)
                 {
-                    ptr = (i/2) + (FFT_IQ_BUFF_LEN/8);
-                    if(ptr < FFT_IQ_BUFF_LEN/2)
-                    {
-                        sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                    }
-                }
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-            {
-                for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
-                {
-                    ptr = (i/2) + (FFT_IQ_BUFF_LEN/16);
-                    if(ptr < FFT_IQ_BUFF_LEN/2)
-                    {
-                        sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                    }
-                }
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
-            {
-                for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
-                {
-                    ptr = (i/2) + (FFT_IQ_BUFF_LEN*3/16);
-                    if(ptr < FFT_IQ_BUFF_LEN/2)
-                    {
-                        sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                    }
-                }
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen       aaaaaaaaaaaaaaaaaaaaaa
-            {
-                for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
-                {
-                    ptr = (i/2);
-                    if(ptr < FFT_IQ_BUFF_LEN/2)
-                    {
-                        sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                    }
-                }
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// frequency translate mode is in "RF LO LOW" mode - tune below center of screen
-            {
-                for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
-                {
-                    ptr = (i/2) + (FFT_IQ_BUFF_LEN/4);
-                    if(ptr < FFT_IQ_BUFF_LEN/2)
-                    {
-                        sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                    }
+                    sd.wfall_temp[i] = sd.FFT_Samples[ptr];
                 }
             }
             arm_copy_f32((float32_t *)sd.wfall_temp, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);		// copy the rescaled/shifted data into the main buffer
         }
-        //
+
         // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-        //
         for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
         {
             if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)	// is there an illegal color value?
+            {
                 sd.FFT_Samples[i] = NUMBER_WATERFALL_COLOURS - 1;	// yes - clip it
-            //
+            }
+
             sd.waterfall[sd.wfall_line][i] = (ushort)sd.FFT_Samples[i];	// save the manipulated value in the circular waterfall buffer
         }
-        //
-        // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
-        //
-        if(sd.magnify)
-        {
-            sd.waterfall_colours[NUMBER_WATERFALL_COLOURS] = (ushort)ts.scope_centre_grid_colour_active;	// for some reason it is necessary to reload this entry of the palette!
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/4] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
-        }
-        else if(!ts.iq_freq_mode)	// is frequency translate off OR magnification mode on
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/4] = NUMBER_WATERFALL_COLOURS;	// set graticule in the middle
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// LO HIGH - set graticule below center
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*3/16] = NUMBER_WATERFALL_COLOURS;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// LO LOW - set graticule above center
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*5/16] = NUMBER_WATERFALL_COLOURS;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// LO HIGH - set graticule below center
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN/8] = NUMBER_WATERFALL_COLOURS;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// LO LOW - set graticule above center
-            sd.waterfall[sd.wfall_line][FFT_IQ_BUFF_LEN*3/8] = NUMBER_WATERFALL_COLOURS;
 
-        //
+        // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
+        sd.waterfall[sd.wfall_line][center_pixel_pos] = NUMBER_WATERFALL_COLOURS;
+
         sd.wfall_line++;		// bump to the next line in the circular buffer for next go-around
-        //
-        // scan_top is used to limit AGC action to "magnified" portion
-        //
+
         sd.state++;
         break;
     }
@@ -1625,9 +1593,7 @@ void UiSpectrumReDrawWaterfall()
     case 6:
     {
         uchar lptr = sd.wfall_line;		// get current line of "bottom" of waterfall in circular buffer
-        uchar lcnt = 0;					// initialize count of number of lines of display
 
-        //
         sd.wfall_line_update++;									// update waterfall line count
         sd.wfall_line_update %= ts.waterfall_vert_step_size;	// clip it to number of lines per iteration
 
@@ -1644,8 +1610,9 @@ void UiSpectrumReDrawWaterfall()
             UiLcdHy28_OpenBulkWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
             //
             uint16_t spectrumLine[2][SPECTRUM_WIDTH];
+            uchar lcnt = 0;                 // initialize count of number of lines of display
 
-            while(lcnt < sd.wfall_size)	 				// set up counter for number of lines defining height of waterfall
+            for(lcnt = 0;lcnt < sd.wfall_size; lcnt++)	 				// set up counter for number of lines defining height of waterfall
             {
                 for(i = 0; i < (SPECTRUM_WIDTH); i++)	 	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
                 {
@@ -1654,7 +1621,6 @@ void UiSpectrumReDrawWaterfall()
 
                 UiLcdHy28_BulkWrite(spectrumLine[lcnt%2],SPECTRUM_WIDTH);
 
-                lcnt++;									// update count of lines we have done
                 lptr++;									// point to next line in circular display buffer
                 lptr %= sd.wfall_size;				// clip to display height
             }
