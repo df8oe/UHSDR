@@ -707,6 +707,7 @@ enum MENU_INFO_ITEM
 {
     INFO_EEPROM,
     INFO_DISPLAY,
+    INFO_DISPLAY_CTRL,
     INFO_SI570,
     INFO_TP,
     INFO_RFMOD,
@@ -719,6 +720,7 @@ enum MENU_INFO_ITEM
 const MenuDescriptor infoGroup[] =
 {
     { MENU_HWINFO, MENU_INFO, INFO_DISPLAY,"I01","Display"},
+    { MENU_HWINFO, MENU_INFO, INFO_DISPLAY_CTRL,"I02","Disp. Controller"},
     { MENU_HWINFO, MENU_INFO, INFO_SI570,"I02","SI570"},
     { MENU_HWINFO, MENU_INFO, INFO_EEPROM,"I03","EEPROM"},
     { MENU_HWINFO, MENU_INFO, INFO_TP,"I04","Touchscreen"},
@@ -1303,30 +1305,34 @@ bool UiMenu_DisplayMoveSlotsForward(int16_t change)
 
 bool init_done = false;
 
+static const char* display_types[] = {
+     " ",
+     "HY28A SPI",
+     "HY28B SPI",
+     "HY28A/B Para."
+ };
+
 static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
 {
-    char out[32], outa[10];
+    char out[32];
     const char* outs = NULL;
     uint32_t m_clr = White;
 
-    /*
-       static const char* display_types[] = {
-           " ",
-           "HY28A SPI Mode",
-           "HY28B SPI Mode",
-           "HY28A/B Para."
-       };
-    */
     switch (index)
     {
     case INFO_DISPLAY:
-        if(ts.display_type == 3)
-            sprintf(outa,"ILI%04x parallel",ts.DeviceCode);
-        else
-            sprintf(outa,"ILI%04x SPI",ts.DeviceCode);
-        outs = outa;
-//     outs = display_types[ts.display_type];
+    {
+        outs = display_types[ts.display_type];
         break;
+    }
+    case INFO_DISPLAY_CTRL:
+    {
+        // const char* disp_com = ts.display_type==3?"parallel":"SPI";
+        // snprintf(out,32,"ILI%04x %s",ts.DeviceCode,disp_com);
+        snprintf(out,32,"ILI%04x",ts.DeviceCode);
+        outs = out;
+        break;
+    }
     case INFO_SI570:
     {
         float suf = Si570_GetStartupFrequency();
@@ -1391,7 +1397,7 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
             outs = "unknown";
             break;
         }
-        sprintf(out,"Serial EEPROM: %s",outs);
+        snprintf(out,32,"Serial EEPROM: %s",outs);
         switch(ts.ser_eeprom_in_use)
         {
         case SER_EEPROM_IN_USE_I2C:

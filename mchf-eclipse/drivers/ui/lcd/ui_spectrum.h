@@ -171,7 +171,7 @@ typedef struct SpectrumDisplay
 
     ushort  waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
     float32_t   wfall_temp[FFT_IQ_BUFF_LEN/2];                  // temporary holder for rescaling screen
-    ushort  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][FFT_IQ_BUFF_LEN/2];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+    uint8_t  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][FFT_IQ_BUFF_LEN/2];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
 
     uchar   wfall_line;                                     // pointer to current line of waterfall data
     uchar   wfall_size;                 // vertical size of the waterfall
