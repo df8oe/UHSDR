@@ -3912,33 +3912,38 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
     static uchar enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;  // stores modes of encoder when we enter TX
     static uchar enc_three_mode = ENC_THREE_MODE_CW_SPEED;    // stores modes of encoder when we enter TX
 
-    if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)                // If auto-switch on TX/RX is enabled
+
     {
         if(state == TRX_STATE_RX_TO_TX)
         {
 
             UiDriverDeleteSMeterLabels();
             UiDriver_DrawPowerMeterLabels();
-            // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
-            enc_one_mode = ts.enc_one_mode;
-            ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
-            UiDriverChangeEncoderOneMode(true);
-            // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
-            enc_three_mode = ts.enc_thr_mode;
-            ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
-            UiDriverChangeEncoderThreeMode(true);
+
+            if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)                // If auto-switch on TX/RX is enabled
+            {
+                // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
+                enc_one_mode = ts.enc_one_mode;
+                ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+                UiDriverChangeEncoderOneMode(true);
+                // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
+                enc_three_mode = ts.enc_thr_mode;
+                ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
+                UiDriverChangeEncoderThreeMode(true);
+            }
         }
         else if (state == TRX_STATE_TX_TO_RX)
         {
 
             UiDriverDeleteSMeterLabels();
             UiDriver_DrawSMeterLabels();
-            // were we latched in TX mode?
-            // Yes, Switch to audio gain mode
-            ts.enc_one_mode = enc_one_mode;
-            UiDriverChangeEncoderOneMode(true);
-            ts.enc_thr_mode = enc_three_mode;
-            UiDriverChangeEncoderThreeMode(true);
+            if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)                // If auto-switch on TX/RX is enabled
+            {
+                ts.enc_one_mode = enc_one_mode;
+                UiDriverChangeEncoderOneMode(true);
+                ts.enc_thr_mode = enc_three_mode;
+                UiDriverChangeEncoderThreeMode(true);
+            }
         }
     }
 
