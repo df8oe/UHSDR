@@ -3850,8 +3850,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
             tchange = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tune_power_level,
                                                   0,
-                                                  PA_LEVEL_MAX_ENTRY,
-                                                  PA_LEVEL_MAX_ENTRY,
+                                                  PA_LEVEL_TUNE_KEEP_CURRENT,
+                                                  PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   1);
             switch(ts.tune_power_level)
             {
@@ -3870,7 +3870,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             case PA_LEVEL_0_5W:
                 txt_ptr = "      0.5W";
                 break;
-            case PA_LEVEL_MAX_ENTRY:
+            case PA_LEVEL_TUNE_KEEP_CURRENT:
                 txt_ptr = " as TX PWR";
                 break;
             }

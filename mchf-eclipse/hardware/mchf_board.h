@@ -629,7 +629,7 @@ enum
     PA_LEVEL_2W,
     PA_LEVEL_1W,
     PA_LEVEL_0_5W,
-    PA_LEVEL_MAX_ENTRY
+    PA_LEVEL_TUNE_KEEP_CURRENT
 };
 //
 #define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level

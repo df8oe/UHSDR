@@ -771,14 +771,14 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 
     if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
     {
-        if(power_level >= PA_LEVEL_MAX_ENTRY)     // yes, power over 2 watts?
+        if(power_level >= PA_LEVEL_TUNE_KEEP_CURRENT)     // yes, power over 2 watts?
         {
             power_level = PA_LEVEL_2W;  // force to 2 watt mode when we "roll over"
         }
     }
     else        // other modes, do not limit max power
     {
-        if(power_level >= PA_LEVEL_MAX_ENTRY)
+        if(power_level >= PA_LEVEL_TUNE_KEEP_CURRENT)
         {
             power_level = PA_LEVEL_FULL; //  0 == full power
         }
@@ -811,7 +811,7 @@ bool RadioManagement_Tune(bool tune)
     {
         if(tune)
         {
-            if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+            if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
                 ts.power_level =ts.tune_power_level;
@@ -822,7 +822,7 @@ bool RadioManagement_Tune(bool tune)
         }
         else
         {
-            if(ts.tune_power_level != PA_LEVEL_MAX_ENTRY)
+            if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
                 ts.power_level = ts.power_temp; // restore tx level
             }
