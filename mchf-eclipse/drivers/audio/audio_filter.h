@@ -151,7 +151,7 @@ typedef struct FilterPathDescriptor_s
 } FilterPathDescriptor;
 
 
-#define AUDIO_FILTER_PATH_NUM 93
+#define AUDIO_FILTER_PATH_NUM 94
 
 extern const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM];
 //

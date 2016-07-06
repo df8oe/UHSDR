@@ -713,6 +713,12 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 
 
     {
+        AUDIO_1P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_1k8_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
         AUDIO_2P3KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, i_rx_3k6_coeffs, q_rx_3k6_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
         &FirRxInterpolate, NULL
