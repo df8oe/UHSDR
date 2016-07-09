@@ -1365,48 +1365,21 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
             break;
     case INFO_EEPROM:
     {
-        switch (ts.ser_eeprom_type)
-        {
-        case 0:
-            outs = "n/a";
-            break;
-        case 16:
-            outs = "24xx512/64KB";
-            break;
-        case 17:
-            outs = "24xx1025/128KB";
-            break;
-        case 18:
-            outs = "24xx1026/128KB";
-            break;
-        case 19:
-            outs = "24CM02/256KB";
-            break;
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-            outs = "incompatible";
-            break;
-        default:
-            outs = "unknown";
-            break;
-        }
-        snprintf(out,32,"Serial EEPROM: %s",outs);
+        const char* label = "";
         switch(ts.ser_eeprom_in_use)
-        {
-        case SER_EEPROM_IN_USE_I2C:
-            m_clr = Green;
-            break; // in use & ok
-        case SER_EEPROM_IN_USE_ERROR: // not ok
-        case SER_EEPROM_IN_USE_TOO_SMALL: // too small
-            m_clr = Red;
-        }
+         {
+         case SER_EEPROM_IN_USE_I2C:
+             m_clr = Green;
+             break; // in use & ok
+         case SER_EEPROM_IN_USE_ERROR: // not ok
+             label = " [error]";
+         case SER_EEPROM_IN_USE_TOO_SMALL: // too small
+             label = " [too small]";
+             m_clr = Red;
+         }
+
+        snprintf(out,32,"%s%s",SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, label);
+        outs = out;
     }
     break;
     default:
