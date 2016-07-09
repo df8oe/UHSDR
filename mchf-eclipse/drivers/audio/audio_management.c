@@ -237,13 +237,7 @@ void AudioManagement_CalcTxCompLevel(void)
         ts.alc_tx_postfilt_gain_var = 4;
         ts.alc_decay_var = 10;
     }
-    //
-    tcalc = (float)ts.alc_decay_var;    // use temp var "tcalc" as audio function
-    tcalc += 35;            // can be called mid-calculation!
-    tcalc /= 10;
-    tcalc *= -1;
-    tcalc = powf(10, tcalc);
-    ads.alc_decay = tcalc;
+    AudioManagement_CalcALCDecay();
 }
 
 #include "fm_subaudible_tone_table.h"

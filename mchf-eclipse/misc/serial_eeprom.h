@@ -15,6 +15,17 @@
 #ifndef __SERIAL_EEPROM_H
 #define __SERIAL_EEPROM_H
 
+
+typedef struct {
+    uint32_t size; // in Bytes
+    uint16_t pagesize; // in Bytes
+    bool supported; // i.e. big enough to be used
+    const char* name;
+} SerialEEPROM_EEPROMTypeDescriptor;
+
+#define SERIAL_EEPROM_DESC_NUM 20
+extern const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPROM_DESC_NUM];
+
 void     SerialEEPROM_Clear();
 bool     SerialEEPROM_Exists();
 
@@ -24,5 +35,6 @@ uint16_t SerialEEPROM_24Cxx_Read(uint32_t, uint8_t);
 uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
 uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
 uint8_t  SerialEEPROM_24Cxx_Detect();
+
 
 #endif

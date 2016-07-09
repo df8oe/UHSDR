@@ -19,6 +19,163 @@
 
 #include "serial_eeprom.h"
 
+const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPROM_DESC_NUM] = {
+        // 0
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "No EEPROM"
+        },
+        // 1
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "Not used"
+        },
+        // 2
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "Not used"
+        },
+        // 3
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "Not used"
+        },
+        // 4
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 64,
+                .name = "Not used"
+        },
+        // 5
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "Not used"
+        },
+        // 6
+        {
+                .size = 0,
+                .supported = false,
+                .pagesize = 0,
+                .name = "Not used"
+        },
+        // 7
+        {
+                .size = 128,
+                .supported = false,
+                .pagesize = 8,
+                .name = "24xx01/128B"
+        },
+        // 8
+        {
+                .size = 256,
+                .supported = false,
+                .pagesize = 8,
+                .name = "24xx02/256B"
+        },
+        // 9
+        {
+                .size = 2*256,
+                .supported = false,
+                .pagesize = 16,
+                .name = "24xx04/512B"
+        },
+        // 10
+        {
+                .size = 1*1024,
+                .supported = false,
+                .pagesize = 16,
+                .name = "24xx08/1K"
+        },
+        // 11
+        {
+                .size = 2*1024,
+                .supported = false,
+                .pagesize = 16,
+                .name = "24xx16/2K"
+        },
+        // 12
+        {
+                .size = 4*1024,
+                .supported = false,
+                .pagesize = 32,
+                .name = "24xx32/4K"
+        },
+        // 13
+        {
+                .size = 8*1024,
+                .supported = false,
+                .pagesize = 32,
+                .name = "24xx64/8K"
+        },
+        // 14
+        {
+                .size = 16*1024,
+                .supported = false,
+                .pagesize = 64,
+                .name = "24xx128/16K"
+        },
+        // 15
+        {
+                .size = 32*1024,
+                .supported = false,
+                .pagesize = 64,
+                .name = "24xx256/32K"
+        },
+        // 16
+        {
+                .size = 64*1024,
+                .supported = true,
+                .pagesize = 128,
+                .name = "24xx512/64K"
+        },
+        // 17
+        {
+                .size = 128*1024,
+                .supported = true,
+                .pagesize = 128,
+                .name = "24xx1025/64K"
+        },
+        // 18
+        {
+                .size = 128 * 1024,
+                .supported = true,
+                .pagesize = 128,
+                .name = "24xx1026/128K"
+        },
+        // 19
+        {
+                .size = 2048*1024,
+                .supported = true,
+                .pagesize = 256,
+                .name = "24CM02/2M"
+        }
+
+};
+
+typedef struct
+{
+    uint8_t devaddr;
+    uint8_t addr[2]; // 0 -> upper or single, 1 -> lower, second;
+    uint16_t addr_size;
+} SerialEEPROM_24CXX_Descriptor;
+
+static SerialEEPROM_24CXX_Descriptor serialEeprom_desc;
+// THIS CAN BE USED ONLY WITH SINGLE EEPROM AND SINGLE THREAD
+// NOT THREAD SAFE, USE local variable instead then
+
+
+
 #define MEM_DEVICE_WRITE_ADDR 0xA0
 // serial eeprom functions by DF8OE
 
@@ -89,17 +246,6 @@ static uint16_t SerialEEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
     }
     return retVal;
 }
-typedef struct
-{
-    uint8_t devaddr;
-    uint8_t addr[2]; // 0 -> upper or single, 1 -> lower, second;
-    uint16_t addr_size;
-} SerialEEPROM_24CXX_Descriptor;
-
-static SerialEEPROM_24CXX_Descriptor serialEeprom_desc;
-// THIS CAN BE USED ONLY WITH SINGLE EEPROM AND SINGLE THREAD
-// NOT THREAD SAFE, USE local variable instead then
-
 
 static void SerialEEPROM_24Cxx_StartTransfer_Prep(uint32_t Addr, uint8_t Mem_Type, SerialEEPROM_24CXX_Descriptor* eeprom_desc_ptr)
 {
@@ -146,30 +292,22 @@ uint16_t SerialEEPROM_24Cxx_Read(uint32_t Addr, uint8_t Mem_Type)
 
 uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
-    uint32_t page, count;
     uint16_t retVal = 0xFFFF;
-    count = 0;
+    if (Mem_Type < SERIAL_EEPROM_DESC_NUM) {
+        uint32_t page, count;
+        count = 0;
 
-    if(Mem_Type == 12)
-        page = 64;
-    if(Mem_Type == 13)
-        page = 32;
-    if(Mem_Type == 14 || Mem_Type == 15)
-        page = 64;
-    if(Mem_Type > 15 && Mem_Type < 19)
-        page = 128;
-    if(Mem_Type == 19)
-        page = 256;
+        page =SerialEEPROM_eepromTypeDescs[Mem_Type].pagesize;
 
-
-    while(count < length)
-    {
-        SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
-        retVal = MCHF_I2C_ReadBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
-        count+=page;
-        if (retVal)
+        while(count < length)
         {
-            break;
+            SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
+            retVal = MCHF_I2C_ReadBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
+            count+=page;
+            if (retVal)
+            {
+                break;
+            }
         }
     }
     return retVal;
@@ -177,35 +315,28 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
 
 uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
-    uint32_t page, count;
     uint16_t retVal = 0xFFFF;
-    count = 0;
+    if (Mem_Type < SERIAL_EEPROM_DESC_NUM) {
+        uint32_t page, count;
+        count = 0;
 
-    if(Mem_Type == 12)
-        page = 64;
-    if(Mem_Type == 13)
-        page = 32;
-    if(Mem_Type == 14 || Mem_Type == 15)
-        page = 64;
-    if(Mem_Type > 15 && Mem_Type < 19)
-        page = 128;
-    if(Mem_Type == 19)
-        page = 256;
+        page =SerialEEPROM_eepromTypeDescs[Mem_Type].pagesize;
 
-
-    while(count < length)
-    {
-        SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
-        retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
-        count+=page;
-        if (retVal)
+        while(count < length)
         {
-            break;
+            SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
+            retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
+            count+=page;
+            if (retVal)
+            {
+                break;
+            }
+            retVal = SerialEEPROM_24Cxx_ackPolling(Addr,Mem_Type);
         }
-        retVal = SerialEEPROM_24Cxx_ackPolling(Addr,Mem_Type);
     }
     return retVal;
 }
+
 uint8_t SerialEEPROM_24Cxx_Detect() {
 
     uint8_t ser_eeprom_type = 0xFF;
@@ -229,68 +360,76 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
         }
         else
         {
+            SerialEEPROM_24Cxx_Write(10,0xdd,8);
+            // first decide if 8 or 16 bit addressable eeprom by trying to read with 8 or 16 bit algorithm
+            // if an algorithm succeeds we know the address width
+            if(SerialEEPROM_24Cxx_Read(10,8) == 0xdd)
             {
-                SerialEEPROM_24Cxx_Write(10,0xdd,8);
-                if(SerialEEPROM_24Cxx_Read(10,8) == 0xdd)
+                // 8 bit addressing
+                SerialEEPROM_24Cxx_Write(3,0x99,8);              // write test signature
+                ser_eeprom_type = 7;             // smallest possible 8 bit EEPROM (128Bytes)
+                if(SerialEEPROM_24Cxx_Read(0x83,8) != 0x99)
                 {
-                    // 8 bit addressing
-                    SerialEEPROM_24Cxx_Write(3,0x99,8);              // write testsignature
-                    ser_eeprom_type = 7;             // smallest possible 8 bit EEPROM
-                    if(SerialEEPROM_24Cxx_Read(0x83,8) != 0x99)
-                    {
-                        ser_eeprom_type = 8;
-                    }
-                    SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,8);
-                    SerialEEPROM_24Cxx_Write(1,0x10,8);
+                    ser_eeprom_type = 8;
                 }
-                else
+                SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,8);
+                SerialEEPROM_24Cxx_Write(1,0x10,8);
+            }
+            else
+            {
+                // 16 bit addressing
+                if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
                 {
-                    // 16 bit addressing
-                    if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
+                    ser_eeprom_type = 17;            // 24LC1025
+                    SerialEEPROM_24Cxx_Write(0,17,16);
+                }
+                if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
+                {
+                    ser_eeprom_type = 18;            // 24LC1026
+                    SerialEEPROM_24Cxx_Write(0,18,16);
+                }
+                if(SerialEEPROM_24Cxx_Read(0x10000,19) < 0x100)
+                {
+                    ser_eeprom_type = 19;            // 24CM02
+                    SerialEEPROM_24Cxx_Write(0,19,16);
+                }
+                if(ser_eeprom_type < 17)
+                {
+                    SerialEEPROM_24Cxx_Write(3,0x66,16);         // write testsignature 1
+                    SerialEEPROM_24Cxx_Write(0x103,0x77,16);         // write testsignature 2
+                    if(SerialEEPROM_24Cxx_Read(3,16) == 0x66 && SerialEEPROM_24Cxx_Read(0x103,16) == 0x77)
                     {
-                        ser_eeprom_type = 17;            // 24LC1025
-                        SerialEEPROM_24Cxx_Write(0,17,16);
-                    }
-                    if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
-                    {
-                        ser_eeprom_type = 18;            // 24LC1026
-                        SerialEEPROM_24Cxx_Write(0,18,16);
-                    }
-                    if(SerialEEPROM_24Cxx_Read(0x10000,19) < 0x100)
-                    {
-                        ser_eeprom_type = 19;            // 24CM02
-                        SerialEEPROM_24Cxx_Write(0,19,16);
-                    }
-                    if(ser_eeprom_type < 17)
-                    {
-                        SerialEEPROM_24Cxx_Write(3,0x66,16);         // write testsignature 1
-                        SerialEEPROM_24Cxx_Write(0x103,0x77,16);         // write testsignature 2
-                        if(SerialEEPROM_24Cxx_Read(3,16) == 0x66 && SerialEEPROM_24Cxx_Read(0x103,16) == 0x77)
+                        // 16 bit addressing
+                        ser_eeprom_type = 9;         // smallest possible 16 bit EEPROM
+                        if(SerialEEPROM_24Cxx_Read(0x203,16) != 0x66)
                         {
-                            // 16 bit addressing
-                            ser_eeprom_type = 9;         // smallest possible 16 bit EEPROM
-                            if(SerialEEPROM_24Cxx_Read(0x803,16) != 0x66)
-                            {
-                                ser_eeprom_type = 12;
-                            }
-                            if(SerialEEPROM_24Cxx_Read(0x1003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 13;
-                            }
-                            if(SerialEEPROM_24Cxx_Read(0x2003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 14;
-                            }
-                            if(SerialEEPROM_24Cxx_Read(0x4003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 15;
-                            }
-                            if(SerialEEPROM_24Cxx_Read(0x8003,16) != 0x66)
-                            {
-                                ser_eeprom_type = 16;
-                            }
-                            SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,16);
+                            ser_eeprom_type = 10;
                         }
+                        if(SerialEEPROM_24Cxx_Read(0x403,16) != 0x66)
+                        {
+                            ser_eeprom_type = 11;
+                        }
+                        if(SerialEEPROM_24Cxx_Read(0x803,16) != 0x66)
+                        {
+                            ser_eeprom_type = 12;
+                        }
+                        if(SerialEEPROM_24Cxx_Read(0x1003,16) != 0x66)
+                        {
+                            ser_eeprom_type = 13;
+                        }
+                        if(SerialEEPROM_24Cxx_Read(0x2003,16) != 0x66)
+                        {
+                            ser_eeprom_type = 14;
+                        }
+                        if(SerialEEPROM_24Cxx_Read(0x4003,16) != 0x66)
+                        {
+                            ser_eeprom_type = 15;
+                        }
+                        if(SerialEEPROM_24Cxx_Read(0x8003,16) != 0x66)
+                        {
+                            ser_eeprom_type = 16;
+                        }
+                        SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,16);
                     }
                 }
             }

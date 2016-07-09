@@ -133,7 +133,7 @@ void ConfigStorage_Init()
     if (ts.ser_eeprom_type != EEPROM_SER_NONE)
     {
         ts.ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
-        if(ts.ser_eeprom_type < 16)             // incompatible EEPROMs
+        if(SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].supported == false)             // incompatible EEPROMs
         {
             ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_TOO_SMALL;         // serial EEPROM too small
         }
