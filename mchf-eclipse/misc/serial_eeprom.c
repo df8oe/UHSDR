@@ -155,10 +155,10 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
         },
         // 19
         {
-                .size = 2048*1024,
+                .size = 256*1024,
                 .supported = true,
                 .pagesize = 256,
-                .name = "24CM02/2M"
+                .name = "24CM02/256K"
         }
 
 };
