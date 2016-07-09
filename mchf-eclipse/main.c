@@ -517,31 +517,21 @@ int main(void)
     // HW init
     mchf_board_init();
 
-
-
     mchf_board_green_led(1);
-
 
     // Set default transceiver state
     TransceiverStateInit();
-
-//	if( *(__IO uint32_t*)(SRAM2_BASE+10) == 0x29)	// DSP betatesting for DG9BFC
-//	    {
-//	    ts.dsp_enabled = 1;
-//	    }
-
 
     ConfigStorage_Init();
 
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
 
-    // Show logo
+    // Show logo & HW Info
     UiDriver_ShowStartUpScreen(100);
 
     // Extra init
     MiscInit();
-
 
     // Usb Host driver init
     //keyb_driver_init();
