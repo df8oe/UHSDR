@@ -214,26 +214,7 @@ void audio_driver_config_nco(void)
 //*----------------------------------------------------------------------------
 void audio_driver_init(void)
 {
-    ulong word_size;
-    uchar x;
-
-
-#ifdef DEBUG_BUILD
-    printf("audio driver init...\n\r");
-#endif
-
-    // "use" the temporary variables to keep the compiler from "optimizing" them out of existence
-    //
-
-//	test_a[0] = 0;
-//	test_b[0] = 0;
-//	test_c[0] = 0;
-//	test_d[0] = 0;
-//	test_e[0] = 0;
-//	test_f[0] = 0;
-//	test_j[0] = 0;
-
-    word_size = WORD_SIZE_16;
+    const uint32_t word_size = WORD_SIZE_16;
 
     // CW module init
     cw_gen_init();
@@ -251,9 +232,11 @@ void audio_driver_init(void)
     ads.agc_var = 1;			// used in AGC processing
     ads.agc_calc = 1;			// used in AGC processing
     ads.agc_holder = 1;			// initialize holder for AGC value
-    for(x = 0; x < BUFF_LEN; x++)	// initialize running buffer for AGC delay
+    for(uint32_t x = 0; x < BUFF_LEN; x++)	// initialize running buffer for AGC delay
+    {
         ads.agc_valbuf[x] = 1;
-    //
+    }
+
     ads.alc_val = 1;			// init TX audio auto-level-control (ALC)
     //
     ads.fm_sql_avg = 0;			// init FM squelch averaging
@@ -311,11 +294,6 @@ void audio_driver_init(void)
 //	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
     arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
 
-
-
-#ifdef DEBUG_BUILD
-    printf("audio driver init ok\n\r");
-#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -339,8 +317,6 @@ void audio_driver_set_rx_audio_filter(void)
 
     // Lock - temporarily disable filter
 
-
-
     dsp_inhibit_temp = ts.dsp_inhibit;
     ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
     ads.af_disabled = 1;
@@ -352,11 +328,8 @@ void audio_driver_set_rx_audio_filter(void)
     // I.e. setting the ts.filter_path anywere else in the code is useless. You have to call AudioFilter_NextApplicableFilterPath in order to
     // select a new filter path as this sets the last used/selected memory for a demod mode.
 
-    // if (ts.filter_path == 0 || AudioFilter_IsApplicableFilterPath(PATH_ALL_APPLICABLE,ts.dmod_mode,ts.filter_path)== false) {
-
     ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
 
-    // }
     if (FilterPathInfo[ts.filter_path].pre_instance != NULL)
     {
         // if we turn on a filter, set the number of members to the number of elements last
@@ -379,9 +352,8 @@ void audio_driver_set_rx_audio_filter(void)
         iir_rx_state[i] = 0;
     }
     IIR_PreFilter.pState = (float32_t *)&iir_rx_state;					// point to state array for IIR filter
-    //
+
     // Initialize IIR antialias filter state buffer
-    //
     if (FilterPathInfo[ts.filter_path].iir_instance != NULL)
     {
         // if we turn on a filter, set the number of members to the number of elements last
@@ -428,9 +400,13 @@ void audio_driver_set_rx_audio_filter(void)
     //
     float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+    {
         FSdec = 24000.0;
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+    }
+    else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+    {
         FSdec = 12000.0;
+    }
     float32_t FS = 48000; // we need this for the treble filter
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
@@ -702,9 +678,9 @@ void audio_driver_set_rx_audio_filter(void)
     mu_calc = log10f(mu_calc);					// de-linearize
     lms1Norm_instance.mu = mu_calc;				//
     */
-    //
+
     // New DSP NR "mu" calculation method as of 0.0.214
-    //
+
     mu_calc /= 2;	// scale input value
     mu_calc += 2;	// offset zero value
     mu_calc /= 10;	// convert from "bels" to "deci-bels"
@@ -713,11 +689,10 @@ void audio_driver_set_rx_audio_filter(void)
     lmsData.lms1Norm_instance.mu = mu_calc;
 
     // Debug display of mu calculation
-//	char txt[16];
-//	sprintf(txt, " %d ", (ulong)(mu_calc * 10000));
-//	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,txt,0xFFFF,0,0);
-//
-//
+    //	char txt[16];
+    //	snprintf(txt,16, " %d ", (ulong)(mu_calc * 10000));
+    //	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,txt,0xFFFF,0,0);
+
     for(i = 0; i < LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)	 		// clear LMS delay buffers
     {
         lmsData.lms1_nr_delay[i] = 0;
@@ -731,48 +706,56 @@ void audio_driver_set_rx_audio_filter(void)
             lmsData.lms1NormCoeff_f32[i] = 0;		// yes - zero coefficient buffers
         }
     }
-    //
+
     // use "canned" init to initialize the filter coefficients
     //
     arm_lms_norm_init_f32(&lmsData.lms1Norm_instance, calc_taps, &lmsData.lms1NormCoeff_f32[0], &lmsData.lms1StateF32[0], (float32_t)mu_calc, 64);
     //
+
     //
     if((ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX) || (ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN))
+    {
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
-    //
+    }
+
+    // AUTO NOTCH INIT START
     // LMS instance 2 - Automatic Notch Filter
-    //
-    calc_taps = (uint16_t)ts.dsp_notch_numtaps;
+
+    calc_taps = ts.dsp_notch_numtaps;
     lmsData.lms2Norm_instance.numTaps = calc_taps;
     lmsData.lms2Norm_instance.pCoeffs = lmsData.lms2NormCoeff_f32;
     lmsData.lms2Norm_instance.pState = lmsData.lms2StateF32;
-    //
+
     // Calculate "mu" (convergence rate) from user "Notch ConvRate" setting
-    //
     mu_calc = (float)ts.dsp_notch_mu;		// get user setting (0 = slowest)
     mu_calc += 1;
     mu_calc /= 1500;
     mu_calc += 1;
     mu_calc = log10f(mu_calc);
-    //
+
     // use "canned" init to initialize the filter coefficients
-    //
     arm_lms_norm_init_f32(&lmsData.lms2Norm_instance, calc_taps, &lmsData.lms2NormCoeff_f32[0], &lmsData.lms2StateF32[0], (float32_t)mu_calc, 64);
 
-    //
     for(i = 0; i < LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN; i++)		// clear LMS delay buffer
+    {
         lmsData.lms2_nr_delay[i] = 0;
-    //
+    }
+
     for(i = 0; i < DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN; i++)	 		// clear LMS state and coefficient buffers
     {
         lmsData.lms2StateF32[i] = 0;			// zero state buffer
         if(ts.reset_dsp_nr)				// are we to reset the coefficient buffer?
+        {
             lmsData.lms2NormCoeff_f32[i] = 0;		// yes - zero coefficient buffer
+        }
     }
-    //
+
     if((ts.dsp_notch_delaybuf_len > DSP_NOTCH_BUFLEN_MAX) || (ts.dsp_notch_delaybuf_len < DSP_NOTCH_BUFLEN_MIN))
+    {
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
-    //
+    }
+    // AUTO NOTCH INIT END
+
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
     if (FilterPathInfo[ts.filter_path].dec != NULL)
@@ -796,7 +779,9 @@ void audio_driver_set_rx_audio_filter(void)
     }
 
     if(ts.dmod_mode == DEMOD_FM)
-        ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;		//
+    {
+        ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;
+    }
     //
     //
     ads.agc_decimation_scaling = (float)ads.decimation_rate;
@@ -915,6 +900,7 @@ static void Audio_Init(void)
 //*----------------------------------------------------------------------------
 #define AUDIO_RX_NB_DELAY_BUFFER_ITEMS (16)
 #define AUDIO_RX_NB_DELAY_BUFFER_SIZE (AUDIO_RX_NB_DELAY_BUFFER_ITEMS*2)
+
 static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 {
     static int16_t	delay_buf[AUDIO_RX_NB_DELAY_BUFFER_SIZE];
@@ -1028,7 +1014,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
         ts.multi = 4; 		//(4 = 6 kHz offset)
         flag = 0;
     }
-    if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && ts.multi != 8)
+    else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && ts.multi != 8)
     {
         ts.multi = 8; 		// (8 = 12 kHz offset)
         flag = 0;
@@ -1043,41 +1029,30 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
             rad_calc *= ts.multi;			// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
             //
             sincosf(rad_calc, (float *)&ads.Osc_I_buffer[i], (float *)&ads.Osc_Q_buffer[i]);
-//			ads.Osc_Q_buffer[i] = cos(rad_calc);	// get sine and cosine values and store in pre-calculated array
-//			ads.Osc_I_buffer[i] = sin(rad_calc);	// (using slower, more accurate functions instead of interpolated, fast ARM functions)
-            //
         }
         flag = 1;	// signal that once we have generated the quadrature sine waves, we shall not do it again
     }
-    //
+
     // Do frequency conversion using optimized ARM math functions [KA7OEI]
-    //
+    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.c_buffer, size/2); // multiply products for converted I channel
+    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.d_buffer, size/2);
+    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.e_buffer, size/2);
+    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.f_buffer, size/2);    // multiply products for converted Q channel
+
     if(!dir)	 	// Conversion is "above" on RX (LO needs to be set lower)
     {
-        arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.a_buffer, size/2);	// multiply products for converted I channel
-        arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.b_buffer, size/2);
-        //
-        arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.c_buffer, size/2);	// multiply products for converted Q channel
-        arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.d_buffer, size/2);
-        //
-        arm_add_f32((float32_t *)ads.a_buffer, (float32_t *)ads.b_buffer, (float32_t *)ads.i_buffer, size/2);	// summation for I channel
+        arm_add_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, size/2);	// summation for I channel
         arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, size/2);	// difference for Q channel
     }
     else	 	// Conversion is "below" on RX (LO needs to be set higher)
     {
-        arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.a_buffer, size/2);	// multiply products for converted I channel
-        arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.b_buffer, size/2);
-        //
-        arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.c_buffer, size/2);	// multiply products for converted Q channel
-        arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.d_buffer, size/2);
-        //
-        arm_add_f32((float32_t *)ads.a_buffer, (float32_t *)ads.b_buffer, (float32_t *)ads.q_buffer, size/2);	// summation for I channel
+        arm_add_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.q_buffer, size/2);	// summation for I channel
         arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.i_buffer, size/2);	// difference for Q channel
     }
 }
 
 
-//
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_agc_processor
 //* Object              :
@@ -1109,54 +1084,55 @@ static void audio_rx_agc_processor(int16_t psize)
                 ads.agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
                 //agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
             }
-            //
-            if(ads.agc_calc < ads.agc_knee)	 	// is audio below AGC "knee" value?
+
+            float32_t agc_decay_scaled = (ads.agc_calc < ads.agc_knee) ? (ads.agc_decay * ads.agc_decimation_scaling) : AGC_ATTACK;
+            // if agc_calc is lower than knee - Increase gain slowly for AGC DECAY - scale time constant with decimation
+
+            ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
+            ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+            ads.agc_val += ads.agc_val * agc_decay_scaled * ads.agc_var; // adjust agc_val
+
+            if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
             {
-                ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
-                ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-                ads.agc_val += ads.agc_val*ads.agc_decay * ads.agc_decimation_scaling * ads.agc_var;	// Yes - Increase gain slowly for AGC DECAY - scale time constant with decimation
+                ads.agc_val = AGC_VAL_MIN;
             }
-            else
-            {
-                ads.agc_var = ads.agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
-                ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-                ads.agc_val -= ads.agc_val * AGC_ATTACK * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
-                if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
-                    ads.agc_val = AGC_VAL_MIN;
-            }
+
             if(ads.agc_val >= ads.agc_rf_gain)	 	// limit AGC to reasonable values when low/no signals present
             {
                 ads.agc_val = ads.agc_rf_gain;
                 if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+                {
                     ads.agc_val = ads.agc_val_max;
+                }
             }
         }
         else	// AGC Off - manual AGC gain
+        {
             ads.agc_val = ads.agc_rf_gain;			// use logarithmic gain value in RF gain control
-        //
+        }
+
         ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
     }
-    //
+
     // Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
     // This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
-    //
+
     arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
     arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
-    //
+
     // Update the in/out pointers to the AGC delay buffer
     agc_delay_inbuf += psize/2;						// update circular delay buffer
     agc_delay_outbuf = agc_delay_inbuf + psize/2;
     agc_delay_inbuf %= ads.agc_delay_buflen;
     agc_delay_outbuf %= ads.agc_delay_buflen;
-    //
-    //
+
     // Now apply pre-calculated AGC values to delayed audio
-    //
+
     arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
-    //
-//
+
 }
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -1217,11 +1193,13 @@ static void audio_demod_fm(int16_t size)
         }
         //
         if (y < 0)						// Quadrant 3 or 4 - flip sign
+        {
             angle = -angle;
+        }
         //
         // we now have our audio in "angle"
         //
-        ads.b_buffer[i] = angle;		// save audio in "b" buffer for squelch noise filtering/detection - done later
+        ads.d_buffer[i] = angle;		// save audio in "d" buffer for squelch noise filtering/detection - done later
         //
         // Now do integrating low-pass filter to do FM de-emphasis
         //
@@ -1268,20 +1246,24 @@ static void audio_demod_fm(int16_t size)
         ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
         ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
         if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
+        {
             ads.agc_val = AGC_VAL_MIN;
+        }
     }
     if(ads.agc_val >= ads.agc_rf_gain)	 	// limit AGC to reasonable values when low/no signals present
     {
         ads.agc_val = ads.agc_rf_gain;
         if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+        {
             ads.agc_val = ads.agc_val_max;
+        }
     }
     //
     // *** Squelch Processing ***
     //
-    arm_iir_lattice_f32(&IIR_Squelch_HPF, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);		// Do IIR high-pass filter on audio so we may detect squelch noise energy
+    arm_iir_lattice_f32(&IIR_Squelch_HPF, (float32_t *)ads.d_buffer, (float32_t *)ads.d_buffer, size/2);		// Do IIR high-pass filter on audio so we may detect squelch noise energy
     //
-    ads.fm_sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_sql_avg) + (FM_RX_SQL_SMOOTHING * sqrtf(fabs(ads.b_buffer[0])));	// IIR filter squelch energy magnitude:  We need look at only one representative sample
+    ads.fm_sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_sql_avg) + (FM_RX_SQL_SMOOTHING * sqrtf(fabs(ads.d_buffer[0])));	// IIR filter squelch energy magnitude:  We need look at only one representative sample
 
     //
     // Squelch processing
@@ -1291,12 +1273,16 @@ static void audio_demod_fm(int16_t size)
     if(!count)	 		// do the squelch threshold calculation much less often than we are called to process this audio
     {
         if(ads.fm_sql_avg > 0.175)		// limit maximum noise value in averaging to keep it from going out into the weeds under no-signal conditions (higher = noisier)
+        {
             ads.fm_sql_avg = 0.175;
+        }
 
         b = ads.fm_sql_avg * 172;		// scale noise amplitude to range of squelch setting
 
         if(b > 24)						// limit noise amplitude range
+        {
             b = 24;
+        }
         //
         b = 22-b;						// "invert" the noise power so that high number now corresponds with quieter signal:  "b" may now be compared with squelch setting
         //
@@ -1309,19 +1295,25 @@ static void audio_demod_fm(int16_t size)
         else if(ads.fm_squelched)	 	// are we squelched?
         {
             if(b >= (float)(ts.fm_sql_threshold + FM_SQUELCH_HYSTERESIS))		// yes - is average above threshold plus hysteresis?
+            {
                 ads.fm_squelched = 0 ;		//  yes, open the squelch
+            }
         }
         else	 	// is the squelch open (e.g. passing audio)?
         {
             if(ts.fm_sql_threshold > FM_SQUELCH_HYSTERESIS)	 				// is setting higher than hysteresis?
             {
                 if(b < (float)(ts.fm_sql_threshold - FM_SQUELCH_HYSTERESIS))		// yes - is average below threshold minus hysteresis?
+                {
                     ads.fm_squelched = 1;		// yes, close the squelch
+                }
             }
             else	 				// setting is lower than hysteresis so we can't use it!
             {
                 if(b < (float)ts.fm_sql_threshold)		// yes - is average below threshold?
+                {
                     ads.fm_squelched = 1;		// yes, close the squelch
+                }
             }
         }
         //
@@ -1399,18 +1391,26 @@ static void audio_demod_fm(int16_t size)
             {
                 tdet++;		// yes - increment count			// yes - bump debounce count
                 if(tdet > FM_SUBAUDIBLE_DEBOUNCE_MAX)			// is count above the maximum?
+                {
                     tdet = FM_SUBAUDIBLE_DEBOUNCE_MAX;			// yes - limit the count
+                }
             }
             else	 			// it is below the threshold - reduce the debounce
             {
                 if(tdet)		// - but only if already nonzero!
+                {
                     tdet--;
+                }
             }
             if(tdet >= FM_SUBAUDIBLE_TONE_DEBOUNCE_THRESHOLD)	// are we above the debounce threshold?
+            {
                 ads.fm_subaudible_tone_detected = 1;			// yes - a tone has been detected
+            }
             else												// not above threshold
+            {
                 ads.fm_subaudible_tone_detected = 0;			// no tone detected
-            //
+            }
+
             gcount = 0;		// reset accumulation counter
         }
     }
@@ -2024,9 +2024,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     	}
         break;
     case DEMOD_SAM:
-        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a3_buffer, size/2);	// difference of I and Q - LSB
-        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a2_buffer, size/2);	// sum of I and Q - USB
-        arm_add_f32((float32_t *)ads.a2_buffer, (float32_t *)ads.a3_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of LSB & USB = DSB
+        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, size/2);	// difference of I and Q - LSB
+        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.e_buffer, size/2);	// sum of I and Q - USB
+        arm_add_f32((float32_t *)ads.e_buffer, (float32_t *)ads.f_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of LSB & USB = DSB
         break;
     case DEMOD_FM:
         audio_demod_fm(size);
@@ -2208,6 +2208,10 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 //
 // This is a stripped-down RX signal processor - a work in progress
 //
+// NOT BEING UPDATED FOR A LONG TIME
+// USE WITH EXTREME CARE. MOST LIKELY IT DOES NOT WORK OUT OF THE BOX
+// e.g. there is no DIGITAL audio out support
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_dv_rx_processor
 //* Object              :
@@ -2376,7 +2380,6 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         *dst++ = (int16_t)ads.b_buffer[i];		// Speaker channel (variable level)
         *dst++ = (int16_t)ads.a_buffer[i++];		// LINE OUT (constant level)
     }
-    //
 }
 //         /
 //*----------------------------------------------------------------------------
@@ -3093,9 +3096,13 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
         }
         //
         if(!ts.dvmode)
+        {
             audio_rx_processor(src,dst,size);
+        }
         else
+        {
             audio_dv_rx_processor(src,dst,size);
+        }
         //
         to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
