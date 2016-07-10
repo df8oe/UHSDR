@@ -2160,9 +2160,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         {
             sprintf(options,"  %d",ts.tx_comp_level);
         }
-        else					// show "SV" (Stored Value) for highest value
+        else					// show "CUSTOM" (Stored Value) for highest value
         {
-            strcpy(options, " SV");
+            strcpy(options, "CUSTOM");
         }
         break;
     case MENU_KEYER_MODE:	// Keyer mode
