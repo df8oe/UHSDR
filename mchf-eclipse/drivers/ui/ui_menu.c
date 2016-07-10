@@ -2158,7 +2158,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV)	// 	display numbers for all but the highest value
         {
-            sprintf(options,"  %d",ts.tx_comp_level);
+            sprintf(options,"    %d",ts.tx_comp_level);
         }
         else					// show "CUSTOM" (Stored Value) for highest value
         {
