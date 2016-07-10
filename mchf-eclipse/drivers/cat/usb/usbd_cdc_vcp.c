@@ -226,7 +226,7 @@ uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len)
   *
   * @param  Buf: Buffer of data to be received
   * @param  Len: Number of data received (in bytes)
-  * @retval Result of the opeartion: USBD_OK if all operations are OK else VCP_FAIL
+  * @retval Result of the operation: USBD_OK if all operations are OK else VCP_FAIL
   */
 uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 {
