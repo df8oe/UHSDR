@@ -67,6 +67,13 @@ typedef struct
 
 
 float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
+
+void audio_driver_ClearAGCDelayBuffer()
+{
+    arm_fill_f32(0, agc_delay, AGC_DELAY_BUFSIZE+16);
+}
+
+
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
@@ -3082,6 +3089,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             to_rx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, dst, size);
             arm_fill_q15(0, src, size);
+            audio_driver_ClearAGCDelayBuffer();
         }
         //
         if(!ts.dvmode)
@@ -3098,6 +3106,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, dst, size);
             arm_fill_q15(0, src, size);
+            audio_driver_ClearAGCDelayBuffer();
         }
         else
         {
