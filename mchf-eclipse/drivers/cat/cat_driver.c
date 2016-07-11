@@ -84,34 +84,32 @@ CatInterfaceState cat_driver_state()
 
 int cat_buffer_remove(uint8_t* c_ptr)
 {
+	int ret = 0;
+
     if (cat_head != cat_tail)
     {
         int c = cat_buffer[cat_tail];
         cat_tail = (cat_tail + 1) % CAT_BUFFER_SIZE;
         *c_ptr = (uint8_t)c;
-        return 1;
+        ret++;
     }
-    else
-    {
-        return 0;
-    }
+    return ret;
 }
 
+/* no room left in the buffer returns 0 */
 int cat_buffer_add(uint8_t c)
 {
+	int ret = 0;
     int32_t next_head = (cat_head + 1) % CAT_BUFFER_SIZE;
+
     if (next_head != cat_tail)
     {
         /* there is room */
         cat_buffer[cat_head] = c;
         cat_head = next_head;
-        return 1;
+        ret ++;
     }
-    else
-    {
-        /* no room left in the buffer */
-        return 0;
-    }
+    return ret;
 }
 
 void cat_buffer_reset()
@@ -119,6 +117,25 @@ void cat_buffer_reset()
     cat_tail = cat_head;
 }
 
+/**
+ * Synchronize CAT data and CAT decoder mechanism.
+ * As there is a chance, that buffers have received erroneous data
+ * at least at startup one has to line up packets of five bytes per
+ * telegram. If there is residue in the budffers, this function spills
+ * bytes out until there is a multiple of 5 left.
+ */
+uint32_t cat_driver_sync_data( void)
+{
+	uint32_t bufsz = cat_driver_has_data();
+	uint32_t lmod = bufsz % 5;	// Framesize of CAT telegram
+	uint8_t c;
+
+	while(lmod) {
+		cat_buffer_remove(&c);
+		lmod--;
+	}
+	return bufsz;
+}
 
 uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len)
 {
@@ -228,6 +245,7 @@ void CatDriverFT817CheckAndExecute()
     }
     else
     {
+        cat_driver_sync_data();
 
         while (cat_driver_get_data(ft817.req,5))
         {

@@ -62,7 +62,7 @@
 #define AUDIO_TOTAL_IF_NUM 				0x03
 
 
-/* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
+/* CDC endpoint parameters: you can fine tune these values depending on the needed baudrates and performance. */
 #ifdef USE_USB_OTG_HS
 #define CDC_DATA_MAX_PACKET_SIZE       64  /* Endpoint IN & OUT Packet size */
 #define CDC_CMD_PACKET_SZE             8    /* Control Endpoint Packet size */
