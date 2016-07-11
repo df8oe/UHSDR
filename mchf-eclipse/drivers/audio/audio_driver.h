@@ -419,7 +419,7 @@ enum	{
 //
 // Factors used in audio compressor adjustment limits
 //
-#define	TX_AUDIO_COMPRESSION_MAX		13	// 0 = least compression, 12 = most, 13 = EEPROM values ("SV") - custom selected by user
+#define	TX_AUDIO_COMPRESSION_MAX		13	// 0 = least compression, 12 = most, 13 = EEPROM values ("CUS" = CUSTOM) - custom selected by user
 #define	TX_AUDIO_COMPRESSION_SV			13
 #define	TX_AUDIO_COMPRESSION_DEFAULT	2
 //

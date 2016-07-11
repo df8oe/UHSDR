@@ -2158,11 +2158,11 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV)	// 	display numbers for all but the highest value
         {
-            sprintf(options,"  %d",ts.tx_comp_level);
+            sprintf(options,"    %d",ts.tx_comp_level);
         }
-        else					// show "SV" (Stored Value) for highest value
+        else					// show "CUSTOM" (Stored Value) for highest value
         {
-            strcpy(options, " SV");
+            strcpy(options, "CUSTOM");
         }
         break;
     case MENU_KEYER_MODE:	// Keyer mode

@@ -5063,12 +5063,12 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 
     if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
     {
-        sprintf(temp,"%02d",ts.tx_comp_level);
+        sprintf(temp," %02d",ts.tx_comp_level);
     }
-    else	 				// show "SV" (Stored Value) for highest value
+    else	 				// show "CUS" (Custom Value) for highest value
     {
-        strcpy(temp, "SV");
-        color = Yellow;	// Stored value - use yellow
+        strcpy(temp, "CUS");
+        color = Yellow;	// Custom value - use yellow
     }
 
     UiDriverEncoderDisplay(1,0,"CMP" , encoder_active, temp, color);
