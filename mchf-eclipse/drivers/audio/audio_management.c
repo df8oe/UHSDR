@@ -142,15 +142,28 @@ void AudioManagement_CalcNB_AGC(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 void AudioManagement_CalcRxIqGainAdj(void)
-{
-    if(ts.dmod_mode == DEMOD_AM)
-        ts.rx_adj_gain_var_i = (float)ts.rx_iq_am_gain_balance;         // get current gain adjustment for AM
-    if(ts.dmod_mode == DEMOD_FM)
+{ // please note that the RX adjustments for gain are negative
+	// and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
+
+    switch(ts.dmod_mode)
+    {
+    case DEMOD_FM:
         ts.rx_adj_gain_var_i = (float)ts.rx_iq_fm_gain_balance;         // get current gain adjustment for FM
-    else if(ts.dmod_mode == DEMOD_LSB)
+    	break;
+    case DEMOD_AM:
+        ts.rx_adj_gain_var_i = (float)ts.rx_iq_am_gain_balance;         // get current gain adjustment for AM
+        break;
+    case DEMOD_LSB:
         ts.rx_adj_gain_var_i = -(float)ts.rx_iq_lsb_gain_balance;        // get current gain adjustment setting for LSB
-    else
+    	break;
+    case DEMOD_USB:
         ts.rx_adj_gain_var_i = -(float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
+    	break;
+    default:
+    	ts.rx_adj_gain_var_i = -(float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
+    	break;
+    }
+
     //
     ts.rx_adj_gain_var_i /= SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
     ts.rx_adj_gain_var_q = -ts.rx_adj_gain_var_i;               // get "invert" of it
@@ -169,6 +182,8 @@ void AudioManagement_CalcTxIqGainAdj(void)
     // Note:  There is a fixed amount of offset due to the fact that the phase-added Hilbert (e.g. 0, 90) transforms are
     // slightly asymmetric that is added so that "zero" is closer to being the proper phase balance.
     //
+	// please note that the RX adjustments for gain are negative (in function AudioManagement_CalcRxIqGainAdj)
+	// and the adjustments for TX are positive
     if(ts.dmod_mode == DEMOD_AM)    // is it AM mode?
         ts.tx_adj_gain_var_i = (float)ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
     else if(ts.dmod_mode == DEMOD_FM)   // is it in FM mode?
@@ -219,7 +234,7 @@ static const AlcParams alc_params[] =
 
 void AudioManagement_CalcTxCompLevel(void)
 {
-    float tcalc;
+//    float tcalc;
     if (ts.tx_comp_level < 13)
     {
         ts.alc_tx_postfilt_gain_var = alc_params[ts.tx_comp_level].tx_postfilt_gain;      // restore "pristine" EEPROM values

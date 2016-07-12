@@ -1839,7 +1839,7 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int 
          break;
     default:
         // FM, SAM
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_lsb_phase_balance:0;
+        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:0;
         break;
     }
     if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
@@ -1970,11 +1970,11 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
     }
 
-    AudioDriver_IQPhaseAdjust(ts.dmod_mode, ts.txrx_mode,size);
-
     // Apply gain corrections for I/Q amplitude correction
     arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
     arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, size/2);
+
+    AudioDriver_IQPhaseAdjust(ts.dmod_mode, ts.txrx_mode,size);
 
     if(ts.iq_freq_mode)	 		// is receive frequency conversion to be done?
     {
@@ -2454,7 +2454,7 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
 {
     int16_t i;
 
-    AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+//    AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
 
     // ------------------------
     // Output I and Q as stereo data
