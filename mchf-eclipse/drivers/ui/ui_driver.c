@@ -346,8 +346,6 @@ __IO PowerMeter					pwmt;
 // LO Tcxo
 __IO LoTcxo						lo;
 
-// CAT driver state
-__IO CatDriver					kd;
 
 // move to struct ??
 __IO ulong 						unmute_delay = 0;
@@ -662,7 +660,7 @@ void UiDriver_HandleTouchScreen()
     if (ts.show_tp_coordinates)					// show coordinates for coding purposes
     {
         char text[10];
-        sprintf(text,"%02d%s%02d%s",ts.tp_x," : ",ts.tp_y,"  ");
+        snprintf(text,10,"%02d%s%02d%s",ts.tp_x," : ",ts.tp_y,"  ");
         UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
     }
     if(!ts.menu_mode)						// normal operational screen
@@ -990,7 +988,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     uint32_t tune_new;
     bool tx_ok = false;
 
-	ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
+	// ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
 
     if(is_splitmode())                  // is SPLIT mode active?
     {
@@ -3179,7 +3177,7 @@ static void UiDriverCreateSMeter()
             {
                 if(i)
                 {
-                    sprintf(num,"%d",(i*2));
+                    snprintf(num,20,"%d",(i*2));
                     // Text
                     UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59 - BTM_MINUS),num,White,Black,4);
 
@@ -3209,7 +3207,7 @@ static void UiDriverCreateSMeter()
             {
                 if(i)
                 {
-                    sprintf(num,"%d",(i*2)-20);
+                    snprintf(num,20,"%d",(i*2)-20);
                     // Text
                     UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*10),(POS_SM_IND_Y + 59 - BTM_MINUS),num,White,Black,4);
 
@@ -5060,18 +5058,20 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 {
     ushort 	color = encoder_active?White:Grey;
     char	temp[5];
+    const char* outs;
 
     if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
     {
-        sprintf(temp," %02d",ts.tx_comp_level);
+        snprintf(temp,5,"%02d",ts.tx_comp_level);
+        outs = temp;
     }
     else	 				// show "CUS" (Custom Value) for highest value
     {
-        strcpy(temp, "CUS");
+        outs ="CUS";
         color = Yellow;	// Custom value - use yellow
     }
 
-    UiDriverEncoderDisplay(1,0,"CMP" , encoder_active, temp, color);
+    UiDriverEncoderDisplay(1,0,"CMP" , encoder_active, outs, color);
 }
 
 uint32_t dsp_nr_color_map()
@@ -5254,7 +5254,7 @@ static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
         color = White;
 
     txt = "WPM";
-    sprintf(txt_buf,"%2d",ts.keyer_speed);
+    snprintf(txt_buf,5,"%2d",ts.keyer_speed);
 
     UiDriverEncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
@@ -5294,7 +5294,7 @@ static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
         txt = "???";
     }
 
-    sprintf(txt_buf,"%2d",ts.tx_gain[ts.tx_audio_source]);
+    snprintf(txt_buf,5,"%2d",ts.tx_gain[ts.tx_audio_source]);
 
     UiDriverEncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
@@ -5336,7 +5336,7 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
         value = ts.fm_sql_threshold;
     }
 
-    sprintf(temp," %02ld",value);
+    snprintf(temp,5," %02ld",value);
 
     UiDriverEncoderDisplay(0,1,label, encoder_active, temp, color);
 
@@ -5434,16 +5434,10 @@ static void UiDriver_DisplayTone(bool encoder_active)
 static void UiDriver_DisplayRit(bool encoder_active)
 {
     char	temp[5];
-    uint32_t color;
-    if(ts.rit_value)
-        color = Green;
-    else
-        color = encoder_active?White:Grey;
 
-    if(ts.rit_value)
-        sprintf(temp,"%+3i", ts.rit_value);
-    else
-        sprintf(temp,"%3i", ts.rit_value);
+    uint32_t color = ts.rit_value? Green : (encoder_active ? White:Grey);
+
+    snprintf(temp,5,ts.rit_value?"%+3i":"%3i", ts.rit_value);
 
     UiDriverEncoderDisplay(0,2,"RIT", encoder_active, temp, color);
 }
@@ -5919,7 +5913,7 @@ static void UiDriverHandleTXMeters()
             rev_pwr_avg = rev_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to reverse power reading
             rev_pwr_avg += swrm.rev_pwr * PWR_DAMPENING_FACTOR;
 
-            sprintf(txt, "%d,%d   ", (int)(fwd_pwr_avg*1000), (int)(rev_pwr_avg*1000));		// scale to display power in milliwatts
+            snprintf(txt,32, "%d,%d   ", (int)(fwd_pwr_avg*1000), (int)(rev_pwr_avg*1000));		// scale to display power in milliwatts
             UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
             swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
         }
@@ -6583,14 +6577,7 @@ void UiDriver_KeyTestScreen()
 			}
 			if(t != ENC_MAX)
 			{
-				char encnum[3];
-				sprintf(txt_buf,"%s"," Encoder ");		// building string for encoders
-				sprintf(encnum,"%d",t+1);
-				strcat(txt_buf,encnum);
-				if(direction > 0)
-					strcat(txt_buf," <right>");
-				else
-					strcat(txt_buf," <left> ");
+				snprintf(txt_buf,40," Encoder %d <%s>", t+1, direction>0 ? "right":"left");		// building string for encoders
 				j = 18+t;					// add encoders behind buttons;
 			}
 
@@ -6663,7 +6650,7 @@ void UiDriver_KeyTestScreen()
 
 			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 			    {
-					sprintf(txt_buf,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+					snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
 					txt = txt_buf;
 				}
 				else
@@ -6695,7 +6682,7 @@ void UiDriver_KeyTestScreen()
 			{
 				UiLcdHy28_PrintText(10,120,txt,White,Blue,1);			// identify button on screen
 			}
-			sprintf(txt_buf, "# of buttons pressed: %d  ", (int)k);
+			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
 
 			if(p_o_state == 1)
@@ -6877,12 +6864,12 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
                 *xt_corr += (ts.tp_x - cross[0]);
                 *yt_corr += (ts.tp_y - cross[1]);
                 clr_fg = Green;
-                sprintf(txt_buf,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+                snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
             }
             else
             {
                 clr_fg = Red;
-                sprintf(txt_buf,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+                snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
             }
             samples++;
             UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
@@ -6906,11 +6893,11 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
     non_os_delay();
     // Show first line
-    sprintf(tx,"%s",DEVICE_STRING);
+    snprintf(tx,100,"%s",DEVICE_STRING);
     UiLcdHy28_PrintText(0,30,tx,Cyan,Black,1);       // Position with original text size:  78,40
 
     // Show second line
-    sprintf(tx,"%s",AUTHOR_STRING);
+    snprintf(tx,100,"%s",AUTHOR_STRING);
     UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
 
 	// looking for bootloader version, only works or DF8OE bootloader
@@ -6924,20 +6911,20 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
   	  && *(__IO uint8_t*)(begin+i+3) == 0x73 && *(__IO uint8_t*)(begin+i+4) == 0x69 && *(__IO uint8_t*)(begin+i+5) == 0x6f
   	  && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
   		{
-  		sprintf(bootloader, "%s", (__IO char*)(begin+i+9));
+  		snprintf(bootloader,12, "%s", (__IO char*)(begin+i+9));
   		}
   	  }
   	  if(bootloader[0] == 0)
   		{
-  		sprintf(bootloader, "%s", "no DF8OE BL");
+  		snprintf(bootloader,12, "%s", "no DF8OE BL");
   		}
 
     // Show third line
-    sprintf(tx,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,bootloader);
+    snprintf(tx,100,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,bootloader);
     UiLcdHy28_PrintText(80,80,tx,Grey3,Black,0);
 
     // Show fourth line
-    sprintf(tx,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
+    snprintf(tx,100,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
     UiLcdHy28_PrintText(15,100,tx,Yellow,Black,0);
 
     ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode

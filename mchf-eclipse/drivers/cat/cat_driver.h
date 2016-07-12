@@ -34,8 +34,11 @@ typedef struct CatDriver
     uchar	enabled;
     CatInterfaceState state;
     CatInterfaceProtocol protocol;
+    uint32_t lastbufferadd_time;
 
 } CatDriver;
+
+extern __IO CatDriver kd;
 
 // Exports
 void cat_driver_init(void);

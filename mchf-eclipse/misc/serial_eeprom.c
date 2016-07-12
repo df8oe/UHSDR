@@ -128,7 +128,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
         // 15
         {
                 .size = 32*1024,
-                .supported = false,
+                .supported = true,
                 .pagesize = 64,
                 .name = "24xx256/32K"
         },
