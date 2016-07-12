@@ -398,15 +398,19 @@ void audio_driver_set_rx_audio_filter(void)
     // y[n] = b0/a0 * x[n] + b1/a0 * x[n-1] + b2/a0 * x[n-2] - a1/a0 * y[n-1] - a2/a0 * y[n-2]
     //
     //
-    float32_t FSdec; // we need the sampling rate in the decimated path for calculation of the coefficients
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+    float32_t FSdec = 24000.0; // we need the sampling rate in the decimated path for calculation of the coefficients
+
+    /* if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
     {
         FSdec = 24000.0;
     }
-    else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+    else*/
+
+    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
     {
         FSdec = 12000.0;
     }
+
     float32_t FS = 48000; // we need this for the treble filter
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
@@ -1073,12 +1077,14 @@ static void audio_rx_agc_processor(int16_t psize)
     //
     // FM does not need AGC and the S-meter reading is calculated within the FM demodulation function and not here.
     //
-    for(i = 0; i < psize/2; i++)
+    if(ts.agc_mode != AGC_OFF)
     {
-        if(ts.agc_mode != AGC_OFF)
+        for(i = 0; i < psize/2; i++)
         {
             if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
-            	ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+            {
+                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+            }
             else	 							// not AM - get the amplitude of the recovered audio
             {
                 ads.agc_calc = fabs(ads.a_buffer[i]) * ads.agc_val;
@@ -1096,7 +1102,6 @@ static void audio_rx_agc_processor(int16_t psize)
             {
                 ads.agc_val = AGC_VAL_MIN;
             }
-
             if(ads.agc_val >= ads.agc_rf_gain)	 	// limit AGC to reasonable values when low/no signals present
             {
                 ads.agc_val = ads.agc_rf_gain;
@@ -1105,13 +1110,13 @@ static void audio_rx_agc_processor(int16_t psize)
                     ads.agc_val = ads.agc_val_max;
                 }
             }
+            ads.agc_valbuf[i] = ads.agc_val;            // store in "running" AGC history buffer for later application to audio data
         }
-        else	// AGC Off - manual AGC gain
-        {
-            ads.agc_val = ads.agc_rf_gain;			// use logarithmic gain value in RF gain control
-        }
-
-        ads.agc_valbuf[i] = ads.agc_val;			// store in "running" AGC history buffer for later application to audio data
+    }
+    else    // AGC Off - manual AGC gain
+    {
+        ads.agc_val = ads.agc_rf_gain;          // use logarithmic gain value in RF gain control
+        arm_fill_f32(ads.agc_rf_gain,(float32_t*)ads.agc_valbuf,psize/2);
     }
 
     // Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
