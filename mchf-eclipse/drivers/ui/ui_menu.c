@@ -3141,7 +3141,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         sprintf(options, "   %d", ts.rx_iq_usb_gain_balance);
         break;
     case CONFIG_USB_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_USB)  && (ts.txrx_mode == TRX_MODE_RX))
+        if(((ts.dmod_mode == DEMOD_USB)  || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_RX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_phase_balance,
                                                 MIN_RX_IQ_PHASE_BALANCE,
