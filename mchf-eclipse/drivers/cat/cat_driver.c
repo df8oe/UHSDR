@@ -32,7 +32,8 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 // extern uint32_t USBD_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev);
 
-extern __IO CatDriver kd;
+// CAT driver state
+__IO CatDriver                  kd;
 
 //void OTG_FS_WKUP_IRQHandler(void)
 //{
@@ -54,16 +55,12 @@ void cat_driver_init(void)
                 &USR_desc,
                 &AUDIO_cb,
                 &USR_cb);
-
-    printf("cat driver started\n\r");
 }
 
 void cat_driver_stop(void)
 {
     // Stop driver
     USBD_DeInit(&USB_OTG_dev);
-
-    printf("cat driver stopped\n\r");
 }
 
 void cat_driver_thread(void)
@@ -107,6 +104,7 @@ int cat_buffer_add(uint8_t c)
         /* there is room */
         cat_buffer[cat_head] = c;
         cat_head = next_head;
+        kd.lastbufferadd_time = ts.sysclock;
         ret ++;
     }
     return ret;
@@ -117,24 +115,40 @@ void cat_buffer_reset()
     cat_tail = cat_head;
 }
 
+#define CAT_DRIVER_TIMEOUT 30
+// defined in increments of 10ms, needs to be longer than the longest running operation
+// the mcHF can do. It seems band switching is taking longest time.
+// According to the FT817 manual, timeout is 200ms, so we use that plus a little extra and it seems to work
+
 /**
  * Synchronize CAT data and CAT decoder mechanism.
- * As there is a chance, that buffers have received erroneous data
- * at least at startup one has to line up packets of five bytes per
- * telegram. If there is residue in the budffers, this function spills
- * bytes out until there is a multiple of 5 left.
+ * As there is a chance that buffers have received erroneous data
+ * at least at startup or if the external program stops without completely sending the
+ * request data, we expire old data in the request data buffer.
  */
-uint32_t cat_driver_sync_data( void)
+void cat_driver_sync_data( void)
 {
-	uint32_t bufsz = cat_driver_has_data();
-	uint32_t lmod = bufsz % 5;	// Framesize of CAT telegram
-	uint8_t c;
+    uint32_t bufsz = cat_driver_has_data();
+    // we now know how much data is available
+    // this MUST BE DONE BEFORE find out how old the data is
+    // otherwise a race condition  can occur and we throw away new data.
 
-	while(lmod) {
-		cat_buffer_remove(&c);
-		lmod--;
-	}
-	return bufsz;
+    if (bufsz)
+    {
+        if ( ts.sysclock - CAT_DRIVER_TIMEOUT > kd.lastbufferadd_time)
+        {
+            // if we are here the first bufsz bytes are older than 200ms
+            // if in the meantime new bytes arrive, no problem, we keep them
+            // since we remove the first bufsz "old data" bytes only from
+            // the front of the buffer
+            while(bufsz)
+            {
+                uint8_t c;
+                cat_buffer_remove(&c);
+                bufsz--;
+            }
+        }
+    }
 }
 
 uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len)

@@ -346,8 +346,6 @@ __IO PowerMeter					pwmt;
 // LO Tcxo
 __IO LoTcxo						lo;
 
-// CAT driver state
-__IO CatDriver					kd;
 
 // move to struct ??
 __IO ulong 						unmute_delay = 0;
@@ -990,7 +988,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     uint32_t tune_new;
     bool tx_ok = false;
 
-	ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
+	// ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
 
     if(is_splitmode())                  // is SPLIT mode active?
     {
