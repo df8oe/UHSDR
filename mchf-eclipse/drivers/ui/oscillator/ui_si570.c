@@ -647,33 +647,35 @@ Si570_ResultCodes Si570_SetFrequency(ulong freq, int calib, int temp_factor, uch
 {
     Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
 
-    float		freq_calc, freq_scale, temp_scale, temp;
+    if (Si570_IsPresent() == true) {
+        float		freq_calc, freq_scale, temp_scale, temp;
 
-    freq_scale = (float)freq;		// get frequency
-    freq_calc = freq_scale;		// copy frequency
-    freq_scale /= 14000000;		// get scaling factor since our calibrations are referenced to 14.000 MHz
+        freq_scale = (float)freq;		// get frequency
+        freq_calc = freq_scale;		// copy frequency
+        freq_scale /= 14000000;		// get scaling factor since our calibrations are referenced to 14.000 MHz
 
-    temp = (float)calib;			// get calibration factor
-    temp *= (freq_scale);		// scale calibration for operating frequency but double magnitude of calibration factor
+        temp = (float)calib;			// get calibration factor
+        temp *= (freq_scale);		// scale calibration for operating frequency but double magnitude of calibration factor
 
-    freq_calc -= temp;				// subtract calibration factor
+        freq_calc -= temp;				// subtract calibration factor
 
-    temp_scale = (float)temp_factor;	// get temperature factor
-    temp_scale /= 14000000;		// calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
+        temp_scale = (float)temp_factor;	// get temperature factor
+        temp_scale /= 14000000;		// calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
 
-    freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
+        freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
 
-    // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
-    if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
-    {
-        // tuning inside known working spec
-        retval = Si570_ChangeFrequency((float64_t)freq_calc/1000000.0, test);
-        if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ) && *(__IO uint32_t*)(SRAM2_BASE+5) != 0x29)
+        // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
+        if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
         {
-            // outside official spec but known to work
-            if (retval == SI570_OK)
+            // tuning inside known working spec
+            retval = Si570_ChangeFrequency((float64_t)freq_calc/1000000.0, test);
+            if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ) && *(__IO uint32_t*)(SRAM2_BASE+5) != 0x29)
             {
-                retval = SI570_TUNE_LIMITED;
+                // outside official spec but known to work
+                if (retval == SI570_OK)
+                {
+                    retval = SI570_TUNE_LIMITED;
+                }
             }
         }
     }
