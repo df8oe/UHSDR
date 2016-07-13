@@ -20,6 +20,7 @@
 #include "ui_configuration.h"
 #include "config_storage.h"
 #include "serial_eeprom.h"
+#include "ui_si570.h"
 
 #include <stdio.h>
 #include "arm_math.h"
@@ -478,7 +479,7 @@ enum MENU_GROUP_ITEM
     MENU_CONF,
     MENU_POW,
     MENU_FILTER,
-    MENU_HWINFO,
+    MENU_SYSINFO,
     MENU_CW,
     MENU_DISPLAY,
 };
@@ -491,7 +492,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings"},
     { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
     { MENU_TOP, MENU_GROUP, MENU_POW, "POW","PA Configuration" },
-    { MENU_TOP, MENU_GROUP, MENU_HWINFO,"INF","Hardware Info"},
+    { MENU_TOP, MENU_GROUP, MENU_SYSINFO,"INF","System Info"},
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -703,33 +704,23 @@ const MenuDescriptor filterGroup[] =
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
-enum MENU_INFO_ITEM
-{
-    INFO_EEPROM,
-    INFO_DISPLAY,
-    INFO_DISPLAY_CTRL,
-    INFO_SI570,
-    INFO_TP,
-    INFO_RFMOD,
-    INFO_VHFUHFMOD,
-    INFO_CPU,
-    INFO_FLASH,
-    INFO_RAM,
-};
 
 const MenuDescriptor infoGroup[] =
 {
-    { MENU_HWINFO, MENU_INFO, INFO_DISPLAY,"I01","Display"},
-    { MENU_HWINFO, MENU_INFO, INFO_DISPLAY_CTRL,"I02","Disp. Controller"},
-    { MENU_HWINFO, MENU_INFO, INFO_SI570,"I02","SI570"},
-    { MENU_HWINFO, MENU_INFO, INFO_EEPROM,"I03","EEPROM"},
-    { MENU_HWINFO, MENU_INFO, INFO_TP,"I04","Touchscreen"},
-    { MENU_HWINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
-    { MENU_HWINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
-    { MENU_HWINFO, MENU_INFO, INFO_CPU,"I07","CPU"},
-    { MENU_HWINFO, MENU_INFO, INFO_FLASH,"I07","Flash Size (kB)"},
-    { MENU_HWINFO, MENU_INFO, INFO_RAM,"I08","RAM Size (kB)"},
-    { MENU_HWINFO, MENU_STOP, 0, "   " , NULL }
+    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY,"I01","Display"},
+    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY_CTRL,"I02","Disp. Controller"},
+    { MENU_SYSINFO, MENU_INFO, INFO_SI570,"I02","SI570"},
+    { MENU_SYSINFO, MENU_INFO, INFO_EEPROM,"I03","EEPROM"},
+    { MENU_SYSINFO, MENU_INFO, INFO_TP,"I04","Touchscreen"},
+    { MENU_SYSINFO, MENU_INFO, INFO_CPU,"I07","CPU"},
+    { MENU_SYSINFO, MENU_INFO, INFO_FLASH,"I07","Flash Size (kB)"},
+    { MENU_SYSINFO, MENU_INFO, INFO_RAM,"I08","RAM Size (kB)"},
+    { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION,"I08","Firmware"},
+    { MENU_SYSINFO, MENU_INFO, INFO_BUILD,"I08","Build"},
+    { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION,"I08","Bootloader"},
+    { MENU_SYSINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
+    { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
+    { MENU_SYSINFO, MENU_STOP, 0, "   " , NULL }
 };
 
 
@@ -1314,13 +1305,18 @@ static const char* display_types[] = {
      "HY28A/B Para."
  };
 
-static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
+/**
+ * @returns: information for requested item as string. Do not write to this string.
+ */
+const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 {
-    char out[32];
+    static char out[32];
     const char* outs = NULL;
-    uint32_t m_clr = White;
+    *m_clr_ptr = White;
 
-    switch (index)
+    out[0] = 0;
+
+    switch (info_item)
     {
     case INFO_DISPLAY:
     {
@@ -1332,16 +1328,21 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
         // const char* disp_com = ts.display_type==3?"parallel":"SPI";
         // snprintf(out,32,"ILI%04x %s",ts.DeviceCode,disp_com);
         snprintf(out,32,"ILI%04x",ts.DeviceCode);
-        outs = out;
         break;
     }
     case INFO_SI570:
     {
-        float suf = Si570_GetStartupFrequency();
-        int vorkomma = (int)(suf);
-        int nachkomma = (int) roundf((suf-vorkomma)*10000);
-        snprintf(out,32,"%xh / %u.%04u MHz",(Si570_GeTI2CAddress() >> 1),vorkomma,nachkomma);
-        outs = out;
+        if (Si570_IsPresent()) {
+            float suf = Si570_GetStartupFrequency();
+            int vorkomma = (int)(suf);
+            int nachkomma = (int) roundf((suf-vorkomma)*10000);
+            snprintf(out,32,"%xh / %u.%04u MHz",(Si570_GeTI2CAddress() >> 1),vorkomma,nachkomma);
+        }
+        else
+        {
+            outs = "Not found!";
+            *m_clr_ptr = Red;
+        }
     }
     break;
     case INFO_TP:
@@ -1355,15 +1356,12 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
         break;
     case INFO_FLASH:
             snprintf(out,32,"%d",(STM32_GetFlashSize()));
-            outs = out;
             break;
     case INFO_CPU:
             snprintf(out,32,"%xh",(STM32_GetSignature()));
-            outs = out;
             break;
     case INFO_RAM:
             snprintf(out,32,"%d",(ts.ramsize));
-            outs = out;
             break;
     case INFO_EEPROM:
     {
@@ -1371,23 +1369,69 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
         switch(ts.ser_eeprom_in_use)
          {
          case SER_EEPROM_IN_USE_I2C:
-             m_clr = Green;
+             *m_clr_ptr = Green;
              break; // in use & ok
          case SER_EEPROM_IN_USE_ERROR: // not ok
              label = " [error]";
          case SER_EEPROM_IN_USE_TOO_SMALL: // too small
              label = " [too small]";
-             m_clr = Red;
+             *m_clr_ptr = Red;
          }
 
-        snprintf(out,32,"%s%s",SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, label);
-        outs = out;
+        const char* i2c_size_unit = "K";
+        uint i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
+
+        // in case we have no or very small eeprom (less than 1K)
+        if (i2c_size == 0)
+        {
+            i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size;
+            i2c_size_unit = "B";
+        }
+        snprintf(out,32,"%s/%u%s%s",SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
+    }
+    break;
+    case INFO_BL_VERSION:
+    {
+        uint32_t begin = 0x8000000;
+
+        for(int i=0; i < 32768; i++)
+        {
+            if( *(__IO uint8_t*)(begin+i) == 0x56 && *(__IO uint8_t*)(begin+i+1) == 0x65 && *(__IO uint8_t*)(begin+i+2) == 0x72
+                    && *(__IO uint8_t*)(begin+i+3) == 0x73 && *(__IO uint8_t*)(begin+i+4) == 0x69 && *(__IO uint8_t*)(begin+i+5) == 0x6f
+                    && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
+            {
+                snprintf(out,32, "%s", (__IO char*)(begin+i+9));
+            }
+        }
+        if(out[0] == 0)
+        {
+            outs = "no DF8OE BL";
+        }
+    }
+    break;
+    case INFO_FW_VERSION:
+    {
+        snprintf(out,32,"%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE);
+    }
+    break;
+    case INFO_BUILD:
+    {
+        snprintf(out,32,"%s - %s",__DATE__,__TIME__);
     }
     break;
     default:
         outs = "NO INFO";
     }
+    if (outs == NULL) {
+        outs = out;
+    }
+    return outs;
+}
 
+static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
+{
+    uint32_t m_clr;
+    const char* outs = UiMenu_GetSystemInfo(&m_clr, index);
     UiMenu_DisplayValue(outs,m_clr,pos);
 }
 

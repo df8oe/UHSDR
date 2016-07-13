@@ -37,6 +37,26 @@ void UiMenu_RenderFirstScreen();
 bool UiMenu_RenderNextScreen(); // returns true if screen was changed, i.e. not last screen
 bool UiMenu_RenderPrevScreen(); // returns true if screen was changed, i.e. not first screen
 
+
+enum MENU_INFO_ITEM
+{
+    INFO_EEPROM,
+    INFO_DISPLAY,
+    INFO_DISPLAY_CTRL,
+    INFO_SI570,
+    INFO_TP,
+    INFO_RFMOD,
+    INFO_VHFUHFMOD,
+    INFO_CPU,
+    INFO_FLASH,
+    INFO_RAM,
+    INFO_FW_VERSION,
+    INFO_BL_VERSION,
+    INFO_BUILD,
+};
+
+const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
+
 //
 #define	MENUSIZE	6				// number of menu items per page/screen
 //
