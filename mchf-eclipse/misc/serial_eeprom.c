@@ -32,7 +32,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
                 .size = 0,
                 .supported = false,
                 .pagesize = 0,
-                .name = "Not used"
+                .name = "Wrong Signature"
         },
         // 2
         {
@@ -349,13 +349,31 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
     {
         if(SerialEEPROM_24Cxx_Read(0,16) != 0xFF)
         {
-            if(SerialEEPROM_24Cxx_Read(0,8) > 6 && SerialEEPROM_24Cxx_Read(0,8) < 9 && SerialEEPROM_24Cxx_Read(1,8) == 0x10)
+            ser_eeprom_type = EEPROM_SER_WRONG_SIG;
+            // unless we find a correct signature, we have to assume the EEPROM has incorrect/corrupted data
+
+            uint16_t ser_eeprom_type_read = SerialEEPROM_24Cxx_Read(0,8);
+            uint16_t ser_eeprom_sig = SerialEEPROM_24Cxx_Read(1,8);
+
+            // all 8 bit (i.e. 256 or 128 Byte) EEPROMS are marked as "too small" during detection
+            if(ser_eeprom_sig == SER_EEPROM_IN_USE_TOO_SMALL && ser_eeprom_type_read > 6 && SERIAL_EEPROM_DESC_NUM && ser_eeprom_type_read < 9)
             {
-                ser_eeprom_type = SerialEEPROM_24Cxx_Read(0,8);
+                ser_eeprom_type = ser_eeprom_type_read;
             }
             else
             {
-                ser_eeprom_type = SerialEEPROM_24Cxx_Read(0,16);
+                ser_eeprom_type_read = SerialEEPROM_24Cxx_Read(0,16);
+                ser_eeprom_sig = SerialEEPROM_24Cxx_Read(1,16);
+
+                // we either have a new EEPROM, just being initialized  ( ser_eeprom_sig = SER_EEPROM_IN_USE_NO && valid type) or
+                // we have an used EEPROM (ser_eeprom_sig = SER_EEPROM_IN_USE_I2C && valid type)
+                // please note, that even though no 16 bit EEPROM gets the "too small" signature written in, these may still be
+                // consider too small by the later code. Only EEPROMS which have the "supported" flag set in the descriptor will
+                // be consider of sufficient size for actual use
+                if((ser_eeprom_sig == SER_EEPROM_IN_USE_I2C || ser_eeprom_sig == SER_EEPROM_IN_USE_NO) && ser_eeprom_type_read < SERIAL_EEPROM_DESC_NUM && ser_eeprom_type_read > 8)
+                {
+                    ser_eeprom_type = ser_eeprom_type_read;
+                }
             }
         }
         else
@@ -373,7 +391,7 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
                     ser_eeprom_type = 8;
                 }
                 SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,8);
-                SerialEEPROM_24Cxx_Write(1,0x10,8);
+                SerialEEPROM_24Cxx_Write(1,SER_EEPROM_IN_USE_TOO_SMALL,8);
             }
             else
             {
