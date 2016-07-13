@@ -37,7 +37,11 @@ typedef struct OscillatorState
 
     uint8_t				base_reg;
 
+    bool                present; // is a working Si570 present?
 } OscillatorState;
+
+extern __IO OscillatorState os;
+
 
 
 typedef enum
@@ -66,5 +70,8 @@ uint8_t Si570_GeTI2CAddress();
 
 uchar   Si570_InitExternalTempSensor();
 uchar   Si570_ReadExternalTempSensor(int *temp);
+
+inline bool   Si570_IsPresent() { return os.present == true; }
+
 
 #endif

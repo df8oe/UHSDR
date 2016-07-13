@@ -6887,6 +6887,8 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     uint16_t    i;
     char   tx[100];
     const char* txp;
+    uint32_t clr;
+    const char* info_out;
 
     // Clear all
     UiLcdHy28_LcdClear(Black);
@@ -6901,82 +6903,49 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
 
 	// looking for bootloader version, only works or DF8OE bootloader
-    char bootloader[12];
-    bootloader[0] = 0;								// clearing string
-	uint32_t begin = 0x8000000;
-
-    for(i=0; i < 32768; i++)
-  	  {
-  	  if( *(__IO uint8_t*)(begin+i) == 0x56 && *(__IO uint8_t*)(begin+i+1) == 0x65 && *(__IO uint8_t*)(begin+i+2) == 0x72
-  	  && *(__IO uint8_t*)(begin+i+3) == 0x73 && *(__IO uint8_t*)(begin+i+4) == 0x69 && *(__IO uint8_t*)(begin+i+5) == 0x6f
-  	  && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
-  		{
-  		snprintf(bootloader,12, "%s", (__IO char*)(begin+i+9));
-  		}
-  	  }
-  	  if(bootloader[0] == 0)
-  		{
-  		snprintf(bootloader,12, "%s", "no DF8OE BL");
-  		}
-
     // Show third line
-    snprintf(tx,100,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,bootloader);
-    UiLcdHy28_PrintText(80,80,tx,Grey3,Black,0);
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
+
+    snprintf(tx,100,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
+    UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
 
     // Show fourth line
-    snprintf(tx,100,"Build on %s%s%s%s",__DATE__," at ",__TIME__, " CEST");
-    UiLcdHy28_PrintText(15,100,tx,Yellow,Black,0);
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_BUILD);
+    snprintf(tx,100,"Build on %s CEST",info_out);
+    UiLcdHy28_PrintTextCentered(0,100,320,tx,Yellow,Black,0);
 
     ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
 
     if(!(i & 0xff))
     {
         txp = "WARNING:  Freq. Translation is OFF!!!";
-        UiLcdHy28_PrintText(16,120,txp,Black,Red3,0);
+        UiLcdHy28_PrintTextCentered(0,120,320,txp,Black,Red3,0);
         txp ="Translation is STRONGLY recommended!!";
-        UiLcdHy28_PrintText(16,135,txp,Black,Red3,0);
+        UiLcdHy28_PrintTextCentered(0,135,320,txp,Black,Red3,0);
     }
     else
     {
         txp = " Freq. Translate On ";
-        UiLcdHy28_PrintText(80,120,txp,Grey3,Black,0);
+        UiLcdHy28_PrintTextCentered(0,120,320,txp,Grey3,Black,0);
     }
 
     // Display the mode of the display interface
-    switch(ts.display_type)
-    {
-    case DISPLAY_HY28B_PARALLEL:
-        txp = "LCD: Parallel Mode";
-        break;
-    case DISPLAY_HY28A_SPI:
-        txp = "LCD: HY28A SPI Mode";
-        break;
-    case DISPLAY_HY28B_SPI:
-        txp = "LCD: HY28B SPI Mode";
-        break;
-    default:
-        txp = "LCD: None Detected ";
-        // Yes, this is pointless, no display, no boot splash :-)
-    }
-
-    UiLcdHy28_PrintText(88,150,txp,Grey1,Black,0);
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_DISPLAY);
+    snprintf(tx,100,"LCD: %s",info_out);
+    UiLcdHy28_PrintTextCentered(0,150,320,tx,Grey1,Black,0);
 
     txp = ts.tp_present?"Touchscreen: Yes":"Touchscreen: No";
-    UiLcdHy28_PrintText(88,135,txp,Grey1,Black,0);
+    UiLcdHy28_PrintTextCentered(0,180,320,txp,Grey1,Black,0);
 
-    // Display startup frequency of Si570, By DF8OE, 201506
-    float suf = Si570_GetStartupFrequency();
-    int vorkomma = (int)(suf);
-    int nachkomma = (int) roundf((suf-vorkomma)*10000);
-
-    snprintf(tx,100,"SI570 startup frequency: %u.%04u MHz",vorkomma,nachkomma);
-    UiLcdHy28_PrintText(15, 165, tx, Grey1, Black, 0);
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_SI570);
+    snprintf(tx,100,"Si570: %s",info_out);
+    UiLcdHy28_PrintTextCentered(0, 165,320, tx, clr, Black, 0);
     //
 
     if(ts.ee_init_stat != FLASH_COMPLETE)        // Show error code if problem with EEPROM init
     {
         snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
-        UiLcdHy28_PrintText(60,180,tx,White,Black,0);
+        UiLcdHy28_PrintTextCentered(0,180,320,tx,White,Black,0);
     }
     else
     {
@@ -6986,18 +6955,18 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
         if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
         {
             txp = "SWR Bridge resistor mod NOT completed!";
-            UiLcdHy28_PrintText(8,180,txp,Red3,Black,0);
+            UiLcdHy28_PrintTextCentered(0,180,320,txp,Red3,Black,0);
         }
     }
 
     // Additional Attrib line 1
-    UiLcdHy28_PrintText(54,195,ATTRIB_STRING1,Grey1,Black,0);
+    UiLcdHy28_PrintTextCentered(0,195,320,ATTRIB_STRING1,Grey1,Black,0);
 
     // Additional Attrib line 2
-    UiLcdHy28_PrintText(42,210,ATTRIB_STRING2,Grey1,Black,0);
+    UiLcdHy28_PrintTextCentered(0,210,320,ATTRIB_STRING2,Grey1,Black,0);
 
     // Additional Attrib line 3
-    UiLcdHy28_PrintText(50,225,ATTRIB_STRING3,Grey1,Black,0);
+    UiLcdHy28_PrintTextCentered(0,225,320,ATTRIB_STRING3,Grey1,Black,0);
 
     // Backlight on
     UiLcdHy28_BacklightEnable(true);

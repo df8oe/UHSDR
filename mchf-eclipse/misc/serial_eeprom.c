@@ -74,91 +74,91 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
                 .size = 128,
                 .supported = false,
                 .pagesize = 8,
-                .name = "24xx01/128B"
+                .name = "24xx01"
         },
         // 8
         {
                 .size = 256,
                 .supported = false,
                 .pagesize = 8,
-                .name = "24xx02/256B"
+                .name = "24xx02"
         },
         // 9
         {
                 .size = 2*256,
                 .supported = false,
                 .pagesize = 16,
-                .name = "24xx04/512B"
+                .name = "24xx04"
         },
         // 10
         {
                 .size = 1*1024,
                 .supported = false,
                 .pagesize = 16,
-                .name = "24xx08/1K"
+                .name = "24xx08"
         },
         // 11
         {
                 .size = 2*1024,
                 .supported = false,
                 .pagesize = 16,
-                .name = "24xx16/2K"
+                .name = "24xx16"
         },
         // 12
         {
                 .size = 4*1024,
                 .supported = false,
                 .pagesize = 32,
-                .name = "24xx32/4K"
+                .name = "24xx32"
         },
         // 13
         {
                 .size = 8*1024,
                 .supported = false,
                 .pagesize = 32,
-                .name = "24xx64/8K"
+                .name = "24xx64"
         },
         // 14
         {
                 .size = 16*1024,
                 .supported = false,
                 .pagesize = 64,
-                .name = "24xx128/16K"
+                .name = "24xx128"
         },
         // 15
         {
                 .size = 32*1024,
                 .supported = true,
                 .pagesize = 64,
-                .name = "24xx256/32K"
+                .name = "24xx256"
         },
         // 16
         {
                 .size = 64*1024,
                 .supported = true,
                 .pagesize = 128,
-                .name = "24xx512/64K"
+                .name = "24xx512"
         },
         // 17
         {
                 .size = 128*1024,
                 .supported = true,
                 .pagesize = 128,
-                .name = "24xx1025/64K"
+                .name = "24xx1025"
         },
         // 18
         {
                 .size = 128 * 1024,
                 .supported = true,
                 .pagesize = 128,
-                .name = "24xx1026/128K"
+                .name = "24xx1026"
         },
         // 19
         {
                 .size = 256*1024,
                 .supported = true,
                 .pagesize = 256,
-                .name = "24CM02/256K"
+                .name = "24CM02"
         }
 
 };

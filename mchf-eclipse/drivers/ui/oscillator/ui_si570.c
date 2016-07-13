@@ -582,6 +582,7 @@ uchar Si570_ResetConfiguration()
 
     // Reset publics
     os.fxtal        = FACTORY_FXTAL;
+    os.present = false;
 
     res = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
     if(res != 0)
@@ -637,6 +638,7 @@ uchar Si570_ResetConfiguration()
     os.cur_config.hsdiv = hsdiv_curr;
     os.cur_config.fdco = Si570_GetFDCOForFreq(os.fout,n1_curr,hsdiv_curr);
 
+    os.present = true;
     return 0;
 }
 
