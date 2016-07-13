@@ -356,7 +356,7 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
             uint16_t ser_eeprom_sig = SerialEEPROM_24Cxx_Read(1,8);
 
             // all 8 bit (i.e. 256 or 128 Byte) EEPROMS are marked as "too small" during detection
-            if(ser_eeprom_sig == SER_EEPROM_IN_USE_TOO_SMALL && ser_eeprom_type_read > 6 && SERIAL_EEPROM_DESC_NUM && ser_eeprom_type_read < 9)
+            if(ser_eeprom_sig == SER_EEPROM_IN_USE_TOO_SMALL && ser_eeprom_type_read > 6 && ser_eeprom_type_read < 9)
             {
                 ser_eeprom_type = ser_eeprom_type_read;
             }

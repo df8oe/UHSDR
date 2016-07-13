@@ -1050,8 +1050,8 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
     }
     else	 	// Conversion is "below" on RX (LO needs to be set higher)
     {
-        arm_add_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.q_buffer, size/2);	// summation for I channel
-        arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.i_buffer, size/2);	// difference for Q channel
+        arm_add_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, size/2);	// summation for I channel
+        arm_sub_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, size/2);	// difference for Q channel
     }
 }
 
