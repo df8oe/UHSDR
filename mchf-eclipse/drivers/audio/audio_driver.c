@@ -1975,10 +1975,11 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
     }
 
-    // Apply gain corrections for I/Q amplitude correction
+    // Apply I/Q amplitude correction
     arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
     arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, size/2);
 
+    // Apply I/Q phase correction
     AudioDriver_IQPhaseAdjust(ts.dmod_mode, ts.txrx_mode,size);
 
     if(ts.iq_freq_mode)	 		// is receive frequency conversion to be done?
