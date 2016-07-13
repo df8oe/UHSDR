@@ -1850,7 +1850,7 @@ void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const
     char temp[5];
     uint32_t color = encoder_active?White:Grey;
 
-    snprintf(temp,5,"%2lu",value);
+    snprintf(temp,5," %2lu",value);
     UiDriverEncoderDisplay(column, row, label, encoder_active,
                            temp, color);
 }
@@ -5062,7 +5062,7 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 
     if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
     {
-        snprintf(temp,5,"%02d",ts.tx_comp_level);
+        snprintf(temp,5," %02d",ts.tx_comp_level);
         outs = temp;
     }
     else	 				// show "CUS" (Custom Value) for highest value
