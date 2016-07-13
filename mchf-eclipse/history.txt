@@ -13,6 +13,10 @@
 #########################################################################
 
 
+2016mmdd [DF8OE]
+
+
+
 20160713 [DF8OE]
 - minor changes in LCD init for parallel use
 - new ui for encoder boxes
