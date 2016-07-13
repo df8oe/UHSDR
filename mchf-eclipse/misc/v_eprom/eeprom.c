@@ -360,8 +360,7 @@ uint16_t Flash_UpdateVariable(uint16_t addr, uint16_t value)
 {
     uint16_t DataRead = 0;
     uint16_t Status = 0;
-    uint16_t VirtAddress = Flash_GetVirtAddrForId(addr);
-    Status = Flash_ReadVariable(VirtAddress,&DataRead);
+    Status = Flash_ReadVariable(addr,&DataRead);
     // the variable was found and the data content is  equal to the new value
     // -> no need to write it again
     if (Status == 0 && DataRead == value)
@@ -370,7 +369,7 @@ uint16_t Flash_UpdateVariable(uint16_t addr, uint16_t value)
     }
     else
     {
-        Status = Flash_WriteVariable(VirtAddress, value);
+        Status = Flash_WriteVariable(addr, value);
     }
     return Status;
 }

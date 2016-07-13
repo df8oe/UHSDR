@@ -1129,7 +1129,7 @@ typedef struct TransceiverState
     bool	mic_bias;				// TRUE = mic bias on
 
 #define EEPROM_SER_NONE 0
-
+#define EEPROM_SER_WRONG_SIG 1
     uchar	ser_eeprom_type;			// serial eeprom type
 
 #define SER_EEPROM_IN_USE_I2C         0x00
