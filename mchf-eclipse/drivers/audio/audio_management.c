@@ -397,8 +397,11 @@ void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
 
         if ((dmod_mode == DEMOD_USB || dmod_mode == DEMOD_LSB) && ts.tune_tone_mode == TUNE_TONE_TWO)
-        {
-            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
+        { // ARRL Standard is 700Hz and 1900Hz
+        	// so I temporarily changed this to SSB_TUNE_FREQ + 1200, DD4WH 2016_07_14
+        	// --> TWO_TONE = 750Hz and 1950Hz
+        	//            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+600):0.0;
+            tonefreq[1] = tune_mode?(SSB_TUNE_FREQ+1200):0.0;
         }
     }
 
