@@ -41,7 +41,8 @@
   signal in the mcHF which goes away after rebooting, you now can try to restart the I2S
   stream by tapping on the DSP box (if you have touch enabled) or by going into the Standard
   Menu and selecting "Restart I2S". No need to reboot.
-- qQuite a number of bug fixes to improve stability and fix some more or less annoying issues.
+- quite a number of bug fixes to improve stability and fix some more or less annoying issues.
+- bugfix translation +6khz/+12khz not working
 
 
 20160515 [DF8OE]
