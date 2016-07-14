@@ -1299,7 +1299,7 @@ bool UiMenu_DisplayMoveSlotsForward(int16_t change)
 bool init_done = false;
 
 static const char* display_types[] = {
-     " ",
+     "No Display",
      "HY28A SPI",
      "HY28B SPI",
      "HY28A/B Para."
