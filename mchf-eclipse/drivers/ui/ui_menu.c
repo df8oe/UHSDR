@@ -1392,7 +1392,8 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_BL_VERSION:
     {
-        uint32_t begin = 0x8000000;
+        const uint32_t begin = 0x8000000;
+        outs = "no DF8OE BL";
 
         for(int i=0; i < 32768; i++)
         {
@@ -1401,11 +1402,8 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
                     && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
             {
                 snprintf(out,32, "%s", (__IO char*)(begin+i+9));
+                outs = out;
             }
-        }
-        if(out[0] == 0)
-        {
-            outs = "no DF8OE BL";
         }
     }
     break;

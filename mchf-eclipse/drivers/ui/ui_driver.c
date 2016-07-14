@@ -931,7 +931,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
             }
         }
 
-        if(ts.sysclock-ts.last_tuning > 2 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
+        if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
             // Set frequency
             ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
@@ -7041,8 +7041,6 @@ void ui_driver_thread()
             UiDriverCheckFrequencyEncoder();
             UiDriver_KeyboardProcessOldClicks();
         }
-        // ok, done with it, wait for next change
-        last_sysclock_seen[SCTimer_ENCODER_KEYS] = now;
     }
 
     if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
