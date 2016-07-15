@@ -1385,7 +1385,12 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
          }
 
         const char* i2c_size_unit = "K";
-        uint i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
+        uint i2c_size = 0;
+        
+		if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < 20)
+		  {
+      	  i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
+		  }
 
         // in case we have no or very small eeprom (less than 1K)
         if (i2c_size == 0)
