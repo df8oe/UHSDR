@@ -1310,7 +1310,7 @@ static const char* display_types[] = {
  */
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 {
-    static char out[40];
+    static char out[48];
     const char* outs = NULL;
     *m_clr_ptr = White;
 
@@ -1398,7 +1398,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size;
             i2c_size_unit = "B";
         }
-        snprintf(out,32,"%x %s/%u%s%s",ts.ser_eeprom_type, SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
+        snprintf(out,48,"%x %s/%u%s%s",ts.ser_eeprom_type, SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
     }
     break;
     case INFO_BL_VERSION:
@@ -1426,7 +1426,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_BUILD:
     {
-        snprintf(out,32,"%s - %s",__DATE__,__TIME__);
+        outs  = __DATE__ " - " __TIME__;
     }
     break;
     default:
