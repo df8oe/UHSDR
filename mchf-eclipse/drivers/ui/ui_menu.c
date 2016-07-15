@@ -717,7 +717,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_RAM,"I08","RAM Size (kB)"},
     { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION,"I08","Firmware"},
     { MENU_SYSINFO, MENU_INFO, INFO_BUILD,"I08","Build"},
-    { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION,"I08","Bootloader"},
+    // { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION,"I08","Bootloader"},
     { MENU_SYSINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
     { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
     { MENU_SYSINFO, MENU_STOP, 0, "   " , NULL }
@@ -1310,7 +1310,7 @@ static const char* display_types[] = {
  */
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 {
-    static char out[32];
+    static char out[40];
     const char* outs = NULL;
     *m_clr_ptr = White;
 
@@ -1387,21 +1387,22 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size;
             i2c_size_unit = "B";
         }
-        snprintf(out,32,"%s/%u%s%s",SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
+        snprintf(out,32,"%x %s/%u%s%s",ts.ser_eeprom_type, SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
     }
     break;
     case INFO_BL_VERSION:
     {
-        const uint32_t begin = 0x8000000;
+        const uint8_t* begin = (uint8_t*)0x8000000;
         outs = "no DF8OE BL";
 
-        for(int i=0; i < 32768; i++)
+        // We search for string "Version: " in bootloader memory
+        for(int i=0; i < 32768-8; i++)
         {
-            if( *(__IO uint8_t*)(begin+i) == 0x56 && *(__IO uint8_t*)(begin+i+1) == 0x65 && *(__IO uint8_t*)(begin+i+2) == 0x72
-                    && *(__IO uint8_t*)(begin+i+3) == 0x73 && *(__IO uint8_t*)(begin+i+4) == 0x69 && *(__IO uint8_t*)(begin+i+5) == 0x6f
-                    && *(__IO uint8_t*)(begin+i+6) == 0x6e && *(__IO uint8_t*)(begin+i+7) == 0x3a && *(__IO uint8_t*)(begin+i+8) == 0x20)
+            if( begin[i] == 0x56 && begin[i+1] == 0x65 && begin[i+2] == 0x72
+                    && begin[i+3] == 0x73 && begin[i+4] == 0x69 && begin[i+5] == 0x6f
+                    && begin[i+6] == 0x6e && begin[i+7] == 0x3a && begin[i+8] == 0x20)
             {
-                snprintf(out,32, "%s", (__IO char*)(begin+i+9));
+                snprintf(out,32, "%s", &begin[i+9]);
                 outs = out;
             }
         }
