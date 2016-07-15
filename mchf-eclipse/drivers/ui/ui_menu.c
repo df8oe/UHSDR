@@ -1373,8 +1373,14 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
              break; // in use & ok
          case SER_EEPROM_IN_USE_ERROR: // not ok
              label = " [error]";
+             *m_clr_ptr = Red;
+             break;
          case SER_EEPROM_IN_USE_TOO_SMALL: // too small
              label = " [too small]";
+             *m_clr_ptr = Red;
+			 break;
+		 default:
+             label = " [error]";
              *m_clr_ptr = Red;
          }
 
