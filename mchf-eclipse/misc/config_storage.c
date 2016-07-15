@@ -132,6 +132,7 @@ void ConfigStorage_Init()
 
     if (ts.ser_eeprom_type != EEPROM_SER_NONE && ts.ser_eeprom_type != EEPROM_SER_WRONG_SIG)
     {
+        // we read the "in use" signature here
         ts.ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
         if(SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].supported == false)             // incompatible EEPROMs
         {

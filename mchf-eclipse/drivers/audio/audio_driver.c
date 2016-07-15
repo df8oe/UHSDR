@@ -2538,7 +2538,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         {
             softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size/2);      // generate tone/modulation for TUNE
             // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
-            audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
+            audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
         }
         else
         {
@@ -2557,7 +2557,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
                 // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
             	// Wouldn�t it be necessary to include IF conversion here? DD4WH June 16th, 2016
             	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
-                audio_tx_final_iq_processing(1.0, ts.cw_lsb, dst, size);
+                audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
             }
         }
     }
