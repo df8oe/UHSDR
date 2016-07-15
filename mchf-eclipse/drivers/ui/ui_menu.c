@@ -717,7 +717,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_RAM,"I08","RAM Size (kB)"},
     { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION,"I08","Firmware"},
     { MENU_SYSINFO, MENU_INFO, INFO_BUILD,"I08","Build"},
-    // { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION,"I08","Bootloader"},
+    { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION,"I08","Bootloader"},
     { MENU_SYSINFO, MENU_INFO, INFO_RFMOD,"I05","RF Bands Mod"},
     { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD,"I06","V/UHF Mod"},
     { MENU_SYSINFO, MENU_STOP, 0, "   " , NULL }

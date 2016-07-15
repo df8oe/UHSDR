@@ -98,17 +98,17 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define BIAS_OFFSET         25      // Offset value to be added to bias setting
 //  DA value = (OFFSET + (2*setting))  where DA value is 0-255
 //
-#define MIN_TX_IQ_GAIN_BALANCE  -99 // Minimum setting for TX IQ gain balance
-#define MAX_TX_IQ_GAIN_BALANCE  99  // Maximum setting for TX IQ gain balance
+#define MIN_TX_IQ_GAIN_BALANCE  -127 // Minimum setting for TX IQ gain balance
+#define MAX_TX_IQ_GAIN_BALANCE  127  // Maximum setting for TX IQ gain balance
 //
-#define MIN_RX_IQ_GAIN_BALANCE  -99 // Minimum setting for RX IQ gain balance
-#define MAX_RX_IQ_GAIN_BALANCE  99  // Maximum setting for RX IQ gain balance
+#define MIN_RX_IQ_GAIN_BALANCE  -127 // Minimum setting for RX IQ gain balance
+#define MAX_RX_IQ_GAIN_BALANCE  127  // Maximum setting for RX IQ gain balance
 //
-#define MIN_TX_IQ_PHASE_BALANCE -100 // Minimum setting for TX IQ phase balance
-#define MAX_TX_IQ_PHASE_BALANCE 100  // Maximum setting for TX IQ phase balance
+#define MIN_TX_IQ_PHASE_BALANCE -127 // Minimum setting for TX IQ phase balance
+#define MAX_TX_IQ_PHASE_BALANCE 127  // Maximum setting for TX IQ phase balance
 //
-#define MIN_RX_IQ_PHASE_BALANCE -100 // Minimum setting for RX IQ phase balance
-#define MAX_RX_IQ_PHASE_BALANCE 100  // Maximum setting for RX IQ phase balance
+#define MIN_RX_IQ_PHASE_BALANCE -127 // Minimum setting for RX IQ phase balance
+#define MAX_RX_IQ_PHASE_BALANCE 127  // Maximum setting for RX IQ phase balance
 //
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
 #define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)
