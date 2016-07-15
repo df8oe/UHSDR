@@ -39,7 +39,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
                 .size = 0,
                 .supported = false,
                 .pagesize = 0,
-                .name = "Not used"
+                .name = "Unknown Type"
         },
         // 3
         {
@@ -339,7 +339,7 @@ uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, uint8_t *buffer, uint16_t l
 
 uint8_t SerialEEPROM_24Cxx_Detect() {
 
-    uint8_t ser_eeprom_type = 0xFF;
+    uint8_t ser_eeprom_type = EEPROM_SER_UNKNOWN;
 
     // serial EEPROM init
     //  Write_24Cxx(0,0xFF,16);     //enable to reset EEPROM and force new copyvirt2ser
@@ -452,6 +452,11 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
                 }
             }
         }
+    }
+    // just to be save. Never ever deliver a type id outside the array boundaries.
+    if (ser_eeprom_type >= SERIAL_EEPROM_DESC_NUM)
+    {
+        ser_eeprom_type = EEPROM_SER_UNKNOWN;
     }
     return ser_eeprom_type;
 }
