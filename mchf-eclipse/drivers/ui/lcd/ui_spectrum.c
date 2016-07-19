@@ -1531,11 +1531,11 @@ void UiSpectrumReDrawWaterfall()
         switch (ts.iq_freq_mode) {
         case FREQ_IQ_CONV_P6KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*3/16;
-            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
+            magnify_offset = FFT_IQ_BUFF_LEN/16;
             break;
         case FREQ_IQ_CONV_M6KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*5/16;
-            magnify_offset = FFT_IQ_BUFF_LEN/16;
+            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
             break;
         case FREQ_IQ_CONV_P12KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*2/16;
