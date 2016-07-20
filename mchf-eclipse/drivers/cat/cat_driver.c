@@ -458,7 +458,7 @@ void CatDriverFT817CheckAndExecute()
                 bc = 1;
                 break;
             case 231: /* E7 */
-                resp[0] = 0x09; // S9 signal;
+                resp[0] = (uint8_t)round(sm.s_count*0.5);	//S-Meter signal
                 bc = 1;
                 break;
             case 247: /* F7 */
