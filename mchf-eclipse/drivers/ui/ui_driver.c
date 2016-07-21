@@ -677,8 +677,16 @@ void UiDriver_HandleTouchScreen()
         }
         if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
         {
+      		int i,j;
             sd.magnify = !sd.magnify;
             ts.menu_var_changed = 1;
+            for(i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)	// clear old wf lines if changing magnify
+          	  {
+          	  for(j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
+          		{
+          		sd.waterfall[i][j] = 0;
+          		}
+          	  }
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
         }
         if(check_tp_coordinates(43,60,00,04))			// TUNE button
