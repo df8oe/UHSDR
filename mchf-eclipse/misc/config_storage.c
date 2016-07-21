@@ -18,9 +18,6 @@
 
 static uint8_t config_ramcache[MAX_VAR_ADDR*2+2];
 
-static uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value);
-static uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value);
-static uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value);
 
 static void ConfigStorage_CheckSameContentSerialAndFlash(void);
 
@@ -32,11 +29,16 @@ static void ConfigStorage_CheckSameContentSerialAndFlash(void);
 // otherwise use virtual EEPROM
 uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value)
 {
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
-        return SerialEEPROM_ReadVariable(addr, value);
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
-        return(Flash_ReadVariable(addr, value));
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_RAMCACHE)
+    uint16_t retval;
+    switch(ts.ser_eeprom_in_use){
+    case SER_EEPROM_IN_USE_I2C:
+        retval = SerialEEPROM_ReadVariable(addr, value);
+        break;
+    case SER_EEPROM_IN_USE_NO:
+    case SER_EEPROM_IN_USE_TOO_SMALL:
+        retval = Flash_ReadVariable(addr, value);
+        break;
+    case SER_EEPROM_IN_USE_RAMCACHE:
     {
         uint8_t lowbyte;
         uint8_t highbyte;
@@ -46,8 +48,13 @@ uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value)
         lowbyte = config_ramcache[addr*2+1];
         data = lowbyte + (highbyte<<8);
         *value = data;
+        retval = 0;
+        break;
     }
-    return 0;
+    default:
+        retval = 0;
+    }
+    return retval;
 }
 
 //*----------------------------------------------------------------------------
@@ -77,50 +84,12 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
         uint8_t highbyte;
 
         lowbyte = (uint8_t)((0x00FF)&value);
-        value = value>>8;
-        highbyte = (uint8_t)((0x00FF)&value);
+        highbyte = (uint8_t)((0x00FF)&(value >> 8));
         config_ramcache[addr*2] = highbyte;
         config_ramcache[addr*2+1] = lowbyte;
         status = FLASH_COMPLETE;
     }
     return status;
-}
-
-//
-// Interface for serial EEPROM functions
-//
-static uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value)      // reference to serial EEPROM read function
-{
-    uint16_t data;
-
-    data = (uint16_t)(SerialEEPROM_24Cxx_Read(addr*2, ts.ser_eeprom_type)<<8);
-    data = data + (uint8_t)(SerialEEPROM_24Cxx_Read(addr*2+1, ts.ser_eeprom_type));
-    *value = data;
-
-    return 0;
-}
-
-static uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value)
-{
-        uint16_t value_read = 0;
-        uint16_t status = SerialEEPROM_ReadVariable(addr,&value_read);
-        if  (status != 0 || value_read != value ) {
-            SerialEEPROM_WriteVariable(addr,value);
-        }
-        return 0;
-}
-
-uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value)      // reference to serial EEPROM write function, writing unsigned 16 bit
-{
-    uint8_t lowbyte, highbyte;
-
-    lowbyte = (uint8_t)(value&(0x00FF));
-    highbyte = (uint8_t)((value&(0xFF00))>>8);
-
-    SerialEEPROM_24Cxx_Write(addr*2, highbyte, ts.ser_eeprom_type);
-    SerialEEPROM_24Cxx_Write(addr*2+1, lowbyte, ts.ser_eeprom_type);
-
-    return 0;
 }
 
 void ConfigStorage_Init()
@@ -130,20 +99,21 @@ void ConfigStorage_Init()
 
     ts.ser_eeprom_type = SerialEEPROM_24Cxx_Detect();
 
-    if (ts.ser_eeprom_type != EEPROM_SER_NONE && ts.ser_eeprom_type != EEPROM_SER_WRONG_SIG)
+    if (ts.ser_eeprom_type != EEPROM_SER_NONE && ts.ser_eeprom_type != EEPROM_SER_WRONG_SIG && ts.ser_eeprom_type != EEPROM_SER_UNKNOWN)
     {
-        // we read the "in use" signature here
-        ts.ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
         if(SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].supported == false)             // incompatible EEPROMs
         {
             ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_TOO_SMALL;         // serial EEPROM too small
         }
-        else {
+        else
+        {
+            // we read the "in use" signature here
+            ts.ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
             if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO) // empty EEPROM
             {
                 ConfigStorage_CopyFlash2Serial();               // copy data from virtual to serial EEPROM
                 ConfigStorage_CheckSameContentSerialAndFlash();             // just 4 debug purposes
-                SerialEEPROM_24Cxx_Write(1, 0, ts.ser_eeprom_type);      // serial EEPROM in use now
+                SerialEEPROM_24Cxx_Write(1, SER_EEPROM_IN_USE_I2C, ts.ser_eeprom_type);      // serial EEPROM in use now
             }
         }
     }
@@ -221,6 +191,8 @@ static void ConfigStorage_CheckSameContentSerialAndFlash(void)
         SerialEEPROM_ReadVariable(count, &data1);
         Flash_ReadVariable(count, &data2);
         if(data1 != data2)
+        {
             ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR; // mark data copy as faulty
+        }
     }
 }

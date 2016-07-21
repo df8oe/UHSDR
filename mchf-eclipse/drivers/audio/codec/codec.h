@@ -87,11 +87,11 @@
 
 //
 
-uint32_t Codec_Init(uint32_t AudioFreq,ulong word_size);
+uint32_t Codec_MCUInterfaceInit(uint32_t AudioFreq,ulong word_size);
 void 	 Codec_RX_TX(uint8_t mode);
 void 	 Codec_Volume(uchar vol, uint8_t txrx_mode);
 void 	Codec_Line_Gain_Adj(uchar gain);
-void 	 Codec_Mute(uchar state);
+void 	 Codec_Mute(bool state);
 
 void     Codec_AudioInterface_Init(uint32_t AudioFreq);
 void     Codec_Reset(uint32_t AudioFreq,ulong word_size);

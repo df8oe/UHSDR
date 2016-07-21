@@ -31,8 +31,8 @@ void PrintChar(char c)
        Transmit a char;
     */
 #ifdef DEBUG_BUILD
-    USART_SendData(DEBUG_COM, (uint8_t) c);
-    while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
+    // USART_SendData(DEBUG_COM, (uint8_t) c);
+    // while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
 #endif
 }
 
@@ -64,11 +64,11 @@ signed int PutChar(char *pStr, char c)
  * @param  pSource  Source string.
  * @return  The size of the written
  */
-signed int PutString(char *pStr, const char *pSource)
+signed int PutNString(char *pStr, size_t width, const char *pSource)
 {
     signed int num = 0;
 
-    while (*pSource != 0)
+    while (*pSource != 0 && num <  width)
     {
 
         *pStr++ = *pSource++;
@@ -320,18 +320,15 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
     /* Phase string */
     while (*pFormat != 0 && size < length)
     {
-
         /* Normal character */
         if (*pFormat != '%')
         {
-
             *pStr++ = *pFormat++;
             size++;
         }
         /* Escaped '%' */
         else if (*(pFormat+1) == '%')
         {
-
             *pStr++ = '%';
             pFormat += 2;
             size++;
@@ -339,12 +336,10 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
         /* Token delimiter */
         else
         {
-
             fill = ' ';
             signboth = false;
-            width = 0;
+            width = length - size;
             pFormat++;
-
 
             /* Parse sign */
             if (*pFormat == '+')
@@ -356,7 +351,6 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             /* Parse filler */
             if (*pFormat == '0')
             {
-
                 fill = '0';
                 pFormat++;
             }
@@ -364,7 +358,6 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             /* Parse width */
             while ((*pFormat >= '0') && (*pFormat <= '9'))
             {
-
                 width = (width*10) + *pFormat-'0';
                 pFormat++;
             }
@@ -372,7 +365,6 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             /* Check if there is enough space */
             if (size + width > length)
             {
-
                 width = length - size;
             }
             // we ignore an 'l' since l equal 32 bits aka int
@@ -387,21 +379,27 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             {
             case 'd':
             case 'i':
+                // max size increase width? then -> OK
                 num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int),signboth);
                 break;
             case 'u':
+                // max size increase width? then -> OK
                 num = PutUnsignedInt(pStr, fill, width, va_arg(ap, unsigned int),signboth);
                 break;
             case 'x':
+                // max size increase width? then -> OK
                 num = PutHexa(pStr, fill, width, 0, va_arg(ap, unsigned int));
                 break;
             case 'X':
+                // max size increase width? then -> OK
                 num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int));
                 break;
             case 's':
-                num = PutString(pStr, va_arg(ap, char *));
+                // copied character count never more than width
+                num = PutNString(pStr, width, va_arg(ap, char *));
                 break;
             case 'c':
+                // size increase 1 -> OK
                 num = PutChar(pStr, va_arg(ap, unsigned int));
                 break;
             default:
@@ -417,12 +415,10 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
     /* NULL-terminated (final \0 is not counted) */
     if (size < length)
     {
-
         *pStr = 0;
     }
     else
     {
-
         *(--pStr) = 0;
         size--;
     }

@@ -61,6 +61,10 @@ static void mchf_board_debug_init(void)
 {
 #ifdef DEBUG_BUILD
 
+#if 0
+    // disabled the USART since it is used by the touch screen code
+    // as well which renders it unusable
+    #error "Debug Build No Longer Supported, needs alternative way of communication"
     USART_InitTypeDef USART_InitStructure;
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -94,6 +98,7 @@ static void mchf_board_debug_init(void)
 
     // Wait tx ready
     while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
+#endif
 
 #endif
 }

@@ -275,7 +275,7 @@ void audio_driver_init(void)
     Audio_TXFilter_Init();
 
     // Codec init
-    Codec_Init(ts.samp_rate,word_size);
+    Codec_MCUInterfaceInit(ts.samp_rate,word_size);
 
     // Codec settle delay
     non_os_delay();

@@ -12,7 +12,6 @@
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-// 218b
 // Common
 #include "mchf_board.h"
 #include "audio_driver.h"
@@ -22,10 +21,6 @@
 #include "mchf_hw_i2c2.h"
 #include "codec.h"
 
-// Public Audio
-extern __IO		AudioDriverState	ads;
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : Codec_Init
 //* Object              :
@@ -34,7 +29,7 @@ extern __IO		AudioDriverState	ads;
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-uint32_t Codec_Init(uint32_t AudioFreq,ulong word_size)
+uint32_t Codec_MCUInterfaceInit(uint32_t AudioFreq,ulong word_size)
 {
     // Configure the Codec related IOs
     Codec_GPIO_Init();
@@ -349,13 +344,12 @@ void Codec_Volume(uchar vol, uint8_t txrx_mode)
 //* Function Name       : Codec_Mute
 //* Object              : new method of mute via soft mute of the DAC
 //* Object              :
-//* Input Parameters    : 0 = Unmuted  1 = Muted
+//* Input Parameters    : false = Unmuted  true = Muted
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void Codec_Mute(uchar state)
+void Codec_Mute(bool state)
 {
-//	ts.codec_mute_state = state;
     //
     // Reg 05: Digital Audio Path Control(all filters disabled)
     // De-emphasis control, bx11x - 48kHz
@@ -366,20 +360,13 @@ void Codec_Mute(uchar state)
     if(state)
     {
         Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR|0x08));	// mute
-//		ts.codec_was_muted = 1;
     }
     else
+    {
         Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR));		// mute off
+    }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : Codec_WriteRegister
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
 {
     uchar 	res;
@@ -388,16 +375,7 @@ uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
 
-
     res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, &Byte1, 1, Byte2);
-
-
-    if(res)
-    {
-#ifdef DEBUG_BUILD
-        printf("err codec i2c: %d\n\r",res);
-#endif
-    }
 
     return res;
 }
@@ -486,8 +464,6 @@ void Codec_Line_Gain_Adj(uchar gain)
     l_gain |= 0x100;	// set MSB of control word for "LRINBOTH" flag
     //
     Codec_WriteRegister(W8731_LEFT_LINE_IN,l_gain);
-
-
 }
 
 bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)

@@ -4207,7 +4207,7 @@ static void UiDriverTimeScheduler()
 
         ts.dsp_inhibit = 0;                 // allow DSP to function
         unmute_flag = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
-        Codec_Mute(0);                      // make sure that audio is un-muted
+        Codec_Mute(false);                      // make sure that audio is un-muted
 
 
         if((ts.version_number_major != TRX4M_VER_MAJOR) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))        // Yes - check for new version
@@ -6009,7 +6009,7 @@ static void UiDriver_PowerDownCleanup(void)
 
     UiSpectrumClearDisplay();   // clear display under spectrum scope
 
-    Codec_Mute(1);  // mute audio when powering down
+    Codec_Mute(true);  // mute audio when powering down
 
     txp = "                           ";
     UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
