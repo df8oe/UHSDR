@@ -305,7 +305,7 @@ signed int PutHexa(
 signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
 {
     char          fill;
-    unsigned char width;
+    unsigned char width, limit;
     bool 		  signboth = false;
     signed int    num = 0;
     signed int    size = 0;
@@ -338,7 +338,8 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
         {
             fill = ' ';
             signboth = false;
-            width = length - size;
+            width = 0;
+            limit = length - size;
             pFormat++;
 
             /* Parse sign */
@@ -396,7 +397,7 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
                 break;
             case 's':
                 // copied character count never more than width
-                num = PutNString(pStr, width, va_arg(ap, char *));
+                num = PutNString(pStr, limit, va_arg(ap, char *));
                 break;
             case 'c':
                 // size increase 1 -> OK
