@@ -1629,7 +1629,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             // did it change?
             if(ts.dsp_active & DSP_NR_ENABLE)	// only change if DSP active
             {
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
             }
         }
         //
@@ -3669,7 +3669,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(tchange)	 	// did something change?
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
         }
         if(!(ts.dsp_active & DSP_NR_ENABLE))	// mark orange if DSP NR not active
             clr = Orange;
@@ -3690,7 +3690,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(tchange)	 	// did something change?
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
         }
 
         if(!(ts.dsp_active & DSP_NR_ENABLE))	// mark orange if DSP NR not active
@@ -3718,7 +3718,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
             {
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
             }
         }
         break;
@@ -3733,7 +3733,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if Notch DSP is active
             {
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if Notch DSP not active
@@ -3758,7 +3758,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if DSP Notch active
             {
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if DSP Notch not active
@@ -3784,7 +3784,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if DSP NR active
             {
-                audio_driver_set_rx_audio_filter();
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if DSP NR not active

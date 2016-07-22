@@ -621,7 +621,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 
         ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
         ts.reset_dsp_nr = 1;               // reset DSP NR coefficients
-        audio_driver_set_rx_audio_filter();        // update DSP/filter settings
+        audio_driver_set_rx_audio_filter(ts.dmod_mode);        // update DSP/filter settings
         ts.reset_dsp_nr = 0;
         // UiDriver_DisplayDSPMode(false);         // update on-screen display
         UiDriverChangeEncoderTwoMode(true);         // DSP control is mapped to column 2
@@ -1371,16 +1371,25 @@ void RadioManagement_SetBandPowerFactor(uchar band)
 void RadioManagement_SetDemodMode(uint32_t new_mode)
 {
 
+
+    ts.dsp_inhibit++;
+    ads.af_disabled++;
+
+
+    audio_driver_set_rx_audio_filter(new_mode);
+    Audio_TXFilter_Init(new_mode);
+    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
+
+
     // Finally update public flag
     ts.dmod_mode = new_mode;
 
-    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
-
-    Audio_TXFilter_Init();
     AudioManagement_CalcRxIqGainAdj();
     AudioManagement_CalcTxIqGainAdj();
 
-    audio_driver_set_rx_audio_filter();
+    if  (ads.af_disabled) { ads.af_disabled--; }
+    if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
+
 }
 
 
@@ -2090,7 +2099,7 @@ static void UiDriverProcessKeyboard()
                             ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
                         }
                     }
-                    audio_driver_set_rx_audio_filter();	// update DSP settings
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);	// update DSP settings
                     UiDriverChangeEncoderTwoMode(true);
                 }
                 break;
@@ -4134,7 +4143,7 @@ static void UiDriverTimeScheduler()
             if((ads.dsp_zero_count > DSP_ZERO_COUNT_ERROR) || (dsp_crash_count > DSP_CRASH_COUNT_THRESHOLD))        // is "zero" output count OR high level count exceeding threshold?
             {
                 ts.reset_dsp_nr = 1;              // yes - DSP has likely crashed:  Set flag to reset DSP NR coefficients
-                audio_driver_set_rx_audio_filter();   // update DSP settings
+                audio_driver_set_rx_audio_filter(ts.dmod_mode);   // update DSP settings
                 ts.reset_dsp_nr = 0;              // clear "reset NR coefficients" flag
                 dsp_crash_count = 0;              // clear crash count flag
             }
@@ -4329,8 +4338,6 @@ static void UiDriverChangeBand(uchar is_up)
 
     uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
-    //printf("-----------> change band\n\r");
-
     // Do not allow band change during TX
     if(ts.txrx_mode != TRX_MODE_TX)
     {
@@ -4432,16 +4439,6 @@ static void UiDriverChangeBand(uchar is_up)
             df.tune_new = new_band_freq; 					// Load new frequency from startup
         }
 
-        // Change decode mode if need to
-        if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
-        {
-            // Update mode
-            ts.dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
-
-            // Update Decode Mode (USB/LSB/AM/FM/CW)
-            UiDriverShowMode();
-        }
-
 
         // Create Band value
         UiDriver_DisplayBand(new_band_index);
@@ -4451,6 +4448,13 @@ static void UiDriverChangeBand(uchar is_up)
 
         // Set filters
         RadioManagement_ChangeBandFilter(new_band_index);
+
+        // Change decode mode if need to
+        if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
+        {
+            // Update mode
+            UiDriverSetDemodMode(vfo[vfo_sel].band[new_band_index].decod_mode);
+        }
 
         // Finally update public flag
         ts.band = new_band_index;
@@ -4729,7 +4733,7 @@ static void UiDriverCheckEncoderTwo()
                     if (is_dsp_nr())        // only allow adjustment if DSP NR is active
                     {
                         ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step,0,DSP_NR_STRENGTH_MAX);
-                        audio_driver_set_rx_audio_filter();
+                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
                     }
                     // Signal processor setting
                     UiDriver_DisplayDSPMode(1);
@@ -4755,21 +4759,21 @@ static void UiDriverCheckEncoderTwo()
                         }
                         // display notch frequency
                         // set notch filter instance
-                        audio_driver_set_rx_audio_filter();
+                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
                         UiDriver_DisplayDSPMode(1);
                     }
                     break;
                 case ENC_TWO_MODE_BASS_GAIN:
                     ts.bass_gain = change_and_limit_int(ts.bass_gain,pot_diff_step,MIN_BASS,MAX_BASS);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter();
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
                     // display bass gain
                     UiDriver_DisplayTone(true);
                     break;
                 case ENC_TWO_MODE_TREBLE_GAIN:
                     ts.treble_gain = change_and_limit_int(ts.treble_gain,pot_diff_step,MIN_TREBLE,MAX_TREBLE);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter();
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
                     // display treble gain
                     UiDriver_DisplayTone(true);
                     break;
@@ -4793,7 +4797,7 @@ static void UiDriverCheckEncoderTwo()
                             ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
                         }
                         // set notch filter instance
-                        audio_driver_set_rx_audio_filter();
+                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
                         // display peak frequency
                         UiDriver_DisplayDSPMode(1);
                     }

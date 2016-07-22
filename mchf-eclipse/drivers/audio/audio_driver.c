@@ -272,7 +272,7 @@ void audio_driver_init(void)
     ads.tx_filter_adjusting = 0;	// used to disable TX I/Q filter during adjustment
     // Audio init
     Audio_Init();
-    Audio_TXFilter_Init();
+    Audio_TXFilter_Init(ts.dmod_mode);
 
     // Codec init
     Codec_MCUInterfaceInit(ts.samp_rate,word_size);
@@ -309,17 +309,14 @@ void audio_driver_init(void)
 //	not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
 //  This information is from recommendations by online references for using ARM math/DSP functions
 //
-void audio_driver_set_rx_audio_filter(void)
+
+void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
 {
     uint32_t	i;
     float	mu_calc;
-    bool	dsp_inhibit_temp;
 
-    // Lock - temporarily disable filter
-
-    dsp_inhibit_temp = ts.dsp_inhibit;
-    ts.dsp_inhibit = 1;	// disable DSP while doing adjustment
-    ads.af_disabled = 1;
+    ts.dsp_inhibit++;
+    ads.af_disabled++;
 
     // make sure we have a proper filter path for the given mode
 
@@ -328,7 +325,7 @@ void audio_driver_set_rx_audio_filter(void)
     // I.e. setting the ts.filter_path anywere else in the code is useless. You have to call AudioFilter_NextApplicableFilterPath in order to
     // select a new filter path as this sets the last used/selected memory for a demod mode.
 
-    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+    ts.filter_path = AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE|PATH_LAST_USED_IN_MODE,AudioFilter_GetFilterModeFromDemodMode(dmod_mode),ts.filter_path);
 
     if (FilterPathInfo[ts.filter_path].pre_instance != NULL)
     {
@@ -782,7 +779,7 @@ void audio_driver_set_rx_audio_filter(void)
         INTERPOLATE_RX.pCoeffs = NULL;
     }
 
-    if(ts.dmod_mode == DEMOD_FM)
+    if(dmod_mode == DEMOD_FM)
     {
         ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;
     }
@@ -821,12 +818,12 @@ void audio_driver_set_rx_audio_filter(void)
     //
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
     //
-    // Unlock - re-enable filtering
-    //
-   ads.af_disabled = 0;
-   ts.dsp_inhibit = dsp_inhibit_temp;
-    //
     AudioFilter_InitRxHilbertFIR(); // this switches the Hilbert/FIR-filters
+
+    // Unlock - re-enable filtering
+    if  (ads.af_disabled) { ads.af_disabled--; }
+    if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
+
 }
 //
 
@@ -841,7 +838,7 @@ void audio_driver_set_rx_audio_filter(void)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void Audio_TXFilter_Init(void)
+void Audio_TXFilter_Init(uint8_t dmod_mode)
 {
     uint32_t	i;
 
@@ -849,7 +846,7 @@ void Audio_TXFilter_Init(void)
     // Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
     //
     //
-    if(ts.dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
+    if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
         IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
         IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
@@ -886,11 +883,11 @@ static void Audio_Init(void)
 
     //
     if((ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN) || (ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX))
+    {
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
-    //
-    // -------------------
+    }
     // Init RX audio filters
-    audio_driver_set_rx_audio_filter();
+    audio_driver_set_rx_audio_filter(ts.dmod_mode);
 }
 //
 //
