@@ -555,10 +555,12 @@ int main(void)
 	UiInitRxParms();
 
 	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
-	Codec_Mute(0);					// make sure codec is un-muted
+	Codec_Mute(false);					// make sure codec is un-muted
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
+    {
         cat_driver_init();
+    }
 
     // Transceiver main loop
     for(;;)

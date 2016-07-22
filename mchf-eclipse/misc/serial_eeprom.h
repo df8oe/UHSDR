@@ -36,5 +36,8 @@ uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
 uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t, uint8_t*, uint16_t, uint8_t);
 uint8_t  SerialEEPROM_24Cxx_Detect();
 
+uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value);
+uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value);
+uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value);
 
 #endif
