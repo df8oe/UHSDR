@@ -450,18 +450,18 @@ void CatDriverFT817CheckAndExecute()
                 bc = 4;
                 break;
             case 188: /* BC Write EEPROM */
+                resp[0] = 0;
+                bc = 1;
+                break;
+            case 189: /* BD Read TX Status */
                if(ts.tx_disable||(ts.txrx_mode != TRX_MODE_TX))
 		 {
-                 resp[0] =0x00;
+                 resp[0] = 0;
 		 }
                else
 		 {
                  resp[0] =((uint8_t)round(swrm.fwd_pwr)<<4)+(uint8_t)round(swrm.vswr_dampened);
 		 }
-                bc = 1;
-                break;
-            case 189: /* BD Read TX Status */
-                resp[0] = 0;
                 bc = 1;
                 break;
             case 231: /* E7 */
