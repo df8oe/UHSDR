@@ -47,6 +47,7 @@
 //
 #include "cat_driver.h"
 
+#include "TestCPlusPlusInterface.h"
 // ----------------------------------------------------
 // Create a time reference incremented by 1 mS and 10mS
 //__IO uint32_t LocalTime_1MS  = 0;
@@ -513,6 +514,9 @@ int main(void)
 
 //	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
 
+#ifdef TESTCPLUSPLUS
+    test_call_cpp();
+#endif
 
     // HW init
     mchf_board_init();
