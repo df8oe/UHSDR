@@ -8,7 +8,7 @@
 #define I_BLOCK_SIZE		1
 #define I_NUM_TAPS			89
 #define I_TX_BLOCK_SIZE		1
-#define I_TX_NUM_TAPS			89
+#define I_TX_NUM_TAPS		89
 #define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
 #define Q_TX_BLOCK_SIZE		1
@@ -72,7 +72,7 @@ extern const float q_tx_coeffs_plus[Q_NUM_TAPS];
 
 extern const arm_iir_lattice_instance_f32 IIR_1k4_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_1k4_BPF;
-extern const arm_iir_lattice_instance_f32 IIR_1k4_SSTV;
+//extern const arm_iir_lattice_instance_f32 IIR_1k4_SSTV;
 extern const arm_iir_lattice_instance_f32 IIR_1k6_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_1k6_BPF;
 extern const arm_iir_lattice_instance_f32 IIR_1k8_1k425;
@@ -99,7 +99,8 @@ extern const arm_iir_lattice_instance_f32 IIR_2k7_BPF;
 extern const arm_iir_lattice_instance_f32 IIR_2k9_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_2k9_BPF;
 extern const arm_iir_lattice_instance_f32 IIR_TX_2k7;
-extern const arm_iir_lattice_instance_f32 IIR_TX_2k7;
+extern const arm_iir_lattice_instance_f32 IIR_TX_WIDE_BASS;
+extern const arm_iir_lattice_instance_f32 IIR_TX_WIDE_TREBLE;
 extern const arm_iir_lattice_instance_f32 IIR_TX_2k7_FM;
 extern const arm_iir_lattice_instance_f32 IIR_3k2_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_3k2_BPF;

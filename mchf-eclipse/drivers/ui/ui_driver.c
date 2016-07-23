@@ -4777,20 +4777,7 @@ static void UiDriverCheckEncoderTwo()
                     // display treble gain
                     UiDriver_DisplayTone(true);
                     break;
-                case ENC_TWO_MODE_TX_BASS_GAIN:
-                    ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
-                    // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
-                    // display bass gain
-                    UiDriver_DisplayTone(true);
-                    break;
-                case ENC_TWO_MODE_TX_TREBLE_GAIN:
-                    ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
-                    // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
-                    // display treble gain
-                    UiDriver_DisplayTone(true);
-                    break;
+
                 case ENC_TWO_MODE_PEAK_F:
                     if (is_dsp_mpeak())   // peak f is only adjustable when peak is enabled
                     {
@@ -4815,6 +4802,29 @@ static void UiDriverCheckEncoderTwo()
                         // display peak frequency
                         UiDriver_DisplayDSPMode(1);
                     }
+                    break;
+                default:
+                    break;
+                }
+            }
+            else { // in TX case only bass & treble gain can be adjusted with encoder TWO
+
+                // Take appropriate action
+                switch(ts.enc_two_mode)
+                {
+                case ENC_TWO_MODE_TX_BASS_GAIN:
+                    ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
+                    // set filter instance
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    // display bass gain
+                    UiDriver_DisplayTone(true);
+                    break;
+                case ENC_TWO_MODE_TX_TREBLE_GAIN:
+                    ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
+                    // set filter instance
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    // display treble gain
+                    UiDriver_DisplayTone(true);
                     break;
                 default:
                     break;

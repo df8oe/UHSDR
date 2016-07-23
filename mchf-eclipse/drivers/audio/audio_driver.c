@@ -951,16 +951,16 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
     	if(ts.tx_filter == TX_FILTER_WIDE_BASS)
-    	{ // FIXME: insert real coeffs here!
-            IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-            IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-            IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+    	{
+            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
     	}
     	else if (ts.tx_filter == TX_FILTER_WIDE_TREBLE)
-    	{// FIXME: insert real coeffs here!
-            IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-            IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-            IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+    	{
+            IIR_TXFilter.numStages = IIR_TX_WIDE_TREBLE.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;	// point to ladder coefficients
     	}
     	else
     	{
