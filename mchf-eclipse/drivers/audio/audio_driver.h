@@ -193,6 +193,11 @@ typedef struct SMeter
 #define MIN_BASS 			-20
 #define MAX_TREBLE 			20
 #define MIN_TREBLE			-20
+#define MAX_TX_BASS		 	5
+#define MIN_TX_BASS			-20
+#define MAX_TX_TREBLE 		5
+#define MIN_TX_TREBLE		-20
+
 #define MIN_PEAK_NOTCH_FREQ 200
 //
 // AGC Time constants

@@ -4777,6 +4777,20 @@ static void UiDriverCheckEncoderTwo()
                     // display treble gain
                     UiDriver_DisplayTone(true);
                     break;
+                case ENC_TWO_MODE_TX_BASS_GAIN:
+                    ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
+                    // set filter instance
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    // display bass gain
+                    UiDriver_DisplayTone(true);
+                    break;
+                case ENC_TWO_MODE_TX_TREBLE_GAIN:
+                    ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
+                    // set filter instance
+                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    // display treble gain
+                    UiDriver_DisplayTone(true);
+                    break;
                 case ENC_TWO_MODE_PEAK_F:
                     if (is_dsp_mpeak())   // peak f is only adjustable when peak is enabled
                     {
@@ -5420,15 +5434,28 @@ static void UiDriver_DisplayTone(bool encoder_active)
 
     bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
     char temp[5];
-    snprintf(temp,5,"%3d", ts.bass_gain);
-
+    if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
+    {
+    	snprintf(temp,5,"%3d", ts.tx_bass_gain);
+    }
+    else
+    {
+        snprintf(temp,5,"%3d", ts.bass_gain);
+    }
     // use 2,1 for placement below existing boxes
     UiDriverEncoderDisplay(0,1,"BAS", enable && encoder_active, temp, White);
 
 
-    enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
+    enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_TREBLE_GAIN);
 
-    snprintf(temp,5,"%3d", ts.treble_gain);
+    if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
+    {
+    	snprintf(temp,5,"%3d", ts.tx_treble_gain);
+    }
+    else
+    {
+        snprintf(temp,5,"%3d", ts.treble_gain);
+    }
 
     // use 2,2 for placement below existing boxes
     UiDriverEncoderDisplay(1,1,"TRB", enable && encoder_active, temp, White);
