@@ -1254,7 +1254,8 @@ void CriticalError(ulong error);
 bool is_vfo_b();
 
 inline bool is_ssb_tx_filter_enabled() {
-    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
+	return (ts.tx_filter != 0);
+	//    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
 }
 
 #define STM32_DBGMCU_IDCODE        0xE0042000

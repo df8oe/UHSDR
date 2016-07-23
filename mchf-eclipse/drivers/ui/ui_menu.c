@@ -699,7 +699,7 @@ const MenuDescriptor filterGroup[] =
     { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4"  },
 
     { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE,"330","AM  TX Audio Filter"},
-    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
+//    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
 	{ MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER,"332","SSB TX Audio Filter2"},
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
@@ -3829,7 +3829,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Orange;					// warn user that filter is off!
         }
         break;
-    case CONFIG_SSB_TX_FILTER_DISABLE:	// Enable/disable SSB TX audio filter
+/*    case CONFIG_SSB_TX_FILTER_DISABLE:	// Enable/disable SSB TX audio filter
         temp_var = ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE;
         tchange = UiDriverMenuItemChangeDisableOnOff(var, mode, &temp_var,0,options,&clr);
         if(tchange)		 	// did the status change and is translate mode NOT active?
@@ -3848,6 +3848,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Red;					// warn user that filter is off!
         }
         break;
+*/
     case CONFIG_SSB_TX_FILTER:	// Type of SSB TX audio filter
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_filter,
                                               0,
@@ -3857,8 +3858,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                              );
         switch(ts.tx_filter) {
         case TX_FILTER_NONE:
-            txt_ptr = "       NONE";
-            clr = Red;
+            txt_ptr = "        OFF";
+            clr = Orange;
             break;
         case TX_FILTER_NARROW:
             txt_ptr = "     NARROW";
