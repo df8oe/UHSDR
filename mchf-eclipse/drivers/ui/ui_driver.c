@@ -1597,37 +1597,34 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level)
 
 
 
+static const int BAND_DOWN = 0;
+static const int BAND_UP = 1;
+
 void UiDriver_HandleBandButtons(uint16_t button)
 {
-    uint8_t normal,swapped;
-    bool btemp;
+
+	bool buttondirSwap = (ts.flags1 & FLAGS1_SWAP_BAND_BTN)?true:false;
+    uint8_t dir;
+
+
     if (button == BUTTON_BNDM)
     {
-        normal = 0;
-        swapped = 1;
+        dir = buttondirSwap ? BAND_UP : BAND_DOWN;
     }
     else
     {
-        normal = 1;
-        swapped = 0;
+    	dir = buttondirSwap ? BAND_DOWN : BAND_UP;
     }
 
-    btemp = ads.af_disabled;
-    ads.af_disabled = 0;
-    //
+    // TODO: Make proper timed inhibit function out of this code
+    // AudioDriver_timed_dsp_inibit(DSP_BAND_CHANGE_DELAY) or something like this
     ts.dsp_timed_mute = 1;		// disable DSP when changing bands
     ts.dsp_inhibit = 1;
     ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
     //
-    if(ts.flags1 & FLAGS1_SWAP_BAND_BTN)		// band up/down button swapped?
-        UiDriverChangeBand(swapped);	// yes - go up
-    else
-        UiDriverChangeBand(normal);	// not swapped, go down
-    //
-    UiInitRxParms();	// re-init because mode/filter may have changed
 
-    ads.af_disabled =  btemp;
 
+    UiDriverChangeBand(dir);
 }
 
 
@@ -2284,8 +2281,6 @@ void UiInitRxParms()
 
     // Init / Functional changes to operation in RX path
     RadioManagement_CalculateCWSidebandMode();
-    // I do not think we need the TX adjustments in RX ?! DD4WH
-    // not sure, I leave them here
 
     RadioManagement_SetDemodMode(ts.dmod_mode);
 
@@ -2305,7 +2300,9 @@ void UiInitRxParms()
     UiDriver_RefreshEncoderDisplay();
 
     if(ts.menu_mode)    // are we in menu mode?
+    {
         UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
+    }
 
 }
 //
@@ -4334,8 +4331,6 @@ static void UiDriverChangeBand(uchar is_up)
     ulong 	curr_band_index;	// index in band table of currently selected band
     ulong	new_band_index;		// index of the new selected band
 
-    ulong 	new_band_freq;		// new dial frequency
-
     uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
     // Do not allow band change during TX
@@ -4349,8 +4344,6 @@ static void UiDriverChangeBand(uchar is_up)
 
         curr_band_index = ts.band;
 
-        //printf("current index: %d and freq: %d\n\r",curr_band_index,tune_bands[ts.band]);
-
         // Save old band values
         if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
         {
@@ -4359,15 +4352,15 @@ static void UiDriverChangeBand(uchar is_up)
             vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
         }
         else
+        {
             ts.cat_band_index = 255;
+        }
 
         // Handle direction
         if(is_up)
         {
             if(curr_band_index < (MAX_BANDS - 1))
             {
-                //printf("going up band\n\r");
-
                 // Increase
                 new_band_index = curr_band_index + 1;
                 if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
@@ -4425,7 +4418,7 @@ static void UiDriverChangeBand(uchar is_up)
                 new_band_index = MAX_BANDS-1;
             }
         }
-        new_band_freq  = bandInfo[curr_band_index].tune;
+
 
         // TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
         // Load frequency value - either from memory or default for
@@ -4436,12 +4429,9 @@ static void UiDriverChangeBand(uchar is_up)
         }
         else
         {
-            df.tune_new = new_band_freq; 					// Load new frequency from startup
+            df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
         }
 
-
-        // Create Band value
-        UiDriver_DisplayBand(new_band_index);
 
         // Set TX power factor
         RadioManagement_SetBandPowerFactor(new_band_index);
@@ -4449,18 +4439,19 @@ static void UiDriverChangeBand(uchar is_up)
         // Set filters
         RadioManagement_ChangeBandFilter(new_band_index);
 
-        // Change decode mode if need to
         if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
         {
             // Update mode
-            UiDriverSetDemodMode(vfo[vfo_sel].band[new_band_index].decod_mode);
+            RadioManagement_SetDemodMode(vfo[vfo_sel].band[new_band_index].decod_mode);
         }
+
+        // Create Band value
+        UiDriver_DisplayBand(new_band_index);
 
         // Finally update public flag
         ts.band = new_band_index;
 
-        UiDriver_FrequencyUpdateLOandDisplay(false);
-
+        UiInitRxParms();    // re-init because mode/filter may have changed
     }
 }
 
