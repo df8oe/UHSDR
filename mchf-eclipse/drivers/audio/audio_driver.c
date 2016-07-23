@@ -2460,8 +2460,6 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
 {
     int16_t i;
 
-//    AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
-
     // ------------------------
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
@@ -2551,7 +2549,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             }
             else
             {
-                // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
+                // apply I/Q amplitude & phase adjustments
             	// Wouldn�t it be necessary to include IF conversion here? DD4WH June 16th, 2016
             	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
                 audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
@@ -2596,6 +2594,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             }
 
             // Apply gain if not in TUNE mode
+            // this is the LINE GAIN!
             arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);	// apply gain
             //
             arm_max_f32((float32_t *)ads.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
@@ -2655,7 +2654,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             audio_rx_freq_conv(size, swap);
         }
         //
-        // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
+        // apply I/Q amplitude & phase adjustments
         audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, size);
     }
     // -----------------------------

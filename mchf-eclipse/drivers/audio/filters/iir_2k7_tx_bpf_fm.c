@@ -16,7 +16,7 @@
 //
 // Filter designed 20151024 by C. Turner, KA7OEI using MatLAB fdatools
 //
-// This filter is deigned for FM voice transmission, removing low-frequency audio
+// This filter is designed for FM voice transmission, removing low-frequency audio
 //
 // NOTE:
 //	- IIR structure is Lattice Autoregressive Moving-Average (ARMA)
