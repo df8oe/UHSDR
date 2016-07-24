@@ -604,6 +604,8 @@ typedef enum {
     ENC_TWO_MODE_PEAK_F,
     ENC_TWO_MODE_BASS_GAIN,
     ENC_TWO_MODE_TREBLE_GAIN,
+    ENC_TWO_MODE_TX_BASS_GAIN,
+    ENC_TWO_MODE_TX_TREBLE_GAIN,
     ENC_TWO_NUM_MODES
 } EncoderTwoModes;
 //
@@ -1157,11 +1159,20 @@ typedef struct TransceiverState
     ulong	peak_frequency;			// frequency of the manual peak filter
     int		bass_gain;				// gain of the low shelf EQ filter
     int		treble_gain;			// gain of the high shelf EQ filter
+    int		tx_bass_gain;			// gain of the TX low shelf EQ filter
+    int		tx_treble_gain;			// gain of the TX high shelf EQ filter
+
     bool	AM_experiment;			// for AM demodulation experiments, not for "public" use
 //    bool	dBm_Hz_Test;			// for testing only
     ulong	dBm_count;				// timer for calculating RX dBm
     uchar 	display_dbm;			// display dbm or dbm/Hz or OFF
     uchar	s_meter;				// defines S-Meter style/configuration
+
+    #define TX_FILTER_NONE			0
+    #define TX_FILTER_NARROW		1
+    #define TX_FILTER_WIDE_BASS		2
+    #define TX_FILTER_WIDE_TREBLE	3
+    uchar	tx_filter;				// which TX filter has been chosen?
 
     uint8_t display_type;           // existence/identification of display type
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
@@ -1243,7 +1254,8 @@ void CriticalError(ulong error);
 bool is_vfo_b();
 
 inline bool is_ssb_tx_filter_enabled() {
-    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
+	return (ts.tx_filter != 0);
+	//    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
 }
 
 #define STM32_DBGMCU_IDCODE        0xE0042000

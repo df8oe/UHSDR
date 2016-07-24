@@ -507,7 +507,6 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE,"042","FM Sub Tone Det"},
     { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE,"043","FM Tone Burst"},
-//    { MENU_BASE, MENU_ITEM, MENU_FM_RX_BANDWIDTH,"044","FM RX Bandwidth"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE,"045","FM Deviation"},
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE,"050","AGC Mode"},
     { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain"},
@@ -700,7 +699,8 @@ const MenuDescriptor filterGroup[] =
     { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4"  },
 
     { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE,"330","AM  TX Audio Filter"},
-    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
+//    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter"},
+	{ MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER,"332","SSB TX Audio Filter2"},
     { MENU_FILTER, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -3829,7 +3829,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Orange;					// warn user that filter is off!
         }
         break;
-    case CONFIG_SSB_TX_FILTER_DISABLE:	// Enable/disable SSB TX audio filter
+/*    case CONFIG_SSB_TX_FILTER_DISABLE:	// Enable/disable SSB TX audio filter
         temp_var = ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE;
         tchange = UiDriverMenuItemChangeDisableOnOff(var, mode, &temp_var,0,options,&clr);
         if(tchange)		 	// did the status change and is translate mode NOT active?
@@ -3848,7 +3848,39 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Red;					// warn user that filter is off!
         }
         break;
-    case CONFIG_TUNE_TONE_MODE: // set power for antenne tuning
+*/
+    case CONFIG_SSB_TX_FILTER:	// Type of SSB TX audio filter
+        tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_filter,
+                                              0,
+                                              TX_FILTER_WIDE_TREBLE,
+                                              TX_FILTER_NARROW,
+                                              1
+                                             );
+        switch(ts.tx_filter) {
+        case TX_FILTER_NONE:
+            txt_ptr = "        OFF";
+            clr = Orange;
+            break;
+        case TX_FILTER_NARROW:
+            txt_ptr = "     NARROW";
+            break;
+        case TX_FILTER_WIDE_BASS:
+            txt_ptr = "  WIDE BASS";
+            break;
+        case TX_FILTER_WIDE_TREBLE:
+            txt_ptr = "WIDE TREBLE";
+            break;
+        }
+        if(tchange)
+        {
+            // switch FIR Hilberts
+        	AudioFilter_InitTxHilbertFIR();
+        	// switch IIR Filters
+        	Audio_TXFilter_Init(ts.dmod_mode);
+        }
+    	break;
+
+        case CONFIG_TUNE_TONE_MODE: // set power for antenne tuning
         temp_var = ts.menu_var_changed;
         // this is not save, so no need to mark as dirty,
         // we just remember the state and restore it

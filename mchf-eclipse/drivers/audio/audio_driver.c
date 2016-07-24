@@ -91,7 +91,7 @@ static arm_iir_lattice_instance_f32	IIR_PreFilter;
 static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 
-// variables for RX manual notch IIR filter
+// variables for RX manual notch, manual peak & bass shelf IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
 {
     .numStages = 3,
@@ -106,7 +106,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
     } // 3 x 4 = 12 state variables
 };
 
-// variables for RX manual notch IIR filter
+// variables for RX treble shelf IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
 {
     .numStages = 1,
@@ -121,6 +121,20 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
     } // 1 x 4 = 4 state variables
 };
 
+// variables for TX bass & treble adjustment IIR biquad filter
+static arm_biquad_casd_df1_inst_f32 IIR_TX_biquad =
+{
+    .numStages = 2,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+        1,0,0,0,0,  1,0,0,0,0
+    }, // 2 x 5 = 10 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0
+    } // 2 x 4 = 8 state variables
+};
 
 // variables for FM squelch IIR filters
 static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -629,6 +643,94 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     	IIR_biquad_2.pCoeffs[4] = 0;
     	}
     */
+
+    // insert coefficient calculation for TX bass & treble adjustment here!
+    // the TX treble filter is in IIR_TX_biquad and works at 48000ksps
+    f0 = 1700;
+    FS = 48000;
+    w0 = 2 * PI * f0 / FS;
+    A = powf(10.0,(ts.tx_treble_gain/40.0)); // gain ranges from -20 to 5
+    S = 0.9; // shelf slope, 1 is maximum value
+    alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+    cosw0 = cos(w0);
+    twoAa = 2 * sqrt(A) * alpha;
+    // highShelf
+    //
+    b0 = A * 		( (A + 1) + (A - 1) * cosw0 + twoAa );
+    b1 = - 2 * A * 	( (A - 1) + (A + 1) * cosw0 		);
+    b2 = A * 		( (A + 1) + (A - 1) * cosw0 - twoAa );
+    a0 = 	 		  (A + 1) - (A - 1) * cosw0 + twoAa ;
+    a1 = - 2 * 		( (A - 1) - (A + 1) * cosw0 		); // already negated!
+    a2 = twoAa 		- (A + 1) + (A - 1) * cosw0; // already negated!
+
+    // scaling the coefficients for gain
+    b0 = b0/a0;
+    b1 = b1/a0;
+    b2 = b2/a0;
+    a1 = a1/a0;
+    a2 = a2/a0;
+
+//    DCgain = 3; //
+    DCgain = 2; //
+    b0 = b0 / DCgain;
+    b1 = b1 / DCgain;
+    b2 = b2 / DCgain;
+
+    IIR_TX_biquad.pCoeffs[0] = b0;
+    IIR_TX_biquad.pCoeffs[1] = b1;
+    IIR_TX_biquad.pCoeffs[2] = b2;
+    IIR_TX_biquad.pCoeffs[3] = a1;
+    IIR_TX_biquad.pCoeffs[4] = a2;
+
+    // the TX bass filter is in TX_biquad and works at 48000 sample rate
+    //
+    // Bass
+    // lowShelf
+    //
+    FS = 48000;
+    f0 = 300;
+    w0 = 2 * PI * f0 / FSdec;
+    A = powf(10.0,(ts.tx_bass_gain/40.0)); // gain ranges from -20 to 5
+    S = 0.7; // shelf slope, 1 is maximum value
+    alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+    cosw0 = cos(w0);
+    twoAa = 2 * sqrt(A) * alpha;
+
+    // lowShelf
+    b0 = A * 		( (A + 1) - (A - 1) * cosw0 + twoAa );
+    b1 = 2 * A * 	( (A - 1) - (A + 1) * cosw0 		);
+    b2 = A * 		( (A + 1) - (A - 1) * cosw0 - twoAa );
+    a0 = 	 		  (A + 1) + (A - 1) * cosw0 + twoAa ;
+    a1 = 2 *  		( (A - 1) + (A + 1) * cosw0 		); // already negated!
+    a2 = twoAa 		- (A + 1) - (A - 1) * cosw0; // already negated!
+
+    // scaling the coefficients for gain
+    b0 = b0/a0;
+    b1 = b1/a0;
+    b2 = b2/a0;
+    a1 = a1/a0;
+    a2 = a2/a0;
+
+    // scaling the feedforward coefficients for gain adjustment !
+    // "DC gain of an IIR filter is the sum of the filters� feedforward coeffs divided by
+    // 1 minus the sum of the filters� feedback coeffs" (Lyons 2011)
+    //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
+    // does not work for some reason?
+    // I take a divide by a constant instead !
+//    float32_t DCgain = 3; //
+    DCgain = 2; //
+    b0 = b0 / DCgain;
+    b1 = b1 / DCgain;
+    b2 = b2 / DCgain;
+
+    IIR_TX_biquad.pCoeffs[5] = b0;
+    IIR_TX_biquad.pCoeffs[6] = b1;
+    IIR_TX_biquad.pCoeffs[7] = b2;
+    IIR_TX_biquad.pCoeffs[8] = a1;
+    IIR_TX_biquad.pCoeffs[9] = a2;
+
+
+
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -848,10 +950,25 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     //
     if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
-        IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-        IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-        IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
-    }
+    	if(ts.tx_filter == TX_FILTER_WIDE_BASS)
+    	{
+            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
+    	}
+    	else if (ts.tx_filter == TX_FILTER_WIDE_TREBLE)
+    	{
+            IIR_TXFilter.numStages = IIR_TX_WIDE_TREBLE.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;	// point to ladder coefficients
+    	}
+    	else
+    	{
+    		IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
+    		IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
+    		IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+    	}
+   	}
     else	 	// This is FM - use a filter with "better" lows and highs more appropriate for FM
     {
         IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
@@ -2616,6 +2733,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             {
                 arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);
             }
+            // biquad filter for bass & treble
+        	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, size/2);
+
         }
         //
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
