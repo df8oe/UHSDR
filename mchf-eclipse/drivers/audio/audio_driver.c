@@ -234,6 +234,7 @@ void audio_driver_init(void)
     cw_gen_init();
 
     // Audio filter disabled
+    ts.dsp_inhibit = 1;
     ads.af_disabled = 1;
 
     // Reset S meter public
@@ -301,12 +302,14 @@ void audio_driver_init(void)
     I2S_Block_Process((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
     Codec_Reset(ts.samp_rate,word_size);
-    // Audio filter enabled
-    ads.af_disabled = 0;
 
     // initialize FFT structure used for snap carrier
 //	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
     arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
+
+    // Audio filter enabled
+     ads.af_disabled = 0;
+     ts.dsp_inhibit = 0;
 
 }
 

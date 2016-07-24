@@ -35,12 +35,14 @@ endif
 CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 
 # compilation options
-CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb  \
+MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
+CFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall -std=gnu99  \
+          -ffunction-sections -O2 -Wall \
           $(EXTRACFLAGS)
 
-LDFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
+
+LDFLAGS := $(MACHFLAGS)
 
 LIBS :=  	-lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
@@ -219,6 +221,8 @@ SRC =  \
     usb/usbh/core/src/usbh_ioreq.c  \
     usb/usbh/core/src/usbh_stdreq.c  \
 
+SRCCXX = \
+    misc/TestCPlusPlusBuild.cxx  \
 
 # ------------- nothing to change below this line ---------------------- 
 
@@ -226,10 +230,12 @@ INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
 
 ifdef SystemRoot  # WINxx
     CC = arm-none-eabi-gcc
+    CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
     OS = arm-none-eabi-size
 else
     CC = @${PREFIX}/bin/arm-none-eabi-gcc
+    CXX = @${PREFIX}/bin/arm-none-eabi-g++
     OC = @${PREFIX}/bin/arm-none-eabi-objcopy
     OS = @${PREFIX}/bin/arm-none-eabi-size
 endif
@@ -249,10 +255,14 @@ endif
 # how to compile individual object files
 OBJS :=
 OBJS += $(SRC:.c=.o)
-
+OBJS += $(SRCCXX:.cxx=.o)
 .c.o:
 	$(ECHO) "  [CC] $@"
-	$(CC) $(CFLAGS) -c ${INC_DIRS} $< -o $@
+	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+
+%.o: %.cxx
+	$(ECHO) "  [CXX] $@"
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
 # ---------------------------------------------------------
 #  BUILT-IN HELP
@@ -280,7 +290,7 @@ all:  $(LPRJ).elf $(PRJ).bin
 # compilation
 $(LPRJ).elf:  $(OBJS) $(SRC)
 	$(ECHO) "  [LD] $@"
-	$(CC) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin:  $(LPRJ).elf
 	$(ECHO) "  [OBJC] $@"
