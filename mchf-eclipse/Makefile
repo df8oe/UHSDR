@@ -222,7 +222,7 @@ SRC =  \
     usb/usbh/core/src/usbh_stdreq.c  \
 
 SRCCXX = \
-    misc/TestCPlusPlusBuild.cxx  \
+    misc/TestCPlusPlusBuild.cpp  \
 
 # ------------- nothing to change below this line ---------------------- 
 
@@ -255,12 +255,16 @@ endif
 # how to compile individual object files
 OBJS :=
 OBJS += $(SRC:.c=.o)
-OBJS += $(SRCCXX:.cxx=.o)
+OBJS += $(SRCCXX:.cpp=.o)
 .c.o:
 	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 
 %.o: %.cxx
+	$(ECHO) "  [CXX] $@"
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+
+%.o: %.cpp
 	$(ECHO) "  [CXX] $@"
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
