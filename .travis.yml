@@ -1,9 +1,8 @@
 sudo: required
 language: generic
-os: debian
-dist: jessie
+dist: wily
 install:
-    - sudo apt-get install -t jessie-backports -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    - sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
 script:
     - cd mchf-eclipse
     - make all
