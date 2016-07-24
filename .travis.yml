@@ -1,6 +1,6 @@
 sudo: required
 language: generic
-dist: trusty
+dist: jessie
 install:
     - sudo add-apt-repository "deb http://ftp.debian.org/debian jessie-backports main"
     - sudo apt-get -qq update
@@ -19,11 +19,6 @@ deploy:
   skip_cleanup: true
   api_key:
     secure: "SECURE TOKEN MISSING"
-  file:
-    - mchf.bin
-    - docs.tar.gz
-    - bootloader/src/bootloader.dfu
-    - bootloader/src/bootloader.bin
   on:
     repo: df8oe/mchf-github
     tags: true
