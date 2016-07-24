@@ -151,6 +151,9 @@ typedef struct AudioDriverState
     float					fm_goertzel_ctr_r;
     //
     ulong					fm_goertzel_size;
+
+    float32_t               iq_phase_balance;
+
     //
 //	float					Osc_Cos;
 //	float					Osc_Sin;
@@ -161,6 +164,8 @@ typedef struct AudioDriverState
 //	float					Osc_Gain;
 
 } AudioDriverState;
+
+void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq);
 
 //
 // FFT will work with quadrature signals
