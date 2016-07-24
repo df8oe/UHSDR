@@ -1,8 +1,8 @@
 sudo: required
 language: generic
-dist: xenial
+dist: trusty
 install:
-    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu xenial universe"
+    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu wily universe"
     - sudo apt-get -qq update
     - sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 script:
