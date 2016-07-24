@@ -1,6 +1,6 @@
 sudo: required
 language: generic
-dist: jessie
+dist: trusty
 install:
     - sudo add-apt-repository "deb http://ftp.debian.org/debian jessie-backports main"
     - sudo apt-get -qq update
