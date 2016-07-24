@@ -2,6 +2,7 @@ sudo: required
 language: generic
 dist: trusty
 install:
+	- uname -a
     - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu wily universe"
     - sudo apt-get -qq update
     - sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
