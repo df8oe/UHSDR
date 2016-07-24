@@ -4,7 +4,7 @@ dist: trusty
 install:
     - sudo add-apt-repository "deb http://ftp.debian.org/debian jessie-backports main"
     - sudo apt-get -qq update
-    - sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    - sudo apt-get install -y --force-yes gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 script:
     - cd mchf-eclipse
     - make all
