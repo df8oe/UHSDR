@@ -40,10 +40,12 @@ typedef struct FilterCoeffs
     uint16_t    rx_i_num_taps;
     uint32_t    rx_i_block_size;
     //
-    float   tx_filt_q[128];
+    //    float   tx_filt_q[128];
+    float   tx_filt_q[201];
     uint16_t    tx_q_num_taps;
     uint32_t    tx_q_block_size;
-    float   tx_filt_i[128];
+    //    float   tx_filt_i[128];
+    float   tx_filt_i[201];
     uint16_t    tx_i_num_taps;
     uint32_t    tx_i_block_size;
 } FilterCoeffs;
