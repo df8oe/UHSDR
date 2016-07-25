@@ -1185,6 +1185,8 @@ typedef struct TransceiverState
 	TuneToneMode tune_tone_mode;
 
 	uint16_t ramsize; // in KB, this is used to distinguish  between 192 and 256 kB models.
+
+	uint8_t debug_tx_audio; // send tx audio via usb back to pc if value != 0;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

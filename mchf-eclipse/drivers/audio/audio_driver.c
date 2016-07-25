@@ -1981,6 +1981,10 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int 
     }
 }
 
+static uint16_t modulus = 0;
+// used to divide usb audio out sample rate, set to 0 for 48khz, do not change
+
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -1994,7 +1998,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
 
     static ulong 		i, beep_idx = 0, beep_accum = 0;
-    static uint16_t modulus = 0;
+
     //
     int16_t				psize;		// processing size, with decimation
     //
@@ -2002,15 +2006,14 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
 
-#define DEBUGNB
-#ifdef DEBUGNB
-    for(i = 0; i < size/2; i++)
+    if (ts.tx_audio_source == TX_AUDIO_DIGIQ)
     {
-        //
-        // 16 bit format - convert to float and increment
-        // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-        if (ts.tx_audio_source == TX_AUDIO_DIGIQ)
+
+        for(i = 0; i < size/2; i++)
         {
+            //
+            // 16 bit format - convert to float and increment
+            // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
             {
                 audio_in_put_buffer(src[2*i]);
@@ -2018,7 +2021,6 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
             }
         }
     }
-#endif
     //
     audio_rx_noise_blanker(src, size);		// do noise blanker function
     //
@@ -3055,6 +3057,40 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
             audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, size);
         }
+
+    }
+    if (ts.debug_tx_audio == true)
+    {
+
+        if (true || ts.tx_audio_source == TX_AUDIO_DIGIQ)
+        {
+
+            for(i = 0; i < size/2; i++)
+            {
+                //
+                // 16 bit format - convert to float and increment
+                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
+                {
+                    audio_in_put_buffer(dst[2*i+1]);
+                    audio_in_put_buffer(dst[2*i]);
+                }
+            }
+        }
+        else
+        {
+            for(i = 0; i < size/2; i++)
+            {
+                //
+                // 16 bit format - convert to float and increment
+                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
+                {
+                    audio_in_put_buffer(ads.a_buffer[i]);
+                    audio_in_put_buffer(ads.a_buffer[i]);
+                }
+            }
+        }
     }
 }
 //
@@ -3189,6 +3225,8 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             *dst++ = (int16_t)ads.i_buffer[i];	// save right channel
         }
     }
+
+
     return;
 }
 
