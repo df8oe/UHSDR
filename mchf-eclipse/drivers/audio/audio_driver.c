@@ -961,15 +961,21 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     	}
     	else if (ts.tx_filter == TX_FILTER_WIDE_TREBLE)
     	{
-            IIR_TXFilter.numStages = IIR_TX_WIDE_TREBLE.numStages;		// number of stages
-            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;	// point to reflection coefficients
-            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;	// point to ladder coefficients
+            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
+//            IIR_TXFilter.numStages = IIR_TX_WIDE_TREBLE.numStages;		// number of stages
+  //          IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;	// point to reflection coefficients
+    //        IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;	// point to ladder coefficients
     	}
     	else
     	{
-    		IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-    		IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-    		IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
+            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
+            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
+//    		IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
+//    		IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
+  //  		IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
     	}
    	}
     else	 	// This is FM - use a filter with "better" lows and highs more appropriate for FM
