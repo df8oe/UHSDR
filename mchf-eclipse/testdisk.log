@@ -1,0 +1,156 @@
+
+
+Sun Jul 24 14:46:11 2016
+Command line: TestDisk
+
+TestDisk 6.14, Data Recovery Utility, July 2013
+Christophe GRENIER <grenier@cgsecurity.org>
+http://www.cgsecurity.org
+OS: Linux, kernel 3.16.0-4-amd64 (#1 SMP Debian 3.16.7-ckt25-2+deb8u3 (2016-07-02)) x86_64
+Compiler: GCC 4.9
+Compilation date: 2014-10-19T15:33:13
+ext2fs lib: 1.42.12, ntfs lib: libntfs-3g, reiserfs lib: none, ewf lib: none
+/dev/sda: LBA, HPA, LBA48, DCO support
+/dev/sda: size       976771055 sectors
+/dev/sda: user_max   976771055 sectors
+/dev/sda: native_max 976773168 sectors
+/dev/sda: dco        976773168 sectors
+/dev/sdb: LBA, HPA, LBA48, DCO support
+/dev/sdb: size       976773168 sectors
+/dev/sdb: user_max   976773168 sectors
+/dev/sdb: native_max 976773168 sectors
+/dev/sdb: dco        976773168 sectors
+Warning: can't get size for Disk /dev/mapper/control - 0 B - 1 sectors, sector size=512
+Warning: can't get size for Disk /dev/md - 0 B - 1 sectors (RO), sector size=512
+Hard disk list
+Disk /dev/sda - 500 GB / 465 GiB - CHS 60801 255 63, sector size=512 - Hitachi HDS721050CLA360, S/N:JP1532FR31YY1K, FW:JP2OA50E
+Disk /dev/sdb - 500 GB / 465 GiB - CHS 60801 255 63, sector size=512 - Hitachi HDS721050CLA362, S/N:JPB530HN2SSLTB, FW:JP2OA39C
+Disk /dev/sdg - 63 GB / 59 GiB - CHS 60500 64 32, sector size=512 - Intenso Rainbow Line, FW:8.07
+Disk /dev/md124 - 40 GB / 37 GiB - CHS 9767248 2 4, sector size=512
+Disk /dev/md126 - 10001 MB / 9538 MiB - CHS 2441856 2 4, sector size=512
+Disk /dev/md127 - 450 GB / 419 GiB - CHS 109886592 2 4, sector size=512
+
+Partition table type (auto): Intel
+Disk /dev/sdg - 63 GB / 59 GiB - Intenso Rainbow Line
+Partition table type: Intel
+
+Interface Advanced
+Geometry from i386 MBR: head=255 sector=63
+FAT32 at 0/0/2
+Info: size boot_sector 2043903, partition 2043903
+FAT1 : 52-1049
+FAT2 : 1050-2047
+start_rootdir : 33424 root cluster : 1963
+Data : 2048-2043887
+sectors : 2043903
+cluster_size : 16
+no_of_cluster : 127615 (2 - 127616)
+fat_length 998 calculated 998
+FAT differs, FAT sectors=0-16/998
+BAD_RS LBA=2043904 261978
+check_part_i386 failed for partition type 83
+get_geometry_from_list_part_aux head=64 nbr=2
+get_geometry_from_list_part_aux head=8 nbr=2
+get_geometry_from_list_part_aux head=16 nbr=2
+get_geometry_from_list_part_aux head=32 nbr=2
+get_geometry_from_list_part_aux head=64 nbr=2
+get_geometry_from_list_part_aux head=128 nbr=2
+ 1 * FAT32 LBA                0   0  2   997  63 32    2043903 [I-MEDIA1]
+     FAT32, blocksize=8192, 1046 MB / 997 MiB
+ 2 P Linux                  998   0  1 30399  63 32   60215296
+
+FAT: cluster=1963(0x7ab), pos=33425
+FAT: cluster=1964(0x7ac), pos=33441
+FAT: cluster=1965(0x7ad), pos=33457
+FAT: cluster=1966(0x7ae), pos=33473
+FAT: cluster=1967(0x7af), pos=33489
+FAT: cluster=1968(0x7b0), pos=33505
+FAT: cluster=1969(0x7b1), pos=33521
+FAT: cluster=1970(0x7b2), pos=33537
+FAT: cluster=1971(0x7b3), pos=33553
+FAT: cluster=1972(0x7b4), pos=33569
+FAT: cluster=1973(0x7b5), pos=33585
+FAT: cluster=1974(0x7b6), pos=33601
+FAT: cluster=1975(0x7b7), pos=33617
+FAT: cluster=1976(0x7b8), pos=33633
+FAT: cluster=1977(0x7b9), pos=33649
+FAT: cluster=1978(0x7ba), pos=33665
+FAT: cluster=1979(0x7bb), pos=33681
+FAT: cluster=1980(0x7bc), pos=33697
+FAT: cluster=1981(0x7bd), pos=33713
+FAT: cluster=1982(0x7be), pos=33729
+FAT: cluster=1983(0x7bf), pos=33745
+FAT: cluster=1984(0x7c0), pos=33761
+FAT: cluster=1985(0x7c1), pos=33777
+FAT: cluster=1986(0x7c2), pos=33793
+FAT: cluster=1987(0x7c3), pos=33809
+FAT: cluster=1988(0x7c4), pos=33825
+FAT: cluster=1989(0x7c5), pos=33841
+FAT: cluster=1990(0x7c6), pos=33857
+FAT: cluster=1991(0x7c7), pos=33873
+FAT: cluster=1992(0x7c8), pos=33889
+Directory /
+    1965 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 boot
+    1993 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 bootdisk
+    1999 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 bootprog
+    2003 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 efi
+      12 drwxr-xr-x     0      0         0 16-Jan-2016 17:15 install
+    2027 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 ntpasswd
+   17140 -rwxr-xr-x     0      0      2349 16-Jan-2016 16:42 readme.txt
+   17142 -rwxr-xr-x     0      0 352092160 16-Jan-2016 16:42 sysrcd.dat
+   60122 -rwxr-xr-x     0      0        45 16-Jan-2016 16:42 sysrcd.md5
+    2033 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 usb_inst
+   60676 -rwxr-xr-x     0      0     15918 16-Jan-2016 16:42 usb_inst.sh
+   60678 -rwxr-xr-x     0      0       877 16-Jan-2016 16:42 usbstick.htm
+   60680 -rwxr-xr-x     0      0         6 16-Jan-2016 16:42 version
+    2019 drwxr-xr-x     0      0         0 16-Jan-2016 16:49 syslinux
+FAT: cluster=12(0xc), pos=2209
+FAT: cluster=12(0xc), pos=2209
+Directory /install
+FAT: cluster=1963(0x7ab), pos=33425
+FAT: cluster=1964(0x7ac), pos=33441
+FAT: cluster=1965(0x7ad), pos=33457
+FAT: cluster=1966(0x7ae), pos=33473
+FAT: cluster=1967(0x7af), pos=33489
+FAT: cluster=1968(0x7b0), pos=33505
+FAT: cluster=1969(0x7b1), pos=33521
+FAT: cluster=1970(0x7b2), pos=33537
+FAT: cluster=1971(0x7b3), pos=33553
+FAT: cluster=1972(0x7b4), pos=33569
+FAT: cluster=1973(0x7b5), pos=33585
+FAT: cluster=1974(0x7b6), pos=33601
+FAT: cluster=1975(0x7b7), pos=33617
+FAT: cluster=1976(0x7b8), pos=33633
+FAT: cluster=1977(0x7b9), pos=33649
+FAT: cluster=1978(0x7ba), pos=33665
+FAT: cluster=1979(0x7bb), pos=33681
+FAT: cluster=1980(0x7bc), pos=33697
+FAT: cluster=1981(0x7bd), pos=33713
+FAT: cluster=1982(0x7be), pos=33729
+FAT: cluster=1983(0x7bf), pos=33745
+FAT: cluster=1984(0x7c0), pos=33761
+FAT: cluster=1985(0x7c1), pos=33777
+FAT: cluster=1986(0x7c2), pos=33793
+FAT: cluster=1987(0x7c3), pos=33809
+FAT: cluster=1988(0x7c4), pos=33825
+FAT: cluster=1989(0x7c5), pos=33841
+FAT: cluster=1990(0x7c6), pos=33857
+FAT: cluster=1991(0x7c7), pos=33873
+FAT: cluster=1992(0x7c8), pos=33889
+Directory /
+    1965 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 boot
+    1993 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 bootdisk
+    1999 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 bootprog
+    2003 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 efi
+      12 drwxr-xr-x     0      0         0 16-Jan-2016 17:15 install
+    2027 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 ntpasswd
+   17140 -rwxr-xr-x     0      0      2349 16-Jan-2016 16:42 readme.txt
+   17142 -rwxr-xr-x     0      0 352092160 16-Jan-2016 16:42 sysrcd.dat
+   60122 -rwxr-xr-x     0      0        45 16-Jan-2016 16:42 sysrcd.md5
+    2033 drwxr-xr-x     0      0         0 16-Jan-2016 16:42 usb_inst
+   60676 -rwxr-xr-x     0      0     15918 16-Jan-2016 16:42 usb_inst.sh
+   60678 -rwxr-xr-x     0      0       877 16-Jan-2016 16:42 usbstick.htm
+   60680 -rwxr-xr-x     0      0         6 16-Jan-2016 16:42 version
+    2019 drwxr-xr-x     0      0         0 16-Jan-2016 16:49 syslinux
+
+TestDisk exited normally.

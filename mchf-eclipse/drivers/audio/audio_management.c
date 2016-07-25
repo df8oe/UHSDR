@@ -148,10 +148,10 @@ void AudioManagement_CalcRxIqGainAdj(void)
     switch(ts.dmod_mode)
     {
     case DEMOD_FM:
-        ts.rx_adj_gain_var_i = (float)ts.rx_iq_fm_gain_balance;         // get current gain adjustment for FM
+        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_fm_gain_balance;         // get current gain adjustment for FM
     	break;
     case DEMOD_AM:
-        ts.rx_adj_gain_var_i = (float)ts.rx_iq_am_gain_balance;         // get current gain adjustment for AM
+        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_am_gain_balance;         // get current gain adjustment for AM
         break;
     case DEMOD_LSB:
         ts.rx_adj_gain_var_i = -(float)ts.rx_iq_lsb_gain_balance;        // get current gain adjustment setting for LSB
@@ -185,9 +185,9 @@ void AudioManagement_CalcTxIqGainAdj(void)
 	// please note that the RX adjustments for gain are negative (in function AudioManagement_CalcRxIqGainAdj)
 	// and the adjustments for TX are positive
     if(ts.dmod_mode == DEMOD_AM)    // is it AM mode?
-        ts.tx_adj_gain_var_i = (float)ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
+        ts.tx_adj_gain_var_i = -(float)ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
     else if(ts.dmod_mode == DEMOD_FM)   // is it in FM mode?
-        ts.tx_adj_gain_var_i = (float)ts.tx_iq_fm_gain_balance;     // get current gain balance adjustment setting for FM
+        ts.tx_adj_gain_var_i = -(float)ts.tx_iq_fm_gain_balance;     // get current gain balance adjustment setting for FM
     else if(ts.dmod_mode == DEMOD_LSB)
         ts.tx_adj_gain_var_i = (float)ts.tx_iq_lsb_gain_balance;        // get current gain balance adjustment setting for LSB
     else
