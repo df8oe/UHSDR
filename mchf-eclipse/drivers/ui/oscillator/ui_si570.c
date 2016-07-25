@@ -437,36 +437,17 @@ static Si570_ResultCodes Si570_ChangeFrequency(float new_freq, uchar test)
     return retval;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_set_frequency
-//* Object              :
-//* Input Parameters    : freq = 32 bit frequency in HZ, temp_factor = temperature calibration factor ref to 14.000 MHz, test: 0= set freq, 1= calculate, but do not change freq
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void Si570_ConvExternalTemp(uchar *temp, int *dtemp)
+static int32_t Si570_ConvExternalTemp(uint8_t *temp)
 {
-    ushort  ts;
-    int     t = 0, d = 0;
+    int32_t  ts = 0;
 
-    if(dtemp == NULL)
-        return;
+    ts = temp[1];
 
-    ts = *temp << 8;
-    temp++;
-    ts |= *temp;
+    ts += (int8_t)temp[0] << 8;
+    ts *= 10000;
+    ts /= 256;
 
-    // Full part
-    t = (ts >> 8) & 0xFF;
-
-    // Decimal part
-    if(ts & 0x80) d += 5000;
-    if(ts & 0x40) d += 2500;
-    if(ts & 0x20) d += 1250;
-    if(ts & 0x10) d += 625;
-
-    // Return int temperature (sign ok after this ?)
-    *dtemp = (t * 10000) + d;
+    return ts;
 }
 
 
@@ -711,23 +692,21 @@ uchar Si570_InitExternalTempSensor()
 
 
 
-uchar Si570_ReadExternalTempSensor(int *temp)
+uchar Si570_ReadExternalTempSensor(int32_t *temp)
 {
-    uchar	res;
-    uchar	data[10];
-
-    if(data == NULL)
-        return 1;
+    uint8_t	data[2];
+    uint8_t retval = 0;
 
     // Read temperature
-    res = mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2);
-    if(res != 0)
-        return 2;
-
-    // Convert to decimal
-    Si570_ConvExternalTemp(data, temp);
-
-    return 0;
+    if(temp != NULL && mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2) == 0)
+    {
+        *temp = Si570_ConvExternalTemp(data);
+    }
+    else
+    {
+        retval = 2;
+    }
+    return retval;
 }
 
 
