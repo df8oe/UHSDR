@@ -1940,7 +1940,7 @@ static void AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, fl
     arm_add_f32((float32_t *)dst, e3_buffer, (float32_t *)dst, size);
 }
 
-static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int size)
+void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq)
 {
     //
     // the phase adjustment is done by mixing a little bit of I into Q or vice versa
@@ -1964,13 +1964,20 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int 
         iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:0;
         break;
     }
-    if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
+    ads.iq_phase_balance = ((float32_t)(iq_phase_balance))/SCALING_FACTOR_IQ_PHASE_ADJUST;
+}
+
+static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int size)
+{
+    AudioDriver_CalcIQPhaseAdjust(dmod_mode, txrx_mode, ts.tune_freq);
+
+    if (ads.iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
-        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, (float32_t)(iq_phase_balance)/SCALING_FACTOR_IQ_PHASE_ADJUST, size/2);
+        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, ads.iq_phase_balance, size/2);
     }
-    else if (iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
+    else if (ads.iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
     {
-        AudioDriver_Mix(ads.q_buffer,ads.i_buffer, (float32_t)(iq_phase_balance)/SCALING_FACTOR_IQ_PHASE_ADJUST, size/2);
+        AudioDriver_Mix(ads.q_buffer,ads.i_buffer, ads.iq_phase_balance, size/2);
     }
 }
 
