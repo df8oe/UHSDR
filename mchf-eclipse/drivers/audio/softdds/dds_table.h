@@ -22,8 +22,8 @@
 //#define DDS_ACC_SHIFT     7
 
 // 1024 points
-#define DDS_ACC_SHIFT       6
-
+//#define DDS_ACC_SHIFT       6
+#define DDS_ACC_SHIFT       22
 #define DDS_TBL_SIZE		1024
 
 extern const short DDS_TABLE[DDS_TBL_SIZE];
