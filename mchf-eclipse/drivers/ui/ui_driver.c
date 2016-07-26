@@ -1426,7 +1426,7 @@ uint8_t RadioManagement_GetBand(ulong freq)
 
 static bool RadioManagement_HandleLoTemperatureDrift()
 {
-    int     temp = 0;
+    int32_t temp = 0;
     int     comp, comp_p;
     float   dtemp, remain, t_index;
     uchar   tblp;
