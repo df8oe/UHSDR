@@ -69,7 +69,7 @@ float   Si570_GetStartupFrequency();
 uint8_t Si570_GeTI2CAddress();
 
 uchar   Si570_InitExternalTempSensor();
-uchar   Si570_ReadExternalTempSensor(int *temp);
+uchar   Si570_ReadExternalTempSensor(int32_t *temp);
 
 inline bool   Si570_IsPresent() { return os.present == true; }
 

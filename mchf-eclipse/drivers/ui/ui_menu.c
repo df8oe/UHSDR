@@ -482,6 +482,7 @@ enum MENU_GROUP_ITEM
     MENU_SYSINFO,
     MENU_CW,
     MENU_DISPLAY,
+    MENU_DEBUG,
 };
 
 const MenuDescriptor topGroup[] =
@@ -493,6 +494,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection" },
     { MENU_TOP, MENU_GROUP, MENU_POW, "POW","PA Configuration" },
     { MENU_TOP, MENU_GROUP, MENU_SYSINFO,"INF","System Info"},
+    { MENU_TOP, MENU_GROUP, MENU_DEBUG,"INF","Debug/Exper. Settings"},
     { MENU_TOP, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -625,8 +627,8 @@ const MenuDescriptor powGroup[] =
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL,"P00","Tune Power Level"},
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_TONE_MODE,"P99","Tune Tone (SSB)"},
     { MENU_POW, MENU_ITEM, CONFIG_REDUCE_POWER_ON_LOW_BANDS,"P0A","Reduce Power on Low Bands"},
-    { MENU_CONF, MENU_ITEM, CONFIG_CW_PA_BIAS,"260","CW PA Bias (If >0 )"},
-    { MENU_CONF, MENU_ITEM, CONFIG_PA_BIAS,"261","PA Bias"},
+    { MENU_POW, MENU_ITEM, CONFIG_CW_PA_BIAS,"260","CW PA Bias (If >0 )"},
+    { MENU_POW, MENU_ITEM, CONFIG_PA_BIAS,"261","PA Bias"},
     { MENU_POW, MENU_ITEM, CONFIG_2200M_5W_ADJUST,"P01","2200m 5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_630M_5W_ADJUST,"P02","630m  5W PWR Adjust"},
     { MENU_POW, MENU_ITEM, CONFIG_160M_5W_ADJUST,"P03","160m  5W PWR Adjust"},
@@ -723,6 +725,12 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_STOP, 0, "   " , NULL }
 };
 
+const MenuDescriptor debugGroup[] =
+{
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO,"028","TX Audio via USB"},
+    { MENU_DEBUG, MENU_STOP, 0, "   " , NULL }
+};
+
 
 MenuGroupState topGroupState;
 MenuGroupState baseGroupState;
@@ -732,6 +740,7 @@ MenuGroupState filterGroupState;
 MenuGroupState infoGroupState;
 MenuGroupState cwGroupState;
 MenuGroupState displayGroupState;
+MenuGroupState debugGroupState;
 
 
 const MenuGroupDescriptor groups[] =
@@ -744,6 +753,7 @@ const MenuGroupDescriptor groups[] =
     { infoGroup, &infoGroupState, topGroup },  // Group 6
     { cwGroup, &cwGroupState, topGroup },  // Group 7
     { displayGroup, &displayGroupState, topGroup },  // Group 8
+    { debugGroup, &debugGroupState, topGroup },  // Group 9
 };
 
 // actions [this is an internal, not necessarily complete or accurate sketch of the used algorithms /API
@@ -4039,6 +4049,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             ts.xlat = temp_var;
         }
         break;
+    case MENU_DEBUG_TX_AUDIO:  // Step size button swap on/off
+            tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.debug_tx_audio,0,options,&clr);
+            break;
     default:						// Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
