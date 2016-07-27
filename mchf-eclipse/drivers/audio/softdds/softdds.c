@@ -40,13 +40,19 @@ __IO 	SoftDds	softdds;
 // Two Tone Dds
 __IO    SoftDds dbldds[2];
 
+uint32_t softdds_stepForSampleRate(float freq,ulong samp_rate)
+{
+    uint64_t freq64_shifted = freq * DDS_TBL_SIZE;
+    freq64_shifted <<= DDS_ACC_SHIFT;
+    uint64_t step = freq64_shifted / samp_rate;
+    return step;
+}
+
 /**
  * Initialize softdds for given frequency and sample rate
  */
 void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
 {
-    float f = samp_rate;
-
     // Reset accumulator, if need smooth tone
     // transition, do not reset it (e.g. wspr)
     if(!smooth)
@@ -54,14 +60,11 @@ void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
         softdds.acc = 0;
     }
     // Calculate new step
-    f   	 /= 65536.0;
-    softdds.step   = (ulong)(freq / f);
+    softdds.step = softdds_stepForSampleRate(freq,samp_rate);
 }
 
 void softdds_setfreq_dbl(float freq[2],ulong samp_rate,uchar smooth)
 {
-    float f = (float)(samp_rate);
-
     // Reset accumulator, if need smooth tone
     // transition, do not reset it (e.g. wspr)
     if(!smooth)
@@ -70,9 +73,8 @@ void softdds_setfreq_dbl(float freq[2],ulong samp_rate,uchar smooth)
         dbldds[1].acc = 0;
     }
     // Calculate new step
-    f        /= 65536.0;
-    dbldds[0].step   = (ulong)(freq[0] / f);
-    dbldds[1].step   = (ulong)(freq[1] / f);
+    dbldds[0].step   = softdds_stepForSampleRate(freq[0],samp_rate);
+    dbldds[1].step   = softdds_stepForSampleRate(freq[1],samp_rate);
 }
 
 /**
