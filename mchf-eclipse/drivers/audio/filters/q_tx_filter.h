@@ -33,7 +33,7 @@
 //
 // -90.00 degrees
 //
-
+*/
 const float q_tx_coeffs[Q_NUM_TAPS] =
 {
     0.000350654345247197,
@@ -126,7 +126,7 @@ const float q_tx_coeffs[Q_NUM_TAPS] =
     -0.000048495992345297,
     -0.0003506543
 };
-*/
+
 
 // -90 degrees - just for comparison!
 // phase added, 48000 sampling frequency
@@ -134,7 +134,8 @@ const float q_tx_coeffs[Q_NUM_TAPS] =
 // Kaiser, Beta = 3.650, Raised Cosine 0.910
 // Iowa Hills Hilbert Filter Designer Version 3.0
 // DD4WH, 2016_07_24
-const float q_tx_coeffs[Q_NUM_TAPS] =
+//const float q_tx_coeffs[Q_NUM_TAPS] =
+		const float q_tx_wide_coeffs[Q_NUM_TAPS] =
 {
 
 		-0.000665402252765227,
@@ -231,7 +232,7 @@ const float q_tx_coeffs[Q_NUM_TAPS] =
 };
 
 
-
+/*
 //-45 degrees
 // phase added, 48000 sampling frequency
 // Fc=1.50kHz, BW=2.70kHz
@@ -444,7 +445,7 @@ const float q_tx_wide_coeffs[201] =
 
 
 };
-
+*/
 /*
 //
 // -90 degrees
