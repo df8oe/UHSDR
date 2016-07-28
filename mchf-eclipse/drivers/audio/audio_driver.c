@@ -2800,6 +2800,12 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         if(!ads.tx_filter_adjusting)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
         {
             // yes - apply transformation AND audio filtering to buffer data
+
+        	// put delay line here for i_buffer ;-)
+        	//
+        	// has to be of different length depending on whether the Hilbert for Q uses I_TX_NUM_TAPS_WIDE or I_TX_NUM_TAPS number of taps
+        	// delay samples = (taps - 1) / 2
+        	//
             // + 0 deg to I data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
 

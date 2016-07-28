@@ -988,10 +988,10 @@ void AudioFilter_InitTxHilbertFIR(void)
     //
     if(ts.tx_filter == TX_FILTER_WIDE_BASS || ts.tx_filter == TX_FILTER_WIDE_TREBLE)
     {
-        fc.tx_q_num_taps = Q_TX_NUM_TAPS;
-        fc.tx_i_num_taps = Q_TX_NUM_TAPS;
+        fc.tx_q_num_taps = Q_TX_NUM_TAPS_WIDE;
+        fc.tx_i_num_taps = Q_TX_NUM_TAPS_WIDE;
 
-        for(i = 0; i < Q_TX_NUM_TAPS;i++)
+        for(i = 0; i < Q_TX_NUM_TAPS_WIDE;i++)
             {
                 fc.tx_filt_q[i] = q_tx_wide_coeffs[i];
                 fc.tx_filt_i[i] = i_tx_wide_coeffs[i];
