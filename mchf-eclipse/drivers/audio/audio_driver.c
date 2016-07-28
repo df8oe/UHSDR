@@ -2666,6 +2666,26 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
         }
     }
 }
+
+/**
+ * @brief Delay function, basically implementing a filter which provides nothing but a delay of (numTaps -1) / 2;
+ * @param[in]  S          points to an instance of the floating-point FIR structure.
+ * @param[in]  pSrc       points to the block of input data.
+ * @param[out] pDst       points to the block of output data.
+ * @param[in]  blockSize  number of samples to process.
+ */
+void AudioDriver_delay_f32(
+    const arm_fir_instance_f32 * S,
+    float32_t * pSrc,
+    float32_t * pDst,
+    uint32_t blockSize)
+{
+    uint32_t delay = (S->numTaps-1)/2;
+    arm_copy_f32(S->pState,pDst,delay); // fill the first delay bytes from buffer content
+    arm_copy_f32(pSrc,&pDst[delay],blockSize-delay); // fill the block with the remaining first bytes from new data
+    arm_copy_f32(&pSrc[blockSize-delay],S->pState,delay); // and put the rest in the delay buffer;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_processor
 //* Object              :
@@ -2807,7 +2827,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         	// delay samples = (taps - 1) / 2
         	//
             // + 0 deg to I data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            // arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
 
             // - 90 deg to Q data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
@@ -2892,7 +2913,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // Apply transformation AND audio filtering to buffer data
             //
             // + 0 deg to I data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            // arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
             // - 90 deg to Q data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
             //
