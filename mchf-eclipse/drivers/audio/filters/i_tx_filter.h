@@ -30,7 +30,7 @@
      * -6dB @ 363, 3000 Hz
      *
      * 20140926 by KA7OEI using Iowa Hills Hilbert Filter Designer
-
+*/
 
 const float i_tx_coeffs[I_NUM_TAPS] =
 {
@@ -124,14 +124,15 @@ const float i_tx_coeffs[I_NUM_TAPS] =
     -0.00154698180275285,
     -0.0013696339
 };
-*/
+
 // trial with 0 degrees!!!
 // phase added, 48000 sampling frequency
 // Fc=1.50kHz, BW=2.70kHz
 // Kaiser, Beta = 3.650, Raised Cosine 0.910
 // Iowa Hills Hilbert Filter Designer Version 3.0
 // DD4WH, 2016_07_24
-const float i_tx_coeffs[I_NUM_TAPS] =
+//const float i_tx_coeffs[I_NUM_TAPS] =
+		const float i_tx_wide_coeffs[I_NUM_TAPS] =
 {
 
 		-0.000675829974580901,
@@ -224,7 +225,7 @@ const float i_tx_coeffs[I_NUM_TAPS] =
 		-0.000775321733206627,
 		-0.000675829974580823
 };
-
+/*
 // trial with +45 degrees!!!
 // phase added, 48000 sampling frequency
 // Fc=1.50kHz, BW=2.70kHz
@@ -436,7 +437,7 @@ const float i_tx_wide_coeffs[201] =
 		-0.000206699262770281
 };
 
-
+*/
 /*
 //
 // 0 degrees
