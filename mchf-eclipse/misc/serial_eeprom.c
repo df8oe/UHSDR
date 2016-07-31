@@ -390,16 +390,23 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
             }
             else
             {
-                // 16 bit addressing
+                // 16 bit addressing check
+                // the other banks are mapped to different I2C
+                // device addresses. We simply try to read from them
+                // and if it succeeds we know the device type
+                // We need to check unique addresses for each EEPROM type
+                // 0xA0 + 0xA8
                 if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
                 {
                     ser_eeprom_type = 17;            // 24LC1025
                 }
+                // 0xA0 + 0x1000: 0xA2
                 if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
                 {
                     ser_eeprom_type = 18;            // 24LC1026
                 }
-                if(SerialEEPROM_24Cxx_Read(0x10000,19) < 0x100)
+                // 0xA0 + 0x1000: 0xA2 + 0x2000: 0xA4 + 0x3000: 0xA6
+                if(SerialEEPROM_24Cxx_Read(0x20000,19) < 0x100)
                 {
                     ser_eeprom_type = 19;            // 24CM02
                 }
