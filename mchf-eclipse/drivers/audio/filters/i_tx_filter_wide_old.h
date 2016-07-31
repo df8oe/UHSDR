@@ -15,8 +15,8 @@
 #ifndef __I_TX_FILTER_H
 #define __I_TX_FILTER_H
 
-#define I_TX_BLOCK_SIZE		1
-#define I_TX_NUM_TAPS			89
+#define IQ_TX_BLOCK_SIZE		1
+#define IQ_TX_NUM_TAPS			89
 
 /*
  	 * Hilbert 0 Degree, "Phase-added" bandpass filter

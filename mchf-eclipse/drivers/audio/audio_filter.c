@@ -11,8 +11,10 @@
 **  Last Modified:                                                                 **
 **  Licence:        CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
+#include <iq_tx_filter.h>
 #include "mchf_board.h"
 #include "audio_filter.h"
+#include "audio_driver.h"
 #include "filters.h"
 
 #include "arm_math.h"
@@ -21,9 +23,7 @@
 
 
 // SSB Hilbert TX Filter
-#include "filters/q_tx_filter.h"
-#include "filters/i_tx_filter.h"
-
+#include "iq_tx_filter.h"
 //
 static __IO    FilterCoeffs        fc;
 
@@ -911,22 +911,24 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
 
 //
 // RX Hilbert transform (90 degree) FIR filter state tables and instances
-//
-static float32_t        FirState_I[128];
-extern __IO arm_fir_instance_f32    FIR_I;
-//
-static float32_t        FirState_Q[128];
-extern __IO arm_fir_instance_f32    FIR_Q;
+__IO    arm_fir_instance_f32    FIR_I;
+__IO    arm_fir_instance_f32    FIR_Q;
+
+static float32_t        FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
+static float32_t        FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
 
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances
 //
-static float            FirState_I_TX[201];
-extern __IO arm_fir_instance_f32    FIR_I_TX;
+// FIXME: I think this is to short should calculated from max blocksize
+// (BUFLEN / 4 -> Each Interrupt == BUFLEN /2, each filter gets half of the samples, i.e. one audio channel) + max numTaps
+static float            FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float            FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 
-static float            FirState_Q_TX[201];
-extern __IO arm_fir_instance_f32    FIR_Q_TX;
-//
+
+__IO    arm_fir_instance_f32    FIR_I_TX;
+__IO    arm_fir_instance_f32    FIR_Q_TX;
+
 
 /*
  * @brief Initialize RX Hilbert filters
@@ -980,30 +982,21 @@ void AudioFilter_InitTxHilbertFIR(void)
     //
     // phase adjustment is now done in audio_driver.c audio_tx_processor
 
-    fc.tx_q_num_taps = Q_TX_NUM_TAPS;
-    fc.tx_i_num_taps = I_TX_NUM_TAPS;
-    //
-    fc.tx_q_block_size = Q_TX_BLOCK_SIZE;
-    fc.tx_i_block_size = I_TX_BLOCK_SIZE;
-    //
-    if(ts.tx_filter == TX_FILTER_WIDE_BASS || ts.tx_filter == TX_FILTER_WIDE_TREBLE)
-    {
-        fc.tx_q_num_taps = Q_TX_NUM_TAPS_WIDE;
-        fc.tx_i_num_taps = Q_TX_NUM_TAPS_WIDE;
+    IQ_FilterDescriptor iq_tx_filter =
+            (ts.tx_filter == TX_FILTER_WIDE_BASS ||
+             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_narrow;
 
-        for(i = 0; i < Q_TX_NUM_TAPS_WIDE;i++)
-            {
-                fc.tx_filt_q[i] = q_tx_wide_coeffs[i];
-                fc.tx_filt_i[i] = i_tx_wide_coeffs[i];
-            }
-    }
-    else
+
+    fc.tx_q_num_taps = iq_tx_filter.num_taps;
+    fc.tx_i_num_taps = iq_tx_filter.num_taps;
+
+    fc.tx_q_block_size = IQ_TX_BLOCK_SIZE;
+    fc.tx_i_block_size = IQ_TX_BLOCK_SIZE;
+
+    for(i = 0; i < iq_tx_filter.num_taps; i++)
     {
-        for(i = 0; i < Q_TX_NUM_TAPS; i++)
-        	{
-            	fc.tx_filt_q[i] = q_tx_coeffs[i];
-            	fc.tx_filt_i[i] = i_tx_coeffs[i];
-        	}
+        fc.tx_filt_q[i] = iq_tx_filter.q[i];
+        fc.tx_filt_i[i] = iq_tx_filter.i[i];
     }
 
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);

@@ -5,14 +5,17 @@
 #include "mchf_board.h"
 #include "arm_math.h"
 
-#define I_BLOCK_SIZE		1
+#define I_BLOCK_SIZE		IQ_BUFSZ
+#define Q_BLOCK_SIZE        IQ_BUFSZ
+
 #define I_NUM_TAPS			89
-#define I_TX_BLOCK_SIZE		1
-#define I_TX_NUM_TAPS		89
-#define Q_BLOCK_SIZE		1
 #define Q_NUM_TAPS			89
-#define Q_TX_BLOCK_SIZE		1
-#define Q_TX_NUM_TAPS		89
+
+typedef struct {
+    const float32_t* i;
+    const float32_t* q;
+    const int num_taps;
+} IQ_FilterDescriptor;
 
 extern const arm_fir_decimate_instance_f32 FirRxDecimate;
 extern const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF;
@@ -36,39 +39,15 @@ extern const float i_rx_5k_coeffs[I_NUM_TAPS];
 extern const float i_rx_6k_coeffs[I_NUM_TAPS];
 extern const float i_rx_7k5_coeffs[I_NUM_TAPS];
 extern const float i_rx_coeffs[I_NUM_TAPS];
-extern const float i_tx_coeffs[I_NUM_TAPS];
 
 extern const float q_rx_coeffs[Q_NUM_TAPS];
-extern const float q_rx_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_10k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_10k_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_10k_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_3k6_coeffs[Q_NUM_TAPS];
-extern const float q_rx_3k6_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_3k6_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_4k5_coeffs[Q_NUM_TAPS];
-extern const float q_rx_4k5_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_4k5_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_5k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_5k_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_5k_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_6k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_6k_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_6k_coeffs_plus[Q_NUM_TAPS];
-
 extern const float q_rx_7k5_coeffs[Q_NUM_TAPS];
-extern const float q_rx_7k5_coeffs_minus[Q_NUM_TAPS];
-extern const float q_rx_7k5_coeffs_plus[Q_NUM_TAPS];
 
-extern const float q_tx_coeffs[Q_NUM_TAPS];
-extern const float q_tx_coeffs_minus[Q_NUM_TAPS];
-extern const float q_tx_coeffs_plus[Q_NUM_TAPS];
 
 extern const arm_iir_lattice_instance_f32 IIR_1k4_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_1k4_BPF;
