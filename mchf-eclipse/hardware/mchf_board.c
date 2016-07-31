@@ -823,6 +823,27 @@ __attribute__ ((noinline)) bool is_ram_at(volatile uint32_t* where) {
     return retval;
 }
 
+unsigned int mchf_board_get_ramsize() {
+    uint32_t retval = 0;
+    // we enable the bus fault
+    // we now get bus faults if we access not  available  memory
+    // instead of hard faults
+    // this will run our very special bus fault handler in case no memory
+    // is at the defined location
+    SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
+    if (is_ram_at((volatile uint32_t*)TEST_ADDR_256)){
+        retval=256;
+    } else if (is_ram_at((volatile uint32_t*)TEST_ADDR_192)){
+        retval=192;
+    }
+    // now we disable it
+    // we'll get hard faults as usual if we access wrong addresses
+    SCB->SHCSR &= ~SCB_SHCSR_BUSFAULTENA_Msk;
+
+    return retval;
+}
+
+
 /**
  * Determines the available RAM. Only supports 192 and 256 STM32F4 models
  * Approach works but makes some assumptions. Do not change if you don't know
@@ -835,13 +856,5 @@ void mchf_board_detect_ramsize() {
     // instead of hard faults
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
-    SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
-    if (is_ram_at((volatile uint32_t*)TEST_ADDR_256)){
-        ts.ramsize=256;
-    } else if (is_ram_at((volatile uint32_t*)TEST_ADDR_192)){
-        ts.ramsize=192;
-    }
-    // now we disable it
-    // we'll get hard faults as usual if we access wrong addresses
-    SCB->SHCSR &= ~SCB_SHCSR_BUSFAULTENA_Msk;
+    ts.ramsize = mchf_board_get_ramsize();
 }
