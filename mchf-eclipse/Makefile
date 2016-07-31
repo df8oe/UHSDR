@@ -38,7 +38,7 @@ CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 CFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall \
+          -ffunction-sections -O2 -Wall -D_GNU_SOURCE \
           $(EXTRACFLAGS)
 
 
@@ -159,13 +159,8 @@ SRC =  \
     drivers/audio/filters/iir_9k.c  \
     drivers/audio/filters/iir_antialias.c  \
     drivers/audio/filters/iq_rx_filter.c  \
-    drivers/audio/filters/iq_rx_filter_10k0.c  \
-    drivers/audio/filters/iq_rx_filter_3k6.c  \
-    drivers/audio/filters/iq_rx_filter_4k5.c  \
-    drivers/audio/filters/iq_rx_filter_5k0.c  \
-    drivers/audio/filters/iq_rx_filter_6k0.c  \
-    drivers/audio/filters/iq_rx_filter_7k5.c  \
     drivers/audio/filters/iq_rx_filter_am.c  \
+    drivers/audio/filters/iq_tx_filter.c  \
     drivers/audio/softdds/softdds.c  \
     drivers/audio/softdds/dds_table.c  \
     \

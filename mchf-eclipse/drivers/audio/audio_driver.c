@@ -17,7 +17,7 @@
 #include "profiling.h"
 
 #include <stdio.h>
-
+#include <math.h>
 #include "codec.h"
 #include "i2s.h"
 #include "cw_gen.h"
@@ -143,13 +143,6 @@ static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
 // variables for TX IIR filter
 float32_t		iir_tx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 arm_iir_lattice_instance_f32	IIR_TXFilter;
-
-// RX Hilbert transform (90 degree) FIR filters
-__IO	arm_fir_instance_f32 	FIR_I;
-__IO	arm_fir_instance_f32 	FIR_Q;
-
-__IO	arm_fir_instance_f32	FIR_I_TX;
-__IO	arm_fir_instance_f32	FIR_Q_TX;
 
 
 // S meter public
@@ -2687,9 +2680,9 @@ void AudioDriver_delay_f32(
         arm_copy_f32(pSrc,&pDst[delay],blockSize-delay); // fill the block with the remaining first bytes from new data
         arm_copy_f32(&pSrc[blockSize-delay],S->pState,delay); // and put the rest in the delay buffer;
     } else {
-        arm_copy_f32(S->pState,pDst,blockSize); // take oldest part of delay and put in buffer
-        arm_copy_f32(&S->pState[blockSize],S->pState,delay); // move remaining data to front of buffer;
-        arm_copy_f32(pSrc,&S->pState[delay],blockSize); // fill the buffer with new data
+       arm_copy_f32(S->pState,pDst,blockSize); // take oldest part of delay and put in buffer
+       arm_copy_f32(&S->pState[blockSize],S->pState,delay); // move remaining data to front of buffer;
+       arm_copy_f32(pSrc,&S->pState[delay],blockSize); // append new data to buffer
     }
 }
 
@@ -2834,7 +2827,6 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         	// delay samples = (taps - 1) / 2
         	//
             // + 0 deg to I data
-            // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
 
             // - 90 deg to Q data

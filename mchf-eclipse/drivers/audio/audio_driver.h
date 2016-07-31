@@ -46,9 +46,9 @@
 #define	IQ_BUFSZ 	(BUFF_LEN/2)
 
 // Audio filter
-#define FIR_RXAUDIO_BLOCK_SIZE		32 // block size is 64, but size/2 is used in audio_rx_driver
+#define FIR_RXAUDIO_BLOCK_SIZE		(IQ_BUFSZ/2) // block size is 64, but size/2 is used in audio_rx_driver
 #define FIR_RXAUDIO_NUM_TAPS		16 // maximum number of taps in the decimation and interpolation FIR filters
-#define IIR_RXAUDIO_BLOCK_SIZE		32 // block size is 64, but size/2 is used in audio_rx_driver
+#define IIR_RXAUDIO_BLOCK_SIZE		(IQ_BUFSZ/2) // block size is 64, but size/2 is used in audio_rx_driver
 #define IIR_RXAUDIO_NUM_STAGES		12 // we use a maximum stage number of 10 at the moment, so this is 12 just to be safe
 //
 #define CODEC_DEFAULT_GAIN		0x1F	// Gain of line input to start with

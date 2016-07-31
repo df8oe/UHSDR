@@ -18,6 +18,10 @@
 #include "mchf_types.h"
 #include "arm_math.h"
 //
+extern __IO arm_fir_instance_f32    FIR_Q_TX;
+extern __IO arm_fir_instance_f32    FIR_I_TX;
+extern __IO arm_fir_instance_f32    FIR_Q;
+extern __IO arm_fir_instance_f32    FIR_I;
 
 
 
