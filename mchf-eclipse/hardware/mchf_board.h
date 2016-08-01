@@ -1248,6 +1248,7 @@ inline bool mchf_dit_line_pressed() {
     return  !GPIO_ReadInputDataBit(PADDLE_DIT_PIO,PADDLE_DIT);
 }
 
+unsigned int mchf_board_get_ramsize();
 void mchf_board_detect_ramsize();
 
 // in main.c

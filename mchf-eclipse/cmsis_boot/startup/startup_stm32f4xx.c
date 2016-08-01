@@ -268,10 +268,14 @@ void (* const g_pfnVectors[])(void) =
   * @param  None
   * @retval None
   */
+
+unsigned int mchf_board_get_ramsize();
+
 void Default_Reset_Handler(void)
 {
 //      __asm volatile ("MSR msp, %0\n" : : "r" ((void (*)(void))((unsigned long)pulStack + sizeof(pulStack))) );
     __asm volatile ("MSR msp, %0\n" : : "r" ((void (*)(void))((unsigned long)&__stack - 2*sizeof(void*))));
+
 
     /* Initialize data and bss */
     unsigned long *pulSrc, *pulDest;
@@ -315,7 +319,15 @@ void Default_Reset_Handler(void)
           "  STR R1, [R0]");
 #endif
 
+
+
     SystemInit();
+
+    // if we have more ram than 192k, we move the stackpointer 64k up
+    if (mchf_board_get_ramsize() >= 256) {
+        __asm volatile ("MSR msp, %0\n" : : "r" ((void (*)(void))((unsigned long)&__stack - 2*sizeof(void*) + 64*1024)));
+    }
+
 
     /* Call the application's entry point.*/
     main();
