@@ -6089,7 +6089,9 @@ static void UiDriver_PowerDownCleanup(void)
     ts.powering_down = 1;   // indicate that we should be powering down
 
     if(ts.ser_eeprom_in_use != SER_EEPROM_IN_USE_DONT_SAVE)
+    {
         UiConfiguration_SaveEepromValues();     // save EEPROM values
+    }
 
 
     // Actual power-down moved to "UiDriverHandlePowerSupply()" with part of delay
