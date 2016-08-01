@@ -2287,7 +2287,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(fchange && ts.dmod_mode == DEMOD_CW)         // did it change?
         {
-            softdds_setfreq((float)ts.sidetone_freq,ts.samp_rate,0);
+            float freq[2] = { ts.sidetone_freq, 0.0 };
+
+            softdds_setfreq_dbl(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
         snprintf(options,32, "  %uHz", (uint)ts.sidetone_freq);

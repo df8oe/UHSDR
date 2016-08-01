@@ -17,6 +17,8 @@
 #define __AUDIO_DRIVER_H
 
 #include "arm_math.h"
+#include "softdds.h"
+
 // 16 or 24 bits from Codec
 //
 //#define USE_24_BITS
@@ -127,7 +129,7 @@ typedef struct AudioDriverState
     float					fm_subaudible_tone_det_freq;	// frequency, in Hz, of currently-selected subaudible tone for detection
     bool					fm_subaudible_tone_detected;	// TRUE if subaudible tone has been detected
     //
-    ulong					beep_word;				// this is the actively-used DDS tone word for the radio's beep generator
+    SoftDds					beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection

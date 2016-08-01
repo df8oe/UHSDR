@@ -20,18 +20,6 @@
 #include "softdds.h"
 
 
-// Soft DDS public structure
-typedef struct
-{
-    // DDS accumulator
-    ulong   acc;
-
-    // DDS step - not working if part of the structure
-    ulong   step;
-
-} SoftDds;
-
-
 
 
 // Software DDS public
@@ -51,43 +39,29 @@ uint32_t softdds_stepForSampleRate(float freq,ulong samp_rate)
 /**
  * Initialize softdds for given frequency and sample rate
  */
-void softdds_setfreq(float freq,ulong samp_rate,uchar smooth)
+void softdds_setfreq(__IO SoftDds* softdds_p, float freq,ulong samp_rate,uchar smooth)
 {
     // Reset accumulator, if need smooth tone
     // transition, do not reset it (e.g. wspr)
     if(!smooth)
     {
-        softdds.acc = 0;
+        softdds_p->acc = 0;
     }
     // Calculate new step
-    softdds.step = softdds_stepForSampleRate(freq,samp_rate);
+    softdds_p->step = softdds_stepForSampleRate(freq,samp_rate);
 }
+
+
+/**
+ * Initialize softdds for given frequency and sample rate
+ */
 
 void softdds_setfreq_dbl(float freq[2],ulong samp_rate,uchar smooth)
 {
-    // Reset accumulator, if need smooth tone
-    // transition, do not reset it (e.g. wspr)
-    if(!smooth)
-    {
-        dbldds[0].acc = 0;
-        dbldds[1].acc = 0;
-    }
-    // Calculate new step
-    dbldds[0].step   = softdds_stepForSampleRate(freq[0],samp_rate);
-    dbldds[1].step   = softdds_stepForSampleRate(freq[1],samp_rate);
-}
+    softdds_setfreq(&dbldds[0],freq[0],samp_rate,smooth);
+    softdds_setfreq(&dbldds[1],freq[1],samp_rate,smooth);
+  }
 
-/**
- * Execute a single step in the sinus generation
- */
-static inline uint32_t softdds_step(__IO SoftDds* dds)
-{
-    dds->acc += dds->step;
-
-    // now scale down precision and  make sure that
-    // index wraps around properly
-    return (dds->acc >> DDS_ACC_SHIFT)%DDS_TBL_SIZE;
-}
 
 /*
  * Get the index which represents a -90 degree shift compared to
@@ -120,7 +94,7 @@ void softdds_runf(float *i_buff,float *q_buff,ushort size)
         for(i = 0; i < size; i++)
         {
             // Calculate next sample
-            k    = softdds_step(&softdds);
+            k    = softdds_step(&dbldds[0]);
 
             // Load I value (sin)
             *i_buff = DDS_TABLE[k];

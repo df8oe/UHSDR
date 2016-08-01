@@ -468,7 +468,8 @@ void TransceiverStateInit(void)
 void MiscInit(void)
 {
     // Init Soft DDS
-    softdds_setfreq(0.0,ts.samp_rate,0);
+    float freq[2] = { 0.0, 0.0 };
+    softdds_setfreq_dbl(freq,ts.samp_rate,0);
 }
 
 /*
