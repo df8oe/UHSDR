@@ -16,6 +16,8 @@
 #define __SOFTDDS_H
 
 
+uint32_t softdds_stepForSampleRate(float freq,ulong samp_rate);
+
 void 	softdds_setfreq(float freq, ulong samp_rate, uchar smooth);
 void 	softdds_runf(float32_t *i_buff, float32_t *q_buff, ushort size);
 

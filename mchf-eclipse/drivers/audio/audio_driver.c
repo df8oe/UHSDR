@@ -2330,13 +2330,12 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     i = 0;			// init sample transfer counter
     while(i < size/2)	 						// transfer to DMA buffer and do conversion to INT
     {
+        // TODO: move to softdds ...
         if((ts.beep_active) && (ads.beep_word))	 		// is beep active?
         {
             // Yes - Calculate next sample
             beep_accum += ads.beep_word;	// generate tone using frequency word, calculating next sample
-            beep_accum &= 0xffff;				// limit to 16 Meg range
-            beep_idx    = beep_accum >> DDS_ACC_SHIFT;	// shift accumulator to index sine table
-            beep_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
+            beep_idx    = (beep_accum >> DDS_ACC_SHIFT)%DDS_TBL_SIZE;	// shift accumulator to index sine table
             ads.b_buffer[i] += (float32_t)(DDS_TABLE[beep_idx] * ads.beep_loudness_factor);	// load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
         }
         else					// beep not active - force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
