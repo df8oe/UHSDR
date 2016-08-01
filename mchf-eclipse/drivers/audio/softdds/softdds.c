@@ -21,7 +21,7 @@
 
 
 // Soft DDS public structure
-typedef struct SoftDds
+typedef struct
 {
     // DDS accumulator
     ulong   acc;
