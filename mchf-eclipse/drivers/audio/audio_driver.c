@@ -3114,7 +3114,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // Calculate next sample
             fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (ads.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));	// change frequency using scaled audio
             fm_mod_accum &= 0xffff;				// limit to 64k range
-            fm_mod_idx    = fm_mod_accum >> DDS_ACC_SHIFT;
+            fm_mod_idx    = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT;
             fm_mod_idx &= (DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
             ads.i_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);				// Load I value
             fm_mod_idx += (DDS_TBL_SIZE/4);	// do 90 degree shift by indexing 1/4 into sine table
