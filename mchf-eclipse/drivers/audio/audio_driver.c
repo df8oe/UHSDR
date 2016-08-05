@@ -2035,7 +2035,7 @@ static uint16_t modulus = 0;
 static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
 
-    static ulong 		i, beep_idx = 0, beep_accum = 0;
+    static ulong 		i, beep_idx = 0;
 
     //
     int16_t				psize;		// processing size, with decimation
@@ -2566,6 +2566,21 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
     static ulong		alc_delay_inbuf = 0, alc_delay_outbuf = 0;
     static float		alc_calc, alc_var;
 
+    if(!ts.tune)        // do post-filter gain calculations if we are NOT in TUNE mode
+    {
+        // perform post-filter gain operation
+        // this is part of the compression
+        //
+        float32_t gain_calc = (float)ts.alc_tx_postfilt_gain_var;       // get post-filter gain setting
+        gain_calc /= 2;                                 // halve it
+        gain_calc += 0.5;                               // offset it so that 2 = unity
+
+        arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);      // use optimized function to apply scaling to I/Q buffers
+        if (ts.dmod_mode != DEMOD_FM) {
+            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, size/2);
+        }
+    }
+
     // ------------------------
     // Do ALC processing on audio buffer - look-ahead type by KA7OEI
     for(i = 0; i < size/2; i++)
@@ -2685,6 +2700,160 @@ void AudioDriver_delay_f32(
     }
 }
 
+float32_t AudioDriver_absmax(float32_t* buffer, int size) {
+    float32_t min, max;
+    uint32_t            pindex;
+
+    arm_max_f32(buffer, size, &max, &pindex);      // find absolute value of audio in buffer after gain applied
+    arm_min_f32(buffer, size, &min, &pindex);
+
+    return -min>max?-min:max;
+}
+
+static void AudioDriver_tx_fill_audio_buffer(int16_t *src, int16_t size)
+{
+    float32_t           gain_calc;
+
+    if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)      // Are we in LINE IN mode?
+    {
+        gain_calc = LINE_IN_GAIN_RESCALE;           // Yes - fixed gain scaling for line input - the rest is done in hardware
+    }
+    else if (ts.tx_audio_source == TX_AUDIO_MIC)
+    {
+        gain_calc = ts.tx_mic_gain_mult;     // We are in MIC In mode:  Calculate Microphone gain
+        gain_calc /= MIC_GAIN_RESCALE;              // rescale microphone gain to a reasonable range
+    }
+    else
+    {
+        gain_calc = 1;
+    }
+
+    if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)         // Are we in LINE IN mode?
+    {
+        src++; // use right channel data
+    }
+    // Fill I and Q buffers with left channel(same as right)
+    for(int i = 0; i < size/2; i++)                 // Copy to single buffer
+    {
+        ads.a_buffer[i] = *src;
+        src += 2;                               // Next sample
+    }
+
+    // Apply gain if not in TUNE mode
+    // this is the LINE GAIN!
+    arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);  // apply gain
+
+    ads.peak_audio = AudioDriver_absmax((float32_t *)ads.a_buffer, size/2);
+}
+
+void AudioDriver_tx_am_sideband_processor(int size) {
+    //
+    // generate AM carrier by applying a "DC bias" to the audio
+    //
+    arm_offset_f32((float32_t *)ads.i_buffer, AM_CARRIER_LEVEL, (float32_t *)ads.i_buffer, size/2);
+    arm_offset_f32((float32_t *)ads.q_buffer, (-1 * AM_CARRIER_LEVEL), (float32_t *)ads.q_buffer, size/2);
+    //
+    // check and apply correct translate mode
+    //
+    audio_rx_freq_conv(size, (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ));
+    //
+    // Equalize based on band and simultaneously apply I/Q gain adjustments
+    //
+    arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
+    arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
+
+}
+
+static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
+{
+    static float32_t    hpf_prev_a, hpf_prev_b;
+    float32_t           a, b;
+
+    static uint32_t fm_mod_idx = 0, fm_mod_accum = 0, fm_tone_idx = 0, fm_tone_accum = 0, fm_tone_burst_idx = 0, fm_tone_burst_accum = 0;
+
+    float32_t fm_mod_mult;
+    // Fill I and Q buffers with left channel(same as right)
+    //
+    if(ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)   // are we in 5 kHz modulation mode?
+    {
+        fm_mod_mult = 2;    // yes - multiply all modulation factors by 2
+    }
+    else
+    {
+        fm_mod_mult = 1;    // not in 5 kHz mode - used default (2.5 kHz) modulation factors
+    }
+
+    AudioDriver_tx_fill_audio_buffer(src,size);
+
+    arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.i_buffer, size/2);   // Use special bandpass filter designed for FM (above 200 Hz, limit to below 2800 Hz)
+
+    audio_tx_compressor(size, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+    //
+    // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "i" and puts it into "a".
+    //
+    for(int i = 0; i < size/2; i++)
+    {
+        //
+        //
+        a = ads.i_buffer[i];
+        //
+        b = FM_TX_HPF_ALPHA * (hpf_prev_b + a - hpf_prev_a);    // do differentiation
+        hpf_prev_a = a;     // save "[n-1] samples for next iteration
+        hpf_prev_b = b;
+        //
+        ads.a_buffer[i] = b;    // save differentiated data in audio buffer
+    }
+    //
+    // do tone generation using the NCO (a.k.a. DDS) method.  This is used for subaudible tone generation and, if necessary, summing the result in "a".
+    //
+    if((ads.fm_subaudible_tone_word) && (!ads.fm_tone_burst_active))        // generate tone only if it is enabled (and not during a tone burst)
+    {
+        for(int i = 0; i < size/2; i++)
+        {
+            fm_tone_accum += ads.fm_subaudible_tone_word;   // generate tone using frequency word, calculating next sample
+            fm_tone_accum &= 0xffffff;              // limit to 16 Meg range
+            fm_tone_idx    = fm_tone_accum >> FM_TONE_DDS_ACC_SHIFT;    // shift accumulator to index sine table
+            fm_tone_idx &= (DDS_TBL_SIZE-1);        // limit lookup to range of sine table
+            ads.a_buffer[i] += ((float32_t)(DDS_TABLE[fm_tone_idx]) * FM_TONE_AMPLITUDE_SCALING * fm_mod_mult); // load indexed sine wave value, adding it to audio
+        }
+    }
+    //
+    // do tone  generation using the NCO (a.k.a. DDS) method.  This is used for tone burst ("whistle-up") generation, summing the result in "a".
+    //
+    if(ads.fm_tone_burst_active)                // generate tone burst only if it is enabled
+    {
+        for(int i = 0; i < size/2; i++)
+        {
+            // Calculate next sample
+            fm_tone_burst_accum += ads.fm_tone_burst_word;  // generate tone using frequency word, calculating next sample
+            fm_tone_burst_accum &= 0xffffff;                // limit to 16 Meg range
+            fm_tone_burst_idx    = fm_tone_burst_accum >> FM_TONE_DDS_ACC_SHIFT;    // shift accumulator to index sine table
+            fm_tone_burst_idx &= (DDS_TBL_SIZE-1);      // limit lookup to range of sine table
+            ads.a_buffer[i] += ((float32_t)((DDS_TABLE[fm_tone_burst_idx]) * FM_MOD_SCALING * fm_mod_mult) / FM_TONE_BURST_MOD_SCALING);    // load indexed sine wave value, adding it to audio
+        }
+    }
+    //
+    // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
+    //
+    for(int i = 0; i < size/2; i++)
+    {
+        // Calculate next sample
+        fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (ads.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));   // change frequency using scaled audio
+        fm_mod_accum &= 0xffff;             // limit to 64k range
+        fm_mod_idx    = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT;
+        fm_mod_idx &= (DDS_TBL_SIZE - 1);       // limit lookup to range of sine table
+        ads.i_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);               // Load I value
+        fm_mod_idx += (DDS_TBL_SIZE/4); // do 90 degree shift by indexing 1/4 into sine table
+        fm_mod_idx &= (DDS_TBL_SIZE - 1);       // limit lookup to range of sine table
+        ads.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);   // Load Q value
+    }
+
+    bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+
+    audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, size);
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_processor
 //* Object              :
@@ -2695,11 +2864,6 @@ void AudioDriver_delay_f32(
 //*----------------------------------------------------------------------------
 static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
-    static ulong 		i, fm_mod_idx = 0, fm_mod_accum = 0, fm_tone_idx = 0, fm_tone_accum = 0, fm_tone_burst_idx = 0, fm_tone_burst_accum = 0;
-    static float32_t	hpf_prev_a, hpf_prev_b;
-    float32_t			gain_calc, min, max, a, b, fm_mod_mult;
-    int16_t				*ptr;
-    uint32_t			pindex;
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
@@ -2712,7 +2876,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         // If in CW mode or Tune  DIQ audio input is ignored
         // Output I and Q as stereo, fill buffer
-        for(i = 0; i < size/2; i++)	 				// Copy to single buffer
+        for(int i = 0; i < size/2; i++)	 				// Copy to single buffer
         {
             ads.i_buffer[i] = (float)*src++;
             ads.q_buffer[i] = (float)*src++;
@@ -2733,17 +2897,13 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // Generate CW
             if(cw_gen_process((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size) == 0)
             {
+                memset(dst,0,size*sizeof(*dst));
                 // Pause or inactivity
-                for(i = 0; i < size/2; i++)
-                {
-                    *dst++ = 0;
-                    *dst++ = 0;
-                }
             }
             else
             {
                 // apply I/Q amplitude & phase adjustments
-            	// Wouldn�t it be necessary to include IF conversion here? DD4WH June 16th, 2016
+            	// Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
             	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
                 audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
             }
@@ -2753,52 +2913,14 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     // SSB processor
     else if((ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_USB))
     {
-        if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)      // Are we in LINE IN mode?
-        {
-            gain_calc = LINE_IN_GAIN_RESCALE;           // Yes - fixed gain scaling for line input - the rest is done in hardware
-        }
-        else if (ts.tx_audio_source == TX_AUDIO_MIC)
-        {
-            gain_calc = (float)ts.tx_mic_gain_mult;     // We are in MIC In mode:  Calculate Microphone gain
-            gain_calc /= MIC_GAIN_RESCALE;              // rescale microphone gain to a reasonable range
-        }
-        else
-        {
-            gain_calc = 1;
-        }
-
-
         if(ts.tune)	 	// TUNE mode?  If so, generate tone so we can adjust TX IQ phase and gain
         {
             softdds_runf((float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer,size/2);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
         }
         else	 		// Not tune mode - use audio from CODEC
         {
-            if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)  	 	// Are we in LINE IN mode?
-            {
-                src++;
-                // use right channel data
-            }
-            // Fill I and Q buffers with left channel(same as right)
-            for(i = 0; i < size/2; i++)	 				// Copy to single buffer
-            {
-                ads.a_buffer[i] = (float)*src;
-                src += 2;								// Next sample
-            }
 
-            // Apply gain if not in TUNE mode
-            // this is the LINE GAIN!
-            arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);	// apply gain
-            //
-            arm_max_f32((float32_t *)ads.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
-            arm_min_f32((float32_t *)ads.a_buffer, size/2, &min, &pindex);
-            min = fabs(min);
-            if(min > max)
-            {
-                max = min;
-            }
-            ads.peak_audio = max;
-
+            AudioDriver_tx_fill_audio_buffer(src,size);
             // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
             // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
@@ -2819,43 +2941,25 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         if(!ads.tx_filter_adjusting)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
         {
             // yes - apply transformation AND audio filtering to buffer data
-
-        	// put delay line here for i_buffer ;-)
-        	//
-        	// has to be of different length depending on whether the Hilbert for Q uses I_TX_NUM_TAPS_WIDE or I_TX_NUM_TAPS number of taps
-        	// delay samples = (taps - 1) / 2
-        	//
             // + 0 deg to I data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
-
             // - 90 deg to Q data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
         }
 
-        if(!ts.tune)	 	// do post-filter gain calculations if we are NOT in TUNE mode
-        {
-            // perform post-filter gain operation
-            // this is part of the compression
-            //
-            gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
-            gain_calc /= 2;									// halve it
-            gain_calc += 0.5;								// offset it so that 2 = unity
-            arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers
-            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, size/2);
-        }
-
         audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
-        if(ts.iq_freq_mode)	 		// is transmit frequency conversion to be done?
-        	// USB && (-6kHz || -12kHz) --> false, else true
-        	// LSB && (+6kHz || +12kHz) --> false, else true
+        if(ts.iq_freq_mode)
         {
-
+            // is transmit frequency conversion to be done?
+            // USB && (-6kHz || -12kHz) --> false, else true
+            // LSB && (+6kHz || +12kHz) --> false, else true
             bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
             swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
             audio_rx_freq_conv(size, swap);
         }
-        //
+
         // apply I/Q amplitude & phase adjustments
         audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, size);
     }
@@ -2866,36 +2970,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         if(ts.iq_freq_mode)	 				// is translation active?
         {
-            if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)  	 	// Are we in LINE IN mode?
-            {
-                src++;
-                // use right channel data
-            }
-            // Translation is active - Fill I and Q buffers with left channel(same as right)
-            for(i = 0; i < size/2; i++)	 				// Copy to single buffer
-            {
-                ads.a_buffer[i] = (float)*src;
-                src += 2;								// Next sample
-            }
-            //
-            if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
-                gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
-            else
-            {
-                gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
-                gain_calc /= MIC_GAIN_RESCALE;				// rescale microphone gain to a reasonable range
-            }
+            AudioDriver_tx_fill_audio_buffer(src,size);
 
-            // Apply gain if not in TUNE mode
-            //
-            arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);	// apply gain
-            //
-            arm_max_f32((float32_t *)ads.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
-            arm_min_f32((float32_t *)ads.a_buffer, size/2, &min, &pindex);
-            min = fabs(min);
-            if(min > max)
-                max = min;
-            ads.peak_audio = max;
             //
             // Apply the TX equalization filtering:  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
@@ -2904,7 +2980,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // over the 275-2500 Hz range.
             //
             if(!(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
+            {
                 arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);	// this is the 275-2500-ish bandpass filter with low-end pre-emphasis
+            }
             //
             // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
             // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
@@ -2915,16 +2993,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
             // - 90 deg to Q data
             arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
-            //
-            // perform post-filter gain operation
-            //
-            gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
-            gain_calc /= 2;									// halve it
-            gain_calc += 0.5;								// offset it so that 2 = unity
-            //
-            arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers
-            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, size/2);
-            //
+
             audio_tx_compressor(size, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
             //
             // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
@@ -2936,199 +3005,43 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             //
             arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e_buffer, size/2);
             arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, size/2);
-            //
-            //
-            // generate AM carrier by applying a "DC bias" to the audio
-            //
-            arm_offset_f32((float32_t *)ads.i_buffer, AM_CARRIER_LEVEL, (float32_t *)ads.i_buffer, size/2);
-            arm_offset_f32((float32_t *)ads.q_buffer, (-1 * AM_CARRIER_LEVEL), (float32_t *)ads.q_buffer, size/2);
-            //
-            // check and apply correct translate mode
-            //
-            if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
-                audio_rx_freq_conv(size, 0);	// set "RX LO IS HIGH" mode
-            else								// it is in "RX LO LOW" mode
-                audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
-            //
-            //
-            // Equalize based on band and simultaneously apply I/Q gain adjustments
-            //
-            arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
-            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
-            //
-            ptr = dst;	// save a copy of the destination pointer to the DMA data before we increment it for production of USB data
+
+            AudioDriver_tx_am_sideband_processor(size);
             //
             // Output I and Q as stereo - storing an LSB AM signal in the DMA buffer
             //
-            for(i = 0; i < size/2; i++)
+            int16_t *ptr = dst; // save a copy of the destination pointer to the DMA data before we increment it for production of USB data
+            for(int i = 0; i < size/2; i++)
             {
                 // Prepare data for DAC
-                *dst++ = (int16_t)ads.q_buffer[i];	// save left channel
-                *dst++ = (int16_t)ads.i_buffer[i];	// save right channel
+                *ptr++ = (int16_t)ads.q_buffer[i];	// save left channel
+                *ptr++ = (int16_t)ads.i_buffer[i];	// save right channel
             }
-            //
+
             // Now, generate the upper sideband of the AM signal:  We must do much of this again to produce an identical (but "different") signal (opposite polarity)
-            //
             arm_negate_f32((float32_t *)ads.e_buffer, (float32_t *)ads.q_buffer, size/2);
             arm_negate_f32((float32_t *)ads.f_buffer, (float32_t *)ads.i_buffer, size/2);
-            //
-            // generate AM carrier by applying a "DC bias" to the audio
-            //
-            arm_offset_f32((float32_t *)ads.i_buffer, AM_CARRIER_LEVEL, (float32_t *)ads.i_buffer, size/2);
-            arm_offset_f32((float32_t *)ads.q_buffer, (-1 * AM_CARRIER_LEVEL), (float32_t *)ads.q_buffer, size/2);
-            //
-            // check and apply correct translate mode
-            //
-            if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// is it "RX LO HIGH" mode?
-                audio_rx_freq_conv(size, 0);	// set "LO IS HIGH" mode
-            else								// it is in "RX LO LOW" mode
-                audio_rx_freq_conv(size, 1);	// set conversion to "RX LO IS LOW" mode
-            //
-            // Equalize based on band and simultaneously apply I/Q gain adjustments
-            //
-            arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
-            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
-            //
-            dst = ptr;	// restore the copy of the pointer to the DMA data (yes, I know we could have used "ptr" below...)
-            //
+
+            AudioDriver_tx_am_sideband_processor(size);
+
             // Output I and Q as stereo
-            for(i = 0; i < size/2; i++)
+            for(int i = 0; i < size/2; i++)
             {
-                //
                 // Prepare data for DAC, adding the USB AM data to the already-stored LSB AM data
-                //
                 (*dst++) += (int16_t)ads.q_buffer[i];	// save left channel
                 (*dst++) += (int16_t)ads.i_buffer[i];	// save right channel
             }
         }
         else	 	// Translate mode is NOT active - we CANNOT do full-carrier AM! (if we tried, we'd end up with DSB SSB because of the "DC hole"!))
         {
-            for(i = 0; i < size/2; i++)	 				// send nothing out to the DAC if AM attempted with translate mode turned off!
-            {
-                *dst++ = 0;	// save left channel
-                *dst++ = 0;	// save right channel
-            }
+            memset(dst,0,size*sizeof(*dst));
+	 		// send nothing out to the DAC if AM attempted with translate mode turned off!
         }
     }
-    //
-    // -----------------------------
-    // FM handler  [KA7OEI October, 2015]
-    //
     else if((ts.dmod_mode == DEMOD_FM) && (ts.iq_freq_mode) && (!ts.tune))	 	//	Is it in FM mode *AND* is frequency translation active and NOT in TUNE mode?  (No FM possible unless in frequency translate mode!)
     {
-        // Fill I and Q buffers with left channel(same as right)
-        //
-        if(ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)	// are we in 5 kHz modulation mode?
-            fm_mod_mult = 2;	// yes - multiply all modulation factors by 2
-        else
-            fm_mod_mult = 1;	// not in 5 kHz mode - used default (2.5 kHz) modulation factors
-        //
-        if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)  	 	// Are we in LINE IN mode?
-        {
-            src++;
-            // use right channel data
-        }
-        for(i = 0; i < size/2; i++)	 				// Copy to single buffer
-        {
-            ads.a_buffer[i] = (float)*src;
-            src += 2;								// Next sample
-        }
-        //
-        if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
-            gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
-        else
-        {
-            gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
-            gain_calc /= MIC_GAIN_RESCALE;				// rescale microphone gain to a reasonable range
-        }
-        //
-        arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);	// apply gain
-        //
-        arm_max_f32((float32_t *)ads.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
-        arm_min_f32((float32_t *)ads.a_buffer, size/2, &min, &pindex);
-        min = fabs(min);
-        if(min > max)
-            max = min;
-        ads.peak_audio = max;		// save peak sample for "AUDio" metering
-        //
-        arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.i_buffer, size/2);	// Use special bandpass filter designed for FM (above 200 Hz, limit to below 2800 Hz)
-        //
-        // perform post-filter gain operation
-        //
-        //
-        gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
-        gain_calc /= 2;									// halve it
-        gain_calc += 0.5;								// offset it so that 2 = unity
-        arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);		// use optimized function to apply scaling to audio buffer - put in "i"
-        //
-        audio_tx_compressor(size, FM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
-        //
-        // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "i" and puts it into "a".
-        //
-        for(i = 0; i < size/2; i++)
-        {
-            //
-            //
-            a = ads.i_buffer[i];
-            //
-            b = FM_TX_HPF_ALPHA * (hpf_prev_b + a - hpf_prev_a);	// do differentiation
-            hpf_prev_a = a;		// save "[n-1] samples for next iteration
-            hpf_prev_b = b;
-            //
-            ads.a_buffer[i] = b;	// save differentiated data in audio buffer
-        }
-        //
-        // do tone generation using the NCO (a.k.a. DDS) method.  This is used for subaudible tone generation and, if necessary, summing the result in "a".
-        //
-        if((ads.fm_subaudible_tone_word) && (!ads.fm_tone_burst_active))	 	// generate tone only if it is enabled (and not during a tone burst)
-        {
-            for(i = 0; i < size/2; i++)
-            {
-                fm_tone_accum += ads.fm_subaudible_tone_word;	// generate tone using frequency word, calculating next sample
-                fm_tone_accum &= 0xffffff;				// limit to 16 Meg range
-                fm_tone_idx    = fm_tone_accum >> FM_TONE_DDS_ACC_SHIFT;	// shift accumulator to index sine table
-                fm_tone_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
-                ads.a_buffer[i] += ((float32_t)(DDS_TABLE[fm_tone_idx]) * FM_TONE_AMPLITUDE_SCALING * fm_mod_mult);	// load indexed sine wave value, adding it to audio
-            }
-        }
-        //
-        // do tone  generation using the NCO (a.k.a. DDS) method.  This is used for tone burst ("whistle-up") generation, summing the result in "a".
-        //
-        if(ads.fm_tone_burst_active)	 			// generate tone burst only if it is enabled
-        {
-            for(i = 0; i < size/2; i++)
-            {
-                // Calculate next sample
-                fm_tone_burst_accum += ads.fm_tone_burst_word;	// generate tone using frequency word, calculating next sample
-                fm_tone_burst_accum &= 0xffffff;				// limit to 16 Meg range
-                fm_tone_burst_idx    = fm_tone_burst_accum >> FM_TONE_DDS_ACC_SHIFT;	// shift accumulator to index sine table
-                fm_tone_burst_idx &= (DDS_TBL_SIZE-1);		// limit lookup to range of sine table
-                ads.a_buffer[i] += ((float32_t)((DDS_TABLE[fm_tone_burst_idx]) * FM_MOD_SCALING * fm_mod_mult) / FM_TONE_BURST_MOD_SCALING);	// load indexed sine wave value, adding it to audio
-            }
-        }
-        //
-        // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
-        //
-        for(i = 0; i < size/2; i++)
-        {
-            // Calculate next sample
-            fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (ads.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));	// change frequency using scaled audio
-            fm_mod_accum &= 0xffff;				// limit to 64k range
-            fm_mod_idx    = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT;
-            fm_mod_idx &= (DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
-            ads.i_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);				// Load I value
-            fm_mod_idx += (DDS_TBL_SIZE/4);	// do 90 degree shift by indexing 1/4 into sine table
-            fm_mod_idx &= (DDS_TBL_SIZE - 1);		// limit lookup to range of sine table
-            ads.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);	// Load Q value
-        }
-        //
-        // Equalize based on band and simultaneously apply I/Q gain adjustments
-        //
-        {
-            bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
-            audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, size);
-        }
-
+        // FM handler  [KA7OEI October, 2015]
+        audio_tx_fm_processor(src,dst,size);
     }
     if (ts.debug_tx_audio == true)
     {
@@ -3136,7 +3049,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         if (true || ts.tx_audio_source == TX_AUDIO_DIGIQ)
         {
 
-            for(i = 0; i < size/2; i++)
+            for(int i = 0; i < size/2; i++)
             {
                 //
                 // 16 bit format - convert to float and increment
@@ -3150,9 +3063,8 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         }
         else
         {
-            for(i = 0; i < size/2; i++)
+            for(int i = 0; i < size/2; i++)
             {
-                //
                 // 16 bit format - convert to float and increment
                 // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
                 if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
