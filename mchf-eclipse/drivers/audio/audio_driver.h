@@ -367,6 +367,7 @@ typedef struct SMeter
 #define FM_MOD_SCALING	FM_MOD_SCALING_2K5		// For FM modulator - system deviation
 #define	FM_MOD_AMPLITUDE_SCALING	0.875		// For FM modulator:  Scaling factor for output of modulator to set proper output power
 #define	FM_FREQ_MOD_WORD			8192		// FM frequency modulator word for modulation DDS/NCO at 6 kHz (6 kHz = 1/8th sample rate, 1/8th of 65536 = 8192)
+#define FM_MOD_DDS_ACC_SHIFT   6
 //
 #define	FM_ALC_GAIN_CORRECTION	0.95
 //
