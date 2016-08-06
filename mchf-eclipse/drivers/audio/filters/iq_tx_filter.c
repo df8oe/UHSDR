@@ -417,7 +417,7 @@ const IQ_FilterDescriptor iq_tx_narrow =
 };
 #endif
 
-#if 1
+#if 0
 // trial with +/-45 degrees!!!
 // phase added, 48000 sampling frequency
 // Fc=1.50kHz, BW=2.70kHz
