@@ -2927,7 +2927,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
             // over the 275-2500 Hz range.
             //
-            if(is_ssb_tx_filter_enabled())	// Do the audio filtering *IF* it is enabled
+            //            if(is_ssb_tx_filter_enabled())	// Do the audio filtering *IF* it is enabled
+            // FIXME: quick & dirty: TX IIR filter cannot be disabled anymore
+            if(1)	// Do the audio filtering *IF* it is enabled
             {
                 arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);
             }

@@ -984,7 +984,9 @@ void AudioFilter_InitTxHilbertFIR(void)
 
     IQ_FilterDescriptor iq_tx_filter =
             (ts.tx_filter == TX_FILTER_WIDE_BASS ||
-             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_narrow;
+            		//             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_narrow;
+            		// FIXME: dirty trial: always use the "wide" 201 tap Hilbert filter
+             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_wide;
 
 
     fc.tx_q_num_taps = iq_tx_filter.num_taps;
