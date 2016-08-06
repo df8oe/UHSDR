@@ -3864,7 +3864,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 */
     case CONFIG_SSB_TX_FILTER:	// Type of SSB TX audio filter
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_filter,
-                                              0,
+//                0,
+                1,
                                               TX_FILTER_WIDE_TREBLE,
                                               TX_FILTER_NARROW,
                                               1
