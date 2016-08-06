@@ -1379,6 +1379,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         switch(ts.ser_eeprom_in_use)
          {
          case SER_EEPROM_IN_USE_I2C:
+             label = " [used]";
              *m_clr_ptr = Green;
              break; // in use & ok
          case SER_EEPROM_IN_USE_ERROR: // not ok
@@ -1390,7 +1391,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
              *m_clr_ptr = Red;
 			 break;
 		 default:
-             label = " [error]";
+             label = " [not used]";
              *m_clr_ptr = Red;
          }
 
@@ -1408,7 +1409,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size;
             i2c_size_unit = "B";
         }
-        snprintf(out,48,"%x %s/%u%s%s",ts.ser_eeprom_type, SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
+        snprintf(out,48,"%s/%u%s%s",SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name, i2c_size, i2c_size_unit, label);
     }
     break;
     case INFO_BL_VERSION:
