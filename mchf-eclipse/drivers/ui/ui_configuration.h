@@ -513,7 +513,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TREBLE_GAIN				361		// treble gain highShelf filter
 #define	EEPROM_S_METER					362		// S-Meter configuration
 #define EEPROM_TX_FILTER				363		// TX_Filter configuration
-#define EEPROM_FIRST_UNUSED 			364  // change this if new value ids are introduced
+#define EEPROM_TX_BASS_GAIN				364		// TX bass gain lowShelf filter
+#define EEPROM_TX_TREBLE_GAIN			365		// TX treble gain highShelf filter
+#define EEPROM_FIRST_UNUSED 			366  // change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
