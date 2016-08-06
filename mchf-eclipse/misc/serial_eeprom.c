@@ -194,7 +194,7 @@ static void SerialEEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* deva
             *devaddr_ptr = MEM_DEVICE_WRITE_ADDR + 2;            // 24LC1026
             break;
         case  19: // 24CM02
-            *devaddr_ptr = MEM_DEVICE_WRITE_ADDR + ((*Addr_ptr & 0x3000) >> 15); // the upper bits 16 and 17 determine the I2C address offset
+            *devaddr_ptr = MEM_DEVICE_WRITE_ADDR + ((*Addr_ptr & 0x30000) >> 15); // the upper bits 16 and 17 determine the I2C address offset
             break;
         }
         *Addr_ptr &= 0xFFFF; // mask address to 16bits in all cases
@@ -395,17 +395,17 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
                 // device addresses. We simply try to read from them
                 // and if it succeeds we know the device type
                 // We need to check unique addresses for each EEPROM type
-                // 0xA0 + 0xA8
+                // 0xA0 + 0x10000: 0xA8
                 if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
                 {
                     ser_eeprom_type = 17;            // 24LC1025
                 }
-                // 0xA0 + 0x1000: 0xA2
+                // 0xA0 + 0x10000: 0xA2
                 if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
                 {
                     ser_eeprom_type = 18;            // 24LC1026
                 }
-                // 0xA0 + 0x1000: 0xA2 + 0x2000: 0xA4 + 0x3000: 0xA6
+                // 0xA0 + 0x10000: 0xA2 + 0x20000: 0xA4 + 0x30000: 0xA6
                 if(SerialEEPROM_24Cxx_Read(0x20000,19) < 0x100)
                 {
                     ser_eeprom_type = 19;            // 24CM02
