@@ -3938,12 +3938,16 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
                 // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
                 enc_one_mode = ts.enc_one_mode;
                 ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
-                UiDriverChangeEncoderOneMode(true);
-                // change display related to encoder one to TX mode (e.g. CW speed or MIC/LINE gain)
                 enc_three_mode = ts.enc_thr_mode;
                 ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
-                UiDriverChangeEncoderThreeMode(true);
+
             }
+
+            // force redisplay of Encoder boxes and values
+            UiDriverChangeEncoderOneMode(true);
+            UiDriverChangeEncoderTwoMode(true);
+            UiDriverChangeEncoderThreeMode(true);
+
         }
         else if (state == TRX_STATE_TX_TO_RX)
         {
@@ -3953,10 +3957,14 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)                // If auto-switch on TX/RX is enabled
             {
                 ts.enc_one_mode = enc_one_mode;
-                UiDriverChangeEncoderOneMode(true);
                 ts.enc_thr_mode = enc_three_mode;
-                UiDriverChangeEncoderThreeMode(true);
             }
+
+            // force redisplay of Encoder boxes and values
+            UiDriverChangeEncoderOneMode(true);
+            UiDriverChangeEncoderTwoMode(true);
+            UiDriverChangeEncoderThreeMode(true);
+
         }
     }
 
@@ -4804,14 +4812,14 @@ static void UiDriverCheckEncoderTwo()
                 // Take appropriate action
                 switch(ts.enc_two_mode)
                 {
-                case ENC_TWO_MODE_TX_BASS_GAIN:
+                case ENC_TWO_MODE_BASS_GAIN:
                     ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
                     // set filter instance
                     audio_driver_set_rx_audio_filter(ts.dmod_mode);
                     // display bass gain
                     UiDriver_DisplayTone(true);
                     break;
-                case ENC_TWO_MODE_TX_TREBLE_GAIN:
+                case ENC_TWO_MODE_TREBLE_GAIN:
                     ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
                     // set filter instance
                     audio_driver_set_rx_audio_filter(ts.dmod_mode);
@@ -4955,15 +4963,6 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         {
     		//
         	ts.enc_two_mode++;
-            // take care of TX case
-        	if(ts.txrx_mode == TRX_MODE_TX && ts.enc_two_mode < ENC_TWO_MODE_TX_BASS_GAIN) {
-        		ts.enc_two_mode = ENC_TWO_MODE_TX_BASS_GAIN;
-        	}
-        	// if in RX mode
-        	if(ts.txrx_mode == TRX_MODE_RX && (ts.enc_two_mode == ENC_TWO_MODE_TX_BASS_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_TREBLE_GAIN)) {
-        		ts.enc_two_mode = ENC_TWO_NUM_MODES;
-        	}
-
 
             // only switch to notch frequency adjustment, if notch enabled!
             if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && is_dsp_mnotch() == false)
@@ -5012,14 +5011,6 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriver_DisplayDSPMode(0);
         UiDriver_DisplayTone(1*inactive_mult);
         break;
-    case ENC_TWO_MODE_TX_BASS_GAIN:
-        UiDriver_DisplayDSPMode(0);
-        UiDriver_DisplayTone(1*inactive_mult);
-    	break;
-    case ENC_TWO_MODE_TX_TREBLE_GAIN:
-        UiDriver_DisplayDSPMode(0);
-        UiDriver_DisplayTone(1*inactive_mult);
-    	break;
     default:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplayNoiseBlanker(0);
@@ -5454,30 +5445,30 @@ static void UiDriver_DisplayTone(bool encoder_active)
 
     // UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16 + 12 , 112, Black);
 
-    bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_BASS_GAIN);
+    bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
     char temp[5];
+    int bas,tre;
+
     if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
     {
-    	snprintf(temp,5,"%3d", ts.tx_bass_gain);
+        bas = ts.tx_bass_gain;
+        tre = ts.tx_treble_gain;
     }
     else
     {
-        snprintf(temp,5,"%3d", ts.bass_gain);
+        bas = ts.bass_gain;
+        tre = ts.treble_gain;
     }
+
+    snprintf(temp,5,"%3d", bas);
+
     // use 2,1 for placement below existing boxes
     UiDriverEncoderDisplay(0,1,"BAS", enable && encoder_active, temp, White);
 
 
-    enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_TREBLE_GAIN);
+    enable = (ts.enc_two_mode == ENC_TWO_MODE_TREBLE_GAIN);
 
-    if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
-    {
-    	snprintf(temp,5,"%3d", ts.tx_treble_gain);
-    }
-    else
-    {
-        snprintf(temp,5,"%3d", ts.treble_gain);
-    }
+    snprintf(temp,5,"%3d", tre);
 
     // use 2,2 for placement below existing boxes
     UiDriverEncoderDisplay(1,1,"TRB", enable && encoder_active, temp, White);
@@ -6450,13 +6441,6 @@ static void UiDriver_HandleLoTemperature()
 	kbs.last_char = 0;
 }*/
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverSwitchOffPtt
-//* Object              : PTT button release handling
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 typedef enum
 {
     CONFIG_DEFAULTS_KEEP = 0,
