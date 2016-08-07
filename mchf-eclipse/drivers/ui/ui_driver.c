@@ -4953,7 +4953,18 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
 
         if(just_display_no_change == false)
         {
-            ts.enc_two_mode++;
+    		//
+        	ts.enc_two_mode++;
+            // take care of TX case
+        	if(ts.txrx_mode == TRX_MODE_TX && ts.enc_two_mode < ENC_TWO_MODE_TX_BASS_GAIN) {
+        		ts.enc_two_mode = ENC_TWO_MODE_TX_BASS_GAIN;
+        	}
+        	// if in RX mode
+        	if(ts.txrx_mode == TRX_MODE_RX && (ts.enc_two_mode == ENC_TWO_MODE_TX_BASS_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_TREBLE_GAIN)) {
+        		ts.enc_two_mode = ENC_TWO_NUM_MODES;
+        	}
+
+
             // only switch to notch frequency adjustment, if notch enabled!
             if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && is_dsp_mnotch() == false)
             {
@@ -4965,6 +4976,7 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
             {
                 ts.enc_two_mode++;
             }
+
             // flip round
             if(ts.enc_two_mode >= ENC_TWO_NUM_MODES)
             {
@@ -5000,6 +5012,14 @@ static void UiDriverChangeEncoderTwoMode(bool just_display_no_change)
         UiDriver_DisplayDSPMode(0);
         UiDriver_DisplayTone(1*inactive_mult);
         break;
+    case ENC_TWO_MODE_TX_BASS_GAIN:
+        UiDriver_DisplayDSPMode(0);
+        UiDriver_DisplayTone(1*inactive_mult);
+    	break;
+    case ENC_TWO_MODE_TX_TREBLE_GAIN:
+        UiDriver_DisplayDSPMode(0);
+        UiDriver_DisplayTone(1*inactive_mult);
+    	break;
     default:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplayNoiseBlanker(0);
@@ -5434,7 +5454,7 @@ static void UiDriver_DisplayTone(bool encoder_active)
 
     // UiLcdHy28_DrawFullRect(POS_AG_IND_X, POS_AG_IND_Y + NOTCH_DELTA_Y, 16 + 12 , 112, Black);
 
-    bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN);
+    bool enable = (ts.enc_two_mode == ENC_TWO_MODE_BASS_GAIN || ts.enc_two_mode == ENC_TWO_MODE_TX_BASS_GAIN);
     char temp[5];
     if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
     {
