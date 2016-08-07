@@ -1073,9 +1073,10 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 
     if((ts.nb_setting > 0) &&  (ts.dsp_active & DSP_NB_ENABLE)
 //            && (ts.dmod_mode != DEMOD_AM && ts.dmod_mode != DEMOD_FM)
-	        && (ts.dmod_mode != DEMOD_FM)
-        && (FilterPathInfo[ts.filter_path].sample_rate_dec != RX_DECIMATION_RATE_24KHZ ))
-        // bail out if noise blanker disabled, in AM/FM mode, or set to 10 kHz
+	        && (ts.dmod_mode != DEMOD_FM))
+//        && (FilterPathInfo[ts.filter_path].sample_rate_dec != RX_DECIMATION_RATE_24KHZ ))
+
+			// bail out if noise blanker disabled, in AM/FM mode, or set to 10 kHz
     {
 
         nb_short_setting = (float)ts.nb_setting;		// convert and rescale NB1 setting for higher resolution in adjustment
