@@ -97,8 +97,8 @@ void I2S_Block_Init(void)
     DMA_InitStructure2.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure2.DMA_Priority = DMA_Priority_High;
     DMA_InitStructure2.DMA_FIFOMode = DMA_FIFOMode_Enable;
-    DMA_InitStructure2.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
-    DMA_InitStructure2.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+    DMA_InitStructure2.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+    DMA_InitStructure2.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
     DMA_InitStructure2.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
     DMA_Init(AUDIO_I2S_EXT_DMA_STREAM, &DMA_InitStructure2);
 
