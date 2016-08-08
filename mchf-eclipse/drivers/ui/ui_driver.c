@@ -1857,6 +1857,23 @@ static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool e
     }
 }
 
+static void UiDriverFButton_F3MemSplit()
+{
+    const char* cap;
+    uint32_t color;
+
+    if(ts.vfo_mem_flag)            // is it in VFO mode now?
+    {
+        cap = "MEM";
+        color = White;    // yes - indicate with color
+    }
+    else
+    {
+        color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+        cap = "SPLIT";
+    }
+    UiDriverFButtonLabel(3,cap,color);
+}
 
 void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool encoder_active,
                                   uint32_t value)
@@ -2021,18 +2038,9 @@ static void UiDriverProcessKeyboard()
                 }
                 else	 			// not in menu mode - toggle between VFO/SPLIT and Memory mode
                 {
-                    if(!ts.vfo_mem_flag)	 		// is it in VFO mode now?
-                    {
-                        ts.vfo_mem_flag = 1;		// yes, switch to memory mode
-                        UiDriverFButtonLabel(3,"MEM",White);	// yes - indicate with color
-                    }
-                    else
-                    {
-                        uint32_t color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
-                        ts.vfo_mem_flag = 0;		// it was in memory mode - switch to VFO mode
-                        UiDriverFButtonLabel(3,"SPLIT",color);
-                    }
-                    //
+                    ts.vfo_mem_flag = ! ts.vfo_mem_flag;
+                    UiDriverFButton_F3MemSplit();
+
                 }
                 break;
             case BUTTON_F4_PRESSED:	// Press-and-hold button F4
@@ -2436,34 +2444,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
                 // Restore encoder displays to previous modes
                 UiDriver_RefreshEncoderDisplay();
                 UiDriver_DisplayFilter();	// update bandwidth display
-                // Label for Button F1
-                UiDriverFButton_F1MenuExit();
-                // Label for Button F2
-                UiDriverFButtonLabel(2,"SNAP",White);
 
-                // Display Label for Button F3
-                {
-                    uint32_t color;
-                    char* label;
+                UiDriverCreateFunctionButtons(false);
 
-                    if(!ts.vfo_mem_flag)	 	// in normal VFO mode?
-                    {
-                        label = "SPLIT";
-                        color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
-                    }
-                    else	 					// in memory mode
-                    {
-                        color = White;
-                        label = "MEM";
-                    }
-                    UiDriverFButtonLabel(3,label,color);	// yes - indicate with color
-                }
-                // Display Label for Button F4
-                {
-                    char* label = is_vfo_b()?"VFO B":"VFO A";
-                    // VFO B active?
-                    UiDriverFButtonLabel(4,label,White);
-                }
             }
         }
     }
@@ -2823,19 +2806,9 @@ static void UiDriver_DisplayBand(uchar band)
 //*----------------------------------------------------------------------------
 static void UiDriverInitMainFreqDisplay()
 {
-    if(!(is_splitmode()))	 	// are we in SPLIT mode?
+    UiDriverFButton_F3MemSplit();
+    if((is_splitmode()))	 	// are we in SPLIT mode?
     {
-        if(!ts.vfo_mem_flag)	 	// update bottom of screen if in VFO (not memory) mode
-        {
-            UiDriverFButtonLabel(3,"SPLIT",SPLIT_INACTIVE_COLOUR);	// make SPLIT indicator grey to indicate off
-        }
-    }
-    else	 	// are we NOT in SPLIT mode?
-    {
-        if(!ts.vfo_mem_flag)	 	// update bottom of screen if in VFO (not memory) mode
-        {
-            UiDriverFButtonLabel(3,"SPLIT",White);	// make SPLIT indicator YELLOW to indicate on
-        }
         UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
         UiDriverDisplaySplitFreqLabels();
     }
@@ -2952,19 +2925,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
     // Button F2
     UiDriverFButtonLabel(2,"SNAP",White);
 
-    // Button F3
-    if(!ts.vfo_mem_flag)  	// is it in VFO (not memory) mode?
-    {
-        cap = " SPLIT";
-        clr= is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
-    }
-    else	 	// it is in memory mode (not VFO) mode
-    {
-        clr = White;
-        cap = "  MEM ";
-    }
-
-    UiDriverFButtonLabel(3,cap,clr);
+    UiDriverFButton_F3MemSplit();
 
     // Button F4
     UiDriverFButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
