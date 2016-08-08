@@ -1062,6 +1062,7 @@ static void Audio_Init(void)
 
 static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 {
+    const int16_t blockSize = size/2;
     static int16_t	delay_buf[AUDIO_RX_NB_DELAY_BUFFER_SIZE];
     static uchar	delbuf_inptr = 0, delbuf_outptr = 2;
     ulong	i;
@@ -1082,7 +1083,7 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
         nb_short_setting = (float)ts.nb_setting;		// convert and rescale NB1 setting for higher resolution in adjustment
         nb_short_setting /= 2;
 
-        for(i = 0; i < size/2; i++)	 		// Noise blanker function
+        for(i = 0; i < blockSize; i++)	 		// Noise blanker function
         {
             sig = (float)fabs(*src);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
             sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
@@ -1129,7 +1130,7 @@ static void audio_rx_noise_blanker(int16_t *src, int16_t size)
 //* Output Parameters   : uses variables in ads structure
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_rx_freq_conv(int16_t size, int16_t dir)
+static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
 {
     ulong 		i;
     float32_t	rad_calc;
@@ -1182,10 +1183,10 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
     }
     if(!flag)	 		// have we already calculated the sine wave?
     {
-        for(i = 0; i < size/2; i++)	 		// No, let's do it!
+        for(i = 0; i < blockSize; i++)	 		// No, let's do it!
         {
             rad_calc = (float32_t)i;		// convert to float the current position within the buffer
-            rad_calc /= (size/2);			// make this a fraction
+            rad_calc /= (blockSize);			// make this a fraction
             rad_calc *= (PI * 2);			// convert to radians
             rad_calc *= ts.multi;			// multiply by number of cycles that we want within this block (4 = 6 kHz offset)
             //
@@ -1195,20 +1196,20 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
     }
 
     // Do frequency conversion using optimized ARM math functions [KA7OEI]
-    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.c_buffer, size/2); // multiply products for converted I channel
-    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.d_buffer, size/2);
-    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.e_buffer, size/2);
-    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.f_buffer, size/2);    // multiply products for converted Q channel
+    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.c_buffer, blockSize); // multiply products for converted I channel
+    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.d_buffer, blockSize);
+    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.Osc_I_buffer, (float32_t *)ads.e_buffer, blockSize);
+    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.Osc_Q_buffer, (float32_t *)ads.f_buffer, blockSize);    // multiply products for converted Q channel
 
     if(!dir)	 	// Conversion is "above" on RX (LO needs to be set lower)
     {
-        arm_add_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, size/2);	// summation for I channel
-        arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, size/2);	// difference for Q channel
+        arm_add_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, blockSize);	// summation for I channel
+        arm_sub_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, blockSize);	// difference for Q channel
     }
     else	 	// Conversion is "below" on RX (LO needs to be set higher)
     {
-        arm_add_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, size/2);	// summation for I channel
-        arm_sub_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, size/2);	// difference for Q channel
+        arm_add_f32((float32_t *)ads.c_buffer, (float32_t *)ads.d_buffer, (float32_t *)ads.q_buffer, blockSize);	// summation for I channel
+        arm_sub_f32((float32_t *)ads.f_buffer, (float32_t *)ads.e_buffer, (float32_t *)ads.i_buffer, blockSize);	// difference for Q channel
     }
 }
 
@@ -1222,7 +1223,7 @@ static void audio_rx_freq_conv(int16_t size, int16_t dir)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_rx_agc_processor(int16_t psize)
+static void audio_rx_agc_processor(int16_t blockSize)
 {
     static ulong 		i;
     static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
@@ -1236,7 +1237,7 @@ static void audio_rx_agc_processor(int16_t psize)
     //
     if(ts.agc_mode != AGC_OFF)
     {
-        for(i = 0; i < psize/2; i++)
+        for(i = 0; i < blockSize; i++)
         {
             if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
             {
@@ -1273,25 +1274,25 @@ static void audio_rx_agc_processor(int16_t psize)
     else    // AGC Off - manual AGC gain
     {
         ads.agc_val = ads.agc_rf_gain;          // use logarithmic gain value in RF gain control
-        arm_fill_f32(ads.agc_rf_gain,(float32_t*)ads.agc_valbuf,psize/2);
+        arm_fill_f32(ads.agc_rf_gain,(float32_t*)ads.agc_valbuf,blockSize);
     }
 
     // Delay the post-AGC audio slightly so that the AGC's "attack" will very slightly lead the audio being acted upon by the AGC.
     // This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
 
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], psize/2);	// put new data into the delay buffer
-    arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, psize/2);	// take old data out of the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)&agc_delay[agc_delay_outbuf], (float32_t *)ads.a_buffer, blockSize);	// take old data out of the delay buffer
 
     // Update the in/out pointers to the AGC delay buffer
-    agc_delay_inbuf += psize/2;						// update circular delay buffer
-    agc_delay_outbuf = agc_delay_inbuf + psize/2;
+    agc_delay_inbuf += blockSize;						// update circular delay buffer
+    agc_delay_outbuf = agc_delay_inbuf + blockSize;
     agc_delay_inbuf %= ads.agc_delay_buflen;
     agc_delay_outbuf %= ads.agc_delay_buflen;
 
     // Now apply pre-calculated AGC values to delayed audio
 
-    arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
+    arm_mult_f32((float32_t *)ads.a_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.a_buffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
 
 }
 
@@ -1305,7 +1306,7 @@ static void audio_rx_agc_processor(int16_t psize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_fm(int16_t size)
+static void audio_demod_fm(int16_t blockSize)
 {
 
     float r, s, angle, abs_y, x, y, a, b;
@@ -1327,7 +1328,7 @@ static void audio_demod_fm(int16_t size)
         tone_det_enabled = 0;					// decoding is not enabled
 
 
-    for(i = 0; i < size/2; i++)
+    for(i = 0; i < blockSize; i++)
     {
         //
         // first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
@@ -1423,7 +1424,7 @@ static void audio_demod_fm(int16_t size)
     //
     // *** Squelch Processing ***
     //
-    arm_iir_lattice_f32(&IIR_Squelch_HPF, (float32_t *)ads.d_buffer, (float32_t *)ads.d_buffer, size/2);		// Do IIR high-pass filter on audio so we may detect squelch noise energy
+    arm_iir_lattice_f32(&IIR_Squelch_HPF, (float32_t *)ads.d_buffer, (float32_t *)ads.d_buffer, blockSize);		// Do IIR high-pass filter on audio so we may detect squelch noise energy
     //
     ads.fm_sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_sql_avg) + (FM_RX_SQL_SMOOTHING * sqrtf(fabs(ads.d_buffer[0])));	// IIR filter squelch energy magnitude:  We need look at only one representative sample
 
@@ -1504,7 +1505,7 @@ static void audio_demod_fm(int16_t size)
         //
         gcount++;		// this counter is used for the accumulation of data over multiple cycles
         //
-        for(i = 0; i < size/2; i++)
+        for(i = 0; i < blockSize; i++)
         {
 
             // Detect above target frequency
@@ -1592,14 +1593,14 @@ static void audio_demod_fm(int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
- static void audio_demod_am(int16_t size)
+ static void audio_demod_am(int16_t blockSize)
 {
     ulong i, j;
     bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
     if(!testSAM)  // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
     {
         j = 0;
-        for(i = 0; i < size/2; i++)	 					// interleave I and Q data, putting result in "b" buffer
+        for(i = 0; i < blockSize; i++)	 					// interleave I and Q data, putting result in "b" buffer
         {
             ads.b_buffer[j] = ads.i_buffer[i];
             j++;
@@ -1610,14 +1611,14 @@ static void audio_demod_fm(int16_t size)
         // perform complex vector magnitude calculation on interleaved data in "b" to recover
         // instantaneous carrier power:  sqrtf(b[n]^2+b[n+1]^2) - put result in "a"
         //
-        arm_cmplx_mag_f32((float32_t *)ads.b_buffer, (float32_t *)ads.a_buffer, size/2);	// use optimized (fast) ARM function
+        arm_cmplx_mag_f32((float32_t *)ads.b_buffer, (float32_t *)ads.a_buffer, blockSize);	// use optimized (fast) ARM function
     }
     // this is the very experimental demodulator for DSB
     // demodulates only the real part = I
     //
     if(testSAM)  // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
     {
-        for(i = 0; i < size/2; i++)	 			// put I into buffer a
+        for(i = 0; i < blockSize; i++)	 			// put I into buffer a
         {
             ads.a_buffer[i] = ads.i_buffer[i];
         }
@@ -1625,7 +1626,7 @@ static void audio_demod_fm(int16_t size)
     //
     // Now produce signal/carrier level for AGC
     //
-    arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+    arm_mean_f32((float32_t *)ads.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
     ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
 }
@@ -1641,7 +1642,7 @@ static void audio_demod_fm(int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_am_exp(int16_t size)
+static void audio_demod_am_exp(int16_t blockSize)
 {
     ulong i;
     float32_t sqrt;
@@ -1650,7 +1651,7 @@ static void audio_demod_am_exp(int16_t size)
         // this could possibly make this even faster than first interleaving and then calculating magnitude
     	// (because arm_cmplx_mag uses the same sqrt function )
 
-    for(i = 0; i < size/2; i++) {
+    for(i = 0; i < blockSize; i++) {
     	 arm_sqrt_f32 (ads.i_buffer[i] * ads.i_buffer[i] + ads.q_buffer[i] * ads.q_buffer[i], &sqrt);
     	 ads.a_buffer[i] = sqrt;
     }
@@ -1658,7 +1659,7 @@ static void audio_demod_am_exp(int16_t size)
     //
     // Now produce signal/carrier level for AGC
     //
-    arm_mean_f32((float32_t *)ads.a_buffer, size/2, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+    arm_mean_f32((float32_t *)ads.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
     //
     ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
@@ -1675,20 +1676,20 @@ static void audio_demod_am_exp(int16_t size)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_lms_notch_filter(int16_t psize)
+static void audio_lms_notch_filter(int16_t blockSize)
 {
     static ulong		lms2_inbuf = 0;
     static ulong		lms2_outbuf = 0;
 
     // DSP Automatic Notch Filter using LMS (Least Mean Squared) algorithm
     //
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_inbuf], psize/2);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_inbuf], blockSize);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lmsData.lms2Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_outbuf], (float32_t *)lmsData.errsig2, (float32_t *)ads.a_buffer, psize/2);	// do automatic notch
+    arm_lms_norm_f32(&lmsData.lms2Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms2_nr_delay[lms2_outbuf], (float32_t *)lmsData.errsig2, (float32_t *)ads.a_buffer, blockSize);	// do automatic notch
     // Desired (notched) audio comes from the "error" term - "errsig2" is used to hold the discarded ("non-error") audio data
     //
-    lms2_inbuf += psize/2;				// update circular de-correlation delay buffer
-    lms2_outbuf = lms2_inbuf + psize/2;
+    lms2_inbuf += blockSize;				// update circular de-correlation delay buffer
+    lms2_outbuf = lms2_inbuf + blockSize;
     lms2_inbuf %= ts.dsp_notch_delaybuf_len;
     lms2_outbuf %= ts.dsp_notch_delaybuf_len;
     //
@@ -1703,13 +1704,13 @@ static void audio_lms_notch_filter(int16_t psize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_lms_noise_reduction(int16_t psize)
+static void audio_lms_noise_reduction(int16_t blockSize)
 {
     static ulong		lms1_inbuf = 0, lms1_outbuf = 0;
 
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_inbuf], psize/2);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_inbuf], blockSize);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lmsData.lms1Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_outbuf], (float32_t *)ads.a_buffer, (float32_t *)lmsData.errsig1 ,psize/2);	// do noise reduction
+    arm_lms_norm_f32(&lmsData.lms1Norm_instance, (float32_t *)ads.a_buffer, (float32_t *)&lmsData.lms1_nr_delay[lms1_outbuf], (float32_t *)ads.a_buffer, (float32_t *)lmsData.errsig1 ,blockSize);	// do noise reduction
     //
     // Detect if the DSP output has gone to (near) zero output - a sign of it crashing!
     //
@@ -1726,8 +1727,8 @@ static void audio_lms_noise_reduction(int16_t psize)
     //
     ads.dsp_nr_sample = ads.a_buffer[0];		// provide a sample of the DSP output for crash detection
     //
-    lms1_inbuf += psize/2;	// bump input to the next location in our de-correlation buffer
-    lms1_outbuf = lms1_inbuf + psize/2;	// advance output to same distance ahead of input
+    lms1_inbuf += blockSize;	// bump input to the next location in our de-correlation buffer
+    lms1_outbuf = lms1_inbuf + blockSize;	// advance output to same distance ahead of input
     lms1_inbuf %= ts.dsp_nr_delaybuf_len;
     lms1_outbuf %= ts.dsp_nr_delaybuf_len;
 }
@@ -1972,12 +1973,12 @@ static void audio_snap_carrier (void)
 }
 
 
-static void AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, float32_t scaling, uint16_t size)
+static void AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, float32_t scaling, uint16_t blockSize)
 {
     float32_t                   e3_buffer[IQ_BUFSZ+1];
 
-    arm_scale_f32((float32_t *)src, scaling, e3_buffer, size);
-    arm_add_f32((float32_t *)dst, e3_buffer, (float32_t *)dst, size);
+    arm_scale_f32((float32_t *)src, scaling, e3_buffer, blockSize);
+    arm_add_f32((float32_t *)dst, e3_buffer, (float32_t *)dst, blockSize);
 }
 
 void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq)
@@ -2007,17 +2008,17 @@ void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_
     ads.iq_phase_balance = ((float32_t)(iq_phase_balance))/SCALING_FACTOR_IQ_PHASE_ADJUST;
 }
 
-static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int size)
+static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, int blockSize)
 {
     AudioDriver_CalcIQPhaseAdjust(dmod_mode, txrx_mode, ts.tune_freq);
 
     if (ads.iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
-        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, ads.iq_phase_balance, size/2);
+        AudioDriver_Mix(ads.i_buffer,ads.q_buffer, ads.iq_phase_balance, blockSize);
     }
     else if (ads.iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
     {
-        AudioDriver_Mix(ads.q_buffer,ads.i_buffer, ads.iq_phase_balance, size/2);
+        AudioDriver_Mix(ads.q_buffer,ads.i_buffer, ads.iq_phase_balance, blockSize);
     }
 }
 
@@ -2036,20 +2037,17 @@ static uint16_t modulus = 0;
 //*----------------------------------------------------------------------------
 static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
+    const int16_t blockSize = size/2;
+    const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
 
     static ulong 		i, beep_idx = 0;
 
-    //
-    int16_t				psize;		// processing size, with decimation
-    //
     float				post_agc_gain_scaling;
-    //
-    psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
 
     if (ts.tx_audio_source == TX_AUDIO_DIGIQ)
     {
 
-        for(i = 0; i < size/2; i++)
+        for(i = 0; i < blockSize; i++)
         {
             //
             // 16 bit format - convert to float and increment
@@ -2068,7 +2066,7 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     // ------------------------
     // Split stereo channels
-    for(i = 0; i < size/2; i++)
+    for(i = 0; i < blockSize; i++)
     {
         if (sc.state == 0 && sc.snap) sc.counter = sc.counter + 1;
 
@@ -2142,21 +2140,21 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     }
 
     // Apply I/Q amplitude correction
-    arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, size/2);
-    arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, size/2);
+    arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)ts.rx_adj_gain_var_i, (float32_t *)ads.i_buffer, blockSize);
+    arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)ts.rx_adj_gain_var_q, (float32_t *)ads.q_buffer, blockSize);
 
     // Apply I/Q phase correction
-    AudioDriver_IQPhaseAdjust(ts.dmod_mode, ts.txrx_mode,size);
+    AudioDriver_IQPhaseAdjust(ts.dmod_mode, ts.txrx_mode,blockSize);
 
     if(ts.iq_freq_mode)	 		// is receive frequency conversion to be done?
     {
         if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
         {
-            audio_rx_freq_conv(size, 1);
+            audio_rx_freq_conv(blockSize, 1);
         }
         else								// it is in "RX LO LOW" mode
         {
-            audio_rx_freq_conv(size, 0);
+            audio_rx_freq_conv(blockSize, 0);
         }
     }
     //
@@ -2166,47 +2164,47 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     //    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
     //	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
     //
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_I,(float32_t *)(ads.i_buffer),(float32_t *)(ads.i_buffer),size/2);	// shift 0 degree FIR+LPF
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(ads.q_buffer),(float32_t *)(ads.q_buffer),size/2);	// shift -90 degrees FIR+LPF
+    arm_fir_f32((arm_fir_instance_f32 *)&FIR_I,(float32_t *)(ads.i_buffer),(float32_t *)(ads.i_buffer),blockSize);	// shift 0 degree FIR+LPF
+    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(ads.q_buffer),(float32_t *)(ads.q_buffer),blockSize);	// shift -90 degrees FIR+LPF
 
     //	Demodulation, optimized using fast ARM math functions as much as possible
     switch(ts.dmod_mode)
     {
     case DEMOD_LSB:
-        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q - LSB
+        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, blockSize);	// difference of I and Q - LSB
         break;
     case DEMOD_CW:
         if(!ts.cw_lsb)	// is this USB RX mode?  (LSB of mode byte was zero)
         {
-            arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of I and Q - USB
+            arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, blockSize);	// sum of I and Q - USB
         }
         else	// No, it is LSB RX mode
         {
-            arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// difference of I and Q - LSB
+            arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, blockSize);	// difference of I and Q - LSB
         }
         break;
     case DEMOD_AM:
     	if (ts.AM_experiment)
     	{
-        	audio_demod_am_exp(size);
+        	audio_demod_am_exp(blockSize);
     	}
     	else
     	{
-    	    audio_demod_am(size);
+    	    audio_demod_am(blockSize);
     	}
         break;
     case DEMOD_SAM:
-        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, size/2);	// difference of I and Q - LSB
-        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.e_buffer, size/2);	// sum of I and Q - USB
-        arm_add_f32((float32_t *)ads.e_buffer, (float32_t *)ads.f_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of LSB & USB = DSB
+        arm_sub_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, blockSize);	// difference of I and Q - LSB
+        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.e_buffer, blockSize);	// sum of I and Q - USB
+        arm_add_f32((float32_t *)ads.e_buffer, (float32_t *)ads.f_buffer, (float32_t *)ads.a_buffer, blockSize);	// sum of LSB & USB = DSB
         break;
     case DEMOD_FM:
-        audio_demod_fm(size);
+        audio_demod_fm(blockSize);
         break;
     case DEMOD_USB:
     case DEMOD_DIGI:
     default:
-        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, size/2);	// sum of I and Q - USB
+        arm_add_f32((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer, (float32_t *)ads.a_buffer, blockSize);	// sum of I and Q - USB
         break;
     }
 
@@ -2215,12 +2213,12 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         // Do decimation down to lower rate to reduce processor load
         if (DECIMATE_RX.numTaps > 0)
         {
-            arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
+            arm_fir_decimate_f32(&DECIMATE_RX, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, blockSize);		// LPF built into decimation (Yes, you can decimate-in-place!)
         }
 
         if((!ads.af_disabled) && (ts.dsp_active & DSP_NOTCH_ENABLE) && (ts.dmod_mode != DEMOD_CW) && (!ts.dsp_inhibit))	 	// No notch in CW
         {
-            audio_lms_notch_filter(psize);		// Do notch filter
+            audio_lms_notch_filter(blockSizeDecim);		// Do notch filter
         }
 
         //
@@ -2229,24 +2227,24 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         //
         if((ts.dsp_active & DSP_NR_ENABLE) && (!(ts.dsp_active & DSP_NR_POSTAGC_ENABLE)) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do this if enabled and "Pre-AGC" DSP NR enabled
         {
-            audio_lms_noise_reduction(psize);
+            audio_lms_noise_reduction(blockSizeDecim);
         }
 
         // Apply audio  bandpass filter
         if ((!ads.af_disabled)	&& (IIR_PreFilter.numStages > 0))   // yes, we want an audio IIR filter
         {
-            arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, psize/2);
+            arm_iir_lattice_f32(&IIR_PreFilter, (float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer, blockSizeDecim);
         }
 
         // now process the samples and perform the receiver AGC function
-        audio_rx_agc_processor(psize);
+        audio_rx_agc_processor(blockSizeDecim);
 
         // DSP noise reduction using LMS (Least Mean Squared) algorithm
         // This is the post-filter, post-AGC instance
         //
         if((ts.dsp_active & DSP_NR_ENABLE) && (ts.dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))	 	// Do DSP NR if enabled and if post-DSP NR enabled
         {
-            audio_lms_noise_reduction(psize);
+            audio_lms_noise_reduction(blockSizeDecim);
         }
         //
         // Calculate scaling based on decimation rate since this affects the audio gain
@@ -2263,29 +2261,29 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         //
         if(ts.dmod_mode == DEMOD_AM)
         {
-            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING)), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING)), (float32_t *)ads.a_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
         }
         else		// Not AM
         {
-            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling), (float32_t *)ads.a_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
         }
 
         // this is the biquad filter, a notch, peak, and lowshelf filter
         if (!ads.af_disabled)
         {
-        	arm_biquad_cascade_df1_f32 (&IIR_biquad_1, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, psize/2);
+        	arm_biquad_cascade_df1_f32 (&IIR_biquad_1, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, blockSizeDecim);
         }
         // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
         //
         if (INTERPOLATE_RX.phaseLength > 0)
         {
-            arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, psize/2);
+            arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, blockSizeDecim);
         }
         // additional antialias filter for specific bandwidths
         // IIR ARMA-type lattice filter
         if ((!ads.af_disabled) && (IIR_AntiAlias.numStages > 0))   // yes, we want an interpolation IIR filter
         {
-            arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, size/2);
+            arm_iir_lattice_f32(&IIR_AntiAlias, (float32_t *)ads.b_buffer, (float32_t *)ads.b_buffer, blockSize);
         }
 
     } // end NOT in FM mode
@@ -2293,30 +2291,30 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         if(ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)		// is this 5 kHz FM mode?  If so, scale down (reduce) audio to normalize
         {
-            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_5K, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_5K, (float32_t *)ads.b_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
         }
         else		// it is 2.5 kHz FM mode:  Scale audio level accordingly
         {
-            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_2K5, (float32_t *)ads.b_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+            arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)FM_RX_SCALING_2K5, (float32_t *)ads.b_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
         }
     }
 
     // this is the biquad filter, a highshelf filter
     if (!ads.af_disabled)
     {
-        arm_biquad_cascade_df1_f32 (&IIR_biquad_2, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, size/2);
+        arm_biquad_cascade_df1_f32 (&IIR_biquad_2, (float32_t *)ads.b_buffer,(float32_t *)ads.b_buffer, blockSize);
     }
 
     if((ads.af_disabled) || (ts.rx_muting) || ((ts.dmod_mode == DEMOD_FM) && ads.fm_squelched))
     	// fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
     	// or when filters are switched
     {
-        arm_fill_f32(0, (float32_t *)ads.a_buffer, size/2);
-        arm_fill_f32(0, (float32_t *)ads.b_buffer, size/2);
+        arm_fill_f32(0, (float32_t *)ads.a_buffer, blockSize);
+        arm_fill_f32(0, (float32_t *)ads.b_buffer, blockSize);
     }
     else
     {
-        arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)LINE_OUT_SCALING_FACTOR, (float32_t *)ads.a_buffer, size/2);		// Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+        arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)LINE_OUT_SCALING_FACTOR, (float32_t *)ads.a_buffer, blockSize);		// Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
         //
         // AF gain in "ts.audio_gain-active"
         //  0 - 16: via codec command
@@ -2324,13 +2322,13 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         //
         if(ts.rx_gain[RX_AUDIO_SPKR].value > 16)	// is volume control above highest hardware setting?
         {
-            arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, (float32_t *)ads.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
+            arm_scale_f32((float32_t *)ads.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, (float32_t *)ads.b_buffer, blockSize);	// yes, do software volume control adjust on "b" buffer
         }
     }
 
     // Transfer processed audio to DMA buffer
     i = 0;			// init sample transfer counter
-    while(i < size/2)	 						// transfer to DMA buffer and do conversion to INT
+    while(i < blockSize)	 						// transfer to DMA buffer and do conversion to INT
     {
         // TODO: move to softdds ...
         if((ts.beep_active) && (ads.beep.step))	 		// is beep active?
@@ -2375,6 +2373,9 @@ static void audio_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         modulus%=USBD_AUDIO_IN_OUT_DIV;
     }
 }
+
+#if 0
+// DO NOT USE, HAS NOT BEEN KEPT UP TO DATE WITH DEVELOPMENT IN audio_rx_processor!
 
 //
 // This is a stripped-down RX signal processor - a work in progress
@@ -2455,9 +2456,9 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
     if(ts.iq_freq_mode)	 		// is receive frequency conversion to be done?
     {
         if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// Yes - "RX LO LOW" mode
-            audio_rx_freq_conv(size, 1);
+            audio_rx_freq_conv(size/2, 1);
         else								// it is in "RX LO LOW" mod
-            audio_rx_freq_conv(size, 0);
+            audio_rx_freq_conv(size/2, 0);
     }
     //
     // ------------------------
@@ -2552,6 +2553,7 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
         *dst++ = (int16_t)ads.a_buffer[i++];		// LINE OUT (constant level)
     }
 }
+#endif
 //         /
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_compressor (look-ahead type) by KA7OEI
@@ -2562,8 +2564,9 @@ static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
 //* Output Parameters   : data via "ads.i_buffer" and "ads.q_buffer"
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void audio_tx_compressor(int16_t size, float gain_scaling)
+static void audio_tx_compressor(int16_t blockSize, float gain_scaling)
 {
+
     ulong i;
     static ulong		alc_delay_inbuf = 0, alc_delay_outbuf = 0;
     static float		alc_calc, alc_var;
@@ -2577,15 +2580,15 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
         gain_calc /= 2;                                 // halve it
         gain_calc += 0.5;                               // offset it so that 2 = unity
 
-        arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, size/2);      // use optimized function to apply scaling to I/Q buffers
+        arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)gain_calc, (float32_t *)ads.i_buffer, blockSize);      // use optimized function to apply scaling to I/Q buffers
         if (ts.dmod_mode != DEMOD_FM) {
-            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, size/2);
+            arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)gain_calc, (float32_t *)ads.q_buffer, blockSize);
         }
     }
 
     // ------------------------
     // Do ALC processing on audio buffer - look-ahead type by KA7OEI
-    for(i = 0; i < size/2; i++)
+    for(i = 0; i < blockSize; i++)
     {
         if(!ts.tune)	 	// if NOT in TUNE mode, do ALC processing
         {
@@ -2624,22 +2627,22 @@ static void audio_tx_compressor(int16_t size, float gain_scaling)
     // This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
     //
-    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[alc_delay_inbuf], size/2);	// put new data into the delay buffer
-    arm_copy_f32((float32_t *)&agc_delay[alc_delay_outbuf], (float32_t *)ads.a_buffer, size/2);	// take old data out of the delay buffer
+    arm_copy_f32((float32_t *)ads.a_buffer, (float32_t *)&agc_delay[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)&agc_delay[alc_delay_outbuf], (float32_t *)ads.a_buffer, blockSize);	// take old data out of the delay buffer
     //
     // Update the in/out pointers to the ALC delay buffer
     //
-    alc_delay_inbuf += size/2;
-    alc_delay_outbuf = alc_delay_inbuf + size/2;
+    alc_delay_inbuf += blockSize;
+    alc_delay_outbuf = alc_delay_inbuf + blockSize;
     alc_delay_inbuf %= ALC_DELAY_BUFSIZE;
     alc_delay_outbuf %= ALC_DELAY_BUFSIZE;
     //
-    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.i_buffer, size/2);		// Apply ALC gain corrections to both TX audio channels
-    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.q_buffer, size/2);
+    arm_mult_f32((float32_t *)ads.i_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.i_buffer, blockSize);		// Apply ALC gain corrections to both TX audio channels
+    arm_mult_f32((float32_t *)ads.q_buffer, (float32_t *)ads.agc_valbuf, (float32_t *)ads.q_buffer, blockSize);
 }
 
 // Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
-void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t size)
+void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_t blockSize)
 {
     int16_t i;
 
@@ -2648,11 +2651,11 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
         // this is the IQ gain / amplitude adjustment
-        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, size/2);
-        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.i_buffer, blockSize);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.q_buffer, blockSize);
         // this is the IQ phase adjustment
-        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
-         for(i = 0; i < size/2; i++)
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
+         for(i = 0; i < blockSize; i++)
         {
             // Prepare data for DAC
             *dst++ = (int16_t)ads.i_buffer[i];	// save left channel
@@ -2662,12 +2665,12 @@ void audio_tx_final_iq_processing(float scaling, bool swap, int16_t* dst, int16_
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
         // this is the IQ gain / amplitude adjustment
-        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.i_buffer, size/2);
-        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.q_buffer, size/2);
+        arm_scale_f32((float32_t*)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), (float32_t*)ads.i_buffer, blockSize);
+        arm_scale_f32((float32_t*)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), (float32_t*)ads.q_buffer, blockSize);
         // this is the IQ phase adjustment
-        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,size);
+        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
 
-        for(i = 0; i < size/2; i++)
+        for(i = 0; i < blockSize; i++)
         {
             // Prepare data for DAC
             *dst++ = (int16_t)ads.q_buffer[i];	// save left channel
@@ -2712,7 +2715,7 @@ float32_t AudioDriver_absmax(float32_t* buffer, int size) {
     return -min>max?-min:max;
 }
 
-static void AudioDriver_tx_fill_audio_buffer(int16_t *src, int16_t size)
+static void AudioDriver_tx_fill_audio_buffer(int16_t *src, int16_t blockSize)
 {
     float32_t           gain_calc;
 
@@ -2735,7 +2738,7 @@ static void AudioDriver_tx_fill_audio_buffer(int16_t *src, int16_t size)
         src++; // use right channel data
     }
     // Fill I and Q buffers with left channel(same as right)
-    for(int i = 0; i < size/2; i++)                 // Copy to single buffer
+    for(int i = 0; i < blockSize; i++)                 // Copy to single buffer
     {
         ads.a_buffer[i] = *src;
         src += 2;                               // Next sample
@@ -2743,31 +2746,33 @@ static void AudioDriver_tx_fill_audio_buffer(int16_t *src, int16_t size)
 
     // Apply gain if not in TUNE mode
     // this is the LINE GAIN!
-    arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, size/2);  // apply gain
+    arm_scale_f32((float32_t *)ads.a_buffer, (float32_t)gain_calc, (float32_t *)ads.a_buffer, blockSize);  // apply gain
 
-    ads.peak_audio = AudioDriver_absmax((float32_t *)ads.a_buffer, size/2);
+    ads.peak_audio = AudioDriver_absmax((float32_t *)ads.a_buffer, blockSize);
 }
 
-void AudioDriver_tx_am_sideband_processor(int size) {
-    //
+void AudioDriver_tx_am_sideband_processor(const int16_t blockSize) {
+
     // generate AM carrier by applying a "DC bias" to the audio
     //
-    arm_offset_f32((float32_t *)ads.i_buffer, AM_CARRIER_LEVEL, (float32_t *)ads.i_buffer, size/2);
-    arm_offset_f32((float32_t *)ads.q_buffer, (-1 * AM_CARRIER_LEVEL), (float32_t *)ads.q_buffer, size/2);
+    arm_offset_f32((float32_t *)ads.i_buffer, AM_CARRIER_LEVEL, (float32_t *)ads.i_buffer, blockSize);
+    arm_offset_f32((float32_t *)ads.q_buffer, (-1 * AM_CARRIER_LEVEL), (float32_t *)ads.q_buffer, blockSize);
     //
     // check and apply correct translate mode
     //
-    audio_rx_freq_conv(size, (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ));
+    audio_rx_freq_conv(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ));
     //
     // Equalize based on band and simultaneously apply I/Q gain adjustments
     //
-    arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), (float32_t *)ads.i_buffer, size/2);
-    arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), (float32_t *)ads.q_buffer, size/2);
+    arm_scale_f32((float32_t *)ads.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), (float32_t *)ads.i_buffer, blockSize);
+    arm_scale_f32((float32_t *)ads.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), (float32_t *)ads.q_buffer, blockSize);
 
 }
 
 static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
 {
+    const int16_t blockSize = size/2;
+
     static float32_t    hpf_prev_a, hpf_prev_b;
     float32_t           a, b;
 
@@ -2785,15 +2790,15 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
         fm_mod_mult = 1;    // not in 5 kHz mode - used default (2.5 kHz) modulation factors
     }
 
-    AudioDriver_tx_fill_audio_buffer(src,size);
+    AudioDriver_tx_fill_audio_buffer(src,blockSize);
 
-    arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.i_buffer, size/2);   // Use special bandpass filter designed for FM (above 200 Hz, limit to below 2800 Hz)
+    arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.i_buffer, blockSize);   // Use special bandpass filter designed for FM (above 200 Hz, limit to below 2800 Hz)
 
-    audio_tx_compressor(size, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+    audio_tx_compressor(blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
     //
     // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "i" and puts it into "a".
     //
-    for(int i = 0; i < size/2; i++)
+    for(int i = 0; i < blockSize; i++)
     {
         //
         //
@@ -2810,7 +2815,7 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     if((ads.fm_subaudible_tone_word) && (!ads.fm_tone_burst_active))        // generate tone only if it is enabled (and not during a tone burst)
     {
-        for(int i = 0; i < size/2; i++)
+        for(int i = 0; i < blockSize; i++)
         {
             fm_tone_accum += ads.fm_subaudible_tone_word;   // generate tone using frequency word, calculating next sample
             fm_tone_accum &= 0xffffff;              // limit to 16 Meg range
@@ -2824,7 +2829,7 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     if(ads.fm_tone_burst_active)                // generate tone burst only if it is enabled
     {
-        for(int i = 0; i < size/2; i++)
+        for(int i = 0; i < blockSize; i++)
         {
             // Calculate next sample
             fm_tone_burst_accum += ads.fm_tone_burst_word;  // generate tone using frequency word, calculating next sample
@@ -2837,7 +2842,7 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
     //
-    for(int i = 0; i < size/2; i++)
+    for(int i = 0; i < blockSize; i++)
     {
         // Calculate next sample
         fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (ads.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));   // change frequency using scaled audio
@@ -2852,7 +2857,7 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
 
     bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
 
-    audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, size);
+    audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
 
 
@@ -2866,6 +2871,7 @@ static void audio_tx_fm_processor(int16_t *src, int16_t *dst, int16_t size)
 //*----------------------------------------------------------------------------
 static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
+    const int16_t blockSize = size/2;
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
@@ -2878,26 +2884,26 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         // If in CW mode or Tune  DIQ audio input is ignored
         // Output I and Q as stereo, fill buffer
-        for(int i = 0; i < size/2; i++)	 				// Copy to single buffer
+        for(int i = 0; i < blockSize; i++)	 				// Copy to single buffer
         {
             ads.i_buffer[i] = (float)*src++;
             ads.q_buffer[i] = (float)*src++;
         }
 
-        audio_tx_final_iq_processing(1.0, false, dst, size);
+        audio_tx_final_iq_processing(1.0, false, dst, blockSize);
     }
     else if(ts.dmod_mode == DEMOD_CW)
     {
         if (ts.tune)
         {
-            softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size/2);      // generate tone/modulation for TUNE
+            softdds_runf((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,blockSize);      // generate tone/modulation for TUNE
             // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
-            audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
+            audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
         }
         else
         {
             // Generate CW
-            if(cw_gen_process((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,size) == 0)
+            if(cw_gen_process((float32_t *)ads.i_buffer, (float32_t *)ads.q_buffer,blockSize) == 0)
             {
                 memset(dst,0,size*sizeof(*dst));
                 // Pause or inactivity
@@ -2907,7 +2913,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
                 // apply I/Q amplitude & phase adjustments
             	// Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
             	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
-                audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, size);
+                audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
             }
         }
     }
@@ -2917,12 +2923,12 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         if(ts.tune)	 	// TUNE mode?  If so, generate tone so we can adjust TX IQ phase and gain
         {
-            softdds_runf((float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer,size/2);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
+            softdds_runf((float32_t *)ads.a_buffer, (float32_t *)ads.a_buffer,blockSize);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
         }
         else	 		// Not tune mode - use audio from CODEC
         {
 
-            AudioDriver_tx_fill_audio_buffer(src,size);
+            AudioDriver_tx_fill_audio_buffer(src,blockSize);
             // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
             // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
@@ -2933,10 +2939,10 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // FIXME: quick & dirty: TX IIR filter cannot be disabled anymore
             if(1)	// Do the audio filtering *IF* it is enabled
             {
-                arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);
+                arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, blockSize);
             }
             // biquad filter for bass & treble
-        	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, size/2);
+        	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, (float32_t *)ads.a_buffer,(float32_t *)ads.a_buffer, blockSize);
         }
 
         //
@@ -2946,12 +2952,12 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         {
             // yes - apply transformation AND audio filtering to buffer data
             // + 0 deg to I data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),blockSize);
             // - 90 deg to Q data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), blockSize);
         }
 
-        audio_tx_compressor(size, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+        audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
         if(ts.iq_freq_mode)
         {
@@ -2961,11 +2967,11 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
             swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 
-            audio_rx_freq_conv(size, swap);
+            audio_rx_freq_conv(blockSize, swap);
         }
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, size);
+        audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
     }
     // -----------------------------
     // AM handler - Generate USB and LSB AM signals and combine  [KA7OEI]
@@ -2974,7 +2980,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     {
         if(ts.iq_freq_mode)	 				// is translation active?
         {
-            AudioDriver_tx_fill_audio_buffer(src,size);
+            AudioDriver_tx_fill_audio_buffer(src,blockSize);
 
             //
             // Apply the TX equalization filtering:  This "flattens" the audio
@@ -2985,7 +2991,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             //
             if(!(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
             {
-                arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, size/2);	// this is the 275-2500-ish bandpass filter with low-end pre-emphasis
+                arm_iir_lattice_f32(&IIR_TXFilter, (float *)ads.a_buffer, (float *)ads.a_buffer, blockSize);	// this is the 275-2500-ish bandpass filter with low-end pre-emphasis
             }
             //
             // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
@@ -2993,12 +2999,12 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // Apply transformation AND audio filtering to buffer data
             //
             // + 0 deg to I data
-            // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),size/2);
+            // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),blockSize);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.i_buffer),blockSize);
             // - 90 deg to Q data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), size/2);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(ads.a_buffer),(float32_t *)(ads.q_buffer), blockSize);
 
-            audio_tx_compressor(size, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+            audio_tx_compressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
             //
             // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
             // and putting them back together!  [KA7OEI]
@@ -3007,15 +3013,15 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             // First, generate the LOWER sideband of the AM signal
             // copy contents to temporary holding buffers for later generation of USB AM carrier
             //
-            arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e_buffer, size/2);
-            arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, size/2);
+            arm_copy_f32((float32_t *)ads.i_buffer, (float32_t *)ads.e_buffer, blockSize);
+            arm_copy_f32((float32_t *)ads.q_buffer, (float32_t *)ads.f_buffer, blockSize);
 
-            AudioDriver_tx_am_sideband_processor(size);
+            AudioDriver_tx_am_sideband_processor(blockSize);
             //
             // Output I and Q as stereo - storing an LSB AM signal in the DMA buffer
             //
             int16_t *ptr = dst; // save a copy of the destination pointer to the DMA data before we increment it for production of USB data
-            for(int i = 0; i < size/2; i++)
+            for(int i = 0; i < blockSize; i++)
             {
                 // Prepare data for DAC
                 *ptr++ = (int16_t)ads.q_buffer[i];	// save left channel
@@ -3023,13 +3029,13 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
             }
 
             // Now, generate the upper sideband of the AM signal:  We must do much of this again to produce an identical (but "different") signal (opposite polarity)
-            arm_negate_f32((float32_t *)ads.e_buffer, (float32_t *)ads.q_buffer, size/2);
-            arm_negate_f32((float32_t *)ads.f_buffer, (float32_t *)ads.i_buffer, size/2);
+            arm_negate_f32((float32_t *)ads.e_buffer, (float32_t *)ads.q_buffer, blockSize);
+            arm_negate_f32((float32_t *)ads.f_buffer, (float32_t *)ads.i_buffer, blockSize);
 
-            AudioDriver_tx_am_sideband_processor(size);
+            AudioDriver_tx_am_sideband_processor(blockSize);
 
             // Output I and Q as stereo
-            for(int i = 0; i < size/2; i++)
+            for(int i = 0; i < blockSize; i++)
             {
                 // Prepare data for DAC, adding the USB AM data to the already-stored LSB AM data
                 (*dst++) += (int16_t)ads.q_buffer[i];	// save left channel
@@ -3053,7 +3059,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         if (true || ts.tx_audio_source == TX_AUDIO_DIGIQ)
         {
 
-            for(int i = 0; i < size/2; i++)
+            for(int i = 0; i < blockSize; i++)
             {
                 //
                 // 16 bit format - convert to float and increment
@@ -3067,7 +3073,7 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         }
         else
         {
-            for(int i = 0; i < size/2; i++)
+            for(int i = 0; i < blockSize; i++)
             {
                 // 16 bit format - convert to float and increment
                 // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
@@ -3080,6 +3086,10 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
         }
     }
 }
+
+
+#if 0
+// DO NOT USE, HAS NOT BEEN KEPT UP TO DATE WITH DEVELOPMENT IN audio_tx_processor!
 //
 // This is a stripped-down TX processor - work in progress
 //
@@ -3093,6 +3103,9 @@ static void audio_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 //*----------------------------------------------------------------------------
 static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 {
+    const int16_t blockSize  = size/2;
+    const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;    // rescale sample size inside decimated portion based on decimation factor
+
     static ulong 		i;
     float32_t			gain_calc, min, max;
 //	int16_t				*ptr;
@@ -3101,7 +3114,6 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     float				post_agc_gain_scaling;
 
 
-    psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor
 
     // Not tune mode - use audio from CODEC
     // Fill I and Q buffers with left channel(same as right)
@@ -3142,11 +3154,11 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
     //
     // Scale audio to according to AGC setting, demodulation mode and required fixed levels
     //
-    arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(post_agc_gain_scaling), (float32_t *)ads.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+    arm_scale_f32((float32_t *)ads.a_buffer,(float32_t)(post_agc_gain_scaling), (float32_t *)ads.a_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
     //
     // resample back to original sample rate while doing low-pass filtering to minimize aliasing effects
     //
-    arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, psize/2);
+    arm_fir_interpolate_f32(&INTERPOLATE_RX, (float32_t *)ads.a_buffer,(float32_t *) ads.b_buffer, blockSizeDecim);
     //
     //
     // Apply gain if not in TUNE mode
@@ -3172,22 +3184,12 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
     if(ts.iq_freq_mode)	 		// is transmit frequency conversion to be done?
     {
-        if(ts.dmod_mode == DEMOD_LSB)	 		// Is it LSB?
-        {
-            if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
-                audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
-            else								// it is in "RX LO LOW" mode
-                audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
-        }
-        else	 								// It is USB!
-        {
-            if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// yes - is it "RX LO HIGH" mode?
-                audio_rx_freq_conv(size, 1);	// set conversion to "RX LO LOW" mode
-            else								// it is in "RX LO LOW" mode
-                audio_rx_freq_conv(size, 0);	// set conversion to "LO IS HIGH" mode
-        }
-    }
 
+        bool translate_up = (ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ))
+                || (ts.dmod_mode == DEMOD_USB && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+        audio_rx_freq_conv(size/2, translate_up);
+    }
     //
     // Equalize based on band and simultaneously apply I/Q gain adjustments
     //
@@ -3216,7 +3218,7 @@ static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
 
     return;
 }
-
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack
@@ -3252,14 +3254,14 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             audio_driver_ClearAGCDelayBuffer();
         }
         //
-        if(!ts.dvmode)
-        {
+        // if(!ts.dvmode)
+        // {
             audio_rx_processor(src,dst,size);
-        }
-        else
-        {
-            audio_dv_rx_processor(src,dst,size);
-        }
+        // }
+        // else
+        //{
+        //    audio_dv_rx_processor(src,dst,size);
+        //}
         //
         to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
@@ -3274,17 +3276,17 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
         }
         else
         {
-            if(!ts.dvmode)
-            {
+            // if(!ts.dvmode)
+            // {
                 // TODO: HACK: simply overwrite input buffer with USB data instead of using data from I2S bus
                 // I2S just delivers the "timing".
                 // needs to be used only if USB digital line in is selected.
                 audio_tx_processor(src,dst,size);
-            }
-            else
-            {
-                audio_dv_tx_processor(src,dst,size);
-            }
+            // }
+            // else
+            // {
+            //    audio_dv_tx_processor(src,dst,size);
+            // }
         }
         //
         to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
@@ -3320,10 +3322,12 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     ts.thread_timer = 0;	// used to trigger the UI Driver thread
     //
     if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
+    {
         ts.spectrum_scope_scheduler--;
-
+    }
 
     if(ts.show_tp_coordinates)
+    {
   	  mchf_board_green_led(0);
-
+    }
 }
