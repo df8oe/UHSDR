@@ -286,23 +286,19 @@ static void cw_gen_check_keyer_state(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size)
+ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
-        return cw_gen_process_strk(i_buffer,q_buffer,size);
+    {
+        return cw_gen_process_strk(i_buffer,q_buffer,blockSize);
+    }
     else
-        return cw_gen_process_iamb(i_buffer,q_buffer,size);
+    {
+        return cw_gen_process_iamb(i_buffer,q_buffer,blockSize);
+    }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_process_iamb
-//* Object              : strait key implementation
-//* Object              :
-//* Input Parameters    : This is called via audio driver I2S IRQ!
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size)
+static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval;
 
@@ -324,7 +320,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong s
     else
     {
 
-        softdds_runf(i_buffer,q_buffer,size/2);
+        softdds_runf(i_buffer,q_buffer,blockSize);
 
         // ----------------------------------------------------------------
         // Raising slope
@@ -335,7 +331,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong s
         // then stop at key_timer = 12
         if(ps.key_timer > 12)
         {
-            cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
+            cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
             if(ps.key_timer)
             {
                 ps.key_timer--;
@@ -355,7 +351,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong s
         // then finally switch to RX is performed (here, but on next request)
         if(ps.key_timer < 12)
         {
-            cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,size/2);
+            cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,blockSize);
             if(ps.key_timer)
             {
                 ps.key_timer--;
@@ -376,15 +372,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong s
     return retval;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_process_iamb
-//* Object              : iambic keyer state machine
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
+static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval = 0;
     switch(ps.cw_state)
@@ -450,12 +438,12 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong s
     break;
     case CW_KEY_DOWN:
     {
-        softdds_runf(i_buffer,q_buffer,size/2);
+        softdds_runf(i_buffer,q_buffer,blockSize);
         ps.key_timer--;
 
         // Smooth start of element - initial
         ps.sm_tbl_ptr = 0;
-        cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
+        cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
 
         ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
         ps.cw_state    = CW_KEY_UP;
@@ -472,18 +460,18 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong s
         }
         else
         {
-            softdds_runf(i_buffer,q_buffer,size/2);
+            softdds_runf(i_buffer,q_buffer,blockSize);
             ps.key_timer--;
 
             // Smooth start of element - continue
             if(ps.key_timer > (ps.dit_time/2))
             {
-                cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,size/2);
+                cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
             }
             // Smooth end of element
             if(ps.key_timer < 12)
             {
-                cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,size/2);
+                cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,blockSize);
             }
             if(ps.port_state & CW_IAMBIC_B)
             {
