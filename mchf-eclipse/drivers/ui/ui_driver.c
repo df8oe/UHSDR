@@ -3531,11 +3531,13 @@ uchar UiDriver_DisplayBandForFreq(ulong freq)
 void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 {
 
+    // FIXME: Don't like the handling of lo_result if in Split mode and transmitting
     uint32_t		dial_freq;
     Si570_ResultCodes       lo_result = SI570_OK;
     bool        lo_change_not_pending = true;
 
-    if(mode == UFM_SMALL_TX)	 				// are we updating the TX frequency (small, lower display)?
+    if(mode == UFM_SMALL_TX)
+    // are we updating the TX frequency (small, lower display)?
     {
         uint8_t tx_vfo = is_vfo_b()?VFO_A:VFO_B;
 
@@ -3549,8 +3551,20 @@ void UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
     else
     {
         dial_freq = df.tune_new/TUNE_MULT;
+
         lo_change_not_pending =  RadioManagement_ChangeFrequency(force_update, dial_freq, ts.txrx_mode);
         lo_result = ts.last_lo_result;   // use last ts.lo_result
+    }
+
+    if (mode == UFM_SMALL_RX && ts.txrx_mode == TRX_MODE_TX )
+    // we are not going to show the tx frequency here (aka dial_freq) so we cannot use dial_freq
+    {
+        uint8_t rx_vfo = is_vfo_b()?VFO_B:VFO_A;
+
+        dial_freq = vfo[rx_vfo].band[ts.band].dial_value / TUNE_MULT;
+
+        // we check with the si570 code if the frequency is tunable, we do not tune to it.
+        // lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
     }
 
     // ALL UI CODE BELOW
