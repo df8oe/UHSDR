@@ -2448,13 +2448,13 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
 
                     if(!ts.vfo_mem_flag)	 	// in normal VFO mode?
                     {
-                        label = " SPLIT";
+                        label = "SPLIT";
                         color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
                     }
                     else	 					// in memory mode
                     {
                         color = White;
-                        label = "  MEM ";
+                        label = "MEM";
                     }
                     UiDriverFButtonLabel(3,label,color);	// yes - indicate with color
                 }
