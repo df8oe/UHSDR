@@ -1974,12 +1974,12 @@ static void audio_snap_carrier (void)
 }
 
 
-static void AudioDriver_Mix(volatile float32_t* src, volatile float32_t* dst, float32_t scaling, uint16_t blockSize)
+static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, uint16_t blockSize)
 {
     float32_t                   e3_buffer[IQ_BUFSZ+1];
 
-    arm_scale_f32((float32_t *)src, scaling, e3_buffer, blockSize);
-    arm_add_f32((float32_t *)dst, e3_buffer, (float32_t *)dst, blockSize);
+    arm_scale_f32(src, scaling, e3_buffer, blockSize);
+    arm_add_f32(dst, e3_buffer, dst, blockSize);
 }
 
 void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq)
@@ -2868,16 +2868,14 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const dst, int16_t size)
+static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
-    const int16_t blockSize = size/2;
-
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
     if (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ)
     {
         // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
-        audio_out_fill_tx_buffer((int16_t*)src,size);
+        audio_out_fill_tx_buffer((int16_t*)src,2*blockSize);
     }
 
     if (ts.tx_audio_source == TX_AUDIO_DIGIQ && ts.dmod_mode != DEMOD_CW && !ts.tune)
@@ -2905,7 +2903,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // Generate CW
             if(cw_gen_process(adb.i_buffer, adb.q_buffer,blockSize) == 0)
             {
-                memset(dst,0,size*sizeof(*dst));
+                memset(dst,0,blockSize*sizeof(*dst));
                 // Pause or inactivity
             }
             else
@@ -3043,7 +3041,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
         }
         else	 	// Translate mode is NOT active - we CANNOT do full-carrier AM! (if we tried, we'd end up with DSB SSB because of the "DC hole"!))
         {
-            memset(dst,0,size*sizeof(*dst));
+            memset(dst,0,blockSize*sizeof(*dst));
 	 		// send nothing out to the DAC if AM attempted with translate mode turned off!
         }
     }
