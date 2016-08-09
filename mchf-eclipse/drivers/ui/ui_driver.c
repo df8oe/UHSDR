@@ -1875,6 +1875,11 @@ static void UiDriverFButton_F3MemSplit()
     UiDriverFButtonLabel(3,cap,color);
 }
 
+static inline void UiDriverFButton_F4ActiveVFO() {
+    UiDriverFButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+}
+
+
 void UiDriverEncoderDisplaySimple(const uint8_t column, const uint8_t row, const char *label, bool encoder_active,
                                   uint32_t value)
 {
@@ -2518,30 +2523,27 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
         }
         else	 	// NOT menu mode
         {
-            uint8_t vfo_active,vfo_new;
-            char* vfo_name;
+            uint8_t vfo_new,vfo_active;
 
             if(is_vfo_b())		 	// LSB on VFO mode byte set?
             {
-                vfo_active = VFO_A;
-                vfo_new = VFO_B;
-                vfo_name = "VFO A";
+                vfo_new = VFO_A;
+                vfo_active = VFO_B;
                 ts.vfo_mem_mode &= ~VFO_MEM_MODE_VFO_B;	// yes, it's now VFO-B mode, so clear it, setting it to VFO A mode
             }
             else	 						// LSB on VFO mode byte NOT set?
             {
                 ts.vfo_mem_mode |= VFO_MEM_MODE_VFO_B;			// yes, it's now in VFO-A mode, so set it, setting it to VFO B mode
-                vfo_active = VFO_B;
-                vfo_new = VFO_A;
-                vfo_name = "VFO B";
+                vfo_new = VFO_B;
+                vfo_active = VFO_A;
             }
-            vfo[vfo_new].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
-            vfo[vfo_new].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
+            vfo[vfo_active].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
+            vfo[vfo_active].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
 
-            UiDriverFButtonLabel(4,vfo_name,White);
+            df.tune_new = vfo[vfo_new].band[ts.band].dial_value;
 
+            UiDriverFButton_F4ActiveVFO();
 
-            df.tune_new = vfo[vfo_active].band[ts.band].dial_value;
             //
             // do frequency/display update
             if(is_splitmode())	 	// in SPLIT mode?
@@ -2550,16 +2552,15 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
             }
 
             // Change decode mode if need to
-            if(ts.dmod_mode != vfo[vfo_active].band[ts.band].decod_mode)
+            if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
             {
-                ts.dmod_mode = vfo[vfo_active].band[ts.band].decod_mode;
+                ts.dmod_mode = vfo[vfo_new].band[ts.band].decod_mode;
                 UiInitRxParms(); // set up for RX in changed demod mode
             }
             else
             {
                 UiDriver_FrequencyUpdateLOandDisplay(true);
             }
-
         }
     }
 
@@ -2907,7 +2908,6 @@ static void UiDriverCreateDesktop()
 //*----------------------------------------------------------------------------
 static void UiDriverCreateFunctionButtons(bool full_repaint)
 {
-    const char* cap;
     uint32_t	clr;
 
     // Create bottom bar
@@ -2928,7 +2928,7 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
     UiDriverFButton_F3MemSplit();
 
     // Button F4
-    UiDriverFButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+    UiDriverFButton_F4ActiveVFO();
 
     // Button F5
     clr = ts.tx_disable?Grey1:White;
