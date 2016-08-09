@@ -14,7 +14,17 @@
 
 
 2016mmdd [DF8OE]
-
+- reworked DDS code for better quality
+- reworked TX IIR filter for better uppression of spurious signals
+- added new TX filters 'WIDE BASS' and 'WIDE TREBLE'
+- added possibility of adjusting BASS and TREBLE in TX mode
+- bugfix EEPROM detection 24LC1025
+- added EEPROM 24LC256 to usable EEPROMs
+- added 'DEBUG/EXPER. SETTINGS' to menu structure. For now only item is enabling
+  audio out via USB during TX
+- bugfix spectrum and spectrum light
+- bugfix CW frequency offsets
+- many code simplifications and minor bugfixes
 
 
 20160713 [DF8OE]
