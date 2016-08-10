@@ -1166,10 +1166,10 @@ typedef struct TransceiverState
     uchar 	display_dbm;			// display dbm or dbm/Hz or OFF
     uchar	s_meter;				// defines S-Meter style/configuration
 
-    #define TX_FILTER_NONE			0
-    #define TX_FILTER_NARROW		1
-    #define TX_FILTER_WIDE_BASS		2
-    #define TX_FILTER_WIDE_TREBLE	3
+//    #define TX_FILTER_NONE			0
+    #define TX_FILTER_SOPRANO		1
+    #define TX_FILTER_TENOR			2
+    #define TX_FILTER_BASS			3
     uchar	tx_filter;				// which TX filter has been chosen?
 
     uint8_t display_type;           // existence/identification of display type

@@ -989,13 +989,13 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     //
     if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
-    	if(ts.tx_filter == TX_FILTER_WIDE_BASS)
+    	if(ts.tx_filter == TX_FILTER_BASS)
     	{
             IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
             IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
             IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
     	}
-    	else if (ts.tx_filter == TX_FILTER_WIDE_TREBLE)
+    	else if (ts.tx_filter == TX_FILTER_TENOR)
     	{
 //            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
 //            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients

@@ -983,10 +983,10 @@ void AudioFilter_InitTxHilbertFIR(void)
     // phase adjustment is now done in audio_driver.c audio_tx_processor
 
     IQ_FilterDescriptor iq_tx_filter =
-            (ts.tx_filter == TX_FILTER_WIDE_BASS ||
+            (ts.tx_filter == TX_FILTER_BASS ||
             		//             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_narrow;
             		// FIXME: dirty trial: always use the "wide" 201 tap Hilbert filter
-             ts.tx_filter == TX_FILTER_WIDE_TREBLE) ? iq_tx_wide:iq_tx_wide;
+             ts.tx_filter == TX_FILTER_SOPRANO) ? iq_tx_wide:iq_tx_wide;
 
 
     fc.tx_q_num_taps = iq_tx_filter.num_taps;
