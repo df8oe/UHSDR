@@ -25,6 +25,7 @@
 - bugfix spectrum and spectrum light
 - bugfix CW frequency offsets
 - many code simplifications and minor bugfixes
+- added MAC support for Makefile
 
 
 20160713 [DF8OE]
