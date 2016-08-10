@@ -2951,8 +2951,12 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             {
                arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
             }
-            // biquad filter for bass & treble
+
+            if(ts.tx_audio_source != TX_AUDIO_DIG && ts.tx_audio_source != TX_AUDIO_DIGIQ)
+            { //
+            // biquad filter for bass & treble --> NOT enabled when using USB Audio (eg. for Digimodes)
         	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, adb.a_buffer,adb.a_buffer, blockSize);
+            }
         }
 
         //
