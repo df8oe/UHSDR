@@ -240,11 +240,12 @@ ECHO = @echo
 ifdef SystemRoot  # WINxx
    RM = del /Q
    FixPath = $(subst /,\,$1)
-else              # Linux
-   ifeq ($(shell uname), Linux)
+else ifeq ($(shell uname), linux)
       RM = rm --force
       FixPath = $1
-   endif
+else ifeq ($(shell uname), Darwin)
+      RM = rm -f
+      FixPath = $1
 endif
 
 # how to compile individual object files
