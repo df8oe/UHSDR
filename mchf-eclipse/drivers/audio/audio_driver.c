@@ -413,12 +413,6 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //
     float32_t FSdec = 24000.0; // we need the sampling rate in the decimated path for calculation of the coefficients
 
-    /* if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
-    {
-        FSdec = 24000.0;
-    }
-    else*/
-
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
     {
         FSdec = 12000.0;
@@ -577,8 +571,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
-//    float32_t DCgain = 3; //
-    float32_t DCgain = 2; //
+    float32_t DCgain = 1; //
+//    float32_t DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -624,8 +618,11 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     a1 = a1/a0;
     a2 = a2/a0;
 
-//    DCgain = 3; //
-    DCgain = 2; //
+    DCgain = 1; //
+
+//    DCgain = 2; //
+//    DCgain = (b0 + b1 + b2) / (1 + (a1 + a2)); // takes into account that a1 and a2 are already negated!
+
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -672,8 +669,9 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     a1 = a1/a0;
     a2 = a2/a0;
 
-//    DCgain = 3; //
     DCgain = 2; //
+//    DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
+
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -719,8 +717,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
-//    float32_t DCgain = 3; //
-    DCgain = 2; //
+    DCgain = 1; //
+//    DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
