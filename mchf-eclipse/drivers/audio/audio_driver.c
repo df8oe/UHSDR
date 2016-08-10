@@ -2715,41 +2715,55 @@ float32_t AudioDriver_absmax(float32_t* buffer, int size) {
 
 static void AudioDriver_tx_fill_audio_buffer(AudioSample_t * const src, int16_t blockSize)
 {
-    float32_t           gain_calc;
 
-    if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)      // Are we in LINE IN mode?
+    if(ts.tune)     // TUNE mode?  If so, generate tone so we can adjust TX IQ phase and gain
     {
-        gain_calc = LINE_IN_GAIN_RESCALE;           // Yes - fixed gain scaling for line input - the rest is done in hardware
-    }
-    else if (ts.tx_audio_source == TX_AUDIO_MIC)
-    {
-        gain_calc = ts.tx_mic_gain_mult;     // We are in MIC In mode:  Calculate Microphone gain
-        gain_calc /= MIC_GAIN_RESCALE;              // rescale microphone gain to a reasonable range
+        softdds_runf(adb.a_buffer, adb.a_buffer,blockSize);     // load audio buffer with the tone - DDS produces quadrature channels, but we need only one
     }
     else
     {
-        gain_calc = 1;
-    }
+        float32_t           gain_calc;
 
-    if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)         // Are we in LINE IN mode?
-    {
-        for(int i = 0; i < blockSize; i++)                 // Copy to single buffer
+        if(ts.tx_audio_source == TX_AUDIO_LINEIN_L || ts.tx_audio_source == TX_AUDIO_LINEIN_R)      // Are we in LINE IN mode?
         {
-            adb.a_buffer[i] = src[i].r;
+            gain_calc = LINE_IN_GAIN_RESCALE;           // Yes - fixed gain scaling for line input - the rest is done in hardware
         }
-    } else {
-        // Fill I and Q buffers with left channel(same as right)
-        for(int i = 0; i < blockSize; i++)                 // Copy to single buffer
+        else if (ts.tx_audio_source == TX_AUDIO_MIC)
         {
-            adb.a_buffer[i] = src[i].l;
+            gain_calc = ts.tx_mic_gain_mult;     // We are in MIC In mode:  Calculate Microphone gain
+            gain_calc /= MIC_GAIN_RESCALE;              // rescale microphone gain to a reasonable range
         }
+        else if (ts.tx_audio_source == TX_AUDIO_DIG)
+        {
+            gain_calc = ts.tx_gain[TX_AUDIO_DIG];     // We are in MIC In mode:  Calculate Microphone gain
+            gain_calc /= 16;              // rescale microphone gain to a reasonable range
+            gain_calc = 1;
+        }
+        else
+        {
+            gain_calc = 1;
+        }
+
+        if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)         // Are we in LINE IN mode?
+        {
+            for(int i = 0; i < blockSize; i++)                 // Copy to single buffer
+            {
+                adb.a_buffer[i] = src[i].r;
+            }
+        } else {
+            // Fill I and Q buffers with left channel(same as right)
+            for(int i = 0; i < blockSize; i++)                 // Copy to single buffer
+            {
+                adb.a_buffer[i] = src[i].l;
+            }
+        }
+
+        // Apply gain if not in TUNE mode
+        // this is the LINE GAIN!
+        arm_scale_f32(adb.a_buffer, (float32_t)gain_calc, adb.a_buffer, blockSize);  // apply gain
+
+        ads.peak_audio = AudioDriver_absmax(adb.a_buffer, blockSize);
     }
-
-    // Apply gain if not in TUNE mode
-    // this is the LINE GAIN!
-    arm_scale_f32(adb.a_buffer, (float32_t)gain_calc, adb.a_buffer, blockSize);  // apply gain
-
-    ads.peak_audio = AudioDriver_absmax(adb.a_buffer, blockSize);
 }
 
 void AudioDriver_tx_am_sideband_processor(const int16_t blockSize) {
@@ -2892,41 +2906,41 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     }
     else if(ts.dmod_mode == DEMOD_CW)
     {
+        bool cw_signal_active = true;
         if (ts.tune)
         {
             softdds_runf(adb.i_buffer, adb.q_buffer,blockSize);      // generate tone/modulation for TUNE
             // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
+        }
+        else
+        {
+            // Generate CW tone if necessary
+            cw_signal_active = cw_gen_process(adb.i_buffer, adb.q_buffer,blockSize) != 0;
+        }
+
+        if (cw_signal_active)
+        {
+            // apply I/Q amplitude & phase adjustments
+            // Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
+            // Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
             audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
         }
         else
         {
-            // Generate CW
-            if(cw_gen_process(adb.i_buffer, adb.q_buffer,blockSize) == 0)
-            {
-                memset(dst,0,blockSize*sizeof(*dst));
-                // Pause or inactivity
-            }
-            else
-            {
-                // apply I/Q amplitude & phase adjustments
-            	// Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
-            	// Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
-                audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
-            }
+            memset(dst,0,blockSize*sizeof(*dst));
+            // Pause or inactivity
         }
     }
 
     // SSB processor
     else if((ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_USB))
     {
-        if(ts.tune)	 	// TUNE mode?  If so, generate tone so we can adjust TX IQ phase and gain
-        {
-            softdds_runf(adb.a_buffer, adb.a_buffer,blockSize);		// load audio buffer with the tone - DDS produces quadrature channels, but we need only one
-        }
-        else	 		// Not tune mode - use audio from CODEC
+        AudioDriver_tx_fill_audio_buffer(src,blockSize);
+
+        if (!ts.tune)
         {
 
-            AudioDriver_tx_fill_audio_buffer(src,blockSize);
+
             // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
             // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
@@ -2937,7 +2951,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // FIXME: quick & dirty: TX IIR filter cannot be disabled anymore
             if(1)	// Do the audio filtering *IF* it is enabled
             {
-                arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
+               arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
             }
             // biquad filter for bass & treble
         	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, adb.a_buffer,adb.a_buffer, blockSize);
@@ -2974,12 +2988,11 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     // -----------------------------
     // AM handler - Generate USB and LSB AM signals and combine  [KA7OEI]
     //
-    else if((ts.dmod_mode == DEMOD_AM) && (!ts.tune))	 	//	Is it in AM mode *AND* is frequency translation active?
+    else if(ts.dmod_mode == DEMOD_AM)	 	//	Is it in AM mode *AND* is frequency translation active?
     {
         if(ts.iq_freq_mode)	 				// is translation active?
         {
             AudioDriver_tx_fill_audio_buffer(src,blockSize);
-
             //
             // Apply the TX equalization filtering:  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
@@ -3045,7 +3058,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
 	 		// send nothing out to the DAC if AM attempted with translate mode turned off!
         }
     }
-    else if((ts.dmod_mode == DEMOD_FM) && (ts.iq_freq_mode) && (!ts.tune))	 	//	Is it in FM mode *AND* is frequency translation active and NOT in TUNE mode?  (No FM possible unless in frequency translate mode!)
+    else if((ts.dmod_mode == DEMOD_FM) && ts.iq_freq_mode)	 	//	Is it in FM mode *AND* is frequency translation active and NOT in TUNE mode?  (No FM possible unless in frequency translate mode!)
     {
         // FM handler  [KA7OEI October, 2015]
         audio_tx_fm_processor(src,dst,blockSize);

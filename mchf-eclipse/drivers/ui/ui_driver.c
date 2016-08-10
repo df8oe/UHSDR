@@ -814,7 +814,7 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 bool RadioManagement_Tune(bool tune)
 {
     bool retval = tune;
-    if(ts.tx_disable == false &&  ((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB)))
+    if(ts.tx_disable == false &&  ((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM)))
     {
         if(tune)
         {
@@ -1629,32 +1629,6 @@ void UiDriver_HandleBandButtons(uint16_t button)
 }
 
 
-static void UiDriverFButton_F1MenuExit()
-{
-    char* label;
-    uint32_t color;
-    if(!ts.menu_var_changed)
-    {
-        if (ts.menu_mode)
-        {
-            label = "EXIT";
-            color = Yellow;
-        }
-        else
-        {
-            label = "MENU";
-            color = White;
-        }
-    }
-    else
-    {
-        label = ts.menu_mode?"EXIT *":"MENU *";
-        color = Orange;
-    }
-    UiDriverFButtonLabel(1,label,color);
-}
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_driver_init
 //* Object              :
@@ -1857,6 +1831,33 @@ static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool e
     }
 }
 
+static void UiDriverFButton_F1MenuExit()
+{
+    char* label;
+    uint32_t color;
+    if(!ts.menu_var_changed)
+    {
+        if (ts.menu_mode)
+        {
+            label = "EXIT";
+            color = Yellow;
+        }
+        else
+        {
+            label = "MENU";
+            color = White;
+        }
+    }
+    else
+    {
+        label = ts.menu_mode?"EXIT *":"MENU *";
+        color = Orange;
+    }
+    UiDriverFButtonLabel(1,label,color);
+}
+
+
+
 static void UiDriverFButton_F3MemSplit()
 {
     const char* cap;
@@ -1875,8 +1876,16 @@ static void UiDriverFButton_F3MemSplit()
     UiDriverFButtonLabel(3,cap,color);
 }
 
+
 static inline void UiDriverFButton_F4ActiveVFO() {
     UiDriverFButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+}
+
+static inline void UiDriverFButton_F5Tune()
+{
+    uint32_t color;
+    color = ts.tx_disable?Grey1:(ts.tune?Red:White);
+    UiDriverFButtonLabel(5,"TUNE",color);
 }
 
 
@@ -2082,7 +2091,7 @@ static void UiDriverProcessKeyboard()
                     {
                         ts.tx_disable &= ~TX_DISABLE_USER;
                     }
-                    UiDriverFButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);		// Set TUNE button color according to ts.tx_disable
+                    UiDriverFButton_F5Tune();
                 }
                 break;
             case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
@@ -2570,7 +2579,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
     {
         ts.tune = RadioManagement_Tune(!ts.tune);
         UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
-        UiDriverFButtonLabel(5,"TUNE",ts.tune?Red:White);
+        UiDriverFButton_F5Tune();
     }
 }
 
@@ -2908,31 +2917,29 @@ static void UiDriverCreateDesktop()
 //*----------------------------------------------------------------------------
 static void UiDriverCreateFunctionButtons(bool full_repaint)
 {
-    uint32_t	clr;
-
     // Create bottom bar
     if(full_repaint)
     {
-        UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X +                             0),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
-        UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*1 + 2),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
-        UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*2 + 4),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
-        UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*3 + 6),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
-        UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + POS_BOTTOM_BAR_BUTTON_W*4 + 8),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,(POS_BOTTOM_BAR_BUTTON_W + 1),Grey);
+        for (int i = 0; i < 5; i++)
+        {
+            UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + (POS_BOTTOM_BAR_BUTTON_W+1)*i),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
+        }
     }
 
     // Button F1
     UiDriverFButton_F1MenuExit();
+
     // Button F2
     UiDriverFButtonLabel(2,"SNAP",White);
 
+    // Button F3
     UiDriverFButton_F3MemSplit();
 
     // Button F4
     UiDriverFButton_F4ActiveVFO();
 
     // Button F5
-    clr = ts.tx_disable?Grey1:White;
-    UiDriverFButtonLabel(5,"TUNE",clr);
+    UiDriverFButton_F5Tune();
 }
 
 //
