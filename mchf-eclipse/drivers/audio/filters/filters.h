@@ -80,6 +80,7 @@ extern const arm_iir_lattice_instance_f32 IIR_2k9_BPF;
 extern const arm_iir_lattice_instance_f32 IIR_TX_2k7;
 extern const arm_iir_lattice_instance_f32 IIR_TX_WIDE_BASS;
 extern const arm_iir_lattice_instance_f32 IIR_TX_WIDE_TREBLE;
+extern const arm_iir_lattice_instance_f32 IIR_TX_SOPRANO;
 extern const arm_iir_lattice_instance_f32 IIR_TX_2k7_FM;
 extern const arm_iir_lattice_instance_f32 IIR_3k2_LPF;
 extern const arm_iir_lattice_instance_f32 IIR_3k2_BPF;
