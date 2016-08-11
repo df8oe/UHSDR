@@ -393,6 +393,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
     // biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
     // biquad 2 :   Treble in the 48kHz path
+    // TX_biquad:   Bass & Treble in the 48kHz path
     // DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
     // www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
     //
