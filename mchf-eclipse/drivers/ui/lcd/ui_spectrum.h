@@ -182,6 +182,6 @@ typedef struct SpectrumDisplay
 } SpectrumDisplay;
 
 // Spectrum display
-extern __IO   SpectrumDisplay      sd;
+extern SpectrumDisplay      sd;
 
 #endif

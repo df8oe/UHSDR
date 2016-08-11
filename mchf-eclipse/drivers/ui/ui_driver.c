@@ -352,9 +352,6 @@ __IO LoTcxo						lo;
 __IO ulong 						unmute_delay = 0;
 
 // ------------------------------------------------
-// Spectrum display
-extern __IO	SpectrumDisplay		sd;
-
 
 uchar drv_state = 0;
 
