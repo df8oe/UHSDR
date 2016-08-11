@@ -393,6 +393,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
     // biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
     // biquad 2 :   Treble in the 48kHz path
+    // TX_biquad:   Bass & Treble in the 48kHz path
     // DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
     // www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
     //
@@ -412,12 +413,6 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //
     //
     float32_t FSdec = 24000.0; // we need the sampling rate in the decimated path for calculation of the coefficients
-
-    /* if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
-    {
-        FSdec = 24000.0;
-    }
-    else*/
 
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
     {
@@ -577,8 +572,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
-//    float32_t DCgain = 3; //
-    float32_t DCgain = 2; //
+    float32_t DCgain = 1; //
+//    float32_t DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -624,8 +619,11 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     a1 = a1/a0;
     a2 = a2/a0;
 
-//    DCgain = 3; //
-    DCgain = 2; //
+    DCgain = 1; //
+
+//    DCgain = 2; //
+//    DCgain = (b0 + b1 + b2) / (1 + (a1 + a2)); // takes into account that a1 and a2 are already negated!
+
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -672,8 +670,10 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     a1 = a1/a0;
     a2 = a2/a0;
 
-//    DCgain = 3; //
-    DCgain = 2; //
+//    DCgain = 2; //
+//    DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
+    DCgain = 1; //
+
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -719,8 +719,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
     // does not work for some reason?
     // I take a divide by a constant instead !
-//    float32_t DCgain = 3; //
-    DCgain = 2; //
+    DCgain = 1; //
+//    DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
     b2 = b2 / DCgain;
@@ -991,13 +991,13 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     //
     if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
-    	if(ts.tx_filter == TX_FILTER_WIDE_BASS)
+    	if(ts.tx_filter == TX_FILTER_BASS)
     	{
             IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
             IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
             IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
     	}
-    	else if (ts.tx_filter == TX_FILTER_WIDE_TREBLE)
+    	else if (ts.tx_filter == TX_FILTER_TENOR)
     	{
 //            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
 //            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
@@ -1011,9 +1011,12 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
 //            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
 //            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
 //            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
-    	      IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-  		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+//			  IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
+//    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
+//		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
+    	      IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
+    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
+  		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
     	}
    	}
     else	 	// This is FM - use a filter with "better" lows and highs more appropriate for FM
@@ -2953,8 +2956,12 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             {
                arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
             }
-            // biquad filter for bass & treble
+
+            if(ts.tx_audio_source != TX_AUDIO_DIG && ts.tx_audio_source != TX_AUDIO_DIGIQ)
+            { //
+            // biquad filter for bass & treble --> NOT enabled when using USB Audio (eg. for Digimodes)
         	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, adb.a_buffer,adb.a_buffer, blockSize);
+            }
         }
 
         //

@@ -153,7 +153,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
 	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20},
     { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.treble_gain,0,-20,20},
-    { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_WIDE_TREBLE},
+    { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_BASS},
 	{ ConfigEntry_Int32_16, EEPROM_TX_BASS_GAIN,&ts.tx_bass_gain,4,-20,6},
     { ConfigEntry_Int32_16, EEPROM_TX_TREBLE_GAIN,&ts.tx_treble_gain,4,-20,6},
 

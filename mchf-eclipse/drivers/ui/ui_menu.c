@@ -3866,23 +3866,19 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_filter,
 //                0,
                 1,
-                                              TX_FILTER_WIDE_TREBLE,
-                                              TX_FILTER_NARROW,
+                                              TX_FILTER_BASS,
+                                              TX_FILTER_SOPRANO,
                                               1
                                              );
         switch(ts.tx_filter) {
-        case TX_FILTER_NONE:
-            txt_ptr = "        OFF";
-            clr = Orange;
+        case TX_FILTER_SOPRANO:
+            txt_ptr = " SOPRANO";
             break;
-        case TX_FILTER_NARROW:
-            txt_ptr = "     NARROW";
+        case TX_FILTER_BASS:
+            txt_ptr = "    BASS";
             break;
-        case TX_FILTER_WIDE_BASS:
-            txt_ptr = "  WIDE BASS";
-            break;
-        case TX_FILTER_WIDE_TREBLE:
-            txt_ptr = "WIDE TREBLE";
+        case TX_FILTER_TENOR:
+            txt_ptr = "   TENOR";
             break;
         }
         if(tchange)
