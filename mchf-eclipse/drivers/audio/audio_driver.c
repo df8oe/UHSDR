@@ -595,7 +595,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // Treble = highShelf
     //
     // the treble filter is in biquad 2 and works at 48000ksps
-    f0 = 4500;
+    f0 = 3500;
     FS = 48000;
     w0 = 2 * PI * f0 / FS;
     A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -20 to 20
