@@ -669,8 +669,9 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     a1 = a1/a0;
     a2 = a2/a0;
 
-    DCgain = 2; //
+//    DCgain = 2; //
 //    DCgain = (b0 + b1 + b2) / (1 - (- a1 - a2)); // takes into account that a1 and a2 are already negated!
+    DCgain = 1; //
 
     b0 = b0 / DCgain;
     b1 = b1 / DCgain;
