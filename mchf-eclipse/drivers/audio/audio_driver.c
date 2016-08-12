@@ -595,7 +595,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // Treble = highShelf
     //
     // the treble filter is in biquad 2 and works at 48000ksps
-    f0 = 4500;
+    f0 = 3500;
     FS = 48000;
     w0 = 2 * PI * f0 / FS;
     A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -20 to 20
@@ -1014,9 +1014,13 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
 //			  IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
 //    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
 //		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
-    	      IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
-    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
-  		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
+//  	      IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
+//  		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
+//		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
+    	      IIR_TXFilter.numStages = IIR_TX_SOPRANO.numStages;		// number of stages
+    		  IIR_TXFilter.pkCoeffs = IIR_TX_SOPRANO.pkCoeffs;	// point to reflection coefficients
+  		      IIR_TXFilter.pvCoeffs = IIR_TX_SOPRANO.pvCoeffs;	// point to ladder coefficients
+
     	}
    	}
     else	 	// This is FM - use a filter with "better" lows and highs more appropriate for FM
