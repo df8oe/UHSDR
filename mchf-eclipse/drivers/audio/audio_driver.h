@@ -65,21 +65,19 @@
 typedef struct
 {
     // Stereo buffers
-    float32_t                   i_buffer[IQ_BUFSZ+1];
-    float32_t                   q_buffer[IQ_BUFSZ+1];
-    float32_t                   a_buffer[IQ_BUFSZ+1];
+    float32_t                   i_buffer[IQ_BUFSZ];
+    float32_t                   q_buffer[IQ_BUFSZ];
+    float32_t                   a_buffer[IQ_BUFSZ];
 
-    float32_t                   b_buffer[(IQ_BUFSZ*2)+1];   // this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
+    float32_t                   b_buffer[(IQ_BUFSZ*2)];   // this is larger since we need interleaved data for magnitude calculation in AM demod and thus, twice as much space
 
-    float32_t                   c_buffer[IQ_BUFSZ+1]; // only used in two places ( audio_rx_freq_conv and audio_demod_fm )
-    float32_t                   d_buffer[IQ_BUFSZ+1]; // only used in two places ( audio_rx_freq_conv and audio_demod_fm )
-    float32_t                   e_buffer[IQ_BUFSZ+1]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
-    float32_t                   f_buffer[IQ_BUFSZ+1]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
-    float32_t                   e2_buffer[IQ_BUFSZ+1]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
-    float32_t                   f2_buffer[IQ_BUFSZ+1]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
+    float32_t                   c_buffer[IQ_BUFSZ]; // only used in two places ( audio_rx_freq_conv and audio_demod_fm )
+    float32_t                   d_buffer[IQ_BUFSZ]; // only used in two places ( audio_rx_freq_conv and audio_demod_fm )
+    float32_t                   e_buffer[IQ_BUFSZ]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
+    float32_t                   f_buffer[IQ_BUFSZ]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
     //
-    float32_t                   Osc_I_buffer[IQ_BUFSZ+1];
-    float32_t                   Osc_Q_buffer[IQ_BUFSZ+1];
+    float32_t                   Osc_I_buffer[IQ_BUFSZ];
+    float32_t                   Osc_Q_buffer[IQ_BUFSZ];
 
     float32_t                   agc_valbuf[BUFF_LEN];   // holder for "running" AGC value
 
@@ -547,7 +545,7 @@ enum	{
 void audio_driver_init(void);
 void audio_driver_set_rx_audio_filter(uint8_t dmod_mode);
 void Audio_TXFilter_Init(uint8_t dmod_mode);
-uint32_t audio_driver_xlate_freq();
+int32_t audio_driver_xlate_freq();
 //uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS
