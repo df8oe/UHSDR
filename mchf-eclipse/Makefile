@@ -240,7 +240,7 @@ ECHO = @echo
 ifdef SystemRoot  # WINxx
    RM = del /Q
    FixPath = $(subst /,\,$1)
-else ifeq ($(shell uname), linux)
+else ifeq ($(shell uname), Linux)
       RM = rm --force
       FixPath = $1
 else ifeq ($(shell uname), Darwin)
