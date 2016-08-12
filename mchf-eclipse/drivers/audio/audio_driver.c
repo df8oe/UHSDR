@@ -2110,19 +2110,6 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
                 }
             }
         }
-#ifndef DEBUGNB
-        //
-        // 16 bit format - convert to float and increment
-        // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-        if (tx_audio_source == TX_AUDIO_DIGIQ)
-        {
-            if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
-            {
-                audio_in_put_buffer(src[i].l);
-                audio_in_put_buffer(src[i].r);
-            }
-        }
-#endif
         adb.i_buffer[i] = (float32_t)src[i].l;
         adb.q_buffer[i] = (float32_t)src[i].r;
         // HACK: we have 48 khz sample frequency
