@@ -2888,7 +2888,7 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
 //*----------------------------------------------------------------------------
 static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
 {
-    // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
+    // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
     // shaved off a few bytes of code
     const uint8_t dmod_mode = ts.dmod_mode;
@@ -3018,8 +3018,8 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // First, generate the LOWER sideband of the AM signal
             // copy contents to temporary holding buffers for later generation of USB AM carrier
             //
-            arm_copy_f32(adb.i_buffer, adb.e_buffer, blockSize);
-            arm_copy_f32(adb.q_buffer, adb.f_buffer, blockSize);
+            arm_copy_f32(adb.i_buffer, adb.e2_buffer, blockSize);
+            arm_copy_f32(adb.q_buffer, adb.f2_buffer, blockSize);
 
             AudioDriver_tx_am_sideband_processor(blockSize);
             //
@@ -3033,8 +3033,8 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             }
 
             // Now, generate the upper sideband of the AM signal:  We must do much of this again to produce an identical (but "different") signal (opposite polarity)
-            arm_negate_f32(adb.e_buffer, adb.q_buffer, blockSize);
-            arm_negate_f32(adb.f_buffer, adb.i_buffer, blockSize);
+            arm_negate_f32(adb.e2_buffer, adb.q_buffer, blockSize);
+            arm_negate_f32(adb.f2_buffer, adb.i_buffer, blockSize);
 
             AudioDriver_tx_am_sideband_processor(blockSize);
 
