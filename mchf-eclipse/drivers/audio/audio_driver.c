@@ -168,9 +168,9 @@ LMSData                 __attribute__ ((section (".ccm"))) lmsData;
 /*
  * @return offset frequency in Hz for current frequency translate mode
  */
-uint32_t audio_driver_xlate_freq()
+int32_t audio_driver_xlate_freq()
 {
-    uint32_t fdelta = 0;
+    int32_t fdelta = 0;
     switch (ts.iq_freq_mode)
     {
     case FREQ_IQ_CONV_P6KHZ:
@@ -1140,10 +1140,7 @@ static void audio_rx_noise_blanker(AudioSample_t * const src, int16_t blockSize)
 //*----------------------------------------------------------------------------
 static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
 {
-    ulong 		i;
-    float32_t	rad_calc;
-//	static float32_t	q_temp, i_temp;
-    static bool flag = 1;
+    static bool recalculate_Osc = false;
     //
     // Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
     // frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
@@ -1179,20 +1176,29 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
     //
     // Pre-calculate quadrature sine wave(s) ONCE for the conversion
     //
-    if((ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ) && ts.multi != 4)
+    switch(ts.iq_freq_mode)
     {
-        ts.multi = 4; 		//(4 = 6 kHz offset)
-        flag = 0;
-    }
-    else if((ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ) && ts.multi != 8)
-    {
-        ts.multi = 8; 		// (8 = 12 kHz offset)
-        flag = 0;
-    }
-    if(!flag)	 		// have we already calculated the sine wave?
-    {
-        for(i = 0; i < blockSize; i++)	 		// No, let's do it!
+    case FREQ_IQ_CONV_P6KHZ:
+    case FREQ_IQ_CONV_M6KHZ:
+        if (ts.multi != 4)
         {
+            ts.multi = 4; 		//(4 = 6 kHz offset)
+            recalculate_Osc = true;
+        }
+        break;
+    case FREQ_IQ_CONV_P12KHZ:
+    case FREQ_IQ_CONV_M12KHZ:
+        if (ts.multi != 8)
+        {
+            ts.multi = 8; 		// (8 = 12 kHz offset)
+            recalculate_Osc = true;
+        }
+    }
+    if(recalculate_Osc == true)	 		// have we already calculated the sine wave?
+    {
+        for(int i = 0; i < blockSize; i++)	 		// No, let's do it!
+        {
+            float32_t   rad_calc;
             rad_calc = i;		// convert to float the current position within the buffer
             rad_calc /= (blockSize);			// make this a fraction
             rad_calc *= (PI * 2);			// convert to radians
@@ -1200,7 +1206,7 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
             //
             sincosf(rad_calc, &adb.Osc_I_buffer[i], &adb.Osc_Q_buffer[i]);
         }
-        flag = 1;	// signal that once we have generated the quadrature sine waves, we shall not do it again
+        recalculate_Osc = false;	// signal that once we have generated the quadrature sine waves, we shall not do it again
     }
 
     // Do frequency conversion using optimized ARM math functions [KA7OEI]
@@ -1756,48 +1762,40 @@ static void audio_lms_noise_reduction(int16_t blockSize)
 static void audio_snap_carrier (void)
 {
 
-    float32_t  Lbin, Ubin;
+    const float32_t buff_len = FFT_IQ_BUFF_LEN2;
+    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+    const int buff_len_int = FFT_IQ_BUFF_LEN2;
+
     float32_t bw_LSB = 0.0;
     float32_t bw_USB = 0.0;
-    float32_t maximum = 0.0;
-    int posbin = 0;
-    float32_t maxbin = 1.0;
-    float32_t buff_len = FFT_IQ_BUFF_LEN2;
-    float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-    int i = 0;
-    float32_t delta1 = 0.0;
-    float32_t delta2 = 0.0;
-    float32_t help_freq = (float32_t)df.tune_old / 4.0;
-    float32_t bin1, bin2, bin3;
-    float32_t help_sample;
-    float32_t width, centre_f, offset;
 
-    int buff_len_int = FFT_IQ_BUFF_LEN2;
-    // init of FFT structure has been moved to audio_driver_init()
+    float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 
     //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
-    posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
+    const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
 
-    width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-    centre_f = FilterPathInfo[ts.filter_path].offset;
-    offset = centre_f - (width/2.0);
+    const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+    const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
+    const float32_t offset = centre_f - (width/2.0);
 
     //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
     //	= determine bandwith separately for lower and upper sideband
 
-    if (ts.dmod_mode == DEMOD_LSB)
+    switch(ts.dmod_mode)
+    {
+    case DEMOD_LSB:
     {
         bw_USB = 1000.0; // also "look" 1kHz away from carrier
         bw_LSB = width;
     }
-
-    if (ts.dmod_mode == DEMOD_USB)
+    break;
+    case DEMOD_USB:
     {
         bw_LSB = 1000.0; // also "look" 1kHz away from carrier
         bw_USB = width;
     }
-
-    if (ts.dmod_mode == DEMOD_CW)   // experimental feature for CW - morse code signals
+    break;
+    case DEMOD_CW:   // experimental feature for CW - morse code signals
     {
         if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)  	// Yes - USB?
         {
@@ -1837,16 +1835,18 @@ static void audio_snap_carrier (void)
             }
         }
     }
-
-    if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM)
+    break;
+    case DEMOD_SAM:
+    case DEMOD_AM:
     {
         bw_LSB = width;
         bw_USB = width;
     }
-
+    break;
+    }
     // calculate upper and lower limit for determination of maximum magnitude
-    Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-    Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+    const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+    const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
 
     // 	FFT preparation
@@ -1855,14 +1855,14 @@ static void audio_snap_carrier (void)
     //
     // do windowing function on input data to get less "Bin Leakage" on FFT data
     //
-    for(i = 0; i < buff_len_int; i++)
+    for(int i = 0; i < buff_len_int; i++)
     {
         //	Hanning 1.36
         //sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
         // Hamming 1.22
         //sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
         // Blackman 1.75
-        help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/((float32_t)buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/((float32_t)buff_len-1.0)))) * sc.FFT_Samples[i];
+        float32_t help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/(buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/(buff_len-1.0)))) * sc.FFT_Samples[i];
         sc.FFT_Samples[i] = help_sample;
     }
 
@@ -1880,7 +1880,7 @@ static void audio_snap_carrier (void)
     // the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
     // when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
     //
-    for(i = 0; i < (buff_len_int/2); i++)
+    for(int i = 0; i < (buff_len_int/2); i++)
     {
         if(i < (buff_len_int/4))	 		// build left half of magnitude data
         {
@@ -1895,21 +1895,23 @@ static void audio_snap_carrier (void)
     if (sc.FFT_number == 0)
     {
         // look for maximum value and save the bin # for frequency delta calculation
-        int c;
-        for (c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+        float32_t maximum = 0.0;
+        float32_t maxbin = 1.0;
+        float32_t delta = 0.0;
+
+        for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
         {
             if (maximum < sc.FFT_Samples[c])
             {
                 maximum = sc.FFT_Samples[c];
-                maxbin = (float32_t)c;
+                maxbin = c;
             }
         }
-        maximum = 0.0; // reset maximum for next time ;-)
 
         // ok, we have found the maximum, now save first delta frequency
-        delta1 = (maxbin - (float32_t)posbin) * bin_BW;
+        delta = (maxbin - (float32_t)posbin) * bin_BW;
 
-        help_freq = help_freq + delta1;
+        help_freq = help_freq + delta;
 
         //        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
 
@@ -1921,10 +1923,7 @@ static void audio_snap_carrier (void)
         //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
         sc.state    = 0;
-        for(i = 0; i < (buff_len_int); i++)
-        {
-            sc.FFT_Samples[i] = 0.0;
-        }
+        arm_fill_f32(0.0,sc.FFT_Samples,buff_len_int);
     }
     else
     {
@@ -1933,20 +1932,20 @@ static void audio_snap_carrier (void)
         // and now: fine-tuning:
         //	get amplitude values of the three bins around the carrier
 
-        bin1 = sc.FFT_Samples[posbin-1];
-        bin2 = sc.FFT_Samples[posbin];
-        bin3 = sc.FFT_Samples[posbin+1];
+        float32_t bin1 = sc.FFT_Samples[posbin-1];
+        float32_t bin2 = sc.FFT_Samples[posbin];
+        float32_t bin3 = sc.FFT_Samples[posbin+1];
 
         if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
         // estimate frequency of carrier by three-point-interpolation of bins around maxbin
         // formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
 
-        delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
-        if(delta2 > bin_BW) delta2 = 0.0;
+        float32_t delta = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+        if(delta > bin_BW) delta = 0.0;
 
         // set frequency variable with delta2
-        help_freq = help_freq + delta2;
+        help_freq = help_freq + delta;
         //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
 
         help_freq = help_freq * ((float32_t)TUNE_MULT);
@@ -2756,12 +2755,12 @@ static void AudioDriver_tx_fill_audio_buffer(AudioSample_t * const src, int16_t 
     }
 }
 
-void AudioDriver_tx_am_sideband_processor(const int16_t blockSize) {
+void AudioDriver_tx_am_sideband_processor(float32_t* inI_buffer, float32_t* inQ_buffer,  const int16_t blockSize) {
 
     // generate AM carrier by applying a "DC bias" to the audio
     //
-    arm_offset_f32(adb.i_buffer, AM_CARRIER_LEVEL, adb.i_buffer, blockSize);
-    arm_offset_f32(adb.q_buffer, (-1 * AM_CARRIER_LEVEL), adb.q_buffer, blockSize);
+    arm_offset_f32(inI_buffer, AM_CARRIER_LEVEL, adb.i_buffer, blockSize);
+    arm_offset_f32(inQ_buffer, (-1 * AM_CARRIER_LEVEL), adb.q_buffer, blockSize);
     //
     // check and apply correct translate mode
     //
@@ -3018,10 +3017,10 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // First, generate the LOWER sideband of the AM signal
             // copy contents to temporary holding buffers for later generation of USB AM carrier
             //
-            arm_copy_f32(adb.i_buffer, adb.e2_buffer, blockSize);
-            arm_copy_f32(adb.q_buffer, adb.f2_buffer, blockSize);
+            arm_negate_f32(adb.i_buffer, adb.a_buffer, blockSize); // this becomes the q buffer for the upper  sideband
+            arm_negate_f32(adb.q_buffer, adb.b_buffer, blockSize); // this becomes the i buffer for the upper  sideband
 
-            AudioDriver_tx_am_sideband_processor(blockSize);
+            AudioDriver_tx_am_sideband_processor(adb.i_buffer,adb.q_buffer,blockSize);
             //
             // Output I and Q as stereo - storing an LSB AM signal in the DMA buffer
             //
@@ -3032,11 +3031,8 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
                 dst[i].r = adb.i_buffer[i];	// save right channel
             }
 
-            // Now, generate the upper sideband of the AM signal:  We must do much of this again to produce an identical (but "different") signal (opposite polarity)
-            arm_negate_f32(adb.e2_buffer, adb.q_buffer, blockSize);
-            arm_negate_f32(adb.f2_buffer, adb.i_buffer, blockSize);
 
-            AudioDriver_tx_am_sideband_processor(blockSize);
+            AudioDriver_tx_am_sideband_processor(adb.b_buffer,adb.a_buffer,blockSize);
 
             // Output I and Q as stereo
             for(int i = 0; i < blockSize; i++)
