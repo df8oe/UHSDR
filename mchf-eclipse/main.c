@@ -591,7 +591,8 @@ int main(void)
     // Freedv Test DL2FW
 
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
-
+    // ts.dvmode = true;
+    // ts.digital_mode = 1;
     // end Freedv Test DL2FW
 #endif
 
