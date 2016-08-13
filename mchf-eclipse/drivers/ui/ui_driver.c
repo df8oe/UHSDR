@@ -52,6 +52,11 @@
 #include "config_storage.h"
 
 #include "cw_gen.h"
+// Freedv Test DL2FW
+#include "freedv_api.h"
+#include "codec2_fdmdv.h"
+
+// ENDE Freedv Test DL2FW
 
 static void 	UiDriverPublicsInit();
 static void 	UiDriverProcessKeyboard();
@@ -730,7 +735,21 @@ void UiDriver_HandleTouchScreen()
         {
             incr_wrap_uint8(&ts.digital_mode,0,7);
             UiDriver_DisplayDigitalMode();
+
+         //DL2FW freeDV test
+
+            if (ts.digital_mode == 1)
+              {
+        	ts.dvmode = 1;
+              }
+            else
+              {
+        	ts.dvmode = 0;
+              }
+         //DL2FW freeDV test end
+
         }
+
         if(check_tp_coordinates(26,35,39,46))			// dynamic tuning activation
         {
             if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
@@ -7051,8 +7070,23 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 
 void ui_driver_thread()
 {
+#ifdef USE_FREEDV
+
+	// Freedv Test DL2FW
+	static uint16_t	FDV_TX_pt = 0;
+	uint16_t	i=0;
+	static short FDV_TX_out_im_buff[320];
+	static bool was_here = false;
+	int16_t s=0;
+	int16_t nout=0;
+	// END Freedv Test DL2FW
+#endif
+
     profileEvent(EnterDriverThread);
     uint32_t now = ts.sysclock;
+
+
+
     if (UiDriver_TimerExpireAndRewind(SCTimer_ENCODER_KEYS,now,1))
     {
         // 10ms have elapsed.
@@ -7061,6 +7095,84 @@ void ui_driver_thread()
         // to all other processing below.
         if(!ts.boot_halt_flag)
         {
+
+#ifdef USE_FREEDV
+            // Freedv Test DL2FW
+
+            if (ts.txrx_mode == TRX_MODE_RX) was_here = false; //set to false to detect the first entry after switching to TX
+							      //will later be inside RX
+            if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
+        	if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready))
+        	  {  			// ...and if we are transmitting and samples from dv_tx_processor are ready
+
+		      if (FDV_TX_pt > 959) FDV_TX_pt = 0; //we use only 3 buffers
+
+		      ts.FDV_TX_samples_ready = false;
+
+		      freedv_tx(f_FREEDV, &FDV_TX_out_buff[FDV_TX_pt],
+				 &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]); // start the encoding process
+
+		      // to bypass the encoding
+		      //for (s=0;s<320;s++)
+		      //FDV_TX_out_buff[s+FDV_TX_pt] = FDV_TX_in_buff[s + ts.FDV_TX_in_start_pt];
+
+		      ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
+
+		      if (was_here) ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
+					// was_here ensures, that at least 2 encoded blocks are in the buffer before we start
+		      FDV_TX_pt += 320;
+		      // lets try the complex function later to go directly I/Q! and save some time!!
+
+		  was_here = true;
+
+        	  }
+
+        	else if (false && (ts.txrx_mode == TRX_MODE_RX)  //deactivated for now
+		  && (ts.FDV_TX_samples_ready)) // have to renam variables to make it clear TX-RX
+
+        	  {
+        	    was_here = false;
+
+        	    if (FDV_TX_pt > 959)
+		    FDV_TX_pt = 0; //959?
+
+		  ts.FDV_TX_samples_ready = false;
+
+		  //nout=freedv_rx(f_FREEDV, &FDV_TX_out_im_buff[0], &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]);  // start the encoding process
+		  // bypass the encoding
+		  for (s = 0; s < 320; s++)
+		    FDV_TX_out_im_buff[s] = FDV_TX_in_buff[s
+			+ ts.FDV_TX_in_start_pt];
+
+		  //now we are doing ugly upsampling to 24 kSamples here - has to be removed later
+		  // because it will be done inside the audio_processor like in TX
+		  for (i = 0; i < 319; i++)
+		    {
+		      FDV_TX_out_buff[3 * i + FDV_TX_pt] =
+			  FDV_TX_out_im_buff[i];
+		      FDV_TX_out_buff[3 * i + 1 + FDV_TX_pt] =
+			  FDV_TX_out_im_buff[i];
+		      FDV_TX_out_buff[3 * i + 2 + FDV_TX_pt] =
+			  FDV_TX_out_im_buff[i];
+		    }
+		  ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
+		  ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
+
+		  FDV_TX_pt += 320;
+
+		}
+
+	    }
+
+	  // END Freedv Test DL2FW
+
+#endif USE_FREEDV
+
+
+
+
+
+
             UiDriverCheckEncoderOne();
             UiDriverCheckEncoderTwo();
             UiDriverCheckEncoderThree();

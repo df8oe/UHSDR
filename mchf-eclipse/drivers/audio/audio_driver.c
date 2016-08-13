@@ -3082,7 +3082,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
 }
 
 
-#if 0
+#ifdef USE_FREEDV
 // DO NOT USE, HAS NOT BEEN KEPT UP TO DATE WITH DEVELOPMENT IN audio_tx_processor!
 //
 // This is a stripped-down TX processor - work in progress
@@ -3095,124 +3095,494 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_dv_tx_processor(int16_t *src, int16_t *dst, int16_t size)
+static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
-    const int16_t blockSize  = size/2;
-    const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;    // rescale sample size inside decimated portion based on decimation factor
+  // Freedv Test DL2FW
 
-    static ulong 		i;
-    float32_t			gain_calc, min, max;
-//	int16_t				*ptr;
-    uint32_t			pindex;
-    int16_t				psize;		// processing size, with decimation
-    float				post_agc_gain_scaling;
+    static int16_t i,j, k;
+    static int16_t outbuff_count = 0;
+    static int16_t trans_count_in = 0;
+    static int16_t modem_buffer_offset = 0;
+    static int16_t modulus_NF = 0, modulus_MOD = 0;
+
+  // end Freedv Test DL2FW
 
 
 
-    // Not tune mode - use audio from CODEC
-    // Fill I and Q buffers with left channel(same as right)
-    if(ts.tx_audio_source == TX_AUDIO_LINEIN_R)  	 	// Are we in LINE IN mode?
+
+  // If source is digital usb in, pull from USB buffer, discard line or mic audio and
+    // let the normal processing happen
+    if (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ)
     {
-        src++;
-        // use right channel data
-    }
-    for(i = 0; i < size/2; i++)	 				// Copy to single buffer
-    {
-        adb.a_buffer[i] = (float)*src;
-        src += 2;								// Next sample
+        // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
+        audio_out_fill_tx_buffer((int16_t*)src,2*blockSize);
     }
 
-    //
-    if(ts.tx_audio_source != TX_AUDIO_MIC)		// Are we in LINE IN mode?
-        gain_calc = LINE_IN_GAIN_RESCALE;			// Yes - fixed gain scaling for line input - the rest is done in hardware
-    else
+    if (ts.tx_audio_source == TX_AUDIO_DIGIQ && ts.dmod_mode != DEMOD_CW && !ts.tune)
     {
-        gain_calc = (float)ts.tx_mic_gain_mult;		// We are in MIC In mode:  Calculate Microphone gain
-        gain_calc /= MIC_GAIN_RESCALE;				// rescale microphone gain to a reasonable range
-    }
-    //
-    //
-    // Do decimation down to lower rate for heavy-duty processing to reduce processor load - NOT YET AT 8 KHz!!!
-    //
-    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
-    //
-    //
-    // *****************************   DV Modulator goes here - adb.a_buffer must be at 8 ksps
-    //
-    //
-    //
-    //
-    // Calculate scaling based on decimation rate since this affects the audio gain
-    //
-    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
-    //
-    // Scale audio to according to AGC setting, demodulation mode and required fixed levels
-    //
-    arm_scale_f32(adb.a_buffer,(float32_t)(post_agc_gain_scaling), adb.a_buffer, blockSizeDecim);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-    //
-    // resample back to original sample rate while doing low-pass filtering to minimize aliasing effects
-    //
-    arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer,(float32_t *) adb.b_buffer, blockSizeDecim);
-    //
-    //
-    // Apply gain if not in TUNE mode
-    arm_scale_f32(adb.a_buffer, (float32_t)gain_calc, adb.a_buffer, size/2);	// apply gain
-    //
-    arm_max_f32(adb.a_buffer, size/2, &max, &pindex);		// find absolute value of audio in buffer after gain applied
-    arm_min_f32(adb.a_buffer, size/2, &min, &pindex);
-    min = fabs(min);
-    if(min > max)
-        max = min;
-    ads.peak_audio = max;
-    //
-    // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
-    // to the transmitted audio.
-    //
-    //
-    gain_calc = (float)ts.alc_tx_postfilt_gain_var;		// get post-filter gain setting
-    gain_calc /= 2;									// halve it
-    gain_calc += 0.5;								// offset it so that 2 = unity
-    arm_scale_f32(adb.i_buffer, (float32_t)gain_calc, adb.i_buffer, size/2);		// use optimized function to apply scaling to I/Q buffers
-    arm_scale_f32(adb.q_buffer, (float32_t)gain_calc, adb.q_buffer, size/2);
-    //
-
-    if(ts.iq_freq_mode)	 		// is transmit frequency conversion to be done?
-    {
-
-        bool translate_up = (ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ))
-                || (ts.dmod_mode == DEMOD_USB && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
-
-        audio_rx_freq_conv(size/2, translate_up);
-    }
-    //
-    // Equalize based on band and simultaneously apply I/Q gain adjustments
-    //
-    arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * SSB_GAIN_COMP), adb.i_buffer, size/2);
-    arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * SSB_GAIN_COMP), adb.q_buffer, size/2);
-    //
-    // if this void is going to be used for DIGI modes, put code for TX phase adjustment at this place! DD4WH 2016_03_30
-    //
-    // ------------------------
-    // Output I and Q as stereo data
-    for(i = 0; i < size/2; i++)
-    {
-        // Prepare data for DAC
-        if(ts.dmod_mode == DEMOD_USB)
+        // If in CW mode or Tune  DIQ audio input is ignored
+        // Output I and Q as stereo, fill buffer
+        for(int i = 0; i < blockSize; i++)	 				// Copy to single buffer
         {
-            *dst++ = adb.i_buffer[i];	// save left channel
-            *dst++ = adb.q_buffer[i];	// save right channel
+            adb.i_buffer[i] = src[i].l;
+            adb.q_buffer[i] = src[i].r;
         }
-        else	 		// Save in the opposite order for LSB
+
+        audio_tx_final_iq_processing(1.0, false, dst, blockSize);
+    }
+    else if(ts.dmod_mode == DEMOD_CW)
+    {
+        bool cw_signal_active = true;
+        if (ts.tune)
         {
-            *dst++ = adb.q_buffer[i];	// save left channel
-            *dst++ = adb.i_buffer[i];	// save right channel
+            softdds_runf(adb.i_buffer, adb.q_buffer,blockSize);      // generate tone/modulation for TUNE
+            // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
+        }
+        else
+        {
+            // Generate CW tone if necessary
+            cw_signal_active = cw_gen_process(adb.i_buffer, adb.q_buffer,blockSize) != 0;
+        }
+
+        if (cw_signal_active)
+        {
+            // apply I/Q amplitude & phase adjustments
+            // Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
+            // Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
+            audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
+        }
+        else
+        {
+            memset(dst,0,blockSize*sizeof(*dst));
+            // Pause or inactivity
         }
     }
+    else if (ts.dvmode && ts.digital_mode==1)
+      { //we are in freedv-mode
+
+	AudioDriver_tx_fill_audio_buffer(src,blockSize);
+
+	if (!ts.tune)
+	  {
+
+	    // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
+	    // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
+	    // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
+	    // and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
+	    // over the 275-2500 Hz range.
+	    //
+	    //            if(is_ssb_tx_filter_enabled())	// Do the audio filtering *IF* it is enabled
+	    // FIXME: quick & dirty: TX IIR filter cannot be disabled anymore
+	    if(1)// Do the audio filtering *IF* it is enabled
+	      {
+		arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
+	      }
+	  }
+	    // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
+
+	    // Freedv Test DL2FW
+
+	    for (k = 0; k < blockSize; k++)
+	      {
+		if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
+		  {
+		    FDV_TX_in_buff[trans_count_in] = (short) adb.a_buffer[k];
+		    trans_count_in++;
+		  }
+	      }
+
+	    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
+	    modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
+
+	    if (trans_count_in == 320) //yes, we really hit exactly 320 - don't worry
+	      {      //we have enough samples ready to start the FreeDV encoding
+		ts.FDV_TX_in_start_pt = 0;
+		ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
+	      }
+	    else
+	      {
+		if (trans_count_in > 639) //and here we hit exactly 640
+		  {    // using the 2nd buffer
+		    ts.FDV_TX_in_start_pt = 320;
+		    ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
+		    trans_count_in = 0;
+		  }
+	      }
+
+	    if (ts.FDV_TX_encode_ready) // freeDV encode has finished (running in ui_driver.c)?
+	      {
+		for (j = 0; j < blockSize; j++) //  now we are doing ugly upsampling by 6
+		  {
+		    adb.a_buffer[j] = FDV_TX_out_buff[modem_buffer_offset + ((j + modulus_MOD) / 6) + outbuff_count];
+		  }
+
+		modulus_MOD += 2;  // modulus is not exactly what it is... :-(
+
+		if (modulus_MOD == 6)// this is a bit ugly - hope to find a better way
+		  {
+		    modulus_MOD = 0;
+		    outbuff_count += 6;
+		  }
+		else
+		  {
+		    outbuff_count += 5;  //  5*6 +2 samples upsampled
+		  }
+	      }
+
+	    //
+	    // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+	    // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
+	    if(!ads.tx_filter_adjusting)//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+	      {
+		// yes - apply transformation AND audio filtering to buffer data
+		// + 0 deg to I data
+		arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
+		// - 90 deg to Q data
+		arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.q_buffer), blockSize);
+	      }
+
+	    //    audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+
+	    if(ts.iq_freq_mode)
+	      {
+		// is transmit frequency conversion to be done?
+		// USB && (-6kHz || -12kHz) --> false, else true
+		// LSB && (+6kHz || +12kHz) --> false, else true
+		bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+		swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+		audio_rx_freq_conv(blockSize, swap);
+	      }
+
+	    // apply I/Q amplitude & phase adjustments
+	    audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+
+	    if (outbuff_count > 319)
+	        {
+	          outbuff_count = 0;
+	          //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
+	          modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
+	        }
 
 
-    return;
+      }
+
+
+
+    // SSB processor
+    else if((ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_USB))
+    {
+        AudioDriver_tx_fill_audio_buffer(src,blockSize);
+
+        if (!ts.tune)
+        {
+
+
+            // NOT in TUNE mode, apply the TX equalization filtering.  This "flattens" the audio
+            // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
+            // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
+            // and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
+            // over the 275-2500 Hz range.
+            //
+            //            if(is_ssb_tx_filter_enabled())	// Do the audio filtering *IF* it is enabled
+            // FIXME: quick & dirty: TX IIR filter cannot be disabled anymore
+            if(1)	// Do the audio filtering *IF* it is enabled
+            {
+               arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);
+            }
+
+            if(ts.tx_audio_source != TX_AUDIO_DIG && ts.tx_audio_source != TX_AUDIO_DIGIQ)
+            { //
+            // biquad filter for bass & treble --> NOT enabled when using USB Audio (eg. for Digimodes)
+        	arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, adb.a_buffer,adb.a_buffer, blockSize);
+            }
+        }
+
+        //
+        // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+        // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
+        if(!ads.tx_filter_adjusting)		 	//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+        {
+            // yes - apply transformation AND audio filtering to buffer data
+            // + 0 deg to I data
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
+            // - 90 deg to Q data
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.q_buffer), blockSize);
+        }
+
+        audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+
+        if(ts.iq_freq_mode)
+        {
+            // is transmit frequency conversion to be done?
+            // USB && (-6kHz || -12kHz) --> false, else true
+            // LSB && (+6kHz || +12kHz) --> false, else true
+            bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+            swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+            audio_rx_freq_conv(blockSize, swap);
+        }
+
+        // apply I/Q amplitude & phase adjustments
+        audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+    }
+    // -----------------------------
+    // AM handler - Generate USB and LSB AM signals and combine  [KA7OEI]
+    //
+    else if(ts.dmod_mode == DEMOD_AM)	 	//	Is it in AM mode *AND* is frequency translation active?
+    {
+        if(ts.iq_freq_mode)	 				// is translation active?
+        {
+            AudioDriver_tx_fill_audio_buffer(src,blockSize);
+            //
+            // Apply the TX equalization filtering:  This "flattens" the audio
+            // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
+            // It does this by applying a "peak" to the bottom end to compensate for the roll-off caused by the Hilbert
+            // and then a gradual roll-off toward the high end.  The net result is a very flat (to better than 1dB) response
+            // over the 275-2500 Hz range.
+            //
+            if(!(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE))	// Do the audio filtering *IF* it is to be enabled
+            {
+                arm_iir_lattice_f32(&IIR_TXFilter, adb.a_buffer, adb.a_buffer, blockSize);	// this is the 275-2500-ish bandpass filter with low-end pre-emphasis
+            }
+            //
+            // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+            // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
+            // Apply transformation AND audio filtering to buffer data
+            //
+            // + 0 deg to I data
+            // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
+            // - 90 deg to Q data
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
+
+            audio_tx_compressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+            //
+            // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
+            // and putting them back together!  [KA7OEI]
+            //
+            //
+            // First, generate the LOWER sideband of the AM signal
+            // copy contents to temporary holding buffers for later generation of USB AM carrier
+            //
+            arm_copy_f32(adb.i_buffer, adb.e_buffer, blockSize);
+            arm_copy_f32(adb.q_buffer, adb.f_buffer, blockSize);
+
+            AudioDriver_tx_am_sideband_processor(blockSize);
+            //
+            // Output I and Q as stereo - storing an LSB AM signal in the DMA buffer
+            //
+            for(int i = 0; i < blockSize; i++)
+            {
+                // Prepare data for DAC
+                dst[i].l = adb.q_buffer[i];	// save left channel
+                dst[i].r = adb.i_buffer[i];	// save right channel
+            }
+
+            // Now, generate the upper sideband of the AM signal:  We must do much of this again to produce an identical (but "different") signal (opposite polarity)
+            arm_negate_f32(adb.e_buffer, adb.q_buffer, blockSize);
+            arm_negate_f32(adb.f_buffer, adb.i_buffer, blockSize);
+
+            AudioDriver_tx_am_sideband_processor(blockSize);
+
+            // Output I and Q as stereo
+            for(int i = 0; i < blockSize; i++)
+            {
+                // Prepare data for DAC, adding the USB AM data to the already-stored LSB AM data
+                dst[i].l += adb.q_buffer[i];	// save left channel
+                dst[i].r += adb.i_buffer[i];	// save right channel
+            }
+        }
+        else	 	// Translate mode is NOT active - we CANNOT do full-carrier AM! (if we tried, we'd end up with DSB SSB because of the "DC hole"!))
+        {
+            memset(dst,0,blockSize*sizeof(*dst));
+	 		// send nothing out to the DAC if AM attempted with translate mode turned off!
+        }
+    }
+    else if((ts.dmod_mode == DEMOD_FM) && ts.iq_freq_mode)	 	//	Is it in FM mode *AND* is frequency translation active and NOT in TUNE mode?  (No FM possible unless in frequency translate mode!)
+    {
+        // FM handler  [KA7OEI October, 2015]
+        audio_tx_fm_processor(src,dst,blockSize);
+    }
+    if (ts.debug_tx_audio == true)
+    {
+
+        if (true || ts.tx_audio_source == TX_AUDIO_DIGIQ)
+        {
+
+            for(int i = 0; i < blockSize; i++)
+            {
+                //
+                // 16 bit format - convert to float and increment
+                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
+                {
+                    audio_in_put_buffer(dst[i].r);
+                    audio_in_put_buffer(dst[i].l);
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < blockSize; i++)
+            {
+                // 16 bit format - convert to float and increment
+                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
+                {
+                    audio_in_put_buffer(adb.a_buffer[i]);
+                    audio_in_put_buffer(adb.a_buffer[i]);
+                }
+            }
+        }
+    }
 }
+
 #endif
+
+
+#if 0
+static void
+audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+{
+  float32_t gain_calc, min, max;
+//	int16_t				*ptr;
+  uint32_t pindex;
+  int16_t psize;		// processing size, with decimation
+  float post_agc_gain_scaling;
+
+
+  const uint8_t dmod_mode = ts.dmod_mode;
+      const uint8_t tx_audio_source = ts.tx_audio_source;
+      const uint8_t tune = ts.tune;
+      const uint8_t iq_freq_mode = ts.iq_freq_mode;
+
+// Freedv Test DL2FW
+
+  static int16_t i,j, k;
+  static int16_t imbuff_count = 0;
+  static int16_t outbuff_count = 0;
+  static short imbuff[48]; //old 48
+  static int16_t trans_count_in = 0;
+  static int16_t trans_count_out = 0;
+  static int16_t modem_buffer_offset = 0;
+  static int16_t modulus_NF = 0, modulus_MOD = 0;
+
+// end Freedv Test DL2FW
+
+  // Not tune mode - use audio from CODEC
+  // Fill I and Q buffers with left channel(same as right)
+
+  AudioDriver_tx_fill_audio_buffer(src,blockSize);
+  //AudioDriver_tx_filter_audio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
+
+  //
+
+  // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
+
+// Freedv Test DL2FW
+
+    for (k = 0; k < blockSize; k++)
+      {
+	if (k % 6 == modulus_NF)  //every 6th sample has to be catched
+	  {
+	    FDV_TX_in_buff[trans_count_in] = (short) adb.a_buffer[k];
+	    trans_count_in++;
+	  }
+      }
+
+    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
+    modulus_NF %= 6; //  reset modulus to 0 at modulus = 12
+
+
+  if (trans_count_in == 320)
+    {                       //we have enough samples ready to start the FreeDV encoding
+
+      ts.FDV_TX_in_start_pt = 0;
+      ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
+
+
+    }
+  else
+    {
+      if (trans_count_in > 639)
+	{    // using the 2nd buffer
+
+	  ts.FDV_TX_in_start_pt = 320;
+	  ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
+	  trans_count_in = 0;
+	}
+    }
+
+  if (ts.FDV_TX_encode_ready)  // freeDV encode has finished?
+    {
+      for (i = 0; i < blockSize; i++) //  now we are doing ugly upsampling by 6
+      	{
+      	  adb.a_buffer[i] = FDV_TX_out_buff[modem_buffer_offset + ((i + modulus_MOD) / 6) + outbuff_count];
+      	}
+      modulus_MOD += 2;  // modulus is not exactly what it is... :-(
+      if (modulus_MOD == 6)  // this is a bit ugly - hope to find a better
+	{
+	  modulus_MOD = 0;
+	  outbuff_count += 6;
+	}
+      else
+	{
+	  outbuff_count += 5;  //  5*6 +2 samples upsampled
+	}
+
+      //
+      // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+      // to the transmitted audio.
+      //
+
+      if (!ads.tx_filter_adjusting)//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+	{
+	  // yes - apply transformation AND audio filtering to buffer data
+	  // + 0 deg to I data
+	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_I_TX,
+		       (float32_t *) (adb.a_buffer),
+		       (float32_t *) (adb.i_buffer), blockSize);
+
+	  // - 90 deg to Q data
+	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_Q_TX,
+		       (float32_t *) (adb.a_buffer),
+		       (float32_t *) (adb.q_buffer), blockSize);
+	}
+      if(iq_freq_mode)
+                 {
+                     // is transmit frequency conversion to be done?
+                     // USB && (-6kHz || -12kHz) --> false, else true
+                     // LSB && (+6kHz || +12kHz) --> false, else true
+                     bool swap = dmod_mode == DEMOD_LSB && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+                     swap = swap || ((dmod_mode == DEMOD_USB) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+                     audio_rx_freq_conv(blockSize, swap);
+                 }      //
+      // Equalize based on band and simultaneously apply I/Q gain adjustments
+      //
+      audio_tx_final_iq_processing(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
+
+
+
+    }
+
+  if (outbuff_count > 319)
+    {
+      outbuff_count = 0;
+      //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
+      modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
+    }
+
+  return;
+}
+
+
+#endif
+
+
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack
@@ -3247,17 +3617,20 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             arm_fill_q15(0, src, size);
             audio_driver_ClearAGCDelayBuffer();
         }
-        //
-        // if(!ts.dvmode)
+
+
+	  //
+         //if(!ts.dvmode)
         // {
             audio_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
         // }
         // else
         //{
-        //    audio_dv_rx_processor(src,dst,size);
+        //    audio_dv_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
         //}
         //
-        to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
+
+            to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
     else  			// Transmit mode
     {
@@ -3270,19 +3643,24 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
         }
         else
         {
-            // if(!ts.dvmode)
-            // {
+
+#ifdef USE_FREEDV
+             if(!ts.dvmode)
+             {
                 // TODO: HACK: simply overwrite input buffer with USB data instead of using data from I2S bus
                 // I2S just delivers the "timing".
                 // needs to be used only if USB digital line in is selected.
                 audio_tx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
-            // }
-            // else
-            // {
-            //    audio_dv_tx_processor(src,dst,size);
-            // }
+             }
+             else
+             {
+                audio_dv_tx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+             }
+
+#else
+        audio_tx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+#endif
         }
-        //
         to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
     //
