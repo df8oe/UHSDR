@@ -22,6 +22,7 @@ typedef enum {
     EnterDriverThread,
     EnterSMeter,
     EnterVoltage,
+    EnterFreeDVEncode,
     EventProfileMax
 } ProfiledEventNames;
 
