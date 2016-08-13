@@ -3099,7 +3099,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 {
   // Freedv Test DL2FW
 
-    static int16_t i, k;
+    static int16_t i,j, k;
     static int16_t outbuff_count = 0;
     static int16_t trans_count_in = 0;
     static int16_t modem_buffer_offset = 0;
@@ -3194,14 +3194,14 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 	    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
 	    modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
 
-	    if (trans_count_in == 320)
+	    if (trans_count_in == 320) //yes, we really hit exactly 320 - don't worry
 	      {      //we have enough samples ready to start the FreeDV encoding
 		ts.FDV_TX_in_start_pt = 0;
 		ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
 	      }
 	    else
 	      {
-		if (trans_count_in > 639)
+		if (trans_count_in > 639) //and here we hit exactly 640
 		  {    // using the 2nd buffer
 		    ts.FDV_TX_in_start_pt = 320;
 		    ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
@@ -3211,9 +3211,9 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
 	    if (ts.FDV_TX_encode_ready) // freeDV encode has finished (running in ui_driver.c)?
 	      {
-		for (i = 0; i < blockSize; i++) //  now we are doing ugly upsampling by 6
+		for (j = 0; j < blockSize; j++) //  now we are doing ugly upsampling by 6
 		  {
-		    adb.a_buffer[i] = FDV_TX_out_buff[modem_buffer_offset + ((i + modulus_MOD) / 6) + outbuff_count];
+		    adb.a_buffer[j] = FDV_TX_out_buff[modem_buffer_offset + ((j + modulus_MOD) / 6) + outbuff_count];
 		  }
 
 		modulus_MOD += 2;  // modulus is not exactly what it is... :-(
@@ -3257,14 +3257,13 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 	    // apply I/Q amplitude & phase adjustments
 	    audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
 
-#ifdef USE_FREEDV
 	    if (outbuff_count > 319)
 	        {
 	          outbuff_count = 0;
 	          //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
 	          modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
 	        }
-#endif
+
 
       }
 
@@ -3440,6 +3439,150 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 }
 
 #endif
+
+
+#if 0
+static void
+audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+{
+  float32_t gain_calc, min, max;
+//	int16_t				*ptr;
+  uint32_t pindex;
+  int16_t psize;		// processing size, with decimation
+  float post_agc_gain_scaling;
+
+
+  const uint8_t dmod_mode = ts.dmod_mode;
+      const uint8_t tx_audio_source = ts.tx_audio_source;
+      const uint8_t tune = ts.tune;
+      const uint8_t iq_freq_mode = ts.iq_freq_mode;
+
+// Freedv Test DL2FW
+
+  static int16_t i,j, k;
+  static int16_t imbuff_count = 0;
+  static int16_t outbuff_count = 0;
+  static short imbuff[48]; //old 48
+  static int16_t trans_count_in = 0;
+  static int16_t trans_count_out = 0;
+  static int16_t modem_buffer_offset = 0;
+  static int16_t modulus_NF = 0, modulus_MOD = 0;
+
+// end Freedv Test DL2FW
+
+  // Not tune mode - use audio from CODEC
+  // Fill I and Q buffers with left channel(same as right)
+
+  AudioDriver_tx_fill_audio_buffer(src,blockSize);
+  //AudioDriver_tx_filter_audio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
+
+  //
+
+  // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
+
+// Freedv Test DL2FW
+
+    for (k = 0; k < blockSize; k++)
+      {
+	if (k % 6 == modulus_NF)  //every 6th sample has to be catched
+	  {
+	    FDV_TX_in_buff[trans_count_in] = (short) adb.a_buffer[k];
+	    trans_count_in++;
+	  }
+      }
+
+    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
+    modulus_NF %= 6; //  reset modulus to 0 at modulus = 12
+
+
+  if (trans_count_in == 320)
+    {                       //we have enough samples ready to start the FreeDV encoding
+
+      ts.FDV_TX_in_start_pt = 0;
+      ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
+
+
+    }
+  else
+    {
+      if (trans_count_in > 639)
+	{    // using the 2nd buffer
+
+	  ts.FDV_TX_in_start_pt = 320;
+	  ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
+	  trans_count_in = 0;
+	}
+    }
+
+  if (ts.FDV_TX_encode_ready)  // freeDV encode has finished?
+    {
+      for (i = 0; i < blockSize; i++) //  now we are doing ugly upsampling by 6
+      	{
+      	  adb.a_buffer[i] = FDV_TX_out_buff[modem_buffer_offset + ((i + modulus_MOD) / 6) + outbuff_count];
+      	}
+      modulus_MOD += 2;  // modulus is not exactly what it is... :-(
+      if (modulus_MOD == 6)  // this is a bit ugly - hope to find a better
+	{
+	  modulus_MOD = 0;
+	  outbuff_count += 6;
+	}
+      else
+	{
+	  outbuff_count += 5;  //  5*6 +2 samples upsampled
+	}
+
+      //
+      // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+      // to the transmitted audio.
+      //
+
+      if (!ads.tx_filter_adjusting)//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
+	{
+	  // yes - apply transformation AND audio filtering to buffer data
+	  // + 0 deg to I data
+	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_I_TX,
+		       (float32_t *) (adb.a_buffer),
+		       (float32_t *) (adb.i_buffer), blockSize);
+
+	  // - 90 deg to Q data
+	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_Q_TX,
+		       (float32_t *) (adb.a_buffer),
+		       (float32_t *) (adb.q_buffer), blockSize);
+	}
+      if(iq_freq_mode)
+                 {
+                     // is transmit frequency conversion to be done?
+                     // USB && (-6kHz || -12kHz) --> false, else true
+                     // LSB && (+6kHz || +12kHz) --> false, else true
+                     bool swap = dmod_mode == DEMOD_LSB && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+                     swap = swap || ((dmod_mode == DEMOD_USB) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+                     audio_rx_freq_conv(blockSize, swap);
+                 }      //
+      // Equalize based on band and simultaneously apply I/Q gain adjustments
+      //
+      audio_tx_final_iq_processing(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
+
+
+
+    }
+
+  if (outbuff_count > 319)
+    {
+      outbuff_count = 0;
+      //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
+      modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
+    }
+
+  return;
+}
+
+
+#endif
+
+
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack

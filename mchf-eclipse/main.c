@@ -458,6 +458,9 @@ void TransceiverStateInit(void)
 	// Freedv Test DL2FW
 	ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
 	ts.FDV_TX_samples_ready = false;	// FREEDV handshaking test DL2FW
+	ts.FDV_TX_out_start_pt=0;
+	ts.FDV_TX_in_start_pt=0;
+
 	// end Freedv Test DL2FW
 
 

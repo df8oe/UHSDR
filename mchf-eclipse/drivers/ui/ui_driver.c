@@ -7098,17 +7098,18 @@ void ui_driver_thread()
 
 #ifdef USE_FREEDV
             // Freedv Test DL2FW
+
+            if (ts.txrx_mode == TRX_MODE_RX) was_here = false; //set to false to detect the first entry after switching to TX
+							      //will later be inside RX
             if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
         	if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready))
-        	  {  // ...and if we are transmitting and samples from dv_tx_processor are ready
+        	  {  			// ...and if we are transmitting and samples from dv_tx_processor are ready
 
-		  if (was_here == true) //shift for one thread (app 10ms) at the beginning
-		    {
-		      if (FDV_TX_pt > 959) FDV_TX_pt = 0;
+		      if (FDV_TX_pt > 959) FDV_TX_pt = 0; //we use only 3 buffers
 
 		      ts.FDV_TX_samples_ready = false;
 
-		      freedv_tx (f_FREEDV, &FDV_TX_out_buff[FDV_TX_pt],
+		      freedv_tx(f_FREEDV, &FDV_TX_out_buff[FDV_TX_pt],
 				 &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]); // start the encoding process
 
 		      // to bypass the encoding
@@ -7117,35 +7118,34 @@ void ui_driver_thread()
 
 		      ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
 
-		      if (FDV_TX_pt > 639) ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
-
+		      if (was_here) ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
+					// was_here ensures, that at least 2 encoded blocks are in the buffer before we start
 		      FDV_TX_pt += 320;
 		      // lets try the complex function later to go directly I/Q! and save some time!!
 
-		    }
-
 		  was_here = true;
-		}
 
-	      else if ((ts.txrx_mode == TRX_MODE_RX)
+        	  }
+
+        	else if (false && (ts.txrx_mode == TRX_MODE_RX)  //deactivated for now
 		  && (ts.FDV_TX_samples_ready)) // have to renam variables to make it clear TX-RX
 
-		{
-		  was_here = false;
+        	  {
+        	    was_here = false;
 
-		  if (FDV_TX_pt > 959)
+        	    if (FDV_TX_pt > 959)
 		    FDV_TX_pt = 0; //959?
 
 		  ts.FDV_TX_samples_ready = false;
 
-		  //				      nout=freedv_rx(f_FREEDV, &FDV_TX_out_im_buff[0], &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]);  // start the encoding process
+		  //nout=freedv_rx(f_FREEDV, &FDV_TX_out_im_buff[0], &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]);  // start the encoding process
 		  // bypass the encoding
 		  for (s = 0; s < 320; s++)
 		    FDV_TX_out_im_buff[s] = FDV_TX_in_buff[s
 			+ ts.FDV_TX_in_start_pt];
 
 		  //now we are doing ugly upsampling to 24 kSamples here - has to be removed later
-
+		  // because it will be done inside the audio_processor like in TX
 		  for (i = 0; i < 319; i++)
 		    {
 		      FDV_TX_out_buff[3 * i + FDV_TX_pt] =
