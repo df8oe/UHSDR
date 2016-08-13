@@ -831,8 +831,8 @@ typedef struct TransceiverState
     int		tx_iq_am_gain_balance;		// setting for TX IQ gain balance
     int		tx_iq_fm_gain_balance;		// setting for TX IQ gain balance
     //
-    float	tx_adj_gain_var_i;		// active variables for adjusting tx gain balance
-    float	tx_adj_gain_var_q;
+    float32_t	tx_adj_gain_var_i;		// active variables for adjusting tx gain balance
+    float32_t	tx_adj_gain_var_q;
 
     int		rx_iq_lsb_gain_balance;		// setting for RX IQ gain balance
     int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
@@ -849,7 +849,7 @@ typedef struct TransceiverState
     float	rx_adj_gain_var_q;
     //
     // Equalisation factor
-    float	tx_power_factor;
+    float32_t	tx_power_factor;
 
     int	freq_cal;				// frequency calibration
 

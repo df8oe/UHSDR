@@ -75,6 +75,10 @@ typedef struct
     float32_t                   d_buffer[IQ_BUFSZ]; // only used in two places ( audio_rx_freq_conv and audio_demod_fm )
     float32_t                   e_buffer[IQ_BUFSZ]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
     float32_t                   f_buffer[IQ_BUFSZ]; // only used in three places audio_rx_freq_conv / rx_proc / tx_proc
+
+    float32_t                   i2_buffer[IQ_BUFSZ];
+    float32_t                   q2_buffer[IQ_BUFSZ];
+
     //
     float32_t                   Osc_I_buffer[IQ_BUFSZ];
     float32_t                   Osc_Q_buffer[IQ_BUFSZ];
