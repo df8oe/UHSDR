@@ -70,6 +70,7 @@ SUBDIRS :=  \
     drivers/ui/lcd  \
     drivers/ui/misc  \
     drivers/ui/oscillator  \
+    drivers/freedv  \
     \
     hardware  \
     \
@@ -169,6 +170,36 @@ SRC =  \
     drivers/cat/usb/usbd_cdc_vcp.c  \
     drivers/cat/usb/usbd_desc.c  \
     drivers/cat/usb/usbd_usr.c  \
+    \
+    drivers/freedv/codebookd.c  \
+	drivers/freedv/fifo.c  \
+	drivers/freedv/phase.c  \
+	drivers/freedv/codebookjnd.c  \
+	drivers/freedv/varicode.c  \
+	drivers/freedv/lsp.c  \
+	drivers/freedv/codebookvqanssi.c  \
+	drivers/freedv/octave.c  \
+	drivers/freedv/codebookdt.c  \
+	drivers/freedv/fdmdv.c  \
+	drivers/freedv/nlp.c  \
+	drivers/freedv/codec2.c  \
+	drivers/freedv/dump.c  \
+	drivers/freedv/pack.c  \
+	drivers/freedv/sine.c  \
+	drivers/freedv/codebookres.c  \
+	drivers/freedv/kiss_fft.c  \
+	drivers/freedv/codebookvq.c  \
+	drivers/freedv/freedv_api.c  \
+	drivers/freedv/quantise.c  \
+	drivers/freedv/golay23.c  \
+	drivers/freedv/interp.c  \
+	drivers/freedv/lpc.c  \
+	drivers/freedv/codebook.c  \
+	drivers/freedv/codebookge.c  \
+	drivers/freedv/ampexp.c  \
+	drivers/freedv/phaseexp.c  \
+	drivers/freedv/codebookjvm.c  \
+	drivers/freedv/postfilter.c  \
     \
     drivers/keyboard/keyb_driver.c  \
     drivers/keyboard/usb/usbh_bsp.c  \
