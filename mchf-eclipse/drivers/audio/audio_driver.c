@@ -2755,22 +2755,23 @@ static void AudioDriver_tx_fill_audio_buffer(AudioSample_t * const src, int16_t 
     }
 }
 
-void AudioDriver_tx_am_sideband_processor(float32_t* inI_buffer, float32_t* inQ_buffer,  const int16_t blockSize) {
+/***
+ * takes the I Q input buffers containing the I Q audio for a single AM sideband and returns the frequency translated IQ sideband
+ * in the i/q buffers.
+ * Used temporary buffers:
+ *  directly: i,q
+ *  indirectly: c,d,e,f -> see audio_rx_freq_conv
+ */
+void AudioDriver_tx_am_sideband_processor(float32_t* I_buffer, float32_t* Q_buffer,  const int16_t blockSize) {
 
     // generate AM carrier by applying a "DC bias" to the audio
     //
-    arm_offset_f32(inI_buffer, AM_CARRIER_LEVEL, adb.i_buffer, blockSize);
-    arm_offset_f32(inQ_buffer, (-1 * AM_CARRIER_LEVEL), adb.q_buffer, blockSize);
+    arm_offset_f32(I_buffer, AM_CARRIER_LEVEL, adb.i_buffer, blockSize);
+    arm_offset_f32(Q_buffer, (-1 * AM_CARRIER_LEVEL), adb.q_buffer, blockSize);
     //
     // check and apply correct translate mode
     //
     audio_rx_freq_conv(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ));
-    //
-    // Equalize based on band and simultaneously apply I/Q gain adjustments
-    //
-    arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * AM_GAIN_COMP), adb.i_buffer, blockSize);
-    arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * AM_GAIN_COMP), adb.q_buffer, blockSize);
-
 }
 
 static inline void AudioDriver_tx_filter_audio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
@@ -2892,6 +2893,9 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     // shaved off a few bytes of code
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
+    const uint8_t tx_audio_sink   =  (ts.debug_tx_audio == true)?ts.tx_audio_source:TX_AUDIO_LINEIN_L;
+    // we use TX_AUDIO_LINEIN_L as placeholder for no tx audio output on USB
+
     const uint8_t tune = ts.tune;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
 
@@ -3020,28 +3024,20 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             arm_negate_f32(adb.i_buffer, adb.a_buffer, blockSize); // this becomes the q buffer for the upper  sideband
             arm_negate_f32(adb.q_buffer, adb.b_buffer, blockSize); // this becomes the i buffer for the upper  sideband
 
+            // now generate USB AM sideband signal
             AudioDriver_tx_am_sideband_processor(adb.i_buffer,adb.q_buffer,blockSize);
-            //
-            // Output I and Q as stereo - storing an LSB AM signal in the DMA buffer
-            //
-            for(int i = 0; i < blockSize; i++)
-            {
-                // Prepare data for DAC
-                dst[i].l = adb.q_buffer[i];	// save left channel
-                dst[i].r = adb.i_buffer[i];	// save right channel
-            }
 
+            arm_copy_f32(adb.i_buffer, adb.i2_buffer, blockSize);
+            arm_copy_f32(adb.q_buffer, adb.q2_buffer, blockSize);
+            // i2/q2 now contain the LSB AM signal
 
+            // now generate USB AM sideband signal
             AudioDriver_tx_am_sideband_processor(adb.b_buffer,adb.a_buffer,blockSize);
 
-            // Output I and Q as stereo
-            for(int i = 0; i < blockSize; i++)
-            {
-                // Prepare data for DAC, adding the USB AM data to the already-stored LSB AM data
-                dst[i].l += adb.q_buffer[i];	// save left channel
-                dst[i].r += adb.i_buffer[i];	// save right channel
-            }
+            arm_add_f32(adb.i2_buffer,adb.q_buffer,adb.i_buffer,blockSize);
+            arm_add_f32(adb.q2_buffer,adb.i_buffer,adb.q_buffer,blockSize);
 
+            audio_tx_final_iq_processing(AM_GAIN_COMP, false, dst, blockSize);
             signal_active = true;
         }
     }
@@ -3061,38 +3057,26 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
     }
-
-
-    if (ts.debug_tx_audio == true)
+    if (tx_audio_sink == TX_AUDIO_DIGIQ)
     {
 
-        if (true || tx_audio_source == TX_AUDIO_DIGIQ)
+        for(int i = 0; i < blockSize; i++)
         {
-
-            for(int i = 0; i < blockSize; i++)
-            {
-                //
-                // 16 bit format - convert to float and increment
-                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
-                {
-                    audio_in_put_buffer(dst[i].r);
-                    audio_in_put_buffer(dst[i].l);
-                }
-            }
+            //
+            // 16 bit format - convert to float and increment
+            // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+            audio_in_put_buffer(dst[i].r);
+            audio_in_put_buffer(dst[i].l);
         }
-        else
+    }
+    else if (tx_audio_sink == TX_AUDIO_DIG)
+    {
+        for(int i = 0; i < blockSize; i++)
         {
-            for(int i = 0; i < blockSize; i++)
-            {
-                // 16 bit format - convert to float and increment
-                // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-                if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
-                {
-                    audio_in_put_buffer(adb.a_buffer[i]);
-                    audio_in_put_buffer(adb.a_buffer[i]);
-                }
-            }
+            // we collect our I/Q samples for USB transmission if TX_AUDIO_DIG
+            // TODO: certain modulation modes will destroy the "a_buffer" during IQ signal creation (AM does at least)
+            audio_in_put_buffer(adb.a_buffer[i]);
+            audio_in_put_buffer(adb.a_buffer[i]);
         }
     }
 }
