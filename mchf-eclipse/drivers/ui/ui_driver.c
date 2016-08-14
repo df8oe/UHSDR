@@ -7085,7 +7085,7 @@ static void UiDriver_HandleFreeDV()
     static bool was_here = false;
     int16_t s=0;
     // int16_t nout=0;
-
+    char outtext[8];
     // END Freedv Test DL2FW
 
     // Freedv Test DL2FW
@@ -7096,8 +7096,9 @@ static void UiDriver_HandleFreeDV()
     }
     //will later be inside RX
     if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
-        if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready))
+        if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready > 0))
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
+
 
             ts.FDV_TX_samples_ready = false;
 

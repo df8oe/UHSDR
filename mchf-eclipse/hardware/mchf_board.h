@@ -1191,7 +1191,7 @@ typedef struct TransceiverState
 
 	// Freedv Test DL2FW
 	bool	FDV_TX_encode_ready;
-	bool	FDV_TX_samples_ready;
+	int	FDV_TX_samples_ready;
 	uint16_t FDV_TX_out_start_pt;
 	uint16_t FDV_TX_in_start_pt;
 
