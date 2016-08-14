@@ -84,6 +84,10 @@ void audio_driver_ClearAGCDelayBuffer()
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
 __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
+// Decimator for Zoom FFT
+static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT;
+__IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
 __IO float32_t			interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
@@ -931,6 +935,16 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     ads.agc_decimation_scaling = ads.decimation_rate;
     ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
     //
+    // Set up ZOOM FFT decimation/filter
+    DECIMATE_ZOOM_FFT.numTaps = FirRxDecimate.numTaps;
+    DECIMATE_ZOOM_FFT.pCoeffs = FirRxDecimate.pCoeffs;
+
+    DECIMATE_ZOOM_FFT.M = 8;			// Decimation factor  (48 kHz / 8 = 6 kHz)
+
+    DECIMATE_ZOOM_FFT.pState = (float32_t *)&decimState[0];			// Filter state variables
+    //
+
+
     // Set up RX decimation/filter
     DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
 
@@ -2066,7 +2080,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 
         //
         // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
-        if(sd.state == 0)
+        if(sd.state == 0 && ZOOM_FFT == 0)
         {
             sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for spectrum scope/waterfall display
             sd.samp_ptr++;
@@ -2139,6 +2153,50 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         }
     }
     //
+    // Here we would insert the first steps for the ZOOM FFT, which will be used to have a very close look at a small part
+    // of the spectrum display of the mcHF
+    // The ZOOM FFT is based on the principles described in Lyons (2011)
+    // 1. I & Q
+    // 2. convert to baseband (at this place has already been done in audio_rx_freq_conv!)
+    // 3. lowpass I and lowpass Q separately (48kHz sample rate)
+    // 4. decimate I and Q separately
+    // 5. apply FFT to decimated I&Q samples
+    //
+    // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display
+    // frequency resolution with
+#if ZOOM_FFT == 1
+    // lowpass [with IIR_TX_WIDE_BASS]
+    arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
+    arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
+
+    // decimation
+    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.x_buffer, adb.x_buffer, blockSize);
+    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.y_buffer, adb.y_buffer, blockSize);
+    // collect samples for spectrum display 256-point-FFT
+
+    	// loop to put decimated samples from x and y buffer into sd.FFT_Samples
+        for(i = 0; i < blockSize/8; i++)
+        {
+            if(sd.state == 0)
+            {
+
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i];	// get floating point data for FFT for spectrum scope/waterfall display
+            	sd.samp_ptr++;
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i];
+            	sd.samp_ptr++;
+
+        // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
+            	if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
+            	{
+            		sd.samp_ptr = 0;
+            		sd.state    = 1;
+            	}
+            }
+        }
+
+
+#endif
+
     // ------------------------
     // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
     // *** *EXCEPT* in AM mode

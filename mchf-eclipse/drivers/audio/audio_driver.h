@@ -79,6 +79,10 @@ typedef struct
     float32_t                   i2_buffer[IQ_BUFSZ];
     float32_t                   q2_buffer[IQ_BUFSZ];
 
+    float32_t                   x_buffer[IQ_BUFSZ];
+    float32_t                   y_buffer[IQ_BUFSZ];
+
+
     //
     float32_t                   Osc_I_buffer[IQ_BUFSZ];
     float32_t                   Osc_Q_buffer[IQ_BUFSZ];
