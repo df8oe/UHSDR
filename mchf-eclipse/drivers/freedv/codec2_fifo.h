@@ -1,14 +1,14 @@
 /*---------------------------------------------------------------------------*\
-                                                                             
+
   FILE........: codec2_fifo.h
   AUTHOR......: David Rowe
   DATE CREATED: Oct 15 2012
-                                                                             
+
   A FIFO design useful in gluing the FDMDV modem and codec together in
   integrated applications.
-  
+
   The name codec2_fifo.h is used to make it unique when "make
-  installed".                   
+  installed".
 
 \*---------------------------------------------------------------------------*/
 
@@ -42,7 +42,16 @@ struct FIFO *fifo_create(int nshort);
 void fifo_destroy(struct FIFO *fifo);
 int fifo_write(struct FIFO *fifo, short data[], int n);
 int fifo_read(struct FIFO *fifo, short data[], int n);
-int fifo_used(struct FIFO *fifo);
+
+/*!
+ * Return the number of bytes stored in the FIFO.
+ */
+int fifo_used(const struct FIFO * const fifo);
+
+/*!
+ * Return the space available in the FIFO.
+ */
+int fifo_free(const struct FIFO * const fifo);
 
 #ifdef __cplusplus
 }

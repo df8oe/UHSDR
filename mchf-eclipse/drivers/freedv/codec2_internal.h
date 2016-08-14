@@ -1,12 +1,12 @@
 /*---------------------------------------------------------------------------*\
-                                                                             
+
   FILE........: codec2_internal.h
-  AUTHOR......: David Rowe                                                          
+  AUTHOR......: David Rowe
   DATE CREATED: April 16 2012
-                                                                             
+
   Header file for Codec2 internal states, exposed via this header
   file to assist in testing.
-                                                                             
+
 \*---------------------------------------------------------------------------*/
 
 /*
@@ -35,6 +35,7 @@ struct CODEC2 {
     float         w[M];	                   /* time domain hamming window                */
     COMP          W[FFT_ENC];	           /* DFT of w[]                                */
     float         Pn[2*N];	           /* trapezoidal synthesis window              */
+    float        *bpf_buf;                 /* buffer for band pass filter               */
     float         Sn[M];                   /* input speech                              */
     float         hpf_states[2];           /* high pass filter states                   */
     void         *nlp;                     /* pitch predictor states                    */
@@ -48,7 +49,7 @@ struct CODEC2 {
     MODEL         prev_model_dec;          /* previous frame's model parameters         */
     float         prev_lsps_dec[LPC_ORD];  /* previous frame's LSPs                     */
     float         prev_e_dec;              /* previous frame's LPC energy               */
-    
+
     int           lpc_pf;                  /* LPC post filter on                        */
     int           bass_boost;              /* LPC post filter bass boost                */
     float         beta;                    /* LPC post filter parameters                */
@@ -58,6 +59,7 @@ struct CODEC2 {
     float         xq_dec[2];
 
     int           smoothing;               /* enable smoothing for channels with errors */
+    float        *softdec;                 /* optional soft decn bits from demod        */
 };
 
 #endif
