@@ -1,11 +1,11 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: defines.h                                                     
-  AUTHOR......: David Rowe 
-  DATE CREATED: 23/4/93                                                       
-                                                                             
-  Defines and structures used throughout the codec.			     
-                                                                             
+  FILE........: defines.h
+  AUTHOR......: David Rowe
+  DATE CREATED: 23/4/93
+
+  Defines and structures used throughout the codec.
+
 \*---------------------------------------------------------------------------*/
 
 /*
@@ -29,9 +29,9 @@
 #define __DEFINES__
 
 /*---------------------------------------------------------------------------*\
-                                                                             
-				DEFINES                                       
-                                                                             
+
+				DEFINES
+
 \*---------------------------------------------------------------------------*/
 
 /* General defines */
@@ -48,7 +48,8 @@
 #define FFT_DEC    512	    	/* size of FFT used in decoder          */
 #define TW         40		/* Trapezoidal synthesis window overlap */
 #define V_THRESH   6.0          /* voicing threshold in dB              */
-#define LPC_ORD    10		/* phase modelling LPC order            */
+#define LPC_ORD    10		/* LPC order                            */
+#define LPC_ORD_LOW 6		/* LPC order for lower rates            */
 
 /* Pitch estimation defines */
 
@@ -57,9 +58,9 @@
 #define P_MAX    160		/* maximum pitch                        */
 
 /*---------------------------------------------------------------------------*\
-                                                                             
-				TYPEDEFS                                      
-                                                                             
+
+				TYPEDEFS
+
 \*---------------------------------------------------------------------------*/
 
 /* Structure to hold model parameters for one frame */
@@ -88,6 +89,8 @@ extern const struct lsp_codebook lsp_cbjnd[];
 extern const struct lsp_codebook lsp_cbdt[];
 extern const struct lsp_codebook lsp_cbjvm[];
 extern const struct lsp_codebook lsp_cbvqanssi[];
+extern const struct lsp_codebook mel_cb[];
 extern const struct lsp_codebook ge_cb[];
+extern const struct lsp_codebook lspmelvq_cb[];
 
 #endif

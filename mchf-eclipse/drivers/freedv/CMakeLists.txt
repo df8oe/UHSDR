@@ -34,60 +34,43 @@ set(CODEBOOKSD
     ${D}/dlsp10.txt
 )
 
-# lspd VQ quantisers
-
-set(CODEBOOKSVQ
-    ${D}/lsp1.txt
-    ${D}/lsp2.txt
-    ${D}/lsp3.txt
-    ${D}/lsp4.txt
-    ${CMAKE_SOURCE_DIR}/unittest/lsp45678910.txt
-)
-
-set(CODEBOOKSJND
-    ${D}/lsp1.txt
-    ${D}/lsp2.txt
-    ${D}/lsp3.txt
-    ${D}/lsp4.txt
-    ${CMAKE_SOURCE_DIR}/unittest/lspjnd5-10.txt
-)
-
-set(CODEBOOKSDT
-    ${D}/lspdt1.txt
-    ${D}/lspdt2.txt
-    ${D}/lspdt3.txt
-    ${D}/lspdt4.txt
-    ${D}/lspdt5.txt
-    ${D}/lspdt6.txt
-    ${D}/lspdt7.txt
-    ${D}/lspdt8.txt
-    ${D}/lspdt9.txt
-    ${D}/lspdt10.txt
-)
-
 set(CODEBOOKSJVM
     ${D}/lspjvm1.txt
     ${D}/lspjvm2.txt
     ${D}/lspjvm3.txt
 )
 
-set(CODEBOOKSVQANSSI
-    ${D}/lspvqanssi1.txt
-    ${D}/lspvqanssi2.txt
-    ${D}/lspvqanssi3.txt
-    ${D}/lspvqanssi4.txt
+set(CODEBOOKSMEL
+    ${D}/mel1.txt
+    ${D}/mel2.txt
+    ${D}/mel3.txt
+    ${D}/mel4.txt
+    ${D}/mel5.txt
+    ${D}/mel6.txt
+)
+
+set(CODEBOOKSLSPMELVQ
+    ${D}/lspmelvq1.txt
+    ${D}/lspmelvq2.txt
+    ${D}/lspmelvq3.txt
 )
 
 set(CODEBOOKSGE ${D}/gecb.txt)
 
-# when crosscompiling import the executable targets from a file
+# when crosscompiling we need a native executable
 if(CMAKE_CROSSCOMPILING)
-    SET(IMPORT_EXECUTABLES "IMPORTFILE-NOTFOUND" CACHE FILEPATH "Point it to the export file from a native build")
-    INCLUDE(${IMPORT_EXECUTABLES})
-endif(CMAKE_CROSSCOMPILING)
-
+    include(ExternalProject)
+    ExternalProject_Add(codec2_native
+       SOURCE_DIR ${CMAKE_SOURCE_DIR}
+       BUILD_COMMAND $(MAKE) generate_codebook
+       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy src/generate_codebook ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_executable(generate_codebook IMPORTED)
+    set_target_properties(generate_codebook PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/generate_codebook)
+    add_dependencies(generate_codebook codec2_native)
+else(CMAKE_CROSSCOMPILING)
 # Build code generator binaries. These do not get installed.
-if(NOT CMAKE_CROSSCOMPILING)
     # generate_codebook
     add_executable(generate_codebook generate_codebook.c)
     target_link_libraries(generate_codebook ${CMAKE_REQUIRED_LIBRARIES})
@@ -97,7 +80,8 @@ if(NOT CMAKE_CROSSCOMPILING)
     # Make native builds available for cross-compiling.
     export(TARGETS generate_codebook genlspdtcb
         FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake)
-endif(NOT CMAKE_CROSSCOMPILING)
+endif(CMAKE_CROSSCOMPILING)
+
 
 # codebook.c
 add_custom_command(
@@ -113,27 +97,6 @@ add_custom_command(
     DEPENDS generate_codebook ${CODEBOOKSD}
 )
 
-# codebookdt.c
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookdt.c
-    COMMAND generate_codebook lsp_cbdt ${CODEBOOKSDT} > ${CMAKE_CURRENT_BINARY_DIR}/codebookdt.c
-    DEPENDS generate_codebook ${CODEBOOKSDT}
-)
-
-# codebookvq.c
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookvq.c
-    COMMAND generate_codebook lsp_cbvq ${CODEBOOKSVQ} > ${CMAKE_CURRENT_BINARY_DIR}/codebookvq.c
-    DEPENDS generate_codebook ${CODEBOOKSVQ}
-)
-
-# codebookjnd.c
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookjnd.c
-    COMMAND generate_codebook lsp_cbjnd ${CODEBOOKSJND} > ${CMAKE_CURRENT_BINARY_DIR}/codebookjnd.c
-    DEPENDS generate_codebook ${CODEBOOKSJND}
-)
-
 # codebookjvm.c
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookjvm.c
@@ -141,11 +104,19 @@ add_custom_command(
     DEPENDS generate_codebook ${CODEBOOKSJVM}
 )
 
-# codebookvqanssi.c
+
+# codebookmel.c
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookvqanssi.c
-    COMMAND generate_codebook lsp_cbvqanssi ${CODEBOOKSVQANSSI} > ${CMAKE_CURRENT_BINARY_DIR}/codebookvqanssi.c
-    DEPENDS generate_codebook ${CODEBOOKSVQANSSI}
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebookmel.c
+    COMMAND generate_codebook mel_cb ${CODEBOOKSMEL} > ${CMAKE_CURRENT_BINARY_DIR}/codebookmel.c
+    DEPENDS generate_codebook ${CODEBOOKSMEL}
+)
+
+# codebooklspmelvq.c
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/codebooklspmelvq.c
+    COMMAND generate_codebook lspmelvq_cb ${CODEBOOKSLSPMELVQ} > ${CMAKE_CURRENT_BINARY_DIR}/codebooklspmelvq.c
+    DEPENDS generate_codebook ${CODEBOOKSLSPMELVQ}
 )
 
 # codebookge.c
@@ -166,9 +137,12 @@ set(CODEC2_SRCS
     postfilter.c
     sine.c
     codec2.c
+    cohpsk.c
     fifo.c
     fdmdv.c
+    fm.c
     kiss_fft.c
+    linreg.c
     interp.c
     lsp.c
     phase.c
@@ -176,32 +150,41 @@ set(CODEC2_SRCS
     pack.c
     codebook.c
     codebookd.c
-    codebookvq.c
-    codebookjnd.c
     codebookjvm.c
-    codebookvqanssi.c
-    codebookdt.c
+    codebookmel.c
+    codebooklspmelvq.c
     codebookge.c
     golay23.c
     freedv_api.c
     varicode.c
+    modem_stats.c
 )
 
+set(CODEC2_PUBLIC_HEADERS
+    golay23.h
+    codec2.h
+    codec2_fdmdv.h
+    codec2_cohpsk.h
+    codec2_fm.h
+    codec2_fifo.h
+    comp.h
+    comp_prim.h
+    modem_stats.h
+    kiss_fft.h
+    freedv_api.h
+    varicode.h
+    freedv_api_internal.h
+)
+
+#
+# Setup the codec2 library
+#
 add_library(codec2 ${CODEC2_SRCS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(codec2 ${CMAKE_REQUIRED_LIBRARIES})
-set_target_properties(codec2 PROPERTIES SOVERSION ${SOVERSION})
-
-set(CODEC2_PUBLIC_HEADERS
-    codec2.h
-    codec2_fdmdv.h
-    codec2_fifo.h
-    comp.h
-    golay23.h
-)
-
-install(FILES ${CODEC2_PUBLIC_HEADERS}
-    DESTINATION include/codec2
+set_target_properties(codec2 PROPERTIES
+    SOVERSION ${SOVERSION}
+    PUBLIC_HEADER "${CODEC2_PUBLIC_HEADERS}"
 )
 
 add_executable(c2demo c2demo.c)
@@ -222,7 +205,7 @@ target_link_libraries(fdmdv_get_test_bits ${CMAKE_REQUIRED_LIBRARIES})
 add_executable(fdmdv_mod fdmdv_mod.c fdmdv.c kiss_fft.c)
 target_link_libraries(fdmdv_mod ${CMAKE_REQUIRED_LIBRARIES})
 
-add_executable(fdmdv_demod fdmdv_demod.c fdmdv.c kiss_fft.c octave.c)
+add_executable(fdmdv_demod fdmdv_demod.c fdmdv.c kiss_fft.c octave.c modem_stats.c)
 target_link_libraries(fdmdv_demod ${CMAKE_REQUIRED_LIBRARIES})
 
 add_executable(fdmdv_put_test_bits fdmdv_put_test_bits.c fdmdv.c kiss_fft.c)
@@ -249,9 +232,36 @@ target_link_libraries(freedv_tx ${CMAKE_REQUIRED_LIBRARIES} codec2)
 add_executable(freedv_rx freedv_rx.c)
 target_link_libraries(freedv_rx ${CMAKE_REQUIRED_LIBRARIES} codec2)
 
+add_executable(fm_demod fm_demod.c fm.c)
+target_link_libraries(fm_demod ${CMAKE_REQUIRED_LIBRARIES})
+
+add_executable(cohpsk_mod cohpsk_mod.c)
+target_link_libraries(cohpsk_mod ${CMAKE_REQUIRED_LIBRARIES} codec2)
+
+add_executable(cohpsk_demod cohpsk_demod.c octave.c)
+target_link_libraries(cohpsk_demod ${CMAKE_REQUIRED_LIBRARIES} codec2)
+
+add_executable(cohpsk_get_test_bits cohpsk_get_test_bits.c)
+target_link_libraries(cohpsk_get_test_bits ${CMAKE_REQUIRED_LIBRARIES} codec2)
+
+add_executable(cohpsk_put_test_bits cohpsk_put_test_bits.c octave.c)
+target_link_libraries(cohpsk_put_test_bits ${CMAKE_REQUIRED_LIBRARIES} codec2)
+
+add_executable(cohpsk_ch cohpsk_ch.c)
+target_link_libraries(cohpsk_ch ${CMAKE_REQUIRED_LIBRARIES} codec2)
+
+install(TARGETS codec2 EXPORT codec2-config
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/codec2
+)
+
+#install(EXPORT codec2-config
+#    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/codec2
+#)
 
 install(TARGETS
-    codec2
     c2demo
     c2demo
     c2enc
@@ -259,12 +269,11 @@ install(TARGETS
     c2sim
     fdmdv_get_test_bits
     fdmdv_mod fdmdv_demod
+    fm_demod
     fdmdv_put_test_bits
     fdmdv_interleave
     insert_errors
     fec_enc
     fec_dec
-    LIBRARY DESTINATION lib${LIB_SUFFIX}
-    ARCHIVE DESTINATION lib${LIB_SUFFIX}
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

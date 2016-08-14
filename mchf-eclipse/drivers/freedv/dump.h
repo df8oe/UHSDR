@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------*\
-                                                                             
+
   FILE........: dump.h
-  AUTHOR......: David Rowe                                                          
-  DATE CREATED: 25/8/09                                                       
-                                                                             
+  AUTHOR......: David Rowe
+  DATE CREATED: 25/8/09
+
   Routines to dump data to text files for Octave analysis.
 
 \*---------------------------------------------------------------------------*/
@@ -38,6 +38,7 @@ void dump_Sn(float Sn[]);
 void dump_Sw(COMP Sw[]);
 void dump_Sw_(COMP Sw_[]);
 void dump_Ew(COMP Ew[]);
+void dump_softdec(float *softdec, int n);
 
 /* amplitude modelling */
 
@@ -49,7 +50,8 @@ void dump_Rw(float Rw[]);
 void dump_lsp(float lsp[]);
 void dump_weights(float w[], int ndim);
 void dump_lsp_(float lsp_[]);
-void dump_mel(int mel[]);
+void dump_mel(float mel[], int order);
+void dump_mel_indexes(int mel_indexes[], int order);
 void dump_ak(float ak[], int order);
 void dump_ak_(float ak[], int order);
 void dump_E(float E);

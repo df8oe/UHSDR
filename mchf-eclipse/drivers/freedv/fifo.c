@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------*\
-                                                                             
+
   FILE........: fifo.c
   AUTHOR......: David Rowe
   DATE CREATED: Oct 15 2012
-                                                                             
+
   A FIFO design useful in gluing the FDMDV modem and codec together in
   integrated applications.  The unittest/tfifo indicates these
   routines are thread safe without the need for syncronisation
@@ -64,19 +64,13 @@ void fifo_destroy(struct FIFO *fifo) {
 
 int fifo_write(struct FIFO *fifo, short data[], int n) {
     int            i;
-    int            fifo_free;
     short         *pdata;
     short         *pin = fifo->pin;
 
     assert(fifo != NULL);
     assert(data != NULL);
 
-    // available storage is one less than nshort as prd == pwr
-    // is reserved for empty rather than full
-
-    fifo_free = fifo->nshort - fifo_used(fifo) - 1;
-
-    if (n > fifo_free) {
+    if (n > fifo_free(fifo)) {
 	return -1;
     }
     else {
@@ -104,7 +98,7 @@ int fifo_read(struct FIFO *fifo, short data[], int n)
 
     assert(fifo != NULL);
     assert(data != NULL);
- 
+
     if (n > fifo_used(fifo)) {
 	return -1;
     }
@@ -125,7 +119,7 @@ int fifo_read(struct FIFO *fifo, short data[], int n)
     return 0;
 }
 
-int fifo_used(struct FIFO *fifo)
+int fifo_used(const struct FIFO * const fifo)
 {
     short         *pin = fifo->pin;
     short         *pout = fifo->pout;
@@ -140,3 +134,10 @@ int fifo_used(struct FIFO *fifo)
     return used;
 }
 
+int fifo_free(const struct FIFO * const fifo)
+{
+    // available storage is one less than nshort as prd == pwr
+    // is reserved for empty rather than full
+
+    return fifo->nshort - fifo_used(fifo) - 1;
+}
