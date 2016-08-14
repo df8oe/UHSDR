@@ -7068,17 +7068,23 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 }
 
 
+
 #ifdef USE_FREEDV
+
+struct freedv *f_FREEDV;
+FDV_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+FDV_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
+
 static void UiDriver_HandleFreeDV()
 {
 
     // Freedv Test DL2FW
     static uint16_t FDV_TX_pt = 0;
     uint16_t    i=0;
-    static short FDV_TX_out_im_buff[320];
+    static FDV_Buffer FDV_TX_out_im_buff;
     static bool was_here = false;
     int16_t s=0;
-    int16_t nout=0;
+    // int16_t nout=0;
 
     // END Freedv Test DL2FW
 
@@ -7092,22 +7098,18 @@ static void UiDriver_HandleFreeDV()
     if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
         if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready))
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
-            if (FDV_TX_pt > 959)
-            {
-                FDV_TX_pt = 0; //we use only 3 buffers
-            }
 
             ts.FDV_TX_samples_ready = false;
 
             profileEvent(EnterFreeDVEncode);
-            freedv_tx(f_FREEDV, &FDV_TX_out_buff[FDV_TX_pt],
-                    &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]); // start the encoding process
+            freedv_tx(f_FREEDV, FDV_TX_out_buff[FDV_TX_pt].samples,
+                    FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples); // start the encoding process
 
             // to bypass the encoding
-            //for (s=0;s<320;s++)
-            //{
-            //    FDV_TX_out_buff[s+FDV_TX_pt] = FDV_TX_in_buff[s + ts.FDV_TX_in_start_pt];
-            //}
+            // for (s=0;s<320;s++)
+            // {
+            //    FDV_TX_out_buff[FDV_TX_pt].samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
+            // }
 
             ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
 
@@ -7116,7 +7118,9 @@ static void UiDriver_HandleFreeDV()
                 ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
             }
             // was_here ensures, that at least 2 encoded blocks are in the buffer before we start
-            FDV_TX_pt += 320;
+            FDV_TX_pt++;
+            FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
+
             // lets try the complex function later to go directly I/Q! and save some time!!
 
             was_here = true;
@@ -7129,37 +7133,31 @@ static void UiDriver_HandleFreeDV()
         {
             was_here = false;
 
-            if (FDV_TX_pt > 959)
-            {
-                FDV_TX_pt = 0; //959?
-            }
-
             ts.FDV_TX_samples_ready = false;
 
             //nout=freedv_rx(f_FREEDV, &FDV_TX_out_im_buff[0], &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]);  // start the encoding process
             // bypass the encoding
             for (s = 0; s < 320; s++)
             {
-                FDV_TX_out_im_buff[s] = FDV_TX_in_buff[s
-                                                       + ts.FDV_TX_in_start_pt];
+                FDV_TX_out_im_buff.samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
             }
 
             //now we are doing ugly upsampling to 24 kSamples here - has to be removed later
             // because it will be done inside the audio_processor like in TX
             for (i = 0; i < 319; i++)
             {
-                FDV_TX_out_buff[3 * i + FDV_TX_pt] =
-                        FDV_TX_out_im_buff[i];
-                FDV_TX_out_buff[3 * i + 1 + FDV_TX_pt] =
-                        FDV_TX_out_im_buff[i];
-                FDV_TX_out_buff[3 * i + 2 + FDV_TX_pt] =
-                        FDV_TX_out_im_buff[i];
+                FDV_TX_out_buff[FDV_TX_pt].samples[3*i] =
+                        FDV_TX_out_im_buff.samples[i];
+                FDV_TX_out_buff[FDV_TX_pt].samples[3*i+1] =
+                        FDV_TX_out_im_buff.samples[i];
+                FDV_TX_out_buff[FDV_TX_pt].samples[3*i+2] =
+                        FDV_TX_out_im_buff.samples[i];
             }
             ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
             ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
 
-            FDV_TX_pt += 320;
-
+            FDV_TX_pt ++;
+            FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
         }
 
     }
@@ -7176,6 +7174,9 @@ void ui_driver_thread()
     profileEvent(EnterDriverThread);
     uint32_t now = ts.sysclock;
 
+#ifdef USE_FREEDV
+    UiDriver_HandleFreeDV();
+#endif // USE_FREEDV
 
 
     if (UiDriver_TimerExpireAndRewind(SCTimer_ENCODER_KEYS,now,1))
@@ -7187,9 +7188,6 @@ void ui_driver_thread()
         if(!ts.boot_halt_flag)
         {
 
-#ifdef USE_FREEDV
-            UiDriver_HandleFreeDV();
-#endif USE_FREEDV
 
             UiDriverCheckEncoderOne();
             UiDriverCheckEncoderTwo();

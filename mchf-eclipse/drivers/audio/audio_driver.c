@@ -2894,9 +2894,11 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     // Freedv Test DL2FW
     static int16_t outbuff_count = 0;
     static int16_t trans_count_in = 0;
+    static int16_t FDV_TX_fill_in_pt = 0;
     static int16_t modem_buffer_offset = 0;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
-
+    static float32_t last_sample = 0.0;
+    static float32_t sample_delta = 0.0;
     // end Freedv Test DL2FW
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
@@ -2919,7 +2921,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
-                FDV_TX_in_buff[trans_count_in] = adb.a_buffer[k];
+                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = adb.a_buffer[k];
                 // FDV_TX_in_buff[trans_count_in] = 0; // transmit "silence"
                 trans_count_in++;
             }
@@ -2928,34 +2930,44 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         modulus_NF += 4; //  shift modulus to not loose any data while overlapping
         modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
 
-        if (trans_count_in == 320) //yes, we really hit exactly 320 - don't worry
+        if (trans_count_in == FDV_BUFFER_SIZE) //yes, we really hit exactly 320 - don't worry
         {
             //we have enough samples ready to start the FreeDV encoding
-            ts.FDV_TX_in_start_pt = 0;
+            ts.FDV_TX_in_start_pt = FDV_TX_fill_in_pt;
             ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
-        }
-        else
-        {
-            if (trans_count_in > 639) //and here we hit exactly 640
-            {    // using the 2nd buffer
-                ts.FDV_TX_in_start_pt = 320;
-                ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
-                trans_count_in = 0;
-            }
+            trans_count_in = 0;
+
+            FDV_TX_fill_in_pt++;
+            FDV_TX_fill_in_pt %= FDV_BUFFER_IN_NUM;
         }
 
         if (ts.FDV_TX_encode_ready) // freeDV encode has finished (running in ui_driver.c)?
         {
             for (int j = 0; j < blockSize; j++) //  now we are doing ugly upsampling by 6
             {
-                adb.a_buffer[j] = FDV_TX_out_buff[modem_buffer_offset + outbuff_count];
+                if (modulus_MOD == 0)
+                {
+                    sample_delta = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count] - last_sample)/6 ;
+                }
+                adb.a_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count] + (sample_delta * (float32_t)modulus_MOD);
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
+                    last_sample = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count];
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
             }
+        } else {
+          profileEvent(FreeDVTXUnderrun);
+          memset(dst,0,blockSize*sizeof(*dst));
+        }
+
+        if (outbuff_count >= FDV_BUFFER_SIZE)
+        {
+            outbuff_count = 0;
+            //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
+            modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
         }
 
         //
@@ -2980,13 +2992,6 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
         // apply I/Q amplitude & phase adjustments
         audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
-
-        if (outbuff_count > 319)
-        {
-            outbuff_count = 0;
-            //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
-            modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
-        }
     }
     else
     {

@@ -1203,8 +1203,17 @@ extern __IO TransceiverState ts;
 
 //DL2FW UGLY test for FREEDV - some globals :-(
 
-struct freedv *f_FREEDV;
-short FDV_TX_in_buff[640], FDV_TX_out_buff[960];
+#define FDV_BUFFER_SIZE     320
+#define FDV_BUFFER_IN_NUM   2
+#define FDV_BUFFER_OUT_NUM  3
+
+typedef struct {
+    int16_t samples[320];
+}  FDV_Buffer;
+
+extern struct freedv *f_FREEDV;
+extern FDV_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+extern FDV_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
 //end DL2FW UGLY test for FREEDV - some globals :-(
 
