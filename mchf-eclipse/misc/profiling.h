@@ -23,6 +23,7 @@ typedef enum {
     EnterSMeter,
     EnterVoltage,
     EnterFreeDVEncode,
+    FreeDVTXUnderrun,
     EventProfileMax
 } ProfiledEventNames;
 
