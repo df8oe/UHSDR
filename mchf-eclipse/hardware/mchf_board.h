@@ -14,6 +14,7 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 #define USE_FREEDV
+#define ZOOM_FFT 0
 
 // HW libs
 #include "stm32f4xx_rcc.h"

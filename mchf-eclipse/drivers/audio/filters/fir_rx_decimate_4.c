@@ -54,3 +54,16 @@ const arm_fir_decimate_instance_f32 FirRxDecimate =
         -0.3105557871709
     }
 };
+
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+        -0.3105711170561,
+        -0.2100034101786,
+        -0.2099936469089,
+        -0.3105557871709
+    }
+};
+
