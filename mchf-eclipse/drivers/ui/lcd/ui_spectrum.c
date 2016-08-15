@@ -158,8 +158,6 @@ void UiSpectrumCreateDrawArea(void)
 {
     ulong i;
     uint32_t clr;
-    char s[32];
-    char* div_txt_ptr = NULL;
 
     //
     // get grid colour of all but center line
@@ -205,74 +203,23 @@ void UiSpectrumCreateDrawArea(void)
 
     if(!ts.spectrum_size)		//don't draw text bar when size is BIG
     {
-
-        switch(ts.spectrum_db_scale)	 	// convert variable to setting
-        {
-        case DB_DIV_5:
-            div_txt_ptr = "(5dB/div)";
-            break;
-        case DB_DIV_7:
-            div_txt_ptr = "(7.5dB/div)";
-            break;
-        case DB_DIV_15:
-            div_txt_ptr = "(15dB/div)";
-            break;
-        case DB_DIV_20:
-            div_txt_ptr = "(20dB/div)";
-            break;
-        case S_1_DIV:
-            div_txt_ptr = "(1S-Unit/div)";
-            break;
-        case S_2_DIV:
-            div_txt_ptr = "(2S-Unit/div)";
-            break;
-        case S_3_DIV:
-            div_txt_ptr = "(3S-Unit/div)";
-            break;
-        case DB_DIV_10:
-        default:
-            div_txt_ptr = "(10dB/div)";
-            break;
-        }
-        //
-        snprintf(s,32,"SPECTRUM SCOPE %s",div_txt_ptr);
-
         // Draw top band = grey box in which text is printed
         for(i = 0; i < 16; i++)
         {
             UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
         }
 
-        if(!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE))	 	// Display Spectrum Scope banner if enabled
-        {
+		char bartext[34];
 
-            // Top band text - middle caption
-            UiLcdHy28_PrintTextCentered(
+        // Top band text - middle caption
+        UiGet_Wfscope_Bar_Text(bartext);
+        UiLcdHy28_PrintTextCentered(
                     POS_SPECTRUM_IND_X,
                     (POS_SPECTRUM_IND_Y - 18),
                     POS_SPECTRUM_IND_W,
-                    s,
-                    Grey,
+                    bartext,
+                    White,
                     RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-        }
-        else	 			// Waterfall Mode banner if that is enabled
-        {
-
-            // Top band text - middle caption
-            UiLcdHy28_PrintTextCentered(
-                    POS_SPECTRUM_IND_X,
-                    (POS_SPECTRUM_IND_Y - 18),
-                    POS_SPECTRUM_IND_W,
-                    "WATERFALL DISPLAY",
-                    Grey,
-                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-        }
-        // Top band text - grid size
-        //UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X +  2),
-        //								(POS_SPECTRUM_IND_Y - 18),
-        //								"Grid 6k",
-        //								Grey,
-        //								RGB((COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD)),4);
 
         // Draw control left and right border
         for(i = 0; i < 2; i++)
@@ -1911,4 +1858,75 @@ static void calculate_dBm(void)
         {
         	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
         }
+}
+
+
+// function builds text which is displayed above waterfall/scope area
+void UiGet_Wfscope_Bar_Text(char* wfbartext)
+{
+  char* lefttext;
+  char* righttext;
+
+  if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)			//waterfall
+  {
+	lefttext = "WATERFALL      ";
+  }
+  else												// scope
+  {
+    switch(ts.spectrum_db_scale)	 	// convert variable to setting
+  	{
+  	  case DB_DIV_5:
+        lefttext = "SC(5dB/div)    ";
+        break;
+  	  case DB_DIV_7:
+        lefttext = "SC(7.5dB/div)  ";
+        break;
+  	  case DB_DIV_15:
+        lefttext = "SC(15dB/div)   ";
+        break;
+  	  case DB_DIV_20:
+        lefttext = "SC(20dB/div)   ";
+        break;
+  	  case S_1_DIV:
+        lefttext = "SC(1S-Unit/div)";
+        break;
+  	  case S_2_DIV:
+        lefttext = "SC(2S-Unit/div)";
+        break;
+  	  case S_3_DIV:
+        lefttext = "SC(3S-Unit/div)";
+        break;
+  	  case DB_DIV_10:
+  	  default:
+        lefttext = "SC(10dB/div)   ";
+        break;
+  	}
+  }
+
+  if(!sd.magnify)
+  {
+	righttext = " < Magnify x1 > ";
+  }
+  else if(sd.magnify)
+  {
+	righttext = " < Magnify x2 > ";
+  }
+  else if(sd.magnify == 4)
+  {
+	righttext = " < Magnify x4 > ";
+  }
+  else if(sd.magnify == 8)
+  {
+	righttext = " < Magnify x8 > ";
+  }
+  else if(sd.magnify == 16)
+  {
+	righttext = " < Magnify x16 >";
+  }
+  else if(sd.magnify == 32)
+  {
+	righttext = " < Magnify x32 >";
+  }
+
+sprintf(wfbartext,"%s%s",lefttext,righttext);
 }

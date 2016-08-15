@@ -674,11 +674,11 @@ void UiDriver_HandleTouchScreen()
             UiDriverDeleteSMeter();
             UiDriverCreateSMeter();	// redraw meter
         }
-        if(check_tp_coordinates(30,60,27,31))			// wf/scope bar right part
+        if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
         {
             UiDriver_ToggleWaterfallScopeDisplay();
         }
-        if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
+        if(check_tp_coordinates(30,60,27,31))			// wf/scope bar right part
         {
       		int i,j;
             sd.magnify = !sd.magnify;
