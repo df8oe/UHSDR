@@ -53,7 +53,7 @@ static const char format[] =
 
 float get_float(FILE * in, const char * name, char * * cursor, char * buffer, int size)
 {
-  for ( ; ; ) {
+  while(1) {
     char *	s = *cursor;
     char	c;
 
@@ -68,8 +68,10 @@ float get_float(FILE * in, const char * name, char * * cursor, char * buffer, in
       f = strtod(s, &end);
 
       if ( end != s )
+      {
         *cursor = end;
-        return f;
+      }
+      return f;
     }
 
     if ( fgets(buffer, size, in) == NULL ) {
@@ -216,6 +218,7 @@ struct AMPINDEX {
     int   index;
 };
 
+#if 0
 static void bubbleSort(struct AMPINDEX numbers[], int array_size)
 {
     int i, j;
@@ -257,7 +260,7 @@ static void print_pred_error(struct PEXP *pexp, MODEL *model, int start, int end
     }
 
 }
-
+#endif
 
 static void predict_phases(struct PEXP *pexp, MODEL *model, int start, int end) {
     int i;
@@ -342,7 +345,7 @@ static void predict_phases2(struct PEXP *pexp, MODEL *model, int start, int end)
     }
 
 }
-
+#if 0
 static void rand_phases(MODEL *model, int start, int end) {
     int i;
 
@@ -350,6 +353,7 @@ static void rand_phases(MODEL *model, int start, int end) {
 	model->phi[i] = PI*(1.0 - 2.0*(float)rand()/RAND_MAX);
 
 }
+#endif
 
 static void quant_phase(float *phase, float min, float max, int bits) {
     int   levels = 1 << bits;
@@ -375,7 +379,7 @@ static void quant_phases(MODEL *model, int start, int end, int bits) {
 	quant_phase(&model->phi[i], -PI, PI, bits);
     }
 }
-
+#if 0
 static void fixed_bits_per_frame(struct PEXP *pexp, MODEL *model, int m, int budget) {
     int res, finished;
 
@@ -418,7 +422,6 @@ static void check_phase_quant(MODEL *model, float tol)
 	    exit(0);
     }
 }
-
 
 static float est_phi1(MODEL *model, int start, int end)
 {
@@ -620,7 +623,7 @@ static void print_sparse_pred_error(struct PEXP *pexp, MODEL *model, int start, 
 	printf("\n");
     }
 }
-
+#endif
 
 static void update_snr_calc(struct PEXP *pexp, MODEL *model, float before[])
 {
@@ -744,7 +747,7 @@ static float refine_Wo(struct PEXP     *pexp,
 
 {
     int i;
-    float Wo_est, best_var, Wo, var, pred, error, best_Wo;
+    float Wo_est, best_var, Wo, var, pred, error, best_Wo = 0.0;
 
     /* test variance over a range of Wo values */
 
@@ -850,7 +853,7 @@ static void sparse_vq_pred_error(struct PEXP     *pexp,
     }
 }
 
-
+#if 0
 static void predict_phases1(struct PEXP *pexp, MODEL *model, int start, int end) {
     int i;
     float best_Wo;
@@ -862,6 +865,7 @@ static void predict_phases1(struct PEXP *pexp, MODEL *model, int start, int end)
     }
 }
 
+#endif
 
 /*
   This functions tests theory that some bands can be combined together
@@ -1022,7 +1026,7 @@ static float bins[] = {/*
 void smooth_phase3(struct PEXP *pexp, MODEL *model) {
     int    m, i;
     int   nbins;
-    int   b;
+    int   b = MAX_BINS;
     float f, best_Wo, pred, err;
     COMP  av[MAX_BINS];
 
@@ -1045,8 +1049,12 @@ void smooth_phase3(struct PEXP *pexp, MODEL *model) {
 	    /* find bin  */
 
 	    for(i=0; i<nbins; i++)
-		if ((f > bins[i]) && (f <= bins[i+1]))
-		    b = i;
+	    {
+	        if ((f > bins[i]) && (f <= bins[i+1]))
+	        {
+	            b = i;
+	        }
+	    }
 	    assert(b < MAX_BINS);
 
 	    /* est predicted phase from average */
@@ -1067,8 +1075,12 @@ void smooth_phase3(struct PEXP *pexp, MODEL *model) {
 	    /* find bin */
 
 	    for(i=0; i<nbins; i++)
-		if ((f > bins[i]) && (f <= bins[i+1]))
-		    b = i;
+	    {
+	        if ((f > bins[i]) && (f <= bins[i+1]))
+	        {
+	            b = i;
+	        }
+	    }
 	    assert(b < MAX_BINS);
 
 	    /* add predicted phase error to this bin */
@@ -1092,11 +1104,10 @@ void smooth_phase3(struct PEXP *pexp, MODEL *model) {
    phase of the other harmonics. The theory is that only the largest harmonic
    will be audible.
 */
-
 void cb_phase1(struct PEXP *pexp, MODEL *model) {
     int   m, i;
     int   nbins;
-    int   b;
+    int   b = MAX_BINS;
     float f, best_Wo;
     float max_val[MAX_BINS];
     int   max_ind[MAX_BINS];
@@ -1116,8 +1127,12 @@ void cb_phase1(struct PEXP *pexp, MODEL *model) {
 	    /* find bin  */
 
 	    for(i=0; i<nbins; i++)
-		if ((f > bins[i]) && (f <= bins[i+1]))
-		    b = i;
+	    {
+	        if ((f > bins[i]) && (f <= bins[i+1]))
+	        {
+	            b = i;
+	        }
+	    }
 	    assert(b < MAX_BINS);
 
 	    if (model->A[m] > max_val[b]) {
@@ -1156,7 +1171,8 @@ void cb_phase1(struct PEXP *pexp, MODEL *model) {
 
 void cb_phase2(struct PEXP *pexp, MODEL *model) {
     int   st, m, i, a, b, step;
-    float diff,w,c,s,phi1_;
+    float diff,w,c,s;
+    // float phi1_;
     float A[MAX_AMP];
 
     for(m=1; m<=model->L; m++) {
@@ -1182,7 +1198,7 @@ void cb_phase2(struct PEXP *pexp, MODEL *model) {
 	    w = 1.0;
 	    c += w*cos(diff); s += w*sin(diff);
 	}
-	phi1_ = atan2(s,c);
+	// phi1_ = atan2(s,c);
 	printf("replacing: ");
 	for(i=a; i<b; i++) {
 	    //model->phi[i] = i*phi1_;
