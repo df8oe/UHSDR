@@ -741,7 +741,7 @@ void UiDriver_HandleTouchScreen()
       		{
           	  step = 200;					// adjust to 50Hz
           	}
-            if(ts.dmod_mode == DEMOD_AM)
+            if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
                 step = 20000;				// adjust to 5KHz
             uchar line = 29;				// x-position of rx frequency in middle position
             if(sd.magnify == 0)					// x-position differs in translated modes if not magnified
@@ -765,32 +765,9 @@ void UiDriver_HandleTouchScreen()
                 }
             }
 
-            char mul = 0;
-
-            switch(sd.magnify)
-          	  {
-          	  case 0:
-          		mul = 1;
-          		break;
-          	  case 1:
-          		mul = 2;
-          		break;
-          	  case 2:
-          		mul = 4;
-          		break;
-          	  case 3:
-          		mul = 8;
-          		break;
-          	  case 4:
-          		mul = 16;
-          		break;
-          	  case 5:
-          		mul = 32;
-          		break;
-          	  }
-            uint tunediff = ((1000)/(mul))*(ts.tp_x-line)*TUNE_MULT;
-            df.tune_new = lround((df.tune_new + tunediff)/step) * step;
-            UiDriver_FrequencyUpdateLOandDisplay(true);
+        uint tunediff = ((1000)/(1 << sd.magnify))*(ts.tp_x-line)*TUNE_MULT;
+        df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+        UiDriver_FrequencyUpdateLOandDisplay(true);
         }
         if(check_tp_coordinates(0,7,10,13))			// toggle digital modes
         {

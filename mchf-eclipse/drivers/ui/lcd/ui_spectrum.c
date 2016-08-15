@@ -1627,33 +1627,8 @@ static void UiSpectrum_FrequencyBarText()
     if(ts.spectrum_freqscale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
         return;
 
+	grat = (float)6 / (1 << sd.magnify);
 
-	switch(sd.magnify)
-	{
-	  default:
-	  case 0:
-		grat = 6;
-		break;
-	  case 1:
-		grat = 3;
-		break;
-	  case 2:
-		grat = 1.5;
-		break;
-	  case 3:
-		grat = 0.75;
-		break;
-	  case 4:
-		grat = 0.375;
-		break;
-	  case 5:
-		grat = 0.1875;
-		break;
-	}
-//    grat = 6;   // Default - Magnify mode OFF, graticules spaced 6 kHz
-    //
-//    if(sd.magnify)          // magnify mode on - only available when NOT in translate mode
-//        grat = 3;   // graticules spaced 3 kHz
     //
     // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
     // (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)
@@ -1669,7 +1644,19 @@ static void UiSpectrum_FrequencyBarText()
     {
         freq_calc += audio_driver_xlate_freq();
     }
-    freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
+
+    if(sd.magnify < 3)
+  	{
+  	  freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
+	}
+    if(sd.magnify > 2 && sd.magnify < 5)
+  	{
+  	  freq_calc = ((freq_calc + 500)/10000) * 10; // round graticule frequency to the nearest 100Hz
+	}
+    if(sd.magnify == 5)
+  	{
+  	  freq_calc = ((freq_calc + 500)/10000) * 10; // round graticule frequency to the nearest 50Hz
+	}
 
     centerIdx = UiSpectrum_GetGridCenterLine(0);
 
