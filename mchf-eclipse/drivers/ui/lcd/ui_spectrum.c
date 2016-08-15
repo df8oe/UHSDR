@@ -1617,7 +1617,7 @@ static void UiSpectrum_FrequencyBarText()
     ulong   freq_calc;
     ulong   i, clr;
     char    txt[16], *c;
-    ulong   grat = 0;
+    float   grat;
     int centerIdx;
 
     if(ts.spectrum_freqscale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
@@ -1626,6 +1626,7 @@ static void UiSpectrum_FrequencyBarText()
 
 	switch(sd.magnify)
 	{
+	  default:
 	  case 0:
 		grat = 6;
 		break;
@@ -1673,7 +1674,7 @@ static void UiSpectrum_FrequencyBarText()
         const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
-        snprintf(txt,16, "  %lu  ", freq_calc+(centerIdx*grat)); // build string for center frequency
+        snprintf(txt,16, "  %lu  ", (ulong)(freq_calc+(centerIdx*grat))); // build string for center frequency
         i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
         UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
 
@@ -1684,10 +1685,14 @@ static void UiSpectrum_FrequencyBarText()
             int pos = idx2pos[idx+4];
             if (idx != centerIdx)
             {
-                snprintf(txt,16, " %lu ", freq_calc+(idx*grat));   // build string for middle-left frequency
+                snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency
                 c = &txt[strlen(txt)-3];  // point at 2nd character from the end
                 UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
             }
+      		if(sd.magnify > 2)
+      		{
+      		idx++;
+      		}
         }
     }
 
