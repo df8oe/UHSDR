@@ -2166,23 +2166,22 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     // frequency resolution with
 #if ZOOM_FFT == 1
     // lowpass [with IIR_TX_WIDE_BASS]
-    arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
-    arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
+   // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
+   // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
 
     // decimation
-    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.x_buffer, adb.x_buffer, blockSize);
-    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.y_buffer, adb.y_buffer, blockSize);
+//    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.x_buffer, adb.x_buffer, blockSize);
+//    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.y_buffer, adb.y_buffer, blockSize);
     // collect samples for spectrum display 256-point-FFT
 
     	// loop to put decimated samples from x and y buffer into sd.FFT_Samples
-        for(i = 0; i < blockSize/8; i++)
+        for(i = 0; i < blockSize/16; i++)
         {
             if(sd.state == 0)
             {
-
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i];	// get floating point data for FFT for spectrum scope/waterfall display
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i*16];	// get floating point data for FFT for spectrum scope/waterfall display
             	sd.samp_ptr++;
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i];
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i*16];
             	sd.samp_ptr++;
 
         // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
