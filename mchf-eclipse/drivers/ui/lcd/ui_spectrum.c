@@ -1125,7 +1125,8 @@ void UiSpectrumReDrawScopeDisplay()
         // gives us the index in the buffer.
         // we use this  knowledge to simplify the magnification code
         // compiler can heavily optimize this since we  all these values being power of 2 value
-        if(sd.magnify != 0)	 	// is magnify mode on?
+//        if(sd.magnify != 0)	 	// is magnify mode on?
+        if(0)	 	// FIXME
         {
             uint32_t end_range;
             switch(ts.iq_freq_mode)

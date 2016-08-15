@@ -2183,7 +2183,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             {
             	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
             	sd.samp_ptr++;
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i << sd.magnify];
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
             	sd.samp_ptr++;
 
         // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
