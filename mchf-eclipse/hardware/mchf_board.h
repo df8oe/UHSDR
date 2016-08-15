@@ -44,7 +44,7 @@
 #include "audio_filter.h"
 #include "ui_si570.h"
 //
-//
+#include "comp.h"
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
@@ -1219,9 +1219,15 @@ typedef struct {
    COMP samples[320];
 }  FDV_Out_Buffer;
 
+typedef struct {
+COMP samples[320];
+}  FDV_out_Buffer;
+
+
 extern struct freedv *f_FREEDV;
 extern FDV_In_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
 extern FDV_Out_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
+
 
 //end DL2FW UGLY test for FREEDV - some globals :-(
 

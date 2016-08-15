@@ -7129,6 +7129,7 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 #ifdef USE_FREEDV
 
 struct freedv *f_FREEDV;
+
 FDV_In_Buffer __attribute__ ((section (".ccm"))) FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
 FDV_Out_Buffer __attribute__ ((section (".ccm"))) FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
@@ -7267,6 +7268,7 @@ static void UiDriver_HandleFreeDV()
             fdv_in_buffer_remove(&input_buf);
 
             profileEvent(EnterFreeDVEncode);
+
             freedv_comptx(f_FREEDV,
                     FDV_TX_out_buff[FDV_TX_pt].samples,
                     input_buf->samples); // start the encoding process
@@ -7301,6 +7303,7 @@ static void UiDriver_HandleFreeDV()
             // because it will be done inside the audio_processor like in TX
             for (i = 0; i < 319; i++)
             {
+
 #if 0
                 FDV_TX_out_buff[FDV_TX_pt].samples[3*i] =
                         FDV_TX_out_im_buff.samples[i];
@@ -7308,6 +7311,7 @@ static void UiDriver_HandleFreeDV()
                         FDV_TX_out_im_buff.samples[i];
                 FDV_TX_out_buff[FDV_TX_pt].samples[3*i+2] =
                         FDV_TX_out_im_buff.samples[i];
+
 #endif
             }
             ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region

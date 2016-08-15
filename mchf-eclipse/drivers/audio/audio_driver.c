@@ -3301,6 +3301,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
         // + 0 deg to I data
+
         arm_fir_f32(&FIR_I_TX,adb.a_buffer, adb.i_buffer,blockSize);
         // - 90 deg to Q data
         arm_fir_f32(&FIR_Q_TX,adb.a_buffer, adb.q_buffer, blockSize);
