@@ -7171,7 +7171,7 @@ static void UiDriver_HandleFreeDV()
     static bool was_here = false;
     int16_t s=0;
     // int16_t nout=0;
-    char outtext[8];
+    // char outtext[8];
     // END Freedv Test DL2FW
 
     // Freedv Test DL2FW

@@ -440,7 +440,7 @@ void Default_Reset_Handler(void)
   * @param  None
   * @retval None
   */
-static void Default_Handler(void)
+void Default_Handler(void)
 {
     /* Go into an infinite loop. */
     while (1)
