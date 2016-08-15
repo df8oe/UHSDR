@@ -731,11 +731,20 @@ void UiDriver_HandleTouchScreen()
         }
         if(check_tp_coordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
         {
-            int step = 2000;				// adjust to 500Hz
+      		int step = 2000;				// adjust to 500Hz
+
+      		if(sd.magnify == 3)
+      		{
+          	  step = 400;					// adjust to 100Hz
+          	}
+          	if(sd.magnify > 3)
+      		{
+          	  step = 200;					// adjust to 50Hz
+          	}
             if(ts.dmod_mode == DEMOD_AM)
                 step = 20000;				// adjust to 5KHz
             uchar line = 29;				// x-position of rx frequency in middle position
-            if(!sd.magnify)					// x-position differs in translated modes if not magnified
+            if(sd.magnify == 0)					// x-position differs in translated modes if not magnified
             {
                 switch(ts.iq_freq_mode)
                 {
@@ -755,7 +764,31 @@ void UiDriver_HandleTouchScreen()
                     line = 29;
                 }
             }
-            uint tunediff = ((1000)/(sd.magnify+1))*(ts.tp_x-line)*TUNE_MULT;
+
+            char mul = 0;
+
+            switch(sd.magnify)
+          	  {
+          	  case 0:
+          		mul = 1;
+          		break;
+          	  case 1:
+          		mul = 2;
+          		break;
+          	  case 2:
+          		mul = 4;
+          		break;
+          	  case 3:
+          		mul = 8;
+          		break;
+          	  case 4:
+          		mul = 16;
+          		break;
+          	  case 5:
+          		mul = 32;
+          		break;
+          	  }
+            uint tunediff = ((1000)/(mul))*(ts.tp_x-line)*TUNE_MULT;
             df.tune_new = lround((df.tune_new + tunediff)/step) * step;
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
@@ -5600,9 +5633,34 @@ void UiDriverDisplayFilterBW()
         break;
     }
     //
+    char mul = 0;
+
+    switch(sd.magnify)
+  	  {
+  	  case 0:
+  		mul = 1;
+  		break;
+  	  case 1:
+  		mul = 2;
+  		break;
+  	  case 2:
+  		mul = 4;
+  		break;
+  	  case 3:
+  		mul = 8;
+  		break;
+	  case 4:
+  		mul = 16;
+  		break;
+  	  case 5:
+  		mul = 32;
+  		break;
+  	  }
+
+    calc = 48000/(mul * FILT_DISPLAY_WIDTH);		// magnify mode is on
     if(!sd.magnify)	 	// is magnify mode on?
     {
-        calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
+//aaaa        calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
         if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
             lpos = 98;
         else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// line is to right if in "RX LO LOW" mode
@@ -5617,7 +5675,7 @@ void UiDriverDisplayFilterBW()
     }
     else	 	// magnify mode is on
     {
-        calc = 24000/FILT_DISPLAY_WIDTH;		// magnify mode is on
+//        calc = 48000/(2^sd.magnify * FILT_DISPLAY_WIDTH);		// magnify mode is on
         lpos = 130;								// line is alway in center in "magnify" mode
     }
     //
