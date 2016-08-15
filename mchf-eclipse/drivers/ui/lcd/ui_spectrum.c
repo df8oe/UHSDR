@@ -915,7 +915,7 @@ void UiSpectrumReDrawScopeDisplay()
         //
         // Find peak and average to vertically adjust display
         //
-        if(sd.magnify)	 	// are we in magnify mode?  If so, find max/mean of only those portions of the spectrum magnified - which are NOT in the proper order, dammit!
+        if(sd.magnify != 0)	 	// are we in magnify mode?  If so, find max/mean of only those portions of the spectrum magnified - which are NOT in the proper order, dammit!
         {
             //
             if(!ts.iq_freq_mode)	 	// yes, are we NOT in translate mode?
@@ -1125,7 +1125,7 @@ void UiSpectrumReDrawScopeDisplay()
         // gives us the index in the buffer.
         // we use this  knowledge to simplify the magnification code
         // compiler can heavily optimize this since we  all these values being power of 2 value
-        if(sd.magnify)	 	// is magnify mode on?
+        if(sd.magnify != 0)	 	// is magnify mode on?
         {
             uint32_t end_range;
             switch(ts.iq_freq_mode)
