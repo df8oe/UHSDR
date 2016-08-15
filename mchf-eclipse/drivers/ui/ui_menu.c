@@ -536,7 +536,7 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"091","Step Size Marker"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE,"109","Spectrum Type"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum 2x Magn"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum Magnify"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE,"117","Spectrum Size"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH,"101","Spectrum Filter"},
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR,"104","Spec FreqScaleClr"},
@@ -2491,8 +2491,35 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                                              );
         UiMenu_MapColors(ts.spectrum_freqscale_colour,options,&clr);
         break;
-    case MENU_SPECTRUM_MAGNIFY:	// Spectrum 2x magnify mode on/off
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &sd.magnify,0,options,&clr);
+    case MENU_SPECTRUM_MAGNIFY:	// WF/Spectrum magnifying
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &sd.magnify,
+                                              MAGNIFY_MIN,
+                                              MAGNIFY_MAX,
+                                              MAGNIFY_DEFAULT,
+                                              1
+                                             );
+        switch(sd.magnify)
+        {
+        case 1:
+            txt_ptr = " x2";
+            break;
+        case 2:
+            txt_ptr = " x4";
+            break;
+        case 3:
+            txt_ptr = " x8";
+            break;
+        case 4:
+            txt_ptr = "x16";
+            break;
+        case 5:
+            txt_ptr = "x32";
+            break;
+        case 0:
+        default:
+            txt_ptr = "OFF";
+            break;
+        }
         break;
     case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,

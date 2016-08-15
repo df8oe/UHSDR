@@ -80,6 +80,11 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MAX_DIG_GAIN      31      // Maximum audio gain setting
 #define DEFAULT_AUDIO_GAIN  16      // Default audio gain
 #define DEFAULT_DIG_GAIN    16      // Default audio gain
+
+#define MAGNIFY_MIN 				0
+#define MAGNIFY_MAX					5
+#define MAGNIFY_DEFAULT				0
+
 //
 // The following are used in the max volume setting in the menu system
 //

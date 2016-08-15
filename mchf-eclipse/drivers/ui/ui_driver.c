@@ -678,10 +678,38 @@ void UiDriver_HandleTouchScreen()
         {
             UiDriver_ToggleWaterfallScopeDisplay();
         }
-        if(check_tp_coordinates(30,60,27,31))			// wf/scope bar right part
+        if(check_tp_coordinates(29,33,26,32))			// wf/scope bar magnify down
         {
       		int i,j;
-            sd.magnify = !sd.magnify;
+      		if(sd.magnify)
+      		{
+      		  sd.magnify--;
+      		}
+      		else
+      		{
+      		  sd.magnify = MAGNIFY_MAX;
+      		}
+            ts.menu_var_changed = 1;
+            for(i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)	// clear old wf lines if changing magnify
+          	  {
+          	  for(j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
+          		{
+          		sd.waterfall[i][j] = 0;
+          		}
+          	  }
+            UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+        }
+        if(check_tp_coordinates(52,60,26,32))			// wf/scope bar magnify up
+        {
+      		int i,j;
+            if(sd.magnify < MAGNIFY_MAX)
+            {
+          	  sd.magnify++;
+          	}
+          	else
+          	{
+          	  sd.magnify = MAGNIFY_MIN;
+          	}
             ts.menu_var_changed = 1;
             for(i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)	// clear old wf lines if changing magnify
           	  {

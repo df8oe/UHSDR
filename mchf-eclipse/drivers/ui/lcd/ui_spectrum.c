@@ -1903,29 +1903,27 @@ void UiGet_Wfscope_Bar_Text(char* wfbartext)
   	}
   }
 
-  if(!sd.magnify)
+  switch(sd.magnify)
   {
-	righttext = " < Magnify x1 > ";
-  }
-  else if(sd.magnify)
-  {
-	righttext = " < Magnify x2 > ";
-  }
-  else if(sd.magnify == 4)
-  {
-	righttext = " < Magnify x4 > ";
-  }
-  else if(sd.magnify == 8)
-  {
-	righttext = " < Magnify x8 > ";
-  }
-  else if(sd.magnify == 16)
-  {
-	righttext = " < Magnify x16 >";
-  }
-  else if(sd.magnify == 32)
-  {
-	righttext = " < Magnify x32 >";
+	case 1:
+	  righttext = " < Magnify x2 > ";
+	  break;
+	case 2:
+	  righttext = " < Magnify x4 > ";
+	  break;
+	case 3:
+	  righttext = " < Magnify x8 > ";
+	  break;
+	case 4:
+	  righttext = " < Magnify x16 >";
+	  break;
+	case 5:
+	  righttext = " < Magnify x32 >";
+	  break;
+	case 0:
+	default:
+	  righttext = " < Magnify x1 > ";
+	  break;
   }
 
 sprintf(wfbartext,"%s%s",lefttext,righttext);
