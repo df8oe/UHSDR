@@ -2080,7 +2080,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 
         //
         // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
-        if(sd.state == 0 && sd.magnify != 4)		// o magnify x 16
+        if(sd.state == 0 && sd.magnify == 0)		//
         {
             sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for spectrum scope/waterfall display
             sd.samp_ptr++;
@@ -2165,7 +2165,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display
     // frequency resolution with
 
-	if(sd.magnify == 4)				// magnify x 16
+	if(sd.magnify != 0)				// magnify 2, 4, 8, 16, or 32
 	{
     // lowpass [with IIR_TX_WIDE_BASS]
    // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
@@ -2177,13 +2177,13 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     // collect samples for spectrum display 256-point-FFT
 
     	// loop to put decimated samples from x and y buffer into sd.FFT_Samples
-        for(i = 0; i < blockSize/16; i++)
+        for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
         {
             if(sd.state == 0)
             {
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i*16];	// get floating point data for FFT for spectrum scope/waterfall display
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
             	sd.samp_ptr++;
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i*16];
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
             	sd.samp_ptr++;
 
         // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
