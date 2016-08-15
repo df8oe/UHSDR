@@ -2517,7 +2517,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             break;
         case 0:
         default:
-            txt_ptr = "OFF";
+            txt_ptr = " x1";
             break;
         }
         break;
