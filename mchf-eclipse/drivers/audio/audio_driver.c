@@ -2991,6 +2991,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         if (trans_count_in == FDV_BUFFER_SIZE) //yes, we really hit exactly 320 - don't worry
         {
             //we have enough samples ready to start the FreeDV encoding
+
             ts.FDV_TX_in_start_pt = FDV_TX_fill_in_pt;
             ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
             trans_count_in = 0;
