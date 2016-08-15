@@ -80,7 +80,7 @@ static const char format[] =
 
 static float get_float(FILE * in, const char * name, char * * cursor, char * buffer, int size)
 {
-  for ( ; ; ) {
+  while(1) {
     char *	s = *cursor;
     char	c;
 
@@ -298,7 +298,7 @@ static void add_quant_noise(struct AEXP *aexp, MODEL *model, int start, int end,
 
  */
 
-
+#if 0
 static void print_sparse_pred_error(struct AEXP *aexp, MODEL *model, float mag_thresh)
 {
     int    m, index;
@@ -332,7 +332,7 @@ static void print_sparse_pred_error(struct AEXP *aexp, MODEL *model, float mag_t
 	printf("\n");
     }
 }
-
+#endif
 
 static float frame_energy(MODEL *model, float *enormdB) {
     int   m;
@@ -453,7 +453,7 @@ static int split_vq(float sparse_pe_out[], struct AEXP *aexp, struct codebook *v
     return vq_ind;
 }
 
-
+#if 0
 static void sparse_vq_pred_error(struct AEXP *aexp,
 				 MODEL       *model
 )
@@ -531,7 +531,7 @@ static void split_error(struct AEXP *aexp, struct codebook *vq, float sparse_pe_
 	}
     }
 }
-
+#endif
 
 static void sparse_vq_amp(struct AEXP *aexp, MODEL *model)
 {
@@ -957,7 +957,7 @@ static float bins[] = {
 void smooth_amp(struct AEXP *aexp, MODEL *model) {
     int    m, i;
     int    nbins;
-    int    b;
+    int    b = MAX_BINS;
     float  f;
     float  av[MAX_BINS];
     int    nav[MAX_BINS];

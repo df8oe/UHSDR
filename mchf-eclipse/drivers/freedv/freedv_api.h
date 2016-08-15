@@ -71,6 +71,7 @@ void freedv_set_total_bit_errors	(struct freedv *freedv, int val);
 void freedv_set_total_bits              (struct freedv *freedv, int val);
 void freedv_set_callback_error_pattern  (struct freedv *freedv, freedv_calback_error_pattern cb, void *state);
 void freedv_set_varicode_code_num       (struct freedv *freedv, int val);
+struct MODEM_STATS; // forward declaration, only for pointers
 
 // Get parameters
 int freedv_get_version(void);
