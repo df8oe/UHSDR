@@ -1127,7 +1127,7 @@ void UiSpectrumReDrawScopeDisplay()
         // compiler can heavily optimize this since we  all these values being power of 2 value
 //        if(sd.magnify != 0)	 	// is magnify mode on?
         if(0)	 	// FIXME
-        {
+        { // we don´t need all this any more, because the new Zoom FFT takes care of that, DD4WH, Aug 15th, 2016
             uint32_t end_range;
             switch(ts.iq_freq_mode)
             {
@@ -1505,6 +1505,8 @@ void UiSpectrumReDrawWaterfall()
             // position of center is always in the middle if
             // in magnify mode, so we fix that position here
 
+/*			// we don´t need the following anymore, because the new Zoom FFT already
+  	  	  	// takes care of that, DD4WH, Aug 15th, 2016
             for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
             {
                 ptr = (i/2) + magnify_offset;
@@ -1514,6 +1516,7 @@ void UiSpectrumReDrawWaterfall()
                 }
             }
             arm_copy_f32((float32_t *)sd.wfall_temp, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);		// copy the rescaled/shifted data into the main buffer
+*/
         }
 
         // After the above manipulation, clip the result to make sure that it is within the range of the palette table
