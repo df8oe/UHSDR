@@ -105,7 +105,7 @@ static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 
 
-static float32_t Koeff[20];
+// static float32_t Koeff[20];
 // variables for RX manual notch, manual peak & bass shelf IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
 {
@@ -1394,14 +1394,14 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimate.numTaps;
     DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimate.pCoeffs;
 
-    DECIMATE_ZOOM_FFT_I.M = 1 << sd.magnify;			// Decimation factor
+    DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
 
     DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
 
     DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimate.numTaps;
     DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimate.pCoeffs;
 
-    DECIMATE_ZOOM_FFT_Q.M = 8;			// Decimation factor  (48 kHz / 8 = 6 kHz)
+    DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
 
     DECIMATE_ZOOM_FFT_Q.pState = (float32_t *)&decimZoomFFTQState[0];			// Filter state variables
 
