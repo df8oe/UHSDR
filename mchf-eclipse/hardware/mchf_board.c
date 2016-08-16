@@ -34,7 +34,7 @@
 
 
 // Transceiver state public structure
-__IO TransceiverState ts;
+__IO __attribute__ ((section (".ccm"))) TransceiverState ts;
 
 
 static void mchf_board_led_init(void)

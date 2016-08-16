@@ -119,7 +119,7 @@ enum
 typedef struct FilterDescriptor_s
 {
     const uint8_t id;
-    const char* name;
+    const char* const name;
     const uint16_t width;
 } FilterDescriptor;
 

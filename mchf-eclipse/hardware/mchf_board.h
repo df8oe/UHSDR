@@ -13,7 +13,9 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
-#define USE_FREEDV
+
+// #define USE_FREEDV
+#define USE_SNAP
 
 // HW libs
 #include "stm32f4xx_rcc.h"
@@ -34,6 +36,8 @@
 #include "stm32f4xx_flash.h"
 #include "misc.h"
 #include "core_cm4.h"
+
+#include "freedv_api.h"
 
 #include "stm32f4xx.h"
 #include "mchf_types.h"
@@ -1211,9 +1215,13 @@ typedef struct {
     int16_t samples[320];
 }  FDV_Buffer;
 
+typedef struct {
+   COMP samples[320];
+}  FDV_Out_Buffer;
+
 extern struct freedv *f_FREEDV;
 extern FDV_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
-extern FDV_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
+extern FDV_Out_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
 //end DL2FW UGLY test for FREEDV - some globals :-(
 
