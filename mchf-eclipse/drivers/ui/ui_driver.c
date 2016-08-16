@@ -5569,7 +5569,7 @@ void UiDriver_DisplayFilter()
 void UiDriverDisplayFilterBW()
 {
     float	width, offset, calc;
-    ushort	lpos;
+    int	lpos;
     bool	is_usb;
     uint32_t clr;
 
@@ -5657,10 +5657,6 @@ void UiDriverDisplayFilterBW()
     offset /= calc;							// calculate filter center frequency offset in pixels
     width /= calc;							// calculate width of line in pixels
     //
-	if(width > 127)
-	{
-	  width = 128;							// prevent bar leaving scope width
-	}
     //
     if((ts.dmod_mode == DEMOD_AM) ||(ts.dmod_mode == DEMOD_SAM) || (ts.dmod_mode == DEMOD_FM))	 	// special cases - AM, SAM and FM, which are double-sidebanded
     {
@@ -5676,6 +5672,17 @@ void UiDriverDisplayFilterBW()
     UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
     //	erase old line by clearing whole area
     UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
+
+	if(POS_SPECTRUM_IND_X + lpos < POS_SPECTRUM_IND_X)			// prevents line to leave left border
+	{
+	  width = width + lpos;
+	  lpos = 0;
+	}
+	if(lpos + width > 256)										// prevents line to leave right border
+	{
+	  width = 256 - lpos;
+	}
+
     // draw line
     UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
 
