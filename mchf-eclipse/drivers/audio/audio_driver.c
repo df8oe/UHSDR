@@ -105,7 +105,6 @@ static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_AntiAlias;
 
 
-static float32_t Koeff[20];
 // variables for RX manual notch, manual peak & bass shelf IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
 {
@@ -946,11 +945,12 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
 		case 0:
 		break;
 		case 5:
+		;
 		    // 750Hz, sample rate 48k, 60dB stopband, elliptic
 		    // a1 and a2 negated! order: b0, b1, b2, a1, a2
 		    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
 //			IIR_biquad_Zoom_FFT_I.pCoeffs = (float32_t *)(float32_t []) {
-			Koeff [20] = {
+  static float32_t Koeff[20] = {
 			0.201507402588557594,
    -0.400273615727755550,
    0.201507402588557594,
