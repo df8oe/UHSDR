@@ -3486,11 +3486,19 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
         if (!ts.tune)
         {
-            AudioDriver_tx_filter_audio(true,ts.tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
+//            AudioDriver_tx_filter_audio(true,ts.tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
         }
         // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
 
         // Freedv Test DL2FW
+
+        // we have to add a decimation filter here BEFORE we decimate
+        // for decimation-by-6 the stopband frequency is 48/6*2 = 4kHz
+        // but our audio is at most 3kHz wide, so we should use 3k or 2k9
+
+        // this should be the correct filter:
+        // use it ALWAYS, also with TUNE tone!!!
+        AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 
         for (int k = 0; k < blockSize; k++)
         {
@@ -3537,6 +3545,9 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
                     modulus_MOD = 0;
                 }
             }
+
+            // Add interpolation filter here to suppress alias frequencies
+
         } else {
           profileEvent(FreeDVTXUnderrun);
           // memset(dst,0,blockSize*sizeof(*dst));
