@@ -85,8 +85,12 @@ static	arm_fir_decimate_instance_f32	DECIMATE_RX;
 __IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
-static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT;
-__IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
+__IO float32_t			decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+
+// Decimator for Zoom FFT
+static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_Q;
+__IO float32_t			decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
@@ -146,67 +150,136 @@ static arm_biquad_casd_df1_inst_f32 IIR_TX_biquad =
 };
 
 // variables for ZoomFFT lowpass filtering
-static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT =
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_I =
 {
-    .numStages = 2,
+    .numStages = 4,
     .pCoeffs = (float32_t *)(float32_t [])
     {
-    	0.108758227853704995,
+/*    	0.108758227853704995,
     	-0.139506262660944735,
     	0.108758227853704995,
-    	-1.508499028959062520,
-    	0.586509222005527797,
+    	1.508499028959062520,
+    	-0.586509222005527797,
 
     	0.059987774408103857,
     	0.011859987344015712,
     	0.059987774408103857,
-    	-1.699151355391507190,
-    	0.830986891551730666
+    	1.699151355391507190,
+    	-0.830986891551730666
+*/
+    	   0.185643392652478922,
+    	   -0.332064345389014803,
+    	   0.185643392652478922,
+    	   1.654637402827731090,
+    	   -0.693859842743674182,
+
+    	   0.327519300813245984,
+    	   -0.571358085216950418,
+    	   0.327519300813245984,
+    	   1.715375037176782860,
+    	   -0.799055553586324407,
+
+    	   0.283656142708241688,
+    	   -0.441088976843048652,
+    	   0.283656142708241688,
+    	   1.778230635987093860,
+    	   -0.904453944560528522,
+
+    	   0.079685368654848945,
+    	   -0.011231810140649204,
+    	   0.079685368654848945,
+    	   1.825046003243238070,
+    	   -0.973184930412286708
+
+/*
 
 
-    	//        1,0,0,0,0,  1,0,0,0,0 // passthru
+// lowpass 3k elliptic 4 stages
+   0.185643392652478922,
+   -0.332064345389014803,
+   0.185643392652478922,
+   1.654637402827731090,
+   -0.693859842743674182,
+
+   0.327519300813245984,
+   -0.571358085216950418,
+   0.327519300813245984,
+   1.715375037176782860,
+   -0.799055553586324407,
+
+   0.283656142708241688,
+   -0.441088976843048652,
+   0.283656142708241688,
+   1.778230635987093860,
+   -0.904453944560528522,
+
+   0.079685368654848945,
+   -0.011231810140649204,
+   0.079685368654848945,
+   1.825046003243238070,
+   -0.973184930412286708
+
+ */
+
+//        1,0,0,0,0,  1,0,0,0,0 // passthru
     }, // 2 x 5 = 10 coefficients
 
     .pState = (float32_t *)(float32_t [])
     {
-        0,0,0,0,   0,0,0,0
+        0,0,0,0,   0,0,0,0,    0,0,0,0,   0,0,0,0
     } // 2 x 4 = 8 state variables
 };
 
-/*
- * coeffs have to be in the order
- *
- * b0, b1, b2, a1, a2
- *
- * lowpass 3k
- *
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
+{
+    .numStages = 4,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+/*    	0.108758227853704995,
+    	-0.139506262660944735,
+    	0.108758227853704995,
+    	1.508499028959062520,
+    	-0.586509222005527797,
 
-0.108758227853704995,
--0.139506262660944735,
-0.108758227853704995,
--1.508499028959062520,
-0.586509222005527797,
+    	0.059987774408103857,
+    	0.011859987344015712,
+    	0.059987774408103857,
+    	1.699151355391507190,
+    	-0.830986891551730666
+*/
+    	   0.185643392652478922,
+    	   -0.332064345389014803,
+    	   0.185643392652478922,
+    	   1.654637402827731090,
+    	   -0.693859842743674182,
 
-0.059987774408103857,
-0.011859987344015712,
-0.059987774408103857,
--1.699151355391507190,
-0.830986891551730666
+    	   0.327519300813245984,
+    	   -0.571358085216950418,
+    	   0.327519300813245984,
+    	   1.715375037176782860,
+    	   -0.799055553586324407,
+
+    	   0.283656142708241688,
+    	   -0.441088976843048652,
+    	   0.283656142708241688,
+    	   1.778230635987093860,
+    	   -0.904453944560528522,
+
+    	   0.079685368654848945,
+    	   -0.011231810140649204,
+    	   0.079685368654848945,
+    	   1.825046003243238070,
+    	   -0.973184930412286708
 
 
- *
- *
- *
- *
- *
- *
- *
- *
- */
+//        1,0,0,0,0,  1,0,0,0,0 // passthru
+    }, // 2 x 5 = 10 coefficients
 
-
-
-
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
+    } // 2 x 4 = 8 state variables
+};
 
 
 // variables for FM squelch IIR filters
@@ -840,6 +913,81 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     IIR_TX_biquad.pCoeffs[14] = a2;
 
 */
+
+/*    // set coefficients for Zoom FFT lowpass filter
+
+    f0 = 3000;
+    FS = 48000;
+    w0 = 2 * PI * f0 / FS;
+    Q = 5.0;
+    alpha = sin(w0) / 2 * Q;
+    cosw0 = cos(w0);
+    // lowpass
+    b0 = (1 - cosw0) / 2;
+    b1 =  1 - cosw0;
+    b2 = (1 - cosw0) / 2;;
+    a0 =  1 + alpha;
+    a1 =  2 * cosw0; // already negated!
+    a2 = alpha - 1; // already negated!
+
+    // scaling the coefficients for gain
+    b0 = b0/a0;
+    b1 = b1/a0;
+    b2 = b2/a0;
+    a1 = a1/a0;
+    a2 = a2/a0;
+
+    IIR_biquad_Zoom_FFT_I.pCoeffs[0] = b0;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[1] = b1;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[2] = b2;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[3] = a1;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[4] = a2;
+
+    IIR_biquad_Zoom_FFT_I.pCoeffs[5] = b0;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[6] = b1;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[7] = b2;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[8] = a1;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[9] = a2;
+
+
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[0] = b0;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[1] = b1;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[2] = b2;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[3] = a1;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[4] = a2;
+
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[5] = b0;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[6] = b1;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[7] = b2;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[8] = a1;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[9] = a2;
+*/
+/*
+    IIR_biquad_Zoom_FFT_I.pCoeffs[0] = 0.108758227853704995;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[1] = -0.139506262660944735;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[2] = 0.108758227853704995;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[3] = 1.508499028959062520; //negated
+    IIR_biquad_Zoom_FFT_I.pCoeffs[4] =  -0.586509222005527797; //negated
+
+    IIR_biquad_Zoom_FFT_I.pCoeffs[5] =  0.059987774408103857;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[6] =  0.011859987344015712;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[7] =  0.059987774408103857;
+    IIR_biquad_Zoom_FFT_I.pCoeffs[8] = 1.699151355391507190; //negated
+    IIR_biquad_Zoom_FFT_I.pCoeffs[9] = -0.830986891551730666; //negated
+
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[0] = 0.108758227853704995;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[1] = -0.139506262660944735;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[2] = 0.108758227853704995;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[3] = 1.508499028959062520; //negated
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[4] =  -0.586509222005527797; //negated
+
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[5] =  0.059987774408103857;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[6] =  0.011859987344015712;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[7] =  0.059987774408103857;
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[8] = 1.699151355391507190; //negated
+    IIR_biquad_Zoom_FFT_Q.pCoeffs[9] = -0.830986891551730666; //negated
+*/
+
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -1000,12 +1148,20 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
     //
     // Set up ZOOM FFT decimation/filter
-    DECIMATE_ZOOM_FFT.numTaps = FirRxDecimate.numTaps;
-    DECIMATE_ZOOM_FFT.pCoeffs = FirRxDecimate.pCoeffs;
+    DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimate.numTaps;
+    DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimate.pCoeffs;
 
-    DECIMATE_ZOOM_FFT.M = 8;			// Decimation factor  (48 kHz / 8 = 6 kHz)
+    DECIMATE_ZOOM_FFT_I.M = 8;			// Decimation factor  (48 kHz / 8 = 6 kHz)
 
-    DECIMATE_ZOOM_FFT.pState = (float32_t *)&decimState[0];			// Filter state variables
+    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
+
+    DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimate.numTaps;
+    DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimate.pCoeffs;
+
+    DECIMATE_ZOOM_FFT_Q.M = 8;			// Decimation factor  (48 kHz / 8 = 6 kHz)
+
+    DECIMATE_ZOOM_FFT_Q.pState = (float32_t *)&decimZoomFFTQState[0];			// Filter state variables
+
     //
 
 
@@ -1034,6 +1190,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS; i++)	 	// Initialize all filter state variables
     {
         decimState[i] = 0;
+        decimZoomFFTIState[i] = 0;
+        decimZoomFFTQState[i] = 0;
         interpState[i] = 0;
     }
     //
@@ -2241,9 +2399,9 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 		// Mag 16x - 1k5 lowpass --> 3k bandwidth
 		// Mag 32x - 750Hz lowpass --> 1k5 bandwidth
 
-		// 1st attempt - use low processor power biquad lowpass filters with 2 stages each
-		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT, adb.i_buffer,adb.i_buffer, blockSize);
-		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT, adb.q_buffer,adb.q_buffer, blockSize);
+		// 1st attempt - use low processor power biquad lowpass filters with 4 stages each
+		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_I, adb.i_buffer,adb.x_buffer, blockSize);
+		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_Q, adb.q_buffer,adb.y_buffer, blockSize);
 
 
 
@@ -2251,25 +2409,18 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
    // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
 
     // decimation
-//    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.x_buffer, adb.x_buffer, blockSize);
-//    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.y_buffer, adb.y_buffer, blockSize);
+    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_I, adb.x_buffer, adb.x_buffer, blockSize);
+    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, adb.y_buffer, adb.y_buffer, blockSize);
     // collect samples for spectrum display 256-point-FFT
 
-    	// loop to put samples from x and y buffer into sd.FFT_Samples
-		// = ugly decimating
-
-		// TODO: also insert sample collection for snap carrier here
-		// and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
-		// in order to save many kilobytes of RAM ;-)
-
-		for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
+	for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
         {
             if(sd.state == 0)
             { //
-            	// take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
+            	//
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i];	// get floating point data for FFT for spectrum scope/waterfall display
             	sd.samp_ptr++;
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i]; //
             	sd.samp_ptr++;
 
         // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
@@ -2279,7 +2430,38 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             		sd.state    = 1;
             	}
             }
-        }
+        } // end for
+
+    	// loop to put samples from x and y buffer into sd.FFT_Samples
+
+		// TODO: also insert sample collection for snap carrier here
+		// and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
+		// in order to save many kilobytes of RAM ;-)
+
+
+
+
+		// this works!
+/*		for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
+        {
+            if(sd.state == 0)
+            { //
+            	// take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
+            	sd.samp_ptr++;
+            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
+            	sd.samp_ptr++;
+
+        // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
+            	if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) // _ *2)
+            	{
+            		sd.samp_ptr = 0;
+            		sd.state    = 1;
+            	}
+            }
+        } // end for
+*/
+
 	  }
 
     // ------------------------

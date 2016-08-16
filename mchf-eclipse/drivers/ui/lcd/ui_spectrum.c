@@ -1469,33 +1469,33 @@ void UiSpectrumReDrawWaterfall()
         //
         arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)sd.wfall_contrast, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);
         //
-        ushort ptr;
+//        ushort ptr;
         uint16_t center_pixel_pos;
         // determine the pixel location for center line
 
-        uint16_t magnify_offset;
+//        uint16_t magnify_offset;
         // only used if magnify is on
 
         switch (ts.iq_freq_mode) {
         case FREQ_IQ_CONV_P6KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*3/16;
-            magnify_offset = FFT_IQ_BUFF_LEN/16;
+//            magnify_offset = FFT_IQ_BUFF_LEN/16;
             break;
         case FREQ_IQ_CONV_M6KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*5/16;
-            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
+//            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
             break;
         case FREQ_IQ_CONV_P12KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*2/16;
-            magnify_offset = 0;
+//            magnify_offset = 0;
             break;
         case FREQ_IQ_CONV_M12KHZ:
             center_pixel_pos = FFT_IQ_BUFF_LEN*6/16;
-            magnify_offset = FFT_IQ_BUFF_LEN/4;
+//            magnify_offset = FFT_IQ_BUFF_LEN/4;
             break;
         default:
             center_pixel_pos = FFT_IQ_BUFF_LEN*4/16;
-            magnify_offset = FFT_IQ_BUFF_LEN/8;
+//            magnify_offset = FFT_IQ_BUFF_LEN/8;
             break;
         }
 
