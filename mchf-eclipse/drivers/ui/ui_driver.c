@@ -2532,7 +2532,9 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
         }
         else
         {
+#ifdef USE_SNAP
             sc.snap = 1;
+#endif
         }
     }
 
@@ -2984,7 +2986,12 @@ static void UiDriverCreateFunctionButtons(bool full_repaint)
     UiDriverFButton_F1MenuExit();
 
     // Button F2
-    UiDriverFButtonLabel(2,"SNAP",White);
+    #ifdef USE_SNAP
+        #define SNAP_COLOR White
+    #else
+        #define SNAP_COLOR Grey1
+    #endif
+    UiDriverFButtonLabel(2,"SNAP",SNAP_COLOR);
 
     // Button F3
     UiDriverFButton_F3MemSplit();
@@ -7120,8 +7127,8 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 #ifdef USE_FREEDV
 
 struct freedv *f_FREEDV;
-FDV_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
-FDV_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
+FDV_Buffer __attribute__ ((section (".ccm"))) FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+FDV_Out_Buffer __attribute__ ((section (".ccm"))) FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
 static void UiDriver_HandleFreeDV()
 {
@@ -7129,9 +7136,10 @@ static void UiDriver_HandleFreeDV()
     // Freedv Test DL2FW
     static uint16_t FDV_TX_pt = 0;
     uint16_t    i=0;
-    static FDV_Buffer FDV_TX_out_im_buff;
+    // static FDV_Out_Buffer FDV_TX_out_im_buff;
     static bool was_here = false;
     int16_t s=0;
+
     // int16_t nout=0;
     // char outtext[8];
     // END Freedv Test DL2FW
@@ -7151,7 +7159,7 @@ static void UiDriver_HandleFreeDV()
             ts.FDV_TX_samples_ready = false;
 
             profileEvent(EnterFreeDVEncode);
-            freedv_tx(f_FREEDV, FDV_TX_out_buff[FDV_TX_pt].samples,
+            freedv_comptx(f_FREEDV, FDV_TX_out_buff[FDV_TX_pt].samples,
                     FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples); // start the encoding process
 
             // to bypass the encoding
@@ -7188,19 +7196,21 @@ static void UiDriver_HandleFreeDV()
             // bypass the encoding
             for (s = 0; s < 320; s++)
             {
-                FDV_TX_out_im_buff.samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
+                // FDV_TX_out_im_buff.samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
             }
 
             //now we are doing ugly upsampling to 24 kSamples here - has to be removed later
             // because it will be done inside the audio_processor like in TX
             for (i = 0; i < 319; i++)
             {
+#if 0
                 FDV_TX_out_buff[FDV_TX_pt].samples[3*i] =
                         FDV_TX_out_im_buff.samples[i];
                 FDV_TX_out_buff[FDV_TX_pt].samples[3*i+1] =
                         FDV_TX_out_im_buff.samples[i];
                 FDV_TX_out_buff[FDV_TX_pt].samples[3*i+2] =
                         FDV_TX_out_im_buff.samples[i];
+#endif
             }
             ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
             ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?

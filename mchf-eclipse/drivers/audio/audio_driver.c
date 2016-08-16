@@ -71,7 +71,7 @@ typedef struct
 } LMSData;
 
 
-float32_t	agc_delay	[AGC_DELAY_BUFSIZE+16];
+float32_t	__attribute__ ((section (".ccm"))) agc_delay	[AGC_DELAY_BUFSIZE+16];
 
 void audio_driver_ClearAGCDelayBuffer()
 {
@@ -82,19 +82,19 @@ void audio_driver_ClearAGCDelayBuffer()
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
-__IO float32_t			decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+__IO float32_t			__attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
-__IO float32_t			decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+__IO float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_Q;
-__IO float32_t			decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+__IO float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
-__IO float32_t			interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+__IO float32_t			__attribute__ ((section (".ccm"))) interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // variables for RX IIR filters
 static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -285,7 +285,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
 
 
 // variables for FM squelch IIR filters
-static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+static float32_t	iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
 
 // variables for TX IIR filter
@@ -305,8 +305,11 @@ extern __IO	KeypadState				ks;
 // Be careful! Check mchf-eclipse.map for current allocation
 __IO AudioDriverState   __attribute__ ((section (".ccm")))  ads;
 AudioDriverBuffer   __attribute__ ((section (".ccm")))  adb;
-SnapCarrier             __attribute__ ((section (".ccm")))   sc;
 LMSData                 __attribute__ ((section (".ccm"))) lmsData;
+
+#ifdef USE_SNAP
+SnapCarrier   sc;
+#endif
 
 /*
  * @return offset frequency in Hz for current frequency translate mode
@@ -445,9 +448,11 @@ void audio_driver_init(void)
 
     Codec_Reset(ts.samp_rate,word_size);
 
+#ifdef USE_SNAP
     // initialize FFT structure used for snap carrier
 //	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
     arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
+#endif
 
     // Audio filter enabled
      ads.af_disabled = 0;
@@ -2266,6 +2271,7 @@ static void audio_lms_noise_reduction(int16_t blockSize)
 
 
 
+#ifdef USE_SNAP
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_snap_carrier [DD4WH, march 2016]
@@ -2475,7 +2481,7 @@ static void audio_snap_carrier (void)
         sc.FFT_number = 0; // reset flag to first FFT
     }
 }
-
+#endif
 
 static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, const uint16_t blockSize)
 {
@@ -2579,7 +2585,6 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     // Split stereo channels
     for(i = 0; i < blockSize; i++)
     {
-        if (sc.state == 0 && sc.snap) sc.counter = sc.counter + 1;
 
         //
         // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
@@ -2597,22 +2602,29 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
                 sd.state    = 1;
             }
         }
-        if(sc.state == 0 && sc.snap && sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-        {
 
-            // collect samples for snap carrier FFT
-            sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for snap carrier
-            sc.samp_ptr++;
-            sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].l);
-            sc.samp_ptr++;
-            // obtain samples for snap carrier mode
-            if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+#ifdef USE_SNAP
+        if (sc.state == 0 && sc.snap)
+        {
+            sc.counter += blockSize;
+            if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
             {
-                sc.samp_ptr = 0;
-                sc.state    = 1;
-                sc.counter = 0;
+
+                // collect samples for snap carrier FFT
+                sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for snap carrier
+                sc.samp_ptr++;
+                sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].l);
+                sc.samp_ptr++;
+                // obtain samples for snap carrier mode
+                if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+                {
+                    sc.samp_ptr = 0;
+                    sc.state    = 1;
+                    sc.counter = 0;
+                }
             }
         }
+#endif
 
         if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)	 		// This is the release threshold for the auto RF gain
         {
@@ -2631,12 +2643,12 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         // HACK: we have 48 khz sample frequency
         //
     }
-
+#ifdef USE_SNAP
     if (sc.snap && sc.state == 1)
     {
         audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
     }
-
+#endif
     // Apply I/Q amplitude correction
     arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
@@ -3503,8 +3515,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     static int16_t FDV_TX_fill_in_pt = 0;
     static int16_t modem_buffer_offset = 0;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
-    static float32_t last_sample = 0.0;
-    static float32_t sample_delta = 0.0;
+    static COMP last_sample = { 0.0, 0.0 };
+    static COMP sample_delta = { 0.0, 0.0 };
     // end Freedv Test DL2FW
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
@@ -3554,20 +3566,23 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             {
                 if (modulus_MOD == 0)
                 {
-                    sample_delta = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count] - last_sample)/6 ;
+                    sample_delta.real = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real - last_sample.real)/6 ;
+                    sample_delta.imag = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag - last_sample.imag)/6 ;
                 }
-                adb.a_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count] + (sample_delta * (float32_t)modulus_MOD);
+                adb.q_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real + (sample_delta.real * (float32_t)modulus_MOD);
+                adb.i_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag + (sample_delta.imag * (float32_t)modulus_MOD);
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
-                    last_sample = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count];
+                    last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
+                    last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
             }
         } else {
           profileEvent(FreeDVTXUnderrun);
-          memset(dst,0,blockSize*sizeof(*dst));
+          // memset(dst,0,blockSize*sizeof(*dst));
         }
 
         if (outbuff_count >= FDV_BUFFER_SIZE)
@@ -3577,6 +3592,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
         }
 
+#if 0
         //
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
@@ -3585,6 +3601,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // - 90 deg to Q data
         arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.q_buffer), blockSize);
         // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+#endif
 
         if(ts.iq_freq_mode)
         {

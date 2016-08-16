@@ -568,6 +568,9 @@ extern __IO     SMeter              sm;
 // change this to 2048 (=1024 tap FFT), if problems with spectrum display with 7k5 SAM mode persist!
 #define FFT_IQ_BUFF_LEN2 2048
 //#define FFT_IQ_BUFF_LEN2 4096 // = 2048 tap FFT !!! this is very very accurate
+
+#ifdef USE_SNAP
+
 typedef struct SnapCarrier
 {
     // FFT state
@@ -593,6 +596,6 @@ typedef struct SnapCarrier
 } SnapCarrier;
 
 extern SnapCarrier sc;
-
+#endif
 
 #endif

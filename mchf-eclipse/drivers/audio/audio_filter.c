@@ -25,7 +25,7 @@
 // SSB Hilbert TX Filter
 #include "iq_tx_filter.h"
 //
-static __IO    FilterCoeffs        fc;
+static __IO    FilterCoeffs   __attribute__ ((section (".ccm")))     fc;
 
 enum
 {
@@ -914,16 +914,16 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
 __IO    arm_fir_instance_f32    FIR_I;
 __IO    arm_fir_instance_f32    FIR_Q;
 
-static float32_t        FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
-static float32_t        FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
+static float32_t    __attribute__ ((section (".ccm")))    FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
+static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
 
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances
 //
 // FIXME: I think this is to short should calculated from max blocksize
 // (BUFLEN / 4 -> Each Interrupt == BUFLEN /2, each filter gets half of the samples, i.e. one audio channel) + max numTaps
-static float            FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
-static float            FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   __attribute__ ((section (".ccm")))         FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   __attribute__ ((section (".ccm")))         FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 
 
 __IO    arm_fir_instance_f32    FIR_I_TX;
