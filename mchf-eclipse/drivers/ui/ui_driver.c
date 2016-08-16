@@ -7127,8 +7127,113 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 #ifdef USE_FREEDV
 
 struct freedv *f_FREEDV;
-FDV_Buffer __attribute__ ((section (".ccm"))) FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+FDV_In_Buffer __attribute__ ((section (".ccm"))) FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
 FDV_Out_Buffer __attribute__ ((section (".ccm"))) FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
+
+
+FDV_Out_Buffer* fdv_out_buffer[FDV_BUFFER_OUT_NUM];
+__IO int32_t fdv_out_head = 0;
+__IO int32_t fdv_out_tail = 0;
+
+int fdv_out_buffer_remove(FDV_Out_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (fdv_out_head != fdv_out_tail)
+    {
+        FDV_Out_Buffer* c = fdv_out_buffer[fdv_out_tail];
+        fdv_out_tail = (fdv_out_tail + 1) % FDV_BUFFER_OUT_NUM;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int fdv_out_buffer_add(FDV_Out_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (fdv_out_head + 1) % FDV_BUFFER_OUT_NUM;
+
+    if (next_head != fdv_out_tail)
+    {
+        /* there is room */
+        fdv_out_buffer[fdv_out_head] = c;
+        fdv_out_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void fdv_out_buffer_reset()
+{
+    fdv_out_tail = fdv_out_head;
+}
+
+int8_t fdv_out_has_data()
+{
+    int32_t len = fdv_out_head - fdv_out_tail;
+    return len < 0?len+FDV_BUFFER_OUT_NUM:len;
+}
+
+bool fdv_out_has_room()
+{
+    return fdv_out_has_data() != FDV_BUFFER_OUT_NUM;
+}
+
+
+FDV_In_Buffer* fdv_in_buffer[FDV_BUFFER_IN_NUM];
+__IO int32_t fdv_in_head = 0;
+__IO int32_t fdv_in_tail = 0;
+
+int fdv_in_buffer_remove(FDV_In_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (fdv_in_head != fdv_in_tail)
+    {
+        FDV_In_Buffer* c = fdv_in_buffer[fdv_in_tail];
+        fdv_in_tail = (fdv_in_tail + 1) % FDV_BUFFER_IN_NUM;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int fdv_in_buffer_add(FDV_In_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (fdv_in_head + 1) % FDV_BUFFER_IN_NUM;
+
+    if (next_head != fdv_in_tail)
+    {
+        /* there is room */
+        fdv_in_buffer[fdv_in_head] = c;
+        fdv_in_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void fdv_in_buffer_reset()
+{
+    fdv_in_tail = fdv_in_head;
+}
+
+int8_t fdv_in_has_data()
+{
+    int32_t len = fdv_in_head - fdv_in_tail;
+    return len < 0?len+FDV_BUFFER_IN_NUM:len;
+}
+
+bool fdv_in_has_room()
+{
+    return fdv_in_has_data() != FDV_BUFFER_IN_NUM;
+}
+
+
+
 
 static void UiDriver_HandleFreeDV()
 {
@@ -7153,36 +7258,26 @@ static void UiDriver_HandleFreeDV()
     }
     //will later be inside RX
     if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
-        if ((ts.txrx_mode == TRX_MODE_TX) && (ts.FDV_TX_samples_ready > 0))
+        if ((ts.txrx_mode == TRX_MODE_TX) && fdv_in_has_data() && fdv_out_has_room())
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
 
-
-            ts.FDV_TX_samples_ready = false;
+            FDV_In_Buffer* input_buf = NULL;
+            fdv_in_buffer_remove(&input_buf);
 
             profileEvent(EnterFreeDVEncode);
-                freedv_comptx(f_FREEDV,
-                        FDV_TX_out_buff[FDV_TX_pt].samples,
-                        FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples); // start the encoding process
+            freedv_comptx(f_FREEDV,
+                    FDV_TX_out_buff[FDV_TX_pt].samples,
+                    input_buf->samples); // start the encoding process
+
+            fdv_out_buffer_add(&FDV_TX_out_buff[FDV_TX_pt]);
             // to bypass the encoding
             // for (s=0;s<320;s++)
             // {
             //    FDV_TX_out_buff[FDV_TX_pt].samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
             // }
-
-            ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
-
-            if (was_here)
-            {
-                ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
-            }
             // was_here ensures, that at least 2 encoded blocks are in the buffer before we start
             FDV_TX_pt++;
             FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
-
-            // lets try the complex function later to go directly I/Q! and save some time!!
-
-            was_here = true;
-
         }
 
         else if (false && (ts.txrx_mode == TRX_MODE_RX)  //deactivated for now

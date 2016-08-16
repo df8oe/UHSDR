@@ -3470,7 +3470,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     static int16_t outbuff_count = 0;
     static int16_t trans_count_in = 0;
     static int16_t FDV_TX_fill_in_pt = 0;
-    static int16_t modem_buffer_offset = 0;
+    static FDV_Out_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
     static COMP last_sample = { 0.0, 0.0 };
     static COMP sample_delta = { 0.0, 0.0 };
@@ -3496,7 +3496,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
-                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)adb.a_buffer[k])/16;
+                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)adb.a_buffer[k])/4;
                 // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
                 trans_count_in++;
             }
@@ -3509,15 +3509,19 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             //we have enough samples ready to start the FreeDV encoding
 
-            ts.FDV_TX_in_start_pt = FDV_TX_fill_in_pt;
-            ts.FDV_TX_samples_ready = true;//handshake to external function in ui.driver_thread
+            fdv_in_buffer_add(&FDV_TX_in_buff[FDV_TX_fill_in_pt]);
+            //handshake to external function in ui.driver_thread
             trans_count_in = 0;
 
             FDV_TX_fill_in_pt++;
             FDV_TX_fill_in_pt %= FDV_BUFFER_IN_NUM;
         }
 
-        if (ts.FDV_TX_encode_ready) // freeDV encode has finished (running in ui_driver.c)?
+        if (out_buffer == NULL && fdv_out_has_data() > 1) {
+            fdv_out_buffer_remove(&out_buffer);
+        }
+
+        if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
         {
             for (int j = 0; j < blockSize; j++) //  now we are doing ugly upsampling by 6
             {
@@ -3526,8 +3530,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
                     // sample_delta.real = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real - last_sample.real)/6 ;
                     // sample_delta.imag = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag - last_sample.imag)/6 ;
                 }
-                adb.i_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
-                adb.q_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
+                adb.i_buffer[j] = out_buffer->samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
+                adb.q_buffer[j] = out_buffer->samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
@@ -3545,10 +3549,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         if (outbuff_count >= FDV_BUFFER_SIZE)
         {
             outbuff_count = 0;
-            //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
-            modem_buffer_offset++;
-            modem_buffer_offset%= FDV_BUFFER_OUT_NUM;
-            // modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
+            out_buffer = NULL;
+            fdv_out_buffer_remove(&out_buffer);
         }
 
 #if 0

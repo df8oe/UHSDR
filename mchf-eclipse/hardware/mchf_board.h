@@ -1213,14 +1213,14 @@ extern __IO TransceiverState ts;
 
 typedef struct {
     int16_t samples[320];
-}  FDV_Buffer;
+}  FDV_In_Buffer;
 
 typedef struct {
    COMP samples[320];
 }  FDV_Out_Buffer;
 
 extern struct freedv *f_FREEDV;
-extern FDV_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+extern FDV_In_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
 extern FDV_Out_Buffer FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
 //end DL2FW UGLY test for FREEDV - some globals :-(
