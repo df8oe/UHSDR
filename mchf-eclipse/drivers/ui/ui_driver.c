@@ -7138,6 +7138,7 @@ static void UiDriver_HandleFreeDV()
     uint16_t    i=0;
     // static FDV_Out_Buffer FDV_TX_out_im_buff;
     static bool was_here = false;
+    static int first_run = 3;
     int16_t s=0;
 
     // int16_t nout=0;
@@ -7159,9 +7160,9 @@ static void UiDriver_HandleFreeDV()
             ts.FDV_TX_samples_ready = false;
 
             profileEvent(EnterFreeDVEncode);
-            freedv_comptx(f_FREEDV, FDV_TX_out_buff[FDV_TX_pt].samples,
-                    FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples); // start the encoding process
-
+                freedv_comptx(f_FREEDV,
+                        FDV_TX_out_buff[FDV_TX_pt].samples,
+                        FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples); // start the encoding process
             // to bypass the encoding
             // for (s=0;s<320;s++)
             // {

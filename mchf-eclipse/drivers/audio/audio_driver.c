@@ -3496,8 +3496,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
-                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = adb.a_buffer[k];
-                // FDV_TX_in_buff[trans_count_in] = 0; // transmit "silence"
+                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)adb.a_buffer[k])/16;
+                // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
                 trans_count_in++;
             }
         }
@@ -3523,16 +3523,16 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             {
                 if (modulus_MOD == 0)
                 {
-                    sample_delta.real = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real - last_sample.real)/6 ;
-                    sample_delta.imag = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag - last_sample.imag)/6 ;
+                    // sample_delta.real = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real - last_sample.real)/6 ;
+                    // sample_delta.imag = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag - last_sample.imag)/6 ;
                 }
-                adb.q_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real + (sample_delta.real * (float32_t)modulus_MOD);
-                adb.i_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag + (sample_delta.imag * (float32_t)modulus_MOD);
+                adb.i_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
+                adb.q_buffer[j] = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
-                    last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
-                    last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
+                    // last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
+                    // last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
@@ -3546,7 +3546,9 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             outbuff_count = 0;
             //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
-            modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
+            modem_buffer_offset++;
+            modem_buffer_offset%= FDV_BUFFER_OUT_NUM;
+            // modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
         }
 
 #if 0
@@ -3558,7 +3560,6 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // - 90 deg to Q data
         arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.q_buffer), blockSize);
         // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
-#endif
 
         if(ts.iq_freq_mode)
         {
@@ -3570,6 +3571,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
             audio_rx_freq_conv(blockSize, swap);
         }
+#endif
 
         // apply I/Q amplitude & phase adjustments
         audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
