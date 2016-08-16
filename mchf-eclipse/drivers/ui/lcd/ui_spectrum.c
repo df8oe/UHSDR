@@ -1618,7 +1618,7 @@ void UiSpectrumInitSpectrumDisplay()
 //*----------------------------------------------------------------------------
 static void UiSpectrum_FrequencyBarText()
 {
-    ulong   freq_calc;
+    float   freq_calc;
     ulong   i, clr;
     char    txt[16], *c;
     float   grat;
@@ -1638,7 +1638,7 @@ static void UiSpectrum_FrequencyBarText()
     UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
 
-    freq_calc = df.tune_new/TUNE_MULT;      // get current frequency in Hz
+    freq_calc = (float)(df.tune_new/TUNE_MULT);      // get current frequency in Hz
 
     if(!sd.magnify)         // if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
     {
@@ -1647,15 +1647,15 @@ static void UiSpectrum_FrequencyBarText()
 
     if(sd.magnify < 3)
   	{
-  	  freq_calc = (freq_calc + 500)/1000; // round graticule frequency to the nearest kHz
+  	  freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz
 	}
     if(sd.magnify > 2 && sd.magnify < 5)
   	{
-  	  freq_calc = ((freq_calc + 500)/10000) * 10; // round graticule frequency to the nearest 100Hz
+  	  freq_calc = roundf(freq_calc/100) / 10; // round graticule frequency to the nearest 100Hz
 	}
     if(sd.magnify == 5)
   	{
-  	  freq_calc = ((freq_calc + 500)/10000) * 10; // round graticule frequency to the nearest 50Hz
+  	  freq_calc = roundf(freq_calc/50) / 20; // round graticule frequency to the nearest 50Hz
 	}
 
     centerIdx = UiSpectrum_GetGridCenterLine(0);
@@ -1665,7 +1665,18 @@ static void UiSpectrum_FrequencyBarText()
         const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
-        snprintf(txt,16, "  %lu  ", (ulong)(freq_calc+(centerIdx*grat))); // build string for center frequency
+		if(sd.magnify < 3)
+		{
+      	  snprintf(txt,16, "  %lu  ", (ulong)(freq_calc+(centerIdx*grat))); // build string for center frequency precision 1khz
+      	}
+      	else
+		{
+		  float disp_freq = freq_calc+(centerIdx*grat);
+		  int bignum = (int)disp_freq;
+		  int smallnum = (int)roundf((disp_freq-bignum)*100);
+      	  snprintf(txt,16, "  %u.%02u  ", bignum,smallnum); // build string for center frequency precision 100Hz/10Hz
+      	}
+
         i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
         UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
 
@@ -1676,9 +1687,22 @@ static void UiSpectrum_FrequencyBarText()
             int pos = idx2pos[idx+4];
             if (idx != centerIdx)
             {
-                snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency
-                c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-                UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+			  if(sd.magnify < 3)
+			  {
+                snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency (1khz precision)
+            	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
+      		  }
+      		  else
+			  {
+				float disp_freq = freq_calc+(idx*grat);
+				int bignum = (int)disp_freq;
+				int smallnum = (int)roundf((disp_freq-bignum)*100);
+          		snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
+            	c = &txt[strlen(txt)-5];  // point at 5th character from the end
+			  }
+
+
+              UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
             }
       		if(sd.magnify > 2)
       		{

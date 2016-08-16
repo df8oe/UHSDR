@@ -5637,7 +5637,6 @@ void UiDriverDisplayFilterBW()
     calc = 48000/(mul * FILT_DISPLAY_WIDTH);		// magnify mode is on
     if(!sd.magnify)	 	// is magnify mode on?
     {
-//aaaa        calc = 48000/FILT_DISPLAY_WIDTH;		// magnify mode not on - calculate number of Hz/pixel
         if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
             lpos = 98;
         else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// line is to right if in "RX LO LOW" mode
@@ -5652,13 +5651,16 @@ void UiDriverDisplayFilterBW()
     }
     else	 	// magnify mode is on
     {
-//        calc = 48000/(2^sd.magnify * FILT_DISPLAY_WIDTH);		// magnify mode is on
         lpos = 130;								// line is alway in center in "magnify" mode
     }
     //
     offset /= calc;							// calculate filter center frequency offset in pixels
     width /= calc;							// calculate width of line in pixels
     //
+	if(width > 127)
+	{
+	  width = 128;							// prevent bar leaving scope width
+	}
     //
     if((ts.dmod_mode == DEMOD_AM) ||(ts.dmod_mode == DEMOD_SAM) || (ts.dmod_mode == DEMOD_FM))	 	// special cases - AM, SAM and FM, which are double-sidebanded
     {
