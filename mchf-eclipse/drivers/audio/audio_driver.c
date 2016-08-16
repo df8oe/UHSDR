@@ -145,6 +145,70 @@ static arm_biquad_casd_df1_inst_f32 IIR_TX_biquad =
     } // 3 x 4 = 12 state variables
 };
 
+// variables for ZoomFFT lowpass filtering
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT =
+{
+    .numStages = 2,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+    	0.108758227853704995,
+    	-0.139506262660944735,
+    	0.108758227853704995,
+    	-1.508499028959062520,
+    	0.586509222005527797,
+
+    	0.059987774408103857,
+    	0.011859987344015712,
+    	0.059987774408103857,
+    	-1.699151355391507190,
+    	0.830986891551730666
+
+
+    	//        1,0,0,0,0,  1,0,0,0,0 // passthru
+    }, // 2 x 5 = 10 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0
+    } // 2 x 4 = 8 state variables
+};
+
+/*
+ * coeffs have to be in the order
+ *
+ * b0, b1, b2, a1, a2
+ *
+ * lowpass 3k
+ *
+
+0.108758227853704995,
+-0.139506262660944735,
+0.108758227853704995,
+-1.508499028959062520,
+0.586509222005527797,
+
+0.059987774408103857,
+0.011859987344015712,
+0.059987774408103857,
+-1.699151355391507190,
+0.830986891551730666
+
+
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
+
+
+
+
+
 // variables for FM squelch IIR filters
 static float32_t		iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
@@ -2152,23 +2216,38 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             audio_rx_freq_conv(blockSize, 0);
         }
     }
-    //
-    // Here we would insert the first steps for the ZOOM FFT, which will be used to have a very close look at a small part
+    // ZOOM FFT
+    // is used here to have a very close look at a small part
     // of the spectrum display of the mcHF
     // The ZOOM FFT is based on the principles described in Lyons (2011)
-    // 1. I & Q
-    // 2. convert to baseband (at this place has already been done in audio_rx_freq_conv!)
+    // 1. take the I & Q samples
+    // 2. complex conversion to baseband (at this place has already been done in audio_rx_freq_conv!)
     // 3. lowpass I and lowpass Q separately (48kHz sample rate)
     // 4. decimate I and Q separately
-    // 5. apply FFT to decimated I&Q samples
+    // 5. apply 256-point-FFT to decimated I&Q samples
     //
-    // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display
-    // frequency resolution with
+    // frequency resolution: spectrum bandwidth / 256
+    // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display bandwidth
+    // frequency resolution of the display --> 6kHz / 256 = 23.44Hz
+    // in 32x Mag-mode the resolution is 5.9Hz, not bad for such a small processor . . .
+    //
 
 	if(sd.magnify != 0)				// magnify 2, 4, 8, 16, or 32
 	{
-    // lowpass [with IIR_TX_WIDE_BASS]
-   // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
+    // lowpass Filtering
+		// Mag 2x - 12k lowpass --> 24k bandwidth
+		// Mag 4x - 6k lowpass --> 12k bandwidth
+		// Mag 8x - 3k lowpass --> 6k bandwidth
+		// Mag 16x - 1k5 lowpass --> 3k bandwidth
+		// Mag 32x - 750Hz lowpass --> 1k5 bandwidth
+
+		// 1st attempt - use low processor power biquad lowpass filters with 2 stages each
+		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT, adb.i_buffer,adb.i_buffer, blockSize);
+		arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT, adb.q_buffer,adb.q_buffer, blockSize);
+
+
+
+		// arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
    // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
 
     // decimation
@@ -2176,11 +2255,18 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 //    arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT, adb.y_buffer, adb.y_buffer, blockSize);
     // collect samples for spectrum display 256-point-FFT
 
-    	// loop to put decimated samples from x and y buffer into sd.FFT_Samples
-        for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
+    	// loop to put samples from x and y buffer into sd.FFT_Samples
+		// = ugly decimating
+
+		// TODO: also insert sample collection for snap carrier here
+		// and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
+		// in order to save many kilobytes of RAM ;-)
+
+		for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
         {
             if(sd.state == 0)
-            {
+            { //
+            	// take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
             	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.q_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
             	sd.samp_ptr++;
             	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.i_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
