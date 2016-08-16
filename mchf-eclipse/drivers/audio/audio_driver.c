@@ -3264,6 +3264,10 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
+                    // last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
+                    // last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
+
+
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
@@ -3320,7 +3324,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 #endif
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+        audio_tx_final_iq_processing(0.35, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
     }
     else
     {

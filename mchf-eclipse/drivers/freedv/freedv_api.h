@@ -55,6 +55,7 @@ void freedv_close(struct freedv *freedv);
 // Transmit
 void freedv_tx(struct freedv *freedv, short mod_out[], short speech_in[]);
 void freedv_comptx(struct freedv *freedv, COMP mod_out[], short speech_in[]);
+void freedv_comp_short_tx(struct freedv *freedv, COMPSHORT mod_out_short[], short speech_in[]);
 // Receive
 int freedv_nin(struct freedv *freedv);
 int freedv_rx(struct freedv *freedv, short speech_out[], short demod_in[]);

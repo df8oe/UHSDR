@@ -7269,11 +7269,13 @@ static void UiDriver_HandleFreeDV()
 
             profileEvent(EnterFreeDVEncode);
 
+
             freedv_comptx(f_FREEDV,
                     FDV_TX_out_buff[FDV_TX_pt].samples,
                     input_buf->samples); // start the encoding process
 
             fdv_out_buffer_add(&FDV_TX_out_buff[FDV_TX_pt]);
+
             // to bypass the encoding
             // for (s=0;s<320;s++)
             // {

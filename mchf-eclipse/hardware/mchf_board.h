@@ -14,8 +14,8 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 
-// #define USE_FREEDV
-#define USE_SNAP
+ #define USE_FREEDV
+//#define USE_SNAP
 
 // HW libs
 #include "stm32f4xx_rcc.h"
@@ -1220,7 +1220,7 @@ typedef struct {
 }  FDV_Out_Buffer;
 
 typedef struct {
-COMP samples[320];
+COMPSHORT samples[320]; //test to save some space later to be set back to COMP??
 }  FDV_out_Buffer;
 
 

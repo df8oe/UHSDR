@@ -36,3 +36,17 @@ typedef struct {
 } COMP;
 
 #endif
+
+#ifndef __COMPSHORT__
+#define __COMPSHORT__
+
+/* Complex number */
+
+typedef struct {
+  short real;
+  short imag;
+} COMPSHORT;
+
+#endif
+
+
