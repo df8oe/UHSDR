@@ -1435,6 +1435,12 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
         DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
     }
     	break;
+    default:
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+    	break;
     }
 
     DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
@@ -3533,10 +3539,12 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // but our audio is at most 3kHz wide, so we should use 3k or 2k9
 
 
-        // this is the correct DECIMATION FILTER:
+        // this is the correct DECIMATION FILTER (before the downsampling takes place):
         // use it ALWAYS, also with TUNE tone!!!
         AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 
+
+        // DOWNSAMPLING
         for (int k = 0; k < blockSize; k++)
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
@@ -3568,14 +3576,28 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
         if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
         {
-            for (int j = 0; j < blockSize; j++) //  now we are doing ugly upsampling by 6
+
+
+
+            // Best thing here would be to use the arm_fir_decimate function! Why?
+        	// --> we need phase linear filters, because we have to filter I & Q and preserve their phase relationship
+        	// IIR filters are power saving, but they do not care about phase, so useless at this point
+        	// FIR filters are phase linear, but need processor power
+        	// so we now use the decimation function that upsamples like the code below, BUT at the same time filters
+        	// (and the routine knows that it does not have to multiply with 0 while filtering: if we do upsampling and subsequent
+        	// filtering, the filter does not know that and multiplies with zero 5 out of six times --> very inefficient)
+        	// BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
+        	// block size (which is 64 in our case --> 64 / 6 = non-integer!)
+
+        	// UPSAMPLING [by hand]
+        	for (int j = 0; j < blockSize; j++) //  now we are doing upsampling by 6
             {
-                if (modulus_MOD == 0)
+                if (modulus_MOD == 0) // put in sample pair
                 {
                 adb.i_buffer[j] = out_buffer->samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
                 adb.q_buffer[j] = out_buffer->samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
                 }
-                else
+                else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
                 {
                     adb.i_buffer[j] = 0;
                     adb.q_buffer[j] = 0;
@@ -3592,6 +3614,16 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             }
 
             // Add interpolation filter here to suppress alias frequencies
+            // we are upsampling from 8kHz to 48kHz, so we have to suppress all frequencies below 4kHz
+            // our FreeDV signal is centred at 1500Hz ??? and is 1250Hz broad,
+            // so a lowpass filter with cutoff frequency 2400Hz should be fine!
+
+            // INTERPOLATION FILTER [after the interpolation has taken place]
+        	// the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_FREEDV,(float32_t *)(adb.i_buffer),(float32_t *)(adb.i_buffer),blockSize);
+            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_FREEDV,(float32_t *)(adb.q_buffer),(float32_t *)(adb.q_buffer), blockSize);
+
+
 
         } else {
           profileEvent(FreeDVTXUnderrun);

@@ -22,6 +22,8 @@ extern __IO arm_fir_instance_f32    FIR_Q_TX;
 extern __IO arm_fir_instance_f32    FIR_I_TX;
 extern __IO arm_fir_instance_f32    FIR_Q;
 extern __IO arm_fir_instance_f32    FIR_I;
+extern __IO arm_fir_instance_f32    FIR_Q_FREEDV;
+extern __IO arm_fir_instance_f32    FIR_I_FREEDV;
 
 
 
@@ -52,6 +54,16 @@ typedef struct FilterCoeffs
     float   tx_filt_i[201];
     uint16_t    tx_i_num_taps;
     uint32_t    tx_i_block_size;
+
+    float   tx_filt_q_freedv[201];
+    uint16_t    freedv_q_num_taps;
+    uint32_t    freedv_q_block_size;
+
+    float   tx_filt_i_freedv[201];
+    uint16_t    freedv_i_num_taps;
+    uint32_t    freedv_i_block_size;
+
+
 } FilterCoeffs;
 
 

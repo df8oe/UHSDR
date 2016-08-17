@@ -28,6 +28,7 @@ extern const arm_fir_interpolate_instance_f32 FirRxInterpolate;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_5k;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate10KHZ;
+extern const arm_fir_instance_f32 FirFreeDVInterpolate;
 
 extern const float iq_rx_am_10k_coeffs[Q_NUM_TAPS];
 extern const float iq_rx_am_2k3_coeffs[Q_NUM_TAPS];
