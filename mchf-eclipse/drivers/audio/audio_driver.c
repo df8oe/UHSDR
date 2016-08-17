@@ -3535,11 +3535,15 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             {
                 if (modulus_MOD == 0)
                 {
-                    // sample_delta.real = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real - last_sample.real)/6 ;
-                    // sample_delta.imag = ((float32_t)FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag - last_sample.imag)/6 ;
-                }
                 adb.i_buffer[j] = out_buffer->samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
                 adb.q_buffer[j] = out_buffer->samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
+                }
+                else
+                {
+                    adb.i_buffer[j] = 0;
+                    adb.q_buffer[j] = 0;
+
+                }
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
@@ -3563,6 +3567,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             out_buffer = NULL;
             fdv_out_buffer_remove(&out_buffer);
         }
+
 
 #if 0
         //
