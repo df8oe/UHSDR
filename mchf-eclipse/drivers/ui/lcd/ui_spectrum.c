@@ -1662,7 +1662,7 @@ static void UiSpectrum_FrequencyBarText()
 
     {
         // remainder of frequency/graticule markings
-        const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
+        const static int idx2pos[] = {0,26,58,90,122,154,186,218, 242};
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
 		if(sd.magnify < 3)

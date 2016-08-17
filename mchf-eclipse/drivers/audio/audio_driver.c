@@ -1391,21 +1391,46 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
     //
     // Set up ZOOM FFT decimation/filters
-    DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimate.numTaps;
-    DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimate.pCoeffs;
+
+    // switch right FIR decimation filter depending on sd.magnify
+    switch(sd.magnify) {
+    case 1: // 2x
+        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_2x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_2x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_2x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_2x.pCoeffs;
+    	break;
+    case 2: // 4x
+        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_4x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_4x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_4x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_4x.pCoeffs;
+    	break;
+    case 3: // 8x
+        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_8x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_8x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_8x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_8x.pCoeffs;
+    	break;
+    case 4: // 16x
+        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_16x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_16x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_16x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_16x.pCoeffs;
+    	break;
+    case 5: // 32x
+        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_32x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_32x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_32x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_32x.pCoeffs;
+    	break;
+    }
 
     DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
-
-    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
-
-    DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimate.numTaps;
-    DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimate.pCoeffs;
-
     DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
 
+    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
     DECIMATE_ZOOM_FFT_Q.pState = (float32_t *)&decimZoomFFTQState[0];			// Filter state variables
-
-    //
 
 
     // Set up RX decimation/filter

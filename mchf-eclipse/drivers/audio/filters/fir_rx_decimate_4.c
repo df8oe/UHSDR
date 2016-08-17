@@ -66,4 +66,66 @@ const arm_fir_decimate_instance_f32 FirZoomFFTDecimate =
         -0.3105557871709
     }
 };
+// 48ksps, 12kHz lowpass
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_2x  =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+    	 475.1179397144384210E-6,
+    	 0.503905202786044337,
+    	 0.503905202786044337,
+    	 475.1179397144384210E-6
+    }
+};
+// 48ksps, 6kHz lowpass
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_4x =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+    	 0.198273254218889416,
+    	 0.298085149879260325,
+    	 0.298085149879260325,
+    	 0.198273254218889416
+    }
+};
+// 48ksps, 3kHz lowpass
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_8x =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+    	 0.199820836596682871,
+    	 0.272777397353925699,
+    	 0.272777397353925699,
+    	 0.199820836596682871
+    }
+};
+// 48ksps, 1.5kHz lowpass
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_16x =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+   	 0.199820836596682871,
+   	 0.272777397353925699,
+   	 0.272777397353925699,
+   	 0.199820836596682871
+    }
+};
+// 48ksps, 750Hz lowpass
+const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_32x =
+{
+    .numTaps = 4,
+    .pCoeffs = (float*) (const float[])
+    {
+   	 0.199820836596682871,
+   	 0.272777397353925699,
+   	 0.272777397353925699,
+   	 0.199820836596682871
+    }
+};
+
+
 
