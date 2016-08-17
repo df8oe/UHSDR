@@ -1703,7 +1703,7 @@ static void UiSpectrum_FrequencyBarText()
 
 			  if((idx == 3 || idx == 4) && (sd.magnify > 2))
 			  {
-				  pos = pos - 11;
+				  pos = pos - 9;
 			  }
               UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
             }

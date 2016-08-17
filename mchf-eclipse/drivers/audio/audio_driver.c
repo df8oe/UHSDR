@@ -3532,7 +3532,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // for decimation-by-6 the stopband frequency is 48/6*2 = 4kHz
         // but our audio is at most 3kHz wide, so we should use 3k or 2k9
 
-        // this should be the correct filter:
+
+        // this is the correct DECIMATION FILTER:
         // use it ALWAYS, also with TUNE tone!!!
         AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 
