@@ -925,9 +925,15 @@ static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO
 static float   __attribute__ ((section (".ccm")))         FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 static float   __attribute__ ((section (".ccm")))         FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 
-
 __IO    arm_fir_instance_f32    FIR_I_TX;
 __IO    arm_fir_instance_f32    FIR_Q_TX;
+
+
+static float   __attribute__ ((section (".ccm")))         FirState_I_FREEDV[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   __attribute__ ((section (".ccm")))         FirState_Q_FREEDV[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+__IO    arm_fir_instance_f32    FIR_I_FREEDV;
+__IO    arm_fir_instance_f32    FIR_Q_FREEDV;
+
 
 
 /*
@@ -1003,6 +1009,15 @@ void AudioFilter_InitTxHilbertFIR(void)
 
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_TX,fc.tx_i_num_taps,(float32_t *)&fc.tx_filt_i[0], &FirState_I_TX[0],fc.tx_i_block_size);
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q_TX,fc.tx_q_num_taps,(float32_t *)&fc.tx_filt_q[0], &FirState_Q_TX[0],fc.tx_q_block_size);
+
+    fc.freedv_i_num_taps = FirFreeDVInterpolate.numTaps;
+    fc.freedv_q_num_taps = FirFreeDVInterpolate.numTaps;
+    fc.freedv_i_block_size = IQ_TX_BLOCK_SIZE;
+    fc.freedv_q_block_size = IQ_TX_BLOCK_SIZE;
+
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I_FREEDV,fc.freedv_i_num_taps,FirFreeDVInterpolate.pCoeffs, &FirState_I_FREEDV[0],fc.freedv_i_block_size);
+    arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q_FREEDV,fc.freedv_q_num_taps,FirFreeDVInterpolate.pCoeffs, &FirState_Q_FREEDV[0],fc.freedv_q_block_size);
+
 
     ads.tx_filter_adjusting = 0;        // re enable TX I/Q filter now that we are done
 }
