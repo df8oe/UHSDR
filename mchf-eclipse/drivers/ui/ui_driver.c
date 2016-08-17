@@ -931,7 +931,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
     // In CW TX mode we do not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
 
-    if(!((ts.dmod_mode == DEMOD_CW) && (txrx_mode == TRX_MODE_TX)))
+    if(!((ts.dmod_mode == DEMOD_CW || (ts.dvmode == true)) && (txrx_mode == TRX_MODE_TX)))
     {
         tune_freq += audio_driver_xlate_freq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
     }
