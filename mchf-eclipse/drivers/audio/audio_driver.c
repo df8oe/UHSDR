@@ -1393,36 +1393,47 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // Set up ZOOM FFT decimation/filters
 
     // switch right FIR decimation filter depending on sd.magnify
-    switch(sd.magnify) {
+    switch(sd.magnify)
+    {
     case 1: // 2x
-        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_2x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_2x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_2x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_2x.pCoeffs;
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+    }
     	break;
     case 2: // 4x
-        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_4x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_4x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_4x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_4x.pCoeffs;
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_4x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_4x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
+    }
     	break;
     case 3: // 8x
-        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_8x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_8x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_8x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_8x.pCoeffs;
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_8x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_8x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
+    }
     	break;
     case 4: // 16x
-        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_16x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_16x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_16x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_16x.pCoeffs;
+    {
+        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_16x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_16x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
+    }
     	break;
     case 5: // 32x
-        DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimateFFT_32x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimateFFT_32x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimateFFT_32x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimateFFT_32x.pCoeffs;
+    {
+        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_32x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_32x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
+    }
     	break;
     }
 

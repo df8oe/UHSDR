@@ -18,11 +18,11 @@ typedef struct {
 } IQ_FilterDescriptor;
 
 extern const arm_fir_decimate_instance_f32 FirRxDecimate;
-extern const arm_fir_decimate_instance_f32 FirRxDecimateFFT_2x;
-extern const arm_fir_decimate_instance_f32 FirRxDecimateFFT_4x;
-extern const arm_fir_decimate_instance_f32 FirRxDecimateFFT_8x;
-extern const arm_fir_decimate_instance_f32 FirRxDecimateFFT_16x;
-extern const arm_fir_decimate_instance_f32 FirRxDecimateFFT_32x;
+extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_2x;
+extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_4x;
+extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_8x;
+extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_16x;
+extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate_32x;
 extern const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_5k;
