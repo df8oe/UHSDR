@@ -55,11 +55,9 @@ typedef struct FilterCoeffs
     uint16_t    tx_i_num_taps;
     uint32_t    tx_i_block_size;
 
-    float   tx_filt_q_freedv[201];
     uint16_t    freedv_q_num_taps;
     uint32_t    freedv_q_block_size;
 
-    float   tx_filt_i_freedv[201];
     uint16_t    freedv_i_num_taps;
     uint32_t    freedv_i_block_size;
 
