@@ -82,19 +82,19 @@ void audio_driver_ClearAGCDelayBuffer()
 //
 // Audio RX - Decimator
 static	arm_fir_decimate_instance_f32	DECIMATE_RX;
-__IO float32_t			__attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
-__IO float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_Q;
-__IO float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
-__IO float32_t			__attribute__ ((section (".ccm"))) interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__attribute__ ((section (".ccm"))) interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // variables for RX IIR filters
 static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -1152,15 +1152,15 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
     DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
 
-    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
-    DECIMATE_ZOOM_FFT_Q.pState = (float32_t *)&decimZoomFFTQState[0];			// Filter state variables
+    DECIMATE_ZOOM_FFT_I.pState = decimZoomFFTIState;			// Filter state variables
+    DECIMATE_ZOOM_FFT_Q.pState = decimZoomFFTQState;			// Filter state variables
 
 
     // Set up RX decimation/filter
     DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
 
 
-    DECIMATE_RX.pState = (float32_t *)&decimState[0];			// Filter state variables
+    DECIMATE_RX.pState = decimState;			// Filter state variables
     //
     // Set up RX interpolation/filter
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
@@ -1176,7 +1176,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
         INTERPOLATE_RX.phaseLength = 0;
     }
 
-    INTERPOLATE_RX.pState = (float32_t *)&interpState[0];		// Filter state variables
+    INTERPOLATE_RX.pState = interpState;		// Filter state variables
     //
     for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS; i++)	 	// Initialize all filter state variables
     {
@@ -2085,7 +2085,7 @@ static void audio_snap_carrier (void)
     // run FFT
     //		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
     //		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
-    arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,sc.FFT_Samples,sc.FFT_Samples,0);	// Do FFT
+    arm_rfft_fast_f32(&sc.S,sc.FFT_Samples,sc.FFT_Samples,0);	// Do FFT
     //
     // Calculate magnitude
     // as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
@@ -2456,8 +2456,9 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     //    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
     //	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
     //
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_I,(float32_t *)(adb.i_buffer),(float32_t *)(adb.i_buffer),blockSize);	// shift 0 degree FIR+LPF
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(adb.q_buffer),(float32_t *)(adb.q_buffer),blockSize);	// shift -90 degrees FIR+LPF
+	//
+    arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);	// shift 0 degree FIR+LPF
+    arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);	// shift -90 degrees FIR+LPF
 
     //	Demodulation, optimized using fast ARM math functions as much as possible
     switch(dmod_mode)
@@ -3208,9 +3209,6 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_Out_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
-    static COMP last_sample = { 0.0, 0.0 };
-    static COMP sample_delta = { 0.0, 0.0 };
-    // end Freedv Test DL2FW
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
@@ -3220,10 +3218,6 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
         AudioDriver_tx_fill_audio_buffer(src,blockSize);
 
-        if (!ts.tune)
-        {
-//            AudioDriver_tx_filter_audio(true,ts.tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
-        }
         // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
 
         // Freedv Test DL2FW
@@ -3300,8 +3294,6 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
-                    // last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
-                    // last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
@@ -3314,12 +3306,14 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
             // INTERPOLATION FILTER [after the interpolation has taken place]
         	// the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_FREEDV,(float32_t *)(adb.i_buffer),(float32_t *)(adb.i_buffer),blockSize);
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_FREEDV,(float32_t *)(adb.q_buffer),(float32_t *)(adb.q_buffer), blockSize);
+            arm_fir_f32(&FIR_I_FREEDV, adb.i_buffer, adb.i_buffer,blockSize);
+            arm_fir_f32(&FIR_Q_FREEDV, adb.q_buffer, adb.q_buffer, blockSize);
 
 
 
-        } else {
+        }
+        else
+        {
           profileEvent(FreeDVTXUnderrun);
           // memset(dst,0,blockSize*sizeof(*dst));
         }
@@ -3337,9 +3331,9 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
         // + 0 deg to I data
-        arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
+        arm_fir_f32(&FIR_I_TX,adb.a_buffer, adb.i_buffer,blockSize);
         // - 90 deg to Q data
-        arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.q_buffer), blockSize);
+        arm_fir_f32(&FIR_Q_TX,adb.a_buffer, adb.q_buffer, blockSize);
         // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
 
         if(ts.iq_freq_mode)
@@ -3456,9 +3450,9 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
             // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
             // + 0 deg to I data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
+            arm_fir_f32(&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
             // - 90 deg to Q data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
+            arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
             audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
@@ -3502,9 +3496,9 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             //
             // + 0 deg to I data
             // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
+            arm_fir_f32(&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
             // - 90 deg to Q data
-            arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
+            arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
             audio_tx_compressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
             //
@@ -3576,151 +3570,6 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
 }
 
 
-
-
-#if 0
-static void
-audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
-{
-  float32_t gain_calc, min, max;
-//	int16_t				*ptr;
-  uint32_t pindex;
-  int16_t psize;		// processing size, with decimation
-  float post_agc_gain_scaling;
-
-
-  const uint8_t dmod_mode = ts.dmod_mode;
-      const uint8_t tx_audio_source = ts.tx_audio_source;
-      const uint8_t tune = ts.tune;
-      const uint8_t iq_freq_mode = ts.iq_freq_mode;
-
-// Freedv Test DL2FW
-
-  static int16_t i,j, k;
-  static int16_t imbuff_count = 0;
-  static int16_t outbuff_count = 0;
-  static short imbuff[48]; //old 48
-  static int16_t trans_count_in = 0;
-  static int16_t trans_count_out = 0;
-  static int16_t modem_buffer_offset = 0;
-  static int16_t modulus_NF = 0, modulus_MOD = 0;
-
-// end Freedv Test DL2FW
-
-  // Not tune mode - use audio from CODEC
-  // Fill I and Q buffers with left channel(same as right)
-
-  AudioDriver_tx_fill_audio_buffer(src,blockSize);
-  //AudioDriver_tx_filter_audio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
-
-  //
-
-  // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
-
-// Freedv Test DL2FW
-
-    for (k = 0; k < blockSize; k++)
-      {
-	if (k % 6 == modulus_NF)  //every 6th sample has to be catched
-	  {
-	    FDV_TX_in_buff[trans_count_in] = (short) adb.a_buffer[k];
-	    trans_count_in++;
-	  }
-      }
-
-    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
-    modulus_NF %= 6; //  reset modulus to 0 at modulus = 12
-
-
-  if (trans_count_in == 320)
-    {                       //we have enough samples ready to start the FreeDV encoding
-
-      ts.FDV_TX_in_start_pt = 0;
-      ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
-
-
-    }
-  else
-    {
-      if (trans_count_in > 639)
-	{    // using the 2nd buffer
-
-	  ts.FDV_TX_in_start_pt = 320;
-	  ts.FDV_TX_samples_ready = true; //handshake to external function in ui.driver_thread
-	  trans_count_in = 0;
-	}
-    }
-
-  if (ts.FDV_TX_encode_ready)  // freeDV encode has finished?
-    {
-      for (i = 0; i < blockSize; i++) //  now we are doing ugly upsampling by 6
-      	{
-      	  adb.a_buffer[i] = FDV_TX_out_buff[modem_buffer_offset + ((i + modulus_MOD) / 6) + outbuff_count];
-      	}
-      modulus_MOD += 2;  // modulus is not exactly what it is... :-(
-      if (modulus_MOD == 6)  // this is a bit ugly - hope to find a better
-	{
-	  modulus_MOD = 0;
-	  outbuff_count += 6;
-	}
-      else
-	{
-	  outbuff_count += 5;  //  5*6 +2 samples upsampled
-	}
-
-      //
-      // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
-      // to the transmitted audio.
-      //
-
-      if (!ads.tx_filter_adjusting)//	is the filter NOT being adjusted?  (e.g. disable filter while we alter coefficients)
-	{
-	  // yes - apply transformation AND audio filtering to buffer data
-	  // + 0 deg to I data
-	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_I_TX,
-		       (float32_t *) (adb.a_buffer),
-		       (float32_t *) (adb.i_buffer), blockSize);
-
-	  // - 90 deg to Q data
-	  arm_fir_f32 ((arm_fir_instance_f32 *) &FIR_Q_TX,
-		       (float32_t *) (adb.a_buffer),
-		       (float32_t *) (adb.q_buffer), blockSize);
-	}
-      if(iq_freq_mode)
-                 {
-                     // is transmit frequency conversion to be done?
-                     // USB && (-6kHz || -12kHz) --> false, else true
-                     // LSB && (+6kHz || +12kHz) --> false, else true
-                     bool swap = dmod_mode == DEMOD_LSB && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
-                     swap = swap || ((dmod_mode == DEMOD_USB) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
-
-                     audio_rx_freq_conv(blockSize, swap);
-                 }      //
-      // Equalize based on band and simultaneously apply I/Q gain adjustments
-      //
-      audio_tx_final_iq_processing(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
-
-
-
-    }
-
-  if (outbuff_count > 319)
-    {
-      outbuff_count = 0;
-      //ts.FDV_TX_encode_ready = false; //das ist falsch!!!
-      modem_buffer_offset = ts.FDV_TX_out_start_pt; // hier internen neuen Pointer auf externen setzen
-    }
-
-  return;
-}
-
-
-#endif
-
-
-
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack
 //* Object              :
@@ -3755,19 +3604,9 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             audio_driver_ClearAGCDelayBuffer();
         }
 
+        audio_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
 
-	  //
-         //if(!ts.dvmode)
-        // {
-            audio_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
-        // }
-        // else
-        //{
-        //    audio_dv_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
-        //}
-        //
-
-            to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
+        to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
     else  			// Transmit mode
     {

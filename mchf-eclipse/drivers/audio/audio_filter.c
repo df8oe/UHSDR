@@ -911,8 +911,8 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
 
 //
 // RX Hilbert transform (90 degree) FIR filter state tables and instances
-__IO    arm_fir_instance_f32    FIR_I;
-__IO    arm_fir_instance_f32    FIR_Q;
+arm_fir_instance_f32    FIR_I;
+arm_fir_instance_f32    FIR_Q;
 
 static float32_t    __attribute__ ((section (".ccm")))    FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
 static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
@@ -925,14 +925,14 @@ static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO
 static float   __attribute__ ((section (".ccm")))         FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 static float   __attribute__ ((section (".ccm")))         FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 
-__IO    arm_fir_instance_f32    FIR_I_TX;
-__IO    arm_fir_instance_f32    FIR_Q_TX;
+arm_fir_instance_f32    FIR_I_TX;
+arm_fir_instance_f32    FIR_Q_TX;
 
 
 static float   FirState_I_FREEDV[60+IQ_BUFSZ];
 static float   FirState_Q_FREEDV[60+IQ_BUFSZ];
-__IO    arm_fir_instance_f32    FIR_I_FREEDV;
-__IO    arm_fir_instance_f32    FIR_Q_FREEDV;
+arm_fir_instance_f32    FIR_I_FREEDV;
+arm_fir_instance_f32    FIR_Q_FREEDV;
 
 
 
