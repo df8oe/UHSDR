@@ -929,8 +929,8 @@ __IO    arm_fir_instance_f32    FIR_I_TX;
 __IO    arm_fir_instance_f32    FIR_Q_TX;
 
 
-static float   __attribute__ ((section (".ccm")))         FirState_I_FREEDV[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
-static float   __attribute__ ((section (".ccm")))         FirState_Q_FREEDV[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   FirState_I_FREEDV[60+IQ_BUFSZ];
+static float   FirState_Q_FREEDV[60+IQ_BUFSZ];
 __IO    arm_fir_instance_f32    FIR_I_FREEDV;
 __IO    arm_fir_instance_f32    FIR_Q_FREEDV;
 
