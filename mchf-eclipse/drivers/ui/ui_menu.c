@@ -2520,6 +2520,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             txt_ptr = " x1";
             break;
         }
+        audio_driver_set_rx_audio_filter(ts.dmod_mode);
         break;
     case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,

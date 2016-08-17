@@ -698,6 +698,7 @@ void UiDriver_HandleTouchScreen()
           		}
           	  }
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+            audio_driver_set_rx_audio_filter(ts.dmod_mode);
         }
         if(check_tp_coordinates(52,60,26,32))			// wf/scope bar magnify up
         {
@@ -719,6 +720,7 @@ void UiDriver_HandleTouchScreen()
           		}
           	  }
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+            audio_driver_set_rx_audio_filter(ts.dmod_mode);
         }
         if(check_tp_coordinates(43,60,00,04))			// TUNE button
         {
