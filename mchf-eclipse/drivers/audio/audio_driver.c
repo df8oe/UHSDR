@@ -183,141 +183,151 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
 float32_t* mag_coeffs[5] =
 
 {
-        // index 1
-        (float32_t*)(float32_t[]){ 	    // 12kHz, sample rate 48k, 60dB stopband, elliptic
-    	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-    	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-    	      0.228454526413293696,
-    	      0.077639329099949764,
-    	      0.228454526413293696,
-    	      0.635534925142242080,
-    	      -0.170083307068779194,
+    (float32_t*)(float32_t[]){
+    	// 2x magnify - index 1
+    	// 12kHz, sample rate 48k, 60dB stopband, elliptic
+    	// a1 and a2 negated! order: b0, b1, b2, a1, a2
+    	// Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
+	    0.228454526413293696,
+   	    0.077639329099949764,
+   	    0.228454526413293696,
+   	    0.635534925142242080,
+   	    -0.170083307068779194,
 
-    	        0.436788292542003964,
-    	      0.232307972937606161,
-    	      0.436788292542003964,
-    	      0.365885230717786780,
-    	      -0.471769788739400842,
+		0.436788292542003964,
+    	0.232307972937606161,
+   	    0.436788292542003964,
+   	    0.365885230717786780,
+   	    -0.471769788739400842,
 
-    	      0.535974654742658707,
-    	      0.557035600464780845,
-    	      0.535974654742658707,
-    	      0.125740787233286133,
-    	      -0.754725697183384336,
+		0.535974654742658707,
+   	    0.557035600464780845,
+   	    0.535974654742658707,
+   	    0.125740787233286133,
+   	    -0.754725697183384336,
 
-    	      0.501116342273565607,
-    	      0.914877831284765408,
-    	      0.501116342273565607,
-    	      0.013862536615004284,
-    	      -0.930973052446900984  },
-        // index 2
-       (float32_t*)(float32_t[]){     // 6kHz, sample rate 48k, 60dB stopband, elliptic
-    	    	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-    	    	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-    	    	       0.182208761527446556,
-    	    	       -0.222492493114674145,
-    	    	       0.182208761527446556,
-    	    	       1.326111070880959810,
-    	    	       -0.468036100821178802,
+   	    0.501116342273565607,
+   	    0.914877831284765408,
+   	    0.501116342273565607,
+   	    0.013862536615004284,
+   	    -0.930973052446900984  },
 
-    	    	       0.337123762652097259,
-    	    	       -0.366352718812586853,
-    	    	       0.337123762652097259,
-    	    	       1.337053579516321200,
-    	    	       -0.644948386007929031,
+	(float32_t*)(float32_t[]){
+     	// 4x magnify - index 2
+    	// 6kHz, sample rate 48k, 60dB stopband, elliptic
+	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
+   	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
+   	    0.182208761527446556,
+       -0.222492493114674145,
+    	0.182208761527446556,
+    	1.326111070880959810,
+    	-0.468036100821178802,
 
-    	    	       0.336163175380826074,
-    	    	       -0.199246162162897811,
-    	    	       0.336163175380826074,
-    	    	       1.354952684569386670,
-    	    	       -0.828032873168141115,
+    	0.337123762652097259,
+    	-0.366352718812586853,
+    	0.337123762652097259,
+    	1.337053579516321200,
+    	-0.644948386007929031,
 
-    	    	       0.178588201750411041,
-    	    	       0.207271695028067304,
-    	    	       0.178588201750411041,
-    	    	       1.386486967455699220,
-    	    	       -0.950935065984588657  },
-       // index 3
-       (float32_t*)(float32_t[]){ 			//lowpass 3k
-    	    	     	   0.185643392652478922,
-    	    	     	   -0.332064345389014803,
-    	    	     	   0.185643392652478922,
-    	    	     	   1.654637402827731090,
-    	    	     	   -0.693859842743674182,
+    	0.336163175380826074,
+    	-0.199246162162897811,
+    	0.336163175380826074,
+    	1.354952684569386670,
+    	-0.828032873168141115,
 
-    	    	     	   0.327519300813245984,
-    	    	     	   -0.571358085216950418,
-    	    	     	   0.327519300813245984,
-    	    	     	   1.715375037176782860,
-    	    	     	   -0.799055553586324407,
+    	0.178588201750411041,
+    	0.207271695028067304,
+    	0.178588201750411041,
+    	1.386486967455699220,
+    	-0.950935065984588657  },
 
-    	    	     	   0.283656142708241688,
-    	    	     	   -0.441088976843048652,
-    	    	     	   0.283656142708241688,
-    	    	     	   1.778230635987093860,
-    	    	     	   -0.904453944560528522,
+    (float32_t*)(float32_t[]){
+      	// 8x magnify - index 3
+       	// 3kHz, sample rate 48k, 60dB stopband, elliptic
+   	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
+   	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
+  	   0.185643392652478922,
+   	   -0.332064345389014803,
+   	   0.185643392652478922,
+   	   1.654637402827731090,
+   	   -0.693859842743674182,
 
-    	    	     	   0.079685368654848945,
-    	    	     	   -0.011231810140649204,
-    	    	     	   0.079685368654848945,
-    	    	     	   1.825046003243238070,
-    	    	     	   -0.973184930412286708  },
-      // index 4
-       (float32_t*)(float32_t[]){  			// 1k5, sample rate 48k, 60dB stopband, elliptic
-    	    	     		    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-    	    	     		    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-    	    	     		       0.194769868656866380,
-    	    	     		       -0.379098413160710079,
-    	    	     		       0.194769868656866380,
-    	    	     		      1.824436402073870810,
-    	    	     		       -0.834877726226893380,
+  	   0.327519300813245984,
+   	   -0.571358085216950418,
+   	   0.327519300813245984,
+   	   1.715375037176782860,
+ 	   -0.799055553586324407,
 
-    	    	     		       0.333973874901496770,
-    	    	     		       -0.646106479315673776,
-    	    	     		       0.333973874901496770,
-    	    	     		       1.871892825636887640,
-    	    	     		       -0.893734096124207178,
+	   0.283656142708241688,
+  	   -0.441088976843048652,
+   	   0.283656142708241688,
+   	   1.778230635987093860,
+   	   -0.904453944560528522,
 
-    	    	     		       0.272903880596429671,
-    	    	     		       -0.513507745397738469,
-    	    	     		       0.272903880596429671,
-    	    	     		       1.918161772571113750,
-    	    	     		       -0.950461788366234739,
+   	   0.079685368654848945,
+  	   -0.011231810140649204,
+   	   0.079685368654848945,
+  	   1.825046003243238070,
+   	   -0.973184930412286708  },
 
-    	    	     		       0.053535383722369843,
-    	    	     		       -0.069683422367188122,
-    	    	     		       0.053535383722369843,
-    	    	     		       1.948900719896301760,
-    	    	     		       -0.986288064973853129 },
-     // index 5
-      (float32_t*)(float32_t[]){  			0.201507402588557594,
-    	    	     		    	   -0.400273615727755550,
-    	    	     		    	   0.201507402588557594,
-    	    	     		    	   1.910767558906650840,
-    	    	     		    	   -0.913508748356010480,
+   (float32_t*)(float32_t[]){
+       	// 16x magnify - index 4
+   		// 1k5, sample rate 48k, 60dB stopband, elliptic
+	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
+	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
+       0.194769868656866380,
+       -0.379098413160710079,
+       0.194769868656866380,
+       1.824436402073870810,
+       -0.834877726226893380,
 
-    	    	     		    	   0.340295203367131205,
-    	    	     		    	   -0.674930558961690075,
-    	    	     		    	   0.340295203367131205,
-    	    	     		    	   1.939398230905991390,
-    	    	     		    	   -0.945058078678563840,
+       0.333973874901496770,
+      -0.646106479315673776,
+       0.333973874901496770,
+       1.871892825636887640,
+      -0.893734096124207178,
 
-    	    	     		    	   0.271859921641011359,
-    	    	     		    	   -0.535453706265515361,
-    	    	     		    	   0.271859921641011359,
-    	    	     		    	   1.966439529620203740,
-    	    	     		    	   -0.974705666636711099,
+       0.272903880596429671,
+      -0.513507745397738469,
+       0.272903880596429671,
+       1.918161772571113750,
+      -0.950461788366234739,
 
-    	    	     		    	   0.047026497485465592,
-    	    	     		    	   -0.084562104085501480,
-    	    	     		    	   0.047026497485465592,
-    	    	     		    	   1.983564238653704900,
-    	    	     		    	   -0.993055129539134551 },
+       0.053535383722369843,
+      -0.069683422367188122,
+       0.053535383722369843,
+       1.948900719896301760,
+      -0.986288064973853129 },
 
+   (float32_t*)(float32_t[]){
+       	// 32x magnify - index 5
+   		// 750Hz, sample rate 48k, 60dB stopband, elliptic
+  	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
+  	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
+   	   0.201507402588557594,
+	   0.400273615727755550,
+       0.201507402588557594,
+   	   1.910767558906650840,
+      -0.913508748356010480,
 
+   	   0.340295203367131205,
+	   -0.674930558961690075,
+  	   0.340295203367131205,
+       1.939398230905991390,
+      -0.945058078678563840,
+
+  	   0.271859921641011359,
+      -0.535453706265515361,
+ 	   0.271859921641011359,
+   	   1.966439529620203740,
+      -0.974705666636711099,
+
+  	   0.047026497485465592,
+      -0.084562104085501480,
+   	   0.047026497485465592,
+	   1.983564238653704900,
+  	   -0.993055129539134551 },
 };
-
-
 
 // variables for FM squelch IIR filters
 static float32_t	iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -914,322 +924,17 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     IIR_TX_biquad.pCoeffs[8] = a1;
     IIR_TX_biquad.pCoeffs[9] = a2;
 
-/*    // here follows an experimental lowpass filter for the TUNE mode
-    f0 = 800;
-    FS = 48000;
-    w0 = 2 * PI * f0 / FS;
-    Q = 4;
-    alpha = sin(w0) / 2 * Q;
-    cosw0 = cos(w0);
-    // lowpass
-    b0 = (1 - cosw0) / 2;
-    b1 =  1 - cosw0;
-    b2 = (1 - cosw0) / 2;;
-    a0 =  1 + alpha;
-    a1 =  2 * cosw0; // already negated!
-    a2 = alpha - 1; // already negated!
-
-    // scaling the coefficients for gain
-    b0 = b0/a0;
-    b1 = b1/a0;
-    b2 = b2/a0;
-    a1 = a1/a0;
-    a2 = a2/a0;
-
-    // scaling the feedforward coefficients for gain adjustment !
-    // "DC gain of an IIR filter is the sum of the filters� feedforward coeffs divided by
-    // 1 minus the sum of the filters� feedback coeffs" (Lyons 2011)
-    //    float32_t DCgain = (b0 + b1 + b2) / (1 - (a1 + a2));
-    // does not work for some reason?
-    // I take a divide by a constant instead !
-//    float32_t DCgain = 3; //
-    DCgain = 2; //
-    b0 = b0 / DCgain;
-    b1 = b1 / DCgain;
-    b2 = b2 / DCgain;
-
-    IIR_TX_biquad.pCoeffs[10] = b0;
-    IIR_TX_biquad.pCoeffs[11] = b1;
-    IIR_TX_biquad.pCoeffs[12] = b2;
-    IIR_TX_biquad.pCoeffs[13] = a1;
-    IIR_TX_biquad.pCoeffs[14] = a2;
-
-*/
-
-/*    // set coefficients for Zoom FFT lowpass filter
-
-    f0 = 3000;
-    FS = 48000;
-    w0 = 2 * PI * f0 / FS;
-    Q = 5.0;
-    alpha = sin(w0) / 2 * Q;
-    cosw0 = cos(w0);
-    // lowpass
-    b0 = (1 - cosw0) / 2;
-    b1 =  1 - cosw0;
-    b2 = (1 - cosw0) / 2;;
-    a0 =  1 + alpha;
-    a1 =  2 * cosw0; // already negated!
-    a2 = alpha - 1; // already negated!
-
-    // scaling the coefficients for gain
-    b0 = b0/a0;
-    b1 = b1/a0;
-    b2 = b2/a0;
-    a1 = a1/a0;
-    a2 = a2/a0;
-
-
-*/
-
+    // this sets the coefficients for the ZoomFFT decimation filter
+    // according to the desired magnification mode sd.magnify
+    // sd.magnify 0 = 1x magnification
+    // sd.magnify 1 = 2x
+    // sd.magnify 2 = 4x
+    // sd.magnify 3 = 8x
+    // sd.magnify 4 = 16x
+    // sd.magnify 5 = 32x
+    //
     IIR_biquad_Zoom_FFT_I.pCoeffs = mag_coeffs[sd.magnify - 1];
     IIR_biquad_Zoom_FFT_Q.pCoeffs = mag_coeffs[sd.magnify - 1];
-
-
-/*	switch (sd.magnify) {
-		case 0:
-		break;
-		case 5:
-		;
-		    // 750Hz, sample rate 48k, 60dB stopband, elliptic
-		    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-		    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-//			IIR_biquad_Zoom_FFT_I.pCoeffs = (float32_t *)(float32_t []) {
-  static float32_t temp[20] = {
-			0.201507402588557594,
-   -0.400273615727755550,
-   0.201507402588557594,
-   1.910767558906650840,
-   -0.913508748356010480,
-
-   0.340295203367131205,
-   -0.674930558961690075,
-   0.340295203367131205,
-   1.939398230905991390,
-   -0.945058078678563840,
-
-   0.271859921641011359,
-   -0.535453706265515361,
-   0.271859921641011359,
-   1.966439529620203740,
-   -0.974705666636711099,
-
-   0.047026497485465592,
-   -0.084562104085501480,
-   0.047026497485465592,
-   1.983564238653704900,
-   -0.993055129539134551
-			};
-
-  uchar i;
-
-  for( i=0; i<20; i++)
-  {
-  Koeff[i] = temp[i];
-  }
-
-			IIR_biquad_Zoom_FFT_I.pCoeffs = Koeff;
-			IIR_biquad_Zoom_FFT_Q.pCoeffs = Koeff;
-
-			break;
-		case 4:
-			  ;
-			  static float32_t Koeff[20] = {
-
-			// 1k5, sample rate 48k, 60dB stopband, elliptic
-    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-       0.194769868656866380,
-       -0.379098413160710079,
-       0.194769868656866380,
-      1.824436402073870810,
-       -0.834877726226893380,
-
-       0.333973874901496770,
-       -0.646106479315673776,
-       0.333973874901496770,
-       1.871892825636887640,
-       -0.893734096124207178,
-
-       0.272903880596429671,
-       -0.513507745397738469,
-       0.272903880596429671,
-       1.918161772571113750,
-       -0.950461788366234739,
-
-       0.053535383722369843,
-       -0.069683422367188122,
-       0.053535383722369843,
-       1.948900719896301760,
-       -0.986288064973853129
-			};
-
-				IIR_biquad_Zoom_FFT_I.pCoeffs = Koeff;
-				IIR_biquad_Zoom_FFT_Q.pCoeffs = Koeff;
-
-			  break;
-
-		case 3:
-			;
-			static float32_t Koeff[20] = {
-
-			//lowpass 3k
-     	   0.185643392652478922,
-     	   -0.332064345389014803,
-     	   0.185643392652478922,
-     	   1.654637402827731090,
-     	   -0.693859842743674182,
-
-     	   0.327519300813245984,
-     	   -0.571358085216950418,
-     	   0.327519300813245984,
-     	   1.715375037176782860,
-     	   -0.799055553586324407,
-
-     	   0.283656142708241688,
-     	   -0.441088976843048652,
-     	   0.283656142708241688,
-     	   1.778230635987093860,
-     	   -0.904453944560528522,
-
-     	   0.079685368654848945,
-     	   -0.011231810140649204,
-     	   0.079685368654848945,
-     	   1.825046003243238070,
-     	   -0.973184930412286708
-
-    };
-
-
-	IIR_biquad_Zoom_FFT_I.pCoeffs = Koeff;
-	IIR_biquad_Zoom_FFT_Q.pCoeffs = Koeff;
-
-    break;
-		case 2:
-			;
-			static float32_t Koeff[20] = {
-
-    // 6kHz, sample rate 48k, 60dB stopband, elliptic
-    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-       0.182208761527446556,
-       -0.222492493114674145,
-       0.182208761527446556,
-       1.326111070880959810,
-       -0.468036100821178802,
-
-       0.337123762652097259,
-       -0.366352718812586853,
-       0.337123762652097259,
-       1.337053579516321200,
-       -0.644948386007929031,
-
-       0.336163175380826074,
-       -0.199246162162897811,
-       0.336163175380826074,
-       1.354952684569386670,
-       -0.828032873168141115,
-
-       0.178588201750411041,
-       0.207271695028067304,
-       0.178588201750411041,
-       1.386486967455699220,
-       -0.950935065984588657
-			};
-
-			IIR_biquad_Zoom_FFT_I.pCoeffs = Koeff;
-			IIR_biquad_Zoom_FFT_Q.pCoeffs = Koeff;
-
-			break;
-		case 1:
-			 ;
-			 static float32_t Koeff[20] = {
-	    // 12kHz, sample rate 48k, 60dB stopband, elliptic
-	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
-	    // Iowa Hills IIR Filter Designer, DD4WH Aug 16th 2016
-	      0.228454526413293696,
-	      0.077639329099949764,
-	      0.228454526413293696,
-	      0.635534925142242080,
-	      -0.170083307068779194,
-
-	        0.436788292542003964,
-	      0.232307972937606161,
-	      0.436788292542003964,
-	      0.365885230717786780,
-	      -0.471769788739400842,
-
-	      0.535974654742658707,
-	      0.557035600464780845,
-	      0.535974654742658707,
-	      0.125740787233286133,
-	      -0.754725697183384336,
-
-	      0.501116342273565607,
-	      0.914877831284765408,
-	      0.501116342273565607,
-	      0.013862536615004284,
-	      -0.930973052446900984
-			};
-			IIR_biquad_Zoom_FFT_I.pCoeffs = Koeff;
-			IIR_biquad_Zoom_FFT_Q.pCoeffs = Koeff;
-
-			break;
-
-	} // end of switch
-*/
-
-    /*
-    IIR_biquad_Zoom_FFT_I.pCoeffs[0] = b0;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[1] = b1;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[2] = b2;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[3] = a1;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[4] = a2;
-
-    IIR_biquad_Zoom_FFT_I.pCoeffs[5] = b0;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[6] = b1;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[7] = b2;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[8] = a1;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[9] = a2;
-
-
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[0] = b0;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[1] = b1;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[2] = b2;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[3] = a1;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[4] = a2;
-
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[5] = b0;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[6] = b1;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[7] = b2;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[8] = a1;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[9] = a2;
-*/
-/*
-    IIR_biquad_Zoom_FFT_I.pCoeffs[0] = 0.108758227853704995;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[1] = -0.139506262660944735;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[2] = 0.108758227853704995;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[3] = 1.508499028959062520; //negated
-    IIR_biquad_Zoom_FFT_I.pCoeffs[4] =  -0.586509222005527797; //negated
-
-    IIR_biquad_Zoom_FFT_I.pCoeffs[5] =  0.059987774408103857;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[6] =  0.011859987344015712;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[7] =  0.059987774408103857;
-    IIR_biquad_Zoom_FFT_I.pCoeffs[8] = 1.699151355391507190; //negated
-    IIR_biquad_Zoom_FFT_I.pCoeffs[9] = -0.830986891551730666; //negated
-
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[0] = 0.108758227853704995;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[1] = -0.139506262660944735;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[2] = 0.108758227853704995;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[3] = 1.508499028959062520; //negated
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[4] =  -0.586509222005527797; //negated
-
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[5] =  0.059987774408103857;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[6] =  0.011859987344015712;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[7] =  0.059987774408103857;
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[8] = 1.699151355391507190; //negated
-    IIR_biquad_Zoom_FFT_Q.pCoeffs[9] = -0.830986891551730666; //negated
-*/
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
@@ -1390,7 +1095,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     ads.agc_decimation_scaling = ads.decimation_rate;
     ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
     //
-    // Set up ZOOM FFT decimation/filters
+    // Set up ZOOM FFT FIR decimation filters
 
     // switch right FIR decimation filter depending on sd.magnify
     switch(sd.magnify)
@@ -1435,7 +1140,8 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
         DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
     }
     	break;
-    default:
+    default: // this is important in order to prevent crash on first switching from 1x to 2x directly after startup
+    	// (when the filter coeffs have not yet been set)
     	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
         DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
         DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
@@ -1520,24 +1226,12 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     	}
     	else if (ts.tx_filter == TX_FILTER_TENOR)
     	{
-//            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
-//            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
-//            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
               IIR_TXFilter.numStages = IIR_TX_WIDE_TREBLE.numStages;		// number of stages
               IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;	// point to reflection coefficients
               IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;	// point to ladder coefficients
     	}
     	else
     	{
-//            IIR_TXFilter.numStages = IIR_TX_WIDE_BASS.numStages;		// number of stages
-//            IIR_TXFilter.pkCoeffs = IIR_TX_WIDE_BASS.pkCoeffs;	// point to reflection coefficients
-//            IIR_TXFilter.pvCoeffs = IIR_TX_WIDE_BASS.pvCoeffs;	// point to ladder coefficients
-//			  IIR_TXFilter.numStages = IIR_TX_2k7.numStages;		// number of stages
-//    		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7.pkCoeffs;	// point to reflection coefficients
-//		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7.pvCoeffs;	// point to ladder coefficients
-//  	      IIR_TXFilter.numStages = IIR_TX_2k7_FM.numStages;		// number of stages
-//  		  IIR_TXFilter.pkCoeffs = IIR_TX_2k7_FM.pkCoeffs;	// point to reflection coefficients
-//		      IIR_TXFilter.pvCoeffs = IIR_TX_2k7_FM.pvCoeffs;	// point to ladder coefficients
     	      IIR_TXFilter.numStages = IIR_TX_SOPRANO.numStages;		// number of stages
     		  IIR_TXFilter.pkCoeffs = IIR_TX_SOPRANO.pkCoeffs;	// point to reflection coefficients
   		      IIR_TXFilter.pvCoeffs = IIR_TX_SOPRANO.pvCoeffs;	// point to ladder coefficients
