@@ -1391,21 +1391,57 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
     //
     // Set up ZOOM FFT decimation/filters
-    DECIMATE_ZOOM_FFT_I.numTaps = FirRxDecimate.numTaps;
-    DECIMATE_ZOOM_FFT_I.pCoeffs = FirRxDecimate.pCoeffs;
+
+    // switch right FIR decimation filter depending on sd.magnify
+    switch(sd.magnify)
+    {
+    case 1: // 2x
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+    }
+    	break;
+    case 2: // 4x
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_4x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_4x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
+    }
+    	break;
+    case 3: // 8x
+    {
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_8x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_8x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
+    }
+    	break;
+    case 4: // 16x
+    {
+        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_16x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_16x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
+    }
+    	break;
+    case 5: // 32x
+    {
+        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_32x.numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_32x.numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
+    }
+    	break;
+    }
 
     DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
-
-    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
-
-    DECIMATE_ZOOM_FFT_Q.numTaps = FirRxDecimate.numTaps;
-    DECIMATE_ZOOM_FFT_Q.pCoeffs = FirRxDecimate.pCoeffs;
-
     DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
 
+    DECIMATE_ZOOM_FFT_I.pState = (float32_t *)&decimZoomFFTIState[0];			// Filter state variables
     DECIMATE_ZOOM_FFT_Q.pState = (float32_t *)&decimZoomFFTQState[0];			// Filter state variables
-
-    //
 
 
     // Set up RX decimation/filter
@@ -3496,7 +3532,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // for decimation-by-6 the stopband frequency is 48/6*2 = 4kHz
         // but our audio is at most 3kHz wide, so we should use 3k or 2k9
 
-        // this should be the correct filter:
+
+        // this is the correct DECIMATION FILTER:
         // use it ALWAYS, also with TUNE tone!!!
         AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 

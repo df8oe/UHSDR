@@ -1662,7 +1662,7 @@ static void UiSpectrum_FrequencyBarText()
 
     {
         // remainder of frequency/graticule markings
-        const static int idx2pos[] = {0,26,58,90,122,154,186,218,242};
+        const static int idx2pos[] = {0,26,58,90,122,154,186,218, 242};
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
 		if(sd.magnify < 3)
@@ -1701,7 +1701,10 @@ static void UiSpectrum_FrequencyBarText()
             	c = &txt[strlen(txt)-5];  // point at 5th character from the end
 			  }
 
-
+			  if((idx == 3 || idx == 4) && (sd.magnify > 2))
+			  {
+				  pos = pos - 9;
+			  }
               UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
             }
       		if(sd.magnify > 2)
