@@ -1717,6 +1717,10 @@ static void calculate_dBm(void)
         // so the additional processor load and additional RAM usage should be close to zero
 		// this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
         //
+
+		// FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
+
+
         if(ts.sysclock > ts.dBm_count + 19 && ts.txrx_mode == TRX_MODE_RX && (ts.s_meter == 1 || ts.s_meter == 2 || ts.display_dbm != 0))
         {
         char txt[12];
@@ -1729,9 +1733,13 @@ static void calculate_dBm(void)
         float64_t sum_db = 0.0;
         int posbin = 0;
         float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
+        float32_t width;
+
         float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
         // width of a 256 tap FFT bin = 187.5Hz
-        float32_t width;
+        // we have to take into account the magnify mode
+        // --> recalculation of bin_BW
+        bin_BW = bin_BW / (1 << sd.magnify); // correct bin bandwidth is determined by the Zoom FFT display setting
 
         int buff_len_int = FFT_IQ_BUFF_LEN;
 
@@ -1801,6 +1809,15 @@ static void calculate_dBm(void)
         Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
         Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
+        // take care of filter bandwidths that are larger than the displayed FFT bins
+        if(Lbin < 0)
+        {
+        	Lbin = 0;
+        }
+        if (Ubin > 255)
+        {
+        	Ubin = 255;
+        }
 
         i=0;
         for(i = 0; i < (buff_len_int/2); i++)
