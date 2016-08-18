@@ -3324,7 +3324,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 #endif
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(0.35, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+        audio_tx_final_iq_processing(2.0*SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
     }
     else
     {
