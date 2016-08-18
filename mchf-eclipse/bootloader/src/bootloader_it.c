@@ -136,3 +136,8 @@ void OTG_FS_IRQHandler(void)
 {
     USBH_OTG_ISR_Handler(&USB_OTG_Core);
 }
+
+void OTG_HS_IRQHandler(void)
+{
+    USBH_OTG_ISR_Handler(&USB_OTG_Core);
+}

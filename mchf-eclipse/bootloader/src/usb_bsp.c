@@ -95,6 +95,7 @@ void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
     RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, ENABLE) ;
 #else	// USE_USB_OTG_HS 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+    RCC_AHB1PeriphClockLPModeCmd(RCC_AHB1Periph_OTG_HS_ULPI, DISABLE);
 
     /* Configure DP Pins */
     GPIO_InitStructure.GPIO_Pin = 	GPIO_Pin_14 |	// Data-
@@ -311,11 +312,3 @@ static void BSP_SetTime(uint8_t unit)
     TIM_Cmd(TIM2, ENABLE);
 }
 #endif
-
-
-/*
-void OTG_HS_IRQHandler(void)
-{
-    USBD_OTG_ISR_Handler(&USB_OTG_dev);
-}
-*/

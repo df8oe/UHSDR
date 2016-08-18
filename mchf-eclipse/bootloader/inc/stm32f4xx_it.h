@@ -47,6 +47,7 @@ void SysTick_Handler(void);
 
 void USB_OTG_BSP_TimerIRQ (void);
 void OTG_FS_IRQHandler(void);
+void OTG_HS_IRQHandler(void);
 void TIM2_IRQHandler(void);
 void EXTI1_IRQHandler(void);
 #ifdef __cplusplus
