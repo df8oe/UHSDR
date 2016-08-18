@@ -15,6 +15,7 @@
 
 2016mmdd [DF8OE]
 - started working on FREEDV (feature is not enabled in daily snapshots yet)
+- implemented using of big USB plug for USB-stick bootloader instead of small plug
 
 
 20160819 [DF8OE]

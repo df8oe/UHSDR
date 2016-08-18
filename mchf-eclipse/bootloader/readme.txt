@@ -1,15 +1,7 @@
-You need to add 5V supply to connector via schottky-diode
-and (poly)fuse 0.5A to make usb-key work. You can add
-these components on ui-board. 5V pin of usb connector is
-located nearest to the bottom side of the ui pcb. Solder
-anode of diode to +5V and cathode via fuse to described
-usb pin. It is a good idea to add tantalum 100uF/6V on
-5V-Pin of USB for cleaning power supply of stick.
+You need USB-key with filesystem FAT/FAT32.
 
-You need usb-key with filesystem FAT/FAT32.
-
-For firmware-upgrade you must plug the usb-key to mchf
-otg (mikto-usb).
+For firmware-upgrade you must plug the USB-key to mchf
+big USB plug.
 
 1) Only saving old firmware to key:
 Press BAND- button and hold it. Then press power button and
@@ -52,4 +44,4 @@ by "SanDisk" are widely distributed and easy to purchase.
 
 2-be-continued
 
-DF8OE, Andreas						10/02/2015
+DF8OE, Andreas						08/19/2016
