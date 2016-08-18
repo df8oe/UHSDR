@@ -5,6 +5,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
 
+
+char use_usba;
+
 typedef enum
 {
     LEDGREEN = 0,
@@ -17,6 +20,7 @@ typedef enum
 {
     BUTTON_BANDM = 0,
     BUTTON_POWER = 1,
+    BUTTON_BANDP = 2
 } Button_TypeDef;
 
 typedef enum
@@ -43,7 +47,7 @@ typedef enum
 #define BLON_GPIO_PORT                   GPIOD
 #define BLON_GPIO_CLK                    RCC_AHB1Periph_GPIOD
 
-#define BUTTONn                          2
+#define BUTTONn                          3
 
 #define BANDM_BUTTON_PIN                GPIO_Pin_0
 #define BANDM_BUTTON_GPIO_PORT          GPIOB
@@ -52,6 +56,14 @@ typedef enum
 #define BANDM_BUTTON_EXTI_PORT_SOURCE   EXTI_PortSourceGPIOB
 #define BANDM_BUTTON_EXTI_PIN_SOURCE    EXTI_PinSource0
 #define BANDM_BUTTON_EXTI_IRQn          EXTI0_IRQn
+
+#define BANDP_BUTTON_PIN                GPIO_Pin_2
+#define BANDP_BUTTON_GPIO_PORT          GPIOB
+#define BANDP_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
+#define BANDP_BUTTON_EXTI_LINE          EXTI_Line0
+#define BANDP_BUTTON_EXTI_PORT_SOURCE   EXTI_PortSourceGPIOB
+#define BANDP_BUTTON_EXTI_PIN_SOURCE    EXTI_PinSource2
+#define BANDP_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
 #define POWER_BUTTON_PIN                GPIO_Pin_13
 #define POWER_BUTTON_GPIO_PORT          GPIOC

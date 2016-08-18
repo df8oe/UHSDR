@@ -16,7 +16,7 @@
 #include "usbh_usr.h"
 #include "usbh_msc_core.h"
 #include "flash_if.h"
-
+#include "mchf.h"
 
 USB_OTG_CORE_HANDLE          USB_OTG_Core;
 USBH_HOST                    USB_Host;
@@ -31,6 +31,7 @@ int main(void)
     STM_EVAL_LEDOn(ON);
 
     double i,border;
+	use_usba = 0;
 
 // *(__IO uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
 // *(__IO uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
@@ -68,7 +69,7 @@ int main(void)
 
 #ifdef USE_USB_OTG_FS
     USBH_Init(&USB_OTG_Core, USB_OTG_FS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
-#else	// use HS_CORE
+#else	// USE_USB_OTG_HS
     USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
 #endif
 

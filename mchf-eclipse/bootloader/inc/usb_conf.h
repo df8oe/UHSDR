@@ -86,17 +86,6 @@
 *     Configuration (ii) need a different hardware, for more details refer to your
 *     STM32 device datasheet.
 *******************************************************************************/
-#ifndef USE_USB_OTG_HS
-//#define USE_USB_OTG_HS
-#endif /* USE_USB_OTG_HS */
-
-#ifndef USE_ULPI_PHY
-//#define USE_ULPI_PHY
-#endif /* USE_ULPI_PHY */
-
-#ifndef USE_EMBEDDED_PHY
-#define USE_EMBEDDED_PHY
-#endif /* USE_EMBEDDED_PHY */
 
 #ifdef USE_USB_OTG_HS
 #define USB_OTG_HS_CORE

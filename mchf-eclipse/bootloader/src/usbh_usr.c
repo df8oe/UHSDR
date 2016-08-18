@@ -87,6 +87,7 @@ void USBH_USR_Init(void)
         STM_EVAL_LEDInit(BLON);
 
         STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+        STM_EVAL_PBInit(BUTTON_BANDP, BUTTON_MODE_GPIO);
         STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
         /* time for slow memory keys to wake up */
         double i;
@@ -347,6 +348,15 @@ int USBH_USR_MSC_Application(void)
 
         /* Configure Button EXTI line */
         EXTI_InitStructure.EXTI_Line = POWER_BUTTON_EXTI_LINE;
+        EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+        EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+        EXTI_Init(&EXTI_InitStructure);
+
+        STM_EVAL_PBInit(BUTTON_BANDP, BUTTON_MODE_EXTI);
+
+        /* Configure Button EXTI line */
+        EXTI_InitStructure.EXTI_Line = BANDP_BUTTON_EXTI_LINE;
         EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
         EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
         EXTI_InitStructure.EXTI_LineCmd = ENABLE;
