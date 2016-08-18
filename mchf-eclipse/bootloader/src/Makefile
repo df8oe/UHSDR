@@ -26,7 +26,7 @@ CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -I../inc
 
-# Choose fullspeed or highspeed (?)
+# Choose USB core FS or HS in FS mode
 #CFLAGS += -DUSE_USB_OTG_FS -DUSE_EMBEDDED_PHY
 CFLAGS += -DUSE_USB_OTG_HS -DUSE_EMBEDDED_PHY
 
