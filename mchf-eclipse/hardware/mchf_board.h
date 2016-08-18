@@ -14,8 +14,22 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 
- #define USE_FREEDV
-//#define USE_SNAP
+
+// some special switches
+//#define 	DEBUG_BUILD
+
+#define USE_FREEDV //uncomment to use freedv instead of SNAP function
+
+// hardware specific switches
+//#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
+
+
+
+
+
+#ifndef USE_FREE_DV
+  #define USE_SNAP
+#endif
 
 // HW libs
 #include "stm32f4xx_rcc.h"
@@ -59,11 +73,6 @@
 #define		ATTRIB_STRING3			"Licensed under CC BY-NC-SA 3.0"
 //
 // -----------------------------------------------------------------------------
-//#define 	DEBUG_BUILD
-
-// hardware specific switches
-//#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
-
 #define CODEC_I2C                       I2C2
 #define SERIALEEPROM_I2C                I2C2
 

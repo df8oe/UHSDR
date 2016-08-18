@@ -14,6 +14,7 @@
 
 
 2016mmdd [DF8OE]
+- started working on FREEDV (feature is not enabled in daily snapshots yet)
 
 
 20160819 [DF8OE]
