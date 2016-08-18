@@ -7249,17 +7249,23 @@ static void UiDriver_HandleFreeDV()
     // Freedv Test DL2FW
     static uint16_t FDV_TX_pt = 0;
     // static FDV_Out_Buffer FDV_TX_out_im_buff;
-    static bool was_here = false;
+    static bool tx_was_here = false;
+    static bool rx_was_here = false;
 
-    if (ts.txrx_mode == TRX_MODE_RX)
+    if ((tx_was_here == true && ts.txrx_mode == TRX_MODE_RX) || (rx_was_here == true && ts.txrx_mode == TRX_MODE_TX))
     {
-        was_here = false; //set to false to detect the first entry after switching to TX
+        tx_was_here = false; //set to false to detect the first entry after switching to TX
+        rx_was_here = false;
+        FDV_TX_pt = 0;
+        fdv_in_buffer_reset();
+        fdv_out_buffer_reset();
     }
     //will later be inside RX
     if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
         if ((ts.txrx_mode == TRX_MODE_TX) && fdv_in_has_data() && fdv_out_has_room())
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
 
+            tx_was_here = true;
             FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
 
             FDV_In_Buffer* input_buf = NULL;
@@ -7283,8 +7289,10 @@ static void UiDriver_HandleFreeDV()
             FDV_TX_pt++;
 
         }
-        else if (false && (ts.txrx_mode == TRX_MODE_RX) && fdv_out_has_data() && fdv_in_has_room())
+        else if ((ts.txrx_mode == TRX_MODE_RX) && fdv_out_has_data() && fdv_in_has_room())
         {
+
+            rx_was_here = true;
 
             static flex_buffer outBufCtrl = { 0, 0 };
             static flex_buffer inBufCtrl = { 0, 0 };
@@ -7293,8 +7301,8 @@ static void UiDriver_HandleFreeDV()
             FDV_TX_pt %= FDV_BUFFER_IN_NUM;
 
 
-            static int16_t rx_buffer[2/* FDV_RX_AUDIO_SIZE_MAX */];
-            static COMP    iq_buffer[2/*FDV_RX_AUDIO_SIZE_MAX */];
+            static int16_t rx_buffer[FDV_RX_AUDIO_SIZE_MAX];
+            static COMP    iq_buffer[FDV_RX_AUDIO_SIZE_MAX];
 
             int iq_nin = freedv_nin(f_FREEDV);
             while (inBufCtrl.offset != iq_nin)
@@ -7319,6 +7327,7 @@ static void UiDriver_HandleFreeDV()
                 else
                 {
                     // memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(int16_t));
+                    inBufCtrl.start += (iq_nin - inBufCtrl.offset);
                     inBufCtrl.offset = iq_nin;
                 }
             }
@@ -7326,7 +7335,7 @@ static void UiDriver_HandleFreeDV()
             inBufCtrl.offset = 0;
 
             int32_t result  = 320;
-            //freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // start the encoding process
+            freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // start the encoding process
 
             do
             {
