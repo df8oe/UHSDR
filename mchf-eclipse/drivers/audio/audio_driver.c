@@ -169,7 +169,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_I =
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
 {
     .numStages = 4,
-    .pCoeffs = (float32_t *)(float32_t [])
+    .pCoeffs = (float32_t *)(const float32_t [])
     {
         1,0,0,0,0,  1,0,0,0,0 // passthru
     }, // 2 x 5 = 10 coefficients
@@ -187,7 +187,7 @@ static float32_t* mag_coeffs[6] =
         // for Index 0 [1xZoom == no zoom] the mag_coeffs will a NULL  ptr, since the filter is not going to be used in this  mode!
         (float32_t*)NULL,
 
-    (float32_t*)(float32_t[]){
+    (float32_t*)(const float32_t[]){
     	// 2x magnify - index 1
     	// 12kHz, sample rate 48k, 60dB stopband, elliptic
     	// a1 and a2 negated! order: b0, b1, b2, a1, a2
@@ -216,7 +216,7 @@ static float32_t* mag_coeffs[6] =
    	    0.013862536615004284,
    	    -0.930973052446900984  },
 
-	(float32_t*)(float32_t[]){
+	(float32_t*)(const float32_t[]){
      	// 4x magnify - index 2
     	// 6kHz, sample rate 48k, 60dB stopband, elliptic
 	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
@@ -245,7 +245,7 @@ static float32_t* mag_coeffs[6] =
     	1.386486967455699220,
     	-0.950935065984588657  },
 
-    (float32_t*)(float32_t[]){
+    (float32_t*)(const float32_t[]){
       	// 8x magnify - index 3
        	// 3kHz, sample rate 48k, 60dB stopband, elliptic
    	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
@@ -274,7 +274,7 @@ static float32_t* mag_coeffs[6] =
   	   1.825046003243238070,
    	   -0.973184930412286708  },
 
-   (float32_t*)(float32_t[]){
+   (float32_t*)(const float32_t[]){
        	// 16x magnify - index 4
    		// 1k5, sample rate 48k, 60dB stopband, elliptic
 	    // a1 and a2 negated! order: b0, b1, b2, a1, a2
@@ -303,7 +303,7 @@ static float32_t* mag_coeffs[6] =
        1.948900719896301760,
       -0.986288064973853129 },
 
-   (float32_t*)(float32_t[]){
+   (float32_t*)(const float32_t[]){
        	// 32x magnify - index 5
    		// 750Hz, sample rate 48k, 60dB stopband, elliptic
   	    // a1 and a2 negated! order: b0, b1, b2, a1, a2

@@ -425,11 +425,7 @@ enum
     STATE_SWR_METER,				//
     STATE_HANDLE_POWERSUPPLY,		//
     STATE_LO_TEMPERATURE,			//
-    STATE_SWITCH_OFF_PTT,            //
     STATE_TASK_CHECK,				//
-    STATE_CHECK_ENC_ONE,			//
-    STATE_CHECK_ENC_TWO,			//
-    STATE_CHECK_ENC_THREE,			//
     STATE_UPDATE_FREQUENCY,			//
     STATE_PROCESS_KEYBOARD,			//
     STATE_MAX
@@ -467,7 +463,7 @@ int fdv_out_buffer_remove(FDV_Out_Buffer** c_ptr);
 int fdv_out_buffer_add(FDV_Out_Buffer* c);
 void fdv_out_buffer_reset();
 int8_t fdv_out_has_data();
-bool fdv_out_has_room();
+int32_t fdv_out_has_room();
 
 
 int fdv_in_buffer_remove(FDV_In_Buffer** c_ptr);
@@ -475,7 +471,7 @@ int fdv_in_buffer_remove(FDV_In_Buffer** c_ptr);
 int fdv_in_buffer_add(FDV_In_Buffer* c);
 void fdv_in_buffer_reset();
 int8_t fdv_in_has_data();
-bool fdv_in_has_room();
+int32_t fdv_in_has_room();
 #endif
 
 #endif

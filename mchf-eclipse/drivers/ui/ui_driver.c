@@ -7130,7 +7130,7 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 
 struct freedv *f_FREEDV;
 
-FDV_In_Buffer __attribute__ ((section (".ccm"))) FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
+FDV_In_Buffer FDV_TX_in_buff[FDV_BUFFER_IN_NUM];
 FDV_Out_Buffer __attribute__ ((section (".ccm"))) FDV_TX_out_buff[FDV_BUFFER_OUT_NUM];
 
 
@@ -7179,9 +7179,9 @@ int8_t fdv_out_has_data()
     return len < 0?len+FDV_BUFFER_OUT_NUM:len;
 }
 
-bool fdv_out_has_room()
+int32_t fdv_out_has_room()
 {
-    return fdv_out_has_data() != FDV_BUFFER_OUT_NUM;
+    return FDV_BUFFER_OUT_NUM - fdv_out_has_data();
 }
 
 
@@ -7230,30 +7230,26 @@ int8_t fdv_in_has_data()
     return len < 0?len+FDV_BUFFER_IN_NUM:len;
 }
 
-bool fdv_in_has_room()
+int32_t fdv_in_has_room()
 {
-    return fdv_in_has_data() != FDV_BUFFER_IN_NUM;
+    return FDV_BUFFER_IN_NUM - fdv_in_has_data();
 }
 
 
+typedef struct {
+    int32_t start;
+    int32_t offset;
+} flex_buffer;
 
+volatile int l,r;
 
 static void UiDriver_HandleFreeDV()
 {
 
     // Freedv Test DL2FW
     static uint16_t FDV_TX_pt = 0;
-    uint16_t    i=0;
     // static FDV_Out_Buffer FDV_TX_out_im_buff;
     static bool was_here = false;
-    static int first_run = 3;
-    int16_t s=0;
-
-    // int16_t nout=0;
-    // char outtext[8];
-    // END Freedv Test DL2FW
-
-    // Freedv Test DL2FW
 
     if (ts.txrx_mode == TRX_MODE_RX)
     {
@@ -7263,6 +7259,8 @@ static void UiDriver_HandleFreeDV()
     if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
         if ((ts.txrx_mode == TRX_MODE_TX) && fdv_in_has_data() && fdv_out_has_room())
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
+
+            FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
 
             FDV_In_Buffer* input_buf = NULL;
             fdv_in_buffer_remove(&input_buf);
@@ -7283,44 +7281,83 @@ static void UiDriver_HandleFreeDV()
             // }
             // was_here ensures, that at least 2 encoded blocks are in the buffer before we start
             FDV_TX_pt++;
-            FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
+
         }
-
-        else if (false && (ts.txrx_mode == TRX_MODE_RX)  //deactivated for now
-                && (ts.FDV_TX_samples_ready)) // have to renam variables to make it clear TX-RX
-
+        else if (false && (ts.txrx_mode == TRX_MODE_RX) && fdv_out_has_data() && fdv_in_has_room())
         {
-            was_here = false;
 
-            ts.FDV_TX_samples_ready = false;
+            static flex_buffer outBufCtrl = { 0, 0 };
+            static flex_buffer inBufCtrl = { 0, 0 };
 
-            //nout=freedv_rx(f_FREEDV, &FDV_TX_out_im_buff[0], &FDV_TX_in_buff[ts.FDV_TX_in_start_pt]);  // start the encoding process
-            // bypass the encoding
-            for (s = 0; s < 320; s++)
+            static FDV_Out_Buffer* input_buf = NULL;
+            FDV_TX_pt %= FDV_BUFFER_IN_NUM;
+
+
+            static int16_t rx_buffer[2/* FDV_RX_AUDIO_SIZE_MAX */];
+            static COMP    iq_buffer[2/*FDV_RX_AUDIO_SIZE_MAX */];
+
+            int iq_nin = freedv_nin(f_FREEDV);
+            while (inBufCtrl.offset != iq_nin)
             {
-                // FDV_TX_out_im_buff.samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
+                if  (input_buf == NULL)
+                {
+                    fdv_out_buffer_remove(&input_buf);
+                    inBufCtrl.start = 0;
+                }
+                l = (iq_nin - inBufCtrl.offset);
+                r = l - (FDV_BUFFER_SIZE  - inBufCtrl.start) ;
+                if ( r >= 0 )
+                {
+                    // memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(int16_t));
+                    inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
+                    input_buf = NULL;
+                    while (fdv_out_has_data() == false)
+                    {
+                        asm volatile("");
+                    }
+                }
+                else
+                {
+                    // memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(int16_t));
+                    inBufCtrl.offset = iq_nin;
+                }
             }
+            // if we arrive here the buffer for comprx is full
+            inBufCtrl.offset = 0;
 
-            //now we are doing ugly upsampling to 24 kSamples here - has to be removed later
-            // because it will be done inside the audio_processor like in TX
-            for (i = 0; i < 319; i++)
+            int32_t result  = 320;
+            //freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // start the encoding process
+
+            do
             {
+                if ((result - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
+                {
+                    // memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],rx_buffer,(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
 
-#if 0
-                FDV_TX_out_buff[FDV_TX_pt].samples[3*i] =
-                        FDV_TX_out_im_buff.samples[i];
-                FDV_TX_out_buff[FDV_TX_pt].samples[3*i+1] =
-                        FDV_TX_out_im_buff.samples[i];
-                FDV_TX_out_buff[FDV_TX_pt].samples[3*i+2] =
-                        FDV_TX_out_im_buff.samples[i];
+                    outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
 
-#endif
-            }
-            ts.FDV_TX_out_start_pt = FDV_TX_pt; //save offset to last ready region
-            ts.FDV_TX_encode_ready = true; //handshake to the dv_tx_processor - has also to be resetted inside dv_tx_proc?
 
-            FDV_TX_pt ++;
-            FDV_TX_pt %= FDV_BUFFER_OUT_NUM;
+                    fdv_in_buffer_add(&FDV_TX_in_buff[FDV_TX_pt]);
+                    FDV_TX_pt ++;
+                    FDV_TX_pt %= FDV_BUFFER_IN_NUM;
+                    outBufCtrl.start = 0;
+                    if (result > outBufCtrl.offset) {
+                        // we have more data
+                        while(fdv_in_has_room() == 0)
+                        {
+                            asm volatile("");
+                        }
+                        // we have to wait until we can use the next buffer
+                    }
+                }
+                else
+                {
+                    // memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(result - outBufCtrl.offset)*sizeof(int16_t));
+                    outBufCtrl.start += (result-outBufCtrl.offset);
+                    outBufCtrl.offset = result;
+                }
+                FDV_TX_pt ++;
+            } while (result > outBufCtrl.offset);
         }
 
     }
@@ -7424,26 +7461,6 @@ void ui_driver_thread()
             UiDriverTimeScheduler();
             // Handles live update of Calibrate between TX/RX and volume control
             break;
-#if 0
-        case STATE_CHECK_ENC_ONE:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderOne();
-            }
-            break;
-        case STATE_CHECK_ENC_TWO:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderTwo();
-            }
-            break;
-        case STATE_CHECK_ENC_THREE:
-            if(!ts.boot_halt_flag)
-            {
-                // UiDriverCheckEncoderThree();
-            }
-            break;
-#endif
         case STATE_UPDATE_FREQUENCY:
             if(!ts.boot_halt_flag)
             {
@@ -7466,8 +7483,6 @@ void ui_driver_thread()
             break;
         case STATE_PROCESS_KEYBOARD:
             UiDriverProcessKeyboard();
-            break;
-        case STATE_SWITCH_OFF_PTT:
             break;
         default:
             break;
