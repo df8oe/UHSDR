@@ -180,9 +180,13 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
     } // 2 x 4 = 8 state variables
 };
 
-float32_t* mag_coeffs[5] =
+static float32_t* mag_coeffs[6] =
 
 {
+
+        // for Index 0 [1xZoom == no zoom] the mag_coeffs will a NULL  ptr, since the filter is not going to be used in this  mode!
+        (float32_t*)NULL,
+
     (float32_t*)(float32_t[]){
     	// 2x magnify - index 1
     	// 12kHz, sample rate 48k, 60dB stopband, elliptic
@@ -933,8 +937,9 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // sd.magnify 4 = 16x
     // sd.magnify 5 = 32x
     //
-    IIR_biquad_Zoom_FFT_I.pCoeffs = mag_coeffs[sd.magnify - 1];
-    IIR_biquad_Zoom_FFT_Q.pCoeffs = mag_coeffs[sd.magnify - 1];
+    // for 0 the mag_coeffs will a NULL  ptr, since the filter is not going to be used in this  mode!
+    IIR_biquad_Zoom_FFT_I.pCoeffs = mag_coeffs[sd.magnify];
+    IIR_biquad_Zoom_FFT_Q.pCoeffs = mag_coeffs[sd.magnify];
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
@@ -959,9 +964,13 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     uint16_t	calc_taps;
     //
     if((ts.dsp_nr_numtaps < DSP_NR_NUMTAPS_MIN) || (ts.dsp_nr_numtaps > DSP_NR_NUMTAPS_MAX))
+    {
         calc_taps = DSP_NR_NUMTAPS_DEFAULT;
+    }
     else
+    {
         calc_taps = (uint16_t)ts.dsp_nr_numtaps;
+    }
     //
     // Load settings into instance structure
     //
@@ -1098,55 +1107,16 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // Set up ZOOM FFT FIR decimation filters
 
     // switch right FIR decimation filter depending on sd.magnify
-    switch(sd.magnify)
+    if(sd.magnify > 5)
     {
-    case 1: // 2x
-    {
-    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
+        sd.magnify = 0;
     }
-    	break;
-    case 2: // 4x
+
     {
-    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_4x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_4x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_4x.pCoeffs;
-    }
-    	break;
-    case 3: // 8x
-    {
-    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_8x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_8x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_8x.pCoeffs;
-    }
-    	break;
-    case 4: // 16x
-    {
-        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_16x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_16x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_16x.pCoeffs;
-    }
-    	break;
-    case 5: // 32x
-    {
-        DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_32x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_32x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_32x.pCoeffs;
-    }
-    	break;
-    default: // this is important in order to prevent crash on first switching from 1x to 2x directly after startup
-    	// (when the filter coeffs have not yet been set)
-    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate_2x.numTaps;
-        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
-        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate_2x.numTaps;
-        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate_2x.pCoeffs;
-    	break;
+    	DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
+        DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
+        DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
+        DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
     }
 
     DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
@@ -2399,7 +2369,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, adb.y_buffer, adb.y_buffer, blockSize);
     // collect samples for spectrum display 256-point-FFT
 
-	for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
+	for(i = 0; i < blockSize/ (1<<sd.magnify); i++)
         {
             if(sd.state == 0)
             { //
