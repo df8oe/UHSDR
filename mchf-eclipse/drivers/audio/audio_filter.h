@@ -18,12 +18,12 @@
 #include "mchf_types.h"
 #include "arm_math.h"
 //
-extern __IO arm_fir_instance_f32    FIR_Q_TX;
-extern __IO arm_fir_instance_f32    FIR_I_TX;
-extern __IO arm_fir_instance_f32    FIR_Q;
-extern __IO arm_fir_instance_f32    FIR_I;
-extern __IO arm_fir_instance_f32    FIR_Q_FREEDV;
-extern __IO arm_fir_instance_f32    FIR_I_FREEDV;
+extern arm_fir_instance_f32    FIR_Q_TX;
+extern arm_fir_instance_f32    FIR_I_TX;
+extern arm_fir_instance_f32    FIR_Q;
+extern arm_fir_instance_f32    FIR_I;
+extern arm_fir_instance_f32    FIR_Q_FREEDV;
+extern arm_fir_instance_f32    FIR_I_FREEDV;
 
 
 
