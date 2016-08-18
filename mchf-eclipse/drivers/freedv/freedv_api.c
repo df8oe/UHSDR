@@ -442,6 +442,187 @@ void freedv_comptx(struct freedv *f, COMP mod_out[], short speech_in[]) {
 #endif
 }
 
+
+
+void freedv_comp_short_tx(struct freedv *f, COMPSHORT mod_out_short[], short speech_in[]) {
+    assert(f != NULL);
+    int    bit, byte, i, j, k;
+    int    bits_per_codec_frame, bits_per_modem_frame;
+    int    data, codeword1, data_flag_index, nspare;
+    COMP   tx_fdm[f->n_nat_modem_samples];
+    COMP   mod_out_trans;
+    assert((f->mode == FREEDV_MODE_1600) || (f->mode == FREEDV_MODE_700) || (f->mode == FREEDV_MODE_700B));
+
+    if (f->mode == FREEDV_MODE_1600) {
+        bits_per_codec_frame = codec2_bits_per_frame(f->codec2);
+        bits_per_modem_frame = fdmdv_bits_per_frame(f->fdmdv);
+
+        codec2_encode(f->codec2, f->packed_codec_bits, speech_in);
+
+        /* unpack bits, MSB first */
+
+        bit = 7; byte = 0;
+        for(i=0; i<bits_per_codec_frame; i++) {
+            f->codec_bits[i] = (f->packed_codec_bits[byte] >> bit) & 0x1;
+            bit--;
+            if (bit < 0) {
+                bit = 7;
+                byte++;
+            }
+        }
+
+        // spare bit in frame that codec defines.  Use this 1
+        // bit/frame to send txt messages
+
+        data_flag_index = codec2_get_spare_bit_index(f->codec2);
+
+        if (f->nvaricode_bits) {
+            f->codec_bits[data_flag_index] = f->tx_varicode_bits[f->varicode_bit_index++];
+            f->nvaricode_bits--;
+        }
+
+        if (f->nvaricode_bits == 0) {
+            /* get new char and encode */
+            char s[2];
+            if (f->freedv_get_next_tx_char != NULL) {
+                s[0] = (*f->freedv_get_next_tx_char)(f->callback_state);
+                f->nvaricode_bits = varicode_encode(f->tx_varicode_bits, s, VARICODE_MAX_BITS, 1, 1);
+                f->varicode_bit_index = 0;
+            }
+        }
+
+        /* Protect first 12 out of first 16 excitation bits with (23,12) Golay Code:
+
+           0,1,2,3: v[0]..v[1]
+           4,5,6,7: MSB of pitch
+           11,12,13,14: MSB of energy
+
+        */
+
+        data = 0;
+        for(i=0; i<8; i++) {
+            data <<= 1;
+            data |= f->codec_bits[i];
+        }
+        for(i=11; i<15; i++) {
+            data <<= 1;
+            data |= f->codec_bits[i];
+        }
+        codeword1 = golay23_encode(data);
+
+        /* now pack output frame with parity bits at end to make them
+           as far apart as possible from the data they protect.  Parity
+           bits are LSB of the Golay codeword */
+
+        for(i=0; i<bits_per_codec_frame; i++)
+            f->tx_bits[i] = f->codec_bits[i];
+        for(j=0; i<bits_per_codec_frame+11; i++,j++) {
+            f->tx_bits[i] = (codeword1 >> (10-j)) & 0x1;
+        }
+        f->tx_bits[i] = 0; /* spare bit */
+
+        /* optionally overwrite with test frames */
+
+        if (f->test_frames) {
+            fdmdv_get_test_bits(f->fdmdv, f->tx_bits);
+            fdmdv_get_test_bits(f->fdmdv, &f->tx_bits[bits_per_modem_frame]);
+            //fprintf(stderr, "test frames on tx\n");
+        }
+
+        /* modulate even and odd frames */
+
+        fdmdv_mod(f->fdmdv, tx_fdm, f->tx_bits, &f->tx_sync_bit);
+        assert(f->tx_sync_bit == 1);
+
+        fdmdv_mod(f->fdmdv, &tx_fdm[FDMDV_NOM_SAMPLES_PER_FRAME], &f->tx_bits[bits_per_modem_frame], &f->tx_sync_bit);
+        assert(f->tx_sync_bit == 0);
+
+        assert(2*FDMDV_NOM_SAMPLES_PER_FRAME == f->n_nom_modem_samples);
+
+        for(i=0; i<f->n_nom_modem_samples; i++)
+          {
+            mod_out_trans=(fcmult(FDMDV_SCALE, tx_fdm[i]));
+            mod_out_short[i].real=mod_out_trans.real; //switching I/Q to get proper sideband
+            mod_out_short[i].imag=mod_out_trans.imag;
+          }
+    }
+
+#if 0
+    if ((f->mode == FREEDV_MODE_700) || (f->mode == FREEDV_MODE_700B)) {
+        bits_per_codec_frame = codec2_bits_per_frame(f->codec2);
+        bits_per_modem_frame = COHPSK_BITS_PER_FRAME;
+
+        for (j=0; j<bits_per_modem_frame; j+=bits_per_codec_frame) {
+            codec2_encode(f->codec2, f->packed_codec_bits, speech_in);
+            speech_in += codec2_samples_per_frame(f->codec2);
+
+            // unpack bits, MSB first
+
+            bit = 7; byte = 0;
+            for(i=0; i<bits_per_codec_frame; i++) {
+                f->codec_bits[j+i] = (f->packed_codec_bits[byte] >> bit) & 0x1;
+                bit--;
+                if (bit < 0) {
+                    bit = 7;
+                    byte++;
+                }
+            }
+
+            // spare bits in frame that codec defines.  Use these spare
+            // bits/frame to send txt messages
+
+            if (f->mode == FREEDV_MODE_700)
+                nspare = 2;
+            else
+                nspare = 1; // Just one spare bit for FREEDV_MODE_700B
+
+            data_flag_index = codec2_get_spare_bit_index(f->codec2);
+
+            for(k=0; k<nspare; k++) {
+                if (f->nvaricode_bits) {
+                    f->codec_bits[j+data_flag_index+k] = f->tx_varicode_bits[f->varicode_bit_index++];
+                    //fprintf(stderr, "%d %d\n", j+data_flag_index+k, f->codec_bits[j+data_flag_index+k]);
+                    f->nvaricode_bits--;
+                }
+
+                if (f->nvaricode_bits == 0) {
+                    // get new char and encode
+                    char s[2];
+                    if (f->freedv_get_next_tx_char != NULL) {
+                        s[0] = (*f->freedv_get_next_tx_char)(f->callback_state);
+                        f->nvaricode_bits = varicode_encode(f->tx_varicode_bits, s, VARICODE_MAX_BITS, 1, 1);
+                        f->varicode_bit_index = 0;
+                    }
+                }
+            }
+
+        }
+
+        // optionally ovwerwrite the codec bits with test frames
+
+        if (f->test_frames) {
+            cohpsk_get_test_bits(f->cohpsk, f->codec_bits);
+        }
+
+        // cohpsk modulator
+
+        cohpsk_mod(f->cohpsk, tx_fdm, f->codec_bits);
+        if (f->clip)
+            cohpsk_clip(tx_fdm);
+        for(i=0; i<f->n_nat_modem_samples; i++)
+          {
+            mod_out_short[i] = fcmult(FDMDV_SCALE*NORM_PWR, tx_fdm[i]);
+
+          }
+       // i = quisk_cfInterpDecim(mod_out, f->n_nat_modem_samples, f->ptFilter7500to8000, 16, 15);
+        //assert(i == f->n_nom_modem_samples);
+        // Caution: assert fails if f->n_nat_modem_samples * 16.0 / 15.0 is not an integer
+    }
+#endif
+
+}
+
+
 int freedv_nin(struct freedv *f) {
     if ((f->mode == FREEDV_MODE_700) || (f->mode == FREEDV_MODE_700B))
         // For mode 700, the input rate is 8000 sps, but the modem rate is 7500 sps

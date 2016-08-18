@@ -476,6 +476,27 @@ void TransceiverStateInit(void)
 
 }
 
+// FreeDV txt test - will be out of here
+struct my_callback_state {
+    char  tx_str[80];
+    char *ptx_str;
+};
+
+char my_get_next_tx_char(void *callback_state) {
+    struct my_callback_state* pstate = (struct my_callback_state*)callback_state;
+    char  c = *pstate->ptx_str++;
+
+    if (*pstate->ptx_str == 0) {
+        pstate->ptx_str = pstate->tx_str;
+    }
+
+    return c;
+}
+// FreeDV txt test - will be out of here
+
+
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : MiscInit
 //* Object              :
@@ -522,7 +543,11 @@ static void wd_reset(void)
 // Power on
 int main(void)
 {
-    *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
+
+
+
+
+  *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
     mchf_board_detect_ramsize();
 //	FLASH_OB_Unlock();
@@ -589,10 +614,19 @@ int main(void)
 
 #ifdef USE_FREEDV
     // Freedv Test DL2FW
+    struct my_callback_state  my_cb_state;
 
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
-    ts.dvmode = true;
-    ts.digital_mode = 1;
+
+
+     sprintf(my_cb_state.tx_str, "cq cq cq hello this is the mchf mchf mchf\n");
+     my_cb_state.ptx_str = my_cb_state.tx_str;
+     freedv_set_callback_txt(f_FREEDV, NULL, &my_get_next_tx_char, &my_cb_state);
+
+
+    // ts.dvmode = true;
+    // ts.digital_mode = 1;
+
     // end Freedv Test DL2FW
 #endif
 

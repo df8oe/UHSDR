@@ -3264,6 +3264,10 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
+                    // last_sample.real = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].real;
+                    // last_sample.imag = FDV_TX_out_buff[modem_buffer_offset].samples[outbuff_count].imag;
+
+
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
@@ -3301,6 +3305,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
         // + 0 deg to I data
+
         arm_fir_f32(&FIR_I_TX,adb.a_buffer, adb.i_buffer,blockSize);
         // - 90 deg to Q data
         arm_fir_f32(&FIR_Q_TX,adb.a_buffer, adb.q_buffer, blockSize);
@@ -3319,7 +3324,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 #endif
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+        audio_tx_final_iq_processing(2.0*SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
     }
     else
     {
