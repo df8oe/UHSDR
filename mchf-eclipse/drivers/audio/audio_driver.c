@@ -2082,7 +2082,7 @@ static void audio_snap_carrier (void)
 {
 
     const float32_t buff_len = FFT_IQ_BUFF_LEN2;
-    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
     const int buff_len_int = FFT_IQ_BUFF_LEN2;
 
     float32_t bw_LSB = 0.0;
@@ -2167,6 +2167,14 @@ static void audio_snap_carrier (void)
     const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
     const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
+    if(Lbin < 0)
+    {
+    	Lbin = 0;
+    }
+    if (Ubin > 255)
+    {
+    	Ubin = 255;
+    }
 
     // 	FFT preparation
     // we do not need to scale for this purpose !
