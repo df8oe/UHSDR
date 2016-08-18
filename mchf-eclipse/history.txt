@@ -14,6 +14,9 @@
 
 
 2016mmdd [DF8OE]
+
+
+20160819 [DF8OE]
 - reworked DDS code for better quality
 - reworked TX IIR filter for better uppression of spurious signals
 - added new TX filters 'WIDE BASS' and 'WIDE TREBLE'
@@ -26,6 +29,11 @@
 - bugfix CW frequency offsets
 - many code simplifications and minor bugfixes
 - added MAC support for Makefile
+- reworked TX audio filters for improving spurious suppression
+- reworked TX software chain for better signal quality
+- added "Zoom FFT / magnify" x2 x4 x8 x16 x32
+- added touchscreen support for Zoom FFT / magnify"
+- many minor bugfixes
 
 
 20160713 [DF8OE]
