@@ -1127,7 +1127,7 @@ void UiSpectrumReDrawScopeDisplay()
         // compiler can heavily optimize this since we  all these values being power of 2 value
 //        if(sd.magnify != 0)	 	// is magnify mode on?
         if(0)	 	// FIXME
-        { // we don´t need all this any more, because the new Zoom FFT takes care of that, DD4WH, Aug 15th, 2016
+        { // we donï¿½t need all this any more, because the new Zoom FFT takes care of that, DD4WH, Aug 15th, 2016
             uint32_t end_range;
             switch(ts.iq_freq_mode)
             {
@@ -1372,48 +1372,37 @@ void UiSpectrumReDrawWaterfall()
         //
         // Find peak and average to vertically adjust display
         //
+        uint16_t samp_idx;
         if(sd.magnify)	 	// are we in magnify mode?
         {
             spec_width = FFT_IQ_BUFF_LEN/4;	// yes - define new spectrum width
-            //
-            if(!ts.iq_freq_mode)	 	// yes, are we NOT in translate mode?
+
+            switch(ts.iq_freq_mode)
             {
-                arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &max, &max_ptr);		// find maximum element in center portion
-                arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &min, &max_ptr);		// find minimum element in center portion
-                arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/8], spec_width, &mean);				// find mean value in center portion
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-            {
-                arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &max, &max_ptr);		// find maximum element in center portion
-                arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &min, &max_ptr);		// find minimum element in center portion
-                arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/16], spec_width, &mean);				// find mean value in center portion
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-            {
-                arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &max, &max_ptr);		// find maximum element in center portion
-                arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &min, &max_ptr);		// find minimum element in center portion
-                arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN*3/16], spec_width, &mean);				// find mean value in center portion
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
-            {
-                arm_max_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &max, &max_ptr);		// find maximum element in center portion
-                arm_min_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &min, &max_ptr);		// find minimum element in center portion
-                arm_mean_f32((float32_t *)&sd.FFT_Samples[0], spec_width, &mean);				// find mean value in center portion
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-            {
-                arm_max_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &max, &max_ptr);		// find maximum element in center portion
-                arm_min_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &min, &max_ptr);		// find minimum element in center portion
-                arm_mean_f32((float32_t *)&sd.FFT_Samples[FFT_IQ_BUFF_LEN/4], spec_width, &mean);				// find mean value in center portion
+            case FREQ_IQ_CONV_P6KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+                samp_idx = FFT_IQ_BUFF_LEN/16;
+                break;
+            case FREQ_IQ_CONV_M6KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
+                samp_idx = FFT_IQ_BUFF_LEN*3/16;
+            case FREQ_IQ_CONV_P12KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
+                samp_idx = 0;
+                break;
+            case FREQ_IQ_CONV_M12KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
+                samp_idx = FFT_IQ_BUFF_LEN/4;
+                break;
+            default:
+                samp_idx = FFT_IQ_BUFF_LEN/8;
             }
         }
         else
         {
             spec_width = FFT_IQ_BUFF_LEN/2;
-            arm_max_f32((float32_t *)sd.FFT_Samples, spec_width, &max, &max_ptr);		// find maximum element
-            arm_min_f32((float32_t *)sd.FFT_Samples, spec_width, &min, &max_ptr);		// find minimum element
-            arm_mean_f32((float32_t *)sd.FFT_Samples, spec_width, &mean);				// find mean value
+            samp_idx = 0;
         }
+        arm_max_f32(&sd.FFT_Samples[samp_idx], spec_width, &max, &max_ptr);        // find maximum element in center portion
+        arm_min_f32(&sd.FFT_Samples[samp_idx], spec_width, &min, &max_ptr);        // find minimum element in center portion
+        arm_mean_f32(&sd.FFT_Samples[samp_idx], spec_width, &mean);                // find mean value in center portion
+
         //
         // Calculate "brightness" offset for amplitude value
         //
@@ -1505,7 +1494,7 @@ void UiSpectrumReDrawWaterfall()
             // position of center is always in the middle if
             // in magnify mode, so we fix that position here
 
-/*			// we don´t need the following anymore, because the new Zoom FFT already
+/*			// we donï¿½t need the following anymore, because the new Zoom FFT already
   	  	  	// takes care of that, DD4WH, Aug 15th, 2016
             for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
             {
