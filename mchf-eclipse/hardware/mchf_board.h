@@ -18,16 +18,14 @@
 // some special switches
 //#define 	DEBUG_BUILD
 
-#define USE_FREEDV //uncomment to use freedv instead of SNAP function
+// #define USE_FREEDV //uncomment to use freedv instead of SNAP function
 
 // hardware specific switches
-//#define hY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
+//#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
-
-
-
-
-#ifndef USE_FREE_DV
+// TODO: FIX THIS, FREEDV and SNAP do not go together due to lack of memory in 192K machines,
+// it will work in 256K machines.
+#ifndef USE_FREEDV
   #define USE_SNAP
 #endif
 
@@ -1217,15 +1215,17 @@ extern __IO TransceiverState ts;
 //DL2FW UGLY test for FREEDV - some globals :-(
 
 #define FDV_BUFFER_SIZE     320
-#define FDV_BUFFER_IN_NUM   2
+#define FDV_RX_AUDIO_SIZE_MAX     360
+// this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
+#define FDV_BUFFER_IN_NUM   3
 #define FDV_BUFFER_OUT_NUM  3
 
 typedef struct {
-    int16_t samples[320];
+    int16_t samples[FDV_BUFFER_SIZE]; // this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
 }  FDV_In_Buffer;
 
 typedef struct {
-   COMP samples[320];
+   COMP samples[FDV_BUFFER_SIZE];
 }  FDV_Out_Buffer;
 
 typedef struct {
