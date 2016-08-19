@@ -7316,7 +7316,7 @@ static void UiDriver_HandleFreeDV()
                 r = l - (FDV_BUFFER_SIZE  - inBufCtrl.start) ;
                 if ( r >= 0 )
                 {
-                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
+                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf->samples[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
                     inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
                     input_buf = NULL;
                     while (fdv_out_has_data() == false)
@@ -7326,7 +7326,7 @@ static void UiDriver_HandleFreeDV()
                 }
                 else
                 {
-                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
+                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf->samples[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
                     inBufCtrl.start += (iq_nin - inBufCtrl.offset);
                     inBufCtrl.offset = iq_nin;
                 }
