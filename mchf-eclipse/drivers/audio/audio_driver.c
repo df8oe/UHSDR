@@ -1412,7 +1412,150 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
     }
 }
 
+#ifdef USE_FREEDV
+static void audio_dv_rx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
+{
+    // Freedv Test DL2FW
+    static int16_t outbuff_count = 0;
+    static int16_t trans_count_in = 0;
+    static int16_t FDV_TX_fill_in_pt = 0;
+    static FDV_Audio_Buffer* out_buffer = NULL;
+    static int16_t modulus_NF = 0, modulus_MOD = 0;
 
+    // If source is digital usb in, pull from USB buffer, discard line or mic audio and
+    // let the normal processing happen
+
+    if (ts.digital_mode==1)
+    { //we are in freedv-mode
+
+
+        // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
+
+        // Freedv Test DL2FW
+
+        // we have to add a decimation filter here BEFORE we decimate
+        // for decimation-by-6 the stopband frequency is 48/6*2 = 4kHz
+        // but our audio is at most 3kHz wide, so we should use 3k or 2k9
+
+
+        // this is the correct DECIMATION FILTER (before the downsampling takes place):
+        // use it ALWAYS, also with TUNE tone!!!
+        // AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
+
+
+        // DOWNSAMPLING
+        for (int k = 0; k < blockSize; k++)
+        {
+            if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
+            {
+                fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
+                fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
+                // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
+                trans_count_in++;
+            }
+        }
+
+        modulus_NF += 4; //  shift modulus to not loose any data while overlapping
+        modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
+
+        if (trans_count_in == FDV_BUFFER_SIZE) //yes, we really hit exactly 320 - don't worry
+        {
+            //we have enough samples ready to start the FreeDV encoding
+
+            fdv_iq_buffer_add(&fdv_iq_buff[FDV_TX_fill_in_pt]);
+            //handshake to external function in ui.driver_thread
+            trans_count_in = 0;
+
+            FDV_TX_fill_in_pt++;
+            FDV_TX_fill_in_pt %= FDV_BUFFER_IQ_NUM;
+        }
+
+        if (out_buffer == NULL && fdv_audio_has_data() > 1) {
+            fdv_audio_buffer_remove(&out_buffer);
+        }
+
+        if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
+        {
+
+
+
+            // Best thing here would be to use the arm_fir_decimate function! Why?
+            // --> we need phase linear filters, because we have to filter I & Q and preserve their phase relationship
+            // IIR filters are power saving, but they do not care about phase, so useless at this point
+            // FIR filters are phase linear, but need processor power
+            // so we now use the decimation function that upsamples like the code below, BUT at the same time filters
+            // (and the routine knows that it does not have to multiply with 0 while filtering: if we do upsampling and subsequent
+            // filtering, the filter does not know that and multiplies with zero 5 out of six times --> very inefficient)
+            // BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
+            // block size (which is 64 in our case --> 64 / 6 = non-integer!)
+
+            // UPSAMPLING [by hand]
+            for (int j = 0; j < blockSize; j++) //  now we are doing upsampling by 6
+            {
+                if (modulus_MOD == 0) // put in sample pair
+                {
+                adb.a_buffer[j] = out_buffer->samples[outbuff_count]; // + (sample_delta.real * (float32_t)modulus_MOD);
+                }
+                else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
+                {
+                    adb.i_buffer[j] = adb.a_buffer[j] = out_buffer->samples[outbuff_count];
+                }
+                modulus_MOD++;
+                if (modulus_MOD == 6)
+                {
+                    outbuff_count++;
+                    modulus_MOD = 0;
+                }
+            }
+
+            // Add interpolation filter here to suppress alias frequencies
+            // we are upsampling from 8kHz to 48kHz, so we have to suppress all frequencies below 4kHz
+            // our FreeDV signal is centred at 1500Hz ??? and is 1250Hz broad,
+            // so a lowpass filter with cutoff frequency 2400Hz should be fine!
+
+            // INTERPOLATION FILTER [after the interpolation has taken place]
+            // the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
+            // arm_fir_f32(&FIR_I_FREEDV, adb.a_buffer, adb.a_buffer,blockSize);
+            // arm_fir_f32(&FIR_Q_FREEDV, adb.q_buffer, adb.q_buffer, blockSize);
+        }
+        else
+        {
+          profileEvent(FreeDVTXUnderrun);
+        }
+
+        if (outbuff_count >= FDV_BUFFER_SIZE)
+        {
+            outbuff_count = 0;
+            out_buffer = NULL;
+            fdv_audio_buffer_remove(&out_buffer);
+        }
+
+
+#if 0
+        //
+        // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+        // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
+        // + 0 deg to I data
+
+        arm_fir_f32(&FIR_I_TX,adb.a_buffer, adb.i_buffer,blockSize);
+        // - 90 deg to Q data
+        arm_fir_f32(&FIR_Q_TX,adb.a_buffer, adb.q_buffer, blockSize);
+        // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+
+        if(ts.iq_freq_mode)
+        {
+            // is transmit frequency conversion to be done?
+            // USB && (-6kHz || -12kHz) --> false, else true
+            // LSB && (+6kHz || +12kHz) --> false, else true
+            bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+            swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+            audio_rx_freq_conv(blockSize, swap);
+        }
+#endif
+    }
+}
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_agc_processor
@@ -2435,20 +2578,13 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     {
     case DEMOD_LSB:
         arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);	// difference of I and Q - LSB
-#ifdef USE_FREEDV // just for testing FreeDV stuff
-        {
-            static int x = 0, tx = 0;
-            x++;
-            if (x==60)
-            {
 
-                fdv_iq_buffer_add(&fdv_iq_buff[tx]);
-                tx++;
-                tx %= FDV_BUFFER_IQ_NUM;
-                x=0;
-            }
+    #ifdef USE_FREEDV
+        if (ts.dvmode) {
+            audio_dv_rx_processor(src,dst,blockSize);
         }
-#endif
+    #endif
+
         break;
     case DEMOD_CW:
         if(!ts.cw_lsb)	// is this USB RX mode?  (LSB of mode byte was zero)
