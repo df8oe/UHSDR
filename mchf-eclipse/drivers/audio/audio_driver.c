@@ -2442,9 +2442,9 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             if (x==60)
             {
 
-                fdv_out_buffer_add(&FDV_TX_out_buff[tx]);
+                fdv_iq_buffer_add(&fdv_iq_buff[tx]);
                 tx++;
-                tx %= FDV_BUFFER_OUT_NUM;
+                tx %= FDV_BUFFER_IQ_NUM;
                 x=0;
             }
         }
@@ -3191,7 +3191,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     static int16_t outbuff_count = 0;
     static int16_t trans_count_in = 0;
     static int16_t FDV_TX_fill_in_pt = 0;
-    static FDV_Out_Buffer* out_buffer = NULL;
+    static FDV_IQ_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
@@ -3221,7 +3221,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
-                FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)adb.a_buffer[k])/4;
+                fdv_audio_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)adb.a_buffer[k])/4;
                 // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
                 trans_count_in++;
             }
@@ -3234,16 +3234,16 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             //we have enough samples ready to start the FreeDV encoding
 
-            fdv_in_buffer_add(&FDV_TX_in_buff[FDV_TX_fill_in_pt]);
+            fdv_audio_buffer_add(&fdv_audio_buff[FDV_TX_fill_in_pt]);
             //handshake to external function in ui.driver_thread
             trans_count_in = 0;
 
             FDV_TX_fill_in_pt++;
-            FDV_TX_fill_in_pt %= FDV_BUFFER_IN_NUM;
+            FDV_TX_fill_in_pt %= FDV_BUFFER_AUDIO_NUM;
         }
 
-        if (out_buffer == NULL && fdv_out_has_data() > 1) {
-            fdv_out_buffer_remove(&out_buffer);
+        if (out_buffer == NULL && fdv_iq_has_data() > 1) {
+            fdv_iq_buffer_remove(&out_buffer);
         }
 
         if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
@@ -3310,7 +3310,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
         {
             outbuff_count = 0;
             out_buffer = NULL;
-            fdv_out_buffer_remove(&out_buffer);
+            fdv_iq_buffer_remove(&out_buffer);
         }
 
 

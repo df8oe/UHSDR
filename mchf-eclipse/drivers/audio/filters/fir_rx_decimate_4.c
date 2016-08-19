@@ -57,19 +57,6 @@ const arm_fir_decimate_instance_f32 FirRxDecimate =
 
 const arm_fir_decimate_instance_f32 FirZoomFFTDecimate[] =
 {
-        // TODO: Change to "passthru" filter" -> This is just a dummy filter for 1x magnification (right now copy of 2x filter)
-        //
-/*        {
-                .numTaps = 4,
-                .pCoeffs = (float*) (const float[])
-                {
-                    -0.3105711170561,
-                    -0.2100034101786,
-                    -0.2099936469089,
-                    -0.3105557871709
-                }
-        },
-*/
         {
                 .numTaps = 4,
                 .pCoeffs = (float*) (const float[])
