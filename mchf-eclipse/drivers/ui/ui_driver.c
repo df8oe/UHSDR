@@ -7240,6 +7240,7 @@ int32_t fdv_audio_has_room()
 typedef struct {
     int32_t start;
     int32_t offset;
+    int32_t count;
 } flex_buffer;
 
 
@@ -7294,8 +7295,8 @@ static void UiDriver_HandleFreeDV()
 
             bool leave_now = false;
 
-            static flex_buffer outBufCtrl = { 0, 0 }; // Audio Buffer
-            static flex_buffer inBufCtrl = { 0, 0 };  // IQ Buffer
+            static flex_buffer outBufCtrl = { 0, 0, 0 }; // Audio Buffer
+            static flex_buffer inBufCtrl = { 0, 0, 0 };  // IQ Buffer
 
             static FDV_IQ_Buffer* inBuf = NULL; // used to point to the current IQ input buffer
             // since we are not always use the same amount of samples, we need to remember the last (partially)
@@ -7354,7 +7355,10 @@ static void UiDriver_HandleFreeDV()
                 // if we arrive here the rx_buffer for comprx is full.
                 inBufCtrl.offset = 0;
 
-                int32_t result = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
+                if (outBufCtrl.count == 0)
+                {
+                    outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
+                }
 
                 // result tells us the number of returned audio samples
                 // place  these in the audio output buffer for sending them to the I2S Codec
@@ -7362,9 +7366,9 @@ static void UiDriver_HandleFreeDV()
                 {
                     // the output data will fill the current audio output buffer
                     // some data may be left for copying into the next audio output buffer.
-                    if ((result - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
+                    if ((outBufCtrl.count - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
                     {
-                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],rx_buffer,(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
+                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
 
                         outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
 
@@ -7373,7 +7377,7 @@ static void UiDriver_HandleFreeDV()
                         fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM;
                         outBufCtrl.start = 0;
 
-                        if (result > outBufCtrl.offset) {
+                        if (outBufCtrl.count > outBufCtrl.offset) {
                             // do we have more data? no -> leave the whole function
                             leave_now = (fdv_audio_has_room() == 0);
                             if (leave_now)
@@ -7382,19 +7386,21 @@ static void UiDriver_HandleFreeDV()
                             }
                             // we have to wait until we can use the next buffer
                         }
+                        else
+                        {
+                            // ready to decode next  buffer
+                            outBufCtrl.offset = 0;
+                            outBufCtrl.count = 0;
+                        }
                     }
                     else
                     {
                         // copy all output data we have into the audio output buffer, but we will not fill it completely
-                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(result - outBufCtrl.offset)*sizeof(int16_t));
-                        outBufCtrl.start += (result-outBufCtrl.offset);
-                        outBufCtrl.offset = result;
+                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(outBufCtrl.count - outBufCtrl.offset)*sizeof(int16_t));
+                        outBufCtrl.start += (outBufCtrl.count-outBufCtrl.offset);
+                        outBufCtrl.offset = outBufCtrl.count = 0;
                     }
-                } while (result > outBufCtrl.offset);
-                if (leave_now == false)
-                {
-                    outBufCtrl.offset = 0;
-                }
+                } while (outBufCtrl.count > outBufCtrl.offset);
             }
 
         }
