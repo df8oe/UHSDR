@@ -169,7 +169,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_I =
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
 {
     .numStages = 4,
-    .pCoeffs = (float32_t *)(const float32_t [])
+    .pCoeffs = (float32_t *)(float32_t [])
     {
         1,0,0,0,0,  1,0,0,0,0 // passthru
     }, // 2 x 5 = 10 coefficients
@@ -2435,6 +2435,20 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     {
     case DEMOD_LSB:
         arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);	// difference of I and Q - LSB
+#ifdef USE_FREEDV // just for testing FreeDV stuff
+        {
+            static int x = 0, tx = 0;
+            x++;
+            if (x==60)
+            {
+
+                fdv_out_buffer_add(&FDV_TX_out_buff[tx]);
+                tx++;
+                tx %= FDV_BUFFER_OUT_NUM;
+                x=0;
+            }
+        }
+#endif
         break;
     case DEMOD_CW:
         if(!ts.cw_lsb)	// is this USB RX mode?  (LSB of mode byte was zero)

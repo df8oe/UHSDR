@@ -7316,7 +7316,7 @@ static void UiDriver_HandleFreeDV()
                 r = l - (FDV_BUFFER_SIZE  - inBufCtrl.start) ;
                 if ( r >= 0 )
                 {
-                    // memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(int16_t));
+                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
                     inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
                     input_buf = NULL;
                     while (fdv_out_has_data() == false)
@@ -7326,7 +7326,7 @@ static void UiDriver_HandleFreeDV()
                 }
                 else
                 {
-                    // memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(int16_t));
+                    memcpy(&iq_buffer[inBufCtrl.offset],&input_buf[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
                     inBufCtrl.start += (iq_nin - inBufCtrl.offset);
                     inBufCtrl.offset = iq_nin;
                 }
@@ -7334,14 +7334,13 @@ static void UiDriver_HandleFreeDV()
             // if we arrive here the buffer for comprx is full
             inBufCtrl.offset = 0;
 
-            int32_t result  = 320;
-            freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // start the encoding process
+            int32_t result = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // start the encoding process
 
             do
             {
                 if ((result - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
                 {
-                    // memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],rx_buffer,(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
+                    memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],rx_buffer,(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
 
                     outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
 
@@ -7361,12 +7360,12 @@ static void UiDriver_HandleFreeDV()
                 }
                 else
                 {
-                    // memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(result - outBufCtrl.offset)*sizeof(int16_t));
+                    memcpy(&FDV_TX_in_buff[FDV_TX_pt].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(result - outBufCtrl.offset)*sizeof(int16_t));
                     outBufCtrl.start += (result-outBufCtrl.offset);
                     outBufCtrl.offset = result;
                 }
-                FDV_TX_pt ++;
             } while (result > outBufCtrl.offset);
+            outBufCtrl.offset = 0;
         }
 
     }
