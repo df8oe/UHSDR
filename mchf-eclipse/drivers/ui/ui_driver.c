@@ -7133,8 +7133,11 @@ struct freedv *f_FREEDV;
 FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
 FDV_IQ_Buffer __attribute__ ((section (".ccm"))) fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
+#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
+// we allow for one more pointer to a buffer as we have buffers
+// why? because our implementation will only fill up the fifo only to N-1 elements
 
-FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_NUM];
+FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
 
 __IO int32_t fdv_iq_head = 0;
 __IO int32_t fdv_iq_tail = 0;
@@ -7146,7 +7149,7 @@ int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr)
     if (fdv_iq_head != fdv_iq_tail)
     {
         FDV_IQ_Buffer* c = fdv_iq_buffers[fdv_iq_tail];
-        fdv_iq_tail = (fdv_iq_tail + 1) % FDV_BUFFER_IQ_NUM;
+        fdv_iq_tail = (fdv_iq_tail + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
         *c_ptr = c;
         ret++;
     }
@@ -7157,7 +7160,7 @@ int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr)
 int fdv_iq_buffer_add(FDV_IQ_Buffer* c)
 {
     int ret = 0;
-    int32_t next_head = (fdv_iq_head + 1) % FDV_BUFFER_IQ_NUM;
+    int32_t next_head = (fdv_iq_head + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
 
     if (next_head != fdv_iq_tail)
     {
@@ -7177,18 +7180,23 @@ void fdv_iq_buffer_reset()
 int8_t fdv_iq_has_data()
 {
     int32_t len = fdv_iq_head - fdv_iq_tail;
-    return len < 0?len+FDV_BUFFER_IQ_NUM:len;
+    return len < 0?len+FDV_BUFFER_IQ_FIFO_SIZE:len;
 }
 
 int32_t fdv_iq_has_room()
 {
     // FIXME: Since we cannot completely fill the buffer
     // we need to say full 1 element earlier
-    return FDV_BUFFER_IQ_NUM - 1 - fdv_iq_has_data();
+    return FDV_BUFFER_IQ_FIFO_SIZE - 1 - fdv_iq_has_data();
 }
 
 
-FDV_Audio_Buffer* fdv_audio_buffers[FDV_BUFFER_AUDIO_NUM];
+
+#define FDV_BUFFER_AUDIO_FIFO_SIZE (FDV_BUFFER_AUDIO_NUM+1)
+// we allow for one more pointer to a buffer as we have buffers
+// why? because our implementation will only fill up the fifo only to N-1 elements
+
+FDV_Audio_Buffer* fdv_audio_buffers[FDV_BUFFER_AUDIO_FIFO_SIZE];
 __IO int32_t fdv_audio_head = 0;
 __IO int32_t fdv_audio_tail = 0;
 
@@ -7199,7 +7207,7 @@ int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr)
     if (fdv_audio_head != fdv_audio_tail)
     {
         FDV_Audio_Buffer* c = fdv_audio_buffers[fdv_audio_tail];
-        fdv_audio_tail = (fdv_audio_tail + 1) % FDV_BUFFER_AUDIO_NUM;
+        fdv_audio_tail = (fdv_audio_tail + 1) % FDV_BUFFER_AUDIO_FIFO_SIZE;
         *c_ptr = c;
         ret++;
     }
@@ -7210,7 +7218,7 @@ int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr)
 int fdv_audio_buffer_add(FDV_Audio_Buffer* c)
 {
     int ret = 0;
-    int32_t next_head = (fdv_audio_head + 1) % FDV_BUFFER_AUDIO_NUM;
+    int32_t next_head = (fdv_audio_head + 1) % FDV_BUFFER_AUDIO_FIFO_SIZE;
 
     if (next_head != fdv_audio_tail)
     {
@@ -7230,14 +7238,14 @@ void fdv_audio_buffer_reset()
 int8_t fdv_audio_has_data()
 {
     int32_t len = fdv_audio_head - fdv_audio_tail;
-    return len < 0?len+FDV_BUFFER_AUDIO_NUM:len;
+    return len < 0?len+FDV_BUFFER_AUDIO_FIFO_SIZE:len;
 }
 
 int32_t fdv_audio_has_room()
 {
     // FIXME: Since we cannot completely fill the buffer
     // we need to say full 1 element earlier
-    return FDV_BUFFER_AUDIO_NUM - 1 - fdv_audio_has_data();
+    return FDV_BUFFER_AUDIO_FIFO_SIZE - 1 - fdv_audio_has_data();
 }
 
 
@@ -7303,7 +7311,7 @@ static void UiDriver_HandleFreeDV()
             fdv_current_buffer_idx++;
 
         }
-        else if ((ts.txrx_mode == TRX_MODE_RX) && fdv_iq_has_data() && fdv_audio_has_room())
+        else if ((ts.txrx_mode == TRX_MODE_RX))
         {
 
             bool leave_now = false;
@@ -7323,100 +7331,103 @@ static void UiDriver_HandleFreeDV()
             rx_was_here = true; // this is used to clear buffers when going into TX
 
 
-            fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
-
-            int iq_nin = freedv_nin(f_FREEDV); // how many bytes are requested as input for freedv_comprx ?
-
-            // now fill the rx_buffer with the samples from the IQ input buffer
-            while (inBufCtrl.offset != iq_nin)
+            while (fdv_iq_has_data() && fdv_audio_has_room())
             {
-                // okay no buffer with fresh data, let's get one
-                // we will get one without delay since we checked for that
-                // See below
-                if  (inBuf == NULL)
-                {
-                    fdv_iq_buffer_remove(&inBuf);
-                    // inBuf = &tune_iq;
-                    inBufCtrl.start = 0;
-                }
+                leave_now = false;
+                fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
 
-                // do we empty a complete buffer?
-                if ( (iq_nin - inBufCtrl.offset) >= (FDV_BUFFER_SIZE  - inBufCtrl.start)  )
-                {
-                    memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
-                    inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
-                    inBuf = NULL;
+                int iq_nin = freedv_nin(f_FREEDV); // how many bytes are requested as input for freedv_comprx ?
 
-                    // if there is no buffer available, leave the whole
-                    // function, next time we'll have more data ready here
-                    leave_now = (fdv_iq_has_data() == 0);
-                    if (leave_now)
+                // now fill the rx_buffer with the samples from the IQ input buffer
+                while (inBufCtrl.offset != iq_nin)
+                {
+                    // okay no buffer with fresh data, let's get one
+                    // we will get one without delay since we checked for that
+                    // See below
+                    if  (inBuf == NULL)
                     {
-                        break;
+                        fdv_iq_buffer_remove(&inBuf);
+                        // inBuf = &tune_iq;
+                        inBufCtrl.start = 0;
                     }
-                }
-                else
-                {
-                    // the input buffer data will not be used completely to fill the buffer for the encoder.
-                    // fill encoder buffer, remember pointer in iq in buffer coming from the audio interrupt
-                    memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
-                    inBufCtrl.start += (iq_nin - inBufCtrl.offset);
-                    inBufCtrl.offset = iq_nin;
-                }
-            }
-            if (leave_now == false)
-            {
-                // if we arrive here the rx_buffer for comprx is full.
-                inBufCtrl.offset = 0;
 
-                if (outBufCtrl.count == 0)
-                {
-                    outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
-                }
-
-                // result tells us the number of returned audio samples
-                // place  these in the audio output buffer for sending them to the I2S Codec
-                do
-                {
-                    // the output data will fill the current audio output buffer
-                    // some data may be left for copying into the next audio output buffer.
-                    if ((outBufCtrl.count - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
+                    // do we empty a complete buffer?
+                    if ( (iq_nin - inBufCtrl.offset) >= (FDV_BUFFER_SIZE  - inBufCtrl.start)  )
                     {
-                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
+                        memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
+                        inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
+                        inBuf = NULL;
 
-                        outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
-
-                        fdv_audio_buffer_add(&fdv_audio_buff[fdv_current_buffer_idx]);
-                        fdv_current_buffer_idx ++;
-                        fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM;
-                        outBufCtrl.start = 0;
-
-                        if (outBufCtrl.count > outBufCtrl.offset) {
-                            // do we have more data? no -> leave the whole function
-                            leave_now = (fdv_audio_has_room() == 0);
-                            if (leave_now)
-                            {
-                                break;
-                            }
-                            // we have to wait until we can use the next buffer
-                        }
-                        else
+                        // if there is no buffer available, leave the whole
+                        // function, next time we'll have more data ready here
+                        leave_now = (fdv_iq_has_data() == 0);
+                        if (leave_now)
                         {
-                            // ready to decode next  buffer
-                            outBufCtrl.offset = 0;
-                            outBufCtrl.count = 0;
+                            break;
                         }
                     }
                     else
                     {
-                        // copy all output data we have into the audio output buffer, but we will not fill it completely
-                        memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(outBufCtrl.count - outBufCtrl.offset)*sizeof(int16_t));
-                        outBufCtrl.start += (outBufCtrl.count-outBufCtrl.offset);
-                        outBufCtrl.offset = outBufCtrl.count = 0;
+                        // the input buffer data will not be used completely to fill the buffer for the encoder.
+                        // fill encoder buffer, remember pointer in iq in buffer coming from the audio interrupt
+                        memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
+                        inBufCtrl.start += (iq_nin - inBufCtrl.offset);
+                        inBufCtrl.offset = iq_nin;
                     }
-                } while (outBufCtrl.count > outBufCtrl.offset);
-            }
+                }
+                if (leave_now == false)
+                {
+                    // if we arrive here the rx_buffer for comprx is full.
+                    inBufCtrl.offset = 0;
 
+                    if (outBufCtrl.count == 0)
+                    {
+                        outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
+                    }
+
+                    // result tells us the number of returned audio samples
+                    // place  these in the audio output buffer for sending them to the I2S Codec
+                    do
+                    {
+                        // the output data will fill the current audio output buffer
+                        // some data may be left for copying into the next audio output buffer.
+                        if ((outBufCtrl.count - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
+                        {
+                            memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
+
+                            outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
+
+                            fdv_audio_buffer_add(&fdv_audio_buff[fdv_current_buffer_idx]);
+                            fdv_current_buffer_idx ++;
+                            fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM;
+                            outBufCtrl.start = 0;
+
+                            if (outBufCtrl.count > outBufCtrl.offset) {
+                                // do we have more data? no -> leave the whole function
+                                leave_now = (fdv_audio_has_room() == 0);
+                                if (leave_now)
+                                {
+                                    break;
+                                }
+                                // we have to wait until we can use the next buffer
+                            }
+                            else
+                            {
+                                // ready to decode next  buffer
+                                outBufCtrl.offset = 0;
+                                outBufCtrl.count = 0;
+                            }
+                        }
+                        else
+                        {
+                            // copy all output data we have into the audio output buffer, but we will not fill it completely
+                            memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(outBufCtrl.count - outBufCtrl.offset)*sizeof(int16_t));
+                            outBufCtrl.start += (outBufCtrl.count-outBufCtrl.offset);
+                            outBufCtrl.offset = outBufCtrl.count = 0;
+                        }
+                    } while (outBufCtrl.count > outBufCtrl.offset);
+                }
+            }
         }
     }
     // END Freedv Test DL2FW
