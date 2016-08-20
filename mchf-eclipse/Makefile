@@ -115,6 +115,8 @@ SRC =  \
     drivers/audio/audio_driver.c  \
     drivers/audio/audio_filter.c  \
     drivers/audio/audio_management.c  \
+    drivers/audio/freedv_mchf.c  \
+    drivers/audio/freedv_test_data.c  \
     drivers/audio/codec/codec.c  \
     drivers/audio/codec/i2s.c  \
     drivers/audio/cw/cw_gen.c  \

@@ -229,6 +229,9 @@
     <File name="drivers/audio/filters/iir_10k_neu.c" path="drivers/audio/filters/iir_10k_neu.c" type="1"/>
     <File name="cmsis_lib/include/misc.h" path="cmsis_lib/include/misc.h" type="1"/>
     <File name="drivers/audio/audio_management.h" path="drivers/audio/audio_management.h" type="1"/>
+    <File name="drivers/audio/freedv_mchf.h" path="drivers/audio/freedv_mchf.h" type="1"/>
+    <File name="drivers/audio/freedv_mchf.c" path="drivers/audio/freedv_mchf.c" type="1"/>
+    <File name="drivers/audio/freedv_test_data.c" path="drivers/audio/freedv_test_data.h" type="1"/>
     <File name="drivers/audio/filters/iir_1_4k.c" path="drivers/audio/filters/iir_1_4k.c" type="1"/>
     <File name="drivers/ui" path="" type="2"/>
     <File name="misc/profiling.c" path="misc/profiling.c" type="1"/>
