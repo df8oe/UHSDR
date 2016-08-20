@@ -1498,7 +1498,7 @@ static void audio_dv_rx_processor (AudioSample_t * const src, AudioSample_t * co
                 }
                 else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
                 {
-                    adb.i_buffer[j] = adb.a_buffer[j] = out_buffer->samples[outbuff_count];
+                    adb.a_buffer[j] = adb.a_buffer[j] = 0;
                 }
                 modulus_MOD++;
                 if (modulus_MOD == 6)
@@ -1515,7 +1515,7 @@ static void audio_dv_rx_processor (AudioSample_t * const src, AudioSample_t * co
 
             // INTERPOLATION FILTER [after the interpolation has taken place]
             // the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
-            // arm_fir_f32(&FIR_I_FREEDV, adb.a_buffer, adb.a_buffer,blockSize);
+            arm_fir_f32(&FIR_I_FREEDV, adb.a_buffer, adb.a_buffer,blockSize);
             // arm_fir_f32(&FIR_Q_FREEDV, adb.q_buffer, adb.q_buffer, blockSize);
         }
         else
@@ -2391,7 +2391,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     // Split stereo channels
     for(i = 0; i < blockSize; i++)
     {
-
+#if 1
         //
         // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
         if(sd.state == 0 && sd.magnify == 0)		//
@@ -2408,7 +2408,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
                 sd.state    = 1;
             }
         }
-
+#endif
 #ifdef USE_SNAP
         if (sc.state == 0 && sc.snap)
         {
@@ -2456,12 +2456,13 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     }
 #endif
     // Apply I/Q amplitude correction
+#if 1
     arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
 
     // Apply I/Q phase correction
     AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
-
+#endif
     if(iq_freq_mode)	 		// is receive frequency conversion to be done?
     {
         if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
@@ -2785,187 +2786,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     }
 }
 
-#if 0
-// DO NOT USE, HAS NOT BEEN KEPT UP TO DATE WITH DEVELOPMENT IN audio_rx_processor!
-
 //
-// This is a stripped-down RX signal processor - a work in progress
-//
-// NOT BEING UPDATED FOR A LONG TIME
-// USE WITH EXTREME CARE. MOST LIKELY IT DOES NOT WORK OUT OF THE BOX
-// e.g. there is no DIGITAL audio out support
-
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_dv_rx_processor
-//* Object              :
-//* Object              : audio sample processor - minimized USB-only RX processor with internal decimation to 8 kHz - but this will require the future addition of a circular buffer and queueing in ISR!
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void audio_dv_rx_processor(int16_t *src, int16_t *dst, int16_t size)
-{
-
-    static ulong 		i;
-    //
-    int16_t				psize;		// processing size, with decimation
-    //
-    float				post_agc_gain_scaling;
-
-
-    psize = size/(int16_t)ads.decimation_rate;	// rescale sample size inside decimated portion based on decimation factor:  This must be set to 6 for DV1300 mode!
-    //
-    //
-    // ------------------------
-    // Split stereo channels
-    for(i = 0; i < size/2; i++)
-    {
-        //
-        // Collect I/Q samples
-        if(sd.state == 0)
-        {
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)(*(src + 1));	// get floating point data for FFT for spectrum scope/waterfall display
-            sd.samp_ptr++;
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)(*(src));
-            sd.samp_ptr++;
-
-            // On overload, update state machine,
-            // reset pointer and wait
-            if(sd.samp_ptr >= FFT_IQ_BUFF_LEN*2)
-            {
-                sd.samp_ptr = 0;
-                sd.state    = 1;
-            }
-        }
-        //
-        if(*src > ADC_CLIP_WARN_THRESHOLD/4)	 		// This is the release threshold for the auto RF gain
-        {
-            ads.adc_quarter_clip = 1;
-            if(*src > ADC_CLIP_WARN_THRESHOLD/2)	 		// This is the trigger threshold for the auto RF gain
-            {
-                ads.adc_half_clip = 1;
-                if(*src > ADC_CLIP_WARN_THRESHOLD)			// This is the threshold for the red clip indicator on S-meter
-                    ads.adc_clip = 1;
-            }
-        }
-        //
-        // 16 bit format - convert to float and increment
-        adb.i_buffer[i] = (float32_t)*src++;
-        adb.q_buffer[i] = (float32_t)*src++;
-        //
-    }
-    // ***************************************************************************************************
-    // if this void is used for DIGI modes, put RX phase adjustment code HERE
-    // ***************************************************************************************************
-
-    // Apply gain corrections for I/Q gain balancing
-    arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, size/2);
-    //
-    arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, size/2);
-    //
-    //
-    if(ts.iq_freq_mode)	 		// is receive frequency conversion to be done?
-    {
-        if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)		// Yes - "RX LO LOW" mode
-            audio_rx_freq_conv(size/2, 1);
-        else								// it is in "RX LO LOW" mod
-            audio_rx_freq_conv(size/2, 0);
-    }
-    //
-    // ------------------------
-    // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
-    // *** *EXCEPT* in AM mode - see the function "UiCalcRxPhaseAdj()"
-    //    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
-    //	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
-    //
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_I,(float32_t *)(adb.i_buffer),(float32_t *)(adb.i_buffer),size/2);	// shift 0 degree FIR
-    arm_fir_f32((arm_fir_instance_f32 *)&FIR_Q,(float32_t *)(adb.q_buffer),(float32_t *)(adb.q_buffer),size/2);	// shift +90 degrees FIR (plus RX IQ phase adjustment)
-    //
-
-    switch(ts.dmod_mode)
-    {
-    case DEMOD_LSB:
-        arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, size/2);	// difference of I and Q - LSB
-        break;
-    case DEMOD_USB:
-    default:
-        arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, size/2);	// sum of I and Q - USB
-        break;
-    }
-    //
-    //
-    // Do decimation down to lower rate for heavy-duty processing to reduce processor load - NOT YET AT 8 KHz!!!
-    //
-    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, size/2);		// LPF built into decimation (Yes, you can decimate-in-place!)
-    //
-    //
-    //
-    // now process the samples and perform the receiver AGC function
-    //
-    audio_rx_agc_processor(psize);
-    //
-    //
-    // Now apply pre-calculated AGC values to delayed audio
-    //
-    arm_mult_f32(adb.a_buffer, adb.agc_valbuf, adb.a_buffer, psize/2);		// do vector multiplication to apply delayed "running" AGC data
-    //
-    //
-    // ***************************************************************************************************
-    //
-    // DV Demodulator goes here.  adb.a_buffer must now be at 8ksps
-    //
-    // ***************************************************************************************************
-    //
-    //
-    // Calculate scaling based on decimation rate since this affects the audio gain
-    //
-    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
-    //
-    // Scale audio to according to AGC setting, demodulation mode and required fixed levels
-    //
-    arm_scale_f32(adb.a_buffer,(float32_t)(ads.post_agc_gain * post_agc_gain_scaling), adb.a_buffer, psize/2);	// apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-    //
-    // resample back to original sample rate while doing low-pass filtering to minimize aliasing effects
-    //
-    arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer,(float32_t *) adb.b_buffer, psize/2);
-    //
-    if(ts.rx_muting)
-    {
-        arm_fill_f32(0, adb.a_buffer, size/2);
-        arm_fill_f32(0, adb.b_buffer, size/2);
-    }
-    else
-    {
-        arm_scale_f32(adb.b_buffer, (float32_t)LINE_OUT_SCALING_FACTOR, adb.a_buffer, size/2);		// Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
-        //
-        // AF gain in "ts.audio_gain-active"
-        //  0 - 16: via codec command
-        // 17 - 20: soft gain after decoder
-        //
-        if(ts.rx_gain[RX_AUDIO_SPKR].value > 16)	// is volume control above highest hardware setting?
-            arm_scale_f32(adb.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, adb.b_buffer, size/2);	// yes, do software volume control adjust on "b" buffer
-    }
-    //
-    // Transfer processed audio to DMA buffer
-    //
-    i = 0;			// init sample transfer counter
-    while(i < size/2)	 						// transfer to DMA buffer and do conversion to INT - Unrolled to speed it up
-    {
-        *dst++ = adb.b_buffer[i];		// Speaker channel (variable level)
-        *dst++ = adb.a_buffer[i++];		// LINE OUT (constant level)
-
-        *dst++ = adb.b_buffer[i];		// Speaker channel (variable level)
-        *dst++ = adb.a_buffer[i++];		// LINE OUT (constant level)
-
-        *dst++ = adb.b_buffer[i];		// Speaker channel (variable level)
-        *dst++ = adb.a_buffer[i++];		// LINE OUT (constant level)
-
-        *dst++ = adb.b_buffer[i];		// Speaker channel (variable level)
-        *dst++ = adb.a_buffer[i++];		// LINE OUT (constant level)
-    }
-}
-#endif
-//         /
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_tx_compressor (look-ahead type) by KA7OEI
 //* Object              :
