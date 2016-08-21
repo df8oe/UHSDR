@@ -1272,7 +1272,36 @@ do {							\
 // ------------------------------------------------------------------
 // Exports
 
-void mchf_board_green_led(int state);
+inline void mchf_board_green_led(int state)
+{
+    switch(state)
+    {
+    case 1:
+        GREEN_LED_PIO->BSRRL = GREEN_LED;
+        break;
+    case 0:
+        GREEN_LED_PIO->BSRRH = GREEN_LED;
+        break;
+    default:
+        GREEN_LED_PIO->ODR ^= GREEN_LED;
+        break;
+    }
+}
+inline void mchf_board_red_led(int state)
+{
+    switch(state)
+    {
+    case 1:
+        RED_LED_PIO->BSRRL = RED_LED;
+        break;
+    case 0:
+        RED_LED_PIO->BSRRH = RED_LED;
+        break;
+    default:
+        RED_LED_PIO->ODR ^= RED_LED;
+        break;
+    }
+}
 
 void mchf_HandlePowerDown();
 
