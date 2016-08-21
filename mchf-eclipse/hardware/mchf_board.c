@@ -626,21 +626,6 @@ static void mchf_board_set_system_tick_value(void)
 //	NVIC_Init(&NVIC_InitStructure);
 }
 
-void mchf_board_green_led(int state)
-{
-    switch(state)
-    {
-    case 1:
-        GREEN_LED_PIO->BSRRL = GREEN_LED;
-        break;
-    case 0:
-        GREEN_LED_PIO->BSRRH = GREEN_LED;
-        break;
-    default:
-        GREEN_LED_PIO->ODR ^= GREEN_LED;
-        break;
-    }
-}
 
 
 void mchf_board_init(void)
