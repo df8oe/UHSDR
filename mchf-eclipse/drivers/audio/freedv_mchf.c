@@ -35,6 +35,20 @@ FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
 __IO int32_t fdv_iq_head = 0;
 __IO int32_t fdv_iq_tail = 0;
 
+int fdv_iq_buffer_peek(FDV_IQ_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (fdv_iq_head != fdv_iq_tail)
+    {
+        FDV_IQ_Buffer* c = fdv_iq_buffers[fdv_iq_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+
 int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr)
 {
     int ret = 0;
@@ -92,6 +106,20 @@ int32_t fdv_iq_has_room()
 FDV_Audio_Buffer* fdv_audio_buffers[FDV_BUFFER_AUDIO_FIFO_SIZE];
 __IO int32_t fdv_audio_head = 0;
 __IO int32_t fdv_audio_tail = 0;
+
+int fdv_audio_buffer_peek(FDV_Audio_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (fdv_audio_head != fdv_audio_tail)
+    {
+        FDV_Audio_Buffer* c = fdv_audio_buffers[fdv_audio_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
 
 int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr)
 {
@@ -211,7 +239,10 @@ void FreeDV_mcHF_HandleFreeDV()
 
             rx_was_here = true; // this is used to clear buffers when going into TX
 
-
+            // while makes this highest prio
+            // since we are so slow, right now the loop then is never left if while
+            // is being used. This means the mcHF is essentially no longer controllable
+            // since UI is not being updated
             // while (fdv_iq_has_data() && fdv_audio_has_room())
             if (fdv_iq_has_data() && fdv_audio_has_room())
             {
@@ -228,14 +259,17 @@ void FreeDV_mcHF_HandleFreeDV()
                     // See below
                     if  (inBuf == NULL)
                     {
-                        fdv_iq_buffer_remove(&inBuf);
+                        fdv_iq_buffer_peek(&inBuf);
 #ifdef DEBUG_FREEDV
                         // here we simulate input using pre-generated data
                         static  int iq_testidx  = 0;
                         iq_testidx %= FREEDV_TEST_BUFFER_FRAME_COUNT;
+                        /*
                         memcpy(inBuf->samples,
                                 &test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE],
                                 FREEDV_TEST_BUFFER_FRAME_SIZE*sizeof(COMP));
+                                */
+                        inBuf = (FDV_IQ_Buffer*)&test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE];
 
 #endif
                         inBufCtrl.start = 0;
@@ -246,6 +280,7 @@ void FreeDV_mcHF_HandleFreeDV()
                     {
                         memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
                         inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
+                        fdv_iq_buffer_remove(&inBuf);
                         inBuf = NULL;
 
                         // if there is no buffer available, leave the whole

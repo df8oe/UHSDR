@@ -1472,7 +1472,7 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
         }
 
         if (out_buffer == NULL && fdv_audio_has_data() > 1) {
-            fdv_audio_buffer_remove(&out_buffer);
+            fdv_audio_buffer_peek(&out_buffer);
         }
 
         if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
@@ -1525,8 +1525,10 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
         if (outbuff_count >= FDV_BUFFER_SIZE)
         {
             outbuff_count = 0;
-            out_buffer = NULL;
             fdv_audio_buffer_remove(&out_buffer);
+            out_buffer = NULL;
+            fdv_audio_buffer_peek(&out_buffer);
+
         }
     }
 }

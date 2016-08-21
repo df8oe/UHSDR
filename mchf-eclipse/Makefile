@@ -38,7 +38,7 @@ CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 CFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall -D_GNU_SOURCE \
+          -ffunction-sections -O2 -Wall -D_GNU_SOURCE -DCORTEX_M4 \
           $(EXTRACFLAGS)
 
 
