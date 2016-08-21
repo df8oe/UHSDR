@@ -1,16 +1,16 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
-************************************************************************************/
+ **                                                                                 **
+ **                               mcHF QRP Transceiver                              **
+ **                             K Atanassov - M0NKA 2014                            **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:		CC BY-NC-SA 3.0                                                **
+ ************************************************************************************/
 
 // Common
 #include "mchf_board.h"
@@ -26,6 +26,7 @@
 #include "audio_management.h"
 #include "cw_gen.h"
 
+#include "freedv_mchf.h"
 // UI Driver
 #include "ui_driver.h"
 #include "ui_rotary.h"
@@ -47,10 +48,6 @@
 //
 #include "cat_driver.h"
 
-// Freedv Test DL2FW
-#include "freedv_api.h"
-#include "codec2_fdmdv.h"
-// end Freedv Test DL2FW
 
 
 
@@ -109,7 +106,7 @@ void MemManage_Handler(void)
 {
     CriticalError(4);
 }
-*/
+ */
 
 void UsageFault_Handler(void)
 {
@@ -136,28 +133,28 @@ void SysTick_Handler(void)
  */
 void EXTI0_IRQHandler(void)
 {
-	// Checks whether the User Button EXTI line is asserted
-	//
-	// WARNING:
-	// Due to an apparent HARDWARE bug in the MCU this interrupt seems to be occasionally triggered by transitions
-	// of lines OTHER than the PADDLE_DAH (PE0) line, specifically the PC4 and PC5 (Step- and Step+) lines.
-	//
-	if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-	{
-		// Call handler
-		if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
-		{	// was DAH line low?
-				cw_gen_dah_IRQ();		// Yes - go to CW state machine
-		}
-		// PTT activate
-		else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
-		{
-			if(mchf_ptt_dah_line_pressed())
-			{	// was PTT line low?
-				ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-			}
-		}
-	}
+    // Checks whether the User Button EXTI line is asserted
+    //
+    // WARNING:
+    // Due to an apparent HARDWARE bug in the MCU this interrupt seems to be occasionally triggered by transitions
+    // of lines OTHER than the PADDLE_DAH (PE0) line, specifically the PC4 and PC5 (Step- and Step+) lines.
+    //
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+    {
+        // Call handler
+        if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
+        {	// was DAH line low?
+            cw_gen_dah_IRQ();		// Yes - go to CW state machine
+        }
+        // PTT activate
+        else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
+        {
+            if(mchf_ptt_dah_line_pressed())
+            {	// was PTT line low?
+                ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+            }
+        }
+    }
 
     // Clears the EXTI's line pending bit
     EXTI_ClearITPendingBit(EXTI_Line0);
@@ -191,7 +188,7 @@ void EXTI15_10_IRQHandler(void)
     // power button interrupt
     if(EXTI_GetITStatus(EXTI_Line13) != RESET)
     {
-//		if(!GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13))	// Signal power off
+        //		if(!GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13))	// Signal power off
 
     }
     // Clear interrupt pending bit
@@ -273,7 +270,7 @@ void TransceiverStateInit(void)
     ts.tune_freq		= 0;
     //ts.tune_freq_old	= 0;
     //
-//	ts.calib_mode		= 0;					// calibrate mode
+    //	ts.calib_mode		= 0;					// calibrate mode
     ts.menu_mode		= 0;					// menu mode
     ts.menu_item		= 0;					// menu item selection
     ts.menu_var			= 0;					// menu item change variable
@@ -301,9 +298,9 @@ void TransceiverStateInit(void)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
     ts.power_level		= PA_LEVEL_DEFAULT;			// See mchf_board.h for setting
     //
-//	ts.codec_vol		= 0;					// Holder for codec volume
-//	ts.codec_mute_state	= 0;					// Holder for codec mute state
-//	ts.codec_was_muted = 0;						// Indicator that codec *was* muted
+    //	ts.codec_vol		= 0;					// Holder for codec volume
+    //	ts.codec_mute_state	= 0;					// Holder for codec mute state
+    //	ts.codec_was_muted = 0;						// Indicator that codec *was* muted
     //
     ts.powering_down	= 0;						// TRUE if powering down
     //
@@ -355,7 +352,7 @@ void TransceiverStateInit(void)
     ts.freq_step_config		= 0;				// disabled both marker line under frequency and swapping of STEP buttons
     //
     ts.dsp_active		= 0;					// TRUE if DSP noise reduction is to be enabled
-//    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
+    //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
     ts.digital_mode		= 0;					// digital modes OFF by default
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
@@ -421,7 +418,7 @@ void TransceiverStateInit(void)
     ts.fm_tone_burst_mode = 0;					// this is the setting for the tone burst generator
     ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
     ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
-//	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
+    //	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
     ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
     ts.beep_active = 1;						// TRUE if beep is active
     ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
@@ -452,48 +449,29 @@ void TransceiverStateInit(void)
     ts.AM_experiment = 0;					// for AM demodulation experiments, not for "public" use
     ts.s_meter = 0;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
-	ts.dBm_count = 0;						// timer start
-	ts.tx_filter = 0;						// which TX filter has been chosen by the user
+    ts.dBm_count = 0;						// timer start
+    ts.tx_filter = 0;						// which TX filter has been chosen by the user
 
-	// Freedv Test DL2FW
-	ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
-	ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
-	ts.FDV_TX_out_start_pt=0;
-	ts.FDV_TX_in_start_pt=0;
+    // Freedv Test DL2FW
+    ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
+    ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
+    ts.FDV_TX_out_start_pt=0;
+    ts.FDV_TX_in_start_pt=0;
 
-	// end Freedv Test DL2FW
-
-
+    // end Freedv Test DL2FW
 
 
 
-// development setting for DF8OE
-	if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
-	  {
-	  ts.rfmod_present = 1;					// activate rfmod-board handling
-	  }
 
 
-}
-
-// FreeDV txt test - will be out of here
-struct my_callback_state {
-    char  tx_str[80];
-    char *ptx_str;
-};
-
-char my_get_next_tx_char(void *callback_state) {
-    struct my_callback_state* pstate = (struct my_callback_state*)callback_state;
-    char  c = *pstate->ptx_str++;
-
-    if (*pstate->ptx_str == 0) {
-        pstate->ptx_str = pstate->tx_str;
+    // development setting for DF8OE
+    if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
+    {
+        ts.rfmod_present = 1;					// activate rfmod-board handling
     }
 
-    return c;
-}
-// FreeDV txt test - will be out of here
 
+}
 
 
 
@@ -538,7 +516,7 @@ static void wd_reset(void)
 		WWDG_SetCounter(WD_REFRESH_COUNTER);
 	}
 }
-*/
+ */
 
 // Power on
 int main(void)
@@ -547,18 +525,18 @@ int main(void)
 
 
 
-  *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
+    *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
-    mchf_board_detect_ramsize();
-//	FLASH_OB_Unlock();
-//	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
-//	FLASH_OB_Launch();
-//	ts.test = FLASH_OB_GetWRP();
-//	ts.test = FLASH_OB_GetRDP();
+    // mchf_board_detect_ramsize();
+    //	FLASH_OB_Unlock();
+    //	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
+    //	FLASH_OB_Launch();
+    //	ts.test = FLASH_OB_GetWRP();
+    //	ts.test = FLASH_OB_GetRDP();
     // Set unbuffered mode for stdout (newlib)
     //setvbuf( stdout, 0, _IONBF, 0 );
 
-//	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
+    //	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
 
 #ifdef TESTCPLUSPLUS
     test_call_cpp();
@@ -589,23 +567,23 @@ int main(void)
     // UI HW init
     ui_driver_init();
 
-	ts.temp_nb = ts.nb_setting;
-	ts.nb_setting = 0;
+    ts.temp_nb = ts.nb_setting;
+    ts.nb_setting = 0;
 
-	// Audio HW init
-	audio_driver_init();
+    // Audio HW init
+    audio_driver_init();
 
-	AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
-	AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
-	AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
-	AudioManagement_LoadBeepFreq();		// load/set beep frequency
+    AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
+    AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
+    AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
+    AudioManagement_LoadBeepFreq();		// load/set beep frequency
 
     AudioFilter_SetDefaultMemories();
 
-	UiInitRxParms();
+    UiInitRxParms();
 
-	ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
-	Codec_Mute(false);					// make sure codec is un-muted
+    ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
+    Codec_Mute(false);					// make sure codec is un-muted
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {
@@ -613,23 +591,8 @@ int main(void)
     }
 
 #ifdef USE_FREEDV
-    // Freedv Test DL2FW
-    struct my_callback_state  my_cb_state;
-
-    f_FREEDV = freedv_open(FREEDV_MODE_1600);
-
-
-     sprintf(my_cb_state.tx_str, "cq cq cq hello this is the mchf mchf mchf\n");
-     my_cb_state.ptx_str = my_cb_state.tx_str;
-     freedv_set_callback_txt(f_FREEDV, NULL, &my_get_next_tx_char, &my_cb_state);
-
-
-    // ts.dvmode = true;
-    // ts.digital_mode = 1;
-
-    // end Freedv Test DL2FW
+    FreeDV_mcHF_init();
 #endif
-
 
     // Transceiver main loop
     for(;;)
