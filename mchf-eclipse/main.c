@@ -34,7 +34,7 @@
 #include "ui_menu.h"
 #include "ui_si570.h"
 #include "codec.h"
-
+#include "profiling.h"
 // Keyboard Driver
 // #include "keyb_driver.h"
 
@@ -569,6 +569,8 @@ int main(void)
 
     ts.temp_nb = ts.nb_setting;
     ts.nb_setting = 0;
+
+    profileTimedEventInit();
 
     // Audio HW init
     audio_driver_init();

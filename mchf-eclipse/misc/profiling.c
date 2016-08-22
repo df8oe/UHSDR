@@ -22,3 +22,6 @@
  * Not a big deal with ST-Link and Eclipse or gdb.
  */
 EventProfile_t eventProfile;
+
+
+

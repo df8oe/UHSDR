@@ -14,6 +14,7 @@
 
 // Common
 #include "mchf_board.h"
+#include "profiling.h"
 
 #include "codec.h"
 #include "audio_driver.h"
@@ -189,6 +190,12 @@ void I2S_Block_Stop(void)
 //*----------------------------------------------------------------------------
 void DMA1_Stream2_IRQHandler(void)
 {
+#ifdef PROFILE_EVENTS
+    // we stop during interrupt
+    // at the end we start again
+    profileCycleCount_stop();
+#endif
+
 #ifdef USE_24_BITS
     static int32_t *src, *dst, sz;
 #else
@@ -248,5 +255,10 @@ void DMA1_Stream2_IRQHandler(void)
 #ifdef EXEC_PROFILING
     // Profiling pin (low level)
     GPIOE->BSRRH = GPIO_Pin_10;
+#endif
+#ifdef PROFILE_EVENTS
+    // we stopped during interrupt
+    // now we start again
+    profileCycleCount_start();
 #endif
 }
