@@ -32,6 +32,11 @@
 #include <string.h>
 #include <math.h>
 
+#include "mchf_board.h"
+#include "profiling.h"
+#include "arm_math.h"
+
+
 #include "codec2.h"
 #include "codec2_fdmdv.h"
 #include "fdmdv_internal.h"
@@ -40,6 +45,7 @@
 #include "freedv_api.h"
 #include "freedv_api_internal.h"
 #include "comp_prim.h"
+
 
 #define VERSION     11    /* The API version number.  The first version
                            is 10.  Increment if the API changes in a
@@ -734,13 +740,25 @@ int freedv_comprx(struct freedv *f, short speech_out[], COMP demod_in[]) {
 
     if (f->mode == FREEDV_MODE_1600) {
 
+#if 0
+        // TODO: ~14,4us
         for(i=0; i<f->nin; i++)
             demod_in[i] = fcmult(1.0/FDMDV_SCALE, demod_in[i]);
+#else
+        // TODO: ~11,3uS / -23%
+        arm_scale_f32(demod_in,1.0/FDMDV_SCALE,demod_in,2*f->nin);
+#endif
+        profileTimedEventStart(ProfileFreeDV);
+
+        profileTimedEventStop(ProfileFreeDV);
 
         bits_per_fdmdv_frame  = fdmdv_bits_per_frame(f->fdmdv);
 
         nin_prev = f->nin;
+        // TODO: ~8.8ms
+        profileTimedEventStart(4);
         fdmdv_demod(f->fdmdv, f->fdmdv_bits, &reliable_sync_bit, demod_in, &f->nin);
+        profileTimedEventStop(4);
         fdmdv_get_demod_stats(f->fdmdv, &f->stats);
         f->sync = f->fdmdv->sync;
         f->snr_est = f->stats.snr_est;
@@ -816,7 +834,9 @@ int freedv_comprx(struct freedv *f, short speech_out[], COMP demod_in[]) {
                         }
                     }
 
+                    // TODO: ~4ms
                     codec2_decode(f->codec2, speech_out, f->packed_codec_bits);
+
                 }
                 else {
                     int   test_frame_sync, bit_errors, ntest_bits, k;

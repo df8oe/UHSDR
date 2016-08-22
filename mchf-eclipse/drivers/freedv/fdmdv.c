@@ -37,6 +37,10 @@
 #include <string.h>
 #include <math.h>
 
+#include "mchf_board.h"
+#include "profiling.h"
+#include "arm_math.h"
+
 #include "fdmdv_internal.h"
 #include "codec2_fdmdv.h"
 #include "comp_prim.h"
@@ -992,6 +996,30 @@ static float fir_filter(float mem[], float coeff[], int dec_rate) {
     return dec_rate*acc;
 }
 
+static void fir_filter2(float acc[2], float mem[], float coeff[], const unsigned int dec_rate) {
+    acc[0] = 0.0;
+    acc[1] = 0.0;
+
+    float c,m1,m2,a1,a2;
+    float* inpCmplx = &mem[0];
+    float* coeffPtr = &coeff[0];
+
+    for(int m=0; m<NFILTER; m+=dec_rate) {
+        c = *coeffPtr;
+        m1 = inpCmplx[0];
+        m2 = inpCmplx[1];
+        a1 = c * m1;
+        a2 = c * m2;
+        acc[0] += a1;
+        inpCmplx+= dec_rate*2;
+        acc[1] += a2;
+        coeffPtr+= dec_rate;
+    }
+
+    acc[0] *= dec_rate;
+    acc[1] *= dec_rate;
+}
+
 
 /*---------------------------------------------------------------------------*\
 
@@ -1082,8 +1110,10 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
            for(m=0; m<NFILTER; m++)
                rx_filt[c][k] = cadd(rx_filt[c][k], fcmult(gt_alpha5_root[m], rx_baseband[st+i+m]));
            #else
-           rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
-           rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
+
+           // rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+           // rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
+           fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
            #endif
         }
         //PROFILE_SAMPLE_AND_LOG2(filter_start, "        filter");
@@ -1507,14 +1537,18 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
     PROFILE_VAR(rx_est_timing_start, qpsk_to_bits_start, snr_update_start, freq_state_start);
 
     /* shift down to complex baseband */
-
+    profileTimedEventStart(ProfileFreeDV);
     fdmdv_freq_shift(rx_fdm_bb, rx_fdm, -FDMDV_FCENTRE, &fdmdv->fbb_phase_rx, *nin);
+    profileTimedEventStop(ProfileFreeDV);
+
 
     /* freq offset estimation and correction */
-
+    profileTimedEventStart(1);
     PROFILE_SAMPLE(demod_start);
+    // TODO: ~1.4ms
     foff_coarse = rx_est_freq_offset(fdmdv, rx_fdm_bb, *nin, !fdmdv->sync);
     PROFILE_SAMPLE_AND_LOG(fdmdv_freq_shift_start, demod_start, "    rx_est_freq_offset");
+    profileTimedEventStop(1);
 
     if (fdmdv->sync == 0)
 	fdmdv->foff = foff_coarse;
@@ -1522,13 +1556,16 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
     PROFILE_SAMPLE_AND_LOG(down_convert_and_rx_filter_start, fdmdv_freq_shift_start, "    fdmdv_freq_shift");
 
     /* baseband processing */
-
+    profileTimedEventStart(2);
     rxdec_filter(rx_fdm_filter, rx_fdm_fcorr, fdmdv->rxdec_lpf_mem, *nin);
     down_convert_and_rx_filter(rx_filt, fdmdv->Nc, rx_fdm_filter, fdmdv->rx_fdm_mem, fdmdv->phase_rx, fdmdv->freq,
                                fdmdv->freq_pol, *nin, M/Q);
+    profileTimedEventStop(2);
     PROFILE_SAMPLE_AND_LOG(rx_est_timing_start, down_convert_and_rx_filter_start, "    down_convert_and_rx_filter");
+    profileTimedEventStart(3);
     fdmdv->rx_timing = rx_est_timing(rx_symbols, fdmdv->Nc, rx_filt, fdmdv->rx_filter_mem_timing, env, *nin, M);
     PROFILE_SAMPLE_AND_LOG(qpsk_to_bits_start, rx_est_timing_start, "    rx_est_timing");
+    profileTimedEventStop(3);
 
     /* Adjust number of input samples to keep timing within bounds */
 
@@ -1542,15 +1579,17 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
 
     foff_fine = qpsk_to_bits(rx_bits, &sync_bit, fdmdv->Nc, fdmdv->phase_difference, fdmdv->prev_rx_symbols, rx_symbols,
                              fdmdv->old_qpsk_mapping);
+
     memcpy(fdmdv->prev_rx_symbols, rx_symbols, sizeof(COMP)*(fdmdv->Nc+1));
     PROFILE_SAMPLE_AND_LOG(snr_update_start, qpsk_to_bits_start, "    qpsk_to_bits");
     snr_update(fdmdv->sig_est, fdmdv->noise_est, fdmdv->Nc, fdmdv->phase_difference);
     PROFILE_SAMPLE_AND_LOG(freq_state_start, snr_update_start, "    snr_update");
-
     /* freq offset estimation state machine */
-
+    profileTimedEventStart(6);
     fdmdv->sync = freq_state(reliable_sync_bit, sync_bit, &fdmdv->fest_state, &fdmdv->timer, fdmdv->sync_mem);
     PROFILE_SAMPLE_AND_LOG2(freq_state_start, "    freq_state");
+    profileTimedEventStop(6);
+
     fdmdv->foff  -= TRACK_COEFF*foff_fine;
 }
 

@@ -3750,7 +3750,6 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     static bool to_tx = 0;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
 
-    profileEvent(ProfileAudioInterrupt);
 
     if(ts.show_tp_coordinates)
     {

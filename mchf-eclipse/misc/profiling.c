@@ -22,6 +22,16 @@
  * Not a big deal with ST-Link and Eclipse or gdb.
  */
 EventProfile_t eventProfile;
+void dummy() {
+    eventProfile.event[2].duration;
+    eventProfile.event[2].count;
+    eventProfile.event[3].duration;
+    eventProfile.event[3].count;
+    eventProfile.event[4].duration;
+    eventProfile.event[4].count;
+    eventProfile.event[8].duration;
+    eventProfile.event[8].count;
 
 
+}
 
