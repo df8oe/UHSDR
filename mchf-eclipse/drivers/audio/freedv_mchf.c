@@ -20,6 +20,7 @@
 #include "freedv_api.h"
 #include "codec2_fdmdv.h"
 // end Freedv Test DL2FW
+#include "profiling.h"
 
 struct freedv *f_FREEDV;
 
@@ -244,8 +245,11 @@ void FreeDV_mcHF_HandleFreeDV()
             // is being used. This means the mcHF is essentially no longer controllable
             // since UI is not being updated
             // while (fdv_iq_has_data() && fdv_audio_has_room())
+            // while (fdv_audio_has_room())
             if (fdv_iq_has_data() && fdv_audio_has_room())
             {
+                mchf_board_green_led(1);
+
                 leave_now = false;
                 fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
 
@@ -307,7 +311,10 @@ void FreeDV_mcHF_HandleFreeDV()
                     {
                         // if we arrive here the rx_buffer for comprx is full and will be consumed now.
                         inBufCtrl.offset = 0;
+                        profileTimedEventStart(ProfileFreeDV);
                         outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
+                        // outBufCtrl.count = iq_nin;
+                        profileTimedEventStop(ProfileFreeDV);
                     }
 
                     // result tells us the number of returned audio samples
@@ -354,6 +361,7 @@ void FreeDV_mcHF_HandleFreeDV()
                 }
             }
         }
+        mchf_board_green_led(0);
     }
     // END Freedv Test DL2FW
 }

@@ -1471,6 +1471,10 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
             FDV_TX_fill_in_pt %= FDV_BUFFER_IQ_NUM;
         }
 
+        // if we run out  of buffers lately
+        // we wait for availability of at least 2 buffers
+        // so that in theory we have uninterrupt flow of audio
+        // albeit with a delay of 80ms
         if (out_buffer == NULL && fdv_audio_has_data() > 1) {
             fdv_audio_buffer_peek(&out_buffer);
         }
@@ -1487,18 +1491,21 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
             // BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
             // block size (which is 64 in our case --> 64 / 6 = non-integer!)
 
+            arm_fill_f32(0,adb.b_buffer,blockSize);
             // UPSAMPLING [by hand]
             for (int j = 0; j < blockSize; j++) //  now we are doing upsampling by 6
             {
                 if (modulus_MOD == 0) // put in sample pair
                 {
-                adb.b_buffer[j] = out_buffer->samples[outbuff_count]; // + (sample_delta.real * (float32_t)modulus_MOD);
+                    adb.b_buffer[j] = out_buffer->samples[outbuff_count]; // + (sample_delta.real * (float32_t)modulus_MOD);
                 }
+#if 0
                 else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
                 {
                     adb.b_buffer[j] = 0;
                     // adb.b_buffer[j] = out_buffer->samples[outbuff_count];
                 }
+#endif
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
@@ -1520,14 +1527,20 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
         else
         {
           profileEvent(FreeDVTXUnderrun);
+          // in case of underrun -> produce silence
+          arm_fill_f32(0,adb.b_buffer,blockSize);
         }
 
         if (outbuff_count >= FDV_BUFFER_SIZE)
         {
             outbuff_count = 0;
             fdv_audio_buffer_remove(&out_buffer);
+            // ok, this one is done with
             out_buffer = NULL;
             fdv_audio_buffer_peek(&out_buffer);
+            // we may or may not get a buffer here
+            // if not and we have a stall the code somewhere up
+            // produces silence until 2 out buffers are available
 
         }
     }
@@ -3737,7 +3750,7 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
     static bool to_tx = 0;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
 
-    profileEvent(EnterAudioInterrupt);
+    profileEvent(ProfileAudioInterrupt);
 
     if(ts.show_tp_coordinates)
     {

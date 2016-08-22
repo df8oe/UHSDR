@@ -14,7 +14,6 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 
-
 // some special switches
 //#define 	DEBUG_BUILD
 
