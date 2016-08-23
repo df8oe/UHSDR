@@ -1499,7 +1499,6 @@ static bool RadioManagement_HandleLoTemperatureDrift()
         // lo.skip++;
         // if(lo.skip >= LO_COMP_SKP)
         {
-            profileEvent(EnterLO);
             // lo.skip = 0;
             // Get current temperature
             if(Si570_ReadExternalTempSensor(&temp) == 0)
@@ -1594,7 +1593,6 @@ static void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break_timer = ptt_break_time;
     // Not when tuning
-    profileEvent(EnterPTT);
 
     if(ts.tune == false)
     {
@@ -6181,7 +6179,6 @@ static void UiDriver_HandleVoltage()
     // pwmt.skip++;
     // if(pwmt.skip >= POWER_SAMPLES_SKP)
     {
-        profileEvent(EnterVoltage);
         // pwmt.skip = 0;
 
         // Collect samples
@@ -7133,7 +7130,6 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 void ui_driver_thread()
 {
 
-    profileEvent(EnterDriverThread);
     uint32_t now = ts.sysclock;
 
 #ifdef USE_FREEDV
@@ -7193,7 +7189,6 @@ void ui_driver_thread()
             if(!ts.boot_halt_flag)
             {
                 if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4)){
-                    profileEvent(EnterSMeter);
                     UiDriverHandleSmeter();
                 }
             }

@@ -311,10 +311,8 @@ void FreeDV_mcHF_HandleFreeDV()
                     {
                         // if we arrive here the rx_buffer for comprx is full and will be consumed now.
                         inBufCtrl.offset = 0;
-                        profileTimedEventStart(ProfileFreeDV);
                         outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
                         // outBufCtrl.count = iq_nin;
-                        profileTimedEventStop(ProfileFreeDV);
                     }
 
                     // result tells us the number of returned audio samples
