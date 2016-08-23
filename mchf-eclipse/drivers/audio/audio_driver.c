@@ -2420,7 +2420,7 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
     }
 #endif
     // Apply I/Q amplitude correction
-#if 0
+#if 1
     arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
 

@@ -746,12 +746,8 @@ int freedv_comprx(struct freedv *f, short speech_out[], COMP demod_in[]) {
             demod_in[i] = fcmult(1.0/FDMDV_SCALE, demod_in[i]);
 #else
         // TODO: ~11,3uS / -23%
-        arm_scale_f32(demod_in,1.0/FDMDV_SCALE,demod_in,2*f->nin);
+        arm_scale_f32(&demod_in[0].real,1.0/FDMDV_SCALE,&demod_in[0].real,2*f->nin);
 #endif
-        profileTimedEventStart(ProfileFreeDV);
-
-        profileTimedEventStop(ProfileFreeDV);
-
         bits_per_fdmdv_frame  = fdmdv_bits_per_frame(f->fdmdv);
 
         nin_prev = f->nin;
