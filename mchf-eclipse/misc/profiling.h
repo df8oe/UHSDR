@@ -16,15 +16,18 @@
 #define __PROFILING_H
 
 typedef enum {
-    ProfileAudioInterrupt = 0,
-    EnterLO,
-    EnterPTT,
-    EnterDriverThread,
-    EnterSMeter,
-    EnterVoltage,
-    EnterFreeDVEncode,
-    FreeDVTXUnderrun,
+    ProfileTP0 = 0,
+    ProfileTP1,
+    ProfileTP2,
+    ProfileTP3,
+    ProfileTP4,
+    ProfileTP5,
+    ProfileTP6,
+    ProfileTP7,
+    ProfileTP8,
+    ProfileTP9,
     ProfileFreeDV,
+    FreeDVTXUnderrun,
     EventProfileMax
 } ProfiledEventNames;
 
@@ -99,7 +102,7 @@ inline void profileCycleCount_start()
 
 inline void profileCycleCount_stop()
 {
-    *DWT_CONTROL = *DWT_CONTROL | 0; //
+    *DWT_CONTROL = *DWT_CONTROL  & ~1; //
 }
 
 inline uint32_t profileCycleCount_get()

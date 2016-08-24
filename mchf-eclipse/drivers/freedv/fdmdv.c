@@ -680,7 +680,9 @@ void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq)
 	if (f >= 4)
 	    memcpy(&pilot_lut[M*(f-4)], pilot, M*sizeof(COMP));
     }
-
+    // we do this, since later we need that in conjugate form only
+    // TODO: make this portable, it is not time critical
+    arm_cmplx_conj_f32(&pilot_lut[0].real,&pilot_lut[0].real,4*M);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -707,13 +709,26 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
     /* LPF cutoff 200Hz, so we can handle max +/- 200 Hz freq offset */
 
     for(i=0; i<NPILOTLPF-nin; i++)
-	pilot_lpf[i] = pilot_lpf[nin+i];
+        pilot_lpf[i] = pilot_lpf[nin+i];
     for(i=NPILOTLPF-nin, j=NPILOTBASEBAND-nin; i<NPILOTLPF; i++,j++) {
-	pilot_lpf[i].real = 0.0; pilot_lpf[i].imag = 0.0;
-	for(k=0; k<NPILOTCOEFF; k++)
-	    pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
+        pilot_lpf[i].real = 0.0; pilot_lpf[i].imag = 0.0;
+#if 0
+        for(k=0; k<NPILOTCOEFF; k++)
+            pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
+#else
+        COMP temp_buffer[NPILOTCOEFF];
+        float re = pilot_lpf[i].real;
+        float im = pilot_lpf[i].imag;
+        arm_cmplx_mult_real_f32(&pilot_baseband[j-NPILOTCOEFF+1].real,(float32_t*)&pilot_coeff[0],&temp_buffer[0].real,NPILOTCOEFF);
+        for(k=0; k<NPILOTCOEFF; k++)
+        {
+                re += temp_buffer[k].real;
+                im += temp_buffer[k].imag;
+        }
+        pilot_lpf[i].real = re;
+        pilot_lpf[i].imag = im;
+#endif
     }
-
     /* We only need to do FFTs if we are out of sync.  Making them optional saves CPU in sync, which is when
        we need to run the codec */
 
@@ -810,10 +825,18 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 	f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
     }
 
+#if 0
     for(i=0,j=NPILOTBASEBAND-nin; i<nin; i++,j++) {
-       	f->pilot_baseband1[j] = cmult(rx_fdm[i], cconj(pilot[i]));
-	f->pilot_baseband2[j] = cmult(rx_fdm[i], cconj(prev_pilot[i]));
+       	f->pilot_baseband1[j] = cmult(rx_fdm[i], pilot[i]);
+	f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
     }
+#else
+    // TODO: Maybe a handwritten mult taking advantage of rx_fdm[0] being used twice would be faster
+    // but this is for sure faster than the implementation above in any case.
+    arm_cmplx_mult_cmplx_f32(&rx_fdm[0].real,&pilot[0].real,&f->pilot_baseband1[NPILOTBASEBAND-nin].real,nin);
+    arm_cmplx_mult_cmplx_f32(&rx_fdm[0].real,&prev_pilot[0].real,&f->pilot_baseband2[NPILOTBASEBAND-nin].real,nin);
+#endif
+
 
     lpf_peak_pick(&foff1, &max1, f->pilot_baseband1, f->pilot_lpf1, f->fft_pilot_cfg, f->S1, nin, do_fft);
     lpf_peak_pick(&foff2, &max2, f->pilot_baseband2, f->pilot_lpf2, f->fft_pilot_cfg, f->S2, nin, do_fft);

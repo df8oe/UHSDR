@@ -311,7 +311,9 @@ void FreeDV_mcHF_HandleFreeDV()
                     {
                         // if we arrive here the rx_buffer for comprx is full and will be consumed now.
                         inBufCtrl.offset = 0;
+                        profileTimedEventStart(7);
                         outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
+                        profileTimedEventStop(7);
                         // outBufCtrl.count = iq_nin;
                     }
 
