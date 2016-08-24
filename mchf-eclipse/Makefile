@@ -38,7 +38,7 @@ CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 CFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall -D_GNU_SOURCE -DCORTEX_M4 \
+          -ffunction-sections -O2 -Wall -Wno-unused-function -D_GNU_SOURCE -DCORTEX_M4 \
           $(EXTRACFLAGS)
 
 
@@ -173,7 +173,6 @@ SRC =  \
     drivers/cat/usb/usbd_desc.c  \
     drivers/cat/usb/usbd_usr.c  \
     \
-    drivers/freedv/ampexp.c  \
     drivers/freedv/codebook.c  \
     drivers/freedv/codebookd.c  \
     drivers/freedv/codebookdt.c  \
@@ -203,7 +202,6 @@ SRC =  \
     drivers/freedv/octave.c  \
     drivers/freedv/pack.c  \
     drivers/freedv/phase.c  \
-    drivers/freedv/phaseexp.c  \
     drivers/freedv/postfilter.c  \
     drivers/freedv/quantise.c  \
     drivers/freedv/sine.c  \
