@@ -113,9 +113,16 @@ struct FDMDV * fdmdv_create(int Nc)
 	/* Spread initial FDM carrier phase out as far as possible.
            This helped PAPR for a few dB.  We don't need to adjust rx
            phase as DQPSK takes care of that. */
-
+#if 0
 	f->phase_tx[c].real = cosf(2.0*PI*c/(Nc+1));
- 	f->phase_tx[c].imag = sinf(2.0*PI*c/(Nc+1));
+	f->phase_tx[c].imag = sinf(2.0*PI*c/(Nc+1));
+
+
+#else
+	f->phase_tx[c].real = arm_cos_f32(2.0*PI*c/(Nc+1));
+	f->phase_tx[c].imag = arm_sin_f32(2.0*PI*c/(Nc+1));
+#endif
+
 
 	f->phase_rx[c].real = 1.0;
  	f->phase_rx[c].imag = 0.0;
@@ -128,11 +135,17 @@ struct FDMDV * fdmdv_create(int Nc)
     f->prev_tx_symbols[Nc].real = 2.0;
 
     fdmdv_set_fsep(f, FSEP);
+#if 0
     f->freq[Nc].real = cosf(2.0*PI*0.0/FS);
     f->freq[Nc].imag = sinf(2.0*PI*0.0/FS);
+
+#else
+    f->freq[Nc].real = arm_cos_f32(2.0*PI*0.0/FS);
+    f->freq[Nc].imag = arm_sin_f32(2.0*PI*0.0/FS);
+#endif
     f->freq_pol[Nc]  = 2.0*PI*0.0/FS;
 
-    f->fbb_rect.real     = cosf(2.0*PI*FDMDV_FCENTRE/FS);
+    f->fbb_rect.real     = arm_cos_f32(2.0*PI*FDMDV_FCENTRE/FS);
     f->fbb_rect.imag     = sinf(2.0*PI*FDMDV_FCENTRE/FS);
     f->fbb_pol           = 2.0*PI*FDMDV_FCENTRE/FS;
     f->fbb_phase_tx.real = 1.0;
@@ -261,15 +274,26 @@ void fdmdv_set_fsep(struct FDMDV *f, float fsep) {
 
     for(c=0; c<f->Nc/2; c++) {
 	carrier_freq = (-f->Nc/2 + c)*f->fsep;
+#if 0
 	f->freq[c].real = cosf(2.0*PI*carrier_freq/FS);
  	f->freq[c].imag = sinf(2.0*PI*carrier_freq/FS);
- 	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
+#else
+ 	f->freq[c].real = arm_cos_f32(2.0*PI*carrier_freq/FS);
+ 	f->freq[c].imag = arm_sin_f32(2.0*PI*carrier_freq/FS);
+#endif
+ 	  f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
     }
 
     for(c=f->Nc/2; c<f->Nc; c++) {
 	carrier_freq = (-f->Nc/2 + c + 1)*f->fsep;
+#if 0
 	f->freq[c].real = cosf(2.0*PI*carrier_freq/FS);
  	f->freq[c].imag = sinf(2.0*PI*carrier_freq/FS);
+#else
+ 	f->freq[c].real = arm_cos_f32(2.0*PI*carrier_freq/FS);
+ 	f->freq[c].imag = arm_sin_f32(2.0*PI*carrier_freq/FS);
+
+#endif
  	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
     }
 }
@@ -866,9 +890,14 @@ void fdmdv_freq_shift(COMP rx_fdm_fcorr[], COMP rx_fdm[], float foff,
     COMP  foff_rect;
     float mag;
     int   i;
-
+#if 0
     foff_rect.real = cosf(2.0*PI*foff/FS);
     foff_rect.imag = sinf(2.0*PI*foff/FS);
+#else
+    foff_rect.real = arm_cos_f32(2.0*PI*foff/FS);
+    foff_rect.imag = arm_sin_f32(2.0*PI*foff/FS);
+
+#endif
     for(i=0; i<nin; i++) {
 	*foff_phase_rect = cmult(*foff_phase_rect, foff_rect);
 	rx_fdm_fcorr[i] = cmult(rx_fdm[i], *foff_phase_rect);
@@ -1100,8 +1129,13 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 
         //PROFILE_SAMPLE(windback_start);
         windback_phase           = -freq_pol[c]*NFILTER;
+#if 0
         windback_phase_rect.real = cosf(windback_phase);
         windback_phase_rect.imag = sinf(windback_phase);
+#else
+        windback_phase_rect.real = arm_cos_f32(windback_phase);
+        windback_phase_rect.imag = arm_sin_f32(windback_phase);
+#endif
         phase_rx[c]              = cmult(phase_rx[c],windback_phase_rect);
         //PROFILE_SAMPLE_AND_LOG(downconvert_start, windback_start, "        windback");
 
@@ -1208,11 +1242,16 @@ float rx_est_timing(COMP rx_symbols[],
        out single DFT at frequency 2*pi/P */
 
     x.real = 0.0; x.imag = 0.0;
+#if 0
     freq.real = cosf(2*PI/P);
     freq.imag = sinf(2*PI/P);
+#else
+    freq.real = arm_cos_f32(2*PI/P);
+    freq.imag = arm_sin_f32(2*PI/P);
+
+#endif
     phase.real = 1.0;
     phase.imag = 0.0;
-
     for(i=0; i<NT*P; i++) {
 	x = cadd(x, fcmult(env[i], phase));
 	phase = cmult(phase, freq);
@@ -1270,10 +1309,13 @@ float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[]
     COMP  d;
     int   msb=0, lsb=0;
     float ferr, norm;
-
+#if 0
     pi_on_4.real = cosf(PI/4.0);
     pi_on_4.imag = sinf(PI/4.0);
-
+#else
+    pi_on_4.real = arm_cos_f32(PI/4.0);
+    pi_on_4.imag = arm_sin_f32(PI/4.0);
+#endif
     /* Extra 45 degree clockwise lets us use real and imag axis as
        decision boundaries. "norm" makes sure the phase subtraction
        from the previous symbol doesn't affect the amplitude, which
@@ -1351,10 +1393,14 @@ void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_differenc
     float n[NC+1];
     COMP  pi_on_4;
     int   c;
-
+#if 0
+    pi_on_4.real = arm_cos_f32(PI/4.0);
+    pi_on_4.imag = arm_sin_f32(PI/4.0);
+#else
     pi_on_4.real = cosf(PI/4.0);
     pi_on_4.imag = sinf(PI/4.0);
 
+#endif
     /* mag of each symbol is distance from origin, this gives us a
        vector of mags, one for each carrier. */
 
