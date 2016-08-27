@@ -16,9 +16,11 @@
  ************************************************************************************/
 #include "mchf_board.h"
 
-#define  FREEDV_TEST_BUFFER_FRAME_COUNT 50
-#define  FREEDV_TEST_BUFFER_FRAME_SIZE 320
-extern const  COMP test_buffer[FREEDV_TEST_BUFFER_FRAME_SIZE*FREEDV_TEST_BUFFER_FRAME_COUNT];
+#ifdef DEBUG_FREEDV
+    #define  FREEDV_TEST_BUFFER_FRAME_COUNT 50
+    #define  FREEDV_TEST_BUFFER_FRAME_SIZE 320
+    extern const  COMP test_buffer[FREEDV_TEST_BUFFER_FRAME_SIZE*FREEDV_TEST_BUFFER_FRAME_COUNT];
+#endif
 
 void FreeDV_mcHF_HandleFreeDV();
 void FreeDV_mcHF_init();

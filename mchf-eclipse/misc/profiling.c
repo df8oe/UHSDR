@@ -22,16 +22,26 @@
  * Not a big deal with ST-Link and Eclipse or gdb.
  */
 EventProfile_t eventProfile;
+
+#if 0
+// the code below is only used to ease profiling with eclipse
+// you just need hover over a variable to get the value
 void dummy() {
+
     eventProfile.event[0].duration;
     eventProfile.event[0].count;
-
+    eventProfile.event[1].duration;
+    eventProfile.event[1].count;
     eventProfile.event[2].duration;
     eventProfile.event[2].count;
     eventProfile.event[3].duration;
     eventProfile.event[3].count;
     eventProfile.event[4].duration;
     eventProfile.event[4].count;
+    eventProfile.event[5].duration;
+    eventProfile.event[5].count;
+    eventProfile.event[6].duration;
+    eventProfile.event[6].count;
     eventProfile.event[7].duration;
     eventProfile.event[7].count;
 
@@ -40,4 +50,4 @@ void dummy() {
 
 
 }
-
+#endif

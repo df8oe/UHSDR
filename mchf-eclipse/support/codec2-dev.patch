@@ -1,0 +1,43 @@
+Index: codec2-dev/src/fm.c
+===================================================================
+--- codec2-dev/src/fm.c	(revision 2841)
++++ codec2-dev/src/fm.c	(working copy)
+@@ -120,7 +120,10 @@
+   float  wd = 2*M_PI*fd/Fs;
+   COMP  *rx_bb = fm_states->rx_bb + FILT_MEM;
+   COMP   wc_rect, rx_bb_filt, rx_bb_diff;
+-  float  rx_dem, acc;
++  float  rx_dem;
++  /*
++  float acc;
++  */
+   float *rx_dem_mem = fm_states->rx_dem_mem + FILT_MEM;
+   int    nsam = fm_states->nsam;
+   float  mag;
+@@ -170,8 +173,8 @@
+       rx_dem *= (1/wd);
+       //printf("%f %f\n", rx_bb_diff.real, rx_bb_diff.imag);
+       rx_dem_mem[i] = rx_dem;
++      /*
+       acc = 0;
+-      /*
+         for(k=0; k<FILT_MEM; k++) {
+           acc += rx_dem_mem[i-k] * bout[k];
+       }
+Index: codec2-dev/src/freedv_api.c
+===================================================================
+--- codec2-dev/src/freedv_api.c	(revision 2841)
++++ codec2-dev/src/freedv_api.c	(working copy)
+@@ -678,8 +678,11 @@
+ 
+ void freedv_comptx(struct freedv *f, COMP mod_out[], short speech_in[]) {
+     assert(f != NULL);
+-    int    i, j;
++    int    i;
++#ifndef CORTEX_M4
++    int    j;	
+     int    bits_per_codec_frame;
++#endif
+     short  tx_real[f->n_nom_modem_samples];
+ 
+     assert((f->mode == FREEDV_MODE_1600) || (f->mode == FREEDV_MODE_700) || 

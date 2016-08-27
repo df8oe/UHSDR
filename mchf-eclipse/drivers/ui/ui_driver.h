@@ -458,6 +458,7 @@ extern __IO LoTcxo				lo;
 extern const ulong tune_steps[T_STEP_MAX_STEPS];
 
 #ifdef USE_FREEDV
+int fdv_iq_buffer_peek(FDV_IQ_Buffer** c_ptr);
 int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr);
 /* no room left in the buffer returns 0 */
 int fdv_iq_buffer_add(FDV_IQ_Buffer* c);
@@ -466,6 +467,7 @@ int8_t fdv_iq_has_data();
 int32_t fdv_iq_has_room();
 
 
+int fdv_audio_buffer_peek(FDV_Audio_Buffer** c_ptr);
 int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr);
 /* no room left in the buffer returns 0 */
 int fdv_audio_buffer_add(FDV_Audio_Buffer* c);
