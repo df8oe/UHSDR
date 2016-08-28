@@ -1,43 +1,222 @@
-Index: codec2-dev/src/fm.c
+Index: codec2-dev/src/fdmdv.c
 ===================================================================
---- codec2-dev/src/fm.c	(revision 2841)
-+++ codec2-dev/src/fm.c	(working copy)
-@@ -120,7 +120,10 @@
-   float  wd = 2*M_PI*fd/Fs;
-   COMP  *rx_bb = fm_states->rx_bb + FILT_MEM;
-   COMP   wc_rect, rx_bb_filt, rx_bb_diff;
--  float  rx_dem, acc;
-+  float  rx_dem;
-+  /*
-+  float acc;
-+  */
-   float *rx_dem_mem = fm_states->rx_dem_mem + FILT_MEM;
-   int    nsam = fm_states->nsam;
-   float  mag;
-@@ -170,8 +173,8 @@
-       rx_dem *= (1/wd);
-       //printf("%f %f\n", rx_bb_diff.real, rx_bb_diff.imag);
-       rx_dem_mem[i] = rx_dem;
-+      /*
-       acc = 0;
--      /*
-         for(k=0; k<FILT_MEM; k++) {
-           acc += rx_dem_mem[i-k] * bout[k];
-       }
-Index: codec2-dev/src/freedv_api.c
-===================================================================
---- codec2-dev/src/freedv_api.c	(revision 2841)
-+++ codec2-dev/src/freedv_api.c	(working copy)
-@@ -678,8 +678,11 @@
+--- codec2-dev/src/fdmdv.c	(revision 2846)
++++ codec2-dev/src/fdmdv.c	(working copy)
+@@ -50,11 +50,21 @@
+ #include "machdep.h"
  
- void freedv_comptx(struct freedv *f, COMP mod_out[], short speech_in[]) {
-     assert(f != NULL);
--    int    i, j;
-+    int    i;
-+#ifndef CORTEX_M4
-+    int    j;	
-     int    bits_per_codec_frame;
+ static int sync_uw[] = {1,-1,1,-1,1,-1};
+-
+ #ifdef __EMBEDDED__
+ #define printf gdb_stdio_printf
+ #endif
+ 
++#ifndef ARM_MATH_CM4
++  #define SINF(a) sinf(a)
++  #define COSF(a) cosf(a)
++#else
++  #define SINF(a) arm_sin_f32(a)
++  #define COSF(a) arm_cos_f32(a)
 +#endif
-     short  tx_real[f->n_nom_modem_samples];
++
++static const COMP  pi_on_4 = { .70710678118654752439, .70710678118654752439 }; // COSF(PI/4) , SINF(PI/4)
++
++
+ /*--------------------------------------------------------------------------* \
  
-     assert((f->mode == FREEDV_MODE_1600) || (f->mode == FREEDV_MODE_700) || 
+   FUNCTION....: fdmdv_create
+@@ -110,8 +120,8 @@
+            This helped PAPR for a few dB.  We don't need to adjust rx
+            phase as DQPSK takes care of that. */
+ 
+-	f->phase_tx[c].real = cosf(2.0*PI*c/(Nc+1));
+- 	f->phase_tx[c].imag = sinf(2.0*PI*c/(Nc+1));
++	f->phase_tx[c].real = COSF(2.0*PI*c/(Nc+1));
++ 	f->phase_tx[c].imag = SINF(2.0*PI*c/(Nc+1));
+ 
+ 	f->phase_rx[c].real = 1.0;
+  	f->phase_rx[c].imag = 0.0;
+@@ -124,12 +134,12 @@
+     f->prev_tx_symbols[Nc].real = 2.0;
+ 
+     fdmdv_set_fsep(f, FSEP);
+-    f->freq[Nc].real = cosf(2.0*PI*0.0/FS);
+-    f->freq[Nc].imag = sinf(2.0*PI*0.0/FS);
++    f->freq[Nc].real = COSF(2.0*PI*0.0/FS);
++    f->freq[Nc].imag = SINF(2.0*PI*0.0/FS);
+     f->freq_pol[Nc]  = 2.0*PI*0.0/FS;
+ 
+-    f->fbb_rect.real     = cosf(2.0*PI*FDMDV_FCENTRE/FS);
+-    f->fbb_rect.imag     = sinf(2.0*PI*FDMDV_FCENTRE/FS);
++    f->fbb_rect.real     = COSF(2.0*PI*FDMDV_FCENTRE/FS);
++    f->fbb_rect.imag     = SINF(2.0*PI*FDMDV_FCENTRE/FS);
+     f->fbb_pol           = 2.0*PI*FDMDV_FCENTRE/FS;
+     f->fbb_phase_tx.real = 1.0;
+     f->fbb_phase_tx.imag = 0.0;
+@@ -257,15 +267,15 @@
+ 
+     for(c=0; c<f->Nc/2; c++) {
+ 	carrier_freq = (-f->Nc/2 + c)*f->fsep;
+-	f->freq[c].real = cosf(2.0*PI*carrier_freq/FS);
+- 	f->freq[c].imag = sinf(2.0*PI*carrier_freq/FS);
++	f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
++ 	f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
+  	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
+     }
+ 
+     for(c=f->Nc/2; c<f->Nc; c++) {
+ 	carrier_freq = (-f->Nc/2 + c + 1)*f->fsep;
+-	f->freq[c].real = cosf(2.0*PI*carrier_freq/FS);
+- 	f->freq[c].imag = sinf(2.0*PI*carrier_freq/FS);
++	f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
++ 	f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
+  	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
+     }
+ }
+@@ -676,6 +686,12 @@
+ 	if (f >= 4)
+ 	    memcpy(&pilot_lut[M*(f-4)], pilot, M*sizeof(COMP));
+     }
++   
++    // create complex conjugate since we need this and only this later on 
++    for (f=0;f<4*M;f++)
++    {
++        pilot_lut[f] = cconj(pilot_lut[f]);
++    }
+ 
+ }
+ 
+@@ -806,10 +822,18 @@
+ 	f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
+     }
+ 
++#ifndef ARM_MATH_CM4
+     for(i=0,j=NPILOTBASEBAND-nin; i<nin; i++,j++) {
+-       	f->pilot_baseband1[j] = cmult(rx_fdm[i], cconj(pilot[i]));
+-	f->pilot_baseband2[j] = cmult(rx_fdm[i], cconj(prev_pilot[i]));
++       	f->pilot_baseband1[j] = cmult(rx_fdm[i], pilot[i]);
++	f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
+     }
++#else
++    // TODO: Maybe a handwritten mult taking advantage of rx_fdm[0] being 
++    // used twice would be faster but this is for sure faster than 
++    // the implementation above in any case.
++    arm_cmplx_mult_cmplx_f32(&rx_fdm[0].real,&pilot[0].real,&f->pilot_baseband1[NPILOTBASEBAND-nin].real,nin);
++    arm_cmplx_mult_cmplx_f32(&rx_fdm[0].real,&prev_pilot[0].real,&f->pilot_baseband2[NPILOTBASEBAND-nin].real,nin);
++#endif
+ 
+     lpf_peak_pick(&foff1, &max1, f->pilot_baseband1, f->pilot_lpf1, f->fft_pilot_cfg, f->S1, nin, do_fft);
+     lpf_peak_pick(&foff2, &max2, f->pilot_baseband2, f->pilot_lpf2, f->fft_pilot_cfg, f->S2, nin, do_fft);
+@@ -840,8 +864,8 @@
+     float mag;
+     int   i;
+ 
+-    foff_rect.real = cosf(2.0*PI*foff/FS);
+-    foff_rect.imag = sinf(2.0*PI*foff/FS);
++    foff_rect.real = COSF(2.0*PI*foff/FS);
++    foff_rect.imag = SINF(2.0*PI*foff/FS);
+     for(i=0; i<nin; i++) {
+ 	*foff_phase_rect = cmult(*foff_phase_rect, foff_rect);
+ 	rx_fdm_fcorr[i] = cmult(rx_fdm[i], *foff_phase_rect);
+@@ -992,7 +1016,41 @@
+     return dec_rate*acc;
+ }
+ 
++/*---------------------------------------------------------------------------*\
+ 
++  FUNCTION....: fir_filter2()
++  AUTHOR......: David Rowe
++  DATE CREATED: July 2014
++
++  Helper fir filter function which runs 2x same filter on two sets of data.
++\*---------------------------------------------------------------------------*/
++
++static void fir_filter2(float acc[2], float mem[], float coeff[], const unsigned int dec_rate) {
++    acc[0] = 0.0;
++    acc[1] = 0.0;
++
++    float c,m1,m2,a1,a2;
++    float* inpCmplx = &mem[0];
++    float* coeffPtr = &coeff[0];
++
++    int m;
++
++    for(m=0; m<NFILTER; m+=dec_rate) {
++        c = *coeffPtr;
++        m1 = inpCmplx[0];
++        m2 = inpCmplx[1];
++        a1 = c * m1;
++        a2 = c * m2;
++        acc[0] += a1;
++        inpCmplx+= dec_rate*2;
++        acc[1] += a2;
++        coeffPtr+= dec_rate;
++    }
++
++    acc[0] *= dec_rate;
++    acc[1] *= dec_rate;
++}
++
+ /*---------------------------------------------------------------------------*\
+ 
+   FUNCTION....: down_convert_and_rx_filter()
+@@ -1049,8 +1107,8 @@
+ 
+         //PROFILE_SAMPLE(windback_start);
+         windback_phase           = -freq_pol[c]*NFILTER;
+-        windback_phase_rect.real = cosf(windback_phase);
+-        windback_phase_rect.imag = sinf(windback_phase);
++        windback_phase_rect.real = COSF(windback_phase);
++        windback_phase_rect.imag = SINF(windback_phase);
+         phase_rx[c]              = cmult(phase_rx[c],windback_phase_rect);
+         //PROFILE_SAMPLE_AND_LOG(downconvert_start, windback_start, "        windback");
+ 
+@@ -1082,8 +1140,9 @@
+            for(m=0; m<NFILTER; m++)
+                rx_filt[c][k] = cadd(rx_filt[c][k], fcmult(gt_alpha5_root[m], rx_baseband[st+i+m]));
+            #else
+-           rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+-           rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
++            // rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
++            // rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
++	    fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+            #endif
+         }
+         //PROFILE_SAMPLE_AND_LOG2(filter_start, "        filter");
+@@ -1155,8 +1214,8 @@
+        out single DFT at frequency 2*pi/P */
+ 
+     x.real = 0.0; x.imag = 0.0;
+-    freq.real = cosf(2*PI/P);
+-    freq.imag = sinf(2*PI/P);
++    freq.real = COSF(2*PI/P);
++    freq.imag = SINF(2*PI/P);
+     phase.real = 1.0;
+     phase.imag = 0.0;
+ 
+@@ -1213,13 +1272,10 @@
+                    COMP rx_symbols[], int old_qpsk_mapping)
+ {
+     int   c;
+-    COMP  pi_on_4;
+     COMP  d;
+     int   msb=0, lsb=0;
+     float ferr, norm;
+ 
+-    pi_on_4.real = cosf(PI/4.0);
+-    pi_on_4.imag = sinf(PI/4.0);
+ 
+     /* Extra 45 degree clockwise lets us use real and imag axis as
+        decision boundaries. "norm" makes sure the phase subtraction
+@@ -1296,11 +1352,8 @@
+     float s[NC+1];
+     COMP  refl_symbols[NC+1];
+     float n[NC+1];
+-    COMP  pi_on_4;
+     int   c;
+ 
+-    pi_on_4.real = cosf(PI/4.0);
+-    pi_on_4.imag = sinf(PI/4.0);
+ 
+     /* mag of each symbol is distance from origin, this gives us a
+        vector of mags, one for each carrier. */

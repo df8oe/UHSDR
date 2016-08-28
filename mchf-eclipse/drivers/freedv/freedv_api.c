@@ -740,7 +740,7 @@ int freedv_comprx(struct freedv *f, short speech_out[], COMP demod_in[]) {
 
     if (f->mode == FREEDV_MODE_1600) {
 
-#if 0
+#ifndef ARM_MATH_CM4
         // TODO: ~14,4us
         for(i=0; i<f->nin; i++)
             demod_in[i] = fcmult(1.0/FDMDV_SCALE, demod_in[i]);
