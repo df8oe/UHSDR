@@ -517,12 +517,15 @@ static void wd_reset(void)
 	}
 }
  */
+#include "diag/Trace.h"
 
 // Power on
 int main(void)
 {
 
 
+    trace_puts("Hello mcHF World!");
+    // trace_printf(" %u\n", 1u);
 
 
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
