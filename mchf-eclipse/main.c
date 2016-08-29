@@ -517,7 +517,7 @@ static void wd_reset(void)
 	}
 }
  */
-#include "diag/Trace.h"
+#include "Trace.h"
 
 // Power on
 int main(void)
