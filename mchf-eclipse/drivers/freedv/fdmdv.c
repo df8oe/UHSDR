@@ -704,9 +704,11 @@ void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq)
 	if (f >= 4)
 	    memcpy(&pilot_lut[M*(f-4)], pilot, M*sizeof(COMP));
     }
-    // we do this, since later we need that in conjugate form only
-    // TODO: make this portable, it is not time critical
-    arm_cmplx_conj_f32(&pilot_lut[0].real,&pilot_lut[0].real,4*M);
+
+    for (f=0;f<4*M;f++)
+    {
+        pilot_lut[f] = cconj(pilot_lut[f]);
+    }
 }
 
 /*---------------------------------------------------------------------------*\
@@ -843,11 +845,17 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
       received and local version of the pilot, so we do it twice at
       different time shifts and choose the maximum.
     */
-
+#if 0
     for(i=0; i<NPILOTBASEBAND-nin; i++) {
 	f->pilot_baseband1[i] = f->pilot_baseband1[i+nin];
 	f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
     }
+#else
+    // we have to use memmove instead of memcpy due to overlapping ranges
+    // TODO: Measure performance gain
+    memmove(&f->pilot_baseband1[0],&f->pilot_baseband1[nin],(NPILOTBASEBAND-nin)*sizeof(f->pilot_baseband1[0]));
+    memmove(&f->pilot_baseband2[0],&f->pilot_baseband2[nin],(NPILOTBASEBAND-nin)*sizeof(f->pilot_baseband2[0]));
+#endif
 
 #if 0
     for(i=0,j=NPILOTBASEBAND-nin; i<nin; i++,j++) {
@@ -855,6 +863,7 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 	f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
     }
 #else
+
     // TODO: Maybe a handwritten mult taking advantage of rx_fdm[0] being used twice would be faster
     // but this is for sure faster than the implementation above in any case.
     arm_cmplx_mult_cmplx_f32(&rx_fdm[0].real,&pilot[0].real,&f->pilot_baseband1[NPILOTBASEBAND-nin].real,nin);

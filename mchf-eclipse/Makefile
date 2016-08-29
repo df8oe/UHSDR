@@ -63,6 +63,8 @@ SUBDIRS :=  \
     drivers/audio/softdds  \
     drivers/cat  \
     drivers/cat/usb  \
+    drivers/diag \
+    drivers/diag/arm \
     drivers/keyboard  \
     drivers/keyboard/usb  \
     drivers/ui  \
@@ -172,6 +174,9 @@ SRC =  \
     drivers/cat/usb/usbd_cdc_vcp.c  \
     drivers/cat/usb/usbd_desc.c  \
     drivers/cat/usb/usbd_usr.c  \
+    \
+    drivers/diag/Trace.c  \
+    drivers/diag/trace_impl.c  \
     \
     drivers/freedv/codebook.c  \
     drivers/freedv/codebookd.c  \
