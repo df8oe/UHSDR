@@ -56,6 +56,7 @@ SUBDIRS :=  \
     cmsis_lib/include  \
     cmsis_lib/source  \
     \
+    drivers \
     drivers/audio  \
     drivers/audio/codec  \
     drivers/audio/cw  \
