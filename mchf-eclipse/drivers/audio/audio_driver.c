@@ -2082,7 +2082,9 @@ static void audio_snap_carrier (void)
 {
 
     const float32_t buff_len = FFT_IQ_BUFF_LEN2;
-    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+    // the calculation of bin_BW is perfectly right at the moment, but we have to change it, if we switch to using the spectrum display zoom FFT to finetune
+//    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len));
     const int buff_len_int = FFT_IQ_BUFF_LEN2;
 
     float32_t bw_LSB = 0.0;
@@ -2091,8 +2093,45 @@ static void audio_snap_carrier (void)
     float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 
     //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
+    // FIXME: this is not the right calculation, at least it is a professional programmers blabla . . .
+    // In order for me to understand and to be sure it is the right calculation, I have got to change it, even if it is not a const anymore, sorry! DD4WH, 2016_08_30
     const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
+    // maybe this would be right AND satisfy the professional programmers search for "elegance" ;-)
+    /*
+     if (sd.magnify == 0)
+     {
+     const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
+     }
+     else
+     {
+          const int posbin = buff_len_int/4;
+     }
+    */
 
+    // for now, I use this:
+/*
+    int posbin = buff_len_int/4; // when sd.magnify is != 0 OR freq translation is on
+
+    if(sd.magnify == 0)
+    {
+    if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+  	  {
+      posbin = (buff_len_int / 4) - (buff_len_int / 16);
+  	  }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+  	  {
+      posbin = (buff_len_int / 4) + (buff_len_int / 16);
+  	  }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+  	  {
+      posbin = (buff_len_int / 4) - (buff_len_int / 8);
+  	  }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+  	  {
+      posbin = (buff_len_int / 4) + (buff_len_int / 8);
+  	  }
+    }
+*/
     const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
     const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
     const float32_t offset = centre_f - (width/2.0);
@@ -2164,10 +2203,10 @@ static void audio_snap_carrier (void)
     break;
     }
     // calculate upper and lower limit for determination of maximum magnitude
-    const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-    const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+     const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+     const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
-    if(Lbin < 0)
+/*    if(Lbin < 0)
     {
     	Lbin = 0;
     }
@@ -2175,7 +2214,7 @@ static void audio_snap_carrier (void)
     {
     	Ubin = 255;
     }
-
+*/
     // 	FFT preparation
     // we do not need to scale for this purpose !
     // arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
