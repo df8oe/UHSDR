@@ -473,7 +473,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
             {
                 cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,blockSize);
             }
-            if(ps.port_state & CW_IAMBIC_B)
+            if(ts.keyer_mode == CW_MODE_IAM_B)
             {
                 cw_gen_check_keyer_state();
             }
