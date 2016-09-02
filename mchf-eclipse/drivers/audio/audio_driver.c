@@ -2206,7 +2206,9 @@ static void audio_snap_carrier (void)
      const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
      const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
-/*    if(Lbin < 0)
+/* NEVER USE THIS, THIS CAUSES BIG PROBLEMS (but I dunno why . . )
+ *
+ *    if(Lbin < 0)
     {
     	Lbin = 0;
     }

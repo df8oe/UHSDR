@@ -1402,12 +1402,14 @@ void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_differenc
     float n[NC+1];
     COMP  pi_on_4;
     int   c;
+// this has to be swapped probably
 #if 0
-    pi_on_4.real = arm_cos_f32(PI/4.0);
-    pi_on_4.imag = arm_sin_f32(PI/4.0);
-#else
     pi_on_4.real = cosf(PI/4.0);
     pi_on_4.imag = sinf(PI/4.0);
+
+#else
+    pi_on_4.real = arm_cos_f32(PI/4.0);
+    pi_on_4.imag = arm_sin_f32(PI/4.0);
 
 #endif
     /* mag of each symbol is distance from origin, this gives us a
