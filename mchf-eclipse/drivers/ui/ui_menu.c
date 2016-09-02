@@ -2231,7 +2231,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
     case MENU_KEYER_MODE:	// Keyer mode
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_mode,
                                               0,
-                                              CW_MODE_STRAIGHT,
+                                              CW_MODE_ULTIMATE,
                                               CW_MODE_IAM_B,
                                               1
                                              );
@@ -2246,6 +2246,9 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             break;
         case CW_MODE_STRAIGHT:
             txt_ptr = "STR_K";
+            break;
+        case CW_MODE_ULTIMATE:
+            txt_ptr = "ULTIM";
             break;
         }
         break;

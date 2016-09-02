@@ -61,6 +61,8 @@ typedef struct PaddleState
 
     // Key clicks smoothing table current ptr
     ulong   sm_tbl_ptr;
+    
+    ulong	ultim;
 
 } PaddleState;
 
@@ -288,6 +290,7 @@ static void cw_gen_check_keyer_state(void)
 //*----------------------------------------------------------------------------
 ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
+
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
     {
         return cw_gen_process_strk(i_buffer,q_buffer,blockSize);
@@ -488,6 +491,8 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
         ps.key_timer--;
         if(ps.key_timer == 0)
         {
+		  if (ts.keyer_mode == CW_MODE_IAM_A || ts.keyer_mode == CW_MODE_IAM_B)
+		  {
             if (ps.port_state & CW_DIT_PROC)
             {
                 ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
@@ -499,6 +504,28 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
                 ps.cw_state    = CW_IDLE;
                 cw_gen_set_break_time();
             }
+          }
+          else
+          {
+          	if(!cw_dit_requested() && cw_dah_requested())
+          	{
+          	  ps.ultim = 1;
+          	}
+          	if(cw_dit_requested() && !cw_dah_requested())
+          	{
+          	  ps.ultim = 0;
+          	}
+			if(cw_dah_requested() && ps.ultim == 0)
+			{
+              ps.cw_state    = CW_DAH_CHECK;
+			}
+			else
+			{
+          	  ps.port_state &= ~(CW_DAH_L);
+          	  ps.cw_state    = CW_IDLE;
+          	  cw_gen_set_break_time();
+            }
+          }
         }
     }
     break;
