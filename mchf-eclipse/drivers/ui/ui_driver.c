@@ -1170,7 +1170,7 @@ void RadioManagement_CalculateCWSidebandMode()
     case CW_OFFSET_AUTO_RX:
     case CW_OFFSET_AUTO_SHIFT:
         // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        if (df.tune_new/TUNE_MULT > USB_FREQ_THRESHOLD || ts.band == BAND_MODE_60)   // is the current frequency above the USB threshold?
+        if (df.tune_new/TUNE_MULT > USB_FREQ_THRESHOLD || (df.tune_new >= BAND_FREQ_60 && df.tune_new < BAND_FREQ_60 + BAND_SIZE_60))   // is the current frequency above the USB threshold or is it 60m?
         {
             ts.cw_lsb = 0;                      // yes - indicate that it is USB
         }
