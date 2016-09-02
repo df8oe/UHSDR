@@ -655,7 +655,7 @@ static void mbest_insert(struct MBEST *mbest, int index[], float error) {
 	}
 }
 
-#if 0
+
 static void mbest_print(char title[], struct MBEST *mbest) {
     int i,j;
 
@@ -666,7 +666,7 @@ static void mbest_print(char title[], struct MBEST *mbest) {
 	fprintf(stderr, " %f\n", mbest->list[i].error);
     }
 }
-#endif
+
 
 /*---------------------------------------------------------------------------*\
 

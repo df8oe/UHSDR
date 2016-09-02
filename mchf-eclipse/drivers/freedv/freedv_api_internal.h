@@ -38,6 +38,8 @@
 #ifndef __FREEDV__
 
 #include "varicode.h"
+#include "fsk.h"
+#include "fmfsk.h"
 #include "codec2_fdmdv.h"
 #include "codec2_cohpsk.h"
 
@@ -63,6 +65,10 @@ struct freedv {
     struct FDMDV        *fdmdv;
     struct MODEM_STATS   stats;
     struct COHPSK       *cohpsk;
+    struct FSK          *fsk;
+    struct FMFSK        *fmfsk;
+    
+    struct freedv_vhf_deframer * deframer;      //Extracts frames from VHF stream
 
     struct quisk_cfFilter * ptFilter7500to8000;     // Filters to change to/from 7500 and 8000 sps
     struct quisk_cfFilter * ptFilter8000to7500;
@@ -83,6 +89,7 @@ struct freedv {
     int                  tx_sync_bit;
     int                  smooth_symbols;
     float               *prev_rx_bits;
+    int                  n_codec_bits;           // amount of codec bits in a frame
 
     int                 *ptest_bits_coh;
     int                 *ptest_bits_coh_end;
@@ -116,9 +123,14 @@ struct freedv {
 
     char (*freedv_get_next_tx_char)(void *callback_state);
     void (*freedv_put_next_rx_char)(void *callback_state, char c);
-
     void                *callback_state;
-
+    
+    /* user defined functions to produce and consume protocol bits */
+    /* Protocol bits are packed MSB-first */
+    void (*freedv_put_next_proto)(void *callback_state, char *proto_bits_packed);
+    void (*freedv_get_next_proto)(void *callback_state, char *proto_bits_packed);
+    void *proto_callback_state;
+    int n_protocol_bits;
 };
 
 // FIR filter suitable for changing rates 7500 to/from 8000
