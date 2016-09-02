@@ -1766,6 +1766,12 @@ static void calculate_dBm(void)
           posbin = (buff_len_int / 4) + (buff_len_int / 8);
       	  }
 
+        if(sd.magnify != 0)
+        	// in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
+        {
+        	posbin = buff_len_int / 4;
+        }
+
         width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 
         //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
