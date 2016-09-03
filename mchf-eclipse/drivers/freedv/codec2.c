@@ -100,20 +100,22 @@ struct CODEC2 * codec2_create(int mode)
     struct CODEC2 *c2;
     int            i,l;
 
+    if ((mode != CODEC2_MODE_3200) &&
+	   (mode != CODEC2_MODE_2400) &&
+	   (mode != CODEC2_MODE_1600) &&
+	   (mode != CODEC2_MODE_1400) &&
+	   (mode != CODEC2_MODE_1300) &&
+	   (mode != CODEC2_MODE_1200) &&
+	   (mode != CODEC2_MODE_700) &&
+	   (mode != CODEC2_MODE_700B)
+        ) {
+        return NULL;
+    }
+
     c2 = (struct CODEC2*)malloc(sizeof(struct CODEC2));
     if (c2 == NULL)
 	return NULL;
 
-    assert(
-	   (mode == CODEC2_MODE_3200) ||
-	   (mode == CODEC2_MODE_2400) ||
-	   (mode == CODEC2_MODE_1600) ||
-	   (mode == CODEC2_MODE_1400) ||
-	   (mode == CODEC2_MODE_1300) ||
-	   (mode == CODEC2_MODE_1200) ||
-	   (mode == CODEC2_MODE_700) ||
-	   (mode == CODEC2_MODE_700B)
-	   );
     c2->mode = mode;
     for(i=0; i<M; i++)
 	c2->Sn[i] = 1.0;
@@ -1392,7 +1394,7 @@ void codec2_encode_700(struct CODEC2 *c2, unsigned char * bits, short speech[])
         c2->bpf_buf[i] = c2->bpf_buf[4*N+i];
     for(i=0; i<4*N; i++)
         c2->bpf_buf[BPF_N+i] = speech[i];
-    inverse_filter(&c2->bpf_buf[BPF_N], bpf, 4*N, bpf_out, BPF_N);
+    inverse_filter(&c2->bpf_buf[BPF_N], bpf, 4*N, bpf_out, BPF_N-1);
     for(i=0; i<4*N; i++)
         bpf_speech[i] = bpf_out[i];
 
@@ -1604,7 +1606,7 @@ void codec2_encode_700b(struct CODEC2 *c2, unsigned char * bits, short speech[])
         c2->bpf_buf[i] = c2->bpf_buf[4*N+i];
     for(i=0; i<4*N; i++)
         c2->bpf_buf[BPF_N+i] = speech[i];
-    inverse_filter(&c2->bpf_buf[BPF_N], bpfb, 4*N, bpf_out, BPF_N);
+    inverse_filter(&c2->bpf_buf[BPF_N], bpfb, 4*N, bpf_out, BPF_N-1);
     for(i=0; i<4*N; i++)
         bpf_speech[i] = bpf_out[i];
 
@@ -1747,6 +1749,80 @@ void codec2_decode_700b(struct CODEC2 *c2, short speech[], const unsigned char *
 	c2->prev_lsps_dec[i] = lsps[3][i];
 }
 #endif
+
+/*---------------------------------------------------------------------------*\
+
+  FUNCTION....: codec2_get_energy()
+  AUTHOR......: Jeroen Vreeken
+  DATE CREATED: 08/03/2016
+
+  Extract energy value from an encoded frame.
+
+\*---------------------------------------------------------------------------*/
+
+float codec2_get_energy(struct CODEC2 *c2, const unsigned char *bits)
+{
+    assert(c2 != NULL);
+    assert(
+	   (c2->mode == CODEC2_MODE_3200) ||
+	   (c2->mode == CODEC2_MODE_2400) ||
+	   (c2->mode == CODEC2_MODE_1600) ||
+	   (c2->mode == CODEC2_MODE_1400) ||
+	   (c2->mode == CODEC2_MODE_1300) ||
+	   (c2->mode == CODEC2_MODE_1200) ||
+	   (c2->mode == CODEC2_MODE_700) ||
+	   (c2->mode == CODEC2_MODE_700B)
+	   );
+    MODEL model;
+    float xq_dec[2] = {};
+    int e_index, WoE_index;
+    float e;
+    unsigned int nbit;
+
+    if (c2->mode == CODEC2_MODE_3200) {
+        nbit = 1 + 1 + WO_BITS;
+	e_index = unpack(bits, &nbit, E_BITS);
+        e = decode_energy(e_index, E_BITS);
+    }
+    if (c2->mode == CODEC2_MODE_2400) {
+        nbit = 1 + 1;
+        WoE_index = unpack(bits, &nbit, WO_E_BITS);
+        decode_WoE(&model, &e, xq_dec, WoE_index);
+    }
+    if (c2->mode == CODEC2_MODE_1600) {
+        nbit = 1 + 1 + WO_BITS;
+        e_index = unpack(bits, &nbit, E_BITS);
+        e = decode_energy(e_index, E_BITS);
+    }
+    if (c2->mode == CODEC2_MODE_1400) {
+        nbit = 1 + 1;
+        WoE_index = unpack(bits, &nbit, WO_E_BITS);
+        decode_WoE(&model, &e, xq_dec, WoE_index);
+    }
+    if (c2->mode == CODEC2_MODE_1300) {
+        nbit = 1 + 1 + 1 + 1 + WO_BITS;
+        e_index = unpack_natural_or_gray(bits, &nbit, E_BITS, c2->gray);
+        e = decode_energy(e_index, E_BITS);
+    }
+    if (c2->mode == CODEC2_MODE_1200) {
+        nbit = 1 + 1;
+        WoE_index = unpack(bits, &nbit, WO_E_BITS);
+        decode_WoE(&model, &e, xq_dec, WoE_index);
+    }
+    if (c2->mode == CODEC2_MODE_700) {
+        nbit = 1 + 5;
+        e_index = unpack_natural_or_gray(bits, &nbit, 3, c2->gray);
+        e = decode_energy(e_index, 3);
+    }
+    if (c2->mode == CODEC2_MODE_700B) {
+        nbit = 1 + 5;
+        e_index = unpack_natural_or_gray(bits, &nbit, 3, c2->gray);
+        e = decode_energy(e_index, 3);
+    }
+
+    return e;
+}
+
 
 /*---------------------------------------------------------------------------*\
 

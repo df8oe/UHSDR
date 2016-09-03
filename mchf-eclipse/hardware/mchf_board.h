@@ -1228,10 +1228,6 @@ typedef struct {
    COMP samples[FDV_BUFFER_SIZE];
 }  FDV_IQ_Buffer;
 
-typedef struct {
-COMPSHORT samples[320]; //test to save some space later to be set back to COMP??
-}  FDV_out_Buffer;
-
 
 extern struct freedv *f_FREEDV;
 extern FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];

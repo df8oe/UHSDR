@@ -179,39 +179,44 @@ SRC =  \
     drivers/diag/Trace.c  \
     drivers/diag/trace_impl.c  \
     \
-    drivers/freedv/codebook.c  \
-    drivers/freedv/codebookd.c  \
-    drivers/freedv/codebookdt.c  \
-    drivers/freedv/codebookge.c  \
-    drivers/freedv/codebookjnd.c  \
-    drivers/freedv/codebookjvm.c  \
-    drivers/freedv/codebooklspmelvq.c  \
-    drivers/freedv/codebookmel.c  \
-    drivers/freedv/codebookres.c  \
-    drivers/freedv/codebookvqanssi.c  \
-    drivers/freedv/codebookvq.c  \
-    drivers/freedv/codec2.c  \
-    drivers/freedv/cohpsk.c  \
-    drivers/freedv/dump.c  \
-    drivers/freedv/fdmdv.c  \
-    drivers/freedv/fifo.c  \
-    drivers/freedv/fm.c  \
-    drivers/freedv/freedv_api.c  \
-    drivers/freedv/golay23.c  \
-    drivers/freedv/interp.c  \
-    drivers/freedv/kiss_fft.c  \
-    drivers/freedv/linreg.c  \
-    drivers/freedv/lpc.c  \
-    drivers/freedv/lsp.c  \
-    drivers/freedv/modem_stats.c  \
-    drivers/freedv/nlp.c  \
-    drivers/freedv/octave.c  \
-    drivers/freedv/pack.c  \
-    drivers/freedv/phase.c  \
-    drivers/freedv/postfilter.c  \
-    drivers/freedv/quantise.c  \
-    drivers/freedv/sine.c  \
-    drivers/freedv/varicode.c  \
+    drivers/freedv/codebook.c \
+    drivers/freedv/codebookd.c \
+    drivers/freedv/codebookdt.c \
+    drivers/freedv/codebookge.c \
+    drivers/freedv/codebookjnd.c \
+    drivers/freedv/codebookjvm.c \
+    drivers/freedv/codebooklspmelvq.c \
+    drivers/freedv/codebookmel.c \
+    drivers/freedv/codebookres.c \
+    drivers/freedv/codebookvq.c \
+    drivers/freedv/codebookvqanssi.c \
+    drivers/freedv/codec2.c \
+    drivers/freedv/cohpsk.c \
+    drivers/freedv/dump.c \
+    drivers/freedv/fdmdv.c \
+    drivers/freedv/fifo.c \
+    drivers/freedv/fm.c \
+    drivers/freedv/fmfsk.c \
+    drivers/freedv/freedv_api.c \
+    drivers/freedv/freedv_data_channel.c \
+    drivers/freedv/freedv_vhf_framing.c \
+    drivers/freedv/fsk.c \
+    drivers/freedv/golay23.c \
+    drivers/freedv/interp.c \
+    drivers/freedv/kiss_fft.c \
+    drivers/freedv/kiss_fftr.c \
+    drivers/freedv/linreg.c \
+    drivers/freedv/lpc.c \
+    drivers/freedv/lsp.c \
+    drivers/freedv/modem_stats.c \
+    drivers/freedv/nlp.c \
+    drivers/freedv/octave.c \
+    drivers/freedv/pack.c \
+    drivers/freedv/phase.c \
+    drivers/freedv/postfilter.c \
+    drivers/freedv/quantise.c \
+    drivers/freedv/sine.c \
+    drivers/freedv/varicode.c \
     \
     drivers/keyboard/keyb_driver.c  \
     drivers/keyboard/usb/usbh_bsp.c  \
