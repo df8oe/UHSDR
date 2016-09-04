@@ -14,8 +14,13 @@
 
 
 2016mmdd [DF8OE]
+- implemented keyer mode "ULTIMATIC"
+
+
+20160820 [DF8OE]
 - started working on FREEDV (feature is not enabled in daily snapshots yet)
 - implemented using of big USB plug for USB-stick bootloader instead of small plug
+- many minor bugfixes
 
 
 20160819 [DF8OE]

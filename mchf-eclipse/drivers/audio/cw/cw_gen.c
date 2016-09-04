@@ -507,14 +507,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
           }
           else
           {
-          	if(!cw_dit_requested() && cw_dah_requested())
-          	{
-          	  ps.ultim = 1;
-          	}
-          	if(cw_dit_requested() && !cw_dah_requested())
-          	{
-          	  ps.ultim = 0;
-          	}
+        	cw_test_first_paddle();
 			if(cw_dah_requested() && ps.ultim == 0)
 			{
               ps.cw_state    = CW_DAH_CHECK;
@@ -534,6 +527,23 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
     }
     return retval;
 }
+
+
+void cw_test_first_paddle(void)
+{
+  if(ts.keyer_mode == CW_MODE_ULTIMATE)
+  {
+    if(!cw_dit_requested() && cw_dah_requested())
+    {
+      ps.ultim = 1;
+    }
+    if(cw_dit_requested() && !cw_dah_requested())
+    {
+      ps.ultim = 0;
+    }
+  }
+}
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : cw_gen_dah_IRQ
@@ -558,6 +568,10 @@ void cw_gen_dah_IRQ(void)
             cw_gen_set_break_time();
         }
     }
+    else
+    {
+  	  cw_test_first_paddle();
+    }
 }
 
 //*----------------------------------------------------------------------------
@@ -575,6 +589,7 @@ void cw_gen_dit_IRQ(void)
     {
         ts.ptt_req = true;
         // Just flag change - nothing to call
+  		cw_test_first_paddle();
     }
 }
 
