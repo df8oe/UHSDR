@@ -508,8 +508,10 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
           else
           {
         	cw_test_first_paddle();
-			if(cw_dah_requested() && ps.ultim == 0)
+//			if(cw_dah_requested() && ps.ultim == 0)
+			if(ps.port_state & CW_DAH_L && ps.ultim == 0)
 			{
+          	  ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
               ps.cw_state    = CW_DAH_CHECK;
 			}
 			else
@@ -529,7 +531,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
 }
 
 
-void cw_test_first_paddle(void)
+void cw_test_first_paddle()
 {
   if(ts.keyer_mode == CW_MODE_ULTIMATE)
   {

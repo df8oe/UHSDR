@@ -25,7 +25,7 @@ void    cw_set_speed();
 
 ulong	cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 
-void	w_test_first_paddle();
+void	cw_test_first_paddle();
 void 	cw_gen_dah_IRQ();
 void 	cw_gen_dit_IRQ();
 
