@@ -23,7 +23,7 @@
 
   You should have received a copy of the GNU Lesser General Public License
   along with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /*---------------------------------------------------------------------------*\
 
@@ -36,6 +36,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#ifdef ARM_MATH_CM4
+#include "stm32f4xx.h"
+#include "core_cm4.h"
+#include "arm_math.h"
+#endif
+
 
 #include "fdmdv_internal.h"
 #include "codec2_fdmdv.h"
@@ -55,11 +62,11 @@ static int sync_uw[] = {1,-1,1,-1,1,-1};
 #endif
 
 #ifndef ARM_MATH_CM4
-  #define SINF(a) sinf(a)
-  #define COSF(a) cosf(a)
+#define SINF(a) sinf(a)
+#define COSF(a) cosf(a)
 #else
-  #define SINF(a) arm_sin_f32(a)
-  #define COSF(a) arm_cos_f32(a)
+#define SINF(a) arm_sin_f32(a)
+#define COSF(a) arm_cos_f32(a)
 #endif
 
 static const COMP  pi_on_4 = { .70710678118654752439, .70710678118654752439 }; // COSF(PI/4) , SINF(PI/4)
@@ -89,7 +96,7 @@ struct FDMDV * fdmdv_create(int Nc)
 
     f = (struct FDMDV*)malloc(sizeof(struct FDMDV));
     if (f == NULL)
-	return NULL;
+        return NULL;
 
     f->Nc = Nc;
 
@@ -98,7 +105,7 @@ struct FDMDV * fdmdv_create(int Nc)
     f->rx_test_bits_mem = (int*)malloc(sizeof(int)*f->ntest_bits);
     assert(f->rx_test_bits_mem != NULL);
     for(i=0; i<f->ntest_bits; i++)
-	f->rx_test_bits_mem[i] = 0;
+        f->rx_test_bits_mem[i] = 0;
     assert((sizeof(test_bits)/sizeof(int)) >= f->ntest_bits);
 
     f->old_qpsk_mapping = 0;
@@ -106,30 +113,30 @@ struct FDMDV * fdmdv_create(int Nc)
     f->tx_pilot_bit = 0;
 
     for(c=0; c<Nc+1; c++) {
-	f->prev_tx_symbols[c].real = 1.0;
-	f->prev_tx_symbols[c].imag = 0.0;
-	f->prev_rx_symbols[c].real = 1.0;
-	f->prev_rx_symbols[c].imag = 0.0;
+        f->prev_tx_symbols[c].real = 1.0;
+        f->prev_tx_symbols[c].imag = 0.0;
+        f->prev_rx_symbols[c].real = 1.0;
+        f->prev_rx_symbols[c].imag = 0.0;
 
-	for(k=0; k<NSYM; k++) {
-	    f->tx_filter_memory[c][k].real = 0.0;
-	    f->tx_filter_memory[c][k].imag = 0.0;
-	}
+        for(k=0; k<NSYM; k++) {
+            f->tx_filter_memory[c][k].real = 0.0;
+            f->tx_filter_memory[c][k].imag = 0.0;
+        }
 
-	/* Spread initial FDM carrier phase out as far as possible.
+        /* Spread initial FDM carrier phase out as far as possible.
            This helped PAPR for a few dB.  We don't need to adjust rx
            phase as DQPSK takes care of that. */
 
-	f->phase_tx[c].real = COSF(2.0*PI*c/(Nc+1));
- 	f->phase_tx[c].imag = SINF(2.0*PI*c/(Nc+1));
+        f->phase_tx[c].real = COSF(2.0*PI*c/(Nc+1));
+        f->phase_tx[c].imag = SINF(2.0*PI*c/(Nc+1));
 
-	f->phase_rx[c].real = 1.0;
- 	f->phase_rx[c].imag = 0.0;
+        f->phase_rx[c].real = 1.0;
+        f->phase_rx[c].imag = 0.0;
 
-	for(k=0; k<NT*P; k++) {
-	    f->rx_filter_mem_timing[c][k].real = 0.0;
-	    f->rx_filter_mem_timing[c][k].imag = 0.0;
-	}
+        for(k=0; k<NT*P; k++) {
+            f->rx_filter_mem_timing[c][k].real = 0.0;
+            f->rx_filter_mem_timing[c][k].imag = 0.0;
+        }
     }
     f->prev_tx_symbols[Nc].real = 2.0;
 
@@ -156,8 +163,8 @@ struct FDMDV * fdmdv_create(int Nc)
     assert(f->fft_pilot_cfg != NULL);
 
     for(i=0; i<NPILOTBASEBAND; i++) {
-	f->pilot_baseband1[i].real = f->pilot_baseband2[i].real = 0.0;
-	f->pilot_baseband1[i].imag = f->pilot_baseband2[i].imag = 0.0;
+        f->pilot_baseband1[i].real = f->pilot_baseband2[i].real = 0.0;
+        f->pilot_baseband1[i].imag = f->pilot_baseband2[i].imag = 0.0;
     }
     f->pilot_lut_index = 0;
     f->prev_pilot_lut_index = 3*M;
@@ -168,8 +175,8 @@ struct FDMDV * fdmdv_create(int Nc)
     }
 
     for(i=0; i<NPILOTLPF; i++) {
-	f->pilot_lpf1[i].real = f->pilot_lpf2[i].real = 0.0;
-	f->pilot_lpf1[i].imag = f->pilot_lpf2[i].imag = 0.0;
+        f->pilot_lpf1[i].real = f->pilot_lpf2[i].real = 0.0;
+        f->pilot_lpf1[i].imag = f->pilot_lpf2[i].imag = 0.0;
     }
 
     f->foff = 0.0;
@@ -188,8 +195,8 @@ struct FDMDV * fdmdv_create(int Nc)
         f->sync_mem[i] = 0;
 
     for(c=0; c<Nc+1; c++) {
-	f->sig_est[c] = 0.0;
-	f->noise_est[c] = 0.0;
+        f->sig_est[c] = 0.0;
+        f->noise_est[c] = 0.0;
     }
 
     f->sig_pwr_av = 0.0;
@@ -245,10 +252,10 @@ void fdmdv_get_test_bits(struct FDMDV *f, int tx_bits[])
     int bits_per_frame = fdmdv_bits_per_frame(f);
 
     for(i=0; i<bits_per_frame; i++) {
-	tx_bits[i] = test_bits[f->current_test_bit];
-	f->current_test_bit++;
-	if (f->current_test_bit > (f->ntest_bits-1))
-	    f->current_test_bit = 0;
+        tx_bits[i] = test_bits[f->current_test_bit];
+        f->current_test_bit++;
+        if (f->current_test_bit > (f->ntest_bits-1))
+            f->current_test_bit = 0;
     }
 }
 
@@ -266,17 +273,17 @@ void fdmdv_set_fsep(struct FDMDV *f, float fsep) {
     /* Set up frequency of each carrier */
 
     for(c=0; c<f->Nc/2; c++) {
-	carrier_freq = (-f->Nc/2 + c)*f->fsep;
-	f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
- 	f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
- 	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
+        carrier_freq = (-f->Nc/2 + c)*f->fsep;
+        f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
+        f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
+        f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
     }
 
     for(c=f->Nc/2; c<f->Nc; c++) {
-	carrier_freq = (-f->Nc/2 + c + 1)*f->fsep;
-	f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
- 	f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
- 	f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
+        carrier_freq = (-f->Nc/2 + c + 1)*f->fsep;
+        f->freq[c].real = COSF(2.0*PI*carrier_freq/FS);
+        f->freq[c].imag = SINF(2.0*PI*carrier_freq/FS);
+        f->freq_pol[c]  = 2.0*PI*carrier_freq/FS;
     }
 }
 
@@ -302,20 +309,20 @@ void bits_to_dqpsk_symbols(COMP tx_symbols[], int Nc, COMP prev_tx_symbols[], in
        old (suboptimal) V0.91 FreeDV mapping */
 
     for(c=0; c<Nc; c++) {
-	msb = tx_bits[2*c];
-	lsb = tx_bits[2*c+1];
-	if ((msb == 0) && (lsb == 0))
-	    tx_symbols[c] = prev_tx_symbols[c];
-	if ((msb == 0) && (lsb == 1))
+        msb = tx_bits[2*c];
+        lsb = tx_bits[2*c+1];
+        if ((msb == 0) && (lsb == 0))
+            tx_symbols[c] = prev_tx_symbols[c];
+        if ((msb == 0) && (lsb == 1))
             tx_symbols[c] = cmult(j, prev_tx_symbols[c]);
-	if ((msb == 1) && (lsb == 0)) {
-	    if (old_qpsk_mapping)
+        if ((msb == 1) && (lsb == 0)) {
+            if (old_qpsk_mapping)
                 tx_symbols[c] = cneg(prev_tx_symbols[c]);
             else
                 tx_symbols[c] = cmult(cneg(j),prev_tx_symbols[c]);
         }
-	if ((msb == 1) && (lsb == 1)) {
-	    if (old_qpsk_mapping)
+        if ((msb == 1) && (lsb == 1)) {
+            if (old_qpsk_mapping)
                 tx_symbols[c] = cmult(cneg(j),prev_tx_symbols[c]);
             else
                 tx_symbols[c] = cneg(prev_tx_symbols[c]);
@@ -326,14 +333,14 @@ void bits_to_dqpsk_symbols(COMP tx_symbols[], int Nc, COMP prev_tx_symbols[], in
        two spectral lines at +/- Rs/2 */
 
     if (*pilot_bit)
-	tx_symbols[Nc] = cneg(prev_tx_symbols[Nc]);
+        tx_symbols[Nc] = cneg(prev_tx_symbols[Nc]);
     else
-	tx_symbols[Nc] = prev_tx_symbols[Nc];
+        tx_symbols[Nc] = prev_tx_symbols[Nc];
 
     if (*pilot_bit)
-	*pilot_bit = 0;
+        *pilot_bit = 0;
     else
-	*pilot_bit = 1;
+        *pilot_bit = 1;
 }
 
 
@@ -359,42 +366,42 @@ void tx_filter(COMP tx_baseband[NC+1][M], int Nc, COMP tx_symbols[], COMP tx_fil
     gain.imag = 0.0;
 
     for(c=0; c<Nc+1; c++)
-	tx_filter_memory[c][NSYM-1] = cmult(tx_symbols[c], gain);
+        tx_filter_memory[c][NSYM-1] = cmult(tx_symbols[c], gain);
 
     /*
        tx filter each symbol, generate M filtered output samples for each symbol.
        Efficient polyphase filter techniques used as tx_filter_memory is sparse
-    */
+     */
 
     for(i=0; i<M; i++) {
-	for(c=0; c<Nc+1; c++) {
+        for(c=0; c<Nc+1; c++) {
 
-	    /* filter real sample of symbol for carrier c */
+            /* filter real sample of symbol for carrier c */
 
-	    acc = 0.0;
-	    for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
-		acc += M * tx_filter_memory[c][j].real * gt_alpha5_root[k];
-	    tx_baseband[c][i].real = acc;
+            acc = 0.0;
+            for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
+                acc += M * tx_filter_memory[c][j].real * gt_alpha5_root[k];
+            tx_baseband[c][i].real = acc;
 
-	    /* filter imag sample of symbol for carrier c */
+            /* filter imag sample of symbol for carrier c */
 
-	    acc = 0.0;
-	    for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
-		acc += M * tx_filter_memory[c][j].imag * gt_alpha5_root[k];
-	    tx_baseband[c][i].imag = acc;
+            acc = 0.0;
+            for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
+                acc += M * tx_filter_memory[c][j].imag * gt_alpha5_root[k];
+            tx_baseband[c][i].imag = acc;
 
-	}
+        }
     }
 
     /* shift memory, inserting zeros at end */
 
     for(i=0; i<NSYM-1; i++)
-	for(c=0; c<Nc+1; c++)
-	    tx_filter_memory[c][i] = tx_filter_memory[c][i+1];
+        for(c=0; c<Nc+1; c++)
+            tx_filter_memory[c][i] = tx_filter_memory[c][i+1];
 
     for(c=0; c<Nc+1; c++) {
-	tx_filter_memory[c][NSYM-1].real = 0.0;
-	tx_filter_memory[c][NSYM-1].imag = 0.0;
+        tx_filter_memory[c][NSYM-1].real = 0.0;
+        tx_filter_memory[c][NSYM-1].imag = 0.0;
     }
 }
 
@@ -411,9 +418,9 @@ void tx_filter(COMP tx_baseband[NC+1][M], int Nc, COMP tx_symbols[], COMP tx_fil
 \*---------------------------------------------------------------------------*/
 
 void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
-                             COMP tx_filter_memory[NC+1][NSYM],
-                             COMP phase_tx[], COMP freq[],
-                             COMP *fbb_phase, COMP fbb_rect)
+        COMP tx_filter_memory[NC+1][NSYM],
+        COMP phase_tx[], COMP freq[],
+        COMP *fbb_phase, COMP fbb_rect)
 {
     int     c;
     int     i,j,k;
@@ -427,49 +434,49 @@ void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
     gain.imag = 0.0;
 
     for(i=0; i<M; i++) {
-	tx_fdm[i].real = 0.0;
-	tx_fdm[i].imag = 0.0;
+        tx_fdm[i].real = 0.0;
+        tx_fdm[i].imag = 0.0;
     }
 
     for(c=0; c<Nc+1; c++)
-	tx_filter_memory[c][NSYM-1] = cmult(tx_symbols[c], gain);
+        tx_filter_memory[c][NSYM-1] = cmult(tx_symbols[c], gain);
 
     /*
        tx filter each symbol, generate M filtered output samples for
        each symbol, which we then freq shift and sum with other
        carriers.  Efficient polyphase filter techniques used as
        tx_filter_memory is sparse
-    */
+     */
 
     for(c=0; c<Nc+1; c++) {
         for(i=0; i<M; i++) {
 
-	    /* filter real sample of symbol for carrier c */
+            /* filter real sample of symbol for carrier c */
 
-	    acc = 0.0;
-	    for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
-		acc += M * tx_filter_memory[c][j].real * gt_alpha5_root[k];
-	    tx_baseband.real = acc;
+            acc = 0.0;
+            for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
+                acc += M * tx_filter_memory[c][j].real * gt_alpha5_root[k];
+            tx_baseband.real = acc;
 
-	    /* filter imag sample of symbol for carrier c */
+            /* filter imag sample of symbol for carrier c */
 
-	    acc = 0.0;
-	    for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
-		acc += M * tx_filter_memory[c][j].imag * gt_alpha5_root[k];
-	    tx_baseband.imag = acc;
+            acc = 0.0;
+            for(j=0,k=M-i-1; j<NSYM; j++,k+=M)
+                acc += M * tx_filter_memory[c][j].imag * gt_alpha5_root[k];
+            tx_baseband.imag = acc;
 
             /* freq shift and sum */
 
-	    phase_tx[c] = cmult(phase_tx[c], freq[c]);
-	    tx_fdm[i] = cadd(tx_fdm[i], cmult(tx_baseband, phase_tx[c]));
-	}
+            phase_tx[c] = cmult(phase_tx[c], freq[c]);
+            tx_fdm[i] = cadd(tx_fdm[i], cmult(tx_baseband, phase_tx[c]));
+        }
     }
 
     /* shift whole thing up to carrier freq */
 
     for (i=0; i<M; i++) {
-	*fbb_phase = cmult(*fbb_phase, fbb_rect);
-	tx_fdm[i] = cmult(tx_fdm[i], *fbb_phase);
+        *fbb_phase = cmult(*fbb_phase, fbb_rect);
+        tx_fdm[i] = cmult(tx_fdm[i], *fbb_phase);
     }
 
     /*
@@ -477,17 +484,17 @@ void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
       excludes the power of the pilot tone.
       We return the complex (single sided) signal to make frequency
       shifting for the purpose of testing easier
-    */
+     */
 
     for (i=0; i<M; i++)
-	tx_fdm[i] = cmult(two, tx_fdm[i]);
+        tx_fdm[i] = cmult(two, tx_fdm[i]);
 
     /* normalise digital oscillators as the magnitude can drift over time */
 
     for (c=0; c<Nc+1; c++) {
         mag = cabsolute(phase_tx[c]);
-	phase_tx[c].real /= mag;
-	phase_tx[c].imag /= mag;
+        phase_tx[c].real /= mag;
+        phase_tx[c].imag /= mag;
     }
 
     mag = cabsolute(*fbb_phase);
@@ -497,12 +504,12 @@ void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
     /* shift memory, inserting zeros at end */
 
     for(i=0; i<NSYM-1; i++)
-	for(c=0; c<Nc+1; c++)
-	    tx_filter_memory[c][i] = tx_filter_memory[c][i+1];
+        for(c=0; c<Nc+1; c++)
+            tx_filter_memory[c][i] = tx_filter_memory[c][i+1];
 
     for(c=0; c<Nc+1; c++) {
-	tx_filter_memory[c][NSYM-1].real = 0.0;
-	tx_filter_memory[c][NSYM-1].imag = 0.0;
+        tx_filter_memory[c][NSYM-1].real = 0.0;
+        tx_filter_memory[c][NSYM-1].imag = 0.0;
     }
 }
 
@@ -520,28 +527,28 @@ void tx_filter_and_upconvert(COMP tx_fdm[], int Nc, COMP tx_symbols[],
 \*---------------------------------------------------------------------------*/
 
 void fdm_upconvert(COMP tx_fdm[], int Nc, COMP tx_baseband[NC+1][M], COMP phase_tx[], COMP freq[],
-                   COMP *fbb_phase, COMP fbb_rect)
+        COMP *fbb_phase, COMP fbb_rect)
 {
     int   i,c;
     COMP  two = {2.0, 0.0};
     float mag;
 
     for(i=0; i<M; i++) {
-	tx_fdm[i].real = 0.0;
-	tx_fdm[i].imag = 0.0;
+        tx_fdm[i].real = 0.0;
+        tx_fdm[i].imag = 0.0;
     }
 
     for (c=0; c<=Nc; c++)
-	for (i=0; i<M; i++) {
-	    phase_tx[c] = cmult(phase_tx[c], freq[c]);
-	    tx_fdm[i] = cadd(tx_fdm[i], cmult(tx_baseband[c][i], phase_tx[c]));
-	}
+        for (i=0; i<M; i++) {
+            phase_tx[c] = cmult(phase_tx[c], freq[c]);
+            tx_fdm[i] = cadd(tx_fdm[i], cmult(tx_baseband[c][i], phase_tx[c]));
+        }
 
     /* shift whole thing up to carrier freq */
 
     for (i=0; i<M; i++) {
-	*fbb_phase = cmult(*fbb_phase, fbb_rect);
-	tx_fdm[i] = cmult(tx_fdm[i], *fbb_phase);
+        *fbb_phase = cmult(*fbb_phase, fbb_rect);
+        tx_fdm[i] = cmult(tx_fdm[i], *fbb_phase);
     }
 
     /*
@@ -549,17 +556,17 @@ void fdm_upconvert(COMP tx_fdm[], int Nc, COMP tx_baseband[NC+1][M], COMP phase_
       excludes the power of the pilot tone.
       We return the complex (single sided) signal to make frequency
       shifting for the purpose of testing easier
-    */
+     */
 
     for (i=0; i<M; i++)
-	tx_fdm[i] = cmult(two, tx_fdm[i]);
+        tx_fdm[i] = cmult(two, tx_fdm[i]);
 
     /* normalise digital oscilators as the magnitude can drift over time */
 
     for (c=0; c<Nc+1; c++) {
         mag = cabsolute(phase_tx[c]);
-	phase_tx[c].real /= mag;
-	phase_tx[c].imag /= mag;
+        phase_tx[c].real /= mag;
+        phase_tx[c].imag /= mag;
     }
 
     mag = cabsolute(*fbb_phase);
@@ -595,7 +602,7 @@ void fdmdv_mod(struct FDMDV *fdmdv, COMP tx_fdm[], int tx_bits[], int *sync_bit)
     memcpy(fdmdv->prev_tx_symbols, tx_symbols, sizeof(COMP)*(fdmdv->Nc+1));
     PROFILE_SAMPLE_AND_LOG(tx_filter_and_upconvert_start, mod_start, "    bits_to_dqpsk_symbols");
     tx_filter_and_upconvert(tx_fdm, fdmdv->Nc, tx_symbols, fdmdv->tx_filter_memory,
-                            fdmdv->phase_tx, fdmdv->freq, &fdmdv->fbb_phase_tx, fdmdv->fbb_rect);
+            fdmdv->phase_tx, fdmdv->freq, &fdmdv->fbb_phase_tx, fdmdv->fbb_rect);
     PROFILE_SAMPLE_AND_LOG2(tx_filter_and_upconvert_start, "    tx_filter_and_upconvert");
 
     *sync_bit = fdmdv->tx_pilot_bit;
@@ -612,7 +619,7 @@ void fdmdv_mod(struct FDMDV *fdmdv, COMP tx_fdm[], int tx_bits[], int *sync_bit)
 \*---------------------------------------------------------------------------*/
 
 void generate_pilot_fdm(COMP *pilot_fdm, int *bit, float *symbol,
-			float *filter_mem, COMP *phase, COMP *freq)
+        float *filter_mem, COMP *phase, COMP *freq)
 {
     int   i,j,k;
     float tx_baseband[M];
@@ -621,36 +628,36 @@ void generate_pilot_fdm(COMP *pilot_fdm, int *bit, float *symbol,
        two spectral lines at +/- RS/2 */
 
     if (*bit)
-	*symbol = -*symbol;
+        *symbol = -*symbol;
 
     if (*bit)
-	*bit = 0;
+        *bit = 0;
     else
-	*bit = 1;
+        *bit = 1;
 
     /* filter DPSK symbol to create M baseband samples */
 
     filter_mem[NFILTER-1] = (sqrtf(2)/2) * *symbol;
     for(i=0; i<M; i++) {
-	tx_baseband[i] = 0.0;
-	for(j=M-1,k=M-i-1; j<NFILTER; j+=M,k+=M)
-	    tx_baseband[i] += M * filter_mem[j] * gt_alpha5_root[k];
+        tx_baseband[i] = 0.0;
+        for(j=M-1,k=M-i-1; j<NFILTER; j+=M,k+=M)
+            tx_baseband[i] += M * filter_mem[j] * gt_alpha5_root[k];
     }
 
     /* shift memory, inserting zeros at end */
 
     for(i=0; i<NFILTER-M; i++)
-	filter_mem[i] = filter_mem[i+M];
+        filter_mem[i] = filter_mem[i+M];
 
     for(i=NFILTER-M; i<NFILTER; i++)
-	filter_mem[i] = 0.0;
+        filter_mem[i] = 0.0;
 
     /* upconvert */
 
     for(i=0; i<M; i++) {
-	*phase = cmult(*phase, *freq);
-	pilot_fdm[i].real = sqrtf(2)*2*tx_baseband[i] * phase->real;
-	pilot_fdm[i].imag = sqrtf(2)*2*tx_baseband[i] * phase->imag;
+        *phase = cmult(*phase, *freq);
+        pilot_fdm[i].real = sqrtf(2)*2*tx_baseband[i] * phase->real;
+        pilot_fdm[i].imag = sqrtf(2)*2*tx_baseband[i] * phase->imag;
     }
 }
 
@@ -676,17 +683,17 @@ void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq)
     int   i,f;
 
     for(i=0; i<NFILTER; i++)
-	pilot_filter_mem[i] = 0.0;
+        pilot_filter_mem[i] = 0.0;
 
     /* discard first 4 symbols as filter memory is filling, just keep
        last four symbols */
 
     for(f=0; f<8; f++) {
-	generate_pilot_fdm(pilot, &pilot_rx_bit, &pilot_symbol, pilot_filter_mem, &pilot_phase, pilot_freq);
-	if (f >= 4)
-	    memcpy(&pilot_lut[M*(f-4)], pilot, M*sizeof(COMP));
+        generate_pilot_fdm(pilot, &pilot_rx_bit, &pilot_symbol, pilot_filter_mem, &pilot_phase, pilot_freq);
+        if (f >= 4)
+            memcpy(&pilot_lut[M*(f-4)], pilot, M*sizeof(COMP));
     }
-   
+
     // create complex conjugate since we need this and only this later on 
     for (f=0;f<4*M;f++)
     {
@@ -706,8 +713,8 @@ void generate_pilot_lut(COMP pilot_lut[], COMP *pilot_freq)
 \*---------------------------------------------------------------------------*/
 
 void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
-		   COMP pilot_lpf[], kiss_fft_cfg fft_pilot_cfg, COMP S[], int nin,
-                   int do_fft)
+        COMP pilot_lpf[], kiss_fft_cfg fft_pilot_cfg, COMP S[], int nin,
+        int do_fft)
 {
     int   i,j,k;
     int   mpilot;
@@ -719,11 +726,11 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
     /* LPF cutoff 200Hz, so we can handle max +/- 200 Hz freq offset */
 
     for(i=0; i<NPILOTLPF-nin; i++)
-	pilot_lpf[i] = pilot_lpf[nin+i];
+        pilot_lpf[i] = pilot_lpf[nin+i];
     for(i=NPILOTLPF-nin, j=NPILOTBASEBAND-nin; i<NPILOTLPF; i++,j++) {
-	pilot_lpf[i].real = 0.0; pilot_lpf[i].imag = 0.0;
-	for(k=0; k<NPILOTCOEFF; k++)
-	    pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
+        pilot_lpf[i].real = 0.0; pilot_lpf[i].imag = 0.0;
+        for(k=0; k<NPILOTCOEFF; k++)
+            pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
     }
 
     /* We only need to do FFTs if we are out of sync.  Making them optional saves CPU in sync, which is when
@@ -787,7 +794,10 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
 
 float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 {
-    int  i,j;
+    int  i;
+#ifndef ARM_MATH_CM4
+    int j;
+#endif
     COMP pilot[M+M/P];
     COMP prev_pilot[M+M/P];
     float foff, foff1, foff2;
@@ -798,15 +808,15 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
     /* get pilot samples used for correlation/down conversion of rx signal */
 
     for (i=0; i<nin; i++) {
-	pilot[i] = f->pilot_lut[f->pilot_lut_index];
-	f->pilot_lut_index++;
-	if (f->pilot_lut_index >= 4*M)
-	    f->pilot_lut_index = 0;
+        pilot[i] = f->pilot_lut[f->pilot_lut_index];
+        f->pilot_lut_index++;
+        if (f->pilot_lut_index >= 4*M)
+            f->pilot_lut_index = 0;
 
-	prev_pilot[i] = f->pilot_lut[f->prev_pilot_lut_index];
-	f->prev_pilot_lut_index++;
-	if (f->prev_pilot_lut_index >= 4*M)
-	    f->prev_pilot_lut_index = 0;
+        prev_pilot[i] = f->pilot_lut[f->prev_pilot_lut_index];
+        f->prev_pilot_lut_index++;
+        if (f->prev_pilot_lut_index >= 4*M)
+            f->prev_pilot_lut_index = 0;
     }
 
     /*
@@ -815,17 +825,17 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
       resulting signal is sensitive to the time shift between the
       received and local version of the pilot, so we do it twice at
       different time shifts and choose the maximum.
-    */
+     */
 
     for(i=0; i<NPILOTBASEBAND-nin; i++) {
-	f->pilot_baseband1[i] = f->pilot_baseband1[i+nin];
-	f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
+        f->pilot_baseband1[i] = f->pilot_baseband1[i+nin];
+        f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
     }
 
 #ifndef ARM_MATH_CM4
     for(i=0,j=NPILOTBASEBAND-nin; i<nin; i++,j++) {
-       	f->pilot_baseband1[j] = cmult(rx_fdm[i], pilot[i]);
-	f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
+        f->pilot_baseband1[j] = cmult(rx_fdm[i], pilot[i]);
+        f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
     }
 #else
     // TODO: Maybe a handwritten mult taking advantage of rx_fdm[0] being 
@@ -839,9 +849,9 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
     lpf_peak_pick(&foff2, &max2, f->pilot_baseband2, f->pilot_lpf2, f->fft_pilot_cfg, f->S2, nin, do_fft);
 
     if (max1 > max2)
-	foff = foff1;
+        foff = foff1;
     else
-	foff = foff2;
+        foff = foff2;
 
     return foff;
 }
@@ -858,7 +868,7 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 \*---------------------------------------------------------------------------*/
 
 void fdmdv_freq_shift(COMP rx_fdm_fcorr[], COMP rx_fdm[], float foff,
-                      COMP *foff_phase_rect, int nin)
+        COMP *foff_phase_rect, int nin)
 {
     COMP  foff_rect;
     float mag;
@@ -867,8 +877,8 @@ void fdmdv_freq_shift(COMP rx_fdm_fcorr[], COMP rx_fdm[], float foff,
     foff_rect.real = COSF(2.0*PI*foff/FS);
     foff_rect.imag = SINF(2.0*PI*foff/FS);
     for(i=0; i<nin; i++) {
-	*foff_phase_rect = cmult(*foff_phase_rect, foff_rect);
-	rx_fdm_fcorr[i] = cmult(rx_fdm[i], *foff_phase_rect);
+        *foff_phase_rect = cmult(*foff_phase_rect, foff_rect);
+        rx_fdm_fcorr[i] = cmult(rx_fdm[i], *foff_phase_rect);
     }
 
     /* normalise digital oscilator as the magnitude can drfift over time */
@@ -900,17 +910,17 @@ void fdm_downconvert(COMP rx_baseband[NC+1][M+M/P], int Nc, COMP rx_fdm[], COMP 
     /* downconvert */
 
     for (c=0; c<Nc+1; c++)
-	for (i=0; i<nin; i++) {
-	    phase_rx[c] = cmult(phase_rx[c], freq[c]);
-	    rx_baseband[c][i] = cmult(rx_fdm[i], cconj(phase_rx[c]));
-	}
+        for (i=0; i<nin; i++) {
+            phase_rx[c] = cmult(phase_rx[c], freq[c]);
+            rx_baseband[c][i] = cmult(rx_fdm[i], cconj(phase_rx[c]));
+        }
 
     /* normalise digital oscilators as the magnitude can drift over time */
 
     for (c=0; c<Nc+1; c++) {
         mag = cabsolute(phase_rx[c]);
-	phase_rx[c].real /= mag;
-	phase_rx[c].imag /= mag;
+        phase_rx[c].real /= mag;
+        phase_rx[c].imag /= mag;
     }
 }
 
@@ -941,25 +951,25 @@ void rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_baseband[NC+1][M+M/P], C
 
     for(i=0, j=0; i<nin; i+=n,j++) {
 
-	/* latest input sample */
+        /* latest input sample */
 
-	for(c=0; c<Nc+1; c++)
-	    for(k=NFILTER-n,l=i; k<NFILTER; k++,l++)
-		rx_filter_memory[c][k] = rx_baseband[c][l];
+        for(c=0; c<Nc+1; c++)
+            for(k=NFILTER-n,l=i; k<NFILTER; k++,l++)
+                rx_filter_memory[c][k] = rx_baseband[c][l];
 
-	/* convolution (filtering) */
+        /* convolution (filtering) */
 
-	for(c=0; c<Nc+1; c++) {
-	    rx_filt[c][j].real = 0.0; rx_filt[c][j].imag = 0.0;
-	    for(k=0; k<NFILTER; k++)
-		rx_filt[c][j] = cadd(rx_filt[c][j], fcmult(gt_alpha5_root[k], rx_filter_memory[c][k]));
-	}
+        for(c=0; c<Nc+1; c++) {
+            rx_filt[c][j].real = 0.0; rx_filt[c][j].imag = 0.0;
+            for(k=0; k<NFILTER; k++)
+                rx_filt[c][j] = cadd(rx_filt[c][j], fcmult(gt_alpha5_root[k], rx_filter_memory[c][k]));
+        }
 
-	/* make room for next input sample */
+        /* make room for next input sample */
 
-	for(c=0; c<Nc+1; c++)
-	    for(k=0,l=n; k<NFILTER-n; k++,l++)
-		rx_filter_memory[c][k] = rx_filter_memory[c][l];
+        for(c=0; c<Nc+1; c++)
+            for(k=0,l=n; k<NFILTER-n; k++,l++)
+                rx_filter_memory[c][k] = rx_filter_memory[c][l];
     }
 
     assert(j <= (P+1)); /* check for any over runs */
@@ -1051,11 +1061,11 @@ static void fir_filter2(float acc[2], float mem[], float coeff[], const unsigned
 
 /*
    TODO: [ ] windback phase calculated once at init time
-*/
+ */
 
 void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
-                                COMP rx_fdm_mem[], COMP phase_rx[], COMP freq[],
-                                float freq_pol[], int nin, int dec_rate)
+        COMP rx_fdm_mem[], COMP phase_rx[], COMP freq[],
+        float freq_pol[], int nin, int dec_rate)
 {
     int i,k,c,st,N;
     float windback_phase, mag;
@@ -1085,7 +1095,7 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 
           This means winding phase(c) back from this point to ensure
           phase continuity.
-        */
+         */
 
         //PROFILE_SAMPLE(windback_start);
         windback_phase           = -freq_pol[c]*NFILTER;
@@ -1116,26 +1126,26 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 
         N=M/P;
         for(i=0, k=0; i<nin; i+=N, k++) {
-           #ifdef ORIG
-           rx_filt[c][k].real = 0.0; rx_filt[c][k].imag = 0.0;
+#ifdef ORIG
+            rx_filt[c][k].real = 0.0; rx_filt[c][k].imag = 0.0;
 
-           for(m=0; m<NFILTER; m++)
-               rx_filt[c][k] = cadd(rx_filt[c][k], fcmult(gt_alpha5_root[m], rx_baseband[st+i+m]));
-           #else
-           // rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
-           // rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
-	        fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
-           #endif
+            for(m=0; m<NFILTER; m++)
+                rx_filt[c][k] = cadd(rx_filt[c][k], fcmult(gt_alpha5_root[m], rx_baseband[st+i+m]));
+#else
+            // rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+            // rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
+            fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+#endif
         }
         //PROFILE_SAMPLE_AND_LOG2(filter_start, "        filter");
 
         /* normalise digital oscilators as the magnitude can drift over time */
 
         mag = cabsolute(phase_rx[c]);
-	phase_rx[c].real /= mag;
-	phase_rx[c].imag /= mag;
+        phase_rx[c].real /= mag;
+        phase_rx[c].imag /= mag;
 
-       //printf("phase_rx[%d] = %f %f\n", c, phase_rx[c].real, phase_rx[c].imag);
+        //printf("phase_rx[%d] = %f %f\n", c, phase_rx[c].real, phase_rx[c].imag);
     }
 }
 
@@ -1151,12 +1161,12 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 \*---------------------------------------------------------------------------*/
 
 float rx_est_timing(COMP rx_symbols[],
-                    int  Nc,
-		    COMP rx_filt[NC+1][P+1],
-		    COMP rx_filter_mem_timing[NC+1][NT*P],
-		    float env[],
-		    int nin,
-                    int m)
+        int  Nc,
+        COMP rx_filt[NC+1][P+1],
+        COMP rx_filter_mem_timing[NC+1][NT*P],
+        float env[],
+        int nin,
+        int m)
 {
     int   c,i,j;
     int   adjust;
@@ -1170,25 +1180,25 @@ float rx_est_timing(COMP rx_symbols[],
       120  -1 (one less rate P sample)
       160   0 (nominal)
       200   1 (one more rate P sample)
-    */
+     */
 
     adjust = P - nin*P/m;
 
     /* update buffer of NT rate P filtered symbols */
 
     for(c=0; c<Nc+1; c++)
-	for(i=0,j=P-adjust; i<(NT-1)*P+adjust; i++,j++)
-	    rx_filter_mem_timing[c][i] = rx_filter_mem_timing[c][j];
+        for(i=0,j=P-adjust; i<(NT-1)*P+adjust; i++,j++)
+            rx_filter_mem_timing[c][i] = rx_filter_mem_timing[c][j];
     for(c=0; c<Nc+1; c++)
-	for(i=(NT-1)*P+adjust,j=0; i<NT*P; i++,j++)
-	    rx_filter_mem_timing[c][i] = rx_filt[c][j];
+        for(i=(NT-1)*P+adjust,j=0; i<NT*P; i++,j++)
+            rx_filter_mem_timing[c][i] = rx_filt[c][j];
 
     /* sum envelopes of all carriers */
 
     for(i=0; i<NT*P; i++) {
-	env[i] = 0.0;
-	for(c=0; c<Nc+1; c++)
-	    env[i] += cabsolute(rx_filter_mem_timing[c][i]);
+        env[i] = 0.0;
+        for(c=0; c<Nc+1; c++)
+            env[i] += cabsolute(rx_filter_mem_timing[c][i]);
     }
 
     /* The envelope has a frequency component at the symbol rate.  The
@@ -1202,8 +1212,8 @@ float rx_est_timing(COMP rx_symbols[],
     phase.imag = 0.0;
 
     for(i=0; i<NT*P; i++) {
-	x = cadd(x, fcmult(env[i], phase));
-	phase = cmult(phase, freq);
+        x = cadd(x, fcmult(env[i], phase));
+        phase = cmult(phase, freq);
     }
 
     /* Map phase to estimated optimum timing instant at rate P.  The
@@ -1215,9 +1225,9 @@ float rx_est_timing(COMP rx_symbols[],
     rx_timing      = norm_rx_timing*P + P/4;
 
     if (rx_timing > P)
-	rx_timing -= P;
+        rx_timing -= P;
     if (rx_timing < -P)
-	rx_timing += P;
+        rx_timing += P;
 
     /* rx_filter_mem_timing contains Nt*P samples (Nt symbols at rate
        P), where Nt is odd.  Lets use linear interpolation to resample
@@ -1251,7 +1261,7 @@ float rx_est_timing(COMP rx_symbols[],
 \*---------------------------------------------------------------------------*/
 
 float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[], COMP prev_rx_symbols[],
-                   COMP rx_symbols[], int old_qpsk_mapping)
+        COMP rx_symbols[], int old_qpsk_mapping)
 {
     int   c;
     COMP  d;
@@ -1266,35 +1276,35 @@ float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[]
 
     for(c=0; c<Nc; c++) {
         norm = 1.0/(cabsolute(prev_rx_symbols[c])+1E-6);
-	phase_difference[c] = cmult(cmult(rx_symbols[c], fcmult(norm,cconj(prev_rx_symbols[c]))), pi_on_4);
+        phase_difference[c] = cmult(cmult(rx_symbols[c], fcmult(norm,cconj(prev_rx_symbols[c]))), pi_on_4);
     }
 
     /* map (Nc,1) DQPSK symbols back into an (1,Nc*Nb) array of bits */
 
     for (c=0; c<Nc; c++) {
-      d = phase_difference[c];
-      if ((d.real >= 0) && (d.imag >= 0)) {
-          msb = 0; lsb = 0;
-      }
-      if ((d.real < 0) && (d.imag >= 0)) {
-          msb = 0; lsb = 1;
-      }
-      if ((d.real < 0) && (d.imag < 0)) {
-          if (old_qpsk_mapping) {
-              msb = 1; lsb = 0;
-          } else {
-              msb = 1; lsb = 1;
-          }
-      }
-      if ((d.real >= 0) && (d.imag < 0)) {
-          if (old_qpsk_mapping) {
-              msb = 1; lsb = 1;
-          } else {
-              msb = 1; lsb = 0;
-          }
-      }
-      rx_bits[2*c] = msb;
-      rx_bits[2*c+1] = lsb;
+        d = phase_difference[c];
+        if ((d.real >= 0) && (d.imag >= 0)) {
+            msb = 0; lsb = 0;
+        }
+        if ((d.real < 0) && (d.imag >= 0)) {
+            msb = 0; lsb = 1;
+        }
+        if ((d.real < 0) && (d.imag < 0)) {
+            if (old_qpsk_mapping) {
+                msb = 1; lsb = 0;
+            } else {
+                msb = 1; lsb = 1;
+            }
+        }
+        if ((d.real >= 0) && (d.imag < 0)) {
+            if (old_qpsk_mapping) {
+                msb = 1; lsb = 1;
+            } else {
+                msb = 1; lsb = 0;
+            }
+        }
+        rx_bits[2*c] = msb;
+        rx_bits[2*c+1] = lsb;
     }
 
     /* Extract DBPSK encoded Sync bit and fine freq offset estimate */
@@ -1302,12 +1312,12 @@ float qpsk_to_bits(int rx_bits[], int *sync_bit, int Nc, COMP phase_difference[]
     norm = 1.0/(cabsolute(prev_rx_symbols[Nc])+1E-6);
     phase_difference[Nc] = cmult(rx_symbols[Nc], fcmult(norm, cconj(prev_rx_symbols[Nc])));
     if (phase_difference[Nc].real < 0) {
-      *sync_bit = 1;
-      ferr = phase_difference[Nc].imag*norm;    /* make f_err magnitude insensitive */
+        *sync_bit = 1;
+        ferr = phase_difference[Nc].imag*norm;    /* make f_err magnitude insensitive */
     }
     else {
-      *sync_bit = 0;
-      ferr = -phase_difference[Nc].imag*norm;
+        *sync_bit = 0;
+        ferr = -phase_difference[Nc].imag*norm;
     }
 
     /* pilot carrier gets an extra pi/4 rotation to make it consistent
@@ -1341,23 +1351,23 @@ void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_differenc
        vector of mags, one for each carrier. */
 
     for(c=0; c<Nc+1; c++)
-	s[c] = cabsolute(phase_difference[c]);
+        s[c] = cabsolute(phase_difference[c]);
 
     /* signal mag estimate for each carrier is a smoothed version of
        instantaneous magntitude, this gives us a vector of smoothed
        mag estimates, one for each carrier. */
 
     for(c=0; c<Nc+1; c++)
-	sig_est[c] = SNR_COEFF*sig_est[c] + (1.0 - SNR_COEFF)*s[c];
+        sig_est[c] = SNR_COEFF*sig_est[c] + (1.0 - SNR_COEFF)*s[c];
 
     /* noise mag estimate is distance of current symbol from average
        location of that symbol.  We reflect all symbols into the first
        quadrant for convenience. */
 
     for(c=0; c<Nc+1; c++) {
-	refl_symbols[c].real = fabsf(phase_difference[c].real);
-	refl_symbols[c].imag = fabsf(phase_difference[c].imag);
-	n[c] = cabsolute(cadd(fcmult(sig_est[c], pi_on_4), cneg(refl_symbols[c])));
+        refl_symbols[c].real = fabsf(phase_difference[c].real);
+        refl_symbols[c].imag = fabsf(phase_difference[c].imag);
+        n[c] = cabsolute(cadd(fcmult(sig_est[c], pi_on_4), cneg(refl_symbols[c])));
     }
 
     /* noise mag estimate for each carrier is a smoothed version of
@@ -1365,7 +1375,7 @@ void snr_update(float sig_est[], float noise_est[], int Nc, COMP phase_differenc
        noise power estimates, one for each carrier. */
 
     for(c=0; c<Nc+1; c++)
-	noise_est[c] = SNR_COEFF*noise_est[c] + (1 - SNR_COEFF)*n[c];
+        noise_est[c] = SNR_COEFF*noise_est[c] + (1 - SNR_COEFF)*n[c];
 }
 
 // returns number of shorts in error_pattern[], one short per error
@@ -1386,7 +1396,7 @@ int fdmdv_error_pattern_size(struct FDMDV *f) {
 \*---------------------------------------------------------------------------*/
 
 void fdmdv_put_test_bits(struct FDMDV *f, int *sync, short error_pattern[],
-			 int *bit_errors, int *ntest_bits, int rx_bits[])
+        int *bit_errors, int *ntest_bits, int rx_bits[])
 {
     int   i,j;
     float ber;
@@ -1395,17 +1405,17 @@ void fdmdv_put_test_bits(struct FDMDV *f, int *sync, short error_pattern[],
     /* Append to our memory */
 
     for(i=0,j=bits_per_frame; i<f->ntest_bits-bits_per_frame; i++,j++)
-	f->rx_test_bits_mem[i] = f->rx_test_bits_mem[j];
+        f->rx_test_bits_mem[i] = f->rx_test_bits_mem[j];
     for(i=f->ntest_bits-bits_per_frame,j=0; i<f->ntest_bits; i++,j++)
-	f->rx_test_bits_mem[i] = rx_bits[j];
+        f->rx_test_bits_mem[i] = rx_bits[j];
 
     /* see how many bit errors we get when checked against test sequence */
 
     *bit_errors = 0;
     for(i=0; i<f->ntest_bits; i++) {
         error_pattern[i] = test_bits[i] ^ f->rx_test_bits_mem[i];
-	*bit_errors += error_pattern[i];
-	//printf("%d %d %d %d\n", i, test_bits[i], f->rx_test_bits_mem[i], test_bits[i] ^ f->rx_test_bits_mem[i]);
+        *bit_errors += error_pattern[i];
+        //printf("%d %d %d %d\n", i, test_bits[i], f->rx_test_bits_mem[i], test_bits[i] ^ f->rx_test_bits_mem[i]);
     }
 
     /* if less than a thresh we are aligned and in sync with test sequence */
@@ -1414,7 +1424,7 @@ void fdmdv_put_test_bits(struct FDMDV *f, int *sync, short error_pattern[],
 
     *sync = 0;
     if (ber < 0.2)
-	*sync = 1;
+        *sync = 1;
 
     *ntest_bits = f->ntest_bits;
 
@@ -1466,43 +1476,43 @@ int freq_state(int *reliable_sync_bit, int sync_bit, int *state, int *timer, int
     next_state = *state;
     switch(*state) {
     case 0:
-	if (unique_word) {
-	    next_state = 1;
+        if (unique_word) {
+            next_state = 1;
             *timer = 0;
         }
-	break;
+        break;
     case 1:                   /* tentative sync state         */
-	if (unique_word) {
+        if (unique_word) {
             (*timer)++;
             if (*timer == 25) /* sync has been good for 500ms */
                 next_state = 2;
         }
-	else
-	    next_state = 0;  /* quickly fall out of sync     */
-	break;
+        else
+            next_state = 0;  /* quickly fall out of sync     */
+        break;
     case 2:                  /* good sync state */
-	if (unique_word == 0) {
+        if (unique_word == 0) {
             *timer = 0;
-	    next_state = 3;
+            next_state = 3;
         }
-	break;
+        break;
     case 3:                  /* tentative bad state, but could be a fade */
-	if (unique_word)
-	    next_state = 2;
-	else  {
+        if (unique_word)
+            next_state = 2;
+        else  {
             (*timer)++;
             if (*timer == 50) /* wait for 1000ms in case sync comes back  */
                 next_state = 0;
         }
-	break;
+        break;
     }
 
     //printf("state: %d next_state: %d uw: %d timer: %d\n", *state, next_state, unique_word, *timer);
     *state = next_state;
     if (*state)
-	sync = 1;
+        sync = 1;
     else
-	sync = 0;
+        sync = 0;
 
     return sync;
 }
@@ -1528,7 +1538,7 @@ int freq_state(int *reliable_sync_bit, int sync_bit, int *state, int *timer, int
 \*---------------------------------------------------------------------------*/
 
 void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
-		 int *reliable_sync_bit, COMP rx_fdm[], int *nin)
+        int *reliable_sync_bit, COMP rx_fdm[], int *nin)
 {
     float         foff_coarse, foff_fine;
     COMP          rx_fdm_fcorr[M+M/P];
@@ -1552,7 +1562,7 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
     PROFILE_SAMPLE_AND_LOG(fdmdv_freq_shift_start, demod_start, "    rx_est_freq_offset");
 
     if (fdmdv->sync == 0)
-	fdmdv->foff = foff_coarse;
+        fdmdv->foff = foff_coarse;
     fdmdv_freq_shift(rx_fdm_fcorr, rx_fdm_bb, -fdmdv->foff, &fdmdv->foff_phase_rect, *nin);
     PROFILE_SAMPLE_AND_LOG(down_convert_and_rx_filter_start, fdmdv_freq_shift_start, "    fdmdv_freq_shift");
 
@@ -1560,7 +1570,7 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
 
     rxdec_filter(rx_fdm_filter, rx_fdm_fcorr, fdmdv->rxdec_lpf_mem, *nin);
     down_convert_and_rx_filter(rx_filt, fdmdv->Nc, rx_fdm_filter, fdmdv->rx_fdm_mem, fdmdv->phase_rx, fdmdv->freq,
-                               fdmdv->freq_pol, *nin, M/Q);
+            fdmdv->freq_pol, *nin, M/Q);
     PROFILE_SAMPLE_AND_LOG(rx_est_timing_start, down_convert_and_rx_filter_start, "    down_convert_and_rx_filter");
     fdmdv->rx_timing = rx_est_timing(rx_symbols, fdmdv->Nc, rx_filt, fdmdv->rx_filter_mem_timing, env, *nin, M);
     PROFILE_SAMPLE_AND_LOG(qpsk_to_bits_start, rx_est_timing_start, "    rx_est_timing");
@@ -1570,13 +1580,13 @@ void fdmdv_demod(struct FDMDV *fdmdv, int rx_bits[],
     *nin = M;
 
     if (fdmdv->rx_timing > 2*M/P)
-	*nin += M/P;
+        *nin += M/P;
 
     if (fdmdv->rx_timing < 0)
-	*nin -= M/P;
+        *nin -= M/P;
 
     foff_fine = qpsk_to_bits(rx_bits, &sync_bit, fdmdv->Nc, fdmdv->phase_difference, fdmdv->prev_rx_symbols, rx_symbols,
-                             fdmdv->old_qpsk_mapping);
+            fdmdv->old_qpsk_mapping);
     memcpy(fdmdv->prev_rx_symbols, rx_symbols, sizeof(COMP)*(fdmdv->Nc+1));
     PROFILE_SAMPLE_AND_LOG(snr_update_start, qpsk_to_bits_start, "    qpsk_to_bits");
     snr_update(fdmdv->sig_est, fdmdv->noise_est, fdmdv->Nc, fdmdv->phase_difference);
@@ -1608,7 +1618,7 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
 
     S = 0.0;
     for(c=0; c<Nc+1; c++)
-	S += powf(sig_est[c], 2.0);
+        S += powf(sig_est[c], 2.0);
     SdB = 10.0*log10f(S+1E-12);
 
     /* Average noise mag across all carriers and square to get an
@@ -1618,7 +1628,7 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
 
     mean = 0.0;
     for(c=0; c<Nc+1; c++)
-	mean += noise_est[c];
+        mean += noise_est[c];
     mean /= (Nc+1);
     N50 = powf(mean, 2.0);
     N50dB = 10.0*log10f(N50+1E-12);
@@ -1658,7 +1668,7 @@ void fdmdv_get_demod_stats(struct FDMDV *fdmdv, struct MODEM_STATS *stats)
 
     stats->nr = 1;
     for(c=0; c<fdmdv->Nc+1; c++) {
-	stats->rx_symbols[0][c] = fdmdv->phase_difference[c];
+        stats->rx_symbols[0][c] = fdmdv->phase_difference[c];
     }
 }
 
@@ -1702,7 +1712,7 @@ void fdmdv_8_to_16(float out16k[], float in8k[], int n)
     /* update filter memory */
 
     for(i=-(FDMDV_OS_TAPS_8K); i<0; i++)
-	in8k[i] = in8k[i + n];
+        in8k[i] = in8k[i + n];
 
 }
 
@@ -1735,7 +1745,7 @@ void fdmdv_8_to_16_short(short out16k[], short in8k[], int n)
     /* update filter memory */
 
     for(i=-(FDMDV_OS_TAPS_8K); i<0; i++)
-	in8k[i] = in8k[i + n];
+        in8k[i] = in8k[i + n];
 
 }
 
@@ -1762,16 +1772,16 @@ void fdmdv_16_to_8(float out8k[], float in16k[], int n)
     int   i,j,k;
 
     for(i=0, k=0; k<n; i+=FDMDV_OS, k++) {
-	acc = 0.0;
-	for(j=0; j<FDMDV_OS_TAPS_16K; j++)
-	    acc += fdmdv_os_filter[j]*in16k[i-j];
+        acc = 0.0;
+        for(j=0; j<FDMDV_OS_TAPS_16K; j++)
+            acc += fdmdv_os_filter[j]*in16k[i-j];
         out8k[k] = acc;
     }
 
     /* update filter memory */
 
     for(i=-FDMDV_OS_TAPS_16K; i<0; i++)
-	in16k[i] = in16k[i + n*FDMDV_OS];
+        in16k[i] = in16k[i + n*FDMDV_OS];
 }
 
 void fdmdv_16_to_8_short(short out8k[], short in16k[], int n)
@@ -1780,16 +1790,16 @@ void fdmdv_16_to_8_short(short out8k[], short in16k[], int n)
     int i,j,k;
 
     for(i=0, k=0; k<n; i+=FDMDV_OS, k++) {
-	acc = 0.0;
-	for(j=0; j<FDMDV_OS_TAPS_16K; j++)
-	    acc += fdmdv_os_filter[j]*(float)in16k[i-j];
+        acc = 0.0;
+        for(j=0; j<FDMDV_OS_TAPS_16K; j++)
+            acc += fdmdv_os_filter[j]*(float)in16k[i-j];
         out8k[k] = acc;
     }
 
     /* update filter memory */
 
     for(i=-FDMDV_OS_TAPS_16K; i<0; i++)
-	in16k[i] = in16k[i + n*FDMDV_OS];
+        in16k[i] = in16k[i + n*FDMDV_OS];
 }
 
 
@@ -1806,14 +1816,14 @@ void fdmdv_dump_osc_mags(struct FDMDV *f)
 
     fprintf(stderr, "phase_tx[]:\n");
     for(i=0; i<=f->Nc; i++)
-	fprintf(stderr,"  %1.3f", (double)cabsolute(f->phase_tx[i]));
+        fprintf(stderr,"  %1.3f", (double)cabsolute(f->phase_tx[i]));
     fprintf(stderr,"\nfreq[]:\n");
     for(i=0; i<=f->Nc; i++)
-	fprintf(stderr,"  %1.3f", (double)cabsolute(f->freq[i]));
+        fprintf(stderr,"  %1.3f", (double)cabsolute(f->freq[i]));
     fprintf(stderr,"\nfoff_phase_rect: %1.3f", (double)cabsolute(f->foff_phase_rect));
     fprintf(stderr,"\nphase_rx[]:\n");
     for(i=0; i<=f->Nc; i++)
-	fprintf(stderr,"  %1.3f", (double)cabsolute(f->phase_rx[i]));
+        fprintf(stderr,"  %1.3f", (double)cabsolute(f->phase_rx[i]));
     fprintf(stderr, "\n\n");
 }
 
@@ -1897,5 +1907,5 @@ void fdmdv_simulate_channel(float *sig_pwr_av, COMP samples[], int nin, float ta
     /*
     fprintf(stderr, "sig_pwr: %f f->sig_pwr_av: %e target_snr_linear: %f noise_pwr_4000Hz: %e noise_gain: %e\n",
             sig_pwr, f->sig_pwr_av, target_snr_linear, noise_pwr_4000Hz, noise_gain);
-    */
+     */
 }

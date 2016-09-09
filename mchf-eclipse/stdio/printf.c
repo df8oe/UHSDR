@@ -378,6 +378,14 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
             /* Parse type */
             switch (*pFormat)
             {
+            case 'f':
+                // max size increase width? then -> OK
+                // num = PutSignedInt(pStr, fill, width, va_arg(ap, signed int),signboth);
+                {
+                    float tval = va_arg(ap, double) ;
+                    num = PutHexa(pStr, fill, width, 0, ((uint32_t*)&tval)[0]);
+                }
+                break;
             case 'd':
             case 'i':
                 // max size increase width? then -> OK
@@ -393,7 +401,7 @@ signed int vsnprintf(char *pStr, size_t length, const char *pFormat, va_list ap)
                 break;
             case 'X':
                 // max size increase width? then -> OK
-                num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int));
+                  num = PutHexa(pStr, fill, width, 1, va_arg(ap, unsigned int));
                 break;
             case 's':
                 // copied character count never more than width
