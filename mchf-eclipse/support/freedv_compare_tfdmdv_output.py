@@ -46,8 +46,8 @@ class octaveRecord:
         else:
             return abs(a / (a - b))
 
-    def compare(self,rec2):
-        sys.stdout.write(self.rname + ": ")
+    def compare(self,rec2,of):
+        of.write(self.rname + ": ")
         if ( self.rrows == rec2.rrows):
             if (self.rcols == rec2.rcols):
                 #iterate over both arrays and compare the values
@@ -59,20 +59,19 @@ class octaveRecord:
                         elif self.get_dev(cellA,cellB) > 100.0:
                             res = '' # '#'
                         else:
-                            sys.stdout.write(str(self.get_dev(cellA,cellB)) +":")
-                            self.dumpCell(cellA,sys.stdout)
-                            sys.stdout.write(" /")
-                            self.dumpCell(cellB,sys.stdout)
-                            sys.stdout.write(" ")
+                            of.write(str(self.get_dev(cellA,cellB)) +":")
+                            self.dumpCell(cellA,of)
+                            of.write(" /")
+                            self.dumpCell(cellB,of)
+                            of.write(" ")
                             
-                        sys.stdout.write(res)
-                sys.stdout.write("\n")
+                        of.write(res)
+                of.write("\n")
             else:
-                print "col numbers differ"
+                of.write("col numbers differ\n")
         else:
-            print "row numbers differ"
-        
-        sys.stdout.flush()
+            print of.write("row numbers differ")
+        of.flush()
     
 
 def intStr2float(hexValStr):
@@ -107,6 +106,7 @@ def readFromDump(fileName, FloatAsHexString = True):
     rcols=0
     rrows=0
     rheaderWrite=True
+    outOfSync = True
 
     f = open(fileName, 'r')
     recArray = []
@@ -116,67 +116,69 @@ def readFromDump(fileName, FloatAsHexString = True):
     records = []
 
     for line in f:
-        words = line.split()
-        if words:
-            if (words[0] == "#"):
-                if (words[1] == "name:"):
-                    rname=words[2]
-                elif (words[1] == "type:"):
-                    rtype=words[2]
-                elif (words[1] == "rows:"):
-                    rrows=int(words[2])
-                elif (words[1] == "columns:"):
-                    rcols=int(words[2])
-                    rheaderWrite = True
-                elif (words[1] == "hex:"):
-                    rhex = words[2] == "true"
-    
-            else:
-                if (rheaderWrite):
-                    recArray = []
-                    rheaderWrite = False
-                    record.rname = rname
-                    record.rtype = rtype
-                    record.rrows = rrows
-                    record.rcols = rcols
-                if (rtype == "complex"):
-                    compArray = []
-                    for word in words:
-                        compArray.append(get_complex(word,FloatAsHexString))
-                    recArray.append(compArray)
-                elif (rtype == "float"):
-                    compArray = []
-                    for word in words:
-                        compArray.append(get_float(word,FloatAsHexString))
-                    recArray.append(compArray)
-                elif (rtype == "int"):
-                    compArray = []
-                    for word in words:
-                        compArray.append(get_int(word))
-                    recArray.append(compArray)
-                elif (rtype == "matrix"):
-                    compArray = []
-                    for word in words:
-                        compArray.append(get_float(word,rhex))
-                    recArray.append(compArray)
-                    
-                if (len(recArray) == rrows):
-                    record.record = recArray
-                    records.append(record)
-                    record = octaveRecord()
-                    rhex = False
+        if outOfSync == False:
+            words = line.split()
+            if words:
+                if (words[0] == "#"):
+                    if (words[1] == "name:"):
+                        rname=words[2]
+                    elif (words[1] == "type:"):
+                        rtype=words[2]
+                    elif (words[1] == "rows:"):
+                        rrows=int(words[2])
+                    elif (words[1] == "columns:"):
+                        rcols=int(words[2])
+                        rheaderWrite = True
+                    elif (words[1] == "hex:"):
+                        rhex = words[2] == "true"
+        
+                else:
+                    if (rheaderWrite):
+                        recArray = []
+                        rheaderWrite = False
+                        record.rname = rname
+                        record.rtype = rtype
+                        record.rrows = rrows
+                        record.rcols = rcols
+                    if (rtype == "complex"):
+                        compArray = []
+                        for word in words:
+                            compArray.append(get_complex(word,FloatAsHexString))
+                        recArray.append(compArray)
+                    elif (rtype == "float"):
+                        compArray = []
+                        for word in words:
+                            compArray.append(get_float(word,FloatAsHexString))
+                        recArray.append(compArray)
+                    elif (rtype == "int"):
+                        compArray = []
+                        for word in words:
+                            compArray.append(get_int(word))
+                        recArray.append(compArray)
+                    elif (rtype == "matrix"):
+                        compArray = []
+                        for word in words:
+                            compArray.append(get_float(word,rhex))
+                        recArray.append(compArray)
+                        
+                    if (len(recArray) == rrows):
+                        record.record = recArray
+                        records.append(record)
+                        record = octaveRecord()
+                        rhex = False
+        else:
+            outOfSync = line.startswith("# Created by tfdmdv.c") == False
     f.close()
     return records              
 
 records = readFromDump('tfdmdv_out_reference.txt')
 records2 = readFromDump('tfdmdv_out.txt')
 
+outputFile = open('log2.out', 'wt')
 for rA,rB in zip(records,records2):
-    rA.compare(rB)
+    rA.compare(rB,outputFile)
 
-
-#outputFile = open('log2.out', 'wt')
 #for record in records2:
 #    record.dump(outputFile)                               
-#outputFile.flush()
-#outputFile.close()        
+outputFile.flush()
+outputFile.close()        
