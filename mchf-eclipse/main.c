@@ -523,14 +523,13 @@ static void wd_reset(void)
 int main(void)
 {
 
-
     trace_puts("Hello mcHF World!");
     // trace_printf(" %u\n", 1u);
 
 
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
-    // mchf_board_detect_ramsize();
+    mchf_board_detect_ramsize();
     //	FLASH_OB_Unlock();
     //	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
     //	FLASH_OB_Launch();
