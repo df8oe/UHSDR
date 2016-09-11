@@ -299,7 +299,9 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
                 ProfilingTimedEvent* ev_ptr = profileTimedEventGet(i);
                 if (ev_ptr->count != 0)
                 {
-                    // trace_printf("%d: %d uS per run\n",i, (ev_ptr->duration/(ev_ptr->count*168)));
+#if CUMULATIVE
+                    trace_printf("%d: %d uS per run\n",i, (ev_ptr->duration/(ev_ptr->count*168)));
+#endif
                 }
             }
 #endif

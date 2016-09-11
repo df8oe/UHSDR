@@ -729,8 +729,32 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
         pilot_lpf[i] = pilot_lpf[nin+i];
     for(i=NPILOTLPF-nin, j=NPILOTBASEBAND-nin; i<NPILOTLPF; i++,j++) {
         pilot_lpf[i].real = 0.0; pilot_lpf[i].imag = 0.0;
-        for(k=0; k<NPILOTCOEFF; k++)
-            pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
+
+        // STM32F4 hand optimized, this alone makes it go done from 1.6 to 1.17ms
+        // switching pilot_coeff to RAM (by removing const in pilot_coeff.h) would save
+        // another 0.11 ms at the expense of NPILOTCOEFF * 4 bytes == 120 bytes RAM
+
+        if (NPILOTCOEFF%5 == 0)
+        {
+            for(k=0; k<NPILOTCOEFF; k+=5)
+            {
+                COMP i0 = fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]);
+                COMP i1 = fcmult(pilot_coeff[k+1], pilot_baseband[j-NPILOTCOEFF+1+k+1]);
+                COMP i2 = fcmult(pilot_coeff[k+2], pilot_baseband[j-NPILOTCOEFF+1+k+2]);
+                COMP i3 = fcmult(pilot_coeff[k+3], pilot_baseband[j-NPILOTCOEFF+1+k+3]);
+                COMP i4 = fcmult(pilot_coeff[k+4], pilot_baseband[j-NPILOTCOEFF+1+k+4]);
+
+                pilot_lpf[i] = cadd(cadd(cadd(cadd(cadd(pilot_lpf[i], i0),i1),i2),i3),i4);
+            }
+        }
+        else
+        {
+            for(k=0; k<NPILOTCOEFF; k++)
+            {
+                pilot_lpf[i] = cadd(pilot_lpf[i], fcmult(pilot_coeff[k], pilot_baseband[j-NPILOTCOEFF+1+k]));
+            }
+
+        }
     }
 
     /* We only need to do FFTs if we are out of sync.  Making them optional saves CPU in sync, which is when
