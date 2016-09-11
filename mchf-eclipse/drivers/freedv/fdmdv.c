@@ -1008,7 +1008,7 @@ void rxdec_filter(COMP rx_fdm_filter[], COMP rx_fdm[], COMP rxdec_lpf_mem[], int
 
   FUNCTION....: fir_filter2()
   AUTHOR......: Danilo Beuche
-  DATE CREATED: Auhust 2016
+  DATE CREATED: August 2016
 
   Ths version submitted by Danilo for the STM32F4 platform.  The idea
   is to avoid reading the same value from the STM32F4 "slow" flash
@@ -1017,28 +1017,83 @@ void rxdec_filter(COMP rx_fdm_filter[], COMP rx_fdm[], COMP rxdec_lpf_mem[], int
 
 \*---------------------------------------------------------------------------*/
 
-static void fir_filter2(float acc[2], float mem[], float coeff[], const unsigned int dec_rate) {
+static void fir_filter2(float acc[2], float mem[], const float coeff[], const unsigned int dec_rate) {
     acc[0] = 0.0;
     acc[1] = 0.0;
 
-    float c,m1,m2,a1,a2;
+    float c1,c2,c3,c4,c5,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,a1,a2;
     float* inpCmplx = &mem[0];
-    float* coeffPtr = &coeff[0];
+    const float* coeffPtr = &coeff[0];
 
     int m;
 
-    for(m=0; m<NFILTER; m+=dec_rate) {
-        c = *coeffPtr;
-        m1 = inpCmplx[0];
-        m2 = inpCmplx[1];
-        a1 = c * m1;
-        a2 = c * m2;
-        acc[0] += a1;
-        inpCmplx+= dec_rate*2;
-        acc[1] += a2;
-        coeffPtr+= dec_rate;
-    }
+    // this manual loop unrolling gives significant boost on STM32 machines
+    // reduction from avg 3.2ms to 2.4ms in tfdmv.c test
+    // 5 was the sweet spot, with 6 it took longer again
+    // and should not harm other, more powerful machines
+    // no significant difference in output, only rounding (which was to be expected)
+    // TODO: try to move coeffs to RAM and check if it makes a significant difference
+    if (NFILTER%(dec_rate*5) == 0) {
+        for(m=0; m<NFILTER; m+=dec_rate*5) {
+            c1 = *coeffPtr;
 
+            m1 = inpCmplx[0];
+            m2 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            c2 = *coeffPtr;
+            m3 = inpCmplx[0];
+            m4 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            c3 = *coeffPtr;
+            m5 = inpCmplx[0];
+            m6 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            c4 = *coeffPtr;
+            m7 = inpCmplx[0];
+            m8 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            c5 = *coeffPtr;
+            m9 = inpCmplx[0];
+            m10 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            a1 = c1 * m1 + c2 * m3 + c3 * m5 + c4 * m7 + c5 * m9;
+            a2 = c1 * m2 + c2 * m4 + c3 * m6 + c4 * m8 + c5 * m10;
+            acc[0] += a1;
+            acc[1] += a2;
+        }
+    }
+    else
+    {
+        for(m=0; m<NFILTER; m+=dec_rate) {
+            c1 = *coeffPtr;
+
+            m1 = inpCmplx[0];
+            m2 = inpCmplx[1];
+
+            inpCmplx+= dec_rate*2;
+            coeffPtr+= dec_rate;
+
+            a1 = c1 * m1;
+            a2 = c1 * m2;
+            acc[0] += a1;
+            acc[1] += a2;
+        }
+    }
     acc[0] *= dec_rate;
     acc[1] *= dec_rate;
 }
@@ -1077,11 +1132,16 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 
     /* update memory of rx_fdm */
 
+#if 0
     for(i=0; i<NFILTER+M-nin; i++)
         rx_fdm_mem[i] = rx_fdm_mem[i+nin];
     for(i=NFILTER+M-nin, k=0; i<NFILTER+M; i++, k++)
         rx_fdm_mem[i] = rx_fdm[k];
-
+#else
+    // this gives only 40uS gain on STM32 but now that we have, we keep it
+    memmove(&rx_fdm_mem[0],&rx_fdm_mem[nin],(NFILTER+M-nin)*sizeof(COMP));
+    memcpy(&rx_fdm_mem[NFILTER+M-nin],&rx_fdm[0],nin*sizeof(COMP));
+#endif
     for(c=0; c<Nc+1; c++) {
 
         /*
@@ -1134,7 +1194,7 @@ void down_convert_and_rx_filter(COMP rx_filt[NC+1][P+1], int Nc, COMP rx_fdm[],
 #else
             // rx_filt[c][k].real = fir_filter(&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
             // rx_filt[c][k].imag = fir_filter(&rx_baseband[st+i].imag, (float*)gt_alpha5_root, dec_rate);
-            fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, (float*)gt_alpha5_root, dec_rate);
+            fir_filter2(&rx_filt[c][k].real,&rx_baseband[st+i].real, gt_alpha5_root, dec_rate);
 #endif
         }
         //PROFILE_SAMPLE_AND_LOG2(filter_start, "        filter");

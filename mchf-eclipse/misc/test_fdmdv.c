@@ -38,12 +38,15 @@
 #include "codec2_fdmdv.h"
 #include "octave.h"
 
+
 #ifdef ARM_MATH_CM4
 #include "Trace.h"
 #define FPRINTF(f,...) trace_printf(__VA_ARGS__)
 #else
 #define FPRINTF(...) fprintf(__VA_ARGS__)
 #endif
+
+#include "profiling.h"
 
 
 //  0 -> each frame is stored separately
@@ -175,35 +178,44 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 	\*---------------------------------------------------------*/
 
         /* shift down to complex baseband */
-
+        profileTimedEventStart(ProfileTP0);
         fdmdv_freq_shift(rx_fdm, rx_fdm, -FDMDV_FCENTRE, &fdmdv->fbb_phase_rx, nin);
-
+        profileTimedEventStop(ProfileTP0);
         /* freq offset estimation and correction */
 
         // fdmdv->sync = 0; // when debugging good idea to uncomment this to "open loop"
-
+        profileTimedEventStart(ProfileTP1);
         foff_coarse = rx_est_freq_offset(fdmdv, rx_fdm, nin, !fdmdv->sync);
+        profileTimedEventStop(ProfileTP1);
 
         if (fdmdv->sync == 0)
             fdmdv->foff = foff_coarse;
+        profileTimedEventStart(ProfileTP2);
         fdmdv_freq_shift(rx_fdm_fcorr, rx_fdm, -fdmdv->foff, &fdmdv->foff_phase_rect, nin);
-
+        profileTimedEventStop(ProfileTP2);
         /* baseband processing */
 
         rxdec_filter(rx_fdm_filter, rx_fdm_fcorr, fdmdv->rxdec_lpf_mem, nin);
 
+        profileTimedEventStart(ProfileTP3);
         down_convert_and_rx_filter(rx_filt, fdmdv->Nc, rx_fdm_filter, fdmdv->rx_fdm_mem, fdmdv->phase_rx, fdmdv->freq,
                 fdmdv->freq_pol, nin, M/Q);
+        profileTimedEventStop(ProfileTP3);
+        profileTimedEventStart(ProfileTP4);
         rx_timing = rx_est_timing(rx_symbols, FDMDV_NC, rx_filt, fdmdv->rx_filter_mem_timing, env, nin, M);
+        profileTimedEventStop(ProfileTP4);
+        profileTimedEventStart(ProfileTP5);
         foff_fine = qpsk_to_bits(rx_bits, &sync_bit, FDMDV_NC, fdmdv->phase_difference, fdmdv->prev_rx_symbols, rx_symbols, 0);
+        profileTimedEventStop(ProfileTP5);
 
         //for(i=0; i<FDMDV_NC;i++)
         //    printf("rx_symbols: %f %f prev_rx_symbols: %f %f phase_difference: %f %f\n", rx_symbols[i].real, rx_symbols[i].imag,
         //          fdmdv->prev_rx_symbols[i].real, fdmdv->prev_rx_symbols[i].imag, fdmdv->phase_difference[i].real, fdmdv->phase_difference[i].imag);
         //if (f==1)
         //   exit(0);
-
+        profileTimedEventStart(ProfileTP6);
         snr_update(fdmdv->sig_est, fdmdv->noise_est, FDMDV_NC, fdmdv->phase_difference);
+        profileTimedEventStop(ProfileTP6);
         memcpy(fdmdv->prev_rx_symbols, rx_symbols, sizeof(COMP)*(FDMDV_NC+1));
 
         next_nin = M;
@@ -213,8 +225,9 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 
         if (rx_timing < 0)
             next_nin -= M/P;
-
+        profileTimedEventStart(ProfileTP7);
         fdmdv->sync = freq_state(&reliable_sync_bit, sync_bit, &fdmdv->fest_state, &fdmdv->timer, fdmdv->sync_mem);
+        profileTimedEventStop(ProfileTP7);
         fdmdv->foff  -= TRACK_COEFF*foff_fine;
 
         /* --------------------------------------------------------*\
@@ -280,6 +293,16 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
             int range=cumulativeOutput?FRAMES:1;
             int start=cumulativeOutput?0:f;
 
+#ifdef PROFILE_EVENTS
+            for (int i = 0;i < 10;i++)
+            {
+                ProfilingTimedEvent* ev_ptr = profileTimedEventGet(i);
+                if (ev_ptr->count != 0)
+                {
+                    // trace_printf("%d: %d uS per run\n",i, (ev_ptr->duration/(ev_ptr->count*168)));
+                }
+            }
+#endif
             octave_save_int(fout, "tx_bits_log_c", &tx_bits_log[start * FDMDV_BITS_PER_FRAME], 1, FDMDV_BITS_PER_FRAME*range);
             octave_save_complex(fout, "tx_symbols_log_c", &tx_symbols_log[(FDMDV_NC+1)*start], 1, (FDMDV_NC+1)*range, (FDMDV_NC+1)*FRAMES);
             octave_save_complex(fout, "tx_fdm_log_c", &tx_fdm_log[M*start], 1, M*range, M*FRAMES);
@@ -322,6 +345,9 @@ int tfdmdv_main(int argc, char* argv[])
 #ifndef ARM_MATH_CM4
     fout = fopen("tfdmdv_out.txt","wt");
     assert(fout != NULL);
+#endif
+#ifdef PROFILE_EVENTS
+    profileTimedEventInit();
 #endif
     FPRINTF(fout, "# Created by tfdmdv.c\n");
     fdmdv = fdmdv_create(FDMDV_NC);
