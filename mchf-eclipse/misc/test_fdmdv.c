@@ -293,17 +293,9 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
             int range=cumulativeOutput?FRAMES:1;
             int start=cumulativeOutput?0:f;
 
-#ifdef PROFILE_EVENTS
-            for (int i = 0;i < 10;i++)
-            {
-                ProfilingTimedEvent* ev_ptr = profileTimedEventGet(i);
-                if (ev_ptr->count != 0)
-                {
+
 #if CUMULATIVE
-                    trace_printf("%d: %d uS per run\n",i, (ev_ptr->duration/(ev_ptr->count*168)));
-#endif
-                }
-            }
+            profileEventsTracePrint();
 #endif
             octave_save_int(fout, "tx_bits_log_c", &tx_bits_log[start * FDMDV_BITS_PER_FRAME], 1, FDMDV_BITS_PER_FRAME*range);
             octave_save_complex(fout, "tx_symbols_log_c", &tx_symbols_log[(FDMDV_NC+1)*start], 1, (FDMDV_NC+1)*range, (FDMDV_NC+1)*FRAMES);

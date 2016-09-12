@@ -1003,9 +1003,23 @@ void aks_to_M2(
 
   /* Determine power spectrum P(w) = E/(A(exp(jw))^2 ------------------------*/
 
+#ifndef ARM_MATH_CM4
   for(i=0; i<FFT_ENC/2; i++) {
     Pw[i].real = 1.0/(Aw[i].real*Aw[i].real + Aw[i].imag*Aw[i].imag + 1E-6);
   }
+#else
+  // this difference may seem strange, but the gcc for STM32F4 generates almost 5 times
+  // faster code with the two loops: 1120 ms -> 242 ms
+  // so please leave it as is or improve further
+  // since this code is called 4 times it results in almost 4ms gain (21ms -> 17ms per audio frame decode @ 1300 )
+  for(i=0; i<FFT_ENC/2; i++)
+  {
+      Pw[i].real = Aw[i].real * Aw[i].real + Aw[i].imag * Aw[i].imag  + 1E-6;
+  }
+  for(i=0; i<FFT_ENC/2; i++) {
+      Pw[i].real = 1.0/(Pw[i].real);
+  }
+#endif
 
   PROFILE_SAMPLE_AND_LOG(tpw, tfft, "      Pw");
 

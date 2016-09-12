@@ -75,6 +75,8 @@ inline void profileEvent(const ProfiledEventNames pe) {
  * remove the overhead later.
  */
 
+void profileEventsTracePrint();
+
 
 inline void profileTimedEventInit();
 inline void profileTimedEventStart(const ProfiledEventNames pe);

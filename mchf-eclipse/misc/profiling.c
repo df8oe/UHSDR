@@ -23,7 +23,7 @@
  */
 EventProfile_t eventProfile;
 
-#if 0
+#if 1
 // the code below is only used to ease profiling with eclipse
 // you just need hover over a variable to get the value
 void dummy() {
@@ -51,3 +51,19 @@ void dummy() {
 
 }
 #endif
+
+
+void profileEventsTracePrint()
+{
+#ifdef PROFILE_EVENTS
+
+            for (int i = 0;i < 10;i++)
+            {
+                ProfilingTimedEvent* ev_ptr = profileTimedEventGet(i);
+                if (ev_ptr->count != 0)
+                {
+                    trace_printf("%d: %d uS per run\n",i, (ev_ptr->duration/(ev_ptr->count*168)));
+                }
+            }
+#endif
+}
