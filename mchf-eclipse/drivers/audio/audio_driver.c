@@ -1449,10 +1449,22 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
         {
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
-                fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
-                fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
-                // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
-                trans_count_in++;
+
+        	if (ts.dmod_mode == DEMOD_LSB)
+        	  {
+
+        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
+        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
+        	  }
+        	else
+        	  {
+        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
+        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
+        	  }
+
+        	    // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
+
+        	    trans_count_in++;
             }
         }
 
@@ -3560,7 +3572,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 #endif
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(2.0*SSB_GAIN_COMP, ts.dmod_mode == DEMOD_LSB, dst, blockSize);
+        audio_tx_final_iq_processing(2.0*SSB_GAIN_COMP, ts.dmod_mode != DEMOD_LSB, dst, blockSize);
     }
     else
     {
