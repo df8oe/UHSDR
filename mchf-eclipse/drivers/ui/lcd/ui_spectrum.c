@@ -36,10 +36,15 @@ float32_t m_AverageMagdbm = 0.0;
 float32_t m_AttackAvedbmhz = 0.0;
 float32_t m_DecayAvedbmhz = 0.0;
 float32_t m_AverageMagdbmhz = 0.0;
-float32_t m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
-									// Tau = 10ms = 0.01s attack time
-float32_t m_DecayAlpha = 0.0392; // 500ms decay time
-
+// ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
+// Tau     ALPHA
+//  10ms   0.8647
+//  30ms   0.4866
+//  50ms   0.3297
+// 100ms   0.1812
+// 500ms   0.0391
+float32_t m_AttackAlpha = 0.8647;
+float32_t m_DecayAlpha  = 0.3297;
 
 static void 	UiDriverFFTWindowFunction(char mode);
 static void     UiSpectrum_FrequencyBarText(void);
