@@ -66,7 +66,7 @@ void hs_pitch_refinement(MODEL *model, COMP Sw[], float pmin, float pmax,
 
 \*---------------------------------------------------------------------------*/
 
-void make_analysis_window(kiss_fft_cfg fft_fwd_cfg, float w[], COMP W[])
+void make_analysis_window(codec2_fft_cfg fft_fwd_cfg, float w[], COMP W[])
 {
   float m;
   COMP  wshift[FFT_ENC];
@@ -85,20 +85,20 @@ void make_analysis_window(kiss_fft_cfg fft_fwd_cfg, float w[], COMP W[])
   */
 
   m = 0.0;
-  for(i=0; i<M/2-NW/2; i++)
+  for(i=0; i<M_PITCH/2-NW/2; i++)
     w[i] = 0.0;
-  for(i=M/2-NW/2,j=0; i<M/2+NW/2; i++,j++) {
+  for(i=M_PITCH/2-NW/2,j=0; i<M_PITCH/2+NW/2; i++,j++) {
     w[i] = 0.5 - 0.5*cosf(TWO_PI*j/(NW-1));
     m += w[i]*w[i];
   }
-  for(i=M/2+NW/2; i<M; i++)
+  for(i=M_PITCH/2+NW/2; i<M_PITCH; i++)
     w[i] = 0.0;
 
   /* Normalise - makes freq domain amplitude estimation straight
      forward */
 
   m = 1.0/sqrtf(m*FFT_ENC);
-  for(i=0; i<M; i++) {
+  for(i=0; i<M_PITCH; i++) {
     w[i] *= m;
   }
 
@@ -128,11 +128,11 @@ void make_analysis_window(kiss_fft_cfg fft_fwd_cfg, float w[], COMP W[])
     wshift[i].imag = 0.0;
   }
   for(i=0; i<NW/2; i++)
-    wshift[i].real = w[i+M/2];
-  for(i=FFT_ENC-NW/2,j=M/2-NW/2; i<FFT_ENC; i++,j++)
+    wshift[i].real = w[i+M_PITCH/2];
+  for(i=FFT_ENC-NW/2,j=M_PITCH/2-NW/2; i<FFT_ENC; i++,j++)
    wshift[i].real = w[j];
 
-  kiss_fft(fft_fwd_cfg, (kiss_fft_cpx *)wshift, (kiss_fft_cpx *)W);
+  codec2_fft(fft_fwd_cfg, wshift, W);
 
   /*
       Re-arrange W[] to be symmetrical about FFT_ENC/2.  Makes later
@@ -199,7 +199,7 @@ float hpf(float x, float states[])
 
 \*---------------------------------------------------------------------------*/
 
-void dft_speech(kiss_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[])
+void dft_speech(codec2_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[])
 {
   int  i;
   COMP sw[FFT_ENC];
@@ -215,14 +215,14 @@ void dft_speech(kiss_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[])
   /* move 2nd half to start of FFT input vector */
 
   for(i=0; i<NW/2; i++)
-    sw[i].real = Sn[i+M/2]*w[i+M/2];
+    sw[i].real = Sn[i+M_PITCH/2]*w[i+M_PITCH/2];
 
   /* move 1st half to end of FFT input vector */
 
   for(i=0; i<NW/2; i++)
-    sw[FFT_ENC-NW/2+i].real = Sn[i+M/2-NW/2]*w[i+M/2-NW/2];
+    sw[FFT_ENC-NW/2+i].real = Sn[i+M_PITCH/2-NW/2]*w[i+M_PITCH/2-NW/2];
 
-  kiss_fft(fft_fwd_cfg, (kiss_fft_cpx *)sw, (kiss_fft_cpx *)Sw);
+  codec2_fft(fft_fwd_cfg, sw, Sw);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -522,17 +522,17 @@ void make_synthesis_window(float Pn[])
   /* Generate Parzen window in time domain */
 
   win = 0.0;
-  for(i=0; i<N/2-TW; i++)
+  for(i=0; i<N_SAMP/2-TW; i++)
     Pn[i] = 0.0;
   win = 0.0;
-  for(i=N/2-TW; i<N/2+TW; win+=1.0/(2*TW), i++ )
+  for(i=N_SAMP/2-TW; i<N_SAMP/2+TW; win+=1.0/(2*TW), i++ )
     Pn[i] = win;
-  for(i=N/2+TW; i<3*N/2-TW; i++)
+  for(i=N_SAMP/2+TW; i<3*N_SAMP/2-TW; i++)
     Pn[i] = 1.0;
   win = 1.0;
-  for(i=3*N/2-TW; i<3*N/2+TW; win-=1.0/(2*TW), i++)
+  for(i=3*N_SAMP/2-TW; i<3*N_SAMP/2+TW; win-=1.0/(2*TW), i++)
     Pn[i] = win;
-  for(i=3*N/2+TW; i<2*N; i++)
+  for(i=3*N_SAMP/2+TW; i<2*N_SAMP; i++)
     Pn[i] = 0.0;
 }
 
@@ -549,7 +549,7 @@ void make_synthesis_window(float Pn[])
 \*---------------------------------------------------------------------------*/
 
 void synthesise(
-  kiss_fft_cfg fft_inv_cfg,
+  codec2_fft_cfg fft_inv_cfg,
   float  Sn_[],		/* time domain synthesised signal              */
   MODEL *model,		/* ptr to model parameters for this frame      */
   float  Pn[],		/* time domain Parzen window                   */
@@ -562,10 +562,10 @@ void synthesise(
 
     if (shift) {
 	/* Update memories */
-	for(i=0; i<N-1; i++) {
-	    Sn_[i] = Sn_[i+N];
+	for(i=0; i<N_SAMP-1; i++) {
+	    Sn_[i] = Sn_[i+N_SAMP];
 	}
-	Sn_[N-1] = 0.0;
+	Sn_[N_SAMP-1] = 0.0;
     }
 
     for(i=0; i<FFT_DEC; i++) {
@@ -605,7 +605,7 @@ void synthesise(
 
     /* Perform inverse DFT */
 
-    kiss_fft(fft_inv_cfg, (kiss_fft_cpx *)Sw_, (kiss_fft_cpx *)sw_);
+    codec2_fft(fft_inv_cfg, Sw_, sw_);
 #else
     /*
        Direct time domain synthesis using the cos() function.  Works
@@ -615,25 +615,25 @@ void synthesise(
        is zero.
     */
     for(l=1; l<=model->L; l++) {
-	for(i=0,j=-N+1; i<N-1; i++,j++) {
-	    Sw_[FFT_DEC-N+1+i].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
+	for(i=0,j=-N_SAMP+1; i<N_SAMP-1; i++,j++) {
+	    Sw_[FFT_DEC-N_SAMP+1+i].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
 	}
- 	for(i=N-1,j=0; i<2*N; i++,j++)
+ 	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
 	    Sw_[j].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
     }
 #endif
 
     /* Overlap add to previous samples */
 
-    for(i=0; i<N-1; i++) {
-	Sn_[i] += sw_[FFT_DEC-N+1+i].real*Pn[i];
+    for(i=0; i<N_SAMP-1; i++) {
+	Sn_[i] += sw_[FFT_DEC-N_SAMP+1+i].real*Pn[i];
     }
 
     if (shift)
-	for(i=N-1,j=0; i<2*N; i++,j++)
+	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
 	    Sn_[i] = sw_[j].real*Pn[i];
     else
-	for(i=N-1,j=0; i<2*N; i++,j++)
+	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
 	    Sn_[i] += sw_[j].real*Pn[i];
 }
 
