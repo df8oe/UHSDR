@@ -70,7 +70,7 @@
 #define FRAMEINCR  1
 #endif
 
-#define CHANNEL_BUF_SIZE (10*M)
+#define CHANNEL_BUF_SIZE (10*M_FAC)
 FILE         *fout;
 struct FDMDV *fdmdv;
 
@@ -82,12 +82,12 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 {
     int           tx_bits[FDMDV_BITS_PER_FRAME];
     COMP          tx_symbols[FDMDV_NC+1];
-    COMP          tx_fdm[M];
-    COMP          rx_fdm[M+M/P];
+    COMP          tx_fdm[M_FAC];
+    COMP          rx_fdm[M_FAC+M_FAC/P];
     float         foff_coarse;
     int           nin;
-    COMP          rx_fdm_fcorr[M+M/P];
-    COMP          rx_fdm_filter[M+M/P];
+    COMP          rx_fdm_fcorr[M_FAC+M_FAC/P];
+    COMP          rx_fdm_filter[M_FAC+M_FAC/P];
     COMP          rx_filt[NC+1][P+1];
     float         rx_timing;
     float         env[NT*P];
@@ -98,7 +98,7 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 
     int           tx_bits_log[FDMDV_BITS_PER_FRAME*FRAMES];
     COMP          tx_symbols_log[(FDMDV_NC+1)*FRAMES];
-    COMP          tx_fdm_log[M*FRAMES];
+    COMP          tx_fdm_log[M_FAC*FRAMES];
     COMP          pilot_baseband1_log[NPILOTBASEBAND*FRAMES];
     COMP          pilot_baseband2_log[NPILOTBASEBAND*FRAMES];
     COMP          pilot_lpf1_log[NPILOTLPF*FRAMES];
@@ -107,7 +107,7 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
     COMP          S2_log[MPILOTFFT*FRAMES];
     float         foff_coarse_log[FRAMES];
     float         foff_log[FRAMES];
-    COMP          rx_fdm_filter_log[(M+M/P)*FRAMES];
+    COMP          rx_fdm_filter_log[(M_FAC+M_FAC/P)*FRAMES];
     int           rx_fdm_filter_log_index;
     COMP          rx_filt_log[NC+1][(P+1)*FRAMES];
     int           rx_filt_log_col_index;
@@ -151,14 +151,14 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 
         nin = next_nin;
 
-        // nin = M;  // when debugging good idea to uncomment this to "open loop"
+        // nin = M_FAC;  // when debugging good idea to uncomment this to "open loop"
 
-        /* add M tx samples to end of buffer */
+        /* add M_FAC tx samples to end of buffer */
 
-        assert((channel_count + M) < CHANNEL_BUF_SIZE);
-        for(i=0; i<M; i++)
+        assert((channel_count + M_FAC) < CHANNEL_BUF_SIZE);
+        for(i=0; i<M_FAC; i++)
             channel[channel_count+i] = tx_fdm[i].real;
-        channel_count += M;
+        channel_count += M_FAC;
 
         /* take nin samples from start of buffer */
 
@@ -199,10 +199,10 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 
         profileTimedEventStart(ProfileTP3);
         down_convert_and_rx_filter(rx_filt, fdmdv->Nc, rx_fdm_filter, fdmdv->rx_fdm_mem, fdmdv->phase_rx, fdmdv->freq,
-                fdmdv->freq_pol, nin, M/Q);
+                fdmdv->freq_pol, nin, M_FAC/Q);
         profileTimedEventStop(ProfileTP3);
         profileTimedEventStart(ProfileTP4);
-        rx_timing = rx_est_timing(rx_symbols, FDMDV_NC, rx_filt, fdmdv->rx_filter_mem_timing, env, nin, M);
+        rx_timing = rx_est_timing(rx_symbols, FDMDV_NC, rx_filt, fdmdv->rx_filter_mem_timing, env, nin, M_FAC);
         profileTimedEventStop(ProfileTP4);
         profileTimedEventStart(ProfileTP5);
         foff_fine = qpsk_to_bits(rx_bits, &sync_bit, FDMDV_NC, fdmdv->phase_difference, fdmdv->prev_rx_symbols, rx_symbols, 0);
@@ -218,13 +218,13 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
         profileTimedEventStop(ProfileTP6);
         memcpy(fdmdv->prev_rx_symbols, rx_symbols, sizeof(COMP)*(FDMDV_NC+1));
 
-        next_nin = M;
+        next_nin = M_FAC;
 
-        if (rx_timing > 2*M/P)
-            next_nin += M/P;
+        if (rx_timing > 2*M_FAC/P)
+            next_nin += M_FAC/P;
 
         if (rx_timing < 0)
-            next_nin -= M/P;
+            next_nin -= M_FAC/P;
         profileTimedEventStart(ProfileTP7);
         fdmdv->sync = freq_state(&reliable_sync_bit, sync_bit, &fdmdv->fest_state, &fdmdv->timer, fdmdv->sync_mem);
         profileTimedEventStop(ProfileTP7);
@@ -236,7 +236,7 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 
         memcpy(&tx_bits_log[FDMDV_BITS_PER_FRAME*f], tx_bits, sizeof(int)*FDMDV_BITS_PER_FRAME);
         memcpy(&tx_symbols_log[(FDMDV_NC+1)*f], tx_symbols, sizeof(COMP)*(FDMDV_NC+1));
-        memcpy(&tx_fdm_log[M*f], tx_fdm, sizeof(COMP)*M);
+        memcpy(&tx_fdm_log[M_FAC*f], tx_fdm, sizeof(COMP)*M_FAC);
 
         memcpy(&pilot_baseband1_log[f*NPILOTBASEBAND], fdmdv->pilot_baseband1, sizeof(COMP)*NPILOTBASEBAND);
         memcpy(&pilot_baseband2_log[f*NPILOTBASEBAND], fdmdv->pilot_baseband2, sizeof(COMP)*NPILOTBASEBAND);
@@ -254,10 +254,10 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
         rx_fdm_filter_log_index += nin;
 
         for(c=0; c<NC+1; c++) {
-            for(i=0; i<(P*nin)/M; i++)
+            for(i=0; i<(P*nin)/M_FAC; i++)
                 rx_filt_log[c][rx_filt_log_col_index + i] = rx_filt[c][i];
         }
-        rx_filt_log_col_index += (P*nin)/M;
+        rx_filt_log_col_index += (P*nin)/M_FAC;
 
         /* timing estimation */
 
@@ -299,7 +299,7 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 #endif
             octave_save_int(fout, "tx_bits_log_c", &tx_bits_log[start * FDMDV_BITS_PER_FRAME], 1, FDMDV_BITS_PER_FRAME*range);
             octave_save_complex(fout, "tx_symbols_log_c", &tx_symbols_log[(FDMDV_NC+1)*start], 1, (FDMDV_NC+1)*range, (FDMDV_NC+1)*FRAMES);
-            octave_save_complex(fout, "tx_fdm_log_c", &tx_fdm_log[M*start], 1, M*range, M*FRAMES);
+            octave_save_complex(fout, "tx_fdm_log_c", &tx_fdm_log[M_FAC*start], 1, M_FAC*range, M_FAC*FRAMES);
             octave_save_complex(fout, "pilot_lut_c", fdmdv->pilot_lut, 1, NPILOT_LUT, NPILOT_LUT);
             octave_save_complex(fout, "pilot_baseband1_log_c", &pilot_baseband1_log[start*NPILOTBASEBAND], 1, NPILOTBASEBAND*range, NPILOTBASEBAND*FRAMES);
             octave_save_complex(fout, "pilot_baseband2_log_c", &pilot_baseband2_log[start*NPILOTBASEBAND], 1, NPILOTBASEBAND*range, NPILOTBASEBAND*FRAMES);
@@ -312,7 +312,7 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
             octave_save_float(fout, "foff_coarse_log_c", &foff_coarse_log[start], 1, range, FRAMES);
             octave_save_complex(fout, "rx_fdm_filter_log_c", &rx_fdm_filter_log[cumulativeOutput?0:rx_fdm_filter_log_index-nin_log[start]], 1, cumulativeOutput?rx_fdm_filter_log_index:nin_log[start], cumulativeOutput?rx_fdm_filter_log_index:nin_log[start]);
 
-            int rx_f_l_diff = cumulativeOutput?rx_filt_log_col_index:(P*nin_log[start])/M;
+            int rx_f_l_diff = cumulativeOutput?rx_filt_log_col_index:(P*nin_log[start])/M_FAC;
             int rx_f_l_start = rx_filt_log_col_index - rx_f_l_diff;
 
             octave_save_complex(fout, "rx_filt_log_c", &rx_filt_log[0][rx_f_l_start], (FDMDV_NC+1), rx_f_l_diff, (P+1)*FRAMES);
@@ -333,7 +333,6 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
     return next_nin;
 }
 
-
 int tfdmdv_main(int argc, char* argv[])
 {
 #ifndef ARM_MATH_CM4
@@ -347,7 +346,7 @@ int tfdmdv_main(int argc, char* argv[])
     fdmdv = fdmdv_create(FDMDV_NC);
 
     int i = 0;
-    int next_nin = M;
+    int next_nin = M_FAC;
     channel_count = 0;
     for (i = 0; i < FRAMERUNS; i++)
     {
@@ -360,3 +359,9 @@ int tfdmdv_main(int argc, char* argv[])
     fdmdv_destroy(fdmdv);
     return 0;
 }
+#ifndef ARM_MATH_CM4
+int main(int argc, char* argv[])
+{
+    tfdmdv_main(argc,argv)
+}
+#endif

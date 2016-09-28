@@ -191,6 +191,7 @@ SRC =  \
     drivers/freedv/codebookvq.c \
     drivers/freedv/codebookvqanssi.c \
     drivers/freedv/codec2.c \
+    drivers/freedv/codec2_fft.c \
     drivers/freedv/cohpsk.c \
     drivers/freedv/dump.c \
     drivers/freedv/fdmdv.c \

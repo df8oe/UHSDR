@@ -199,14 +199,15 @@ float hpf(float x, float states[])
 
 \*---------------------------------------------------------------------------*/
 
+// TODO: we can either go for a faster FFT using fftr and some stack usage
+// or we can reduce stack usage to almost zero on STM32 by switching to fft_inplace
+#if 1
 void dft_speech(codec2_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[])
 {
-  int  i;
-  COMP sw[FFT_ENC];
-
+    int  i;
   for(i=0; i<FFT_ENC; i++) {
-    sw[i].real = 0.0;
-    sw[i].imag = 0.0;
+    Sw[i].real = 0.0;
+    Sw[i].imag = 0.0;
   }
 
   /* Centre analysis window on time axis, we need to arrange input
@@ -215,15 +216,42 @@ void dft_speech(codec2_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[])
   /* move 2nd half to start of FFT input vector */
 
   for(i=0; i<NW/2; i++)
-    sw[i].real = Sn[i+M_PITCH/2]*w[i+M_PITCH/2];
+    Sw[i].real = Sn[i+M_PITCH/2]*w[i+M_PITCH/2];
 
   /* move 1st half to end of FFT input vector */
 
   for(i=0; i<NW/2; i++)
-    sw[FFT_ENC-NW/2+i].real = Sn[i+M_PITCH/2-NW/2]*w[i+M_PITCH/2-NW/2];
+    Sw[FFT_ENC-NW/2+i].real = Sn[i+M_PITCH/2-NW/2]*w[i+M_PITCH/2-NW/2];
 
-  codec2_fft(fft_fwd_cfg, sw, Sw);
+  codec2_fft_inplace(fft_fwd_cfg, Sw);
 }
+#else
+void dft_speech(codec2_fftr_cfg fftr_fwd_cfg, COMP Sw[], float Sn[], float w[])
+{
+    int  i;
+  float sw[FFT_ENC];
+
+  for(i=0; i<FFT_ENC; i++) {
+    sw[i] = 0.0;
+  }
+
+  /* Centre analysis window on time axis, we need to arrange input
+     to FFT this way to make FFT phases correct */
+
+  /* move 2nd half to start of FFT input vector */
+
+  for(i=0; i<NW/2; i++)
+    sw[i] = Sn[i+M_PITCH/2]*w[i+M_PITCH/2];
+
+  /* move 1st half to end of FFT input vector */
+
+  for(i=0; i<NW/2; i++)
+    sw[FFT_ENC-NW/2+i] = Sn[i+M_PITCH/2-NW/2]*w[i+M_PITCH/2-NW/2];
+
+  codec2_fftr(fftr_fwd_cfg, sw, Sw);
+}
+#endif
+
 
 /*---------------------------------------------------------------------------*\
 
@@ -549,7 +577,7 @@ void make_synthesis_window(float Pn[])
 \*---------------------------------------------------------------------------*/
 
 void synthesise(
-  codec2_fft_cfg fft_inv_cfg,
+  codec2_fftr_cfg fftr_inv_cfg,
   float  Sn_[],		/* time domain synthesised signal              */
   MODEL *model,		/* ptr to model parameters for this frame      */
   float  Pn[],		/* time domain Parzen window                   */
@@ -557,8 +585,8 @@ void synthesise(
 )
 {
     int   i,l,j,b;	/* loop variables */
-    COMP  Sw_[FFT_DEC];	/* DFT of synthesised signal */
-    COMP  sw_[FFT_DEC];	/* synthesised signal */
+    COMP  Sw_[FFT_DEC/2+1];	/* DFT of synthesised signal */
+    float sw_[FFT_DEC];	/* synthesised signal */
 
     if (shift) {
 	/* Update memories */
@@ -568,7 +596,7 @@ void synthesise(
 	Sn_[N_SAMP-1] = 0.0;
     }
 
-    for(i=0; i<FFT_DEC; i++) {
+    for(i=0; i<FFT_DEC/2+1; i++) {
 	Sw_[i].real = 0.0;
 	Sw_[i].imag = 0.0;
     }
@@ -591,21 +619,19 @@ void synthesise(
 #ifdef FFT_SYNTHESIS
     /* Now set up frequency domain synthesised speech */
     for(l=1; l<=model->L; l++) {
-    //for(l=model->L/2; l<=model->L; l++) {
-    //for(l=1; l<=model->L/4; l++) {
-	b = (int)(l*model->Wo*FFT_DEC/TWO_PI + 0.5);
-	if (b > ((FFT_DEC/2)-1)) {
-		b = (FFT_DEC/2)-1;
-	}
-	Sw_[b].real = model->A[l]*cosf(model->phi[l]);
-	Sw_[b].imag = model->A[l]*sinf(model->phi[l]);
-	Sw_[FFT_DEC-b].real = Sw_[b].real;
-	Sw_[FFT_DEC-b].imag = -Sw_[b].imag;
+        //for(l=model->L/2; l<=model->L; l++) {
+        //for(l=1; l<=model->L/4; l++) {
+        b = (int)(l*model->Wo*FFT_DEC/TWO_PI + 0.5);
+        if (b > ((FFT_DEC/2)-1)) {
+            b = (FFT_DEC/2)-1;
+        }
+        Sw_[b].real = model->A[l]*cosf(model->phi[l]);
+        Sw_[b].imag = model->A[l]*sinf(model->phi[l]);
     }
 
     /* Perform inverse DFT */
 
-    codec2_fft(fft_inv_cfg, Sw_, sw_);
+    codec2_fftri(fftr_inv_cfg, Sw_,sw_);
 #else
     /*
        Direct time domain synthesis using the cos() function.  Works
@@ -613,28 +639,28 @@ void synthesise(
        still used to handle overlap-add between adjacent frames.  This
        could be simplified as we don't need to synthesise where Pn[]
        is zero.
-    */
+     */
     for(l=1; l<=model->L; l++) {
-	for(i=0,j=-N_SAMP+1; i<N_SAMP-1; i++,j++) {
-	    Sw_[FFT_DEC-N_SAMP+1+i].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
-	}
- 	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
-	    Sw_[j].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
+        for(i=0,j=-N_SAMP+1; i<N_SAMP-1; i++,j++) {
+            Sw_[FFT_DEC-N_SAMP+1+i].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
+        }
+        for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
+            Sw_[j].real += 2.0*model->A[l]*cosf(j*model->Wo*l + model->phi[l]);
     }
 #endif
 
     /* Overlap add to previous samples */
 
     for(i=0; i<N_SAMP-1; i++) {
-	Sn_[i] += sw_[FFT_DEC-N_SAMP+1+i].real*Pn[i];
+        Sn_[i] += sw_[FFT_DEC-N_SAMP+1+i]*Pn[i] * (float32_t)FFT_DEC;
     }
 
     if (shift)
-	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
-	    Sn_[i] = sw_[j].real*Pn[i];
+        for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
+            Sn_[i] = sw_[j]*Pn[i] * (float32_t)FFT_DEC;
     else
-	for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
-	    Sn_[i] += sw_[j].real*Pn[i];
+        for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
+            Sn_[i] += sw_[j]*Pn[i] * (float32_t)FFT_DEC;
 }
 
 

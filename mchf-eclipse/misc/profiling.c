@@ -55,7 +55,7 @@ void dummy() {
 
 void profileEventsTracePrint()
 {
-#ifdef PROFILE_EVENTS
+#ifdef XPROFILE_EVENTS
 
             for (int i = 0;i < 10;i++)
             {

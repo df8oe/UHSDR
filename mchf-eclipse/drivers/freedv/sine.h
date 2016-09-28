@@ -39,7 +39,7 @@ void two_stage_pitch_refinement(MODEL *model, COMP Sw[]);
 void estimate_amplitudes(MODEL *model, COMP Sw[], COMP W[], int est_phase);
 float est_voicing_mbe(MODEL *model, COMP Sw[], COMP W[], COMP Sw_[],COMP Ew[]);
 void make_synthesis_window(float Pn[]);
-void synthesise(codec2_fft_cfg fft_inv_cfg, float Sn_[], MODEL *model, float Pn[], int shift);
+void synthesise(codec2_fftr_cfg fftr_inv_cfg, float Sn_[], MODEL *model, float Pn[], int shift);
 
 #define CODEC2_RAND_MAX 32767
 int codec2_rand(void);

@@ -33,6 +33,7 @@
 #include <math.h>
 
 #include "defines.h"
+#include "codec2_fft.h"
 #include "sine.h"
 #include "nlp.h"
 #include "dump.h"
@@ -126,7 +127,7 @@ struct CODEC2 * codec2_create(int mode)
     c2->fftr_fwd_cfg = codec2_fftr_alloc(FFT_ENC, 0, NULL, NULL);
     make_analysis_window(c2->fft_fwd_cfg, c2->w,c2->W);
     make_synthesis_window(c2->Pn);
-    c2->fft_inv_cfg = codec2_fft_alloc(FFT_DEC, 1, NULL, NULL);
+    c2->fftr_inv_cfg = codec2_fftr_alloc(FFT_DEC, 1, NULL, NULL);
     quantise_init();
     c2->prev_Wo_enc = 0.0;
     c2->bg_est = 0.0;
@@ -188,7 +189,7 @@ void codec2_destroy(struct CODEC2 *c2)
     nlp_destroy(c2->nlp);
     codec2_fft_free(c2->fft_fwd_cfg);
     codec2_fftr_free(c2->fftr_fwd_cfg);
-    codec2_fft_free(c2->fft_inv_cfg);
+    codec2_fftr_free(c2->fftr_inv_cfg);
     free(c2);
 }
 
@@ -1855,7 +1856,7 @@ void synthesise_one_frame(struct CODEC2 *c2, short speech[], MODEL *model, COMP 
 
     PROFILE_SAMPLE_AND_LOG(synth_start, pf_start, "    postfilter");
 
-    synthesise(c2->fft_inv_cfg, c2->Sn_, model, c2->Pn, 1);
+    synthesise(c2->fftr_inv_cfg, c2->Sn_, model, c2->Pn, 1);
 
     PROFILE_SAMPLE_AND_LOG2(synth_start, "    synth");
 

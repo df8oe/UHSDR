@@ -44,7 +44,7 @@ struct CODEC2 {
     void         *nlp;                     /* pitch predictor states                    */
     int           gray;                    /* non-zero for gray encoding                */
 
-    codec2_fft_cfg  fft_inv_cfg;             /* inverse FFT config                        */
+    codec2_fftr_cfg  fftr_inv_cfg;             /* inverse FFT config                        */
     float         Sn_[2*N_SAMP];	           /* synthesised output speech                 */
     float         ex_phase;                /* excitation model phase track              */
     float         bg_est;                  /* background noise estimate for post filter */
