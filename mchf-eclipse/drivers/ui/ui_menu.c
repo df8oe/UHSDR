@@ -578,6 +578,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap"},
     { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP,"202","Band+/- Button Swap"},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE,"203","Transmit Disable"},
+    { MENU_CONF, MENU_ITEM, CONFIG_TX_OUT_ENABLE,"207","TX outside Bands"},
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","Mute Line Out TX"},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_AUDIO_MUTE,"206","TX Mute Delay"},
@@ -2947,6 +2948,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             // do not redraw menu button here directly
             UiDriverFButtonLabel(5,"TUNE",temp_var?Grey1:White);
             ts.tx_disable = temp_var;
+        }
+        break;
+    case CONFIG_TX_OUT_ENABLE:		// Enable transmitting outside HAM bands
+        temp_var = (ts.flags1 & FLAGS1_TX_OUTSIDE_BANDS)? 1 : 0;
+        tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+        if(tchange)
+        {
+            if (temp_var)
+                ts.flags1 |= FLAGS1_TX_OUTSIDE_BANDS;
+            else
+                ts.flags1 &= ~FLAGS1_TX_OUTSIDE_BANDS;
         }
         break;
     case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:	// AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
