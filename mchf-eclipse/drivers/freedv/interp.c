@@ -148,7 +148,7 @@ float sample_log_amp(MODEL *model, float w)
 \*---------------------------------------------------------------------------*/
 
 void interpolate_lsp(
-  kiss_fft_cfg  fft_fwd_cfg,
+  codec2_fft_cfg  fft_fwd_cfg,
   MODEL *interp,    /* interpolated model params                     */
   MODEL *prev,      /* previous frames model params                  */
   MODEL *next,      /* next frames model params                      */

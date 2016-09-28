@@ -176,6 +176,8 @@
     <File name="drivers/ui/lcd/ui_lcd_hy28_fonts.c" path="drivers/ui/lcd/ui_lcd_hy28_fonts.c" type="1"/>
     <File name="misc/TestCPlusPlusBuild.cpp" path="misc/TestCPlusPlusBuild.cpp" type="1"/>
     <File name="drivers/freedv/codec2.h" path="drivers/freedv/codec2.h" type="1"/>
+    <File name="drivers/freedv/codec2_fft.h" path="drivers/freedv/codec2_fft.h" type="1"/>
+    <File name="drivers/freedv/codec2_fft.c" path="drivers/freedv/codec2_fft.c" type="1"/>    
     <File name="cmsis_lib/source/stm32f4xx_usart.c" path="cmsis_lib/source/stm32f4xx_usart.c" type="1"/>
     <File name="drivers/freedv/varicode.c" path="drivers/freedv/varicode.c" type="1"/>
     <File name="drivers/freedv/rxdec_coeff.h" path="drivers/freedv/rxdec_coeff.h" type="1"/>
