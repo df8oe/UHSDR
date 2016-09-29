@@ -24,8 +24,15 @@
 
 // TODO: FIX THIS, FREEDV and SNAP do not go together due to lack of memory in 192K machines,
 // it will work in 256K machines.
+//#define USE_FREEDV_AND_SNAP // experimental!!!
+
 #ifndef USE_FREEDV
   #define USE_SNAP
+#endif
+
+#ifdef USE_FREEDV_AND_SNAP
+  #define USE_SNAP
+  #define USE_FREEDV
 #endif
 
 // HW libs
