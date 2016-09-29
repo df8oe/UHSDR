@@ -17,8 +17,8 @@
 // some special switches
 //#define 	DEBUG_BUILD
 
-// #define USE_FREEDV //uncomment to use freedv instead of SNAP function
-// #define DEBUG_FREEDV
+//#define USE_FREEDV //uncomment to use freedv instead of SNAP function
+//#define DEBUG_FREEDV
 // hardware specific switches
 //#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
