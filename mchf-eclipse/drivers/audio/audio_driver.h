@@ -79,10 +79,6 @@ typedef struct
     float32_t                   i2_buffer[IQ_BUFSZ];
     float32_t                   q2_buffer[IQ_BUFSZ];
 
-    float32_t                   x_buffer[IQ_BUFSZ];
-    float32_t                   y_buffer[IQ_BUFSZ];
-
-
     //
     float32_t                   Osc_I_buffer[IQ_BUFSZ];
     float32_t                   Osc_Q_buffer[IQ_BUFSZ];
@@ -584,7 +580,6 @@ typedef struct SnapCarrier
     //
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
 //    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN2];
-    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
     // Current data ptr
     ulong   samp_ptr;
     int8_t FFT_number;
