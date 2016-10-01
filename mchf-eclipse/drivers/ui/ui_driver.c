@@ -774,20 +774,22 @@ void UiDriver_HandleTouchScreen()
         }
         if(check_tp_coordinates(0,7,10,13))			// toggle digital modes
         {
-            incr_wrap_uint8(&ts.digital_mode,0,7);
-            UiDriver_DisplayDigitalMode();
+            incr_wrap_uint8(&ts.digital_mode,0,1);
+            // We limit the reachable modes to the ones truly available
+            // which is FreeDV1 for now
 
-         //DL2FW freeDV test
+            //DL2FW freeDV test
 
             if (ts.digital_mode == 1)
-              {
-        	ts.dvmode = 1;
-              }
+            {
+                ts.dvmode = 1;
+            }
             else
-              {
-        	ts.dvmode = 0;
-              }
+            {
+                ts.dvmode = 0;
+            }
          //DL2FW freeDV test end
+            UiDriver_DisplayDigitalMode();
 
         }
 
@@ -5273,8 +5275,8 @@ typedef enum
 // for operational data per mode [r/w], use a different table with order of modes
 const DigitalModeDescriptor digimodes[DigitalModeNum] =
 {
-    { "DIGITAL", false	},
-    { "FREEDV1", false },
+    { "DIGITAL", true },
+    { "FreeDV", true },
     { "FREEDV2", false },
     { "BPSK 31", false },
     { "RTTY", false },
@@ -5285,12 +5287,15 @@ const DigitalModeDescriptor digimodes[DigitalModeNum] =
 
 static void UiDriver_DisplayDigitalMode()
 {
-    ushort color = digimodes[ts.digital_mode].enabled?White:Grey2;
+
+    ushort bgclr = ts.dvmode?Orange:Blue;
+    ushort color = digimodes[ts.digital_mode].enabled?(ts.dvmode?Black:White):Grey2;
+
     const char* txt = digimodes[ts.digital_mode].label;
 
     // Draw line for box
-    UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,Blue);
-    UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,Blue,0);
+    UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,bgclr);
+    UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,bgclr,0);
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel

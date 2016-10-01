@@ -812,10 +812,10 @@
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.563472857;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.563472857.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.833539941;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.301192583">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1563975183;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1563975183.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.946620455;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1067257841">
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1301137147;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.537084149">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1301137147;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.537084149">
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1563975183;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1563975183.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.946620455;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1067257841">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.563472857;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.563472857.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.606680054;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1071089195">

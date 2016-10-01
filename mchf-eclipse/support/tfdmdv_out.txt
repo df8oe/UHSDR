@@ -13,11 +13,11 @@ Info : Unable to match requested speed 2000 kHz, using 1800 kHz
 Info : clock speed 1800 kHz
 Info : STLINK v2 JTAG v24 API v2 SWIM v0 VID 0x0483 PID 0x3748
 Info : using stlink api v2
-Info : Target voltage: 2.874942
+Info : Target voltage: 2.932218
 Info : stm32f4x.cpu: hardware has 6 breakpoints, 4 watchpoints
 Info : accepting 'gdb' connection on tcp/3333
-Info : device id = 0x10036419
-Info : flash size = 2048kbytes
+Info : device id = 0x10016413
+Info : flash size = 1024kbytes
 undefined debug reason 7 - target needs reset
 stm32f4x.cpu: target state: halted
 target halted due to debug-request, current mode: Thread 
@@ -35,7 +35,7 @@ adapter speed: 4000 kHz
 stm32f4x.cpu: target state: halted
 target halted due to breakpoint, current mode: Thread 
 xPSR: 0x61000000 pc: 0x20000046 msp: 0x2001c000, semihosting
-Warn : keep_alive() was not invoked in the 1000ms timelimit. GDB alive packet not sent! (1244). Workaround: increase "set remotetimeout" in GDB
+Warn : keep_alive() was not invoked in the 1000ms timelimit. GDB alive packet not sent! (5646). Workaround: increase "set remotetimeout" in GDB
 stm32f4x.cpu: target state: halted
 target halted due to debug-request, current mode: Thread 
 xPSR: 0x01000000 pc: 0x080052d8 msp: 0x2001c000, semihosting
@@ -98,6 +98,7 @@ xPSR: 0x01000000 pc: 0x080052d8 msp: 0x2001c000, semihosting
 (51) dwt_3_comp (/32)
 (52) dwt_3_mask (/4)
 (53) dwt_3_function (/32)
+Info : halted: PC: 0x0803517a
 Hello mcHF World!
 # Created by tfdmdv.c
 # hex: false

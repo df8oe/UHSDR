@@ -1887,8 +1887,6 @@ void synthesise_one_frame(struct CODEC2 *c2, short speech[], MODEL *model, COMP 
 void analyse_one_frame(struct CODEC2 *c2, MODEL *model, short speech[])
 {
     COMP    Sw[FFT_ENC];
-    COMP    Sw_[FFT_ENC];
-    COMP    Ew[FFT_ENC];
     float   pitch;
     int     i;
     PROFILE_VAR(dft_start, nlp_start, model_start, two_stage, estamps);
@@ -1918,7 +1916,7 @@ void analyse_one_frame(struct CODEC2 *c2, MODEL *model, short speech[])
     PROFILE_SAMPLE_AND_LOG(two_stage, model_start, "    two_stage");
     estimate_amplitudes(model, Sw, c2->W, 0);
     PROFILE_SAMPLE_AND_LOG(estamps, two_stage, "    est_amps");
-    est_voicing_mbe(model, Sw, c2->W, Sw_, Ew);
+    est_voicing_mbe(model, Sw, c2->W);
     c2->prev_Wo_enc = model->Wo;
     PROFILE_SAMPLE_AND_LOG2(estamps, "    est_voicing");
     #ifdef DUMP

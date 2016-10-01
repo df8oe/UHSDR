@@ -241,14 +241,12 @@ void FreeDV_mcHF_HandleFreeDV()
             rx_was_here = true; // this is used to clear buffers when going into TX
 
             // while makes this highest prio
-            // since we are so slow, right now the loop then is never left if while
-            // is being used. This means the mcHF is essentially no longer controllable
-            // since UI is not being updated
-            // while (fdv_iq_has_data() && fdv_audio_has_room())
+            // if may give more responsiveness but can cause interrupted reception
+            while (fdv_iq_has_data() && fdv_audio_has_room())
             // while (fdv_audio_has_room())
-            if (fdv_iq_has_data() && fdv_audio_has_room())
+            // if (fdv_iq_has_data() && fdv_audio_has_room())
             {
-                mchf_board_green_led(1);
+                mchf_board_green_led(0);
 
                 leave_now = false;
                 fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
@@ -311,9 +309,9 @@ void FreeDV_mcHF_HandleFreeDV()
                     {
                         // if we arrive here the rx_buffer for comprx is full and will be consumed now.
                         inBufCtrl.offset = 0;
-                        profileTimedEventStart(7);
+                        // profileTimedEventStart(7);
                         outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
-                        profileTimedEventStop(7);
+                        // profileTimedEventStop(7);
                         // outBufCtrl.count = iq_nin;
                     }
 
@@ -361,7 +359,7 @@ void FreeDV_mcHF_HandleFreeDV()
                 }
             }
         }
-        mchf_board_green_led(0);
+        mchf_board_green_led(1);
     }
     // END Freedv Test DL2FW
 }
@@ -393,14 +391,14 @@ void  FreeDV_mcHF_init()
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
 
 
-    sprintf(my_cb_state.tx_str, "cq cq cq hello this is the mchf mchf mchf\n");
+    sprintf(my_cb_state.tx_str, "CQ CQ CQ mcHF SDR with integrated FreeDV codec calling!");
     my_cb_state.ptx_str = my_cb_state.tx_str;
     freedv_set_callback_txt(f_FREEDV, NULL, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);
     // freedv_set_snr_squelch_thresh(f_FREEDV,-100.0);
 
-    ts.dvmode = true;
-    ts.digital_mode = 1;
+    // ts.dvmode = true;
+    // ts.digital_mode = 1;
 }
 // end Freedv Test DL2FW
 

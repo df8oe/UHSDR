@@ -22,9 +22,7 @@
 // hardware specific switches
 //#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
-// TODO: FIX THIS, FREEDV and SNAP do not go together due to lack of memory in 192K machines,
-// it will work in 256K machines.
-//#define USE_FREEDV_AND_SNAP // experimental!!!
+#define USE_FREEDV_AND_SNAP // experimental!!!
 
 #ifndef USE_FREEDV
   #define USE_SNAP

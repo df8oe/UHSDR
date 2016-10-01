@@ -416,12 +416,10 @@ void estimate_amplitudes(MODEL *model, COMP Sw[], COMP W[], int est_phase)
 float est_voicing_mbe(
     MODEL *model,
     COMP   Sw[],
-    COMP   W[],
-    COMP   Sw_[],         /* DFT of all voiced synthesised signal  */
-                          /* useful for debugging/dump file        */
-    COMP   Ew[])          /* DFT of error                          */
+    COMP   W[]
+    )          /* DFT of error                          */
 {
-    int   i,l,al,bl,m;    /* loop variables */
+    int   l,al,bl,m;    /* loop variables */
     COMP  Am;             /* amplitude sample for this band */
     int   offset;         /* centers Hw[] about current harmonic */
     float den;            /* denominator of Am expression */
@@ -430,16 +428,13 @@ float est_voicing_mbe(
     float sig, snr;
     float elow, ehigh, eratio;
     float sixty;
+    COMP   Ew;
+    Ew.real = 0;
+    Ew.imag = 0;
 
     sig = 1E-4;
     for(l=1; l<=model->L/4; l++) {
 	sig += model->A[l]*model->A[l];
-    }
-    for(i=0; i<FFT_ENC; i++) {
-	Sw_[i].real = 0.0;
-	Sw_[i].imag = 0.0;
-	Ew[i].real = 0.0;
-	Ew[i].imag = 0.0;
     }
 
     Wo = model->Wo;
@@ -470,12 +465,10 @@ float est_voicing_mbe(
 
         offset = FFT_ENC/2 - l*Wo*FFT_ENC/TWO_PI + 0.5;
         for(m=al; m<bl; m++) {
-	    Sw_[m].real = Am.real*W[offset+m].real;
-	    Sw_[m].imag = Am.imag*W[offset+m].real;
-	    Ew[m].real = Sw[m].real - Sw_[m].real;
-	    Ew[m].imag = Sw[m].imag - Sw_[m].imag;
-	    error += Ew[m].real*Ew[m].real;
-	    error += Ew[m].imag*Ew[m].imag;
+	    Ew.real = Sw[m].real - Am.real*W[offset+m].real;
+	    Ew.imag = Sw[m].imag - Am.imag*W[offset+m].real;
+	    error += Ew.real*Ew.real;
+	    error += Ew.imag*Ew.imag;
 	}
     }
 
@@ -650,17 +643,21 @@ void synthesise(
 #endif
 
     /* Overlap add to previous samples */
-
+#ifdef USE_KISS_FFT
+#define    FFTI_FACTOR ((float32_t)1.0)
+#else
+#define    FFTI_FACTOR ((float32_t)FFT_DEC)
+#endif
     for(i=0; i<N_SAMP-1; i++) {
-        Sn_[i] += sw_[FFT_DEC-N_SAMP+1+i]*Pn[i] * (float32_t)FFT_DEC;
+        Sn_[i] += sw_[FFT_DEC-N_SAMP+1+i]*Pn[i] * FFTI_FACTOR;
     }
 
     if (shift)
         for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
-            Sn_[i] = sw_[j]*Pn[i] * (float32_t)FFT_DEC;
+            Sn_[i] = sw_[j]*Pn[i] * FFTI_FACTOR;
     else
         for(i=N_SAMP-1,j=0; i<2*N_SAMP; i++,j++)
-            Sn_[i] += sw_[j]*Pn[i] * (float32_t)FFT_DEC;
+            Sn_[i] += sw_[j]*Pn[i] * FFTI_FACTOR;
 }
 
 
