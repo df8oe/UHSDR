@@ -1047,6 +1047,16 @@ void aks_to_M2(
   for(m=1; m<=model->L; m++) {
       am = (int)((m - 0.5)*model->Wo/r + 0.5);
       bm = (int)((m + 0.5)*model->Wo/r + 0.5);
+
+      // FIXME: With arm_rfft_fast_f32 we have to use this
+      // otherwise sometimes a to high bm is calculated
+      // which causes trouble later in the calculation
+      // chain
+      // it seems for some reason model->Wo is calculated somewhat too high
+      if (bm>FFT_ENC/2)
+      {
+          bm = FFT_ENC/2;
+      }
       Em = 0.0;
 
       for(i=am; i<bm; i++)
@@ -1070,7 +1080,6 @@ void aks_to_M2(
           if (Am < model->A[m])
               Am *= 1.4;
       }
-
       model->A[m] = Am;
   }
   *snr = 10.0*log10f(signal/noise);

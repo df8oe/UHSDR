@@ -37,7 +37,7 @@ float hpf(float x, float states[]);
 void dft_speech(codec2_fft_cfg fft_fwd_cfg, COMP Sw[], float Sn[], float w[]);
 void two_stage_pitch_refinement(MODEL *model, COMP Sw[]);
 void estimate_amplitudes(MODEL *model, COMP Sw[], COMP W[], int est_phase);
-float est_voicing_mbe(MODEL *model, COMP Sw[], COMP W[], COMP Sw_[],COMP Ew[]);
+float est_voicing_mbe(MODEL *model, COMP Sw[], COMP W[]);
 void make_synthesis_window(float Pn[]);
 void synthesise(codec2_fftr_cfg fftr_inv_cfg, float Sn_[], MODEL *model, float Pn[], int shift);
 

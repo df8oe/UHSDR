@@ -16,10 +16,10 @@
 #undef errno
 extern int errno;
 extern int  _end;
+static unsigned char *heap = NULL;
 
 caddr_t _sbrk ( int incr )
 {
-    static unsigned char *heap = NULL;
     unsigned char *prev_heap;
 
     if (heap == NULL)
