@@ -2099,6 +2099,8 @@ static void audio_snap_carrier (void)
     const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len));
     const int buff_len_int = FFT_IQ_BUFF_LEN2;
 
+    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
+
     float32_t bw_LSB = 0.0;
     float32_t bw_USB = 0.0;
 
@@ -2253,7 +2255,7 @@ static void audio_snap_carrier (void)
     //
     // Calculate magnitude
     // as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
-    arm_cmplx_mag_f32(sc.FFT_Samples, sc.FFT_MagData,(buff_len_int/2));
+    arm_cmplx_mag_f32(sc.FFT_Samples, FFT_MagData,(buff_len_int/2));
     //
     // putting the bins in frequency-sequential order!
     // it puts the Magnitude samples into FFT_Samples again
@@ -2264,11 +2266,11 @@ static void audio_snap_carrier (void)
     {
         if(i < (buff_len_int/4))	 		// build left half of magnitude data
         {
-            sc.FFT_Samples[i] = sc.FFT_MagData[i + buff_len_int/4];	// get data
+            sc.FFT_Samples[i] = FFT_MagData[i + buff_len_int/4];	// get data
         }
         else	 							// build right half of magnitude data
         {
-            sc.FFT_Samples[i] = sc.FFT_MagData[i - buff_len_int/4];	// get data
+            sc.FFT_Samples[i] = FFT_MagData[i - buff_len_int/4];	// get data
         }
     }
     //####################################################################
@@ -2389,6 +2391,123 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, cons
     }
 }
 
+
+void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
+{
+
+    if(sd.state == 0)
+    {
+        if(sd.magnify == 0)        //
+        {
+            for(int i = 0; i < blockSize; i++)
+            {
+                // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
+                sd.FFT_Samples[sd.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for spectrum scope/waterfall display
+                sd.samp_ptr++;
+                sd.FFT_Samples[sd.samp_ptr] = adb.i_buffer[i];
+                sd.samp_ptr++;
+
+                // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
+                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
+                {
+                    sd.samp_ptr = 0;
+                    sd.state    = 1;
+                }
+            }
+        }
+    }
+}
+void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
+{
+    if(sd.state == 0)
+    {
+        if(sd.magnify != 0)        //
+            // magnify 2, 4, 8, 16, or 32
+        {
+            // ZOOM FFT
+            // is used here to have a very close look at a small part
+            // of the spectrum display of the mcHF
+            // The ZOOM FFT is based on the principles described in Lyons (2011)
+            // 1. take the I & Q samples
+            // 2. complex conversion to baseband (at this place has already been done in audio_rx_freq_conv!)
+            // 3. lowpass I and lowpass Q separately (48kHz sample rate)
+            // 4. decimate I and Q separately
+            // 5. apply 256-point-FFT to decimated I&Q samples
+            //
+            // frequency resolution: spectrum bandwidth / 256
+            // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display bandwidth
+            // frequency resolution of the display --> 6kHz / 256 = 23.44Hz
+            // in 32x Mag-mode the resolution is 5.9Hz, not bad for such a small processor . . .
+            //
+
+            float32_t x_buffer[IQ_BUFSZ];
+            float32_t y_buffer[IQ_BUFSZ];
+
+            // lowpass Filtering
+            // Mag 2x - 12k lowpass --> 24k bandwidth
+            // Mag 4x - 6k lowpass --> 12k bandwidth
+            // Mag 8x - 3k lowpass --> 6k bandwidth
+            // Mag 16x - 1k5 lowpass --> 3k bandwidth
+            // Mag 32x - 750Hz lowpass --> 1k5 bandwidth
+
+            // 1st attempt - use low processor power biquad lowpass filters with 4 stages each
+            arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_I, adb.i_buffer,x_buffer, blockSize);
+            arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_Q, adb.q_buffer,y_buffer, blockSize);
+
+            // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
+            // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
+
+            // decimation
+            arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_I, x_buffer, x_buffer, blockSize);
+            arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, y_buffer, y_buffer, blockSize);
+            // collect samples for spectrum display 256-point-FFT
+
+            for(int i = 0; i < blockSize/ (1<<sd.magnify); i++)
+            {
+                sd.FFT_Samples[sd.samp_ptr] = y_buffer[i];   // get floating point data for FFT for spectrum scope/waterfall display
+                sd.samp_ptr++;
+                sd.FFT_Samples[sd.samp_ptr] = x_buffer[i]; //
+                sd.samp_ptr++;
+
+                // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
+                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
+                {
+                    sd.samp_ptr = 0;
+                    sd.state    = 1;
+                }
+            } // end for
+
+            // loop to put samples from x and y buffer into sd.FFT_Samples
+
+            // TODO: also insert sample collection for snap carrier here
+            // and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
+            // in order to save many kilobytes of RAM ;-)
+
+            // this works!
+            /*      for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
+    {
+        if(sd.state == 0)
+        { //
+            // take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
+            sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify]; // get floating point data for FFT for spectrum scope/waterfall display
+            sd.samp_ptr++;
+            sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
+            sd.samp_ptr++;
+
+    // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
+            if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) // _ *2)
+            {
+                sd.samp_ptr = 0;
+                sd.state    = 1;
+            }
+        }
+    } // end for
+             */
+
+        }
+    }
+}
+
 static uint16_t modulus = 0;
 // used to divide usb audio out sample rate, set to 0 for 48khz, do not change
 
@@ -2416,47 +2535,6 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
     // Split stereo channels
     for(int i = 0; i < blockSize; i++)
     {
-#if 0
-        //
-        // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
-        if(sd.state == 0 && sd.magnify == 0)		//
-        {
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for spectrum scope/waterfall display
-            sd.samp_ptr++;
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].l);
-            sd.samp_ptr++;
-
-            // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-            if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
-            {
-                sd.samp_ptr = 0;
-                sd.state    = 1;
-            }
-        }
-#endif
-#ifdef USE_SNAP
-        if (sc.state == 0 && sc.snap)
-        {
-            sc.counter += blockSize;
-            if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-            {
-
-                // collect samples for snap carrier FFT
-                sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].r);	// get floating point data for FFT for snap carrier
-                sc.samp_ptr++;
-                sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].l);
-                sc.samp_ptr++;
-                // obtain samples for snap carrier mode
-                if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
-                {
-                    sc.samp_ptr = 0;
-                    sc.state    = 1;
-                    sc.counter = 0;
-                }
-            }
-        }
-#endif
-
         if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)	 		// This is the release threshold for the auto RF gain
         {
             ads.adc_quarter_clip = 1;
@@ -2474,20 +2552,16 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
         // HACK: we have 48 khz sample frequency
         //
     }
-#ifdef USE_SNAP
-    if (sc.snap && sc.state == 1)
-    {
-        audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
-    }
-#endif
+
+    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
+
     // Apply I/Q amplitude correction
-#if 1
     arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
 
     // Apply I/Q phase correction
     AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
-#endif
+
     if(iq_freq_mode)	 		// is receive frequency conversion to be done?
     {
         if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
@@ -2499,96 +2573,8 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
             audio_rx_freq_conv(blockSize, 0);
         }
     }
-    // ZOOM FFT
-    // is used here to have a very close look at a small part
-    // of the spectrum display of the mcHF
-    // The ZOOM FFT is based on the principles described in Lyons (2011)
-    // 1. take the I & Q samples
-    // 2. complex conversion to baseband (at this place has already been done in audio_rx_freq_conv!)
-    // 3. lowpass I and lowpass Q separately (48kHz sample rate)
-    // 4. decimate I and Q separately
-    // 5. apply 256-point-FFT to decimated I&Q samples
-    //
-    // frequency resolution: spectrum bandwidth / 256
-    // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display bandwidth
-    // frequency resolution of the display --> 6kHz / 256 = 23.44Hz
-    // in 32x Mag-mode the resolution is 5.9Hz, not bad for such a small processor . . .
-    //
-#if 0
-    if(sd.magnify != 0)				// magnify 2, 4, 8, 16, or 32
-    {
-        // lowpass Filtering
-        // Mag 2x - 12k lowpass --> 24k bandwidth
-        // Mag 4x - 6k lowpass --> 12k bandwidth
-        // Mag 8x - 3k lowpass --> 6k bandwidth
-        // Mag 16x - 1k5 lowpass --> 3k bandwidth
-        // Mag 32x - 750Hz lowpass --> 1k5 bandwidth
+    AudioDriver_SpectrumZoomProcessSamples(blockSize);
 
-        // 1st attempt - use low processor power biquad lowpass filters with 4 stages each
-        arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_I, adb.i_buffer,adb.x_buffer, blockSize);
-        arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_Q, adb.q_buffer,adb.y_buffer, blockSize);
-
-
-
-        // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
-        // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
-
-        // decimation
-        arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_I, adb.x_buffer, adb.x_buffer, blockSize);
-        arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, adb.y_buffer, adb.y_buffer, blockSize);
-        // collect samples for spectrum display 256-point-FFT
-
-        for(i = 0; i < blockSize/ (1<<sd.magnify); i++)
-        {
-            if(sd.state == 0)
-            { //
-                //
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i];	// get floating point data for FFT for spectrum scope/waterfall display
-                sd.samp_ptr++;
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i]; //
-                sd.samp_ptr++;
-
-                // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
-                {
-                    sd.samp_ptr = 0;
-                    sd.state    = 1;
-                }
-            }
-        } // end for
-
-        // loop to put samples from x and y buffer into sd.FFT_Samples
-
-        // TODO: also insert sample collection for snap carrier here
-        // and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
-        // in order to save many kilobytes of RAM ;-)
-
-
-
-
-        // this works!
-        /*		for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
-        {
-            if(sd.state == 0)
-            { //
-            	// take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify];	// get floating point data for FFT for spectrum scope/waterfall display
-            	sd.samp_ptr++;
-            	sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
-            	sd.samp_ptr++;
-
-        // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-            	if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) // _ *2)
-            	{
-            		sd.samp_ptr = 0;
-            		sd.state    = 1;
-            	}
-            }
-        } // end for
-         */
-
-    }
-#endif
     // ------------------------
     // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
     // *** *EXCEPT* in AM mode
@@ -2618,6 +2604,7 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
 }
 
 #endif
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -2668,55 +2655,11 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 #endif
     {
 
-        //
         audio_rx_noise_blanker(src, blockSize);     // do noise blanker function
-        //
-        //
-        //
         // ------------------------
         // Split stereo channels
         for(i = 0; i < blockSize; i++)
         {
-            //
-            // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
-            if(sd.state == 0 && sd.magnify == 0)        //
-            {
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].r);    // get floating point data for FFT for spectrum scope/waterfall display
-                sd.samp_ptr++;
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)(src[i].l);
-                sd.samp_ptr++;
-
-                // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
-                {
-                    sd.samp_ptr = 0;
-                    sd.state    = 1;
-                }
-            }
-
-#ifdef USE_SNAP
-            if (sc.state == 0 && sc.snap)
-            {
-                sc.counter += blockSize;
-                if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-                {
-
-                    // collect samples for snap carrier FFT
-                    sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].r);    // get floating point data for FFT for snap carrier
-                    sc.samp_ptr++;
-                    sc.FFT_Samples[sc.samp_ptr] = (float32_t)(src[i].l);
-                    sc.samp_ptr++;
-                    // obtain samples for snap carrier mode
-                    if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
-                    {
-                        sc.samp_ptr = 0;
-                        sc.state    = 1;
-                        sc.counter = 0;
-                    }
-                }
-            }
-#endif
-
             if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
             {
                 ads.adc_quarter_clip = 1;
@@ -2731,18 +2674,46 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             }
             adb.i_buffer[i] = (float32_t)src[i].l;
             adb.q_buffer[i] = (float32_t)src[i].r;
-            // HACK: we have 48 khz sample frequency
-            //
         }
+
 #ifdef USE_SNAP
-        if (sc.snap && sc.state == 1)
-        {
-            audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
+        if (sc.snap) {
+            if (sc.state == 0)
+            {
+                for(i = 0; i < blockSize; i++)
+                {
+                    sc.counter += blockSize;
+                    if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
+                    {
+
+                        // collect samples for snap carrier FFT
+                        sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
+                        sc.samp_ptr++;
+                        sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
+                        sc.samp_ptr++;
+                        // obtain samples for snap carrier mode
+                        if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+                        {
+                            sc.samp_ptr = 0;
+                            sc.state    = 1;
+                            sc.counter = 0;
+                        }
+                    }
+                }
+            }
+            else if (sc.state == 1)
+            {
+                audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
+            }
         }
 #endif
+        AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
+
+
         // Apply I/Q amplitude correction
         arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
         arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
+
 
         // Apply I/Q phase correction
         AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
@@ -2758,94 +2729,9 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
                 audio_rx_freq_conv(blockSize, 0);
             }
         }
-        // ZOOM FFT
-        // is used here to have a very close look at a small part
-        // of the spectrum display of the mcHF
-        // The ZOOM FFT is based on the principles described in Lyons (2011)
-        // 1. take the I & Q samples
-        // 2. complex conversion to baseband (at this place has already been done in audio_rx_freq_conv!)
-        // 3. lowpass I and lowpass Q separately (48kHz sample rate)
-        // 4. decimate I and Q separately
-        // 5. apply 256-point-FFT to decimated I&Q samples
-        //
-        // frequency resolution: spectrum bandwidth / 256
-        // example: decimate by 8 --> 48kHz / 8 = 6kHz spectrum display bandwidth
-        // frequency resolution of the display --> 6kHz / 256 = 23.44Hz
-        // in 32x Mag-mode the resolution is 5.9Hz, not bad for such a small processor . . .
-        //
-        if(sd.magnify != 0)             // magnify 2, 4, 8, 16, or 32
-        {
-            // lowpass Filtering
-            // Mag 2x - 12k lowpass --> 24k bandwidth
-            // Mag 4x - 6k lowpass --> 12k bandwidth
-            // Mag 8x - 3k lowpass --> 6k bandwidth
-            // Mag 16x - 1k5 lowpass --> 3k bandwidth
-            // Mag 32x - 750Hz lowpass --> 1k5 bandwidth
 
-            // 1st attempt - use low processor power biquad lowpass filters with 4 stages each
-            arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_I, adb.i_buffer,adb.x_buffer, blockSize);
-            arm_biquad_cascade_df1_f32 (&IIR_biquad_Zoom_FFT_Q, adb.q_buffer,adb.y_buffer, blockSize);
+        AudioDriver_SpectrumZoomProcessSamples(blockSize);
 
-
-
-            // arm_iir_lattice_f32(&IIR_TXFilter, adb.i_buffer, adb.x_buffer, blockSize);
-            // arm_iir_lattice_f32(&IIR_TXFilter, adb.q_buffer, adb.y_buffer, blockSize);
-
-            // decimation
-            arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_I, adb.x_buffer, adb.x_buffer, blockSize);
-            arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, adb.y_buffer, adb.y_buffer, blockSize);
-            // collect samples for spectrum display 256-point-FFT
-
-            for(i = 0; i < blockSize/ (1<<sd.magnify); i++)
-            {
-                if(sd.state == 0)
-                { //
-                    //
-                    sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i];   // get floating point data for FFT for spectrum scope/waterfall display
-                    sd.samp_ptr++;
-                    sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i]; //
-                    sd.samp_ptr++;
-
-                    // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                    if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
-                    {
-                        sd.samp_ptr = 0;
-                        sd.state    = 1;
-                    }
-                }
-            } // end for
-
-            // loop to put samples from x and y buffer into sd.FFT_Samples
-
-            // TODO: also insert sample collection for snap carrier here
-            // and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
-            // in order to save many kilobytes of RAM ;-)
-
-
-
-
-            // this works!
-            /*      for(i = 0; i < blockSize/powf(2,sd.magnify); i++)
-        {
-            if(sd.state == 0)
-            { //
-                // take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify]; // get floating point data for FFT for spectrum scope/waterfall display
-                sd.samp_ptr++;
-                sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
-                sd.samp_ptr++;
-
-        // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) // _ *2)
-                {
-                    sd.samp_ptr = 0;
-                    sd.state    = 1;
-                }
-            }
-        } // end for
-             */
-
-        }
         // ------------------------
         // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
         // *** *EXCEPT* in AM mode
