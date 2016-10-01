@@ -105,8 +105,13 @@
 #define ADC2_RET_SOURCE		GPIO_PinSource3
 #define ADC2_RET_PIO       	GPIOA
 // pin 4
+#ifdef MCHF_BOARD_0P5
+#define TP_IRQ			GPIO_Pin_14
+#define TP_IRQ_SOURCE		GPIO_PinSource14
+#else
 #define TP_IRQ			GPIO_Pin_4
 #define TP_IRQ_SOURCE		GPIO_PinSource4
+#endif
 #define TP_IRQ_PIO		GPIOA
 #define DAC0 			GPIO_Pin_4
 #define DAC0_SOURCE		GPIO_PinSource4
@@ -131,8 +136,13 @@
 #define DEBUG_PRINT	 	GPIO_Pin_9
 #define DEBUG_PRINT_SOURCE	GPIO_PinSource9
 #define DEBUG_PRINT_PIO    	GPIOA
+#ifdef MCHF_BOARD_0P5
+#define TP_CS			GPIO_Pin_13
+#define TP_CS_SOURCE		GPIO_PinSource13
+#else
 #define TP_CS			GPIO_Pin_9
 #define TP_CS_SOURCE		GPIO_PinSource9
+#endif
 #define TP_CS_PIO		GPIOA
 // pin 10
 #define BAND2 			GPIO_Pin_10
