@@ -278,12 +278,12 @@ void interp_Wo2(
   Interpolates centre 10ms sample of energy given two samples 20ms
   apart.
 
-\*---------------------------------------------------------------------------*/
+\*--------------------------------------------------------------------------*/
 
 float interp_energy(float prev_e, float next_e)
 {
-    return powf(10.0, (log10f(prev_e) + log10f(next_e))/2.0);
-
+    //return powf(10.0, (log10f(prev_e) + log10f(next_e))/2.0);
+    return sqrtf(prev_e * next_e); //looks better is math. identical and faster math
 }
 
 
