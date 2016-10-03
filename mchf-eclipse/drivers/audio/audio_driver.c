@@ -2549,8 +2549,6 @@ static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
         }
         adb.i_buffer[i] = (float32_t)src[i].l;
         adb.q_buffer[i] = (float32_t)src[i].r;
-        // HACK: we have 48 khz sample frequency
-        //
     }
 
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
@@ -3631,8 +3629,8 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // now generate USB AM sideband signal
             AudioDriver_tx_am_sideband_processor(adb.b_buffer,adb.a_buffer,blockSize);
 
-            arm_add_f32(adb.i2_buffer,adb.q_buffer,adb.i_buffer,blockSize);
-            arm_add_f32(adb.q2_buffer,adb.i_buffer,adb.q_buffer,blockSize);
+            arm_add_f32(adb.i2_buffer,adb.i_buffer,adb.i_buffer,blockSize);
+            arm_add_f32(adb.q2_buffer,adb.q_buffer,adb.q_buffer,blockSize);
 
             audio_tx_final_iq_processing(AM_GAIN_COMP, false, dst, blockSize);
             signal_active = true;
