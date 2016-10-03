@@ -173,11 +173,37 @@ int32_t fdv_audio_has_room()
 }
 
 
+
 typedef struct {
     int32_t start;
     int32_t offset;
     int32_t count;
 } flex_buffer;
+
+
+void fdv_print_txt_msg()
+{
+  UiLcdHy28_PrintText(5,92,freedv_rx_buffer,Yellow,Black,4);
+
+}
+
+void fdv_print_ber()
+{
+  int ber = 0;
+  char ber_string[12];
+
+  ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
+  sprintf(ber_string,"BER=0.%03d",ber);  //calculate and display the bit error rate
+  UiLcdHy28_PrintText(5,110,ber_string,Yellow,Black,4);
+
+}
+
+void fdv_clear_display()
+{
+  UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,92,"               ",Yellow,Black,4);
+
+}
 
 
 void FreeDV_mcHF_HandleFreeDV()
@@ -189,8 +215,6 @@ void FreeDV_mcHF_HandleFreeDV()
     static bool tx_was_here = false;
     static bool rx_was_here = false;
 
-    int ber = 0;
-    char ber_string[12];
 
     if ((tx_was_here == true && ts.txrx_mode == TRX_MODE_RX) || (rx_was_here == true && ts.txrx_mode == TRX_MODE_TX))
     {
@@ -246,8 +270,7 @@ void FreeDV_mcHF_HandleFreeDV()
             if (!rx_was_here) {
         	freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
         	freedv_set_total_bits(f_FREEDV,0);
-        	UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
-        	sprintf(freedv_rx_buffer,"               ");
+        	fdv_clear_display();
             }
 
 
@@ -373,12 +396,8 @@ void FreeDV_mcHF_HandleFreeDV()
             }
         }
         mchf_board_green_led(1);
-
-        ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
-        sprintf(ber_string,"BER=0.%03d",ber);  //calculate and display the bit error rate
-        UiLcdHy28_PrintText(5,110,ber_string,Yellow,Black,4);
-        UiLcdHy28_PrintText(5,90,freedv_rx_buffer,Yellow,Black,0);
-
+        fdv_print_ber();
+        fdv_print_txt_msg();
     }
     // END Freedv Test DL2FW
 }
