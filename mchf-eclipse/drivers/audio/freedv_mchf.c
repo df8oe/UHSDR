@@ -21,7 +21,7 @@
 #include "codec2_fdmdv.h"
 // end Freedv Test DL2FW
 #include "profiling.h"
-
+#include "ui_lcd_hy28.h"
 struct freedv *f_FREEDV;
 
 FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
@@ -32,6 +32,8 @@ FDV_IQ_Buffer __attribute__ ((section (".ccm"))) fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 // why? because our implementation will only fill up the fifo only to N-1 elements
 
 FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
+
+char freedv_rx_buffer[15];
 
 __IO int32_t fdv_iq_head = 0;
 __IO int32_t fdv_iq_tail = 0;
@@ -187,6 +189,9 @@ void FreeDV_mcHF_HandleFreeDV()
     static bool tx_was_here = false;
     static bool rx_was_here = false;
 
+    int ber = 0;
+    char ber_string[12];
+
     if ((tx_was_here == true && ts.txrx_mode == TRX_MODE_RX) || (rx_was_here == true && ts.txrx_mode == TRX_MODE_TX))
     {
         tx_was_here = false; //set to false to detect the first entry after switching to TX
@@ -237,6 +242,14 @@ void FreeDV_mcHF_HandleFreeDV()
             static COMP    iq_buffer[FDV_RX_AUDIO_SIZE_MAX];
             // these buffers are large enough to hold the requested/provided amount of data for freedv_comprx
             // these are larger than the FDV_BUFFER_SIZE since some more bytes may be asked for.
+
+            if (!rx_was_here) {
+        	freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
+        	freedv_set_total_bits(f_FREEDV,0);
+        	UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
+        	sprintf(freedv_rx_buffer,"               ");
+            }
+
 
             rx_was_here = true; // this is used to clear buffers when going into TX
 
@@ -360,6 +373,12 @@ void FreeDV_mcHF_HandleFreeDV()
             }
         }
         mchf_board_green_led(1);
+
+        ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
+        sprintf(ber_string,"BER=0.%03d",ber);  //calculate and display the bit error rate
+        UiLcdHy28_PrintText(5,110,ber_string,Yellow,Black,4);
+        UiLcdHy28_PrintText(5,90,freedv_rx_buffer,Yellow,Black,0);
+
     }
     // END Freedv Test DL2FW
 }
@@ -382,6 +401,19 @@ char my_get_next_tx_char(void *callback_state) {
 
     return c;
 }
+
+void my_put_next_rx_char(void *callback_state, char c) {
+    short ch = (short)c;
+    static int idx_rx=0;
+
+    if (ch!=13) freedv_rx_buffer[idx_rx++]=c;
+    if ((idx_rx==15)||(ch==13)) idx_rx=0; //max string length is 15, carriage return sets idx to zero
+					  //have to use another font to be able to show 80 characters
+
+}
+
+
+
 // FreeDV txt test - will be out of here
 
 void  FreeDV_mcHF_init()
@@ -393,7 +425,7 @@ void  FreeDV_mcHF_init()
 
     sprintf(my_cb_state.tx_str, "CQ CQ CQ mcHF SDR with integrated FreeDV codec calling!");
     my_cb_state.ptx_str = my_cb_state.tx_str;
-    freedv_set_callback_txt(f_FREEDV, NULL, &my_get_next_tx_char, &my_cb_state);
+    freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);
     // freedv_set_snr_squelch_thresh(f_FREEDV,-100.0);
 
