@@ -3183,7 +3183,7 @@ void AudioDriver_tx_am_sideband_processor(float32_t* I_buffer, float32_t* Q_buff
     //
     // check and apply correct translate mode
     //
-    audio_rx_freq_conv(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ));
+    audio_rx_freq_conv(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 }
 
 static inline void AudioDriver_tx_filter_audio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
