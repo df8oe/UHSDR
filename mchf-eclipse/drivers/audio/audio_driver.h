@@ -29,6 +29,11 @@
 // IRQ and 530uS idle time
 // (48kHz sampling - USB)
 //
+#define IQ_SAMPLE_RATE (48000)
+#define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
+
+
+
 // -----------------------------
 // FFT buffer, this is double the size of the length of the FFT used for spectrum display and waterfall spectrum
 #define FFT_IQ_BUFF_LEN		512
@@ -381,7 +386,7 @@ typedef struct SMeter
 //
 #define	FM_ALC_GAIN_CORRECTION	0.95
 //
-// For subaudible and burst:  FM Tone word calculation:  freq / (sample rate/2^24) => freq / (48000/16777216) => freq * 349.52533333
+// For subaudible and burst:  FM Tone word calculation:  freq / (sample rate/2^24) => freq / (IQ_SAMPLE_RATE/16777216) => freq * 349.52533333
 //
 #define FM_TONE_AMPLITUDE_SCALING	0.00045	// Scaling factor for subaudible tone modulation - not pre-emphasized -to produce approx +/- 300 Hz deviation in 2.5kHz mode
 #define FM_TONE_DDS_ACC_SHIFT	14			// number of left-shift bits to obtain lookup word
@@ -390,14 +395,14 @@ typedef struct SMeter
 //
 #define FM_SUBAUDIBLE_TONE_OFF	0
 //
-#define	FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR	(16777216/48000)	// scaling factor for calculating "tone word" for subaudible tone generator
+#define	FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR	(16777216/IQ_SAMPLE_RATE)	// scaling factor for calculating "tone word" for subaudible tone generator
 //
 #define	FM_TONE_BURST_OFF	0
 #define	FM_TONE_BURST_1750_MODE	1
 #define	FM_TONE_BURST_2135_MODE	2
 #define	FM_TONE_BURST_MAX	2
 //
-#define	FM_BURST_TONE_WORD_CALC_FACTOR	(16777216/48000)	// scaling factor for calculating "tone word" for the tone burst generator
+#define	FM_BURST_TONE_WORD_CALC_FACTOR	(16777216/IQ_SAMPLE_RATE)	// scaling factor for calculating "tone word" for the tone burst generator
 //
 #define FM_TONE_BURST_1750	(1750 * FM_BURST_TONE_WORD_CALC_FACTOR)
 #define FM_TONE_BURST_2135	(2135 * FM_BURST_TONE_WORD_CALC_FACTOR)
@@ -429,7 +434,7 @@ enum	{
 #define	FM_GOERTZEL_LOW		0.95		// ratio of "low" detect frequency with respect to center
 //
 #define	BEEP_SCALING	20				// audio scaling of keyboard beep
-#define	BEEP_TONE_WORD_FACTOR			(65536/48000)	// scaling factor for beep frequency calculation
+#define	BEEP_TONE_WORD_FACTOR			(65536/IQ_SAMPLE_RATE)	// scaling factor for beep frequency calculation
 //
 #define	MIN_BEEP_FREQUENCY	200			// minimum beep frequency in Hz
 #define	MAX_BEEP_FREQUENCY	3000		// maximum beep frequency in Hz

@@ -617,7 +617,7 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
         FSdec = 12000.0;
     }
 
-    float32_t FS = 48000; // we need this for the treble filter
+    const float32_t FS = IQ_SAMPLE_RATE; // we need this for the treble filter
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
     float32_t f0 = ts.notch_frequency;
@@ -794,7 +794,6 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     //
     // the treble filter is in biquad 2 and works at 48000ksps
     f0 = 3500;
-    FS = 48000;
     w0 = 2 * PI * f0 / FS;
     A = powf(10.0,(ts.treble_gain/40.0)); // gain ranges from -20 to 20
     S = 0.9; // shelf slope, 1 is maximum value
@@ -845,7 +844,6 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // insert coefficient calculation for TX bass & treble adjustment here!
     // the TX treble filter is in IIR_TX_biquad and works at 48000ksps
     f0 = 1700;
-    FS = 48000;
     w0 = 2 * PI * f0 / FS;
     A = powf(10.0,(ts.tx_treble_gain/40.0)); // gain ranges from -20 to 5
     S = 0.9; // shelf slope, 1 is maximum value
@@ -887,7 +885,6 @@ void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
     // Bass
     // lowShelf
     //
-    FS = 48000;
     f0 = 300;
     w0 = 2 * PI * f0 / FSdec;
     A = powf(10.0,(ts.tx_bass_gain/40.0)); // gain ranges from -20 to 5
@@ -2096,7 +2093,7 @@ static void audio_snap_carrier (void)
     const float32_t buff_len = FFT_IQ_BUFF_LEN2;
     // the calculation of bin_BW is perfectly right at the moment, but we have to change it, if we switch to using the spectrum display zoom FFT to finetune
 //    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len));
+    const float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / (buff_len));
     const int buff_len_int = FFT_IQ_BUFF_LEN2;
 
     float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
@@ -2109,12 +2106,12 @@ static void audio_snap_carrier (void)
     //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
     // FIXME: this is not the right calculation, at least it is a professional programmers blabla . . .
     // In order for me to understand and to be sure it is the right calculation, I have got to change it, even if it is not a const anymore, sorry! DD4WH, 2016_08_30
-    const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
+    const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(IQ_SAMPLE_RATE/8)))/16;
     // maybe this would be right AND satisfy the professional programmers search for "elegance" ;-)
     /*
      if (sd.magnify == 0)
      {
-     const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(48000/8)))/16;
+     const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(IQ_SAMPLE_RATE/8)))/16;
      }
      else
      {
@@ -2954,6 +2951,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 //* Object              : speech compressor/processor for TX audio
 //* Input Parameters    : size of buffer to processes, gain scaling factor
 //* Input Parameters    : also processes/compresses audio in "adb.i_buffer" and "adb.q_buffer" - it looks only at data in "i" buffer
+//*                       reads adb.a_buffer as well.
 //* Output Parameters   : data via "adb.i_buffer" and "adb.q_buffer"
 //* Functions called    : none
 //*----------------------------------------------------------------------------
@@ -3205,6 +3203,7 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
 {
     static float32_t    hpf_prev_a, hpf_prev_b;
     float32_t           a, b;
+    const uint32_t iq_freq_mode = ts.iq_freq_mode;
 
     static uint32_t fm_mod_idx = 0, fm_mod_accum = 0, fm_tone_idx = 0, fm_tone_accum = 0, fm_tone_burst_idx = 0, fm_tone_burst_accum = 0;
 
@@ -3272,10 +3271,13 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
     //
     // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
     //
+    uint32_t fm_freq_mod_word = FM_FREQ_MOD_WORD *  ((iq_freq_mode == FREQ_IQ_CONV_P12KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ)?2:1);
+    // in case of 12Khz offset from base we need to adjust the fm_freq_mod_word
+
     for(int i = 0; i < blockSize; i++)
     {
         // Calculate next sample
-        fm_mod_accum += (ulong)(FM_FREQ_MOD_WORD + (adb.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));   // change frequency using scaled audio
+        fm_mod_accum += (ulong)(fm_freq_mod_word + (adb.a_buffer[i] * FM_MOD_SCALING * fm_mod_mult));   // change frequency using scaled audio
         fm_mod_accum &= 0xffff;             // limit to 64k range
         fm_mod_idx    = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT;
         fm_mod_idx &= (DDS_TBL_SIZE - 1);       // limit lookup to range of sine table
@@ -3285,7 +3287,7 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
         adb.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);   // Load Q value
     }
 
-    bool swap = (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+    bool swap = (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
 
     audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
