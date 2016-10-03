@@ -184,15 +184,20 @@ void AudioManagement_CalcTxIqGainAdj(void)
     //
 	// please note that the RX adjustments for gain are negative (in function AudioManagement_CalcRxIqGainAdj)
 	// and the adjustments for TX are positive
-    if(ts.dmod_mode == DEMOD_AM)    // is it AM mode?
-        ts.tx_adj_gain_var_i = -(float)ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
-    else if(ts.dmod_mode == DEMOD_FM)   // is it in FM mode?
-        ts.tx_adj_gain_var_i = -(float)ts.tx_iq_fm_gain_balance;     // get current gain balance adjustment setting for FM
-    else if(ts.dmod_mode == DEMOD_LSB)
-        ts.tx_adj_gain_var_i = (float)ts.tx_iq_lsb_gain_balance;        // get current gain balance adjustment setting for LSB
-    else
-        ts.tx_adj_gain_var_i = (float)ts.tx_iq_usb_gain_balance;        // get current gain adjustment setting for USB and other non AM/FM modes
-
+    switch(ts.dmod_mode)
+    {
+    case DEMOD_AM:    // is it AM mode?
+        ts.tx_adj_gain_var_i = ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
+        break;
+    case DEMOD_FM:   // is it in FM mode?
+        ts.tx_adj_gain_var_i = ts.tx_iq_fm_gain_balance;     // get current gain balance adjustment setting for FM
+        break;
+    case DEMOD_LSB:
+        ts.tx_adj_gain_var_i = ts.tx_iq_lsb_gain_balance;        // get current gain balance adjustment setting for LSB
+        break;
+    default:
+        ts.tx_adj_gain_var_i = ts.tx_iq_usb_gain_balance;        // get current gain adjustment setting for USB and other non AM/FM modes
+    }
     //
     ts.tx_adj_gain_var_i /= SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
     ts.tx_adj_gain_var_q = -ts.tx_adj_gain_var_i;               // get "invert" of it
