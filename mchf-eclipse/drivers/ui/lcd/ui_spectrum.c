@@ -1740,7 +1740,7 @@ static void calculate_dBm(void)
         float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
         float32_t width;
 
-        float32_t bin_BW = (float32_t) (48000.0 * 2.0 / buff_len);
+        float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / buff_len);
         // width of a 256 tap FFT bin = 187.5Hz
         // we have to take into account the magnify mode
         // --> recalculation of bin_BW

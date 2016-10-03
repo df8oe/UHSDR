@@ -290,7 +290,7 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
     //
     // Terms for "above" detection frequency
     //
-    ads.fm_goertzel_high_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_HIGH) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
+    ads.fm_goertzel_high_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_HIGH) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/IQ_SAMPLE_RATE);
     ads.fm_goertzel_high_b = (2*PI*ads.fm_goertzel_high_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
     ads.fm_goertzel_high_sin = sin(ads.fm_goertzel_high_b);
     ads.fm_goertzel_high_cos = cos(ads.fm_goertzel_high_b);
@@ -298,7 +298,7 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
     //
     // Terms for "below" detection frequency
     //
-    ads.fm_goertzel_low_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_LOW) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
+    ads.fm_goertzel_low_a = (0.5 + (ads.fm_subaudible_tone_det_freq * FM_GOERTZEL_LOW) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/IQ_SAMPLE_RATE);
     ads.fm_goertzel_low_b = (2*PI*ads.fm_goertzel_low_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
     ads.fm_goertzel_low_sin = sin(ads.fm_goertzel_low_b);
     ads.fm_goertzel_low_cos = cos(ads.fm_goertzel_low_b);
@@ -306,7 +306,7 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
     //
     // Terms for the actual detection frequency
     //
-    ads.fm_goertzel_ctr_a = (0.5 + ads.fm_subaudible_tone_det_freq * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/48000);
+    ads.fm_goertzel_ctr_a = (0.5 + ads.fm_subaudible_tone_det_freq * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/IQ_SAMPLE_RATE);
     ads.fm_goertzel_ctr_b = (2*PI*ads.fm_goertzel_ctr_a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
     ads.fm_goertzel_ctr_sin = sin(ads.fm_goertzel_ctr_b);
     ads.fm_goertzel_ctr_cos = cos(ads.fm_goertzel_ctr_b);

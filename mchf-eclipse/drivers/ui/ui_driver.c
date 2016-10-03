@@ -5632,7 +5632,7 @@ void UiDriverDisplayFilterBW()
         break;
     }
     //
-    calc = 48000/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
+    calc = IQ_SAMPLE_RATE/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
     if(!sd.magnify)	 	// is magnify mode on?
     {
         if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
