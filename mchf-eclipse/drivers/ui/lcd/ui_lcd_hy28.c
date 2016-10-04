@@ -1491,7 +1491,14 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
                 {
                     i = 60;
                 }
-                x = 60-i;
+                if(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)
+                {
+              		x = i-1;
+                }
+                else
+                {
+              	  x = 60-i;
+              	}
                 for(i=0; touchscreentable[i]<= y; i++)
                 {}
                 y = i--;

@@ -557,6 +557,7 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter"},
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN,"122","Reverse Touchscreen"},
 	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -2694,6 +2695,21 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
            }
            break;
 
+    case MENU_REVERSE_TOUCHSCREEN:	// Touchscreen x mirrored?
+        temp_var = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)? 1 : 0;
+        fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
+        if(fchange)
+        {
+            if (temp_var)
+            {
+                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN;
+            }
+            else
+            {
+                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN;
+            }
+        }
+        break;
     case MENU_WFALL_STEP_SIZE:	// set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,
                                     WATERFALL_STEP_SIZE_MIN,

@@ -75,8 +75,8 @@
 #define		ATTRIB_STRING3			"Licensed under CC BY-NC-SA 3.0"
 //
 // -----------------------------------------------------------------------------
-#define CODEC_I2C                       I2C2
-#define SERIALEEPROM_I2C                I2C2
+#define CODEC_I2C					I2C2
+#define SERIALEEPROM_I2C			I2C2
 
 
 #define		WD_REFRESH_WINDOW		80
@@ -89,65 +89,65 @@
 // ---- 						PORT A										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define ENC_THREE_CH1 		GPIO_Pin_0
+#define ENC_THREE_CH1 			GPIO_Pin_0
 #define ENC_THREE_CH1_SOURCE	GPIO_PinSource0
 #define ENC_THREE_CH1_PIO       GPIOA
 // pin 1
-#define ENC_THREE_CH2 		GPIO_Pin_1
+#define ENC_THREE_CH2 			GPIO_Pin_1
 #define ENC_THREE_CH2_SOURCE	GPIO_PinSource1
 #define ENC_THREE_CH2_PIO       GPIOA
 // pin 2
-#define ADC3_FWD		GPIO_Pin_2
-#define ADC3_FWD_SOURCE		GPIO_PinSource2
-#define ADC3_FWD_PIO       	GPIOA
+#define ADC3_FWD				GPIO_Pin_2
+#define ADC3_FWD_SOURCE			GPIO_PinSource2
+#define ADC3_FWD_PIO       		GPIOA
 // pin 3
-#define ADC2_RET		GPIO_Pin_3
-#define ADC2_RET_SOURCE		GPIO_PinSource3
-#define ADC2_RET_PIO       	GPIOA
+#define ADC2_RET				GPIO_Pin_3
+#define ADC2_RET_SOURCE			GPIO_PinSource3
+#define ADC2_RET_PIO       		GPIOA
 // pin 4
 #ifdef MCHF_BOARD_0P5
-#define TP_IRQ			GPIO_Pin_14
-#define TP_IRQ_SOURCE		GPIO_PinSource14
+#define TP_IRQ					GPIO_Pin_14
+#define TP_IRQ_SOURCE			GPIO_PinSource14
 #else
-#define TP_IRQ			GPIO_Pin_4
-#define TP_IRQ_SOURCE		GPIO_PinSource4
+#define TP_IRQ					GPIO_Pin_4
+#define TP_IRQ_SOURCE			GPIO_PinSource4
 #endif
-#define TP_IRQ_PIO		GPIOA
-#define DAC0 			GPIO_Pin_4
-#define DAC0_SOURCE		GPIO_PinSource4
-#define DAC0_PIO       		GPIOA
+#define TP_IRQ_PIO				GPIOA
+#define DAC0 					GPIO_Pin_4
+#define DAC0_SOURCE				GPIO_PinSource4
+#define DAC0_PIO       			GPIOA
 // pin 5
-#define DAC1 			GPIO_Pin_5
-#define DAC1_SOURCE		GPIO_PinSource5
-#define DAC1_PIO       		GPIOA
+#define DAC1 					GPIO_Pin_5
+#define DAC1_SOURCE				GPIO_PinSource5
+#define DAC1_PIO       			GPIOA
 // pin 6
-#define ADC1_PWR		GPIO_Pin_6
-#define ADC1_PWR_SOURCE		GPIO_PinSource6
-#define ADC1_PWR_PIO       	GPIOA
+#define ADC1_PWR				GPIO_Pin_6
+#define ADC1_PWR_SOURCE			GPIO_PinSource6
+#define ADC1_PWR_PIO       		GPIOA
 // pin 7
-#define BAND0		 	GPIO_Pin_7
-#define BAND0_SOURCE		GPIO_PinSource7
-#define BAND0_PIO       	GPIOA
+#define BAND0		 			GPIO_Pin_7
+#define BAND0_SOURCE			GPIO_PinSource7
+#define BAND0_PIO       		GPIOA
 // pin 8
-#define BAND1		 	GPIO_Pin_8
-#define BAND1_SOURCE		GPIO_PinSource8
-#define BAND1_PIO       	GPIOA
+#define BAND1		 			GPIO_Pin_8
+#define BAND1_SOURCE			GPIO_PinSource8
+#define BAND1_PIO       		GPIOA
 // pin 9
-#define DEBUG_PRINT	 	GPIO_Pin_9
-#define DEBUG_PRINT_SOURCE	GPIO_PinSource9
-#define DEBUG_PRINT_PIO    	GPIOA
+#define DEBUG_PRINT	 			GPIO_Pin_9
+#define DEBUG_PRINT_SOURCE		GPIO_PinSource9
+#define DEBUG_PRINT_PIO    		GPIOA
 #ifdef MCHF_BOARD_0P5
-#define TP_CS			GPIO_Pin_13
-#define TP_CS_SOURCE		GPIO_PinSource13
+#define TP_CS					GPIO_Pin_13
+#define TP_CS_SOURCE			GPIO_PinSource13
 #else
-#define TP_CS			GPIO_Pin_9
-#define TP_CS_SOURCE		GPIO_PinSource9
+#define TP_CS					GPIO_Pin_9
+#define TP_CS_SOURCE			GPIO_PinSource9
 #endif
-#define TP_CS_PIO		GPIOA
+#define TP_CS_PIO				GPIOA
 // pin 10
-#define BAND2 			GPIO_Pin_10
-#define BAND2_SOURCE		GPIO_PinSource10
-#define BAND2_PIO       	GPIOA
+#define BAND2 					GPIO_Pin_10
+#define BAND2_SOURCE			GPIO_PinSource10
+#define BAND2_PIO       		GPIOA
 // pin 11
 // USB DFU
 //
@@ -162,36 +162,36 @@
 //
 //
 // pin 15
-#define CODEC_I2S_WS		GPIO_Pin_15
-#define CODEC_I2S_WS_SOURCE	GPIO_PinSource15
-#define CODEC_I2S_WS_PIO  	GPIOA
+#define CODEC_I2S_WS			GPIO_Pin_15
+#define CODEC_I2S_WS_SOURCE		GPIO_PinSource15
+#define CODEC_I2S_WS_PIO  		GPIOA
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT B										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define BUTTON_BNDM		GPIO_Pin_0
-#define BUTTON_BNDM_SOURCE	GPIO_PinSource0
+#define BUTTON_BNDM				GPIO_Pin_0
+#define BUTTON_BNDM_SOURCE		GPIO_PinSource0
 #define BUTTON_BNDM_PIO       	GPIOB
 // pin 1
-#define PTT_CNTR 		GPIO_Pin_1
-#define PTT_CNTR_SOURCE		GPIO_PinSource1
-#define PTT_CNTR_PIO       	GPIOB
+#define PTT_CNTR 				GPIO_Pin_1
+#define PTT_CNTR_SOURCE			GPIO_PinSource1
+#define PTT_CNTR_PIO       		GPIOB
 // pin 2
-#define BUTTON_BNDP 		GPIO_Pin_2
-#define BUTTON_BNDP_SOURCE	GPIO_PinSource2
+#define BUTTON_BNDP 			GPIO_Pin_2
+#define BUTTON_BNDP_SOURCE		GPIO_PinSource2
 #define BUTTON_BNDP_PIO       	GPIOB
 // pin 3
-#define BUTTON_M2 		GPIO_Pin_3
-#define BUTTON_M2_SOURCE	GPIO_PinSource3
+#define BUTTON_M2 				GPIO_Pin_3
+#define BUTTON_M2_SOURCE		GPIO_PinSource3
 #define BUTTON_M2_PIO       	GPIOB
 // pin 4
-#define ENC_ONE_CH1 		GPIO_Pin_4
-#define ENC_ONE_CH1_SOURCE	GPIO_PinSource4
+#define ENC_ONE_CH1 			GPIO_Pin_4
+#define ENC_ONE_CH1_SOURCE		GPIO_PinSource4
 #define ENC_ONE_CH1_PIO       	GPIOB
 // pin 5
-#define ENC_ONE_CH2 		GPIO_Pin_5
-#define ENC_ONE_CH2_SOURCE	GPIO_PinSource5
+#define ENC_ONE_CH2 			GPIO_Pin_5
+#define ENC_ONE_CH2_SOURCE		GPIO_PinSource5
 #define ENC_ONE_CH2_PIO       	GPIOB
 // pin 6
 #define I2C1_SCL_PIN            GPIO_Pin_6
@@ -202,12 +202,12 @@
 #define I2C1_SDA_PINSRC         GPIO_PinSource7
 #define I2C1_SDA_GPIO           GPIOB
 // pin 8
-#define BUTTON_G3 		GPIO_Pin_8
-#define BUTTON_G3_SOURCE	GPIO_PinSource8
+#define BUTTON_G3 				GPIO_Pin_8
+#define BUTTON_G3_SOURCE		GPIO_PinSource8
 #define BUTTON_G3_PIO       	GPIOB
 // pin 9
-#define GREEN_LED 		GPIO_Pin_9
-#define GREEN_LED_SOURCE	GPIO_PinSource9
+#define GREEN_LED 				GPIO_Pin_9
+#define GREEN_LED_SOURCE		GPIO_PinSource9
 #define GREEN_LED_PIO       	GPIOB
 // pin 10
 #define I2C2_SCL_PIN            GPIO_Pin_10
@@ -218,12 +218,12 @@
 #define I2C2_SDA_PINSRC         GPIO_PinSource11
 #define I2C2_SDA_GPIO           GPIOB
 // pin 12
-#define RED_LED 		GPIO_Pin_12
-#define RED_LED_SOURCE		GPIO_PinSource12
-#define RED_LED_PIO       	GPIOB
+#define RED_LED 				GPIO_Pin_12
+#define RED_LED_SOURCE			GPIO_PinSource12
+#define RED_LED_PIO       		GPIOB
 // pin 13
-#define LCD_SCK 		GPIO_Pin_13
-#define LCD_SCK_SOURCE		GPIO_PinSource13
+#define LCD_SCK 				GPIO_Pin_13
+#define LCD_SCK_SOURCE			GPIO_PinSource13
 #define LCD_SCK_PIO         	GPIOB
 // pin 14
 // USB HOST
@@ -236,205 +236,205 @@
 // ---- 						PORT C										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define BUTTON_G4 		GPIO_Pin_0
-#define BUTTON_G4_SOURCE	GPIO_PinSource0
+#define BUTTON_G4 				GPIO_Pin_0
+#define BUTTON_G4_SOURCE		GPIO_PinSource0
 #define BUTTON_G4_PIO       	GPIOC
 // pin 1
-#define BUTTON_M3 		GPIO_Pin_1
-#define BUTTON_M3_SOURCE	GPIO_PinSource1
+#define BUTTON_M3 				GPIO_Pin_1
+#define BUTTON_M3_SOURCE		GPIO_PinSource1
 #define BUTTON_M3_PIO       	GPIOC
 // pin 2
-#define LCD_MISO 		GPIO_Pin_2
-#define LCD_MISO_SOURCE		GPIO_PinSource2
+#define LCD_MISO 				GPIO_Pin_2
+#define LCD_MISO_SOURCE			GPIO_PinSource2
 #define LCD_MISO_PIO         	GPIOC
 // pin 3
-#define LCD_MOSI 		GPIO_Pin_3
-#define LCD_MOSI_SOURCE		GPIO_PinSource3
+#define LCD_MOSI 				GPIO_Pin_3
+#define LCD_MOSI_SOURCE			GPIO_PinSource3
 #define LCD_MOSI_PIO         	GPIOC
 // pin 4
-#define BUTTON_STEPM		GPIO_Pin_4
-#define BUTTON_STEPM_SOURCE	GPIO_PinSource4
+#define BUTTON_STEPM			GPIO_Pin_4
+#define BUTTON_STEPM_SOURCE		GPIO_PinSource4
 #define BUTTON_STEPM_PIO       	GPIOC
 // pin 5
-#define BUTTON_STEPP		GPIO_Pin_5
-#define BUTTON_STEPP_SOURCE	GPIO_PinSource5
+#define BUTTON_STEPP			GPIO_Pin_5
+#define BUTTON_STEPP_SOURCE		GPIO_PinSource5
 #define BUTTON_STEPP_PIO       	GPIOC
 // pin 6
-#define FREQ_ENC_CH1 		GPIO_Pin_6
-#define FREQ_ENC_CH1_SOURCE	GPIO_PinSource6
+#define FREQ_ENC_CH1 			GPIO_Pin_6
+#define FREQ_ENC_CH1_SOURCE		GPIO_PinSource6
 #define FREQ_ENC_CH1_PIO        GPIOC
 // pin 7
-#define FREQ_ENC_CH2 		GPIO_Pin_7
-#define FREQ_ENC_CH2_SOURCE	GPIO_PinSource7
+#define FREQ_ENC_CH2 			GPIO_Pin_7
+#define FREQ_ENC_CH2_SOURCE		GPIO_PinSource7
 #define FREQ_ENC_CH2_PIO        GPIOC
 // pin 8
-#define POWER_DOWN 		GPIO_Pin_8
-#define POWER_DOWN_SOURCE	GPIO_PinSource8
+#define POWER_DOWN 				GPIO_Pin_8
+#define POWER_DOWN_SOURCE		GPIO_PinSource8
 #define POWER_DOWN_PIO         	GPIOC
 // pin 9
-#define CODEC_CLOCK 		GPIO_Pin_9
-#define CODEC_CLOCK_SOURCE	GPIO_PinSource9
+#define CODEC_CLOCK 			GPIO_Pin_9
+#define CODEC_CLOCK_SOURCE		GPIO_PinSource9
 #define CODEC_CLOCK_PIO         GPIOC
 // pin 10
-#define CODEC_I2S_SCK 		GPIO_Pin_10
+#define CODEC_I2S_SCK 			GPIO_Pin_10
 #define CODEC_I2S_SCK_SOURCE	GPIO_PinSource10
 #define CODEC_I2S_SCK_PIO       GPIOC
 // pin 11
-#define CODEC_I2S_SDI 		GPIO_Pin_11
+#define CODEC_I2S_SDI 			GPIO_Pin_11
 #define CODEC_I2S_SDI_SOURCE	GPIO_PinSource11
 #define CODEC_I2S_SDI_PIO       GPIOC
 // pin 12
-#define CODEC_I2S_SDO 		GPIO_Pin_12
+#define CODEC_I2S_SDO 			GPIO_Pin_12
 #define CODEC_I2S_SDO_SOURCE	GPIO_PinSource12
 #define CODEC_I2S_SDO_PIO       GPIOC
 // pin 13
-#define BUTTON_PWR		GPIO_Pin_13
-#define BUTTON_PWR_SOURCE	GPIO_PinSource13
+#define BUTTON_PWR				GPIO_Pin_13
+#define BUTTON_PWR_SOURCE		GPIO_PinSource13
 #define BUTTON_PWR_PIO       	GPIOC
 // pin 14
-#define BUTTON_M1		GPIO_Pin_14
-#define BUTTON_M1_SOURCE	GPIO_PinSource14
+#define BUTTON_M1				GPIO_Pin_14
+#define BUTTON_M1_SOURCE		GPIO_PinSource14
 #define BUTTON_M1_PIO       	GPIOC
 // pin 15
-#define BUTTON_F3		GPIO_Pin_15
-#define BUTTON_F3_SOURCE	GPIO_PinSource15
+#define BUTTON_F3				GPIO_Pin_15
+#define BUTTON_F3_SOURCE		GPIO_PinSource15
 #define BUTTON_F3_PIO       	GPIOC
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT D										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define LCD_D2			GPIO_Pin_0
-#define LCD_D2_SOURCE		GPIO_PinSource0
-#define LCD_D2_PIO      	GPIOD
+#define LCD_D2					GPIO_Pin_0
+#define LCD_D2_SOURCE			GPIO_PinSource0
+#define LCD_D2_PIO      		GPIOD
 // pin 1
-#define LCD_D3			GPIO_Pin_1
-#define LCD_D3_SOURCE		GPIO_PinSource1
-#define LCD_D3_PIO      	GPIOD
+#define LCD_D3					GPIO_Pin_1
+#define LCD_D3_SOURCE			GPIO_PinSource1
+#define LCD_D3_PIO      		GPIOD
 // pin 2
-#define LCD_BACKLIGHT		GPIO_Pin_2
+#define LCD_BACKLIGHT			GPIO_Pin_2
 #define LCD_BACKLIGHT_SOURCE	GPIO_PinSource2
 #define LCD_BACKLIGHT_PIO      	GPIOD
 // pin 3
-#define LCD_RESET		GPIO_Pin_3
-#define LCD_RESET_SOURCE	GPIO_PinSource3
-#define LCD_RESET_PIO      	GPIOD
+#define LCD_RESET				GPIO_Pin_3
+#define LCD_RESET_SOURCE		GPIO_PinSource3
+#define LCD_RESET_PIO      		GPIOD
 // pin 4
-#define LCD_RD			GPIO_Pin_4
-#define LCD_RD_SOURCE		GPIO_PinSource4
-#define LCD_RD_PIO      	GPIOD
+#define LCD_RD					GPIO_Pin_4
+#define LCD_RD_SOURCE			GPIO_PinSource4
+#define LCD_RD_PIO      		GPIOD
 // pin 5
-#define LCD_WR			GPIO_Pin_5
-#define LCD_WR_SOURCE		GPIO_PinSource5
-#define LCD_WR_PIO      	GPIOD
+#define LCD_WR					GPIO_Pin_5
+#define LCD_WR_SOURCE			GPIO_PinSource5
+#define LCD_WR_PIO      		GPIOD
 // pin 6
-#define BUTTON_F1		GPIO_Pin_6
-#define BUTTON_F1_SOURCE	GPIO_PinSource6
+#define BUTTON_F1				GPIO_Pin_6
+#define BUTTON_F1_SOURCE		GPIO_PinSource6
 #define BUTTON_F1_PIO       	GPIOD
 // pin 7
-#define LCD_CSA			GPIO_Pin_7
-#define LCD_CSA_SOURCE		GPIO_PinSource7
-#define LCD_CSA_PIO      	GPIOD
+#define LCD_CSA					GPIO_Pin_7
+#define LCD_CSA_SOURCE			GPIO_PinSource7
+#define LCD_CSA_PIO      		GPIOD
 // pin 8
-#define LCD_D15			GPIO_Pin_8
-#define LCD_D15_SOURCE		GPIO_PinSource8
-#define LCD_D15_PIO      	GPIOD
+#define LCD_D15					GPIO_Pin_8
+#define LCD_D15_SOURCE			GPIO_PinSource8
+#define LCD_D15_PIO      		GPIOD
 // pin 9
-#define LCD_D16			GPIO_Pin_9
-#define LCD_D16_SOURCE		GPIO_PinSource9
-#define LCD_D16_PIO      	GPIOD
+#define LCD_D16					GPIO_Pin_9
+#define LCD_D16_SOURCE			GPIO_PinSource9
+#define LCD_D16_PIO      		GPIOD
 // pin 10
-#define LCD_D17			GPIO_Pin_10
-#define LCD_D17_SOURCE		GPIO_PinSource10
-#define LCD_D17_PIO      	GPIOD
+#define LCD_D17					GPIO_Pin_10
+#define LCD_D17_SOURCE			GPIO_PinSource10
+#define LCD_D17_PIO      		GPIOD
 // pin 11
-#define LCD_RS			GPIO_Pin_11
-#define LCD_RS_SOURCE		GPIO_PinSource11
-#define LCD_RS_PIO      	GPIOD
+#define LCD_RS					GPIO_Pin_11
+#define LCD_RS_SOURCE			GPIO_PinSource11
+#define LCD_RS_PIO      		GPIOD
 // pin 12
-#define ENC_TWO_CH1 		GPIO_Pin_12
-#define ENC_TWO_CH1_SOURCE	GPIO_PinSource12
+#define ENC_TWO_CH1 			GPIO_Pin_12
+#define ENC_TWO_CH1_SOURCE		GPIO_PinSource12
 #define ENC_TWO_CH1_PIO         GPIOD
 // pin 13
-#define ENC_TWO_CH2 		GPIO_Pin_13
-#define ENC_TWO_CH2_SOURCE	GPIO_PinSource13
+#define ENC_TWO_CH2 			GPIO_Pin_13
+#define ENC_TWO_CH2_SOURCE		GPIO_PinSource13
 #define ENC_TWO_CH2_PIO         GPIOD
 // pin 14
-#define LCD_D0			GPIO_Pin_14
-#define LCD_D0_SOURCE		GPIO_PinSource14
-#define LCD_D0_PIO      	GPIOD
+#define LCD_D0					GPIO_Pin_14
+#define LCD_D0_SOURCE			GPIO_PinSource14
+#define LCD_D0_PIO      		GPIOD
 // pin 15
-#define LCD_D1			GPIO_Pin_15
-#define LCD_D1_SOURCE		GPIO_PinSource15
-#define LCD_D1_PIO      	GPIOD
+#define LCD_D1					GPIO_Pin_15
+#define LCD_D1_SOURCE			GPIO_PinSource15
+#define LCD_D1_PIO      		GPIOD
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT E										----
 // -----------------------------------------------------------------------------
 // pin 0
-#define PADDLE_DAH		GPIO_Pin_0
-#define PADDLE_DAH_SOURCE	GPIO_PinSource0
+#define PADDLE_DAH				GPIO_Pin_0
+#define PADDLE_DAH_SOURCE		GPIO_PinSource0
 #define PADDLE_DAH_PIO       	GPIOE
 // pin 1
-#define PADDLE_DIT		GPIO_Pin_1
-#define PADDLE_DIT_SOURCE	GPIO_PinSource1
+#define PADDLE_DIT				GPIO_Pin_1
+#define PADDLE_DIT_SOURCE		GPIO_PinSource1
 #define PADDLE_DIT_PIO       	GPIOE
 // pin 2
-#define BUTTON_F2		GPIO_Pin_2
-#define BUTTON_F2_SOURCE	GPIO_PinSource2
+#define BUTTON_F2				GPIO_Pin_2
+#define BUTTON_F2_SOURCE		GPIO_PinSource2
 #define BUTTON_F2_PIO       	GPIOE
 // pin 3
-#define BUTTON_F4		GPIO_Pin_3
-#define BUTTON_F4_SOURCE	GPIO_PinSource3
+#define BUTTON_F4				GPIO_Pin_3
+#define BUTTON_F4_SOURCE		GPIO_PinSource3
 #define BUTTON_F4_PIO       	GPIOE
 // pin 4
-#define BUTTON_G2		GPIO_Pin_4
-#define BUTTON_G2_SOURCE	GPIO_PinSource4
+#define BUTTON_G2				GPIO_Pin_4
+#define BUTTON_G2_SOURCE		GPIO_PinSource4
 #define BUTTON_G2_PIO       	GPIOE
 // pin 5
-#define BUTTON_F5		GPIO_Pin_5
-#define BUTTON_F5_SOURCE	GPIO_PinSource5
+#define BUTTON_F5				GPIO_Pin_5
+#define BUTTON_F5_SOURCE		GPIO_PinSource5
 #define BUTTON_F5_PIO       	GPIOE
 // pin 6
-#define BUTTON_G1		GPIO_Pin_6
-#define BUTTON_G1_SOURCE	GPIO_PinSource6
+#define BUTTON_G1				GPIO_Pin_6
+#define BUTTON_G1_SOURCE		GPIO_PinSource6
 #define BUTTON_G1_PIO       	GPIOE
 // pin 7
-#define LCD_D4			GPIO_Pin_7
-#define LCD_D4_SOURCE		GPIO_PinSource7
-#define LCD_D4_PIO      	GPIOE
+#define LCD_D4					GPIO_Pin_7
+#define LCD_D4_SOURCE			GPIO_PinSource7
+#define LCD_D4_PIO      		GPIOE
 // pin 8
-#define LCD_D5			GPIO_Pin_8
-#define LCD_D5_SOURCE		GPIO_PinSource8
-#define LCD_D5_PIO      	GPIOE
+#define LCD_D5					GPIO_Pin_8
+#define LCD_D5_SOURCE			GPIO_PinSource8
+#define LCD_D5_PIO      		GPIOE
 // pin 9
-#define LCD_D6			GPIO_Pin_9
-#define LCD_D6_SOURCE		GPIO_PinSource9
-#define LCD_D6_PIO      	GPIOE
+#define LCD_D6					GPIO_Pin_9
+#define LCD_D6_SOURCE			GPIO_PinSource9
+#define LCD_D6_PIO      		GPIOE
 // pin 10
-#define LCD_D7			GPIO_Pin_10
-#define LCD_D7_SOURCE		GPIO_PinSource10
-#define LCD_D7_PIO      	GPIOE
+#define LCD_D7					GPIO_Pin_10
+#define LCD_D7_SOURCE			GPIO_PinSource10
+#define LCD_D7_PIO      		GPIOE
 // pin 11
-#define LCD_D10			GPIO_Pin_11
-#define LCD_D10_SOURCE		GPIO_PinSource11
-#define LCD_D10_PIO      	GPIOE
+#define LCD_D10					GPIO_Pin_11
+#define LCD_D10_SOURCE			GPIO_PinSource11
+#define LCD_D10_PIO      		GPIOE
 // pin 12
-#define LCD_D11			GPIO_Pin_12
-#define LCD_D11_SOURCE		GPIO_PinSource12
-#define LCD_D11_PIO        	GPIOE
+#define LCD_D11					GPIO_Pin_12
+#define LCD_D11_SOURCE			GPIO_PinSource12
+#define LCD_D11_PIO        		GPIOE
 // pin 13
-#define LCD_D12			GPIO_Pin_13
-#define LCD_D12_SOURCE		GPIO_PinSource13
-#define LCD_D12_PIO      	GPIOE
+#define LCD_D12					GPIO_Pin_13
+#define LCD_D12_SOURCE			GPIO_PinSource13
+#define LCD_D12_PIO      		GPIOE
 // pin 14
-#define LCD_D13			GPIO_Pin_14
-#define LCD_D13_SOURCE		GPIO_PinSource14
-#define LCD_D13_PIO      	GPIOE
+#define LCD_D13					GPIO_Pin_14
+#define LCD_D13_SOURCE			GPIO_PinSource14
+#define LCD_D13_PIO      		GPIOE
 // pin 15
-#define LCD_D14			GPIO_Pin_15
-#define LCD_D14_SOURCE		GPIO_PinSource15
-#define LCD_D14_PIO      	GPIOE
+#define LCD_D14					GPIO_Pin_15
+#define LCD_D14_SOURCE			GPIO_PinSource15
+#define LCD_D14_PIO      		GPIOE
 //
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -1013,19 +1013,14 @@ typedef struct TransceiverState
     uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
     //
 
-#define DSP_NR_ENABLE 	  0x01
-#define DSP_NR_POSTAGC_ENABLE 	  0x02
-#define DSP_NOTCH_ENABLE 0x04
-#define DSP_NB_ENABLE 0x08
-#define DSP_MNOTCH_ENABLE 0x10
-#define DSP_MPEAK_ENABLE 0x20
+#define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
+#define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
+#define DSP_NOTCH_ENABLE		0x04	// DSP Notch mode is on (| 4)
+#define DSP_NB_ENABLE			0x08	// DSP is to be displayed on screen instead of NB (| 8)
+#define DSP_MNOTCH_ENABLE		0x10	// Manual Notch enabled
+#define DSP_MPEAK_ENABLE		0x20	// Manual Peak enabled
 
     uchar	dsp_active;					// Used to hold various aspects of DSP mode selection
-    // LSB = 1 if DSP NR mode is on (| 1)
-    // LSB+1 = 1 if DSP NR is to occur post AGC (| 2)
-    // LSB+2 = 1 if DSP Notch mode is on (| 4)
-    // LSB+3 = 0 if DSP is to be displayed on screen instead of NB (| 8)
-    // MSB	 = 1 if button G2 toggle NOT initialized (| 128)
     uchar	dsp_mode;					// holds the mode chosen in the DSP
 	uchar	temp_nb;
     uchar 	digital_mode;				// holds actual digital mode
@@ -1074,6 +1069,7 @@ typedef struct TransceiverState
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox
 #define FLAGS1_SCOPE_LIGHT_ENABLE		0x1000  // 0 = Spectrum normal, 1 = Spectrum light
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
+#define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
 
     uint16_t	flags2;							// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
 #define FLAGS2_FM_MODE_ENABLE 			0x01    // 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
