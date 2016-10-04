@@ -906,10 +906,10 @@ void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uin
                 // because of the letters
                 if(font == 4)
                 {
-                    if(*str > 0x39)
+                 //   if(*str > 0x39)
                         Xpos -= 1;
-                    else
-                        Xpos -= 2;
+                   // else
+                   //     Xpos -= 2;
                 }
             }
             else if (Ypos < (MAX_Y - cf->Height))

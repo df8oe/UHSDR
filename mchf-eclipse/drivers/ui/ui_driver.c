@@ -787,8 +787,7 @@ void UiDriver_HandleTouchScreen()
             else
             {
                 ts.dvmode = 0;
-            	UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
-            	UiLcdHy28_PrintText(5,90,"               ",Yellow,Black,0);
+            	fdv_clear_display();
             }
          //DL2FW freeDV test end
             UiDriver_DisplayDigitalMode();
