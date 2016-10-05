@@ -1782,39 +1782,44 @@ static void calculate_dBm(void)
         //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
         //	= determine bandwith separately for lower and upper sideband
 
-        if (ts.dmod_mode == DEMOD_LSB)
-      	  {
-          bw_USB = 0.0;
-          bw_LSB = width;
-      	  }
-
-        if (ts.dmod_mode == DEMOD_USB)
-      	  {
-          bw_LSB = 0.0;
-          bw_USB = width;
-      	  }
-
-        if (ts.dmod_mode == DEMOD_CW)
-      	  {
-      	  //
-          if(ts.cw_lsb)
-            {
+        switch(ts.dmod_mode)
+        {
+        case DEMOD_LSB:
             bw_USB = 0.0;
             bw_LSB = width;
-            }
-          else
-            {
+            break;
+        case DEMOD_USB:
             bw_LSB = 0.0;
             bw_USB = width;
+            break;
+        case DEMOD_CW:
+            if(ts.cw_lsb)
+            {
+                bw_USB = 0.0;
+                bw_LSB = width;
             }
-      	  }
-
-        if (ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_FM)
-      	  {
-          bw_LSB = width;
-          bw_USB = width;
-      	  }
-
+            else
+            {
+                bw_LSB = 0.0;
+                bw_USB = width;
+            }
+            break;
+        case DEMOD_DIGI:
+            if(ts.digi_lsb == true)
+            {
+                bw_USB = 0.0;
+                bw_LSB = width;
+            }
+            else
+            {
+                bw_LSB = 0.0;
+                bw_USB = width;
+            }
+            break;
+        default:
+            bw_LSB = width;
+            bw_USB = width;
+        }
         // calculate upper and lower limit for determination of signal strength
         // = filter passband is between the lower bin Lbin and the upper bin Ubin
         Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
