@@ -1420,6 +1420,8 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static FDV_Audio_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
+    bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
+
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
 
@@ -1447,7 +1449,7 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
             if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
             {
 
-        	if (ts.dmod_mode == DEMOD_LSB)
+        	if (lsb_active == true)
         	  {
 
         	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
@@ -3458,7 +3460,8 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 #endif
 
         // apply I/Q amplitude & phase adjustments
-        audio_tx_final_iq_processing(20.0*SSB_GAIN_COMP, ts.dmod_mode != DEMOD_LSB, dst, blockSize);
+        bool swap = ts.dmod_mode == DEMOD_USB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == false);
+        audio_tx_final_iq_processing(20.0*SSB_GAIN_COMP, swap, dst, blockSize);
     }
     else
     {
