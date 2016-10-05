@@ -491,6 +491,12 @@ extern const ButtonMap  bm[BUTTON_NUM];
 #define DEMOD_DIGI			6
 #define DEMOD_MAX_MODE			6
 
+// codec x demod
+// analog USB LSB CW AM FM SAM
+// FreeDV USB LSB -  -  -  -
+
+
+
 #define RTC_OSC_FREQ			32768
 
 #define	TCXO_OFF			0		// TXCO temperature compensation off
@@ -1200,6 +1206,8 @@ typedef struct TransceiverState
 	int	FDV_TX_samples_ready;
 	uint16_t FDV_TX_out_start_pt;
 	uint16_t FDV_TX_in_start_pt;
+
+    bool    digi_lsb;                 // flag used to indicate that mcHF is to operate in LSB when TRUE
 
 	// end Freedv Test DL2FW
 

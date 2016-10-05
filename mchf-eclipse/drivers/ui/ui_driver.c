@@ -83,7 +83,7 @@ uchar 			UiDriver_DisplayBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriverTimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
-static void 	UiDriverChangeDemodMode(uchar noskip);
+static void 	UiDriverChangeDemodMode(bool include_disabled_modes);
 static void 	UiDriverChangeBand(uchar is_up);
 static bool 	UiDriverCheckFrequencyEncoder();
 
@@ -1163,10 +1163,12 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
 
 
-
-
-void RadioManagement_CalculateCWSidebandMode()
+/*
+ * @returns: false -> use USB, true -> use LSB
+ */
+bool RadioManagement_CalculateCWSidebandMode()
 {
+    bool retval = false;
     switch(ts.cw_offset_mode)
     {
     case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
@@ -1175,25 +1177,26 @@ void RadioManagement_CalculateCWSidebandMode()
         // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
         if (df.tune_new/TUNE_MULT > USB_FREQ_THRESHOLD || RadioManagement_GetBand(df.tune_new/TUNE_MULT) == BAND_MODE_60)   // is the current frequency above the USB threshold or is it 60m?
         {
-            ts.cw_lsb = 0;                      // yes - indicate that it is USB
+            retval = false;                      // yes - indicate that it is USB
         }
         else
         {
-            ts.cw_lsb = 1;                      // no - LSB
+            retval = true;                      // no - LSB
         }
         break;
     case CW_OFFSET_LSB_TX:
     case CW_OFFSET_LSB_RX:
     case CW_OFFSET_LSB_SHIFT:
-        ts.cw_lsb = 1;              // It is LSB
+        retval = true;              // It is LSB
         break;
     case CW_OFFSET_USB_TX:
     case CW_OFFSET_USB_RX:
     case CW_OFFSET_USB_SHIFT:
     default:
-        ts.cw_lsb = 0;
+        retval = false;
         break;
     }
+    return retval;
 }
 
 
@@ -1720,7 +1723,7 @@ void ui_driver_init()
     df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
     df.tune_old = df.tune_new;
 
-    RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
+    ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
 
     AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
 
@@ -2367,8 +2370,6 @@ void UiDriver_RefreshEncoderDisplay()
 void UiInitRxParms()
 {
 
-    // Init / Functional changes to operation in RX path
-    RadioManagement_CalculateCWSidebandMode();
 
     RadioManagement_SetDemodMode(ts.dmod_mode);
 
@@ -2713,6 +2714,9 @@ void UiDriverShowMode()
     case DEMOD_CW:
         txt = ts.cw_lsb?"CW-L":"CW-U";
         break;
+    case DEMOD_DIGI:
+            txt = ts.digi_lsb?"DI-L":"DI-U";
+            break;
     default:
         break;
     }
@@ -4323,54 +4327,164 @@ void UiDriverSetDemodMode(uint32_t new_mode)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriverChangeDemodMode(uchar noskip)
+
+static bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
+{
+    bool retval = false;
+    switch(demod_mode)
+    {
+    case DEMOD_LSB:
+    case DEMOD_USB:
+        if((ts.lsb_usb_auto_select))       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+        {
+            retval = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
+        }
+        else
+        {
+            retval = true;
+        }
+        break;
+    case DEMOD_AM:
+        retval = ts.am_mode_disable == false;      // is AM enabled?
+        break;
+    case DEMOD_FM:
+        // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
+        retval = (ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF) && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
+        break;
+    case DEMOD_SAM:
+        retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
+        break;
+    default:
+        retval = true;
+    }
+    return retval;
+}
+
+static uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
+{
+   uint32_t retval = loc_mode;
+   // default is to simply return the original mode
+
+    if(alternate_mode == true)
+    {
+            switch(loc_mode)
+            {
+            case DEMOD_USB:
+                retval = DEMOD_LSB;
+                break;
+            case DEMOD_LSB:
+                retval = DEMOD_USB;
+                break;
+            case DEMOD_CW:
+                // FIXME: get rid of ts.cw_lsb
+                // better use it generally to indicate selected side band (also in SSB)
+                ts.cw_lsb = !ts.cw_lsb;
+                break;
+            case DEMOD_AM:
+                   retval = DEMOD_SAM;
+                break;
+            case DEMOD_SAM:
+                retval = DEMOD_AM;
+                break;
+            case DEMOD_DIGI:
+                ts.digi_lsb = !ts.digi_lsb;
+            }
+            // if there is no explicit alternative mode
+            // we return the original mode.
+    }
+    else
+    {
+        do {
+            retval++;
+            if (retval > DEMOD_MAX_MODE)
+            {
+                retval = 0;
+                // wrap around;
+            }
+        }    while (RadioManagement_IsApplicableDemodMode(retval) == false && retval != loc_mode);
+        // if we loop around to the initial mode, there is no other option than the original mode
+        // so we return it, otherwise we provide the new mode.
+    }
+
+    return retval;
+}
+
+
+
+static void UiDriverChangeDemodMode(bool include_disabled_modes)
 {
     ulong loc_mode = ts.dmod_mode;	// copy to local, so IRQ is not affected
 
-
-    if((ts.lsb_usb_auto_select) && (noskip))	 	// noskip mode with auto-select enabled
+#if 1
+    loc_mode = RadioManagement_NextDemodMode(loc_mode, include_disabled_modes);
+#else
+    if(include_disabled_modes == true
+            && ts.lsb_usb_auto_select == true
+            && (loc_mode == DEMOD_USB || loc_mode == DEMOD_LSB)
+       )	 	// noskip mode with auto-select enabled
     {
         if(loc_mode == DEMOD_LSB)					// if LSB, flip to USB
+        {
             loc_mode = DEMOD_USB;
+        }
         else if(loc_mode == DEMOD_USB)				// if USB, flip to LSB
+        {
             loc_mode = DEMOD_LSB;
-        else										// None of the above?
-            loc_mode++;								// Increase mode
+        }
     }
     else				// Normal changing of the mode
+    {
         loc_mode++;		// Increase mode
+    }
 
-    if(!noskip)	 		// Are we NOT to skip disabled modes?
+    // the rules below figure out if a mode should be
+    // skipped, so this code must be executed after selecting a mode
+    // and the modes need to be checked in the mathematical order of their ids
+    // in order to ensure proper skipping.
+
+    // first set of rules which are only applied if the disable should be honored
+    // i.e. on short press of G1
+    if(include_disabled_modes == false)	 		// Are we NOT to skip disabled modes?
     {
         if(loc_mode == DEMOD_AM)	 	// yes - is this AM mode?
         {
             if(ts.am_mode_disable)		// is AM to be disabled?
+            {
                 loc_mode++;				// yes - go to next mode
+            }
         }
         if(loc_mode == DEMOD_FM)	 	// is this FM mode?
         {
             if((!(ts.flags2 & FLAGS2_FM_MODE_ENABLE)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
+            {
                 loc_mode++;				// yes - go to next mode
+            }
         }
+
+        if(loc_mode == DEMOD_SAM)       // yes - is this SAM mode?
+        {
+            if(!(ts.flags1 & FLAGS1_SAM_ENABLE))        // is SAM to be disabled?
+                loc_mode++;             // yes - go to next mode
+        }
+
     }
 
+    // second set of rules
+    // these rules are always enforced
     if((loc_mode == DEMOD_FM) && (!ts.iq_freq_mode))	 	// are we in FM and frequency translate is off?
     {
         loc_mode++;		// yes - FM NOT permitted unless frequency translate is active, so skip!
     }
 
-    if(loc_mode == DEMOD_SAM)	 	// yes - is this SAM mode?
-    {
-        if(!(ts.flags1 & FLAGS1_SAM_ENABLE))		// is SAM to be disabled?
-            loc_mode++;				// yes - go to next mode
-    }
 
     // Check for overflow
     if(loc_mode >= DEMOD_MAX_MODE)
+    {
         loc_mode = DEMOD_USB;
+    }
 
 
-    if((ts.lsb_usb_auto_select) && ((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB)) && (!noskip))	 	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+    if((ts.lsb_usb_auto_select) && ((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB)) && (include_disabled_modes == false))	 	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
     {
         if(RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) != loc_mode)	 	// is this a voice mode, subject to "auto" LSB/USB select?
         {
@@ -4378,6 +4492,7 @@ static void UiDriverChangeDemodMode(uchar noskip)
             loc_mode++;
         }
     }
+#endif
     RadioManagement_SetDemodMode(loc_mode);
     UiDriverShowMode();
 }
@@ -4513,6 +4628,8 @@ static void UiDriverChangeBand(uchar is_up)
 
         // Finally update public flag
         ts.band = new_band_index;
+
+        ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
 
         UiInitRxParms();    // re-init because mode/filter may have changed
     }
@@ -5591,7 +5708,7 @@ void UiDriverDisplayFilterBW()
 {
     float	width, offset, calc;
     int	lpos;
-    bool	is_usb;
+    bool	is_lsb;
     uint32_t clr;
 
     if(ts.menu_mode)	// bail out if in menu mode
@@ -5600,7 +5717,7 @@ void UiDriverDisplayFilterBW()
 
 
     // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
-    //
+
     const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
     const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
     offset = path_p->offset;
@@ -5611,73 +5728,62 @@ void UiDriverDisplayFilterBW()
         offset = width/2;
     }
 
-    //
-    //
     switch(ts.dmod_mode)	 	// determine if the receiver is set to LSB or USB or FM
     {
     case DEMOD_LSB:
-        is_usb = 0;		// it is LSB
+        is_lsb = true;		// it is LSB
         break;
     case DEMOD_CW:
-        if(!ts.cw_lsb)	// is this USB RX mode?  (LSB of mode byte was zero)
-            is_usb = 1;	// it is USB
-        else	// No, it is LSB RX mode
-            is_usb = 0;	// it is LSB
+        is_lsb = ts.cw_lsb;	// is this USB RX mode?  (LSB of mode byte was zero)
         break;
     case DEMOD_USB:
     case DEMOD_DIGI:
     default:
-        is_usb = 1;		// it is USB
+        is_lsb = false;		// it is USB
         break;
     }
-    //
+
     calc = IQ_SAMPLE_RATE/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
+
     if(!sd.magnify)	 	// is magnify mode on?
     {
-        if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)			// line is to left if in "RX LO HIGH" mode
-            lpos = 98;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)			// line is to right if in "RX LO LOW" mode
-            lpos = 162;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// line is to left if in "RX LO LOW" mode
-            lpos = 66;
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)			// line is to right if in "RX LO LOW" mode
-            lpos = 194;
-        else					// frequency translate mode is off
-            lpos = 130;			// line is in center
-
+        lpos = 130-(audio_driver_xlate_freq()/187);
     }
     else	 	// magnify mode is on
     {
         lpos = 130;								// line is alway in center in "magnify" mode
     }
-    //
+
     offset /= calc;							// calculate filter center frequency offset in pixels
     width /= calc;							// calculate width of line in pixels
-    //
-    //
+
     if((ts.dmod_mode == DEMOD_AM) ||(ts.dmod_mode == DEMOD_SAM) || (ts.dmod_mode == DEMOD_FM))	 	// special cases - AM, SAM and FM, which are double-sidebanded
     {
         lpos -= width;					// line starts "width" below center
         width *= 2;						// the width is double in AM & SAM, above and below center
     }
-    else if(!is_usb)	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
-        lpos -= ((offset - (width/2)) + width);	// if LSB it will be below zero Hz
+    else if(is_lsb)	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
+    {
+        lpos -= (offset + (width/2));	// if LSB it will be below zero Hz
+    }
     else				// USB mode
+    {
         lpos += (offset - (width/2));			// if USB it will be above zero Hz
+    }
 
     // get color for line
     UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
     //	erase old line by clearing whole area
     UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
 
-	if(POS_SPECTRUM_IND_X + lpos < POS_SPECTRUM_IND_X)			// prevents line to leave left border
+    if(POS_SPECTRUM_IND_X + lpos < POS_SPECTRUM_IND_X)			// prevents line to leave left border
+    {
+        width = width + lpos;
+        lpos = 0;
+    }
+    if(lpos + width > 256)										// prevents line to leave right border
 	{
-	  width = width + lpos;
-	  lpos = 0;
-	}
-	if(lpos + width > 256)										// prevents line to leave right border
-	{
-	  width = 256 - lpos;
+	    width = 256 - lpos;
 	}
 
     // draw line

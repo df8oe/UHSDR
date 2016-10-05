@@ -377,7 +377,7 @@ void    UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t lab
 //
 void 	UiDriverShowStep(ulong step);
 //
-void 	RadioManagement_CalculateCWSidebandMode(void);
+bool 	RadioManagement_CalculateCWSidebandMode(void);
 void 	UiDriverDisplayFilterBW(void);
 void 	UiDriverShowMode(void);
 //

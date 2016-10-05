@@ -2358,7 +2358,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         }
         if(fchange)	 	// update parameters if changed
         {
-            RadioManagement_CalculateCWSidebandMode();
+            ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
             UiDriverShowMode();
             UiDriver_FrequencyUpdateLOandDisplay(true);	// update frequency display and local oscillator
         }

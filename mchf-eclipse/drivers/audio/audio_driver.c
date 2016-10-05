@@ -473,7 +473,7 @@ void audio_driver_init(void)
     //
     AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
     //
-    RadioManagement_CalculateCWSidebandMode();	// set up CW sideband mode setting
+    ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();	// set up CW sideband mode setting
     //
     // The "active" NCO in the frequency translate function is NOT used, but rather a "static" sine that is an integer divisor of the sample rate.
     //
