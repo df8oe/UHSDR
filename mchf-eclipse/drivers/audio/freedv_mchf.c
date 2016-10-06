@@ -193,7 +193,7 @@ void fdv_print_ber()
   char ber_string[12];
 
   ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
-  sprintf(ber_string,"BER=0.%03d",ber);  //calculate and display the bit error rate
+  snprintf(ber_string,12,"BER=0.%03d",ber);  //calculate and display the bit error rate
   UiLcdHy28_PrintText(5,110,ber_string,Yellow,Black,4);
 
 }
