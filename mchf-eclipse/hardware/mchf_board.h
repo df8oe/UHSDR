@@ -939,7 +939,13 @@ typedef struct TransceiverState
     uchar	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
     uchar	filter_ssb_narrow_disable;	// TRUE if narrow filters are disabled in SSB modes
     //
-    uchar	am_mode_disable;			// TRUE if AM mode is to be disabled
+    uint16_t	demod_mode_disable;			// TRUE if AM mode is to be disabled
+#define DEMOD_AM_DISABLE    (0x0001)
+#define DEMOD_CW_DISABLE    (0x0002)
+#define DEMOD_DIGI_DISABLE  (0x0004)
+
+
+
 
     // AGC mode
     uchar	agc_mode;

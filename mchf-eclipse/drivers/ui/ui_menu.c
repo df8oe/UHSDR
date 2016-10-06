@@ -289,6 +289,19 @@ bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t m
     return tchange;
 }
 
+void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t demod_mode_disable)
+{
+    uint8_t mode_disable = (ts.demod_mode_disable & demod_mode_disable) > 0;
+    UiDriverMenuItemChangeDisableOnOff(var, mode, &mode_disable,0,options,clr_ptr);
+    if(mode_disable == true)
+    {
+        ts.demod_mode_disable |= demod_mode_disable;
+    }
+    else
+    {
+        ts.demod_mode_disable &= ~demod_mode_disable;
+    }
+}
 
 void __attribute__ ((noinline)) UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr)
 {
@@ -503,6 +516,8 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
+    { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,"030","Digital Modes"},
+    { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE,"030","CW Mode"},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode"},
     { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","SyncAM Mode"  },
     { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE,"040","FM Mode"},
@@ -1663,7 +1678,13 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "  %u", ts.dsp_nr_strength);
         break;
     case MENU_AM_DISABLE: // AM mode enable/disable
-        UiDriverMenuItemChangeDisableOnOff(var, mode, &ts.am_mode_disable,0,options,&clr);
+        UiMenu_HandleDemodModeDisable(var, mode, options, &clr, DEMOD_AM_DISABLE);
+        break;
+    case MENU_DIGI_DISABLE: // AM mode enable/disable
+        UiMenu_HandleDemodModeDisable(var, mode, options, &clr, DEMOD_DIGI_DISABLE);
+        break;
+    case MENU_CW_DISABLE: // AM mode enable/disable
+        UiMenu_HandleDemodModeDisable(var, mode, options, &clr, DEMOD_CW_DISABLE);
         break;
     case MENU_DEMOD_SAM:	// Enable demodulation mode SAM
         temp_sel = (ts.flags1 & FLAGS1_SAM_ENABLE)? 1 : 0;
