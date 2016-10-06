@@ -147,7 +147,7 @@ void EXTI0_IRQHandler(void)
             cw_gen_dah_IRQ();		// Yes - go to CW state machine
         }
         // PTT activate
-        else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
+        else if(ts.dmod_mode != DEMOD_SAM)
         {
             if(mchf_ptt_dah_line_pressed())
             {	// was PTT line low?

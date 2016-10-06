@@ -657,6 +657,20 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
     ts.refresh_freq_disp = 0;           // update ALL digits
 }
 
+void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
+{
+    // codec == 0 -> Analog Sound
+    // all other codecs -> digital codec
+    if (codec == 0)
+    {
+        ts.dvmode = false;
+    }
+    else
+    {
+        ts.dvmode = enableCodec;
+    }
+    ts.digital_mode = codec;
+}
 
 
 void UiDriver_HandleTouchScreen()
@@ -777,21 +791,16 @@ void UiDriver_HandleTouchScreen()
             incr_wrap_uint8(&ts.digital_mode,0,1);
             // We limit the reachable modes to the ones truly available
             // which is FreeDV1 for now
-
-            //DL2FW freeDV test
-
-            if (ts.digital_mode == 1)
+            if (ts.digital_mode>0)
             {
-                ts.dvmode = 1;
+                ts.dvmode = true;
             }
             else
             {
-                ts.dvmode = 0;
-            	fdv_clear_display();
+                ts.dvmode = false;
             }
-         //DL2FW freeDV test end
-            UiDriver_DisplayDigitalMode();
-
+            RadioManagement_ChangeCodec(ts.digital_mode,ts.dvmode);
+            UiDriverShowMode();
         }
 
         if(check_tp_coordinates(26,35,39,46))			// dynamic tuning activation
@@ -874,7 +883,7 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 bool RadioManagement_Tune(bool tune)
 {
     bool retval = tune;
-    if(ts.tx_disable == false &&  ((ts.dmod_mode == DEMOD_CW) || (ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM)))
+    if(ts.tx_disable == false &&  (ts.dmod_mode != DEMOD_SAM))
     {
         if(tune)
         {
@@ -1446,6 +1455,19 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
     ts.dsp_inhibit++;
     ads.af_disabled++;
 
+    if (new_mode == DEMOD_DIGI)
+    {
+        if (ts.digital_mode == 0)
+        {
+            ts.digital_mode = 1;
+            // TODOD: more clever selection of initial DV Mode, if non was previously selected
+        }
+        RadioManagement_ChangeCodec(ts.digital_mode,1);
+    }
+    else if (ts.dmod_mode == DEMOD_DIGI)
+    {
+            RadioManagement_ChangeCodec(ts.digital_mode,0);
+    }
 
     audio_driver_set_rx_audio_filter(new_mode);
     Audio_TXFilter_Init(new_mode);
@@ -2379,7 +2401,6 @@ void UiInitRxParms()
     // Update Display Only Code
     UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
 //    audio_driver_set_rx_audio_filter();
-    UiDriver_DisplayDigitalMode();    // Change Digital display setting as well
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
     // embedded in UiDriver_RefreshEncoderDisplay()
@@ -2721,6 +2742,8 @@ void UiDriverShowMode()
         break;
     }
     UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W,txt,clr_fg,clr_bg,0);
+
+    UiDriver_DisplayDigitalMode();
 }
 
 
@@ -2946,8 +2969,6 @@ static void UiDriverCreateDesktop()
     // embedded in UiDriver_RefreshEncoderDisplay() call
     // UiDriver_DisplayDSPMode(false);
 
-    // Digital mode change
-    UiDriver_DisplayDigitalMode();
 
     // Power level
     UiDriver_DisplayPowerLevel();
@@ -5414,6 +5435,8 @@ static void UiDriver_DisplayDigitalMode()
     // Draw line for box
     UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,bgclr);
     UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,bgclr,0);
+
+    fdv_clear_display();
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangePowerLevel
@@ -5736,8 +5759,10 @@ void UiDriverDisplayFilterBW()
     case DEMOD_CW:
         is_lsb = ts.cw_lsb;	// is this USB RX mode?  (LSB of mode byte was zero)
         break;
-    case DEMOD_USB:
     case DEMOD_DIGI:
+        is_lsb = ts.digi_lsb;
+        break;
+    case DEMOD_USB:
     default:
         is_lsb = false;		// it is USB
         break;
