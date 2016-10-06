@@ -1446,11 +1446,10 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
  * @brief Extracts touchscreen touch coordinates, counts how often same position is being read consecutively
  * @param do_translate false -> raw coordinates, true -> mapped coordinates according to calibration data
  */
-#define XPT2046_PD_NONE 0x03
-#define XPT2046_PD_FULL 0x00
 #define XPT2046_PD_FULL 0x00
 #define XPT2046_PD_REF  0x01
 #define XPT2046_PD_ADC  0x02
+#define XPT2046_PD_NONE 0x03
 
 #define XPT2046_MODE_12BIT 0x00
 #define XPT2046_MODE_8BIT  0x08
