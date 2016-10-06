@@ -7283,7 +7283,10 @@ void ui_driver_thread()
     uint32_t now = ts.sysclock;
 
 #ifdef USE_FREEDV
-    FreeDV_mcHF_HandleFreeDV();
+    if (ts.dvmode == true)
+    {
+        FreeDV_mcHF_HandleFreeDV();
+    }
 #endif // USE_FREEDV
 
 
