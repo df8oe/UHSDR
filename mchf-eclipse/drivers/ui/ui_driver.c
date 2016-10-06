@@ -4366,7 +4366,13 @@ static bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         }
         break;
     case DEMOD_AM:
-        retval = ts.am_mode_disable == false;      // is AM enabled?
+        retval = (ts.demod_mode_disable & DEMOD_AM_DISABLE) == 0;      // is AM enabled?
+        break;
+    case DEMOD_DIGI:
+        retval = (ts.demod_mode_disable & DEMOD_DIGI_DISABLE) == 0;      // is DIGI enabled?
+        break;
+    case DEMOD_CW:
+        retval = (ts.demod_mode_disable & DEMOD_CW_DISABLE) == 0;      // is CW enabled?
         break;
     case DEMOD_FM:
         // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
@@ -4469,7 +4475,7 @@ static void UiDriverChangeDemodMode(bool include_disabled_modes)
     {
         if(loc_mode == DEMOD_AM)	 	// yes - is this AM mode?
         {
-            if(ts.am_mode_disable)		// is AM to be disabled?
+            if(ts.demod_mode_disable)		// is AM to be disabled?
             {
                 loc_mode++;				// yes - go to next mode
             }
