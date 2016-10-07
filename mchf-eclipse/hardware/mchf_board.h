@@ -1164,6 +1164,7 @@ typedef struct TransceiverState
     char 	tp_x;					// touchscreen x coordinate
     char	tp_y;					// touchscreen y coordinate
     uchar	tp_state;				// touchscreen state machine
+    bool	tp_raw;					// touchscreen data as raw data
     bool	show_tp_coordinates;	// show coordinates on LCD
     uchar	rfmod_present;			// 0 = not present
     uchar	vhfuhfmod_present;		// 0 = not present

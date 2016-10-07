@@ -1394,7 +1394,7 @@ uint8_t UiLcdHy28_Init(void)
 void UiLcdHy28_TouchscreenDetectPress()
 {
     if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
-        UiLcdHy28_TouchscreenReadCoordinates(true);
+        UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
 
     if(GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
     {
@@ -1408,7 +1408,7 @@ void UiLcdHy28_TouchscreenDetectPress()
  */
 bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
     bool retval = false;
-    UiLcdHy28_TouchscreenReadCoordinates(true);
+    UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
     if(ts.tp_state > TP_DATASETS_WAIT && ts.tp_state != TP_DATASETS_PROCESSED)
     {
         ts.tp_state = TP_DATASETS_NONE;     // tp data processed

@@ -429,6 +429,7 @@ void TransceiverStateInit(void)
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
     ts.tp_present = 0;						// default no touchscreen
+	ts.tp_raw = 0;							// default translated coordinates
     ts.tp_x = 0xFF;							// invalid position
     ts.tp_y = 0xFF;							// invalid position
     ts.tp_state = 0;						// touchscreen state machine init

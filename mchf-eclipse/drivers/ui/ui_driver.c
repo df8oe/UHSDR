@@ -6888,6 +6888,8 @@ void UiDriver_KeyTestScreen()
 				break;
 			case	BUTTON_BNDM_PRESSED:
 				txt = "        BND-        ";
+				ts.tp_raw = !ts.tp_raw;
+				
 				if(rbcount > 75)
 				{
 					txt = "    rebooting...    ";
@@ -6908,7 +6910,14 @@ void UiDriver_KeyTestScreen()
 
 			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 			    {
-					snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+			  		if(ts.tp_raw)
+			  		{
+					  snprintf(txt_buf,40,"Touchscr. x:%02x y:%02x",ts.tp_x,ts.tp_y);	//show touched coordinates
+					}
+					else
+					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+					{
+					}
 					txt = txt_buf;
 				}
 				else
@@ -6942,6 +6951,15 @@ void UiDriver_KeyTestScreen()
 			}
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
+
+			if(ts.tp_raw && ts.tp_present)			// show translation of touchscreen if present
+			{
+			  UiLcdHy28_PrintText(10,200,"touch is raw       ",White,Blue,1);
+			}
+			else
+			{
+			  UiLcdHy28_PrintText(10,200,"touch is translated",White,Blue,1);
+			}
 
 			if(p_o_state == 1)
 			{
@@ -7035,7 +7053,7 @@ static bool UiDriver_TouchscreenCalibration()
             {
                 non_os_delay();
             }
-            UiLcdHy28_TouchscreenReadCoordinates(true);
+            UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
             ts.tp_state = TP_DATASETS_NONE;
 
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
