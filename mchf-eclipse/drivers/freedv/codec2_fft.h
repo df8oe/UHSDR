@@ -108,4 +108,3 @@ void codec2_fft_inplace(codec2_fft_cfg cfg, codec2_fft_cpx* inout);
 
 
 #endif
-/* DRIVERS_FREEDV_CODEC2_FFT_H_ */

@@ -278,7 +278,7 @@ void interp_Wo2(
   Interpolates centre 10ms sample of energy given two samples 20ms
   apart.
 
-\*--------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 float interp_energy(float prev_e, float next_e)
 {
