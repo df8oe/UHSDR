@@ -791,8 +791,13 @@ void UiDriver_HandleTouchScreen()
             incr_wrap_uint8(&ts.digital_mode,0,1);
             // We limit the reachable modes to the ones truly available
             // which is FreeDV1 for now
+
             if (ts.digital_mode>0)
             {
+                if (ts.dmod_mode != DEMOD_DIGI)
+                {
+                    RadioManagement_SetDemodMode(DEMOD_DIGI);
+                }
                 ts.dvmode = true;
             }
             else
