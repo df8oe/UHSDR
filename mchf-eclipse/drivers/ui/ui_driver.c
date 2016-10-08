@@ -127,6 +127,8 @@ static bool	    UiDriver_TouchscreenCalibration();
 
 static void     UiDriver_PowerDownCleanup(void);
 
+void UiDriver_HandlePowerLevelChange(uint8_t power_level);
+void UiDriver_HandleBandButtons(uint16_t button);
 
 //
 // --------------------------------------------------------------------------
@@ -754,6 +756,23 @@ void UiDriver_HandleTouchScreen()
         {
           UiDriver_HandlePowerLevelChange(ts.power_level+1);
 		}
+        if(check_tp_coordinates(10,16,44,50))			// Audio in box
+        {
+      	  if(ts.dmod_mode != DEMOD_CW)
+      	  {
+        	incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
+
+        	UiDriverChangeEncoderThreeMode(true);
+          }
+		}
+        if(check_tp_coordinates(48,52,35,37))			// left part band display
+        {
+          UiDriver_HandleBandButtons(BUTTON_BNDM);
+        }
+        if(check_tp_coordinates(53,60,35,37))			// right part band display
+        {
+          UiDriver_HandleBandButtons(BUTTON_BNDP);
+        }
         if(check_tp_coordinates(00,07,21,30))			// DSP box
         {
 		Codec_RestartI2S();
