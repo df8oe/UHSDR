@@ -1459,7 +1459,7 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 
 void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
 {
-    uchar i,x,y,x1,y1;
+    uchar i,x,y;
 
     /*
     statemachine stati:
@@ -1476,10 +1476,8 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
             UiLcdHy28_TouchscreenStartSpiTransfer();
             UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
             x = UiLcdHy28_SpiReadByte();
-            x1 = UiLcdHy28_SpiReadByte();
             UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
             y = UiLcdHy28_SpiReadByte();
-            y1 = UiLcdHy28_SpiReadByte();
             UiLcdHy28_TouchscreenFinishSpiTransfer();
 
 
@@ -1492,9 +1490,19 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
               	  x = 60-i;
               	}
 				else
-                {
+                {					// correction of unlinearity because of mirrored x
+              	  char k = 0;
               	  for(i=60; touchscreentable[i] > x && i > 0; i--);
               	  x = i--;
+              	  if(x == 57 || (x < 7 && x > 1))	k=2;
+              	  if(x == 56 || (x == 8 || x == 7))	k=3;
+              	  if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
+              	  if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
+              	  if(x == 45)	k=7;
+              	  if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
+              	  if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
+              	  if(x < 31 && x > 26)	k=10;
+				  x = x - k;
               	}
 
                 for(i=0; touchscreentable[i] < y && i < 60; i++);

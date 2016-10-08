@@ -6836,6 +6836,16 @@ void UiDriver_KeyTestScreen()
 		UiLcdHy28_PrintText(10,35,"Input Elements Test",White,Blue,1);
 		UiLcdHy28_PrintText(15,70,"press & hold POWER button to poweroff",White,Blue,0);
 		UiLcdHy28_PrintText(20,90,"press & hold BAND- button to reboot",White,Blue,0);
+/*
+		UiLcdHy28_PrintText(0,172,"0123456789012345678901234567890123456789",White,Blue,0);
+		UiLcdHy28_PrintText(0,184,"9876543210987654321098765432109876543210",White,Blue,0);
+		for(i=0; i < 20; i++)
+		{
+		sprintf(txt_buf,"%d",i);
+		UiLcdHy28_PrintText(0,0+12*i,txt_buf,White,Blue,0);
+		}
+*/
+
 		for(;;)	 		// get stuck here for test duration
 		{
 			j = 99;		// load with flag value
@@ -6987,9 +6997,6 @@ void UiDriver_KeyTestScreen()
 			}
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
-		UiLcdHy28_PrintText(0,172,"0123456789012345678901234567890123456789",White,Blue,0);
-		UiLcdHy28_PrintText(0,184,"9876543210987654321098765432109876543210",White,Blue,0);
-
 			if(ts.tp_raw && ts.tp_present)			// show translation of touchscreen if present
 			{
 			  UiLcdHy28_PrintText(10,200,"touch is raw       ",White,Blue,1);
