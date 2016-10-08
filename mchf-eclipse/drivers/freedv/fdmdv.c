@@ -774,8 +774,6 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
             S[j] = fcmult(hanning[i], pilot_lpf[i]);
         }
 
-        // FIXME: arm_cfft does not seem to do the job here
-        // where as kiss_fft does. Needs investigation
         codec2_fft_inplace(fft_pilot_cfg, S);
 
         /* peak pick and convert to Hz */

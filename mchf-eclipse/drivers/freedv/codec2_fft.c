@@ -8,8 +8,8 @@
 #include "codec2_fft.h"
 #ifdef USE_KISS_FFT
 #include "_kiss_fft_guts.h"
-#endif
 
+#else
 #define FFT_INIT_CACHE_SIZE 4
 const arm_cfft_instance_f32* fft_init_cache[FFT_INIT_CACHE_SIZE];
 
@@ -52,7 +52,7 @@ static const arm_cfft_instance_f32* arm_fft_cache_get(const arm_cfft_instance_f3
     }
     return retval;
 }
-
+#endif
 
 void codec2_fft_free(codec2_fft_cfg cfg)
 {

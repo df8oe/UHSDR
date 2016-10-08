@@ -644,7 +644,7 @@ void synthesise(
 
     /* Overlap add to previous samples */
 #ifdef USE_KISS_FFT
-#define    FFTI_FACTOR ((float32_t)1.0)
+#define    FFTI_FACTOR ((float)1.0)
 #else
 #define    FFTI_FACTOR ((float32_t)FFT_DEC)
 #endif
