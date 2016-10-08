@@ -1459,7 +1459,7 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 
 void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
 {
-    uchar i,x,y;
+    uchar i,x,y,x1,y1;
 
     /*
     statemachine stati:
@@ -1474,10 +1474,12 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
         if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
             UiLcdHy28_TouchscreenStartSpiTransfer();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
+            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
             x = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
+            x1 = UiLcdHy28_SpiReadByte();
+            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
             y = UiLcdHy28_SpiReadByte();
+            y1 = UiLcdHy28_SpiReadByte();
             UiLcdHy28_TouchscreenFinishSpiTransfer();
 
 
