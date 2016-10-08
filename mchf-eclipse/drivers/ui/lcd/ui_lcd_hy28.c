@@ -48,14 +48,13 @@ GPIO_TypeDef* lcd_cs_pio;
 
 uint16_t display_use_spi;
 
-const uint8_t touchscreentable [] = {
+const uint8_t touchscreentable [] = {0x07,0x09,
         0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,
         0x1c,0x1d,0x1e,0x1f,0x22,0x23,0x24,0x25,0x26,0x27,
         0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,
         0x40,0x42,0x44,0x45,0x46,0x47,0x4c,0x4d,0x4e,0x52,
         0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,
-        0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d,
-        0x80,0xff
+        0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d
 };
 
 
@@ -1482,31 +1481,24 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
             UiLcdHy28_TouchscreenFinishSpiTransfer();
 
 
-            if(do_translate)								//do translation with correction table
+            if(do_translate)						//do translation with correction table
             {
 
                 if(!(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN))
                 {
-              	  for(i=0; touchscreentable[i]<= x; i++)
-              	  {}
-              	  if (i>60)
-              	  {
-                    i = 60;
-              	  }
+              	  for(i=0; touchscreentable[i] < x && i < 60; i++);
               	  x = 60-i;
               	}
 				else
                 {
-              	  for(i=60; touchscreentable[i]>= x && i != 0; i--)
-              	  {}
-              	  x = i;
+              	  for(i=60; touchscreentable[i] > x && i > 0; i--);
+              	  x = i--;
               	}
 
-                for(i=0; touchscreentable[i]<= y; i++)
-                {}
+                for(i=0; touchscreentable[i] < y && i < 60; i++);
                 y = i--;
             }
-            if(x == ts.tp_x && y == ts.tp_y)	// got identical data
+            if(x == ts.tp_x && y == ts.tp_y)		// got identical data
             {
                 ts.tp_state++;						// touch data valid
             }
