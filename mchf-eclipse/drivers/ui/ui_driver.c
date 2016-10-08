@@ -742,6 +742,18 @@ void UiDriver_HandleTouchScreen()
             df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
+        if(check_tp_coordinates(16,24,40,44))			// Mode box
+        {
+          if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
+          {
+            UiDriverChangeDemodMode(0);
+        	UiInitRxParms();        // re-init for change of filter including display updates
+          }
+		}
+        if(check_tp_coordinates(16,24,45,48))			// TX power box
+        {
+          UiDriver_HandlePowerLevelChange(ts.power_level+1);
+		}
         if(check_tp_coordinates(00,07,21,30))			// DSP box
         {
 		Codec_RestartI2S();
