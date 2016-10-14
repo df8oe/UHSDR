@@ -461,9 +461,7 @@ void  FreeDV_mcHF_init()
 
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
 
-
     sprintf(my_cb_state.tx_str, "CQ CQ CQ mcHF SDR with integrated FreeDV codec calling!");
-
     my_cb_state.ptx_str = my_cb_state.tx_str;
     freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);
