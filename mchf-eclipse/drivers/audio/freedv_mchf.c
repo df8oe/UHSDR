@@ -33,7 +33,7 @@ FDV_IQ_Buffer __attribute__ ((section (".ccm"))) fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
 FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
 
-char freedv_rx_buffer[15];
+char freedv_rx_buffer[freedv_rx_buffer_max];
 
 __IO int32_t fdv_iq_head = 0;
 __IO int32_t fdv_iq_tail = 0;
@@ -183,7 +183,11 @@ typedef struct {
 
 void fdv_print_txt_msg()
 {
-  UiLcdHy28_PrintText(5,92,freedv_rx_buffer,Yellow,Black,4);
+  char txt_out[freedv_rx_buffer_max];
+
+  snprintf(txt_out,freedv_rx_buffer_max,freedv_rx_buffer);
+
+  UiLcdHy28_PrintText(5,92,txt_out,Yellow,Black,4);
 
 }
 
@@ -199,9 +203,11 @@ void fdv_print_ber()
 }
 
 void fdv_clear_display()
-{
+{ char clr_string[freedv_rx_buffer_max];
+
+  snprintf(clr_string,freedv_rx_buffer_max,"                                                                           ");
   UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
-  UiLcdHy28_PrintText(5,92,"               ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,92,clr_string,Yellow,Black,4);
 
 }
 
@@ -425,9 +431,23 @@ void my_put_next_rx_char(void *callback_state, char c) {
     short ch = (short)c;
     static int idx_rx=0;
 
-    if (ch!=13) freedv_rx_buffer[idx_rx++]=c;
-    if ((idx_rx==15)||(ch==13)) idx_rx=0; //max string length is 15, carriage return sets idx to zero
-					  //have to use another font to be able to show 80 characters
+    if (ch==13) idx_rx=0;
+
+    else if (idx_rx < (freedv_rx_buffer_max))
+      {
+	freedv_rx_buffer[idx_rx]=c; //fill from left to right
+	idx_rx++;
+      }
+	 else
+	   {
+	   for (int shift_count = 0;shift_count < (freedv_rx_buffer_max-1);shift_count++)
+	     {
+	       freedv_rx_buffer[shift_count]=freedv_rx_buffer[shift_count+1];
+	     }
+	    freedv_rx_buffer[freedv_rx_buffer_max-1]=c;
+	   }
+
+
 
 }
 
@@ -443,6 +463,7 @@ void  FreeDV_mcHF_init()
 
 
     sprintf(my_cb_state.tx_str, "CQ CQ CQ mcHF SDR with integrated FreeDV codec calling!");
+
     my_cb_state.ptx_str = my_cb_state.tx_str;
     freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);

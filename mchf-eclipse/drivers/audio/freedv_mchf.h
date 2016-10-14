@@ -22,6 +22,8 @@
     extern const  COMP test_buffer[FREEDV_TEST_BUFFER_FRAME_SIZE*FREEDV_TEST_BUFFER_FRAME_COUNT];
 #endif
 
+#define freedv_rx_buffer_max 45
+
 void FreeDV_mcHF_HandleFreeDV();
 void FreeDV_mcHF_init();
 
