@@ -198,7 +198,23 @@ void fdv_print_ber()
 
   ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
   snprintf(ber_string,12,"BER=0.%03d",ber);  //calculate and display the bit error rate
-  UiLcdHy28_PrintText(5,110,ber_string,Yellow,Black,4);
+  UiLcdHy28_PrintText(5,104,ber_string,Yellow,Black,4);
+
+}
+
+void fdv_print_SNR()
+{
+  static float SNR = 1;
+  float SNR_est;
+  char SNR_string[12];
+  int sync;
+
+  freedv_get_modem_stats(f_FREEDV,&sync,&SNR_est);
+
+  SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
+  if (SNR<0) SNR=0.0;
+  snprintf(SNR_string,12,"SNR=%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
+  UiLcdHy28_PrintText(5,116,SNR_string,Yellow,Black,4);
 
 }
 
@@ -206,7 +222,8 @@ void fdv_clear_display()
 { char clr_string[freedv_rx_buffer_max];
 
   snprintf(clr_string,freedv_rx_buffer_max,"                                                                           ");
-  UiLcdHy28_PrintText(5,110,"            ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
   UiLcdHy28_PrintText(5,92,clr_string,Yellow,Black,4);
 
 }
@@ -403,6 +420,7 @@ void FreeDV_mcHF_HandleFreeDV()
         }
         mchf_board_green_led(1);
         fdv_print_ber();
+        fdv_print_SNR();
         fdv_print_txt_msg();
     }
     // END Freedv Test DL2FW
