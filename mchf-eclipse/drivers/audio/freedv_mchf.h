@@ -30,5 +30,6 @@ void FreeDV_mcHF_init();
 void fdv_print_txt_msg();
 void fdv_print_ber();
 void fdv_clear_display();
+void fdv_print_SNR();
 
 #endif
