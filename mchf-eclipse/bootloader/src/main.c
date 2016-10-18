@@ -66,11 +66,7 @@ int main(void)
     /* Init upgrade mode display */
     STM_EVAL_LEDOn(BLON);
 
-#ifdef USE_USB_OTG_FS
-    USBH_Init(&USB_OTG_Core, USB_OTG_FS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
-#else	// USE_USB_OTG_HS
     USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
-#endif
 
     while (1)
     {
