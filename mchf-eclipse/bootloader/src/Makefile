@@ -51,9 +51,11 @@ vpath %.c $(STM_COMMON)/../cmsis_lib/source \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Core/src \
           $(STM_COMMON)/Libraries/stm32_usb_host_library/Class/MSC/src \
           $(STM_COMMON)/../drivers/fat_fs/src
+#vpath %.c $(STM_COMMON)/../cmsis_lib/source \
 #          $(STM_COMMON)/../usb/otg/src \
 #          $(STM_COMMON)/../usb/usbh/core/src \
 #          $(STM_COMMON)/../usb/usbh/class/MSC/src \
+#          $(STM_COMMON)/../drivers/fat_fs/src
 
 .PHONY: proj
 
