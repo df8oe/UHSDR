@@ -146,7 +146,7 @@ void USBH_USR_DeviceAttached(void)
 void USBH_USR_UnrecoveredError (void)
 {
     /* Toggle backlight in infinite loop */
-    Fail_Handler();
+    Fail_Handler(1);
 }
 
 /**
@@ -158,7 +158,7 @@ void USBH_USR_UnrecoveredError (void)
 void USBH_USR_DeviceDisconnected (void)
 {
     /* Toggle backlight in infinite loop: USB device disconnected */
-    Fail_Handler();
+    Fail_Handler(2);
 }
 
 /**
@@ -182,7 +182,7 @@ void USBH_USR_DeviceSpeedDetected(uint8_t DeviceSpeed)
     if ((DeviceSpeed != HPRT0_PRTSPD_FULL_SPEED)&&(DeviceSpeed != HPRT0_PRTSPD_LOW_SPEED))
     {
         /* Toggle backlight in infinite loop: USB device disconnected */
-        Fail_Handler();
+        Fail_Handler(3);
     }
 }
 
@@ -269,7 +269,7 @@ void USBH_USR_EnumerationDone(void)
 void USBH_USR_DeviceNotSupported(void)
 {
     /* Toggle backlight in infinite loop */
-    Fail_Handler();
+    Fail_Handler(4);
 }
 
 
@@ -314,7 +314,7 @@ int USBH_USR_MSC_Application(void)
         {
             /* Fatfs initialisation fails */
             /* Toggle backlight in infinite loop */
-            Fail_Handler();
+            Fail_Handler(5);
             return(-1);
         }
 
@@ -417,20 +417,28 @@ void USBH_USR_DeInit(void)
     USBH_USR_ApplicationState = USH_USR_FS_INIT;
 }
 
-/**
-  * @brief  This function handles the program fail.
-  * @param  None
-  * @retval None
-  */
-void Fail_Handler(void)
+// USB error handling
+void Fail_Handler(char count)
 {
+	STM_EVAL_LEDOff(BLON);
+	Wait(300);
+	
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
-        Wait(250);
+  	  char i;
+  		
+  	  for(i = 0; i < count; i++)
+  	  {
+  		STM_EVAL_LEDOn(BLON);
+      	Wait(100);
+  		STM_EVAL_LEDOff(BLON);
+      	Wait(100);
+  	  }
+	  Wait(300);
     }
 }
 
+// flash programming error
 void FPE_Fail_Handler(void)
 {
     STM_EVAL_LEDOn(BLON);
@@ -445,6 +453,7 @@ void FPE_Fail_Handler(void)
     }
 }
 
+// no flash memory left for file
 void FME_Fail_Handler(void)
 {
     STM_EVAL_LEDOn(BLON);
@@ -457,6 +466,7 @@ void FME_Fail_Handler(void)
     }
 }
 
+// flash erase error
 void FEE_Fail_Handler(void)
 {
     STM_EVAL_LEDOn(BLON);
@@ -471,6 +481,7 @@ void FEE_Fail_Handler(void)
     }
 }
 
+// flash is write protected
 void UWP_Fail_Handler(void)
 {
     STM_EVAL_LEDOff(BLON);
@@ -483,6 +494,7 @@ void UWP_Fail_Handler(void)
     }
 }
 
+// flash is read protected
 void UNS_Fail_Handler(void)
 {
     STM_EVAL_LEDOn(BLON);
@@ -495,6 +507,7 @@ void UNS_Fail_Handler(void)
     }
 }
 
+// binary file not found for reading
 void FNF_Fail_Handler(void)
 {
     STM_EVAL_LEDOff(BLON);
@@ -507,7 +520,7 @@ void FNF_Fail_Handler(void)
     }
 }
 
-void Wait(char time)
+void Wait(int time)
 {
     Delay(time);
     if(STM_EVAL_PBGetState(BUTTON_POWER) == Bit_RESET)

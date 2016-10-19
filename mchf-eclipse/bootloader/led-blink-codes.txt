@@ -15,7 +15,7 @@ Red and green LED helps to identify kind of error:
 
 
 - all LEDs off:
-error not specified.
+see additional error codes
 
 - red LED constantly on:
 available flash in STM32F4 is too small for firmware
@@ -33,8 +33,19 @@ mchf.bin not found on USB-key
 no space for backup firmware on USB-key
 
 - green LED blinking against to backlight:
-cannot write to USB-key (write-protected or file
-write-protected)
+flash memory is write protected
+
+Additional error codes are supported now using only backlight
+flashes (and no other LED is on / blinking). Backlight flashes
+several times short in infinite loop. The number of flashes
+identifies error:
+
+1 - unrecovered error
+2 - no attached device detected
+3 - device runs unsupported speed
+4 - device not supported
+5 - no FAT filesystem found
+
 
 You can switch off mchf if in error state by pushing power
 button.

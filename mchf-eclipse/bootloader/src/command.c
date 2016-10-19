@@ -27,7 +27,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 2.0.0"
+#define VERSION                    "Version: 2.0.1"
 #define AUTHOR                     "Author: DF8OE"
 
 /* Private macros ------------------------------------------------------------*/

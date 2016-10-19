@@ -32,8 +32,12 @@ described in led-blink-codes.txt but not all of them.
 If process ends without error (== black backlight) you can directly
 boot either by pulling USB-key or pushing BAND- again.
 
-If process ends in error (==backlight blinking) you can turn off
-mchf by pressing power button.
+If process ends in error (==backlight blinking) blink codes and state
+of LEDs helps to identify the reason for malfunction. Please report
+errors to GitHub issues describing how you get this error and the state
+of backlight and LEDs.
+You can turn off mchf by pressing power button or restart to transceiver
+by pressing BANDM.
 
 If backlight is flashing and everything seems to be ok, your USB key
 is incompatible. This is very rare with older keys (manufactured
@@ -44,4 +48,4 @@ by "SanDisk" are widely distributed and easy to purchase.
 
 2-be-continued
 
-DF8OE, Andreas						08/19/2016
+DF8OE, Andreas						10/19/2016
