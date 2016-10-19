@@ -186,7 +186,7 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void mchf_hw_i2c_init(void)
+void mchf_hw_i2c1_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     I2C_InitTypeDef I2C_InitStructure;
@@ -232,7 +232,7 @@ void mchf_hw_i2c_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void mchf_hw_i2c_reset(void)
+void mchf_hw_i2c1_reset(void)
 {
     //printf("===========================\n\r");
     //printf("i2c reset bus\n\r");
@@ -247,27 +247,27 @@ void mchf_hw_i2c_reset(void)
     I2C_Cmd (SI570_I2C, ENABLE);
 
     // Init again
-    mchf_hw_i2c_init();
+    mchf_hw_i2c1_init();
 }
 
 
 
-uint16_t mchf_hw_i2c_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
+uint16_t mchf_hw_i2c1_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
 {
     return MCHF_I2C_WriteRegister(SI570_I2C, I2CAddr, &RegisterAddr, 1, RegisterValue);
 }
 
-uint16_t mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
+uint16_t mchf_hw_i2c1_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
     return MCHF_I2C_WriteBlock(SI570_I2C, I2CAddr,&RegisterAddr, 1, data, size);
 }
 
-uint16_t mchf_hw_i2c_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
+uint16_t mchf_hw_i2c1_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
 {
     return MCHF_I2C_ReadRegister(SI570_I2C, I2CAddr,&RegisterAddr, 1, RegisterValue);
 }
 
-uint16_t mchf_hw_i2c_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
+uint16_t mchf_hw_i2c1_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
     return MCHF_I2C_ReadBlock(SI570_I2C, I2CAddr, &RegisterAddr, 1, data, size);
 }

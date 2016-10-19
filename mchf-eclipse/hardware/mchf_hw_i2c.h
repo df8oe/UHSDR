@@ -28,12 +28,12 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
 
 // Special init and wrapper functions for I2C Bus 1
 
-void 	mchf_hw_i2c_init(void);
-void 	mchf_hw_i2c_reset(void);
+void 	mchf_hw_i2c1_init(void);
+void 	mchf_hw_i2c1_reset(void);
 
-uint16_t 	mchf_hw_i2c_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
-uint16_t 	mchf_hw_i2c_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data,ulong size);
-uint16_t 	mchf_hw_i2c_ReadRegister (uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue);
-uint16_t 	mchf_hw_i2c_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size);
+uint16_t 	mchf_hw_i2c1_WriteRegister(uchar I2CAddr,uchar RegisterAddr, uchar RegisterValue);
+uint16_t 	mchf_hw_i2c1_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data,ulong size);
+uint16_t 	mchf_hw_i2c1_ReadRegister (uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue);
+uint16_t 	mchf_hw_i2c1_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size);
 
 #endif

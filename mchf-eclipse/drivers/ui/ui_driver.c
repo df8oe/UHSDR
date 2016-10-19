@@ -1637,7 +1637,7 @@ static bool RadioManagement_HandleLoTemperatureDrift()
                 // TODO: Find out why the MCP9801 crashes the I2C bus if
                 // used with FreeDV
                 // Github Issue #589
-                mchf_hw_i2c2_init();
+                mchf_hw_i2c1_reset();
             }
 
         }

@@ -122,7 +122,7 @@ static Si570_ResultCodes Si570_VerifyFrequencyRegisters()
     // Read all regs
     for(i = 0; i < 6; i++)
     {
-        res = mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg + i), &regs[i]);
+        res = mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg + i), &regs[i]);
         if(res != 0)
         {
             retval = SI570_I2C_ERROR;
@@ -146,18 +146,18 @@ static Si570_ResultCodes Si570_VerifyFrequencyRegisters()
 }
 
 static uint16_t Si570_SetRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
-    uint16_t retval = mchf_hw_i2c_ReadRegister(si570_address, regaddr, reg_ptr);
+    uint16_t retval = mchf_hw_i2c1_ReadRegister(si570_address, regaddr, reg_ptr);
     if (retval == 0)
     {
-        retval = mchf_hw_i2c_WriteRegister(si570_address, regaddr, (*reg_ptr|val));
+        retval = mchf_hw_i2c1_WriteRegister(si570_address, regaddr, (*reg_ptr|val));
     }
     return retval;
 }
 static uint16_t Si570_ClearRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
-    uint16_t retval = mchf_hw_i2c_ReadRegister(si570_address, regaddr, reg_ptr);
+    uint16_t retval = mchf_hw_i2c1_ReadRegister(si570_address, regaddr, reg_ptr);
     if (retval == 0)
     {
-        retval = mchf_hw_i2c_WriteRegister(si570_address, regaddr, (*reg_ptr & ~val));
+        retval = mchf_hw_i2c1_WriteRegister(si570_address, regaddr, (*reg_ptr & ~val));
     }
     return retval;
 }
@@ -182,7 +182,7 @@ static Si570_ResultCodes Si570_SmallFrequencyChange()
     if (ret == 0)
     {
         // Write as block, registers 7-12
-        ret = mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
+        ret = mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
         if (ret == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
@@ -212,7 +212,7 @@ static Si570_ResultCodes Si570_LargeFrequencyChange()
     if (Si570_SetRegisterBits(os.si570_address, SI570_REG_137, &reg_137, SI570_FREEZE_DCO) == 0)
     {
         // Write as block, registers 7-12
-        if(mchf_hw_i2c_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6) == 0)
+        if(mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6) == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
         }
@@ -228,7 +228,7 @@ static Si570_ResultCodes Si570_LargeFrequencyChange()
             // Wait for action completed
             do
             {
-                ret = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
+                ret = mchf_hw_i2c1_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
             } while(ret == 0 && (reg_135 & SI570_NEW_FREQ));
         }
     }
@@ -461,7 +461,7 @@ static void Si570_CalcSufHelper()
     int hs_div;
     int n1;
     float rsfreq;
-    mchf_hw_i2c_ReadData(os.si570_address, (os.base_reg), si_regs, 6);
+    mchf_hw_i2c1_ReadData(os.si570_address, (os.base_reg), si_regs, 6);
     // calculate startup frequency
     rsfreq = (float)((si_regs[5] + (si_regs[4] * 0x100) + (si_regs[3] * 0x10000) + (double)((double)si_regs[2] * (double)0x1000000) + (double)((double)(si_regs[1] & 0x3F) * (double)0x100000000)) / (double)POW_2_28);
     hs_div = (si_regs[0] & 0xE0) / 32 + 4;
@@ -483,10 +483,10 @@ void Si570_CalculateStartupFrequency()
 
         // test for hardware address of SI570
         os.si570_address = (0x50 << 1);
-        if(mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
+        if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
         {
             os.si570_address = (0x55 << 1);
-            mchf_hw_i2c_reset();
+            mchf_hw_i2c1_reset();
         }
 
         non_os_delay();
@@ -565,7 +565,7 @@ uchar Si570_ResetConfiguration()
     os.fxtal        = FACTORY_FXTAL;
     os.present = false;
 
-    res = mchf_hw_i2c_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
+    res = mchf_hw_i2c1_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
     if(res != 0)
     {
         return 1;
@@ -574,7 +574,7 @@ uchar Si570_ResetConfiguration()
     i = 0;
     do
     {
-        res = mchf_hw_i2c_ReadRegister(os.si570_address, SI570_REG_135, &ret);
+        res = mchf_hw_i2c1_ReadRegister(os.si570_address, SI570_REG_135, &ret);
         if(res != 0)
         {
             return 2;
@@ -591,7 +591,7 @@ uchar Si570_ResetConfiguration()
 
     for(i = 0; i < 6; i++)
     {
-        res = mchf_hw_i2c_ReadRegister(os.si570_address, (os.base_reg + i), (uchar*)&(os.regs[i]));
+        res = mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg + i), (uchar*)&(os.regs[i]));
         if(res != 0)
         {
             return 4;
@@ -669,7 +669,7 @@ uchar Si570_InitExternalTempSensor()
     uchar config, res;
 
     // Read config reg
-    res = mchf_hw_i2c_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
+    res = mchf_hw_i2c1_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
     if(res != 0)
         return 1;
 
@@ -682,7 +682,7 @@ uchar Si570_InitExternalTempSensor()
     config |= (MCP_POWER_UP << MCP_SHUTDOWN);
 
     // Write config reg
-    res = mchf_hw_i2c_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
+    res = mchf_hw_i2c1_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
     if(res != 0)
         return 2;
 
@@ -690,15 +690,16 @@ uchar Si570_InitExternalTempSensor()
 }
 
 
-
+uint16_t i2c_error_code = 0;
 
 uchar Si570_ReadExternalTempSensor(int32_t *temp)
 {
     uint8_t	data[2];
     uint8_t retval = 0;
 
+
     // Read temperature
-    if(temp != NULL && mchf_hw_i2c_ReadData(MCP_ADDR, MCP_TEMP, data, 2) == 0)
+    if(temp != NULL && (i2c_error_code = mchf_hw_i2c1_ReadData(MCP_ADDR, MCP_TEMP, data, 2)) == 0)
     {
         *temp = Si570_ConvExternalTemp(data);
     }
