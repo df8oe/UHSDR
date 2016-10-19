@@ -1411,7 +1411,7 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
 }
 
 #ifdef USE_FREEDV
-static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
+static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
     static int16_t outbuff_count = 0;
@@ -1555,6 +1555,7 @@ static void audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         }
     }
+    return false;
 }
 #endif
 
@@ -2516,90 +2517,28 @@ static uint16_t modulus = 0;
 // used to help us to figure out how to optimize performance. Lots of performance required for
 // digital signal processing...
 // then it will probably be most merged back into the rx_processor in  order to keep code duplication minimal
-static void audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
+
+/*
+ * @returns: true if digital signal should be used (no analog processing should be done), false -> analog processing maybe used
+ * since no digital signal was detected.
+ */
+static bool audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
-    // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
-    // since we are in an interrupt, no one will change these anyway
-    // shaved off a few bytes of code
-    const uint8_t dmod_mode = ts.dmod_mode;
-    const uint8_t iq_freq_mode = ts.iq_freq_mode;
-
-#if 0
-    audio_rx_noise_blanker(src, blockSize);		// do noise blanker function
-#endif
-    //
-    //
-    //
-    // ------------------------
-    // Split stereo channels
-    for(int i = 0; i < blockSize; i++)
-    {
-        if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)	 		// This is the release threshold for the auto RF gain
-        {
-            ads.adc_quarter_clip = 1;
-            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)	 		// This is the trigger threshold for the auto RF gain
-            {
-                ads.adc_half_clip = 1;
-                if(src[i].l > ADC_CLIP_WARN_THRESHOLD)			// This is the threshold for the red clip indicator on S-meter
-                {
-                    ads.adc_clip = 1;
-                }
-            }
-        }
-        adb.i_buffer[i] = (float32_t)src[i].l;
-        adb.q_buffer[i] = (float32_t)src[i].r;
-    }
-
-    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
-
-    // Apply I/Q amplitude correction
-    arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
-    arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
-
-    // Apply I/Q phase correction
-    AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
-
-    if(iq_freq_mode)	 		// is receive frequency conversion to be done?
-    {
-        if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)			// Yes - "RX LO LOW" mode
-        {
-            audio_rx_freq_conv(blockSize, 1);
-        }
-        else								// it is in "RX LO LOW" mode
-        {
-            audio_rx_freq_conv(blockSize, 0);
-        }
-    }
-    AudioDriver_SpectrumZoomProcessSamples(blockSize);
-
-    // ------------------------
-    // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
-    // *** *EXCEPT* in AM mode
-    //    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
-    //	  which case there is ***NO*** audio phase shift applied to the I/Q channels.
-#if 0
-    arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);	// shift 0 degree FIR+LPF
-    arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);	// shift -90 degrees FIR+LPF
-#endif
-
-    switch(dmod_mode)
+    bool retval = false;
+    switch(ts.dmod_mode)
     {
     case DEMOD_LSB:
-        // arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
-        audio_freedv_rx_processor(src,dst,blockSize);
-        break;
     case DEMOD_USB:
     case DEMOD_DIGI:
-        // arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
-        audio_freedv_rx_processor(src,dst,blockSize);
+        retval = audio_freedv_rx_processor(src,dst,blockSize);
         break;
     default:
         // this is silence
         arm_fill_f32(0.0,adb.b_buffer,blockSize);
     }
     // from here straight to final AUDIO OUT processing
+    return retval;
 }
-
 #endif
 
 //
@@ -2643,92 +2582,97 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         }
     }
 
-#ifdef USE_FREEDV
-    if (ts.dvmode == true)
+    audio_rx_noise_blanker(src, blockSize);     // do noise blanker function
+    // ------------------------
+    // Split stereo channels
+    for(i = 0; i < blockSize; i++)
     {
-        audio_dv_rx_processor(src,dst,blockSize);
-    }
-    else
-#endif
-    {
-
-        audio_rx_noise_blanker(src, blockSize);     // do noise blanker function
-        // ------------------------
-        // Split stereo channels
-        for(i = 0; i < blockSize; i++)
+        if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
         {
-            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
+            ads.adc_quarter_clip = 1;
+            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
             {
-                ads.adc_quarter_clip = 1;
-                if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
+                ads.adc_half_clip = 1;
+                if(src[i].l > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
                 {
-                    ads.adc_half_clip = 1;
-                    if(src[i].l > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
-                    {
-                        ads.adc_clip = 1;
-                    }
+                    ads.adc_clip = 1;
                 }
             }
-            adb.i_buffer[i] = (float32_t)src[i].l;
-            adb.q_buffer[i] = (float32_t)src[i].r;
         }
+        adb.i_buffer[i] = (float32_t)src[i].l;
+        adb.q_buffer[i] = (float32_t)src[i].r;
+    }
 
 #ifdef USE_SNAP
-        if (sc.snap) {
-            if (sc.state == 0)
+    if (sc.snap) {
+        if (sc.state == 0)
+        {
+            for(i = 0; i < blockSize; i++)
             {
-                for(i = 0; i < blockSize; i++)
+                sc.counter += blockSize;
+                if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
                 {
-                    sc.counter += blockSize;
-                    if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-                    {
 
-                        // collect samples for snap carrier FFT
-                        sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
-                        sc.samp_ptr++;
-                        sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
-                        sc.samp_ptr++;
-                        // obtain samples for snap carrier mode
-                        if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
-                        {
-                            sc.samp_ptr = 0;
-                            sc.state    = 1;
-                            sc.counter = 0;
-                        }
+                    // collect samples for snap carrier FFT
+                    sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
+                    sc.samp_ptr++;
+                    sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
+                    sc.samp_ptr++;
+                    // obtain samples for snap carrier mode
+                    if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+                    {
+                        sc.samp_ptr = 0;
+                        sc.state    = 1;
+                        sc.counter = 0;
                     }
                 }
             }
-            else if (sc.state == 1)
-            {
-                audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
-            }
         }
-#endif
-        AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
-
-
-        // Apply I/Q amplitude correction
-        arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
-        arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
-
-
-        // Apply I/Q phase correction
-        AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
-
-        if(iq_freq_mode)            // is receive frequency conversion to be done?
+        else if (sc.state == 1)
         {
-            if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)           // Yes - "RX LO LOW" mode
-            {
-                audio_rx_freq_conv(blockSize, 1);
-            }
-            else                                // it is in "RX LO LOW" mode
-            {
-                audio_rx_freq_conv(blockSize, 0);
-            }
+            audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
         }
+    }
+#endif
+    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
-        AudioDriver_SpectrumZoomProcessSamples(blockSize);
 
+    // Apply I/Q amplitude correction
+    arm_scale_f32(adb.i_buffer, (float32_t)ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
+    arm_scale_f32(adb.q_buffer, (float32_t)ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
+
+
+    // Apply I/Q phase correction
+    AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
+
+    if(iq_freq_mode)            // is receive frequency conversion to be done?
+    {
+        if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)           // Yes - "RX LO LOW" mode
+        {
+            audio_rx_freq_conv(blockSize, 1);
+        }
+        else                                // it is in "RX LO LOW" mode
+        {
+            audio_rx_freq_conv(blockSize, 0);
+        }
+    }
+
+    AudioDriver_SpectrumZoomProcessSamples(blockSize);
+
+
+    //  Demodulation, optimized using fast ARM math functions as much as possible
+
+#ifdef USB_OTG_SPEED_FULL
+    bool dvmode_signal = false;
+    if (ts.dvmode == true)
+    {
+        dvmode_signal = audio_dv_rx_processor(src,dst,blockSize);
+    }
+#endif
+
+    if (dvmode_signal == false)
+    {
+        // TODO: Verify if comment is still valid, since code below is run in all modes even AM!
         // ------------------------
         // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
         // *** *EXCEPT* in AM mode
@@ -2739,7 +2683,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // shift 0 degree FIR+LPF
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // shift -90 degrees FIR+LPF
 
-        //  Demodulation, optimized using fast ARM math functions as much as possible
+
         switch(dmod_mode)
         {
         case DEMOD_LSB:
