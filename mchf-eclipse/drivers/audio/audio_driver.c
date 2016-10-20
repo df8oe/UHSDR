@@ -1555,7 +1555,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         }
     }
-    return false;
+    return true;
 }
 #endif
 
