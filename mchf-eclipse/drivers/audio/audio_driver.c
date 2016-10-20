@@ -1420,10 +1420,43 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static FDV_Audio_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
+    //static bool FIR_init_done=false;
+/*
+    const float32_t FreeDV_RX_IQ_FIR_coeff[52] = {
+
+    0.000831260126918324f, 0.004408197244384240f, 0.004951331362542200f, 0.007392224654739290f,
+    0.009235025019801110f, 0.010566912655052800f, 0.010838518486846700f, 0.009710617727391360f,
+    0.006960313137399340f, 0.002609211263474860f, -0.003037766007247720f, -0.009368387660224870f,
+    -0.015494588408474200f, -0.020340791763903700f, -0.022771278491984900f, -0.021743546190111500f,
+    -0.016484158817727800f, -0.006627560338978250f, 0.007668716215142990f, 0.025690938558661100f,
+    0.046195412407914800f, 0.067525342237229900f, 0.087785378646970400f, 0.105060665998814000f,
+    0.117651440063569000f, 0.124286112407941000f, 0.124286112407941000f, 0.117651440063569000f,
+    0.105060665998814000f, 0.087785378646970400f, 0.067525342237229900f, 0.046195412407914800f,
+    0.025690938558661100f, 0.007668716215142990f, -0.006627560338978250f, -0.016484158817727800f,
+    -0.021743546190111500f, -0.022771278491984900f, -0.020340791763903700f, -0.015494588408474200f,
+    -0.009368387660224870f, -0.003037766007247720f, 0.002609211263474860f, 0.006960313137399340f,
+    0.009710617727391360f, 0.010838518486846700f, 0.010566912655052800f, 0.009235025019801110f,
+    0.007392224654739290f, 0.004951331362542200f, 0.004408197244384240f, 0.000831260126918324f
+    };
+
+    static float32_t FIR_I_buffer[32],FIR_Q_buffer[32];
+    static float32_t FIR_I_State[32 + 52 - 1];
+    static float32_t FIR_Q_State[32 + 52 - 1];
+
+    static arm_fir_instance_f32 S_I;
+    static arm_fir_instance_f32 S_Q;
+
+    if (FIR_init_done==false) {
+	arm_fir_init_f32(&S_I, 52, (float32_t *)&FreeDV_RX_IQ_FIR_coeff[0], &FIR_I_State[0], blockSize);
+	arm_fir_init_f32(&S_Q, 52, (float32_t *)&FreeDV_RX_IQ_FIR_coeff[0], &FIR_Q_State[0], blockSize);
+	FIR_init_done=true;
+    }
+*/
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
+
 
     if (ts.digital_mode==1)
     { //we are in freedv-mode
@@ -1440,7 +1473,15 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         // this is the correct DECIMATION FILTER (before the downsampling takes place):
         // use it ALWAYS, also with TUNE tone!!!
-        // AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
+
+
+	//AudioDriver_tx_filter_audio(true,false, adb.i_buffer,adb.i_buffer, blockSize);
+	//AudioDriver_tx_filter_audio(true,false, adb.q_buffer,adb.q_buffer, blockSize);
+
+
+
+	// arm_fir_f32(&S_I, (int32_t)&adb.i_buffer , &FIR_I_buffer , blockSize);   //FIR filtering I
+	// arm_fir_f32(&S_Q, (int32_t)&adb.q_buffer , &FIR_Q_buffer , blockSize);	  //FIR filtering Q
 
 
         // DOWNSAMPLING
