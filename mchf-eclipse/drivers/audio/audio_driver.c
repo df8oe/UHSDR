@@ -1440,7 +1440,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         // this is the correct DECIMATION FILTER (before the downsampling takes place):
         // use it ALWAYS, also with TUNE tone!!!
-        // AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
+        AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 
 
         // DOWNSAMPLING
