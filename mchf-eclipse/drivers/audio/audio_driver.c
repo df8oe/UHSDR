@@ -331,8 +331,79 @@ static float32_t* mag_coeffs[6] =
       -0.084562104085501480,
    	   0.047026497485465592,
 	   1.983564238653704900,
-  	   -0.993055129539134551 },
+  	   -0.993055129539134551 }
+
+
+
 };
+
+//******* From here 2 set of filters for the I/Q FreeDV aliasing filter**********
+
+// I- and Q- Filter instances for FreeDV downsampling aliasing filters
+
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_I =
+{
+    .numStages = 2,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+        1,0,0,0,0,  1,0,0,0,0 // passthru
+    }, // 2 x 5 = 10 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0,    0,0,0,0,   0,0,0,0
+    } // 2 x 4 = 8 state variables
+};
+
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_Q =
+{
+    .numStages = 2,
+    .pCoeffs = (float32_t *)(float32_t [])
+    {
+        1,0,0,0,0,  1,0,0,0,0 // passthru
+    }, // 2 x 5 = 10 coefficients
+
+    .pState = (float32_t *)(float32_t [])
+    {
+        0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
+    } // 2 x 4 = 8 state variables
+};
+
+static float32_t* FreeDV_coeffs[2] =
+
+{
+
+
+        (float32_t*)NULL, // just a relict from my copy - will take it out later -DL2FW
+
+    (float32_t*)(const float32_t[]){
+    	// index 1
+    	// 2,4kHz, sample rate 48k, 50dB stopband, elliptic
+    	// only 2 stages!!!!!
+          // a1 and a2 negated! order: b0, b1, b2, a1, a2
+    	// Iowa Hills IIR Filter Designer, DL2FW 20-10-16
+
+
+
+          0.083165011486267731,
+	  -0.118387356334666696,
+	  0.083165011486267731,
+	  1.666027486884941840,
+	  -0.713970153522810569,
+
+	  0.068193683664968877,
+	  -0.007220581127135660,
+	  0.068193683664968877,
+	  1.763363677375461290,
+   	    -0.892530463578263378  },
+
+
+};
+
+//******* End of 2 set of filters for the I/Q FreeDV aliasing filter**********
+
+
+
 
 // variables for FM squelch IIR filters
 static float32_t	iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -483,6 +554,8 @@ void audio_driver_init(void)
     // Audio init
     Audio_Init();
     Audio_TXFilter_Init(ts.dmod_mode);
+
+
 
     // Codec init
     Codec_MCUInterfaceInit(ts.samp_rate,word_size);
@@ -1242,6 +1315,10 @@ static void Audio_Init(void)
     }
     // Init RX audio filters
     audio_driver_set_rx_audio_filter(ts.dmod_mode);
+
+    IIR_biquad_FreeDV_I.pCoeffs = FreeDV_coeffs[1];  // FreeDV Filter test -DL2FW-
+    IIR_biquad_FreeDV_Q.pCoeffs = FreeDV_coeffs[1];
+
 }
 //
 //
@@ -1420,10 +1497,14 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static FDV_Audio_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
+
+    static float32_t FIR_I_buffer[32],FIR_Q_buffer[32];  // buffers to hold the filtered RX-I/Q-Samples before entering FreeDV
+
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
+
 
     if (ts.digital_mode==1)
     { //we are in freedv-mode
@@ -1440,7 +1521,19 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         // this is the correct DECIMATION FILTER (before the downsampling takes place):
         // use it ALWAYS, also with TUNE tone!!!
-        // AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
+
+
+	//AudioDriver_tx_filter_audio(true,false, adb.i_buffer,adb.i_buffer, blockSize);
+	//AudioDriver_tx_filter_audio(true,false, adb.q_buffer,adb.q_buffer, blockSize);
+
+
+
+	// arm_fir_f32(&S_I, (int32_t)&adb.i_buffer , &FIR_I_buffer , blockSize);   //FIR filtering I
+	// arm_fir_f32(&S_Q, (int32_t)&adb.q_buffer , &FIR_Q_buffer , blockSize);	  //FIR filtering Q
+if (ts.filter_path != 65){
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, adb.i_buffer,FIR_I_buffer, blockSize);
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, adb.q_buffer,FIR_Q_buffer, blockSize);
+     }
 
 
         // DOWNSAMPLING
@@ -1451,14 +1544,29 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 
         	if (lsb_active == true)
         	  {
+        	    if (ts.filter_path == 65){
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
+        	    }
+        	    else
+        	      {
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)FIR_Q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)FIR_I_buffer[k]);
+        	      }
 
-        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
-        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
         	  }
         	else
         	  {
-        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
-        	    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
+        	    if (ts.filter_path == 65){
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
+        	    }
+        	    else
+        	      {
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)FIR_Q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)FIR_I_buffer[k]);
+        	      }
+
         	  }
 
         	    // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
