@@ -351,7 +351,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_I =
 
     .pState = (float32_t *)(float32_t [])
     {
-        0,0,0,0,   0,0,0,0,    0,0,0,0,   0,0,0,0
+        0,0,0,0,   0,0,0,0
     } // 2 x 4 = 8 state variables
 };
 
@@ -365,7 +365,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_Q =
 
     .pState = (float32_t *)(float32_t [])
     {
-        0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
+        0,0,0,0,   0,0,0,0
     } // 2 x 4 = 8 state variables
 };
 
@@ -1498,7 +1498,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
 
-    static float32_t FIR_I_buffer[32],FIR_Q_buffer[32];  // buffers to hold the filtered RX-I/Q-Samples before entering FreeDV
+    static float32_t IIR_I_buffer[32],IIR_Q_buffer[32];  // buffers to hold the filtered RX-I/Q-Samples before entering FreeDV
 
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
 
@@ -1531,8 +1531,8 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 	// arm_fir_f32(&S_I, (int32_t)&adb.i_buffer , &FIR_I_buffer , blockSize);   //FIR filtering I
 	// arm_fir_f32(&S_Q, (int32_t)&adb.q_buffer , &FIR_Q_buffer , blockSize);	  //FIR filtering Q
 if (ts.filter_path != 65){
-	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, adb.i_buffer,FIR_I_buffer, blockSize);
-	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, adb.q_buffer,FIR_Q_buffer, blockSize);
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, adb.i_buffer,IIR_I_buffer, blockSize);
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, adb.q_buffer,IIR_Q_buffer, blockSize);
      }
 
 
@@ -1550,8 +1550,8 @@ if (ts.filter_path != 65){
         	    }
         	    else
         	      {
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)FIR_Q_buffer[k]);
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)FIR_I_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)IIR_Q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)IIR_I_buffer[k]);
         	      }
 
         	  }
@@ -1563,8 +1563,8 @@ if (ts.filter_path != 65){
         	    }
         	    else
         	      {
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)FIR_Q_buffer[k]);
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)FIR_I_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)IIR_Q_buffer[k]);
+        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)IIR_I_buffer[k]);
         	      }
 
         	  }
