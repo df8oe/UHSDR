@@ -478,8 +478,14 @@ void  FreeDV_mcHF_init()
     // Freedv Test DL2FW
 
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
-
-    sprintf(my_cb_state.tx_str, "CQ CQ CQ mcHF SDR with integrated FreeDV codec calling!");
+	if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
+	{
+  	  sprintf(my_cb_state.tx_str, FREEDV_TX_DF8OE_MESSAGE);
+  	}
+  	else
+	{
+  	  sprintf(my_cb_state.tx_str, FREEDV_TX_MESSAGE);
+  	}
     my_cb_state.ptx_str = my_cb_state.tx_str;
     freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);
