@@ -451,23 +451,23 @@ typedef struct ButtonMap
 enum
 {
     BUTTON_M2_PRESSED = 0,  // 0
-    BUTTON_G3_PRESSED,  // 1
-    BUTTON_G2_PRESSED,  // 2
+    BUTTON_G3_PRESSED,  	// 1
+    BUTTON_G2_PRESSED,  	// 2
     BUTTON_BNDM_PRESSED,    // 3
-    BUTTON_G4_PRESSED,  // 4
-    BUTTON_M3_PRESSED,  // 5
+    BUTTON_G4_PRESSED,  	// 4
+    BUTTON_M3_PRESSED,  	// 5
     BUTTON_STEPM_PRESSED,   // 6
     BUTTON_STEPP_PRESSED,   // 7
-    BUTTON_M1_PRESSED,  // 8
-    BUTTON_F3_PRESSED,  // 9 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F1_PRESSED,  // 10 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F2_PRESSED,  // 11 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F4_PRESSED,  // 12 - Press and release handled in UiDriverProcessFunctionKeyClick()
+    BUTTON_M1_PRESSED,  	// 8
+    BUTTON_F3_PRESSED,  	// 9 - Press and release handled in UiDriverProcessFunctionKeyClick()
+    BUTTON_F1_PRESSED,  	// 10 - Press and release handled in UiDriverProcessFunctionKeyClick()
+    BUTTON_F2_PRESSED,  	// 11 - Press and release handled in UiDriverProcessFunctionKeyClick()
+    BUTTON_F4_PRESSED,  	// 12 - Press and release handled in UiDriverProcessFunctionKeyClick()
     BUTTON_BNDP_PRESSED,    // 13
-    BUTTON_F5_PRESSED,  // 14 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_G1_PRESSED,  // 15
+    BUTTON_F5_PRESSED,  	// 14 - Press and release handled in UiDriverProcessFunctionKeyClick()
+    BUTTON_G1_PRESSED,  	// 15
     BUTTON_POWER_PRESSED,   // 16 - Used for press and release
-    TOUCHSCREEN_ACTIVE, // 17 - Touchscreen touched, needs to last entry before BUTTON_NUM,
+    TOUCHSCREEN_ACTIVE, 	// 17 - Touchscreen touched, needs to last entry before BUTTON_NUM,
     //      init code relies on this
     BUTTON_NUM // How many buttons we have defined
 };
@@ -477,18 +477,18 @@ extern const ButtonMap  bm[BUTTON_NUM];
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-#define POWER_BUTTON_HOLD_TIME		1000000
+#define POWER_BUTTON_HOLD_TIME	1000000
 
-#define TRX_MODE_RX			0
-#define TRX_MODE_TX			1
+#define TRX_MODE_RX				0
+#define TRX_MODE_TX				1
 
-#define DEMOD_USB			0
-#define DEMOD_LSB			1
-#define DEMOD_CW			2
-#define DEMOD_AM			3
-#define	DEMOD_FM			4
-#define	DEMOD_SAM			5
-#define DEMOD_DIGI			6
+#define DEMOD_USB				0
+#define DEMOD_LSB				1
+#define DEMOD_CW				2
+#define DEMOD_AM				3
+#define	DEMOD_FM				4
+#define	DEMOD_SAM				5
+#define DEMOD_DIGI				6
 #define DEMOD_MAX_MODE			6
 
 // codec x demod
@@ -499,10 +499,10 @@ extern const ButtonMap  bm[BUTTON_NUM];
 
 #define RTC_OSC_FREQ			32768
 
-#define	TCXO_OFF			0		// TXCO temperature compensation off
-#define	TCXO_ON				1		// TCXO temperature compensation on
-#define	TCXO_STOP			2		// Stop reading of temperature sensor
-#define	TCXO_TEMP_STATE_MAX		255		// Maximum setting for TCXO setting state
+#define	TCXO_OFF				0		// TXCO temperature compensation off
+#define	TCXO_ON					1		// TCXO temperature compensation on
+#define	TCXO_STOP				2		// Stop reading of temperature sensor
+#define	TCXO_TEMP_STATE_MAX		2		// Maximum setting for TCXO setting state
 
 // Transverter oscillator adds shift
 #define		TRANSVT_FREQ_A	 	42000000
@@ -513,12 +513,12 @@ extern const ButtonMap  bm[BUTTON_NUM];
 //
 // Total bands supported
 //
-#define	MIN_BANDS			0		// lowest band number
-#define	MAX_BANDS			17		// Highest band number:  17 = General coverage (RX only) band
-#define	MAX_BAND_NUM		(MAX_BANDS+1)		// Number of Bands
+#define	MIN_BANDS				0		// lowest band number
+#define	MAX_BANDS				17		// Highest band number:  17 = General coverage (RX only) band
+#define	MAX_BAND_NUM			(MAX_BANDS+1)		// Number of Bands
 
 //  multiplier to convert between dial_freq and tune_freq
-#define TUNE_MULT 4
+#define TUNE_MULT				4
 
 #define	KHZ_MULT			(TUNE_MULT*1000)	// multiplier to convert oscillator frequency or band size to display kHz, used below
 //
