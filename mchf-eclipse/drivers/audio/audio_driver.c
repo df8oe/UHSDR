@@ -369,6 +369,10 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_Q =
     } // 2 x 4 = 8 state variables
 };
 
+
+
+
+
 static float32_t* FreeDV_coeffs[2] =
 
 {
@@ -412,7 +416,8 @@ static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
 // variables for TX IIR filter
 float32_t		iir_tx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 arm_iir_lattice_instance_f32	IIR_TXFilter;
-
+arm_iir_lattice_instance_f32	IIR_FreeDV_RX_Filter;  //DL2FW: temporary installed FreeDV RX Audio Filter
+float32_t		iir_FreeDV_RX_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 
 // S meter public
 __IO	SMeter					sm;
@@ -1307,7 +1312,7 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
 //*----------------------------------------------------------------------------
 static void Audio_Init(void)
 {
-
+  uint32_t	i;
     //
     if((ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN) || (ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX))
     {
@@ -1318,6 +1323,20 @@ static void Audio_Init(void)
 
     IIR_biquad_FreeDV_I.pCoeffs = FreeDV_coeffs[1];  // FreeDV Filter test -DL2FW-
     IIR_biquad_FreeDV_Q.pCoeffs = FreeDV_coeffs[1];
+
+
+				// temporary installed audio filter's coefficients
+    IIR_FreeDV_RX_Filter.numStages = IIR_TX_WIDE_TREBLE.numStages; // using the same for FreeDV RX Audio as for TX
+    IIR_FreeDV_RX_Filter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;   // but keeping it constant at "Tenor" to avoid
+    IIR_FreeDV_RX_Filter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;   // influence of TX setting in RX path
+
+    for(i = 0; i < IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES-1; i++)	 	// initialize state buffer to zeroes
+       {
+	iir_FreeDV_RX_state[i] = 0;
+       }
+    IIR_FreeDV_RX_Filter.pState = iir_tx_state;
+
+
 
 }
 //
@@ -1496,12 +1515,9 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_Audio_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
-
-
-    static float32_t IIR_I_buffer[32],IIR_Q_buffer[32];  // buffers to hold the filtered RX-I/Q-Samples before entering FreeDV
-
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
-
+    static float32_t sample_delta=0;
+    static float32_t last_sample=0;
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
 
@@ -1523,18 +1539,10 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
         // use it ALWAYS, also with TUNE tone!!!
 
 
-	//AudioDriver_tx_filter_audio(true,false, adb.i_buffer,adb.i_buffer, blockSize);
-	//AudioDriver_tx_filter_audio(true,false, adb.q_buffer,adb.q_buffer, blockSize);
-
-
-
-	// arm_fir_f32(&S_I, (int32_t)&adb.i_buffer , &FIR_I_buffer , blockSize);   //FIR filtering I
-	// arm_fir_f32(&S_Q, (int32_t)&adb.q_buffer , &FIR_Q_buffer , blockSize);	  //FIR filtering Q
-if (ts.filter_path != 65){
-	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, adb.i_buffer,IIR_I_buffer, blockSize);
-	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, adb.q_buffer,IIR_Q_buffer, blockSize);
-     }
-
+if (ts.filter_path != 65){   // just for testing, when Filter #65 (10kHz LPF) is selected, antialiasing is switched off
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, adb.i_buffer,adb.i_buffer, blockSize);
+	arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, adb.q_buffer,adb.q_buffer, blockSize);
+  }
 
         // DOWNSAMPLING
         for (int k = 0; k < blockSize; k++)
@@ -1544,32 +1552,14 @@ if (ts.filter_path != 65){
 
         	if (lsb_active == true)
         	  {
-        	    if (ts.filter_path == 65){
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
+        	  	fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
         		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
-        	    }
-        	    else
-        	      {
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)IIR_Q_buffer[k]);
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)IIR_I_buffer[k]);
-        	      }
-
         	  }
         	else
         	  {
-        	    if (ts.filter_path == 65){
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
+         		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
         		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
-        	    }
-        	    else
-        	      {
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)IIR_Q_buffer[k]);
-        		fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)IIR_I_buffer[k]);
-        	      }
-
         	  }
-
-        	    // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
 
         	    trans_count_in++;
             }
@@ -1611,23 +1601,32 @@ if (ts.filter_path != 65){
             // block size (which is 64 in our case --> 64 / 6 = non-integer!)
 
             arm_fill_f32(0,adb.b_buffer,blockSize);
+
             // UPSAMPLING [by hand]
             for (int j = 0; j < blockSize; j++) //  now we are doing upsampling by 6
             {
                 if (modulus_MOD == 0) // put in sample pair
                 {
                     adb.b_buffer[j] = out_buffer->samples[outbuff_count]; // + (sample_delta.real * (float32_t)modulus_MOD);
+                    //sample_delta = (out_buffer->samples[outbuff_count]-last_sample)/6;
                 }
+
+                //adb.b_buffer[j] = out_buffer->samples[outbuff_count] + sample_delta*(float32_t)modulus_MOD;
+
+
 #if 0
                 else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
+		    // or keep the last sample value - like a sample an' old
                 {
-                    adb.b_buffer[j] = 0;
-                    // adb.b_buffer[j] = out_buffer->samples[outbuff_count];
+                    //adb.b_buffer[j] = 0;
+                    adb.b_buffer[j] = out_buffer->samples[outbuff_count];
                 }
 #endif
+
                 modulus_MOD++;
                 if (modulus_MOD == 6)
                 {
+                   // last_sample = out_buffer->samples[outbuff_count];
                     outbuff_count++;
                     modulus_MOD = 0;
                 }
@@ -1635,13 +1634,17 @@ if (ts.filter_path != 65){
 
             // Add interpolation filter here to suppress alias frequencies
             // we are upsampling from 8kHz to 48kHz, so we have to suppress all frequencies below 4kHz
-            // our FreeDV signal is centred at 1500Hz ??? and is 1250Hz broad,
-            // so a lowpass filter with cutoff frequency 2400Hz should be fine!
-            AudioDriver_tx_filter_audio(true,false, adb.b_buffer,adb.b_buffer, blockSize);
-            // INTERPOLATION FILTER [after the interpolation has taken place]
-            // the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
-            // arm_fir_f32(&FIR_I_FREEDV, adb.a_buffer, adb.a_buffer,blockSize);
-            // arm_fir_f32(&FIR_Q_FREEDV, adb.q_buffer, adb.q_buffer, blockSize);
+            // our FreeDV signal is here already an reconstructed Audio Signal,
+            // so a lowpass or bandpass filter with cutoff frequency 50/2800Hz should be fine!
+
+            // This is a temporary installed - neutral - RX Audio Filter which will be replaced by a better
+            // hopefully a polyphase interpolation filter - has to be adopted to our upsampling rate and buffersizes.....
+
+            // Filter below uses the TX-"Tenor" filter shape for the RX upsampling filter
+            arm_iir_lattice_f32(&IIR_FreeDV_RX_Filter, adb.b_buffer,adb.b_buffer, blockSize);
+
+            //AudioDriver_tx_filter_audio(true,false, adb.b_buffer,adb.b_buffer, blockSize);
+
         }
         else
         {
