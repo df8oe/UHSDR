@@ -23,7 +23,7 @@
  */
 EventProfile_t eventProfile;
 
-#if 1
+#if 0
 // the code below is only used to ease profiling with eclipse
 // you just need hover over a variable to get the value
 void dummy() {
