@@ -91,7 +91,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_MAGNIFY,&sd.magnify,MAGNIFY_DEFAULT,MAGNIFY_MIN,MAGNIFY_MAX},
     { ConfigEntry_UInt8, EEPROM_WIDE_FILT_CW_DISABLE,&ts.filter_cw_wide_disable,1,0,1},
     { ConfigEntry_UInt8, EEPROM_NARROW_FILT_SSB_DISABLE,&ts.filter_ssb_narrow_disable,1,0,1},
-    { ConfigEntry_UInt16, EEPROM_AM_MODE_DISABLE,&ts.demod_mode_disable,1,0,3},
+    { ConfigEntry_UInt16, EEPROM_AM_MODE_DISABLE,&ts.demod_mode_disable,1,0,7},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_DB_DIV,&ts.spectrum_db_scale,DB_DIV_ADJUST_DEFAULT,DB_DIV_ADJUST_MIN, DB_DIV_ADJUST_MAX},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_AGC_RATE,&ts.scope_agc_rate,SPECTRUM_SCOPE_AGC_DEFAULT,SPECTRUM_SCOPE_AGC_MIN, SPECTRUM_SCOPE_AGC_MAX},
     { ConfigEntry_UInt8, EEPROM_METER_MODE,&ts.tx_meter_mode,METER_SWR,0,METER_MAX},
