@@ -367,6 +367,7 @@ void CatDriverFT817CheckAndExecute()
             case 7: /* set mode */
             {
                 uint32_t new_mode = ts.dmod_mode;
+                uint32_t new_lsb = ts.cw_lsb;
                 switch (ft817.req[0])
                 {
                 case 0: // LSB
@@ -376,11 +377,11 @@ void CatDriverFT817CheckAndExecute()
                     new_mode = DEMOD_USB;
                     break;
                 case 2: // CW
-                    ts.cw_lsb = false;
+                    new_lsb = false;
                     new_mode = DEMOD_CW;
                     break;
                 case 3: // CW-R
-                    ts.cw_lsb = true;
+                    new_lsb = true;
                     new_mode = DEMOD_CW;
                     break;
                 case 4: // AM
@@ -397,13 +398,12 @@ void CatDriverFT817CheckAndExecute()
                     new_mode = DEMOD_FM;
                     break;
                 }
-                if  (new_mode != ts.dmod_mode)
+                if  (new_mode != ts.dmod_mode || new_lsb != ts.cw_lsb )
                 {
                     if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
                         ts.cat_band_index = ts.band;
-                    UiDriverSetDemodMode(new_mode);
-                    UiDriverDisplayFilterBW();
-                    UiInitRxParms();
+                    ts.cw_lsb = new_lsb;
+                    UiInitRxParms(new_mode);
                 }
             }
             break;

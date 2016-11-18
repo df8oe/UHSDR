@@ -749,7 +749,6 @@ void UiDriver_HandleTouchScreen()
           if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
           {
             UiDriverChangeDemodMode(0);
-        	UiInitRxParms();        // re-init for change of filter including display updates
           }
 		}
         if(check_tp_coordinates(16,24,45,48))			// TX power box
@@ -2066,7 +2065,6 @@ static void UiDriverProcessKeyboard()
                 if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
                 {
                     UiDriverChangeDemodMode(0);
-                    UiInitRxParms();        // re-init for change of filter including display updates
                 }
                 break;
             case BUTTON_G2_PRESSED:		// BUTTON_G2
@@ -2088,7 +2086,7 @@ static void UiDriverProcessKeyboard()
                         AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
                     }
                     // Change filter
-                    UiInitRxParms();		// re-init for change of filter including display updates
+                    UiInitRxParms(ts.dmod_mode);		// re-init for change of filter including display updates
                     UiDriverChangeEncoderThreeMode(true);
                 }
                 break;
@@ -2232,7 +2230,6 @@ static void UiDriverProcessKeyboard()
                 if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
                 {
                     UiDriverChangeDemodMode(1);		// go to next mode, including disabled modes
-                    UiInitRxParms();
                 }
                 break;
             case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
@@ -2259,7 +2256,7 @@ static void UiDriverProcessKeyboard()
                 break;
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
-                UiInitRxParms();			// generate "reference" for sidetone frequency
+                UiInitRxParms(ts.dmod_mode);			// generate "reference" for sidetone frequency
                 if(ts.AM_experiment)
                 {
                     ts.AM_experiment = 0;
@@ -2433,11 +2430,11 @@ void UiDriver_RefreshEncoderDisplay()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiInitRxParms()
+void UiInitRxParms(uint16_t dmod_mode)
 {
 
 
-    RadioManagement_SetDemodMode(ts.dmod_mode);
+    RadioManagement_SetDemodMode(dmod_mode);
 
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
@@ -2696,8 +2693,7 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
             // Change decode mode if need to
             if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
             {
-                ts.dmod_mode = vfo[vfo_new].band[ts.band].decod_mode;
-                UiInitRxParms(); // set up for RX in changed demod mode
+                UiInitRxParms(vfo[vfo_new].band[ts.band].decod_mode); // set up for RX in changed demod mode
             }
             else
             {
@@ -4367,21 +4363,6 @@ static void UiDriverTimeScheduler()
 }
 
 
-// RF API
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverSetDemodMode
-//* Object              : change demodulator mode
-//* Input Parameters    : new_mode contains the new mode
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-void UiDriverSetDemodMode(uint32_t new_mode)
-{
-    RadioManagement_SetDemodMode(new_mode);
-    UiDriverShowMode();
-}
-
 /*
  * Tells you which SSB Demod Mode is the preferred one for a given frequency in Hertz
  */
@@ -4485,87 +4466,8 @@ static uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_
 static void UiDriverChangeDemodMode(bool include_disabled_modes)
 {
     ulong loc_mode = ts.dmod_mode;	// copy to local, so IRQ is not affected
-
-#if 1
     loc_mode = RadioManagement_NextDemodMode(loc_mode, include_disabled_modes);
-#else
-    if(include_disabled_modes == true
-            && ts.lsb_usb_auto_select == true
-            && (loc_mode == DEMOD_USB || loc_mode == DEMOD_LSB)
-       )	 	// noskip mode with auto-select enabled
-    {
-        if(loc_mode == DEMOD_LSB)					// if LSB, flip to USB
-        {
-            loc_mode = DEMOD_USB;
-        }
-        else if(loc_mode == DEMOD_USB)				// if USB, flip to LSB
-        {
-            loc_mode = DEMOD_LSB;
-        }
-    }
-    else				// Normal changing of the mode
-    {
-        loc_mode++;		// Increase mode
-    }
-
-    // the rules below figure out if a mode should be
-    // skipped, so this code must be executed after selecting a mode
-    // and the modes need to be checked in the mathematical order of their ids
-    // in order to ensure proper skipping.
-
-    // first set of rules which are only applied if the disable should be honored
-    // i.e. on short press of G1
-    if(include_disabled_modes == false)	 		// Are we NOT to skip disabled modes?
-    {
-        if(loc_mode == DEMOD_AM)	 	// yes - is this AM mode?
-        {
-            if(ts.demod_mode_disable)		// is AM to be disabled?
-            {
-                loc_mode++;				// yes - go to next mode
-            }
-        }
-        if(loc_mode == DEMOD_FM)	 	// is this FM mode?
-        {
-            if((!(ts.flags2 & FLAGS2_FM_MODE_ENABLE)) || (ts.band != BAND_MODE_10 && ts.lsb_usb_auto_select))	// is FM to be disabled?
-            {
-                loc_mode++;				// yes - go to next mode
-            }
-        }
-
-        if(loc_mode == DEMOD_SAM)       // yes - is this SAM mode?
-        {
-            if(!(ts.flags1 & FLAGS1_SAM_ENABLE))        // is SAM to be disabled?
-                loc_mode++;             // yes - go to next mode
-        }
-
-    }
-
-    // second set of rules
-    // these rules are always enforced
-    if((loc_mode == DEMOD_FM) && (!ts.iq_freq_mode))	 	// are we in FM and frequency translate is off?
-    {
-        loc_mode++;		// yes - FM NOT permitted unless frequency translate is active, so skip!
-    }
-
-
-    // Check for overflow
-    if(loc_mode >= DEMOD_MAX_MODE)
-    {
-        loc_mode = DEMOD_USB;
-    }
-
-
-    if((ts.lsb_usb_auto_select) && ((loc_mode == DEMOD_USB) || (loc_mode == DEMOD_LSB)) && (include_disabled_modes == false))	 	// is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
-    {
-        if(RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) != loc_mode)	 	// is this a voice mode, subject to "auto" LSB/USB select?
-        {
-            // if we are not one the right sideband demod mode, skip it.
-            loc_mode++;
-        }
-    }
-#endif
-    RadioManagement_SetDemodMode(loc_mode);
-    UiDriverShowMode();
+    UiInitRxParms(loc_mode);
 }
 
 //*----------------------------------------------------------------------------
@@ -4702,7 +4604,7 @@ static void UiDriverChangeBand(uchar is_up)
 
         ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
 
-        UiInitRxParms();    // re-init because mode/filter may have changed
+        UiInitRxParms(ts.dmod_mode);    // re-init because mode/filter may have changed
     }
 }
 
@@ -5099,7 +5001,7 @@ static void UiDriverCheckEncoderThree()
         if (filter_path_change)
         {
             AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-            UiInitRxParms();
+            UiInitRxParms(ts.dmod_mode);
         }
         else  if(ts.menu_mode)
         {
