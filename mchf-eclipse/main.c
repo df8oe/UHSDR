@@ -585,7 +585,7 @@ int main(void)
 
     AudioFilter_SetDefaultMemories();
 
-    UiInitRxParms();
+    UiInitRxParms(ts.dmod_mode);
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
     Codec_Mute(false);					// make sure codec is un-muted

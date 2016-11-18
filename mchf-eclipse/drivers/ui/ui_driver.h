@@ -387,7 +387,7 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);
 
-void	UiInitRxParms();
+void	UiInitRxParms(uint16_t new_dmod_mode);
 
 void    UiDriver_KeyTestScreen();
 void UiDriver_ShowStartUpScreen(ulong hold_time);
