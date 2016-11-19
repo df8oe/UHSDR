@@ -626,7 +626,7 @@ void UiDriver_HandleSwitchToNextDspMode()
 
         ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
         ts.reset_dsp_nr = 1;               // reset DSP NR coefficients
-        audio_driver_set_rx_audio_filter(ts.dmod_mode);        // update DSP/filter settings
+        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);        // update DSP/filter settings
         ts.reset_dsp_nr = 0;
         // UiDriver_DisplayDSPMode(false);         // update on-screen display
         UiDriverChangeEncoderTwoMode(true);         // DSP control is mapped to column 2
@@ -714,7 +714,7 @@ void UiDriver_HandleTouchScreen()
           		}
           	  }
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
-            audio_driver_set_rx_audio_filter(ts.dmod_mode);
+            AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
         if(check_tp_coordinates(52,60,26,32))			// wf/scope bar magnify up
         {
@@ -736,7 +736,7 @@ void UiDriver_HandleTouchScreen()
           		}
           	  }
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
-            audio_driver_set_rx_audio_filter(ts.dmod_mode);
+            AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
         if(check_tp_coordinates(43,60,00,04))			// TUNE button
         {
@@ -1503,7 +1503,7 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
             RadioManagement_ChangeCodec(ts.digital_mode,0);
     }
 
-    audio_driver_set_rx_audio_filter(new_mode);
+    AudioDriver_SetRxAudioProcessing(new_mode);
     Audio_TXFilter_Init(new_mode);
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
 
@@ -2083,6 +2083,9 @@ static void UiDriverProcessKeyboard()
                     else
                     {
                         AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+                        // we store the new filter in the current active filter location
+                        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                        // we activate it (in fact the last used one, which is the newly selected one);
                     }
                     // Change filter
                     UiDriverUpdateDisplayAfterParamChange();		// re-init for change of filter including display updates
@@ -2249,7 +2252,7 @@ static void UiDriverProcessKeyboard()
                             ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
                         }
                     }
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);	// update DSP settings
+                    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);	// update DSP settings
                     UiDriverChangeEncoderTwoMode(true);
                 }
                 break;
@@ -4260,7 +4263,7 @@ static void UiDriverTimeScheduler()
             if((ads.dsp_zero_count > DSP_ZERO_COUNT_ERROR) || (dsp_crash_count > DSP_CRASH_COUNT_THRESHOLD))        // is "zero" output count OR high level count exceeding threshold?
             {
                 ts.reset_dsp_nr = 1;              // yes - DSP has likely crashed:  Set flag to reset DSP NR coefficients
-                audio_driver_set_rx_audio_filter(ts.dmod_mode);   // update DSP settings
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);   // update DSP settings
                 ts.reset_dsp_nr = 0;              // clear "reset NR coefficients" flag
                 dsp_crash_count = 0;              // clear crash count flag
             }
@@ -4874,7 +4877,7 @@ static void UiDriverCheckEncoderTwo()
                     if (is_dsp_nr())        // only allow adjustment if DSP NR is active
                     {
                         ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step,0,DSP_NR_STRENGTH_MAX);
-                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                     }
                     // Signal processor setting
                     UiDriver_DisplayDSPMode(1);
@@ -4900,21 +4903,21 @@ static void UiDriverCheckEncoderTwo()
                         }
                         // display notch frequency
                         // set notch filter instance
-                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                         UiDriver_DisplayDSPMode(1);
                     }
                     break;
                 case ENC_TWO_MODE_BASS_GAIN:
                     ts.bass_gain = change_and_limit_int(ts.bass_gain,pot_diff_step,MIN_BASS,MAX_BASS);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                     // display bass gain
                     UiDriver_DisplayTone(true);
                     break;
                 case ENC_TWO_MODE_TREBLE_GAIN:
                     ts.treble_gain = change_and_limit_int(ts.treble_gain,pot_diff_step,MIN_TREBLE,MAX_TREBLE);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                     // display treble gain
                     UiDriver_DisplayTone(true);
                     break;
@@ -4939,7 +4942,7 @@ static void UiDriverCheckEncoderTwo()
                             ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
                         }
                         // set notch filter instance
-                        audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                         // display peak frequency
                         UiDriver_DisplayDSPMode(1);
                     }
@@ -4956,14 +4959,14 @@ static void UiDriverCheckEncoderTwo()
                 case ENC_TWO_MODE_BASS_GAIN:
                     ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                     // display bass gain
                     UiDriver_DisplayTone(true);
                     break;
                 case ENC_TWO_MODE_TREBLE_GAIN:
                     ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
                     // set filter instance
-                    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+                    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
                     // display treble gain
                     UiDriver_DisplayTone(true);
                     break;
@@ -4998,6 +5001,10 @@ static void UiDriverCheckEncoderThree()
         if (filter_path_change)
         {
             AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+            // we store the new filter in the current active filter location
+            AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+            // we activate it (in fact the last used one, which is the newly selected one);
+
             UiDriverUpdateDisplayAfterParamChange();
         }
         else  if(ts.menu_mode)

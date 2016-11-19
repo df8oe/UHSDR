@@ -552,7 +552,7 @@ enum	{
 //
 // Exports
 void audio_driver_init(void);
-void audio_driver_set_rx_audio_filter(uint8_t dmod_mode);
+void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode);
 void Audio_TXFilter_Init(uint8_t dmod_mode);
 int32_t audio_driver_xlate_freq();
 //uchar audio_check_nr_dsp_state(void);

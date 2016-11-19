@@ -602,7 +602,7 @@ void audio_driver_init(void)
 //  This information is from recommendations by online references for using ARM math/DSP functions
 //
 
-void audio_driver_set_rx_audio_filter(uint8_t dmod_mode)
+void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
 {
     uint32_t	i;
     float	mu_calc;
@@ -1319,7 +1319,7 @@ static void Audio_Init(void)
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     }
     // Init RX audio filters
-    audio_driver_set_rx_audio_filter(ts.dmod_mode);
+    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
 
     IIR_biquad_FreeDV_I.pCoeffs = FreeDV_coeffs[1];  // FreeDV Filter test -DL2FW-
     IIR_biquad_FreeDV_Q.pCoeffs = FreeDV_coeffs[1];
