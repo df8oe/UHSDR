@@ -403,7 +403,8 @@ void CatDriverFT817CheckAndExecute()
                     if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
                         ts.cat_band_index = ts.band;
                     ts.cw_lsb = new_lsb;
-                    UiInitRxParms(new_mode);
+                    RadioManagement_SetDemodMode(new_mode);
+                    UiDriverUpdateDisplayAfterParamChange();
                 }
             }
             break;

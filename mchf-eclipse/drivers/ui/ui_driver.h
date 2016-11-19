@@ -1,16 +1,16 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
-************************************************************************************/
+ **                                                                                 **
+ **                               mcHF QRP Transceiver                              **
+ **                             K Atanassov - M0NKA 2014                            **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:		CC BY-NC-SA 3.0                                                **
+ ************************************************************************************/
 
 #ifndef __UI_DRIVER_H
 #define __UI_DRIVER_H
@@ -387,16 +387,20 @@ void 	UiDriverChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);
 
-void	UiInitRxParms(uint16_t new_dmod_mode);
+void	UiDriverUpdateDisplayAfterParamChange();
 
 void    UiDriver_KeyTestScreen();
 void UiDriver_ShowStartUpScreen(ulong hold_time);
 
 bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
+void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
 void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
 uint8_t RadioManagement_GetBand(ulong freq);
+bool RadioManagementLSBActive(uint16_t dmod_mode);
+
+
 
 void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
 
@@ -420,7 +424,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 // UI Driver State machine definitions
 enum
 {
-//STATE_SPECTRUM_DISPLAY = 0,	//
+    //STATE_SPECTRUM_DISPLAY = 0,	//
     STATE_S_METER = 0,				//
     STATE_SWR_METER,				//
     STATE_HANDLE_POWERSUPPLY,		//
