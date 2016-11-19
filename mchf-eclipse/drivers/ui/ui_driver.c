@@ -77,7 +77,6 @@ static void 	UiDriverUpdateBtmMeter(uchar val, uchar warn);
 static void 	UiDriverInitFrequency();
 //
 static void 	RadioManagement_SetHWFiltersForFrequency(ulong freq);
-static void     RadioManagement_SetDemodMode(uint32_t new_mode);
 
 uchar 			UiDriver_DisplayBandForFreq(ulong freq);
 static void 	UiDriverUpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
@@ -835,7 +834,7 @@ void UiDriver_HandleTouchScreen()
                 ts.dvmode = false;
             }
             RadioManagement_ChangeCodec(ts.digital_mode,ts.dvmode);
-            UiDriverShowMode();
+            UiDriverUpdateDisplayAfterParamChange();
         }
 
         if(check_tp_coordinates(26,35,39,46))			// dynamic tuning activation
@@ -1495,7 +1494,7 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
         if (ts.digital_mode == 0)
         {
             ts.digital_mode = 1;
-            // TODOD: more clever selection of initial DV Mode, if non was previously selected
+            // TODOD: more clever selection of initial DV Mode, if none was previously selected
         }
         RadioManagement_ChangeCodec(ts.digital_mode,1);
     }
@@ -2086,7 +2085,7 @@ static void UiDriverProcessKeyboard()
                         AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
                     }
                     // Change filter
-                    UiInitRxParms(ts.dmod_mode);		// re-init for change of filter including display updates
+                    UiDriverUpdateDisplayAfterParamChange();		// re-init for change of filter including display updates
                     UiDriverChangeEncoderThreeMode(true);
                 }
                 break;
@@ -2256,7 +2255,7 @@ static void UiDriverProcessKeyboard()
                 break;
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
-                UiInitRxParms(ts.dmod_mode);			// generate "reference" for sidetone frequency
+                UiDriverUpdateDisplayAfterParamChange();			// generate "reference" for sidetone frequency
                 if(ts.AM_experiment)
                 {
                     ts.AM_experiment = 0;
@@ -2430,22 +2429,14 @@ void UiDriver_RefreshEncoderDisplay()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiInitRxParms(uint16_t dmod_mode)
+void UiDriverUpdateDisplayAfterParamChange()
 {
-
-
-    RadioManagement_SetDemodMode(dmod_mode);
-
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
     UiDriverShowMode();
-    // Update Display Only Code
-    UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
-//    audio_driver_set_rx_audio_filter();
-    UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
-    // embedded in UiDriver_RefreshEncoderDisplay()
-    // UiDriver_DisplayDSPMode(false);  // Change DSP display setting as well
+    UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
+    UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
     ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
     UiDriver_RefreshEncoderDisplay();
@@ -2693,7 +2684,8 @@ static void UiDriverProcessFunctionKeyClick(ulong id)
             // Change decode mode if need to
             if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
             {
-                UiInitRxParms(vfo[vfo_new].band[ts.band].decod_mode); // set up for RX in changed demod mode
+                RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
+                UiDriverUpdateDisplayAfterParamChange();
             }
             else
             {
@@ -4467,7 +4459,8 @@ static void UiDriverChangeDemodMode(bool include_disabled_modes)
 {
     ulong loc_mode = ts.dmod_mode;	// copy to local, so IRQ is not affected
     loc_mode = RadioManagement_NextDemodMode(loc_mode, include_disabled_modes);
-    UiInitRxParms(loc_mode);
+    RadioManagement_SetDemodMode(loc_mode);
+    UiDriverUpdateDisplayAfterParamChange();
 }
 
 //*----------------------------------------------------------------------------
@@ -4590,10 +4583,15 @@ static void UiDriverChangeBand(uchar is_up)
         // Set filters
         RadioManagement_ChangeBandFilter(new_band_index);
 
-        if(ts.dmod_mode != vfo[vfo_sel].band[new_band_index].decod_mode)
+        bool new_lsb = RadioManagement_CalculateCWSidebandMode();
+        uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+
+
+        if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb))
         {
             // Update mode
-            RadioManagement_SetDemodMode(vfo[vfo_sel].band[new_band_index].decod_mode);
+            ts.cw_lsb = new_lsb;
+            RadioManagement_SetDemodMode(new_dmod_mode);
         }
 
         // Create Band value
@@ -4602,9 +4600,8 @@ static void UiDriverChangeBand(uchar is_up)
         // Finally update public flag
         ts.band = new_band_index;
 
-        ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
 
-        UiInitRxParms(ts.dmod_mode);    // re-init because mode/filter may have changed
+        UiDriverUpdateDisplayAfterParamChange();    // re-init because mode/filter may have changed
     }
 }
 
@@ -5001,7 +4998,7 @@ static void UiDriverCheckEncoderThree()
         if (filter_path_change)
         {
             AudioFilter_NextApplicableFilterPath(PATH_ALL_APPLICABLE | (pot_diff < 0?PATH_DOWN:PATH_UP),AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-            UiInitRxParms(ts.dmod_mode);
+            UiDriverUpdateDisplayAfterParamChange();
         }
         else  if(ts.menu_mode)
         {
@@ -5669,6 +5666,31 @@ void UiDriver_DisplayFilter()
 
     UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr, font_clr,false);
 }
+
+bool RadioManagementLSBActive(uint16_t dmod_mode)
+{
+    bool    is_lsb;
+
+    switch(dmod_mode)        // determine if the receiver is set to LSB or USB or FM
+    {
+    case DEMOD_LSB:
+        is_lsb = true;      // it is LSB
+        break;
+    case DEMOD_CW:
+        is_lsb = ts.cw_lsb; // is this USB RX mode?  (LSB of mode byte was zero)
+        break;
+    case DEMOD_DIGI:
+        is_lsb = ts.digi_lsb;
+        break;
+    case DEMOD_USB:
+    default:
+        is_lsb = false;     // it is USB
+        break;
+    }
+
+    return is_lsb;
+}
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -5683,7 +5705,6 @@ void UiDriverDisplayFilterBW()
 {
     float	width, offset, calc;
     int	lpos;
-    bool	is_lsb;
     uint32_t clr;
 
     if(ts.menu_mode)	// bail out if in menu mode
@@ -5701,23 +5722,6 @@ void UiDriverDisplayFilterBW()
     if (offset == 0)
     {
         offset = width/2;
-    }
-
-    switch(ts.dmod_mode)	 	// determine if the receiver is set to LSB or USB or FM
-    {
-    case DEMOD_LSB:
-        is_lsb = true;		// it is LSB
-        break;
-    case DEMOD_CW:
-        is_lsb = ts.cw_lsb;	// is this USB RX mode?  (LSB of mode byte was zero)
-        break;
-    case DEMOD_DIGI:
-        is_lsb = ts.digi_lsb;
-        break;
-    case DEMOD_USB:
-    default:
-        is_lsb = false;		// it is USB
-        break;
     }
 
     calc = IQ_SAMPLE_RATE/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
@@ -5739,7 +5743,7 @@ void UiDriverDisplayFilterBW()
         lpos -= width;					// line starts "width" below center
         width *= 2;						// the width is double in AM & SAM, above and below center
     }
-    else if(is_lsb)	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
+    else if(RadioManagementLSBActive(ts.dmod_mode))	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
     {
         lpos -= (offset + (width/2));	// if LSB it will be below zero Hz
     }

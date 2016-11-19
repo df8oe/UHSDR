@@ -2828,8 +2828,17 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         case DEMOD_FM:
             audio_demod_fm(blockSize);
             break;
-        case DEMOD_USB:
         case DEMOD_DIGI:
+            if (ts.digi_lsb)
+            {
+                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+            }
+            else
+            {
+                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+            }
+            break;
+        case DEMOD_USB:
         default:
             arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
             break;
