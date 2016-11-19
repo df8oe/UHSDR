@@ -7134,7 +7134,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
     // Show fourth line
     info_out = UiMenu_GetSystemInfo(&clr,INFO_BUILD);
-    snprintf(tx,100,"Build on %s CEST",info_out);
+    snprintf(tx,100,"Build on %s CET",info_out);
     UiLcdHy28_PrintTextCentered(0,100,320,tx,Yellow,Black,0);
 
     ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode

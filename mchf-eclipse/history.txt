@@ -12,8 +12,13 @@
 #########################################################################
 #########################################################################
 
+20161115 [DF8OE]
+- minor bugfixes
+- implementation of touchscreen for 3.2" LCDs
+- implementation of freeDV
 
-2016mmdd [DF8OE]
+
+20160912 [DF8OE]
 - implemented keyer mode "ULTIMATIC"
 
 
