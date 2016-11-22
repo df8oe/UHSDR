@@ -1453,14 +1453,16 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
 static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
-    static int16_t outbuff_count = 0;
+    static int16_t outbuff_count = 0;  //set to -4?
     static int16_t trans_count_in = 0;
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_Audio_Buffer* out_buffer = NULL;
-    static int16_t modulus_NF = 0, modulus_MOD = 0;
+    static int16_t modulus_NF = 0, modulus_MOD = 0, mod_count=0;
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
-    // static float32_t sample_delta=0;
-    // static float32_t last_sample=0;
+
+
+    static float32_t History[3]={0.0,0.0,0.0};
+
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
 
@@ -1527,9 +1529,10 @@ if (ts.filter_path != 65){   // just for testing, when Filter #65 (10kHz LPF) is
         // we wait for availability of at least 2 buffers
         // so that in theory we have uninterrupt flow of audio
         // albeit with a delay of 80ms
-        if (out_buffer == NULL && fdv_audio_has_data() > 1) {
+        if (out_buffer == NULL && fdv_audio_has_data() > 1)
+          {
             fdv_audio_buffer_peek(&out_buffer);
-        }
+          }
 
         if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
         {
@@ -1542,6 +1545,9 @@ if (ts.filter_path != 65){   // just for testing, when Filter #65 (10kHz LPF) is
             // filtering, the filter does not know that and multiplies with zero 5 out of six times --> very inefficient)
             // BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
             // block size (which is 64 in our case --> 64 / 6 = non-integer!)
+
+
+#if 0	    // activate IIR FIlter
 
             arm_fill_f32(0,adb.b_buffer,blockSize);
 
@@ -1588,6 +1594,7 @@ if (ts.filter_path != 65){   // just for testing, when Filter #65 (10kHz LPF) is
 
             //AudioDriver_tx_filter_audio(true,false, adb.b_buffer,adb.b_buffer, blockSize);
 
+
         }
         else
         {
@@ -1608,6 +1615,89 @@ if (ts.filter_path != 65){   // just for testing, when Filter #65 (10kHz LPF) is
             // produces silence until 2 out buffers are available
 
         }
+#endif
+
+
+
+#if 1 // activate FIR Filter
+
+      for (int j=0; j < blockSize; j++) //upsampling with integrated interpolation-filter for M=6
+					// avoiding multiplications by zero within the arm_iir_filter
+	{
+	  if (outbuff_count >=0)  // here we are not at an block-overlapping region
+	  {
+	      adb.b_buffer[j]=
+		  FreeDV_FIR_interpolate[5-mod_count]*out_buffer->samples[outbuff_count] +
+		  FreeDV_FIR_interpolate[11-mod_count]*out_buffer->samples[outbuff_count+1]+
+		  FreeDV_FIR_interpolate[17-mod_count]*out_buffer->samples[outbuff_count+2]+
+		  FreeDV_FIR_interpolate[23-mod_count]*out_buffer->samples[outbuff_count+3];
+	      // here we are actually calculation the interpolation for the current "up"-sample
+	  }
+	  else
+	    {
+		    //we are at an overlapping region and have to take care of history
+		if (outbuff_count == -3)
+		    {
+		     adb.b_buffer[j] =
+			 FreeDV_FIR_interpolate[5-mod_count] * History[0] +
+			 FreeDV_FIR_interpolate[11-mod_count] * History[1] +
+			 FreeDV_FIR_interpolate[17-mod_count] * History[2] +
+			 FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[0];
+		    }
+		  else
+		    {
+		      if (outbuff_count == -2)
+			{
+			  adb.b_buffer[j] =
+			      FreeDV_FIR_interpolate[5-mod_count] * History[1] +
+			      FreeDV_FIR_interpolate[11-mod_count] * History[2] +
+			      FreeDV_FIR_interpolate[17-mod_count] * out_buffer->samples[0] +
+			      FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[1];
+			}
+		      else
+			{
+			  adb.b_buffer[j] =
+			      FreeDV_FIR_interpolate[5-mod_count] * History[2] +
+			      FreeDV_FIR_interpolate[11-mod_count] * out_buffer->samples[0] +
+			      FreeDV_FIR_interpolate[17-mod_count] * out_buffer->samples[1] +
+			      FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[2];
+			}
+		    }
+	    }
+
+
+	  mod_count++;
+	  if (mod_count==6)
+	      {
+	      outbuff_count++;
+	      mod_count=0;
+	      }
+	}
+    }
+    else
+      {
+	profileEvent(FreeDVTXUnderrun);
+         // in case of underrun -> produce silence
+	arm_fill_f32(0,adb.b_buffer,blockSize);
+      }
+
+
+       if (outbuff_count >= (FDV_BUFFER_SIZE-3))//  -3???
+	 {
+	   outbuff_count=-3;// -3??
+
+	   History[0] = out_buffer->samples[FDV_BUFFER_SIZE-3]; // here we have to save historic samples
+	   History[1] = out_buffer->samples[FDV_BUFFER_SIZE-2]; // to calculate the interpolation in the
+	   History[2] = out_buffer->samples[FDV_BUFFER_SIZE-1]; // block overlapping region
+
+	   fdv_audio_buffer_remove(&out_buffer);
+	   out_buffer = NULL;
+	   fdv_audio_buffer_peek(&out_buffer);
+
+	 }
+
+#endif  //activate FIR Filter
+
     }
     return true;
 }
