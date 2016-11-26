@@ -124,24 +124,15 @@ void Codec_MicBoostCheck(uint8_t mode)
         // Set up microphone gain and adjust mic boost accordingly
         if(ts.tx_gain[TX_AUDIO_MIC] > 50)	 		// actively adjust microphone gain and microphone boost
         {
-            ts.mic_boost = 1;
-            // if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
-            {
-                // in transmit and in voice mode?
-                Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
-            }
+            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
             ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35)/3;			// above 50, rescale software amplification
         }
         else
         {
-            ts.mic_boost = 0;
-            // if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode != DEMOD_CW))
-            {
-                // in transmit and in voice mode?
-                Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
-            }
+            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
             ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
         }
+
         // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
         // Reg 06: Power Down Control (Clk off, Osc off, Mic On)
         if(ts.mic_bias)
@@ -203,14 +194,12 @@ void Codec_RX_TX(uint8_t mode)
     else		// It is transmit
     {
         Codec_Volume(0,mode);	// Mute sound
-        //
-        ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
-        //
-        if((ts.dmod_mode == DEMOD_CW)
-                || (ts.tune && ((ts.dmod_mode == DEMOD_CW) || !ts.iq_freq_mode))
-          )	 	// Turn sidetone on for CW or TUNE mode in CW mode
-        {
 
+        ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
+
+        if((ts.dmod_mode == DEMOD_CW) || (ts.tune && !ts.iq_freq_mode))
+        // Turn sidetone on for CW or TUNE mode without freq translation
+        {
             Codec_SidetoneSetgain(mode);	// set sidetone level
         }
         else	 	// Not CW or TUNE mode
@@ -395,7 +384,6 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     // Enable the CODEC_I2S peripheral clock
     RCC_APB1PeriphClockCmd(CODEC_I2S_CLK, ENABLE);
 
-
     // CODEC_I2S peripheral configuration for master TX
     SPI_I2S_DeInit(CODEC_I2S);
     I2S_InitStructure.I2S_AudioFreq = AudioFreq;
@@ -404,7 +392,6 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     I2S_InitStructure.I2S_CPOL = I2S_CPOL_Low;
     I2S_InitStructure.I2S_Mode = I2S_Mode_MasterTx;
     I2S_InitStructure.I2S_MCLKOutput = I2S_MCLKOutput_Disable;	// using MCO2
-
 
     // Initialise the I2S main channel for TX
     I2S_Init(CODEC_I2S, &I2S_InitStructure);
@@ -455,14 +442,12 @@ void Codec_GPIO_Init(void)
 void Codec_Line_Gain_Adj(uchar gain)
 {
     uint16_t l_gain;
-    //printf("codec line gain adjust = %d\n\r",gain);
 
     l_gain = (uint16_t)gain;
-    //
+
     // Use Reg 00: Left Line In, set MSB to adjust gain of both channels simultaneously
-    //
     l_gain |= 0x100;	// set MSB of control word for "LRINBOTH" flag
-    //
+
     Codec_WriteRegister(W8731_LEFT_LINE_IN,l_gain);
 }
 
@@ -470,23 +455,20 @@ bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)
 {
     if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
     {
-        if(ts.tx_audio_source != TX_AUDIO_MIC)      // yes - are we in LINE IN mode?
+        Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
+
+        if(ts.tx_audio_source == TX_AUDIO_MIC)  // we are in MIC IN mode
         {
-            Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
-        }
-        else        // we are in MIC IN mode
-        {
-            Codec_Line_Gain_Adj(0);         // momentarily mute MIC IN audio until we switch modes because we will blast any connected LINE IN source until we switch
             ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
             Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0016);    // Mute the microphone with the CODEC (this does so without a CLICK)
         }
-        //
-        if((ts.iq_freq_mode) && (!rx_muted))        // Is translate mode active and we have NOT already muted the audio?
+
+        if((ts.iq_freq_mode) && (rx_muted == false))        // Is translate mode active and we have NOT already muted the audio?
         {
             Codec_Volume(0,txrx_mode);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
-            rx_muted = 1;       // indicate that we've muted the audio so we don't do this every time through
+            rx_muted = true;       // indicate that we've muted the audio so we don't do this every time through
         }
-        //
+
         non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
     }
     return rx_muted;

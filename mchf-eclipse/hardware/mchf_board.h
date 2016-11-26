@@ -976,9 +976,6 @@ typedef struct TransceiverState
     uchar	tx_gain[TX_AUDIO_NUM];
     uchar	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
 
-    // Microphone gain boost of +20dB via Codec command (TX)
-    uchar	mic_boost;
-
     // Global tuning flag - in every demod mode
     uchar 	tune;
 
@@ -1023,7 +1020,6 @@ typedef struct TransceiverState
     //
 #define FREQ_STEP_SWAP_BTN	0xf0
     uchar	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
-    //
 
 #define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
 #define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
@@ -1205,8 +1201,6 @@ typedef struct TransceiverState
 	uint16_t ramsize; // in KB, this is used to distinguish  between 192 and 256 kB models.
 
 	uint8_t debug_tx_audio; // send tx audio via usb back to pc if value != 0;
-
-
 
 	// Freedv Test DL2FW
 	bool	FDV_TX_encode_ready;

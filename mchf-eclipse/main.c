@@ -282,7 +282,6 @@ void TransceiverStateInit(void)
 
     ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
     ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
-    ts.mic_boost		= 0;
     ts.tx_gain[TX_AUDIO_MIC]		= MIC_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_LINEIN_L]		= LINE_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_LINEIN_R]		= LINE_GAIN_DEFAULT;	// default line gain

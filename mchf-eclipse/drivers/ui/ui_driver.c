@@ -119,6 +119,8 @@ static void     UiDriver_CreateVoltageDisplay();
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriver_HandleLoTemperature();
 static void 	RadioManagement_HandlePttOnOff();
+static void     RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
+
 static void 	UiDriverInitMainFreqDisplay();
 
 static bool	    UiDriver_LoadSavedConfigurationAtStartup();
@@ -658,22 +660,6 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
     ts.refresh_freq_disp = 0;           // update ALL digits
 }
 
-void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
-{
-    // codec == 0 -> Analog Sound
-    // all other codecs -> digital codec
-    if (codec == 0)
-    {
-        ts.dvmode = false;
-    }
-    else
-    {
-        ts.dvmode = enableCodec;
-    }
-    ts.digital_mode = codec;
-}
-
-
 void UiDriver_HandleTouchScreen()
 {
     if (ts.show_tp_coordinates)					// show coordinates for coding purposes
@@ -871,6 +857,24 @@ void UiDriver_HandleTouchScreen()
 }
 
 
+
+
+
+
+static void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
+{
+    // codec == 0 -> Analog Sound
+    // all other codecs -> digital codec
+    if (codec == 0)
+    {
+        ts.dvmode = false;
+    }
+    else
+    {
+        ts.dvmode = enableCodec;
+    }
+    ts.digital_mode = codec;
+}
 
 
 
