@@ -119,6 +119,8 @@ static void     UiDriver_CreateVoltageDisplay();
 static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriver_HandleLoTemperature();
 static void 	RadioManagement_HandlePttOnOff();
+static void     RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
+
 static void 	UiDriverInitMainFreqDisplay();
 
 static bool	    UiDriver_LoadSavedConfigurationAtStartup();
@@ -859,7 +861,7 @@ void UiDriver_HandleTouchScreen()
 
 
 
-void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
+static void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 {
     // codec == 0 -> Analog Sound
     // all other codecs -> digital codec
