@@ -4130,8 +4130,28 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
         break;
     case MENU_DEBUG_TX_AUDIO:  // Step size button swap on/off
-            tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.debug_tx_audio,0,options,&clr);
+        tchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.stream_tx_audio,
+                0,
+                STREAM_TX_AUDIO_NUM-1,
+                STREAM_TX_AUDIO_OFF,
+                1);
+        switch(ts.stream_tx_audio)
+        {
+        case STREAM_TX_AUDIO_OFF:
+            txt_ptr = "     Off";
             break;
+        case STREAM_TX_AUDIO_SRC:
+            txt_ptr = "  Source";
+            break;
+        case STREAM_TX_AUDIO_FILT:
+            txt_ptr = "Filtered";
+            break;
+        case STREAM_TX_AUDIO_DIGIQ:
+            txt_ptr = "Final IQ";
+            break;
+        }
+        break;
+
     default:						// Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

@@ -1200,7 +1200,12 @@ typedef struct TransceiverState
 
 	uint16_t ramsize; // in KB, this is used to distinguish  between 192 and 256 kB models.
 
-	uint8_t debug_tx_audio; // send tx audio via usb back to pc if value != 0;
+	uint8_t stream_tx_audio; // send tx audio via usb back
+#define STREAM_TX_AUDIO_OFF     0  // send nothing
+#define STREAM_TX_AUDIO_SRC     1  // send source audio stream (from CODEC)
+#define STREAM_TX_AUDIO_FILT    2  // send processed audio stream (after filtering)
+#define STREAM_TX_AUDIO_DIGIQ   3  // send final IQ signal
+#define STREAM_TX_AUDIO_NUM   4  // how many choices
 
 	// Freedv Test DL2FW
 	bool	FDV_TX_encode_ready;
