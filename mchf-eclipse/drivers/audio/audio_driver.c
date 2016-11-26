@@ -3526,9 +3526,6 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     // shaved off a few bytes of code
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
-    const uint8_t tx_audio_sink   =  (ts.debug_tx_audio == true)?TX_AUDIO_DIGIQ:TX_AUDIO_LINEIN_L;
-    // we use TX_AUDIO_LINEIN_L as placeholder for no tx audio output on USB
-
     const uint8_t tune = ts.tune;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
 
@@ -3696,9 +3693,12 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
     }
-    if (tx_audio_sink == TX_AUDIO_DIGIQ)
-    {
 
+    switch (ts.stream_tx_audio)
+    {
+    case STREAM_TX_AUDIO_OFF:
+        break;
+    case STREAM_TX_AUDIO_DIGIQ:
         for(int i = 0; i < blockSize; i++)
         {
             //
@@ -3707,9 +3707,18 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             audio_in_put_buffer(dst[i].r);
             audio_in_put_buffer(dst[i].l);
         }
-    }
-    else if (tx_audio_sink == TX_AUDIO_DIG)
-    {
+        break;
+    case STREAM_TX_AUDIO_SRC:
+        for(int i = 0; i < blockSize; i++)
+        {
+            //
+            // 16 bit format - convert to float and increment
+            // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+            audio_in_put_buffer(src[i].r);
+            audio_in_put_buffer(src[i].l);
+        }
+        break;
+    case STREAM_TX_AUDIO_FILT:
         for(int i = 0; i < blockSize; i++)
         {
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIG
