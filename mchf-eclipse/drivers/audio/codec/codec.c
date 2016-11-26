@@ -124,16 +124,15 @@ void Codec_MicBoostCheck(uint8_t mode)
         // Set up microphone gain and adjust mic boost accordingly
         if(ts.tx_gain[TX_AUDIO_MIC] > 50)	 		// actively adjust microphone gain and microphone boost
         {
-            ts.mic_boost = 1;
             Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0015);	// mic boost on
             ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35)/3;			// above 50, rescale software amplification
         }
         else
         {
-            ts.mic_boost = 0;
             Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,0x0014);	// mic boost off
             ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
         }
+
         // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
         // Reg 06: Power Down Control (Clk off, Osc off, Mic On)
         if(ts.mic_bias)
@@ -385,7 +384,6 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     // Enable the CODEC_I2S peripheral clock
     RCC_APB1PeriphClockCmd(CODEC_I2S_CLK, ENABLE);
 
-
     // CODEC_I2S peripheral configuration for master TX
     SPI_I2S_DeInit(CODEC_I2S);
     I2S_InitStructure.I2S_AudioFreq = AudioFreq;
@@ -394,7 +392,6 @@ void Codec_AudioInterface_Init(uint32_t AudioFreq)
     I2S_InitStructure.I2S_CPOL = I2S_CPOL_Low;
     I2S_InitStructure.I2S_Mode = I2S_Mode_MasterTx;
     I2S_InitStructure.I2S_MCLKOutput = I2S_MCLKOutput_Disable;	// using MCO2
-
 
     // Initialise the I2S main channel for TX
     I2S_Init(CODEC_I2S, &I2S_InitStructure);
@@ -459,6 +456,7 @@ bool Codec_PrepareTx(bool rx_muted, uint8_t txrx_mode)
     if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
     {
         Codec_Line_Gain_Adj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
+
         if(ts.tx_audio_source == TX_AUDIO_MIC)  // we are in MIC IN mode
         {
             ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
