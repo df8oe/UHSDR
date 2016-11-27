@@ -818,6 +818,10 @@ void UiDriver_HandleTouchScreen()
             else
             {
                 ts.dvmode = false;
+                if (ts.dmod_mode == DEMOD_DIGI)
+                {
+                    RadioManagement_SetDemodMode(ts.digi_lsb?DEMOD_LSB:DEMOD_LSB);
+                }
             }
             RadioManagement_ChangeCodec(ts.digital_mode,ts.dvmode);
             UiDriverUpdateDisplayAfterParamChange();
