@@ -4398,6 +4398,12 @@ static bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         break;
     case DEMOD_DIGI:
         retval = (ts.demod_mode_disable & DEMOD_DIGI_DISABLE) == 0;      // is DIGI enabled?
+        if((ts.lsb_usb_auto_select) && retval == true)       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+        {
+            // TODO: this is only true for FreeDV, but since we have only FreeDV...
+            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == DEMOD_LSB;
+            // is this a voice mode, subject to "auto" LSB/USB select?
+        }
         break;
     case DEMOD_CW:
         retval = (ts.demod_mode_disable & DEMOD_CW_DISABLE) == 0;      // is CW enabled?
