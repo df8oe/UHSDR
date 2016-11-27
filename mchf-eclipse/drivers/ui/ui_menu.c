@@ -2851,7 +2851,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         }
         break;
     case MENU_RESTART_CODEC:
-        txt_ptr = "Do it!";
+        txt_ptr = " Do it!";
         clr = White;
         if(var>=1)
         {
