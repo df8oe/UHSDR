@@ -810,10 +810,18 @@ void UiDriver_HandleTouchScreen()
 
             if (ts.digital_mode>0)
             {
+
                 if (ts.dmod_mode != DEMOD_DIGI)
                 {
                     if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
                     {
+                        // this will switch to the corresponding sideband if we come from
+                        // SSB, otherwise the automatically selected default (AUTO LSB/USB ON) or the previously used
+                        // will be the selected one.
+                        if (ts.dmod_mode == DEMOD_USB || ts.dmod_mode == DEMOD_LSB)
+                        {
+                            ts.digi_lsb = RadioManagementLSBActive(ts.dmod_mode);
+                        }
                         RadioManagement_SetDemodMode(DEMOD_DIGI);
                     }
                 }
