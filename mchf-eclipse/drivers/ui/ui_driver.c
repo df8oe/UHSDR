@@ -120,6 +120,7 @@ static void 	UiDriverRefreshTemperatureDisplay(uchar enabled,int temp);
 static void 	UiDriver_HandleLoTemperature();
 static void 	RadioManagement_HandlePttOnOff();
 static void     RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
+static bool     RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 
 static void 	UiDriverInitMainFreqDisplay();
 
@@ -811,7 +812,10 @@ void UiDriver_HandleTouchScreen()
             {
                 if (ts.dmod_mode != DEMOD_DIGI)
                 {
-                    RadioManagement_SetDemodMode(DEMOD_DIGI);
+                    if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
+                    {
+                        RadioManagement_SetDemodMode(DEMOD_DIGI);
+                    }
                 }
                 ts.dvmode = true;
             }
