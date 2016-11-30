@@ -5491,6 +5491,9 @@ static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
     const char* txt;
     char  txt_buf[5];
 
+    bool gain_external_control = false;
+    // if true, gain is controlled externally and ENC3 encoder does not do anything.
+
     switch (ts.tx_audio_source)
     {
     case TX_AUDIO_MIC:
@@ -5504,15 +5507,24 @@ static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
         break;
     case TX_AUDIO_DIG:										// Line gain
         txt = "DIG";
+        gain_external_control = true;
         break;
     case TX_AUDIO_DIGIQ:
         txt = "DIQ";
+        gain_external_control = true;
         break;
     default:
         txt = "???";
     }
 
-    snprintf(txt_buf,5,"%2d",ts.tx_gain[ts.tx_audio_source]);
+    if (gain_external_control == true)
+    {
+        snprintf(txt_buf,5,"EXT");
+    }
+    else
+    {
+        snprintf(txt_buf,5,"%2d",ts.tx_gain[ts.tx_audio_source]);
+    }
 
     UiDriverEncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
