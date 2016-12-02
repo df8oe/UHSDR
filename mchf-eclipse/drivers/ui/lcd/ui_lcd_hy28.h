@@ -65,6 +65,9 @@
 #define	RX_Grey				RGB(0xb8,0xdb,0xa8)	// slightly green grey
 #define TX_Grey				RGB(0xe8,0xad,0xa0)	// slightly red(ish) grey (more magenta, actually...)
 
+#define SMALL_FONT_WIDTH            8
+#define LARGE_FONT_WIDTH            16
+
 
 #define LCD_DIR_HORIZONTAL	0x0000
 #define LCD_DIR_VERTICAL	0x0001

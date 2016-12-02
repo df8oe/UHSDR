@@ -68,7 +68,7 @@ static void 	UiDriver_DisplayBand(uchar band);
 static void 	UiDriverCreateDesktop();
 static void 	UiDriverCreateFunctionButtons(bool full_repaint);
 static void     UiDriverDeleteSMeter();
-static void 	UiDriverCreateSMeter();
+static void 	UiDriverCreateMeters();
 static void 	UiDriverDrawSMeter(ushort color);
 //
 static void 	UiDriverUpdateTopMeterA(uchar val);
@@ -103,6 +103,7 @@ static void     UiDriver_DisplaySidetoneGain(bool encoder_active);
 static void     UiDriver_DisplayCmpLevel(bool encoder_active);
 static void     UiDriver_DisplayKeyerSpeed(bool encoder_active);
 static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
+static void     UiDriver_DisplayMemoryLabel();
 
 
 static void 	UiDriver_DisplayDigitalMode();
@@ -136,8 +137,6 @@ void UiDriver_HandleBandButtons(uint16_t button);
 // --------------------------------------------------------------------------
 // Controls positions and some related colours
 // --------------------
-#define SMALL_FONT_WIDTH            8
-#define LARGE_FONT_WIDTH            16
 
 // Frequency display control
 #define POS_TUNE_FREQ_X             116
@@ -172,12 +171,10 @@ void UiDriver_HandleBandButtons(uint16_t button);
 #define POS_DEMOD_MODE_MASK_W           41
 
 // Tunning step control
-#define POS_TUNE_STEP_X             (POS_TUNE_FREQ_X + 50)
-#define POS_TUNE_STEP_Y             (POS_TUNE_FREQ_Y - 20)
-#define POS_TUNE_STEP_MASK_X            (POS_TUNE_STEP_X - 1)
-#define POS_TUNE_STEP_MASK_Y            (POS_TUNE_STEP_Y - 1)
-#define POS_TUNE_STEP_MASK_H            17
-#define POS_TUNE_STEP_MASK_W            49
+#define POS_TUNE_STEP_X             (POS_TUNE_FREQ_X + 45)
+#define POS_TUNE_STEP_Y             (POS_TUNE_FREQ_Y - 21)
+#define POS_TUNE_STEP_MASK_H            15
+#define POS_TUNE_STEP_MASK_W            (SMALL_FONT_WIDTH*7)
 
 #define POS_RADIO_MODE_X            4
 #define POS_RADIO_MODE_Y            5
@@ -675,7 +672,7 @@ void UiDriver_HandleTouchScreen()
         {
             incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
             UiDriverDeleteSMeter();
-            UiDriverCreateSMeter();	// redraw meter
+            UiDriverCreateMeters();	// redraw meter
         }
         if(check_tp_coordinates(10,28,27,31))			// wf/scope bar left part
         {
@@ -1805,7 +1802,7 @@ void ui_driver_init()
 
 
     df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
-    df.tune_old = df.tune_new;
+    df.tune_old = 0;
 
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
 
@@ -2194,7 +2191,7 @@ static void UiDriverProcessKeyboard()
                     incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
 
                     UiDriverDeleteSMeter();
-                    UiDriverCreateSMeter();	// redraw meter
+                    UiDriverCreateMeters();	// redraw meter
                 }
                 break;
             case BUTTON_F3_PRESSED:	// Press-and-hold button F3
@@ -2457,6 +2454,8 @@ void UiDriverUpdateDisplayAfterParamChange()
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
     UiDriverShowMode();
+
+    UiDriver_DisplayMemoryLabel();
 
     UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
     UiDriverDisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
@@ -2828,7 +2827,7 @@ void UiDriverShowStep(ulong step)
     }
 
     // Blank old step size
-    UiLcdHy28_DrawFullRect(POS_TUNE_STEP_MASK_X,POS_TUNE_STEP_MASK_Y,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,Black);
+    // UiLcdHy28_DrawFullRect(POS_TUNE_STEP_X,POS_TUNE_STEP_Y-1,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,stepsize_background);
 
     {
         char step_name[10];
@@ -2846,7 +2845,7 @@ void UiDriverShowStep(ulong step)
         const char* stepUnitPrefix[] = { "","k","M","G","T"};
         snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((pow10/3)*3)), stepUnitPrefix[pow10/3]);
 
-        UiLcdHy28_PrintTextRight((POS_TUNE_STEP_X + SMALL_FONT_WIDTH*6),POS_TUNE_STEP_Y,step_name,color,stepsize_background,0);
+        UiLcdHy28_PrintTextCentered(POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,step_name,color,stepsize_background,0);
     }
     //
     if((ts.freq_step_config & 0x0f) && line_loc > 0)	 		// is frequency step marker line enabled?
@@ -2891,6 +2890,18 @@ const BandGenInfo bandGenInfo[] =
     {26965000, 27405000, "11m" },
     { 0,  0,             "Gen" }
 };
+
+//*----------------------------------------------------------------------------
+static void UiDriver_DisplayMemoryLabel()
+{
+     if (ts.band < MAX_BAND_NUM)
+    {
+        char txt[12];
+        uint32_t col = White;
+        snprintf(txt,12,"BND%s",bandInfo[ts.band].name);
+        UiLcdHy28_PrintText(161+(SMALL_FONT_WIDTH * 11)+4,  64,txt,col,Black,0);
+    }
+ }
 
 
 //*----------------------------------------------------------------------------
@@ -3010,7 +3021,7 @@ static void UiDriverCreateDesktop()
     UiDriverCreateFunctionButtons(true);
 
     // S-meter
-    UiDriverCreateSMeter();
+    UiDriverCreateMeters();
 
     // Spectrum scope
     UiSpectrumInitSpectrumDisplay();
@@ -3250,7 +3261,7 @@ static void UiDriver_DrawSMeterLabels()
 }
 
 
-static void UiDriverCreateSMeter()
+static void UiDriverCreateMeters()
 {
     uchar 	i;
     char	num[20];
@@ -5451,7 +5462,7 @@ static void UiDriver_DisplayPowerLevel()
         break;
     }
     // Draw top line
-    UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),POS_DEMOD_MODE_MASK_W,LCD_DIR_HORIZONTAL,Blue);
+    // UiLcdHy28_DrawStraightLine(POS_PW_IND_X,(POS_PW_IND_Y - 1),POS_DEMOD_MODE_MASK_W,LCD_DIR_HORIZONTAL,Blue);
     UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),POS_DEMOD_MODE_MASK_W,txt,color,Blue,0);
 }
 
@@ -5921,7 +5932,7 @@ static void UiDriverHandleSmeter()
         ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
 
         //
-        if (ts.s_meter == 0) // oldschool (os) S-meter scheme
+        if (ts.s_meter == DISPLAY_S_METER_STD) // oldschool (os) S-meter scheme
         {
             sm.gain_calc = ads.agc_val;		// get AGC loop gain setting
             sm.gain_calc /= AGC_GAIN_CAL;	// divide by AGC gain calibration factor
@@ -5930,7 +5941,7 @@ static void UiDriverHandleSmeter()
             //
             sm.gain_calc /= ads.codec_gain_calc;	// divide by known A/D gain setting
         }
-        else if (ts.s_meter == 1) // based on dBm calculation
+        else if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
         {
             sm.gain_calc = sm.dbm;
         }

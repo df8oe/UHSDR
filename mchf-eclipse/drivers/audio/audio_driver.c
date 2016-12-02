@@ -410,18 +410,17 @@ arm_iir_lattice_instance_f32	IIR_FreeDV_RX_Filter;  //DL2FW: temporary installed
 float32_t		iir_FreeDV_RX_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 
 // S meter public
-__IO	SMeter					sm;
+SMeter					sm;
 
 // Keypad driver publics
 extern __IO	KeypadState				ks;
-//
 
 // ATTENTION: These data structures have been placed in CCM Memory (64k)
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
-__IO AudioDriverState   __attribute__ ((section (".ccm")))  ads;
-AudioDriverBuffer   __attribute__ ((section (".ccm")))  adb;
-LMSData                 __attribute__ ((section (".ccm"))) lmsData;
+AudioDriverState   __attribute__ ((section (".ccm"))) ads;
+AudioDriverBuffer  __attribute__ ((section (".ccm"))) adb;
+LMSData            __attribute__ ((section (".ccm"))) lmsData;
 
 #ifdef USE_SNAP
 SnapCarrier   sc;
