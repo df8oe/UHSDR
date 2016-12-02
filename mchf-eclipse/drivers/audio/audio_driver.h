@@ -564,8 +564,9 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 #endif
 
 // Public Audio
-extern __IO		AudioDriverState	ads;
-extern __IO     SMeter              sm;
+extern AudioDriverState	ads;
+extern SMeter           sm;
+
 // change this to 2048 (=1024 tap FFT), if problems with spectrum display with 7k5 SAM mode persist!
 #define FFT_IQ_BUFF_LEN2 2048
 //#define FFT_IQ_BUFF_LEN2 4096 // = 2048 tap FFT !!! this is very very accurate
@@ -582,8 +583,8 @@ typedef struct SnapCarrier
 	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
 
     // Samples buffer
-    //
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
+
 //    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN2];
     // Current data ptr
     ulong   samp_ptr;

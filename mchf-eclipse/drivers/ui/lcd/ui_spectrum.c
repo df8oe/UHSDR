@@ -1711,219 +1711,216 @@ static void UiSpectrum_FrequencyBarText()
 }
 
 
-static void calculate_dBm(void)
+static void calculate_dBm()
 {
-        //###########################################################################################################################################
-        //###########################################################################################################################################
-        // dBm/Hz-display DD4WH June, 9th 2016
-        // this will be renewed every 20ms
-        // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
-        // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
-        // so the additional processor load and additional RAM usage should be close to zero
-		// this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
-        //
+    //###########################################################################################################################################
+    //###########################################################################################################################################
+    // dBm/Hz-display DD4WH June, 9th 2016
+    // this will be renewed every 200ms
+    // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
+    // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
+    // so the additional processor load and additional RAM usage should be close to zero
+    // this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
+    //
 
-		// FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
+    // FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
 
 
-        if(ts.sysclock > ts.dBm_count + 19 && ts.txrx_mode == TRX_MODE_RX && (ts.s_meter == 1 || ts.s_meter == 2 || ts.display_dbm != 0))
+    if(ts.sysclock > ts.dBm_count + 19)
+    {
+        if( ts.txrx_mode == TRX_MODE_RX && (ts.display_dbm != DISPLAY_S_METER_STD ))
         {
-        char txt[12];
-        ulong i;
-        float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
-        float32_t cons = -225; //- 227.0;
-        float32_t  Lbin, Ubin;
-        float32_t bw_LSB = 0.0;
-        float32_t bw_USB = 0.0;
-        float64_t sum_db = 0.0;
-        int posbin = 0;
-        float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
-        float32_t width;
+            char txt[12];
 
-        float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / buff_len);
-        // width of a 256 tap FFT bin = 187.5Hz
-        // we have to take into account the magnify mode
-        // --> recalculation of bin_BW
-        bin_BW = bin_BW / (1 << sd.magnify); // correct bin bandwidth is determined by the Zoom FFT display setting
+            float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
+            float32_t cons = -225; //- 227.0;
+            float32_t  Lbin, Ubin;
+            float32_t bw_LSB = 0.0;
+            float32_t bw_USB = 0.0;
+            float64_t sum_db = 0.0;
+            int posbin = 0;
+            float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
+            float32_t width;
 
-        int buff_len_int = FFT_IQ_BUFF_LEN;
+            float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / buff_len);
+            // width of a 256 tap FFT bin = 187.5Hz
+            // we have to take into account the magnify mode
+            // --> recalculation of bin_BW
+            bin_BW = bin_BW / (1 << sd.magnify); // correct bin bandwidth is determined by the Zoom FFT display setting
 
-        //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
+            int buff_len_int = FFT_IQ_BUFF_LEN;
 
-        if(!ts.iq_freq_mode)	 	// frequency translation off, IF = 0 Hz
-      	  {
-          posbin = buff_len_int / 4; // right in the middle!
-      	  } // frequency translation ON
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-      	  {
-          posbin = (buff_len_int / 4) - (buff_len_int / 16);
-      	  }
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-      	  {
-          posbin = (buff_len_int / 4) + (buff_len_int / 16);
-      	  }
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-      	  {
-          posbin = (buff_len_int / 4) - (buff_len_int / 8);
-      	  }
-        else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-      	  {
-          posbin = (buff_len_int / 4) + (buff_len_int / 8);
-      	  }
+            //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
 
-        if(sd.magnify != 0)
-        	// in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
-        {
-        	posbin = buff_len_int / 4;
-        }
+            // frequency translation off, IF = 0 Hz OR
+            // in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
 
-        width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-
-        //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
-        //	= determine bandwith separately for lower and upper sideband
-
-        switch(ts.dmod_mode)
-        {
-        case DEMOD_LSB:
-            bw_USB = 0.0;
-            bw_LSB = width;
-            break;
-        case DEMOD_USB:
-            bw_LSB = 0.0;
-            bw_USB = width;
-            break;
-        case DEMOD_CW:
-            if(ts.cw_lsb)
+            if(!ts.iq_freq_mode || sd.magnify != 0)
             {
+                posbin = buff_len_int / 4; // right in the middle!
+            } // frequency translation ON
+            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+            {
+                posbin = (buff_len_int / 4) - (buff_len_int / 16);
+            }
+            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+            {
+                posbin = (buff_len_int / 4) + (buff_len_int / 16);
+            }
+            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+            {
+                posbin = (buff_len_int / 4) - (buff_len_int / 8);
+            }
+            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+            {
+                posbin = (buff_len_int / 4) + (buff_len_int / 8);
+            }
+
+            width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+
+            //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
+            //	= determine bandwith separately for lower and upper sideband
+
+            switch(ts.dmod_mode)
+            {
+            case DEMOD_LSB:
                 bw_USB = 0.0;
                 bw_LSB = width;
+                break;
+            case DEMOD_USB:
+                bw_LSB = 0.0;
+                bw_USB = width;
+                break;
+            case DEMOD_CW:
+                if(ts.cw_lsb)
+                {
+                    bw_USB = 0.0;
+                    bw_LSB = width;
+                }
+                else
+                {
+                    bw_LSB = 0.0;
+                    bw_USB = width;
+                }
+                break;
+            case DEMOD_DIGI:
+                if(ts.digi_lsb == true)
+                {
+                    bw_USB = 0.0;
+                    bw_LSB = width;
+                }
+                else
+                {
+                    bw_LSB = 0.0;
+                    bw_USB = width;
+                }
+                break;
+            default:
+                bw_LSB = width;
+                bw_USB = width;
+            }
+            // calculate upper and lower limit for determination of signal strength
+            // = filter passband is between the lower bin Lbin and the upper bin Ubin
+            Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+            Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+
+            // take care of filter bandwidths that are larger than the displayed FFT bins
+            if(Lbin < 0)
+            {
+                Lbin = 0;
+            }
+            if (Ubin > 255)
+            {
+                Ubin = 255;
+            }
+
+            for(uint32_t i = 0; i < (buff_len_int/2); i++)
+            {
+                if(i < (buff_len_int/4))	 		// build left half of magnitude data
+                {
+                    sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                }
+                else	 							// build right half of magnitude data
+                {
+                    sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                }
+            }
+
+            // determine the sum of all the bin values in the passband
+            for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+            {
+                sum_db = sum_db + sd.FFT_Samples[c];
+            }
+
+            if (sum_db > 0)
+            {
+                sm.dbm = slope * log10 (sum_db) + cons;
+                sm.dbmhz = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
             }
             else
             {
-                bw_LSB = 0.0;
-                bw_USB = width;
+                sm.dbm = -145.0;
+                sm.dbmhz = -145.0;
             }
-            break;
-        case DEMOD_DIGI:
-            if(ts.digi_lsb == true)
-            {
-                bw_USB = 0.0;
-                bw_LSB = width;
+
+            // lowpass IIR filter
+            // Wheatley 2011: two averagers with two time constants
+            // IIR filter with one element analog to 1st order RC filter
+            // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
+            // whether the signal is increasing (attack) or decreasing (decay)
+            // m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
+            // Tau = 10ms = 0.01s attack time
+            // m_DecayAlpha = 0.0392; // 500ms decay time
+            //
+            m_AttackAvedbm = (1.0 - m_AttackAlpha) * m_AttackAvedbm + m_AttackAlpha * sm.dbm;
+            m_DecayAvedbm = (1.0 - m_DecayAlpha) * m_DecayAvedbm + m_DecayAlpha * sm.dbm;
+            m_AttackAvedbmhz = (1.0 - m_AttackAlpha) * m_AttackAvedbmhz + m_AttackAlpha * sm.dbmhz;
+            m_DecayAvedbmhz = (1.0 - m_DecayAlpha) * m_DecayAvedbmhz + m_DecayAlpha * sm.dbmhz;
+
+            if (m_AttackAvedbm > m_DecayAvedbm)
+            { // if attack average is larger then it must be an increasing signal
+                m_AverageMagdbm = m_AttackAvedbm; // use attack average value for output
+                m_DecayAvedbm = m_AttackAvedbm; // set decay average to attack average value for next time
             }
             else
-            {
-                bw_LSB = 0.0;
-                bw_USB = width;
+            { // signal is decreasing, so use decay average value
+                m_AverageMagdbm = m_DecayAvedbm;
             }
-            break;
-        default:
-            bw_LSB = width;
-            bw_USB = width;
-        }
-        // calculate upper and lower limit for determination of signal strength
-        // = filter passband is between the lower bin Lbin and the upper bin Ubin
-        Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-        Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
-        // take care of filter bandwidths that are larger than the displayed FFT bins
-        if(Lbin < 0)
-        {
-        	Lbin = 0;
-        }
-        if (Ubin > 255)
-        {
-        	Ubin = 255;
-        }
-
-        i=0;
-        for(i = 0; i < (buff_len_int/2); i++)
-      	  {
-          if(i < (buff_len_int/4))	 		// build left half of magnitude data
-            {
-            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+            if (m_AttackAvedbmhz > m_DecayAvedbmhz)
+            { // if attack average is larger then it must be an increasing signal
+                m_AverageMagdbmhz = m_AttackAvedbmhz; // use attack average value for output
+                m_DecayAvedbmhz = m_AttackAvedbmhz; // set decay average to attack average value for next time
             }
-          else	 							// build right half of magnitude data
-            {
-            sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+            else
+            { // signal is decreasing, so use decay average value
+                m_AverageMagdbmhz = m_DecayAvedbmhz;
             }
-      	  }
 
-          // determine the sum of all the bin values in the passband
-        int c;
-        for (c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
-          {
-          sum_db = sum_db + sd.FFT_Samples[c];
-          }
+            //        long dbm_Hz = (long) m_AverageMag;
+            sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
+            sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
 
-        if (sum_db > 0)
-        {
-    		sm.dbm = slope * log10 (sum_db) + cons;
-    		sm.dbmhz = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
-    	}
-        else
-        {
-        	sm.dbm = -145.0;
-        	sm.dbmhz = -145.0;
-        }
+            // TODO: Move to UI Driver
+            if (ts.display_dbm == DISPLAY_S_METER_DBM)
+            {
+                snprintf(txt,12,"%4lddBm   ", (long)m_AverageMagdbm);
+            }
+            else if (ts.display_dbm == DISPLAY_S_METER_DBMHZ)
+            {
+                snprintf(txt,12,"%4lddBm/Hz", (long)m_AverageMagdbmhz);
+            }
+            UiLcdHy28_PrintTextCentered(161,64,SMALL_FONT_WIDTH * 11,txt,White,Blue,0);
 
-        // lowpass IIR filter
-        // Wheatley 2011: two averagers with two time constants
-        // IIR filter with one element analog to 1st order RC filter
-        // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
-        // whether the signal is increasing (attack) or decreasing (decay)
-        // m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
-		// Tau = 10ms = 0.01s attack time
-        // m_DecayAlpha = 0.0392; // 500ms decay time
-        //
-        m_AttackAvedbm = (1.0 - m_AttackAlpha) * m_AttackAvedbm + m_AttackAlpha * sm.dbm;
-        m_DecayAvedbm = (1.0 - m_DecayAlpha) * m_DecayAvedbm + m_DecayAlpha * sm.dbm;
-        m_AttackAvedbmhz = (1.0 - m_AttackAlpha) * m_AttackAvedbmhz + m_AttackAlpha * sm.dbmhz;
-        m_DecayAvedbmhz = (1.0 - m_DecayAlpha) * m_DecayAvedbmhz + m_DecayAlpha * sm.dbmhz;
-
-        if (m_AttackAvedbm > m_DecayAvedbm)
-        { // if attack average is larger then it must be an increasing signal
-        	m_AverageMagdbm = m_AttackAvedbm; // use attack average value for output
-        	m_DecayAvedbm = m_AttackAvedbm; // set decay average to attack average value for next time
-        }
-        else
-        { // signal is decreasing, so use decay average value
-        	m_AverageMagdbm = m_DecayAvedbm;
-        }
-
-        if (m_AttackAvedbmhz > m_DecayAvedbmhz)
-        { // if attack average is larger then it must be an increasing signal
-        	m_AverageMagdbmhz = m_AttackAvedbmhz; // use attack average value for output
-        	m_DecayAvedbmhz = m_AttackAvedbmhz; // set decay average to attack average value for next time
-        }
-        else
-        { // signal is decreasing, so use decay average value
-        	m_AverageMagdbmhz = m_DecayAvedbmhz;
-        }
-
-//        long dbm_Hz = (long) m_AverageMag;
-        sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
-        sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
-
-        if (ts.display_dbm == 1)
-        {
-            snprintf(txt,12,"%4ld dBm   ", (long)m_AverageMagdbm);
-            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
-        }
-        else if (ts.display_dbm == 2)
-        {
-            snprintf(txt,12,"%4ld dBm/Hz", (long)m_AverageMagdbmhz);
-            UiLcdHy28_PrintTextCentered(162,64,41,txt,White,Blue,0);
-        }
-
-//            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
+            //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
             // TODO: make coordinates constant variables
-
-        ts.dBm_count = ts.sysclock;				// reset timer
         }
-        if (ts.display_dbm == 0)
+        else if (ts.display_dbm == DISPLAY_S_METER_STD)
         {
-        	UiLcdHy28_DrawFullRect(162, 63, 15, 144 , Black);
+                UiLcdHy28_DrawFullRect(162, 64, 15, SMALL_FONT_WIDTH * 10 , Black);
         }
+        ts.dBm_count = ts.sysclock;				// reset timer
+    }
 }
 
 
