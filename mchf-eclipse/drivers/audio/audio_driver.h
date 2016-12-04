@@ -564,8 +564,8 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 #endif
 
 // Public Audio
-extern AudioDriverState	ads;
-extern SMeter           sm;
+extern __IO AudioDriverState	ads;
+extern __IO SMeter              sm;
 
 // change this to 2048 (=1024 tap FFT), if problems with spectrum display with 7k5 SAM mode persist!
 #define FFT_IQ_BUFF_LEN2 2048

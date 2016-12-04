@@ -1728,7 +1728,7 @@ static void calculate_dBm()
 
     if(ts.sysclock > ts.dBm_count + 19)
     {
-        if( ts.txrx_mode == TRX_MODE_RX && (ts.display_dbm != DISPLAY_S_METER_STD ))
+        if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
             char txt[12];
 
@@ -1834,7 +1834,7 @@ static void calculate_dBm()
                 Ubin = 255;
             }
 
-            for(uint32_t i = 0; i < (buff_len_int/2); i++)
+            for(int32_t i = 0; i < (buff_len_int/2); i++)
             {
                 if(i < (buff_len_int/4))	 		// build left half of magnitude data
                 {
