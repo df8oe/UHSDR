@@ -1797,7 +1797,10 @@ static void audio_demod_fm(int16_t blockSize)
     ulong i;
     bool tone_det_enabled;
     static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;		// used in FM detection and low/high pass processing
-    static float q0 = 0, q1 = 0, q2 = 0, r0 = 0, r1 = 0, r2 = 0, s0 = 0, s1 = 0, s2 = 0;		// Goertzel values
+    static float gr[3] = {0, 0, 0 };
+    static float gs[3] = {0, 0, 0 };
+    static float gq[3] = {0, 0, 0 }; // Goertzel values
+
     static float subdet = 0;				// used for tone detection
     static uchar	count = 0, tdet = 0;	// used for squelch processing and debouncing tone detection, respectively
     static ulong	gcount = 0;				// used for averaging in tone detection
@@ -1993,47 +1996,47 @@ static void audio_demod_fm(int16_t blockSize)
         {
 
             // Detect above target frequency
-            r0 = ads.fm_goertzel_high_r * r1 - r2 + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-            r2 = r1;
-            r1 = r0;
+            gr[0] = ads.fm_goertzel[FM_HIGH].r * gr[1] - gr[2] + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+            gr[2] = gr[1];
+            gr[1] = gr[0];
 
             // Detect energy below target frequency
-            s0 = ads.fm_goertzel_low_r * s1 - s2 + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-            s2 = s1;
-            s1 = s0;
+            gs[0] = ads.fm_goertzel[FM_LOW].r * gs[1] - gs[2] + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+            gs[2] = gs[1];
+            gs[1] = gs[0];
 
             // Detect on-frequency energy
-            q0 = ads.fm_goertzel_ctr_r * q1 - q2 + adb.c_buffer[i];
-            q2 = q1;
-            q1 = q0;
+            gq[0] = ads.fm_goertzel[FM_CTR].r * gq[1] - gq[2] + adb.c_buffer[i];
+            gq[2] = gq[1];
+            gq[1] = gq[0];
         }
 
         if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	 		// have we accumulated enough samples to do the final energy calculation?
         {
-            a = (r1-(r2 * ads.fm_goertzel_high_cos));								// yes - calculate energy at frequency above center and reset detection
-            b = (r2 * ads.fm_goertzel_high_sin);
+            a = (gr[1]-(gr[2] * ads.fm_goertzel[FM_HIGH].cos));								// yes - calculate energy at frequency above center and reset detection
+            b = (gr[2] * ads.fm_goertzel[FM_HIGH].sin);
             r = sqrtf(a*a + b*b);
             s = r;
-            r0 = 0;
-            r1 = 0;
-            r2 = 0;
+            gr[0] = 0;
+            gr[1] = 0;
+            gr[2] = 0;
 
-            a = (s1-(s2 * ads.fm_goertzel_low_cos));								// yes - calculate energy at frequency below center and reset detection
-            b = (s2 * ads.fm_goertzel_low_sin);
+            a = (gs[1]-(gs[2] * ads.fm_goertzel[FM_LOW].cos));								// yes - calculate energy at frequency below center and reset detection
+            b = (gs[2] * ads.fm_goertzel[FM_LOW].sin);
             r = sqrtf(a*a + b*b);
             s += r;					// sum +/- energy levels:  s = "off frequency" energy reading
-            s0 = 0;
-            s1 = 0;
-            s2 = 0;
+            gs[0] = 0;
+            gs[1] = 0;
+            gs[2] = 0;
 
-            a = (q1-(q2 * ads.fm_goertzel_ctr_cos));								// yes - calculate on-frequency energy and reset detection
-            b = (q2 * ads.fm_goertzel_ctr_sin);
+            a = (gq[1]-(gq[2] * ads.fm_goertzel[FM_CTR].cos));								// yes - calculate on-frequency energy and reset detection
+            b = (gq[2] * ads.fm_goertzel[FM_CTR].sin);
             r = sqrtf(a*a + b*b);							// r contains "on-frequency" energy
             subdet = ((1 - FM_TONE_DETECT_ALPHA) *subdet) + (r/(s/2) * FM_TONE_DETECT_ALPHA);	// do IIR filtering of the ratio between on and off-frequency energy
-            q0 = 0;
-            q1 = 0;
-            q2 = 0;
-            //
+            gq[0] = 0;
+            gq[1] = 0;
+            gq[2] = 0;
+
             if(subdet > FM_SUBAUDIBLE_TONE_DET_THRESHOLD)	 	// is subaudible tone detector ratio above threshold?
             {
                 tdet++;		// yes - increment count			// yes - bump debounce count

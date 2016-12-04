@@ -746,17 +746,6 @@ static void UiSpectrum_InitSpectrumDisplay()
     sd.wfall_contrast = (float)ts.waterfall_contrast;		// calculate scaling for contrast
     sd.wfall_contrast /= 100;
 
-    // Init FFT structures
-//	a = arm_rfft_init_f32((arm_rfft_instance_f32 *)&sd.S,(arm_cfft_radix4_instance_f32 *)&sd.S_CFFT,FFT_IQ_BUFF_LEN,FFT_QUADRATURE_PROC,1);
-//	arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,FFT_IQ_BUFF_LEN);
-//	const static arm_cfft_instance_f32 *S;
-//	C = &arm_cfft_sR_f32_len256;
-
-//	if(a != ARM_MATH_SUCCESS)
-//	{
-//		return;
-//	}
-
     // Ready
     sd.enabled		= 1;
     sd.first_run 	= 2;
