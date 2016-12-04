@@ -404,7 +404,7 @@ void CatDriverFT817CheckAndExecute()
                         ts.cat_band_index = ts.band;
                     ts.cw_lsb = new_lsb;
                     RadioManagement_SetDemodMode(new_mode);
-                    UiDriverUpdateDisplayAfterParamChange();
+                    UiDriver_UpdateDisplayAfterParamChange();
                 }
             }
             break;

@@ -264,7 +264,7 @@ typedef struct SMeter
 #define	AM_SCALING		1.0		// was 2.0 // Amount of gain multiplication to apply to audio and AGC to make recovery equal to that of SSB
 #define	AM_AUDIO_SCALING	1.4	// was 1.4 // Additional correction factor applied to audio demodulation to make amplitude equal to that of SSB demodulation
 //
-#define	AGC_GAIN_CAL	155000//22440		// multiplier value (linear, not DB) to calibrate the S-Meter reading to the AGC value
+#define	AGC_GAIN_CAL	155000.0//22440		// multiplier value (linear, not DB) to calibrate the S-Meter reading to the AGC value
 //
 #define	AUTO_RFG_DECREASE_LOCKOUT	1
 #define	AUTO_RFG_INCREASE_TIMER		5//10

@@ -822,7 +822,7 @@ enum
     VFO_MAX
 };
 // Working register plus VFO A and VFO B registers.
-extern __IO BandRegs vfo[VFO_MAX];
+extern BandRegs vfo[VFO_MAX];
 
 
 // Transceiver state public structure

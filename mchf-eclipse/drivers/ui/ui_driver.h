@@ -353,15 +353,15 @@ typedef struct LoTcxo
 //
 // --------------------------------------------------------------------------
 // Exports
-void 	ui_driver_init(void);
-void 	ui_driver_thread(void);
+void 	UiDriver_Init(void);
+void 	UiDriver_MainHandler(void);
 
 void 	UiDriverLoadFilterValue(void);
 //
 void 	RadioManagement_ChangeBandFilter(uchar band);
 void 	UiDriver_DisplayFilter(void);
-void 	UiDriverCreateTemperatureDisplay(uchar enabled,uchar create);
-void 	UiDriverUpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
+void 	UiDriver_CreateTemperatureDisplay(uchar enabled,uchar create);
+void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void 	RadioManagement_SetBandPowerFactor(uchar band);
@@ -372,33 +372,33 @@ void 	RadioManagement_SetBandPowerFactor(uchar band);
 
 void    UiDriver_RefreshEncoderDisplay();
 
-void    UiDriverFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
+void    UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
 //
 //
-void 	UiDriverShowStep(ulong step);
+void 	UiDriver_ShowStep(ulong step);
 //
 bool 	RadioManagement_CalculateCWSidebandMode(void);
-void 	UiDriverDisplayFilterBW(void);
-void 	UiDriverShowMode(void);
+void 	UiDriver_DisplayFilterBW(void);
+void 	UiDriver_ShowMode(void);
 //
 void	UiDriver_LcdBlankingStartTimer(void);
-void	UiDriverShowDebugText(const char*);
-void 	UiDriverChangeTuningStep(uchar is_up);
+void	UiDriver_ShowDebugText(const char*);
+void 	UiDriver_ChangeTuningStep(uchar is_up);
 //
 void 	uiCodecMute(uchar val);
 
-void	UiDriverUpdateDisplayAfterParamChange();
+void	UiDriver_UpdateDisplayAfterParamChange();
 
 void    UiDriver_KeyTestScreen();
 void UiDriver_ShowStartUpScreen(ulong hold_time);
 
-bool	check_tp_coordinates(uint8_t,uint8_t,uint8_t,uint8_t);
+bool	UiDriver_CheckTouchCoordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
 void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
 uint8_t RadioManagement_GetBand(ulong freq);
-bool RadioManagementLSBActive(uint16_t dmod_mode);
+bool RadioManagement_LSBActive(uint16_t dmod_mode);
 
 
 
@@ -449,11 +449,11 @@ extern __IO KeypadState				ks;
 
 // ------------------------------------------------
 // SWR/Power meter
-extern __IO SWRMeter				swrm;
+extern SWRMeter				swrm;
 
 // ------------------------------------------------
 // Power supply meter
-extern __IO PowerMeter				pwmt;
+extern PowerMeter				pwmt;
 
 // ------------------------------------------------
 // LO Tcxo
