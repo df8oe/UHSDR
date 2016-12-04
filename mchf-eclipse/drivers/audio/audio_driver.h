@@ -160,7 +160,7 @@ typedef struct AudioDriverState
 
 } AudioDriverState;
 
-void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq);
+void AudioManagement_CalcIQPhaseAdjust(uint8_t txrx_mode, uint32_t freq);
 
 
 // S meter public

@@ -1074,8 +1074,16 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
             {
                 ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
             }
-            RadioManagement_SetHWFiltersForFrequency(ts.tune_freq/TUNE_MULT);  // check the filter status with the new frequency update
+
+            uint32_t tune_freq_real = ts.tune_freq/TUNE_MULT;
+            RadioManagement_SetHWFiltersForFrequency(tune_freq_real);  // check the filter status with the new frequency update
             // Inform Spectrum Display code that a frequency change has happened
+
+            AudioManagement_CalcRxIqGainAdj(tune_freq_real);
+            AudioManagement_CalcTxIqGainAdj(tune_freq_real);
+            AudioManagement_CalcIQPhaseAdjust(txrx_mode, tune_freq_real);
+
+
             sd.dial_moved = 1;
         }
         else
@@ -1525,9 +1533,6 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
     // Finally update public flag
     ts.dmod_mode = new_mode;
 
-    AudioManagement_CalcRxIqGainAdj();
-    AudioManagement_CalcTxIqGainAdj();
-
     if  (ads.af_disabled) { ads.af_disabled--; }
     if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
 
@@ -1901,9 +1906,6 @@ void UiDriver_Init()
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
 
     AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
-
-    AudioManagement_CalcRxIqGainAdj();      // Init RX IQ gain
-    AudioManagement_CalcTxIqGainAdj();      // Init TX IQ gain
 
     AudioFilter_InitRxHilbertFIR();
     AudioFilter_InitTxHilbertFIR();
@@ -5885,7 +5887,6 @@ void UiDriver_DisplayFilterBW()
 //*----------------------------------------------------------------------------
 static void UiDriver_HandleSMeter()
 {
-    uchar 	val;
     float 	rfg_calc;
     float gcalc;
     static bool 		clip_indicate = 0;
@@ -5948,7 +5949,7 @@ static void UiDriver_HandleSMeter()
         }
 
 
-        float *S_Meter_Cal_Ptr = ts.s_meter == DISPLAY_S_METER_STD?  S_Meter_Cal : S_Meter_Cal_dbm;
+        const float *S_Meter_Cal_Ptr = (ts.s_meter == DISPLAY_S_METER_STD)?  S_Meter_Cal : S_Meter_Cal_dbm;
 
         // find corresponding signal level
         for (

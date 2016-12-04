@@ -1456,7 +1456,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static int16_t trans_count_in = 0;
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_Audio_Buffer* out_buffer = NULL;
-    static int16_t modulus_NF = 0, modulus_MOD = 0, mod_count=0;
+    static int16_t modulus_NF = 0, mod_count=0;
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
 
 
@@ -2459,36 +2459,8 @@ static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, c
     arm_add_f32(dst, e3_buffer, dst, blockSize);
 }
 
-void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq)
-{
-    //
-    // the phase adjustment is done by mixing a little bit of I into Q or vice versa
-    // this is justified because the phase shift between two signals of equal frequency can
-    // be regulated by adjusting the amplitudes of the two signals!
-    int iq_phase_balance = 0;
-
-    switch(dmod_mode)
-    {
-    case DEMOD_USB:
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:ts.tx_iq_usb_phase_balance;
-        break;
-    case DEMOD_LSB:
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_lsb_phase_balance:ts.tx_iq_lsb_phase_balance;
-        break;
-    case DEMOD_AM:
-         iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_am_phase_balance:0;
-         break;
-    default:
-        // FM, SAM
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:0;
-        break;
-    }
-    ads.iq_phase_balance = ((float32_t)(iq_phase_balance))/SCALING_FACTOR_IQ_PHASE_ADJUST;
-}
-
 static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, const uint16_t blockSize)
 {
-    AudioDriver_CalcIQPhaseAdjust(dmod_mode, txrx_mode, ts.tune_freq);
 
     if (ads.iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {

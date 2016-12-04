@@ -133,7 +133,11 @@ void AudioManagement_CalcNB_AGC(void)
     ads.nb_agc_filt = 1 - ads.nb_sig_filt;          // calculate parameter for recyling "old" AGC value
 }
 //
-//
+
+static float AudioManagement_AdjustInFreqRange(float32_t adj_low, float32_t adj_high, float32_t freq)
+{
+    return (adj_high - adj_low) / (28100000.0 - 3600000.0) * (freq - 3600000.0) + adj_low;        // get current gain adjustment setting  USB and other modes
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcRxIqGainAdj
 //* Object              : Calculate RX IQ Gain adjustments
@@ -141,31 +145,17 @@ void AudioManagement_CalcNB_AGC(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void AudioManagement_CalcRxIqGainAdj(void)
-{ // please note that the RX adjustments for gain are negative
-	// and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
+void AudioManagement_CalcRxIqGainAdj(float freq)
+{
+    // please note that the RX adjustments for gain are negative
+    // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
+    float32_t adj_i = AudioManagement_AdjustInFreqRange(
+            -ts.rx_iq_lsb_gain_balance,
+            -ts.rx_iq_usb_gain_balance,
+            freq);
 
-    switch(ts.dmod_mode)
-    {
-    case DEMOD_FM:
-        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_fm_gain_balance;         // get current gain adjustment for FM
-    	break;
-    case DEMOD_AM:
-        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_am_gain_balance;         // get current gain adjustment for AM
-        break;
-    case DEMOD_LSB:
-        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_lsb_gain_balance;        // get current gain adjustment setting for LSB
-    	break;
-    case DEMOD_USB:
-        ts.rx_adj_gain_var_i = -(float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
-    	break;
-    default:
-    	ts.rx_adj_gain_var_i = -(float)ts.rx_iq_usb_gain_balance;        // get current gain adjustment setting  USB and other modes
-    	break;
-    }
 
-    //
-    ts.rx_adj_gain_var_i /= SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
+    ts.rx_adj_gain_var_i = adj_i / SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
     ts.rx_adj_gain_var_q = -ts.rx_adj_gain_var_i;               // get "invert" of it
     ts.rx_adj_gain_var_i += 1;      // offset it by one (e.g. 0 = unity)
     ts.rx_adj_gain_var_q += 1;
@@ -177,36 +167,39 @@ void AudioManagement_CalcRxIqGainAdj(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void AudioManagement_CalcTxIqGainAdj(void)
+void AudioManagement_CalcTxIqGainAdj(float freq)
 {
     // Note:  There is a fixed amount of offset due to the fact that the phase-added Hilbert (e.g. 0, 90) transforms are
     // slightly asymmetric that is added so that "zero" is closer to being the proper phase balance.
     //
 	// please note that the RX adjustments for gain are negative (in function AudioManagement_CalcRxIqGainAdj)
 	// and the adjustments for TX are positive
-    switch(ts.dmod_mode)
-    {
-    case DEMOD_AM:    // is it AM mode?
-        ts.tx_adj_gain_var_i = ts.tx_iq_am_gain_balance;     // get current gain balance adjustment setting for AM
-        break;
-    case DEMOD_FM:   // is it in FM mode?
-        ts.tx_adj_gain_var_i = ts.tx_iq_fm_gain_balance;     // get current gain balance adjustment setting for FM
-        break;
-    case DEMOD_LSB:
-        ts.tx_adj_gain_var_i = ts.tx_iq_lsb_gain_balance;        // get current gain balance adjustment setting for LSB
-        break;
-    default:
-        ts.tx_adj_gain_var_i = ts.tx_iq_usb_gain_balance;        // get current gain adjustment setting for USB and other non AM/FM modes
-    }
-    //
-    ts.tx_adj_gain_var_i /= SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
+    float32_t adj_i = AudioManagement_AdjustInFreqRange(
+            ts.tx_iq_lsb_gain_balance,
+            ts.tx_iq_usb_gain_balance,
+            freq);
+
+    ts.tx_adj_gain_var_i = adj_i / SCALING_FACTOR_IQ_AMPLITUDE_ADJUST;       // fractionalize it
     ts.tx_adj_gain_var_q = -ts.tx_adj_gain_var_i;               // get "invert" of it
     ts.tx_adj_gain_var_i += 1;      // offset it by one (e.g. 0 = unity)
     ts.tx_adj_gain_var_q += 1;
 }
 
-//
-//
+void AudioManagement_CalcIQPhaseAdjust(uint8_t txrx_mode, uint32_t freq)
+{
+    //
+    // the phase adjustment is done by mixing a little bit of I into Q or vice versa
+    // this is justified because the phase shift between two signals of equal frequency can
+    // be regulated by adjusting the amplitudes of the two signals!
+
+    float32_t adj_i = AudioManagement_AdjustInFreqRange(
+            txrx_mode==TRX_MODE_RX?ts.rx_iq_lsb_phase_balance:ts.tx_iq_lsb_phase_balance,
+            txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:ts.tx_iq_usb_phase_balance,
+            freq);
+
+    ads.iq_phase_balance = ((float32_t)(adj_i))/SCALING_FACTOR_IQ_PHASE_ADJUST;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcTxCompLevel
 //* Object              : Set TX audio compression settings (gain and ALC decay rate) based on user setting

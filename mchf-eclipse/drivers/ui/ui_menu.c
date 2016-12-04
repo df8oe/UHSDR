@@ -610,19 +610,19 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE,"230","Freq. Calibrate"},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_LIMIT_RELAX,"231","Freq. Limit Disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_MEM_LIMIT_RELAX,"232","MemFreq Lim Disable"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_GAIN_BAL,"240","LSB RX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_PHASE_BAL,"241","LSB RX IQ Phase"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_GAIN_BAL,"242","USB RX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_PHASE_BAL,"243","USB RX IQ Phase"},
-    { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_GAIN_BAL,"244","AM  RX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_PHASE_BAL,"244b","AM  RX IQ Phase"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FM_RX_GAIN_BAL,"245","FM  RX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_GAIN_BAL,"250","LSB TX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_PHASE_BAL,"251","LSB TX IQ Phase"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_GAIN_BAL,"252","USB TX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_PHASE_BAL,"253","USB TX IQ Phase"},
-    { MENU_CONF, MENU_ITEM, CONFIG_AM_TX_GAIN_BAL,"254","AM  TX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_GAIN_BAL,"240","Low RX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_PHASE_BAL,"241","Low RX IQ Phase"},
+    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_GAIN_BAL,"242","High RX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_PHASE_BAL,"243","High RX IQ Phase"},
+    // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_GAIN_BAL,"244","AM  RX IQ Bal."},
+    // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_PHASE_BAL,"244b","AM  RX IQ Phase"},
+    // { MENU_CONF, MENU_ITEM, CONFIG_FM_RX_GAIN_BAL,"245","FM  RX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_GAIN_BAL,"250","Low TX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_PHASE_BAL,"251","Low TX IQ Phase"},
+    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_GAIN_BAL,"252","High TX IQ Bal."},
+    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_PHASE_BAL,"253","High TX IQ Phase"},
+    //{ MENU_CONF, MENU_ITEM, CONFIG_AM_TX_GAIN_BAL,"254","AM  TX IQ Bal."},
+    //{ MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal."},
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)"},
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL,"271","Pwr. Det. Null"},
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","FWD/REV ADC Swap."},
@@ -3249,7 +3249,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj();
+                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3277,7 +3277,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj();
+                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3305,7 +3305,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj();
+                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3333,7 +3333,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj();
+                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3349,7 +3349,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj();
+                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3381,7 +3381,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj();
+                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3417,7 +3417,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj();
+                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3436,7 +3436,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj();
+                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
