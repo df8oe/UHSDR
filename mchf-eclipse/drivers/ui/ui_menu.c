@@ -2380,7 +2380,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         if(fchange)	 	// update parameters if changed
         {
             ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
-            UiDriverShowMode();
+            UiDriver_ShowMode();
             UiDriver_FrequencyUpdateLOandDisplay(true);	// update frequency display and local oscillator
         }
         break;
@@ -2405,7 +2405,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             txt_ptr = " OFF";
             if(fchange)
             {
-                UiDriverCreateTemperatureDisplay(0,1);
+                UiDriver_CreateTemperatureDisplay(0,1);
             }
             break;
         case TCXO_ON:
@@ -2413,14 +2413,14 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             if(fchange)
             {
                 Si570_InitExternalTempSensor();
-                UiDriverCreateTemperatureDisplay(1,1);
+                UiDriver_CreateTemperatureDisplay(1,1);
             }
             break;
         case TCXO_STOP:
             txt_ptr = "STOP";
             if(fchange)
             {
-                UiDriverCreateTemperatureDisplay(0,1);
+                UiDriver_CreateTemperatureDisplay(0,1);
             }
             break;
         }
@@ -2460,7 +2460,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         }
         if(fchange)		// update screen if a change was made
         {
-            UiDriverCreateTemperatureDisplay(1,1);
+            UiDriver_CreateTemperatureDisplay(1,1);
         }
 
         txt_ptr =temp_sel?"F":"C";
@@ -2704,10 +2704,10 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
           switch(ts.s_meter)
            {
-           case 1:		//
+           case DISPLAY_S_METER_DBM:		//
                txt_ptr = "    based on dBm";		// dbm S-Meter
                break;
-           case 2:	//
+           case DISPLAY_S_METER_DBMHZ:	//
                txt_ptr = " based on dBm/Hz";		// dbm/Hz display and old school S-Meter
                break;
            default:
@@ -2921,8 +2921,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             if(ts.freq_cal_adjust_flag)	 	// had frequency calibrate mode been active?
             {
                 ts.freq_cal_adjust_flag = 0;
-                UiDriverChangeTuningStep(0);	// force to valid frequency step size for normal tuning
-                UiDriverChangeTuningStep(1);
+                UiDriver_ChangeTuningStep(0);	// force to valid frequency step size for normal tuning
+                UiDriver_ChangeTuningStep(1);
             }
         }
         //
@@ -2933,8 +2933,8 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             if(ts.xvtr_adjust_flag)	 		// had transverter frequency mode been active?
             {
                 ts.xvtr_adjust_flag = 0;	// yes - disable flag
-                UiDriverChangeTuningStep(0);	// force to valid frequency step size for normal tuning
-                UiDriverChangeTuningStep(1);
+                UiDriver_ChangeTuningStep(0);	// force to valid frequency step size for normal tuning
+                UiDriver_ChangeTuningStep(1);
             }
         }
     }
@@ -2951,7 +2951,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             else			// line disabled?
                 ts.freq_step_config &= 0xf0;	// no, clear lower nybble
             //
-            UiDriverShowStep(df.tuning_step);	// update screen
+            UiDriver_ShowStep(df.tuning_step);	// update screen
         }
         break;
     case CONFIG_STEP_SIZE_BUTTON_SWAP:	// Step size button swap on/off
@@ -2983,7 +2983,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             // FIXME: Call "abstract" function to update status of tune,
             // do not redraw menu button here directly
-            UiDriverFButtonLabel(5,"TUNE",temp_var?Grey1:White);
+            UiDriver_FButtonLabel(5,"TUNE",temp_var?Grey1:White);
             ts.tx_disable = temp_var;
         }
         break;
@@ -3205,7 +3205,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
         if(tchange)
         {
-            UiDriverUpdateFrequency(true,UFM_AUTOMATIC);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
+            UiDriver_UpdateFrequency(true,UFM_AUTOMATIC);	// Update LO frequency without checking encoder but overriding "frequency didn't change" detect
         }
         snprintf(options,32, "   %d", ts.freq_cal);
         break;

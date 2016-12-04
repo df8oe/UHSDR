@@ -567,7 +567,7 @@ int main(void)
     //keyb_driver_init();
 
     // UI HW init
-    ui_driver_init();
+    UiDriver_Init();
 
     ts.temp_nb = ts.nb_setting;
     ts.nb_setting = 0;
@@ -584,7 +584,7 @@ int main(void)
 
     AudioFilter_SetDefaultMemories();
 
-    UiDriverUpdateDisplayAfterParamChange();
+    UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
     Codec_Mute(false);					// make sure codec is un-muted
@@ -602,7 +602,7 @@ int main(void)
     for(;;)
     {
         // UI events processing
-        ui_driver_thread();
+        UiDriver_MainHandler();
         CatDriverFT817CheckAndExecute();
         // Audio driver processing
         //audio_driver_thread();
