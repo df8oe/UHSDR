@@ -15,8 +15,8 @@
 #ifndef DRIVERS_AUDIO_AUDIO_MANAGEMENT_H_
 #define DRIVERS_AUDIO_AUDIO_MANAGEMENT_H_
 
-void    AudioManagement_CalcRxIqGainAdj(void);
-void    AudioManagement_CalcTxIqGainAdj(void);
+void    AudioManagement_CalcRxIqGainAdj(float32_t freq);
+void    AudioManagement_CalcTxIqGainAdj(float32_t freq);
 
 void    AudioManagement_CalcTxCompLevel(void);
 void    AudioManagement_CalcNB_AGC(void);

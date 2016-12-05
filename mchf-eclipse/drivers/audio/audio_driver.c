@@ -1456,7 +1456,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
     static int16_t trans_count_in = 0;
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_Audio_Buffer* out_buffer = NULL;
-    static int16_t modulus_NF = 0, modulus_MOD = 0, mod_count=0;
+    static int16_t modulus_NF = 0, mod_count=0;
     bool lsb_active = (ts.dmod_mode == DEMOD_LSB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == true));
 
 
@@ -1797,7 +1797,10 @@ static void audio_demod_fm(int16_t blockSize)
     ulong i;
     bool tone_det_enabled;
     static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;		// used in FM detection and low/high pass processing
-    static float q0 = 0, q1 = 0, q2 = 0, r0 = 0, r1 = 0, r2 = 0, s0 = 0, s1 = 0, s2 = 0;		// Goertzel values
+    static float gr[3] = {0, 0, 0 };
+    static float gs[3] = {0, 0, 0 };
+    static float gq[3] = {0, 0, 0 }; // Goertzel values
+
     static float subdet = 0;				// used for tone detection
     static uchar	count = 0, tdet = 0;	// used for squelch processing and debouncing tone detection, respectively
     static ulong	gcount = 0;				// used for averaging in tone detection
@@ -1993,47 +1996,47 @@ static void audio_demod_fm(int16_t blockSize)
         {
 
             // Detect above target frequency
-            r0 = ads.fm_goertzel_high_r * r1 - r2 + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-            r2 = r1;
-            r1 = r0;
+            gr[0] = ads.fm_goertzel[FM_HIGH].r * gr[1] - gr[2] + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+            gr[2] = gr[1];
+            gr[1] = gr[0];
 
             // Detect energy below target frequency
-            s0 = ads.fm_goertzel_low_r * s1 - s2 + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
-            s2 = s1;
-            s1 = s0;
+            gs[0] = ads.fm_goertzel[FM_LOW].r * gs[1] - gs[2] + adb.c_buffer[i];		// perform Goertzel function on audio in "c" buffer
+            gs[2] = gs[1];
+            gs[1] = gs[0];
 
             // Detect on-frequency energy
-            q0 = ads.fm_goertzel_ctr_r * q1 - q2 + adb.c_buffer[i];
-            q2 = q1;
-            q1 = q0;
+            gq[0] = ads.fm_goertzel[FM_CTR].r * gq[1] - gq[2] + adb.c_buffer[i];
+            gq[2] = gq[1];
+            gq[1] = gq[0];
         }
 
         if(gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)	 		// have we accumulated enough samples to do the final energy calculation?
         {
-            a = (r1-(r2 * ads.fm_goertzel_high_cos));								// yes - calculate energy at frequency above center and reset detection
-            b = (r2 * ads.fm_goertzel_high_sin);
+            a = (gr[1]-(gr[2] * ads.fm_goertzel[FM_HIGH].cos));								// yes - calculate energy at frequency above center and reset detection
+            b = (gr[2] * ads.fm_goertzel[FM_HIGH].sin);
             r = sqrtf(a*a + b*b);
             s = r;
-            r0 = 0;
-            r1 = 0;
-            r2 = 0;
+            gr[0] = 0;
+            gr[1] = 0;
+            gr[2] = 0;
 
-            a = (s1-(s2 * ads.fm_goertzel_low_cos));								// yes - calculate energy at frequency below center and reset detection
-            b = (s2 * ads.fm_goertzel_low_sin);
+            a = (gs[1]-(gs[2] * ads.fm_goertzel[FM_LOW].cos));								// yes - calculate energy at frequency below center and reset detection
+            b = (gs[2] * ads.fm_goertzel[FM_LOW].sin);
             r = sqrtf(a*a + b*b);
             s += r;					// sum +/- energy levels:  s = "off frequency" energy reading
-            s0 = 0;
-            s1 = 0;
-            s2 = 0;
+            gs[0] = 0;
+            gs[1] = 0;
+            gs[2] = 0;
 
-            a = (q1-(q2 * ads.fm_goertzel_ctr_cos));								// yes - calculate on-frequency energy and reset detection
-            b = (q2 * ads.fm_goertzel_ctr_sin);
+            a = (gq[1]-(gq[2] * ads.fm_goertzel[FM_CTR].cos));								// yes - calculate on-frequency energy and reset detection
+            b = (gq[2] * ads.fm_goertzel[FM_CTR].sin);
             r = sqrtf(a*a + b*b);							// r contains "on-frequency" energy
             subdet = ((1 - FM_TONE_DETECT_ALPHA) *subdet) + (r/(s/2) * FM_TONE_DETECT_ALPHA);	// do IIR filtering of the ratio between on and off-frequency energy
-            q0 = 0;
-            q1 = 0;
-            q2 = 0;
-            //
+            gq[0] = 0;
+            gq[1] = 0;
+            gq[2] = 0;
+
             if(subdet > FM_SUBAUDIBLE_TONE_DET_THRESHOLD)	 	// is subaudible tone detector ratio above threshold?
             {
                 tdet++;		// yes - increment count			// yes - bump debounce count
@@ -2456,36 +2459,8 @@ static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, c
     arm_add_f32(dst, e3_buffer, dst, blockSize);
 }
 
-void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq)
-{
-    //
-    // the phase adjustment is done by mixing a little bit of I into Q or vice versa
-    // this is justified because the phase shift between two signals of equal frequency can
-    // be regulated by adjusting the amplitudes of the two signals!
-    int iq_phase_balance = 0;
-
-    switch(dmod_mode)
-    {
-    case DEMOD_USB:
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:ts.tx_iq_usb_phase_balance;
-        break;
-    case DEMOD_LSB:
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_lsb_phase_balance:ts.tx_iq_lsb_phase_balance;
-        break;
-    case DEMOD_AM:
-         iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_am_phase_balance:0;
-         break;
-    default:
-        // FM, SAM
-        iq_phase_balance = txrx_mode==TRX_MODE_RX?ts.rx_iq_usb_phase_balance:0;
-        break;
-    }
-    ads.iq_phase_balance = ((float32_t)(iq_phase_balance))/SCALING_FACTOR_IQ_PHASE_ADJUST;
-}
-
 static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, const uint16_t blockSize)
 {
-    AudioDriver_CalcIQPhaseAdjust(dmod_mode, txrx_mode, ts.tune_freq);
 
     if (ads.iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {

@@ -20,15 +20,9 @@
 #include "softdds.h"
 
 // 16 or 24 bits from Codec
-//
+// 24 bits are not supported anywhere in the recent code!
 //#define USE_24_BITS
 
-// -----------------------------
-// With 128 words buffer we have
-// 120uS processing time in the
-// IRQ and 530uS idle time
-// (48kHz sampling - USB)
-//
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
 
@@ -92,6 +86,14 @@ typedef struct
 
 } AudioDriverBuffer;
 
+typedef struct {
+    float                   a;
+    float                   b;
+    float                   sin;
+    float                   cos;
+    float                   r;
+} Goertzel;
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
@@ -148,60 +150,23 @@ typedef struct AudioDriverState
     float					beep_loudness_factor;	// this is used to set the beep loudness
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
-    //
-    float					fm_goertzel_high_a;
-    float					fm_goertzel_high_b;
-    float					fm_goertzel_high_sin;
-    float					fm_goertzel_high_cos;
-    float					fm_goertzel_high_r;
-    //
-    float					fm_goertzel_low_a;
-    float					fm_goertzel_low_b;
-    float					fm_goertzel_low_sin;
-    float					fm_goertzel_low_cos;
-    float					fm_goertzel_low_r;
-    //
-    float					fm_goertzel_ctr_a;
-    float					fm_goertzel_ctr_b;
-    float					fm_goertzel_ctr_sin;
-    float					fm_goertzel_ctr_cos;
-    float					fm_goertzel_ctr_r;
-    //
-    ulong					fm_goertzel_size;
+
+    Goertzel fm_goertzel[3];
+    #define FM_HIGH 0
+    #define FM_LOW  1
+    #define FM_CTR  2
 
     float32_t               iq_phase_balance;
 
-    //
-//	float					Osc_Cos;
-//	float					Osc_Sin;
-//	float					Osc_Vect_Q;
-//	float					Osc_Vect_I;
-//	float					Osc_Q;
-//	float					Osc_I;
-//	float					Osc_Gain;
-
 } AudioDriverState;
 
-void AudioDriver_CalcIQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, uint32_t freq);
+void AudioManagement_CalcIQPhaseAdjust(uint8_t txrx_mode, uint32_t freq);
 
-//
-// FFT will work with quadrature signals
-#define FFT_QUADRATURE_PROC	1
-
-//
-//
-// -----------------------------
-// S meter sample time
-#define S_MET_SAMP_CNT		512
-
-// S meter drag delay
-#define S_MET_UPD_SKIP		10		//10000
 
 // S meter public
 typedef struct SMeter
 {
     ulong	skip;
-
     ulong	s_count;
     float	gain_calc;
     int		curr_max;
@@ -209,8 +174,8 @@ typedef struct SMeter
     float32_t dbmhz;
 
 } SMeter;
-//
-//
+
+
 #define MAX_BASS 		 	20
 #define MIN_BASS 			-20
 #define MAX_TREBLE 			20
