@@ -43,4 +43,9 @@ typedef	int				bool;
 #define false			0
 #endif
 
+typedef struct {
+    float i;
+    float q;
+} iq_float_t;
+
 #endif

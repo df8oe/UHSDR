@@ -156,11 +156,12 @@ typedef struct AudioDriverState
     #define FM_LOW  1
     #define FM_CTR  2
 
-    float32_t               iq_phase_balance;
+    float32_t               iq_phase_balance_rx;
+    float32_t               iq_phase_balance_tx;
 
 } AudioDriverState;
 
-void AudioManagement_CalcIQPhaseAdjust(uint8_t txrx_mode, uint32_t freq);
+void AudioManagement_CalcIQPhaseAdjust(uint32_t freq);
 
 
 // S meter public
