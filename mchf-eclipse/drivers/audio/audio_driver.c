@@ -2462,13 +2462,15 @@ static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, c
 static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, const uint16_t blockSize)
 {
 
-    if (ads.iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
+    float32_t iq_phase_balance =  (txrx_mode == TRX_MODE_RX)? ads.iq_phase_balance_rx: ads.iq_phase_balance_tx;
+
+    if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
-        AudioDriver_Mix(adb.i_buffer,adb.q_buffer, ads.iq_phase_balance, blockSize);
+        AudioDriver_Mix(adb.i_buffer,adb.q_buffer, iq_phase_balance, blockSize);
     }
-    else if (ads.iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
+    else if (ads.iq_phase_balance_rx > 0)  // we only need to deal with Q and put a little bit of it into I
     {
-        AudioDriver_Mix(adb.q_buffer,adb.i_buffer, ads.iq_phase_balance, blockSize);
+        AudioDriver_Mix(adb.q_buffer,adb.i_buffer, iq_phase_balance, blockSize);
     }
 }
 
@@ -2719,8 +2721,8 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
     // Apply I/Q amplitude correction
-    arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var_i, adb.i_buffer, blockSize);
-    arm_scale_f32(adb.q_buffer, ts.rx_adj_gain_var_q, adb.q_buffer, blockSize);
+    arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var.i, adb.i_buffer, blockSize);
+    arm_scale_f32(adb.q_buffer, ts.rx_adj_gain_var.q, adb.q_buffer, blockSize);
 
 
     // Apply I/Q phase correction
@@ -3082,8 +3084,8 @@ void audio_tx_final_iq_processing(float scaling, bool swap, AudioSample_t* const
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
         // this is the IQ gain / amplitude adjustment
-        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), adb.i_buffer, blockSize);
-        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), adb.q_buffer, blockSize);
+        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling), adb.i_buffer, blockSize);
+        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling), adb.q_buffer, blockSize);
         // this is the IQ phase adjustment
         AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
          for(i = 0; i < blockSize; i++)
@@ -3096,8 +3098,8 @@ void audio_tx_final_iq_processing(float scaling, bool swap, AudioSample_t* const
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
         // this is the IQ gain / amplitude adjustment
-        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_q * scaling), adb.i_buffer, blockSize);
-        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var_i * scaling), adb.q_buffer, blockSize);
+        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling), adb.i_buffer, blockSize);
+        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling), adb.q_buffer, blockSize);
         // this is the IQ phase adjustment
         AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
 

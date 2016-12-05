@@ -3249,7 +3249,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3265,7 +3265,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if (tchange)
             {
-                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
 
         }
@@ -3282,7 +3282,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3298,7 +3298,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if (tchange)
             {
-                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in RX and/or correct mode
@@ -3314,7 +3314,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
+            {
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
+            }
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3342,7 +3344,9 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 0,
                                                 1);
             if(tchange)
-                AudioManagement_CalcRxIqGainAdj(ts.tune_freq/TUNE_MULT);
+            {
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
+            }
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3358,7 +3362,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3377,7 +3381,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if (tchange)
             {
-                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
 
         }
@@ -3395,7 +3399,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3414,7 +3418,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if (tchange)
             {
-                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
 
         }
@@ -3436,7 +3440,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode
@@ -3455,7 +3459,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
                                                 1);
             if(tchange)
             {
-                AudioManagement_CalcTxIqGainAdj(ts.tune_freq/TUNE_MULT);
+                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
             }
         }
         else		// Orange if not in TX and/or correct mode

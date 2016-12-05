@@ -1076,14 +1076,11 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
             }
 
             uint32_t tune_freq_real = ts.tune_freq/TUNE_MULT;
+
             RadioManagement_SetHWFiltersForFrequency(tune_freq_real);  // check the filter status with the new frequency update
+            AudioManagement_CalcIqPhaseGainAdjust(tune_freq_real);
+
             // Inform Spectrum Display code that a frequency change has happened
-
-            AudioManagement_CalcRxIqGainAdj(tune_freq_real);
-            AudioManagement_CalcTxIqGainAdj(tune_freq_real);
-            AudioManagement_CalcIQPhaseAdjust(txrx_mode, tune_freq_real);
-
-
             sd.dial_moved = 1;
         }
         else
