@@ -3241,7 +3241,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
         break;
     case CONFIG_LSB_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
-        if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX)) 	 	// only allow adjustment if in LSB mode
+        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_RX)) 	 	// only allow adjustment if in LSB mode
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_gain_balance,
                                                 MIN_RX_IQ_GAIN_BALANCE,
@@ -3256,20 +3256,25 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "   %d", ts.rx_iq_lsb_gain_balance);
         break;
     case CONFIG_LSB_RX_IQ_PHASE_BAL:		// LSB RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX))
+        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_RX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_phase_balance,
                                                 MIN_RX_IQ_PHASE_BALANCE,
                                                 MAX_RX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
+            if (tchange)
+            {
+                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+            }
+
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
         snprintf(options,32, "   %d", ts.rx_iq_lsb_phase_balance);
         break;
     case CONFIG_USB_RX_IQ_GAIN_BAL:		// USB/CW RX IQ Gain balance
-        if(((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW))  && (ts.txrx_mode == TRX_MODE_RX))
+        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB)  && (ts.txrx_mode == TRX_MODE_RX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_gain_balance,
                                                 MIN_RX_IQ_GAIN_BALANCE,
@@ -3284,13 +3289,17 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "   %d", ts.rx_iq_usb_gain_balance);
         break;
     case CONFIG_USB_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
-        if(((ts.dmod_mode == DEMOD_USB)  || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_RX))
+        if((ts.dmod_mode == DEMOD_USB  || ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_phase_balance,
                                                 MIN_RX_IQ_PHASE_BALANCE,
                                                 MAX_RX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
+            if (tchange)
+            {
+                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+            }
         }
         else		// Orange if not in RX and/or correct mode
             clr = Orange;
@@ -3340,7 +3349,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "   %d", ts.rx_iq_fm_gain_balance);
         break;
     case CONFIG_LSB_TX_IQ_GAIN_BAL:		// LSB TX IQ Gain balance
-        if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))
+        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_gain_balance,
                                                 MIN_TX_IQ_GAIN_BALANCE,
@@ -3359,20 +3368,25 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "   %d", ts.tx_iq_lsb_gain_balance);
         break;
     case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_TX))
+        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_phase_balance,
                                                 MIN_TX_IQ_PHASE_BALANCE,
                                                 MAX_TX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
+            if (tchange)
+            {
+                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+            }
+
         }
         else		// Orange if not in TX and/or correct mode
             clr = Orange;
         snprintf(options,32, "   %d", ts.tx_iq_lsb_phase_balance);
         break;
     case CONFIG_USB_TX_IQ_GAIN_BAL:		// USB/CW TX IQ Gain balance
-        if(((ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_TX))
+        if(((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_TX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_gain_balance,
                                                 MIN_TX_IQ_GAIN_BALANCE,
@@ -3391,13 +3405,18 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         snprintf(options,32, "   %d", ts.tx_iq_usb_gain_balance);
         break;
     case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
+        if((ts.dmod_mode == DEMOD_LSB|| ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
         {
             tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_phase_balance,
                                                 MIN_TX_IQ_PHASE_BALANCE,
                                                 MAX_TX_IQ_PHASE_BALANCE,
                                                 0,
                                                 1);
+            if (tchange)
+            {
+                AudioManagement_CalcIQPhaseAdjust(ts.txrx_mode,ts.tune_freq/TUNE_MULT);
+            }
+
         }
         else		// Orange if not in TX and/or correct mode
         {
