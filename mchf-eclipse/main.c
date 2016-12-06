@@ -249,28 +249,23 @@ void TransceiverStateInit(void)
     ts.paddle_reverse	= 0;					// Paddle defaults to NOT reversed
     ts.cw_rx_delay		= CW_RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
     ts.unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
-    //
-    ts.nb_setting		= 0;					// Noise Blanker setting
-    //
-    ts.tx_iq_lsb_gain_balance 	= 0;				// Default settings for RX and TX gain and phase balance
-    ts.tx_iq_usb_gain_balance 	= 0;
-    ts.tx_iq_lsb_phase_balance 	= 0;
-    ts.tx_iq_usb_phase_balance 	= 0;
 
-    ts.rx_iq_lsb_gain_balance = 0;
-    ts.rx_iq_usb_gain_balance = 0;
-    ts.rx_iq_lsb_phase_balance = 0;
-    ts.rx_iq_usb_phase_balance = 0;
-    ts.rx_iq_am_phase_balance = 0;
-    ts.rx_iq_am_gain_balance = 0;
-    ts.rx_iq_fm_gain_balance = 0;
-    ts.tx_iq_am_gain_balance = 0;
-    ts.tx_iq_fm_gain_balance = 0;
-    //
+    ts.nb_setting		= 0;					// Noise Blanker setting
+
+    for (int i = 0; i < IQ_ADJUST_POINTS_NUM; i++)
+    {
+        ts.tx_iq_gain_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.tx_iq_phase_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.rx_iq_gain_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.rx_iq_phase_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
+
+    }
+
     ts.tune_freq		= 0;
     //ts.tune_freq_old	= 0;
-    //
+
     //	ts.calib_mode		= 0;					// calibrate mode
+
     ts.menu_mode		= 0;					// menu mode
     ts.menu_item		= 0;					// menu item selection
     ts.menu_var			= 0;					// menu item change variable

@@ -103,18 +103,12 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define BIAS_OFFSET         25      // Offset value to be added to bias setting
 //  DA value = (OFFSET + (2*setting))  where DA value is 0-255
 //
-#define MIN_TX_IQ_GAIN_BALANCE  -127 // Minimum setting for TX IQ gain balance
-#define MAX_TX_IQ_GAIN_BALANCE  127  // Maximum setting for TX IQ gain balance
-//
-#define MIN_RX_IQ_GAIN_BALANCE  -127 // Minimum setting for RX IQ gain balance
-#define MAX_RX_IQ_GAIN_BALANCE  127  // Maximum setting for RX IQ gain balance
-//
-#define MIN_TX_IQ_PHASE_BALANCE -127 // Minimum setting for TX IQ phase balance
-#define MAX_TX_IQ_PHASE_BALANCE 127  // Maximum setting for TX IQ phase balance
-//
-#define MIN_RX_IQ_PHASE_BALANCE -127 // Minimum setting for RX IQ phase balance
-#define MAX_RX_IQ_PHASE_BALANCE 127  // Maximum setting for RX IQ phase balance
-//
+#define MIN_IQ_GAIN_BALANCE  -127 // Minimum setting for IQ gain balance
+#define MAX_IQ_GAIN_BALANCE  127  // Maximum setting for IQ gain balance
+
+#define MIN_IQ_PHASE_BALANCE -127 // Minimum setting for IQ phase balance
+#define MAX_IQ_PHASE_BALANCE 127  // Maximum setting for IQ phase balance
+
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
 #define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)
 //
@@ -157,10 +151,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_KEYER_MODE       14
 #define EEPROM_SIDETONE_GAIN        15
 #define EEPROM_MIC_BOOST        16
-#define EEPROM_TX_IQ_LSB_GAIN_BALANCE   17      // TX gain balance
-#define EEPROM_TX_IQ_LSB_PHASE_BALANCE  18      // TX phase balance
-#define EEPROM_RX_IQ_LSB_GAIN_BALANCE   19
-#define EEPROM_RX_IQ_LSB_PHASE_BALANCE  20
+#define EEPROM_TX_IQ_80M_GAIN_BALANCE   17      // TX gain balance
+#define EEPROM_TX_IQ_80M_PHASE_BALANCE  18      // TX phase balance
+#define EEPROM_RX_IQ_80M_GAIN_BALANCE   19
+#define EEPROM_RX_IQ_80M_PHASE_BALANCE  20
 //
 #define EEPROM_BAND0_MODE       21      // Band/mode/filter memory per-band - bands indexed from here
 #define EEPROM_BAND1_MODE       22
@@ -295,10 +289,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_FILTER_WIDE_SEL      138     // Selection of "Wide" filter (>3.6kHz)
 //
 #endif
-#define EEPROM_TX_IQ_USB_GAIN_BALANCE   139     // TX gain balance
-#define EEPROM_TX_IQ_USB_PHASE_BALANCE  140     // TX phase balance
-#define EEPROM_RX_IQ_USB_GAIN_BALANCE   141
-#define EEPROM_RX_IQ_USB_PHASE_BALANCE  142
+#define EEPROM_TX_IQ_10M_GAIN_BALANCE   139     // TX gain balance
+#define EEPROM_TX_IQ_10M_PHASE_BALANCE  140     // TX phase balance
+#define EEPROM_RX_IQ_10M_GAIN_BALANCE   141
+#define EEPROM_RX_IQ_10M_PHASE_BALANCE  142
 #define EEPROM_SENSOR_NULL      143     // Power meter sensor null calibrate
 //#define   EEPROM_REV_PWR_CAL  144     // REV power meter calibrate
 //
@@ -338,7 +332,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_MAX_RX_GAIN      166     // Maximum RX gain - adjusts maximum allowed AGC gain in S-units
 #define EEPROM_TX_AUDIO_COMPRESS    167     // TX audio compressor setting, used to calculate other values
 //
-#define EEPROM_RX_IQ_AM_GAIN_BALANCE    168     // IQ Gain balance for AM reception
+#define EEPROM_RX_IQ_20M_GAIN_BALANCE    168     // IQ Gain balance for AM reception
 //
 #define EEPROM_TX_DISABLE       169     // TRUE of transmit is to be disabled
 #define EEPROM_FLAGS1      170     // Miscellaneous status flag, saved in EEPROM - see variable "flags1"
@@ -484,8 +478,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TX_PTT_AUDIO_MUTE    297     // timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 #define EEPROM_FLAGS2      298     // Miscellaneous status flag, saved in EEPROM - see variable "flags2"
 #define EEPROM_FILTER_DISP_COLOUR   299     // This contains the color of the line under the spectrum/waterfall display
-#define EEPROM_TX_IQ_AM_GAIN_BALANCE    300     // IQ Gain balance for AM transmission
-#define EEPROM_TX_IQ_FM_GAIN_BALANCE    301     // IQ Gain balance for FM transmission
+#define EEPROM_TX_IQ_20M_GAIN_BALANCE    300     // IQ Gain balance for AM transmission
+#define EEPROM_TX_IQ_20_PHASE_BALANCE    301     // IQ Gain balance for FM transmission
 #define EEPROM_FM_SUBAUDIBLE_TONE_GEN   302     // index for storage of subaudible tone generation
 #define EEPROM_FM_TONE_BURST_MODE   303     // tone burst mode
 #define EEPROM_FM_SQUELCH_SETTING   304     // FM squelch setting
@@ -512,7 +506,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //#define EEPROM_SPECTRUM_LIGHT_ENABLE 355
 #define EEPROM_MANUAL_NOTCH				356
 #define EEPROM_MANUAL_PEAK				357
-#define EEPROM_RX_IQ_AM_PHASE_BALANCE   358     // IQ Gain balance for AM reception
+#define EEPROM_RX_IQ_20M_PHASE_BALANCE   358     // IQ Gain balance for AM reception
 #define EEPROM_DISPLAY_DBM				359		// dbm display
 #define EEPROM_BASS_GAIN				360		// bass gain lowShelf filter
 #define EEPROM_TREBLE_GAIN				361		// treble gain highShelf filter

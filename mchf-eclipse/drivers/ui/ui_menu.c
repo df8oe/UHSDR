@@ -303,6 +303,38 @@ void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_
     }
 }
 
+void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode, int32_t min, int32_t max)
+{
+    bool tchange = false;
+    if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == demod_mode))       // only allow adjustment if in SSB mode
+    {
+        tchange = UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,
+                min,
+                max,
+                0,
+                1);
+        if(tchange)
+        {
+            AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
+        }
+    }
+    else        // Orange if not in correct mode
+    {
+        *clr_ptr = Orange;
+    }
+    snprintf(options,32, "   %d", (int)*val_ptr);
+}
+
+void UiMenu_HandleIQAdjustGain(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode)
+{
+    UiMenu_HandleIQAdjust(var, mode, options, clr_ptr, val_ptr, demod_mode, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE);
+}
+
+void UiMenu_HandleIQAdjustPhase(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode)
+{
+    UiMenu_HandleIQAdjust(var, mode, options, clr_ptr, val_ptr, demod_mode, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE);
+}
+
 void __attribute__ ((noinline)) UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr)
 {
     char* clr_str;
@@ -572,7 +604,7 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter"},
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
-    { MENU_DISPLAY, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN,"122","Reverse Touchscreen"},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)"},
 	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -591,43 +623,58 @@ const MenuDescriptor cwGroup[] =
 
 const MenuDescriptor confGroup[] =
 {
-    { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap"},
-    { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP,"202","Band+/- Button Swap"},
+
+    // Unused in firmware: { MENU_CONF, MENU_ITEM, CONFIG_FREQ_LIMIT_RELAX,"231","Freq. Limit Disable"},
+    { MENU_CONF, MENU_ITEM, CONFIG_FREQ_MEM_LIMIT_RELAX,"232","Save Out-Of-Band Freq."},
+    { MENU_CONF, MENU_ITEM, CONFIG_TX_OUT_ENABLE,"207", "TX on Out-Of-Band Freq."},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE,"203","Transmit Disable"},
-    { MENU_CONF, MENU_ITEM, CONFIG_TX_OUT_ENABLE,"207","TX outside Bands"},
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable"},
+
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","Mute Line Out TX"},
     { MENU_CONF, MENU_ITEM, CONFIG_TX_AUDIO_MUTE,"206","TX Mute Delay"},
-    { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION,"208","Voltmeter Cal."},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME,"210","Max Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)"},
+
+    // UI Behavior / Key Beep
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE,"212","Key Beep"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_FREQ,"213","Beep Frequency"},
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_VOLUME,"214","Beep Volume"},
+
+    // USB CAT Related
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_ENABLE,"220","CAT Mode"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX,"530","CAT Running In Sandbox"},
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT"},
+
+    // Transverter Configuration
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult"},
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset"},
+
+    // Button Handling Setup
+    { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap"},
+    { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP,"202","Band+/- Button Swap"},
+
+    // mcHF Setup Calibration (Initial Setup, never to be changed unless HW changes)
+
+    { MENU_CONF, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN,"122","Reverse Touchscreen"},
+    { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION,"208","Voltmeter Cal."},
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE,"230","Freq. Calibrate"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FREQ_LIMIT_RELAX,"231","Freq. Limit Disable"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FREQ_MEM_LIMIT_RELAX,"232","MemFreq Lim Disable"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_GAIN_BAL,"240", "RX IQ Balance (80m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_RX_IQ_PHASE_BAL,"241","RX IQ Phase   (80m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_GAIN_BAL,"242", "RX IQ Balance (10m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_RX_IQ_PHASE_BAL,"243","RX IQ Phase   (10m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_GAIN_BAL,"250", "TX IQ Balance (80m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_LSB_TX_IQ_PHASE_BAL,"251","TX IQ Phase   (80m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_GAIN_BAL,"252", "TX IQ Balance (10m)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_USB_TX_IQ_PHASE_BAL,"253","TX IQ Phase   (10m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL,"271","Pwr. Det. Null"},
+    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","FWD/REV ADC Swap."},
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_GAIN_BAL,"240", "RX IQ Balance (80m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_PHASE_BAL,"241","RX IQ Phase   (80m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_RX_IQ_GAIN_BAL,"242", "RX IQ Balance (10m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_RX_IQ_PHASE_BAL,"243","RX IQ Phase   (10m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_TX_IQ_GAIN_BAL,"250", "TX IQ Balance (80m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_TX_IQ_PHASE_BAL,"251","TX IQ Phase   (80m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_GAIN_BAL,"252", "TX IQ Balance (10m)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_PHASE_BAL,"253","TX IQ Phase   (10m)"},
     // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_GAIN_BAL,"244","AM  RX IQ Bal."},
     // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_PHASE_BAL,"244b","AM  RX IQ Phase"},
     // { MENU_CONF, MENU_ITEM, CONFIG_FM_RX_GAIN_BAL,"245","FM  RX IQ Bal."},
     //{ MENU_CONF, MENU_ITEM, CONFIG_AM_TX_GAIN_BAL,"254","AM  TX IQ Bal."},
     //{ MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal."},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL,"271","Pwr. Det. Null"},
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","FWD/REV ADC Swap."},
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult"},
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset"},
+
+    // DSP Configuration, probably never touched
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH,"310","DSP NR BufLen"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_FFT_NUMTAPS,"311","DSP NR FFT NumTaps"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_POST_AGC_SELECT,"312","DSP NR Post-AGC"},
@@ -635,7 +682,9 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap"},
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB  AGC T/C (<=Slow)"},
-    { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Ser EEPROM"},
+
+    // Reset I2C Config EEPROM to empty state
+    { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Config EEPROM"},
     { MENU_CONF, MENU_STOP, 0, "   " , NULL }
 };
 
@@ -3240,233 +3289,44 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             clr = Orange;					// warn user!
         }
         break;
-    case CONFIG_LSB_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
-        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_RX)) 	 	// only allow adjustment if in LSB mode
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_gain_balance,
-                                                MIN_RX_IQ_GAIN_BALANCE,
-                                                MAX_RX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_lsb_gain_balance);
+    case CONFIG_80M_RX_IQ_GAIN_BAL:		// LSB RX IQ Gain balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_80M], TRX_MODE_RX);
         break;
-    case CONFIG_LSB_RX_IQ_PHASE_BAL:		// LSB RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_lsb_phase_balance,
-                                                MIN_RX_IQ_PHASE_BALANCE,
-                                                MAX_RX_IQ_PHASE_BALANCE,
-                                                0,
-                                                1);
-            if (tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_lsb_phase_balance);
+    case CONFIG_80M_RX_IQ_PHASE_BAL:		// LSB RX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_80M], TRX_MODE_RX);
         break;
-    case CONFIG_USB_RX_IQ_GAIN_BAL:		// USB/CW RX IQ Gain balance
-        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB)  && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_gain_balance,
-                                                MIN_RX_IQ_GAIN_BALANCE,
-                                                MAX_RX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_usb_gain_balance);
+    case CONFIG_10M_RX_IQ_GAIN_BAL:		// USB/CW RX IQ Gain balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_10M], TRX_MODE_RX);
         break;
-    case CONFIG_USB_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_USB  || ts.dmod_mode == DEMOD_LSB) && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_usb_phase_balance,
-                                                MIN_RX_IQ_PHASE_BALANCE,
-                                                MAX_RX_IQ_PHASE_BALANCE,
-                                                0,
-                                                1);
-            if (tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_usb_phase_balance);
+    case CONFIG_10M_RX_IQ_PHASE_BAL:		// USB RX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_10M], TRX_MODE_RX);
         break;
-    case 	CONFIG_AM_RX_GAIN_BAL:		// AM RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_AM)  && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_am_gain_balance,
-                                                MIN_RX_IQ_GAIN_BALANCE,
-                                                MAX_RX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_am_gain_balance);
+    case CONFIG_20M_RX_GAIN_BAL:		// AM RX IQ Phase balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_20M], TRX_MODE_RX);
         break;
-    case 	CONFIG_AM_RX_PHASE_BAL:		// AM RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_AM)  && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_am_phase_balance,
-                                                MIN_RX_IQ_PHASE_BALANCE,
-                                                MAX_RX_IQ_PHASE_BALANCE,
-                                                0,
-                                                1);
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_am_phase_balance);
+    case CONFIG_20M_RX_PHASE_BAL:		// AM RX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_20M], TRX_MODE_RX);
         break;
-    case 	CONFIG_FM_RX_GAIN_BAL:		// FM RX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_RX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.rx_iq_fm_gain_balance,
-                                                MIN_RX_IQ_GAIN_BALANCE,
-                                                MAX_RX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in RX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.rx_iq_fm_gain_balance);
+    case CONFIG_FM_RX_GAIN_BAL:		// FM RX IQ Phase balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[3], TRX_MODE_RX);
         break;
-    case CONFIG_LSB_TX_IQ_GAIN_BAL:		// LSB TX IQ Gain balance
-        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_gain_balance,
-                                                MIN_TX_IQ_GAIN_BALANCE,
-                                                MAX_TX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in TX and/or correct mode
-        {
-            clr = Orange;
-        }
-        snprintf(options,32, "   %d", ts.tx_iq_lsb_gain_balance);
+    case CONFIG_80M_TX_IQ_GAIN_BAL:		// LSB TX IQ Gain balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_80M], TRX_MODE_TX);
         break;
-    case CONFIG_LSB_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_lsb_phase_balance,
-                                                MIN_TX_IQ_PHASE_BALANCE,
-                                                MAX_TX_IQ_PHASE_BALANCE,
-                                                0,
-                                                1);
-            if (tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-
-        }
-        else		// Orange if not in TX and/or correct mode
-            clr = Orange;
-        snprintf(options,32, "   %d", ts.tx_iq_lsb_phase_balance);
+    case CONFIG_80M_TX_IQ_PHASE_BAL:		// LSB TX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_80M], TRX_MODE_TX);
         break;
-    case CONFIG_USB_TX_IQ_GAIN_BAL:		// USB/CW TX IQ Gain balance
-        if(((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) || (ts.dmod_mode == DEMOD_CW)) && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_gain_balance,
-                                                MIN_TX_IQ_GAIN_BALANCE,
-                                                MAX_TX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in TX and/or correct mode
-        {
-            clr = Orange;
-        }
-        snprintf(options,32, "   %d", ts.tx_iq_usb_gain_balance);
+    case CONFIG_10M_TX_IQ_GAIN_BAL:		// USB/CW TX IQ Gain balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_10M], TRX_MODE_TX);
         break;
-    case CONFIG_USB_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_LSB|| ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_usb_phase_balance,
-                                                MIN_TX_IQ_PHASE_BALANCE,
-                                                MAX_TX_IQ_PHASE_BALANCE,
-                                                0,
-                                                1);
-            if (tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-
-        }
-        else		// Orange if not in TX and/or correct mode
-        {
-            clr = Orange;
-        }
-        //
-        snprintf(options,32, "   %d", ts.tx_iq_usb_phase_balance);
+    case CONFIG_10M_TX_IQ_PHASE_BAL:		// USB TX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M], TRX_MODE_TX);
         break;
-    //
-    case 	CONFIG_AM_TX_GAIN_BAL:		// AM TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_AM) && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_am_gain_balance,
-                                                MIN_TX_IQ_GAIN_BALANCE,
-                                                MAX_TX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in TX and/or correct mode
-        {
-            clr = Orange;
-        }
-        snprintf(options,32, "   %d", ts.tx_iq_am_gain_balance);
+    case 	CONFIG_20M_TX_GAIN_BAL:		// AM TX IQ Phase balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_20M], TRX_MODE_TX);
         break;
-    case 	CONFIG_FM_TX_GAIN_BAL:		// FM TX IQ Phase balance
-        if((ts.dmod_mode == DEMOD_FM)  && (ts.txrx_mode == TRX_MODE_TX))
-        {
-            tchange = UiDriverMenuItemChangeInt(var, mode, &ts.tx_iq_fm_gain_balance,
-                                                MIN_TX_IQ_GAIN_BALANCE,
-                                                MAX_TX_IQ_GAIN_BALANCE,
-                                                0,
-                                                1);
-            if(tchange)
-            {
-                AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
-            }
-        }
-        else		// Orange if not in TX and/or correct mode
-        {
-            clr = Orange;
-        }
-        snprintf(options,32, "   %d", ts.tx_iq_fm_gain_balance);
+    case 	CONFIG_20M_TX_PHASE_BAL:		// FM TX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_20M], TRX_MODE_TX);
         break;
     case CONFIG_CW_PA_BIAS:		// CW PA Bias adjust
         if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))	 	// enable only in TUNE mode

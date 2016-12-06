@@ -24,6 +24,7 @@ void UiSpectrumReDrawWaterfall();
 void UiSpectrumReDrawScopeDisplay();
 void UiSpectrumCreateDrawArea(void);
 void UiGet_Wfscope_Bar_Text(char*);
+void UiSpectrum_ClearWaterfallData();
 
 
 // Spectrum scope operational constants

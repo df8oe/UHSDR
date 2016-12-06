@@ -751,6 +751,16 @@ static void UiSpectrum_InitSpectrumDisplay()
     sd.first_run 	= 2;
 }
 
+void UiSpectrum_ClearWaterfallData()
+{
+    for(int i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)   // clear old wf lines if changing magnify
+      {
+      for(int j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
+        {
+        sd.waterfall[i][j] = 0;
+        }
+      }
+}
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverReDrawSpectrumDisplay
