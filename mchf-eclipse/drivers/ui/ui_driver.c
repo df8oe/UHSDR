@@ -677,45 +677,19 @@ void UiDriver_HandleTouchScreen()
         }
         if(UiDriver_CheckTouchCoordinates(29,33,26,32))			// wf/scope bar magnify down
         {
-      		int i,j;
-      		if(sd.magnify)
-      		{
-      		  sd.magnify--;
-      		}
-      		else
-      		{
-      		  sd.magnify = MAGNIFY_MAX;
-      		}
             ts.menu_var_changed = 1;
-            for(i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)	// clear old wf lines if changing magnify
-          	  {
-          	  for(j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
-          		{
-          		sd.waterfall[i][j] = 0;
-          		}
-          	  }
+      		decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
+
+            UiSpectrum_ClearWaterfallData();
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
             AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
         if(UiDriver_CheckTouchCoordinates(52,60,26,32))			// wf/scope bar magnify up
         {
-      		int i,j;
-            if(sd.magnify < MAGNIFY_MAX)
-            {
-          	  sd.magnify++;
-          	}
-          	else
-          	{
-          	  sd.magnify = MAGNIFY_MIN;
-          	}
             ts.menu_var_changed = 1;
-            for(i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)	// clear old wf lines if changing magnify
-          	  {
-          	  for(j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
-          		{
-          		sd.waterfall[i][j] = 0;
-          		}
-          	  }
+      		incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
+
+            UiSpectrum_ClearWaterfallData();
             UiSpectrumInitSpectrumDisplay();		// init spectrum scope
             AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
@@ -758,16 +732,16 @@ void UiDriver_HandleTouchScreen()
         }
         if(UiDriver_CheckTouchCoordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
         {
-      		int step = 2000;				// adjust to 500Hz
+            int step = 2000;				// adjust to 500Hz
 
-      		if(sd.magnify == 3)
-      		{
-          	  step = 400;					// adjust to 100Hz
-          	}
-          	if(sd.magnify > 3)
-      		{
-          	  step = 200;					// adjust to 50Hz
-          	}
+            if(sd.magnify == 3)
+            {
+                step = 400;					// adjust to 100Hz
+            }
+            if(sd.magnify > 3)
+            {
+                step = 200;					// adjust to 50Hz
+            }
             if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
                 step = 20000;				// adjust to 5KHz
             uchar line = 29;				// x-position of rx frequency in middle position
@@ -792,9 +766,9 @@ void UiDriver_HandleTouchScreen()
                 }
             }
 
-        uint tunediff = ((1000)/(1 << sd.magnify))*(ts.tp_x-line)*TUNE_MULT;
-        df.tune_new = lround((df.tune_new + tunediff)/step) * step;
-        UiDriver_FrequencyUpdateLOandDisplay(true);
+            uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp_x-line)*TUNE_MULT;
+            df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+            UiDriver_FrequencyUpdateLOandDisplay(true);
         }
         if(UiDriver_CheckTouchCoordinates(0,7,10,13))			// toggle digital modes
         {
@@ -804,7 +778,6 @@ void UiDriver_HandleTouchScreen()
 
             if (ts.digital_mode>0)
             {
-
                 if (ts.dmod_mode != DEMOD_DIGI)
                 {
                     if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
@@ -836,9 +809,13 @@ void UiDriver_HandleTouchScreen()
         if(UiDriver_CheckTouchCoordinates(26,35,39,46))			// dynamic tuning activation
         {
             if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
+            {
                 ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
+            }
             else
+            {
                 ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it off
+            }
 
             UiDriver_ShowStep(df.selected_idx);
         }
@@ -867,10 +844,9 @@ void UiDriver_HandleTouchScreen()
 }
 
 
-
-
-
-
+/**
+ * @brief permits to dis/enable a digital codec (or get back to analog)
+ */
 static void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 {
     // codec == 0 -> Analog Sound
@@ -887,8 +863,13 @@ static void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 }
 
 
-
-
+/**
+ * @brief API Function, implements application logic for changing the power level including filter changes
+ *
+ *
+ * @param power_level The requested power level (as PA_LEVEL constants)
+ * @returns true if power level has been changed, false otherwise
+ */
 bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 {
     bool retval = false;
@@ -922,12 +903,6 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
     return retval;
 }
 
-/**
- * @brief API Function, implements application logic for changing the power level including display updates
- *
- *
- * @param power_level The requested power level (as PA_LEVEL constants)
- */
 bool RadioManagement_Tune(bool tune)
 {
     bool retval = tune;
@@ -1418,7 +1393,14 @@ static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] =
 
 
 
-
+/**
+ * @brief Select and activate the correct BPF for the frequency given in @p freq
+ *
+ *
+ * @param freq The frequency to activate the BPF for in Hz
+ *
+ * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
+ */
 static void RadioManagement_SetHWFiltersForFrequency(ulong freq)
 {
     int idx;
@@ -3689,21 +3671,11 @@ static void UiDriver_InitFrequency()
 }
 
 /**
- * @brief Select and activate the correct BPF for the frequency given in @p freq
+ * @brief Checks in which band the current frequency lies and updates display only if changed
  *
- *
- * @param freq The frequency to activate the BPF for in Hz
- *
- * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
+ * @param freq frequency in Hz
+ * @returns band index (0 - (MAX_BANDS-1))
  */
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckBand
-//* Object              : Checks in which band the current frequency lies
-//* Input Parameters    : frequency in Hz
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 
 uchar UiDriver_DisplayBandForFreq(ulong freq)
 {
@@ -7250,9 +7222,8 @@ bool UiDriver_TimerIsExpired(SysClockTimers sct,uint32_t now, uint32_t divider)
     return (last_sysclock_seen[sct] != now/divider);
 }
 
-/*
- * Implements a simple timeout timer.
- * Sets the time to now/divider, so it will expire in now+divider cycles
+/**
+ * @brief Implements a simple timeout timer. Sets the time to now/divider, so it will expire in now+divider cycles
  * Dividers should be powers of 2 to generate optimal code
  */
 void UiDriver_TimerRewind(SysClockTimers sct,uint32_t now, uint32_t divider)
@@ -7260,10 +7231,15 @@ void UiDriver_TimerRewind(SysClockTimers sct,uint32_t now, uint32_t divider)
     last_sysclock_seen[sct] = now/divider;
 }
 
-/*
- * Implements a simple timeout timer.
- * Returns true if the current sysclock differs by equal or more than divider cycles.
- * Dividers should be powers of 2 to generate optimal code
+/**
+ * @brief Implements a simple timeout timer. If expired the timer is automatically restarted.
+ *
+ * @param sct the timer data structure
+ * @param divider should be powers of 2 to generate optimal code
+ * @param now current sysclock value
+ *
+ * @returns true if the now differs by equal or more than divider cycles.
+ *
  */
 bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t divider)
 {

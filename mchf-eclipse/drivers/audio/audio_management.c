@@ -153,14 +153,14 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // be regulated by adjusting the amplitudes of the two signals!
 
     ads.iq_phase_balance_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.rx_iq_lsb_phase_balance,
-            ts.rx_iq_usb_phase_balance,
+            ts.rx_iq_phase_balance[IQ_80M],
+            ts.rx_iq_phase_balance[IQ_10M],
             freq,
             SCALING_FACTOR_IQ_PHASE_ADJUST);
 
     ads.iq_phase_balance_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-                ts.tx_iq_lsb_phase_balance,
-                ts.tx_iq_usb_phase_balance,
+                ts.tx_iq_phase_balance[IQ_80M],
+                ts.tx_iq_phase_balance[IQ_10M],
                 freq,
                 SCALING_FACTOR_IQ_PHASE_ADJUST);
 
@@ -168,14 +168,14 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // please note that the RX adjustments for gain are negative
     // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
     float32_t adj_i_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            -ts.rx_iq_lsb_gain_balance,
-            -ts.rx_iq_usb_gain_balance,
+            -ts.rx_iq_gain_balance[IQ_80M],
+            -ts.rx_iq_gain_balance[IQ_10M],
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 
     float32_t adj_i_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.tx_iq_lsb_gain_balance,
-            ts.tx_iq_usb_gain_balance,
+            ts.tx_iq_gain_balance[IQ_80M],
+            ts.tx_iq_gain_balance[IQ_10M],
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 

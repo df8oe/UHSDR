@@ -855,34 +855,21 @@ typedef struct TransceiverState
     uchar	audio_unmute;
     bool	buffer_clear;
 
-    int  	tx_iq_lsb_gain_balance;		// setting for TX IQ gain balance
-    int  	tx_iq_usb_gain_balance;		// setting for TX IQ gain balance
-    //
-    int		tx_iq_lsb_phase_balance;	// setting for TX IQ phase balance
-    int		tx_iq_usb_phase_balance;	// setting for TX IQ phase balance
-    //
-    int		tx_iq_am_gain_balance;		// setting for TX IQ gain balance
-    int		tx_iq_fm_gain_balance;		// setting for TX IQ gain balance
-    //
-    // float32_t	tx_adj_gain_var_i;		// active variables for adjusting tx gain balance
-    // float32_t	tx_adj_gain_var_q;
-    iq_float_t   tx_adj_gain_var;
+#define IQ_ADJUST_POINTS_NUM 4
 
-    int		rx_iq_lsb_gain_balance;		// setting for RX IQ gain balance
-    int		rx_iq_usb_gain_balance;		// setting for RX IQ gain balance
-    //
-    int		rx_iq_am_gain_balance;		// setting for AM RX IQ gain balance
-    int		rx_iq_am_phase_balance;		// setting for AM RX IQ phase balance
-    int		rx_iq_fm_gain_balance;		// setting for FM RX IQ gain balance
-    //
-    //
-    int		rx_iq_lsb_phase_balance;	// setting for RX IQ phase balance
-    int		rx_iq_usb_phase_balance;	// setting for RX IQ phase balance
+    // corresponding frequencies are stored in const array iq_adjust_freq
+#define IQ_80M 0
+#define IQ_10M 1
+#define IQ_20M 2
 
-    // float	rx_adj_gain_var_i;		// active variables for adjusting rx gain balance
-    // float	rx_adj_gain_var_q;
-    iq_float_t rx_adj_gain_var;
-    //
+    int32_t tx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for TX IQ gain balance
+    int32_t tx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for TX IQ phase balance
+    int32_t rx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for RX IQ gain balance
+    int32_t rx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for RX IQ phase balance
+
+    iq_float_t tx_adj_gain_var;    // active variables for adjusting tx gain balance
+    iq_float_t rx_adj_gain_var;    // active variables for adjusting rx gain balance
+
     // Equalisation factor
     float32_t	tx_power_factor;
 
