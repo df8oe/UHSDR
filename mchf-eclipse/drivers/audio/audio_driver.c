@@ -2459,18 +2459,18 @@ static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, c
     arm_add_f32(dst, e3_buffer, dst, blockSize);
 }
 
-static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, const uint16_t blockSize)
+static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize)
 {
 
     float32_t iq_phase_balance =  (txrx_mode == TRX_MODE_RX)? ads.iq_phase_balance_rx: ads.iq_phase_balance_tx;
 
     if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
-        AudioDriver_Mix(adb.i_buffer,adb.q_buffer, iq_phase_balance, blockSize);
+        AudioDriver_Mix(i_buffer,q_buffer, iq_phase_balance, blockSize);
     }
     else if (iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
     {
-        AudioDriver_Mix(adb.q_buffer,adb.i_buffer, iq_phase_balance, blockSize);
+        AudioDriver_Mix(q_buffer,i_buffer, iq_phase_balance, blockSize);
     }
 }
 
@@ -2726,7 +2726,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 
 
     // Apply I/Q phase correction
-    AudioDriver_IQPhaseAdjust(dmod_mode, ts.txrx_mode,blockSize);
+    AudioDriver_IQPhaseAdjust(ts.txrx_mode,adb.i_buffer, adb.q_buffer,blockSize);
 
     if(iq_freq_mode)            // is receive frequency conversion to be done?
     {
@@ -3079,37 +3079,35 @@ void audio_tx_final_iq_processing(float scaling, bool swap, AudioSample_t* const
 {
     int16_t i;
 
+    float32_t *final_i_buffer, *final_q_buffer;
+
+    float32_t final_i_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling);
+    float32_t final_q_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling);
     // ------------------------
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
-        // this is the IQ gain / amplitude adjustment
-        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling), adb.i_buffer, blockSize);
-        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling), adb.q_buffer, blockSize);
-        // this is the IQ phase adjustment
-        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
-         for(i = 0; i < blockSize; i++)
-        {
-            // Prepare data for DAC
-            dst[i].l = adb.i_buffer[i];	// save left channel
-            dst[i].r = adb.q_buffer[i];	// save right channel
-        }
+        final_i_buffer = adb.i_buffer;
+        final_q_buffer = adb.q_buffer;
     }
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
         // this is the IQ gain / amplitude adjustment
-        arm_scale_f32(adb.i_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling), adb.i_buffer, blockSize);
-        arm_scale_f32(adb.q_buffer, (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling), adb.q_buffer, blockSize);
-        // this is the IQ phase adjustment
-        AudioDriver_IQPhaseAdjust(ts.dmod_mode,ts.txrx_mode,blockSize);
-
-        for(i = 0; i < blockSize; i++)
-        {
-            // Prepare data for DAC
-            dst[i].l = adb.q_buffer[i];	// save left channel
-            dst[i].r = adb.i_buffer[i];	// save right channel
-        }
+        final_i_buffer = adb.q_buffer;
+        final_q_buffer = adb.i_buffer;
     }
+    // this is the IQ gain / amplitude adjustment
+    arm_scale_f32(final_i_buffer, final_i_gain, final_i_buffer, blockSize);
+    arm_scale_f32(final_q_buffer, final_q_gain, final_q_buffer, blockSize);
+    // this is the IQ phase adjustment
+    AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
+     for(i = 0; i < blockSize; i++)
+    {
+        // Prepare data for DAC
+        dst[i].l = final_i_buffer[i]; // save left channel
+        dst[i].r = final_q_buffer[i]; // save right channel
+    }
+
 }
 
 
