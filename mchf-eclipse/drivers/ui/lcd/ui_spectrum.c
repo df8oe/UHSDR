@@ -46,11 +46,10 @@ float32_t m_AverageMagdbmhz = 0.0;
 float32_t m_AttackAlpha = 0.8647;
 float32_t m_DecayAlpha  = 0.3297;
 
-static void 	UiDriverFFTWindowFunction(char mode);
-static void     UiSpectrum_FrequencyBarText(void);
-static void		calculate_dBm(void);
+static void     UiSpectrum_FrequencyBarText();
+static void		UiSpectrum_CalculateDBm();
 
-static void UiDriverFFTWindowFunction(char mode)
+static void UiSpectrum_FFTWindowFunction(char mode)
 {
     ulong i;
     float32_t gcalc;
@@ -121,10 +120,6 @@ static void UiDriverFFTWindowFunction(char mode)
 //		sprintf(txt, " %d    ", (int)(c1));
 //		UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
 }
-//
-//
-//
-//
 
 
 static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
@@ -159,14 +154,11 @@ static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiSpectrumCreateDrawArea(void)
+void UiSpectrum_CreateDrawArea()
 {
-    ulong i;
     uint32_t clr;
 
-    //
     // get grid colour of all but center line
-    //
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
     if(ts.scope_grid_colour == SPEC_GREY)
     {
@@ -176,8 +168,7 @@ void UiSpectrumCreateDrawArea(void)
     {
         UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
     }
-    //
-    //
+
     // Get color of center vertical line of spectrum scope
     //
     if(ts.spectrum_centre_line_colour == SPEC_GREY)
@@ -209,7 +200,7 @@ void UiSpectrumCreateDrawArea(void)
     if(!ts.spectrum_size)		//don't draw text bar when size is BIG
     {
         // Draw top band = grey box in which text is printed
-        for(i = 0; i < 16; i++)
+        for(int i = 0; i < 16; i++)
         {
             UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
         }
@@ -227,7 +218,7 @@ void UiSpectrumCreateDrawArea(void)
                     RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
 
         // Draw control left and right border
-        for(i = 0; i < 2; i++)
+        for(int i = 0; i < 2; i++)
         {
             UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X - 2 + i),
                     (POS_SPECTRUM_IND_Y - 20),
@@ -264,7 +255,7 @@ void UiSpectrumCreateDrawArea(void)
             y_add = 0;
         }
 
-        for(i = 1; i < upperline; i++)
+        for(int i = 1; i < upperline; i++)
         {
             // Save y position for repaint
             sd.horz_grid_id[i - 1] = (POS_SPECTRUM_IND_Y - 5 - y_add + i*16);
@@ -279,7 +270,7 @@ void UiSpectrumCreateDrawArea(void)
 
 //        ts.c_line = UiSpectrum_GetGridCenterLine(4);
         // Vertical grid lines
-        for(i = 1; i < 8; i++)
+        for(int i = 1; i < 8; i++)
         {
 
             if (i == ts.c_line)
@@ -322,7 +313,7 @@ void UiSpectrumCreateDrawArea(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiSpectrumClearDisplay(void)
+void UiSpectrum_ClearDisplay()
 {
     UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
@@ -388,7 +379,7 @@ static uint16_t UiSpectrum_Draw_GetCenterLineX()
 }
 
 
-void    UiSpectrumDrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
+void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
 
     int spec_height = SPECTRUM_HEIGHT; //x
@@ -630,7 +621,7 @@ static inline const uint32_t FftIdx2BufMap(const uint32_t idx)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiSpectrum_InitSpectrumDisplay()
+static void UiSpectrum_InitSpectrumDisplayData()
 {
     ulong i;
 //	arm_status	a;
@@ -772,7 +763,7 @@ void UiSpectrum_ClearWaterfallData()
 //
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 //
-void UiSpectrumReDrawScopeDisplay()
+void UiSpectrum_RedrawScopeDisplay()
 {
     int spec_height = SPECTRUM_HEIGHT;
     if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
@@ -828,7 +819,7 @@ void UiSpectrumReDrawScopeDisplay()
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
         //
-        UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
+        UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
         //
 //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
 //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
@@ -888,7 +879,7 @@ void UiSpectrumReDrawScopeDisplay()
             if(sd.FFT_AVGData[i] < 1)
                 sd.FFT_AVGData[i] = 1;
         }
-		calculate_dBm();
+		UiSpectrum_CalculateDBm();
         sd.state++;
 
         break;
@@ -1206,9 +1197,9 @@ void UiSpectrumReDrawScopeDisplay()
         UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
 */
         // Left part of screen(mask and update in one operation to minimize flicker)
-        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
+        UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
-        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
+        UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
 
 
 
@@ -1233,7 +1224,7 @@ void UiSpectrumReDrawScopeDisplay()
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch" - which is to say that I did not borrow any of it
 // from anywhere else, aside from keeping some of the general functions found in "Case 1".
 //
-void UiSpectrumReDrawWaterfall()
+void UiSpectrum_RedrawWaterfall()
 {
     ulong i, spec_width;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval AND minval functions
@@ -1282,7 +1273,7 @@ void UiSpectrumReDrawWaterfall()
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
 //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
         //
-        UiDriverFFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
+        UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
         //
         sd.state++;
         break;
@@ -1330,7 +1321,7 @@ void UiSpectrumReDrawWaterfall()
                 sd.FFT_AVGData[i] = 1;
         }
 
-		calculate_dBm();
+		UiSpectrum_CalculateDBm();
 		sd.state++;
 
 
@@ -1590,14 +1581,14 @@ void UiSpectrumReDrawWaterfall()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 //
-void UiSpectrumInitSpectrumDisplay()
+void UiSpectrum_InitSpectrumDisplay()
 {
     if(ts.boot_halt_flag)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
         return;
 
-    UiSpectrumClearDisplay();			// clear display under spectrum scope
-    UiSpectrumCreateDrawArea();
-    UiSpectrum_InitSpectrumDisplay();
+    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
+    UiSpectrum_CreateDrawArea();
+    UiSpectrum_InitSpectrumDisplayData();
     UiDriver_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }
 
@@ -1710,7 +1701,7 @@ static void UiSpectrum_FrequencyBarText()
 }
 
 
-static void calculate_dBm()
+static void UiSpectrum_CalculateDBm()
 {
     //###########################################################################################################################################
     //###########################################################################################################################################
@@ -1926,67 +1917,67 @@ static void calculate_dBm()
 // function builds text which is displayed above waterfall/scope area
 void UiGet_Wfscope_Bar_Text(char* wfbartext)
 {
-  char* lefttext;
-  char* righttext;
+    char* lefttext;
+    char* righttext;
 
-  if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)			//waterfall
-  {
-	lefttext = "WATERFALL      ";
-  }
-  else												// scope
-  {
-    switch(ts.spectrum_db_scale)	 	// convert variable to setting
-  	{
-  	  case DB_DIV_5:
-        lefttext = "SC(5dB/div)    ";
-        break;
-  	  case DB_DIV_7:
-        lefttext = "SC(7.5dB/div)  ";
-        break;
-  	  case DB_DIV_15:
-        lefttext = "SC(15dB/div)   ";
-        break;
-  	  case DB_DIV_20:
-        lefttext = "SC(20dB/div)   ";
-        break;
-  	  case S_1_DIV:
-        lefttext = "SC(1S-Unit/div)";
-        break;
-  	  case S_2_DIV:
-        lefttext = "SC(2S-Unit/div)";
-        break;
-  	  case S_3_DIV:
-        lefttext = "SC(3S-Unit/div)";
-        break;
-  	  case DB_DIV_10:
-  	  default:
-        lefttext = "SC(10dB/div)   ";
-        break;
-  	}
-  }
+    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)			//waterfall
+    {
+        lefttext = "WATERFALL      ";
+    }
+    else												// scope
+    {
+        switch(ts.spectrum_db_scale)	 	// convert variable to setting
+        {
+        case DB_DIV_5:
+            lefttext = "5dB/div)    ";
+            break;
+        case DB_DIV_7:
+            lefttext = "7.5dB/div)  ";
+            break;
+        case DB_DIV_15:
+            lefttext = "15dB/div)   ";
+            break;
+        case DB_DIV_20:
+            lefttext = "20dB/div)   ";
+            break;
+        case S_1_DIV:
+            lefttext = "1S-Unit/div)";
+            break;
+        case S_2_DIV:
+            lefttext = "2S-Unit/div)";
+            break;
+        case S_3_DIV:
+            lefttext = "3S-Unit/div)";
+            break;
+        case DB_DIV_10:
+        default:
+            lefttext = "10dB/div)   ";
+            break;
+        }
+    }
 
-  switch(sd.magnify)
-  {
-	case 1:
-	  righttext = " < Magnify x2 > ";
-	  break;
-	case 2:
-	  righttext = " < Magnify x4 > ";
-	  break;
-	case 3:
-	  righttext = " < Magnify x8 > ";
-	  break;
-	case 4:
-	  righttext = " < Magnify x16 >";
-	  break;
-	case 5:
-	  righttext = " < Magnify x32 >";
-	  break;
-	case 0:
-	default:
-	  righttext = " < Magnify x1 > ";
-	  break;
-  }
+    switch(sd.magnify)
+    {
+    case 1:
+        righttext = "2 > ";
+        break;
+    case 2:
+        righttext = "4 > ";
+        break;
+    case 3:
+        righttext = "8 > ";
+        break;
+    case 4:
+        righttext = "16 >";
+        break;
+    case 5:
+        righttext = "32 >";
+        break;
+    case 0:
+    default:
+        righttext = "1 > ";
+        break;
+    }
 
-sprintf(wfbartext,"%s%s",lefttext,righttext);
+    sprintf(wfbartext,"SC(%s < Magnify x%s",lefttext,righttext);
 }

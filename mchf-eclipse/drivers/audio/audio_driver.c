@@ -2468,7 +2468,7 @@ static void AudioDriver_IQPhaseAdjust(uint8_t dmod_mode, uint8_t txrx_mode, cons
     {
         AudioDriver_Mix(adb.i_buffer,adb.q_buffer, iq_phase_balance, blockSize);
     }
-    else if (ads.iq_phase_balance_rx > 0)  // we only need to deal with Q and put a little bit of it into I
+    else if (iq_phase_balance > 0)  // we only need to deal with Q and put a little bit of it into I
     {
         AudioDriver_Mix(adb.q_buffer,adb.i_buffer, iq_phase_balance, blockSize);
     }
