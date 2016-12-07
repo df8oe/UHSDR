@@ -1587,7 +1587,7 @@ void UiSpectrum_InitSpectrumDisplay()
         return;
 
     UiSpectrum_ClearDisplay();			// clear display under spectrum scope
-    UiSpectrumCreateDrawArea();
+    UiSpectrum_CreateDrawArea();
     UiSpectrum_InitSpectrumDisplayData();
     UiDriver_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }
