@@ -18,10 +18,10 @@
 #include "audio_driver.h"
 #include "arm_const_structs.h"
 
-void UiSpectrumInitSpectrumDisplay();
-void UiSpectrumClearDisplay();
-void UiSpectrumReDrawWaterfall();
-void UiSpectrumReDrawScopeDisplay();
+void UiSpectrum_InitSpectrumDisplay();
+void UiSpectrum_ClearDisplay();
+void UiSpectrum_RedrawWaterfall();
+void UiSpectrum_RedrawScopeDisplay();
 void UiSpectrumCreateDrawArea(void);
 void UiGet_Wfscope_Bar_Text(char*);
 void UiSpectrum_ClearWaterfallData();

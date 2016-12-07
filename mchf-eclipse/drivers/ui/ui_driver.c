@@ -504,7 +504,7 @@ static void UiDriver_ToggleWaterfallScopeDisplay()
         // waterfall mode was turned off
         ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
     }
-    UiSpectrumInitSpectrumDisplay();   // init spectrum display
+    UiSpectrum_InitSpectrumDisplay();   // init spectrum display
 }
 //
 //
@@ -681,7 +681,7 @@ void UiDriver_HandleTouchScreen()
       		decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
             UiSpectrum_ClearWaterfallData();
-            UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+            UiSpectrum_InitSpectrumDisplay();		// init spectrum scope
             AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
         if(UiDriver_CheckTouchCoordinates(52,60,26,32))			// wf/scope bar magnify up
@@ -690,7 +690,7 @@ void UiDriver_HandleTouchScreen()
       		incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
             UiSpectrum_ClearWaterfallData();
-            UiSpectrumInitSpectrumDisplay();		// init spectrum scope
+            UiSpectrum_InitSpectrumDisplay();		// init spectrum scope
             AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
         }
         if(UiDriver_CheckTouchCoordinates(43,60,00,04))			// TUNE button
@@ -2234,7 +2234,7 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
-                    UiSpectrumClearDisplay();			// clear display under spectrum scope
+                    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
                         UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
@@ -2250,7 +2250,7 @@ static void UiDriver_ProcessKeyboard()
                     }
                     else
                     {
-                        UiSpectrumInitSpectrumDisplay();          // not in menu mode, redraw spectrum scope
+                        UiSpectrum_InitSpectrumDisplay();          // not in menu mode, redraw spectrum scope
                     }
                 }
                 break;
@@ -2299,11 +2299,11 @@ static void UiDriver_ProcessKeyboard()
                     vfo_store->dial_value = df.tune_new;
                     vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
                     UiDriver_FrequencyUpdateLOandDisplay(true);
-                    UiSpectrumClearDisplay();			// clear display under spectrum scope
+                    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
                     UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
                     non_os_delay_multi(18);
 
-                    UiSpectrumInitSpectrumDisplay();			// init spectrum scope
+                    UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
                 }
                 break;
             case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
@@ -2648,7 +2648,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 ts.encoder3state = filter_path_change;
                 filter_path_change = false;			// deactivate while in menu mode
                 UiDriver_DisplayFilter();
-                UiSpectrumClearDisplay();
+                UiSpectrum_ClearDisplay();
                 UiDriver_FButton_F1MenuExit();
                 UiDriver_FButtonLabel(2,"PREV",Yellow);
                 UiDriver_FButtonLabel(3,"NEXT",Yellow);
@@ -2669,7 +2669,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 ts.menu_mode = 0;
                 filter_path_change = ts.encoder3state;
                 UiDriver_DisplayFilter();
-                UiSpectrumInitSpectrumDisplay();			// init spectrum scope
+                UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
                 //
                 // Restore encoder displays to previous modes
                 UiDriver_RefreshEncoderDisplay();
@@ -2725,7 +2725,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
             }
             else	 		// in memory mode
             {
-                UiSpectrumClearDisplay();		// always clear displayclear display
+                UiSpectrum_ClearDisplay();		// always clear displayclear display
                 if(!ts.mem_disp)	 	// are we NOT in memory display mode at this moment?
                 {
                     ts.mem_disp = 1;	// we are not - turn it on
@@ -2733,7 +2733,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 else	 				// we are in memory display mode
                 {
                     ts.mem_disp = 0;	// turn it off
-                    UiSpectrumInitSpectrumDisplay();			// init spectrum scope
+                    UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
                 }
             }
         }
@@ -3099,7 +3099,7 @@ static void UiDriver_CreateDesktop()
     UiDriver_CreateMeters();
 
     // Spectrum scope
-    UiSpectrumInitSpectrumDisplay();
+    UiSpectrum_InitSpectrumDisplay();
 //	UiDriverCreateSpectrumScope();
 //	UiDriverInitSpectrumDisplay();
 
@@ -4442,12 +4442,12 @@ static void UiDriver_TimeScheduler()
             ts.version_number_release = TRX4M_VER_RELEASE;
             ts.version_number_minor = TRX4M_VER_MINOR;
 
-            UiSpectrumClearDisplay();         // clear display under spectrum scope
+            UiSpectrum_ClearDisplay();         // clear display under spectrum scope
             UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
             UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
 
             non_os_delay_multi(6);
-            UiSpectrumInitSpectrumDisplay();          // init spectrum scope
+            UiSpectrum_InitSpectrumDisplay();          // init spectrum scope
         }
 
     }
@@ -6224,7 +6224,7 @@ static void UiDriver_PowerDownCleanup(void)
     const char* txp;
     // Power off all - high to disable main regulator
 
-    UiSpectrumClearDisplay();   // clear display under spectrum scope
+    UiSpectrum_ClearDisplay();   // clear display under spectrum scope
 
     Codec_Mute(true);  // mute audio when powering down
 
@@ -7289,12 +7289,12 @@ void UiDriver_MainHandler()
     if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
     {
 #ifndef DEBUG_FREEDV
-        UiSpectrumReDrawWaterfall();	// yes - call waterfall update instead
+        UiSpectrum_RedrawWaterfall();	// yes - call waterfall update instead
 #endif
     }
     else
     {
-        UiSpectrumReDrawScopeDisplay();	// Spectrum Display enabled - do that!
+        UiSpectrum_RedrawScopeDisplay();	// Spectrum Display enabled - do that!
     }
 
     // Expect the code below to be executed around every 40 - 80ms.
