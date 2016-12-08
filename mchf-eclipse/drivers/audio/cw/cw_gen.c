@@ -20,12 +20,9 @@
 
 // Common
 #include "mchf_board.h"
-
-#include "ui_driver.h"
 #include "softdds.h"
-#include "codec.h"
-
 #include "cw_gen.h"
+
 
 // States
 #define CW_IDLE             0
@@ -69,8 +66,9 @@ typedef struct PaddleState
 // Public paddle state
 __IO PaddleState                ps;
 
-static ulong   cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong size);
-static ulong   cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+static void    CwGen_TestFirstPaddle();
 
 
 #define CW_SMOOTH_TBL_SIZE  32
@@ -112,35 +110,29 @@ static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 };
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_init
-//* Object              : publics init
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-void cw_set_speed()
+void CwGen_SetSpeed()
 {
     ps.dit_time         = 1650/ts.keyer_speed;      //100;
 }
 
-void cw_gen_set_break_time()
+static void CwGen_SetBreakTime()
 {
     ps.break_timer = ts.cw_rx_delay*50;      // break timer value
 }
 
-void cw_gen_init(void)
+/**
+ * @brief Initializes CW generator, called once during init phase
+ */
+void CwGen_Init(void)
 {
 
-    cw_set_speed();
+    CwGen_SetSpeed();
 
     if (ts.txrx_mode != TRX_MODE_TX  ||  ts.dmod_mode != DEMOD_CW)
     {
         // do not change if currently in CW transmit
         ps.cw_state         = CW_IDLE;
-        cw_gen_set_break_time();
+        CwGen_SetBreakTime();
         ps.key_timer		= 0;
     }
 
@@ -157,81 +149,75 @@ void cw_gen_init(void)
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_remove_click_on_rising_edge
-//* Object              : remove clicks
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void cw_gen_remove_click_on_rising_edge(float *i_buffer,float *q_buffer,ulong size)
+/**
+ * @brief remove clicks at start of tone
+ */
+static void CwGen_RemoveClickOnRisingEdge(float *i_buffer,float *q_buffer,ulong size)
 {
-    ulong i,j;
-
     // Do not overload
-    if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
-        return;
-
-    for(i = 0,j = 0; i < size; i++)
+    if(ps.sm_tbl_ptr < (CW_SMOOTH_TBL_SIZE ))
     {
-        i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
-        q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
-
-        j++;
-        if(j == CW_SMOOTH_LEN)
+        for(int i = 0, j = 0; i < size; i++)
         {
-            j = 0;
+            i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
+            q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
 
-            (ps.sm_tbl_ptr)++;
-            if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
-                return;
+            j++;
+            if(j == CW_SMOOTH_LEN)
+            {
+                j = 0;
+
+                ps.sm_tbl_ptr++;
+                if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
+                {
+                    break;
+                    // leave loop and return
+                }
+            }
         }
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_remove_click_on_falling_edge
-//* Object              : remove clicks
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void cw_gen_remove_click_on_falling_edge(float *i_buffer,float *q_buffer,ulong size)
+/**
+ * @brief remove clicks at end of tone
+ */
+static void CwGen_RemoveClickOnFallingEdge(float *i_buffer,float *q_buffer,ulong size)
 {
-    ulong i,j;
-
-    // Do not overload
-    if(ps.sm_tbl_ptr == 0)
-        return;
-
-    // Fix ptr, so we start from the last element
-    if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
-        ps.sm_tbl_ptr = (CW_SMOOTH_TBL_SIZE - 1);
-
-    for(i = 0,j = 0; i < size; i++)
+     // Do not overload
+    if(ps.sm_tbl_ptr != 0)
     {
-        i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
-        q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
-
-        j++;
-        if(j == CW_SMOOTH_LEN)
+        // Fix ptr, so we start from the last element
+        if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
         {
-            j = 0;
+            ps.sm_tbl_ptr = (CW_SMOOTH_TBL_SIZE - 1);
+        }
 
-            (ps.sm_tbl_ptr)--;
-            if(ps.sm_tbl_ptr == 0)
-                return;
+        for(int i = 0,j = 0; i < size; i++)
+        {
+            i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
+            q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
+
+            j++;
+            if(j == CW_SMOOTH_LEN)
+            {
+                j = 0;
+
+                ps.sm_tbl_ptr--;
+                if(ps.sm_tbl_ptr == 0)
+                {
+                    break;
+                    // leave loop and return
+                }
+            }
         }
     }
 }
 
 
 /**
- * Is the logically DIT pressed (may reverse logic of HW contacts)
+ * @brief Is the logically DIT pressed (may reverse logic of HW contacts)
  */
-static bool cw_dit_requested() {
+static bool CwGen_DitRequested() {
     bool retval;
     if(ts.paddle_reverse)      // Paddles ARE reversed
     {
@@ -245,9 +231,9 @@ static bool cw_dit_requested() {
 }
 
 /**
- * Is the logically DAH pressed (may reverse logic of HW contacts)
+ * @brief Is the logically DAH pressed (may reverse logic of HW contacts)
  */
-static bool cw_dah_requested() {
+static bool CwGen_DahRequested() {
     bool retval;
     if(!ts.paddle_reverse)      // Paddles NOT reversed
     {
@@ -260,48 +246,35 @@ static bool cw_dah_requested() {
     return retval;
 }
 
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_check_keyer_state
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void cw_gen_check_keyer_state(void)
+static void CwGen_CheckKeyerState(void)
 {
-    if (cw_dah_requested()) {
+    if (CwGen_DahRequested()) {
             ps.port_state |= CW_DAH_L;
     }
-    if (cw_dit_requested()) {
+    if (CwGen_DitRequested()) {
             ps.port_state |= CW_DIT_L;
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_process
-//* Object              :
-//* Object              : called every 600uS from I2S IRQ
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-ulong cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
+/**
+ * @brief called every 600uS from I2S IRQ, does cw tone generation
+ * @returns true if a tone is currently being active, false if silence/no tone is requested
+ */
+bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
 
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
     {
-        return cw_gen_process_strk(i_buffer,q_buffer,blockSize);
+        return CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
     }
     else
     {
-        return cw_gen_process_iamb(i_buffer,q_buffer,blockSize);
+        return CwGen_ProcessIambic(i_buffer,q_buffer,blockSize);
     }
 }
 
-static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
+
+static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval;
 
@@ -318,7 +291,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong b
         {
             ps.break_timer--;
         }
-        retval = 0;
+        retval = false;
     }
     else
     {
@@ -334,7 +307,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong b
         // then stop at key_timer = 12
         if(ps.key_timer > 12)
         {
-            cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
+            CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
             if(ps.key_timer)
             {
                 ps.key_timer--;
@@ -354,7 +327,7 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong b
         // then finally switch to RX is performed (here, but on next request)
         if(ps.key_timer < 12)
         {
-            cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,blockSize);
+            CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
             if(ps.key_timer)
             {
                 ps.key_timer--;
@@ -370,14 +343,14 @@ static ulong cw_gen_process_strk(float32_t *i_buffer,float32_t *q_buffer,ulong b
                 ps.key_timer--;
             }
         }
-        retval = 1;
+        retval = true;
     }
     return retval;
 }
 
-static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
+static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
-    uint32_t retval = 0;
+    uint32_t retval = false;
     switch(ps.cw_state)
     {
     case CW_IDLE:
@@ -386,7 +359,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
         if( mchf_dit_line_pressed() || mchf_ptt_dah_line_pressed()	||
             (ps.port_state & (CW_DAH_L|CW_DIT_L)))
         {
-            cw_gen_check_keyer_state();
+            CwGen_CheckKeyerState();
             ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
         }
         else
@@ -401,7 +374,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
              {
                  ps.break_timer--;
              }
-             retval = 0;
+             retval = false;
         }
     }
     break;
@@ -435,7 +408,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
         else
         {
             ps.cw_state  = CW_IDLE;
-            cw_gen_set_break_time();
+            CwGen_SetBreakTime();
         }
     }
     break;
@@ -446,12 +419,12 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
 
         // Smooth start of element - initial
         ps.sm_tbl_ptr = 0;
-        cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
+        CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
 
         ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
         ps.cw_state    = CW_KEY_UP;
         ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
-        retval = 1;
+        retval = true;
     }
     break;
     case CW_KEY_UP:
@@ -469,24 +442,24 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
             // Smooth start of element - continue
             if(ps.key_timer > (ps.dit_time/2))
             {
-                cw_gen_remove_click_on_rising_edge(i_buffer,q_buffer,blockSize);
+                CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
             }
             // Smooth end of element
             if(ps.key_timer < 12)
             {
-                cw_gen_remove_click_on_falling_edge(i_buffer,q_buffer,blockSize);
+                CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
             }
             if(ts.keyer_mode == CW_MODE_IAM_B)
             {
-                cw_gen_check_keyer_state();
+                CwGen_CheckKeyerState();
             }
-            retval = 1;
+            retval = true;
         }
     }
     break;
     case CW_PAUSE:
     {
-        cw_gen_check_keyer_state();
+        CwGen_CheckKeyerState();
 
         ps.key_timer--;
         if(ps.key_timer == 0)
@@ -502,14 +475,14 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
             {
                 ps.port_state &= ~(CW_DAH_L);
                 ps.cw_state    = CW_IDLE;
-                cw_gen_set_break_time();
+                CwGen_SetBreakTime();
             }
           }
           else
           {
-        	cw_test_first_paddle();
+        	CwGen_TestFirstPaddle();
 //			if(cw_dah_requested() && ps.ultim == 0)
-			if(ps.port_state & CW_DAH_L && ps.ultim == 0)
+			if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
 			{
           	  ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
               ps.cw_state    = CW_DAH_CHECK;
@@ -518,7 +491,7 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
 			{
           	  ps.port_state &= ~(CW_DAH_L);
           	  ps.cw_state    = CW_IDLE;
-          	  cw_gen_set_break_time();
+          	  CwGen_SetBreakTime();
             }
           }
         }
@@ -531,15 +504,15 @@ static ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong b
 }
 
 
-void cw_test_first_paddle()
+static void CwGen_TestFirstPaddle()
 {
   if(ts.keyer_mode == CW_MODE_ULTIMATE)
   {
-    if(!cw_dit_requested() && cw_dah_requested())
+    if(!CwGen_DitRequested() && CwGen_DahRequested())
     {
       ps.ultim = 1;
     }
-    if(cw_dit_requested() && !cw_dah_requested())
+    if(CwGen_DitRequested() && !CwGen_DahRequested())
     {
       ps.ultim = 0;
     }
@@ -547,18 +520,12 @@ void cw_test_first_paddle()
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_dah_IRQ
-//* Object              : switch to tx
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void cw_gen_dah_IRQ(void)
+/**
+ * @brief request switch to TX and sets timers
+ */
+void CwGen_DahIRQ(void)
 {
     ts.ptt_req = true;
-    // Just flag change - nothing to call
 
     if(ts.keyer_mode == CW_MODE_STRAIGHT)
     {
@@ -567,31 +534,25 @@ void cw_gen_dah_IRQ(void)
         {
             ps.sm_tbl_ptr  = 0;				// smooth table start
             ps.key_timer   = 24;			// smooth steps * 2
-            cw_gen_set_break_time();
+            CwGen_SetBreakTime();
         }
     }
     else
     {
-  	  cw_test_first_paddle();
+  	  CwGen_TestFirstPaddle();
     }
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : cw_gen_dit_IRQ
-//* Object              : switch to tx
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void cw_gen_dit_IRQ(void)
+/**
+ * @brief request switch to TX and sets timers, only does something if not in straight key mode
+ */
+void CwGen_DitIRQ(void)
 {
     // CW mode handler - no dit interrupt in straight key mode
     if(ts.keyer_mode != CW_MODE_STRAIGHT)
     {
         ts.ptt_req = true;
-        // Just flag change - nothing to call
-  		cw_test_first_paddle();
+  		CwGen_TestFirstPaddle();
     }
 }
 
