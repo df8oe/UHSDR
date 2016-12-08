@@ -15,6 +15,9 @@
 #ifndef __MCHF_TYPES_H
 #define __MCHF_TYPES_H
 
+#include "arm_math.h"
+// defines float32_t
+
 #ifndef uchar
 typedef	unsigned char	uchar;
 #endif

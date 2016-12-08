@@ -2,7 +2,7 @@
 
 #include "mchf_board.h"
 
-#include "arm_math.h"
+#include "audio_management.h"
 #include "math.h"
 #include "audio_driver.h"
 #include "softdds.h"
@@ -18,26 +18,28 @@
 //*----------------------------------------------------------------------------
 //
 
-void AudioManagement_CalcAGCDecay(void)
+void AudioManagement_CalcAGCDecay()
 {
-    float tcalc;    // temporary holder - used to avoid conflict during operation
-
-    // Set AGC rate - this needs to be moved to its own function (and the one in "ui_menu.c")
-    //
-    if(ts.agc_mode == AGC_SLOW)
-        ads.agc_decay = AGC_SLOW_DECAY;
-    else if(ts.agc_mode == AGC_FAST)
-        ads.agc_decay = AGC_FAST_DECAY;
-    else if(ts.agc_mode == AGC_CUSTOM)      // calculate custom AGC setting
+    switch (ts.agc_mode)
     {
-        tcalc = (float)ts.agc_custom_decay;
+    case AGC_SLOW:
+        ads.agc_decay = AGC_SLOW_DECAY;
+        break;
+    case AGC_FAST:
+        ads.agc_decay = AGC_FAST_DECAY;
+        break;
+    case AGC_CUSTOM:      // calculate custom AGC setting
+    {
+        float tcalc = (float)ts.agc_custom_decay;
         tcalc += 30;
         tcalc /= 10;
         tcalc = -tcalc;
         ads.agc_decay = powf(10, tcalc);
     }
-    else
+    break;
+    default:
         ads.agc_decay = AGC_MED_DECAY;
+    }
 }
 //
 //
@@ -96,18 +98,12 @@ void AudioManagement_CalcRFGain(void)
 //
 void AudioManagement_CalcAGCVals(void)
 {
-    if(ts.max_rf_gain <= MAX_RF_GAIN_MAX)
-    {
-        ads.agc_knee = AGC_KNEE_REF * (float)(ts.max_rf_gain + 1);
-        ads.agc_val_max = AGC_VAL_MAX_REF / ((float)(ts.max_rf_gain + 1));
-        ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
-    }
-    else
-    {
-        ads.agc_knee = AGC_KNEE_REF * MAX_RF_GAIN_DEFAULT+1;
-        ads.agc_val_max = AGC_VAL_MAX_REF / MAX_RF_GAIN_DEFAULT+1;
-        ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF /  (float)(ts.max_rf_gain + 1);
-    }
+    float max_rf_gain = 1 + (ts.max_rf_gain <= MAX_RF_GAIN_MAX ? ts.max_rf_gain : MAX_RF_GAIN_DEFAULT);
+
+    ads.agc_knee = AGC_KNEE_REF * max_rf_gain;
+    ads.agc_val_max = AGC_VAL_MAX_REF / max_rf_gain;
+    ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
+    // TODO: Why is here always ts.max_rf_gain used? Shouldn't it be max_rf_gain too?
 }
 //
 //
@@ -185,12 +181,6 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : UiCalcTxCompLevel
-//* Object              : Set TX audio compression settings (gain and ALC decay rate) based on user setting
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 typedef struct AlcParams_s
 {
     uint32_t tx_postfilt_gain;
@@ -214,9 +204,11 @@ static const AlcParams alc_params[] =
     { 25, 0},
 };
 
-void AudioManagement_CalcTxCompLevel(void)
+/**
+ * @brief Set TX audio compression settings (gain and ALC decay rate) based on user setting
+ */
+void AudioManagement_CalcTxCompLevel()
 {
-//    float tcalc;
     if (ts.tx_comp_level < 13)
     {
         ts.alc_tx_postfilt_gain_var = alc_params[ts.tx_comp_level].tx_postfilt_gain;      // restore "pristine" EEPROM values
@@ -263,23 +255,16 @@ static void AudioManagement_CalcGoertzel(volatile Goertzel* gv, const uint32_t s
     g->r = 2 * g->cos;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcSubaudibleDetFreq
-//* Object              : Calculate frequency word for subaudible tone  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief Calculate frequency word for subaudible tone, call after change of detection frequency  [KA7OEI October, 2015]
+ */
 void AudioManagement_CalcSubaudibleDetFreq(void)
 {
     const uint32_t size = BUFF_LEN;
 
     ads.fm_subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
-    //
+
     // Calculate Goertzel terms for tone detector(s)
-    //
-    // Terms for "above" detection frequency
-    //
     AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_HIGH],size,FM_GOERTZEL_HIGH);
     AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_LOW],size,FM_GOERTZEL_LOW);
     AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_CTR],size,1.0);
@@ -310,16 +295,11 @@ void AudioManagement_LoadToneBurstMode(void)
     }
 
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLoadBeepFreq
-//* Object              : Load beep frequency  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void AudioManagement_LoadBeepFreq(void)
+
+/**
+ * @brief Generates the sound for a given beep frequency, call after change of beep freq or before beep  [KA7OEI October, 2015]
+ */
+void AudioManagement_LoadBeepFreq()
 {
     float calc;
 
@@ -331,33 +311,27 @@ void AudioManagement_LoadBeepFreq(void)
     {
         softdds_setfreq(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
     }
-    //
+
     calc = (float)ts.beep_loudness;     // range 0-20
     calc /= 2;                          // range 0-10
     calc *= calc;                       // range 0-100
     calc += 3;                          // range 3-103
     ads.beep_loudness_factor = calc / 400;      // range from 0.0075 to 0.2575 - multiplied by DDS output
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiKeyBeep
-//* Object              : Make beep  [KA7OEI October, 2015]
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void AudioManagement_KeyBeep(void)
+
+/**
+ * @brief Tell audio driver to make beeping sound  [KA7OEI October, 2015]
+ */
+void AudioManagement_KeyBeep()
 {
+    // FIXME: Do we really need to call this here, or shall we rely on the calls
+    // made when changing the freq/settings?
+    // right now every beep runs the generator code
     AudioManagement_LoadBeepFreq();       // load and calculate beep frequency
     ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
     ts.beep_active = 1;                                 // activate tone
 }
 
-/** @brief API Function, implements application logic for changing the power level including display updates
- * @param power_level The requested power level (as PA_LEVEL constants)
- * @returns true if there was indeed a power level change
- */
 void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
 {
     float tonefreq[2] = {0.0, 0.0};

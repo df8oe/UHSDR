@@ -3849,7 +3849,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
             // switch FIR Hilberts
         	AudioFilter_InitTxHilbertFIR();
         	// switch IIR Filters
-        	Audio_TXFilter_Init(ts.dmod_mode);
+        	AudioDriver_TxFilterInit(ts.dmod_mode);
         }
     	break;
 
