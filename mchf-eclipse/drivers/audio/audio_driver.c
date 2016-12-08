@@ -491,7 +491,7 @@ void audio_driver_init(void)
     const uint32_t word_size = WORD_SIZE_16;
 
     // CW module init
-    cw_gen_init();
+    CwGen_Init();
 
     // Audio filter disabled
     ts.dsp_inhibit = 1;
@@ -3544,7 +3544,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
         else
         {
             // Generate CW tone if necessary
-            signal_active = cw_gen_process(adb.i_buffer, adb.q_buffer,blockSize) != 0;
+            signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer,blockSize);
         }
 
         if (signal_active)

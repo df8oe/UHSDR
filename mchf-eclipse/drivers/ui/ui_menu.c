@@ -2335,7 +2335,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
 
         if(fchange && ts.dmod_mode == DEMOD_CW)         // did it change?
         {
-            cw_set_speed(); // make sure keyerspeed is being used
+            CwGen_SetSpeed(); // make sure keyerspeed is being used
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
         snprintf(options,32, "  %u", ts.keyer_speed);

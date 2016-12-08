@@ -1173,7 +1173,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         }
         if (ts.dmod_mode == DEMOD_CW)
         {
-            cw_set_speed();
+            CwGen_SetSpeed();
             // make sure the keyer speed is set correctly
         }
         AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode == TRX_MODE_RX?false:tune_mode);
@@ -3104,7 +3104,6 @@ static void UiDriver_CreateDesktop()
 //	UiDriverInitSpectrumDisplay();
 
     UiDriver_RefreshEncoderDisplay();
-    cw_gen_init();
 
     // DSP mode change
     // embedded in UiDriver_RefreshEncoderDisplay() call
@@ -5040,7 +5039,7 @@ static void UiDriver_CheckEncoderThree()
                 {
                     // Convert to Audio Gain incr/decr
                     ts.keyer_speed = change_and_limit_int(ts.keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
-                    cw_set_speed();
+                    CwGen_SetSpeed();
                     UiDriver_DisplayKeyerSpeed(1);
                 }
                 else	 	// in voice mode, adjust audio gain
