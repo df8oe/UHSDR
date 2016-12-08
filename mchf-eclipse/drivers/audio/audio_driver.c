@@ -49,7 +49,7 @@ typedef struct {
 __IO int16_t 	tx_buffer[BUFF_LEN+1];
 __IO int16_t    rx_buffer[BUFF_LEN+1];
 
-static inline void AudioDriver_tx_filter_audio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize);
+static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize);
 
 typedef struct
 {
@@ -74,7 +74,7 @@ typedef struct
 
 float32_t	__attribute__ ((section (".ccm"))) agc_delay	[AGC_DELAY_BUFSIZE+16];
 
-void audio_driver_ClearAGCDelayBuffer()
+static void AudioDriver_ClearAGCDelayBuffer()
 {
     arm_fill_f32(0, agc_delay, AGC_DELAY_BUFSIZE+16);
 }
@@ -426,10 +426,10 @@ LMSData            __attribute__ ((section (".ccm"))) lmsData;
 SnapCarrier   sc;
 #endif
 
-/*
- * @return offset frequency in Hz for current frequency translate mode
+/**
+ * @returns offset frequency in Hz for current frequency translate mode
  */
-int32_t audio_driver_xlate_freq()
+int32_t AudioDriver_GetTranslateFreq()
 {
     int32_t fdelta = 0;
     switch (ts.iq_freq_mode)
@@ -450,7 +450,7 @@ int32_t audio_driver_xlate_freq()
     return fdelta;
 }
 
-static void Audio_InitFilters(void);
+static void AudioDriver_InitFilters(void);
 //
 // THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
 //*----------------------------------------------------------------------------
@@ -486,7 +486,7 @@ void audio_driver_config_nco(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void audio_driver_init(void)
+void AudioDriver_Init(void)
 {
     const uint32_t word_size = WORD_SIZE_16;
 
@@ -546,7 +546,7 @@ void audio_driver_init(void)
     //
     ads.tx_filter_adjusting = 0;	// used to disable TX I/Q filter during adjustment
     // Audio Filter Init init
-    Audio_InitFilters();
+    AudioDriver_InitFilters();
 
 
 
@@ -592,7 +592,6 @@ void audio_driver_init(void)
 
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
 {
-    uint32_t	i;
     float	mu_calc;
 
     ts.dsp_inhibit++;
@@ -1008,23 +1007,19 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     IIR_Squelch_HPF.pkCoeffs = IIR_15k_hpf.pkCoeffs;   // point to reflection coefficients
     IIR_Squelch_HPF.pvCoeffs = IIR_15k_hpf.pvCoeffs;   // point to ladder coefficients
     IIR_Squelch_HPF.numStages = IIR_15k_hpf.numStages;      // number of stages
-    //
-
+    IIR_Squelch_HPF.pState = iir_squelch_rx_state;                  // point to state array for IIR filter
     arm_fill_f32(0.0,iir_squelch_rx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
-    IIR_Squelch_HPF.pState = iir_squelch_rx_state;					// point to state array for IIR filter
 
     // Initialize LMS (DSP Noise reduction) filter
     // It is (sort of) initalized "twice" since this it what it seems to take for the LMS function to
     // start reliably and consistently!
     //
     uint16_t	calc_taps = ts.dsp_nr_numtaps;
-    //
     if((calc_taps < DSP_NR_NUMTAPS_MIN) || (calc_taps > DSP_NR_NUMTAPS_MAX))
     {
         calc_taps = DSP_NR_NUMTAPS_DEFAULT;
     }
 
-    //
     // Load settings into instance structure
     //
     // LMS instance 1 is pre-AGC DSP NR
@@ -1033,10 +1028,9 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     lmsData.lms1Norm_instance.numTaps = calc_taps;
     lmsData.lms1Norm_instance.pCoeffs = lmsData.lms1NormCoeff_f32;
     lmsData.lms1Norm_instance.pState = lmsData.lms1StateF32;
-    //
+
     // Calculate "mu" (convergence rate) from user "DSP Strength" setting.  This needs to be significantly de-linearized to
     // squeeze a wide range of adjustment (e.g. several magnitudes) into a fairly small numerical range.
-    //
     mu_calc = ts.dsp_nr_strength;		// get user setting
     /*
     mu_calc = DSP_NR_STRENGTH_MAX-mu_calc;		// invert (0 = minimum))
@@ -1050,18 +1044,12 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     */
 
     // New DSP NR "mu" calculation method as of 0.0.214
-
     mu_calc /= 2;	// scale input value
     mu_calc += 2;	// offset zero value
     mu_calc /= 10;	// convert from "bels" to "deci-bels"
     mu_calc = powf(10,mu_calc);		// convert to ratio
     mu_calc = 1/mu_calc;			// invert to fraction
     lmsData.lms1Norm_instance.mu = mu_calc;
-
-    // Debug display of mu calculation
-    //	char txt[16];
-    //	snprintf(txt,16, " %d ", (ulong)(mu_calc * 10000));
-    //	UiLcdHy28_PrintText(POS_BOTTOM_BAR_F3_X,POS_BOTTOM_BAR_F3_Y,txt,0xFFFF,0,0);
 
     arm_fill_f32(0.0,lmsData.lms1_nr_delay,LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms1StateF32,DSP_NR_NUMTAPS_MAX + BUFF_LEN);
@@ -1072,11 +1060,8 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     }
 
     // use "canned" init to initialize the filter coefficients
-    //
     arm_lms_norm_init_f32(&lmsData.lms1Norm_instance, calc_taps, &lmsData.lms1NormCoeff_f32[0], &lmsData.lms1StateF32[0], mu_calc, 64);
-    //
 
-    //
     if((ts.dsp_nr_delaybuf_len > DSP_NR_BUFLEN_MAX) || (ts.dsp_nr_delaybuf_len < DSP_NR_BUFLEN_MIN))
     {
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
@@ -1101,8 +1086,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     arm_lms_norm_init_f32(&lmsData.lms2Norm_instance, calc_taps, &lmsData.lms2NormCoeff_f32[0], &lmsData.lms2StateF32[0], mu_calc, 64);
 
     arm_fill_f32(0.0,lmsData.lms2_nr_delay,LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN);
-
-    arm_fill_f32(0.0,lmsData.lms2_nr_delay,LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms2StateF32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);
 
     if(ts.reset_dsp_nr)             // are we to reset the coefficient buffer as well?
@@ -1118,6 +1101,30 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
+
+    ads.agc_decimation_scaling = ads.decimation_rate;
+    ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
+
+    // Set up ZOOM FFT FIR decimation filters
+    // switch right FIR decimation filter depending on sd.magnify
+    if(sd.magnify > 5)
+    {
+        sd.magnify = 0;
+    }
+
+    DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
+    DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
+    DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);          // Decimation factor
+    DECIMATE_ZOOM_FFT_I.pState = decimZoomFFTIState;            // Filter state variables
+    arm_fill_f32(0.0,decimZoomFFTIState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
+
+    DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
+    DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
+    DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
+    DECIMATE_ZOOM_FFT_Q.pState = decimZoomFFTQState;			// Filter state variables
+    arm_fill_f32(0.0,decimZoomFFTQState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
+
+    // Set up RX decimation/filter
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
         DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path].dec->numTaps;      // Number of taps in FIR filter
@@ -1128,9 +1135,17 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
         DECIMATE_RX.numTaps = 0;
         DECIMATE_RX.pCoeffs = NULL;
     }
+
+    DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
+    DECIMATE_RX.pState = decimState;			// Filter state variables
+    arm_fill_f32(0.0,decimState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
+
+    // Set up RX interpolation/filter
+    // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     if (FilterPathInfo[ts.filter_path].interpolate != NULL)
     {
         INTERPOLATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].interpolate->pCoeffs; // Filter coefficients
+        INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
     }
     else
     {
@@ -1138,67 +1153,13 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
         INTERPOLATE_RX.pCoeffs = NULL;
     }
 
-    if(dmod_mode == DEMOD_FM)
-    {
-        ads.decimation_rate = RX_DECIMATION_RATE_48KHZ;
-    }
-    //
-    //
-    ads.agc_decimation_scaling = ads.decimation_rate;
-    ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
-    //
-    // Set up ZOOM FFT FIR decimation filters
-
-    // switch right FIR decimation filter depending on sd.magnify
-    if(sd.magnify > 5)
-    {
-        sd.magnify = 0;
-    }
-
-    DECIMATE_ZOOM_FFT_I.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
-    DECIMATE_ZOOM_FFT_I.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
-    DECIMATE_ZOOM_FFT_Q.numTaps = FirZoomFFTDecimate[sd.magnify].numTaps;
-    DECIMATE_ZOOM_FFT_Q.pCoeffs = FirZoomFFTDecimate[sd.magnify].pCoeffs;
-
-    DECIMATE_ZOOM_FFT_I.M = (1 << sd.magnify);			// Decimation factor
-    DECIMATE_ZOOM_FFT_Q.M = (1 << sd.magnify);			// Decimation factor
-
-    DECIMATE_ZOOM_FFT_I.pState = decimZoomFFTIState;			// Filter state variables
-    DECIMATE_ZOOM_FFT_Q.pState = decimZoomFFTQState;			// Filter state variables
+    INTERPOLATE_RX.L = ads.decimation_rate;         // Interpolation factor, L  (12 kHz * 4 = 48 kHz)
+    INTERPOLATE_RX.pState = interpState;        // Filter state variables
+    arm_fill_f32(0.0,interpState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
 
 
-    // Set up RX decimation/filter
-    DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
-
-
-    DECIMATE_RX.pState = decimState;			// Filter state variables
-    //
-    // Set up RX interpolation/filter
-    // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
-    //
-    INTERPOLATE_RX.L = ads.decimation_rate;			// Interpolation factor, L  (12 kHz * 4 = 48 kHz)
-
-    if (FilterPathInfo[ts.filter_path].interpolate != NULL)
-    {
-        INTERPOLATE_RX.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
-    }
-    else
-    {
-        INTERPOLATE_RX.phaseLength = 0;
-    }
-
-    INTERPOLATE_RX.pState = interpState;		// Filter state variables
-    //
-    for(i = 0; i < FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS; i++)	 	// Initialize all filter state variables
-    {
-        decimState[i] = 0;
-        decimZoomFFTIState[i] = 0;
-        decimZoomFFTQState[i] = 0;
-        interpState[i] = 0;
-    }
-    //
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
-    //
+
     AudioFilter_InitRxHilbertFIR(); // this switches the Hilbert/FIR-filters
 
     // Unlock - re-enable filtering
@@ -1206,39 +1167,24 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
 
 }
-//
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : Audio_TXFilter_Init
-//* Object              :
-//* Object              : init TX audio filters
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void Audio_TXFilter_Init(uint8_t dmod_mode)
+void AudioDriver_TxFilterInit(uint8_t dmod_mode)
 {
-    // -------------------
     // Init TX audio filter - Do so "manually" since built-in init functions don't work with CONST coefficients
-    //
-    //
+
     const arm_iir_lattice_instance_f32* IIR_TXFilterSelected_ptr;
 
     if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
-    	if(ts.tx_filter == TX_FILTER_BASS)
-    	{
+        switch(ts.tx_filter)
+        {
+        case TX_FILTER_BASS:
     	    IIR_TXFilterSelected_ptr = &IIR_TX_WIDE_BASS;
-    	}
-    	else if (ts.tx_filter == TX_FILTER_TENOR)
-    	{
+            break;
+        case TX_FILTER_TENOR:
     	    IIR_TXFilterSelected_ptr = &IIR_TX_WIDE_TREBLE;
-    	}
-    	else
-    	{
+    	    break;
+        default:
     	    IIR_TXFilterSelected_ptr = &IIR_TX_SOPRANO;
     	}
    	}
@@ -1250,9 +1196,8 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
     IIR_TXFilter.numStages = IIR_TXFilterSelected_ptr->numStages;       // number of stages
     IIR_TXFilter.pkCoeffs = IIR_TXFilterSelected_ptr->pkCoeffs; // point to reflection coefficients
     IIR_TXFilter.pvCoeffs = IIR_TXFilterSelected_ptr->pvCoeffs; // point to ladder coefficients
-
-    arm_fill_f32(0.0,iir_tx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
     IIR_TXFilter.pState = iir_tx_state;
+    arm_fill_f32(0.0,iir_tx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
 
 }
 
@@ -1264,11 +1209,11 @@ void Audio_TXFilter_Init(uint8_t dmod_mode)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void Audio_InitFilters(void)
+static void AudioDriver_InitFilters(void)
 {
     AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
 
-    Audio_TXFilter_Init(ts.dmod_mode);
+    AudioDriver_TxFilterInit(ts.dmod_mode);
 
     IIR_biquad_FreeDV_I.pCoeffs = FreeDV_coeffs[0];  // FreeDV Filter test -DL2FW-
     IIR_biquad_FreeDV_Q.pCoeffs = FreeDV_coeffs[0];
@@ -1277,9 +1222,8 @@ static void Audio_InitFilters(void)
     IIR_FreeDV_RX_Filter.numStages = IIR_TX_WIDE_TREBLE.numStages; // using the same for FreeDV RX Audio as for TX
     IIR_FreeDV_RX_Filter.pkCoeffs = IIR_TX_WIDE_TREBLE.pkCoeffs;   // but keeping it constant at "Tenor" to avoid
     IIR_FreeDV_RX_Filter.pvCoeffs = IIR_TX_WIDE_TREBLE.pvCoeffs;   // influence of TX setting in RX path
-
-    arm_fill_f32(0.0,iir_FreeDV_RX_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
     IIR_FreeDV_RX_Filter.pState = iir_tx_state;
+    arm_fill_f32(0.0,iir_FreeDV_RX_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
 
 }
 
@@ -1294,7 +1238,7 @@ static void Audio_InitFilters(void)
 #define AUDIO_RX_NB_DELAY_BUFFER_ITEMS (16)
 #define AUDIO_RX_NB_DELAY_BUFFER_SIZE (AUDIO_RX_NB_DELAY_BUFFER_ITEMS*2)
 
-static void audio_rx_noise_blanker(AudioSample_t * const src, int16_t blockSize)
+static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSize)
 {
     static int16_t	delay_buf[AUDIO_RX_NB_DELAY_BUFFER_SIZE];
     static uchar	delbuf_inptr = 0, delbuf_outptr = 2;
@@ -1312,7 +1256,6 @@ static void audio_rx_noise_blanker(AudioSample_t * const src, int16_t blockSize)
 
 			// bail out if noise blanker disabled, in AM/FM mode, or set to 10 kHz
     {
-
         nb_short_setting = ts.nb_setting;		// convert and rescale NB1 setting for higher resolution in adjustment
         nb_short_setting /= 2;
 
@@ -1359,7 +1302,7 @@ static void audio_rx_noise_blanker(AudioSample_t * const src, int16_t blockSize)
 //* Output Parameters   : uses variables in ads structure
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
+static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
 {
     static bool recalculate_Osc = false;
     //
@@ -1449,7 +1392,7 @@ static void audio_rx_freq_conv(int16_t blockSize, int16_t dir)
 }
 
 #ifdef USE_FREEDV
-static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
+static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
     static int16_t outbuff_count = -3;  //set to -3 since we simulate that we start with history
@@ -1707,7 +1650,7 @@ static bool audio_freedv_rx_processor (AudioSample_t * const src, AudioSample_t 
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_rx_agc_processor(int16_t blockSize)
+static void AudioDriver_RxAgcProcessor(int16_t blockSize)
 {
     static ulong 		i;
     static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
@@ -1790,7 +1733,7 @@ static void audio_rx_agc_processor(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_fm(int16_t blockSize)
+static void AudioDriver_DemodFM(int16_t blockSize)
 {
 
     float r, s, angle, abs_y, x, y, a, b;
@@ -2080,7 +2023,7 @@ static void audio_demod_fm(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
- static void audio_demod_am(int16_t blockSize)
+ static void AudioDriver_DemodAM(int16_t blockSize)
 {
     ulong i, j;
     bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
@@ -2129,7 +2072,7 @@ static void audio_demod_fm(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_demod_am_exp(int16_t blockSize)
+static void AudioDriver_DemodAmExperimental(int16_t blockSize)
 {
     ulong i;
     float32_t sqrt;
@@ -2163,7 +2106,7 @@ static void audio_demod_am_exp(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_lms_notch_filter(int16_t blockSize)
+static void AudioDriver_NotchFilter(int16_t blockSize)
 {
     static ulong		lms2_inbuf = 0;
     static ulong		lms2_outbuf = 0;
@@ -2191,7 +2134,7 @@ static void audio_lms_notch_filter(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_lms_noise_reduction(int16_t blockSize)
+static void AudioDriver_NoiseReduction(int16_t blockSize)
 {
     static ulong		lms1_inbuf = 0, lms1_outbuf = 0;
 
@@ -2233,7 +2176,7 @@ static void audio_lms_noise_reduction(int16_t blockSize)
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-static void audio_snap_carrier (void)
+static void AudioDriver_SnapCarrier (void)
 {
 
     const float32_t buff_len = FFT_IQ_BUFF_LEN2;
@@ -2252,7 +2195,7 @@ static void audio_snap_carrier (void)
     //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
     // FIXME: this is not the right calculation, at least it is a professional programmers blabla . . .
     // In order for me to understand and to be sure it is the right calculation, I have got to change it, even if it is not a const anymore, sorry! DD4WH, 2016_08_30
-    const int posbin = buff_len_int/4  - (buff_len_int * (audio_driver_xlate_freq()/(IQ_SAMPLE_RATE/8)))/16;
+    const int posbin = buff_len_int/4  - (buff_len_int * (AudioDriver_GetTranslateFreq()/(IQ_SAMPLE_RATE/8)))/16;
     // maybe this would be right AND satisfy the professional programmers search for "elegance" ;-)
 
     const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
@@ -2475,7 +2418,7 @@ static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, f
 }
 
 
-void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
+static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 {
 
     if(sd.state == 0)
@@ -2500,7 +2443,7 @@ void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
         }
     }
 }
-void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
+static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
 {
     if(sd.state == 0)
     {
@@ -2605,7 +2548,7 @@ static uint16_t modulus = 0;
  * @returns: true if digital signal should be used (no analog processing should be done), false -> analog processing maybe used
  * since no digital signal was detected.
  */
-static bool audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
+static bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
     bool retval = false;
     switch(ts.dmod_mode)
@@ -2613,7 +2556,7 @@ static bool audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
     case DEMOD_LSB:
     case DEMOD_USB:
     case DEMOD_DIGI:
-        retval = audio_freedv_rx_processor(src,dst,blockSize);
+        retval = AudioDriver_RxProcessorFreeDV(src,dst,blockSize);
         break;
     default:
         // this is silence
@@ -2633,7 +2576,7 @@ static bool audio_dv_rx_processor(AudioSample_t * const src, AudioSample_t * con
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
+static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
     const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
 
@@ -2665,7 +2608,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         }
     }
 
-    audio_rx_noise_blanker(src, blockSize);     // do noise blanker function
+    AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
     // ------------------------
     // Split stereo channels
     for(i = 0; i < blockSize; i++)
@@ -2713,7 +2656,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         }
         else if (sc.state == 1)
         {
-            audio_snap_carrier(); // tunes the mcHF to the largest signal in the filterpassband
+            AudioDriver_SnapCarrier(); // tunes the mcHF to the largest signal in the filterpassband
         }
     }
 #endif
@@ -2732,11 +2675,11 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
     {
         if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)           // Yes - "RX LO LOW" mode
         {
-            audio_rx_freq_conv(blockSize, 1);
+            AudioDriver_FreqConversion(blockSize, 1);
         }
         else                                // it is in "RX LO LOW" mode
         {
-            audio_rx_freq_conv(blockSize, 0);
+            AudioDriver_FreqConversion(blockSize, 0);
         }
     }
 
@@ -2749,7 +2692,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 #ifdef USE_FREEDV
     if (ts.dvmode == true)
     {
-        dvmode_signal = audio_dv_rx_processor(src,dst,blockSize);
+        dvmode_signal = AudioDriver_RxProcessorDigital(src,dst,blockSize);
     }
 #endif
 
@@ -2785,11 +2728,11 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
         case DEMOD_AM:
             if (ts.AM_experiment)
             {
-                audio_demod_am_exp(blockSize);
+                AudioDriver_DemodAmExperimental(blockSize);
             }
             else
             {
-                audio_demod_am(blockSize);
+                AudioDriver_DemodAM(blockSize);
             }
             break;
         case DEMOD_SAM:
@@ -2798,7 +2741,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
             break;
         case DEMOD_FM:
-            audio_demod_fm(blockSize);
+            AudioDriver_DemodFM(blockSize);
             break;
         case DEMOD_DIGI:
             // if we are here, the digital codec (e.g. because of no signal) asked to decode
@@ -2832,14 +2775,14 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
                 {
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW))       // No notch in CW
                     {
-                        audio_lms_notch_filter(blockSizeDecim);     // Do notch filter
+                        AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
-                        audio_lms_noise_reduction(blockSizeDecim);
+                        AudioDriver_NoiseReduction(blockSizeDecim);
                     }
                 }
 
@@ -2851,14 +2794,14 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
             }
 
             // now process the samples and perform the receiver AGC function
-            audio_rx_agc_processor(blockSizeDecim);
+            AudioDriver_RxAgcProcessor(blockSizeDecim);
 
             // DSP noise reduction using LMS (Least Mean Squared) algorithm
             // This is the post-filter, post-AGC instance
             //
             if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))     // Do DSP NR if enabled and if post-DSP NR enabled
             {
-                audio_lms_noise_reduction(blockSizeDecim);
+                AudioDriver_NoiseReduction(blockSizeDecim);
             }
             //
             // Calculate scaling based on decimation rate since this affects the audio gain
@@ -2997,7 +2940,7 @@ static void audio_rx_processor(AudioSample_t * const src, AudioSample_t * const 
 //* Output Parameters   : data via "adb.i_buffer" and "adb.q_buffer"
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void audio_tx_compressor(int16_t blockSize, float gain_scaling)
+static void AudioDriver_TxCompressor(int16_t blockSize, float gain_scaling)
 {
 
     ulong i;
@@ -3075,7 +3018,7 @@ static void audio_tx_compressor(int16_t blockSize, float gain_scaling)
 }
 
 // Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
-void audio_tx_final_iq_processing(float scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
+static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
 {
     int16_t i;
 
@@ -3111,7 +3054,7 @@ void audio_tx_final_iq_processing(float scaling, bool swap, AudioSample_t* const
 }
 
 
-float32_t AudioDriver_absmax(float32_t* buffer, int size) {
+static float32_t AudioDriver_absmax(float32_t* buffer, int size) {
     float32_t min, max;
     uint32_t            pindex;
 
@@ -3121,7 +3064,7 @@ float32_t AudioDriver_absmax(float32_t* buffer, int size) {
     return -min>max?-min:max;
 }
 
-static void AudioDriver_tx_fill_audio_buffer(AudioSample_t * const src, int16_t blockSize)
+static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blockSize)
 {
     const uint8_t tx_audio_source = ts.tx_audio_source;
 
@@ -3189,7 +3132,7 @@ static void AudioDriver_tx_fill_audio_buffer(AudioSample_t * const src, int16_t 
  *  directly: i,q
  *  indirectly: c,d,e,f -> see audio_rx_freq_conv
  */
-void AudioDriver_tx_am_sideband_processor(float32_t* I_buffer, float32_t* Q_buffer,  const int16_t blockSize) {
+static void AudioDriver_TxProcessorAMSideband(float32_t* I_buffer, float32_t* Q_buffer,  const int16_t blockSize) {
 
     // generate AM carrier by applying a "DC bias" to the audio
     //
@@ -3198,10 +3141,10 @@ void AudioDriver_tx_am_sideband_processor(float32_t* I_buffer, float32_t* Q_buff
     //
     // check and apply correct translate mode
     //
-    audio_rx_freq_conv(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+    AudioDriver_FreqConversion(blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 }
 
-static inline void AudioDriver_tx_filter_audio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
+static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
 {
     if (do_bandpass)
     {
@@ -3214,7 +3157,7 @@ static inline void AudioDriver_tx_filter_audio(bool do_bandpass, bool do_bass_tr
     }
 }
 
-static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
 {
     static float32_t    hpf_prev_a, hpf_prev_b;
     float32_t           a, b;
@@ -3234,11 +3177,11 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
         fm_mod_mult = 1;    // not in 5 kHz mode - used default (2.5 kHz) modulation factors
     }
 
-    AudioDriver_tx_fill_audio_buffer(src,blockSize);
+    AudioDriver_TxAudioBufferFill(src,blockSize);
 
-    AudioDriver_tx_filter_audio(true,ts.tx_audio_source != TX_AUDIO_DIG,adb.a_buffer,adb.i_buffer, blockSize);
+    AudioDriver_TxFilterAudio(true,ts.tx_audio_source != TX_AUDIO_DIG,adb.a_buffer,adb.i_buffer, blockSize);
 
-    audio_tx_compressor(blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+    AudioDriver_TxCompressor(blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
     //
     // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "i" and puts it into "a".
     //
@@ -3304,7 +3247,7 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
 
     bool swap = (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
 
-    audio_tx_final_iq_processing(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
+    AudioDriver_TxIqProcessingFinal(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
 
 #ifdef USE_FREEDV
@@ -3320,7 +3263,7 @@ static void audio_tx_fm_processor(AudioSample_t * const src, AudioSample_t * con
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
+static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
     static int16_t outbuff_count = 0;
@@ -3335,7 +3278,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
     if (ts.digital_mode==1)
     { //we are in freedv-mode
 
-        AudioDriver_tx_fill_audio_buffer(src,blockSize);
+        AudioDriver_TxAudioBufferFill(src,blockSize);
 
         // *****************************   DV Modulator goes here - ads.a_buffer must be at 8 ksps
 
@@ -3348,7 +3291,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 
         // this is the correct DECIMATION FILTER (before the downsampling takes place):
         // use it ALWAYS, also with TUNE tone!!!
-        AudioDriver_tx_filter_audio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
+        AudioDriver_TxFilterAudio(true,false, adb.a_buffer,adb.a_buffer, blockSize);
 
 
         // DOWNSAMPLING
@@ -3468,13 +3411,13 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
             bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
             swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 
-            audio_rx_freq_conv(blockSize, swap);
+            AudioDriver_FreqConversion(blockSize, swap);
         }
 #endif
 
         // apply I/Q amplitude & phase adjustments
         bool swap = ts.dmod_mode == DEMOD_USB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == false);
-        audio_tx_final_iq_processing(20.0*SSB_GAIN_COMP, swap, dst, blockSize);
+        AudioDriver_TxIqProcessingFinal(20.0*SSB_GAIN_COMP, swap, dst, blockSize);
     }
     else
     {
@@ -3493,7 +3436,7 @@ static void audio_dv_tx_processor (AudioSample_t * const src, AudioSample_t * co
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
 {
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
@@ -3524,12 +3467,12 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             adb.q_buffer[i] = src[i].r;
         }
 
-        audio_tx_final_iq_processing(1.0, false, dst, blockSize);
+        AudioDriver_TxIqProcessingFinal(1.0, false, dst, blockSize);
         signal_active = true;
     }
     else if (ts.dvmode) {
 #ifdef USE_FREEDV
-        audio_dv_tx_processor(src,dst,blockSize);
+        AudioDriver_TxProcessorDigital(src,dst,blockSize);
         signal_active = true;
 #endif
     }
@@ -3552,7 +3495,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // apply I/Q amplitude & phase adjustments
             // Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
             // Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
-            audio_tx_final_iq_processing(1.0, ts.cw_lsb == 0, dst, blockSize);
+            AudioDriver_TxIqProcessingFinal(1.0, ts.cw_lsb == 0, dst, blockSize);
         }
     }
     // SSB processor
@@ -3560,12 +3503,12 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     {
         if (ads.tx_filter_adjusting == false)
         {
-            AudioDriver_tx_fill_audio_buffer(src,blockSize);
+            AudioDriver_TxAudioBufferFill(src,blockSize);
 
 
             if (!tune)
             {
-                AudioDriver_tx_filter_audio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
+                AudioDriver_TxFilterAudio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
             }
 
             //
@@ -3576,7 +3519,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // - 90 deg to Q data
             arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
-            audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+            AudioDriver_TxCompressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
             if(iq_freq_mode)
             {
@@ -3586,11 +3529,11 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
                 bool swap = dmod_mode == DEMOD_LSB && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
                 swap = swap || ((dmod_mode == DEMOD_USB) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
 
-                audio_rx_freq_conv(blockSize, swap);
+                AudioDriver_FreqConversion(blockSize, swap);
             }
 
             // apply I/Q amplitude & phase adjustments
-            audio_tx_final_iq_processing(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
+            AudioDriver_TxIqProcessingFinal(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
             signal_active = true;
         }
     }
@@ -3601,7 +3544,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
     {
         if(iq_freq_mode && ads.tx_filter_adjusting == false)	 				// is translation active?
         {
-            AudioDriver_tx_fill_audio_buffer(src,blockSize);
+            AudioDriver_TxAudioBufferFill(src,blockSize);
             //
             // Apply the TX equalization filtering:  This "flattens" the audio
             // prior to being applied to the Hilbert transformer as well as added low-pass filtering.
@@ -3610,7 +3553,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // over the 275-2500 Hz range.
             //
 
-            AudioDriver_tx_filter_audio((ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer , blockSize);
+            AudioDriver_TxFilterAudio((ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer , blockSize);
             //
             // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
             // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
@@ -3622,7 +3565,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             // - 90 deg to Q data
             arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
-            audio_tx_compressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
+            AudioDriver_TxCompressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
             //
             // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
             // and putting them back together!  [KA7OEI]
@@ -3635,19 +3578,19 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
             arm_negate_f32(adb.q_buffer, adb.b_buffer, blockSize); // this becomes the i buffer for the upper  sideband
 
             // now generate USB AM sideband signal
-            AudioDriver_tx_am_sideband_processor(adb.i_buffer,adb.q_buffer,blockSize);
+            AudioDriver_TxProcessorAMSideband(adb.i_buffer,adb.q_buffer,blockSize);
 
             arm_copy_f32(adb.i_buffer, adb.i2_buffer, blockSize);
             arm_copy_f32(adb.q_buffer, adb.q2_buffer, blockSize);
             // i2/q2 now contain the LSB AM signal
 
             // now generate USB AM sideband signal
-            AudioDriver_tx_am_sideband_processor(adb.b_buffer,adb.a_buffer,blockSize);
+            AudioDriver_TxProcessorAMSideband(adb.b_buffer,adb.a_buffer,blockSize);
 
             arm_add_f32(adb.i2_buffer,adb.i_buffer,adb.i_buffer,blockSize);
             arm_add_f32(adb.q2_buffer,adb.q_buffer,adb.q_buffer,blockSize);
 
-            audio_tx_final_iq_processing(AM_GAIN_COMP, false, dst, blockSize);
+            AudioDriver_TxIqProcessingFinal(AM_GAIN_COMP, false, dst, blockSize);
             signal_active = true;
         }
     }
@@ -3657,7 +3600,7 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
         if (iq_freq_mode)
         {
             // FM handler  [KA7OEI October, 2015]
-            audio_tx_fm_processor(src,dst,blockSize);
+            AudioDriver_TxProcessorFM(src,dst,blockSize);
             signal_active = true;
         }
     }
@@ -3713,9 +3656,9 @@ static void audio_tx_processor(AudioSample_t * const src, AudioSample_t * const 
 //* Functions called    :
 //*----------------------------------------------------------------------------
 #ifdef USE_24_BITS
-void I2S_RX_CallBack(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
+void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
 #else
-void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
+void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 #endif
 {
     static bool to_rx = 0;	// used as a flag to clear the RX buffer
@@ -3734,10 +3677,10 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             to_rx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, dst, size);
             arm_fill_q15(0, src, size);
-            audio_driver_ClearAGCDelayBuffer();
+            AudioDriver_ClearAGCDelayBuffer();
         }
 
-        audio_rx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
 
         to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
@@ -3748,27 +3691,29 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, dst, size);
             arm_fill_q15(0, src, size);
-            audio_driver_ClearAGCDelayBuffer();
+            AudioDriver_ClearAGCDelayBuffer();
         }
         else
         {
-            audio_tx_processor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
         }
         to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
-    //
+
     if(ts.unmute_delay_count)		// this updates at 375 Hz - used to time TX->RX delay
+    {
         ts.unmute_delay_count--;
-    //
+    }
+
     ks.debounce_time++;				// keyboard debounce timer
     if(ks.debounce_time > DEBOUNCE_TIME_MAX)
+    {
         ks.debounce_time = DEBOUNCE_TIME_MAX;
-    //
+    }
+
     // Perform LCD backlight PWM brightness function
-    //
     UiLcdHy28_BacklightDimHandler();
-    //
-    //
+
     tcount+=CLOCKS_PER_DMA_CYCLE;		// add the number of clock cycles that would have passed between DMA cycles
     if(tcount > CLOCKS_PER_CENTISECOND)	 	// has enough clock cycles for 0.01 second passed?
     {
@@ -3783,9 +3728,9 @@ void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
             ts.beep_timing = 0;
         }
     }
-    //
+
     ts.thread_timer = 0;	// used to trigger the UI Driver thread
-    //
+
     if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
     {
         ts.spectrum_scope_scheduler--;

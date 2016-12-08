@@ -517,16 +517,16 @@ enum	{
 //
 //
 // Exports
-void audio_driver_init(void);
+void AudioDriver_Init(void);
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode);
-void Audio_TXFilter_Init(uint8_t dmod_mode);
-int32_t audio_driver_xlate_freq();
+void AudioDriver_TxFilterInit(uint8_t dmod_mode);
+int32_t AudioDriver_GetTranslateFreq();
 //uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS
-void I2S_RX_CallBack(int32_t *src, int32_t *dst, int16_t size, uint16_t ht);
+void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht);
 #else
-void I2S_RX_CallBack(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
+void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t ht);
 #endif
 
 // Public Audio

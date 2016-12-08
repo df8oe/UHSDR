@@ -224,7 +224,7 @@ void DMA1_Stream2_IRQHandler(void)
 #endif
 
         // Handle 2nd half
-        I2S_RX_CallBack(src, dst, sz, 0);
+        AudioDriver_I2SCallback(src, dst, sz, 0);
 
         // Clear the Interrupt flag
         DMA_ClearFlag(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_TC);
@@ -246,7 +246,7 @@ void DMA1_Stream2_IRQHandler(void)
 #endif
 
         // Handle 1st half
-        I2S_RX_CallBack(src, dst, sz, 1);
+        AudioDriver_I2SCallback(src, dst, sz, 1);
 
         // Clear the Interrupt flag
         DMA_ClearFlag(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_HT);

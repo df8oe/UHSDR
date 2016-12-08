@@ -1107,7 +1107,6 @@ void UiSpectrum_RedrawScopeDisplay()
 
         //
         //
-        ushort ptr;
         //
         // Now, re-arrange the spectrum for the various magnify modes so that they display properly!
         //
@@ -1121,7 +1120,10 @@ void UiSpectrum_RedrawScopeDisplay()
         // we use this  knowledge to simplify the magnification code
         // compiler can heavily optimize this since we  all these values being power of 2 value
 //        if(sd.magnify != 0)	 	// is magnify mode on?
-        if(0)	 	// FIXME
+#if 0
+        ushort ptr;
+
+        if(0)
         { // we don�t need all this any more, because the new Zoom FFT takes care of that, DD4WH, Aug 15th, 2016
             uint32_t end_range;
             switch(ts.iq_freq_mode)
@@ -1168,18 +1170,20 @@ void UiSpectrum_RedrawScopeDisplay()
             }
         }
         else
+#endif
+        {
             arm_copy_q15((q15_t *)sd.FFT_DspData, (q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/2);
-        //
+        }
+
         // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-        //
         for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
         {
             if(sd.FFT_DspData[i] >= spec_height)	// is there an illegal height value?
+            {
                 sd.FFT_DspData[i] = spec_height - 1;	// yes - clip it
-
+            }
         }
-        //
-        //
+
         sd.state++;
         break;
 
@@ -1200,8 +1204,6 @@ void UiSpectrum_RedrawScopeDisplay()
         UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
         // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
         UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
-
-
 
         sd.state = 0;   // Stage 0 - collection of data by the Audio driver
         break;
@@ -1626,7 +1628,7 @@ static void UiSpectrum_FrequencyBarText()
 
     if(!sd.magnify)         // if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
     {
-        freq_calc += audio_driver_xlate_freq();
+        freq_calc += AudioDriver_GetTranslateFreq();
     }
 
     if(sd.magnify < 3)

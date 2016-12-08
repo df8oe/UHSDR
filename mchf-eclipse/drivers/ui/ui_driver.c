@@ -969,7 +969,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
 
     if(!((ts.dmod_mode == DEMOD_CW || (ts.dvmode == true)) && (txrx_mode == TRX_MODE_TX)))
     {
-        tune_freq += audio_driver_xlate_freq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
+        tune_freq += AudioDriver_GetTranslateFreq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
     }
 
     // Extra tuning actions
@@ -1505,7 +1505,7 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
     }
 
     AudioDriver_SetRxAudioProcessing(new_mode);
-    Audio_TXFilter_Init(new_mode);
+    AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
 
 
@@ -5753,7 +5753,7 @@ void UiDriver_DisplayFilterBW()
 
     if(!sd.magnify)	 	// is magnify mode on?
     {
-        lpos = 130-(audio_driver_xlate_freq()/187);
+        lpos = 130-(AudioDriver_GetTranslateFreq()/187);
     }
     else	 	// magnify mode is on
     {

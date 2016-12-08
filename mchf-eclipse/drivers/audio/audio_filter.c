@@ -160,20 +160,20 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
 // 1
     {
         AUDIO_3P6KHZ, "FM", FILTER_MASK_FM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, NULL,
-        0, NULL,
+        RX_DECIMATION_RATE_48KHZ, NULL,
         NULL, NULL
     },
 
     {
         AUDIO_5P0KHZ, "FM", FILTER_MASK_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
-        0, NULL,
+        RX_DECIMATION_RATE_48KHZ, NULL,
         NULL, NULL
     },
 
     {
 //        AUDIO_6P0KHZ, "FM", FILTER_MASK_FM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, NULL,
 	    AUDIO_6P0KHZ, "FM", FILTER_MASK_FM, 1, I_NUM_TAPS, iq_rx_am_6k_coeffs, iq_rx_am_6k_coeffs, NULL,
-        0, NULL,
+	    RX_DECIMATION_RATE_48KHZ, NULL,
         NULL, NULL
     },
 
@@ -940,7 +940,6 @@ arm_fir_instance_f32    FIR_Q_FREEDV;
  * @brief Initialize RX Hilbert filters
  */
 void 	AudioFilter_InitRxHilbertFIR(void)
-//void AudioFilter_CalcRxPhaseAdj(void) // OLD NAME
 {
     ulong i;
 
@@ -974,7 +973,6 @@ void 	AudioFilter_InitRxHilbertFIR(void)
 /*
  * @brief Initialize TX Hilbert filters
  */
-//void AudioFilter_CalcTxPhaseAdj(void) // OLD NAME
 void AudioFilter_InitTxHilbertFIR(void)
 {
 
