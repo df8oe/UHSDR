@@ -11,22 +11,18 @@
 **  Last Modified:                                                                 **
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
-
-#include "math.h"
-#include "arm_math.h"
-
 #ifndef __CW_GEN_H
 #define __CW_GEN_H
 
+#include "arm_math.h"
 
 // Exports
-void 	cw_gen_init();
-void    cw_set_speed();
+void 	CwGen_Init();
+void    CwGen_SetSpeed();
 
-ulong	cw_gen_process(float32_t *i_buffer,float32_t *q_buffer,ulong size);
+bool	CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 
-void	cw_test_first_paddle();
-void 	cw_gen_dah_IRQ();
-void 	cw_gen_dit_IRQ();
+void 	CwGen_DahIRQ();
+void 	CwGen_DitIRQ();
 
 #endif

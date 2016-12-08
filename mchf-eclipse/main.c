@@ -144,7 +144,7 @@ void EXTI0_IRQHandler(void)
         // Call handler
         if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
         {	// was DAH line low?
-            cw_gen_dah_IRQ();		// Yes - go to CW state machine
+            CwGen_DahIRQ();		// Yes - go to CW state machine
         }
         // PTT activate
         else if(ts.dmod_mode != DEMOD_SAM)
@@ -172,7 +172,7 @@ void EXTI1_IRQHandler(void)
         // was Dit line low?  (Validate to prevent extraneous interrupts)
         if(ts.dmod_mode == DEMOD_CW && mchf_dit_line_pressed())
         {
-            cw_gen_dit_IRQ();
+            CwGen_DitIRQ();
         }
     }	// do nothing if not in CW mode!
 
