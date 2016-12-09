@@ -74,7 +74,7 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
 
     // Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
-    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);
+    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	//aaa war 62
 
 #define W8731_DIGI_AU_INTF_FORMAT_PHILIPS 0x02
 #define W8731_DIGI_AU_INTF_FORMAT_PCM     0x00
@@ -178,7 +178,7 @@ void Codec_RX_TX(uint8_t mode)
         // and maintain microphone bias during receive, but this seems to cause problems on receive (e.g. deafness) even
         // if the microphone is muted and "mic boost" is disabled.  (KA7OEI 20151030)
         //
-        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);	// turn off mic bias, etc.
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn off mic bias, etc. //aaa war 62
         //
         // --------------------------------------------------------------
         // Test - route mic to headphones
