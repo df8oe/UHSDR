@@ -1390,6 +1390,18 @@ uint8_t UiLcdHy28_Init(void)
 /*
  * @brief Called to run the touch detection state machine, results are stored in ts structure
  */
+static inline void UiLcdHy28_SetSpiPrescaler(const uint16_t baudrate_prescaler)
+{
+    /*---------------------------- SPIx CR1 Configuration ------------------------*/
+    /* Get the SPIx CR1 value */
+    uint16_t tmpreg = SPI2->CR1;
+    tmpreg &= ~(uint16_t)((uint32_t) (SPI_BaudRatePrescaler_256));
+    tmpreg |= (uint16_t)((uint32_t) (baudrate_prescaler));
+    /* Write to SPIx CR1 */
+    SPI2->CR1 = tmpreg;
+}
+
+
 void UiLcdHy28_TouchscreenDetectPress()
 {
     if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
@@ -1414,17 +1426,6 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
         retval = true;
     }
     return retval;
-}
-
-static inline void UiLcdHy28_SetSpiPrescaler(const uint16_t baudrate_prescaler)
-{
-    /*---------------------------- SPIx CR1 Configuration ------------------------*/
-    /* Get the SPIx CR1 value */
-    uint16_t tmpreg = SPI2->CR1;
-    tmpreg &= ~(uint16_t)((uint32_t) (SPI_BaudRatePrescaler_256));
-    tmpreg |= (uint16_t)((uint32_t) (baudrate_prescaler));
-    /* Write to SPIx CR1 */
-    SPI2->CR1 = tmpreg;
 }
 
 static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
