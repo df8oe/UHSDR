@@ -5503,7 +5503,7 @@ static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
     }
     else
     {
-        snprintf(txt_buf,5,"%2d",ts.tx_gain[ts.tx_audio_source]);
+        snprintf(txt_buf,5,"%3d",ts.tx_gain[ts.tx_audio_source]);
     }
 
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
