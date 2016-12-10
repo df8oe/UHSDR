@@ -582,7 +582,7 @@ int main(void)
     UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
-    Codec_Mute(false);					// make sure codec is un-muted
+    Codec_MuteDAC(false);					// make sure codec is un-muted
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {

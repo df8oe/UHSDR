@@ -1625,7 +1625,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
         {
             RadioManagement_SetBandPowerFactor(ts.band);	// yes, update the power factor
             if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-                Codec_SidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
+                Codec_TxSidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
         }
     }
     else	// not enabled
@@ -2164,7 +2164,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
         }
         if(fchange)
         {
-            Codec_MicBoostCheck(ts.txrx_mode);
+            Codec_SwitchMicTxRxMode(ts.txrx_mode);
 
             if(ts.dmod_mode != DEMOD_CW)
             {
@@ -2201,7 +2201,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                 if(ts.txrx_mode == TRX_MODE_TX)		// in transmit mode?
                 {
                     // TODO: Think about this, this is a hack
-                    Codec_Line_Gain_Adj(ts.tx_gain[TX_AUDIO_LINEIN_L]);		// change codec gain
+                    Codec_LineInGainAdj(ts.tx_gain[TX_AUDIO_LINEIN_L]);		// change codec gain
                 }
             }
         }

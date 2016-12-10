@@ -895,7 +895,7 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
         ts.power_level = power_level;
         if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
         {
-            Codec_SidetoneSetgain(ts.txrx_mode);
+            Codec_TxSidetoneSetgain(ts.txrx_mode);
         }
         // Set TX power factor - to reflect changed power
         RadioManagement_SetBandPowerFactor(band);
@@ -1089,8 +1089,6 @@ void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode)
 
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
-
-    static bool rx_muted = 0;
     uint32_t tune_new;
     bool tx_ok = false;
 
@@ -1145,7 +1143,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             ts.dsp_inhibit = 1;                             // disable DSP when going into TX mode
 
 
-            rx_muted = Codec_PrepareTx(rx_muted, txrx_mode);
+            Codec_PrepareTx(ts.txrx_mode);
 
             if(ts.tx_disable == false)
             {
@@ -1186,13 +1184,14 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     {
         PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
         mchf_board_red_led(0);      // TX led off
-        rx_muted = 0;       // clear flag to indicate that we've muted the audio
     }
 
     if (ts.txrx_mode != txrx_mode_final)
     {
+        ads.agc_holder = ads.agc_val;
+        // store AGC value at instant we went to TX for recovery when we return to RX
         // Switch codec mode
-        Codec_RX_TX(txrx_mode_final);
+        Codec_SwitchTxRxMode(txrx_mode_final);
         ts.txrx_mode = txrx_mode_final;
     }
 }
@@ -1899,12 +1898,6 @@ void UiDriver_Init()
 
     // Read SI570 settings
     lo.lo_error = 0 != Si570_ResetConfiguration();
-
-
-    // Update codec volume
-    //  0 - 16: via codec command
-    // 17 - 30: soft gain after decoder
-    Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*8),ts.txrx_mode);		// This is only approximate - it will be properly set later
 
     // Reset inter driver requests flag
     ts.LcdRefreshReq	= 0;
@@ -4280,7 +4273,7 @@ static void UiDriver_TimeScheduler()
         if(ts.boot_halt_flag)	 	// are we halting boot?
         {
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 0;	// yes - null out audio
-            Codec_Volume(0,ts.txrx_mode);
+            Codec_VolumeSpkr(0);
         }
         else if((ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old) || unmute_flag)	 	// in normal mode - calculate volume normally
         {
@@ -4289,11 +4282,11 @@ static void UiDriver_TimeScheduler()
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
             if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)  				// Note:  Gain > 16 adjusted in audio_driver.c via software
             {
-                Codec_Volume((ts.rx_gain[RX_AUDIO_SPKR].value*5),ts.txrx_mode);
+                Codec_VolumeSpkr((ts.rx_gain[RX_AUDIO_SPKR].value*5));
             }
             else  	// are we in the "software amplification" range?
             {
-                Codec_Volume((80),ts.txrx_mode);		// set to fixed "maximum" gain
+                Codec_VolumeSpkr(80);		// set to fixed "maximum" gain
                 ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
                 ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
                 ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
@@ -4431,7 +4424,7 @@ static void UiDriver_TimeScheduler()
 
         ts.dsp_inhibit = 0;                 // allow DSP to function
         unmute_flag = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
-        Codec_Mute(false);                      // make sure that audio is un-muted
+        Codec_MuteDAC(false);                      // make sure that audio is un-muted
 
 
         if((ts.version_number_major != TRX4M_VER_MAJOR) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))        // Yes - check for new version
@@ -4490,7 +4483,7 @@ static void UiDriver_ChangeBand(uchar is_up)
     if(ts.txrx_mode != TRX_MODE_TX)
     {
 
-        Codec_Volume(0,ts.txrx_mode);		// Turn volume down to suppress click
+        Codec_VolumeSpkr(0);		// Turn volume down to suppress click
         ts.band_change = 1;		// indicate that we need to turn the volume back up after band change
         ads.agc_holder = ads.agc_val;	// save the current AGC value to reload after the band change so that we can better recover
         // from the loud "POP" that will occur when we change bands
@@ -5052,7 +5045,7 @@ static void UiDriver_CheckEncoderThree()
 
                     if (ts.tx_audio_source == TX_AUDIO_MIC)
                     {
-                        Codec_MicBoostCheck(ts.txrx_mode);
+                        Codec_SwitchMicTxRxMode(ts.txrx_mode);
                     }
                     UiDriver_DisplayLineInModeAndGain(1);
                 }
@@ -5890,7 +5883,7 @@ static void UiDriver_HandleSMeter()
             rfg_calc = 31;
         }
 
-        Codec_Line_Gain_Adj((uint8_t)rfg_calc);	// set the RX gain on the codec
+        Codec_LineInGainAdj((uint8_t)rfg_calc);	// set the RX gain on the codec
 
         // Now calculate the RF gain setting
         gcalc = pow10(((rfg_calc * 1.5) - 34.5) / 10) ;
@@ -6225,7 +6218,7 @@ static void UiDriver_PowerDownCleanup(void)
 
     UiSpectrum_ClearDisplay();   // clear display under spectrum scope
 
-    Codec_Mute(true);  // mute audio when powering down
+    Codec_MuteDAC(true);  // mute audio when powering down
 
     txp = "                           ";
     UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
