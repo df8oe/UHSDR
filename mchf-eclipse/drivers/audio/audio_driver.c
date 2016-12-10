@@ -551,7 +551,7 @@ void AudioDriver_Init(void)
 
 
     // Codec init
-    Codec_MCUInterfaceInit(ts.samp_rate,word_size);
+    Codec_MCUInterfaceInit(ts.samp_rate);
 
     // Codec settle delay
     non_os_delay();
@@ -3093,8 +3093,8 @@ static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blo
         break;
         case TX_AUDIO_DIG:
         {
-            gain_calc = ts.tx_gain[TX_AUDIO_DIG];     // We are in MIC In mode:  Calculate Microphone gain
-            gain_calc /= 16;              // rescale microphone gain to a reasonable range
+            // gain_calc = ts.tx_gain[TX_AUDIO_DIG];     // We are in MIC In mode:  Calculate Microphone gain
+            // gain_calc /= 16;              // rescale microphone gain to a reasonable range
             gain_calc = 1;
         }
         break;
