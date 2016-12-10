@@ -184,6 +184,8 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
         // Set up microphone gain and adjust mic boost accordingly
         // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
 
+        non_os_delay();
+
         if(ts.tx_gain[TX_AUDIO_MIC] > 50)	 		// actively adjust microphone gain and microphone boost
         {
             Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
@@ -217,7 +219,10 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
         if(ts.tx_audio_source == TX_AUDIO_MIC)  // we are in MIC IN mode
         {
             ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
-            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,W8731_ANLG_AU_PATH_CNTR_DACSEL|W8731_ANLG_AU_PATH_CNTR_INSEL_MIC|W8731_ANLG_AU_PATH_CNTR_MUTEMIC);    // Mute the microphone with the CODEC (this does so without a CLICK)
+            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,W8731_ANLG_AU_PATH_CNTR_DACSEL|W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
+            // Mute the microphone with the CODEC (this does so without a CLICK) and  remain/switch line in on
+            Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
+            // now we power on all amps including the mic preamp and bias
         }
 
         // Is translate mode active and we have NOT already muted the audio output?
@@ -250,6 +255,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
         // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
         Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
                 W8731_ANLG_AU_PATH_CNTR_DACSEL|
+                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
                 W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
 
         // Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
@@ -277,11 +283,6 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
 
             if(ts.tx_audio_source == TX_AUDIO_MIC)
             {
-                Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
-                // turn on mic preamp first
-                // then let preamp switch on settle
-                non_os_delay();
-                non_os_delay();
 
                 // now enabled the analog path according to gain settings
                 // with or without boost
