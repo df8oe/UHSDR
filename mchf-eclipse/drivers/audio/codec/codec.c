@@ -184,7 +184,7 @@ void Codec_RX_TX(uint8_t mode)
     else		// It is transmit
     {
         Codec_Volume(0,mode);	// Mute sound
-        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic preamp first
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0060);	// turn on mic preamp first
 
         ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
 
