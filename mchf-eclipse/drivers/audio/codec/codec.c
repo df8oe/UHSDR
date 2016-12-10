@@ -73,8 +73,8 @@ void Codec_Reset(uint32_t AudioFreq,ulong word_size)
     //
     Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
 
-    // Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
-    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	//aaa war 62
+    // Reg 06: Power Down Control (Clk off, Osc off, Mic off))
+    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);
 
 #define W8731_DIGI_AU_INTF_FORMAT_PHILIPS 0x02
 #define W8731_DIGI_AU_INTF_FORMAT_PCM     0x00
@@ -135,14 +135,7 @@ void Codec_MicBoostCheck(uint8_t mode)
 
         // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
         // Reg 06: Power Down Control (Clk off, Osc off, Mic On)
-        if(ts.mic_bias)
-        {
-            Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic bias
-        }
-        else
-        {
-            Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0063);	// turn off mic bias
-        }
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);
     }
 }
 
@@ -158,9 +151,6 @@ void Codec_MicBoostCheck(uint8_t mode)
 
 void Codec_RX_TX(uint8_t mode)
 {
-
-    uchar mute_count;
-
     if(mode == TRX_MODE_RX)
     {
         // First step - mute sound
@@ -178,7 +168,7 @@ void Codec_RX_TX(uint8_t mode)
         // and maintain microphone bias during receive, but this seems to cause problems on receive (e.g. deafness) even
         // if the microphone is muted and "mic boost" is disabled.  (KA7OEI 20151030)
         //
-        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn off mic bias, etc. //aaa war 62
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0062);	// turn off mic bias
         //
         // --------------------------------------------------------------
         // Test - route mic to headphones
@@ -194,6 +184,7 @@ void Codec_RX_TX(uint8_t mode)
     else		// It is transmit
     {
         Codec_Volume(0,mode);	// Mute sound
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,0x0061);	// turn on mic preamp first
 
         ads.agc_holder = ads.agc_val;		// store AGC value at instant we went to TX for recovery when we return to RX
 
@@ -204,11 +195,9 @@ void Codec_RX_TX(uint8_t mode)
         }
         else	 	// Not CW or TUNE mode
         {
-            for(mute_count = 0; mute_count < 8; mute_count++)  		// Doing this seems to suppress the loud CLICK
-            {
-                Codec_Volume(0,mode);	// that occurs when going from RX to TX in modes other than CW
-            }
-            // This is probably because of the delay between the mute command, above, and the
+            Codec_Volume(0,mode);	// that occurs when going from RX to TX in modes other than CW
+            // This is to prevent spike of activated mic preamp go to TX
+            non_os_delay();
             non_os_delay();
 
             // Select source or leave it as it is
