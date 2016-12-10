@@ -1931,29 +1931,29 @@ void UiGet_Wfscope_Bar_Text(char* wfbartext)
         switch(ts.spectrum_db_scale)	 	// convert variable to setting
         {
         case DB_DIV_5:
-            lefttext = "5dB/div)    ";
+            lefttext = "SC(5dB/div)    ";
             break;
         case DB_DIV_7:
-            lefttext = "7.5dB/div)  ";
+            lefttext = "SC(7.5dB/div)  ";
             break;
         case DB_DIV_15:
-            lefttext = "15dB/div)   ";
+            lefttext = "SC(15dB/div)   ";
             break;
         case DB_DIV_20:
-            lefttext = "20dB/div)   ";
+            lefttext = "SC(20dB/div)   ";
             break;
         case S_1_DIV:
-            lefttext = "1S-Unit/div)";
+            lefttext = "SC(1S-Unit/div)";
             break;
         case S_2_DIV:
-            lefttext = "2S-Unit/div)";
+            lefttext = "SC(2S-Unit/div)";
             break;
         case S_3_DIV:
-            lefttext = "3S-Unit/div)";
+            lefttext = "SC(3S-Unit/div)";
             break;
         case DB_DIV_10:
         default:
-            lefttext = "10dB/div)   ";
+            lefttext = "SC(10dB/div)   ";
             break;
         }
     }
@@ -1961,25 +1961,25 @@ void UiGet_Wfscope_Bar_Text(char* wfbartext)
     switch(sd.magnify)
     {
     case 1:
-        righttext = "2 > ";
+        righttext = "2  ";
         break;
     case 2:
-        righttext = "4 > ";
+        righttext = "4  ";
         break;
     case 3:
-        righttext = "8 > ";
+        righttext = "8  ";
         break;
     case 4:
-        righttext = "16 >";
+        righttext = "16 ";
         break;
     case 5:
-        righttext = "32 >";
+        righttext = "32 ";
         break;
     case 0:
     default:
-        righttext = "1 > ";
+        righttext = "1  ";
         break;
     }
 
-    sprintf(wfbartext,"SC(%s < Magnify x%s",lefttext,righttext);
+    sprintf(wfbartext,"%s < Magnify x%s>",lefttext,righttext);
 }
