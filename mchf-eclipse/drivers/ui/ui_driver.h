@@ -418,7 +418,8 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 //
 #define	THREAD_TIMING_DELAY			1				// Delay, in 100ths of a second, between thread tasks
 //
-#define	TX_PTT_AUDIO_MUTE_DELAY_MAX		25			// Maximum delay, in 100ths of a second, that audio will be muted after PTT (key-up) to prevent "clicks" and "clunks"
+#define TXRX_SWITCH_AUDIO_MUTE_DELAY_DEFAULT     1          // Default, in 100ths of a second, that audio will be muted after PTT (key-up/key-down) to prevent "clicks" and "clunks"
+#define	TXRX_SWITCH_AUDIO_MUTE_DELAY_MAX		25			// Maximum delay, in 100ths of a second, that audio will be muted after PTT (key-up/key-down) to prevent "clicks" and "clunks"
 //
 //
 // UI Driver State machine definitions

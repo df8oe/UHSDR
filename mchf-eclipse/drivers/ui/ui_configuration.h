@@ -475,7 +475,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DSP_NOTCH_FFT_NUMTAPS    294     // DSP Notch FFT number of taps
 #define EEPROM_SPECTRUM_SIZE       295     // size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 #define EEPROM_FFT_WINDOW       296     // FFT Window information (lower nybble currently used - upper nybble reserved)
-#define EEPROM_TX_PTT_AUDIO_MUTE    297     // timer used for muting TX audio when keying PTT to suppress "click" or "thump"
+#define EEPROM_TXRX_SWITCH_AUDIO_MUTE_DELAY    297     // timer used for muting TX audio when keying PTT to suppress "click" or "thump"
 #define EEPROM_FLAGS2      298     // Miscellaneous status flag, saved in EEPROM - see variable "flags2"
 #define EEPROM_FILTER_DISP_COLOUR   299     // This contains the color of the line under the spectrum/waterfall display
 #define EEPROM_TX_IQ_20M_GAIN_BALANCE    300     // IQ Gain balance for AM transmission

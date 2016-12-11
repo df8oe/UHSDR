@@ -1139,7 +1139,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     {
         if (txrx_mode_final != ts.txrx_mode)
         {
-            ts.tx_audio_muting_flag = 1; // let the audio being muted initially
+            ts.audio_dac_muting_flag = 1; // let the audio being muted initially
         }
 
         if(txrx_mode_final == TRX_MODE_TX)
@@ -1185,7 +1185,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
             mchf_board_red_led(0);      // TX led off
-            ts.tx_audio_muting_flag = 0; // unmute audio output        }
+            ts.audio_dac_muting_flag = 0; // unmute audio output        }
         }
 
         if (ts.txrx_mode != txrx_mode_final)
@@ -4200,6 +4200,7 @@ static void UiDriver_TimeScheduler()
     enum TRX_States_t state;
 
 
+
     // let us figure out if we are in a stable state or if this
     // is the first run after a mode change
     if (ts.txrx_mode == TRX_MODE_TX)
@@ -4226,6 +4227,7 @@ static void UiDriver_TimeScheduler()
         }
         last_state = TRX_STATE_RX;
     }
+
 
     /*** RX MODE ***/
     if(ts.txrx_mode == TRX_MODE_RX)
@@ -4377,17 +4379,10 @@ static void UiDriver_TimeScheduler()
             // we just switched to TX
             if((ts.dmod_mode != DEMOD_CW))        // did we just enter TX mode in voice mode?
             {
-                ts.tx_audio_muting_timer = ts.tx_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
-                ts.tx_audio_muting_flag = 1;
                 ads.alc_val = 1;    // re-init AGC value
                 ads.peak_audio = 0; // clear peak reading of audio meter
             }
 
-        }
-        // Did the TX muting expire?
-        if(ts.sysclock >= ts.tx_audio_muting_timer)
-        {
-            ts.tx_audio_muting_flag = 0;                // Yes, un-mute the transmit audio
         }
 
 
@@ -4408,7 +4403,17 @@ static void UiDriver_TimeScheduler()
     // if we do change modes, some visuals need an update
     if(state == TRX_STATE_RX_TO_TX || state == TRX_STATE_TX_TO_RX)
     {
+        if((ts.dmod_mode != DEMOD_CW))        // did we just enter TX mode in voice mode?
+        {
+            ts.audio_dac_muting_timer = ts.txrx_switch_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
+            ts.audio_dac_muting_flag = 1;
+        }
         UiDriver_TxRxUiSwitch(state);
+    }
+    // Did the TX muting expire?
+    if(ts.sysclock >= ts.audio_dac_muting_timer)
+    {
+        ts.audio_dac_muting_flag = 0;                // Yes, un-mute the transmit audio
     }
 
 
@@ -4420,9 +4425,9 @@ static void UiDriver_TimeScheduler()
     // and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
 
     /*** ONCE AFTER STARTUP DELAY ***/
-    if((ts.sysclock > DSP_STARTUP_DELAY) && (!startup_done_flag))       // has it been long enough after startup?
+    if( startup_done_flag == false && (ts.sysclock > DSP_STARTUP_DELAY))       // has it been long enough after startup?
     {
-        startup_done_flag = 1;                  // set flag so that we do this only once
+        startup_done_flag = true;                  // set flag so that we do this only once
 
         ts.dsp_inhibit = 0;                 // allow DSP to function
         unmute_flag = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!

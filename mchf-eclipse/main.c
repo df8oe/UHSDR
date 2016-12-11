@@ -401,9 +401,9 @@ void TransceiverStateInit(void)
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
-    ts.tx_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ts.tx_audio_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ts.tx_audio_muting_flag = 0;					// when TRUE, audio is to be muted after PTT/keyup
+    ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    ts.audio_dac_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
+    ts.audio_dac_muting_flag = 0;					// when TRUE, audio is to be muted after PTT/keyup
     ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;
     ts.vfo_mem_flag = 0;						// when TRUE, memory mode is enabled
     ts.mem_disp = 0;						// when TRUE, memory display is enabled
@@ -582,7 +582,6 @@ int main(void)
     UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
-    Codec_MuteDAC(false);					// make sure codec is un-muted
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {
