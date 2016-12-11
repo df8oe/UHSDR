@@ -2882,6 +2882,18 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
+    bool do_mute_output =  ts.tx_audio_muting_flag;
+    // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
+    // we still can see the signal on the digital channel, since there is no problem for us here
+
+    float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
+
+    if (ts.tx_audio_muting_flag)
+    {
+        memset(dst,0,blockSize*sizeof(*dst));
+        // Pause or inactivity
+    }
+
     // Transfer processed audio to DMA buffer
     for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
     {
@@ -2897,16 +2909,23 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             ads.beep.acc = 0;
         }
-        //
-        dst[i].l = adb.b_buffer[i];        // Speaker channel (variable level)
-        dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
 
+        if (do_mute_output)
+        {
+            dst[i].l = 0;
+            dst[i].r = 0;
+        }
+        else
+        {
+            dst[i].l = adb.b_buffer[i];        // Speaker channel (variable level)
+            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
+        }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
             if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
             {
-                float32_t val = adb.a_buffer[i] * ts.rx_gain[RX_AUDIO_DIG].value/31.0;
+                float32_t val = adb.a_buffer[i] * usb_audio_gain;
                 audio_in_put_buffer(val);
                 if (USBD_AUDIO_IN_CHANNELS == 2)
                 {
@@ -3605,7 +3624,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if (signal_active == false)
+    if (signal_active == false  || ts.tx_audio_muting_flag)
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
@@ -3686,7 +3705,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     }
     else  			// Transmit mode
     {
-        if((to_tx) || (ts.tx_audio_muting_flag))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
             to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, dst, size);

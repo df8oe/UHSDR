@@ -1092,7 +1092,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     uint32_t tune_new;
     bool tx_ok = false;
 
-	// ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
+    // ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
 
     if(is_splitmode())                  // is SPLIT mode active?
     {
@@ -1128,39 +1128,44 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
     if(txrx_mode == TRX_MODE_TX)
     {
-
         // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
         tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != SI570_TUNE_IMPOSSIBLE;
+    }
 
-        if (tx_ok)
+    uint8_t txrx_mode_final = tx_ok?txrx_mode:TRX_MODE_RX;
+
+    // only switch mode if tx was permitted or rx was requested
+    if (txrx_mode_final != ts.txrx_mode || txrx_mode_final == TRX_MODE_RX)
+    {
+        if (txrx_mode_final != ts.txrx_mode)
+        {
+            ts.tx_audio_muting_flag = 1; // let the audio being muted initially
+        }
+
+        if(txrx_mode_final == TRX_MODE_TX)
         {
             //
             // Below, in VOICE modes we mute the audio BEFORE we activate the PTT.  This is necessary since U3 is switched the instant that we do so,
             // rerouting audio paths and causing all sorts of disruption including CLICKs and squeaks.
             // We restore TX audio levels in the function "Codec_RX_TX()" according to operating mode
             //
-            ts.tx_audio_muting_flag = 1; // let the audio being muted initially
-            ts.dsp_inhibit = 1;                             // disable DSP when going into TX mode
-
+            ts.dsp_inhibit = 1;          // disable DSP when going into TX mode
 
             Codec_PrepareTx(ts.txrx_mode);
 
             if(ts.tx_disable == false)
             {
-                PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
                 mchf_board_red_led(1);      // TX led on
+                PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
                 RadioManagement_EnablePABias();
             }
         }
-    }
 
-    // only switch mode if tx was permitted or rx was requested
-    if (txrx_mode == TRX_MODE_RX || tx_ok == true)
-    {
         df.tune_new = tune_new;
-        RadioManagement_UpdateFrequencyFast(txrx_mode);
+
+        RadioManagement_UpdateFrequencyFast(txrx_mode_final);
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
-        if (txrx_mode == TRX_MODE_TX)
+        if (txrx_mode_final == TRX_MODE_TX)
         {
             uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
             // if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false)
@@ -1174,28 +1179,25 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             CwGen_SetSpeed();
             // make sure the keyer speed is set correctly
         }
-        AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode == TRX_MODE_RX?false:tune_mode);
+        AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
         // make sure the audio is set properly according to txrx and tune modes
-    }
+        if (txrx_mode_final == TRX_MODE_RX)
+        {
+            PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
+            mchf_board_red_led(0);      // TX led off
+            ts.tx_audio_muting_flag = 0; // unmute audio output        }
+        }
 
-    uint8_t txrx_mode_final = tx_ok?txrx_mode:TRX_MODE_RX;
-
-    if (txrx_mode_final == TRX_MODE_RX)
-    {
-        PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
-        mchf_board_red_led(0);      // TX led off
-    }
-
-    if (ts.txrx_mode != txrx_mode_final)
-    {
-        ads.agc_holder = ads.agc_val;
-        // store AGC value at instant we went to TX for recovery when we return to RX
-        // Switch codec mode
-        Codec_SwitchTxRxMode(txrx_mode_final);
-        ts.txrx_mode = txrx_mode_final;
+        if (ts.txrx_mode != txrx_mode_final)
+        {
+            ads.agc_holder = ads.agc_val;
+            // store AGC value at instant we went to TX for recovery when we return to RX
+            // Switch codec mode
+            Codec_SwitchTxRxMode(txrx_mode_final);
+            ts.txrx_mode = txrx_mode_final;
+        }
     }
 }
-
 
 
 
