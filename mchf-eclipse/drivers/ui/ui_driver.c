@@ -1139,6 +1139,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     {
         if (txrx_mode_final != ts.txrx_mode)
         {
+            ts.audio_dac_muting_buffer_count = 2; // wait at least 2 buffer cycles
             ts.audio_dac_muting_flag = 1; // let the audio being muted initially
         }
 
@@ -1155,9 +1156,16 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             if(ts.tx_disable == false)
             {
+
                 MchfBoard_RedLed(LED_STATE_ON); // TX
-                MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
                 RadioManagement_EnablePABias();
+                while (ts.audio_dac_muting_buffer_count >0)
+                {
+                    // TODO: Find a better solution here
+                    asm("nop"); // just wait a little for the silence to come out of the audio path
+                    // this can take up to 1.2ms (time for processing two audio buffer dma requests
+                }
+                MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
             }
         }
 
@@ -1167,17 +1175,17 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
         if (txrx_mode_final == TRX_MODE_TX)
         {
+            if (ts.dmod_mode == DEMOD_CW)
+            {
+                CwGen_PrepareTx();
+                // make sure the keyer is set correctly
+            }
             uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
             // if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false)
             RadioManagement_PowerLevelChange(tx_band,ts.power_level);
             {
                 RadioManagement_SetBandPowerFactor(tx_band);
             }
-        }
-        if (ts.dmod_mode == DEMOD_CW)
-        {
-            CwGen_SetSpeed();
-            // make sure the keyer speed is set correctly
         }
         AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
         // make sure the audio is set properly according to txrx and tune modes

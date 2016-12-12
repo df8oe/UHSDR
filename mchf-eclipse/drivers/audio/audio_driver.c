@@ -2888,10 +2888,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
-    if (ts.audio_dac_muting_flag)
+    if (do_mute_output)
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
+        if (ts.audio_dac_muting_buffer_count > 0)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
     }
 
     // Transfer processed audio to DMA buffer
