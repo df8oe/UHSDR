@@ -1186,9 +1186,10 @@ typedef struct TransceiverState
     bool encoder3state;
     int bc_band;
     uchar c_line;					// position of center line
+
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
-	uint8_t test;
-	TuneToneMode tune_tone_mode;
+
+    TuneToneMode tune_tone_mode;
 
 	uint16_t ramsize; // in KB, this is used to distinguish  between 192 and 256 kB models.
 
@@ -1217,6 +1218,7 @@ extern __IO TransceiverState ts;
 
 #define FDV_BUFFER_SIZE     320
 #define FDV_RX_AUDIO_SIZE_MAX     360
+
 // this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
 #define FDV_BUFFER_AUDIO_NUM   3
 #define FDV_BUFFER_IQ_NUM  3
@@ -1268,15 +1270,20 @@ do {							\
 
 // ------------------------------------------------------------------
 // Exports
+typedef enum {
+    LED_STATE_OFF = 0,
+    LED_STATE_ON = 1,
+    LED_STATE_TOGGLE = 2
+} ledstate_t;
 
-inline void mchf_board_green_led(int state)
+inline void MchfBoard_GreenLed(ledstate_t state)
 {
     switch(state)
     {
-    case 1:
+    case LED_STATE_ON:
         GREEN_LED_PIO->BSRRL = GREEN_LED;
         break;
-    case 0:
+    case LED_STATE_OFF:
         GREEN_LED_PIO->BSRRH = GREEN_LED;
         break;
     default:
@@ -1284,14 +1291,15 @@ inline void mchf_board_green_led(int state)
         break;
     }
 }
-inline void mchf_board_red_led(int state)
+
+inline void MchfBoard_RedLed(ledstate_t state)
 {
     switch(state)
     {
-    case 1:
+    case LED_STATE_ON:
         RED_LED_PIO->BSRRL = RED_LED;
         break;
-    case 0:
+    case LED_STATE_OFF:
         RED_LED_PIO->BSRRH = RED_LED;
         break;
     default:
@@ -1299,9 +1307,40 @@ inline void mchf_board_red_led(int state)
         break;
     }
 }
+/**
+ * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
+ * @param tx_enable true == TX Paths, false == RX Paths
+ */
+inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
+{
+    // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
+    if (tx_enable)
+    {
+        PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
+        // Antenna Direction Output
+        // BPF Direction Output (U1,U2)
+        // PTT Optocoupler LED On (ACC Port) (U6)
+        // QSD Mixer Output Disable (U15)
+        // QSE Mixer Output Enable (U17)
+        // Codec LineIn comes from mcHF LineIn Socket (U3)
+        // Codec LineOut connected to QSE mixer (IQ Out) (U3a)
+    }
+    else
+    {
+        PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
+        // Antenna Direction Input
+        // BPF Direction Input (U1,U2)
+        // PTT Optocoupler LED Off (ACC Port) (U6)
+        // QSD Mixer Output Enable (U15)
+        // QSE Mixer Output Disable (U17)
+        // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
+        // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
+    }
+}
 
-void mchf_HandlePowerDown();
+void MchfBoard_HandlePowerDown();
 
+void MchfBoard_SelectLpfBpf(uint8_t group);
 
 void mchf_board_init(void);
 void mchf_board_post_init(void);

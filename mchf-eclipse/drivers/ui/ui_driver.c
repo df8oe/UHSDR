@@ -120,7 +120,7 @@ static void 	RadioManagement_HandlePttOnOff();
 static void     RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 static bool     RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 
-static void 	UiDriver_InitMainFreqDisplay();
+static void 	UiDriver_CreateMainFreqDisplay();
 
 static bool	    UiDriver_LoadSavedConfigurationAtStartup();
 static bool	    UiDriver_TouchscreenCalibration();
@@ -1155,8 +1155,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             if(ts.tx_disable == false)
             {
-                mchf_board_red_led(1);      // TX led on
-                PTT_CNTR_PIO->BSRRL     = PTT_CNTR;     // TX on and switch CODEC audio paths
+                MchfBoard_RedLed(LED_STATE_ON); // TX
+                MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
                 RadioManagement_EnablePABias();
             }
         }
@@ -1183,8 +1183,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // make sure the audio is set properly according to txrx and tune modes
         if (txrx_mode_final == TRX_MODE_RX)
         {
-            PTT_CNTR_PIO->BSRRH     = PTT_CNTR;     // TX off
-            mchf_board_red_led(0);      // TX led off
+            MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
+            MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
             ts.audio_dac_muting_flag = 0; // unmute audio output        }
         }
 
@@ -1238,107 +1238,29 @@ bool RadioManagement_CalculateCWSidebandMode()
 }
 
 
-
-
-
-static void RadioManagement_BandFilterPulseRelays()
-{
-    BAND2_PIO->BSRRH = BAND2;
-    non_os_delay();
-    BAND2_PIO->BSRRL = BAND2;
-}
-
-
-
 void RadioManagement_ChangeBandFilter(uchar band)
 {
-    // -------------------------------------------
-    // 	 BAND		BAND0		BAND1		BAND2
-    //
-    //	 80m		1			1			x
-    //	 40m		1			0			x
-    //	 20/30m		0			0			x
-    //	 15-10m		0			1			x
-    //
-    // ---------------------------------------------
-    // Set LPFs:
-    // Set relays in groups, internal first, then external group
-    // state change via two pulses on BAND2 line, then idle
-    //
-    // then
-    //
-    // Set BPFs
-    // Constant line states for the BPF filter,
-    // always last - after LPF change
+    // here the bands are mapped to the hardware functions to enable the proper
+    // filter configuration for a given band
+
     switch(band)
     {
     case BAND_MODE_2200:
     case BAND_MODE_630:
     case BAND_MODE_160:
     case BAND_MODE_80:
-    {
-        // Internal group - Set(High/Low)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // External group -Set(High/High)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // BPF
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
+        MchfBoard_SelectLpfBpf(0);
         break;
-    }
 
     case BAND_MODE_60:
     case BAND_MODE_40:
-    {
-        // Internal group - Set(High/Low)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // External group - Reset(Low/High)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // BPF
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
+        MchfBoard_SelectLpfBpf(1);
         break;
-    }
 
     case BAND_MODE_30:
     case BAND_MODE_20:
-    {
-        // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // External group - Reset(Low/High)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // BPF
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
+        MchfBoard_SelectLpfBpf(2);
         break;
-    }
 
     case BAND_MODE_17:
     case BAND_MODE_15:
@@ -1346,25 +1268,8 @@ void RadioManagement_ChangeBandFilter(uchar band)
     case BAND_MODE_10:
     case BAND_MODE_6:
     case BAND_MODE_4:
-    {
-        // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // External group - Set(High/High)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
-        RadioManagement_BandFilterPulseRelays();
-
-        // BPF
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
-
+        MchfBoard_SelectLpfBpf(3);
         break;
-    }
 
     default:
         break;
@@ -2512,13 +2417,10 @@ void UiDriver_RefreshEncoderDisplay()
     UiDriver_ChangeEncoderThreeMode(true);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiInitRxParms
-//* Object              : Initializes/sets all of the crap associated with filters, DSP, band settings, etc.
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief This is THE function to call after changing operational parameters such as frequency or demod mode
+ * It will make sure to update the display AND also tunes to a newly selected frequency if not already tuned to it.
+ */
 void UiDriver_UpdateDisplayAfterParamChange()
 {
     UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
@@ -2530,7 +2432,6 @@ void UiDriver_UpdateDisplayAfterParamChange()
     UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
     UiDriver_DisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
-    ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
     UiDriver_RefreshEncoderDisplay();
 
     if(ts.menu_mode)    // are we in menu mode?
@@ -2715,7 +2616,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 {
                     ts.vfo_mem_mode |= VFO_MEM_MODE_SPLIT;		// yes - turn on MSB to activate SPLIT
                 }
-                UiDriver_InitMainFreqDisplay();      //
+                UiDriver_CreateMainFreqDisplay();      //
                 UiDriver_FrequencyUpdateLOandDisplay(true);
             }
             else	 		// in memory mode
@@ -2974,13 +2875,6 @@ static void UiDriver_DisplayMemoryLabel()
  }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverShowBand
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_DisplayBand(uchar band)
 {
     const char* bandName;
@@ -3044,7 +2938,7 @@ static void UiDriver_DisplayBand(uchar band)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_InitMainFreqDisplay()
+static void UiDriver_CreateMainFreqDisplay()
 {
     UiDriver_FButton_F3MemSplit();
     if((is_splitmode()))	 	// are we in SPLIT mode?
@@ -3064,8 +2958,6 @@ static void UiDriver_InitMainFreqDisplay()
 //*----------------------------------------------------------------------------
 static void UiDriver_CreateDesktop()
 {
-    //char temp[10];
-
     // Backlight off - hide startup logo
     UiLcdHy28_BacklightEnable(false);
 
@@ -3075,17 +2967,8 @@ static void UiDriver_CreateDesktop()
     // Create Band value
     UiDriver_DisplayBand(ts.band);
 
-    // Set filters
-    RadioManagement_ChangeBandFilter(ts.band);
-
-    // Create Decode Mode (USB/LSB/AM/FM/CW)
-    UiDriver_ShowMode();
-
-    // Create Step Mode
-    UiDriver_ShowStep(df.tuning_step);
-
     // Frequency
-    UiDriver_InitMainFreqDisplay();
+    UiDriver_CreateMainFreqDisplay();
 
     // Function buttons
     UiDriver_CreateFunctionButtons(true);
@@ -3095,41 +2978,29 @@ static void UiDriver_CreateDesktop()
 
     // Spectrum scope
     UiSpectrum_InitSpectrumDisplay();
-//	UiDriverCreateSpectrumScope();
-//	UiDriverInitSpectrumDisplay();
 
     UiDriver_RefreshEncoderDisplay();
-
-    // DSP mode change
-    // embedded in UiDriver_RefreshEncoderDisplay() call
-    // UiDriver_DisplayDSPMode(false);
-
 
     // Power level
     UiDriver_DisplayPowerLevel();
 
-    // FIR via keypad, not encoder mode
-    UiDriver_DisplayFilter();
-
-    UiDriver_DisplayFilterBW();	// update on-screen filter bandwidth indicator
-
-    // Create USB Keyboard indicator
-    //UiLcdHy28_PrintText(POS_KBD_IND_X,POS_KBD_IND_Y,"KBD",Grey,Black,0);
-
-    // Create RX/TX indicator
-    //UiLcdHy28_PrintText(POS_TX_IND_X,POS_TX_IND_Y,	"RX", Green,Black,0);
 
     UiDriver_CreateVoltageDisplay();
 
     // Create temperature
     if((lo.sensor_absent == 0) && (df.temp_enabled & 0x0f))
+    {
         UiDriver_CreateTemperatureDisplay(1,1);
+    }
     else
+    {
         UiDriver_CreateTemperatureDisplay(0,1);
+    }
 
     // Set correct frequency
-    //UiDriverUpdateFrequency(1,0);
     UiDriver_FrequencyUpdateLOandDisplay(true);
+
+    UiDriver_UpdateDisplayAfterParamChange();
 
     // Backlight on - only when all is drawn
     UiLcdHy28_BacklightEnable(true);
@@ -4472,28 +4343,21 @@ static void UiDriver_ChangeDemodMode(bool include_disabled_modes)
     UiDriver_UpdateDisplayAfterParamChange();
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeBand
-//* Object              : change band
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief initiate band change.
+ * @param is_up select the next higher band, otherwise go to the next lower band
+ */
 static void UiDriver_ChangeBand(uchar is_up)
 {
-    ulong 	curr_band_index;	// index in band table of currently selected band
-    ulong	new_band_index;		// index of the new selected band
-
-    uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
     // Do not allow band change during TX
     if(ts.txrx_mode != TRX_MODE_TX)
     {
+        ulong   curr_band_index;    // index in band table of currently selected band
+        ulong   new_band_index;     // index of the new selected band
 
-        Codec_VolumeSpkr(0);		// Turn volume down to suppress click
-        ts.band_change = 1;		// indicate that we need to turn the volume back up after band change
-        ads.agc_holder = ads.agc_val;	// save the current AGC value to reload after the band change so that we can better recover
-        // from the loud "POP" that will occur when we change bands
+
+        uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
         curr_band_index = ts.band;
 
@@ -4585,14 +4449,13 @@ static void UiDriver_ChangeBand(uchar is_up)
             df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
         }
 
-
-        // Set TX power factor
-        RadioManagement_SetBandPowerFactor(new_band_index);
-
-        // Set filters
-        RadioManagement_ChangeBandFilter(new_band_index);
+        Codec_VolumeSpkr(0);        // Turn volume down to suppress click
+        ts.band_change = 1;     // indicate that we need to turn the volume back up after band change
+        ads.agc_holder = ads.agc_val;   // save the current AGC value to reload after the band change so that we can better recover
+        // from the loud "POP" that will occur when we change bands
 
         bool new_lsb = RadioManagement_CalculateCWSidebandMode();
+
         uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
 
 
@@ -4603,14 +4466,10 @@ static void UiDriver_ChangeBand(uchar is_up)
             RadioManagement_SetDemodMode(new_dmod_mode);
         }
 
-        // Create Band value
-        UiDriver_DisplayBand(new_band_index);
-
         // Finally update public flag
         ts.band = new_band_index;
 
-
-        UiDriver_UpdateDisplayAfterParamChange();    // re-init because mode/filter may have changed
+        UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
     }
 }
 
@@ -7330,7 +7189,7 @@ void UiDriver_MainHandler()
             }
             break;
         case STATE_HANDLE_POWERSUPPLY:
-            mchf_HandlePowerDown();
+            MchfBoard_HandlePowerDown();
             if(!ts.boot_halt_flag)
             {
                 if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8)){

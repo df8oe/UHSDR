@@ -692,7 +692,7 @@ void mchf_board_init(void)
 /*
  * @brief  handle final power-off and delay
  */
-void mchf_HandlePowerDown() {
+void MchfBoard_HandlePowerDown() {
     static ulong    powerdown_delay = 0;
 
     if(ts.powering_down)        // are we powering down?
@@ -842,4 +842,129 @@ void mchf_board_detect_ramsize() {
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
     ts.ramsize = mchf_board_get_ramsize();
+}
+
+
+
+static void MchfBoard_BandFilterPulseRelays()
+{
+    BAND2_PIO->BSRRH = BAND2;
+    non_os_delay();
+    BAND2_PIO->BSRRL = BAND2;
+}
+
+/**
+ * @brief switches one of the four LPF&BPF groups into the RX/TX signal path
+ * @param group 0: 80m, 1: 40m, 2: 20m , 3:10m
+ */
+void MchfBoard_SelectLpfBpf(uint8_t group)
+{
+    // -------------------------------------------
+    //   BAND       BAND0       BAND1       BAND2
+    //
+    //   80m        1           1           x
+    //   40m        1           0           x
+    //   20/30m     0           0           x
+    //   15-10m     0           1           x
+    //
+    // ---------------------------------------------
+    // Set LPFs:
+    // Set relays in groups, internal first, then external group
+    // state change via two pulses on BAND2 line, then idle
+    //
+    // then
+    //
+    // Set BPFs
+    // Constant line states for the BPF filter,
+    // always last - after LPF change
+    switch(group)
+    {
+    case 0:
+    {
+        // Internal group - Set(High/Low)
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // External group -Set(High/High)
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // BPF
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        break;
+    }
+
+    case 1:
+    {
+        // Internal group - Set(High/Low)
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // External group - Reset(Low/High)
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // BPF
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        break;
+    }
+
+    case 2:
+    {
+        // Internal group - Reset(Low/Low)
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // External group - Reset(Low/High)
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // BPF
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        break;
+    }
+
+    case 3:
+    {
+        // Internal group - Reset(Low/Low)
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRH = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // External group - Set(High/High)
+        BAND0_PIO->BSRRL = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        MchfBoard_BandFilterPulseRelays();
+
+        // BPF
+        BAND0_PIO->BSRRH = BAND0;
+        BAND1_PIO->BSRRL = BAND1;
+
+        break;
+    }
+
+    default:
+        break;
+    }
+
 }
