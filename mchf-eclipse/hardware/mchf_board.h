@@ -1111,10 +1111,10 @@ typedef struct TransceiverState
     uchar	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
     uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
-    uchar	tx_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ulong	tx_audio_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    uchar	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    ulong	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
     uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
-    bool	tx_audio_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
+    bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
     bool	mem_disp;				// when TRUE, memory display is enabled
     bool	load_eeprom_defaults;			// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!

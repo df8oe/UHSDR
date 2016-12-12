@@ -2882,13 +2882,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    bool do_mute_output =  ts.tx_audio_muting_flag;
+    bool do_mute_output =  ts.audio_dac_muting_flag;
     // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
     // we still can see the signal on the digital channel, since there is no problem for us here
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
-    if (ts.tx_audio_muting_flag)
+    if (ts.audio_dac_muting_flag)
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
@@ -3624,7 +3624,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if (signal_active == false  || ts.tx_audio_muting_flag)
+    if (signal_active == false  || ts.audio_dac_muting_flag)
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity

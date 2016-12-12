@@ -631,7 +631,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable"},
 
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","Mute Line Out TX"},
-    { MENU_CONF, MENU_ITEM, CONFIG_TX_AUDIO_MUTE,"206","TX Mute Delay"},
+    { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE,"206","TX/RX Mute Delay"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME,"210","Max Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)"},
 
@@ -3071,14 +3071,14 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(ts.iq_freq_mode)	// Mark RED if translate mode is active
             clr = Red;
         break;
-    case CONFIG_TX_AUDIO_MUTE:	// maximum RX gain setting
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_muting_timing,
+    case CONFIG_TXRX_SWITCH_AUDIO_MUTE:	// maximum RX gain setting
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.txrx_switch_audio_muting_timing,
                                     0,
-                                    TX_PTT_AUDIO_MUTE_DELAY_MAX,
+                                    TXRX_SWITCH_AUDIO_MUTE_DELAY_MAX,
                                     0,
                                     1
                                    );
-        snprintf(options,32, "    %u", ts.tx_audio_muting_timing);
+        snprintf(options,32, "%3ums", ts.txrx_switch_audio_muting_timing*10);
         break;
     case CONFIG_LCD_AUTO_OFF_MODE:	// LCD auto-off mode control
         temp_var = ts.lcd_backlight_blanking;		// get control variable
