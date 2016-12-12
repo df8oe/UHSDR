@@ -3687,7 +3687,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
 
     if(ts.show_tp_coordinates)
     {
-  	  mchf_board_green_led(1);
+  	  MchfBoard_GreenLed(LED_STATE_ON);
     }
     if((ts.txrx_mode == TRX_MODE_RX))
     {
@@ -3757,6 +3757,6 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
 
     if(ts.show_tp_coordinates)
     {
-  	  mchf_board_green_led(0);
+  	  MchfBoard_GreenLed(LED_STATE_OFF);
     }
 }

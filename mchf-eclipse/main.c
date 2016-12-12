@@ -542,7 +542,7 @@ int main(void)
     // HW init
     mchf_board_init();
 
-    mchf_board_green_led(1);
+    MchfBoard_GreenLed(LED_STATE_ON);
 
     // Set default transceiver state
     TransceiverStateInit();

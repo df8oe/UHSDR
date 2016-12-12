@@ -16,12 +16,12 @@
 
 #ifdef USE_FREEDV
 
-// Freedv Test DL2FW
 #include "freedv_api.h"
 #include "codec2_fdmdv.h"
-// end Freedv Test DL2FW
+
 #include "profiling.h"
 #include "ui_lcd_hy28.h"
+
 struct freedv *f_FREEDV;
 
 FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
@@ -305,7 +305,7 @@ void FreeDV_mcHF_HandleFreeDV()
             // while (fdv_audio_has_room())
             // if (fdv_iq_has_data() && fdv_audio_has_room())
             {
-                mchf_board_green_led(0);
+                MchfBoard_GreenLed(LED_STATE_OFF);
 
                 leave_now = false;
                 fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
@@ -418,7 +418,7 @@ void FreeDV_mcHF_HandleFreeDV()
                 }
             }
         }
-        mchf_board_green_led(1);
+        MchfBoard_GreenLed(LED_STATE_ON);
         fdv_print_ber();
         fdv_print_SNR();
         fdv_print_txt_msg();
