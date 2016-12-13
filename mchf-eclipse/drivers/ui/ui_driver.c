@@ -981,9 +981,18 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     return tune_freq*TUNE_MULT;
 }
 
+/**
+ * @brief switch off the PA Bias even if PTT is on
+ */
+void RadioManagement_DisablePaBias()
+{
+    MchfBoard_SetPaBiasValue(0);
+}
 
-
-void RadioManagement_EnablePABias()
+/**
+ * @brief recalculate and set the PA Bias according to requested value
+ */
+void RadioManagement_SetPaBias()
 {
     uint32_t   calc_var;
 
@@ -1001,8 +1010,7 @@ void RadioManagement_EnablePABias()
     {
         calc_var = 255;
     }
-    // Set DAC Channel 1 DHR12L register
-    DAC_SetChannel2Data(DAC_Align_8b_R,calc_var);       // set PA bias
+    MchfBoard_SetPaBiasValue(calc_var);
 }
 
 
@@ -1139,7 +1147,9 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     {
         if (txrx_mode_final != ts.txrx_mode)
         {
+            ts.audio_dac_muting_buffer_count = 2; // wait at least 2 buffer cycles
             ts.audio_dac_muting_flag = 1; // let the audio being muted initially
+            RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
         if(txrx_mode_final == TRX_MODE_TX)
@@ -1152,12 +1162,16 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             ts.dsp_inhibit = 1;          // disable DSP when going into TX mode
 
             Codec_PrepareTx(ts.txrx_mode);
-
             if(ts.tx_disable == false)
             {
                 MchfBoard_RedLed(LED_STATE_ON); // TX
+                while (ts.audio_dac_muting_buffer_count >0)
+                {
+                    // TODO: Find a better solution here
+                    asm("nop"); // just wait a little for the silence to come out of the audio path
+                    // this can take up to 1.2ms (time for processing two audio buffer dma requests
+                }
                 MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
-                RadioManagement_EnablePABias();
             }
         }
 
@@ -1174,18 +1188,18 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 RadioManagement_SetBandPowerFactor(tx_band);
             }
         }
-        if (ts.dmod_mode == DEMOD_CW)
-        {
-            CwGen_SetSpeed();
-            // make sure the keyer speed is set correctly
-        }
         AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
         // make sure the audio is set properly according to txrx and tune modes
         if (txrx_mode_final == TRX_MODE_RX)
         {
             MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
-            ts.audio_dac_muting_flag = 0; // unmute audio output        }
+            ts.audio_dac_muting_flag = 0; // unmute audio output
+            if (ts.dmod_mode == DEMOD_CW)
+            {
+                CwGen_PrepareTx();
+                // make sure the keyer is set correctly for next round
+            }
         }
 
         if (ts.txrx_mode != txrx_mode_final)
@@ -1194,6 +1208,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             // store AGC value at instant we went to TX for recovery when we return to RX
             // Switch codec mode
             Codec_SwitchTxRxMode(txrx_mode_final);
+            RadioManagement_SetPaBias();
             ts.txrx_mode = txrx_mode_final;
         }
     }

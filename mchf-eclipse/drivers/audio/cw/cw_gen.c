@@ -556,4 +556,8 @@ void CwGen_DitIRQ(void)
     }
 }
 
-
+void CwGen_PrepareTx()
+{
+    CwGen_SetSpeed();
+    ps.key_timer        = 0;
+}

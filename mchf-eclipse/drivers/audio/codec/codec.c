@@ -212,7 +212,8 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
  */
 void Codec_PrepareTx(uint8_t current_txrx_mode)
 {
-    if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
+    // if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
+    // FIXME: Remove commented out "if" above, if the CW guys accept that this works as wanted.
     {
         Codec_LineInGainAdj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
 

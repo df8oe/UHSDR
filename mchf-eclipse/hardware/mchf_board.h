@@ -1113,6 +1113,7 @@ typedef struct TransceiverState
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uchar	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     ulong	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    uint32_t audio_dac_muting_buffer_count; // the audio dac out will be muted for number of buffers
     uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
@@ -1336,6 +1337,16 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
         // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
         // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
     }
+}
+
+/**
+ * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
+ */
+inline void MchfBoard_SetPaBiasValue(uint16_t bias)
+{
+    // Set DAC Channel 1 DHR12L register
+    DAC_SetChannel2Data(DAC_Align_8b_R,bias);
+
 }
 
 void MchfBoard_HandlePowerDown();

@@ -3339,7 +3339,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
             if(tchange)
             {
-                RadioManagement_EnablePABias();
+                RadioManagement_SetPaBias();
             }
             if(ts.pa_cw_bias < MIN_BIAS_SETTING)
             {
@@ -3363,7 +3363,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
 
             if(tchange)
             {
-                RadioManagement_EnablePABias();
+                RadioManagement_SetPaBias();
             }
             if(ts.pa_bias < MIN_BIAS_SETTING)
             {
