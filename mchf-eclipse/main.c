@@ -248,7 +248,7 @@ void TransceiverStateInit(void)
     ts.sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
     ts.paddle_reverse	= 0;					// Paddle defaults to NOT reversed
     ts.cw_rx_delay		= CW_RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
-    ts.unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
+    ts.audio_spkr_unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
 
     ts.nb_setting		= 0;					// Noise Blanker setting
 
@@ -272,8 +272,8 @@ void TransceiverStateInit(void)
     ts.menu_var_changed	= 0;					// TRUE if a menu variable was changed and that an EEPROM save should be done
 
     //ts.txrx_lock		= 0;					// unlocked on start
-    ts.audio_unmute		= 0;					// delayed un-mute not needed
-    ts.buffer_clear		= 0;					// used on return from TX to purge the audio buffers
+    ts.audio_spkr_delayed_unmute_request		= 0;					// delayed un-mute not needed
+    ts.rx_processor_input_mute		= 0;					// used on return from TX to purge the audio buffers
 
     ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
     ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
@@ -358,7 +358,7 @@ void TransceiverStateInit(void)
     ts.dsp_inhibit_mute = 0;					// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
     ts.dsp_timed_mute	= 0;					// TRUE if DSP is to be muted for a timed amount
     ts.dsp_inhibit_timing = 0;					// used to time inhibiting of DSP when it must be turned off for some reason
-    ts.reset_dsp_nr		= 0;					// TRUE if DSP NR coefficients are to be reset when "audio_driver_set_rx_audio_filter()" is called
+
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
     ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
     //

@@ -266,7 +266,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
 
         Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);	// turn off mic bias
 
-        ts.audio_unmute = 1;
+        ts.audio_spkr_delayed_unmute_request = 1;
     }
     else		// It is transmit
     {

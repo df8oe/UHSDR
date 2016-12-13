@@ -852,8 +852,8 @@ typedef struct TransceiverState
     uchar	pa_cw_bias;
 
     // flag to show delayed request for unmute afte TX->RX change (remove clicks)
-    uchar	audio_unmute;
-    bool	buffer_clear;
+    uchar	audio_spkr_delayed_unmute_request;
+    bool	rx_processor_input_mute;
 
 #define IQ_ADJUST_POINTS_NUM 4
 
@@ -956,7 +956,7 @@ typedef struct TransceiverState
     ulong	sidetone_freq;
     uchar	paddle_reverse;
     uchar	cw_rx_delay;
-    ulong	unmute_delay_count;
+    ulong	audio_spkr_unmute_delay_count;
 
     uchar	power_level;
 
@@ -1032,7 +1032,6 @@ typedef struct TransceiverState
     bool	dsp_inhibit_mute;			// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
     bool	dsp_timed_mute;				// TRUE if DSP is to be muted for a timed amount
     ulong	dsp_inhibit_timing;			// used to time inhibiting of DSP when it must be turned off for some reason
-    bool	reset_dsp_nr;				// TRUE if DSP NR coefficients are to be reset when "audio_driver_set_rx_audio_filter()" is called
     //
     uchar	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
 

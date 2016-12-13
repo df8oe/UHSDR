@@ -396,7 +396,7 @@ bool	UiDriver_CheckTouchCoordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
-void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
+void RadioManagement_UpdateFrequency(uint8_t txrx_mode);
 uint8_t RadioManagement_GetBand(ulong freq);
 bool RadioManagement_LSBActive(uint16_t dmod_mode);
 

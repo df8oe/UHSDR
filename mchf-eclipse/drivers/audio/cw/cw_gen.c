@@ -283,7 +283,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
     {
         if(ps.break_timer == 0)
         {
-            ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
+            ts.audio_spkr_delayed_unmute_request = 1;		// Assure that TX->RX timer gets reset at the end of an element
             // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);				// straight
             ts.tx_stop_req = true;
         }
@@ -366,7 +366,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
         {
             if(ps.break_timer == 0)
              {
-                 ts.audio_unmute = 1;        // Assure that TX->RX timer gets reset at the end of an element
+                 ts.audio_spkr_delayed_unmute_request = 1;        // Assure that TX->RX timer gets reset at the end of an element
                  // RadioManagement_SwitchTxRx(TRX_MODE_RX,false);               // straight
                  ts.tx_stop_req = true;
              }
@@ -423,7 +423,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 
         ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
         ps.cw_state    = CW_KEY_UP;
-        ts.audio_unmute = 1;		// Assure that TX->RX timer gets reset at the end of an element
+        ts.audio_spkr_delayed_unmute_request = 1;		// Assure that TX->RX timer gets reset at the end of an element
         retval = true;
     }
     break;

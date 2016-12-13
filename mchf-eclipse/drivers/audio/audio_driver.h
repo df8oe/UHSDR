@@ -518,7 +518,7 @@ enum	{
 //
 // Exports
 void AudioDriver_Init(void);
-void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode);
+void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
 void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
 //uchar audio_check_nr_dsp_state(void);

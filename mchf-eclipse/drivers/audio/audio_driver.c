@@ -72,11 +72,11 @@ typedef struct
 } LMSData;
 
 
-float32_t	__attribute__ ((section (".ccm"))) agc_delay	[AGC_DELAY_BUFSIZE+16];
+float32_t	__attribute__ ((section (".ccm"))) audio_delay_buffer	[AGC_DELAY_BUFSIZE+16];
 
-static void AudioDriver_ClearAGCDelayBuffer()
+static void AudioDriver_ClearAudioDelayBuffer()
 {
-    arm_fill_f32(0, agc_delay, AGC_DELAY_BUFSIZE+16);
+    arm_fill_f32(0, audio_delay_buffer, AGC_DELAY_BUFSIZE+16);
 }
 
 
@@ -576,22 +576,17 @@ void AudioDriver_Init(void)
 
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_set_rx_audio_filter
-//* Object              :
-//* Object              : select audio filter
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-// WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
-//	not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
-//  This information is from recommendations by online references for using ARM math/DSP functions
-//
-
-void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
+/**
+ * @brief configures filters/dsp etc. so that audio processing works according to the current configuration
+ * @param dmod_mode needs to know the demodulation mode
+ * @param reset_dsp_nr whether it is supposed to reset also DSP related filters (in most cases false is to be used here)
+ */
+void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 {
+    // WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
+    //  not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
+    //  This information is from recommendations by online references for using ARM math/DSP functions
+
     float	mu_calc;
 
     ts.dsp_inhibit++;
@@ -1054,7 +1049,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     arm_fill_f32(0.0,lmsData.lms1_nr_delay,LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms1StateF32,DSP_NR_NUMTAPS_MAX + BUFF_LEN);
 
-    if(ts.reset_dsp_nr)	 			// are we to reset the coefficient buffer as well?
+    if(reset_dsp_nr)	 			// are we to reset the coefficient buffer as well?
     {
         arm_fill_f32(0.0,lmsData.lms1NormCoeff_f32,DSP_NR_NUMTAPS_MAX + BUFF_LEN);		// yes - zero coefficient buffers
     }
@@ -1088,7 +1083,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     arm_fill_f32(0.0,lmsData.lms2_nr_delay,LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms2StateF32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);
 
-    if(ts.reset_dsp_nr)             // are we to reset the coefficient buffer as well?
+    if(reset_dsp_nr)             // are we to reset the coefficient buffer as well?
     {
         arm_fill_f32(0.0,lmsData.lms2NormCoeff_f32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);      // yes - zero coefficient buffers
     }
@@ -1211,7 +1206,7 @@ void AudioDriver_TxFilterInit(uint8_t dmod_mode)
 //*----------------------------------------------------------------------------
 static void AudioDriver_InitFilters(void)
 {
-    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+    AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 
     AudioDriver_TxFilterInit(ts.dmod_mode);
 
@@ -1708,8 +1703,8 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
     // This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
 
-    arm_copy_f32(adb.a_buffer, &agc_delay[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32(&agc_delay[agc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
+    arm_copy_f32(adb.a_buffer, &audio_delay_buffer[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32(&audio_delay_buffer[agc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
 
     // Update the in/out pointers to the AGC delay buffer
     agc_delay_inbuf += blockSize;						// update circular delay buffer
@@ -3026,8 +3021,8 @@ static void AudioDriver_TxCompressor(int16_t blockSize, float gain_scaling)
     // This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
     //
-    arm_copy_f32(adb.a_buffer, (float32_t *)&agc_delay[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32((float32_t *)&agc_delay[alc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
+    arm_copy_f32(adb.a_buffer, (float32_t *)&audio_delay_buffer[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)&audio_delay_buffer[alc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
     //
     // Update the in/out pointers to the ALC delay buffer
     //
@@ -3684,8 +3679,8 @@ void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t 
 void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 #endif
 {
-    static bool to_rx = 0;	// used as a flag to clear the RX buffer
-    static bool to_tx = 0;	// used as a flag to clear the TX buffer
+    static bool to_rx = false;	// used as a flag to clear the RX buffer
+    static bool to_tx = false;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
 
 
@@ -3695,37 +3690,38 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     }
     if((ts.txrx_mode == TRX_MODE_RX))
     {
-        if((to_rx) || (ts.buffer_clear))	 	// the first time back to RX, clear the buffers to reduce the "crash"
+        if((to_rx) || (ts.rx_processor_input_mute))	 	// the first time back to RX, clear the buffers to reduce the "crash"
         {
-            to_rx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
-            arm_fill_q15(0, dst, size);
             arm_fill_q15(0, src, size);
-            AudioDriver_ClearAGCDelayBuffer();
+            if (to_rx)
+            {
+                AudioDriver_ClearAudioDelayBuffer();
+            }
+            to_rx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
         }
 
         AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
 
-        to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
+        to_tx = true;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
     else  			// Transmit mode
     {
         if((to_tx))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
-            to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
-            arm_fill_q15(0, dst, size);
+            to_tx = false;							// caused by the content of the buffers from TX - used on return from SSB TX
             arm_fill_q15(0, src, size);
-            AudioDriver_ClearAGCDelayBuffer();
+            AudioDriver_ClearAudioDelayBuffer();
         }
         else
         {
             AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
         }
-        to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
+        to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
 
-    if(ts.unmute_delay_count)		// this updates at 375 Hz - used to time TX->RX delay
+    if(ts.audio_spkr_unmute_delay_count)		// this updates at 1.2 kHz - used to time TX->RX delay
     {
-        ts.unmute_delay_count--;
+        ts.audio_spkr_unmute_delay_count--;
     }
 
     ks.debounce_time++;				// keyboard debounce timer
