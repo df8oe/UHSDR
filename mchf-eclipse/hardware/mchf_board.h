@@ -1339,6 +1339,16 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
     }
 }
 
+/**
+ * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
+ */
+inline void MchfBoard_SetPaBiasValue(uint16_t bias)
+{
+    // Set DAC Channel 1 DHR12L register
+    DAC_SetChannel2Data(DAC_Align_8b_R,bias);
+
+}
+
 void MchfBoard_HandlePowerDown();
 
 void MchfBoard_SelectLpfBpf(uint8_t group);
