@@ -390,7 +390,6 @@ void TransceiverStateInit(void)
     // LSB+7 (0x80) = 0:  Normal mode, 1 = SPLIT mode
     // Other bits are currently reserved
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
-    ts.thread_timer = 0;						// used to time thread
     ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
     ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
     ts.waterfall_offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)

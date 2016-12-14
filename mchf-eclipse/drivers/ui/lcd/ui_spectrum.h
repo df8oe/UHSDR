@@ -20,8 +20,7 @@
 
 void UiSpectrum_InitSpectrumDisplay();
 void UiSpectrum_ClearDisplay();
-void UiSpectrum_RedrawWaterfall();
-void UiSpectrum_RedrawScopeDisplay();
+void UiSpectrum_RedrawSpectrumDisplay();
 void UiSpectrumCreateDrawArea(void);
 void UiGet_Wfscope_Bar_Text(char*);
 void UiSpectrum_ClearWaterfallData();

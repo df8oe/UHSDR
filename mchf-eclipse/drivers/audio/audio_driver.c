@@ -3688,6 +3688,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     {
   	  MchfBoard_GreenLed(LED_STATE_ON);
     }
+
     if((ts.txrx_mode == TRX_MODE_RX))
     {
         if((to_rx) || (ts.rx_processor_input_mute))	 	// the first time back to RX, clear the buffers to reduce the "crash"
@@ -3712,10 +3713,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
             arm_fill_q15(0, src, size);
             AudioDriver_ClearAudioDelayBuffer();
         }
-        else
-        {
-            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
-        }
+
+        AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
 
@@ -3724,10 +3724,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         ts.audio_spkr_unmute_delay_count--;
     }
 
-    ks.debounce_time++;				// keyboard debounce timer
-    if(ks.debounce_time > DEBOUNCE_TIME_MAX)
+    if(ks.debounce_time < DEBOUNCE_TIME_MAX)
     {
-        ks.debounce_time = DEBOUNCE_TIME_MAX;
+        ks.debounce_time++;   // keyboard debounce timer
     }
 
     // Perform LCD backlight PWM brightness function
@@ -3740,15 +3739,13 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         ts.sysclock++;	// this clock updates at PRECISELY 100 Hz over the long term
         //
         // Has the timing for the keyboard beep expired?
-        //
+
         if(ts.sysclock > ts.beep_timing)
         {
             ts.beep_active = 0;				// yes, turn the tone off
             ts.beep_timing = 0;
         }
     }
-
-    ts.thread_timer = 0;	// used to trigger the UI Driver thread
 
     if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
     {

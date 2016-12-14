@@ -1099,7 +1099,6 @@ typedef struct TransceiverState
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
-    bool	thread_timer;				// used to trigger the thread timing (e.g. "driver_thread()")
     uchar	waterfall_color_scheme;			// stores waterfall color scheme
     uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
     ulong	waterfall_offset;			// offset for waterfall display

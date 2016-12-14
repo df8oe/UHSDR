@@ -3434,15 +3434,21 @@ static void UiDriver_UpdateTopMeterA(uchar val)
     UiDriver_UpdateMeter(val,SMETER_MAX_LEVEL+1,Blue2,METER_TOP);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateBtmMeter
-//* Object              : redraw indicator
-//* Input Parameters    : val=indicated value, warn=red warning threshold
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriver_UpdateBtmMeter(uchar val, uchar warn)
+/**
+ * @brief updates the lower meter
+ * @param val the value to display, max value is S_METER_MAX, min is 0, values will be limited to range
+ * @param warn the level value from which the meter is going to show warning indication
+ */
+static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 {
+    if (val < 0)
+    {
+        val = 0;
+    }
+    if (val > S_METER_MAX)
+    {
+        val = S_METER_MAX;
+    }
     UiDriver_UpdateMeter(val,warn,Cyan,METER_BTM);
 }
 
@@ -5858,7 +5864,7 @@ static void UiDriver_HandleSMeter()
 }
 
 
-void UiDriver_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
+void RadioManagement_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
     float pwr;
     float dbm;
@@ -5891,7 +5897,7 @@ void UiDriver_PowerFromADCValue(float val, float sensor_null, float coupling_cal
  * @brief Measures and calculates TX Power Output and SWR, has to be called regularily
  * @returns true if new values have been calculated
  */
-static bool UiDriver_UpdatePowerAndVSWR()
+static bool RadioManagement_UpdatePowerAndVSWR()
 {
 
     uint16_t  val_p,val_s = 0;
@@ -5941,8 +5947,8 @@ static bool UiDriver_UpdatePowerAndVSWR()
             swrm.fwd_calc /= SWR_SAMPLES_CNT;
             swrm.rev_calc /= SWR_SAMPLES_CNT;
 
-            UiDriver_PowerFromADCValue(swrm.fwd_calc, sensor_null, coupling_calc,&swrm.fwd_pwr, &swrm.fwd_dbm);
-            UiDriver_PowerFromADCValue(swrm.rev_calc, sensor_null, coupling_calc,&swrm.rev_pwr, &swrm.rev_dbm);
+            RadioManagement_PowerFromADCValue(swrm.fwd_calc, sensor_null, coupling_calc,&swrm.fwd_pwr, &swrm.fwd_dbm);
+            RadioManagement_PowerFromADCValue(swrm.rev_calc, sensor_null, coupling_calc,&swrm.rev_pwr, &swrm.rev_dbm);
 
             // Reset accumulators and variables for power measurements
             swrm.p_curr   = 0;
@@ -5979,7 +5985,7 @@ static void UiDriver_HandleTXMeters()
         fwd_pwr_avg = -1;
         rev_pwr_avg = -1;
     }
-    else if (UiDriver_UpdatePowerAndVSWR())
+    else if (RadioManagement_UpdatePowerAndVSWR())
     {
 
         // display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
@@ -6029,13 +6035,15 @@ static void UiDriver_HandleTXMeters()
             {
                 // (Do nothing/freeze old data if below this power level)
                 if(swrm.vswr_dampened < 1)	// initialize averaging if this is the first time (e.g. VSWR <1 = just returned from RX)
+                {
                     swrm.vswr_dampened = swrm.vswr;
+                }
                 else
                 {
                     swrm.vswr_dampened = swrm.vswr_dampened * (1 - VSWR_DAMPENING_FACTOR);
                     swrm.vswr_dampened += swrm.vswr * VSWR_DAMPENING_FACTOR;
                 }
-                //
+
                 scale_calc = (uchar)(swrm.vswr_dampened * 4);		// yes - four dots per unit of VSWR
                 UiDriver_UpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
             }
@@ -6046,11 +6054,7 @@ static void UiDriver_HandleTXMeters()
             scale_calc *= scale_calc;		// square the value
             scale_calc = log10f(scale_calc);	// get the log10
             scale_calc *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
-            if(scale_calc < 0)
-            {
-                scale_calc = 0;
-            }
-            //
+
             UiDriver_UpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
         }
         else if(ts.tx_meter_mode == METER_AUDIO)
@@ -6061,12 +6065,7 @@ static void UiDriver_HandleTXMeters()
             scale_calc = log10f(scale_calc);	// get the log10
             scale_calc *= 10;					// convert to DeciBels and scale for the meter
             scale_calc += 11;					// offset for meter
-            //
-            if(scale_calc < 0)
-            {
-                scale_calc = 0;
-            }
-            //
+
             UiDriver_UpdateBtmMeter((uchar)(scale_calc), 22);	// update the meter, setting the "red" threshold
         }
     }
@@ -7139,26 +7138,16 @@ void UiDriver_MainHandler()
         // to all other processing below.
         if(!ts.boot_halt_flag)
         {
-
-
             UiDriver_CheckEncoderOne();
             UiDriver_CheckEncoderTwo();
             UiDriver_CheckEncoderThree();
             UiDriver_CheckFrequencyEncoder();
             UiDriver_KeyboardProcessOldClicks();
+            RadioManagement_HandlePttOnOff();
         }
     }
 
-    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)  	// is waterfall mode enabled?
-    {
-#ifndef DEBUG_FREEDV
-        UiSpectrum_RedrawWaterfall();	// yes - call waterfall update instead
-#endif
-    }
-    else
-    {
-        UiSpectrum_RedrawScopeDisplay();	// Spectrum Display enabled - do that!
-    }
+    UiSpectrum_RedrawSpectrumDisplay();
 
     // Expect the code below to be executed around every 40 - 80ms.
     // The exact time between two calls is unknown and varies with different
@@ -7166,23 +7155,15 @@ void UiDriver_MainHandler()
     // Nothing with short intervals < 100ms  and/or need for very regular intervals between calls
     // should be placed in here.
 
-    // if(ts.thread_timer == 0)			// bail out if it is not time to do this task
     if(UiDriver_TimerIsExpired(SCTimer_MAIN,now,1))            // bail out if it is not time to do this task
     {
-        ts.thread_timer = 1;		// reset flag to schedule next occurrence
-
-        if(!ts.boot_halt_flag)
-        {
-            RadioManagement_HandlePttOnOff();
-        }
-
-
         switch(drv_state)
         {
         case STATE_S_METER:
             if(!ts.boot_halt_flag)
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4)){
+                if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4))
+                {
                     UiDriver_HandleSMeter();
                 }
             }
@@ -7197,7 +7178,8 @@ void UiDriver_MainHandler()
             MchfBoard_HandlePowerDown();
             if(!ts.boot_halt_flag)
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8)){
+                if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8))
+                {
                     UiDriver_HandleVoltage();
                 }
             }
@@ -7205,7 +7187,8 @@ void UiDriver_MainHandler()
         case STATE_LO_TEMPERATURE:
             if(!ts.boot_halt_flag)
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64)){
+                if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64))
+                {
                     UiDriver_HandleLoTemperature();
                 }
             }
@@ -7251,5 +7234,3 @@ void UiDriver_MainHandler()
         }
     }
 }
-
-
