@@ -676,7 +676,7 @@ enum
 //
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
-#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX
+#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
 //
 #define	CW_RX_DELAY_MAX			50	// Maximum TX to RX turnaround setting
 #define	CW_RX_DELAY_DEFAULT		8
@@ -852,7 +852,6 @@ typedef struct TransceiverState
     uchar	pa_cw_bias;
 
     // flag to show delayed request for unmute afte TX->RX change (remove clicks)
-    uchar	audio_spkr_delayed_unmute_request;
     bool	rx_processor_input_mute;
 
 #define IQ_ADJUST_POINTS_NUM 4
@@ -1128,8 +1127,6 @@ typedef struct TransceiverState
     ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
     uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
     bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-    bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
-    bool	mic_bias;				// TRUE = mic bias on
 
 #define EEPROM_SER_NONE 0
 #define EEPROM_SER_WRONG_SIG 1

@@ -1541,13 +1541,10 @@ void UiSpectrum_RedrawWaterfall()
 //
 void UiSpectrum_InitSpectrumDisplay()
 {
-    if(ts.boot_halt_flag == false)			// do not build spectrum display/waterfall if we are loading EEPROM defaults!
-    {
         UiSpectrum_ClearDisplay();			// clear display under spectrum scope
         UiSpectrum_CreateDrawArea();
         UiSpectrum_InitSpectrumDisplayData();
         UiDriver_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
-    }
 }
 
 //
@@ -1666,7 +1663,6 @@ void UiSpectrum_RedrawSpectrumDisplay()
             && (ts.menu_mode == false)
             && (ts.powering_down == false)
             && (ts.mem_disp == false)
-            && (ts.boot_halt_flag == false)
             && (sd.enabled == true)
             && (ts.lcd_blanking_flag == false)
     )

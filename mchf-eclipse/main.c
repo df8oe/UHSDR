@@ -271,8 +271,6 @@ void TransceiverStateInit(void)
     ts.menu_var			= 0;					// menu item change variable
     ts.menu_var_changed	= 0;					// TRUE if a menu variable was changed and that an EEPROM save should be done
 
-    //ts.txrx_lock		= 0;					// unlocked on start
-    ts.audio_spkr_delayed_unmute_request		= 0;					// delayed un-mute not needed
     ts.rx_processor_input_mute		= 0;					// used on return from TX to purge the audio buffers
 
     ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
@@ -417,8 +415,6 @@ void TransceiverStateInit(void)
     ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
     ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;			// loudness of keyboard/CW sidetone test beep
     ts.load_freq_mode_defaults = 0;					// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-    ts.boot_halt_flag = 0;						// when TRUE, boot-up is halted - used to allow various test functions
-    ts.mic_bias = 1;						// mic bias on
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
     ts.tp_present = 0;						// default no touchscreen
@@ -580,7 +576,7 @@ int main(void)
 
     UiDriver_UpdateDisplayAfterParamChange();
 
-    ts.rx_gain[RX_AUDIO_SPKR].value_old = 99;		// Force update of volume control
+    ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {

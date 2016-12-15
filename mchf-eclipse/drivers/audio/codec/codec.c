@@ -256,7 +256,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
         // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
         Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
                 W8731_ANLG_AU_PATH_CNTR_DACSEL|
-                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
+                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|
                 W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
 
         // Reg 06: Power Down Control (Clk off, Osc off, Mic Off)
@@ -265,8 +265,6 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
         // if the microphone is muted and "mic boost" is disabled.  (KA7OEI 20151030)
 
         Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);	// turn off mic bias
-
-        ts.audio_spkr_delayed_unmute_request = 1;
     }
     else		// It is transmit
     {

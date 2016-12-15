@@ -2877,11 +2877,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    bool do_mute_output =  ts.audio_dac_muting_flag;
+    bool do_mute_output =  ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count > 0;
     // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
     // we still can see the signal on the digital channel, since there is no problem for us here
 
-    float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
     if (do_mute_output)
     {
@@ -2892,6 +2891,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             ts.audio_dac_muting_buffer_count--;
         }
     }
+
+    float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
     // Transfer processed audio to DMA buffer
     for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
@@ -3623,10 +3624,14 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if (signal_active == false  || ts.audio_dac_muting_flag)
+    if (signal_active == false  || ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count >0 )
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
+        if (ts.audio_dac_muting_buffer_count)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
     }
 
     switch (ts.stream_tx_audio)

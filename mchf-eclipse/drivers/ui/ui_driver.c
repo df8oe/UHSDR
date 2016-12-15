@@ -69,7 +69,7 @@ static void 	UiDriver_CreateMeters();
 static void 	UiDriver_DrawSMeter(ushort color);
 //
 static void 	UiDriver_UpdateTopMeterA(uchar val);
-static void 	UiDriver_UpdateBtmMeter(uchar val, uchar warn);
+static void 	UiDriver_UpdateBtmMeter(float val, uchar warn);
 
 static void 	UiDriver_InitFrequency();
 //
@@ -1142,12 +1142,18 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // which may cause audio issues
         if (txrx_mode_final != ts.txrx_mode)
         {
+
             ts.audio_dac_muting_buffer_count = 2; // wait at least 2 buffer cycles
-            ts.audio_dac_muting_flag = 1; // let the audio being muted initially
+            ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
             RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
-        if(txrx_mode_final == TRX_MODE_TX)
+        if(txrx_mode_final == TRX_MODE_RX)
+        {
+                // remember current agc
+                ads.agc_holder = ads.agc_val;
+        }
+        else
         {
 
             MchfBoard_RedLed(LED_STATE_ON); // TX
@@ -1174,15 +1180,23 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         if (txrx_mode_final == TRX_MODE_TX)
         {
             uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
-            // if (RadioManagement_PowerLevelChange(tx_band,ts.power_level) == false)
             RadioManagement_PowerLevelChange(tx_band,ts.power_level);
             RadioManagement_SetBandPowerFactor(tx_band);
         }
 
         AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
         // make sure the audio is set properly according to txrx and tune modes
+
         if (txrx_mode_final == TRX_MODE_RX)
         {
+
+            while (ts.audio_dac_muting_buffer_count >0)
+            {
+                // TODO: Find a better solution here
+                asm("nop"); // just wait a little for the silence to come out of the audio path
+                // this can take up to 1.2ms (time for processing two audio buffer dma requests
+            }
+
             MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
             ts.audio_dac_muting_flag = 0; // unmute audio output
@@ -1192,11 +1206,23 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
         if (ts.txrx_mode != txrx_mode_final)
         {
-            ads.agc_holder = ads.agc_val;
-            // store AGC value at instant we went to TX for recovery when we return to RX
-            // Switch codec mode
             Codec_SwitchTxRxMode(txrx_mode_final);
-            RadioManagement_SetPaBias();
+
+            if (txrx_mode_final == TRX_MODE_RX)
+            {
+                // Assure that TX->RX timer gets reset at the end of an element
+                // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
+                if (ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW))
+                {
+                    ts.audio_spkr_unmute_delay_count = SSB_RX_DELAY;  // set time delay in SSB mode with MIC
+                    ts.rx_processor_input_mute = true;
+                }
+
+            }
+            else
+            {
+                RadioManagement_SetPaBias();
+            }
             ts.txrx_mode = txrx_mode_final;
         }
     }
@@ -2116,10 +2142,7 @@ static void UiDriver_ProcessKeyboard()
                 UiDriver_HandleBandButtons(BUTTON_BNDP);
                 break;
             case BUTTON_POWER_PRESSED:
-                if(!ts.boot_halt_flag)	 	// do brightness adjust ONLY if NOT in "boot halt" mode
-                {
-                    incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
-                }
+                incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
                 break;
             default:
                 UiDriver_ProcessFunctionKeyClick(ks.button_id);
@@ -2541,7 +2564,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
     {
         if(!ts.mem_disp)	 			// allow only if NOT in memory display mode
         {
-            if((!ts.menu_mode) && (!ts.boot_halt_flag))	 	// go into menu mode if NOT already in menu mode and not to halt on startup
+            if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
             {
                 ts.menu_mode = 1;
                 ts.encoder3state = filter_path_change;
@@ -3903,10 +3926,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
-        if(!ts.boot_halt_flag)  				// are we NOT in "boot halt" mode?
-        {
-            retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
-        }
+        retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
     }
     return retval;
 }
@@ -4116,31 +4136,13 @@ static void UiDriver_TimeScheduler()
 
         if (state == TRX_STATE_TX_TO_RX)
         {
-
-            // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
-            if(ts.audio_spkr_delayed_unmute_request)	 						// are we returning from TX with muted audio?
-            {
-#if 0
-                if(ts.dmod_mode == DEMOD_CW)	 		// yes - was it CW mode?
-                {
-                    ts.audio_spkr_unmute_delay_count = (ulong)ts.cw_rx_delay + 1;	// yes - get CW TX->RX delay timing
-                    ts.audio_spkr_unmute_delay_count++;
-                    ts.audio_spkr_unmute_delay_count *= 40;	// rescale value and limit minimum delay value
-                }
-                else  								// SSB mode
-#endif
-                {
-                    ts.audio_spkr_unmute_delay_count = SSB_RX_DELAY;	// set time delay in SSB mode
-                    ts.rx_processor_input_mute = true;
-                }
-                audio_spkr_delayed_unmute_active = true;
-                ts.audio_spkr_delayed_unmute_request = false;					// clear flag
-            }
+            audio_spkr_delayed_unmute_active = true;
         }
 
-        if(audio_spkr_delayed_unmute_active  && !ts.audio_spkr_unmute_delay_count)	 	// did timer hit zero
+        if(audio_spkr_delayed_unmute_active  && ts.audio_spkr_unmute_delay_count == 0)	 	// did timer hit zero
         {
             audio_spkr_delayed_unmute_active = false;
+            ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;
             audio_spkr_volume_update_request = true;
             ts.rx_processor_input_mute = false;
             ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
@@ -4153,23 +4155,37 @@ static void UiDriver_TimeScheduler()
             audio_spkr_volume_update_request = true;
         }
 
-        // Audio un-muting handler and volume control handler
-        if(ts.boot_halt_flag)	 	// are we halting boot?
-        {
-            ts.rx_gain[RX_AUDIO_SPKR].value = 0;
-        }
 
         audio_spkr_volume_update_request |= ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old;
 
 
         if( audio_spkr_volume_update_request)	 	// in normal mode - calculate volume normally
         {
+            uint16_t from = ts.rx_gain[RX_AUDIO_SPKR].value_old * 5;
+            if (from > 80)
+            {
+                from = 80;
+            }
+            uint16_t to = ts.rx_gain[RX_AUDIO_SPKR].value * 5;
+            int16_t step = from>to?-1:1;
 
             ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
             if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)  				// Note:  Gain > 16 adjusted in audio_driver.c via software
             {
+#if 0
+                // this is an attempt to implement noise-free volume changes
+                if (from != to)
+                {
+                    for (uint16_t vol = from + step; vol != (to - step); vol += step )
+                    {
+                        Codec_VolumeSpkr(vol);
+                        //non_os_delay();
+                    }
+                }
+#endif
                 Codec_VolumeSpkr((ts.rx_gain[RX_AUDIO_SPKR].value*5));
+
             }
             else  	// are we in the "software amplification" range?
             {
@@ -4205,18 +4221,15 @@ static void UiDriver_TimeScheduler()
         }
 
         // update the on-screen indicator of squelch/tone detection (the "FM" mode text) if there is a change of state of squelch/tone detection
-        if(!ts.boot_halt_flag)        // do this only if not in "boot halt" mode
+        if((old_squelch != ads.fm_squelched)
+                || (old_tone_det != ads.fm_subaudible_tone_detected)
+                || (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select))       // did the squelch or tone detect state just change?
         {
-            if((old_squelch != ads.fm_squelched)
-                    || (old_tone_det != ads.fm_subaudible_tone_detected)
-                    || (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select))       // did the squelch or tone detect state just change?
-            {
 
-                UiDriver_ShowMode();                           // yes - update on-screen indicator to show that squelch is open/closed
-                old_squelch = ads.fm_squelched;
-                old_tone_det = ads.fm_subaudible_tone_detected;
-                old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
-            }
+            UiDriver_ShowMode();                           // yes - update on-screen indicator to show that squelch is open/closed
+            old_squelch = ads.fm_squelched;
+            old_tone_det = ads.fm_subaudible_tone_detected;
+            old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
         }
 
         // DSP crash detection
@@ -4286,16 +4299,20 @@ static void UiDriver_TimeScheduler()
         if((ts.dmod_mode != DEMOD_CW))  // did we just enter the new TX/RX mode in a voice mode?
         {
             ts.audio_dac_muting_timer = ts.txrx_switch_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
-            ts.audio_dac_muting_flag = 1;
+            ts.audio_dac_muting_flag = true;
+        }
+        else
+        {
+            ts.audio_dac_muting_timer = ts.sysclock;
         }
         // now update display according to the changed state
         UiDriver_TxRxUiSwitch(state);
     }
 
     // Did the DAC muting expire?
-    if(ts.sysclock >= ts.audio_dac_muting_timer)
+    if(ts.audio_dac_muting_flag && ts.sysclock >= ts.audio_dac_muting_timer)
     {
-        ts.audio_dac_muting_flag = 0;                // Yes, unmute the audio to dac
+        ts.audio_dac_muting_flag = false;                // Yes, unmute the audio to dac
     }
 
 
@@ -6088,6 +6105,7 @@ static void UiDriver_PowerDownCleanup(void)
 
     UiSpectrum_ClearDisplay();   // clear display under spectrum scope
 
+    // hardware based mute
     Codec_MuteDAC(true);  // mute audio when powering down
 
     txp = "                           ";
@@ -7136,15 +7154,12 @@ void UiDriver_MainHandler()
         // Now process events which should be handled regularly at a rate of 100 Hz
         // Remember to keep this as short as possible since this is executed in addition
         // to all other processing below.
-        if(!ts.boot_halt_flag)
-        {
             UiDriver_CheckEncoderOne();
             UiDriver_CheckEncoderTwo();
             UiDriver_CheckEncoderThree();
             UiDriver_CheckFrequencyEncoder();
             UiDriver_KeyboardProcessOldClicks();
             RadioManagement_HandlePttOnOff();
-        }
     }
 
     UiSpectrum_RedrawSpectrumDisplay();
@@ -7160,37 +7175,25 @@ void UiDriver_MainHandler()
         switch(drv_state)
         {
         case STATE_S_METER:
-            if(!ts.boot_halt_flag)
+            if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4))
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4))
-                {
-                    UiDriver_HandleSMeter();
-                }
+                UiDriver_HandleSMeter();
             }
             break;
         case STATE_SWR_METER:
-            if(!ts.boot_halt_flag)
-            {
-                UiDriver_HandleTXMeters();
-            }
+            UiDriver_HandleTXMeters();
             break;
         case STATE_HANDLE_POWERSUPPLY:
             MchfBoard_HandlePowerDown();
-            if(!ts.boot_halt_flag)
+            if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8))
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8))
-                {
-                    UiDriver_HandleVoltage();
-                }
+                UiDriver_HandleVoltage();
             }
             break;
         case STATE_LO_TEMPERATURE:
-            if(!ts.boot_halt_flag)
+            if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64))
             {
-                if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64))
-                {
-                    UiDriver_HandleLoTemperature();
-                }
+                UiDriver_HandleLoTemperature();
             }
             break;
         case STATE_TASK_CHECK:
@@ -7198,21 +7201,18 @@ void UiDriver_MainHandler()
             // Handles live update of Calibrate between TX/RX and volume control
             break;
         case STATE_UPDATE_FREQUENCY:
-            if(!ts.boot_halt_flag)
+            /* at this point we handle request for changing the frequency
+             * either from a difference in dial freq or a temp change
+             *  */
+            if((df.tune_old != df.tune_new))
             {
-                /* at this point we handle request for changing the frequency
-                 * either from a difference in dial freq or a temp change
-                 *  */
-                if((df.tune_old != df.tune_new))
-                {
-                    UiDriver_FrequencyUpdateLOandDisplay(false);
-                }
-                else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
-                {
-                    // this handles the cases where the dial frequency remains the same but the
-                    // LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
-                    RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, ts.txrx_mode);
-                }
+                UiDriver_FrequencyUpdateLOandDisplay(false);
+            }
+            else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
+            {
+                // this handles the cases where the dial frequency remains the same but the
+                // LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
+                RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, ts.txrx_mode);
             }
             break;
         case STATE_PROCESS_KEYBOARD:
