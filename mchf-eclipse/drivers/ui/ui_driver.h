@@ -221,7 +221,7 @@ enum
 //
 #define	SD_DB_DIV_SCALING			0.0316	// Scaling factor for number of dB/Division	0.0316 = 10dB/Division
 
-enum
+typedef enum
 {
     COUPLING_2200M = 0,
     COUPLING_630M,
@@ -235,7 +235,7 @@ enum
     COUPLING_70CM,
     COUPLING_23CM,
     COUPLING_MAX
-};
+} filter_band_t;
 
 // SWR and RF power meter public
 typedef struct SWRMeter

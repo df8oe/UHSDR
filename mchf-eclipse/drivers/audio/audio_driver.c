@@ -1858,7 +1858,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
     //
     // Determine if the (averaged) energy in "ads.fm_sql_avg" is above or below the squelch threshold
     //
-    if(!count)	 		// do the squelch threshold calculation much less often than we are called to process this audio
+    if(count == 0)	 		// do the squelch threshold calculation much less often than we are called to process this audio
     {
         if(ads.fm_sql_avg > 0.175)		// limit maximum noise value in averaging to keep it from going out into the weeds under no-signal conditions (higher = noisier)
         {
@@ -1878,13 +1878,13 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         //
         if(!ts.fm_sql_threshold)	 	// is squelch set to zero?
         {
-            ads.fm_squelched = 0;		// yes, the we are un-squelched
+            ads.fm_squelched = false;		// yes, the we are un-squelched
         }
         else if(ads.fm_squelched)	 	// are we squelched?
         {
             if(b >= (float)(ts.fm_sql_threshold + FM_SQUELCH_HYSTERESIS))		// yes - is average above threshold plus hysteresis?
             {
-                ads.fm_squelched = 0 ;		//  yes, open the squelch
+                ads.fm_squelched = false;		//  yes, open the squelch
             }
         }
         else	 	// is the squelch open (e.g. passing audio)?
@@ -1893,14 +1893,14 @@ static void AudioDriver_DemodFM(int16_t blockSize)
             {
                 if(b < (float)(ts.fm_sql_threshold - FM_SQUELCH_HYSTERESIS))		// yes - is average below threshold minus hysteresis?
                 {
-                    ads.fm_squelched = 1;		// yes, close the squelch
+                    ads.fm_squelched = true;		// yes, close the squelch
                 }
             }
             else	 				// setting is lower than hysteresis so we can't use it!
             {
                 if(b < (float)ts.fm_sql_threshold)		// yes - is average below threshold?
                 {
-                    ads.fm_squelched = 1;		// yes, close the squelch
+                    ads.fm_squelched = true;		// yes, close the squelch
                 }
             }
         }
@@ -2856,12 +2856,24 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if((ads.af_disabled) || (ts.rx_muting) || ((dmod_mode == DEMOD_FM) && ads.fm_squelched))
+
+    bool do_mute_output =  ts.audio_dac_muting_flag
+            || ts.audio_dac_muting_buffer_count > 0
+            || (ads.af_disabled)
+            || (ts.rx_muting)
+            || ((dmod_mode == DEMOD_FM) && ads.fm_squelched);
+    // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
+
+    if (do_mute_output)
         // fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
         // or when filters are switched
     {
         arm_fill_f32(0, adb.a_buffer, blockSize);
         arm_fill_f32(0, adb.b_buffer, blockSize);
+        if (ts.audio_dac_muting_buffer_count > 0)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
     }
     else
     {
@@ -2877,20 +2889,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    bool do_mute_output =  ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count > 0;
-    // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
-    // we still can see the signal on the digital channel, since there is no problem for us here
 
-
-    if (do_mute_output)
-    {
-        memset(dst,0,blockSize*sizeof(*dst));
-        // Pause or inactivity
-        if (ts.audio_dac_muting_buffer_count > 0)
-        {
-            ts.audio_dac_muting_buffer_count--;
-        }
-    }
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
@@ -3687,7 +3686,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     static bool to_rx = false;	// used as a flag to clear the RX buffer
     static bool to_tx = false;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
-
+    bool muted = false;
 
     if(ts.show_tp_coordinates)
     {
@@ -3698,6 +3697,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     {
         if((to_rx) || (ts.rx_processor_input_mute))	 	// the first time back to RX, clear the buffers to reduce the "crash"
         {
+            muted = true;
             arm_fill_q15(0, src, size);
             if (to_rx)
             {
@@ -3706,25 +3706,53 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
             to_rx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
         }
 
-        AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        if (muted)
+        {
+            // muted input should not modify the ALC so we simply restore it after processing
+            float agc_holder = ads.agc_val;
+            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            ads.agc_val = agc_holder;
+        }
+        else
+        {
+            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        }
 
         to_tx = true;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
     else  			// Transmit mode
     {
-        if((to_tx))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx) || (ts.tx_processor_input_mute_counter>0))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
-            to_tx = false;							// caused by the content of the buffers from TX - used on return from SSB TX
+            muted = true;
             arm_fill_q15(0, src, size);
-            AudioDriver_ClearAudioDelayBuffer();
+            if (to_rx)
+            {
+                AudioDriver_ClearAudioDelayBuffer();
+            }
+            to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
+            if ( ts.tx_processor_input_mute_counter >0)
+            {
+                ts.tx_processor_input_mute_counter--;
+            }
         }
 
-        AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        if (muted)
+        {
+            // muted input should not modify the ALC so we simply restore it after processing
+            float alc_holder = ads.alc_val;
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            ads.alc_val = alc_holder;
+        }
+        else
+        {
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        }
 
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
 
-    if(ts.audio_spkr_unmute_delay_count)		// this updates at 1.2 kHz - used to time TX->RX delay
+    if(ts.audio_spkr_unmute_delay_count)		// this updates at 1.5 kHz - used to time TX->RX delay
     {
         ts.audio_spkr_unmute_delay_count--;
     }

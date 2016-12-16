@@ -518,14 +518,12 @@ static void UiDriver_ToggleWaterfallScopeDisplay()
 //
 void UiDriver_LcdBlankingStartTimer()
 {
-    ulong ltemp;
-
     if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)     // is LCD blanking enabled?
     {
-        ltemp = (ulong)(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK);      // get setting of LCD blanking timing
+        uint32_t ltemp = (ulong)(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK);      // get setting of LCD blanking timing
         ltemp *= 100;       // multiply to convert to deciseconds
         ts.lcd_blanking_time = ltemp + ts.sysclock;     // calculate future time at which LCD is to be turned off
-        ts.lcd_blanking_flag = 0;       // clear flag to make LCD turn on
+        ts.lcd_blanking_flag = false;       // clear flag to make LCD turn on
     }
 }
 
@@ -537,16 +535,16 @@ static void   UiDriver_LcdBlankingProcessTimer()
     {
         if(ts.sysclock > ts.lcd_blanking_time)      // has the time expired and the LCD should be blanked?
         {
-            ts.lcd_blanking_flag = 1;             // yes - blank the LCD
+            ts.lcd_blanking_flag = true;             // yes - blank the LCD
         }
         else                                        // time not expired
         {
-            ts.lcd_blanking_flag = 0;             // un-blank the LCD
+            ts.lcd_blanking_flag = false;             // un-blank the LCD
         }
     }
     else                                  // auto-blanking NOT enabled
     {
-        ts.lcd_blanking_flag = 0;               // always un-blank the LCD in this case
+        ts.lcd_blanking_flag = false;               // always un-blank the LCD in this case
     }
 }
 
@@ -1079,7 +1077,17 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
     return lo_change_pending == false;
 }
 
-
+/**
+ * @brief temporary muting of the receiver when making changes which may cause audible pops etc., unmuting happens some 10s of milliseconds automatically later
+ *
+ */
+static void RadioManagement_MuteTemporarilyRxAudio()
+{
+    ads.agc_holder = ads.agc_val;   // save the current AGC value to reload after the band change so that we can better recover
+    ts.rx_temp_mute = true;     // indicate that we need to turn the volume back up after band change
+    ts.rx_processor_input_mute = true;
+    // from the loud "POP" that will occur when we change bands
+}
 
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
@@ -1199,7 +1207,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
-            ts.audio_dac_muting_flag = 0; // unmute audio output
+            ts.audio_dac_muting_flag = false; // unmute audio output
             CwGen_PrepareTx();
             // make sure the keyer is set correctly for next round
         }
@@ -1222,6 +1230,38 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             else
             {
                 RadioManagement_SetPaBias();
+                uint32_t input_mute_time = 0, dac_mute_time = 2; // aka 1.3ms
+
+                if((ts.dmod_mode != DEMOD_CW))  // did we just enter the new TX/RX mode in a voice mode?
+                {
+                    // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
+                    dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
+                    switch(ts.tx_audio_source)
+                    {
+
+                    case TX_AUDIO_LINEIN_L:
+                    case TX_AUDIO_LINEIN_R:
+                        if (dac_mute_time < 15)
+                        {
+                            dac_mute_time = 15; // Minimum time is 10ms
+                        }
+                        break;
+                    case TX_AUDIO_MIC:
+                        if (dac_mute_time < 8 * 15)
+                        {
+                            dac_mute_time = 8* 15; // Minimum time is 80ms
+                        }
+                        input_mute_time = dac_mute_time;
+                        break;
+                    }
+
+
+                }
+
+                ts.tx_processor_input_mute_counter = input_mute_time;
+                ts.audio_dac_muting_buffer_count =   dac_mute_time; // 15 == 10ms
+
+                ts.audio_dac_muting_flag = false; // unmute audio output
             }
             ts.txrx_mode = txrx_mode_final;
         }
@@ -1439,6 +1479,11 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
             RadioManagement_ChangeCodec(ts.digital_mode,0);
     }
 
+    if (new_mode == DEMOD_FM && ts.dmod_mode != DEMOD_FM)
+    {
+        // ads.fm_squelched = true;
+        // ads.fm_sql_avg = 1;
+    }
     AudioDriver_SetRxAudioProcessing(new_mode, false);
     AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
@@ -2757,7 +2802,7 @@ void UiDriver_ShowMode()
         {
             if(ts.txrx_mode == TRX_MODE_RX)
             {
-                if(!ads.fm_squelched)
+                if(ads.fm_squelched == false)
                 {
                     // is audio not squelched?
                     if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))
@@ -4133,6 +4178,12 @@ static void UiDriver_TimeScheduler()
     /*** RX MODE ***/
     if(ts.txrx_mode == TRX_MODE_RX)
     {
+        if(ts.rx_temp_mute)        // did we un-mute because of a band change
+         {
+             ts.audio_spkr_unmute_delay_count = 5 * 15; // n x 15 == n  x 10ms
+             audio_spkr_delayed_unmute_active = true;
+             ts.rx_temp_mute = false;     // yes, reset the flag
+         }
 
         if (state == TRX_STATE_TX_TO_RX)
         {
@@ -4142,18 +4193,12 @@ static void UiDriver_TimeScheduler()
         if(audio_spkr_delayed_unmute_active  && ts.audio_spkr_unmute_delay_count == 0)	 	// did timer hit zero
         {
             audio_spkr_delayed_unmute_active = false;
-            ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;
+            // ts.rx_gain[RX_AUDIO_SPKR].value_old = 0; // only if smooth change
             audio_spkr_volume_update_request = true;
             ts.rx_processor_input_mute = false;
             ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
         }
 
-        if(ts.band_change)        // did we un-mute because of a band change
-        {
-            ts.band_change = false;     // yes, reset the flag
-            ads.agc_val = ads.agc_holder;   // restore previously-stored AGC value before the band change (minimize "POP" desense)
-            audio_spkr_volume_update_request = true;
-        }
 
 
         audio_spkr_volume_update_request |= ts.rx_gain[RX_AUDIO_SPKR].value != ts.rx_gain[RX_AUDIO_SPKR].value_old;
@@ -4296,25 +4341,9 @@ static void UiDriver_TimeScheduler()
     // if we do change modes, some visuals need an update
     if(state == TRX_STATE_RX_TO_TX || state == TRX_STATE_TX_TO_RX)
     {
-        if((ts.dmod_mode != DEMOD_CW))  // did we just enter the new TX/RX mode in a voice mode?
-        {
-            ts.audio_dac_muting_timer = ts.txrx_switch_audio_muting_timing + ts.sysclock;             // calculate expiry time for audio muting
-            ts.audio_dac_muting_flag = true;
-        }
-        else
-        {
-            ts.audio_dac_muting_timer = ts.sysclock;
-        }
         // now update display according to the changed state
         UiDriver_TxRxUiSwitch(state);
     }
-
-    // Did the DAC muting expire?
-    if(ts.audio_dac_muting_flag && ts.sysclock >= ts.audio_dac_muting_timer)
-    {
-        ts.audio_dac_muting_flag = false;                // Yes, unmute the audio to dac
-    }
-
 
     /*** ALWAYS ***/
     UiDriver_LcdBlankingProcessTimer();
@@ -4477,14 +4506,12 @@ static void UiDriver_ChangeBand(uchar is_up)
             df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
         }
 
-        Codec_VolumeSpkr(0);        // Turn volume down to suppress click
-        ts.band_change = 1;     // indicate that we need to turn the volume back up after band change
-        ads.agc_holder = ads.agc_val;   // save the current AGC value to reload after the band change so that we can better recover
-        // from the loud "POP" that will occur when we change bands
-
         bool new_lsb = RadioManagement_CalculateCWSidebandMode();
 
         uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+
+        // we need to mute here since changing bands may cause audible click/pops
+        RadioManagement_MuteTemporarilyRxAudio();
 
 
         if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb))

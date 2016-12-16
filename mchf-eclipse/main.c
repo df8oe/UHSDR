@@ -224,7 +224,7 @@ void TransceiverStateInit(void)
     ts.enc_thr_mode		= ENC_THREE_MODE_RIT;
 
     ts.band		  		= BAND_MODE_20;			// band from eeprom
-    ts.band_change		= 0;					// used in muting audio during band change
+    ts.rx_temp_mute		= false;					// used in muting audio during band change
     ts.filter_band		= 0;					// used to indicate the bpf filter selection for power detector coefficient selection
     ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
     ts.rx_gain[RX_AUDIO_SPKR].value = DEFAULT_AUDIO_GAIN;
@@ -275,6 +275,7 @@ void TransceiverStateInit(void)
 
     ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
     ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
+
     ts.tx_gain[TX_AUDIO_MIC]		= MIC_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_LINEIN_L]		= LINE_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_LINEIN_R]		= LINE_GAIN_DEFAULT;	// default line gain
@@ -319,19 +320,16 @@ void TransceiverStateInit(void)
     //
     ts.refresh_freq_disp	= 1;					// TRUE if frequency/color display is to be refreshed when next called - NORMALLY LEFT AT 0 (FALSE)!!!
     // This is NOT reset by the LCD function, but must be enabled/disabled externally
-    //
+
+    for (int idx=0; idx<MAX_BANDS; idx++)
     {
-        int idx;
-        for (idx=0; idx<MAX_BANDS; idx++)
-        {
-            ts.pwr_adj[ADJ_5W][idx] = 1;
-            ts.pwr_adj[ADJ_FULL_POWER][idx] = 1;
-        }
+        ts.pwr_adj[ADJ_5W][idx] = 1;
+        ts.pwr_adj[ADJ_FULL_POWER][idx] = 1;
     }
-    //
+
     ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
     ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mdoe
-    ts.demod_mode_disable				= 0;		// TRUE if AM mode is to be disabled
+    ts.demod_mode_disable			= 0;		// TRUE if AM mode is to be disabled
     //
     ts.tx_meter_mode	= METER_SWR;
     //
@@ -384,9 +382,6 @@ void TransceiverStateInit(void)
     ts.rx_muting = 0;							// set TRUE if audio output is to be muted
     ts.rx_blanking_time = 0;					// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
     ts.vfo_mem_mode = 0;						// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
-    // LSB+6 (0x40) = 0:  VFO A,  1 = VFO B
-    // LSB+7 (0x80) = 0:  Normal mode, 1 = SPLIT mode
-    // Other bits are currently reserved
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
     ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
     ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
@@ -398,9 +393,11 @@ void TransceiverStateInit(void)
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
+
     ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     ts.audio_dac_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
     ts.audio_dac_muting_flag = 0;					// when TRUE, audio is to be muted after PTT/keyup
+
     ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;
     ts.vfo_mem_flag = 0;						// when TRUE, memory mode is enabled
     ts.mem_disp = 0;						// when TRUE, memory display is enabled
@@ -409,7 +406,6 @@ void TransceiverStateInit(void)
     ts.fm_tone_burst_mode = 0;					// this is the setting for the tone burst generator
     ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
     ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
-    //	ts.fm_rx_bandwidth = FM_BANDWIDTH_DEFAULT;			// bandwidth setting for FM reception
     ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
     ts.beep_active = 1;						// TRUE if beep is active
     ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
@@ -442,17 +438,10 @@ void TransceiverStateInit(void)
     ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
 
-    // Freedv Test DL2FW
     ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
     ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
     ts.FDV_TX_out_start_pt=0;
     ts.FDV_TX_in_start_pt=0;
-
-    // end Freedv Test DL2FW
-
-
-
-
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)

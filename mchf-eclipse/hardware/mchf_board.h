@@ -853,7 +853,7 @@ typedef struct TransceiverState
 
     // flag to show delayed request for unmute afte TX->RX change (remove clicks)
     bool	rx_processor_input_mute;
-
+    uint16_t    tx_processor_input_mute_counter;
 #define IQ_ADJUST_POINTS_NUM 4
 
     // corresponding frequencies are stored in const array iq_adjust_freq
@@ -890,7 +890,7 @@ typedef struct TransceiverState
     // Ham band public flag
     // index of bands table in Flash
     uchar 	band;
-    bool	band_change;
+    bool	rx_temp_mute;
     uchar	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
     //
     // Receive/Transmit public flag
@@ -1109,7 +1109,7 @@ typedef struct TransceiverState
     uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uchar	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ulong	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    uint32_t	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
     uint32_t audio_dac_muting_buffer_count; // the audio dac out will be muted for number of buffers
     uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
