@@ -566,9 +566,9 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE,"060","Mic/Line Select"},
     { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN,"061","Mic Input Gain"},
     { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN,"062","Line Input Gain"},
-    { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","ALC Release Time"},
-    { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX PRE ALC Gain"},
     { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL,"065","TX Audio Compress"},
+    { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","TX ALC Release Time"},
+    { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX ALC Input Gain"},
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE,"090","TCXO Off/On/Stop"},
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)"},
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config"},
@@ -630,8 +630,8 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE,"203","Transmit Disable"},
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable"},
 
-    { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","Mute Line Out TX"},
-    { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE,"206","TX/RX Mute Delay"},
+    { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","TX Mute LineOut"},
+    { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE,"206","TX Initial Muting Time"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME,"210","Max Volume"},
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)"},
 
@@ -1706,7 +1706,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             // did it change?
             if(ts.dsp_active & DSP_NR_ENABLE)	// only change if DSP active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
         //
@@ -2595,7 +2595,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
             txt_ptr = " x1";
             break;
         }
-        AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+        AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
         break;
     case MENU_SCOPE_AGC_ADJUST:	// Spectrum scope AGC adjust
         fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
@@ -3645,7 +3645,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(tchange)	 	// did something change?
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
         }
         if(!(ts.dsp_active & DSP_NR_ENABLE))	// mark orange if DSP NR not active
             clr = Orange;
@@ -3666,7 +3666,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         if(tchange)	 	// did something change?
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
         }
 
         if(!(ts.dsp_active & DSP_NR_ENABLE))	// mark orange if DSP NR not active
@@ -3694,7 +3694,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NR_ENABLE)	// only update if DSP NR active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
         break;
@@ -3709,7 +3709,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if Notch DSP is active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if Notch DSP not active
@@ -3734,7 +3734,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if DSP Notch active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if DSP Notch not active
@@ -3760,7 +3760,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)	// only update if DSP NR active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp_active & DSP_NOTCH_ENABLE))	// mark orange if DSP NR not active

@@ -676,7 +676,7 @@ enum
 //
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
-#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX
+#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
 //
 #define	CW_RX_DELAY_MAX			50	// Maximum TX to RX turnaround setting
 #define	CW_RX_DELAY_DEFAULT		8
@@ -852,9 +852,8 @@ typedef struct TransceiverState
     uchar	pa_cw_bias;
 
     // flag to show delayed request for unmute afte TX->RX change (remove clicks)
-    uchar	audio_unmute;
-    bool	buffer_clear;
-
+    bool	rx_processor_input_mute;
+    uint16_t    tx_processor_input_mute_counter;
 #define IQ_ADJUST_POINTS_NUM 4
 
     // corresponding frequencies are stored in const array iq_adjust_freq
@@ -891,7 +890,7 @@ typedef struct TransceiverState
     // Ham band public flag
     // index of bands table in Flash
     uchar 	band;
-    bool	band_change;
+    bool	rx_temp_mute;
     uchar	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
     //
     // Receive/Transmit public flag
@@ -956,7 +955,7 @@ typedef struct TransceiverState
     ulong	sidetone_freq;
     uchar	paddle_reverse;
     uchar	cw_rx_delay;
-    ulong	unmute_delay_count;
+    ulong	audio_spkr_unmute_delay_count;
 
     uchar	power_level;
 
@@ -1032,7 +1031,6 @@ typedef struct TransceiverState
     bool	dsp_inhibit_mute;			// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
     bool	dsp_timed_mute;				// TRUE if DSP is to be muted for a timed amount
     ulong	dsp_inhibit_timing;			// used to time inhibiting of DSP when it must be turned off for some reason
-    bool	reset_dsp_nr;				// TRUE if DSP NR coefficients are to be reset when "audio_driver_set_rx_audio_filter()" is called
     //
     uchar	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
 
@@ -1100,7 +1098,6 @@ typedef struct TransceiverState
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
-    bool	thread_timer;				// used to trigger the thread timing (e.g. "driver_thread()")
     uchar	waterfall_color_scheme;			// stores waterfall color scheme
     uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
     ulong	waterfall_offset;			// offset for waterfall display
@@ -1112,7 +1109,7 @@ typedef struct TransceiverState
     uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uchar	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ulong	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
+    uint32_t	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
     uint32_t audio_dac_muting_buffer_count; // the audio dac out will be muted for number of buffers
     uchar	filter_disp_colour;			// used to hold the current color of the line that indicates the filter passband/bandwidth
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
@@ -1130,8 +1127,6 @@ typedef struct TransceiverState
     ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
     uchar	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
     bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
-    bool	boot_halt_flag;				// when TRUE, boot-up is halted - used to allow various test functions
-    bool	mic_bias;				// TRUE = mic bias on
 
 #define EEPROM_SER_NONE 0
 #define EEPROM_SER_WRONG_SIG 1

@@ -72,11 +72,11 @@ typedef struct
 } LMSData;
 
 
-float32_t	__attribute__ ((section (".ccm"))) agc_delay	[AGC_DELAY_BUFSIZE+16];
+float32_t	__attribute__ ((section (".ccm"))) audio_delay_buffer	[AGC_DELAY_BUFSIZE+16];
 
-static void AudioDriver_ClearAGCDelayBuffer()
+static void AudioDriver_ClearAudioDelayBuffer()
 {
-    arm_fill_f32(0, agc_delay, AGC_DELAY_BUFSIZE+16);
+    arm_fill_f32(0, audio_delay_buffer, AGC_DELAY_BUFSIZE+16);
 }
 
 
@@ -576,22 +576,17 @@ void AudioDriver_Init(void)
 
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_set_rx_audio_filter
-//* Object              :
-//* Object              : select audio filter
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-// WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
-//	not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
-//  This information is from recommendations by online references for using ARM math/DSP functions
-//
-
-void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
+/**
+ * @brief configures filters/dsp etc. so that audio processing works according to the current configuration
+ * @param dmod_mode needs to know the demodulation mode
+ * @param reset_dsp_nr whether it is supposed to reset also DSP related filters (in most cases false is to be used here)
+ */
+void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 {
+    // WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
+    //  not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
+    //  This information is from recommendations by online references for using ARM math/DSP functions
+
     float	mu_calc;
 
     ts.dsp_inhibit++;
@@ -1054,7 +1049,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     arm_fill_f32(0.0,lmsData.lms1_nr_delay,LMS_NR_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms1StateF32,DSP_NR_NUMTAPS_MAX + BUFF_LEN);
 
-    if(ts.reset_dsp_nr)	 			// are we to reset the coefficient buffer as well?
+    if(reset_dsp_nr)	 			// are we to reset the coefficient buffer as well?
     {
         arm_fill_f32(0.0,lmsData.lms1NormCoeff_f32,DSP_NR_NUMTAPS_MAX + BUFF_LEN);		// yes - zero coefficient buffers
     }
@@ -1088,7 +1083,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode)
     arm_fill_f32(0.0,lmsData.lms2_nr_delay,LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN);
     arm_fill_f32(0.0,lmsData.lms2StateF32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);
 
-    if(ts.reset_dsp_nr)             // are we to reset the coefficient buffer as well?
+    if(reset_dsp_nr)             // are we to reset the coefficient buffer as well?
     {
         arm_fill_f32(0.0,lmsData.lms2NormCoeff_f32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);      // yes - zero coefficient buffers
     }
@@ -1211,7 +1206,7 @@ void AudioDriver_TxFilterInit(uint8_t dmod_mode)
 //*----------------------------------------------------------------------------
 static void AudioDriver_InitFilters(void)
 {
-    AudioDriver_SetRxAudioProcessing(ts.dmod_mode);
+    AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 
     AudioDriver_TxFilterInit(ts.dmod_mode);
 
@@ -1708,8 +1703,8 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
     // This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
 
-    arm_copy_f32(adb.a_buffer, &agc_delay[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32(&agc_delay[agc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
+    arm_copy_f32(adb.a_buffer, &audio_delay_buffer[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32(&audio_delay_buffer[agc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
 
     // Update the in/out pointers to the AGC delay buffer
     agc_delay_inbuf += blockSize;						// update circular delay buffer
@@ -1863,7 +1858,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
     //
     // Determine if the (averaged) energy in "ads.fm_sql_avg" is above or below the squelch threshold
     //
-    if(!count)	 		// do the squelch threshold calculation much less often than we are called to process this audio
+    if(count == 0)	 		// do the squelch threshold calculation much less often than we are called to process this audio
     {
         if(ads.fm_sql_avg > 0.175)		// limit maximum noise value in averaging to keep it from going out into the weeds under no-signal conditions (higher = noisier)
         {
@@ -1883,13 +1878,13 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         //
         if(!ts.fm_sql_threshold)	 	// is squelch set to zero?
         {
-            ads.fm_squelched = 0;		// yes, the we are un-squelched
+            ads.fm_squelched = false;		// yes, the we are un-squelched
         }
         else if(ads.fm_squelched)	 	// are we squelched?
         {
             if(b >= (float)(ts.fm_sql_threshold + FM_SQUELCH_HYSTERESIS))		// yes - is average above threshold plus hysteresis?
             {
-                ads.fm_squelched = 0 ;		//  yes, open the squelch
+                ads.fm_squelched = false;		//  yes, open the squelch
             }
         }
         else	 	// is the squelch open (e.g. passing audio)?
@@ -1898,14 +1893,14 @@ static void AudioDriver_DemodFM(int16_t blockSize)
             {
                 if(b < (float)(ts.fm_sql_threshold - FM_SQUELCH_HYSTERESIS))		// yes - is average below threshold minus hysteresis?
                 {
-                    ads.fm_squelched = 1;		// yes, close the squelch
+                    ads.fm_squelched = true;		// yes, close the squelch
                 }
             }
             else	 				// setting is lower than hysteresis so we can't use it!
             {
                 if(b < (float)ts.fm_sql_threshold)		// yes - is average below threshold?
                 {
-                    ads.fm_squelched = 1;		// yes, close the squelch
+                    ads.fm_squelched = true;		// yes, close the squelch
                 }
             }
         }
@@ -2861,12 +2856,24 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if((ads.af_disabled) || (ts.rx_muting) || ((dmod_mode == DEMOD_FM) && ads.fm_squelched))
+
+    bool do_mute_output =  ts.audio_dac_muting_flag
+            || ts.audio_dac_muting_buffer_count > 0
+            || (ads.af_disabled)
+            || (ts.rx_muting)
+            || ((dmod_mode == DEMOD_FM) && ads.fm_squelched);
+    // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
+
+    if (do_mute_output)
         // fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
         // or when filters are switched
     {
         arm_fill_f32(0, adb.a_buffer, blockSize);
         arm_fill_f32(0, adb.b_buffer, blockSize);
+        if (ts.audio_dac_muting_buffer_count > 0)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
     }
     else
     {
@@ -2882,21 +2889,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    bool do_mute_output =  ts.audio_dac_muting_flag;
-    // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
-    // we still can see the signal on the digital channel, since there is no problem for us here
+
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
-
-    if (do_mute_output)
-    {
-        memset(dst,0,blockSize*sizeof(*dst));
-        // Pause or inactivity
-        if (ts.audio_dac_muting_buffer_count > 0)
-        {
-            ts.audio_dac_muting_buffer_count--;
-        }
-    }
 
     // Transfer processed audio to DMA buffer
     for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
@@ -3026,8 +3021,8 @@ static void AudioDriver_TxCompressor(int16_t blockSize, float gain_scaling)
     // This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
     //
-    arm_copy_f32(adb.a_buffer, (float32_t *)&agc_delay[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32((float32_t *)&agc_delay[alc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
+    arm_copy_f32(adb.a_buffer, (float32_t *)&audio_delay_buffer[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32((float32_t *)&audio_delay_buffer[alc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
     //
     // Update the in/out pointers to the ALC delay buffer
     //
@@ -3628,10 +3623,14 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if (signal_active == false  || ts.audio_dac_muting_flag)
+    if (signal_active == false  || ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count >0 )
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
+        if (ts.audio_dac_muting_buffer_count)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
     }
 
     switch (ts.stream_tx_audio)
@@ -3684,54 +3683,83 @@ void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t 
 void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
 #endif
 {
-    static bool to_rx = 0;	// used as a flag to clear the RX buffer
-    static bool to_tx = 0;	// used as a flag to clear the TX buffer
+    static bool to_rx = false;	// used as a flag to clear the RX buffer
+    static bool to_tx = false;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
-
+    bool muted = false;
 
     if(ts.show_tp_coordinates)
     {
   	  MchfBoard_GreenLed(LED_STATE_ON);
     }
+
     if((ts.txrx_mode == TRX_MODE_RX))
     {
-        if((to_rx) || (ts.buffer_clear))	 	// the first time back to RX, clear the buffers to reduce the "crash"
+        if((to_rx) || (ts.rx_processor_input_mute))	 	// the first time back to RX, clear the buffers to reduce the "crash"
         {
-            to_rx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
-            arm_fill_q15(0, dst, size);
+            muted = true;
             arm_fill_q15(0, src, size);
-            AudioDriver_ClearAGCDelayBuffer();
+            if (to_rx)
+            {
+                AudioDriver_ClearAudioDelayBuffer();
+            }
+            to_rx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
         }
 
-        AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        if (muted)
+        {
+            // muted input should not modify the ALC so we simply restore it after processing
+            float agc_holder = ads.agc_val;
+            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            ads.agc_val = agc_holder;
+        }
+        else
+        {
+            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+        }
 
-        to_tx = 1;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
+        to_tx = true;		// Set flag to indicate that we WERE receiving when we go back to transmit mode
     }
     else  			// Transmit mode
     {
-        if((to_tx))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx) || (ts.tx_processor_input_mute_counter>0))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
-            to_tx = 0;							// caused by the content of the buffers from TX - used on return from SSB TX
-            arm_fill_q15(0, dst, size);
+            muted = true;
             arm_fill_q15(0, src, size);
-            AudioDriver_ClearAGCDelayBuffer();
+            if (to_rx)
+            {
+                AudioDriver_ClearAudioDelayBuffer();
+            }
+            to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
+            if ( ts.tx_processor_input_mute_counter >0)
+            {
+                ts.tx_processor_input_mute_counter--;
+            }
+        }
+
+        if (muted)
+        {
+            // muted input should not modify the ALC so we simply restore it after processing
+            float alc_holder = ads.alc_val;
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            ads.alc_val = alc_holder;
         }
         else
         {
             AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
         }
-        to_rx = 1;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
+
+        to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
 
-    if(ts.unmute_delay_count)		// this updates at 375 Hz - used to time TX->RX delay
+    if(ts.audio_spkr_unmute_delay_count)		// this updates at 1.5 kHz - used to time TX->RX delay
     {
-        ts.unmute_delay_count--;
+        ts.audio_spkr_unmute_delay_count--;
     }
 
-    ks.debounce_time++;				// keyboard debounce timer
-    if(ks.debounce_time > DEBOUNCE_TIME_MAX)
+    if(ks.debounce_time < DEBOUNCE_TIME_MAX)
     {
-        ks.debounce_time = DEBOUNCE_TIME_MAX;
+        ks.debounce_time++;   // keyboard debounce timer
     }
 
     // Perform LCD backlight PWM brightness function
@@ -3744,15 +3772,13 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         ts.sysclock++;	// this clock updates at PRECISELY 100 Hz over the long term
         //
         // Has the timing for the keyboard beep expired?
-        //
+
         if(ts.sysclock > ts.beep_timing)
         {
             ts.beep_active = 0;				// yes, turn the tone off
             ts.beep_timing = 0;
         }
     }
-
-    ts.thread_timer = 0;	// used to trigger the UI Driver thread
 
     if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
     {

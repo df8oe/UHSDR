@@ -221,7 +221,7 @@ enum
 //
 #define	SD_DB_DIV_SCALING			0.0316	// Scaling factor for number of dB/Division	0.0316 = 10dB/Division
 
-enum
+typedef enum
 {
     COUPLING_2200M = 0,
     COUPLING_630M,
@@ -235,7 +235,7 @@ enum
     COUPLING_70CM,
     COUPLING_23CM,
     COUPLING_MAX
-};
+} filter_band_t;
 
 // SWR and RF power meter public
 typedef struct SWRMeter
@@ -396,7 +396,7 @@ bool	UiDriver_CheckTouchCoordinates(uint8_t,uint8_t,uint8_t,uint8_t);
 
 void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
-void RadioManagement_UpdateFrequencyFast(uint8_t txrx_mode);
+void RadioManagement_UpdateFrequency(uint8_t txrx_mode);
 uint8_t RadioManagement_GetBand(ulong freq);
 bool RadioManagement_LSBActive(uint16_t dmod_mode);
 
