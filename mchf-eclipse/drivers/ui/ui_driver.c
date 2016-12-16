@@ -1028,20 +1028,21 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
     if((ts.tune_freq != ts.tune_freq_req) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
-        if(Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
-        {
-            if(ts.sysclock > RX_MUTE_START_DELAY)       // has system start-up completed?
-            {
-                ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
-                ts.rx_muting = 1;               // yes - mute audio output
-                ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
-                ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
-                ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
-            }
-        }
-
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
+            // first check and mute output if a large step is to be done
+            if(Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
+            {
+                if(ts.sysclock > RX_MUTE_START_DELAY)       // has system start-up completed?
+                {
+                    ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
+                    ts.rx_muting = 1;               // yes - mute audio output
+                    ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
+                    ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
+                    ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
+                }
+            }
+
             // Set frequency
             ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
             df.temp_factor_changed = false;
@@ -1182,7 +1183,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         }
 
         df.tune_new = tune_new;
-        RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, ts.txrx_mode);
+        RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
 
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
         if (txrx_mode_final == TRX_MODE_TX)
