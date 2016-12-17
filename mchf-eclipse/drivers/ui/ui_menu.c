@@ -545,7 +545,6 @@ const MenuDescriptor topGroup[] =
 
 const MenuDescriptor baseGroup[] =
 {
-    { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" },
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode"},
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select"},
     { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,"030","Digital Modes"},
@@ -558,17 +557,21 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE,"043","FM Tone Burst"},
     { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE,"045","FM Deviation"},
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE,"050","AGC Mode"},
-    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain"},
-    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC,"052","Cust AGC (+=Slower)"},
+    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain"}, // also via knob
+    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC,"052","Custom AGC (+=Slower)"},
     { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE,"053","RX Codec Gain"},
     { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING,"054","RX NB Setting"},
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV,"055","RX/TX Freq Xlate"},
     { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE,"060","Mic/Line Select"},
     { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN,"061","Mic Input Gain"},
     { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN,"062","Line Input Gain"},
+
     { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL,"065","TX Audio Compress"},
     { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","TX ALC Release Time"},
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX ALC Input Gain"},
+
+    { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength" }, // via knob
+
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE,"090","TCXO Off/On/Stop"},
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)"},
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config"},
@@ -681,7 +684,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE,"313","DSP Notch ConvRate"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen"},
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap"},
-    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB  AGC T/C (<=Slow)"},
+    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB AGC T/C (<=Slow)"},
 
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Config EEPROM"},
@@ -2382,7 +2385,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
                                               1
                                              );
 
-        snprintf(options,32, "  %u", ts.cw_rx_delay);
+        snprintf(options,32, "%3ums", ts.cw_rx_delay*10);
         break;
 
     case MENU_CW_OFFSET_MODE:	// CW offset mode (e.g. USB, LSB, etc.)
