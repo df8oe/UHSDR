@@ -851,9 +851,8 @@ typedef struct TransceiverState
     uchar	pa_bias;
     uchar	pa_cw_bias;
 
-    // flag to show delayed request for unmute afte TX->RX change (remove clicks)
-    bool	rx_processor_input_mute;
-    uint16_t    tx_processor_input_mute_counter;
+    // timer for muting of input into signal processing chains (TX/RX)
+    uint16_t    audio_processor_input_mute_counter;
 #define IQ_ADJUST_POINTS_NUM 4
 
     // corresponding frequencies are stored in const array iq_adjust_freq
