@@ -3695,13 +3695,17 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
 
     if((ts.txrx_mode == TRX_MODE_RX))
     {
-        if((to_rx) || (ts.rx_processor_input_mute))	 	// the first time back to RX, clear the buffers to reduce the "crash"
+        if((to_rx) || ts.audio_processor_input_mute_counter > 0)	 	// the first time back to RX, clear the buffers to reduce the "crash"
         {
             muted = true;
             arm_fill_q15(0, src, size);
             if (to_rx)
             {
                 AudioDriver_ClearAudioDelayBuffer();
+            }
+            if ( ts.audio_processor_input_mute_counter >0)
+            {
+                ts.audio_processor_input_mute_counter--;
             }
             to_rx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
         }
@@ -3722,7 +3726,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     }
     else  			// Transmit mode
     {
-        if((to_tx) || (ts.tx_processor_input_mute_counter>0))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx) || (ts.audio_processor_input_mute_counter>0))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
             muted = true;
             arm_fill_q15(0, src, size);
@@ -3731,9 +3735,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
                 AudioDriver_ClearAudioDelayBuffer();
             }
             to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
-            if ( ts.tx_processor_input_mute_counter >0)
+            if ( ts.audio_processor_input_mute_counter >0)
             {
-                ts.tx_processor_input_mute_counter--;
+                ts.audio_processor_input_mute_counter--;
             }
         }
 

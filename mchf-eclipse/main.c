@@ -271,8 +271,6 @@ void TransceiverStateInit(void)
     ts.menu_var			= 0;					// menu item change variable
     ts.menu_var_changed	= 0;					// TRUE if a menu variable was changed and that an EEPROM save should be done
 
-    ts.rx_processor_input_mute		= 0;					// used on return from TX to purge the audio buffers
-
     ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
     ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
 

@@ -351,10 +351,6 @@ PowerMeter					pwmt;
 // LO Tcxo
 __IO LoTcxo						lo;
 
-
-// move to struct ??
-__IO ulong 						unmute_delay = 0;
-
 // ------------------------------------------------
 
 uchar drv_state = 0;
@@ -1033,16 +1029,15 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
             // first check and mute output if a large step is to be done
             if(Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
             {
-                if(ts.sysclock > RX_MUTE_START_DELAY)       // has system start-up completed?
+                if (ts.audio_dac_muting_buffer_count < 25)
                 {
-                    ads.agc_holder = ads.agc_val;   // grab current AGC value as synthesizer "click" can momentarily desense radio as we tune
-                    ts.rx_muting = 1;               // yes - mute audio output
-                    ts.dsp_inhibit_mute = ts.dsp_inhibit;       // get current status of DSP muting and save for later restoration
-                    ts.dsp_inhibit = 1;             // disable DSP during tuning to avoid disruption
-                    ts.rx_blanking_time = ts.sysclock + (is_dsp_nr()? TUNING_LARGE_STEP_MUTING_TIME_DSP_ON : TUNING_LARGE_STEP_MUTING_TIME_DSP_OFF);    // yes - schedule un-muting of audio when DSP is on
+                    ts.audio_dac_muting_buffer_count = 25;
+                }
+                if (ts.audio_processor_input_mute_counter < 25)
+                {
+                    ts.audio_processor_input_mute_counter = 25;
                 }
             }
-
             // Set frequency
             ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
             df.temp_factor_changed = false;
@@ -1084,10 +1079,9 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
  */
 static void RadioManagement_MuteTemporarilyRxAudio()
 {
-    ads.agc_holder = ads.agc_val;   // save the current AGC value to reload after the band change so that we can better recover
-    ts.rx_temp_mute = true;     // indicate that we need to turn the volume back up after band change
-    ts.rx_processor_input_mute = true;
-    // from the loud "POP" that will occur when we change bands
+    // save us from the loud "POP" that will occur when we change bands
+    ts.audio_processor_input_mute_counter = 5 * 15;
+    ts.audio_dac_muting_buffer_count = 10 * 15;
 }
 
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
@@ -1224,14 +1218,14 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 if (ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW))
                 {
                     ts.audio_spkr_unmute_delay_count = SSB_RX_DELAY;  // set time delay in SSB mode with MIC
-                    ts.rx_processor_input_mute = true;
+                    ts.audio_processor_input_mute_counter = SSB_RX_DELAY;
                 }
 
             }
             else
             {
                 RadioManagement_SetPaBias();
-                uint32_t input_mute_time = 0, dac_mute_time = 2; // aka 1.3ms
+                uint32_t input_mute_time = 0, dac_mute_time = 2, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
 
                 if((ts.dmod_mode != DEMOD_CW))  // did we just enter the new TX/RX mode in a voice mode?
                 {
@@ -1240,26 +1234,24 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                     switch(ts.tx_audio_source)
                     {
 
+                    case TX_AUDIO_DIG:
+                        dac_mute_time_mode = 2* 15; // Minimum time is 10ms
+                        break;
                     case TX_AUDIO_LINEIN_L:
                     case TX_AUDIO_LINEIN_R:
-                        if (dac_mute_time < 15)
-                        {
-                            dac_mute_time = 15; // Minimum time is 10ms
-                        }
+                        dac_mute_time_mode = 5* 15; // Minimum time is 10ms
                         break;
                     case TX_AUDIO_MIC:
-                        if (dac_mute_time < 8 * 15)
-                        {
-                            dac_mute_time = 8* 15; // Minimum time is 80ms
-                        }
-                        input_mute_time = dac_mute_time;
+                        dac_mute_time_mode = 10* 15; // Minimum time is 80ms
+                        input_mute_time_mode = dac_mute_time_mode;
                         break;
                     }
-
+                    dac_mute_time = (dac_mute_time > dac_mute_time_mode)? dac_mute_time : dac_mute_time_mode;
+                    input_mute_time = (input_mute_time > input_mute_time_mode)? input_mute_time : input_mute_time_mode;
 
                 }
 
-                ts.tx_processor_input_mute_counter = input_mute_time;
+                ts.audio_processor_input_mute_counter = input_mute_time;
                 ts.audio_dac_muting_buffer_count =   dac_mute_time; // 15 == 10ms
 
                 ts.audio_dac_muting_flag = false; // unmute audio output
@@ -4179,13 +4171,6 @@ static void UiDriver_TimeScheduler()
     /*** RX MODE ***/
     if(ts.txrx_mode == TRX_MODE_RX)
     {
-        if(ts.rx_temp_mute)        // did we un-mute because of a band change
-         {
-             ts.audio_spkr_unmute_delay_count = 5 * 15; // n x 15 == n  x 10ms
-             audio_spkr_delayed_unmute_active = true;
-             ts.rx_temp_mute = false;     // yes, reset the flag
-         }
-
         if (state == TRX_STATE_TX_TO_RX)
         {
             audio_spkr_delayed_unmute_active = true;
@@ -4194,10 +4179,7 @@ static void UiDriver_TimeScheduler()
         if(audio_spkr_delayed_unmute_active  && ts.audio_spkr_unmute_delay_count == 0)	 	// did timer hit zero
         {
             audio_spkr_delayed_unmute_active = false;
-            // ts.rx_gain[RX_AUDIO_SPKR].value_old = 0; // only if smooth change
             audio_spkr_volume_update_request = true;
-            ts.rx_processor_input_mute = false;
-            ads.agc_val = ads.agc_holder;		// restore AGC value that was present when we went to TX
         }
 
 
@@ -4213,7 +4195,7 @@ static void UiDriver_TimeScheduler()
                 from = 80;
             }
             uint16_t to = ts.rx_gain[RX_AUDIO_SPKR].value * 5;
-            int16_t step = from>to?-1:1;
+            // int16_t step = from>to?-1:1;
 
             ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
