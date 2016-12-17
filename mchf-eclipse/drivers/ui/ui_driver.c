@@ -1081,7 +1081,7 @@ static void RadioManagement_MuteTemporarilyRxAudio()
 {
     // save us from the loud "POP" that will occur when we change bands
     ts.audio_processor_input_mute_counter = 5 * 15;
-    ts.audio_dac_muting_buffer_count = 10 * 15;
+    ts.audio_dac_muting_buffer_count = 13 * 15;
 }
 
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
@@ -1816,14 +1816,6 @@ void UiDriver_HandleBandButtons(uint16_t button)
     {
     	dir = buttondirSwap ? BAND_DOWN : BAND_UP;
     }
-
-    // TODO: Make proper timed inhibit function out of this code
-    // AudioDriver_timed_dsp_inibit(DSP_BAND_CHANGE_DELAY) or something like this
-    ts.dsp_timed_mute = 1;		// disable DSP when changing bands
-    ts.dsp_inhibit = 1;
-    ts.dsp_inhibit_timing = ts.sysclock + DSP_BAND_CHANGE_DELAY;	// set time to re-enable DSP
-    //
-
 
     UiDriver_ChangeBand(dir);
 }
@@ -4189,29 +4181,11 @@ static void UiDriver_TimeScheduler()
 
         if( audio_spkr_volume_update_request)	 	// in normal mode - calculate volume normally
         {
-            uint16_t from = ts.rx_gain[RX_AUDIO_SPKR].value_old * 5;
-            if (from > 80)
-            {
-                from = 80;
-            }
-            uint16_t to = ts.rx_gain[RX_AUDIO_SPKR].value * 5;
-            // int16_t step = from>to?-1:1;
 
             ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
             if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)  				// Note:  Gain > 16 adjusted in audio_driver.c via software
             {
-#if 0
-                // this is an attempt to implement noise-free volume changes
-                if (from != to)
-                {
-                    for (uint16_t vol = from + step; vol != (to - step); vol += step )
-                    {
-                        Codec_VolumeSpkr(vol);
-                        //non_os_delay();
-                    }
-                }
-#endif
                 Codec_VolumeSpkr((ts.rx_gain[RX_AUDIO_SPKR].value*5));
 
             }
@@ -4236,15 +4210,6 @@ static void UiDriver_TimeScheduler()
             {
                 ts.dsp_inhibit = false;		// yes - re-enable DSP
                 dsp_rx_reenable_flag = false;	// clear flag so we don't do this again
-            }
-        }
-        // Check to see if we need to re-enabled DSP after disabling after a function that disables the DSP (e.g. band change)
-        if(ts.dsp_timed_mute)
-        {
-            if(ts.sysclock > ts.dsp_inhibit_timing)
-            {
-                ts.dsp_timed_mute = false;
-                ts.dsp_inhibit = false;
             }
         }
 
@@ -4281,14 +4246,6 @@ static void UiDriver_TimeScheduler()
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);   // update DSP settings
                 dsp_crash_count = 0;              // clear crash count flag
             }
-        }
-
-        if((ts.sysclock >= ts.rx_blanking_time) && (ts.rx_muting) && (ts.rx_blanking_time> RX_MUTE_START_DELAY))
-        {
-            // is it time to un-mute audio AND have we NOT done it already AND is it long enough after start-up to allow muting?
-            ads.agc_val = ads.agc_holder;           // restore AGC setting
-            ts.dsp_inhibit = ts.dsp_inhibit_mute;   // restore previous state of DSP inhibit flag
-            ts.rx_muting = 0;                       // unmute receiver audio
         }
     }
 
