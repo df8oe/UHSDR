@@ -1026,11 +1026,9 @@ typedef struct TransceiverState
     uchar	dsp_notch_numtaps;
     uchar	dsp_notch_mu;				// mu adjust of notch DSP LMS
     uint8_t	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
-    bool	dsp_inhibit;				// if TRUE, DSP (NR, Notch) functions are inhibited.  Used during power-up
-    bool	dsp_inhibit_mute;			// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
-    bool	dsp_timed_mute;				// TRUE if DSP is to be muted for a timed amount
-    ulong	dsp_inhibit_timing;			// used to time inhibiting of DSP when it must be turned off for some reason
-    //
+    uint8_t dsp_inhibit;				// if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
+
+
     uchar	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
 
 #define LCD_BLANKING_ENABLE 0x80
@@ -1088,8 +1086,6 @@ typedef struct TransceiverState
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     bool	freq_cal_adjust_flag;			// set TRUE if frequency calibration is in process
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
-    bool	rx_muting;				// set TRUE if audio output is to be muted
-    ulong	rx_blanking_time;			// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
 
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40

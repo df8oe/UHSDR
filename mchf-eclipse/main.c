@@ -349,9 +349,6 @@ void TransceiverStateInit(void)
     ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
     ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
     ts.dsp_inhibit		= 1;					// TRUE if DSP is to be inhibited - power up with DSP disabled
-    ts.dsp_inhibit_mute = 0;					// holder for "dsp_inhibit" during muting operations to allow restoration of previous state
-    ts.dsp_timed_mute	= 0;					// TRUE if DSP is to be muted for a timed amount
-    ts.dsp_inhibit_timing = 0;					// used to time inhibiting of DSP when it must be turned off for some reason
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
     ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
@@ -377,8 +374,6 @@ void TransceiverStateInit(void)
     ts.lcd_blanking_flag = 0;					// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     ts.freq_cal_adjust_flag = 0;				// set TRUE if frequency calibration is in process
     ts.xvtr_adjust_flag = 0;					// set TRUE if transverter offset adjustment is in process
-    ts.rx_muting = 0;							// set TRUE if audio output is to be muted
-    ts.rx_blanking_time = 0;					// this is a timer used to delay the un-blanking of the audio after a large synthesizer tuning step
     ts.vfo_mem_mode = 0;						// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
     ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display

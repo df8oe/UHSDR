@@ -2850,17 +2850,17 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
 
         // this is the biquad filter, a highshelf filter
-        if (!ads.af_disabled)
+        if (ads.af_disabled == false)
         {
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
         }
     }
 
 
-    bool do_mute_output =  ts.audio_dac_muting_flag
+    bool do_mute_output =
+            ts.audio_dac_muting_flag
             || ts.audio_dac_muting_buffer_count > 0
             || (ads.af_disabled)
-            || (ts.rx_muting)
             || ((dmod_mode == DEMOD_FM) && ads.fm_squelched);
     // this flag is set during rx tx transition, so once this is active we mute our output to the I2S Codec
 
@@ -3714,8 +3714,10 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         {
             // muted input should not modify the ALC so we simply restore it after processing
             float agc_holder = ads.agc_val;
+            bool dsp_inhibit_holder = ts.dsp_inhibit;
             AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
             ads.agc_val = agc_holder;
+            ts.dsp_inhibit = dsp_inhibit_holder;
         }
         else
         {
