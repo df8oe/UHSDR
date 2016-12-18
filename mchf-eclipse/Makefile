@@ -373,4 +373,9 @@ docs-clean:
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
 	$(RM) --recursive --verbose $(call FixPath,../docs)
 
+release:  
+	# generate quick operating guide
+	@inkscape --export-png=useful_manuals/mcHF-quick-manual.png useful_manuals/mcHF-quick-manual.svg
+	@inkscape --export-pdf=useful_manuals/mcHF-quick-manual.pdf useful_manuals/mcHF-quick-manual.svg
+
 # EOFILE
