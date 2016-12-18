@@ -1161,6 +1161,8 @@ typedef struct TransceiverState
     ulong	dBm_count;				// timer for calculating RX dBm
     uchar 	display_dbm;			// display dbm or dbm/Hz or OFF
     uchar	s_meter;				// defines S-Meter style/configuration
+	uint8_t	meter_colour_up;
+	uint8_t	meter_colour_down;
 #define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
 #define DISPLAY_S_METER_DBMHZ 2

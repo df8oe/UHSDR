@@ -606,6 +606,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST,"113","Wfall Contrast"},
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj."},
     { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP,"122","Meter Colour Up"},
+    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN,"123","Meter Colour Down"},
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display"},
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)"},
 	{ MENU_DISPLAY, MENU_STOP, 0, "   " , NULL }
@@ -2767,7 +2769,24 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
            	break;
            }
            break;
-
+    case MENU_METER_COLOUR_UP:				// upper meter colour
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.meter_colour_up,
+                                              0,
+                                              SPEC_MAX_COLOUR,
+                                              SPEC_BLUE,
+                                              1
+                                             );
+        UiMenu_MapColors(ts.meter_colour_up,options,&clr);
+        break;
+    case MENU_METER_COLOUR_DOWN:			// lower meter colour
+        fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.meter_colour_down,
+                                              0,
+                                              SPEC_MAX_COLOUR,
+                                              SPEC_CYAN,
+                                              1
+                                             );
+        UiMenu_MapColors(ts.meter_colour_down,options,&clr);
+        break;
     case MENU_REVERSE_TOUCHSCREEN:	// Touchscreen x mirrored?
         temp_var = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)? 1 : 0;
         fchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);

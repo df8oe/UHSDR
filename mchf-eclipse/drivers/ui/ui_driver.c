@@ -3484,7 +3484,10 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 
 static void UiDriver_UpdateTopMeterA(uchar val)
 {
-    UiDriver_UpdateMeter(val,SMETER_MAX_LEVEL+1,Blue2,METER_TOP);
+	ulong clr;
+	char options[6];
+	UiMenu_MapColors(ts.meter_colour_up,options,&clr);
+    UiDriver_UpdateMeter(val,SMETER_MAX_LEVEL+1,clr,METER_TOP);
 }
 
 /**
@@ -3494,6 +3497,9 @@ static void UiDriver_UpdateTopMeterA(uchar val)
  */
 static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 {
+	ulong clr;
+	char options[6];
+	UiMenu_MapColors(ts.meter_colour_down,options,&clr);
     if (val < 0)
     {
         val = 0;
@@ -3502,7 +3508,7 @@ static void UiDriver_UpdateBtmMeter(float val, uchar warn)
     {
         val = S_METER_MAX;
     }
-    UiDriver_UpdateMeter(val,warn,Cyan,METER_BTM);
+    UiDriver_UpdateMeter(val,warn,clr,METER_BTM);
 }
 
 
