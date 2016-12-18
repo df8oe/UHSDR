@@ -3510,6 +3510,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         if (signal_active)
         {
+
             // apply I/Q amplitude & phase adjustments
             // Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
             // Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
@@ -3517,7 +3518,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
     // SSB processor
-    else if((dmod_mode == DEMOD_LSB) || (dmod_mode == DEMOD_USB))
+    else if(is_ssb(dmod_mode))
     {
         if (ads.tx_filter_adjusting == false)
         {

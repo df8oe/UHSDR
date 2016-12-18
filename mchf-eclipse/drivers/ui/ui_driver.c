@@ -777,7 +777,7 @@ void UiDriver_HandleTouchScreen()
                         // this will switch to the corresponding sideband if we come from
                         // SSB, otherwise the automatically selected default (AUTO LSB/USB ON) or the previously used
                         // will be the selected one.
-                        if (ts.dmod_mode == DEMOD_USB || ts.dmod_mode == DEMOD_LSB)
+                        if (is_ssb(ts.dmod_mode))
                         {
                             ts.digi_lsb = RadioManagement_LSBActive(ts.dmod_mode);
                         }

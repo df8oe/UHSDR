@@ -306,7 +306,7 @@ void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_
 void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode, int32_t min, int32_t max)
 {
     bool tchange = false;
-    if((ts.dmod_mode == DEMOD_LSB || ts.dmod_mode == DEMOD_USB) && (ts.txrx_mode == demod_mode))       // only allow adjustment if in SSB mode
+    if(is_ssb(ts.dmod_mode) && (ts.txrx_mode == demod_mode))       // only allow adjustment if in SSB mode
     {
         tchange = UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,
                 min,
@@ -2361,7 +2361,7 @@ static void UiDriverUpdateMenuLines(uchar index, uchar mode, int pos)
     case MENU_SIDETONE_FREQUENCY:	// sidetone frequency
         fchange = UiDriverMenuItemChangeUInt32(var, mode, &ts.sidetone_freq,
                                                CW_SIDETONE_FREQ_MIN,
-                                               CW_SIDETONE_FREQ_MAX,
+                                               CW_SIDETONE_FREQ_MAX*10,
                                                CW_SIDETONE_FREQ_DEFAULT,
                                                10
                                               );
