@@ -898,7 +898,7 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
 bool RadioManagement_Tune(bool tune)
 {
     bool retval = tune;
-    if(ts.tx_disable == false &&  (ts.dmod_mode != DEMOD_SAM))
+    if(RadioManagement_IsTxDisabled() == false &&  (ts.dmod_mode != DEMOD_SAM))
     {
         if(tune)
         {
@@ -1140,14 +1140,17 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // this code handles the ts.tx_disable
         // even if ts.tx_disble is set in CW and only in CW we still switch to TX
         // but leave the PA disabled. This is for support of CW training right with the mcHF.
-        if (ts.tx_disable == true && tx_ok == true && ts.dmod_mode == DEMOD_CW)
+        if (RadioManagement_IsTxDisabled())
         {
-            tx_pa_disabled = true;
-        }
-        else if (ts.tx_disable == true)
-        {
-            // in any other case, it is not okay to transmit with ts.tx_disable == true
-            tx_ok = false;
+            if (tx_ok == true && ts.dmod_mode == DEMOD_CW)
+            {
+                tx_pa_disabled = true;
+            }
+            else
+            {
+                // in any other case, it is not okay to transmit with ts.tx_disable == true
+                tx_ok = false;
+            }
         }
     }
 
@@ -1667,7 +1670,7 @@ static void RadioManagement_HandlePttOnOff()
         // PTT on
         if(ts.ptt_req)
         {
-            if(ts.txrx_mode == TRX_MODE_RX && (!ts.tx_disable || ts.dmod_mode == DEMOD_CW))
+            if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW))
             {
                 RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
             }
@@ -2087,7 +2090,7 @@ static inline void UiDriver_FButton_F4ActiveVFO() {
 static inline void UiDriver_FButton_F5Tune()
 {
     uint32_t color;
-    color = ts.tx_disable?Grey1:(ts.tune?Red:White);
+    color = RadioManagement_IsTxDisabled() ? Grey1:(ts.tune?Red:White);
     UiDriver_FButtonLabel(5,"TUNE",color);
 }
 
@@ -2285,7 +2288,7 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
                 if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
                 {
-                    if( (ts.tx_disable&TX_DISABLE_USER) == false)
+                    if( RadioManagement_IsTxDisabledBy(TX_DISABLE_USER) == false)
                     {
                         ts.tx_disable |= TX_DISABLE_USER;
                     }

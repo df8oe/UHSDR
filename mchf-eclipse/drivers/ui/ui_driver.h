@@ -479,6 +479,17 @@ int fdv_audio_buffer_add(FDV_Audio_Buffer* c);
 void fdv_audio_buffer_reset();
 int8_t fdv_audio_has_data();
 int32_t fdv_audio_has_room();
+
+inline bool RadioManagement_IsTxDisabled()
+{
+    return (ts.tx_disable > 0);
+}
+
+inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
+{
+    return ((ts.tx_disable & (whom)) > 0);
+}
+
 #endif
 
 #endif
