@@ -356,7 +356,7 @@ void TransceiverStateInit(void)
     ts.tune_step		= 0;					// Used for press-and-hold step size changing mode
     ts.frequency_lock	= 0;					// TRUE if frequency knob is locked
     //
-    ts.tx_disable		= 0;					// TRUE if transmitter is to be disabled
+    ts.tx_disable		= TX_DISABLE_OFF;	    // > 0 if transmitter is to be disabled
     ts.flags1			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS1"
     ts.flags2			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
     ts.sysclock			= 0;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This

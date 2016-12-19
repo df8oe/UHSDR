@@ -409,7 +409,7 @@ void CatDriverFT817CheckAndExecute()
             }
             break;
             case 8: /* PTT ON */
-                if(!ts.tx_disable)
+                if(RadioManagement_IsTxDisabled() == false)
                 {
                     ts.ptt_req = 1;
                     kd.enabled = 1;
@@ -455,14 +455,14 @@ void CatDriverFT817CheckAndExecute()
                 bc = 1;
                 break;
             case 189: /* BD Read TX Status */
-               if(ts.tx_disable||(ts.txrx_mode != TRX_MODE_TX))
-		 {
-                 resp[0] = 0;
-		 }
-               else
-		 {
-                 resp[0] =((uint8_t)round(swrm.fwd_pwr)<<4)+(uint8_t)round(swrm.vswr_dampened);
-		 }
+                if(RadioManagement_IsTxDisabled()||(ts.txrx_mode != TRX_MODE_TX))
+                {
+                    resp[0] = 0;
+                }
+                else
+                {
+                    resp[0] =((uint8_t)round(swrm.fwd_pwr)<<4)+(uint8_t)round(swrm.vswr_dampened);
+                }
                 bc = 1;
                 break;
             case 231: /* E7 */
@@ -474,7 +474,7 @@ void CatDriverFT817CheckAndExecute()
                 // This differs from KA7OEI description but has been verified
                 // with the real thing.
                 resp[0]=ts.txrx_mode == TRX_MODE_TX?0x00:0xFF;
-                if(ts.tx_disable)
+                if(RadioManagement_IsTxDisabled())
               	  {
               	  resp[0] =0xFF;
               	  }

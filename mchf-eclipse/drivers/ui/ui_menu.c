@@ -3004,7 +3004,7 @@ static void UiDriverUpdateConfigMenuLines(uchar index, uchar mode, int pos)
         }
         break;
     case CONFIG_TX_DISABLE:	// Step size button swap on/off
-        temp_var = ts.tx_disable & 1;
+        temp_var = ts.tx_disable & TX_DISABLE_ALWAYS;
         tchange = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var,0,options,&clr);
         if(tchange)
         {

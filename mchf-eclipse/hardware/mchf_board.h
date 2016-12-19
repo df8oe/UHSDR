@@ -1043,10 +1043,12 @@ typedef struct TransceiverState
     //
     bool	frequency_lock;				// TRUE if frequency knob is locked
     //
+
+#define TX_DISABLE_OFF          0
 #define TX_DISABLE_ALWAYS       1
 #define TX_DISABLE_USER         2
 #define TX_DISABLE_OUTOFRANGE	4
-    uchar	tx_disable;					// TRUE if transmit is to be disabled
+    uchar	tx_disable;		// >0 if no transmit permitted, use RadioManagement_IsTxDisabled() to get boolean
 
 
     uint16_t	flags1;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS1"
