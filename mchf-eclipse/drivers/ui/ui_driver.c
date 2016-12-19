@@ -1144,7 +1144,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             tx_pa_disabled = true;
         }
-        else
+        else if (ts.tx_disable == true)
         {
             // in any other case, it is not okay to transmit with ts.tx_disable == true
             tx_ok = false;
