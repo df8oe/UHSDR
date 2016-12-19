@@ -3496,8 +3496,8 @@ static void UiDriver_UpdateTopMeterA(uchar val)
  */
 static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 {
-    ulong clr;
-    UiMenu_MapColors(ts.meter_colour_down,NULL,&clr);
+	ulong clr;
+	UiMenu_MapColors(ts.meter_colour_down,NULL,&clr);
     if (val < 0)
     {
         val = 0;
