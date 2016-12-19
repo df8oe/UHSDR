@@ -1095,6 +1095,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
     uint32_t tune_new;
     bool tx_ok = false;
+    bool tx_pa_disabled = false;
 
     // ts.last_tuning = 0;					// prevents transmitting on wrong frequency during "RX bk phases"
 
@@ -1130,10 +1131,24 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         tune_new = df.tune_new;
     }
 
-    if(txrx_mode == TRX_MODE_TX && ts.tx_disable == false)
+    if(txrx_mode == TRX_MODE_TX)
     {
         // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
         tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != SI570_TUNE_IMPOSSIBLE;
+
+
+        // this code handles the ts.tx_disable
+        // even if ts.tx_disble is set in CW and only in CW we still switch to TX
+        // but leave the PA disabled. This is for support of CW training right with the mcHF.
+        if (ts.tx_disable == true && tx_ok == true && ts.dmod_mode == DEMOD_CW)
+        {
+            tx_pa_disabled = true;
+        }
+        else
+        {
+            // in any other case, it is not okay to transmit with ts.tx_disable == true
+            tx_ok = false;
+        }
     }
 
     uint8_t txrx_mode_final = tx_ok?txrx_mode:TRX_MODE_RX;
@@ -1159,7 +1174,6 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         else
         {
 
-            MchfBoard_RedLed(LED_STATE_ON); // TX
 
             // We mute the audio BEFORE we activate the PTT.
             // This is necessary since U3 is switched the instant that we do so,
@@ -1173,7 +1187,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 // this can take up to 1.2ms (time for processing two audio buffer dma requests
             }
 
-            MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+            // this is here to allow CW training
+            // with ts.tx_disabled on nothing will be transmitted but you can hear the sidetone
+            if (tx_pa_disabled == false)
+            {
+                MchfBoard_RedLed(LED_STATE_ON); // TX
+                MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+            }
         }
 
         df.tune_new = tune_new;

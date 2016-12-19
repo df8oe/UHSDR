@@ -118,6 +118,13 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define AUTO_LSB_USB_MAX        2
 #define AUTO_LSB_USB_DEFAULT    AUTO_LSB_USB_60M
 
+
+
+#define SPEC_COLOUR_TRACE_DEFAULT   SPEC_WHITE
+#define SPEC_COLOUR_GRID_DEFAULT    SPEC_GREY
+#define SPEC_COLOUR_SCALE_DEFAULT   SPEC_GREY
+#define FILTER_DISP_COLOUR_DEFAULT  SPEC_GREY
+
 //
 // *************************************************************************************************************************
 //

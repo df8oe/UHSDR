@@ -335,91 +335,47 @@ void UiMenu_HandleIQAdjustPhase(int var, uint8_t mode, char* options, uint32_t* 
     UiMenu_HandleIQAdjust(var, mode, options, clr_ptr, val_ptr, demod_mode, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE);
 }
 
+const ColorNameValue MchfColor_Id2ValueName[SPEC_MAX_COLOUR] =
+{
+        { White,    "Whit"},
+        { Grey,     "Grey"},
+        { Blue,     "Blue"},
+        { Red,      "Red1"},
+        { Red2,     "Red2"},
+        { Red3,     "Red2"},
+        { Magenta,  "Mgnt"},
+        { Green,    "Gren"},
+        { Cyan,     "Cyan"},
+        { Yellow,   "Yelw"},
+        { Orange,   "Oran"},
+        { Cream,    "Crea"},
+        { Black,    "Blck"},
+        { Grey1,    "Gry1"},
+        { Grey2,    "Gry2"},
+        { Grey3,    "Gry3"},
+        { Grey4,    "Gry4"},
+        { Grey5,    "Gry5"},
+        { Grey6,    "Gry6"},
+};
+
+
+
 void __attribute__ ((noinline)) UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr)
 {
-    char* clr_str;
-    switch(color)
+    const ColorNameValue* cnv;
+    if (color < SPEC_MAX_COLOUR)
     {
-    case SPEC_WHITE:
-        *clr_ptr = White;
-        clr_str = " Wht";
-        break;
-    case SPEC_BLUE:
-        *clr_ptr = Blue;
-        clr_str = " Blu";
-        break;
-    case SPEC_RED1:
-        *clr_ptr = Red;
-        clr_str = "Red1";
-        break;
-    case SPEC_RED2:
-        *clr_ptr = Red2;
-        clr_str = "Red2";
-        break;
-    case SPEC_RED3:
-        *clr_ptr = Red3;
-        clr_str = "Red3";
-        break;
-    case SPEC_MAGENTA:
-        *clr_ptr = Magenta;
-        clr_str = " Mag";
-        break;
-    case SPEC_GREEN:
-        *clr_ptr = Green;
-        clr_str = " Grn";
-        break;
-    case SPEC_CYAN:
-        *clr_ptr = Cyan;
-        clr_str = " Cyn";
-        break;
-    case SPEC_YELLOW:
-        *clr_ptr = Yellow;
-        clr_str = " Yel";
-        break;
-    case SPEC_BLACK:
-        *clr_ptr = Grid;
-        clr_str = " Blk";
-        break;
-    case SPEC_ORANGE:
-        *clr_ptr = Orange;
-        clr_str = " Org";
-        break;
-    case SPEC_CREAM:
-        *clr_ptr = Cream;
-        clr_str = " Crm";
-        break;
-    case SPEC_GREY1:
-        *clr_ptr = Grey1;
-        clr_str = "Gry1";
-        break;
-    case SPEC_GREY2:
-        *clr_ptr = Grey2;
-        clr_str = "Gry2";
-        break;
-    case SPEC_GREY3:
-        *clr_ptr = Grey3;
-        clr_str = "Gry3";
-        break;
-    case SPEC_GREY4:
-        *clr_ptr = Grey4;
-        clr_str = "Gry4";
-        break;
-    case SPEC_GREY5:
-        *clr_ptr = Grey6;
-        clr_str = "Gry5";
-        break;
-    case SPEC_GREY6:
-        *clr_ptr = Grey;
-        clr_str = " Gry";
-        break;
-    default:
-        *clr_ptr = Grey;
-        clr_str = " Gry";
+        cnv = &MchfColor_Id2ValueName[color];
+    }
+    else
+    {
+     cnv = &MchfColor_Id2ValueName[SPEC_GREY];
     }
     if (options != NULL)
     {
-        strcpy(options,clr_str);
+        strcpy(options,cnv->name);
     }
+    *clr_ptr = cnv->value;
 }
 void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t value ,const uint32_t string_max, const char** strings)
 {

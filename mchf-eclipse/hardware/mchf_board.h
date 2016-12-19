@@ -726,7 +726,7 @@ enum
 //
 // Enumeration of colours used in spectrum scope display
 //
-enum
+typedef enum
 {
     SPEC_WHITE = 0,
     SPEC_GREY,
@@ -748,15 +748,18 @@ enum
     SPEC_GREY5,
     SPEC_GREY6,
     SPEC_MAX_COLOUR,
-};
-//
-#define	SPEC_COLOUR_TRACE_DEFAULT	SPEC_WHITE
-#define	SPEC_COLOUR_GRID_DEFAULT	SPEC_GREY
-#define SPEC_COLOUR_SCALE_DEFAULT	SPEC_GREY
-#define	FILTER_DISP_COLOUR_DEFAULT	SPEC_GREY
-//
+} mchf_color_t;
+
+typedef struct {
+    const uint32_t value;
+    const char* name;
+} ColorNameValue;
+
+// this data structure needs to be in sync with the color definitions above
+// otherwise strange colors may become visible in the UI.
+extern const ColorNameValue MchfColor_Id2ValueName[SPEC_MAX_COLOUR];
+
 // Enumeration of transmit meter modes
-//
 enum
 {
     METER_SWR = 0,
