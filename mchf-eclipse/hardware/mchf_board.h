@@ -1384,7 +1384,7 @@ inline bool is_ssb_tx_filter_enabled() {
 }
 
 inline bool is_ssb(const uint32_t dmod_mode) {
-    return (dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_LSB);
+    return (dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB);
 }
 
 #define STM32_DBGMCU_IDCODE        0xE0042000
