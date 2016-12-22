@@ -20,8 +20,6 @@
 
 #include "ui_spectrum.h"
 
-#include "ui_rotary.h" // df
-
 #include "ui.h" // bandInfo
 
 // Virtual eeprom

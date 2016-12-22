@@ -350,6 +350,41 @@ typedef struct LoTcxo
 
 } LoTcxo;
 
+
+// Frequency public structure
+typedef struct DialFrequency
+{
+    // pot values
+    //
+    // user visible frequency AKA dial frequency
+    // NOT the always LO frequency since we have an IQ TRX which
+    // uses frequency translation in many cases.
+    ulong   tune_old;           // current value
+    ulong   tune_new;           // requested value
+
+    // Current tuning step
+    ulong   tuning_step;        // selected step by user
+    ulong   selected_idx;       // id of step
+    ulong   step_new;           // Eth driver req step
+
+    ulong   update_skip;
+
+    // TCXO routine factor/flag
+    int     temp_factor;
+    bool    temp_factor_changed;
+    uchar   temp_enabled;
+
+    // Virtual segments
+    uint8_t dial_digits[9];
+    // Second display
+    uint8_t sdial_digits[9];
+
+} DialFrequency;
+
+// ------------------------------------------------
+// Frequency public
+extern __IO DialFrequency               df;
+
 //
 // --------------------------------------------------------------------------
 // Exports

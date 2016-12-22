@@ -119,17 +119,15 @@ typedef struct SpectrumDisplay
 //    arm_rfft_instance_f32           S;  // old, depricated FFT routine, do not use
     arm_cfft_instance_f32           C; // new FFT routine for complex FFT
 
-//	arm_cfft_radix4_instance_f32    S_CFFT; // old, depricated FFT routine, do not use
-
     // Samples buffer
-    //
+
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
 //    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN];
-    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN/2];
-    q15_t   FFT_BkpData[FFT_IQ_BUFF_LEN];
-    q15_t   FFT_DspData[FFT_IQ_BUFF_LEN];       // Rescaled and de-linearized display data
-    q15_t   FFT_TempData[FFT_IQ_BUFF_LEN];
-    float32_t   FFT_AVGData[FFT_IQ_BUFF_LEN/2];     // IIR low-pass filtered FFT buffer data
+    float32_t   FFT_MagData[SPEC_BUFF_LEN];
+    q15_t       FFT_BkpData[SPEC_BUFF_LEN];
+    q15_t       FFT_DspData[SPEC_BUFF_LEN];       // Rescaled and de-linearized display data
+    q15_t       FFT_TempData[SPEC_BUFF_LEN];
+    float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
 
     // Current data ptr
     ulong   samp_ptr;
@@ -171,8 +169,7 @@ typedef struct SpectrumDisplay
     float   wfall_contrast; // used to adjust the contrast of the waterfall display
 
     ushort  waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
-    float32_t   wfall_temp[FFT_IQ_BUFF_LEN/2];                  // temporary holder for rescaling screen
-    uint8_t  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][FFT_IQ_BUFF_LEN/2];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+    uint8_t  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][SPEC_BUFF_LEN];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
 
     uchar   wfall_line;                                     // pointer to current line of waterfall data
     uchar   wfall_size;                 // vertical size of the waterfall

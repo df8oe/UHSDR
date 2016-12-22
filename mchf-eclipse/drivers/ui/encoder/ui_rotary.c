@@ -14,17 +14,13 @@
 
 // Common
 #include "mchf_board.h"
+#include "ui_driver.h"
 #include "stdlib.h"
 #include "ui_rotary.h"
 
 // ------------------------------------------------
 // Encoder 1-4 Array
 __IO EncoderSelection		encSel[4];
-
-// ------------------------------------------------
-// Frequency public
-__IO DialFrequency              df;
-
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiRotaryFreqEncoderInit

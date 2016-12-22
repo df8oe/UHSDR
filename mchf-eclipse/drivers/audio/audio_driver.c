@@ -31,7 +31,6 @@
 #include "ui_driver.h"
 #include "usbd_audio_core.h"
 #include "ui_spectrum.h"
-#include "ui_rotary.h"
 #include "filters.h"
 #include "ui_lcd_hy28.h"
 #include "ui_configuration.h"

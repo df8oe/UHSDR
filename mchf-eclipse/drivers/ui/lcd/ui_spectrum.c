@@ -18,7 +18,6 @@
 #include "audio_driver.h"
 #include "ui_driver.h"
 #include "ui_menu.h"
-#include "ui_rotary.h" // dial frequency df
 #include "waterfall_colours.h"
 // ------------------------------------------------
 // Spectrum display public
@@ -51,97 +50,91 @@ static void		UiSpectrum_CalculateDBm();
 
 static void UiSpectrum_FFTWindowFunction(char mode)
 {
-    ulong i;
-    float32_t gcalc;
-    gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
+    float32_t gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
     float32_t s;
 
     // Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
     // KA7OEI - 20150602
 
+
     switch(mode)
     {
     case FFT_WINDOW_RECTANGULAR:	// No processing at all - copy from "Samples" buffer to "Windat" buffer
-//			arm_copy_f32((float32_t *)sd.FFT_Windat, (float32_t *)sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
+//			arm_copy_f32(sd.FFT_Windat, sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
         break;
     case FFT_WINDOW_COSINE:			// Sine window function (a.k.a. "Cosine Window").  Kind of wide...
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_WELCH:			// Parabolic window function, fairly wide, comparable to Bartlett
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Samples[i];
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_HANN:			// Raised Cosine Window (non zero-phase version) - This has the best sidelobe rejection of what is here, but not as narrow as Hamming.
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
         }
         break;
     case FFT_WINDOW_HAMMING:		// Another Raised Cosine window - This is the narrowest with reasonably good sidelobe rejection.
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
         }
         break;
     case FFT_WINDOW_BLACKMAN:		// Approx. same "narrowness" as Hamming but not as good sidelobe rejection - probably best for "default" use.
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_NUTTALL:		// Slightly wider than Blackman, comparable sidelobe rejection.
-        for(i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            s = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
-            sd.FFT_Samples[i] = s * gcalc;
+            sd.FFT_Samples[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
         }
         break;
     }
-    //
-    // used for debugging
-//		char txt[32];
-//		sprintf(txt, " %d    ", (int)(c1));
-//		UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
+
+    arm_scale_f32(sd.FFT_Samples,gcalc,sd.FFT_Samples,FFT_IQ_BUFF_LEN);
+
 }
 
 
 static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
     int8_t c = 0;
-    switch (ts.iq_freq_mode)
+    if (sd.magnify)
     {
-    case FREQ_IQ_CONV_P12KHZ:
-        c = -2;
-        break;
-    case FREQ_IQ_CONV_P6KHZ:
-        c = -1;
-        break;
-    case FREQ_IQ_CONV_M6KHZ:
-        c = 1;
-        break;
-    case FREQ_IQ_CONV_M12KHZ:
-        c = 2;
-        break;
+        c = 0;
     }
-
-    if(sd.magnify)
-  	  c = 0;
+    else
+    {
+        switch (ts.iq_freq_mode)
+        {
+        case FREQ_IQ_CONV_P12KHZ:
+            c = -2;
+            break;
+        case FREQ_IQ_CONV_P6KHZ:
+            c = -1;
+            break;
+        case FREQ_IQ_CONV_M6KHZ:
+            c = 1;
+            break;
+        case FREQ_IQ_CONV_M12KHZ:
+            c = 2;
+            break;
+        }
+    }
 
     return c + reference;
 }
@@ -485,8 +478,8 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
 
         	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
         	{
-        		y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[255];
-        		y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[255];
+        		y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[SPEC_BUFF_LEN-1];
+        		y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[SPEC_BUFF_LEN-1];
         	}
 
             if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
@@ -611,7 +604,7 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
 
 static inline const uint32_t FftIdx2BufMap(const uint32_t idx)
 {
-    return (FFT_IQ_BUFF_LEN/4 + idx)%(FFT_IQ_BUFF_LEN/2);
+    return (SPEC_BUFF_LEN/2 + idx)%(SPEC_BUFF_LEN);
 }
 
 //*----------------------------------------------------------------------------
@@ -681,7 +674,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     	j = 0;					// init count of lines on display
     	k = sd.wfall_line;		// start with line currently displayed in buffer
     	while(j < SPECTRUM_HEIGHT)	{		// loop number of times of buffer
-    		for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	{		// do this all of the way across, horizonally
+    		for(i = 0; i < SPEC_BUFF_LEN; i++)	{		// do this all of the way across, horizonally
     			sd.waterfall[k][i] = (SPECTRUM_HEIGHT - j) % SPECTRUM_HEIGHT;	// place the color of the palette, indexed to vertical position
     		}
     		j++;		// update line count
@@ -770,7 +763,7 @@ void UiSpectrum_RedrawScopeDisplay()
     {
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
     }
-    ulong i, spec_width;
+    ulong i;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 
 
@@ -788,19 +781,10 @@ void UiSpectrum_RedrawScopeDisplay()
         {
             // with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
             // UiDriverFFTWindowFunction was changed
-            // new arm_cfft lib does not seem to need SCOPE_PREAMP_GAIN any more! Why?
-            // gain application of 1/ads.codec_gain_calc is now done in UiDriverFFTWindowFunction to save RAM
-            //
-            //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-            //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-            //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
             //
             UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
             //
-            //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
-            //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S_fast,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
-            //        arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
-            arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
+            arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples, 0, 1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
 
             //
             sd.state++;
@@ -814,12 +798,12 @@ void UiSpectrum_RedrawScopeDisplay()
             //
             // Save old display data - we will use later to mask pixel on the control
             //
-            arm_copy_q15((q15_t *)sd.FFT_DspData, (q15_t *)sd.FFT_BkpData, FFT_IQ_BUFF_LEN/2);
+            arm_copy_q15(sd.FFT_DspData, sd.FFT_BkpData, SPEC_BUFF_LEN);
             //
             // Calculate magnitude
             //
-            arm_cmplx_mag_f32((float32_t *)(sd.FFT_Samples),(float32_t *)(sd.FFT_MagData),(FFT_IQ_BUFF_LEN/2));
-            //
+            arm_cmplx_mag_f32(sd.FFT_Samples, sd.FFT_MagData, SPEC_BUFF_LEN);
+
             sd.state++;
             break;
         }
@@ -844,12 +828,12 @@ void UiSpectrum_RedrawScopeDisplay()
             // as I understand this, this calculates an IIR filter first order
             // AVGData = filt_factor * Sample[t] + (1 - filt_factor) * Sample [t - 1]
             //
-            arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-            arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-            arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-            arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+            arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of previous data
+            arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, SPEC_BUFF_LEN);	// subtract scaled information from old, average data
+            arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of new, input data
+            arm_add_f32(sd.FFT_Samples, sd.FFT_AVGData, sd.FFT_AVGData, SPEC_BUFF_LEN);	// add portion new, input data into average
             //
-            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
+            for(i = 0; i < SPEC_BUFF_LEN; i++)
             {
                 //		// guarantee that the result will always be >= 0
                 if(sd.FFT_AVGData[i] < 1)
@@ -865,184 +849,105 @@ void UiSpectrum_RedrawScopeDisplay()
         //
         case 4:
         {
-            q15_t	max1, max2, max3, min1, min2, min3;
-            q15_t	mean1, mean2, mean3;
+            q15_t	max1, max2, min1, min2;
+            q15_t	mean1, mean2;
             float32_t	sig;
             //
             // De-linearize data with dB/division
             // AND flip data round ! = mirror values from right to left and vice versa (had to be done because of the new FFT lib) DDD4WH april 2016
-            for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)
+            for(i = 0; i < (SPEC_BUFF_LEN); i++)
             {
                 sig = log10(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
                 if(sig > 1)											// is the value greater than 1?
+                {
                     //					sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
-                    sd.FFT_DspData[FFT_IQ_BUFF_LEN/2 - i - 1] = (q15_t)sig;					// it was a useful value - save it
+                    sd.FFT_DspData[SPEC_BUFF_LEN - i - 1] = (q15_t)sig;					// it was a useful value - save it
+                }
                 else
-                    sd.FFT_DspData[FFT_IQ_BUFF_LEN/2 - i - 1] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
+                {
+                    sd.FFT_DspData[SPEC_BUFF_LEN - i - 1] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
+                }
             }
             //
-            arm_copy_q15((q15_t *)sd.FFT_DspData, (q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/2);
+            arm_copy_q15(sd.FFT_DspData, sd.FFT_TempData, SPEC_BUFF_LEN);
             //
             // Find peak and average to vertically adjust display
             //
             if(sd.magnify != 0)	 	// are we in magnify mode?  If so, find max/mean of only those portions of the spectrum magnified - which are NOT in the proper order, dammit!
             {
-                //
-                if(!ts.iq_freq_mode)	 	// yes, are we NOT in translate mode?
+
+                //   [01234567] Buffer in pieces of eight
+                //    XX----XX   0
+                //    X----XXX   +6
+                //    XXX----X   -6
+                //    ----XXXX  +12
+                //    XXXX----  -12
+                uint16_t idx[2],len[2];
+
+                switch(ts.iq_freq_mode)
                 {
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
-                    //
-                    arm_max_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &max2, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &min2, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/8, &mean2);				// find mean value in center portion
-                    //
-                    if(max2 > max1)
-                        max1 = max2;
-                    //
-                    if(mean2 > mean1)
-                        mean1 = mean2;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
+                case FREQ_IQ_CONV_P6KHZ:
+                    idx[0] = 5;
+                    len[0] = 3;
+                    idx[1] = 0;
+                    len[1] = 1;
+                    break;
+                case FREQ_IQ_CONV_M6KHZ:
+                    idx[0] = 7;
+                    len[0] = 3;
+                    idx[1] = 0;
+                    len[1] = 1;
+                    break;
+                case FREQ_IQ_CONV_P12KHZ:
+                    idx[0] = 4;
+                    len[0] = 2;
+                    idx[1] = 6;
+                    len[1] = 2;
+                    break;
+                case FREQ_IQ_CONV_M12KHZ:
+                    idx[0] = 0;
+                    len[0] = 2;
+                    idx[1] = 2;
+                    len[1] = 2;
+                    break;
+                case FREQ_IQ_CONV_MODE_OFF:
+                default:
+                     idx[0] = 6;
+                     len[0] = 2;
+                     idx[1] = 0;
+                     len[1] = 2;
+                     break;
                 }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
+
+                arm_max_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], (len[0]*SPEC_BUFF_LEN)/8, &max1, &max_ptr);       // find maximum element in center portion
+                arm_min_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], (len[0]*SPEC_BUFF_LEN)/8, &min1, &max_ptr);       // find minimum element in center portion
+                arm_mean_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], len[0], &mean1);               // find mean value in center portion
+
+                arm_max_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &max2, &max_ptr);       // find maximum element in center portion
+                arm_min_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &min2, &max_ptr);       // find minimum element in center portion
+                arm_mean_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &mean2);               // find mean value in center portion
+
+                if(max2 > max1)
                 {
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*5/16], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
-                    //
-                    if(max2 > max1)
-                        max1 = max2;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean2 > mean1)
-                        mean1 = mean2;
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max3, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min3, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean3);				// find mean value in center portion
-                    //
-                    if(max3 > max1)
-                        max1 = max3;
-                    //
-                    if(min3 < min1)
-                        min1 = min3;
-                    //
-                    if(mean3 > mean1)
-                        mean1 = mean3;
+                    max1 = max2;
                 }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
+
+                if(mean2 > mean1)
                 {
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &max1, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &min1, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*7/16], FFT_IQ_BUFF_LEN/16, &mean1);				// find mean value in center portion
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
-                    //
-                    if(max2 > max1)
-                        max1 = max2;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean2 > mean1)
-                        mean1 = mean2;
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &max3, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &min3, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/8, &mean3);				// find mean value in center portion
-                    //
-                    if(max3 > max1)
-                        max1 = max3;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean3 > mean1)
-                        mean1 = mean3;
+                    mean1 = mean2;
                 }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaa
+
+                if(min2 < min1)
                 {
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &max1, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &min1, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/4], FFT_IQ_BUFF_LEN/8, &mean1);				// find mean value in center portion
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN*3/8], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
-                    //
-                    if(max2 > max1)
-                        max1 = max2;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean2 > mean1)
-                        mean1 = mean2;
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max3, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min3, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean3);				// find mean value in center portion
-                    //
-                    if(max3 > max1)
-                        max1 = max3;
-                    //
-                    if(min3 < min1)
-                        min1 = min3;
-                    //
-                    if(mean3 > mean1)
-                        mean1 = mean3;
-                }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-                {
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &max1, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &min1, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[0], FFT_IQ_BUFF_LEN/16, &mean1);				// find mean value in center portion
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &max2, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &min2, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/16], FFT_IQ_BUFF_LEN/16, &mean2);				// find mean value in center portion
-                    //
-                    if(max2 > max1)
-                        max1 = max2;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean2 > mean1)
-                        mean1 = mean2;
-                    //
-                    arm_max_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &max3, &max_ptr);		// find maximum element in center portion
-                    arm_min_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &min3, &max_ptr);		// find minimum element in center portion
-                    arm_mean_q15((q15_t *)&sd.FFT_TempData[FFT_IQ_BUFF_LEN/8], FFT_IQ_BUFF_LEN/8, &mean3);				// find mean value in center portion
-                    //
-                    if(max3 > max1)
-                        max1 = max3;
-                    //
-                    if(min2 < min1)
-                        min1 = min2;
-                    //
-                    if(mean3 > mean1)
-                        mean1 = mean3;
+                    min1 = min2;
                 }
             }
             else
             {
-                spec_width = FFT_IQ_BUFF_LEN/2;
-                arm_max_q15((q15_t *)sd.FFT_TempData, spec_width, &max1, &max_ptr);		// find maximum element
-                arm_min_q15((q15_t *)sd.FFT_TempData, spec_width, &min1, &max_ptr);		// find minimum element
-                arm_mean_q15((q15_t *)sd.FFT_TempData, spec_width, &mean1);				// find mean value
+                arm_max_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &max1, &max_ptr);		// find maximum element
+                arm_min_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &min1, &max_ptr);		// find minimum element
+                arm_mean_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &mean1);				// find mean value
             }
 
             //
@@ -1088,71 +993,19 @@ void UiSpectrum_RedrawScopeDisplay()
             //
             // we can calculate any position in the spectrum by using the
             // following thinking
-            // the spectrum is 256 entries wide == FFT_IQ_BUFF_LEN/2
+            // the spectrum is 256 entries wide == SPEC_BUFF_LEN
             // the begin of the spectrum (== -24khz) is in the middle of the buffer
-            // i.e. 0 == FFT_IQ_BUFF_LEN/2/2 == 128
+            // i.e. 0 == SPEC_BUFF_LEN/2 == 128
             // that means (FFT_IQ_BUFF_LEN/4 + idx)%FFT_IQ_BUFF_LEN/2 == (128+idx)%256
             // gives us the index in the buffer.
             // we use this  knowledge to simplify the magnification code
             // compiler can heavily optimize this since we  all these values being power of 2 value
             //        if(sd.magnify != 0)	 	// is magnify mode on?
-#if 0
-            ushort ptr;
 
-            if(0)
-            { // we don�t need all this any more, because the new Zoom FFT takes care of that, DD4WH, Aug 15th, 2016
-                uint32_t end_range;
-                switch(ts.iq_freq_mode)
-                {
-                break;
-                case FREQ_IQ_CONV_P6KHZ:	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-                    ptr = FFT_IQ_BUFF_LEN/16 ; // FFT_IQ_BUFF_LEN/8 + FFT_IQ_BUFF_LEN/16  = -12khz + 6khz = -6khz <-> + 18khz
-                    break;
-                case FREQ_IQ_CONV_M6KHZ: // frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-                    ptr = 3* FFT_IQ_BUFF_LEN/16 ; // FFT_IQ_BUFF_LEN/8 - FFT_IQ_BUFF_LEN/16  = -12khz - 6khz = -18khz <-> + 6khz
-                    break;
-                case FREQ_IQ_CONV_P12KHZ: // frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-                    ptr = 0; // FFT_IQ_BUFF_LEN/8 + FFT_IQ_BUFF_LEN/8  = -12khz + 12khz = 0khz <-> + 24khz
-                    break;
-                case FREQ_IQ_CONV_M12KHZ:	// frequency translate mode is in "RF LO HIGH" mode - tune below center of screen
-                    ptr = FFT_IQ_BUFF_LEN/4 ; // FFT_IQ_BUFF_LEN/8 - FFT_IQ_BUFF_LEN/8  = -12khz - 12khz = -24khz <-> 0khz
-                    break;
-                default:	// yes - frequency translate mode is off
-                    ptr = FFT_IQ_BUFF_LEN/8; // FFT_IQ_BUFF_LEN/8  = -12khz = -12khz <-> + 12khz
-                }
-                end_range = ptr+FFT_IQ_BUFF_LEN/4; // exclusive
-
-                // this would be the right place to interpolate between two FFT values in sd.FFT_TempData in order
-                // to make the mcHF user think that in magnify mode we have 256 different FFT values for the spectrum display
-                // when IN FACT we only have 128 values and interpolate between them to expand to 256 pixels, DD4WH June 2016
-                // when i = 2 * ptr, take same value
-                // in all other cases:
-                /*
-                 *   sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)];  each entry from fft is used twice
-                 *   sd.FFT_DspData[FftIdx2BufMap(i++)] = (sd.FFT_TempData[FftIdx2BufMap(ptr)] + sd.FFT_TempData[FftIdx2BufMap(ptr + 1)]) / 2 ;  each entry from fft is used twice
-                 *
-                 *
-                 * */
-                for(i=0; ptr < end_range; ptr++)	 	// expand data to fill entire screen - get lower half
-                {
-                    sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* each entry from fft is used twice */
-                    if (i != ptr * 2) {
-                        sd.FFT_DspData[FftIdx2BufMap(i++)] = (sd.FFT_TempData[FftIdx2BufMap(ptr)] + sd.FFT_TempData[FftIdx2BufMap(ptr + 1)]) / 2 ;
-                        // interpolated value of FFT [ptr] and FFT [ptr + 1]
-                    }
-                    else {
-                        sd.FFT_DspData[FftIdx2BufMap(i++)] = sd.FFT_TempData[FftIdx2BufMap(ptr)]; /* same entry from fft */
-                    }
-                }
-            }
-            else
-#endif
-            {
-                arm_copy_q15((q15_t *)sd.FFT_DspData, (q15_t *)sd.FFT_TempData, FFT_IQ_BUFF_LEN/2);
-            }
+            arm_copy_q15(sd.FFT_DspData, sd.FFT_TempData, SPEC_BUFF_LEN);
 
             // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
+            for(i = 0; i < SPEC_BUFF_LEN; i++)
             {
                 if(sd.FFT_DspData[i] >= spec_height)	// is there an illegal height value?
                 {
@@ -1172,14 +1025,9 @@ void UiSpectrum_RedrawScopeDisplay()
             uint32_t	clr;
             UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
             // Left part of screen(mask and update in one operation to minimize flicker)
-            /*        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
-        // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
-        UiSpectrumDrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
-             */
-            // Left part of screen(mask and update in one operation to minimize flicker)
-            UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData + FFT_IQ_BUFF_LEN/4), (q15_t *)(sd.FFT_DspData + FFT_IQ_BUFF_LEN/4), Black, clr,0);
+            UiSpectrum_DrawSpectrum(sd.FFT_BkpData + SPEC_BUFF_LEN/2, sd.FFT_DspData + SPEC_BUFF_LEN/2, Black, clr,0);
             // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
-            UiSpectrum_DrawSpectrum((q15_t *)(sd.FFT_BkpData), (q15_t *)(sd.FFT_DspData), Black, clr,1);
+            UiSpectrum_DrawSpectrum(sd.FFT_BkpData, sd.FFT_DspData, Black, clr,1);
 
             sd.state = 0;   // Stage 0 - collection of data by the Audio driver
             break;
@@ -1222,10 +1070,7 @@ void UiSpectrum_RedrawWaterfall()
         {
             // with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
             // UiDriverFFTWindowFunction was changed
-            // new arm_cfft lib does not seem to need SCOPE_PREAMP_GAIN any more! Why?
-            //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc * SCOPE_PREAMP_GAIN), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-            //			arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)(gcalc), (float32_t *)sd.FFT_Windat, FFT_IQ_BUFF_LEN);	// scale input according to A/D gain
-            //
+
             UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
             //
             sd.state++;
@@ -1233,15 +1078,15 @@ void UiSpectrum_RedrawWaterfall()
         }
         case 2:		// Do FFT and calculate complex magnitude
         {
-            //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples));	// Do FFT
-            //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S,(float32_t *)(sd.FFT_Windat),(float32_t *)(sd.FFT_Samples),0);	// Do FFT
-            arm_cfft_f32(&arm_cfft_sR_f32_len256,(float32_t *)(sd.FFT_Samples),0,1);	// Do FFT
+            //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(sd.FFT_Windat),(sd.FFT_Samples));	// Do FFT
+            //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S,(sd.FFT_Windat),(sd.FFT_Samples),0);	// Do FFT
+            arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples,0,1);	// Do FFT
 
             //
             // Calculate magnitude
             //
-            arm_cmplx_mag_f32((float32_t *)(sd.FFT_Samples),(float32_t *)(sd.FFT_MagData),(FFT_IQ_BUFF_LEN/2));
-            //
+            arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,SPEC_BUFF_LEN);
+
             sd.state++;
             break;
         }
@@ -1262,12 +1107,12 @@ void UiSpectrum_RedrawWaterfall()
 
             }
 
-            arm_scale_f32((float32_t *)sd.FFT_AVGData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of previous data
-            arm_sub_f32((float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// subtract scaled information from old, average data
-            arm_scale_f32((float32_t *)sd.FFT_MagData, (float32_t)filt_factor, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);	// get scaled version of new, input data
-            arm_add_f32((float32_t *)sd.FFT_Samples, (float32_t *)sd.FFT_AVGData, (float32_t *)sd.FFT_AVGData, FFT_IQ_BUFF_LEN/2);	// add portion new, input data into average
+            arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of previous data
+            arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, SPEC_BUFF_LEN);	// subtract scaled information from old, average data
+            arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of new, input data
+            arm_add_f32(sd.FFT_Samples, sd.FFT_AVGData, sd.FFT_AVGData, SPEC_BUFF_LEN);	// add portion new, input data into average
 
-            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 		// guarantee that the result will always be >= 0
+            for(i = 0; i < SPEC_BUFF_LEN; i++)	 		// guarantee that the result will always be >= 0
             {
                 if(sd.FFT_AVGData[i] < 1)
                 {
@@ -1291,7 +1136,7 @@ void UiSpectrum_RedrawWaterfall()
             //
             // De-linearize data with dB/division
             //
-            for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)
+            for(i = 0; i < (SPEC_BUFF_LEN); i++)
             {
                 sig = log10(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
@@ -1304,17 +1149,17 @@ void UiSpectrum_RedrawWaterfall()
             // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
             //
 
-            for(i = 0; i < (FFT_IQ_BUFF_LEN/2); i++)
+            for(i = 0; i < (SPEC_BUFF_LEN); i++)
             {
-                if(i < (SPECTRUM_WIDTH/2))	 		// build left half of spectrum data
+                if(i < (SPEC_BUFF_LEN/2))	 		// build left half of spectrum data
                 {
                     //					sd.FFT_Samples[i] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
-                    sd.FFT_Samples[(FFT_IQ_BUFF_LEN/2) - i - 1] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i + SPEC_BUFF_LEN/2];	// get data
                 }
                 else	 							// build right half of spectrum data
                 {
                     //					sd.FFT_Samples[i] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
-                    sd.FFT_Samples[(FFT_IQ_BUFF_LEN/2) - i - 1] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i - SPEC_BUFF_LEN/2];	// get data
                 }
             }
 
@@ -1324,28 +1169,28 @@ void UiSpectrum_RedrawWaterfall()
             uint16_t samp_idx;
             if(sd.magnify)	 	// are we in magnify mode?
             {
-                spec_width = FFT_IQ_BUFF_LEN/4;	// yes - define new spectrum width
+                spec_width = SPEC_BUFF_LEN/2;	// yes - define new spectrum width
 
                 switch(ts.iq_freq_mode)
                 {
                 case FREQ_IQ_CONV_P6KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-                    samp_idx = FFT_IQ_BUFF_LEN/16;
+                    samp_idx = SPEC_BUFF_LEN/8;
                     break;
                 case FREQ_IQ_CONV_M6KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
-                    samp_idx = FFT_IQ_BUFF_LEN*3/16;
-                case FREQ_IQ_CONV_P12KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)		// aaaaaaaaaaaaaaaaaaaaaaaaa
+                    samp_idx = (SPEC_BUFF_LEN*3)/8;
+                case FREQ_IQ_CONV_P12KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)
                     samp_idx = 0;
                     break;
                 case FREQ_IQ_CONV_M12KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
-                    samp_idx = FFT_IQ_BUFF_LEN/4;
+                    samp_idx = SPEC_BUFF_LEN/2;
                     break;
                 default:
-                    samp_idx = FFT_IQ_BUFF_LEN/8;
+                    samp_idx = SPEC_BUFF_LEN/4;
                 }
             }
             else
             {
-                spec_width = FFT_IQ_BUFF_LEN/2;
+                spec_width = SPEC_BUFF_LEN;
                 samp_idx = 0;
             }
 
@@ -1356,12 +1201,8 @@ void UiSpectrum_RedrawWaterfall()
             //
             // Calculate "brightness" offset for amplitude value
             //
-            offset = (float)ts.waterfall_offset;
-            offset -= 100;
-            //
-            //
-            // Vertically adjust spectrum scope so that the strongest signals are adjusted to the top
-            //
+            offset = ts.waterfall_offset -100;
+
             if((max - offset) >= NUMBER_WATERFALL_COLOURS - 1)	 	// is result higher than display brightness
             {
                 sd.display_offset -= sd.agc_rate;	// yes, adjust downwards quickly
@@ -1408,7 +1249,7 @@ void UiSpectrum_RedrawWaterfall()
             //
             // Contrast:  100 = 1.00 multiply factor:  125 = multiply by 1.25 - "sd.wfall_contrast" already converted to 100=1.00
             //
-            arm_scale_f32((float32_t *)sd.FFT_Samples, (float32_t)sd.wfall_contrast, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);
+            arm_scale_f32(sd.FFT_Samples, sd.wfall_contrast, sd.FFT_Samples, SPEC_BUFF_LEN);
             //
             //        ushort ptr;
             uint16_t center_pixel_pos;
@@ -1417,51 +1258,36 @@ void UiSpectrum_RedrawWaterfall()
             //        uint16_t magnify_offset;
             // only used if magnify is on
 
-            switch (ts.iq_freq_mode) {
-            case FREQ_IQ_CONV_P6KHZ:
-                center_pixel_pos = FFT_IQ_BUFF_LEN*3/16;
-                //            magnify_offset = FFT_IQ_BUFF_LEN/16;
-                break;
-            case FREQ_IQ_CONV_M6KHZ:
-                center_pixel_pos = FFT_IQ_BUFF_LEN*5/16;
-                //            magnify_offset = FFT_IQ_BUFF_LEN*3/16;
-                break;
-            case FREQ_IQ_CONV_P12KHZ:
-                center_pixel_pos = FFT_IQ_BUFF_LEN*2/16;
-                //            magnify_offset = 0;
-                break;
-            case FREQ_IQ_CONV_M12KHZ:
-                center_pixel_pos = FFT_IQ_BUFF_LEN*6/16;
-                //            magnify_offset = FFT_IQ_BUFF_LEN/4;
-                break;
-            default:
-                center_pixel_pos = FFT_IQ_BUFF_LEN*4/16;
-                //            magnify_offset = FFT_IQ_BUFF_LEN/8;
-                break;
-            }
-
             if (sd.magnify)
             {
-                center_pixel_pos = FFT_IQ_BUFF_LEN*4/16;
+                center_pixel_pos = (SPEC_BUFF_LEN*4)/8;
                 // position of center is always in the middle if
                 // in magnify mode, so we fix that position here
-
-                /*			// we don�t need the following anymore, because the new Zoom FFT already
-  	  	  	// takes care of that, DD4WH, Aug 15th, 2016
-            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)	 	// expand data to fill entire screen - get lower half
-            {
-                ptr = (i/2) + magnify_offset;
-                if(ptr < FFT_IQ_BUFF_LEN/2)
-                {
-                    sd.wfall_temp[i] = sd.FFT_Samples[ptr];
-                }
             }
-            arm_copy_f32((float32_t *)sd.wfall_temp, (float32_t *)sd.FFT_Samples, FFT_IQ_BUFF_LEN/2);		// copy the rescaled/shifted data into the main buffer
-                 */
+            else
+            {
+
+                switch (ts.iq_freq_mode) {
+                case FREQ_IQ_CONV_P6KHZ:
+                    center_pixel_pos = (SPEC_BUFF_LEN*3)/8;
+                    break;
+                case FREQ_IQ_CONV_M6KHZ:
+                    center_pixel_pos = (SPEC_BUFF_LEN*5)/8;
+                    break;
+                case FREQ_IQ_CONV_P12KHZ:
+                    center_pixel_pos = (SPEC_BUFF_LEN*2)/8;
+                    break;
+                case FREQ_IQ_CONV_M12KHZ:
+                    center_pixel_pos = (SPEC_BUFF_LEN*6)/8;
+                    break;
+                default:
+                    center_pixel_pos = (SPEC_BUFF_LEN*4)/8;
+                    break;
+                }
             }
 
             // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-            for(i = 0; i < FFT_IQ_BUFF_LEN/2; i++)
+            for(i = 0; i < SPEC_BUFF_LEN; i++)
             {
                 if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)	// is there an illegal color value?
                 {
@@ -1805,11 +1631,11 @@ static void UiSpectrum_CalculateDBm()
             {
                 if(i < (buff_len_int/4))	 		// build left half of magnitude data
                 {
-                    sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
                 }
                 else	 							// build right half of magnitude data
                 {
-                    sd.FFT_Samples[FFT_IQ_BUFF_LEN/2 - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
                 }
             }
 
