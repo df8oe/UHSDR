@@ -29,7 +29,6 @@
 #include "freedv_mchf.h"
 // UI Driver
 #include "ui_driver.h"
-#include "ui_rotary.h"
 #include "ui_lcd_hy28.h"
 #include "ui_menu.h"
 #include "ui_si570.h"

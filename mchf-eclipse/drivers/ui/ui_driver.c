@@ -242,6 +242,9 @@ const ulong tune_steps[T_STEP_MAX_STEPS] =
     T_STEP_10MHZ
 };
 
+// ------------------------------------------------
+// Frequency public
+__IO DialFrequency              df;
 
 
 

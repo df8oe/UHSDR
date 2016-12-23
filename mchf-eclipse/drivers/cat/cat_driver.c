@@ -197,7 +197,7 @@ struct FT817
 #endif
 };
 
-#include "ui_rotary.h"
+#include "ui_driver.h"
 #include "mchf_board.h"
 
 // FT817 Emulation

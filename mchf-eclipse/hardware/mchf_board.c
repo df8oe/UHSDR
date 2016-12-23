@@ -20,10 +20,10 @@
 #include "mchf_hw_i2c.h"
 #include "mchf_hw_i2c2.h"
 
-#include "ui_rotary.h"
 #include "ui_lcd_hy28.h"
 //
 #include "ui_driver.h"
+#include "ui_rotary.h"
 //
 #include "codec.h"
 //

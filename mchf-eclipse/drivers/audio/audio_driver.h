@@ -31,7 +31,7 @@
 // -----------------------------
 // FFT buffer, this is double the size of the length of the FFT used for spectrum display and waterfall spectrum
 #define FFT_IQ_BUFF_LEN		512
-
+#define SPEC_BUFF_LEN (FFT_IQ_BUFF_LEN/2)
 
 //
 // Useful DEFINEs for windowing functions
@@ -551,7 +551,6 @@ typedef struct SnapCarrier
     // Samples buffer
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
 
-//    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN2];
     // Current data ptr
     ulong   samp_ptr;
     int8_t FFT_number;
