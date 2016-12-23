@@ -19,7 +19,7 @@
 #include "audio_driver.h"
 
 #include "ui_spectrum.h"
-
+#include "radio_management.h"
 #include "ui.h" // bandInfo
 
 // Virtual eeprom

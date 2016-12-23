@@ -216,56 +216,11 @@ enum
 #define	SPECTRUM_SIZE_DEFAULT			SPECTRUM_NORMAL
 
 //
-#define SWR_SAMPLES_SKP				1	//5000
-#define SWR_SAMPLES_CNT				5//10
 //
 #define	SD_DB_DIV_SCALING			0.0316	// Scaling factor for number of dB/Division	0.0316 = 10dB/Division
 
-typedef enum
-{
-    COUPLING_2200M = 0,
-    COUPLING_630M,
-    COUPLING_160M,
-    COUPLING_80M,
-    COUPLING_40M,
-    COUPLING_20M,
-    COUPLING_15M,
-    COUPLING_6M,
-    COUPLING_2M,
-    COUPLING_70CM,
-    COUPLING_23CM,
-    COUPLING_MAX
-} filter_band_t;
 
-// SWR and RF power meter public
-typedef struct SWRMeter
-{
-    ulong	skip;
 
-    float fwd_calc;			// forward power readings in A/D units
-    float rev_calc;			// reverse power readings in A/D units
-    float fwd_pwr;			// forward power in watts
-    float rev_pwr;			// reverse power in watts
-    float fwd_dbm;			// forward power in dBm
-    float rev_dbm;			// reverse power in dBm
-    float vswr;			// vswr
-    float vswr_dampened;		// dampened VSWR reading
-    bool  pwr_meter_disp;		// TRUE if numerical FWD/REV power metering (in milliwatts) is to be displayed
-    bool  pwr_meter_was_disp;	// TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
-    uchar	p_curr;			// count used to update power meter
-    uchar	sensor_null;		// used to null out the sensor offset voltage
-
-    uint8_t coupling_calc[COUPLING_MAX];
-
-} SWRMeter;
-
-#define	SWR_CAL_MIN				75
-#define	SWR_CAL_MAX				150
-#define	SWR_CAL_DEFAULT				100
-//
-#define	SENSOR_NULL_MIN				75
-#define	SENSOR_NULL_MAX				125
-#define	SENSOR_NULL_DEFAULT			100
 //
 // Location of numerical FWD/REV power indicator
 //
@@ -280,26 +235,10 @@ typedef struct SWRMeter
 #define	SWR_COUPLING_MAX			150
 #define	SWR_COUPLING_DEFAULT			100
 //
-#define	SWR_ADC_FULL_SCALE			4095	// full scale of A/D converter (4095 = 10 bits)
-#define	SWR_ADC_VOLT_REFERENCE			3.3		// NOMINAL A/D reference voltage.  The PRECISE value is calibrated by a menu item!  (Probably "FWD/REV ADC Cal.")
-//
-// coefficients for very low power (<75 milliwatt) power levels.  Do NOT use this above approx. 0.07 volts input!
-//
-#define	LOW_RF_PWR_COEFF_A			-0.0338205168744131		// constant (offset)
-#define	LOW_RF_PWR_COEFF_B			5.02584652062682		// "b" coefficient (for x)
-#define LOW_RF_PWR_COEFF_C			-106.610490958242		// "c" coefficient (for x^2)
-#define	LOW_RF_PWR_COEFF_D			853.156505329744		// "d" coefficient (for x^3)
-//
-// coefficients for higher power levels (>50 milliwatts).  This is actually good down to 25 milliwatts or so.
-//
-#define	HIGH_RF_PWR_COEFF_A			0.01209	//0.0120972709513557		// constant (offset)
-#define HIGH_RF_PWR_COEFF_B			0.8334	//0.833438917330908		// "b" coefficient (for x)
-#define HIGH_RF_PWR_COEFF_C 			1.569	//1.56930042559198		// "c" coefficient (for x^2)
 //
 //
 #define	SWR_MIN_CALC_POWER			0.25	// Minimum forward power required for SWR calculation
 //
-#define	LOW_POWER_CALC_THRESHOLD		0.05	// voltage from sensor below which we use the "low power" calculations, above
 //
 #define	VSWR_DAMPENING_FACTOR			0.25		// dampening/averaging factor (e.g. amount of "new" reading each time) - for VSWR meter indication ONLY
 //
@@ -307,14 +246,9 @@ typedef struct SWRMeter
 //
 // Volt (DC power) meter
 //
-#define POWER_SAMPLES_SKP			10	//1500
 #define POWER_SAMPLES_CNT			32
 //
-// used to limit the voltmeter calibration parameters
-//
-#define	POWER_VOLTMETER_CALIBRATE_DEFAULT	100
-#define	POWER_VOLTMETER_CALIBRATE_MIN		00
-#define	POWER_VOLTMETER_CALIBRATE_MAX		200
+
 //
 #define	VOLTMETER_ADC_FULL_SCALE		4095
 //
@@ -331,59 +265,7 @@ typedef struct PowerMeter
     char	 digits[6]; // voltage in millivolt upto 99.000 volt
 } PowerMeter;
 
-#define LO_COMP_SKP				50		//50000
 
-// LO temperature compensation
-typedef struct LoTcxo
-{
-    ulong	skip;
-
-    // Current compensation value
-    // loaded to LO
-    int		comp;
-
-    int32_t temp;
-
-    bool	sensor_absent;
-    bool    lo_error;
-    int   last;
-
-} LoTcxo;
-
-
-// Frequency public structure
-typedef struct DialFrequency
-{
-    // pot values
-    //
-    // user visible frequency AKA dial frequency
-    // NOT the always LO frequency since we have an IQ TRX which
-    // uses frequency translation in many cases.
-    ulong   tune_old;           // current value
-    ulong   tune_new;           // requested value
-
-    // Current tuning step
-    ulong   tuning_step;        // selected step by user
-    ulong   selected_idx;       // id of step
-    ulong   step_new;           // Eth driver req step
-
-    ulong   update_skip;
-
-    // TCXO routine factor/flag
-    int     temp_factor;
-    bool    temp_factor_changed;
-    uchar   temp_enabled;
-
-    // Virtual segments
-    uint8_t dial_digits[9];
-    // Second display
-    uint8_t sdial_digits[9];
-
-} DialFrequency;
-
-// ------------------------------------------------
-// Frequency public
-extern __IO DialFrequency               df;
 
 //
 // --------------------------------------------------------------------------
@@ -391,55 +273,20 @@ extern __IO DialFrequency               df;
 void 	UiDriver_Init(void);
 void 	UiDriver_MainHandler(void);
 
-void 	UiDriverLoadFilterValue(void);
-//
-void 	RadioManagement_ChangeBandFilter(uchar band);
-void 	UiDriver_DisplayFilter(void);
 void 	UiDriver_CreateTemperatureDisplay(uchar enabled,uchar create);
 void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
-
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
-void 	RadioManagement_SetBandPowerFactor(uchar band);
-void 	RadioManagement_SetPaBias();
-//
-//void 	UiDriverChangeFilter(uchar ui_only_update);
-void 	RadioManagement_SetBandPowerFactor(uchar band);
-
 void    UiDriver_RefreshEncoderDisplay();
-
 void    UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
-//
-//
 void 	UiDriver_ShowStep(ulong step);
-//
-bool 	RadioManagement_CalculateCWSidebandMode(void);
 void 	UiDriver_DisplayFilterBW(void);
 void 	UiDriver_ShowMode(void);
-//
 void	UiDriver_LcdBlankingStartTimer(void);
 void	UiDriver_ShowDebugText(const char*);
 void 	UiDriver_ChangeTuningStep(uchar is_up);
-//
-void 	uiCodecMute(uchar val);
-
 void	UiDriver_UpdateDisplayAfterParamChange();
-
-void    UiDriver_KeyTestScreen();
-void UiDriver_ShowStartUpScreen(ulong hold_time);
-
-bool	UiDriver_CheckTouchCoordinates(uint8_t,uint8_t,uint8_t,uint8_t);
-
-void RadioManagement_SetDemodMode(uint32_t new_mode);
-void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
-void RadioManagement_UpdateFrequency(uint8_t txrx_mode);
-uint8_t RadioManagement_GetBand(ulong freq);
-bool RadioManagement_LSBActive(uint16_t dmod_mode);
-
-
-
-void UiDriverSetDemodMode(uint32_t new_mode); // switch to different demodulation mode.
-
-void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
+void    UiDriver_ShowStartUpScreen(ulong hold_time);
+void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
@@ -455,12 +302,11 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 //
 #define TXRX_SWITCH_AUDIO_MUTE_DELAY_DEFAULT     1          // Default, in 100ths of a second, that audio will be muted after PTT (key-up/key-down) to prevent "clicks" and "clunks"
 #define	TXRX_SWITCH_AUDIO_MUTE_DELAY_MAX		25			// Maximum delay, in 100ths of a second, that audio will be muted after PTT (key-up/key-down) to prevent "clicks" and "clunks"
-//
-//
+
+
 // UI Driver State machine definitions
 enum
 {
-    //STATE_SPECTRUM_DISPLAY = 0,	//
     STATE_S_METER = 0,				//
     STATE_SWR_METER,				//
     STATE_HANDLE_POWERSUPPLY,		//
@@ -470,6 +316,7 @@ enum
     STATE_PROCESS_KEYBOARD,			//
     STATE_MAX
 };
+
 //
 // Used for press-and-hold "temporary" step size adjust
 //
@@ -484,16 +331,10 @@ enum
 extern __IO KeypadState				ks;
 
 // ------------------------------------------------
-// SWR/Power meter
-extern SWRMeter				swrm;
-
-// ------------------------------------------------
 // Power supply meter
 extern PowerMeter				pwmt;
 
 // ------------------------------------------------
-// LO Tcxo
-extern __IO LoTcxo				lo;
 
 extern const ulong tune_steps[T_STEP_MAX_STEPS];
 
@@ -514,17 +355,6 @@ int fdv_audio_buffer_add(FDV_Audio_Buffer* c);
 void fdv_audio_buffer_reset();
 int8_t fdv_audio_has_data();
 int32_t fdv_audio_has_room();
-
-inline bool RadioManagement_IsTxDisabled()
-{
-    return (ts.tx_disable > 0);
-}
-
-inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
-{
-    return ((ts.tx_disable & (whom)) > 0);
-}
-
 #endif
 
 #endif

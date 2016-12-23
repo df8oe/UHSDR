@@ -24,8 +24,8 @@
 #include "usbd_cdc_vcp.h"
 #include "usbd_audio_core.h"
 #include "cat_driver.h"
-#include "ui_driver.h"
 #include "audio_driver.h"
+#include "radio_management.h"
 
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 

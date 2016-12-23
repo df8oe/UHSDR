@@ -1206,7 +1206,7 @@ typedef struct TransceiverState
 
     bool    digi_lsb;                 // flag used to indicate that mcHF is to operate in LSB when TRUE
 
-	// end Freedv Test DL2FW
+    bool dial_moved; // dial was moved, used to communicate with spectrum display code
 
 } TransceiverState;
 //
@@ -1305,6 +1305,7 @@ inline void MchfBoard_RedLed(ledstate_t state)
         break;
     }
 }
+
 /**
  * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
  * @param tx_enable true == TX Paths, false == RX Paths
@@ -1385,6 +1386,11 @@ inline bool is_ssb_tx_filter_enabled() {
 
 inline bool is_ssb(const uint32_t dmod_mode) {
     return (dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB);
+}
+
+inline bool is_splitmode()
+{
+    return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
 #define STM32_DBGMCU_IDCODE        0xE0042000

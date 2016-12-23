@@ -19,6 +19,7 @@
 #include "ui_driver.h"
 #include "ui_menu.h"
 #include "waterfall_colours.h"
+#include "radio_management.h"
 // ------------------------------------------------
 // Spectrum display public
 SpectrumDisplay  __attribute__ ((section (".ccm")))       sd;
@@ -51,7 +52,6 @@ static void		UiSpectrum_CalculateDBm();
 static void UiSpectrum_FFTWindowFunction(char mode)
 {
     float32_t gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
-    float32_t s;
 
     // Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
     // KA7OEI - 20150602
@@ -181,7 +181,7 @@ void UiSpectrum_CreateDrawArea()
     UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
     // Draw Frequency bar text
-    sd.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
+    ts.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
     UiSpectrum_FrequencyBarText();
 
     // draw centre line indicating the receive frequency
@@ -602,10 +602,12 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
     }
 }
 
+#if 0
 static inline const uint32_t FftIdx2BufMap(const uint32_t idx)
 {
     return (SPEC_BUFF_LEN/2 + idx)%(SPEC_BUFF_LEN);
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitSpectrumDisplay - for both "Spectrum Display" and "Waterfall" Display
@@ -624,7 +626,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     sd.samp_ptr 	= 0;
     sd.skip_process = 0;
     sd.enabled		= 0;
-    sd.dial_moved	= 0;
+    ts.dial_moved	= 0;
     //
     sd.rescale_rate = (float)ts.scope_rescale_rate;	// load rescale rate
     sd.rescale_rate = 1/sd.rescale_rate;				// actual rate is inverse of this setting
@@ -818,9 +820,9 @@ void UiSpectrum_RedrawScopeDisplay()
             filt_factor = (float)ts.spectrum_filter;		// use stored filter setting
             filt_factor = 1/filt_factor;		// invert filter factor to allow multiplication
             //
-            if(sd.dial_moved)
+            if(ts.dial_moved)
             {
-                sd.dial_moved = 0;	// Dial moved - reset indicator
+                ts.dial_moved = 0;	// Dial moved - reset indicator
                 //
                 UiSpectrum_FrequencyBarText();	// redraw frequency bar on the bottom of the display
                 //
@@ -1099,9 +1101,9 @@ void UiSpectrum_RedrawWaterfall()
 
             filt_factor = 1/(float)ts.spectrum_filter;		// use stored filter setting inverted to allow multiplication
 
-            if(sd.dial_moved)
+            if(ts.dial_moved)
             {
-                sd.dial_moved = 0;	// Dial moved - reset indicator
+                ts.dial_moved = 0;	// Dial moved - reset indicator
 
                 UiSpectrum_FrequencyBarText();	// redraw frequency bar on the bottom of the display
 
