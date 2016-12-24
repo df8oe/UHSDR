@@ -150,9 +150,6 @@ typedef struct SpectrumDisplay
     // There is no data on screen;
     uint8_t     first_run;
 
-    // Flag to indicate frequency change,
-    // we need it to clear spectrum control
-    uchar   dial_moved;
 
     // Variables used in spectrum display AGC
     //

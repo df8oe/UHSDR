@@ -26,6 +26,7 @@
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
+#include "radio_management.h"
 
 // LCD
 #include "ui_lcd_hy28.h"
@@ -1543,29 +1544,6 @@ void UiMenu_RenderMenu(uint16_t mode)
 }
 
 
-#define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
-
-const BandInfo bandInfo[] =
-{
-    BandInfoGenerate(80,M,"80m") ,
-    BandInfoGenerate(60,M,"60m"),
-    BandInfoGenerate(40,M,"40m"),
-    BandInfoGenerate(30,M,"30m"),
-    BandInfoGenerate(20,M,"20m"),
-    BandInfoGenerate(17,M,"17m"),
-    BandInfoGenerate(15,M,"15m"),
-    BandInfoGenerate(12,M,"12m"),
-    BandInfoGenerate(10,M,"10m"),
-    BandInfoGenerate(6,M,"6m"),
-    BandInfoGenerate(4,M,"4m"),
-    BandInfoGenerate(2,M,"2m"),
-    BandInfoGenerate(70,CM,"70cm"),
-    BandInfoGenerate(23,CM,"23cm"),
-    BandInfoGenerate(2200,M,"2200m"),
-    BandInfoGenerate(630,M,"630m"),
-    BandInfoGenerate(160,M,"160m"),
-    { 0, 0, 0, 0, 0, "Gen" } // Generic Band
-};
 
 bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr)
 {

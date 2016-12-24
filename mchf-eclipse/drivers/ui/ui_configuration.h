@@ -118,6 +118,19 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define AUTO_LSB_USB_MAX        2
 #define AUTO_LSB_USB_DEFAULT    AUTO_LSB_USB_60M
 
+// used to limit the voltmeter calibration parameters
+//
+#define POWER_VOLTMETER_CALIBRATE_DEFAULT   100
+#define POWER_VOLTMETER_CALIBRATE_MIN       00
+#define POWER_VOLTMETER_CALIBRATE_MAX       200
+
+#define SWR_CAL_MIN             75
+#define SWR_CAL_MAX             150
+#define SWR_CAL_DEFAULT             100
+//
+#define SENSOR_NULL_MIN             75
+#define SENSOR_NULL_MAX             125
+#define SENSOR_NULL_DEFAULT         100
 
 
 #define SPEC_COLOUR_TRACE_DEFAULT   SPEC_WHITE
