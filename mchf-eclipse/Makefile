@@ -71,7 +71,7 @@ SUBDIRS :=  \
     drivers/ui  \
     drivers/ui/encoder  \
     drivers/ui/lcd  \
-    drivers/ui/misc  \
+    drivers/ui/menu  \
     drivers/ui/oscillator  \
     drivers/freedv  \
     \
@@ -231,7 +231,10 @@ SRC =  \
     drivers/ui/radio_management.c  \
     drivers/ui/ui_configuration.c  \
     drivers/ui/ui_driver.c  \
-    drivers/ui/ui_menu.c  \
+    \
+    drivers/ui/menu/ui_menu.c  \
+    drivers/ui/menu/ui_menu_structure.c  \
+    drivers/ui/menu/ui_menu_internal.c  \
     \
     hardware/mchf_board.c  \
     hardware/mchf_hw_i2c.c  \

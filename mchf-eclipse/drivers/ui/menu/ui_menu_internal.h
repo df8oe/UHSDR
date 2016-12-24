@@ -1,69 +1,18 @@
-/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
-/************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
-************************************************************************************/
+/*
+ * ui_menu_internal.h
+ *
+ *  Created on: 24.12.2016
+ *      Author: danilo
+ */
 
-#ifndef __UI_MENU_H
-#define __UI_MENU_H
-//
-// Exports
-//
-void UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
+#ifndef DRIVERS_UI_UI_MENU_INTERNAL_H_
+#define DRIVERS_UI_UI_MENU_INTERNAL_H_
 
-
-// The supported mode values
-enum
-{
-    MENU_RENDER_ONLY = 0,
-    MENU_PROCESS_VALUE_CHANGE,
-    MENU_PROCESS_VALUE_SETDEFAULT,
-};
-
-void UiMenu_RenderMenu(uint16_t mode);
-
-void UiMenu_RenderChangeItemValue(int16_t pot_diff);
-void UiMenu_RenderChangeItem(int16_t pot_diff);
-void UiMenu_RenderLastScreen();
-void UiMenu_RenderFirstScreen();
-bool UiMenu_RenderNextScreen(); // returns true if screen was changed, i.e. not last screen
-bool UiMenu_RenderPrevScreen(); // returns true if screen was changed, i.e. not first screen
-
-
-enum MENU_INFO_ITEM
-{
-    INFO_EEPROM,
-    INFO_DISPLAY,
-    INFO_DISPLAY_CTRL,
-    INFO_SI570,
-    INFO_TP,
-    INFO_RFMOD,
-    INFO_VHFUHFMOD,
-    INFO_CPU,
-    INFO_FLASH,
-    INFO_RAM,
-    INFO_FW_VERSION,
-    INFO_BL_VERSION,
-    INFO_BUILD,
-};
-
-const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
+#include "mchf_types.h"
+#define UiMenuDesc(a)
 
 //
-#define	MENUSIZE	6				// number of menu items per page/screen
-//
-// Enumeration for main menu.
-// These items MUST be listed below in the order that they appear on the screen!
-//
-//
+// Enumeration for menu.
 enum
 {
     MENU_DSP_NR_STRENGTH = 0,
@@ -115,10 +64,10 @@ enum
     MENU_WFALL_SPEED,
     MENU_SCOPE_NOSIG_ADJUST,
     MENU_WFALL_NOSIG_ADJUST,
-	MENU_S_METER,
-	MENU_METER_COLOUR_UP,
-	MENU_METER_COLOUR_DOWN,
-	MENU_DBM_DISPLAY,
+    MENU_S_METER,
+    MENU_METER_COLOUR_UP,
+    MENU_METER_COLOUR_DOWN,
+    MENU_DBM_DISPLAY,
     MENU_SPECTRUM_SIZE,
     MENU_BACKUP_CONFIG,
     MENU_RESTORE_CONFIG,
@@ -127,17 +76,7 @@ enum
     MENU_REVERSE_TOUCHSCREEN,
     MENU_CONFIG_ENABLE,
     MENU_RESTART_CODEC,
-    //
-    MAX_MENU_ITEM	// Number of menu items - This must ALWAYS remain as the LAST item!
-};
-//
-//
-// Enumeration for configuration menu.
-// These items MUST be listed below in the order that they appear!
-//
-enum
-{
-    CONFIG_FREQ_STEP_MARKER_LINE = MAX_MENU_ITEM,
+    CONFIG_FREQ_STEP_MARKER_LINE,
     CONFIG_STEP_SIZE_BUTTON_SWAP,
     CONFIG_BAND_BUTTON_SWAP,
     CONFIG_TX_DISABLE,
@@ -231,7 +170,7 @@ enum
     CONFIG_AGC_TIME_CONSTANT,
     CONFIG_AM_TX_FILTER_DISABLE,
 //    CONFIG_SSB_TX_FILTER_DISABLE,
-	CONFIG_SSB_TX_FILTER,
+    CONFIG_SSB_TX_FILTER,
     CONFIG_TUNE_POWER_LEVEL,
     CONFIG_TUNE_TONE_MODE,
     CONFIG_SPECTRUM_FFT_WINDOW_TYPE,
@@ -257,14 +196,75 @@ enum
     MENU_FP_SAM_04,
     MENU_DEBUG_TX_AUDIO,
     //
-    MAX_RADIO_CONFIG_ITEM	// Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
+    MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
-//
-// Starting position of configuration menu
-//
-#define POS_MENU_IND_X                      60      // X position of description of menu item being changed
-#define POS_MENU_IND_Y                      128     // Y position of first (top) item being changed
-#define POS_MENU_CHANGE_X                   244     // Position of variable being changed
-#define POS_MENU_CURSOR_X                   311     // Position of cursor used to indicate selected item
 
-#endif
+
+// menu entry kind constants
+enum MENU_KIND
+{
+    MENU_STOP = 0, // last entry in a menu / group
+    MENU_ITEM, // standard menu entry
+    MENU_GROUP, // menu group entry
+    MENU_INFO, // just like a normal entry (read-only) but just for display purposes.
+    MENU_SEP, // separator line
+    MENU_BLANK // blank
+};
+
+
+struct  MenuGroupDescriptor_s;
+
+// items are stored in RAM
+// Each menu group has to have a MenuGroupItem pointing to the descriptor
+// a MenuGroupItem is used to keep track of the fold/unfold state and to link the
+// Descriptors are stored in flash
+
+typedef struct
+{
+    const uint16_t menuId; // backlink to the menu we are part of. That implies, an entry can only be part of a single menu group
+    const uint16_t kind; // use the enum defined above to indicate what this entry represents
+    const uint16_t number; // this is an identification number which is passed to the menu entry handled
+    // for standard items it is the id of the value to be changed, intepretation is left to handler
+    // MENU_GROUP: for menu groups this MUST BE the index in the menu group table, THIS IS USED INTERNALLY
+    const char id[4];      // this is a visual 3 letter identification which may be display, depending on the render approach
+    const char* label;     // this is the label which will be display, depending on the render approach
+} MenuDescriptor;
+
+typedef struct
+{
+    bool unfolded;            // runtime variable, tells if the user wants to have this groups items to be shown
+    uint16_t count;           // number of menu entries. This will be filled automatically on first use by internal code
+    // do not write to this variable unless you know what you are doing.
+    const MenuDescriptor* me; // pointer to the MenuDescriptor of this menu group in its parent menu. This is the backlink to our parent.
+    // This will be filled automatically on first use by internal code in order to avoid search through the menu structure.
+    // do not write to this variable unless you know what you are doing.
+} MenuGroupState;
+
+
+// This data structure is intended to be placed in flash
+// all data is placed here at compile time
+typedef struct MenuGroupDescriptor_s
+{
+    const MenuDescriptor* entries;          // array of member entries in the menu group
+    MenuGroupState* state;                  // writable data structure for menu management, pointer has to go into RAM
+    const MenuDescriptor* parent;           // pointer to the first element of the array in which our menu group is located in. It does not have
+    // to point to the MENU_GROUP item, wich can be at any position in this array. Used to calculate the real
+    // pointer later and to identify the parent menu group of this menu.
+    // use NULL for top level menus here (i.e. no parent).
+} MenuGroupDescriptor;
+
+
+// Runtime management of menu entries for onscreen rendering.
+typedef struct
+{
+    const MenuDescriptor* entryItem;
+} MenuDisplaySlot;
+
+#define MENU_START_IDX 0
+
+extern const MenuGroupDescriptor groups[];
+
+void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr);
+void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos);
+
+#endif /* DRIVERS_UI_UI_MENU_INTERNAL_H_ */

@@ -76,7 +76,7 @@ __IO LoTcxo                     lo;
 __IO DialFrequency               df;
 
 
-#define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, CONFIG_##BAND##SUFFIX##_5W_ADJUST, CONFIG_##BAND##SUFFIX##_FULL_POWER_ADJUST, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
+#define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
 const BandInfo bandInfo[] =
 {
@@ -97,7 +97,7 @@ const BandInfo bandInfo[] =
     BandInfoGenerate(2200,M,"2200m"),
     BandInfoGenerate(630,M,"630m"),
     BandInfoGenerate(160,M,"160m"),
-    { 0, 0, 0, 0, 0, "Gen" } // Generic Band
+    { 0, 0, 0, "Gen" } // Generic Band
 };
 
 
