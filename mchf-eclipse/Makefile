@@ -377,7 +377,7 @@ docs-clean:
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
 	$(RM) --recursive --verbose $(call FixPath,../docs)
 
-handbook-ui-menu:
+handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
 	cp -v mcHF-logo.png $(call FixPath,support/ui/menu)
 	(cd $(call FixPath,support/ui/menu)  \
@@ -390,7 +390,7 @@ handbook-ui-menu:
 		&&  ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md  \
 	)
 
-handbook-ui-menu-clean:
+handbook-ui-menu-clean:  
 	# remove generated UI Menu files
 	$(RM) support/ui/menu/mcHF-logo.png
 	$(RM) support/ui/menu/ui_menu_structure.py
