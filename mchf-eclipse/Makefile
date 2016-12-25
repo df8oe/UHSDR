@@ -393,7 +393,7 @@ handbook-ui-menu:
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
 	$(RM) support/ui/menu/mcHF-logo.png
-	$(RM) support/ui/menu/ui_menu_structure.py
+	$(RM) support/ui/menu/ui_menu_structure.py*
 	$(RM) support/ui/menu/ui_menu_structure_graph.gv
 	$(RM) support/ui/menu/ui_menu_structure_graph.svg
 	$(RM) support/ui/menu/ui_menu_structure_graph.png
