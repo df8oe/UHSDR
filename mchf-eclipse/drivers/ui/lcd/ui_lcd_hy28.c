@@ -59,6 +59,8 @@ const uint8_t touchscreentable [] = {0x07,0x09,
 
 
 static void UiLcdHy28_Delay(ulong delay);
+static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
+
 
 void UiLcdHy28_BacklightInit(void)
 {
@@ -609,7 +611,91 @@ static void UiLcdHy28_WriteRAM_Prepare()
     }
 }
 
-#define PIXELBUFFERSIZE 256
+static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
+{
+
+    if (display_use_spi == 0) {
+        uint32_t i = len;
+        for (; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(*(pixel++));
+        }
+    }
+    else {
+#ifdef USE_SPI_DMA
+        uint32_t i;
+        for (i = 0; i < len; i++)
+        {
+            pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
+        }
+        UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
+#else
+        uint32_t i = len;
+        for (; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(*(pixel++));
+        }
+#endif
+    }
+
+
+}
+
+static void UiLcdHy28_FinishWaitBulkWrite()
+{
+    if(display_use_spi)         // SPI enabled?
+    {
+#ifdef USE_SPI_DMA
+        UiLcdHy28_SpiDmaStop();
+#endif
+        UiLcdHy28_LcdSpiFinishTransfer();
+    }
+}
+
+static void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
+{
+
+    UiLcdHy28_FinishWaitBulkWrite();
+
+    UiLcdHy28_SetCursorA(x, y); // set starting position of character
+
+    UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and turn on cursor auto-increment
+    // Establish CGRAM window for THIS character
+    UiLcdHy28_WriteReg(0x50, y);    // Vertical GRAM Start Address
+    UiLcdHy28_WriteReg(0x51, y + height -1);    // Vertical GRAM End Address    -1
+    UiLcdHy28_WriteReg(0x52, x);    // Horizontal GRAM Start Address
+    UiLcdHy28_WriteReg(0x53, x + width -1);    // Horizontal GRAM End Address  -1
+
+    UiLcdHy28_WriteRAM_Prepare();                   // prepare for bulk-write to character window
+
+
+}
+
+static void UiLcdHy28_CloseBulkWrite(void)
+{
+
+#if 0
+    if(display_use_spi)         // SPI enabled?
+    {
+#ifdef USE_SPI_DMA
+        UiLcdHy28_SpiDmaStop();
+#endif
+        UiLcdHy28_LcdSpiFinishTransfer();
+    }
+#endif
+#if 0
+    UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
+    UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
+    UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
+    UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
+    UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
+#endif
+}
+
+
+
+
+#define PIXELBUFFERSIZE 512
 #define PIXELBUFFERCOUNT 2
 static uint16_t   pixelbuffer[PIXELBUFFERCOUNT][PIXELBUFFERSIZE];
 static uint16_t pixelcount = 0;
@@ -621,7 +707,8 @@ static inline void UiLcdHy28_BulkPixel_BufferInit()
     pixelcount = 0;
 }
 
-static inline void UiLcdHy28_BulkPixel_BufferFlush()
+
+inline void UiLcdHy28_BulkPixel_BufferFlush()
 {
     UiLcdHy28_BulkWrite(pixelbuffer[pixelbufidx],pixelcount);
     UiLcdHy28_BulkPixel_BufferInit();
@@ -635,6 +722,41 @@ inline void UiLcdHy28_BulkPixel_Put(uint16_t pixel)
         UiLcdHy28_BulkPixel_BufferFlush();
     }
 }
+
+// TODO: Not most efficient way, we could use remaining buffer size to judge
+// if it will fit without flush and fill accordingly.
+
+inline void UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len)
+{
+    // We bypass the buffering if in parallel mode
+    // since as for now, it will not benefit from it.
+    // this can be changed if someone write DMA code for the parallel
+    // interface (memory to memory DMA)
+    if(display_use_spi)         // SPI enabled?
+    {
+        for (uint32_t idx = 0; idx < len; idx++)
+        {
+            UiLcdHy28_BulkPixel_Put(pixel_buffer[idx]);
+        }
+    }
+    else
+    {
+        UiLcdHy28_BulkWrite(pixel_buffer, len);
+    }
+}
+
+inline void UiLcdHy28_BulkPixel_OpenWrite(ushort x, ushort width, ushort y, ushort height)
+{
+    UiLcdHy28_OpenBulkWrite(x, width,y,height);
+    UiLcdHy28_BulkPixel_BufferInit();
+}
+
+inline void UiLcdHy28_BulkPixel_CloseWrite()
+{
+    UiLcdHy28_BulkPixel_BufferFlush();
+    UiLcdHy28_CloseBulkWrite();
+}
+
 
 void UiLcdHy28_LcdClear(ushort Color)
 {
@@ -659,14 +781,19 @@ void UiLcdHy28_LcdClear(ushort Color)
     UiLcdHy28_CloseBulkWrite();
 }
 
+#if 1
 void UiLcdHy28_DrawColorPoint( unsigned short Xpos, unsigned short Ypos, unsigned short point)
 {
+
     if( Xpos < MAX_X && Ypos < MAX_Y )
     {
+        UiLcdHy28_OpenBulkWrite(Xpos,Xpos,Ypos,Ypos);
         UiLcdHy28_SetCursorA(Xpos,Ypos);
         UiLcdHy28_WriteReg(0x0022,point);
+        UiLcdHy28_CloseBulkWrite();
     }
 }
+#endif
 
 void UiLcdHy28_DrawFullRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width ,ushort color)
 {
@@ -748,56 +875,7 @@ void UiLcdHy28_DrawBottomButton(ushort Xpos, ushort Ypos, ushort Height, ushort 
 }
 
 
-void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height)
-{
-
-
-    UiLcdHy28_SetCursorA(x, y);	// set starting position of character
-
-    UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and turn on cursor auto-increment
-    // Establish CGRAM window for THIS character
-    UiLcdHy28_WriteReg(0x50, y);    // Vertical GRAM Start Address
-    UiLcdHy28_WriteReg(0x51, y + height -1);    // Vertical GRAM End Address	-1
-    UiLcdHy28_WriteReg(0x52, x);    // Horizontal GRAM Start Address
-    UiLcdHy28_WriteReg(0x53, x + width -1);    // Horizontal GRAM End Address  -1
-
-    UiLcdHy28_WriteRAM_Prepare();					// prepare for bulk-write to character window
-
-
-}
-
-
-void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
-{
-
-    if (display_use_spi == 0) {
-        uint32_t i = len;
-        for (; i; i--)
-        {
-            UiLcdHy28_WriteDataOnly(*(pixel++));
-        }
-    }
-    else {
-#ifdef USE_SPI_DMA
-        uint32_t i;
-        for (i = 0; i < len; i++)
-        {
-            pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
-        }
-        UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
-#else
-        uint32_t i = len;
-        for (; i; i--)
-        {
-            UiLcdHy28_WriteDataOnly(*(pixel++));
-        }
-#endif
-    }
-
-
-}
-
-void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
+static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 {
 
 #ifdef USE_SPI_DMA
@@ -825,23 +903,6 @@ void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 
 
 
-void UiLcdHy28_CloseBulkWrite(void)
-{
-
-    if(display_use_spi)	 		// SPI enabled?
-    {
-#ifdef USE_SPI_DMA
-        UiLcdHy28_SpiDmaStop();
-#endif
-        UiLcdHy28_LcdSpiFinishTransfer();
-    }
-
-    UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-    UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-    UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-    UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-    UiLcdHy28_WriteReg(0x03,  0x1030);    // set GRAM write direction and BGR=1 and switch increment mode
-}
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
@@ -1430,6 +1491,7 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
 
 static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
 {
+    UiLcdHy28_FinishWaitBulkWrite();
     UiLcdHy28_SetSpiPrescaler(SPI_BaudRatePrescaler_4);
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
 }

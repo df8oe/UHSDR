@@ -514,35 +514,30 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             {
                 RadioManagement_SetPaBias();
                 uint32_t input_mute_time = 0, dac_mute_time = 2, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
-
-                if((ts.dmod_mode != DEMOD_CW))  // did we just enter the new TX/RX mode in a voice mode?
+                // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
+                dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
+                switch(ts.tx_audio_source)
                 {
-                    // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
-                    dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
-                    switch(ts.tx_audio_source)
-                    {
 
-                    case TX_AUDIO_DIG:
-                        dac_mute_time_mode = 2* 15; // Minimum time is 10ms
-                        break;
-                    case TX_AUDIO_LINEIN_L:
-                    case TX_AUDIO_LINEIN_R:
-                        dac_mute_time_mode = 5* 15; // Minimum time is 50ms
-                        break;
-                    case TX_AUDIO_MIC:
-                        dac_mute_time_mode = 10* 15; // Minimum time is 100ms
-                        input_mute_time_mode = dac_mute_time_mode;
-                        break;
-                    }
-                    dac_mute_time = (dac_mute_time > dac_mute_time_mode)? dac_mute_time : dac_mute_time_mode;
-                    input_mute_time = (input_mute_time > input_mute_time_mode)? input_mute_time : input_mute_time_mode;
-
+                case TX_AUDIO_DIG:
+                    dac_mute_time_mode = 2* 15; // Minimum time is 10ms
+                    break;
+                case TX_AUDIO_LINEIN_L:
+                case TX_AUDIO_LINEIN_R:
+                    dac_mute_time_mode = 5* 15; // Minimum time is 50ms
+                    break;
+                case TX_AUDIO_MIC:
+                    dac_mute_time_mode = 10* 15; // Minimum time is 100ms
+                    input_mute_time_mode = dac_mute_time_mode;
+                    break;
                 }
+                dac_mute_time = (dac_mute_time > dac_mute_time_mode)? dac_mute_time : dac_mute_time_mode;
+                input_mute_time = (input_mute_time > input_mute_time_mode)? input_mute_time : input_mute_time_mode;
 
                 ts.audio_processor_input_mute_counter = input_mute_time;
                 ts.audio_dac_muting_buffer_count =   dac_mute_time; // 15 == 10ms
 
-                ts.audio_dac_muting_flag = false; // unmute audio output
+                ts.audio_dac_muting_flag = false; // unmute audio output unless timed muting is active
             }
             ts.txrx_mode = txrx_mode_final;
         }

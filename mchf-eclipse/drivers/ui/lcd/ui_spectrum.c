@@ -46,6 +46,7 @@ float32_t m_AverageMagdbmhz = 0.0;
 float32_t m_AttackAlpha = 0.8647;
 float32_t m_DecayAlpha  = 0.3297;
 
+
 static void     UiSpectrum_FrequencyBarText();
 static void		UiSpectrum_CalculateDBm();
 
@@ -384,7 +385,7 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
         spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
     }
-    static uint16_t pixel_buf[SPECTRUM_HEIGHT+SPEC_LIGHT_MORE_POINTS];
+
 
     uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
 	uint16_t 	  y1_new_minus = 0;
@@ -472,52 +473,52 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
 
             if (x == SPECTRUM_START_X + 1) // special case of first x position of spectrum
             {
-            	y1_old_minus = y1_old;
-            	y1_new_minus = y1_new;
+                y1_old_minus = y1_old;
+                y1_new_minus = y1_new;
             }
-
-        	if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
-        	{
-        		y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[SPEC_BUFF_LEN-1];
-        		y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[SPEC_BUFF_LEN-1];
-        	}
+            else if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
+            {
+                y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[SPEC_BUFF_LEN-1];
+                y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[SPEC_BUFF_LEN-1];
+            }
 
             if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
             {
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
 
-            	// here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
-            	// makes the spectrum display look more complete . . .
-            	//
+                // here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
+                // makes the spectrum display look more complete . . .
+                //
 
 
-            	if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
-            	 { // plot line upwards
-            		UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
-            	 }
-            	else if (y1_old - y1_old_minus < -1) // && x !=(SPECTRUM_START_X + sh))
-            	 { // plot line downwards
-            		UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
-            	 }
-            	else
-            	 {
-            		  UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
-            	 }
+                if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
+                { // plot line upwards
+                    UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
+                }
+                else if (y1_old - y1_old_minus < -1) // && x !=(SPECTRUM_START_X + sh))
+                { // plot line downwards
+                    UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
+                }
+                else
+                {
+                    UiLcdHy28_DrawStraightLine(x,y1_old,1,LCD_DIR_VERTICAL,color_old);
+                    // UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
+                }
 
-            	if(y1_new - y1_new_minus > 1) // && x !=(SPECTRUM_START_X + sh))
-            	 { // plot line upwards
-                     UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
+                if(y1_new - y1_new_minus > 1) // && x !=(SPECTRUM_START_X + sh))
+                { // plot line upwards
+                    UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
 
-            	 }
-            	else if (y1_new - y1_new_minus < -1) // && x !=(SPECTRUM_START_X + sh))
-            	 { // plot line downwards
-                     UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
-
-            	 }
-            	 else
-            	 {
-            		  UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
-            	 }
+                }
+                else if (y1_new - y1_new_minus < -1) // && x !=(SPECTRUM_START_X + sh))
+                { // plot line downwards
+                    UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
+                }
+                else
+                {
+                    UiLcdHy28_DrawStraightLine(x,y1_new,1,LCD_DIR_VERTICAL,color_new);
+                    // UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
+                }
 
             }
             y1_new_minus = y1_new;
@@ -539,16 +540,18 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
                 else
                 {
 
+                    uint16_t spectrum_pixel_buf[SPECTRUM_HEIGHT+SPEC_LIGHT_MORE_POINTS];
+
                     // Repaint vertical grid on clear
                     // Basically paint over the grid is allowed
                     // but during spectrum clear instead of masking
                     // grid lines with black - they are repainted
                     // TODO: This code is  always executed, since this function is always called with color_old == Black
                     repaint_v_grid = UiSpectrum_Draw_IsVgrid(x, color_new, &clr, x_center_line);
-                    //
-                    UiLcdHy28_OpenBulkWrite(x, 1, y1_old, len_old);
 
+                    UiLcdHy28_BulkPixel_OpenWrite(x, 1, y1_old, len_old);
                     idx = 0;
+
                     // Draw vertical line, starting only with position of where new line would be!
                     for(i = y_new; i < len_old; i++)
                     {
@@ -580,12 +583,12 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
 
                         }
 
-                        pixel_buf[idx++] = clr;
+                        spectrum_pixel_buf[idx++] = clr;
                         // Track absolute position
                         y1_old++;
                     }
-                    UiLcdHy28_BulkWrite(pixel_buf,len_old-y_new);
-                    UiLcdHy28_CloseBulkWrite();
+                    UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf,len_old-y_new);
+                    UiLcdHy28_BulkPixel_CloseWrite();
                     // Reset flag
                     if(repaint_v_grid)
                         repaint_v_grid = 0;
@@ -1327,25 +1330,24 @@ void UiSpectrum_RedrawWaterfall()
                 // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
                 // line and the number of lines.
                 //
-                UiLcdHy28_OpenBulkWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
-                //
-                uint16_t spectrumLine[2][SPECTRUM_WIDTH];
-                uchar lcnt = 0;                 // initialize count of number of lines of display
 
-                for(lcnt = 0;lcnt < sd.wfall_size; lcnt++)	 				// set up counter for number of lines defining height of waterfall
+                UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
+
+                uint16_t spectrum_pixel_buf[SPECTRUM_WIDTH];
+
+                for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)	 				// set up counter for number of lines defining height of waterfall
                 {
                     for(i = 0; i < (SPECTRUM_WIDTH); i++)	 	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
                     {
-                        spectrumLine[lcnt%2][i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
+                        spectrum_pixel_buf[i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
                     }
 
-                    UiLcdHy28_BulkWrite(spectrumLine[lcnt%2],SPECTRUM_WIDTH);
+                    UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf,SPECTRUM_WIDTH);
 
                     lptr++;									// point to next line in circular display buffer
                     lptr %= sd.wfall_size;				// clip to display height
                 }
-                //
-                UiLcdHy28_CloseBulkWrite();					// we are done updating the display - return to normal full-screen mode
+                UiLcdHy28_BulkPixel_CloseWrite();					// we are done updating the display - return to normal full-screen mode
             }
             sd.state = 0;	// Stage 0 - collection of data by the Audio driver
             break;

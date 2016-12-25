@@ -3463,6 +3463,8 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tune = ts.tune;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
 
+    // if we want to know if our signal will go out, look at this flag
+    bool external_tx_mute = ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count >0 ;
 
     bool signal_active = false; // unless this is set to true, zero output will be generated
 
@@ -3504,7 +3506,10 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         else
         {
             // Generate CW tone if necessary
-            signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer,blockSize);
+            if (external_tx_mute == false)
+            {
+                signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer,blockSize);
+            }
         }
 
         if (signal_active)
@@ -3623,7 +3628,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    if (signal_active == false  || ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count >0 )
+    if (signal_active == false  || external_tx_mute )
     {
         memset(dst,0,blockSize*sizeof(*dst));
         // Pause or inactivity
