@@ -108,11 +108,11 @@ void 	UiLcdHy28_DrawFullRect (ushort Xpos, ushort Ypos, ushort Height, ushort Wi
 
 void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
 
-void 	UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort height);
+void    UiLcdHy28_BulkPixel_OpenWrite(ushort x, ushort width, ushort y, ushort height);
+void    UiLcdHy28_BulkPixel_CloseWrite();
 void 	UiLcdHy28_BulkPixel_Put(uint16_t pixel);
-void 	UiLcdHy28_BulkWrite(uint16_t* pixels, uint32_t len);
-void 	UiLcdHy28_BulkWriteColor(uint16_t color, uint32_t len);
-void 	UiLcdHy28_CloseBulkWrite(void);
+void    UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len);
+void    UiLcdHy28_BulkPixel_BufferFlush();
 
 uint8_t 	UiLcdHy28_Init();
 
