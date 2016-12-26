@@ -44,10 +44,10 @@ CFLAGS  = $(MACHFLAGS)  \
 
 LDFLAGS := $(MACHFLAGS)
 
-LIBS :=  	-lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
+LIBS := -lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
 	-Llibs
-	
+
 # Every subdirectory with header files must be mentioned here
 SUBDIRS :=  \
     .  \
@@ -291,14 +291,14 @@ endif
 ECHO = @echo
 
 ifdef SystemRoot  # WINxx
-   RM = del /Q
-   FixPath = $(subst /,\,$1)
+    RM = del /Q
+    FixPath = $(subst /,\,$1)
 else ifeq ($(shell uname), Linux)
-      RM = rm --force
-      FixPath = $1
+    RM = rm --force
+    FixPath = $1
 else ifeq ($(shell uname), Darwin)
-      RM = rm -f
-      FixPath = $1
+    RM = rm -f
+    FixPath = $1
 endif
 
 # how to compile individual object files
@@ -376,6 +376,28 @@ docs-clean:
 	# remove docs
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
 	$(RM) --recursive --verbose $(call FixPath,../docs)
+
+handbook-ui-menu:  
+	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
+	cp -v mcHF-logo.png $(call FixPath,support/ui/menu)
+	(cd $(call FixPath,support/ui/menu)  \
+		&&  ./ui_menu_structure_c2py.sh | tee ui_menu_structure.py | python -  \
+		&&  ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
+		&&  dot -Tsvg -oui_menu_structure_graph.svg  ui_menu_structure_graph.gv  \
+		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv  \
+	)
+	(cd $(call FixPath,support/ui/menu)  \
+		&&  ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md  \
+	)
+
+handbook-ui-menu-clean:  
+	# remove generated UI Menu files
+	$(RM) support/ui/menu/mcHF-logo.png
+	$(RM) support/ui/menu/ui_menu_structure.py*
+	$(RM) support/ui/menu/ui_menu_structure_graph.gv
+	$(RM) support/ui/menu/ui_menu_structure_graph.svg
+	$(RM) support/ui/menu/ui_menu_structure_graph.png
+	$(RM) support/ui/menu/ui_menu_structure_mdtable.md
 
 release:  
 	# generate quick operating guide
