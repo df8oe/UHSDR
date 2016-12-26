@@ -214,6 +214,7 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
 {
     // if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
     // FIXME: Remove commented out "if" above, if the CW guys accept that this works as wanted.
+    // Turns out that this code below adds about 60!ms of delay. CW guys don't like that.
     {
         Codec_LineInGainAdj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
 
@@ -232,7 +233,12 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
             Codec_VolumeSpkr(0);
             Codec_VolumeLineOut(TRX_MODE_TX);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
         }
-        non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
+
+        // FIXME: Validate if we can remove this nasty delay or at least reduce it, 40ms are very long indeed.
+        if(ts.dmod_mode != DEMOD_CW)
+        {
+            non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
+        }
     }
 }
 

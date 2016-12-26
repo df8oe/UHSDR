@@ -1243,6 +1243,11 @@ extern FDV_IQ_Buffer fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
 #define DEBUG_COM                        USART1
 
+/**
+ * @brief Introduces about 40ms of delay (load dependent, since interrupt eats some of the time.
+ */
+// TODO: Measure raw time for this loop
+
 #define non_os_delay()						\
 do {							\
   register unsigned int i;				\
@@ -1250,6 +1255,10 @@ do {							\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
 
+/**
+ * @brief Introduces about 400ms of delay (load dependent, since interrupt eats some of the time.
+ */
+// TODO: Measure raw time for this loop
 #define non_os_delay_a()						\
 do {							\
   register unsigned int i;				\
@@ -1257,6 +1266,10 @@ do {							\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
 
+/**
+ * @brief Introduces about (count * 400ms) of delay (load dependent, since interrupt eats some of the time.
+ */
+// TODO: Measure raw time for this loop
 #define non_os_delay_multi(count)                        \
 { int idx; for (idx = 0; idx < count; idx++) {                            \
   register unsigned int i;              \

@@ -516,21 +516,26 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 uint32_t input_mute_time = 0, dac_mute_time = 2, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
                 // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
                 dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
-                switch(ts.tx_audio_source)
-                {
 
-                case TX_AUDIO_DIG:
-                    dac_mute_time_mode = 2* 15; // Minimum time is 10ms
-                    break;
-                case TX_AUDIO_LINEIN_L:
-                case TX_AUDIO_LINEIN_R:
-                    dac_mute_time_mode = 5* 15; // Minimum time is 50ms
-                    break;
-                case TX_AUDIO_MIC:
-                    dac_mute_time_mode = 10* 15; // Minimum time is 100ms
-                    input_mute_time_mode = dac_mute_time_mode;
-                    break;
+                if (ts.dmod_mode != DEMOD_CW)
+                {
+                    switch(ts.tx_audio_source)
+                    {
+
+                    case TX_AUDIO_DIG:
+                        dac_mute_time_mode = 2* 15; // Minimum time is 20ms
+                        break;
+                    case TX_AUDIO_LINEIN_L:
+                    case TX_AUDIO_LINEIN_R:
+                        dac_mute_time_mode = 5* 15; // Minimum time is 50ms
+                        break;
+                    case TX_AUDIO_MIC:
+                        dac_mute_time_mode = 10* 15; // Minimum time is 100ms
+                        input_mute_time_mode = dac_mute_time_mode;
+                        break;
+                    }
                 }
+
                 dac_mute_time = (dac_mute_time > dac_mute_time_mode)? dac_mute_time : dac_mute_time_mode;
                 input_mute_time = (input_mute_time > input_mute_time_mode)? input_mute_time : input_mute_time_mode;
 
