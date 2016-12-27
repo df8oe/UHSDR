@@ -3791,9 +3791,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         }
     }
 
-    if(ts.spectrum_scope_scheduler)		// update thread timer if non-zero
+    if(ts.spectrum_scheduler)		// update thread timer if non-zero
     {
-        ts.spectrum_scope_scheduler--;
+        ts.spectrum_scheduler--;
     }
 
     if(ts.show_tp_coordinates)

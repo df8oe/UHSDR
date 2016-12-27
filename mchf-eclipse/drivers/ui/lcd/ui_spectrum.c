@@ -398,10 +398,13 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
 
 
     if(shift)
-//        sh = (SPECTRUM_WIDTH/2)-1;   // Shift to fill gap in center
+    {
     	sh = (SPECTRUM_WIDTH/2) + 1;   // Shift to fill gap in center
+    }
     else
+    {
         sh = 1;                  // Shift to fill gap in center
+    }
 
     if (sd.first_run>0)
     {
@@ -411,16 +414,14 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
             y_new = fft_new[idx++];
 
             if(y_new > (spec_height - 7))
+            {
                 y_new = (spec_height - 7);
+            }
             y1_new  = (spec_start_y + spec_height - 1) - y_new;
             if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
             {
                 UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
             }
-            //			else
-            //	UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
-//            y1_new_minus = y1_new;
-//            y1_old_minus = y1_new;
         }
         sd.first_run--;
     }
@@ -596,9 +597,7 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
                                                 (POS_SPECTRUM_IND_Y -  4),
                                                 (POS_SPECTRUM_IND_H - 15),
                                                 LCD_DIR_VERTICAL,
-//									RGB((COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD),(COL_SPECTRUM_GRAD)));
                                                 ts.scope_centre_grid_colour_active);
-
                 }
             }
         }
@@ -621,9 +620,6 @@ static inline const uint32_t FftIdx2BufMap(const uint32_t idx)
 //*----------------------------------------------------------------------------
 static void UiSpectrum_InitSpectrumDisplayData()
 {
-    ulong i;
-//	arm_status	a;
-
     // Init publics
     sd.state 		= 0;
     sd.samp_ptr 	= 0;
@@ -643,35 +639,34 @@ static void UiSpectrum_InitSpectrumDisplayData()
     //
     // load buffer containing waterfall colours
     //
-    for(i = 0; i < NUMBER_WATERFALL_COLOURS; i++)
+
+    const uint16_t* wfall_scheme = NULL;
+
+    switch(ts.waterfall_color_scheme)
     {
-        switch(ts.waterfall_color_scheme)
-        {
-        case WFALL_HOT_COLD:
-            sd.waterfall_colours[i] = waterfall_cold_hot[i];
-            break;
-        case WFALL_RAINBOW:
-            sd.waterfall_colours[i] = waterfall_rainbow[i];
-            break;
-        case WFALL_BLUE:
-            sd.waterfall_colours[i] = waterfall_blue[i];
-            break;
-        case WFALL_GRAY_INVERSE:
-            sd.waterfall_colours[i] = waterfall_grey_inverse[i];
-            break;
-        case WFALL_GRAY:
-        default:
-            sd.waterfall_colours[i] = waterfall_grey[i];
-            break;
-        }
+    case WFALL_HOT_COLD:
+        wfall_scheme = &waterfall_cold_hot[0];
+        break;
+    case WFALL_RAINBOW:
+        wfall_scheme = &waterfall_rainbow[0];
+        break;
+    case WFALL_BLUE:
+        wfall_scheme = &waterfall_blue[0];
+        break;
+    case WFALL_GRAY_INVERSE:
+        wfall_scheme = &waterfall_grey_inverse[0];
+        break;
+    case WFALL_GRAY:
+    default:
+        wfall_scheme =  &waterfall_grey[0];
+        break;
     }
-    //
-    //
+
+    memcpy(sd.waterfall_colours,wfall_scheme,sizeof(*wfall_scheme)* NUMBER_WATERFALL_COLOURS);
+
     // Load "top" color of palette (the 65th) with that to be used for the center grid color
-    //
     sd.waterfall_colours[NUMBER_WATERFALL_COLOURS] = (ushort)ts.scope_centre_grid_colour_active;
-    //
-    //
+
     /*
     	//
     	// Load waterfall data with "splash" showing palette
@@ -688,7 +683,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     	}
     	//
     */
-    //
+
     switch(ts.spectrum_db_scale)
     {
     case	DB_DIV_5:
@@ -717,7 +712,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.db_scale = DB_SCALING_10;
         break;
     }
-    //
+
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
         sd.wfall_height = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
@@ -730,10 +725,8 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
         sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
     }
-    //
-    //
-    sd.wfall_contrast = (float)ts.waterfall_contrast;		// calculate scaling for contrast
-    sd.wfall_contrast /= 100;
+
+    sd.wfall_contrast = (float)ts.waterfall_contrast / 100.0;		// calculate scaling for contrast
 
     // Ready
     sd.enabled		= 1;
@@ -743,12 +736,12 @@ static void UiSpectrum_InitSpectrumDisplayData()
 void UiSpectrum_ClearWaterfallData()
 {
     for(int i = 0; i < (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL + 16); i++)   // clear old wf lines if changing magnify
-      {
-      for(int j = 0; j < (FFT_IQ_BUFF_LEN/2); j++)
+    {
+        for(int j = 0; j < SPEC_BUFF_LEN; j++)
         {
-        sd.waterfall[i][j] = 0;
+            sd.waterfall[i][j] = 0;
         }
-      }
+    }
 }
 //
 //*----------------------------------------------------------------------------
@@ -772,9 +765,9 @@ void UiSpectrum_RedrawScopeDisplay()
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
 
 
-    if(ts.spectrum_scope_scheduler == 0 && (ts.scope_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
+    if(ts.spectrum_scheduler == 0 && (ts.scope_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
-        ts.spectrum_scope_scheduler = (ts.scope_speed-1)*2;
+        ts.spectrum_scheduler = (ts.scope_speed-1)*2;
 
         // Process implemented as state machine
         switch(sd.state)
@@ -786,12 +779,8 @@ void UiSpectrum_RedrawScopeDisplay()
         {
             // with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
             // UiDriverFFTWindowFunction was changed
-            //
             UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
-            //
-            arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples, 0, 1);	// Do complex FFT with new lib (faster! sexier! more accurate!?)
 
-            //
             sd.state++;
             break;
         }
@@ -800,14 +789,15 @@ void UiSpectrum_RedrawScopeDisplay()
         //
         case 2:
         {
+            arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples, 0, 1);    // Do complex FFT with new lib (faster! sexier! more accurate!?)
+
+            // Calculate magnitude
+            arm_cmplx_mag_f32(sd.FFT_Samples, sd.FFT_MagData, SPEC_BUFF_LEN);
+
             //
             // Save old display data - we will use later to mask pixel on the control
             //
             arm_copy_q15(sd.FFT_DspData, sd.FFT_BkpData, SPEC_BUFF_LEN);
-            //
-            // Calculate magnitude
-            //
-            arm_cmplx_mag_f32(sd.FFT_Samples, sd.FFT_MagData, SPEC_BUFF_LEN);
 
             sd.state++;
             break;
@@ -1061,9 +1051,9 @@ void UiSpectrum_RedrawWaterfall()
     ulong i, spec_width;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval AND minval functions
 
-    if((ts.spectrum_scope_scheduler == 0 ) && (ts.waterfall_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
+    if((ts.spectrum_scheduler == 0 ) && (ts.waterfall_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
-        ts.spectrum_scope_scheduler = (ts.waterfall_speed-1)*2;
+        ts.spectrum_scheduler = (ts.waterfall_speed-1)*2;
 
         // Process implemented as state machine
         switch(sd.state)
@@ -1075,21 +1065,16 @@ void UiSpectrum_RedrawWaterfall()
         {
             // with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
             // UiDriverFFTWindowFunction was changed
-
             UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
-            //
+
             sd.state++;
             break;
         }
         case 2:		// Do FFT and calculate complex magnitude
         {
-            //			arm_rfft_f32((arm_rfft_instance_f32 *)&sd.S,(sd.FFT_Windat),(sd.FFT_Samples));	// Do FFT
-            //			arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sd.S,(sd.FFT_Windat),(sd.FFT_Samples),0);	// Do FFT
             arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples,0,1);	// Do FFT
 
-            //
             // Calculate magnitude
-            //
             arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,SPEC_BUFF_LEN);
 
             sd.state++;
@@ -1126,9 +1111,8 @@ void UiSpectrum_RedrawWaterfall()
             }
 
             UiSpectrum_CalculateDBm();
+
             sd.state++;
-
-
             break;
         }
         //
@@ -1229,20 +1213,15 @@ void UiSpectrum_RedrawWaterfall()
                 }
             }
             else
+            {
                 sd.display_offset += (sd.agc_rate/3);	// no, adjust upwards more slowly
-            //
-            //
+            }
+
             if((min <= 2) && (max <= 2))	 	// ARGH - We must already be in the weeds, below the bottom - let's adjust upwards quickly to get it back onto the display!
             {
                 sd.display_offset += sd.agc_rate*10;
             }
-            //
-            // used for debugging
-            //	char txt[32];
-            //	sprintf(txt, " %d,%d,%d ", (int)sd.display_offset*100, (int)min*100,(int)max*100);
-            //	UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
-            //
-            // Copy to holder for the waterfall buffer
+
             sd.state++;
             break;
         }
@@ -1255,13 +1234,9 @@ void UiSpectrum_RedrawWaterfall()
             // Contrast:  100 = 1.00 multiply factor:  125 = multiply by 1.25 - "sd.wfall_contrast" already converted to 100=1.00
             //
             arm_scale_f32(sd.FFT_Samples, sd.wfall_contrast, sd.FFT_Samples, SPEC_BUFF_LEN);
-            //
-            //        ushort ptr;
+
             uint16_t center_pixel_pos;
             // determine the pixel location for center line
-
-            //        uint16_t magnify_offset;
-            // only used if magnify is on
 
             if (sd.magnify)
             {
@@ -1358,17 +1333,10 @@ void UiSpectrum_RedrawWaterfall()
         }
     }
 }
-//
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiInitSpectrumScopeWaterfall
-//* Object              : Does all steps for clearing screen and initializing spectrum scope and waterfall
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
+
+/**
+ * @brief Initialize data and display for spectrum display
+ */
 void UiSpectrum_InitSpectrumDisplay()
 {
         UiSpectrum_ClearDisplay();			// clear display under spectrum scope
@@ -1377,14 +1345,9 @@ void UiSpectrum_InitSpectrumDisplay()
         UiDriver_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDrawSpectrumScopeFrequencyBarText
-//* Object              : Draw the frequency information on the frequency bar at the bottom of the spectrum scope based on the current frequency
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief Draw the frequency information on the frequency bar at the bottom of the spectrum scope based on the current frequency
+ */
 static void UiSpectrum_FrequencyBarText()
 {
     float   freq_calc;
@@ -1396,7 +1359,7 @@ static void UiSpectrum_FrequencyBarText()
     if(ts.spectrum_freqscale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
         return;
 
-	grat = (float)6 / (1 << sd.magnify);
+    grat = (float)6 / (1 << sd.magnify);
 
     //
     // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
@@ -1415,17 +1378,17 @@ static void UiSpectrum_FrequencyBarText()
     }
 
     if(sd.magnify < 3)
-  	{
-  	  freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz
-	}
+    {
+        freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz
+    }
     if(sd.magnify > 2 && sd.magnify < 5)
-  	{
-  	  freq_calc = roundf(freq_calc/100) / 10; // round graticule frequency to the nearest 100Hz
-	}
+    {
+        freq_calc = roundf(freq_calc/100) / 10; // round graticule frequency to the nearest 100Hz
+    }
     if(sd.magnify == 5)
-  	{
-  	  freq_calc = roundf(freq_calc/50) / 20; // round graticule frequency to the nearest 50Hz
-	}
+    {
+        freq_calc = roundf(freq_calc/50) / 20; // round graticule frequency to the nearest 50Hz
+    }
 
     centerIdx = UiSpectrum_GetGridCenterLine(0);
 
@@ -1434,55 +1397,53 @@ static void UiSpectrum_FrequencyBarText()
         const static int idx2pos[] = {0,26,58,90,122,154,186,218, 242};
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
-		if(sd.magnify < 3)
-		{
-      	  snprintf(txt,16, "  %lu  ", (ulong)(freq_calc+(centerIdx*grat))); // build string for center frequency precision 1khz
-      	}
-      	else
-		{
-		  float disp_freq = freq_calc+(centerIdx*grat);
-		  int bignum = (int)disp_freq;
-		  int smallnum = (int)roundf((disp_freq-bignum)*100);
-      	  snprintf(txt,16, "  %u.%02u  ", bignum,smallnum); // build string for center frequency precision 100Hz/10Hz
-      	}
+        if(sd.magnify < 3)
+        {
+            snprintf(txt,16, "  %lu  ", (ulong)(freq_calc+(centerIdx*grat))); // build string for center frequency precision 1khz
+        }
+        else
+        {
+            float disp_freq = freq_calc+(centerIdx*grat);
+            int bignum = (int)disp_freq;
+            int smallnum = (int)roundf((disp_freq-bignum)*100);
+            snprintf(txt,16, "  %u.%02u  ", bignum,smallnum); // build string for center frequency precision 100Hz/10Hz
+        }
 
         i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
         UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
 
 
-        int idx;
-        for (idx = -4; idx < 5; idx++)
+        for (int idx = -4; idx < 5; idx++)
         {
             int pos = idx2pos[idx+4];
             if (idx != centerIdx)
             {
-			  if(sd.magnify < 3)
-			  {
-                snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency (1khz precision)
-            	c = &txt[strlen(txt)-3];  // point at 2nd character from the end
-      		  }
-      		  else
-			  {
-				float disp_freq = freq_calc+(idx*grat);
-				int bignum = (int)disp_freq;
-				int smallnum = (int)roundf((disp_freq-bignum)*100);
-          		snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
-            	c = &txt[strlen(txt)-5];  // point at 5th character from the end
-			  }
+                if(sd.magnify < 3)
+                {
+                    snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency (1khz precision)
+                    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
+                }
+                else
+                {
+                    float disp_freq = freq_calc+(idx*grat);
+                    int bignum = (int)disp_freq;
+                    int smallnum = (int)roundf((disp_freq-bignum)*100);
+                    snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
+                    c = &txt[strlen(txt)-5];  // point at 5th character from the end
+                }
 
-			  if((idx == 3 || idx == 4) && (sd.magnify > 2))
-			  {
-				  pos = pos - 9;
-			  }
-              UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
+                if((idx == 3 || idx == 4) && (sd.magnify > 2))
+                {
+                    pos = pos - 9;
+                }
+                UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
             }
-      		if(sd.magnify > 2)
-      		{
-      		idx++;
-      		}
+            if(sd.magnify > 2)
+            {
+                idx++;
+            }
         }
     }
-
 }
 
 void UiSpectrum_RedrawSpectrumDisplay()

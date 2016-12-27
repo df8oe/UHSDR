@@ -103,7 +103,7 @@ void UiSpectrum_ClearWaterfallData();
 // Shift of whole spectrum in vertical direction
 #define SPECTRUM_START_Y		(POS_SPECTRUM_IND_Y - 10)
 //
-// Spectrum hight is bit lower that the whole control
+// Spectrum height is bit lower that the whole control
 #define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
 //
 // How much larger than the NORMAL spectrum display should the BIG Spectrum display be?
