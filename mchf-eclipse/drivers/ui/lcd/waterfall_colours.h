@@ -20,7 +20,7 @@
 //
 // Waterfall Gray Colors:  Weak = dark, strongest = white
 //
-const ushort waterfall_grey[] =
+const uint16_t waterfall_grey[] =
 {
     RGB(0x00,0x00,0x00),
     RGB(0x04,0x04,0x04),
@@ -91,7 +91,7 @@ const ushort waterfall_grey[] =
 
 // Waterfall Gray Colors - inverse (weak = light, strong = dark)
 //
-const ushort waterfall_grey_inverse[] =
+const uint16_t waterfall_grey_inverse[] =
 {
     RGB(0xff,0xff,0xff),
     RGB(0xfa,0xfa,0xfa),
@@ -163,7 +163,7 @@ const ushort waterfall_grey_inverse[] =
 
 // This palette has weak signals as "cold" (blue) and strong signals as hot (red)
 //
-const ushort waterfall_cold_hot[] =
+const uint16_t waterfall_cold_hot[] =
 {
     RGB(0x00,0x00,0x22),	//div 4	RGB(0x00,0x02,0x8a),  - make the first few colors darker/"redder"
     RGB(0x01,0x00,0x23),	//div 3.8 RGB(0x04,0x02,0x87),
@@ -234,7 +234,7 @@ const ushort waterfall_cold_hot[] =
 //
 // Waterfall Blue Colors:  Weak = dark, strongest = white
 //
-const ushort waterfall_blue[] =
+const uint16_t waterfall_blue[] =
 {
     RGB(0x00,0x00,0x2e),
     RGB(0x02,0x02,0x31),
@@ -302,7 +302,7 @@ const ushort waterfall_blue[] =
     RGB(0xa3,0xe5,0xff),
     RGB(0xff,0xff,0xff)
 };
-const ushort waterfall_rainbow[] =
+const uint16_t waterfall_rainbow[] =
 {
     RGB(0x00,0x00,0x0b),	//div 4.0	RGB(0x00,0x01,0x2d),	// Make the first few colors "bluer"
     RGB(0x00,0x01,0x0d),	//div 3.8	RGB(0x00,0x04,0x30),

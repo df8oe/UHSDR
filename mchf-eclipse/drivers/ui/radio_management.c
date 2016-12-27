@@ -1193,3 +1193,87 @@ bool RadioManagement_UpdatePowerAndVSWR()
     }
     return retval;
 }
+
+/**
+ * @brief Calculation and setting of RX Audio Codec gain for ADC of IQ signal and detects signal clipping, needs to be called regularly every 40ms.
+ */
+void RadioManagement_HandleRxIQSignalCodecGain()
+{
+    static  uint16_t    rfg_timer= 0;   // counter used for timing RFG control decay
+    static  float       auto_rfg = 8;
+    float   rfg_calc;
+    float gcalc;
+
+    // ************************
+    // Update S-Meter and control the input gain of the codec to maximize A/D and receiver dynamic range
+    // ************************
+    //
+    // Calculate attenuation of "RF Codec Gain" setting so that S-meter reading can be compensated.
+    // for input RF attenuation setting
+    //
+    if(ts.rf_codec_gain == RF_CODEC_GAIN_AUTO)      // Is RF gain in "AUTO" mode?
+    {
+        rfg_calc = auto_rfg;
+    }
+    else                    // not in "AUTO" mode
+    {
+        rfg_calc = (float)ts.rf_codec_gain;     // get copy of RF gain setting
+        auto_rfg = rfg_calc;        // keep "auto" variable updated with manual setting when in manual mode
+        rfg_timer = 0;
+    }
+
+    rfg_calc += 1;  // offset to prevent zero
+    rfg_calc *= 2;  // double the range of adjustment
+    rfg_calc += 13; // offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
+    if(rfg_calc >31)    // limit calc to hardware range
+    {
+        rfg_calc = 31;
+    }
+
+    Codec_LineInGainAdj((uint8_t)rfg_calc); // set the RX gain on the codec
+
+    // Now calculate the RF gain setting
+    gcalc = pow10(((rfg_calc * 1.5) - 34.5) / 10) ;
+
+    // codec has 1.5 dB/step
+    // offset codec setting by 34.5db (full gain = 12dB)
+    // convert to power ratio
+
+    ads.codec_gain_calc = sqrtf(gcalc);     // convert to voltage ratio - we now have current A/D (codec) gain setting
+
+    // Now handle automatic A/D input gain control timing
+    rfg_timer++;    // bump RFG timer
+
+    if(rfg_timer > 10000)   // limit count of RFG timer
+    {
+        rfg_timer = 10000;
+    }
+
+    if(ads.adc_half_clip)       // did clipping almost occur?
+    {
+        if(rfg_timer >= AUTO_RFG_DECREASE_LOCKOUT)      // has enough time passed since the last gain decrease?
+        {
+            if(auto_rfg)        // yes - is this NOT zero?
+            {
+                auto_rfg -= 0.5;    // decrease gain one step, 1.5dB (it is multiplied by 2, above)
+                rfg_timer = 0;  // reset the adjustment timer
+            }
+        }
+    }
+    else if(!ads.adc_quarter_clip)      // no clipping occurred
+    {
+        if(rfg_timer >= AUTO_RFG_INCREASE_TIMER)        // has it been long enough since the last increase?
+        {
+            auto_rfg += 0.5;    // increase gain by one step, 1.5dB (it is multiplied by 2, above)
+            rfg_timer = 0;  // reset the timer to prevent this from executing too often
+            if(auto_rfg > 8)    // limit it to 8
+            {
+                auto_rfg = 8;
+            }
+        }
+    }
+
+    ads.adc_half_clip = false;      // clear "half clip" indicator that tells us that we should decrease gain
+    ads.adc_quarter_clip = false;   // clear indicator that, if not triggered, indicates that we can increase gain
+}
+

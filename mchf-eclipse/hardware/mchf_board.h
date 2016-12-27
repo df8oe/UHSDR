@@ -1102,7 +1102,7 @@ typedef struct TransceiverState
     uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
     ulong	waterfall_offset;			// offset for waterfall display
     ulong	waterfall_contrast;			// contrast setting for waterfall display
-    uchar	spectrum_scope_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+    uchar	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
     uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
     uchar	waterfall_nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
     uchar	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved

@@ -379,7 +379,7 @@ void TransceiverStateInit(void)
     ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
     ts.waterfall_offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
     ts.waterfall_contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
-    ts.spectrum_scope_scheduler = 0;				// timer for scheduling the next update of the spectrum scope update
+    ts.spectrum_scheduler = 0;				// timer for scheduling the next update of the spectrum update
     ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
     ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
