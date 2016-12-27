@@ -42,14 +42,14 @@ enum MENU_GROUP_ITEM
 
 const MenuDescriptor topGroup[] =
 {
-    { MENU_TOP, MENU_GROUP, MENU_BASE, "STD","Standard Menu", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_CONF, "CON","Configuration Menu", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","PA Configuration", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_SYSINFO,"INF","System Info", UiMenuDesc(":soon:") },
-    { MENU_TOP, MENU_GROUP, MENU_DEBUG,"INF","Debug/Exper. Settings", UiMenuDesc(":soon:") },
+    { MENU_TOP, MENU_GROUP, MENU_BASE, "STD","Standard Menu", UiMenuDesc("Operational parameters") },
+    { MENU_TOP, MENU_GROUP, MENU_CONF, "CON","Configuration Menu", UiMenuDesc("Configuration settings typically not so often to be changed") },
+    { MENU_TOP, MENU_GROUP, MENU_DISPLAY, "DIS","Display Menu", UiMenuDesc("Everything related to how the display presents data such as colors or speed of display") },
+    { MENU_TOP, MENU_GROUP, MENU_CW,"CW ","CW Mode Settings", UiMenuDesc("Everything related to CW Mode operation (except CW PA Bias)") },
+    { MENU_TOP, MENU_GROUP, MENU_FILTER, "FIL","Filter Selection", UiMenuDesc("Select the filters for filter button by mode. Each mode can have up to 4 filters for quick selection via short press Filter button G4.") },
+    { MENU_TOP, MENU_GROUP, MENU_POW, "POW","PA Configuration", UiMenuDesc("Menu for power amplifier parameter and tune function adjustments") },
+    { MENU_TOP, MENU_GROUP, MENU_SYSINFO,"INF","System Info", UiMenuDesc("Lists various system info values") },
+    { MENU_TOP, MENU_GROUP, MENU_DEBUG,"INF","Debug/Exper. Settings", UiMenuDesc("As the name says, contains debug or expert settings usually not relevant for operating the mcHF") },
     { MENU_TOP, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
@@ -57,28 +57,30 @@ const MenuDescriptor baseGroup[] =
 {
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode", UiMenuDesc(":soon:") },
     { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select", UiMenuDesc("If enabled, the appropriate SSB mode is chosen as default for bands by its frequency.")},
-    { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,"030","Digital Modes", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE,"030","CW Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","SyncAM Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE,"040","FM Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE,"042","FM Sub Tone Det", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE,"043","FM Tone Burst", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE,"045","FM Deviation", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_MODE,"050","AGC Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain", UiMenuDesc(":soon:") }, // also via knob
-    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC,"052","Custom AGC (+=Slower)", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE,"053","RX Codec Gain", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING,"054","RX NB Setting", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV,"055","RX/TX Freq Xlate", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE,"060","Mic/Line Select", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN,"061","Mic Input Gain", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN,"062","Line Input Gain", UiMenuDesc(":soon:") },
+    { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,"030","Digital Modes", UiMenuDesc("Disable appearance of digital modes when pressing Mode button")},
+    { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE,"030","CW Mode", UiMenuDesc("Disable appearance of CW mode when pressing Mode button")},
+    { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode", UiMenuDesc("Disable appearance of AM mode when pressing Mode button")},
+    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,"SAM","SyncAM Mode",UiMenuDesc("Disable appearance of SyncAM modeswhen pressing Mode button")  },
+    { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE,"040","FM Mode", UiMenuDesc("Disable appearance of FM mode when pressing Mode button")},
+    { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE,"041","FM Sub Tone Gen", UiMenuDesc("Enable generation of CTCSS tones during FM transmissions.") },
+    { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE,"042","FM Sub Tone Det", UiMenuDesc("Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected.") },
+    { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE,"043","FM Tone Burst", UiMenuDesc("Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz.") },
+    { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE,"045","FM Deviation", UiMenuDesc("Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX") },
+    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ,"051","RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
+    { MENU_BASE, MENU_ITEM, MENU_AGC_MODE,"050","AGC Mode", UiMenuDesc("Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
+    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC,"052","Custom AGC (+=Slower)", UiMenuDesc("If AGC is set to CUSTOM, this controls the speed setting of AGC") },
+    { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE,"053","RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best.") },
 
-    { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL,"065","TX Audio Compress", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","TX ALC Release Time", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX ALC Input Gain", UiMenuDesc(":soon:") },
+    { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV,"055","RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },
+    { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE,"060","Mic/Line Select", UiMenuDesc("Select used signal input for transmit (except in CW). Also changeable via long press on M3") },
+    { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN,"061","Mic Input Gain", UiMenuDesc("Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input") },
+    { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN,"062","Line Input Gain", UiMenuDesc("LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input") },
+
+    { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL,"065","TX Audio Compress", UiMenuDesc("Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP).") },
+    { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","TX ALC Release Time", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level.") },
+    { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX ALC Input Gain", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level.") },
+
+    { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING,"054","RX NB Setting", UiMenuDesc(":soon:") },
 
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength", UiMenuDesc(":soon:") }, // via knob
 
@@ -118,8 +120,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP,"122","Meter Colour Up", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN,"123","Meter Colour Down", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP,"270","Disp. Pwr (mW)", UiMenuDesc(":soon:") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display", UiMenuDesc("Enable an additional numeric display of the RX signal strength")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc("Select the S-Meter measurement style")},
     { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
