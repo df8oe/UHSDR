@@ -4694,150 +4694,68 @@ void UiDriver_DisplayFilterBW()
 	kbs.old_state = kbs.new_state;
 }*/
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverHandleSmeter
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_HandleSMeter()
 {
-    float 	rfg_calc;
-    float gcalc;
-    static bool 		clip_indicate = 0;
-    static	float		auto_rfg = 8;
-    static	uint16_t 	rfg_timer= 0;	// counter used for timing RFG control decay
 
     // Only in RX mode
     if(ts.txrx_mode == TRX_MODE_RX)
     {
-        // ************************
-        // Update S-Meter and control the input gain of the codec to maximize A/D and receiver dynamic range
-        // ************************
-        //
-        // Calculate attenuation of "RF Codec Gain" setting so that S-meter reading can be compensated.
-        // for input RF attenuation setting
-        //
-        if(ts.rf_codec_gain == RF_CODEC_GAIN_AUTO)		// Is RF gain in "AUTO" mode?
-        {
-            rfg_calc = auto_rfg;
-        }
-        else	 				// not in "AUTO" mode
-        {
-            rfg_calc = (float)ts.rf_codec_gain;		// get copy of RF gain setting
-            auto_rfg = rfg_calc;		// keep "auto" variable updated with manual setting when in manual mode
-            rfg_timer = 0;
-        }
 
-        rfg_calc += 1;	// offset to prevent zero
-        rfg_calc *= 2;	// double the range of adjustment
-        rfg_calc += 13;	// offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
-        if(rfg_calc >31)	// limit calc to hardware range
-        {
-            rfg_calc = 31;
-        }
-
-        Codec_LineInGainAdj((uint8_t)rfg_calc);	// set the RX gain on the codec
-
-        // Now calculate the RF gain setting
-        gcalc = pow10(((rfg_calc * 1.5) - 34.5) / 10) ;
-
-        // codec has 1.5 dB/step
-        // offset codec setting by 34.5db (full gain = 12dB)
-        // convert to power ratio
-
-        ads.codec_gain_calc = sqrtf(gcalc);		// convert to voltage ratio - we now have current A/D (codec) gain setting
-
-
-        if (ts.s_meter == DISPLAY_S_METER_STD) // oldschool (os) S-meter scheme
-        {
-            sm.gain_calc = AGC_GAIN_CAL/(ads.agc_val * ads.codec_gain_calc);
-            // AGC gain calibration factor divided by (AGC loop gain setting * known A/D gain setting)
-        }
-        else if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
-        {
-            sm.gain_calc = sm.dbm;
-        }
-        else // based on dBm/Hz calculation
-        {
-            sm.gain_calc = sm.dbmhz;
-        }
-
-
-        const float *S_Meter_Cal_Ptr = (ts.s_meter == DISPLAY_S_METER_STD)?  S_Meter_Cal : S_Meter_Cal_dbm;
-
-        // find corresponding signal level
-        for (
-                sm.s_count = 0;
-                (sm.gain_calc >= S_Meter_Cal_Ptr[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size);
-                sm.s_count++)
-        {
-            // nothing to do here
-        }
-
-
-
-        // Now handle automatic A/D input gain control timing
-        rfg_timer++;	// bump RFG timer
-        if(rfg_timer > 10000)	// limit count of RFG timer
-        {
-            rfg_timer = 10000;
-        }
-
-        if(ads.adc_half_clip)	 	// did clipping almost occur?
-        {
-            if(rfg_timer >=	AUTO_RFG_DECREASE_LOCKOUT)	 	// has enough time passed since the last gain decrease?
-            {
-                if(auto_rfg)	 	// yes - is this NOT zero?
-                {
-                    auto_rfg -= 0.5;	// decrease gain one step, 1.5dB (it is multiplied by 2, above)
-                    rfg_timer = 0;	// reset the adjustment timer
-                }
-            }
-        }
-        else if(!ads.adc_quarter_clip)	 	// no clipping occurred
-        {
-            if(rfg_timer >= AUTO_RFG_INCREASE_TIMER)	 	// has it been long enough since the last increase?
-            {
-                auto_rfg += 0.5;	// increase gain by one step, 1.5dB (it is multiplied by 2, above)
-                rfg_timer = 0;	// reset the timer to prevent this from executing too often
-                if(auto_rfg > 8)	// limit it to 8
-                {
-                    auto_rfg = 8;
-                }
-            }
-        }
-        ads.adc_half_clip = false;		// clear "half clip" indicator that tells us that we should decrease gain
-        ads.adc_quarter_clip = false;	// clear indicator that, if not triggered, indicates that we can increase gain
-
-
+        RadioManagement_HandleRxIQSignalCodecGain();
 
         // ONLY UI CODE BELOW
         //
         // This makes a portion of the S-meter go red if A/D clipping occurs
         //
-        if(ads.adc_clip)	 		// did clipping occur?
         {
-            if(!clip_indicate)	 	// have we seen it clip before?
-            {
-                UiDriver_DrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
-                clip_indicate = true;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
-            }
-            ads.adc_clip = false;		// reset clip detect flag
-        }
-        else	 		// clipping NOT occur?
-        {
-            if(clip_indicate)	 	// had clipping occurred since we last visited this code?
-            {
-                UiDriver_DrawSMeter(White);					// yes - restore the S meter to a white condition
-                clip_indicate = false;							// clear the flag that indicated that clipping had occurred
-            }
-        }
+            static bool         clip_indicate = 0;
 
-        // make sure that the S meter always reads something!
-        UiDriver_UpdateTopMeterA((sm.s_count>0) ? sm.s_count : 1);
+            if (ts.s_meter == DISPLAY_S_METER_STD) // oldschool (os) S-meter scheme
+            {
+                sm.gain_calc = AGC_GAIN_CAL/(ads.agc_val * ads.codec_gain_calc);
+                // AGC gain calibration factor divided by (AGC loop gain setting * known A/D gain setting)
+            }
+            else if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
+            {
+                sm.gain_calc = sm.dbm;
+            }
+            else // based on dBm/Hz calculation
+            {
+                sm.gain_calc = sm.dbmhz;
+            }
 
+            const float *S_Meter_Cal_Ptr = (ts.s_meter == DISPLAY_S_METER_STD)?  S_Meter_Cal : S_Meter_Cal_dbm;
+
+            // find corresponding signal level
+            for (
+                    sm.s_count = 0;
+                    (sm.gain_calc >= S_Meter_Cal_Ptr[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size);
+                    sm.s_count++)
+            {
+                // nothing to do here
+            }
+
+            if(ads.adc_clip)	 		// did clipping occur?
+            {
+                if(!clip_indicate)	 	// have we seen it clip before?
+                {
+                    UiDriver_DrawSMeter(Red);		// No, make the first portion of the S-meter red to indicate A/D overload
+                    clip_indicate = true;		// set flag indicating that we saw clipping and changed the screen (prevent continuous redraw)
+                }
+                ads.adc_clip = false;		// reset clip detect flag
+            }
+            else	 		// clipping NOT occur?
+            {
+                if(clip_indicate)	 	// had clipping occurred since we last visited this code?
+                {
+                    UiDriver_DrawSMeter(White);					// yes - restore the S meter to a white condition
+                    clip_indicate = false;							// clear the flag that indicated that clipping had occurred
+                }
+            }
+
+            // make sure that the S meter always reads something!
+            UiDriver_UpdateTopMeterA((sm.s_count>0) ? sm.s_count : 1);
+        }
     }
 }
 
