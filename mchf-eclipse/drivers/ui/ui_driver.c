@@ -5917,6 +5917,7 @@ void UiDriver_MainHandler()
 
     uint32_t now = ts.sysclock;
 
+    // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
     if (ts.dvmode == true)
     {
@@ -5924,7 +5925,13 @@ void UiDriver_MainHandler()
     }
 #endif // USE_FREEDV
 
+    if (ts.tx_stop_req == true  || ts.ptt_req == true)
+    {
+        RadioManagement_HandlePttOnOff();
+    }
+    // END CALLED AS OFTEN AS POSSIBLE
 
+    // BELOW ALL CALLING IS BASED ON SYSCLOCK 10ms clock
     if (UiDriver_TimerExpireAndRewind(SCTimer_ENCODER_KEYS,now,1))
     {
         // 10ms have elapsed.

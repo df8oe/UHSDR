@@ -18,7 +18,7 @@
 #include "mchf_hw_i2c.h"
 #include "mchf_hw_i2c2.h"
 
-#define I2C2_SPEED             			25000
+#define I2C2_SPEED             			400000 // was 25000
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define I2C2_CLK                  	RCC_APB1Periph_I2C2
@@ -42,7 +42,7 @@ void mchf_hw_i2c2_init(void)
     // I2C2 SCL and SDA pins configuration
     GPIO_InitStructure.GPIO_Pin   = I2C2_SCL_PIN|I2C2_SDA_PIN;
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 
     GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;		// we also have ext pullups
