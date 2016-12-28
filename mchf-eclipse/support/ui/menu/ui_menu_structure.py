@@ -2,7 +2,7 @@
 #
 # WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #
-# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-28T10:47:14+00:00  by "./ui_menu_structure_c2py.sh"
+# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-28T11:52:34+0000  by "./ui_menu_structure_c2py.sh"
 #
 
 MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"], e)) for e in [
@@ -214,4 +214,3 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
 ]
 
 #EOFILE
-

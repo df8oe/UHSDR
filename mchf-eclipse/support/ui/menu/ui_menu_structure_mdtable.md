@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-28T11:47:16  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-28T12:52:36  by  ui_menu_structure_mdtable.py )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
 [//]: # (                                                                              )
@@ -244,6 +244,4 @@
 
 
 [//]: # ( EOFILE                                                                       )
-
-           )
 
