@@ -299,6 +299,9 @@ else ifeq ($(shell uname), Linux)
 else ifeq ($(shell uname), Darwin)
     RM = rm -f
     FixPath = $1
+else ifeq ($(shell uname), CYGWIN_NT-10.0)
+    RM = rm -f
+    FixPath = $1
 endif
 
 # how to compile individual object files
@@ -387,7 +390,7 @@ handbook-ui-menu:
 		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv  \
 	)
 	(cd $(call FixPath,support/ui/menu)  \
-		&&  ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md  \
+		&&  ./ui_menu_structure_mdtable.py | sed -e 's/\\,/,/g' > ui_menu_structure_mdtable.md  \
 	)
 
 handbook-ui-menu-clean:  

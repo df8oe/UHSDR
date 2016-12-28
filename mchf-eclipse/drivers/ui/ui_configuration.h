@@ -53,17 +53,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MAX_KEYER_SPEED     48      // Maximum keyer speed
 #define DEFAULT_KEYER_SPEED 20      // Default keyer speed
 //
-#define CW_OFFSET_USB_TX    0       // CW in USB mode, display is TX frequency if received frequency was zero-beated
-#define CW_OFFSET_LSB_TX    1       // CW in LSB mode, display is TX frequency if received frequency was zero-beated
-#define CW_OFFSET_AUTO_TX   2       // Same as CW_OFFSET_USB_TX except LSB if frequency is < 10 MHz, USB if >= 10 MHz
-#define CW_OFFSET_USB_RX    3       // CW in USB mode, display is RX frequency if received signal is matched to sidetone
-#define CW_OFFSET_LSB_RX    4       // CW in LSB mode, display is RX frequency if received signal is matched to sidetone
-#define CW_OFFSET_AUTO_RX   5       // Same as CW_OFFSET_USB_RX except LSB if frequency is < 10 MHz, USB if >= 10 MHz
-#define CW_OFFSET_USB_SHIFT 6       // CW in USB mode, LO shifts, display is RX frequency if signal is matched to sidetone
-#define CW_OFFSET_LSB_SHIFT 7       // CW in LSB mode, LO shifts, display is RX frequency if signal is matched to sidetone
-#define CW_OFFSET_AUTO_SHIFT    8   // Same as "CW_OFFSET_USB_SHIFT" except LSB if frequency is <10 MHz, USB of >= 10 MHz
-#define CW_OFFSET_MAX       8       // Maximum menu setting
-#define CW_OFFSET_MODE_DEFAULT  0   // Default CW offset setting
+
 //
 #define USB_FREQ_THRESHOLD  (10000000)    // dial frequency at and above which the default is USB, Hz
 //

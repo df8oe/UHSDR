@@ -2,7 +2,7 @@
 #
 # WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #
-# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-27T17:50:01+0000  by "./ui_menu_structure_c2py.sh"
+# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-28T10:47:14+00:00  by "./ui_menu_structure_c2py.sh"
 #
 
 MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"], e)) for e in [
@@ -16,7 +16,7 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_TOP", "MEK_GROUP", "MENU_SYSINFO","INF","System Info", "Lists various system info values"  ],
        [ "MENU_TOP", "MEK_GROUP", "MENU_DEBUG","INF","Debug/Exper. Settings", "As the name says, contains debug or expert settings usually not relevant for operating the mcHF"  ],
        [ "MENU_TOP", "MEK_STOP", 0, "   ", "NULL", ""  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_SSB_AUTO_MODE_SELECT","031","LSB/USB Auto Select", "If enabled, the appropriate SSB mode is chosen as default for bands by its frequency." ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_SSB_AUTO_MODE_SELECT","031","LSB/USB Auto Select", "If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency." ],
        [ "MENU_BASE", "MEK_ITEM", "MENU_DIGI_DISABLE","030","Digital Modes", "Disable appearance of digital modes when pressing Mode button" ],
        [ "MENU_BASE", "MEK_ITEM", "MENU_CW_DISABLE","030","CW Mode", "Disable appearance of CW mode when pressing Mode button" ],
        [ "MENU_BASE", "MEK_ITEM", "MENU_AM_DISABLE","030","AM Mode", "Disable appearance of AM mode when pressing Mode button" ],
@@ -37,13 +37,13 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_BASE", "MEK_ITEM", "MENU_TX_COMPRESSION_LEVEL","065","TX Audio Compress", "Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP)."  ],
        [ "MENU_BASE", "MEK_ITEM", "MENU_ALC_RELEASE","063","TX ALC Release Time", "If Audio Compressor Config is set to CUSTOM\, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level."  ],
        [ "MENU_BASE", "MEK_ITEM", "MENU_ALC_POSTFILT_GAIN","064","TX ALC Input Gain", "If Audio Compressor Config is set to CUSTOM\, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level."  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_NOISE_BLANKER_SETTING","054","RX NB Setting", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_DSP_NR_STRENGTH", "010","DSP NR Strength", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_TCXO_MODE","090","TCXO Off/On/Stop", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_TCXO_C_F","091","TCXO Temp. (C/F)", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_BACKUP_CONFIG","197","Backup Config", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_RESTORE_CONFIG","198","Restore Config", ":soon:"  ],
-       [ "MENU_BASE", "MEK_ITEM", "MENU_RESTART_CODEC","198","Restart Codec", ":soon:"  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_NOISE_BLANKER_SETTING","054","RX NB Setting", "Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_DSP_NR_STRENGTH", "010","DSP NR Strength", "Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_TCXO_MODE","090","TCXO Off/On/Stop", "The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement)."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_TCXO_C_F","091","TCXO Temp. (C/F)", "Show the measure TCXO temperature in Celsius or Fahrenheit."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_BACKUP_CONFIG","197","Backup Config", "Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_RESTORE_CONFIG","198","Restore Config", "Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available."  ],
+       [ "MENU_BASE", "MEK_ITEM", "MENU_RESTART_CODEC","198","Restart Codec", "Sometimes there is a problem with the I2S IQ signal stream from the Codec\, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once\, if first call did not help."  ],
        [ "MENU_BASE", "MEK_STOP", 0, "   ", "NULL", ""  ],
        [ "MENU_DISPLAY", "MEK_ITEM", "CONFIG_LCD_AUTO_OFF_MODE","090","LCD Auto Blank", ":soon:"  ],
        [ "MENU_DISPLAY", "MEK_ITEM", "CONFIG_FREQ_STEP_MARKER_LINE","091","Step Size Marker", ":soon:"  ],
@@ -72,22 +72,23 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_DISPLAY", "MEK_ITEM", "MENU_METER_COLOUR_UP","122","Meter Colour Up", ":soon:"  ],
        [ "MENU_DISPLAY", "MEK_ITEM", "MENU_METER_COLOUR_DOWN","123","Meter Colour Down", ":soon:"  ],
        [ "MENU_DISPLAY", "MEK_ITEM", "MENU_DBM_DISPLAY","120","dBm display", "Enable an additional numeric display of the RX signal strength" ],
-       [ "MENU_DISPLAY", "MEK_ITEM", "MENU_S_METER","121","S-Meter", "Select the S-Meter measurement style" ],
+       [ "MENU_DISPLAY", "MEK_ITEM", "MENU_S_METER","121","S-Meter", "Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value." ],
        [ "MENU_DISPLAY", "MEK_STOP", 0, "   ", "NULL", ""  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_KEYER_MODE","070","CW Keyer Mode", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_KEYER_SPEED","071","CW Keyer Speed", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_SIDETONE_GAIN","072","CW Sidetone Gain", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_SIDETONE_FREQUENCY","073","CW Side/Off Freq", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_PADDLE_REVERSE","074","CW Paddle Reverse", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_CW_TX_RX_DELAY","075","CW TX->RX Delay", ":soon:"  ],
-       [ "MENU_CW", "MEK_ITEM", "MENU_CW_OFFSET_MODE","076","CW Freq. Offset", ":soon:"  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_KEYER_MODE","070","CW Keyer Mode", "Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B)\, Straight Key (STR_K)\, and Ultimatic Keyer (ULTIM)"  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_KEYER_SPEED","071","CW Keyer Speed", "Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode."  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_SIDETONE_GAIN","072","CW Sidetone Gain", "Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode."  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_SIDETONE_FREQUENCY","073","CW Side/Offset Freq", "Sidetone Frequency (also Offset frequency\, see CW Freq. Offset below)"  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_PADDLE_REVERSE","074","CW Paddle Reverse", "Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles."  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_CW_TX_RX_DELAY","075","CW TX->RX Delay", "How long to stay in CW mode after stop sending a signal."  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_CW_OFFSET_MODE","076","CW Freq. Offset", "TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts\, display is RX frequency if signal is matched to sidetone."  ],
+       [ "MENU_CW", "MEK_ITEM", "MENU_CW_AUTO_MODE_SELECT","031","CW LSB/USB Select", "Set appropriate sideband mode for CW. If AUTO\, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode" ],
        [ "MENU_CW", "MEK_STOP", 0, "   ", "NULL", ""  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_FREQ_MEM_LIMIT_RELAX","232","Save Out-Of-Band Freq.", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_TX_OUT_ENABLE","207", "TX on Out-Of-Band Freq.", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_TX_DISABLE","203","Transmit Disable", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH","204","Menu SW on TX disable", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MUTE_LINE_OUT_TX","205","TX Mute LineOut", ":soon:"  ],
-       [ "MENU_CONF", "MEK_ITEM", "CONFIG_TXRX_SWITCH_AUDIO_MUTE","206","TX Initial Muting Time", ":soon:"  ],
+       [ "MENU_CONF", "MEK_ITEM", "CONFIG_TXRX_SWITCH_AUDIO_MUTE","206","TX Initial Muting Time", "When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MAX_VOLUME","210","Max Volume", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MAX_RX_GAIN","211","Max RX Gain (0=Max)", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_BEEP_ENABLE","212","Key Beep", ":soon:"  ],
@@ -96,8 +97,8 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_ENABLE","220","CAT Mode", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_IN_SANDBOX","530","CAT Running In Sandbox", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_XLAT","400","CAT-IQ-FREQ-XLAT", ":soon:"  ],
-       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_OFFSET_MULT","280","XVTR Offs/Mult", ":soon:"  ],
-       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_FREQUENCY_OFFSET","281","XVTR Offset", ":soon:"  ],
+       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_OFFSET_MULT","280","XVTR Offs/Mult", "When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it."  ],
+       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_FREQUENCY_OFFSET","281","XVTR Offset", "When transverter mode is enabled\, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width\, much less turns with the dial knob if it is set to 1Mhz"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_STEP_SIZE_BUTTON_SWAP","201","Step Button Swap", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_BAND_BUTTON_SWAP","202","Band+/- Button Swap", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "MENU_REVERSE_TOUCHSCREEN","122","Reverse Touchscreen", ":soon:"  ],
@@ -213,3 +214,4 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
 ]
 
 #EOFILE
+

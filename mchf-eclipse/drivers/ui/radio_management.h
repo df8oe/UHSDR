@@ -117,6 +117,44 @@ typedef struct SWRMeter
 
 } SWRMeter;
 
+// New modes need to be added so that configuration compatibility is retained
+// it is also necessary to extend the cw_mode_map in radio_management.c to include new modes
+enum {
+    CW_OFFSET_USB_TX  =   0,        // CW in USB mode, display is TX frequency if received frequency was zero-beated
+    CW_OFFSET_LSB_TX,               // CW in LSB mode, display is TX frequency if received frequency was zero-beated
+    CW_OFFSET_AUTO_TX,              // Same as CW_OFFSET_USB_TX except LSB if frequency is < 10 MHz, USB if >= 10 MHz
+    CW_OFFSET_USB_RX,               // CW in USB mode, display is RX frequency if received signal is matched to sidetone
+    CW_OFFSET_LSB_RX,               // CW in LSB mode, display is RX frequency if received signal is matched to sidetone
+    CW_OFFSET_AUTO_RX,              // Same as CW_OFFSET_USB_RX except LSB if frequency is < 10 MHz, USB if >= 10 MHz
+    CW_OFFSET_USB_SHIFT,            // CW in USB mode, LO shifts, display is RX frequency if signal is matched to sidetone
+    CW_OFFSET_LSB_SHIFT,            // CW in LSB mode, LO shifts, display is RX frequency if signal is matched to sidetone
+    CW_OFFSET_AUTO_SHIFT,           // Same as "CW_OFFSET_USB_SHIFT" except LSB if frequency is <10 MHz, USB of >= 10 MHz
+    CW_OFFSET_NUM                   // Number of Modes
+};
+
+#define CW_OFFSET_MODE_DEFAULT  CW_OFFSET_USB_TX   // Default CW offset setting
+
+typedef enum {
+    CW_SB_USB = 0,
+    CW_SB_LSB,
+    CW_SB_AUTO
+} cw_sb_t;
+
+typedef enum {
+    CW_OFFSET_TX = 0,
+    CW_OFFSET_RX,
+    CW_OFFSET_SHIFT
+} cw_dial_t;
+
+
+typedef struct
+{
+    cw_dial_t dial_mode;
+    cw_sb_t sideband_mode;
+} cw_mode_map_entry_t;
+
+extern const cw_mode_map_entry_t cw_mode_map[];
+
 // SWR/Power meter
 extern SWRMeter                    swrm;
 
@@ -154,5 +192,8 @@ void RadioManagement_SetPaBias();
 bool RadioManagement_CalculateCWSidebandMode(void);
 void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_HandleRxIQSignalCodecGain();
+const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_offset_mode);
+uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry);
+
 
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */

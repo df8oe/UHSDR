@@ -1309,54 +1309,82 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "%3ums", ts.cw_rx_delay*10);
         break;
 
-    case MENU_CW_OFFSET_MODE:   // CW offset mode (e.g. USB, LSB, etc.)
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_offset_mode,
-                                              0,
-                                              CW_OFFSET_MAX,
-                                              CW_OFFSET_MODE_DEFAULT,
-                                              1
-                                             );
-        //
-        switch(ts.cw_offset_mode)
-        {
-        case CW_OFFSET_USB_TX:
-            txt_ptr = "        USB";
-            break;
-        case CW_OFFSET_LSB_TX:
-            txt_ptr = "        LSB";
-            break;
-        case CW_OFFSET_USB_RX:
-            txt_ptr = "   USB DISP";
-            break;
-        case CW_OFFSET_LSB_RX:
-            txt_ptr = "   LSB DISP";
-            break;
-        case CW_OFFSET_USB_SHIFT:
-            txt_ptr = "  USB SHIFT";
-            break;
-        case CW_OFFSET_LSB_SHIFT:
-            txt_ptr = "  LSB SHIFT";
-            break;
-        case CW_OFFSET_AUTO_TX:
-            txt_ptr = "AUT USB/LSB";
-            break;
-        case CW_OFFSET_AUTO_RX:
-            txt_ptr = "  AUTO DISP";
-            break;
-        case CW_OFFSET_AUTO_SHIFT:
-            txt_ptr = " AUTO SHIFT";
-            break;
-        default:
-            txt_ptr = "     ERROR!";
-            break;
-        }
+    case MENU_CW_AUTO_MODE_SELECT:     // Enable/Disable auto LSB/USB select
+    {
+        const cw_mode_map_entry_t* curr_mode = RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode);
+        temp_var_u8 = curr_mode->sideband_mode;
+
+                var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                        0,
+                        2,
+                        2,
+                        1
+                );
+
         if(var_change)      // update parameters if changed
-        {
+                {
+            cw_mode_map_entry_t new_mode;
+            new_mode.dial_mode = curr_mode->dial_mode;
+            new_mode.sideband_mode = temp_var_u8;
+            ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
+
             ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
             UiDriver_ShowMode();
             UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
+                }
+
+        switch(temp_var_u8)
+        {
+        case CW_SB_LSB:
+            txt_ptr = " LSB";
+            break;
+        case CW_SB_USB:
+            txt_ptr = " USB";
+            break;
+        case CW_SB_AUTO:
+            txt_ptr = "AUTO";
+            break;
         }
         break;
+    }
+    case MENU_CW_OFFSET_MODE:   // CW offset mode (e.g. USB, LSB, etc.)
+    {
+        const cw_mode_map_entry_t* curr_mode = RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode);
+          temp_var_u8 = curr_mode->dial_mode;
+
+                  var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                          0,
+                          2,
+                          2,
+                          1
+                  );
+
+          if(var_change)      // update parameters if changed
+                  {
+              cw_mode_map_entry_t new_mode;
+              new_mode.sideband_mode = curr_mode->sideband_mode;
+              new_mode.dial_mode = temp_var_u8;
+              ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
+
+              ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
+              UiDriver_ShowMode();
+              UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
+                  }
+
+          switch(temp_var_u8)
+          {
+          case CW_OFFSET_RX:
+              txt_ptr = "   RX";
+              break;
+          case CW_OFFSET_TX:
+              txt_ptr = "   TX";
+              break;
+          case CW_OFFSET_SHIFT:
+              txt_ptr = "SHIFT";
+              break;
+          }
+          break;
+    }
     case MENU_TCXO_MODE:    // TCXO On/Off
         temp_var_u8 = (df.temp_enabled & 0x0f);     // get current setting without upper nibble
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,

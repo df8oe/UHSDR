@@ -2,7 +2,7 @@
     #  
     #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
     #  
-    #  generated from  <${BUILD_ID}>  at  2016-12-27T18:50:01  by  ui_menu_structure_graph.py
+    #  generated from  <${BUILD_ID}>  at  2016-12-28T11:47:15  by  ui_menu_structure_graph.py
     #  
     #  mcHF SDR TRX - Menu Structure Diagram in DOT-language
     #  
@@ -11,7 +11,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF - Menus Overview\ngenerated from  <${BUILD_ID}>  at  2016-12-27T18:50:01  by  ui_menu_structure_graph.py",
+                label = "\nmcHF - Menus Overview\ngenerated from  <${BUILD_ID}>  at  2016-12-28T11:47:15  by  ui_menu_structure_graph.py",
               ];
        
         rankdir=LR
@@ -365,7 +365,7 @@
              ];
         
         "MENU_SIDETONE_FREQUENCY" [
-             label = "MENU_SIDETONE_FREQUENCY (073) | CW Side/Off Freq"
+             label = "MENU_SIDETONE_FREQUENCY (073) | CW Side/Offset Freq"
              shape = record
              ];
         
@@ -381,6 +381,11 @@
         
         "MENU_CW_OFFSET_MODE" [
              label = "MENU_CW_OFFSET_MODE (076) | CW Freq. Offset"
+             shape = record
+             ];
+        
+        "MENU_CW_AUTO_MODE_SELECT" [
+             label = "MENU_CW_AUTO_MODE_SELECT (031) | CW LSB/USB Select"
              shape = record
              ];
         
@@ -1201,6 +1206,7 @@
             MENU_CW -> MENU_PADDLE_REVERSE
             MENU_CW -> MENU_CW_TX_RX_DELAY
             MENU_CW -> MENU_CW_OFFSET_MODE
+            MENU_CW -> MENU_CW_AUTO_MODE_SELECT
 
     }  ## END subgraph MENU_DEBUG
     
