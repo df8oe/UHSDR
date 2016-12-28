@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [ "$(cat support/ui/menu/menu-handbook-build.timestamp 2>/dev/null)" == "$(stat -c%y drivers/ui/menu/ui_menu_structure.c)" ]; then
+	echo "menu-handbook already up2date"
+else
+	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
+	echo "building menu-handbook..."
+	cp -v mcHF-logo.png support/ui/menu > /dev/zero
+	(cd support/ui/menu  \
+		&&  ./ui_menu_structure_c2py.sh | tee ui_menu_structure.py | python -  \
+		&&  ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
+		&&  dot -Tsvg -oui_menu_structure_graph.svg  ui_menu_structure_graph.gv  \
+		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv \
+	)
+	(cd support/ui/menu  \
+		&&  ./ui_menu_structure_mdtable.py | sed -e 's/\\,/,/g' > ui_menu_structure_mdtable.md \
+	)
+	(echo $(stat -c%y drivers/ui/menu/ui_menu_structure.c) > support/ui/menu/menu-handbook-build.timestamp)
+	echo "menu-handbook build completed."
+fi

@@ -338,7 +338,7 @@ help:
 
 .PHONY: all clean docs docs-clean help
 
-all:  $(LPRJ).elf $(PRJ).bin
+all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
 	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
 	@echo "using \c"
 	$(CC) --version | grep gcc
@@ -352,6 +352,9 @@ $(PRJ).bin:  $(LPRJ).elf
 	$(ECHO) "  [OBJC] $@"
 	$(OS) $<
 	$(OC) -v -O binary $< $(PRJ).bin
+
+$(PRJ).handbook:
+	@support/ui/menu/mk-menu-handbook
 
 # cleaning rule
 clean:  
@@ -382,16 +385,7 @@ docs-clean:
 
 handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	cp -v mcHF-logo.png $(call FixPath,support/ui/menu)
-	(cd $(call FixPath,support/ui/menu)  \
-		&&  ./ui_menu_structure_c2py.sh | tee ui_menu_structure.py | python -  \
-		&&  ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
-		&&  dot -Tsvg -oui_menu_structure_graph.svg  ui_menu_structure_graph.gv  \
-		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv  \
-	)
-	(cd $(call FixPath,support/ui/menu)  \
-		&&  ./ui_menu_structure_mdtable.py | sed -e 's/\\,/,/g' > ui_menu_structure_mdtable.md  \
-	)
+	@support/ui/menu/mk-menu-handbook
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
@@ -401,6 +395,7 @@ handbook-ui-menu-clean:
 	$(RM) support/ui/menu/ui_menu_structure_graph.svg
 	$(RM) support/ui/menu/ui_menu_structure_graph.png
 	$(RM) support/ui/menu/ui_menu_structure_mdtable.md
+	$(RM) support/ui/menu/menu-handbook-build.timestamp
 
 release:  
 	# generate quick operating guide
