@@ -56,7 +56,7 @@ const MenuDescriptor topGroup[] =
 const MenuDescriptor baseGroup[] =
 {
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select", UiMenuDesc("If enabled, the appropriate SSB mode is chosen as default for bands by its frequency.")},
+    { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT,"031","LSB/USB Auto Select", UiMenuDesc("If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency.")},
     { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,"030","Digital Modes", UiMenuDesc("Disable appearance of digital modes when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE,"030","CW Mode", UiMenuDesc("Disable appearance of CW mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE,"030","AM Mode", UiMenuDesc("Disable appearance of AM mode when pressing Mode button")},
@@ -80,15 +80,15 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE,"063","TX ALC Release Time", UiMenuDesc("If Audio Compressor Config is set to CUSTOM\, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level.") },
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN,"064","TX ALC Input Gain", UiMenuDesc("If Audio Compressor Config is set to CUSTOM\, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level.") },
 
-    { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING,"054","RX NB Setting", UiMenuDesc(":soon:") },
+    { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING,"054","RX NB Setting", UiMenuDesc("Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active.") },
 
-    { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength", UiMenuDesc(":soon:") }, // via knob
+    { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, "010","DSP NR Strength", UiMenuDesc("Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active.") }, // via knob
 
-    { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE,"090","TCXO Off/On/Stop", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG,"198","Restore Config", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_RESTART_CODEC,"198","Restart Codec", UiMenuDesc(":soon:") },
+    { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE,"090","TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
+    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F,"091","TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
+    { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG,"197","Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
+    { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG,"198","Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
+    { MENU_BASE, MENU_ITEM, MENU_RESTART_CODEC,"198","Restart Codec", UiMenuDesc("Sometimes there is a problem with the I2S IQ signal stream from the Codec\, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once\, if first call did not help.") },
     { MENU_BASE, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
@@ -121,20 +121,21 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP,"122","Meter Colour Up", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN,"123","Meter Colour Down", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display", UiMenuDesc("Enable an additional numeric display of the RX signal strength")},
-    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc("Select the S-Meter measurement style")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc("Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value.")},
     { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
 const MenuDescriptor cwGroup[] =
 {
 //    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_KEYER_MODE,"070","CW Keyer Mode", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED,"071","CW Keyer Speed", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN,"072","CW Sidetone Gain", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY,"073","CW Side/Off Freq", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE,"074","CW Paddle Reverse", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY,"075","CW TX->RX Delay", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE,"076","CW Freq. Offset", UiMenuDesc(":soon:") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_MODE,"070","CW Keyer Mode", UiMenuDesc("Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B)\, Straight Key (STR_K)\, and Ultimatic Keyer (ULTIM)") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED,"071","CW Keyer Speed", UiMenuDesc("Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode.") },
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN,"072","CW Sidetone Gain", UiMenuDesc("Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode.") },
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY,"073","CW Side/Offset Freq", UiMenuDesc("Sidetone Frequency (also Offset frequency\, see CW Freq. Offset below)") },
+    { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE,"074","CW Paddle Reverse", UiMenuDesc("Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY,"075","CW TX->RX Delay", UiMenuDesc("How long to stay in CW mode after stop sending a signal.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE,"076","CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts\, display is RX frequency if signal is matched to sidetone.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT,"031","CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO\, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode")},
     { MENU_CW, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
@@ -148,7 +149,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH,"204","Menu SW on TX disable", UiMenuDesc(":soon:") },
 
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX,"205","TX Mute LineOut", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE,"206","TX Initial Muting Time", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE,"206","TX Initial Muting Time", UiMenuDesc("When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms.") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME,"210","Max Volume", UiMenuDesc(":soon:") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN,"211","Max RX Gain (0=Max)", UiMenuDesc(":soon:") },
 
@@ -163,8 +164,8 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-IQ-FREQ-XLAT", UiMenuDesc(":soon:") },
 
     // Transverter Configuration
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult", UiMenuDesc("When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset", UiMenuDesc("When transverter mode is enabled\, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width\, much less turns with the dial knob if it is set to 1Mhz") },
 
     // Button Handling Setup
     { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP,"201","Step Button Swap", UiMenuDesc(":soon:") },

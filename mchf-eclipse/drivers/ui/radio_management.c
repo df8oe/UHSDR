@@ -1277,3 +1277,44 @@ void RadioManagement_HandleRxIQSignalCodecGain()
     ads.adc_quarter_clip = false;   // clear indicator that, if not triggered, indicates that we can increase gain
 }
 
+const cw_mode_map_entry_t cw_mode_map[] =
+{
+        {CW_OFFSET_TX, CW_SB_USB},      // 0
+        {CW_OFFSET_TX, CW_SB_LSB},      // 1
+        {CW_OFFSET_TX, CW_SB_AUTO},     // 2
+        {CW_OFFSET_RX, CW_SB_USB},      // 3
+        {CW_OFFSET_RX, CW_SB_LSB},      // 4
+        {CW_OFFSET_RX, CW_SB_AUTO},     // 5
+        {CW_OFFSET_SHIFT, CW_SB_USB},   // 6
+        {CW_OFFSET_SHIFT, CW_SB_LSB},   // 7
+        {CW_OFFSET_SHIFT, CW_SB_AUTO},  // 8
+};
+
+
+const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_offset_mode)
+{
+    const cw_mode_map_entry_t* retval = &cw_mode_map[0];
+
+    if (cw_offset_mode < CW_OFFSET_NUM)
+    {
+        retval = &cw_mode_map[cw_offset_mode];
+    }
+    return  retval;
+}
+
+uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry)
+{
+    uint8_t retval = CW_OFFSET_MODE_DEFAULT;
+
+    for (uint8_t cw_offset_mode = 0; cw_offset_mode < CW_OFFSET_NUM; cw_offset_mode++)
+    {
+        if (cw_mode_map[cw_offset_mode].dial_mode == mode_entry->dial_mode
+                && cw_mode_map[cw_offset_mode].sideband_mode == mode_entry->sideband_mode
+        )
+        {
+            retval = cw_offset_mode;
+            break;
+        }
+    }
+    return  retval;
+}

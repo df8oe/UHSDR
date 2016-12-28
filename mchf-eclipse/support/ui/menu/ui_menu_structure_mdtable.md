@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-27T18:50:03  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-28T11:47:16  by  ui_menu_structure_mdtable.py )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
 [//]: # (                                                                              )
@@ -14,7 +14,7 @@
 
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **LSB/USB Auto Select**       (031) | If enabled, the appropriate SSB mode is chosen as default for bands by its frequency. | 
+| **LSB/USB Auto Select**       (031) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency. | 
 | **Digital Modes**             (030) | Disable appearance of digital modes when pressing Mode button | 
 | **CW Mode**                   (030) | Disable appearance of CW mode when pressing Mode button | 
 | **AM Mode**                   (030) | Disable appearance of AM mode when pressing Mode button | 
@@ -25,23 +25,23 @@
 | **FM Tone Burst**             (043) | Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
 | **FM Deviation**              (045) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
 | **RF Gain**                   (051) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
-| **AGC Mode**                  (050) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC\, use RFG to control gain | 
-| **Custom AGC (+=Slower)**     (052) | If AGC is set to CUSTOM\, this controls the speed setting of AGC | 
+| **AGC Mode**                  (050) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
+| **Custom AGC (+=Slower)**     (052) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
 | **RX Codec Gain**             (053) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
 | **RX/TX Freq Xlate**          (055) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
 | **Mic/Line Select**           (060) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
 | **Mic Input Gain**            (061) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
 | **Line Input Gain**           (062) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
 | **TX Audio Compress**         (065) | Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
-| **TX ALC Release Time**       (063) | If Audio Compressor Config is set to CUSTOM\, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level. | 
-| **TX ALC Input Gain**         (064) | If Audio Compressor Config is set to CUSTOM\, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level. | 
-| **RX NB Setting**             (054) | :soon:                                         | 
-| **DSP NR Strength**           (010) | :soon:                                         | 
-| **TCXO Off/On/Stop**          (090) | :soon:                                         | 
-| **TCXO Temp. (C/F)**          (091) | :soon:                                         | 
-| **Backup Config**             (197) | :soon:                                         | 
-| **Restore Config**            (198) | :soon:                                         | 
-| **Restart Codec**             (198) | :soon:                                         | 
+| **TX ALC Release Time**       (063) | If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level. | 
+| **TX ALC Input Gain**         (064) | If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level. | 
+| **RX NB Setting**             (054) | Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active. | 
+| **DSP NR Strength**           (010) | Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active. | 
+| **TCXO Off/On/Stop**          (090) | The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement). | 
+| **TCXO Temp. (C/F)**          (091) | Show the measure TCXO temperature in Celsius or Fahrenheit. | 
+| **Backup Config**             (197) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
+| **Restore Config**            (198) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
+| **Restart Codec**             (198) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
 
 
 ## Configuration Menu (CON, `MENU_CONF`)
@@ -53,7 +53,7 @@
 | **Transmit Disable**          (203) | :soon:                                         | 
 | **Menu SW on TX disable**     (204) | :soon:                                         | 
 | **TX Mute LineOut**           (205) | :soon:                                         | 
-| **TX Initial Muting Time**    (206) | :soon:                                         | 
+| **TX Initial Muting Time**    (206) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. | 
 | **Max Volume**                (210) | :soon:                                         | 
 | **Max RX Gain (0=Max)**       (211) | :soon:                                         | 
 | **Key Beep**                  (212) | :soon:                                         | 
@@ -62,8 +62,8 @@
 | **CAT Mode**                  (220) | :soon:                                         | 
 | **CAT Running In Sandbox**    (530) | :soon:                                         | 
 | **CAT-IQ-FREQ-XLAT**          (400) | :soon:                                         | 
-| **XVTR Offs/Mult**            (280) | :soon:                                         | 
-| **XVTR Offset**               (281) | :soon:                                         | 
+| **XVTR Offs/Mult**            (280) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. | 
+| **XVTR Offset**               (281) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (201) | :soon:                                         | 
 | **Band+/- Button Swap**       (202) | :soon:                                         | 
 | **Reverse Touchscreen**       (122) | :soon:                                         | 
@@ -120,20 +120,21 @@
 | **Meter Colour Up**           (122) | :soon:                                         | 
 | **Meter Colour Down**         (123) | :soon:                                         | 
 | **dBm display**               (120) | Enable an additional numeric display of the RX signal strength | 
-| **S-Meter**                   (121) | Select the S-Meter measurement style           | 
+| **S-Meter**                   (121) | Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value. | 
 
 
 ## CW Mode Settings (CW , `MENU_CW`)
 
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **CW Keyer Mode**             (070) | :soon:                                         | 
-| **CW Keyer Speed**            (071) | :soon:                                         | 
-| **CW Sidetone Gain**          (072) | :soon:                                         | 
-| **CW Side/Off Freq**          (073) | :soon:                                         | 
-| **CW Paddle Reverse**         (074) | :soon:                                         | 
-| **CW TX->RX Delay**           (075) | :soon:                                         | 
-| **CW Freq. Offset**           (076) | :soon:                                         | 
+| **CW Keyer Mode**             (070) | Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM) | 
+| **CW Keyer Speed**            (071) | Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode. | 
+| **CW Sidetone Gain**          (072) | Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode. | 
+| **CW Side/Offset Freq**       (073) | Sidetone Frequency (also Offset frequency, see CW Freq. Offset below) | 
+| **CW Paddle Reverse**         (074) | Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles. | 
+| **CW TX->RX Delay**           (075) | How long to stay in CW mode after stop sending a signal. | 
+| **CW Freq. Offset**           (076) | TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone. | 
+| **CW LSB/USB Select**         (031) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode | 
 
 
 ## Filter Selection (FIL, `MENU_FILTER`)
@@ -243,4 +244,6 @@
 
 
 [//]: # ( EOFILE                                                                       )
+
+           )
 
