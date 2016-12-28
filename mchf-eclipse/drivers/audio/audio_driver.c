@@ -1299,6 +1299,8 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
 {
     static bool recalculate_Osc = false;
+    float32_t hh1 = 0.0;
+    float32_t hh2 = 0.0;
     //
     // Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
     // frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
@@ -1367,6 +1369,67 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
         recalculate_Osc = false;	// signal that once we have generated the quadrature sine waves, we shall not do it again
     }
 
+
+    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
+    {
+ /**********************************************************************************
+ *  Frequency translation by Fs/4 without multiplication
+ *  Lyons (2011): chapter 13.1.2 page 646
+ *  this is supposed to be much more efficient than a standard quadrature oscillator
+ *  with precalculated sin waves
+ **********************************************************************************/
+      // this is for +Fs/4 [moves receive frequency to the left in the spectrum display]
+        for(int i = 0; i < blockSize; i += 4)
+    {   // float_buffer_L contains I = real values
+        // float_buffer_R contains Q = imaginary values
+        // xnew(0) =  xreal(0) + jximag(0)
+        // leave as it is!
+        // xnew(1) =  - ximag(1) + jxreal(1)
+        hh1 = - adb.q_buffer[i + 1];
+        hh2 =   adb.i_buffer[i + 1];
+            adb.i_buffer[i + 1] = hh1;
+            adb.q_buffer[i + 1] = hh2;
+        // xnew(2) = -xreal(2) - jximag(2)
+        hh1 = - adb.i_buffer[i + 2];
+        hh2 = - adb.q_buffer[i + 2];
+            adb.i_buffer[i + 2] = hh1;
+            adb.q_buffer[i + 2] = hh2;
+        // xnew(3) = + ximag(3) - jxreal(3)
+        hh1 =   adb.q_buffer[i + 3];
+        hh2 = - adb.i_buffer[i + 3];
+            adb.i_buffer[i + 3] = hh1;
+            adb.q_buffer[i + 3] = hh2;
+    }
+
+    }
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+    {
+      // this is for -Fs/4 [moves receive frequency to the right in the spectrumdisplay]
+    for(int i = 0; i < blockSize; i += 4)
+    {   // float_buffer_L contains I = real values
+        // float_buffer_R contains Q = imaginary values
+        // xnew(0) =  xreal(0) + jximag(0)
+        // leave as it is!
+        // xnew(1) =  ximag(1) - jxreal(1)
+        hh1 = adb.q_buffer[i + 1];
+        hh2 = - adb.i_buffer[i + 1];
+        adb.i_buffer[i + 1] = hh1;
+        adb.q_buffer[i + 1] = hh2;
+        // xnew(2) = -xreal(2) - jximag(2)
+        hh1 = - adb.i_buffer[i + 2];
+        hh2 = - adb.q_buffer[i + 2];
+        adb.i_buffer[i + 2] = hh1;
+        adb.q_buffer[i + 2] = hh2;
+        // xnew(3) = -ximag(3) + jxreal(3)
+        hh1 = - adb.q_buffer[i + 3];
+        hh2 = adb.i_buffer[i + 3];
+        adb.i_buffer[i + 3] = hh1;
+        adb.q_buffer[i + 3] = hh2;
+    }
+
+    }
+    else  // frequency translation +6kHz or -6kHz
+    {
     // Do frequency conversion using optimized ARM math functions [KA7OEI]
     arm_mult_f32(adb.q_buffer, adb.Osc_Q_buffer, adb.c_buffer, blockSize); // multiply products for converted I channel
     arm_mult_f32(adb.i_buffer, adb.Osc_I_buffer, adb.d_buffer, blockSize);
@@ -1382,6 +1445,7 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     {
         arm_add_f32(adb.c_buffer, adb.d_buffer, adb.q_buffer, blockSize);	// summation for I channel
         arm_sub_f32(adb.f_buffer, adb.e_buffer, adb.i_buffer, blockSize);	// difference for Q channel
+    }
     }
 }
 
