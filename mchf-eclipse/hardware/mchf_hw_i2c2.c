@@ -18,7 +18,7 @@
 #include "mchf_hw_i2c.h"
 #include "mchf_hw_i2c2.h"
 
-#define I2C2_SPEED             			400000 // was 25000
+#define I2C2_SPEED             			25000
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define I2C2_CLK                  	RCC_APB1Periph_I2C2

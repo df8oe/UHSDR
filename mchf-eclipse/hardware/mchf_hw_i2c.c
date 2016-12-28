@@ -21,9 +21,9 @@
 #define I2C1_LONG_TIMEOUT          		((uint32_t)(300 * I2C1_FLAG_TIMEOUT))
 
 // #define I2C1_SPEED             		    400000 // too high, does not work
-// #define I2C1_SPEED             		    100000
-#define I2C1_SPEED                      200000
-//#define I2C1_SPEED           			25000
+#define I2C1_SPEED             		    100000
+// #define I2C1_SPEED                      200000
+// #define I2C1_SPEED           			25000
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define SI570_I2C                      	I2C1
