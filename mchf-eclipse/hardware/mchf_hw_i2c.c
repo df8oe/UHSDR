@@ -20,8 +20,9 @@
 #define I2C1_FLAG_TIMEOUT          		((uint32_t)0x500)
 #define I2C1_LONG_TIMEOUT          		((uint32_t)(300 * I2C1_FLAG_TIMEOUT))
 
-//#define I2C1_SPEED             		400000
-#define I2C1_SPEED             			100000
+// #define I2C1_SPEED             		    400000 // too high, does not work
+// #define I2C1_SPEED             		    100000
+#define I2C1_SPEED                      200000
 //#define I2C1_SPEED           			25000
 
 // I2C peripheral configuration defines (control interface of the si570)
@@ -194,7 +195,7 @@ void mchf_hw_i2c1_init(void)
     // CODEC_I2C SCL and SDA pins configuration
     GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 
     GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;		// - strong ringing on the bus

@@ -446,7 +446,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             // We mute the audio BEFORE we activate the PTT.
             // This is necessary since U3 is switched the instant that we do so,
             // rerouting audio paths and causing all sorts of disruption including CLICKs and squeaks.
-            Codec_PrepareTx(ts.txrx_mode);
+            Codec_PrepareTx(ts.txrx_mode); // 5ms
 
             while (ts.audio_dac_muting_buffer_count >0)
             {
@@ -466,6 +466,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
         df.tune_new = tune_new;
         RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
+        // ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
 
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
         if (txrx_mode_final == TRX_MODE_TX)
@@ -513,7 +514,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             else
             {
                 RadioManagement_SetPaBias();
-                uint32_t input_mute_time = 0, dac_mute_time = 2, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
+                uint32_t input_mute_time = 0, dac_mute_time = 0, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
                 // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
                 dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
 
