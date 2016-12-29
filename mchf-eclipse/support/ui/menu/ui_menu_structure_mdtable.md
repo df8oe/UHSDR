@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-28T17:15:30  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-29T21:11:30  by  ui_menu_structure_mdtable.py )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
 [//]: # (                                                                              )
@@ -48,37 +48,37 @@
 
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **Save Out-Of-Band Freq.**    (232) | :soon:                                         | 
-| **TX on Out-Of-Band Freq.**   (207) | :soon:                                         | 
-| **Transmit Disable**          (203) | :soon:                                         | 
-| **Menu SW on TX disable**     (204) | :soon:                                         | 
-| **TX Mute LineOut**           (205) | :soon:                                         | 
+| **Save Out-Of-Band Freq.**    (232) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
+| **TX on Out-Of-Band Freq.**   (207) | Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load! | 
+| **Transmit Disable**          (203) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made. | 
+| **Menu SW on TX disable**     (204) | Control if the screen automatically adapts Encoder value focus when switching between RX and TX. | 
+| **TX Mute LineOut**           (205) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
 | **TX Initial Muting Time**    (206) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. | 
 | **Max Volume**                (210) | :soon:                                         | 
 | **Max RX Gain (0=Max)**       (211) | :soon:                                         | 
-| **Key Beep**                  (212) | :soon:                                         | 
-| **Beep Frequency**            (213) | :soon:                                         | 
-| **Beep Volume**               (214) | :soon:                                         | 
-| **CAT Mode**                  (220) | :soon:                                         | 
-| **CAT Running In Sandbox**    (530) | :soon:                                         | 
-| **CAT-IQ-FREQ-XLAT**          (400) | :soon:                                         | 
+| **Key Beep**                  (212) | If ON each keypress will generate a short beep | 
+| **Beep Frequency**            (213) | Set beep frequency in Hz.                      | 
+| **Beep Volume**               (214) | Set beep volume.                               | 
+| **CAT Mode**                  (220) | Enabled the FT 817 emulation via USB. See Wiki for more information. | 
+| **CAT Running In Sandbox**    (530) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
+| **CAT-DIQ-FREQ-XLAT**         (400) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF, it reports the displayed frequency. If ON, it reports the center frequency, which is more useful with SDR programs. | 
 | **XVTR Offs/Mult**            (280) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. | 
 | **XVTR Offset**               (281) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
-| **Step Button Swap**          (201) | :soon:                                         | 
-| **Band+/- Button Swap**       (202) | :soon:                                         | 
-| **Reverse Touchscreen**       (122) | :soon:                                         | 
-| **Voltmeter Cal.**            (208) | :soon:                                         | 
-| **Freq. Calibrate**           (230) | :soon:                                         | 
+| **Step Button Swap**          (201) | If ON, Step- behaves like Step+ and vice versa. | 
+| **Band+/- Button Swap**       (202) | If ON, Band- behaves like Band+ and vice versa. | 
+| **Reverse Touchscreen**       (122) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
+| **Voltmeter Cal.**            (208) | Adjusts the displayed value of the voltmeter.  | 
+| **Freq. Calibrate**           (230) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Det. Null**            (271) | :soon:                                         | 
 | **FWD/REV ADC Swap.**         (276) | :soon:                                         | 
-| **RX IQ Balance (80m)**       (240) | :soon:                                         | 
-| **RX IQ Phase   (80m)**       (241) | :soon:                                         | 
-| **RX IQ Balance (10m)**       (242) | :soon:                                         | 
-| **RX IQ Phase   (10m)**       (243) | :soon:                                         | 
-| **TX IQ Balance (80m)**       (250) | :soon:                                         | 
-| **TX IQ Phase   (80m)**       (251) | :soon:                                         | 
-| **TX IQ Balance (10m)**       (252) | :soon:                                         | 
-| **TX IQ Phase   (10m)**       (253) | :soon:                                         | 
+| **RX IQ Balance (80m)**       (240) | See Wiki Adjustments and Calibration.          | 
+| **RX IQ Phase   (80m)**       (241) | See Wiki Adjustments and Calibration.          | 
+| **RX IQ Balance (10m)**       (242) | See Wiki Adjustments and Calibration.          | 
+| **RX IQ Phase   (10m)**       (243) | See Wiki Adjustments and Calibration.          | 
+| **TX IQ Balance (80m)**       (250) | See Wiki Adjustments and Calibration.          | 
+| **TX IQ Phase   (80m)**       (251) | See Wiki Adjustments and Calibration.          | 
+| **TX IQ Balance (10m)**       (252) | See Wiki Adjustments and Calibration.          | 
+| **TX IQ Phase   (10m)**       (253) | See Wiki Adjustments and Calibration.          | 
 | **DSP NR BufLen**             (310) | :soon:                                         | 
 | **DSP NR FFT NumTaps**        (311) | :soon:                                         | 
 | **DSP NR Post-AGC**           (312) | :soon:                                         | 
@@ -86,7 +86,7 @@
 | **DSP Notch BufLen**          (314) | :soon:                                         | 
 | **DSP Notch FFTNumTap**       (315) | :soon:                                         | 
 | **NB AGC T/C (<=Slow)**       (320) | :soon:                                         | 
-| **Reset Config EEPROM**       (341) | :soon:                                         | 
+| **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
 ## Display Menu (DIS, `MENU_DISPLAY`)
@@ -94,31 +94,30 @@
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **LCD Auto Blank**            (090) | :soon:                                         | 
-| **Step Size Marker**          (091) | :soon:                                         | 
+| **Step Size Marker**          (091) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
 | **Filter BW Display**         (092) | :soon:                                         | 
-| **Spectrum Type**             (109) | :soon:                                         | 
-| **Spectrum Magnify**          (105) | :soon:                                         | 
-| **Spectrum Size**             (117) | :soon:                                         | 
+| **Spectrum Type**             (109) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
+| **Spectrum Magnify**          (105) | Select level of magnification of spectrum. Also changeable via touch screen. | 
+| **Spectrum Size**             (117) | Change height of spectrum display              | 
 | **Spectrum Filter**           (101) | :soon:                                         | 
-| **Spec FreqScaleClr**         (104) | :soon:                                         | 
-| **Spectrum LineClr**          (108) | :soon:                                         | 
-| **Spectrum FFT**              (340) | :soon:                                         | 
-| **Scope Light**               ( 99) | :soon:                                         | 
-| **Scope 1/Speed**             (100) | :soon:                                         | 
+| **Spec FreqScale Colour**     (104) | :soon:                                         | 
+| **Spec Line Colour**          (108) | :soon:                                         | 
+| **Spectrum FFT Wind.**        (340) | Selects the use window algorithm for spectrum FFT | 
+| **Scope Light**               ( 99) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
+| **Scope 1/Speed**             (100) | Lower Values: Higher refresh rate              | 
 | **Scope AGC Adj.**            (106) | :soon:                                         | 
 | **Scope Trace Colour**        (102) | :soon:                                         | 
 | **Scope Grid Colour**         (103) | :soon:                                         | 
 | **Scope Div.**                (107) | :soon:                                         | 
 | **Scope NoSig Adj.**          (115) | :soon:                                         | 
-| **Wfall 1/Speed**             (114) | :soon:                                         | 
-| **Wfall Colours**             (110) | :soon:                                         | 
-| **Wfall Step Size**           (111) | :soon:                                         | 
+| **Wfall 1/Speed**             (114) | Lower Values: Higher refresh rate.             | 
+| **Wfall Colours**             (110) | Select colour scheme for waterfall display.    | 
+| **Wfall Step Size**           (111) | How many lines are moved in a single screen update | 
 | **Wfall Brightness**          (112) | :soon:                                         | 
 | **Wfall Contrast**            (113) | :soon:                                         | 
 | **Wfall NoSig Adj.**          (116) | :soon:                                         | 
-| **S-Meter**                   (121) | :soon:                                         | 
-| **Meter Colour Up**           (122) | :soon:                                         | 
-| **Meter Colour Down**         (123) | :soon:                                         | 
+| **Upper Meter Colour**        (122) | Set the colour of the scale of combined S/Power-Meter | 
+| **Lower Meter Colour**        (123) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (120) | Enable an additional numeric display of the RX signal strength | 
 | **S-Meter**                   (121) | Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value. | 
 
@@ -165,11 +164,11 @@
 
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **Tune Power Level**          (P00) | :soon:                                         | 
-| **Tune Tone (SSB)**           (P99) | :soon:                                         | 
-| **Reduce Power on Low Bands** (P0A) | :soon:                                         | 
-| **CW PA Bias (If >0 )**       (260) | :soon:                                         | 
-| **PA Bias**                   (261) | :soon:                                         | 
+| **Tune Power Level**          (P00) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
+| **Tune Tone (SSB)**           (P99) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
+| **CW PA Bias (If >0 )**       (260) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
+| **Reduce Power on Low Bands** (P0A) | If set (recommended!)  frequencies below 8Mhz require higher power adjust values. This permits better control of generated power on these frequencies. | 
+| **PA Bias**                   (261) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
 | **2200m 5W PWR Adjust**       (P01) | :soon:                                         | 
 | **630m  5W PWR Adjust**       (P02) | :soon:                                         | 
 | **160m  5W PWR Adjust**       (P03) | :soon:                                         | 
