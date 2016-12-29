@@ -185,7 +185,7 @@ void MchfHw_I2C_Init(I2C_TypeDef* bus, uint32_t speed)
     I2C_InitTypeDef I2C_InitStructure;
 
     // CODEC_I2C peripheral configuration
-    I2C_DeInit(SI570_I2C);
+    I2C_DeInit(bus);
     I2C_InitStructure.I2C_Mode                  = I2C_Mode_I2C;
     I2C_InitStructure.I2C_DutyCycle             = I2C_DutyCycle_2;
     I2C_InitStructure.I2C_OwnAddress1           = 0x33;
@@ -216,15 +216,6 @@ void MchfHw_I2C_Reset(I2C_TypeDef* bus, uint32_t speed)
 void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    GPIO_TypeDef* GPIOx;
-    if (bus == I2C1)
-    {
-        GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
-    }
-    else if (bus == I2C2)
-    {
-        GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN|I2C2_SDA_PIN;
-    }
 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -239,6 +230,8 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
 
     if (bus == I2C1)
     {
+        GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
+
         GPIO_Init(I2C1_GPIO, &GPIO_InitStructure);
 
         GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
@@ -246,6 +239,8 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
     }
     else if (bus == I2C2)
     {
+        GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN|I2C2_SDA_PIN;
+
         GPIO_Init(I2C2_GPIO, &GPIO_InitStructure);
 
         GPIO_PinAFConfig(I2C2_GPIO, I2C2_SCL_PINSRC, GPIO_AF_I2C2);
