@@ -397,7 +397,6 @@ static float32_t* FreeDV_coeffs[1] =
 
 
 
-
 // variables for FM squelch IIR filters
 static float32_t	iir_squelch_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_Squelch_HPF;
@@ -1377,12 +1376,11 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
  *  Lyons (2011): chapter 13.1.2 page 646
  *  this is supposed to be much more efficient than a standard quadrature oscillator
  *  with precalculated sin waves
+ *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
  **********************************************************************************/
       // this is for +Fs/4 [moves receive frequency to the left in the spectrum display]
         for(int i = 0; i < blockSize; i += 4)
-    {   // float_buffer_L contains I = real values
-        // float_buffer_R contains Q = imaginary values
-        // xnew(0) =  xreal(0) + jximag(0)
+    {   // xnew(0) =  xreal(0) + jximag(0)
         // leave as it is!
         // xnew(1) =  - ximag(1) + jxreal(1)
         hh1 = - adb.q_buffer[i + 1];
@@ -1404,11 +1402,9 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     }
     else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
     {
-      // this is for -Fs/4 [moves receive frequency to the right in the spectrumdisplay]
+      // this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
     for(int i = 0; i < blockSize; i += 4)
-    {   // float_buffer_L contains I = real values
-        // float_buffer_R contains Q = imaginary values
-        // xnew(0) =  xreal(0) + jximag(0)
+    {   // xnew(0) =  xreal(0) + jximag(0)
         // leave as it is!
         // xnew(1) =  ximag(1) - jxreal(1)
         hh1 = adb.q_buffer[i + 1];
@@ -2625,6 +2621,97 @@ static bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, AudioSampl
 }
 #endif
 
+
+//*----------------------------------------------------------------------------
+//* Function Name       : SAM_demodulation [DD4WH, december 2016]
+//* Object              : real synchronous AM demodulation with phase detector and PLL
+//* Object              :
+//* Input Parameters    : adb.i_buffer, adb.q_buffer
+//* Output Parameters   : adb.a_buffer
+//* Functions called    :
+//*----------------------------------------------------------------------------
+
+static void AudioDriver_DemodSAM(int16_t blockSize)
+{
+	// new synchronous AM PLL & PHASE detector
+	// wdsp Warren Pratt, 2016
+	const float32_t DF = 1.0;
+	const float32_t pll_fmin = -4000.0;
+	const float32_t pll_fmax = +4000.0;
+	// DX adjustments: zeta = 0.15, omegaN = 100.0
+	// very stable, but does not lock very fast
+	// standard settings: zeta = 1.0, omegaN = 250.0
+	// maybe user can choose between slow (DX), medium, fast SAM PLL
+	// zeta / omegaN
+	// DX = 0.2, 70
+	// medium 0.6, 200
+	// fast 1.2, 500
+	const float32_t zeta = 0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+	const float32_t omegaN = 200.0; // PLL bandwidth 50.0 - 1000.0
+
+	  //pll
+	//const float32_t omega_min = 2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F;
+	const float32_t  omega_min = (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
+	const float32_t  omega_max = (2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
+	const float32_t  g1 = (1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
+	const float32_t  g2 = (- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F) * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
+
+	  //fade leveler
+	const float32_t tauR = 0.02; // original 0.02;
+	const float32_t tauI = 1.4; // original 1.4;
+	const float32_t  mtauR = (exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
+	const float32_t onem_mtauR = (1.0 - mtauR);
+	const float32_t  mtauI = (exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
+	const float32_t  onem_mtauI = (1.0 - mtauI);
+	//*****************************
+		static float32_t Sin = 0.0;
+		static float32_t Cos = 0.0;
+		static float32_t tmp_re = 0.0;
+		static float32_t tmp_im = 0.0;
+		static float32_t phzerror = 0.0;
+		static float32_t phs = 0.0;
+		static float32_t fil_out = 0.0;
+		static float32_t del_out = 0.0;
+		static float32_t omega2 = 0.0;
+		static float32_t dc = 0.0;
+		static float32_t dc_insert = 0.0;
+
+
+
+          // Wheatley 2011 cuteSDR & Warren Pratt´s WDSP, 2016
+        for(int i = 0; i < blockSize; i++)
+        {
+            Sin = sinf(phs);
+            Cos = cosf(phs);
+            //            tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
+            //            tmp_im = Cos * adb.q_buffer[i] + Sin * adb.i_buffer[i];
+            tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
+            tmp_im = Cos * adb.q_buffer[i] + Sin * adb.i_buffer[i];
+            phzerror = -atan2f(tmp_im, tmp_re);
+
+                del_out = fil_out;
+                omega2 = omega2 + g2 * phzerror;
+                if (omega2 < omega_min) omega2 = omega_min;
+                else if (omega2 > omega_max) omega2 = omega_max;
+                fil_out = g1 * phzerror + omega2;
+                phs = phs + del_out;
+
+
+            // "fade leveler", taken from Warren Pratts´ WDSP / HPSDR, 2016
+            // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
+            dc = mtauR * dc + onem_mtauR * tmp_re;
+            dc_insert = mtauI * dc_insert + onem_mtauI * tmp_re;
+            tmp_re = tmp_re + dc_insert - dc;
+            adb.a_buffer[i] = tmp_re;
+
+            // wrap round 2PI, modulus
+            while (phs >= 2.0 * PI) phs -= 2.0 * PI;
+            while (phs < 0.0) phs += 2.0 * PI;
+        }
+
+}
+
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -2756,16 +2843,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     if (dvmode_signal == false)
     {
-        // TODO: Verify if comment is still valid, since code below is run in all modes even AM!
         // ------------------------
-        // IQ SSB processing - Do 0-90 degree Phase-added Hilbert Transform
-        // *** *EXCEPT* in AM mode
-        //    In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
-        //    which case there is ***NO*** audio phase shift applied to the I/Q channels.
+        // In SSB and SAM - Do 0-90 degree Phase-added Hilbert Transform
+        // In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
+        // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // shift 0 degree FIR+LPF
-        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // shift -90 degrees FIR+LPF
+        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
 
 
         switch(dmod_mode)
@@ -2794,9 +2879,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
             break;
         case DEMOD_SAM:
+//        	AudioDriver_DemodSAM(blockSize);
+        	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
+
             arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
             arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
             arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
+
             break;
         case DEMOD_FM:
             AudioDriver_DemodFM(blockSize);

@@ -25,6 +25,9 @@
 
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
+//const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
+
+
 
 
 
