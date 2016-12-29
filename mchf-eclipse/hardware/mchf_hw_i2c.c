@@ -26,7 +26,9 @@
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define SI570_I2C                      	I2C1
+
 #define I2C1_CLK                  		RCC_APB1Periph_I2C1
+
 #define SI570_I2C_GPIO_AF              	GPIO_AF_I2C1
 
 
@@ -256,7 +258,6 @@ void mchf_hw_i2c1_init()
 
 
     // CODEC_I2C SCL and SDA pins configuration
-
     MchfHw_I2C_GpioInit(I2C1);
 
     // Enable the CODEC_I2C peripheral clock
@@ -280,7 +281,7 @@ void mchf_hw_i2c2_init()
 
 void mchf_hw_i2c1_reset(void)
 {
-    MchfHw_I2C_Reset(I2C1,ts.i2c_speed[I2C_BUS_1]);
+    MchfHw_I2C_Reset(I2C1,ts.i2c_speed[I2C_BUS_1] * I2C_BUS_SPEED_MULT);
 }
 
 
