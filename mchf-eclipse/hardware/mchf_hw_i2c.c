@@ -17,28 +17,18 @@
 
 #include "mchf_hw_i2c.h"
 
-#define I2C1_FLAG_TIMEOUT          		((uint32_t)0x500)
-#define I2C1_LONG_TIMEOUT          		((uint32_t)(300 * I2C1_FLAG_TIMEOUT))
 
-#define I2C1_SPEED                      200000 //400000 does not work
+
+// I2C peripheral configuration defines (control interface of the si570)
+#define I2C2_CLK                    RCC_APB1Periph_I2C2
+#define I2C2_GPIO_AF                GPIO_AF_I2C2
+
 
 // I2C peripheral configuration defines (control interface of the si570)
 #define SI570_I2C                      	I2C1
 #define I2C1_CLK                  		RCC_APB1Periph_I2C1
 #define SI570_I2C_GPIO_AF              	GPIO_AF_I2C1
 
-__IO uint32_t  I2C1_Timeout = I2C1_LONG_TIMEOUT;
-
-
-#define I2C_FlagStatusOrReturn(BUS, FLAG, RETURN) { \
-		uint32_t timeout = I2C1_FLAG_TIMEOUT;\
-		while(I2C_GetFlagStatus((BUS), (FLAG)))\
-		{ if ((timeout--) == 0) { return (RETURN); } } }
-
-#define I2C_EventCompleteOrReturn(BUS,EVENT, RETURN) { \
-		uint32_t timeout = I2C1_LONG_TIMEOUT;\
-		while(!I2C_CheckEvent((BUS), (EVENT)))\
-		{ if ((timeout--) == 0) { return (RETURN); } } }
 
 
 uint16_t MCHF_I2C_StartTransfer(I2C_TypeDef* bus, uint8_t devaddr, uint8_t* data_ptr, uint16_t data_size, bool isWrite, bool isSingleByteRead)
@@ -184,68 +174,112 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void mchf_hw_i2c1_init(void)
+
+/**
+ * @brief init I2C
+ * @param speed in Hertz !!!
+ */
+void MchfHw_I2C_Init(I2C_TypeDef* bus, uint32_t speed)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
+
     I2C_InitTypeDef I2C_InitStructure;
 
-    // CODEC_I2C SCL and SDA pins configuration
-    GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
+    // CODEC_I2C peripheral configuration
+    I2C_DeInit(SI570_I2C);
+    I2C_InitStructure.I2C_Mode                  = I2C_Mode_I2C;
+    I2C_InitStructure.I2C_DutyCycle             = I2C_DutyCycle_2;
+    I2C_InitStructure.I2C_OwnAddress1           = 0x33;
+    I2C_InitStructure.I2C_Ack                   = I2C_Ack_Enable;
+    I2C_InitStructure.I2C_AcknowledgedAddress   = I2C_AcknowledgedAddress_7bit;
+    I2C_InitStructure.I2C_ClockSpeed            = speed;
+
+    // Enable the I2C peripheral
+    I2C_Cmd (bus, ENABLE);
+    I2C_Init(bus, &I2C_InitStructure);
+
+}
+
+void MchfHw_I2C_Reset(I2C_TypeDef* bus, uint32_t speed)
+{
+    I2C_SoftwareResetCmd(bus, ENABLE);
+    non_os_delay();
+    I2C_SoftwareResetCmd(bus, DISABLE);
+
+    I2C_Cmd (bus, DISABLE);
+    non_os_delay();
+    I2C_Cmd (bus, ENABLE);
+
+    // Init again
+    MchfHw_I2C_Init(bus,speed);
+}
+
+void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_TypeDef* GPIOx;
+    if (bus == I2C1)
+    {
+        GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
+        GPIOx = I2C1_GPIO;
+    }
+    else if (bus == I2C2)
+    {
+        GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN|I2C2_SDA_PIN;
+        GPIOx = I2C2_GPIO;
+    }
+    else
+    {
+        GPIOx = NULL;
+    }
+
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;		// - strong ringing on the bus
-    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN; 	// - makes it better
-    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;	// - same as pull down
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;       // - strong ringing on the bus
+    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;   // - makes it better
+    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // - same as pull down
 
-    GPIO_Init(I2C1_SCL_GPIO, &GPIO_InitStructure);
+    GPIO_Init(GPIOx, &GPIO_InitStructure);
 
     // Connect pins to I2C peripheral
-    GPIO_PinAFConfig(I2C1_SCL_GPIO, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
-    GPIO_PinAFConfig(I2C1_SDA_GPIO, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
+    GPIO_PinAFConfig(GPIOx, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
+    GPIO_PinAFConfig(GPIOx, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
+}
+
+/*
+ * @brief full init of I2C1 including GPIO and bus clock
+ */
+void mchf_hw_i2c1_init()
+{
+
+
+    // CODEC_I2C SCL and SDA pins configuration
+
+    MchfHw_I2C_GpioInit(I2C1);
 
     // Enable the CODEC_I2C peripheral clock
     RCC_APB1PeriphClockCmd(I2C1_CLK, ENABLE);
 
-    // CODEC_I2C peripheral configuration
-    I2C_DeInit(SI570_I2C);
-    I2C_InitStructure.I2C_Mode 					= I2C_Mode_I2C;
-    I2C_InitStructure.I2C_DutyCycle 			= I2C_DutyCycle_2;
-    I2C_InitStructure.I2C_OwnAddress1 			= 0x33;
-    I2C_InitStructure.I2C_Ack 					= I2C_Ack_Enable;
-    I2C_InitStructure.I2C_AcknowledgedAddress 	= I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed 			= I2C1_SPEED;
-
-    // Enable the I2C peripheral
-    I2C_Cmd (SI570_I2C, ENABLE);
-    I2C_Init(SI570_I2C, &I2C_InitStructure);
+    MchfHw_I2C_Init(I2C1, ts.i2c_speed[I2C_BUS_1] * I2C_BUS_SPEED_MULT);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : trx4m_i2c_reset
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/*
+ * @brief full init of I2C2 including GPIO and bus clock
+ */
+void mchf_hw_i2c2_init()
+{
+    MchfHw_I2C_GpioInit(I2C2);
+
+    // Enable the I2C2 peripheral clock
+    RCC_APB1PeriphClockCmd(I2C2_CLK, ENABLE);
+
+    MchfHw_I2C_Init(I2C2, ts.i2c_speed[I2C_BUS_2] * I2C_BUS_SPEED_MULT);
+}
+
 void mchf_hw_i2c1_reset(void)
 {
-    //printf("===========================\n\r");
-    //printf("i2c reset bus\n\r");
-    //printf("===========================\n\r");
-
-    I2C_SoftwareResetCmd(SI570_I2C, ENABLE);
-    non_os_delay();
-    I2C_SoftwareResetCmd(SI570_I2C, DISABLE);
-
-    I2C_Cmd (SI570_I2C, DISABLE);
-    non_os_delay();
-    I2C_Cmd (SI570_I2C, ENABLE);
-
-    // Init again
-    mchf_hw_i2c1_init();
+    MchfHw_I2C_Reset(I2C1,ts.i2c_speed[I2C_BUS_1]);
 }
 
 

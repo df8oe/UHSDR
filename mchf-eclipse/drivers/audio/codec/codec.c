@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 
-#include "mchf_hw_i2c2.h"
+#include "mchf_hw_i2c.h"
 #include "codec.h"
 
 // I2C addresses

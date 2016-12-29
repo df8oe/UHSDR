@@ -292,7 +292,6 @@
     <File name="drivers/freedv/codebookjvm.c" path="drivers/freedv/codebookjvm.c" type="1"/>
     <File name="drivers/freedv/fsk.c" path="drivers/freedv/fsk.c" type="1"/>
     <File name="drivers/audio/filters/iir_3_2k.c" path="drivers/audio/filters/iir_3_2k.c" type="1"/>
-    <File name="hardware/mchf_hw_i2c2.c" path="hardware/mchf_hw_i2c2.c" type="1"/>
     <File name="drivers/freedv/fsk.h" path="drivers/freedv/fsk.h" type="1"/>
     <File name="cmsis_lib/include/stm32f4xx_tim.h" path="cmsis_lib/include/stm32f4xx_tim.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_adc.c" path="cmsis_lib/source/stm32f4xx_adc.c" type="1"/>
@@ -317,7 +316,6 @@
     <File name="drivers/audio/filters/iir_5_5k.c" path="drivers/audio/filters/iir_5_5k.c" type="1"/>
     <File name="misc/config_storage.c" path="misc/config_storage.c" type="1"/>
     <File name="drivers/audio/filters/filters.h" path="drivers/audio/filters/filters.h" type="1"/>
-    <File name="hardware/mchf_hw_i2c2.h" path="hardware/mchf_hw_i2c2.h" type="1"/>
     <File name="drivers/freedv/pilot_coeff.h" path="drivers/freedv/pilot_coeff.h" type="1"/>
     <File name="drivers/audio/codec" path="" type="2"/>
     <File name="usb/otg/inc/usb_hcd.h" path="usb/otg/inc/usb_hcd.h" type="1"/>
