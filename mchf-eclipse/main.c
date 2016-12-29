@@ -19,7 +19,7 @@
 #include <stdio.h>
 
 // serial EEPROM driver
-#include "mchf_hw_i2c2.h"
+#include "mchf_hw_i2c.h"
 
 // Audio Driver
 #include "audio_driver.h"
@@ -442,6 +442,8 @@ void TransceiverStateInit(void)
     }
 
 
+    ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
+    ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 }
 
 

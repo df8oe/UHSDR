@@ -15,7 +15,6 @@
 // Common
 #include "mchf_board.h"
 #include "mchf_hw_i2c.h"
-#include "mchf_hw_i2c2.h"
 
 #include "serial_eeprom.h"
 

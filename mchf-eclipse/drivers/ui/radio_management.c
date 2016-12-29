@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-// serial EEPROM driver
-#include "mchf_hw_i2c2.h"
+
+#include "mchf_hw_i2c.h"
 
 #include "freedv_mchf.h"
 // SI570 control

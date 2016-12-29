@@ -30,8 +30,7 @@
 // LCD
 #include "ui_lcd_hy28.h" // for colors!
 
-// serial EEPROM driver
-#include "mchf_hw_i2c2.h"
+#include "mchf_hw_i2c.h"
 
 // Codec control
 #include "codec.h"
