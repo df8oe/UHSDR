@@ -14,7 +14,6 @@
 
 // Common
 #include "mchf_board.h"
-
 #include "mchf_hw_i2c.h"
 
 
@@ -25,12 +24,7 @@
 
 
 // I2C peripheral configuration defines (control interface of the si570)
-#define SI570_I2C                      	I2C1
-
 #define I2C1_CLK                  		RCC_APB1Periph_I2C1
-
-#define SI570_I2C_GPIO_AF              	GPIO_AF_I2C1
-
 
 
 uint16_t MCHF_I2C_StartTransfer(I2C_TypeDef* bus, uint8_t devaddr, uint8_t* data_ptr, uint16_t data_size, bool isWrite, bool isSingleByteRead)
@@ -181,8 +175,20 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
  * @brief init I2C
  * @param speed in Hertz !!!
  */
-void MchfHw_I2C_Init(I2C_TypeDef* bus, uint32_t speed)
+void MchfHw_I2C_Init(I2C_TypeDef* bus)
 {
+
+    uint8_t speedIdx;
+
+    if (bus == I2C1)
+    {
+        speedIdx = I2C_BUS_1;
+    }
+    else
+    {
+        speedIdx = I2C_BUS_2;
+    }
+
 
     I2C_InitTypeDef I2C_InitStructure;
 
@@ -193,7 +199,7 @@ void MchfHw_I2C_Init(I2C_TypeDef* bus, uint32_t speed)
     I2C_InitStructure.I2C_OwnAddress1           = 0x33;
     I2C_InitStructure.I2C_Ack                   = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress   = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed            = speed;
+    I2C_InitStructure.I2C_ClockSpeed            = ts.i2c_speed[speedIdx] * I2C_BUS_SPEED_MULT;
 
     // Enable the I2C peripheral
     I2C_Cmd (bus, ENABLE);
@@ -201,7 +207,7 @@ void MchfHw_I2C_Init(I2C_TypeDef* bus, uint32_t speed)
 
 }
 
-void MchfHw_I2C_Reset(I2C_TypeDef* bus, uint32_t speed)
+void MchfHw_I2C_Reset(I2C_TypeDef* bus)
 {
     I2C_SoftwareResetCmd(bus, ENABLE);
     non_os_delay();
@@ -211,9 +217,9 @@ void MchfHw_I2C_Reset(I2C_TypeDef* bus, uint32_t speed)
     non_os_delay();
     I2C_Cmd (bus, ENABLE);
 
-    // Init again
-    MchfHw_I2C_Init(bus,speed);
-}
+    // MchfHw_I2C_Init(bus);
+    mchf_hw_i2c1_init();
+};
 
 void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
 {
@@ -236,8 +242,8 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
 
         GPIO_Init(I2C1_GPIO, &GPIO_InitStructure);
 
-        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
-        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
+        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, GPIO_AF_I2C1);
+        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SDA_PINSRC, GPIO_AF_I2C1);
     }
     else if (bus == I2C2)
     {
@@ -257,13 +263,14 @@ void mchf_hw_i2c1_init()
 {
 
 
-    // CODEC_I2C SCL and SDA pins configuration
+    // I2C SCL and SDA pins configuration
     MchfHw_I2C_GpioInit(I2C1);
 
-    // Enable the CODEC_I2C peripheral clock
+    // Enable the I2C peripheral clock
     RCC_APB1PeriphClockCmd(I2C1_CLK, ENABLE);
 
-    MchfHw_I2C_Init(I2C1, ts.i2c_speed[I2C_BUS_1] * I2C_BUS_SPEED_MULT);
+    // Enabled I2S peripheral
+    MchfHw_I2C_Init(I2C1);
 }
 
 /*
@@ -276,33 +283,30 @@ void mchf_hw_i2c2_init()
     // Enable the I2C2 peripheral clock
     RCC_APB1PeriphClockCmd(I2C2_CLK, ENABLE);
 
-    MchfHw_I2C_Init(I2C2, ts.i2c_speed[I2C_BUS_2] * I2C_BUS_SPEED_MULT);
+    MchfHw_I2C_Init(I2C2);
 }
 
 void mchf_hw_i2c1_reset(void)
 {
-    MchfHw_I2C_Reset(I2C1,ts.i2c_speed[I2C_BUS_1] * I2C_BUS_SPEED_MULT);
+    MchfHw_I2C_Reset(I2C1);
 }
-
-
 
 uint16_t mchf_hw_i2c1_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
 {
-    return MCHF_I2C_WriteRegister(SI570_I2C, I2CAddr, &RegisterAddr, 1, RegisterValue);
+    return MCHF_I2C_WriteRegister(I2C1, I2CAddr, &RegisterAddr, 1, RegisterValue);
 }
 
 uint16_t mchf_hw_i2c1_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-    return MCHF_I2C_WriteBlock(SI570_I2C, I2CAddr,&RegisterAddr, 1, data, size);
+    return MCHF_I2C_WriteBlock(I2C1, I2CAddr,&RegisterAddr, 1, data, size);
 }
 
 uint16_t mchf_hw_i2c1_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
 {
-    return MCHF_I2C_ReadRegister(SI570_I2C, I2CAddr,&RegisterAddr, 1, RegisterValue);
+    return MCHF_I2C_ReadRegister(I2C1, I2CAddr,&RegisterAddr, 1, RegisterValue);
 }
 
 uint16_t mchf_hw_i2c1_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-    return MCHF_I2C_ReadBlock(SI570_I2C, I2CAddr, &RegisterAddr, 1, data, size);
+    return MCHF_I2C_ReadBlock(I2C1, I2CAddr, &RegisterAddr, 1, data, size);
 }
-

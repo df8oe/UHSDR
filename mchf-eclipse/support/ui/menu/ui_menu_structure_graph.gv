@@ -2,7 +2,7 @@
     #  
     #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
     #  
-    #  generated from  <${BUILD_ID}>  at  2016-12-28T17:15:28  by  ui_menu_structure_graph.py
+    #  generated from  <${BUILD_ID}>  at  2016-12-29T21:11:27  by  ui_menu_structure_graph.py
     #  
     #  mcHF SDR TRX - Menu Structure Diagram in DOT-language
     #  
@@ -11,7 +11,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF - Menus Overview\ngenerated from  <${BUILD_ID}>  at  2016-12-28T17:15:28  by  ui_menu_structure_graph.py",
+                label = "\nmcHF - Menus Overview\ngenerated from  <${BUILD_ID}>  at  2016-12-29T21:11:27  by  ui_menu_structure_graph.py",
               ];
        
         rankdir=LR
@@ -245,17 +245,17 @@
              ];
         
         "MENU_SPECTRUM_FREQSCALE_COLOUR" [
-             label = "MENU_SPECTRUM_FREQSCALE_COLOUR (104) | Spec FreqScaleClr"
+             label = "MENU_SPECTRUM_FREQSCALE_COLOUR (104) | Spec FreqScale Colour"
              shape = record
              ];
         
         "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
-             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR (108) | Spectrum LineClr"
+             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR (108) | Spec Line Colour"
              shape = record
              ];
         
         "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
-             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE (340) | Spectrum FFT"
+             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE (340) | Spectrum FFT Wind."
              shape = record
              ];
         
@@ -324,18 +324,13 @@
              shape = record
              ];
         
-        "MENU_S_METER" [
-             label = "MENU_S_METER (121) | S-Meter"
-             shape = record
-             ];
-        
         "MENU_METER_COLOUR_UP" [
-             label = "MENU_METER_COLOUR_UP (122) | Meter Colour Up"
+             label = "MENU_METER_COLOUR_UP (122) | Upper Meter Colour"
              shape = record
              ];
         
         "MENU_METER_COLOUR_DOWN" [
-             label = "MENU_METER_COLOUR_DOWN (123) | Meter Colour Down"
+             label = "MENU_METER_COLOUR_DOWN (123) | Lower Meter Colour"
              shape = record
              ];
         
@@ -455,7 +450,7 @@
              ];
         
         "CONFIG_CAT_XLAT" [
-             label = "CONFIG_CAT_XLAT (400) | CAT-IQ-FREQ-XLAT"
+             label = "CONFIG_CAT_XLAT (400) | CAT-DIQ-FREQ-XLAT"
              shape = record
              ];
         
@@ -594,13 +589,13 @@
              shape = record
              ];
         
-        "CONFIG_REDUCE_POWER_ON_LOW_BANDS" [
-             label = "CONFIG_REDUCE_POWER_ON_LOW_BANDS (P0A) | Reduce Power on Low Bands"
+        "CONFIG_CW_PA_BIAS" [
+             label = "CONFIG_CW_PA_BIAS (260) | CW PA Bias (If \>0 )"
              shape = record
              ];
         
-        "CONFIG_CW_PA_BIAS" [
-             label = "CONFIG_CW_PA_BIAS (260) | CW PA Bias (If \>0 )"
+        "CONFIG_REDUCE_POWER_ON_LOW_BANDS" [
+             label = "CONFIG_REDUCE_POWER_ON_LOW_BANDS (P0A) | Reduce Power on Low Bands"
              shape = record
              ];
         
@@ -1124,8 +1119,8 @@
     
             MENU_POW -> CONFIG_TUNE_POWER_LEVEL
             MENU_POW -> CONFIG_TUNE_TONE_MODE
-            MENU_POW -> CONFIG_REDUCE_POWER_ON_LOW_BANDS
             MENU_POW -> CONFIG_CW_PA_BIAS
+            MENU_POW -> CONFIG_REDUCE_POWER_ON_LOW_BANDS
             MENU_POW -> CONFIG_PA_BIAS
             MENU_POW -> CONFIG_2200M_5W_ADJUST
             MENU_POW -> CONFIG_630M_5W_ADJUST
@@ -1245,7 +1240,6 @@
             MENU_DISPLAY -> MENU_WFALL_OFFSET
             MENU_DISPLAY -> MENU_WFALL_CONTRAST
             MENU_DISPLAY -> MENU_WFALL_NOSIG_ADJUST
-            MENU_DISPLAY -> MENU_S_METER
             MENU_DISPLAY -> MENU_METER_COLOUR_UP
             MENU_DISPLAY -> MENU_METER_COLOUR_DOWN
             MENU_DISPLAY -> MENU_DBM_DISPLAY

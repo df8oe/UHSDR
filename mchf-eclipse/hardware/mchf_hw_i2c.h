@@ -44,7 +44,7 @@ uint16_t 	mchf_hw_i2c1_ReadRegister (uchar I2CAddr,uchar RegisterAddr, uchar *Re
 uint16_t 	mchf_hw_i2c1_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size);
 
 #define MCHF_I2C_FLAG_TIMEOUT                ((uint32_t)0x500)
-#define MCHF_I2C_LONG_TIMEOUT                ((uint32_t)(300 * I2C_FLAG_TIMEOUT))
+#define MCHF_I2C_LONG_TIMEOUT                ((uint32_t)(300 * MCHF_I2C_FLAG_TIMEOUT))
 
 
 #define I2C_FlagStatusOrReturn(BUS, FLAG, RETURN) { \
