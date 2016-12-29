@@ -234,17 +234,20 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
     //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;   // - makes it better
     //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // - same as pull down
 
-    GPIO_Init(GPIOx, &GPIO_InitStructure);
 
     // Connect pins to I2C peripheral
 
     if (bus == I2C1)
     {
+        GPIO_Init(I2C1_GPIO, &GPIO_InitStructure);
+
         GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
         GPIO_PinAFConfig(I2C1_GPIO, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
     }
     else if (bus == I2C2)
     {
+        GPIO_Init(I2C2_GPIO, &GPIO_InitStructure);
+
         GPIO_PinAFConfig(I2C2_GPIO, I2C2_SCL_PINSRC, GPIO_AF_I2C2);
         GPIO_PinAFConfig(I2C2_GPIO, I2C2_SDA_PINSRC, GPIO_AF_I2C2);
     }
