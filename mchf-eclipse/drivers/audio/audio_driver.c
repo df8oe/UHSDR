@@ -1369,60 +1369,65 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     }
 
 
-    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
     {
- /**********************************************************************************
- *  Frequency translation by Fs/4 without multiplication
- *  Lyons (2011): chapter 13.1.2 page 646
- *  this is supposed to be much more efficient than a standard quadrature oscillator
- *  with precalculated sin waves
- *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
- **********************************************************************************/
+    	/**********************************************************************************
+    	 *  Frequency translation by Fs/4 without multiplication
+    	 *  Lyons (2011): chapter 13.1.2 page 646
+    	 *  this is supposed to be much more efficient than a standard quadrature oscillator
+    	 *  with precalculated sin waves
+    	 *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
+    	 **********************************************************************************/
+    	if(dir)
+    	{
+
       // this is for +Fs/4 [moves receive frequency to the left in the spectrum display]
         for(int i = 0; i < blockSize; i += 4)
-    {   // xnew(0) =  xreal(0) + jximag(0)
-        // leave as it is!
-        // xnew(1) =  - ximag(1) + jxreal(1)
-        hh1 = - adb.q_buffer[i + 1];
-        hh2 =   adb.i_buffer[i + 1];
+        {   // xnew(0) =  xreal(0) + jximag(0)
+        	// leave as it is!
+        	// xnew(1) =  - ximag(1) + jxreal(1)
+        	hh1 = - adb.q_buffer[i + 1];
+        	hh2 =   adb.i_buffer[i + 1];
             adb.i_buffer[i + 1] = hh1;
             adb.q_buffer[i + 1] = hh2;
-        // xnew(2) = -xreal(2) - jximag(2)
-        hh1 = - adb.i_buffer[i + 2];
-        hh2 = - adb.q_buffer[i + 2];
+            // xnew(2) = -xreal(2) - jximag(2)
+            hh1 = - adb.i_buffer[i + 2];
+            hh2 = - adb.q_buffer[i + 2];
             adb.i_buffer[i + 2] = hh1;
             adb.q_buffer[i + 2] = hh2;
-        // xnew(3) = + ximag(3) - jxreal(3)
-        hh1 =   adb.q_buffer[i + 3];
-        hh2 = - adb.i_buffer[i + 3];
+            // xnew(3) = + ximag(3) - jxreal(3)
+            hh1 =   adb.q_buffer[i + 3];
+            hh2 = - adb.i_buffer[i + 3];
             adb.i_buffer[i + 3] = hh1;
             adb.q_buffer[i + 3] = hh2;
-    }
+        }
 
-    }
-    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-    {
-      // this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
-    for(int i = 0; i < blockSize; i += 4)
-    {   // xnew(0) =  xreal(0) + jximag(0)
-        // leave as it is!
-        // xnew(1) =  ximag(1) - jxreal(1)
-        hh1 = adb.q_buffer[i + 1];
-        hh2 = - adb.i_buffer[i + 1];
-        adb.i_buffer[i + 1] = hh1;
-        adb.q_buffer[i + 1] = hh2;
-        // xnew(2) = -xreal(2) - jximag(2)
-        hh1 = - adb.i_buffer[i + 2];
-        hh2 = - adb.q_buffer[i + 2];
-        adb.i_buffer[i + 2] = hh1;
-        adb.q_buffer[i + 2] = hh2;
-        // xnew(3) = -ximag(3) + jxreal(3)
-        hh1 = - adb.q_buffer[i + 3];
-        hh2 = adb.i_buffer[i + 3];
-        adb.i_buffer[i + 3] = hh1;
-        adb.q_buffer[i + 3] = hh2;
-    }
+    	}
 
+    	else // dir == 0
+    	{
+    		// this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
+    		for(int i = 0; i < blockSize; i += 4)
+    		{   // xnew(0) =  xreal(0) + jximag(0)
+    			// leave as it is!
+    			// xnew(1) =  ximag(1) - jxreal(1)
+    			hh1 = adb.q_buffer[i + 1];
+    			hh2 = - adb.i_buffer[i + 1];
+    			adb.i_buffer[i + 1] = hh1;
+    			adb.q_buffer[i + 1] = hh2;
+    			// xnew(2) = -xreal(2) - jximag(2)
+    			hh1 = - adb.i_buffer[i + 2];
+    			hh2 = - adb.q_buffer[i + 2];
+    			adb.i_buffer[i + 2] = hh1;
+    			adb.q_buffer[i + 2] = hh2;
+    			// xnew(3) = -ximag(3) + jxreal(3)
+    			hh1 = - adb.q_buffer[i + 3];
+    			hh2 = adb.i_buffer[i + 3];
+    			adb.i_buffer[i + 3] = hh1;
+    			adb.q_buffer[i + 3] = hh2;
+    		}
+
+    	}
     }
     else  // frequency translation +6kHz or -6kHz
     {
@@ -2668,11 +2673,11 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 		static float32_t Cos = 0.0;
 		static float32_t tmp_re = 0.0;
 		static float32_t tmp_im = 0.0;
-		static float32_t phzerror = 0.0;
-		static float32_t phs = 0.0;
+		static float32_t phzerror = 0.1;
+		static float32_t phs = 0.1;
 		static float32_t fil_out = 0.0;
 		static float32_t del_out = 0.0;
-		static float32_t omega2 = 0.0;
+		static float32_t omega2 = 0.01;
 		static float32_t dc = 0.0;
 		static float32_t dc_insert = 0.0;
 
@@ -2879,12 +2884,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
             break;
         case DEMOD_SAM:
-//        	AudioDriver_DemodSAM(blockSize);
+        	AudioDriver_DemodSAM(blockSize);
         	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
 
-            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
-            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
-            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
+//            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
+//            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
+//            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
 
             break;
         case DEMOD_FM:
