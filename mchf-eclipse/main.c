@@ -500,7 +500,11 @@ int main(void)
     // trace_printf(" %u\n", 1u);
 
 
+
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
+
+    // Set default transceiver state
+    TransceiverStateInit();
 
     mchf_board_detect_ramsize();
     //	FLASH_OB_Unlock();
@@ -510,6 +514,7 @@ int main(void)
     //	ts.test = FLASH_OB_GetRDP();
     // Set unbuffered mode for stdout (newlib)
     //setvbuf( stdout, 0, _IONBF, 0 );
+
 
     //	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
 
@@ -522,8 +527,6 @@ int main(void)
 
     MchfBoard_GreenLed(LED_STATE_ON);
 
-    // Set default transceiver state
-    TransceiverStateInit();
 
     ConfigStorage_Init();
 
