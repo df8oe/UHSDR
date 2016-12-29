@@ -220,16 +220,10 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
     if (bus == I2C1)
     {
         GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
-        GPIOx = I2C1_GPIO;
     }
     else if (bus == I2C2)
     {
         GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN|I2C2_SDA_PIN;
-        GPIOx = I2C2_GPIO;
-    }
-    else
-    {
-        GPIOx = NULL;
     }
 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -243,8 +237,17 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
     GPIO_Init(GPIOx, &GPIO_InitStructure);
 
     // Connect pins to I2C peripheral
-    GPIO_PinAFConfig(GPIOx, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
-    GPIO_PinAFConfig(GPIOx, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
+
+    if (bus == I2C1)
+    {
+        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, SI570_I2C_GPIO_AF);
+        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SDA_PINSRC, SI570_I2C_GPIO_AF);
+    }
+    else if (bus == I2C2)
+    {
+        GPIO_PinAFConfig(I2C2_GPIO, I2C2_SCL_PINSRC, GPIO_AF_I2C2);
+        GPIO_PinAFConfig(I2C2_GPIO, I2C2_SDA_PINSRC, GPIO_AF_I2C2);
+    }
 }
 
 /*
