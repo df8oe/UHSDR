@@ -2,7 +2,7 @@
 #
 # WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #
-# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-29T20:38:37+0000  by "./ui_menu_structure_c2py.sh"
+# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-30T10:14:50+0000  by "./ui_menu_structure_c2py.sh"
 #
 
 MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"], e)) for e in [

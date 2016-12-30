@@ -386,6 +386,10 @@ handbook-ui-menu:
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
 	@support/ui/menu/mk-menu-handbook
 
+handbook-test:  
+	# extract UI Menu Descriptor data from source code and generate graph + table for handbook in different directory for test purposes
+	@support/ui/menu/mk-menu-handbook test
+
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
 	$(RM) support/ui/menu/mcHF-logo.png
