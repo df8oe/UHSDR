@@ -163,7 +163,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT,"400","CAT-DIQ-FREQ-XLAT", UiMenuDesc("Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF\, it reports the displayed frequency. If ON\, it reports the center frequency\, which is more useful with SDR programs.") },
 
     // Transverter Configuration
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult", UiMenuDesc("When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT,"280","XVTR Offs/Mult", UiMenuDesc("When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added\, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display.") },
     { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET,"281","XVTR Offset", UiMenuDesc("When transverter mode is enabled\, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width\, much less turns with the dial knob if it is set to 1Mhz") },
 
     // Button Handling Setup
