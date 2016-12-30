@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# automated build only by DF8OE
+if [ "$1" == "auto" ] && [ ! -f ../DF8OE ]; then
+  exit 0
+fi
+
 if [ "$(cat support/ui/menu/menu-handbook-build.timestamp 2>/dev/null)" == "$(stat -c%y drivers/ui/menu/ui_menu_structure.c)" ]; then
 	echo "menu-handbook already up2date"
 else

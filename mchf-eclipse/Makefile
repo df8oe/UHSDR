@@ -353,7 +353,7 @@ $(PRJ).bin:  $(LPRJ).elf
 	$(OC) -v -O binary $< $(PRJ).bin
 
 $(PRJ).handbook:
-	@support/ui/menu/mk-menu-handbook
+	@support/ui/menu/mk-menu-handbook auto
 
 # cleaning rule
 clean:  
