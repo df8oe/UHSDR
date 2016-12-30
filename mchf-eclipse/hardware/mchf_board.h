@@ -196,10 +196,11 @@
 // pin 6
 #define I2C1_SCL_PIN            GPIO_Pin_6
 #define I2C1_SCL_PINSRC         GPIO_PinSource6
-#define I2C1_GPIO           GPIOB
+#define I2C1_SCL_GPIO           GPIOB
 // pin 7
 #define I2C1_SDA_PIN            GPIO_Pin_7
 #define I2C1_SDA_PINSRC         GPIO_PinSource7
+#define I2C1_SDA_GPIO           GPIOB
 // pin 8
 #define BUTTON_G3 				GPIO_Pin_8
 #define BUTTON_G3_SOURCE		GPIO_PinSource8
@@ -211,10 +212,11 @@
 // pin 10
 #define I2C2_SCL_PIN            GPIO_Pin_10
 #define I2C2_SCL_PINSRC         GPIO_PinSource10
-#define I2C2_GPIO           GPIOB
+#define I2C2_SCL_GPIO           GPIOB
 // pin 11
 #define I2C2_SDA_PIN            GPIO_Pin_11
 #define I2C2_SDA_PINSRC         GPIO_PinSource11
+#define I2C2_SDA_GPIO           GPIOB
 // pin 12
 #define RED_LED 				GPIO_Pin_12
 #define RED_LED_SOURCE			GPIO_PinSource12

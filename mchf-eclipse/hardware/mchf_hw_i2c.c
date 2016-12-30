@@ -26,6 +26,9 @@
 // I2C peripheral configuration defines (control interface of the si570)
 #define I2C1_CLK                  		RCC_APB1Periph_I2C1
 
+// uint32_t i2c_flag_timeout_max = MCHF_I2C_FLAG_TIMEOUT; // lower values, higher timeout!
+uint32_t i2c_event_timeout_max = MCHF_I2C_LONG_TIMEOUT; // lower values, higher timeout!
+
 
 uint16_t MCHF_I2C_StartTransfer(I2C_TypeDef* bus, uint8_t devaddr, uint8_t* data_ptr, uint16_t data_size, bool isWrite, bool isSingleByteRead)
 {
@@ -158,19 +161,6 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
     return retVal;
 }
 
-
-
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       :
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
 /**
  * @brief init I2C
  * @param speed in Hertz !!!
@@ -217,8 +207,7 @@ void MchfHw_I2C_Reset(I2C_TypeDef* bus)
     non_os_delay();
     I2C_Cmd (bus, ENABLE);
 
-    // MchfHw_I2C_Init(bus);
-    mchf_hw_i2c1_init();
+    MchfHw_I2C_Init(bus);
 };
 
 void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
@@ -238,21 +227,27 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
 
     if (bus == I2C1)
     {
-        GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN|I2C1_SDA_PIN;
+        GPIO_InitStructure.GPIO_Pin = I2C1_SCL_PIN;
+        GPIO_Init(I2C1_SCL_GPIO, &GPIO_InitStructure);
 
-        GPIO_Init(I2C1_GPIO, &GPIO_InitStructure);
+        GPIO_InitStructure.GPIO_Pin = I2C1_SDA_PIN;
+        GPIO_Init(I2C1_SDA_GPIO, &GPIO_InitStructure);
 
-        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SCL_PINSRC, GPIO_AF_I2C1);
-        GPIO_PinAFConfig(I2C1_GPIO, I2C1_SDA_PINSRC, GPIO_AF_I2C1);
+
+        GPIO_PinAFConfig(I2C1_SCL_GPIO, I2C1_SCL_PINSRC, GPIO_AF_I2C1);
+        GPIO_PinAFConfig(I2C1_SCL_GPIO, I2C1_SDA_PINSRC, GPIO_AF_I2C1);
     }
     else if (bus == I2C2)
     {
-        GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN|I2C2_SDA_PIN;
+        GPIO_InitStructure.GPIO_Pin = I2C2_SCL_PIN;
+        GPIO_Init(I2C2_SCL_GPIO, &GPIO_InitStructure);
 
-        GPIO_Init(I2C2_GPIO, &GPIO_InitStructure);
+        GPIO_InitStructure.GPIO_Pin = I2C2_SDA_PIN;
+        GPIO_Init(I2C2_SDA_GPIO, &GPIO_InitStructure);
 
-        GPIO_PinAFConfig(I2C2_GPIO, I2C2_SCL_PINSRC, GPIO_AF_I2C2);
-        GPIO_PinAFConfig(I2C2_GPIO, I2C2_SDA_PINSRC, GPIO_AF_I2C2);
+
+        GPIO_PinAFConfig(I2C2_SCL_GPIO, I2C2_SCL_PINSRC, GPIO_AF_I2C2);
+        GPIO_PinAFConfig(I2C2_SDA_GPIO, I2C2_SDA_PINSRC, GPIO_AF_I2C2);
     }
 }
 
@@ -261,8 +256,6 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
  */
 void mchf_hw_i2c1_init()
 {
-
-
     // I2C SCL and SDA pins configuration
     MchfHw_I2C_GpioInit(I2C1);
 

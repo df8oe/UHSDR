@@ -4324,7 +4324,7 @@ static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
         color = White;
 
     txt = "WPM";
-    snprintf(txt_buf,5,"%2d",ts.keyer_speed);
+    snprintf(txt_buf,5,"%3d",ts.keyer_speed);
 
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }

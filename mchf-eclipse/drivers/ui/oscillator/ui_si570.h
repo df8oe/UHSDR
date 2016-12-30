@@ -15,35 +15,6 @@
 #ifndef __HW_SI570
 #define __HW_SI570
 
-
-typedef struct {
-    uint8_t hsdiv;
-    uint8_t n1;
-    float64_t fdco;
-    float64_t rfreq;
-} Si570_FreqConfig;
-
-typedef struct OscillatorState
-{
-    Si570_FreqConfig    cur_config;
-
-    float 				fxtal;
-
-    uint8_t				regs[6];
-
-    float				fout;		// contains startup frequency info of Si570
-
-    unsigned short		si570_address;
-
-    uint8_t				base_reg;
-
-    bool                present; // is a working Si570 present?
-} OscillatorState;
-
-extern __IO OscillatorState os;
-
-
-
 typedef enum
 {
     SI570_OK = 0, // tuning ok
@@ -66,12 +37,11 @@ Si570_ResultCodes 	Si570_SetFrequency(ulong freq, int calib, int temp_factor, uc
 uchar   Si570_ResetConfiguration();
 void 	Si570_CalculateStartupFrequency();
 float   Si570_GetStartupFrequency();
-uint8_t Si570_GeTI2CAddress();
+uint8_t Si570_GetI2CAddress();
 
 uchar   Si570_InitExternalTempSensor();
 uchar   Si570_ReadExternalTempSensor(int32_t *temp);
 
-inline bool   Si570_IsPresent() { return os.present == true; }
-
+bool   Si570_IsPresent();
 
 #endif

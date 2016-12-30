@@ -408,7 +408,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             float suf = Si570_GetStartupFrequency();
             int vorkomma = (int)(suf);
             int nachkomma = (int) roundf((suf-vorkomma)*10000);
-            snprintf(out,32,"%xh / %u.%04u MHz",(Si570_GeTI2CAddress() >> 1),vorkomma,nachkomma);
+            snprintf(out,32,"%xh / %u.%04u MHz",(Si570_GetI2CAddress() >> 1),vorkomma,nachkomma);
         }
         else
         {

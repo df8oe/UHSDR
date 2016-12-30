@@ -524,14 +524,15 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                     {
 
                     case TX_AUDIO_DIG:
-                        dac_mute_time_mode = 2* 15; // Minimum time is 20ms
+                        dac_mute_time_mode = 0* 15; // Minimum time is 0ms
                         break;
                     case TX_AUDIO_LINEIN_L:
                     case TX_AUDIO_LINEIN_R:
-                        dac_mute_time_mode = 5* 15; // Minimum time is 50ms
+                        dac_mute_time_mode = 4 * 15; // Minimum time is 40ms
+                        input_mute_time_mode = dac_mute_time_mode;
                         break;
                     case TX_AUDIO_MIC:
-                        dac_mute_time_mode = 10* 15; // Minimum time is 100ms
+                        dac_mute_time_mode = 4* 15; // Minimum time is 40ms
                         input_mute_time_mode = dac_mute_time_mode;
                         break;
                     }
