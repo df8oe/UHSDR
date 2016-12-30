@@ -2916,7 +2916,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             break;
         }
 
-        if(dmod_mode != DEMOD_FM && dmod_mode!= DEMOD_SAM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
+        if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
         {
             // Do decimation down to lower rate to reduce processor load
             if (DECIMATE_RX.numTaps > 0)
