@@ -1369,7 +1369,7 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     }
 
 
-    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
+    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
     {
  /**********************************************************************************
  *  Frequency translation by Fs/4 without multiplication
@@ -1400,7 +1400,7 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     }
 
     }
-    else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
     {
       // this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
     for(int i = 0; i < blockSize; i += 4)
@@ -2678,7 +2678,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
 
 
-          // Wheatley 2011 cuteSDR & Warren Pratt´s WDSP, 2016
+          // Wheatley 2011 cuteSDR & Warren Prattï¿½s WDSP, 2016
         for(int i = 0; i < blockSize; i++)
         {
             Sin = sinf(phs);
@@ -2697,7 +2697,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 phs = phs + del_out;
 
 
-            // "fade leveler", taken from Warren Pratts´ WDSP / HPSDR, 2016
+            // "fade leveler", taken from Warren Prattsï¿½ WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
             dc = mtauR * dc + onem_mtauR * tmp_re;
             dc_insert = mtauI * dc_insert + onem_mtauI * tmp_re;
