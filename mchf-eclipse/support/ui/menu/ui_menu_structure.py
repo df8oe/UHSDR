@@ -2,7 +2,7 @@
 #
 # WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #
-# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-30T10:14:50+0000  by "./ui_menu_structure_c2py.sh"
+# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-30T11:33:58+0000  by "./ui_menu_structure_c2py.sh"
 #
 
 MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"], e)) for e in [
@@ -87,7 +87,7 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_TX_DISABLE","203","Transmit Disable", "Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH","204","Menu SW on TX disable", "Control if the screen automatically adapts Encoder value focus when switching between RX and TX."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MUTE_LINE_OUT_TX","205","TX Mute LineOut", "During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here."  ],
-       [ "MENU_CONF", "MEK_ITEM", "CONFIG_TXRX_SWITCH_AUDIO_MUTE","206","TX Initial Muting Time", "When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms."  ],
+       [ "MENU_CONF", "MEK_ITEM", "CONFIG_TXRX_SWITCH_AUDIO_MUTE","206","TX Initial Muting Time", "When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero\, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches!"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MAX_VOLUME","210","Max Volume", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_MAX_RX_GAIN","211","Max RX Gain (0=Max)", ":soon:"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_BEEP_ENABLE","212","Key Beep", "If ON each keypress will generate a short beep"  ],

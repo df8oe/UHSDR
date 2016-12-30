@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-29T21:38:40  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-30T12:34:01  by  ui_menu_structure_mdtable.py )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
 [//]: # (                                                                              )
@@ -53,7 +53,7 @@
 | **Transmit Disable**          (203) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made. | 
 | **Menu SW on TX disable**     (204) | Control if the screen automatically adapts Encoder value focus when switching between RX and TX. | 
 | **TX Mute LineOut**           (205) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
-| **TX Initial Muting Time**    (206) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. | 
+| **TX Initial Muting Time**    (206) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
 | **Max Volume**                (210) | :soon:                                         | 
 | **Max RX Gain (0=Max)**       (211) | :soon:                                         | 
 | **Key Beep**                  (212) | If ON each keypress will generate a short beep | 
