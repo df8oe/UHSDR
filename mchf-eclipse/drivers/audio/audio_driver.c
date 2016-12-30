@@ -1369,60 +1369,65 @@ static void AudioDriver_FreqConversion(int16_t blockSize, int16_t dir)
     }
 
 
-    if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
     {
- /**********************************************************************************
- *  Frequency translation by Fs/4 without multiplication
- *  Lyons (2011): chapter 13.1.2 page 646
- *  this is supposed to be much more efficient than a standard quadrature oscillator
- *  with precalculated sin waves
- *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
- **********************************************************************************/
+    	/**********************************************************************************
+    	 *  Frequency translation by Fs/4 without multiplication
+    	 *  Lyons (2011): chapter 13.1.2 page 646
+    	 *  this is supposed to be much more efficient than a standard quadrature oscillator
+    	 *  with precalculated sin waves
+    	 *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
+    	 **********************************************************************************/
+    	if(dir)
+    	{
+
       // this is for +Fs/4 [moves receive frequency to the left in the spectrum display]
         for(int i = 0; i < blockSize; i += 4)
-    {   // xnew(0) =  xreal(0) + jximag(0)
-        // leave as it is!
-        // xnew(1) =  - ximag(1) + jxreal(1)
-        hh1 = - adb.q_buffer[i + 1];
-        hh2 =   adb.i_buffer[i + 1];
+        {   // xnew(0) =  xreal(0) + jximag(0)
+        	// leave as it is!
+        	// xnew(1) =  - ximag(1) + jxreal(1)
+        	hh1 = - adb.q_buffer[i + 1];
+        	hh2 =   adb.i_buffer[i + 1];
             adb.i_buffer[i + 1] = hh1;
             adb.q_buffer[i + 1] = hh2;
-        // xnew(2) = -xreal(2) - jximag(2)
-        hh1 = - adb.i_buffer[i + 2];
-        hh2 = - adb.q_buffer[i + 2];
+            // xnew(2) = -xreal(2) - jximag(2)
+            hh1 = - adb.i_buffer[i + 2];
+            hh2 = - adb.q_buffer[i + 2];
             adb.i_buffer[i + 2] = hh1;
             adb.q_buffer[i + 2] = hh2;
-        // xnew(3) = + ximag(3) - jxreal(3)
-        hh1 =   adb.q_buffer[i + 3];
-        hh2 = - adb.i_buffer[i + 3];
+            // xnew(3) = + ximag(3) - jxreal(3)
+            hh1 =   adb.q_buffer[i + 3];
+            hh2 = - adb.i_buffer[i + 3];
             adb.i_buffer[i + 3] = hh1;
             adb.q_buffer[i + 3] = hh2;
-    }
+        }
 
-    }
-    else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)
-    {
-      // this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
-    for(int i = 0; i < blockSize; i += 4)
-    {   // xnew(0) =  xreal(0) + jximag(0)
-        // leave as it is!
-        // xnew(1) =  ximag(1) - jxreal(1)
-        hh1 = adb.q_buffer[i + 1];
-        hh2 = - adb.i_buffer[i + 1];
-        adb.i_buffer[i + 1] = hh1;
-        adb.q_buffer[i + 1] = hh2;
-        // xnew(2) = -xreal(2) - jximag(2)
-        hh1 = - adb.i_buffer[i + 2];
-        hh2 = - adb.q_buffer[i + 2];
-        adb.i_buffer[i + 2] = hh1;
-        adb.q_buffer[i + 2] = hh2;
-        // xnew(3) = -ximag(3) + jxreal(3)
-        hh1 = - adb.q_buffer[i + 3];
-        hh2 = adb.i_buffer[i + 3];
-        adb.i_buffer[i + 3] = hh1;
-        adb.q_buffer[i + 3] = hh2;
-    }
+    	}
 
+    	else // dir == 0
+    	{
+    		// this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
+    		for(int i = 0; i < blockSize; i += 4)
+    		{   // xnew(0) =  xreal(0) + jximag(0)
+    			// leave as it is!
+    			// xnew(1) =  ximag(1) - jxreal(1)
+    			hh1 = adb.q_buffer[i + 1];
+    			hh2 = - adb.i_buffer[i + 1];
+    			adb.i_buffer[i + 1] = hh1;
+    			adb.q_buffer[i + 1] = hh2;
+    			// xnew(2) = -xreal(2) - jximag(2)
+    			hh1 = - adb.i_buffer[i + 2];
+    			hh2 = - adb.q_buffer[i + 2];
+    			adb.i_buffer[i + 2] = hh1;
+    			adb.q_buffer[i + 2] = hh2;
+    			// xnew(3) = -ximag(3) + jxreal(3)
+    			hh1 = - adb.q_buffer[i + 3];
+    			hh2 = adb.i_buffer[i + 3];
+    			adb.i_buffer[i + 3] = hh1;
+    			adb.q_buffer[i + 3] = hh2;
+    		}
+
+    	}
     }
     else  // frequency translation +6kHz or -6kHz
     {
@@ -2646,15 +2651,16 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 	// DX = 0.2, 70
 	// medium 0.6, 200
 	// fast 1.2, 500
-	const float32_t zeta = 0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-	const float32_t omegaN = 200.0; // PLL bandwidth 50.0 - 1000.0
+	const float32_t zeta = 1.0; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+	const float32_t omegaN = 500.0; //200.0; // PLL bandwidth 50.0 - 1000.0
 
 	  //pll
 	//const float32_t omega_min = 2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F;
 	const float32_t  omega_min = (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
 	const float32_t  omega_max = (2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
 	const float32_t  g1 = (1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
-	const float32_t  g2 = (- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F) * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
+	const float32_t  g2 = (- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F)
+			* cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
 
 	  //fade leveler
 	const float32_t tauR = 0.02; // original 0.02;
@@ -2668,11 +2674,11 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 		static float32_t Cos = 0.0;
 		static float32_t tmp_re = 0.0;
 		static float32_t tmp_im = 0.0;
-		static float32_t phzerror = 0.0;
-		static float32_t phs = 0.0;
+		static float32_t phzerror = 0.1;
+		static float32_t phs = 0.1;
 		static float32_t fil_out = 0.0;
 		static float32_t del_out = 0.0;
-		static float32_t omega2 = 0.0;
+		static float32_t omega2 = 0.01;
 		static float32_t dc = 0.0;
 		static float32_t dc_insert = 0.0;
 
@@ -2683,11 +2689,12 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         {
             Sin = sinf(phs);
             Cos = cosf(phs);
-            //            tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
-            //            tmp_im = Cos * adb.q_buffer[i] + Sin * adb.i_buffer[i];
-            tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
-            tmp_im = Cos * adb.q_buffer[i] + Sin * adb.i_buffer[i];
-            phzerror = -atan2f(tmp_im, tmp_re);
+//            tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
+//            tmp_im = Cos * adb.q_buffer[i] + Sin * adb.i_buffer[i];
+            tmp_re = Cos * adb.q_buffer[i] - Sin * adb.i_buffer[i];
+            tmp_im = Cos * adb.i_buffer[i] + Sin * adb.q_buffer[i];
+            //            phzerror = atan2f(tmp_im, tmp_re);
+            phzerror = atan2f(tmp_re, tmp_im);
 
                 del_out = fil_out;
                 omega2 = omega2 + g2 * phzerror;
@@ -2702,7 +2709,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             dc = mtauR * dc + onem_mtauR * tmp_re;
             dc_insert = mtauI * dc_insert + onem_mtauI * tmp_re;
             tmp_re = tmp_re + dc_insert - dc;
-            adb.a_buffer[i] = tmp_re;
+
+            adb.b_buffer[i] = tmp_re;
 
             // wrap round 2PI, modulus
             while (phs >= 2.0 * PI) phs -= 2.0 * PI;
@@ -2908,7 +2916,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             break;
         }
 
-        if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
+        if(dmod_mode != DEMOD_FM && dmod_mode!= DEMOD_SAM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
         {
             // Do decimation down to lower rate to reduce processor load
             if (DECIMATE_RX.numTaps > 0)
@@ -2992,7 +3000,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
 
         } // end NOT in FM mode
-        else            // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
+        else if(ts.dmod_mode == DEMOD_FM)           // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
         {
                 arm_scale_f32(
                         adb.a_buffer,
