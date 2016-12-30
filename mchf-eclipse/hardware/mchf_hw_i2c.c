@@ -26,6 +26,9 @@
 // I2C peripheral configuration defines (control interface of the si570)
 #define I2C1_CLK                  		RCC_APB1Periph_I2C1
 
+// uint32_t i2c_flag_timeout_max = MCHF_I2C_FLAG_TIMEOUT; // lower values, higher timeout!
+uint32_t i2c_event_timeout_max = MCHF_I2C_LONG_TIMEOUT; // lower values, higher timeout!
+
 
 uint16_t MCHF_I2C_StartTransfer(I2C_TypeDef* bus, uint8_t devaddr, uint8_t* data_ptr, uint16_t data_size, bool isWrite, bool isSingleByteRead)
 {
