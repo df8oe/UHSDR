@@ -2887,12 +2887,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
             break;
         case DEMOD_SAM:
-        	AudioDriver_DemodSAM(blockSize);
+//        	AudioDriver_DemodSAM(blockSize);
         	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
 
-//            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
-//            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
-//            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
+            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
+            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
+            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
 
             break;
         case DEMOD_FM:
