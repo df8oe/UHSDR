@@ -19,7 +19,7 @@
 #define I2C_BUS_SPEED_MULT                      20000 // 20kHz is multiplier for config var
 
 #define I2C1_SPEED_DEFAULT                      (200000/I2C_BUS_SPEED_MULT) // 20 * 20kHz == 200kHz 400000 does not work, may need resistor mod
-#define I2C2_SPEED_DEFAULT                      (200000/I2C_BUS_SPEED_MULT) // 20 * 20kHz == 200kHz, was 25000, 400000 does not work, , may need resistor mod
+#define I2C2_SPEED_DEFAULT                      (100000/I2C_BUS_SPEED_MULT) // 10 * 20kHz == 100kHz, was 25000, 400000 does not work, , may need resistor mod
 
 // Generic Functions for Handling I2C Busses in MCHF
 
