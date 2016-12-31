@@ -844,8 +844,8 @@ void UiSpectrum_RedrawScopeDisplay()
         //
         case 4:
         {
-            q15_t	max1, max2, min1, min2;
-            q15_t	mean1, mean2;
+            q15_t	max1, min1;
+            q15_t	mean1;
             float32_t	sig;
             //
             // De-linearize data with dB/division
@@ -868,83 +868,9 @@ void UiSpectrum_RedrawScopeDisplay()
             arm_copy_q15(sd.FFT_DspData, sd.FFT_TempData, SPEC_BUFF_LEN);
             //
             // Find peak and average to vertically adjust display
-            //
-            if(sd.magnify != 0)	 	// are we in magnify mode?  If so, find max/mean of only those portions of the spectrum magnified - which are NOT in the proper order, dammit!
-            {
-
-                //   [01234567] Buffer in pieces of eight
-                //    XX----XX   0
-                //    X----XXX   +6
-                //    XXX----X   -6
-                //    ----XXXX  +12
-                //    XXXX----  -12
-                uint16_t idx[2],len[2];
-
-                switch(ts.iq_freq_mode)
-                {
-                case FREQ_IQ_CONV_P6KHZ:
-                    idx[0] = 5;
-                    len[0] = 3;
-                    idx[1] = 0;
-                    len[1] = 1;
-                    break;
-                case FREQ_IQ_CONV_M6KHZ:
-                    idx[0] = 7;
-                    len[0] = 3;
-                    idx[1] = 0;
-                    len[1] = 1;
-                    break;
-                case FREQ_IQ_CONV_P12KHZ:
-                    idx[0] = 4;
-                    len[0] = 2;
-                    idx[1] = 6;
-                    len[1] = 2;
-                    break;
-                case FREQ_IQ_CONV_M12KHZ:
-                    idx[0] = 0;
-                    len[0] = 2;
-                    idx[1] = 2;
-                    len[1] = 2;
-                    break;
-                case FREQ_IQ_CONV_MODE_OFF:
-                default:
-                     idx[0] = 6;
-                     len[0] = 2;
-                     idx[1] = 0;
-                     len[1] = 2;
-                     break;
-                }
-
-                arm_max_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], (len[0]*SPEC_BUFF_LEN)/8, &max1, &max_ptr);       // find maximum element in center portion
-                arm_min_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], (len[0]*SPEC_BUFF_LEN)/8, &min1, &max_ptr);       // find minimum element in center portion
-                arm_mean_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[0])/8], len[0], &mean1);               // find mean value in center portion
-
-                arm_max_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &max2, &max_ptr);       // find maximum element in center portion
-                arm_min_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &min2, &max_ptr);       // find minimum element in center portion
-                arm_mean_q15(&sd.FFT_TempData[(SPEC_BUFF_LEN*idx[1])/8], (len[1]*SPEC_BUFF_LEN)/8, &mean2);               // find mean value in center portion
-
-                if(max2 > max1)
-                {
-                    max1 = max2;
-                }
-
-                if(mean2 > mean1)
-                {
-                    mean1 = mean2;
-                }
-
-                if(min2 < min1)
-                {
-                    min1 = min2;
-                }
-            }
-            else
-            {
-                arm_max_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &max1, &max_ptr);		// find maximum element
-                arm_min_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &min1, &max_ptr);		// find minimum element
-                arm_mean_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &mean1);				// find mean value
-            }
-
+            arm_max_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &max1, &max_ptr);		// find maximum element
+            arm_min_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &min1, &max_ptr);		// find minimum element
+            arm_mean_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &mean1);				// find mean value
             //
             // Vertically adjust spectrum scope so that the strongest signals are adjusted to the top
             //
@@ -1152,40 +1078,10 @@ void UiSpectrum_RedrawWaterfall()
                 }
             }
 
-            //
             // Find peak and average to vertically adjust display
-            //
-            uint16_t samp_idx;
-            if(sd.magnify)	 	// are we in magnify mode?
-            {
-                spec_width = SPEC_BUFF_LEN/2;	// yes - define new spectrum width
-
-                switch(ts.iq_freq_mode)
-                {
-                case FREQ_IQ_CONV_P6KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-                    samp_idx = SPEC_BUFF_LEN/8;
-                    break;
-                case FREQ_IQ_CONV_M6KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
-                    samp_idx = (SPEC_BUFF_LEN*3)/8;
-                case FREQ_IQ_CONV_P12KHZ:	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-                    samp_idx = 0;
-                    break;
-                case FREQ_IQ_CONV_M12KHZ:	 	// we are in RF LO LOW mode (tuning is above center of screen)
-                    samp_idx = SPEC_BUFF_LEN/2;
-                    break;
-                default:
-                    samp_idx = SPEC_BUFF_LEN/4;
-                }
-            }
-            else
-            {
-                spec_width = SPEC_BUFF_LEN;
-                samp_idx = 0;
-            }
-
-            arm_max_f32(&sd.FFT_Samples[samp_idx], spec_width, &max, &max_ptr);        // find maximum element in center portion
-            arm_min_f32(&sd.FFT_Samples[samp_idx], spec_width, &min, &max_ptr);        // find minimum element in center portion
-            arm_mean_f32(&sd.FFT_Samples[samp_idx], spec_width, &mean);                // find mean value in center portion
+            arm_max_f32(&sd.FFT_Samples[0],  SPEC_BUFF_LEN, &max, &max_ptr);        // find maximum element in center portion
+            arm_min_f32(&sd.FFT_Samples[0],  SPEC_BUFF_LEN, &min, &max_ptr);        // find minimum element in center portion
+            arm_mean_f32(&sd.FFT_Samples[0], SPEC_BUFF_LEN, &mean);                // find mean value in center portion
 
             //
             // Calculate "brightness" offset for amplitude value
