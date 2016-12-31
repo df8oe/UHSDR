@@ -538,8 +538,8 @@ void AudioDriver_Init(void)
     // DX = 0.2, 70
     // medium 0.6, 200
     // fast 1.0, 500
-    ads.zeta = 0.4; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    ads.omegaN = 200.0; //200.0; // PLL bandwidth 50.0 - 1000.0
+    ads.zeta = 0.8; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+    ads.omegaN = 250.0; //200.0; // PLL bandwidth 50.0 - 1000.0
 
       //pll
     ads.omega_min = (2.0 * PI * ads.pll_fmin * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
@@ -2891,11 +2891,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-        if(ts.dmod_mode != DEMOD_SAM)
-        {
+
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
-        }
+
 
         switch(dmod_mode)
         {
