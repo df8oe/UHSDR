@@ -12,6 +12,17 @@
 #########################################################################
 #########################################################################
 
+20161231 [DF8OE]
+- frequency translation +/- 12KHz uses now more efficient algorithm
+- plopping / klicking sound at PTT is removed
+- I2C Bus speed improved (storing time to serial EEPROM significantly
+  shorter now)
+- many minor bugfixes
+- reduced time for RX <--> TX switching
+- implementing a "menu manual" which is automatically created with every
+  new build - can be found in support/ui/menu and is published in
+  GitHub WIKI
+
 20161115 [DF8OE]
 - minor bugfixes
 - implementation of touchscreen for 3.2" LCDs
