@@ -974,7 +974,7 @@ void UiSpectrum_RedrawScopeDisplay()
 //
 void UiSpectrum_RedrawWaterfall()
 {
-    ulong i, spec_width;
+    ulong i;
     uint32_t	max_ptr;	// throw-away pointer for ARM maxval AND minval functions
 
     if((ts.spectrum_scheduler == 0 ) && (ts.waterfall_speed > 0))	// is it time to update the scan, or is this scope to be disabled?

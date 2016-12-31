@@ -2,7 +2,7 @@
 #
 # WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #
-# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-30T11:33:58+0000  by "./ui_menu_structure_c2py.sh"
+# generated from  ../../../drivers/ui/menu/ui_menu_structure.c  at  2016-12-31T06:45:42+0000  by "./ui_menu_structure_c2py.sh"
 #
 
 MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"], e)) for e in [
@@ -96,7 +96,7 @@ MENU_DESCRIPTOR = [ dict(zip(["MENU_ID", "ME_KIND", "NR", "ID", "LABEL", "DESC"]
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_ENABLE","220","CAT Mode", "Enabled the FT 817 emulation via USB. See Wiki for more information."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_IN_SANDBOX","530","CAT Running In Sandbox", "If On\, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_CAT_XLAT","400","CAT-DIQ-FREQ-XLAT", "Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF\, it reports the displayed frequency. If ON\, it reports the center frequency\, which is more useful with SDR programs."  ],
-       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_OFFSET_MULT","280","XVTR Offs/Mult", "When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it."  ],
+       [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_OFFSET_MULT","280","XVTR Offs/Mult", "When connecting to a transverter\, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added\, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_XVTR_FREQUENCY_OFFSET","281","XVTR Offset", "When transverter mode is enabled\, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width\, much less turns with the dial knob if it is set to 1Mhz"  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_STEP_SIZE_BUTTON_SWAP","201","Step Button Swap", "If ON\, Step- behaves like Step+ and vice versa."  ],
        [ "MENU_CONF", "MEK_ITEM", "CONFIG_BAND_BUTTON_SWAP","202","Band+/- Button Swap", "If ON\, Band- behaves like Band+ and vice versa."  ],

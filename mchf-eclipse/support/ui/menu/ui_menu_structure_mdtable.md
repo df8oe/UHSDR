@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-30T12:34:01  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-31T07:45:44  by  ui_menu_structure_mdtable.py )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
 [//]: # (                                                                              )
@@ -62,7 +62,7 @@
 | **CAT Mode**                  (220) | Enabled the FT 817 emulation via USB. See Wiki for more information. | 
 | **CAT Running In Sandbox**    (530) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
 | **CAT-DIQ-FREQ-XLAT**         (400) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF, it reports the displayed frequency. If ON, it reports the center frequency, which is more useful with SDR programs. | 
-| **XVTR Offs/Mult**            (280) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. | 
+| **XVTR Offs/Mult**            (280) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
 | **XVTR Offset**               (281) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (201) | If ON, Step- behaves like Step+ and vice versa. | 
 | **Band+/- Button Swap**       (202) | If ON, Band- behaves like Band+ and vice versa. | 
