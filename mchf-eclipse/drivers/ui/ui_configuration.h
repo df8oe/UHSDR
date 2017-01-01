@@ -93,13 +93,6 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define BIAS_OFFSET         25      // Offset value to be added to bias setting
 //  DA value = (OFFSET + (2*setting))  where DA value is 0-255
 //
-#define MIN_IQ_GAIN_BALANCE  -127 // Minimum setting for IQ gain balance
-#define MAX_IQ_GAIN_BALANCE  127  // Maximum setting for IQ gain balance
-
-#define MIN_IQ_PHASE_BALANCE -127 // Minimum setting for IQ phase balance
-#define MAX_IQ_PHASE_BALANCE 127  // Maximum setting for IQ phase balance
-
-#define IQ_BALANCE_OFF  -128 // Minimum setting for IQ gain balance
 
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
 #define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)
