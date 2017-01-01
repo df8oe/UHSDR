@@ -30,11 +30,7 @@ void AudioManagement_CalcAGCDecay()
         break;
     case AGC_CUSTOM:      // calculate custom AGC setting
     {
-        float tcalc = (float)ts.agc_custom_decay;
-        tcalc += 30;
-        tcalc /= 10;
-        tcalc = -tcalc;
-        ads.agc_decay = powf(10, tcalc);
+        ads.agc_decay = powf(10,-((((float32_t)ts.agc_custom_decay)+30.0)/10.0));
     }
     break;
     default:
@@ -53,15 +49,8 @@ void AudioManagement_CalcAGCDecay()
 //
 void AudioManagement_CalcALCDecay(void)
 {
-    float tcalc;    // temporary holder - used to avoid conflict during operation
-
     // calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
-    //
-    tcalc = (float)ts.alc_decay_var;
-    tcalc += 35;
-    tcalc /= 10;
-    tcalc *= -1;
-    ads.alc_decay = powf(10, tcalc);
+    ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
 }
 //
 //
@@ -149,14 +138,14 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // be regulated by adjusting the amplitudes of the two signals!
 
     ads.iq_phase_balance_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.rx_iq_phase_balance[IQ_80M],
-            ts.rx_iq_phase_balance[IQ_10M],
+            ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_80M],
+            ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_10M],
             freq,
             SCALING_FACTOR_IQ_PHASE_ADJUST);
 
     ads.iq_phase_balance_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-                ts.tx_iq_phase_balance[IQ_80M],
-                ts.tx_iq_phase_balance[IQ_10M],
+                ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_80M],
+                ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_10M],
                 freq,
                 SCALING_FACTOR_IQ_PHASE_ADJUST);
 
@@ -164,14 +153,14 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // please note that the RX adjustments for gain are negative
     // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
     float32_t adj_i_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            -ts.rx_iq_gain_balance[IQ_80M],
-            -ts.rx_iq_gain_balance[IQ_10M],
+            -ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_80M],
+            -ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_10M],
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 
     float32_t adj_i_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.tx_iq_gain_balance[IQ_80M],
-            ts.tx_iq_gain_balance[IQ_10M],
+            ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_80M],
+            ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_10M],
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 

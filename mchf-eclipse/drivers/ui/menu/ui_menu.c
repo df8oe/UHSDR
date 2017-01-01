@@ -292,7 +292,7 @@ void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_
 void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode, int32_t min, int32_t max)
 {
     bool tchange = false;
-    if(is_ssb(ts.dmod_mode) && (ts.txrx_mode == demod_mode))       // only allow adjustment if in SSB mode
+    if((is_ssb(ts.dmod_mode) || ts.dmod_mode == DEMOD_CW) && (ts.txrx_mode == demod_mode))       // only allow adjustment if in SSB mode
     {
         tchange = UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,
                 min,
@@ -308,7 +308,14 @@ void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_p
     {
         *clr_ptr = Orange;
     }
-    snprintf(options,32, "   %d", (int)*val_ptr);
+    if (*val_ptr == IQ_BALANCE_OFF)
+    {
+        snprintf(options,32, " OFF");
+    }
+    else
+    {
+        snprintf(options,32, "%4d", (int)*val_ptr);
+    }
 }
 
 void UiMenu_HandleIQAdjustGain(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t demod_mode)
@@ -2178,43 +2185,43 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case CONFIG_80M_RX_IQ_GAIN_BAL:     // LSB RX IQ Gain balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_80M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_80M], TRX_MODE_RX);
         break;
     case CONFIG_80M_RX_IQ_PHASE_BAL:        // LSB RX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_80M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_80M], TRX_MODE_RX);
         break;
     case CONFIG_10M_RX_IQ_GAIN_BAL:     // USB/CW RX IQ Gain balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_10M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_10M], TRX_MODE_RX);
         break;
     case CONFIG_10M_RX_IQ_PHASE_BAL:        // USB RX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_10M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_10M], TRX_MODE_RX);
         break;
     case CONFIG_20M_RX_GAIN_BAL:        // AM RX IQ Phase balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_20M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_20M], TRX_MODE_RX);
         break;
     case CONFIG_20M_RX_PHASE_BAL:       // AM RX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_20M], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_20M], TRX_MODE_RX);
         break;
     case CONFIG_FM_RX_GAIN_BAL:     // FM RX IQ Phase balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[3], TRX_MODE_RX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.rx_iq_gain_balance[IQ_TRANS_ON][3], TRX_MODE_RX);
         break;
     case CONFIG_80M_TX_IQ_GAIN_BAL:     // LSB TX IQ Gain balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_80M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_80M], TRX_MODE_TX);
         break;
     case CONFIG_80M_TX_IQ_PHASE_BAL:        // LSB TX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_80M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_80M], TRX_MODE_TX);
         break;
     case CONFIG_10M_TX_IQ_GAIN_BAL:     // USB/CW TX IQ Gain balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_10M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_10M], TRX_MODE_TX);
         break;
     case CONFIG_10M_TX_IQ_PHASE_BAL:        // USB TX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_10M], TRX_MODE_TX);
         break;
     case    CONFIG_20M_TX_GAIN_BAL:     // AM TX IQ Phase balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_20M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_20M], TRX_MODE_TX);
         break;
     case    CONFIG_20M_TX_PHASE_BAL:        // FM TX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_20M], TRX_MODE_TX);
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_20M], TRX_MODE_TX);
         break;
     case CONFIG_CW_PA_BIAS:     // CW PA Bias adjust
         if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))      // enable only in TUNE mode
