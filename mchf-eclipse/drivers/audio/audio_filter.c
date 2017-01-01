@@ -633,7 +633,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     },
 
     {
-        AUDIO_3P6KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+        AUDIO_3P6KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
         RX_DECIMATION_RATE_24KHZ, &IIR_7k_LPF,
         &FirRxInterpolate10KHZ, NULL
     },
@@ -705,64 +705,67 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     },
 
 //###################################################################################################################################
-// SAM filters: this is double sideband demodulation, LSB and USB are demodulated and added together, after that
-//				the IIR filter cuts off at the desired frequency
-//				Conceptually, these are very similar to the SSB filters
-//
+// SAM filters:
+
 //###################################################################################################################################
 
 
     {
-        AUDIO_1P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_1k8_LPF,
+        AUDIO_1P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_3k2_LPF,
         &FirRxInterpolate, NULL
     },
 
     {
         AUDIO_2P3KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
-        &FirRxInterpolate, NULL
-    },
-
-    /*
-             AUDIO_2P5KHZ, "AM", FILTER_MASK_AM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
-
-     */
-
-
-    {
-        AUDIO_2P9KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
-        &FirRxInterpolate, NULL
-    },
-
-    {
-        AUDIO_3P4KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
-        &FirRxInterpolate, NULL
-    },
-	// measurements with Spectrum Lab have shown that there was considerable, but only barely
-	// audible alias noise in the SAM 4k2 and 4k8 filters (25-30dB below signal, you could hear it clearly when treble gain was 20dB)
-	// now I have implemented the IIR_aa_5k antialiasing filter in SAM 4k2 and 4k8 filters and all the aliases
-	// are down by at least 60dB below signal level
-    {
-        AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
         &FirRxInterpolate_4_5k, &IIR_aa_5k
     },
 
     {
+        AUDIO_2P9KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_24KHZ, &IIR_5k5_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+
+    {
+        AUDIO_3P4KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_24KHZ, &IIR_6k5_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+    // old remark, must be analysed again
+    // measurements with Spectrum Lab have shown that there was considerable, but only barely
+	// audible alias noise in the SAM 4k2 and 4k8 filters (25-30dB below signal, you could hear it clearly when treble gain was 20dB)
+	// now I have implemented the IIR_aa_5k antialiasing filter in SAM 4k2 and 4k8 filters and all the aliases
+	// are down by at least 60dB below signal level
+    {
+        AUDIO_4P2KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_24KHZ, &IIR_8k_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+
+    {
         AUDIO_4P8KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimate,
-        RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        RX_DECIMATION_RATE_24KHZ, NULL,
+        &FirRxInterpolate_4_10k, &IIR_aa_9k
+    },
+
+    {
+        AUDIO_6P0KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_6k_coeffs, iq_rx_am_6k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, NULL,
+        &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
 
     {
         AUDIO_7P5KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_7k5_coeffs, iq_rx_am_7k5_coeffs, &FirRxDecimateMinLPF,
         RX_DECIMATION_RATE_24KHZ, NULL,
-        &FirRxInterpolate10KHZ, NULL
+        &FirRxInterpolate_4_10k, &IIR_aa_10k
+    },
+
+    {
+        AUDIO_10P0KHZ, "SAM", FILTER_MASK_SAM, 1, I_NUM_TAPS, iq_rx_am_10k_coeffs, iq_rx_am_10k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, NULL,
+        &FirRxInterpolate_4_10k, &IIR_aa_10k
     }
 
 }; // end FilterPath
