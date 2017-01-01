@@ -253,11 +253,13 @@ void TransceiverStateInit(void)
 
     for (int i = 0; i < IQ_ADJUST_POINTS_NUM; i++)
     {
-        ts.tx_iq_gain_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
-        ts.tx_iq_phase_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
-        ts.rx_iq_gain_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
-        ts.rx_iq_phase_balance[i]   = 0;                // Default settings for RX and TX gain and phase balance
-
+        for (int j = 0; j < IQ_TRANS_NUM; j++)
+        {
+        ts.tx_iq_gain_balance[j][i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.tx_iq_phase_balance[j][i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.rx_iq_gain_balance[j][i]   = 0;                // Default settings for RX and TX gain and phase balance
+        ts.rx_iq_phase_balance[j][i]   = 0;                // Default settings for RX and TX gain and phase balance
+        }
     }
 
     ts.tune_freq		= 0;

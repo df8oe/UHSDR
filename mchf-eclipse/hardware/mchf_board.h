@@ -798,6 +798,13 @@ typedef struct Gain_s
     uint8_t value_old;
     float   active_value;
 } Gain;
+
+typedef enum {
+    IQ_TRANS_OFF = 0,
+    IQ_TRANS_ON,
+    IQ_TRANS_NUM
+} iq_trans_idx_t;
+
 //
 // Bands tuning values - WORKING registers - used "live" during transceiver operation
 // (May contain VFO A, B or "Memory" channel values)
@@ -863,10 +870,10 @@ typedef struct TransceiverState
 #define IQ_10M 1
 #define IQ_20M 2
 
-    int32_t tx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for TX IQ gain balance
-    int32_t tx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for TX IQ phase balance
-    int32_t rx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for RX IQ gain balance
-    int32_t rx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for RX IQ phase balance
+    int32_t tx_iq_gain_balance[IQ_TRANS_NUM][IQ_ADJUST_POINTS_NUM];  // setting for TX IQ gain balance
+    int32_t tx_iq_phase_balance[IQ_TRANS_NUM][IQ_ADJUST_POINTS_NUM]; // setting for TX IQ phase balance
+    int32_t rx_iq_gain_balance[IQ_TRANS_NUM][IQ_ADJUST_POINTS_NUM];  // setting for RX IQ gain balance
+    int32_t rx_iq_phase_balance[IQ_TRANS_NUM][IQ_ADJUST_POINTS_NUM]; // setting for RX IQ phase balance
 
     iq_float_t tx_adj_gain_var;    // active variables for adjusting tx gain balance
     iq_float_t rx_adj_gain_var;    // active variables for adjusting rx gain balance
