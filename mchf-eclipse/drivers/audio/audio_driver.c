@@ -528,7 +528,7 @@ void AudioDriver_Init(void)
 
 // definitions for synchronous AM demodulation = SAM
     ads.DF = 1.0;
-    ads.pll_fmax_int = 2500;
+    //ads.pll_fmax_int = 2500;
     ads.pll_fmax = (float32_t)ads.pll_fmax_int;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
@@ -538,9 +538,9 @@ void AudioDriver_Init(void)
     // DX = 0.2, 70
     // medium 0.6, 200
     // fast 1.0, 500
-    ads.zeta_int = 80; // zeta * 100 !!!
+    //ads.zeta_int = 80; // zeta * 100 !!!
     // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
+    //ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
     ads.omegaN = (float32_t)ads.omegaN_int;
     ads.zeta = (float32_t)ads.zeta_int / 100.0;
       //pll

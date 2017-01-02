@@ -519,7 +519,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TX_FILTER					363		// TX_Filter configuration
 #define EEPROM_TX_BASS_GAIN					364		// TX bass gain lowShelf filter
 #define EEPROM_TX_TREBLE_GAIN				365		// TX treble gain highShelf filter
-#define EEPROM_FIRST_UNUSED 				366		// change this if new value ids are introduced
+#define EEPROM_SAM_PLL_LOCKING_RANGE        366     //
+#define EEPROM_SAM_PLL_STEP_RESPONSE        367     //
+#define EEPROM_SAM_PLL_BANDWIDTH            368     //
+#define EEPROM_FIRST_UNUSED 				369		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

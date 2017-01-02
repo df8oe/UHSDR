@@ -159,6 +159,9 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_BASS},
 	{ ConfigEntry_Int32_16, EEPROM_TX_BASS_GAIN,&ts.tx_bass_gain,4,-20,6},
     { ConfigEntry_Int32_16, EEPROM_TX_TREBLE_GAIN,&ts.tx_treble_gain,4,-20,6},
+    { ConfigEntry_Int32_16, EEPROM_SAM_PLL_LOCKING_RANGE,&ads.pll_fmax_int,2500,50,8000},
+    { ConfigEntry_Int32_16, EEPROM_SAM_PLL_STEP_RESPONSE,&ads.zeta_int,65,1,100},
+    { ConfigEntry_Int32_16, EEPROM_SAM_PLL_BANDWIDTH,&ads.omegaN_int, 250,15,1000},
 
 	UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
