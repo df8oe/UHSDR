@@ -168,9 +168,7 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
     return ((ts.tx_disable & (whom)) > 0);
 }
 
-
-
-
+uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
 uint8_t RadioManagement_GetBand(ulong freq);
 bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level);
 bool RadioManagement_Tune(bool tune);
