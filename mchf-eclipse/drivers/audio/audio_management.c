@@ -121,6 +121,23 @@ void AudioManagement_CalcNB_AGC(void)
 
 static float AudioManagement_CalcAdjustInFreqRangeHelper(float32_t adj_low, float32_t adj_high, float32_t freq, float32_t scaling)
 {
+    if (adj_high == IQ_BALANCE_OFF)
+    {
+        if (adj_low == IQ_BALANCE_OFF)
+        {
+            // no data available, set both to zero
+            adj_high = adj_low = 0.0;
+        }
+        else
+        {
+            // we use the low value for both
+            adj_high = adj_low;
+        }
+    } else if (adj_low == IQ_BALANCE_OFF)
+    {
+        // we use the high value for both
+        adj_low = adj_high;
+    }
     return ((adj_high - adj_low) / (28100000.0 - 3600000.0) * (freq - 3600000.0) + adj_low)/scaling;        // get current gain adjustment setting  USB and other modes
 }
 
@@ -138,34 +155,38 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // be regulated by adjusting the amplitudes of the two signals!
 
     ads.iq_phase_balance_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_80M],
-            ts.rx_iq_phase_balance[IQ_TRANS_ON][IQ_10M],
+            ts.rx_iq_phase_balance[IQ_80M].value[IQ_TRANS_ON],
+            ts.rx_iq_phase_balance[IQ_10M].value[IQ_TRANS_ON],
             freq,
             SCALING_FACTOR_IQ_PHASE_ADJUST);
-
-    ads.iq_phase_balance_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-                ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_80M],
-                ts.tx_iq_phase_balance[IQ_TRANS_ON][IQ_10M],
-                freq,
-                SCALING_FACTOR_IQ_PHASE_ADJUST);
 
 
     // please note that the RX adjustments for gain are negative
     // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
     float32_t adj_i_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            -ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_80M],
-            -ts.rx_iq_gain_balance[IQ_TRANS_ON][IQ_10M],
+            -ts.rx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],
+            -ts.rx_iq_gain_balance[IQ_10M].value[IQ_TRANS_ON],
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 
-    float32_t adj_i_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_80M],
-            ts.tx_iq_gain_balance[IQ_TRANS_ON][IQ_10M],
-            freq,
-            SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
+    for (int i = 0; i < IQ_TRANS_NUM; i++)
+    {
+        ads.iq_phase_balance_tx[i] = AudioManagement_CalcAdjustInFreqRangeHelper(
+                    ts.tx_iq_phase_balance[IQ_80M].value[i],
+                    ts.tx_iq_phase_balance[IQ_10M].value[i],
+                    freq,
+                    SCALING_FACTOR_IQ_PHASE_ADJUST);
+
+        float32_t adj_i_tx= AudioManagement_CalcAdjustInFreqRangeHelper(
+                ts.tx_iq_gain_balance[IQ_80M].value[i],
+                ts.tx_iq_gain_balance[IQ_10M].value[i],
+                freq,
+                SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
+
+        AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var[i],adj_i_tx);
+    }
 
     AudioManagement_CalcIqGainAdjustVarHelper(&ts.rx_adj_gain_var,adj_i_rx);
-    AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var,adj_i_tx);
 
 }
 

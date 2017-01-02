@@ -190,7 +190,7 @@ typedef struct AudioDriverState
     #define FM_CTR  2
 
     float32_t               iq_phase_balance_rx;
-    float32_t               iq_phase_balance_tx;
+    float32_t               iq_phase_balance_tx[IQ_TRANS_NUM];
 
 } AudioDriverState;
 

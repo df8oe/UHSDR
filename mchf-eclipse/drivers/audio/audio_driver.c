@@ -2495,7 +2495,19 @@ static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, c
 static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize)
 {
 
-    float32_t iq_phase_balance =  (txrx_mode == TRX_MODE_RX)? ads.iq_phase_balance_rx: ads.iq_phase_balance_tx;
+    int16_t trans_idx;
+
+    // right now only in TX used, may change in future
+    if ((txrx_mode == TRX_MODE_TX && ts.dmod_mode == DEMOD_CW) || ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
+    {
+        trans_idx = IQ_TRANS_OFF;
+    }
+    else
+    {
+        trans_idx = IQ_TRANS_ON;
+    }
+
+    float32_t iq_phase_balance =  (txrx_mode == TRX_MODE_RX)? ads.iq_phase_balance_rx: ads.iq_phase_balance_tx[trans_idx];
 
     if (iq_phase_balance < 0)   // we only need to deal with I and put a little bit of it into Q
     {
@@ -3233,12 +3245,21 @@ static void AudioDriver_TxCompressor(int16_t blockSize, float gain_scaling)
 // Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
 static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
 {
-    int16_t i;
+    int16_t trans_idx;
+
+    if (ts.dmod_mode == DEMOD_CW || ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
+    {
+        trans_idx = IQ_TRANS_OFF;
+    }
+    else
+    {
+        trans_idx = IQ_TRANS_ON;
+    }
 
     float32_t *final_i_buffer, *final_q_buffer;
 
-    float32_t final_i_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.i * scaling);
-    float32_t final_q_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var.q * scaling);
+    float32_t final_i_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling);
+    float32_t final_q_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling);
     // ------------------------
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
@@ -3257,7 +3278,7 @@ static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSampl
     arm_scale_f32(final_q_buffer, final_q_gain, final_q_buffer, blockSize);
     // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
-     for(i = 0; i < blockSize; i++)
+     for(int i = 0; i < blockSize; i++)
     {
         // Prepare data for DAC
         dst[i].l = final_i_buffer[i]; // save left channel

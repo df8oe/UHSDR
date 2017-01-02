@@ -33,6 +33,14 @@ void    AudioManagement_CalcSubaudibleDetFreq();
 void    AudioManagement_KeyBeep(void);
 void    AudioManagement_LoadBeepFreq(void);
 
+#define IQ_BALANCE_OFF  -128 // Minimum setting for IQ gain balance
+
+#define MIN_IQ_GAIN_BALANCE  IQ_BALANCE_OFF // Minimum setting for IQ gain balance
+#define MAX_IQ_GAIN_BALANCE  127  // Maximum setting for IQ gain balance
+
+#define MIN_IQ_PHASE_BALANCE IQ_BALANCE_OFF // Minimum setting for IQ phase balance
+#define MAX_IQ_PHASE_BALANCE 127  // Maximum setting for IQ phase balance
+
 
 
 #endif /* DRIVERS_AUDIO_AUDIO_MANAGEMENT_H_ */
