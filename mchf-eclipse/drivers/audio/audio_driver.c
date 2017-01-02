@@ -526,7 +526,7 @@ void AudioDriver_Init(void)
     ads.decimation_rate	=	RX_DECIMATION_RATE_12KHZ;		// Decimation rate, when enabled
 
 
-
+// definitions for synchronous AM demodulation = SAM
     ads.DF = 1.0;
     ads.pll_fmin = -2500.0;
     ads.pll_fmax = +2500.0;
@@ -2736,34 +2736,6 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         }
 
 }
-
-
-/*
-if (a->levelfade)
-{
-    a->dc = a->mtauR * a->dc + a->onem_mtauR * audio;
-    a->dc_insert = a->mtauI * a->dc_insert + a->onem_mtauI * corr[0];
-    audio += a->dc_insert - a->dc;
-}
-a->out_buff[2 * i + 0] = audio;
-a->out_buff[2 * i + 1] = audio;
-
-if ((corr[0] == 0.0) && (corr[1] == 0.0)) corr[0] = 1.0;
-det = atan2(corr[1], corr[0]);
-del_out = a->fil_out;
-a->omega += a->g2 * det;
-if (a->omega < a->omega_min) a->omega = a->omega_min;
-if (a->omega > a->omega_max) a->omega = a->omega_max;
-a->fil_out = a->g1 * det + a->omega;
-a->phs += del_out;
-while (a->phs >= TWOPI) a->phs -= TWOPI;
-while (a->phs < 0.0) a->phs += TWOPI;
-*/
-
-
-
-
-
 
 
 //
