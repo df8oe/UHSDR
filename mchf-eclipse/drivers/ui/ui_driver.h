@@ -287,6 +287,7 @@ void 	UiDriver_ChangeTuningStep(uchar is_up);
 void	UiDriver_UpdateDisplayAfterParamChange();
 void    UiDriver_ShowStartUpScreen(ulong hold_time);
 void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
+void    UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode);
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
