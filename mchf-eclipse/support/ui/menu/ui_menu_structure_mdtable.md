@@ -2,16 +2,21 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated from  <${BUILD_ID}>  at  2016-12-31T07:45:44  by  ui_menu_structure_mdtable.py )
+[//]: # ( generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX - Menu Structure Diagram as MarkDown-Table                      )
+[//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
-    
+
+# mcHF FW v1.5.6 - UI Menu Overview
+
+generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py"
+
+
 
 ## Standard Menu (STD, `MENU_BASE`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **LSB/USB Auto Select**       (031) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency. | 
@@ -45,7 +50,7 @@
 
 
 ## Configuration Menu (CON, `MENU_CONF`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **Save Out-Of-Band Freq.**    (232) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
@@ -71,14 +76,18 @@
 | **Freq. Calibrate**           (230) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Det. Null**            (271) | :soon:                                         | 
 | **FWD/REV ADC Swap.**         (276) | :soon:                                         | 
-| **RX IQ Balance (80m)**       (240) | See Wiki Adjustments and Calibration.          | 
-| **RX IQ Phase   (80m)**       (241) | See Wiki Adjustments and Calibration.          | 
-| **RX IQ Balance (10m)**       (242) | See Wiki Adjustments and Calibration.          | 
-| **RX IQ Phase   (10m)**       (243) | See Wiki Adjustments and Calibration.          | 
-| **TX IQ Balance (80m)**       (250) | See Wiki Adjustments and Calibration.          | 
-| **TX IQ Phase   (80m)**       (251) | See Wiki Adjustments and Calibration.          | 
-| **TX IQ Balance (10m)**       (252) | See Wiki Adjustments and Calibration.          | 
-| **TX IQ Phase   (10m)**       (253) | See Wiki Adjustments and Calibration.          | 
+| **RX IQ Balance (80m)**       (240) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (80m)**       (241) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Balance (10m)**       (242) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (10m)**       (243) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (80m)**       (250) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (80m)**       (251) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (10m)**       (252) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (10m)**       (253) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (80m,CW)**    (250) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF). See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (80m,CW)**    (251) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (10m,CW)**    (252) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (10m,CW)**    (253) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
 | **DSP NR BufLen**             (310) | :soon:                                         | 
 | **DSP NR FFT NumTaps**        (311) | :soon:                                         | 
 | **DSP NR Post-AGC**           (312) | :soon:                                         | 
@@ -86,11 +95,14 @@
 | **DSP Notch BufLen**          (314) | :soon:                                         | 
 | **DSP Notch FFTNumTap**       (315) | :soon:                                         | 
 | **NB AGC T/C (<=Slow)**       (320) | :soon:                                         | 
+| **SAM PLL locking range**     (321) | :how far from the carrier frequency will the PLL lock to the carrier when we are offtune: | 
+| **SAM PLL step response**     (322) | :zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. larger values give faster lock even if you are offtune, but PLL is also more sensitive.: | 
+| **SAM PLL bandwidth in Hz**   (323) | :Bandwidth of the PLL loop in Hz, smaller bandwidth = more stable lock. FAST SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100]: | 
 | **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
 ## Display Menu (DIS, `MENU_DISPLAY`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **LCD Auto Blank**            (090) | :soon:                                         | 
@@ -103,7 +115,6 @@
 | **Spec FreqScale Colour**     (104) | :soon:                                         | 
 | **Spec Line Colour**          (108) | :soon:                                         | 
 | **Spectrum FFT Wind.**        (340) | Selects the use window algorithm for spectrum FFT | 
-| **Scope Light**               ( 99) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
 | **Scope 1/Speed**             (100) | Lower Values: Higher refresh rate              | 
 | **Scope AGC Adj.**            (106) | :soon:                                         | 
 | **Scope Trace Colour**        (102) | :soon:                                         | 
@@ -123,7 +134,7 @@
 
 
 ## CW Mode Settings (CW , `MENU_CW`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **CW Keyer Mode**             (070) | Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM) | 
@@ -137,31 +148,27 @@
 
 
 ## Filter Selection (FIL, `MENU_FILTER`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **SSB Filter 1**              (600) | :soon:                                         | 
-| **SSB Filter 2**              (600) | :soon:                                         | 
-| **SSB Filter 3**              (600) | :soon:                                         | 
-| **SSB Filter 4**              (600) | :soon:                                         | 
-| **CW Filter 1**               (600) | :soon:                                         | 
-| **CW Filter 2**               (600) | :soon:                                         | 
-| **CW Filter 3**               (600) | :soon:                                         | 
-| **CW Filter 4**               (600) | :soon:                                         | 
-| **AM Filter 1**               (600) | :soon:                                         | 
-| **AM Filter 2**               (600) | :soon:                                         | 
-| **AM Filter 3**               (600) | :soon:                                         | 
-| **AM Filter 4**               (600) | :soon:                                         | 
-| **SAM Filter 1**              (600) | :soon:                                         | 
-| **SAM Filter 2**              (600) | :soon:                                         | 
-| **SAM Filter 3**              (600) | :soon:                                         | 
-| **SAM Filter 4**              (600) | :soon:                                         | 
+| **SSB Filter 1**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
+| **SSB Filter 2**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
+| **SSB Filter 3**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
+| **SSB Filter 4**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
+| **CW Filter 1**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
+| **CW Filter 2**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
+| **CW Filter 3**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
+| **CW Filter 4**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
+| **AM Filter 1**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
+| **AM Filter 2**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
+| **AM Filter 3**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
+| **AM Filter 4**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
 | **AM  TX Audio Filter**       (330) | :soon:                                         | 
 | **SSB TX Audio Filter2**      (332) | :soon:                                         | 
 
 
 ## PA Configuration (POW, `MENU_POW`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **Tune Power Level**          (P00) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
@@ -217,7 +224,7 @@
 
 
 ## System Info (INF, `MENU_SYSINFO`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **Display**                   (I01) | :soon:                                         | 
@@ -236,7 +243,7 @@
 
 
 ## Debug/Exper. Settings (INF, `MENU_DEBUG`)
-
+    
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
 | **TX Audio via USB**          (028) | :soon:                                         | 
