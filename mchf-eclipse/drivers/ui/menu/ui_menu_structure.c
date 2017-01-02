@@ -268,25 +268,25 @@ const MenuDescriptor powGroup[] =
 
 const MenuDescriptor filterGroup[] =
 {
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01,"600", "SSB Filter 1", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02,"600", "SSB Filter 2", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03,"600", "SSB Filter 3", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04,"600", "SSB Filter 4", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01,"600", "SSB Filter 1", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using LSB or USB:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02,"600", "SSB Filter 2", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using LSB or USB:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03,"600", "SSB Filter 3", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using LSB or USB:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04,"600", "SSB Filter 4", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using LSB or USB:") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01,"600", "CW Filter 1", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02,"600", "CW Filter 2", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01,"600", "CW Filter 1", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using CW:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02,"600", "CW Filter 2", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using CW:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using CW:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button when using CW:") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here:") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4", UiMenuDesc(":Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here:") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4", UiMenuDesc(":soon:") },
 
     { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE,"330","AM  TX Audio Filter", UiMenuDesc(":soon:") },
 //    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE,"331","SSB TX Audio Filter", UiMenuDesc(":soon:") },

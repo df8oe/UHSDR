@@ -2881,12 +2881,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SSB,(select - MENU_FP_SSB_01)+1);
         break;
 
-    case    MENU_FP_SAM_01:
-    case    MENU_FP_SAM_02:
-    case    MENU_FP_SAM_03:
-    case    MENU_FP_SAM_04:
-        UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
-        break;
+//    case    MENU_FP_SAM_01:
+//    case    MENU_FP_SAM_02:
+//    case    MENU_FP_SAM_03:
+//    case    MENU_FP_SAM_04:
+//        UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
+//        break;
     case CONFIG_CAT_IN_SANDBOX:
         temp_var_u8 = (ts.flags1 & FLAGS1_CAT_IN_SANDBOX)? 1 : 0;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
