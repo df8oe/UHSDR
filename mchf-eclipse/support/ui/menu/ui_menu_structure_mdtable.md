@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -95,9 +95,9 @@ generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py"
 | **DSP Notch BufLen**          (314) | :soon:                                         | 
 | **DSP Notch FFTNumTap**       (315) | :soon:                                         | 
 | **NB AGC T/C (<=Slow)**       (320) | :soon:                                         | 
-| **SAM PLL locking range**     (321) | :how far from the carrier frequency will the PLL lock to the carrier when we are offtune: | 
-| **SAM PLL step response**     (322) | :zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. larger values give faster lock even if you are offtune, but PLL is also more sensitive.: | 
-| **SAM PLL bandwidth in Hz**   (323) | :Bandwidth of the PLL loop in Hz, smaller bandwidth = more stable lock. FAST SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100]: | 
+| **SAM PLL locking range**     (321) | SAM PLL Locking Range determines, how far from the carrier frequency the PLL will lock to the carrier when we are offtune. | 
+| **SAM PLL step response**     (322) | Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
+| **SAM PLL bandwidth in Hz**   (323) | Bandwidth of the PLL loop in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100]. | 
 | **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
@@ -151,18 +151,18 @@ generated at  2017-01-02T13:44:47  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **SSB Filter 1**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
-| **SSB Filter 2**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
-| **SSB Filter 3**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
-| **SSB Filter 4**              (600) | :Filter bandwidths to be used when toggling with filter choice button when using LSB or USB: | 
-| **CW Filter 1**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
-| **CW Filter 2**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
-| **CW Filter 3**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
-| **CW Filter 4**               (600) | :Filter bandwidths to be used when toggling with filter choice button when using CW: | 
-| **AM Filter 1**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
-| **AM Filter 2**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
-| **AM Filter 3**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
-| **AM Filter 4**               (600) | :Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here: | 
+| **SSB Filter 1**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
+| **SSB Filter 2**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
+| **SSB Filter 3**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
+| **SSB Filter 4**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
+| **CW Filter 1**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
+| **CW Filter 2**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
+| **CW Filter 3**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
+| **CW Filter 4**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
+| **AM Filter 1**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
+| **AM Filter 2**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
+| **AM Filter 3**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
+| **AM Filter 4**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
 | **AM  TX Audio Filter**       (330) | :soon:                                         | 
 | **SSB TX Audio Filter2**      (332) | :soon:                                         | 
 
