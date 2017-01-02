@@ -100,6 +100,20 @@ const BandInfo bandInfo[] =
     { 0, 0, 0, "Gen" } // Generic Band
 };
 
+/**
+ * @brief returns the "real" frequency translation mode for a given transceiver state. This may differ from the configured one due to modulation demands
+ *
+ */
+uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode)
+{
+    uint32_t retval = iq_freq_mode;
+    if (dmod_mode == DEMOD_CW && txrx_mode == TRX_MODE_TX)
+    {
+        retval = FREQ_IQ_CONV_MODE_OFF;
+    }
+    return retval;
+}
+
 
 /**
  * @brief permits to dis/enable a digital codec (or get back to analog)
