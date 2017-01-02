@@ -6015,6 +6015,12 @@ void UiDriver_MainHandler()
         case STATE_PROCESS_KEYBOARD:
             UiDriver_ProcessKeyboard();
             break;
+        case STATE_DISPLAY_SAM_CARRIER:
+            if(ts.dmod_mode == DEMOD_SAM)
+            {
+                UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
+            }
+            break;
         default:
             break;
         }
