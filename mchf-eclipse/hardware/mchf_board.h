@@ -882,7 +882,7 @@ typedef struct TransceiverState
     iq_balance_data_t rx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for RX IQ gain balance
     iq_balance_data_t rx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for RX IQ phase balance
 
-    iq_float_t tx_adj_gain_var;    // active variables for adjusting tx gain balance
+    iq_float_t tx_adj_gain_var[IQ_TRANS_NUM];    // active variables for adjusting tx gain balance
     iq_float_t rx_adj_gain_var;    // active variables for adjusting rx gain balance
 
     // Equalisation factor

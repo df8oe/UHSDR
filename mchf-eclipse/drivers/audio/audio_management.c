@@ -160,12 +160,6 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
             freq,
             SCALING_FACTOR_IQ_PHASE_ADJUST);
 
-    ads.iq_phase_balance_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-                ts.tx_iq_phase_balance[IQ_80M].value[IQ_TRANS_ON],
-                ts.tx_iq_phase_balance[IQ_10M].value[IQ_TRANS_ON],
-                freq,
-                SCALING_FACTOR_IQ_PHASE_ADJUST);
-
 
     // please note that the RX adjustments for gain are negative
     // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
@@ -175,14 +169,24 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
             freq,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 
-    float32_t adj_i_tx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.tx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],
-            ts.tx_iq_gain_balance[IQ_10M].value[IQ_TRANS_ON],
-            freq,
-            SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
+    for (int i = 0; i < IQ_TRANS_NUM; i++)
+    {
+        ads.iq_phase_balance_tx[i] = AudioManagement_CalcAdjustInFreqRangeHelper(
+                    ts.tx_iq_phase_balance[IQ_80M].value[i],
+                    ts.tx_iq_phase_balance[IQ_10M].value[i],
+                    freq,
+                    SCALING_FACTOR_IQ_PHASE_ADJUST);
+
+        float32_t adj_i_tx= AudioManagement_CalcAdjustInFreqRangeHelper(
+                ts.tx_iq_gain_balance[IQ_80M].value[i],
+                ts.tx_iq_gain_balance[IQ_10M].value[i],
+                freq,
+                SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
+
+        AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var[i],adj_i_tx);
+    }
 
     AudioManagement_CalcIqGainAdjustVarHelper(&ts.rx_adj_gain_var,adj_i_rx);
-    AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var,adj_i_tx);
 
 }
 

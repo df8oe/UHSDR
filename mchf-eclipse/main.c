@@ -255,10 +255,10 @@ void TransceiverStateInit(void)
     {
         for (int j = 0; j < IQ_TRANS_NUM; j++)
         {
-            ts.tx_iq_gain_balance[i].value[j]   = 0;                // Default settings for RX and TX gain and phase balance
-            ts.tx_iq_phase_balance[i].value[j]   = 0;                // Default settings for RX and TX gain and phase balance
-            ts.rx_iq_gain_balance[i].value[j]   = 0;                // Default settings for RX and TX gain and phase balance
-            ts.rx_iq_phase_balance[i].value[j]   = 0;                // Default settings for RX and TX gain and phase balance
+            ts.tx_iq_gain_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
+            ts.tx_iq_phase_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
+            ts.rx_iq_gain_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
+            ts.rx_iq_phase_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
         }
     }
 

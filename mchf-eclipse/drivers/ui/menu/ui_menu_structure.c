@@ -185,6 +185,11 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_80M_TX_IQ_PHASE_BAL,"251","TX IQ Phase   (80m)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_GAIN_BAL,"252", "TX IQ Balance (10m)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_PHASE_BAL,"253","TX IQ Phase   (10m)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF,"250", "TX IQ Balance (80m,CW)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF,"251","TX IQ Phase   (80m,CW)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF,"252", "TX IQ Balance (10m,CW)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF,"253","TX IQ Phase   (10m,CW)", UiMenuDesc("See Wiki Adjustments and Calibration.") },
+
     // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_GAIN_BAL,"244","AM  RX IQ Bal.", UiMenuDesc(":soon:") },
     // { MENU_CONF, MENU_ITEM, CONFIG_AM_RX_PHASE_BAL,"244b","AM  RX IQ Phase", UiMenuDesc(":soon:") },
     // { MENU_CONF, MENU_ITEM, CONFIG_FM_RX_GAIN_BAL,"245","FM  RX IQ Bal.", UiMenuDesc(":soon:") },

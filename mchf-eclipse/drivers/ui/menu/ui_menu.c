@@ -297,7 +297,7 @@ void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_p
         tchange = UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,
                 min,
                 max,
-                0,
+                min,
                 1);
         if(tchange)
         {
@@ -2217,12 +2217,19 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_10M_TX_IQ_PHASE_BAL:        // USB TX IQ Phase balance
         UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M].value[IQ_TRANS_ON], TRX_MODE_TX);
         break;
-    case    CONFIG_20M_TX_GAIN_BAL:     // AM TX IQ Phase balance
-        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_20M].value[IQ_TRANS_ON], TRX_MODE_TX);
+    case    CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF:     // AM TX IQ Phase balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_80M].value[IQ_TRANS_OFF], TRX_MODE_TX);
         break;
-    case    CONFIG_20M_TX_PHASE_BAL:        // FM TX IQ Phase balance
-        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_20M].value[IQ_TRANS_ON], TRX_MODE_TX);
+    case    CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF:        // FM TX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_80M].value[IQ_TRANS_OFF], TRX_MODE_TX);
         break;
+    case    CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF:     // AM TX IQ Phase balance
+        UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_10M].value[IQ_TRANS_OFF], TRX_MODE_TX);
+        break;
+    case    CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF:        // FM TX IQ Phase balance
+        UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M].value[IQ_TRANS_OFF], TRX_MODE_TX);
+        break;
+
     case CONFIG_CW_PA_BIAS:     // CW PA Bias adjust
         if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))      // enable only in TUNE mode
         {
