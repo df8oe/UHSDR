@@ -205,6 +205,10 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap", UiMenuDesc(":soon:") },
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB AGC T/C (<=Slow)", UiMenuDesc(":soon:") },
 
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_LOCKING_RANGE,"321","SAM PLL locking range", UiMenuDesc(":how far from the carrier frequency will the PLL lock to the carrier when we are offtune:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_STEP_RESPONSE,"322","SAM PLL step response", UiMenuDesc(":zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. larger values give faster lock even if you are offtune, but PLL is also more sensitive.:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_BANDWIDTH,"323","SAM PLL bandwidth in Hz", UiMenuDesc(":Bandwidth of the PLL loop in Hz, smaller bandwidth = more stable lock. FAST SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100]:") },
+
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
     { MENU_CONF, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }

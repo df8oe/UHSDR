@@ -528,8 +528,8 @@ void AudioDriver_Init(void)
 
 // definitions for synchronous AM demodulation = SAM
     ads.DF = 1.0;
-    ads.pll_fmin = -2500.0;
-    ads.pll_fmax = +2500.0;
+    ads.pll_fmax_int = 2500;
+    ads.pll_fmax = (float32_t)ads.pll_fmax_int;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
     // standard settings: zeta = 1.0, omegaN = 250.0
@@ -538,11 +538,13 @@ void AudioDriver_Init(void)
     // DX = 0.2, 70
     // medium 0.6, 200
     // fast 1.0, 500
-    ads.zeta = 0.8; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    ads.omegaN = 250.0; //200.0; // PLL bandwidth 50.0 - 1000.0
-
+    ads.zeta_int = 80; // zeta * 100 !!!
+    // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+    ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
+    ads.omegaN = (float32_t)ads.omegaN_int;
+    ads.zeta = (float32_t)ads.zeta_int / 100.0;
       //pll
-    ads.omega_min = (2.0 * PI * ads.pll_fmin * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+    ads.omega_min = - (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
     ads.omega_max = (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
     ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
     ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)

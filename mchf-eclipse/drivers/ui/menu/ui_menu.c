@@ -936,7 +936,61 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ts.rf_gain);
         break;
-    // RX Codec gain adjust
+
+    case CONFIG_SAM_PLL_LOCKING_RANGE:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ads.pll_fmax_int,
+                                            50,
+                                            8000,
+                                            500,
+                                            10
+                                           );
+        if(var_change)
+        {
+            ads.pll_fmax = (float32_t) ads.pll_fmax_int;
+            //pll
+           ads.omega_min = - (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+           ads.omega_max = (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
+        }
+        snprintf(options, 32, "  %d", ads.pll_fmax_int);
+        break;
+    case CONFIG_SAM_PLL_STEP_RESPONSE:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ads.zeta_int,
+                                            1,
+                                            100,
+                                            65,
+                                            1
+                                           );
+        if(var_change)
+        {
+
+
+            //pll
+           ads.zeta = (float32_t)ads.zeta_int / 100.0;
+           ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F));
+           ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
+                 * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta))));
+        }
+        snprintf(options, 32, "  %d", ads.zeta_int);
+        break;
+
+    case CONFIG_SAM_PLL_BANDWIDTH:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ads.omegaN_int,
+                                            25,
+                                            1000,
+                                            250,
+                                            5
+                                           );
+        if(var_change)
+        {
+           ads.omegaN = (float32_t)ads.omegaN_int;
+           ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F));
+           ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
+                 * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta))));
+        }
+        snprintf(options, 32, "  %d", ads.omegaN_int);
+        break;
+
+        // RX Codec gain adjust
     case MENU_CUSTOM_AGC:       // Custom AGC adjust
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_custom_decay,
                                               0,

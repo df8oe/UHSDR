@@ -152,9 +152,9 @@ typedef struct AudioDriverState
     SoftDds					beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness
 
-    float32_t DF;
-    float32_t pll_fmin;
-    float32_t pll_fmax;
+    float32_t               DF;
+    int                     pll_fmax_int;
+    float32_t               pll_fmax;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
     // standard settings: zeta = 1.0, omegaN = 250.0
@@ -163,24 +163,25 @@ typedef struct AudioDriverState
     // DX = 0.2, 70
     // medium 0.6, 200
     // fast 1.2, 500
-    float32_t zeta; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    float32_t omegaN; //200.0; // PLL bandwidth 50.0 - 1000.0
+    int                     zeta_int; // zeta * 100
+    float32_t               zeta; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+    int                     omegaN_int;
+    float32_t               omegaN; //200.0; // PLL bandwidth 50.0 - 1000.0
 
       //pll
-    //const float32_t omega_min = 2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F;
-    float32_t  omega_min; // (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
-    float32_t  omega_max; //(2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
-    float32_t  g1; //(1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
-    float32_t  g2; //(- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F)
+    float32_t               omega_min; // (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
+    float32_t               omega_max; //(2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
+    float32_t               g1; //(1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
+    float32_t               g2; //(- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F)
         //  * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
 
       //fade leveler
-    float32_t tauR; // original 0.02;
-    float32_t tauI; // original 1.4;
-    float32_t  mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
-    float32_t onem_mtauR;
-    float32_t  mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
-    float32_t  onem_mtauI;
+    float32_t               tauR; // original 0.02;
+    float32_t               tauI; // original 1.4;
+    float32_t               mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
+    float32_t               onem_mtauR;
+    float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
+    float32_t               onem_mtauI;
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
 
