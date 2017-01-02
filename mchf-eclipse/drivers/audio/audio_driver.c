@@ -2697,10 +2697,13 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 		static float32_t omega2 = 0.01;
 		static float32_t dc27 = 0.0;
 		static float32_t dc_insert = 0.0;
+		static uint16_t  count = 0;
+		static float32_t lowpass = 0.0;
+		static float32_t carrier = 0.0;
 
           // Wheatley 2011 cuteSDR & Warren Pratt�s WDSP, 2016
         for(int i = 0; i < blockSize; i++)
-        {
+        {   // NCO
             Sin = sinf(phs);
             Cos = cosf(phs);
             tmp_re = Cos * adb.i_buffer[i] - Sin * adb.q_buffer[i];
@@ -2708,10 +2711,12 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 //            tmp_re = Cos * adb.q_buffer[i] - Sin * adb.i_buffer[i];
 //            tmp_im = Cos * adb.i_buffer[i] + Sin * adb.q_buffer[i];
             //            phzerror = atan2f(tmp_im, tmp_re);
+            // determine phase error
             phzerror = - atan2f(tmp_im, tmp_re);
 //            phzerror = atan2f(tmp_re, tmp_im);
 
                 del_out = fil_out;
+                // correct frequency 1st step
                 omega2 = omega2 + ads.g2 * phzerror;
                 if (omega2 < ads.omega_min)
                 {
@@ -2721,6 +2726,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 {
                     omega2 = ads.omega_max;
                 }
+                // correct frequency 2nd step
                 fil_out = ads.g1 * phzerror + omega2;
                 phs = phs + del_out;
 
@@ -2736,7 +2742,15 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             while (phs >= 2.0 * PI) phs -= (2.0 * PI);
             while (phs < 0.0) phs += (2.0 * PI);
         }
-
+        count++;
+        if(count > 20) // display new omega2 every 267ms in small frequency display
+        { // to make this smoother, one could insert a simple lowpass here . . .
+            carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (ads.DF * 2.0 * PI);
+            carrier = carrier + 0.9 * lowpass;
+            ads.carrier_freq_offset = - (int)carrier;
+            count = 0;
+            lowpass = carrier;
+        }
 }
 
 

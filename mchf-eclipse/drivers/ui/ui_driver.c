@@ -66,7 +66,7 @@ static void 	UiDriver_InitFrequency();
 //
 
 static uchar 	UiDriver_DisplayBandForFreq(ulong freq);
-static void 	UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
+void 	        UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriver_TimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriver_ChangeDemodMode(bool include_disabled_modes);
@@ -2810,7 +2810,7 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_d
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
+void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 {
     uchar		digit_size;
     ulong		pos_y_loc;
@@ -2909,7 +2909,20 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
         pos_x_loc = POS_TUNE_FREQ_X;
         font_width = LARGE_FONT_WIDTH;
     }
+    // in SAM mode, never display any RIT etc., but
+    // use small display for display of the carrier frequency that the PLL has locked to
+    if(((ts.dmod_mode == DEMOD_SAM && mode == UFM_SMALL_RX) || (ts.dmod_mode == DEMOD_SAM && mode == UFM_SECONDARY)))
+    {
+        digits_ptr  = df.sdial_digits;
+        digit_size = 0;
+        pos_y_loc = POS_TUNE_SFREQ_Y;
+        pos_x_loc = POS_TUNE_SFREQ_X;
+        font_width = SMALL_FONT_WIDTH;
+        UiDriver_UpdateFreqDisplay(dial_freq + ads.carrier_freq_offset, digits_ptr, pos_x_loc, font_width, pos_y_loc, Yellow, digit_size);
+    }
+    else {
     UiDriver_UpdateFreqDisplay(dial_freq, digits_ptr, pos_x_loc, font_width, pos_y_loc, color, digit_size);
+    }
 }
 
 //*----------------------------------------------------------------------------
