@@ -282,10 +282,10 @@ const MenuDescriptor filterGroup[] =
     { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in CW.") },
     { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in CW.") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM/SAM Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM/SAM Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM/SAM Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM/SAM Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in AM & SAM.") },
 
     // not needed any more: AM & SAM use exactly the same filters
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
