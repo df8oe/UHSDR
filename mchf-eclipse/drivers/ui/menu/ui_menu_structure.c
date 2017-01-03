@@ -96,14 +96,14 @@ const MenuDescriptor displayGroup[] =
 {
     { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE,"090","LCD Auto Blank", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE,"091","Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected step size") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display", UiMenuDesc(":soon:") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH,"092","Filter BW Display", UiMenuDesc("Colour of the horizontal Filter Bandwidth indicator bar.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE,"109","Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum Magnify", UiMenuDesc("Select level of magnification of spectrum. Also changeable via touch screen.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY,"105","Spectrum Magnify", UiMenuDesc("Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE,"117","Spectrum Size", UiMenuDesc("Change height of spectrum display") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH,"101","Spectrum Filter", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR,"104","Spec FreqScale Colour", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR,"108","Spec Line Colour", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE,"340","Spectrum FFT Wind.", UiMenuDesc("Selects the use window algorithm for spectrum FFT") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH,"101","Spectrum Filter", UiMenuDesc("Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR,"104","Spec FreqScale Colour", UiMenuDesc("Colour of the small frequency digits under the spectrum display.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR,"108","Spec Line Colour", UiMenuDesc("Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display.") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE,"340","Spectrum FFT Wind.", UiMenuDesc("Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE,"99","Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED,"100","Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST,"106","Scope AGC Adj.", UiMenuDesc(":soon:") },
@@ -119,8 +119,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST,"116","Wfall NoSig Adj.", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP,"122","Upper Meter Colour", UiMenuDesc("Set the colour of the scale of combined S/Power-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN,"123","Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display", UiMenuDesc("Enable an additional numeric display of the RX signal strength")},
-    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc("Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value.")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY,"120","dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals.")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER,"121","S-Meter", UiMenuDesc("Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength.")},
     { MENU_DISPLAY, MENU_STOP, 0, "   " , NULL, UiMenuDesc("") }
 };
 
@@ -197,17 +197,17 @@ const MenuDescriptor confGroup[] =
     //{ MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal.", UiMenuDesc(":soon:") },
 
     // DSP Configuration, probably never touched
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH,"310","DSP NR BufLen", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_FFT_NUMTAPS,"311","DSP NR FFT NumTaps", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_POST_AGC_SELECT,"312","DSP NR Post-AGC", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE,"313","DSP Notch ConvRate", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FFTNumTap", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB AGC T/C (<=Slow)", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH,"310","DSP NR BufLen", UiMenuDesc("DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_FFT_NUMTAPS,"311","DSP NR FIR NumTaps", UiMenuDesc("DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_POST_AGC_SELECT,"312","DSP NR Post-AGC", UiMenuDesc("DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE,"313","DSP Notch ConvRate", UiMenuDesc("DSP LMS automatic notch filter: ") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH,"314","DSP Notch BufLen", UiMenuDesc("DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS,"315","DSP Notch FIRNumTap", UiMenuDesc("DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT,"320","NB AGC T/C (<=Slow)", UiMenuDesc("Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu.") },
 
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_LOCKING_RANGE,"321","SAM PLL locking range", UiMenuDesc("SAM PLL Locking Range determines, how far from the carrier frequency the PLL will lock to the carrier when we are offtune.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_STEP_RESPONSE,"322","SAM PLL step response", UiMenuDesc("Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_BANDWIDTH,"323","SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100].") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_LOCKING_RANGE,"321","SAM PLL locking range", UiMenuDesc("SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_STEP_RESPONSE,"322","SAM PLL step response", UiMenuDesc("Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_BANDWIDTH,"323","SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100].") },
 
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
@@ -272,21 +272,22 @@ const MenuDescriptor powGroup[] =
 
 const MenuDescriptor filterGroup[] =
 {
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01,"600", "SSB Filter 1", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02,"600", "SSB Filter 2", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03,"600", "SSB Filter 3", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04,"600", "SSB Filter 4", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01,"600", "SSB Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02,"600", "SSB Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03,"600", "SSB Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04,"600", "SSB Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in LSB or USB.") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01,"600", "CW Filter 1", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02,"600", "CW Filter 2", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button when using CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01,"600", "CW Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02,"600", "CW Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03,"600", "CW Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04,"600", "CW Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in CW.") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4", UiMenuDesc("Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01,"600", "AM Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02,"600", "AM Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03,"600", "AM Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04,"600", "AM Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in AM & SAM.") },
 
+    // not needed any more: AM & SAM use exactly the same filters
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2", UiMenuDesc(":soon:") },
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
