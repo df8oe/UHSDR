@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9540 771,-9540 771,4 -4,4"/>
 <text text-anchor="middle" x="383.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v1.5.6 &#45; Menus Overview</text>
-<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;03T11:29:39 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;03T18:51:17 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3999.5"/>
@@ -716,7 +716,7 @@
 <polygon fill="none" stroke="black" points="426,-6939.5 426,-6985.5 690,-6985.5 690,-6939.5 426,-6939.5"/>
 <text text-anchor="middle" x="558" y="-6970.3" font-family="Times,serif" font-size="14.00">CONFIG_FWD_REV_SENSE_SWAP (276)</text>
 <polyline fill="none" stroke="black" points="426,-6962.5 690,-6962.5 "/>
-<text text-anchor="middle" x="558" y="-6947.3" font-family="Times,serif" font-size="14.00">FWD/REV ADC Swap.</text>
+<text text-anchor="middle" x="558" y="-6947.3" font-family="Times,serif" font-size="14.00">SWR/PWR Meter FWD/REV Swap</text>
 </g>
 <!-- MENU_CONF&#45;&gt;CONFIG_FWD_REV_SENSE_SWAP -->
 <g id="edge23" class="edge"><title>MENU_CONF&#45;&gt;CONFIG_FWD_REV_SENSE_SWAP</title>

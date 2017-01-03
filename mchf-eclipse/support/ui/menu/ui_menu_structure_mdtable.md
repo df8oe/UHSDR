@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-03T11:29:41  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-03T18:51:20  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-03T11:29:41  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-03T18:51:20  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -75,7 +75,7 @@ generated at  2017-01-03T11:29:41  by "./ui_menu_structure_mdtable.py"
 | **Voltmeter Cal.**            (208) | Adjusts the displayed value of the voltmeter.  | 
 | **Freq. Calibrate**           (230) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Det. Null**            (271) | :soon:                                         | 
-| **FWD/REV ADC Swap.**         (276) | :soon:                                         | 
+| **SWR/PWR Meter FWD/REV Swap** (276) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
 | **RX IQ Balance (80m)**       (240) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
 | **RX IQ Phase   (80m)**       (241) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
 | **RX IQ Balance (10m)**       (242) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
