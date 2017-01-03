@@ -1019,7 +1019,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                             1
                                            );
         if(var_change)
-        {   ads.tauR = (float32_t)ads.tauR_int / 1000.0;
+        {   ads.tauR = ((float32_t)ads.tauR_int) / 1000.0;
             ads.mtauR = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauR))); //0.99948;
             ads.onem_mtauR = (1.0 - ads.mtauR);
         }
@@ -1035,7 +1035,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            ads.tauI = (float32_t)ads.tauI_int / 100.0;
+            ads.tauI = ((float32_t)ads.tauI_int) / 100.0;
             ads.mtauI = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauI))); //0.99999255955;
             ads.onem_mtauI = (1.0 - ads.mtauI);
         }

@@ -64,6 +64,7 @@
 #define SCALING_FACTOR_IQ_AMPLITUDE_ADJUST 2731.0
 
 
+
 typedef struct
 {
     // Stereo buffers
@@ -184,6 +185,8 @@ typedef struct AudioDriverState
     float32_t               onem_mtauR;
     float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
     float32_t               onem_mtauI;
+    float32_t               c0[7];          // Filter coefficients - path 0
+    float32_t               c1[7];          // Filter coefficients - path 1
     int                     carrier_freq_offset;
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
