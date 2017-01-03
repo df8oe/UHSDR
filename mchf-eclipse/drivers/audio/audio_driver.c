@@ -2701,8 +2701,8 @@ static bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, AudioSampl
 
 static void AudioDriver_DemodSAM(int16_t blockSize)
 {
-#define STAGES    7
-#define OUT_IDX   (3 * STAGES)
+//#define STAGES    7
+#define OUT_IDX   (3 * SAM_PLL_HILBERT_STAGES)
 
     // new synchronous AM PLL & PHASE detector
 	// wdsp Warren Pratt, 2016
@@ -2723,10 +2723,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 		static float32_t carrier = 0.0;
 		static float32_t ai, bi, aq, bq;
 		static float32_t ai_ps, bi_ps, aq_ps, bq_ps;
-		static float32_t a[3 * STAGES + 3];     // Filter a variables
-		static float32_t b[3 * STAGES + 3];     // Filter b variables
-		static float32_t c[3 * STAGES + 3];     // Filter c variables
-		static float32_t d[3 * STAGES + 3];     // Filter d variables
+		static float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter a variables
+		static float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter b variables
+		static float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter c variables
+		static float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter d variables
 		static float32_t dsI;             // delayed sample, I path
 		static float32_t dsQ;             // delayed sample, Q path
         static float32_t corr[2];
@@ -2745,6 +2745,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             bi = Sin * adb.i_buffer[i];
             aq = Cos * adb.q_buffer[i];
             bq = Sin * adb.q_buffer[i];
+
             if (sbmode != 0)
             {
               a[0] = dsI;
@@ -2754,7 +2755,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
               dsI = ai;
               dsQ = bq;
 
-              for (int j = 0; j < STAGES; j++)
+              for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
               {
                 k = 3 * j;
                 a[k + 3] = ads.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
@@ -2775,6 +2776,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 d[j] = d[j - 1];
               }
             }
+
             corr[0] = +ai + bq;
             corr[1] = -bi + aq;
 
