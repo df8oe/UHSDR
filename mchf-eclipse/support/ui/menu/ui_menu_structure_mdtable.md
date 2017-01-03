@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-03T09:12:53  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-03T11:29:41  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-03T09:12:53  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-03T11:29:41  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -159,10 +159,10 @@ generated at  2017-01-03T09:12:53  by "./ui_menu_structure_mdtable.py"
 | **CW Filter 2**               (600) | Filter bandwidth #2 when toggling with filter select button in CW. | 
 | **CW Filter 3**               (600) | Filter bandwidth #3 when toggling with filter select button in CW. | 
 | **CW Filter 4**               (600) | Filter bandwidth #4 when toggling with filter select button in CW. | 
-| **AM Filter 1**               (600) | Filter bandwidth #1 when toggling with filter select button in AM & SAM. | 
-| **AM Filter 2**               (600) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
-| **AM Filter 3**               (600) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
-| **AM Filter 4**               (600) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 1**           (600) | Filter bandwidth #1 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 2**           (600) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 3**           (600) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 4**           (600) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
 | **AM  TX Audio Filter**       (330) | :soon:                                         | 
 | **SSB TX Audio Filter2**      (332) | :soon:                                         | 
 

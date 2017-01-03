@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-03T09:12:50  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-03T11:29:39  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-03T09:12:50  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-03T11:29:39  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -898,22 +898,22 @@
              ];
         
         "MENU_FP_AM_01" [
-             label = "MENU_FP_AM_01 (600) | AM Filter 1"
+             label = "MENU_FP_AM_01 (600) | AM/SAM Filter 1"
              shape = record
              ];
         
         "MENU_FP_AM_02" [
-             label = "MENU_FP_AM_02 (600) | AM Filter 2"
+             label = "MENU_FP_AM_02 (600) | AM/SAM Filter 2"
              shape = record
              ];
         
         "MENU_FP_AM_03" [
-             label = "MENU_FP_AM_03 (600) | AM Filter 3"
+             label = "MENU_FP_AM_03 (600) | AM/SAM Filter 3"
              shape = record
              ];
         
         "MENU_FP_AM_04" [
-             label = "MENU_FP_AM_04 (600) | AM Filter 4"
+             label = "MENU_FP_AM_04 (600) | AM/SAM Filter 4"
              shape = record
              ];
         

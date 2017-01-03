@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9540 771,-9540 771,4 -4,4"/>
 <text text-anchor="middle" x="383.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v1.5.6 &#45; Menus Overview</text>
-<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;03T09:12:50 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;03T11:29:39 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3999.5"/>
@@ -1508,7 +1508,7 @@
 <polygon fill="none" stroke="black" points="477.5,-3573.5 477.5,-3619.5 638.5,-3619.5 638.5,-3573.5 477.5,-3573.5"/>
 <text text-anchor="middle" x="558" y="-3604.3" font-family="Times,serif" font-size="14.00">MENU_FP_AM_01 (600)</text>
 <polyline fill="none" stroke="black" points="477.5,-3596.5 638.5,-3596.5 "/>
-<text text-anchor="middle" x="558" y="-3581.3" font-family="Times,serif" font-size="14.00">AM Filter 1</text>
+<text text-anchor="middle" x="558" y="-3581.3" font-family="Times,serif" font-size="14.00">AM/SAM Filter 1</text>
 </g>
 <!-- MENU_FILTER&#45;&gt;MENU_FP_AM_01 -->
 <g id="edge55" class="edge"><title>MENU_FILTER&#45;&gt;MENU_FP_AM_01</title>
@@ -1520,7 +1520,7 @@
 <polygon fill="none" stroke="black" points="477.5,-3522.5 477.5,-3568.5 638.5,-3568.5 638.5,-3522.5 477.5,-3522.5"/>
 <text text-anchor="middle" x="558" y="-3553.3" font-family="Times,serif" font-size="14.00">MENU_FP_AM_02 (600)</text>
 <polyline fill="none" stroke="black" points="477.5,-3545.5 638.5,-3545.5 "/>
-<text text-anchor="middle" x="558" y="-3530.3" font-family="Times,serif" font-size="14.00">AM Filter 2</text>
+<text text-anchor="middle" x="558" y="-3530.3" font-family="Times,serif" font-size="14.00">AM/SAM Filter 2</text>
 </g>
 <!-- MENU_FILTER&#45;&gt;MENU_FP_AM_02 -->
 <g id="edge56" class="edge"><title>MENU_FILTER&#45;&gt;MENU_FP_AM_02</title>
@@ -1532,7 +1532,7 @@
 <polygon fill="none" stroke="black" points="477.5,-3471.5 477.5,-3517.5 638.5,-3517.5 638.5,-3471.5 477.5,-3471.5"/>
 <text text-anchor="middle" x="558" y="-3502.3" font-family="Times,serif" font-size="14.00">MENU_FP_AM_03 (600)</text>
 <polyline fill="none" stroke="black" points="477.5,-3494.5 638.5,-3494.5 "/>
-<text text-anchor="middle" x="558" y="-3479.3" font-family="Times,serif" font-size="14.00">AM Filter 3</text>
+<text text-anchor="middle" x="558" y="-3479.3" font-family="Times,serif" font-size="14.00">AM/SAM Filter 3</text>
 </g>
 <!-- MENU_FILTER&#45;&gt;MENU_FP_AM_03 -->
 <g id="edge57" class="edge"><title>MENU_FILTER&#45;&gt;MENU_FP_AM_03</title>
@@ -1544,7 +1544,7 @@
 <polygon fill="none" stroke="black" points="477.5,-3420.5 477.5,-3466.5 638.5,-3466.5 638.5,-3420.5 477.5,-3420.5"/>
 <text text-anchor="middle" x="558" y="-3451.3" font-family="Times,serif" font-size="14.00">MENU_FP_AM_04 (600)</text>
 <polyline fill="none" stroke="black" points="477.5,-3443.5 638.5,-3443.5 "/>
-<text text-anchor="middle" x="558" y="-3428.3" font-family="Times,serif" font-size="14.00">AM Filter 4</text>
+<text text-anchor="middle" x="558" y="-3428.3" font-family="Times,serif" font-size="14.00">AM/SAM Filter 4</text>
 </g>
 <!-- MENU_FILTER&#45;&gt;MENU_FP_AM_04 -->
 <g id="edge58" class="edge"><title>MENU_FILTER&#45;&gt;MENU_FP_AM_04</title>
