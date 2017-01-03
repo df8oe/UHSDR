@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-02T17:48:13  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-03T09:12:50  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-02T17:48:13  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-03T09:12:50  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -558,7 +558,7 @@
              ];
         
         "CONFIG_DSP_NR_FFT_NUMTAPS" [
-             label = "CONFIG_DSP_NR_FFT_NUMTAPS (311) | DSP NR FFT NumTaps"
+             label = "CONFIG_DSP_NR_FFT_NUMTAPS (311) | DSP NR FIR NumTaps"
              shape = record
              ];
         
@@ -578,7 +578,7 @@
              ];
         
         "CONFIG_DSP_NOTCH_FFT_NUMTAPS" [
-             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS (315) | DSP Notch FFTNumTap"
+             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS (315) | DSP Notch FIRNumTap"
              shape = record
              ];
         

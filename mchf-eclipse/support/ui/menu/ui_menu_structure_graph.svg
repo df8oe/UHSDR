@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9540 771,-9540 771,4 -4,4"/>
 <text text-anchor="middle" x="383.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v1.5.6 &#45; Menus Overview</text>
-<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;02T17:48:13 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="383.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;03T09:12:50 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3999.5"/>
@@ -884,7 +884,7 @@
 <polygon fill="none" stroke="black" points="428.5,-6225.5 428.5,-6271.5 687.5,-6271.5 687.5,-6225.5 428.5,-6225.5"/>
 <text text-anchor="middle" x="558" y="-6256.3" font-family="Times,serif" font-size="14.00">CONFIG_DSP_NR_FFT_NUMTAPS (311)</text>
 <polyline fill="none" stroke="black" points="428.5,-6248.5 687.5,-6248.5 "/>
-<text text-anchor="middle" x="558" y="-6233.3" font-family="Times,serif" font-size="14.00">DSP NR FFT NumTaps</text>
+<text text-anchor="middle" x="558" y="-6233.3" font-family="Times,serif" font-size="14.00">DSP NR FIR NumTaps</text>
 </g>
 <!-- MENU_CONF&#45;&gt;CONFIG_DSP_NR_FFT_NUMTAPS -->
 <g id="edge37" class="edge"><title>MENU_CONF&#45;&gt;CONFIG_DSP_NR_FFT_NUMTAPS</title>
@@ -932,7 +932,7 @@
 <polygon fill="none" stroke="black" points="414.5,-6021.5 414.5,-6067.5 701.5,-6067.5 701.5,-6021.5 414.5,-6021.5"/>
 <text text-anchor="middle" x="558" y="-6052.3" font-family="Times,serif" font-size="14.00">CONFIG_DSP_NOTCH_FFT_NUMTAPS (315)</text>
 <polyline fill="none" stroke="black" points="414.5,-6044.5 701.5,-6044.5 "/>
-<text text-anchor="middle" x="558" y="-6029.3" font-family="Times,serif" font-size="14.00">DSP Notch FFTNumTap</text>
+<text text-anchor="middle" x="558" y="-6029.3" font-family="Times,serif" font-size="14.00">DSP Notch FIRNumTap</text>
 </g>
 <!-- MENU_CONF&#45;&gt;CONFIG_DSP_NOTCH_FFT_NUMTAPS -->
 <g id="edge41" class="edge"><title>MENU_CONF&#45;&gt;CONFIG_DSP_NOTCH_FFT_NUMTAPS</title>

@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-03T09:12:53  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-03T09:12:53  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -88,16 +88,16 @@ generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
 | **TX IQ Phase   (80m,CW)**    (251) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
 | **TX IQ Balance (10m,CW)**    (252) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
 | **TX IQ Phase   (10m,CW)**    (253) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
-| **DSP NR BufLen**             (310) | :soon:                                         | 
-| **DSP NR FFT NumTaps**        (311) | :soon:                                         | 
-| **DSP NR Post-AGC**           (312) | :soon:                                         | 
-| **DSP Notch ConvRate**        (313) | :soon:                                         | 
-| **DSP Notch BufLen**          (314) | :soon:                                         | 
-| **DSP Notch FFTNumTap**       (315) | :soon:                                         | 
-| **NB AGC T/C (<=Slow)**       (320) | :soon:                                         | 
-| **SAM PLL locking range**     (321) | SAM PLL Locking Range determines, how far from the carrier frequency the PLL will lock to the carrier when we are offtune. | 
-| **SAM PLL step response**     (322) | Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
-| **SAM PLL bandwidth in Hz**   (323) | Bandwidth of the PLL loop in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set zeta and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set zeta and PLL bandwidth to small values [eg. 30 / 100]. | 
+| **DSP NR BufLen**             (310) | DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
+| **DSP NR FIR NumTaps**        (311) | DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
+| **DSP NR Post-AGC**           (312) | DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC. | 
+| **DSP Notch ConvRate**        (313) | DSP LMS automatic notch filter:                | 
+| **DSP Notch BufLen**          (314) | DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
+| **DSP Notch FIRNumTap**       (315) | DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
+| **NB AGC T/C (<=Slow)**       (320) | Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu. | 
+| **SAM PLL locking range**     (321) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
+| **SAM PLL step response**     (322) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
+| **SAM PLL bandwidth in Hz**   (323) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
 | **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
@@ -107,14 +107,14 @@ generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
 | ----------------------------------- | ---------------------------------------------- | 
 | **LCD Auto Blank**            (090) | :soon:                                         | 
 | **Step Size Marker**          (091) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
-| **Filter BW Display**         (092) | :soon:                                         | 
+| **Filter BW Display**         (092) | Colour of the horizontal Filter Bandwidth indicator bar. | 
 | **Spectrum Type**             (109) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
-| **Spectrum Magnify**          (105) | Select level of magnification of spectrum. Also changeable via touch screen. | 
+| **Spectrum Magnify**          (105) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
 | **Spectrum Size**             (117) | Change height of spectrum display              | 
-| **Spectrum Filter**           (101) | :soon:                                         | 
-| **Spec FreqScale Colour**     (104) | :soon:                                         | 
-| **Spec Line Colour**          (108) | :soon:                                         | 
-| **Spectrum FFT Wind.**        (340) | Selects the use window algorithm for spectrum FFT | 
+| **Spectrum Filter**           (101) | Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum. | 
+| **Spec FreqScale Colour**     (104) | Colour of the small frequency digits under the spectrum display. | 
+| **Spec Line Colour**          (108) | Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display. | 
+| **Spectrum FFT Wind.**        (340) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
 | **Scope 1/Speed**             (100) | Lower Values: Higher refresh rate              | 
 | **Scope AGC Adj.**            (106) | :soon:                                         | 
 | **Scope Trace Colour**        (102) | :soon:                                         | 
@@ -129,8 +129,8 @@ generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
 | **Wfall NoSig Adj.**          (116) | :soon:                                         | 
 | **Upper Meter Colour**        (122) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (123) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
-| **dBm display**               (120) | Enable an additional numeric display of the RX signal strength | 
-| **S-Meter**                   (121) | Select the S-Meter measurement style. In old school mode, the RF Gain influence the S-Meter settings, higher RFG values increase S-Meter value. | 
+| **dBm display**               (120) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals. | 
+| **S-Meter**                   (121) | Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength. | 
 
 
 ## CW Mode Settings (CW , `MENU_CW`)
@@ -151,18 +151,18 @@ generated at  2017-01-02T17:48:16  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         ( ID) | DESCRIPTION                                    | 
 | ----------------------------------- | ---------------------------------------------- | 
-| **SSB Filter 1**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
-| **SSB Filter 2**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
-| **SSB Filter 3**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
-| **SSB Filter 4**              (600) | Filter bandwidths to be used when toggling with filter choice button when using LSB or USB. | 
-| **CW Filter 1**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
-| **CW Filter 2**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
-| **CW Filter 3**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
-| **CW Filter 4**               (600) | Filter bandwidths to be used when toggling with filter choice button when using CW. | 
-| **AM Filter 1**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
-| **AM Filter 2**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
-| **AM Filter 3**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
-| **AM Filter 4**               (600) | Filter bandwidths to be used when toggling with filter choice button, AM & SAM use exactly the same filters as defined here. | 
+| **SSB Filter 1**              (600) | Filter bandwidth #1 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 2**              (600) | Filter bandwidth #2 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 3**              (600) | Filter bandwidth #3 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 4**              (600) | Filter bandwidth #4 when toggling with filter select button in LSB or USB. | 
+| **CW Filter 1**               (600) | Filter bandwidth #1 when toggling with filter select button in CW. | 
+| **CW Filter 2**               (600) | Filter bandwidth #2 when toggling with filter select button in CW. | 
+| **CW Filter 3**               (600) | Filter bandwidth #3 when toggling with filter select button in CW. | 
+| **CW Filter 4**               (600) | Filter bandwidth #4 when toggling with filter select button in CW. | 
+| **AM Filter 1**               (600) | Filter bandwidth #1 when toggling with filter select button in AM & SAM. | 
+| **AM Filter 2**               (600) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
+| **AM Filter 3**               (600) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
+| **AM Filter 4**               (600) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
 | **AM  TX Audio Filter**       (330) | :soon:                                         | 
 | **SSB TX Audio Filter2**      (332) | :soon:                                         | 
 
