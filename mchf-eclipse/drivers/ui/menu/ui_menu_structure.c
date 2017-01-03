@@ -176,7 +176,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION,"208","Voltmeter Cal.", UiMenuDesc("Adjusts the displayed value of the voltmeter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE,"230","Freq. Calibrate", UiMenuDesc("Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL,"271","Pwr. Det. Null", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","FWD/REV ADC Swap.", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP,"276","SWR/PWR Meter FWD/REV Swap", UiMenuDesc("Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX.") },
     { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_GAIN_BAL,"240", "RX IQ Balance (80m)", UiMenuDesc("IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_PHASE_BAL,"241","RX IQ Phase   (80m)", UiMenuDesc("IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_10M_RX_IQ_GAIN_BAL,"242", "RX IQ Balance (10m)", UiMenuDesc("IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration.") },

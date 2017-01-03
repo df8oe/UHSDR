@@ -369,11 +369,11 @@ inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uin
 
 inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
 {
-    if (change  > (max - val))
+    if (change  > ((int32_t)max - (int32_t)val))
     {
         val = min;
     }
-    else if (change + (int32_t)val <  min)
+    else if ((change + (int32_t)val) <  (int32_t)min)
     {
         val = max;
     }
@@ -1054,6 +1054,22 @@ static void UiDriver_FButton_F1MenuExit()
 }
 
 
+static void UiDriver_FButton_F2SnapMeter()
+{
+    const char* cap;
+    uint32_t color;
+
+#ifdef SNAP
+        cap = "SNAP";
+        color = White;    // yes - indicate with color
+#else
+        color = White;
+        cap = "METER";
+#endif
+    UiDriver_FButtonLabel(2,cap,color);
+}
+
+
 
 static void UiDriver_FButton_F3MemSplit()
 {
@@ -1662,6 +1678,12 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
         {
 #ifdef USE_SNAP
             sc.snap = 1;
+#else
+            // Not in MENU mode - select the METER mode
+            decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+
+            UiDriver_DeleteSMeter();
+            UiDriver_CreateMeters();    // redraw meter
 #endif
         }
     }
@@ -2098,12 +2120,7 @@ static void UiDriver_CreateFunctionButtons(bool full_repaint)
     UiDriver_FButton_F1MenuExit();
 
     // Button F2
-    #ifdef USE_SNAP
-        #define SNAP_COLOR White
-    #else
-        #define SNAP_COLOR Grey1
-    #endif
-    UiDriver_FButtonLabel(2,"SNAP",SNAP_COLOR);
+    UiDriver_FButton_F2SnapMeter();
 
     // Button F3
     UiDriver_FButton_F3MemSplit();
