@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-03T18:51:20  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-03T19:08:23  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-03T18:51:20  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-03T19:08:23  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -98,6 +98,8 @@ generated at  2017-01-03T18:51:20  by "./ui_menu_structure_mdtable.py"
 | **SAM PLL locking range**     (321) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
 | **SAM PLL step response**     (322) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
 | **SAM PLL bandwidth in Hz**   (323) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
+| **SAM PLL tauR**              (324) | :soon:                                         | 
+| **SAM PLL tauI**              (325) | :soon:                                         | 
 | **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
