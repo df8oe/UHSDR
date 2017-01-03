@@ -66,7 +66,7 @@ static void 	UiDriver_InitFrequency();
 //
 
 static uchar 	UiDriver_DisplayBandForFreq(ulong freq);
-void 	        UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
+static void     UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriver_TimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriver_ChangeDemodMode(bool include_disabled_modes);
@@ -2810,7 +2810,7 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_d
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
+static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 {
     uchar		digit_size;
     ulong		pos_y_loc;

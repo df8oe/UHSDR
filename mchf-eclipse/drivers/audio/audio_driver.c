@@ -2743,8 +2743,11 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             while (phs < 0.0) phs += (2.0 * PI);
         }
         count++;
-        if(count > 20) // display new omega2 every 267ms in small frequency display
-        { // to make this smoother, one could insert a simple lowpass here . . .
+        if(count > 40) // to display the exact carrier frequency that the PLL is tuned to
+            // in the small frequency display
+            // we calculate carrier offset here and the display function is
+            // then called in UiDriver_MainHandler approx. every 40-80ms
+        { // to make this smoother, a simple lowpass/exponential averager here . . .
             carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (ads.DF * 2.0 * PI);
             carrier = carrier + 0.9 * lowpass;
             ads.carrier_freq_offset = - (int)carrier;
