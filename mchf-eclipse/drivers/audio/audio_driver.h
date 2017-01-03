@@ -177,7 +177,9 @@ typedef struct AudioDriverState
 
       //fade leveler
     float32_t               tauR; // original 0.02;
+    int                     tauR_int;
     float32_t               tauI; // original 1.4;
+    int                     tauI_int;
     float32_t               mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
     float32_t               onem_mtauR;
     float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;

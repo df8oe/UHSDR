@@ -550,8 +550,10 @@ void AudioDriver_Init(void)
     ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
           * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta)))); //0.01036367597097734813032783691644; //
       //fade leveler
-    ads.tauR = 0.02; // original 0.02;
-    ads.tauI = 1.4; // original 1.4;
+    ads.tauR_int = 20; // -->  / 1000 = 0.02
+    ads.tauI_int = 140; // --> / 100 = 1.4
+    ads.tauR = ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
+    ads.tauI = ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
     ads.mtauR = 0.99896; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
     ads.onem_mtauR = (1.0 - ads.mtauR);
     ads.mtauI = 0.999985119; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;

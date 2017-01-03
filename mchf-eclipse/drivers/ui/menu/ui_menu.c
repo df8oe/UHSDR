@@ -1011,6 +1011,38 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %d", ads.omegaN_int);
         break;
 
+    case CONFIG_SAM_PLL_TAUR:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ads.tauR_int,
+                                            1,
+                                            1000,
+                                            20,
+                                            1
+                                           );
+        if(var_change)
+        {   ads.tauR = (float32_t)ads.tauR_int / 1000.0;
+            ads.mtauR = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauR))); //0.99948;
+            ads.onem_mtauR = (1.0 - ads.mtauR);
+        }
+        snprintf(options, 32, "  %d", ads.tauR_int);
+        break;
+
+    case CONFIG_SAM_PLL_TAUI:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ads.tauI_int,
+                                            1,
+                                            1000,
+                                            140,
+                                            1
+                                           );
+        if(var_change)
+        {
+            ads.tauI = (float32_t)ads.tauI_int / 100.0;
+            ads.mtauI = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauI))); //0.99999255955;
+            ads.onem_mtauI = (1.0 - ads.mtauI);
+        }
+        snprintf(options, 32, "  %d", ads.tauI_int);
+        break;
+
+
         // RX Codec gain adjust
     case MENU_CUSTOM_AGC:       // Custom AGC adjust
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_custom_decay,
