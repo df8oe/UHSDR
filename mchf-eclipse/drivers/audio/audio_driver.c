@@ -2788,12 +2788,12 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 audio = corr[0];
                 break;
               }
-            case 1: //LSB
+            case 2: //LSB
               {
                 audio = (ai_ps - bi_ps) + (aq_ps + bq_ps);
                 break;
               }
-            case 2: //USB
+            case 1: //USB
               {
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 break;
@@ -3040,10 +3040,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-
+        if(ts.dmod_mode != DEMOD_SAM || ads.sam_sideband == 0)
+        {
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
-
+        }
 
         switch(dmod_mode)
         {
