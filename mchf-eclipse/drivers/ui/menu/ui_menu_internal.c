@@ -49,6 +49,11 @@ const MenuGroupDescriptor* UiMenu_GetGroupForGroupEntry(const MenuDescriptor* me
     return me==NULL?NULL:&groups[me->number];
 }
 
+inline bool UiMenu_IsEnabled(const MenuDescriptor *entry)
+{
+    return entry==NULL?false:(entry->enabled != NULL?*entry->enabled:true);
+}
+
 
 inline bool UiMenu_IsGroup(const MenuDescriptor *entry)
 {
@@ -127,13 +132,19 @@ const MenuDescriptor* UiMenu_GetNextEntryInGroup(const MenuDescriptor* me)
     if (me != NULL)
     {
         const MenuGroupDescriptor* group_ptr = UiMenu_GetParentGroupForEntry(me);
-        if (UiMenu_GroupGetLast(group_ptr)> me)
+        for (const MenuDescriptor* nxt = me + 1; UiMenu_GroupGetLast(group_ptr)>= nxt; nxt++)
         {
-            retval = me + 1;
+            if (UiMenu_IsEnabled(nxt))
+            {
+                retval = nxt;
+                break;
+            }
         }
     }
     return retval;
 }
+
+
 
 const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me)
 {
@@ -141,7 +152,14 @@ const MenuDescriptor* UiMenu_GetPrevEntryInGroup(const MenuDescriptor* me)
     const MenuDescriptor* retval = NULL;
     if (me != NULL && me != &group_ptr->entries[0])
     {
-        retval = me - 1;
+        for (const MenuDescriptor* prv = me - 1; prv >= &group_ptr->entries[0]; prv--)
+        {
+            if (UiMenu_IsEnabled(prv))
+            {
+                retval = prv;
+                break;
+            }
+        }
     }
     return retval;
 }

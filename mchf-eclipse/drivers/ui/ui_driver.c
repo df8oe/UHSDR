@@ -6019,6 +6019,15 @@ void UiDriver_MainHandler()
             if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64))
             {
                 UiDriver_HandleLoTemperature();
+                ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
+#if 1
+                uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
+                profileTimedEventReset(ProfileAudioInterrupt);
+                char str[20];
+                snprintf(str,10,"Load%3u%%",(unsigned int)load);
+                UiLcdHy28_PrintText(0,80,str,White,Black,0);
+#endif
+
             }
             break;
         case STATE_TASK_CHECK:

@@ -16,7 +16,7 @@
 #define __PROFILING_H
 
 typedef enum {
-    ProfileTP0 = 0,
+    ProfileAudioInterrupt = 0,
     ProfileTP1,
     ProfileTP2,
     ProfileTP3,
@@ -154,12 +154,13 @@ inline void profileTimedEventReset(const ProfiledEventNames pe)
 
 inline  ProfilingTimedEvent* profileTimedEventGet(const ProfiledEventNames pe)
 {
+    ProfilingTimedEvent* pe_ptr = NULL;
 #ifdef PROFILE_EVENTS
     if (pe<EventProfileMax && pe >= 0) {
-        return &eventProfile.event[pe];
+        pe_ptr = &eventProfile.event[pe];
     }
 #endif
-    return NULL;
+    return pe_ptr;
 }
 
 

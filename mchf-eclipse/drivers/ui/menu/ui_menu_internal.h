@@ -234,7 +234,8 @@ typedef struct
     const uint16_t number; // this is an identification number which is passed to the menu entry handled
     // for standard items it is the id of the value to be changed, intepretation is left to handler
     // MENU_GROUP: for menu groups this MUST BE the index in the menu group table, THIS IS USED INTERNALLY
-    const char id[4];      // this is a visual 3 letter identification which may be display, depending on the render approach
+    volatile bool* enabled;      // pointer to a variable which contains a boolean value to tell us if the menu entry is enabled right now, set to NULL if always enabled
+    // this was a visual 3 letter identification which may be display, depending on the render approach
     const char* label;     // this is the label which will be display, depending on the render approach
 } MenuDescriptor;
 

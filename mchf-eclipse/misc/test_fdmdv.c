@@ -178,9 +178,9 @@ int run(int cumulativeOutput, int numberOfRuns, int currentRun, int next_nin)
 	\*---------------------------------------------------------*/
 
         /* shift down to complex baseband */
-        profileTimedEventStart(ProfileTP0);
+        profileTimedEventStart(ProfileTP9);
         fdmdv_freq_shift(rx_fdm, rx_fdm, -FDMDV_FCENTRE, &fdmdv->fbb_phase_rx, nin);
-        profileTimedEventStop(ProfileTP0);
+        profileTimedEventStop(ProfileTP9);
         /* freq offset estimation and correction */
 
         // fdmdv->sync = 0; // when debugging good idea to uncomment this to "open loop"
