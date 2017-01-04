@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-03T19:08:21  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-04T09:26:41  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-03T19:08:21  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-04T09:26:41  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -612,6 +612,11 @@
              shape = record
              ];
         
+        "CONFIG_SAM_SIDEBAND" [
+             label = "CONFIG_SAM_SIDEBAND (326) | SAM Sideband"
+             shape = record
+             ];
+        
         "CONFIG_RESET_SER_EEPROM" [
              label = "CONFIG_RESET_SER_EEPROM (341) | Reset Config EEPROM"
              shape = record
@@ -1106,6 +1111,8 @@
             MENU_CONF -> CONFIG_SAM_PLL_TAUR
             
             MENU_CONF -> CONFIG_SAM_PLL_TAUI
+            
+            MENU_CONF -> CONFIG_SAM_SIDEBAND
             
             MENU_CONF -> CONFIG_RESET_SER_EEPROM
             
