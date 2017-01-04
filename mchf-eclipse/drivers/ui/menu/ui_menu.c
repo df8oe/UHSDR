@@ -967,10 +967,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            ads.pll_fmax = (float32_t) ads.pll_fmax_int;
-            //pll
-           ads.omega_min = - (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
-           ads.omega_max = (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
+            set_SAM_PLL_parameters();
         }
         snprintf(options, 32, "  %d", ads.pll_fmax_int);
         break;
@@ -983,13 +980,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
+            set_SAM_PLL_parameters();
 
 
-            //pll
-           ads.zeta = (float32_t)ads.zeta_int / 100.0;
-           ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F));
-           ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
-                 * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta))));
         }
         snprintf(options, 32, "  %d", ads.zeta_int);
         break;
@@ -1003,12 +996,40 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-           ads.omegaN = (float32_t)ads.omegaN_int;
-           ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F));
-           ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
-                 * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta))));
+            set_SAM_PLL_parameters();
+
         }
         snprintf(options, 32, "  %d", ads.omegaN_int);
+        break;
+    case CONFIG_SAM_SIDEBAND:  //
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ads.sam_sideband,
+                                              0,
+                                              2,
+                                              0,
+                                              1
+                                             );
+        if(var_change)
+        {
+
+        }
+        //
+        if(ads.sam_sideband == 1 || ads.sam_sideband == 2)
+        {
+            clr = Red;
+        }
+
+        switch(ads.sam_sideband)
+        {
+        case 0:
+            txt_ptr = "BOTH";
+            break;
+        case 1:
+            txt_ptr = " LSB";
+            break;
+        case 2:
+            txt_ptr = " USB";
+            break;
+        }
         break;
 
     case CONFIG_SAM_PLL_TAUR:      //
@@ -1019,9 +1040,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                             1
                                            );
         if(var_change)
-        {   ads.tauR = ((float32_t)ads.tauR_int) / 1000.0;
-            ads.mtauR = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauR))); //0.99948;
-            ads.onem_mtauR = (1.0 - ads.mtauR);
+        {
+            set_SAM_PLL_parameters();
+
         }
         snprintf(options, 32, "  %d", ads.tauR_int);
         break;
@@ -1035,9 +1056,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            ads.tauI = ((float32_t)ads.tauI_int) / 100.0;
-            ads.mtauI = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauI))); //0.99999255955;
-            ads.onem_mtauI = (1.0 - ads.mtauI);
         }
         snprintf(options, 32, "  %d", ads.tauI_int);
         break;

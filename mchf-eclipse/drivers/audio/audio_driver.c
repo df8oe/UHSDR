@@ -527,9 +527,9 @@ void AudioDriver_Init(void)
 
 
 // definitions for synchronous AM demodulation = SAM
-    ads.DF = 1.0;
+    adb.DF = 1.0;
     //ads.pll_fmax_int = 2500;
-    ads.pll_fmax = (float32_t)ads.pll_fmax_int;
+    adb.pll_fmax = (float32_t)ads.pll_fmax_int;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
     // standard settings: zeta = 1.0, omegaN = 250.0
@@ -541,39 +541,39 @@ void AudioDriver_Init(void)
     //ads.zeta_int = 80; // zeta * 100 !!!
     // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
     //ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
-    ads.omegaN = (float32_t)ads.omegaN_int;
-    ads.zeta = (float32_t)ads.zeta_int / 100.0;
+    adb.omegaN = (float32_t)ads.omegaN_int;
+    adb.zeta = (float32_t)ads.zeta_int / 100.0;
       //pll
-    ads.omega_min = - (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
-    ads.omega_max = (2.0 * PI * ads.pll_fmax * ads.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
-    ads.g1 = (1.0 - exp(-2.0 * ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
-    ads.g2 = (- ads.g1 + 2.0 * (1 - exp(- ads.omegaN * ads.zeta * ads.DF / IQ_SAMPLE_RATE_F)
-          * cosf(ads.omegaN * ads.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - ads.zeta * ads.zeta)))); //0.01036367597097734813032783691644; //
+    adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+    adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
+    adb.g1 = (1.0 - exp(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
+    adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
+          * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
       //fade leveler
     ads.tauR_int = 20; // -->  / 1000 = 0.02
     ads.tauI_int = 140; // --> / 100 = 1.4
-    ads.tauR = ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
-    ads.tauI = ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
-    ads.mtauR = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauR))); //0.99948;
-    ads.onem_mtauR = (1.0 - ads.mtauR);
-    ads.mtauI = (exp(- ads.DF / (IQ_SAMPLE_RATE_F * ads.tauI))); //0.99999255955;
-    ads.onem_mtauI = (1.0 - ads.mtauI);
+    adb.tauR = ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
+    adb.tauI = ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
+    adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
+    adb.onem_mtauR = (1.0 - adb.mtauR);
+    adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
+    adb.onem_mtauI = (1.0 - adb.mtauI);
     //sideband separation
-    ads.c0[0] = -0.328201924180698;
-    ads.c0[1] = -0.744171491539427;
-    ads.c0[2] = -0.923022915444215;
-    ads.c0[3] = -0.978490468768238;
-    ads.c0[4] = -0.994128272402075;
-    ads.c0[5] = -0.998458978159551;
-    ads.c0[6] = -0.999790306259206;
+    adb.c0[0] = -0.328201924180698;
+    adb.c0[1] = -0.744171491539427;
+    adb.c0[2] = -0.923022915444215;
+    adb.c0[3] = -0.978490468768238;
+    adb.c0[4] = -0.994128272402075;
+    adb.c0[5] = -0.998458978159551;
+    adb.c0[6] = -0.999790306259206;
 
-    ads.c1[0] = -0.0991227952747244;
-    ads.c1[1] = -0.565619728761389;
-    ads.c1[2] = -0.857467122550052;
-    ads.c1[3] = -0.959123933111275;
-    ads.c1[4] = -0.988739372718090;
-    ads.c1[5] = -0.996959189310611;
-    ads.c1[6] = -0.999282492800792;
+    adb.c1[0] = -0.0991227952747244;
+    adb.c1[1] = -0.565619728761389;
+    adb.c1[2] = -0.857467122550052;
+    adb.c1[3] = -0.959123933111275;
+    adb.c1[4] = -0.988739372718090;
+    adb.c1[5] = -0.996959189310611;
+    adb.c1[6] = -0.999282492800792;
 
     //
     //
@@ -2733,20 +2733,21 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         static float32_t audio;
 //        static float32_t abs_y, r;
 
-		uint8_t sbmode = 0;             // sideband mode
+//		uint8_t sbmode = 0;             // sideband mode
 		int j, k;
 
 		// Wheatley 2011 cuteSDR & Warren Pratt�s WDSP, 2016
         for(int i = 0; i < blockSize; i++)
         {   // NCO
-            Sin = sinf(phs);
-            Cos = cosf(phs);
+//            Sin = sinf(phs);
+//            Cos = cosf(phs);
+            sincosf(phs,&Sin,&Cos);
             ai = Cos * adb.i_buffer[i];
             bi = Sin * adb.i_buffer[i];
             aq = Cos * adb.q_buffer[i];
             bq = Sin * adb.q_buffer[i];
 
-            if (sbmode != 0)
+            if (ads.sam_sideband != 0)
             {
               a[0] = dsI;
               b[0] = bi;
@@ -2758,10 +2759,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
               for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
               {
                 k = 3 * j;
-                a[k + 3] = ads.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
-                b[k + 3] = ads.c1[j] * (b[k] - b[k + 5]) + b[k + 2];
-                c[k + 3] = ads.c0[j] * (c[k] - c[k + 5]) + c[k + 2];
-                d[k + 3] = ads.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
+                a[k + 3] = adb.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
+                b[k + 3] = adb.c1[j] * (b[k] - b[k + 5]) + b[k + 2];
+                c[k + 3] = adb.c0[j] * (c[k] - c[k + 5]) + c[k + 2];
+                d[k + 3] = adb.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
               }
               ai_ps = a[OUT_IDX];
               bi_ps = b[OUT_IDX];
@@ -2780,7 +2781,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             corr[0] = +ai + bq;
             corr[1] = -bi + aq;
 
-            switch(sbmode)
+            switch(ads.sam_sideband)
             {
             case 0: //both sidebands
               {
@@ -2801,8 +2802,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             // "fade leveler", taken from Warren Pratts� WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
-            dc27 = ads.mtauR * dc27 + ads.onem_mtauR * audio;
-            dc_insert = ads.mtauI * dc_insert + ads.onem_mtauI * corr[0];
+            dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+            dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
             audio = audio + dc_insert - dc27;
 
             adb.a_buffer[i] = audio;
@@ -2810,7 +2811,11 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             // determine phase error
             phzerror = atan2f(corr[1], corr[0]);
-/*
+
+
+            // the following does not work!
+
+            /*
             // first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
             //
 //          y  corr[1] = -bi + aq;
@@ -2845,17 +2850,17 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 */
                 del_out = fil_out;
                 // correct frequency 1st step
-                omega2 = omega2 + ads.g2 * phzerror;
-                if (omega2 < ads.omega_min)
+                omega2 = omega2 + adb.g2 * phzerror;
+                if (omega2 < adb.omega_min)
                 {
-                    omega2 = ads.omega_min;
+                    omega2 = adb.omega_min;
                 }
-                else if (omega2 > ads.omega_max)
+                else if (omega2 > adb.omega_max)
                 {
-                    omega2 = ads.omega_max;
+                    omega2 = adb.omega_max;
                 }
                 // correct frequency 2nd step
-                fil_out = ads.g1 * phzerror + omega2;
+                fil_out = adb.g1 * phzerror + omega2;
                 phs = phs + del_out;
 
             // wrap round 2PI, modulus
@@ -2864,16 +2869,37 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         }
         count++;
         if(count > 40) // to display the exact carrier frequency that the PLL is tuned to
-            // in the small frequency display
+//        if(0)
+        // in the small frequency display
             // we calculate carrier offset here and the display function is
             // then called in UiDriver_MainHandler approx. every 40-80ms
         { // to make this smoother, a simple lowpass/exponential averager here . . .
-            carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (ads.DF * 2.0 * PI);
+            carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (adb.DF * 2.0 * PI);
             carrier = carrier + 0.9 * lowpass;
             ads.carrier_freq_offset =  (int)carrier;
             count = 0;
             lowpass = carrier;
         }
+}
+
+void set_SAM_PLL_parameters()
+{
+        adb.pll_fmax = (float32_t) ads.pll_fmax_int;
+        adb.zeta = (float32_t)ads.zeta_int / 100.0;
+        adb.omegaN = (float32_t)ads.omegaN_int;
+        adb.tauR = ((float32_t)ads.tauR_int) / 1000.0;
+        adb.tauI = ((float32_t)ads.tauI_int) / 100.0;
+
+        adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+        adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
+        adb.g1 = (1.0 - exp(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F));
+        adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
+                  * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta))));
+
+        adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
+        adb.onem_mtauR = (1.0 - adb.mtauR);
+        adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
+        adb.onem_mtauI = (1.0 - adb.mtauI);
 }
 
 
