@@ -1010,7 +1010,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         if(var_change)
         {
-
+            UiDriver_ShowMode();
         }
         //
         if(ads.sam_sideband == 1 || ads.sam_sideband == 2)
