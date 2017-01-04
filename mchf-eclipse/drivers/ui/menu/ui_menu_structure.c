@@ -210,6 +210,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_BANDWIDTH,"323","SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100].") },
     { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUR,"324","SAM PLL tauR", UiMenuDesc(":soon:") },
     { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUI,"325","SAM PLL tauI", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SAM_SIDEBAND,"326","SAM Sideband", UiMenuDesc(":soon:") },
 
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM,"341","Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },

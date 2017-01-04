@@ -1813,7 +1813,18 @@ void UiDriver_ShowMode()
         txt = "LSB";
         break;
     case DEMOD_SAM:
-        txt = "SAM";
+        if(ads.sam_sideband == 1)
+        {
+            txt = "SAM-L";
+        }
+        else if (ads.sam_sideband == 2)
+        {
+            txt = "SAM-U";
+        }
+        else
+        {
+            txt = "SAM";
+        }
         break;
     case DEMOD_AM:
         txt = "AM";

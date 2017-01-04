@@ -63,7 +63,7 @@
 #define SCALING_FACTOR_IQ_PHASE_ADJUST 2000.0
 #define SCALING_FACTOR_IQ_AMPLITUDE_ADJUST 2731.0
 
-
+#define SAM_PLL_HILBERT_STAGES 7
 
 typedef struct
 {
@@ -87,6 +87,37 @@ typedef struct
     float32_t                   Osc_Q_buffer[IQ_BUFSZ];
 
     float32_t                   agc_valbuf[BUFF_LEN];   // holder for "running" AGC value
+    float32_t               DF;
+    float32_t               pll_fmax;
+    // DX adjustments: zeta = 0.15, omegaN = 100.0
+    // very stable, but does not lock very fast
+    // standard settings: zeta = 1.0, omegaN = 250.0
+    // maybe user can choose between slow (DX), medium, fast SAM PLL
+    // zeta / omegaN
+    // DX = 0.2, 70
+    // medium 0.6, 200
+    // fast 1.2, 500
+
+    float32_t               zeta; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+    float32_t               omegaN; //200.0; // PLL bandwidth 50.0 - 1000.0
+
+      //pll
+    float32_t               omega_min; // (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
+    float32_t               omega_max; //(2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
+    float32_t               g1; //(1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
+    float32_t               g2; //(- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F)
+        //  * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
+
+      //fade leveler
+    float32_t               tauR; // original 0.02;
+    float32_t               tauI; // original 1.4;
+    float32_t               mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
+    float32_t               onem_mtauR;
+    float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
+    float32_t               onem_mtauI;
+    float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
+    float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
+
 
 } AudioDriverBuffer;
 
@@ -97,8 +128,6 @@ typedef struct {
     float                   cos;
     float                   r;
 } Goertzel;
-
-#define SAM_PLL_HILBERT_STAGES 7
 
 // Audio driver publics
 typedef struct AudioDriverState
@@ -154,42 +183,14 @@ typedef struct AudioDriverState
     //
     SoftDds					beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness
-
-    float32_t               DF;
-    int                     pll_fmax_int;
-    float32_t               pll_fmax;
-    // DX adjustments: zeta = 0.15, omegaN = 100.0
-    // very stable, but does not lock very fast
-    // standard settings: zeta = 1.0, omegaN = 250.0
-    // maybe user can choose between slow (DX), medium, fast SAM PLL
-    // zeta / omegaN
-    // DX = 0.2, 70
-    // medium 0.6, 200
-    // fast 1.2, 500
-    int                     zeta_int; // zeta * 100
-    float32_t               zeta; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    int                     omegaN_int;
-    float32_t               omegaN; //200.0; // PLL bandwidth 50.0 - 1000.0
-
-      //pll
-    float32_t               omega_min; // (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
-    float32_t               omega_max; //(2.0 * 3.141592653589793f * pll_fmax * DF / IQ_SAMPLE_RATE_F);
-    float32_t               g1; //(1.0 - exp(-2.0 * omegaN * zeta * DF / IQ_SAMPLE_RATE_F));
-    float32_t               g2; //(- g1 + 2.0 * (1 - exp(- omegaN * zeta * DF / IQ_SAMPLE_RATE_F)
-        //  * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
-
-      //fade leveler
-    float32_t               tauR; // original 0.02;
-    int                     tauR_int;
-    float32_t               tauI; // original 1.4;
-    int                     tauI_int;
-    float32_t               mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
-    float32_t               onem_mtauR;
-    float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
-    float32_t               onem_mtauI;
-    float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
-    float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
     int                     carrier_freq_offset;
+    int                     pll_fmax_int;
+    int                     zeta_int; // zeta * 100
+    int                     omegaN_int;
+    uint8_t                 sam_sideband; // 0 = both, 1 = LSB, 2 = USB
+    int                     tauR_int;
+    int                     tauI_int;
+
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
 
@@ -563,6 +564,7 @@ void AudioDriver_Init(void);
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
 void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
+void set_SAM_PLL_parameters (void);
 //uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS
