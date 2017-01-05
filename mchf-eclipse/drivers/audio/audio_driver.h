@@ -188,8 +188,8 @@ typedef struct AudioDriverState
     int                     zeta_int; // zeta * 100
     int                     omegaN_int;
     uint8_t                 sam_sideband; // 0 = both, 1 = LSB, 2 = USB
-    int                     tauR_int;
-    int                     tauI_int;
+//    int                     tauR_int;
+//    int                     tauI_int;
 
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection

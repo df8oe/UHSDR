@@ -563,7 +563,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
 
-    //###################################################################################################################################
+/*    //###################################################################################################################################
     // These are the "new" AM/SAM filters, January 2017
     // designed for an IIR lowpass stopband frequency that is exactly the same as the filter bandwidth
     // In sideband-selected SAM, there is no FIR filter, so the IIR has to do all the work
@@ -696,8 +696,8 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
 
+*/
 
-/*
 //###################################################################################################################################
 // AM filters: designed for an IIR lowpass stopband frequency that is approx. 1.8 times higher than the FIR bandwidth
 //  --> an AM 2.5kHz filter has 2.5kHz of audio when centre tuned, but can have up to 1.8 * 2.5kHz = 4.6kHz of bandwidth (IIR filter!)
@@ -838,7 +838,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         RX_DECIMATION_RATE_24KHZ, NULL,
         &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
- */
+
 
 
 

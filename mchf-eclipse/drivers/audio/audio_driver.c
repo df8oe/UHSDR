@@ -550,10 +550,10 @@ void AudioDriver_Init(void)
     adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
           * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
       //fade leveler
-    ads.tauR_int = 20; // -->  / 1000 = 0.02
-    ads.tauI_int = 140; // --> / 100 = 1.4
-    adb.tauR = ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
-    adb.tauI = ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
+//    ads.tauR_int = 20; // -->  / 1000 = 0.02
+//    ads.tauI_int = 140; // --> / 100 = 1.4
+    adb.tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
+    adb.tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
     adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
     adb.onem_mtauR = (1.0 - adb.mtauR);
     adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
@@ -2885,8 +2885,8 @@ void set_SAM_PLL_parameters()
         adb.pll_fmax = (float32_t) ads.pll_fmax_int;
         adb.zeta = (float32_t)ads.zeta_int / 100.0;
         adb.omegaN = (float32_t)ads.omegaN_int;
-        adb.tauR = ((float32_t)ads.tauR_int) / 1000.0;
-        adb.tauI = ((float32_t)ads.tauI_int) / 100.0;
+//        adb.tauR = ((float32_t)ads.tauR_int) / 1000.0;
+//        adb.tauI = ((float32_t)ads.tauI_int) / 100.0;
 
         adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
         adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
@@ -3038,7 +3038,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-        if(ts.dmod_mode != DEMOD_SAM || ads.sam_sideband == 0)
+        if(ts.dmod_mode != DEMOD_SAM || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
         {
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
@@ -3111,14 +3111,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             if(ads.af_disabled == false) {
                 if (ts.dsp_inhibit == false)
                 {
-                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW))       // No notch in CW
+                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && (dmod_mode != DEMOD_SAM))       // No notch in CW
                     {
                         AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
-                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)))      // Do this if enabled and "Pre-AGC" DSP NR enabled
+                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE))&& (dmod_mode != DEMOD_SAM))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
                         AudioDriver_NoiseReduction(blockSizeDecim);
                     }
@@ -3137,7 +3137,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // DSP noise reduction using LMS (Least Mean Squared) algorithm
             // This is the post-filter, post-AGC instance
             //
-            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))     // Do DSP NR if enabled and if post-DSP NR enabled
+            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit)&& (dmod_mode != DEMOD_SAM))     // Do DSP NR if enabled and if post-DSP NR enabled
             {
                 AudioDriver_NoiseReduction(blockSizeDecim);
             }
