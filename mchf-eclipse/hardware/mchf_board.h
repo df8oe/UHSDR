@@ -1161,8 +1161,8 @@ typedef struct TransceiverState
     uchar	tp_state;				// touchscreen state machine
     bool	tp_raw;					// touchscreen data as raw data
     bool	show_tp_coordinates;	// show coordinates on LCD
-    uchar	rfmod_present;			// 0 = not present
-    uchar	vhfuhfmod_present;		// 0 = not present
+    bool	rfmod_present;			// 0 = not present
+    bool	vhfuhfmod_present;		// 0 = not present
     uchar	multi;					// actual translate factor
     uchar	tune_power_level;		// TX power in antenna tuning function
     uchar	power_temp;				// temporary tx power if tune is different from actual tx power

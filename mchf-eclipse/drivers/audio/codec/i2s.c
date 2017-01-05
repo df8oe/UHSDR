@@ -193,7 +193,8 @@ void DMA1_Stream2_IRQHandler(void)
 #ifdef PROFILE_EVENTS
     // we stop during interrupt
     // at the end we start again
-    profileCycleCount_stop();
+    // profileCycleCount_stop();
+    profileTimedEventStart(ProfileAudioInterrupt);
 #endif
 
 #ifdef USE_24_BITS
@@ -259,6 +260,7 @@ void DMA1_Stream2_IRQHandler(void)
 #ifdef PROFILE_EVENTS
     // we stopped during interrupt
     // now we start again
-    profileCycleCount_start();
+    // profileCycleCount_start();
+    profileTimedEventStop(ProfileAudioInterrupt);
 #endif
 }
