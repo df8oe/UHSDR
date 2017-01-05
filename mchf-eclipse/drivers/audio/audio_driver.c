@@ -2709,8 +2709,6 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 	//*****************************
 		static float32_t Sin = 0.0;
 		static float32_t Cos = 0.0;
-//		static float32_t tmp_re = 0.0;
-//		static float32_t tmp_im = 0.0;
 		static float32_t phzerror = 0.1;
 		static float32_t phs = 0.1;
 		static float32_t fil_out = 0.0;
@@ -2788,12 +2786,12 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 audio = corr[0];
                 break;
               }
-            case 2: //LSB
+            case 2: //USB
               {
                 audio = (ai_ps - bi_ps) + (aq_ps + bq_ps);
                 break;
               }
-            case 1: //USB
+            case 1: //LSB
               {
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 break;
@@ -2813,9 +2811,9 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             phzerror = atan2f(corr[1], corr[0]);
 
 
-            // the following does not work!
+/*            // the following does not work!
 
-            /*
+
             // first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
             //
 //          y  corr[1] = -bi + aq;
@@ -2846,8 +2844,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             {
                 phzerror = -phzerror;
             }
-
 */
+
                 del_out = fil_out;
                 // correct frequency 1st step
                 omega2 = omega2 + adb.g2 * phzerror;
@@ -3035,15 +3033,15 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     if (dvmode_signal == false)
     {
         // ------------------------
-        // In SSB and SAM - Do 0-90 degree Phase-added Hilbert Transform
-        // In AM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected when in AM mode, in
+        // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
+        // In AM and SAM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected, in
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
         if(ts.dmod_mode != DEMOD_SAM || ads.sam_sideband == 0)
         {
-        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
-        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
         }
 
         switch(dmod_mode)
