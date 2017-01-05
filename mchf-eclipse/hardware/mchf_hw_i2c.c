@@ -218,9 +218,9 @@ void MchfHw_I2C_GpioInit(I2C_TypeDef* bus)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;       // - strong ringing on the bus
+    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;       // - strong ringing on the bus
     //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;   // - makes it better
-    //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // - same as pull down
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // - same as pull down
 
 
     // Connect pins to I2C peripheral
