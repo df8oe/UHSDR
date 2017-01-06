@@ -185,7 +185,7 @@ void MchfHw_I2C_Init(I2C_TypeDef* bus)
     // CODEC_I2C peripheral configuration
     I2C_DeInit(bus);
     I2C_InitStructure.I2C_Mode                  = I2C_Mode_I2C;
-    I2C_InitStructure.I2C_DutyCycle             = I2C_DutyCycle_2;
+    I2C_InitStructure.I2C_DutyCycle             = I2C_DutyCycle_16_9;
     I2C_InitStructure.I2C_OwnAddress1           = 0x33;
     I2C_InitStructure.I2C_Ack                   = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress   = I2C_AcknowledgedAddress_7bit;

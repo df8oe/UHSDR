@@ -162,6 +162,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_LOCKING_RANGE,&ads.pll_fmax_int,2500,50,8000},
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_STEP_RESPONSE,&ads.zeta_int,65,1,100},
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_BANDWIDTH,&ads.omegaN_int, 250,15,1000},
+    { ConfigEntry_Int32_16, EEPROM_I2C1_SPEED,&ts.i2c_speed[0], I2C1_SPEED_DEFAULT,1,20},
+    { ConfigEntry_Int32_16, EEPROM_I2C2_SPEED,&ts.i2c_speed[1], I2C2_SPEED_DEFAULT,1,20},
 
 	UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
