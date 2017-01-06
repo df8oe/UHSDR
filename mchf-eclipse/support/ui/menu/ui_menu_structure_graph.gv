@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-06T07:59:43  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-06T15:13:59  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-06T07:59:43  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-06T15:13:59  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -917,6 +917,16 @@
              shape = record
              ];
         
+        "MENU_DEBUG_I2C1_SPEED" [
+             label = "MENU_DEBUG_I2C1_SPEED | I2C1 Bus Speed"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_I2C2_SPEED" [
+             label = "MENU_DEBUG_I2C2_SPEED | I2C2 Bus Speed"
+             shape = record
+             ];
+        
         #  -  -  -  -
 
         subgraph "MENU_CONF" {
@@ -1280,6 +1290,10 @@
 
     
             MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
+            
+            MENU_DEBUG -> MENU_DEBUG_I2C1_SPEED
+            
+            MENU_DEBUG -> MENU_DEBUG_I2C2_SPEED
             
         }  ## END subgraph MENU_DEBUG
     

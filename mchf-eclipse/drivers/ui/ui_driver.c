@@ -1972,7 +1972,7 @@ static void UiDriver_DisplayMemoryLabel()
     {
         char txt[12];
         uint32_t col = White;
-        snprintf(txt,12,"Bnd%s",bandInfo[ts.band].name);
+        snprintf(txt,12,"Bnd%s", bandInfo[ts.band].name);
         UiLcdHy28_PrintText(161+(SMALL_FONT_WIDTH * 11)+4,  64,txt,col,Black,0);
     }
  }
