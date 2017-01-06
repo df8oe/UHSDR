@@ -2,6 +2,7 @@
 """
 2016-12-24 HB9ocq, DB4ple - support program to document the menu structure of mcHF amateur radio SDR TRX
 2017-01-01 HB9ocq - refinement
+2017-01-06 HB9ocq - following change in definition of MenuDescriptor
 
 relies upon module  ui_menu_structure_c2py.py  in the same directory
 
@@ -9,11 +10,10 @@ relies upon module  ui_menu_structure_c2py.py  in the same directory
 
 
 from ui_menu_structure_c2py import MENU_DESCRIPTOR, BUILD_ID
-# MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "ID" "LABEL" "DESC"
+# MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "LABEL" "DESC"
 # e.g.  [ ... { 'MENU_ID': "TOP",
 #               'ME_KIND': "GROUP",
 #               'NR': "MENU_BASE",
-#               'ID': "STD",
 #               'LABEL': "Standard Menu",
 #               'DESC': ":soon:"},
 #         ...]
@@ -70,21 +70,21 @@ OUTPUT += r"""
 for gm in [md for md in MENU_DESCRIPTOR if (('MENU_GROUP' == md['ME_KIND']) and (md['NR'] in am))]:
     # header  H2
     OUTPUT += r"""
-## {LABEL} ({ID}, `{NR}`)
+## {LABEL} (`{NR}`)
     """.format(**gm)
 
     # table header
     OUTPUT += """
-| {:<25}     ({:>3}) | {:<46} | """.format("LABEL", "ID", "DESCRIPTION")
+| {:<25}     ({:>43}) | {:<46} | """.format("LABEL", "NR", "DESCRIPTION")
     OUTPUT += """
-| {0:-<25}------{0:->3}- | {0:-<46} | """.format("-")
+| {0:-<25}------{0:->43}- | {0:-<46} | """.format("-")
     # table rows
     for md in MENU_DESCRIPTOR:
         if((0 != md['NR']) and ('MENU_STOP' != md['ME_KIND']) and (gm['NR'] ==  md['MENU_ID'])):
             # for sensible entries only
             md['LABEL'] = "**{LABEL}**".format(**md)
             OUTPUT += """
-| {LABEL:<29} ({ID:>3}) | {DESC:<46} | """.format(**md)
+| {LABEL:<29} ({NR:>43}) | {DESC:<46} | """.format(**md)
 
     OUTPUT += "\n\n"
     

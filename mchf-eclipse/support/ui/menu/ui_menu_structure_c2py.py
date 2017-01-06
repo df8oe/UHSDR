@@ -15,6 +15,7 @@ LAST WARNING:  YOU HAVE BEEN WARNED ! ! !
 2017-01-01 HB9ocq - replacement for prototype shell script (ui_menu_structure_c2py.sh) 
                     for improved parsing accuracy (avoids issues with commas and 
                     all uppercase text in UiMenuDesc(...))
+2017-01-06 HB9ocq - following change in definition of MenuDescriptor
 
 AFTERLAST WARNING: BINDS EVEN TIGHTER TO WRITING DISCIPLINE IN C SYNTAX ! ! !
 
@@ -66,12 +67,11 @@ MENU_DESCRIPTOR = []
 """
 MENU_DESCRIPTOR is the datastructure we're gonna build
 
-MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "ID" "LABEL" "DESC"
+MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "LABEL" "DESC"
 
 e.g.  [ ... { 'MENU_ID': "TOP",
               'ME_KIND': "GROUP",
               'NR': "MENU_BASE",
-              'ID': "STD",
               'LABEL': "Standard Menu",
               'DESC': ":soon:" },
         ...]
@@ -88,7 +88,7 @@ MENULN_REO = re.compile(  # pattern for lines..
     + r'[,\s]+'
     + r'(?P<NR>[\w]+)'                       # ..a 3rd rather long id 'yy...zz', we call it NR
     + r'[,\s]+'
-    + r'"(?P<ID>[^"]{3})"'                   # ..3 chars in quotes, we call this ID
+    + r'NULL'                                # ..an initial value for a pointer: not relevant for handbook
     + r'[,\s]+'
     + r'"(?P<LABEL>[^"]*)"'                  # ..n chars in quotes, we call this LABEL
     + r'[,\s]+'
