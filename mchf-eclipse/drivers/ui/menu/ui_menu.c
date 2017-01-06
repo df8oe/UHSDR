@@ -1032,7 +1032,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
-    case CONFIG_SAM_PLL_TAUR:      //
+/*    case CONFIG_SAM_PLL_TAUR:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.tauR_int,
                                             1,
                                             1000,
@@ -1059,7 +1059,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ads.tauI_int);
         break;
-
+*/
 
         // RX Codec gain adjust
     case MENU_CUSTOM_AGC:       // Custom AGC adjust

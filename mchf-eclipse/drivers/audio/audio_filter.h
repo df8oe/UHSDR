@@ -24,7 +24,8 @@ extern arm_fir_instance_f32    FIR_Q;
 extern arm_fir_instance_f32    FIR_I;
 extern arm_fir_instance_f32    FIR_Q_FREEDV;
 extern arm_fir_instance_f32    FIR_I_FREEDV;
-
+extern arm_fir_decimate_instance_f32 DECIMATE_SAM_I;
+extern arm_fir_decimate_instance_f32 DECIMATE_SAM_Q;
 
 
 

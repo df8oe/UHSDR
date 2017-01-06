@@ -563,13 +563,148 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
 
+/*    //###################################################################################################################################
+    // These are the "new" AM/SAM filters, January 2017
+    // designed for an IIR lowpass stopband frequency that is exactly the same as the filter bandwidth
+    // In sideband-selected SAM, there is no FIR filter, so the IIR has to do all the work
+    // Let´s try them
+    //###################################################################################################################################
+
+    {
+        AUDIO_1P4KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_1k4_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_1P6KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_1k6_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_1P8KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_1k8_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_2P1KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_2k1_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_2P3KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_2k3_coeffs, iq_rx_am_2k3_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_2P5KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_2k5_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_2P7KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimate,
+        RX_DECIMATION_RATE_12KHZ, &IIR_2k7_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_2P9KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_3P2KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_3k2_LPF,
+        &FirRxInterpolate, NULL
+    },
+
+    {
+        AUDIO_3P4KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_3k6_coeffs, iq_rx_am_3k6_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_3P6KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_3k6_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_3P8KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_3k8_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_4P0KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_4k_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_4P2KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_4P4KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_4k4_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_4P6KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_4k5_coeffs, iq_rx_am_4k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_4P8KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
+        &FirRxInterpolate_4_5k, &IIR_aa_5k
+    },
+
+    {
+        AUDIO_5P0KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_5k_coeffs, iq_rx_am_5k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, &IIR_5k_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+
+    {
+        AUDIO_6P0KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_6k_coeffs, iq_rx_am_6k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, &IIR_6k_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+
+    {
+        AUDIO_7P5KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_7k5_coeffs, iq_rx_am_7k5_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, &IIR_7k5_LPF,
+        &FirRxInterpolate10KHZ, NULL
+    },
+
+    {
+        AUDIO_10P0KHZ, "AM/SAM", FILTER_MASK_AMSAM, 1, Q_NUM_TAPS, iq_rx_am_10k_coeffs, iq_rx_am_10k_coeffs, &FirRxDecimateMinLPF,
+        RX_DECIMATION_RATE_24KHZ, &IIR_10k_LPF,
+        &FirRxInterpolate_4_10k, &IIR_aa_10k
+    },
+
+*/
+
 //###################################################################################################################################
 // AM filters: designed for an IIR lowpass stopband frequency that is approx. 1.8 times higher than the FIR bandwidth
-//	--> an AM 2.5kHz filter has 2.5kHz of audio when centre tuned, but can have up to 1.8 * 2.5kHz = 4.6kHz of bandwidth (IIR filter!)
-//		when tuned away from the carrier, this has been called "sideband-selected AM demodulation" . . . wow . . .
+//  --> an AM 2.5kHz filter has 2.5kHz of audio when centre tuned, but can have up to 1.8 * 2.5kHz = 4.6kHz of bandwidth (IIR filter!)
+//      when tuned away from the carrier, this has been called "sideband-selected AM demodulation" . . . wow . . .
 //###################################################################################################################################
 
-    // in AM, we ALWAYS use the lowpass filter version of the IIR audio PreFilter, regardless of the selected filter_select_ID.
+     // in AM, we ALWAYS use the lowpass filter version of the IIR audio PreFilter, regardless of the selected filter_select_ID.
     // this is because we assume AM mode to be used to demodulate DSB signals, so BPF (sideband suppression) is not necessary
 
     {
@@ -703,6 +838,12 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
         RX_DECIMATION_RATE_24KHZ, NULL,
         &FirRxInterpolate_4_10k, &IIR_aa_10k
     },
+
+
+
+
+
+
 
 //###################################################################################################################################
 // SAM filters:
@@ -948,6 +1089,14 @@ static float   FirState_Q_FREEDV[60+IQ_BUFSZ];
 arm_fir_instance_f32    FIR_I_FREEDV;
 arm_fir_instance_f32    FIR_Q_FREEDV;
 
+// Audio RX - Decimator (numTaps+blockSize-1)
+arm_fir_decimate_instance_f32   DECIMATE_SAM_I;
+static float32_t           __attribute__ ((section (".ccm"))) decimSAMIState[I_BLOCK_SIZE + I_NUM_TAPS];
+
+// Audio RX - Decimator
+arm_fir_decimate_instance_f32   DECIMATE_SAM_Q;
+static float32_t           __attribute__ ((section (".ccm"))) decimSAMQState[Q_BLOCK_SIZE + Q_NUM_TAPS];
+
 
 
 /*
@@ -981,6 +1130,28 @@ void 	AudioFilter_InitRxHilbertFIR(void)
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
     //
+    // Set up RX SAM decimation/filter
+    if (FilterPathInfo[ts.filter_path].FIR_numTaps != NULL)
+    {
+        DECIMATE_SAM_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+        DECIMATE_SAM_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+        DECIMATE_SAM_I.pCoeffs = FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
+        DECIMATE_SAM_Q.pCoeffs = FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+    }
+    else
+    {
+        DECIMATE_SAM_I.numTaps = 0;
+        DECIMATE_SAM_Q.numTaps = 0;
+        DECIMATE_SAM_I.pCoeffs = NULL;
+        DECIMATE_SAM_Q.pCoeffs = NULL;
+    }
+    DECIMATE_SAM_I.M = ads.decimation_rate;
+    DECIMATE_SAM_Q.M = ads.decimation_rate;
+    DECIMATE_SAM_I.pState = decimSAMIState;            // Filter state variables
+    DECIMATE_SAM_Q.pState = decimSAMQState;
+    arm_fill_f32(0.0,decimSAMIState, I_BLOCK_SIZE + I_NUM_TAPS);
+    arm_fill_f32(0.0,decimSAMQState, Q_BLOCK_SIZE + Q_NUM_TAPS);
+
 }
 
 
