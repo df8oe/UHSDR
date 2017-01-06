@@ -3053,6 +3053,33 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
+    case MENU_DEBUG_I2C1_SPEED:      //
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_1],
+                1,
+                20,
+                I2C1_SPEED_DEFAULT,
+                1
+        );
+        if(var_change)
+        {
+            mchf_hw_i2c1_init();
+        }
+        snprintf(options, 32, " %3dkHz",(unsigned int)(ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 );
+        break;
+    case MENU_DEBUG_I2C2_SPEED:      //
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_2],
+                1,
+                20,
+                I2C2_SPEED_DEFAULT,
+                1
+        );
+        if(var_change)
+        {
+            mchf_hw_i2c2_init();
+        }
+        snprintf(options, 32, " %3ukHz",(unsigned int)(ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 );
+        break;
+
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

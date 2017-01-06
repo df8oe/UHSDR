@@ -323,7 +323,9 @@ const MenuDescriptor infoGroup[] =
 
 const MenuDescriptor debugGroup[] =
 {
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc(":soon:") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_I2C1_SPEED, NULL,"I2C1 Bus Speed", UiMenuDesc("Changes speed of the I2C1 bus (Si570 oscillator and MCP9801 temp sensor). Be careful with speeds above 200 kHz. Not stored permanently (yet), reboot will bring back default speeds.") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_I2C2_SPEED, NULL,"I2C2 Bus Speed", UiMenuDesc("Changes speed of the I2C2 bus (Audio Codec and I2C EEPROM). Be careful with speeds above 100 kHz. Not stored permanently (yet), reboot will bring back default speeds.") },
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
