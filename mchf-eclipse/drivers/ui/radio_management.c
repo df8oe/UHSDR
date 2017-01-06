@@ -319,13 +319,20 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
             }
             // Set frequency
             ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
-            df.temp_factor_changed = false;
             ts.last_tuning = ts.sysclock;
-            ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
-            // Save current freq
-            df.tune_old = dial_freq*TUNE_MULT;
+
+            // if i2c error or verify error, there is a chance that we can fix that, so we mark this
+            // as NOT executed, in all other cases we assume the change has happened (but may prevent TX)
+            if (ts.last_lo_result != SI570_I2C_ERROR && ts.last_lo_result != SI570_ERROR_VERIFY)
+            {
+                df.temp_factor_changed = false;
+                ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
+                // Save current freq
+                df.tune_old = dial_freq*TUNE_MULT;
+            }
             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED)
             {
+
                 ts.tx_disable &= ~TX_DISABLE_OUTOFRANGE;
             }
             else

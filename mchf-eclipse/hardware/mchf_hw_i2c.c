@@ -286,20 +286,37 @@ void mchf_hw_i2c1_reset(void)
 
 uint16_t mchf_hw_i2c1_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
 {
-    return MCHF_I2C_WriteRegister(I2C1, I2CAddr, &RegisterAddr, 1, RegisterValue);
+    uint16_t res = MCHF_I2C_WriteRegister(I2C1, I2CAddr, &RegisterAddr, 1, RegisterValue);
+#ifdef DEBUG_I2C1_ISSUES
+    while (res) { asm ("nop"); }
+#endif
+    return res;
 }
 
 uint16_t mchf_hw_i2c1_WriteBlock(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-    return MCHF_I2C_WriteBlock(I2C1, I2CAddr,&RegisterAddr, 1, data, size);
+    uint16_t res = MCHF_I2C_WriteBlock(I2C1, I2CAddr,&RegisterAddr, 1, data, size);
+#ifdef DEBUG_I2C1_ISSUES
+    while (res) { asm ("nop"); }
+#endif
+    return res;
 }
 
 uint16_t mchf_hw_i2c1_ReadRegister(uchar I2CAddr,uchar RegisterAddr, uchar *RegisterValue)
 {
-    return MCHF_I2C_ReadRegister(I2C1, I2CAddr,&RegisterAddr, 1, RegisterValue);
+    uint16_t res = MCHF_I2C_ReadRegister(I2C1, I2CAddr,&RegisterAddr, 1, RegisterValue);
+#ifdef DEBUG_I2C1_ISSUES
+    while (res) { asm ("nop"); }
+#endif
+    return res;
+
 }
 
 uint16_t mchf_hw_i2c1_ReadData(uchar I2CAddr,uchar RegisterAddr, uchar *data, ulong size)
 {
-    return MCHF_I2C_ReadBlock(I2C1, I2CAddr, &RegisterAddr, 1, data, size);
+    uint16_t res =  MCHF_I2C_ReadBlock(I2C1, I2CAddr, &RegisterAddr, 1, data, size);
+#ifdef DEBUG_I2C1_ISSUES
+    while (res) { asm ("nop"); }
+#endif
+    return res;
 }
