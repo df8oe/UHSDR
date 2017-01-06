@@ -511,10 +511,10 @@ void Si570_CalculateStartupFrequency()
         uchar dummy;
 
         // test for hardware address of SI570
-        os.si570_address = (0x50 << 1);
+        os.si570_address = (0x55 << 1);
         if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
         {
-            os.si570_address = (0x55 << 1);
+            os.si570_address = (0x50 << 1);
         }
 
         // make sure everything is cleared and in initial state
