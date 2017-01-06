@@ -958,7 +958,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %d", ts.rf_gain);
         break;
 
-    case CONFIG_SAM_PLL_LOCKING_RANGE:      //
+    case MENU_SAM_PLL_LOCKING_RANGE:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.pll_fmax_int,
                                             50,
                                             8000,
@@ -971,7 +971,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ads.pll_fmax_int);
         break;
-    case CONFIG_SAM_PLL_STEP_RESPONSE:      //
+    case MENU_SAM_PLL_STEP_RESPONSE:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.zeta_int,
                                             1,
                                             100,
@@ -987,7 +987,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %d", ads.zeta_int);
         break;
 
-    case CONFIG_SAM_PLL_BANDWIDTH:      //
+    case MENU_SAM_PLL_BANDWIDTH:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.omegaN_int,
                                             25,
                                             1000,
@@ -1001,7 +1001,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ads.omegaN_int);
         break;
-    case CONFIG_SAM_SIDEBAND:  //
+/*    case MENU_SAM_SIDEBAND:  //
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ads.sam_sideband,
                                               0,
                                               2,
@@ -1032,7 +1032,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
-/*    case CONFIG_SAM_PLL_TAUR:      //
+    case CONFIG_SAM_PLL_TAUR:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.tauR_int,
                                             1,
                                             1000,
