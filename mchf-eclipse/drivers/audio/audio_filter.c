@@ -1131,12 +1131,12 @@ void 	AudioFilter_InitRxHilbertFIR(void)
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
     //
     // Set up RX SAM decimation/filter
-    if (FilterPathInfo[ts.filter_path].FIR_numTaps != NULL)
+    if (FilterPathInfo[ts.filter_path].FIR_numTaps != 0)
     {
         DECIMATE_SAM_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
         DECIMATE_SAM_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
-        DECIMATE_SAM_I.pCoeffs = FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
-        DECIMATE_SAM_Q.pCoeffs = FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+        DECIMATE_SAM_I.pCoeffs = (float32_t *)&fc.rx_filt_i[0]; //FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
+        DECIMATE_SAM_Q.pCoeffs = (float32_t *)&fc.rx_filt_q[0]; //FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
     }
     else
     {

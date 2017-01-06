@@ -61,6 +61,9 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE, NULL, "CW Mode", UiMenuDesc("Disable appearance of CW mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE, NULL, "AM Mode", UiMenuDesc("Disable appearance of AM mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,  NULL,"SyncAM Mode",UiMenuDesc("Disable appearance of SyncAM modeswhen pressing Mode button")  },
+    { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_LOCKING_RANGE, NULL, "SAM PLL locking range", UiMenuDesc("SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier.") },
+    { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_STEP_RESPONSE, NULL, "SAM PLL step response", UiMenuDesc("Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive.") },
+    { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_BANDWIDTH, NULL, "SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100].") },
     { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE, NULL, "FM Mode", UiMenuDesc("Disable appearance of FM mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE, NULL, "FM Sub Tone Gen", UiMenuDesc("Enable generation of CTCSS tones during FM transmissions.") },
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE, NULL, "FM Sub Tone Det", UiMenuDesc("Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected.") },
@@ -205,12 +208,9 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS, NULL, "DSP Notch FIRNumTap", UiMenuDesc("DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
     { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT, NULL, "NB AGC T/C (<=Slow)", UiMenuDesc("Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu.") },
 
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_LOCKING_RANGE, NULL, "SAM PLL locking range", UiMenuDesc("SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_STEP_RESPONSE, NULL, "SAM PLL step response", UiMenuDesc("Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_BANDWIDTH, NULL, "SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100].") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUR, NULL, "SAM PLL tauR", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUI, NULL, "SAM PLL tauI", UiMenuDesc(":soon:") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SAM_SIDEBAND, NULL, "SAM Sideband", UiMenuDesc(":soon:") },
+//    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUR, NULL, "SAM PLL tauR", UiMenuDesc(":soon:") },
+//    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUI, NULL, "SAM PLL tauI", UiMenuDesc(":soon:") },
+//    { MENU_CONF, MENU_ITEM, CONFIG_SAM_SIDEBAND, NULL, "SAM Sideband", UiMenuDesc(":soon:") },
 
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM, NULL, "Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
