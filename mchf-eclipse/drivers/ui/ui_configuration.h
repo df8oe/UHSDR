@@ -522,7 +522,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_SAM_PLL_LOCKING_RANGE        366     //
 #define EEPROM_SAM_PLL_STEP_RESPONSE        367     //
 #define EEPROM_SAM_PLL_BANDWIDTH            368     //
-#define EEPROM_FIRST_UNUSED 				369		// change this if new value ids are introduced
+#define EEPROM_I2C1_SPEED                   369     //
+#define EEPROM_I2C2_SPEED                   370     //
+#define EEPROM_FIRST_UNUSED 				371		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

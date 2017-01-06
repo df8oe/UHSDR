@@ -547,6 +547,10 @@ int main(void)
     // UI HW init
     UiDriver_Init();
 
+    // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
+    mchf_hw_i2c1_init();
+    mchf_hw_i2c2_init();
+
     ts.temp_nb = ts.nb_setting;
     ts.nb_setting = 0;
 
