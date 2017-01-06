@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """
 2017-01-01 HB9ocq - support program to document the menu structure of mcHF amateur radio SDR TRX
+2017-01-06 HB9ocq - following change in definition of MenuDescriptor
 
 relies upon module  ui_menu_structure_c2py.py  in the same directory
 
@@ -8,11 +9,10 @@ relies upon module  ui_menu_structure_c2py.py  in the same directory
 
 
 from ui_menu_structure_c2py import MENU_DESCRIPTOR, BUILD_ID
-# MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "ID" "LABEL"
+# MENU_DESCRIPTOR is a list of dicts with entries "MENU_ID" "ME_KIND" "NR" "LABEL"
 # e.g.  [ ... { 'MENU_ID': "TOP",
 #               'ME_KIND': "GROUP",
 #               'NR': "MENU_BASE",
-#               'ID': "STD",
 #               'LABEL': "Standard Menu",
 #               'DESC': ":soon:" },
 #         ...]
@@ -71,7 +71,7 @@ for md in MENU_DESCRIPTOR:
         # declare a node for id
         OUTPUT += """
         "{NR}" [
-             label = "{NR} ({ID}) | {LABEL}"
+             label = "{NR} | {LABEL}"
              shape = record
              ];
         """.format(**md).replace('<', '\<').replace('>', '\>')
