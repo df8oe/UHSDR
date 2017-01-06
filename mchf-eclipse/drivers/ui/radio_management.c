@@ -788,6 +788,7 @@ void RadioManagement_SetDemodMode(uint32_t new_mode)
         // ads.fm_squelched = true;
         // ads.fm_sql_avg = 1;
     }
+
     AudioDriver_SetRxAudioProcessing(new_mode, false);
     AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
@@ -1065,7 +1066,21 @@ uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
                    retval = DEMOD_SAM;
                 break;
             case DEMOD_SAM:
-                retval = DEMOD_AM;
+                if(ads.sam_sideband == 0)
+                {
+                    ads.sam_sideband = 1;
+                    retval = DEMOD_SAM;
+                }
+                else if(ads.sam_sideband == 1)
+                {
+                    ads.sam_sideband = 2;
+                    retval = DEMOD_SAM;
+                }
+                else //if(ads.sam_sideband == 2)
+                {
+                    ads.sam_sideband = 0;
+                    retval = DEMOD_AM;
+                }
                 break;
             case DEMOD_DIGI:
                 ts.digi_lsb = !ts.digi_lsb;
