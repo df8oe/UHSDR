@@ -203,6 +203,8 @@ enum
 //    MENU_FP_SAM_03,
 //    MENU_FP_SAM_04,
     MENU_DEBUG_TX_AUDIO,
+    MENU_DEBUG_I2C1_SPEED,
+    MENU_DEBUG_I2C2_SPEED,
     //
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
