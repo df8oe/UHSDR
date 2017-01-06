@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-06T17:42:36  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-06T18:03:31  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-06T17:42:36  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-06T18:03:31  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -228,8 +228,8 @@ generated at  2017-01-06T17:42:36  by "./ui_menu_structure_mdtable.py"
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
-| **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Changes speed of the I2C1 bus (Si570 oscillator and MCP9801 temp sensor). Be careful with speeds above 200 kHz. Not stored permanently (yet), reboot will bring back default speeds. | 
-| **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Changes speed of the I2C2 bus (Audio Codec and I2C EEPROM). Be careful with speeds above 100 kHz. Not stored permanently (yet), reboot will bring back default speeds. | 
+| **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temp sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
+| **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
 
 
 [//]: # ( EOFILE                                                                       )
