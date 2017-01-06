@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-04T09:26:41  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-06T07:59:43  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-04T09:26:41  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-06T07:59:43  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -28,987 +28,892 @@
 
 
         "MENU_BASE" [
-             label = "MENU_BASE (STD) | Standard Menu"
+             label = "MENU_BASE | Standard Menu"
              shape = record
              ];
         
         "MENU_CONF" [
-             label = "MENU_CONF (CON) | Configuration Menu"
+             label = "MENU_CONF | Configuration Menu"
              shape = record
              ];
         
         "MENU_DISPLAY" [
-             label = "MENU_DISPLAY (DIS) | Display Menu"
+             label = "MENU_DISPLAY | Display Menu"
              shape = record
              ];
         
         "MENU_CW" [
-             label = "MENU_CW (CW ) | CW Mode Settings"
+             label = "MENU_CW | CW Mode Settings"
              shape = record
              ];
         
         "MENU_FILTER" [
-             label = "MENU_FILTER (FIL) | Filter Selection"
+             label = "MENU_FILTER | Filter Selection"
              shape = record
              ];
         
         "MENU_POW" [
-             label = "MENU_POW (POW) | PA Configuration"
+             label = "MENU_POW | PA Configuration"
              shape = record
              ];
         
         "MENU_SYSINFO" [
-             label = "MENU_SYSINFO (INF) | System Info"
+             label = "MENU_SYSINFO | System Info"
              shape = record
              ];
         
         "MENU_DEBUG" [
-             label = "MENU_DEBUG (INF) | Debug/Exper. Settings"
+             label = "MENU_DEBUG | Debug/Exper. Settings"
              shape = record
              ];
         
         "MENU_SSB_AUTO_MODE_SELECT" [
-             label = "MENU_SSB_AUTO_MODE_SELECT (031) | LSB/USB Auto Select"
+             label = "MENU_SSB_AUTO_MODE_SELECT | LSB/USB Auto Select"
              shape = record
              ];
         
         "MENU_DIGI_DISABLE" [
-             label = "MENU_DIGI_DISABLE (030) | Digital Modes"
+             label = "MENU_DIGI_DISABLE | Digital Modes"
              shape = record
              ];
         
         "MENU_CW_DISABLE" [
-             label = "MENU_CW_DISABLE (030) | CW Mode"
+             label = "MENU_CW_DISABLE | CW Mode"
              shape = record
              ];
         
         "MENU_AM_DISABLE" [
-             label = "MENU_AM_DISABLE (030) | AM Mode"
+             label = "MENU_AM_DISABLE | AM Mode"
              shape = record
              ];
         
         "MENU_DEMOD_SAM" [
-             label = "MENU_DEMOD_SAM (SAM) | SyncAM Mode"
+             label = "MENU_DEMOD_SAM | SyncAM Mode"
              shape = record
              ];
         
         "MENU_FM_MODE_ENABLE" [
-             label = "MENU_FM_MODE_ENABLE (040) | FM Mode"
+             label = "MENU_FM_MODE_ENABLE | FM Mode"
              shape = record
              ];
         
         "MENU_FM_GEN_SUBAUDIBLE_TONE" [
-             label = "MENU_FM_GEN_SUBAUDIBLE_TONE (041) | FM Sub Tone Gen"
+             label = "MENU_FM_GEN_SUBAUDIBLE_TONE | FM Sub Tone Gen"
              shape = record
              ];
         
         "MENU_FM_DET_SUBAUDIBLE_TONE" [
-             label = "MENU_FM_DET_SUBAUDIBLE_TONE (042) | FM Sub Tone Det"
+             label = "MENU_FM_DET_SUBAUDIBLE_TONE | FM Sub Tone Det"
              shape = record
              ];
         
         "MENU_FM_TONE_BURST_MODE" [
-             label = "MENU_FM_TONE_BURST_MODE (043) | FM Tone Burst"
+             label = "MENU_FM_TONE_BURST_MODE | FM Tone Burst"
              shape = record
              ];
         
         "MENU_FM_DEV_MODE" [
-             label = "MENU_FM_DEV_MODE (045) | FM Deviation"
+             label = "MENU_FM_DEV_MODE | FM Deviation"
              shape = record
              ];
         
         "MENU_RF_GAIN_ADJ" [
-             label = "MENU_RF_GAIN_ADJ (051) | RF Gain"
+             label = "MENU_RF_GAIN_ADJ | RF Gain"
              shape = record
              ];
         
         "MENU_AGC_MODE" [
-             label = "MENU_AGC_MODE (050) | AGC Mode"
+             label = "MENU_AGC_MODE | AGC Mode"
              shape = record
              ];
         
         "MENU_CUSTOM_AGC" [
-             label = "MENU_CUSTOM_AGC (052) | Custom AGC (+=Slower)"
+             label = "MENU_CUSTOM_AGC | Custom AGC (+=Slower)"
              shape = record
              ];
         
         "MENU_CODEC_GAIN_MODE" [
-             label = "MENU_CODEC_GAIN_MODE (053) | RX Codec Gain"
+             label = "MENU_CODEC_GAIN_MODE | RX Codec Gain"
              shape = record
              ];
         
         "MENU_RX_FREQ_CONV" [
-             label = "MENU_RX_FREQ_CONV (055) | RX/TX Freq Xlate"
+             label = "MENU_RX_FREQ_CONV | RX/TX Freq Xlate"
              shape = record
              ];
         
         "MENU_MIC_LINE_MODE" [
-             label = "MENU_MIC_LINE_MODE (060) | Mic/Line Select"
+             label = "MENU_MIC_LINE_MODE | Mic/Line Select"
              shape = record
              ];
         
         "MENU_MIC_GAIN" [
-             label = "MENU_MIC_GAIN (061) | Mic Input Gain"
+             label = "MENU_MIC_GAIN | Mic Input Gain"
              shape = record
              ];
         
         "MENU_LINE_GAIN" [
-             label = "MENU_LINE_GAIN (062) | Line Input Gain"
+             label = "MENU_LINE_GAIN | Line Input Gain"
              shape = record
              ];
         
         "MENU_TX_COMPRESSION_LEVEL" [
-             label = "MENU_TX_COMPRESSION_LEVEL (065) | TX Audio Compress"
+             label = "MENU_TX_COMPRESSION_LEVEL | TX Audio Compress"
              shape = record
              ];
         
         "MENU_ALC_RELEASE" [
-             label = "MENU_ALC_RELEASE (063) | TX ALC Release Time"
+             label = "MENU_ALC_RELEASE | TX ALC Release Time"
              shape = record
              ];
         
         "MENU_ALC_POSTFILT_GAIN" [
-             label = "MENU_ALC_POSTFILT_GAIN (064) | TX ALC Input Gain"
+             label = "MENU_ALC_POSTFILT_GAIN | TX ALC Input Gain"
              shape = record
              ];
         
         "MENU_NOISE_BLANKER_SETTING" [
-             label = "MENU_NOISE_BLANKER_SETTING (054) | RX NB Setting"
+             label = "MENU_NOISE_BLANKER_SETTING | RX NB Setting"
              shape = record
              ];
         
         "MENU_DSP_NR_STRENGTH" [
-             label = "MENU_DSP_NR_STRENGTH (010) | DSP NR Strength"
+             label = "MENU_DSP_NR_STRENGTH | DSP NR Strength"
              shape = record
              ];
         
         "MENU_TCXO_MODE" [
-             label = "MENU_TCXO_MODE (090) | TCXO Off/On/Stop"
+             label = "MENU_TCXO_MODE | TCXO Off/On/Stop"
              shape = record
              ];
         
         "MENU_TCXO_C_F" [
-             label = "MENU_TCXO_C_F (091) | TCXO Temp. (C/F)"
+             label = "MENU_TCXO_C_F | TCXO Temp. (C/F)"
              shape = record
              ];
         
         "MENU_BACKUP_CONFIG" [
-             label = "MENU_BACKUP_CONFIG (197) | Backup Config"
+             label = "MENU_BACKUP_CONFIG | Backup Config"
              shape = record
              ];
         
         "MENU_RESTORE_CONFIG" [
-             label = "MENU_RESTORE_CONFIG (198) | Restore Config"
+             label = "MENU_RESTORE_CONFIG | Restore Config"
              shape = record
              ];
         
         "MENU_RESTART_CODEC" [
-             label = "MENU_RESTART_CODEC (198) | Restart Codec"
+             label = "MENU_RESTART_CODEC | Restart Codec"
              shape = record
              ];
         
         "CONFIG_LCD_AUTO_OFF_MODE" [
-             label = "CONFIG_LCD_AUTO_OFF_MODE (090) | LCD Auto Blank"
+             label = "CONFIG_LCD_AUTO_OFF_MODE | LCD Auto Blank"
              shape = record
              ];
         
         "CONFIG_FREQ_STEP_MARKER_LINE" [
-             label = "CONFIG_FREQ_STEP_MARKER_LINE (091) | Step Size Marker"
+             label = "CONFIG_FREQ_STEP_MARKER_LINE | Step Size Marker"
              shape = record
              ];
         
         "CONFIG_DISP_FILTER_BANDWIDTH" [
-             label = "CONFIG_DISP_FILTER_BANDWIDTH (092) | Filter BW Display"
+             label = "CONFIG_DISP_FILTER_BANDWIDTH | Filter BW Display"
              shape = record
              ];
         
         "MENU_SPECTRUM_MODE" [
-             label = "MENU_SPECTRUM_MODE (109) | Spectrum Type"
+             label = "MENU_SPECTRUM_MODE | Spectrum Type"
              shape = record
              ];
         
         "MENU_SPECTRUM_MAGNIFY" [
-             label = "MENU_SPECTRUM_MAGNIFY (105) | Spectrum Magnify"
+             label = "MENU_SPECTRUM_MAGNIFY | Spectrum Magnify"
              shape = record
              ];
         
         "MENU_SPECTRUM_SIZE" [
-             label = "MENU_SPECTRUM_SIZE (117) | Spectrum Size"
+             label = "MENU_SPECTRUM_SIZE | Spectrum Size"
              shape = record
              ];
         
         "MENU_SPECTRUM_FILTER_STRENGTH" [
-             label = "MENU_SPECTRUM_FILTER_STRENGTH (101) | Spectrum Filter"
+             label = "MENU_SPECTRUM_FILTER_STRENGTH | Spectrum Filter"
              shape = record
              ];
         
         "MENU_SPECTRUM_FREQSCALE_COLOUR" [
-             label = "MENU_SPECTRUM_FREQSCALE_COLOUR (104) | Spec FreqScale Colour"
+             label = "MENU_SPECTRUM_FREQSCALE_COLOUR | Spec FreqScale Colour"
              shape = record
              ];
         
         "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
-             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR (108) | Spec Line Colour"
+             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | Spec Line Colour"
              shape = record
              ];
         
         "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
-             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE (340) | Spectrum FFT Wind."
+             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE | Spectrum FFT Wind."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_LIGHT_ENABLE" [
+             label = "MENU_SCOPE_LIGHT_ENABLE | Scope Light"
              shape = record
              ];
         
         "MENU_SCOPE_SPEED" [
-             label = "MENU_SCOPE_SPEED (100) | Scope 1/Speed"
+             label = "MENU_SCOPE_SPEED | Scope 1/Speed"
              shape = record
              ];
         
         "MENU_SCOPE_AGC_ADJUST" [
-             label = "MENU_SCOPE_AGC_ADJUST (106) | Scope AGC Adj."
+             label = "MENU_SCOPE_AGC_ADJUST | Scope AGC Adj."
              shape = record
              ];
         
         "MENU_SCOPE_TRACE_COLOUR" [
-             label = "MENU_SCOPE_TRACE_COLOUR (102) | Scope Trace Colour"
+             label = "MENU_SCOPE_TRACE_COLOUR | Scope Trace Colour"
              shape = record
              ];
         
         "MENU_SCOPE_GRID_COLOUR" [
-             label = "MENU_SCOPE_GRID_COLOUR (103) | Scope Grid Colour"
+             label = "MENU_SCOPE_GRID_COLOUR | Scope Grid Colour"
              shape = record
              ];
         
         "MENU_SCOPE_DB_DIVISION" [
-             label = "MENU_SCOPE_DB_DIVISION (107) | Scope Div."
+             label = "MENU_SCOPE_DB_DIVISION | Scope Div."
              shape = record
              ];
         
         "MENU_SCOPE_NOSIG_ADJUST" [
-             label = "MENU_SCOPE_NOSIG_ADJUST (115) | Scope NoSig Adj."
+             label = "MENU_SCOPE_NOSIG_ADJUST | Scope NoSig Adj."
              shape = record
              ];
         
         "MENU_WFALL_SPEED" [
-             label = "MENU_WFALL_SPEED (114) | Wfall 1/Speed"
+             label = "MENU_WFALL_SPEED | Wfall 1/Speed"
              shape = record
              ];
         
         "MENU_WFALL_COLOR_SCHEME" [
-             label = "MENU_WFALL_COLOR_SCHEME (110) | Wfall Colours"
+             label = "MENU_WFALL_COLOR_SCHEME | Wfall Colours"
              shape = record
              ];
         
         "MENU_WFALL_STEP_SIZE" [
-             label = "MENU_WFALL_STEP_SIZE (111) | Wfall Step Size"
+             label = "MENU_WFALL_STEP_SIZE | Wfall Step Size"
              shape = record
              ];
         
         "MENU_WFALL_OFFSET" [
-             label = "MENU_WFALL_OFFSET (112) | Wfall Brightness"
+             label = "MENU_WFALL_OFFSET | Wfall Brightness"
              shape = record
              ];
         
         "MENU_WFALL_CONTRAST" [
-             label = "MENU_WFALL_CONTRAST (113) | Wfall Contrast"
+             label = "MENU_WFALL_CONTRAST | Wfall Contrast"
              shape = record
              ];
         
         "MENU_WFALL_NOSIG_ADJUST" [
-             label = "MENU_WFALL_NOSIG_ADJUST (116) | Wfall NoSig Adj."
+             label = "MENU_WFALL_NOSIG_ADJUST | Wfall NoSig Adj."
              shape = record
              ];
         
         "MENU_METER_COLOUR_UP" [
-             label = "MENU_METER_COLOUR_UP (122) | Upper Meter Colour"
+             label = "MENU_METER_COLOUR_UP | Upper Meter Colour"
              shape = record
              ];
         
         "MENU_METER_COLOUR_DOWN" [
-             label = "MENU_METER_COLOUR_DOWN (123) | Lower Meter Colour"
+             label = "MENU_METER_COLOUR_DOWN | Lower Meter Colour"
              shape = record
              ];
         
         "MENU_DBM_DISPLAY" [
-             label = "MENU_DBM_DISPLAY (120) | dBm display"
+             label = "MENU_DBM_DISPLAY | dBm display"
              shape = record
              ];
         
         "MENU_S_METER" [
-             label = "MENU_S_METER (121) | S-Meter"
+             label = "MENU_S_METER | S-Meter"
              shape = record
              ];
         
         "MENU_KEYER_MODE" [
-             label = "MENU_KEYER_MODE (070) | CW Keyer Mode"
+             label = "MENU_KEYER_MODE | CW Keyer Mode"
              shape = record
              ];
         
         "MENU_KEYER_SPEED" [
-             label = "MENU_KEYER_SPEED (071) | CW Keyer Speed"
+             label = "MENU_KEYER_SPEED | CW Keyer Speed"
              shape = record
              ];
         
         "MENU_SIDETONE_GAIN" [
-             label = "MENU_SIDETONE_GAIN (072) | CW Sidetone Gain"
+             label = "MENU_SIDETONE_GAIN | CW Sidetone Gain"
              shape = record
              ];
         
         "MENU_SIDETONE_FREQUENCY" [
-             label = "MENU_SIDETONE_FREQUENCY (073) | CW Side/Offset Freq"
+             label = "MENU_SIDETONE_FREQUENCY | CW Side/Offset Freq"
              shape = record
              ];
         
         "MENU_PADDLE_REVERSE" [
-             label = "MENU_PADDLE_REVERSE (074) | CW Paddle Reverse"
+             label = "MENU_PADDLE_REVERSE | CW Paddle Reverse"
              shape = record
              ];
         
         "MENU_CW_TX_RX_DELAY" [
-             label = "MENU_CW_TX_RX_DELAY (075) | CW TX-\>RX Delay"
+             label = "MENU_CW_TX_RX_DELAY | CW TX-\>RX Delay"
              shape = record
              ];
         
         "MENU_CW_OFFSET_MODE" [
-             label = "MENU_CW_OFFSET_MODE (076) | CW Freq. Offset"
+             label = "MENU_CW_OFFSET_MODE | CW Freq. Offset"
              shape = record
              ];
         
         "MENU_CW_AUTO_MODE_SELECT" [
-             label = "MENU_CW_AUTO_MODE_SELECT (031) | CW LSB/USB Select"
+             label = "MENU_CW_AUTO_MODE_SELECT | CW LSB/USB Select"
              shape = record
              ];
         
         "CONFIG_FREQ_MEM_LIMIT_RELAX" [
-             label = "CONFIG_FREQ_MEM_LIMIT_RELAX (232) | Save Out-Of-Band Freq."
+             label = "CONFIG_FREQ_MEM_LIMIT_RELAX | Save Out-Of-Band Freq."
              shape = record
              ];
         
         "CONFIG_TX_OUT_ENABLE" [
-             label = "CONFIG_TX_OUT_ENABLE (207) | TX on Out-Of-Band Freq."
+             label = "CONFIG_TX_OUT_ENABLE | TX on Out-Of-Band Freq."
              shape = record
              ];
         
         "CONFIG_TX_DISABLE" [
-             label = "CONFIG_TX_DISABLE (203) | Transmit Disable"
+             label = "CONFIG_TX_DISABLE | Transmit Disable"
              shape = record
              ];
         
         "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH" [
-             label = "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH (204) | Menu SW on TX disable"
+             label = "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH | Menu SW on TX disable"
              shape = record
              ];
         
         "CONFIG_MUTE_LINE_OUT_TX" [
-             label = "CONFIG_MUTE_LINE_OUT_TX (205) | TX Mute LineOut"
+             label = "CONFIG_MUTE_LINE_OUT_TX | TX Mute LineOut"
              shape = record
              ];
         
         "CONFIG_TXRX_SWITCH_AUDIO_MUTE" [
-             label = "CONFIG_TXRX_SWITCH_AUDIO_MUTE (206) | TX Initial Muting Time"
+             label = "CONFIG_TXRX_SWITCH_AUDIO_MUTE | TX Initial Muting Time"
              shape = record
              ];
         
         "CONFIG_MAX_VOLUME" [
-             label = "CONFIG_MAX_VOLUME (210) | Max Volume"
+             label = "CONFIG_MAX_VOLUME | Max Volume"
              shape = record
              ];
         
         "CONFIG_MAX_RX_GAIN" [
-             label = "CONFIG_MAX_RX_GAIN (211) | Max RX Gain (0=Max)"
+             label = "CONFIG_MAX_RX_GAIN | Max RX Gain (0=Max)"
              shape = record
              ];
         
         "CONFIG_BEEP_ENABLE" [
-             label = "CONFIG_BEEP_ENABLE (212) | Key Beep"
+             label = "CONFIG_BEEP_ENABLE | Key Beep"
              shape = record
              ];
         
         "CONFIG_BEEP_FREQ" [
-             label = "CONFIG_BEEP_FREQ (213) | Beep Frequency"
+             label = "CONFIG_BEEP_FREQ | Beep Frequency"
              shape = record
              ];
         
         "CONFIG_BEEP_VOLUME" [
-             label = "CONFIG_BEEP_VOLUME (214) | Beep Volume"
+             label = "CONFIG_BEEP_VOLUME | Beep Volume"
              shape = record
              ];
         
         "CONFIG_CAT_ENABLE" [
-             label = "CONFIG_CAT_ENABLE (220) | CAT Mode"
+             label = "CONFIG_CAT_ENABLE | CAT Mode"
              shape = record
              ];
         
         "CONFIG_CAT_IN_SANDBOX" [
-             label = "CONFIG_CAT_IN_SANDBOX (530) | CAT Running In Sandbox"
+             label = "CONFIG_CAT_IN_SANDBOX | CAT Running In Sandbox"
              shape = record
              ];
         
         "CONFIG_CAT_XLAT" [
-             label = "CONFIG_CAT_XLAT (400) | CAT-DIQ-FREQ-XLAT"
+             label = "CONFIG_CAT_XLAT | CAT-DIQ-FREQ-XLAT"
              shape = record
              ];
         
         "CONFIG_XVTR_OFFSET_MULT" [
-             label = "CONFIG_XVTR_OFFSET_MULT (280) | XVTR Offs/Mult"
+             label = "CONFIG_XVTR_OFFSET_MULT | XVTR Offs/Mult"
              shape = record
              ];
         
         "CONFIG_XVTR_FREQUENCY_OFFSET" [
-             label = "CONFIG_XVTR_FREQUENCY_OFFSET (281) | XVTR Offset"
+             label = "CONFIG_XVTR_FREQUENCY_OFFSET | XVTR Offset"
              shape = record
              ];
         
         "CONFIG_STEP_SIZE_BUTTON_SWAP" [
-             label = "CONFIG_STEP_SIZE_BUTTON_SWAP (201) | Step Button Swap"
+             label = "CONFIG_STEP_SIZE_BUTTON_SWAP | Step Button Swap"
              shape = record
              ];
         
         "CONFIG_BAND_BUTTON_SWAP" [
-             label = "CONFIG_BAND_BUTTON_SWAP (202) | Band+/- Button Swap"
+             label = "CONFIG_BAND_BUTTON_SWAP | Band+/- Button Swap"
              shape = record
              ];
         
         "MENU_REVERSE_TOUCHSCREEN" [
-             label = "MENU_REVERSE_TOUCHSCREEN (122) | Reverse Touchscreen"
+             label = "MENU_REVERSE_TOUCHSCREEN | Reverse Touchscreen"
              shape = record
              ];
         
         "CONFIG_VOLTMETER_CALIBRATION" [
-             label = "CONFIG_VOLTMETER_CALIBRATION (208) | Voltmeter Cal."
+             label = "CONFIG_VOLTMETER_CALIBRATION | Voltmeter Cal."
              shape = record
              ];
         
         "CONFIG_FREQUENCY_CALIBRATE" [
-             label = "CONFIG_FREQUENCY_CALIBRATE (230) | Freq. Calibrate"
+             label = "CONFIG_FREQUENCY_CALIBRATE | Freq. Calibrate"
              shape = record
              ];
         
         "CONFIG_RF_FWD_PWR_NULL" [
-             label = "CONFIG_RF_FWD_PWR_NULL (271) | Pwr. Det. Null"
+             label = "CONFIG_RF_FWD_PWR_NULL | Pwr. Det. Null"
              shape = record
              ];
         
         "CONFIG_FWD_REV_SENSE_SWAP" [
-             label = "CONFIG_FWD_REV_SENSE_SWAP (276) | SWR/PWR Meter FWD/REV Swap"
+             label = "CONFIG_FWD_REV_SENSE_SWAP | SWR/PWR Meter FWD/REV Swap"
              shape = record
              ];
         
         "CONFIG_80M_RX_IQ_GAIN_BAL" [
-             label = "CONFIG_80M_RX_IQ_GAIN_BAL (240) | RX IQ Balance (80m)"
+             label = "CONFIG_80M_RX_IQ_GAIN_BAL | RX IQ Balance (80m)"
              shape = record
              ];
         
         "CONFIG_80M_RX_IQ_PHASE_BAL" [
-             label = "CONFIG_80M_RX_IQ_PHASE_BAL (241) | RX IQ Phase   (80m)"
+             label = "CONFIG_80M_RX_IQ_PHASE_BAL | RX IQ Phase   (80m)"
              shape = record
              ];
         
         "CONFIG_10M_RX_IQ_GAIN_BAL" [
-             label = "CONFIG_10M_RX_IQ_GAIN_BAL (242) | RX IQ Balance (10m)"
+             label = "CONFIG_10M_RX_IQ_GAIN_BAL | RX IQ Balance (10m)"
              shape = record
              ];
         
         "CONFIG_10M_RX_IQ_PHASE_BAL" [
-             label = "CONFIG_10M_RX_IQ_PHASE_BAL (243) | RX IQ Phase   (10m)"
+             label = "CONFIG_10M_RX_IQ_PHASE_BAL | RX IQ Phase   (10m)"
              shape = record
              ];
         
         "CONFIG_80M_TX_IQ_GAIN_BAL" [
-             label = "CONFIG_80M_TX_IQ_GAIN_BAL (250) | TX IQ Balance (80m)"
+             label = "CONFIG_80M_TX_IQ_GAIN_BAL | TX IQ Balance (80m)"
              shape = record
              ];
         
         "CONFIG_80M_TX_IQ_PHASE_BAL" [
-             label = "CONFIG_80M_TX_IQ_PHASE_BAL (251) | TX IQ Phase   (80m)"
+             label = "CONFIG_80M_TX_IQ_PHASE_BAL | TX IQ Phase   (80m)"
              shape = record
              ];
         
         "CONFIG_10M_TX_IQ_GAIN_BAL" [
-             label = "CONFIG_10M_TX_IQ_GAIN_BAL (252) | TX IQ Balance (10m)"
+             label = "CONFIG_10M_TX_IQ_GAIN_BAL | TX IQ Balance (10m)"
              shape = record
              ];
         
         "CONFIG_10M_TX_IQ_PHASE_BAL" [
-             label = "CONFIG_10M_TX_IQ_PHASE_BAL (253) | TX IQ Phase   (10m)"
+             label = "CONFIG_10M_TX_IQ_PHASE_BAL | TX IQ Phase   (10m)"
              shape = record
              ];
         
         "CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF (250) | TX IQ Balance (80m,CW)"
+             label = "CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (80m,CW)"
              shape = record
              ];
         
         "CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF (251) | TX IQ Phase   (80m,CW)"
+             label = "CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (80m,CW)"
              shape = record
              ];
         
         "CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF (252) | TX IQ Balance (10m,CW)"
+             label = "CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10m,CW)"
              shape = record
              ];
         
         "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF (253) | TX IQ Phase   (10m,CW)"
+             label = "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10m,CW)"
              shape = record
              ];
         
         "CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH" [
-             label = "CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH (310) | DSP NR BufLen"
+             label = "CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH | DSP NR BufLen"
              shape = record
              ];
         
         "CONFIG_DSP_NR_FFT_NUMTAPS" [
-             label = "CONFIG_DSP_NR_FFT_NUMTAPS (311) | DSP NR FIR NumTaps"
+             label = "CONFIG_DSP_NR_FFT_NUMTAPS | DSP NR FIR NumTaps"
              shape = record
              ];
         
         "CONFIG_DSP_NR_POST_AGC_SELECT" [
-             label = "CONFIG_DSP_NR_POST_AGC_SELECT (312) | DSP NR Post-AGC"
+             label = "CONFIG_DSP_NR_POST_AGC_SELECT | DSP NR Post-AGC"
              shape = record
              ];
         
         "CONFIG_DSP_NOTCH_CONVERGE_RATE" [
-             label = "CONFIG_DSP_NOTCH_CONVERGE_RATE (313) | DSP Notch ConvRate"
+             label = "CONFIG_DSP_NOTCH_CONVERGE_RATE | DSP Notch ConvRate"
              shape = record
              ];
         
         "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH" [
-             label = "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH (314) | DSP Notch BufLen"
+             label = "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH | DSP Notch BufLen"
              shape = record
              ];
         
         "CONFIG_DSP_NOTCH_FFT_NUMTAPS" [
-             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS (315) | DSP Notch FIRNumTap"
+             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS | DSP Notch FIRNumTap"
              shape = record
              ];
         
         "CONFIG_AGC_TIME_CONSTANT" [
-             label = "CONFIG_AGC_TIME_CONSTANT (320) | NB AGC T/C (\<=Slow)"
+             label = "CONFIG_AGC_TIME_CONSTANT | NB AGC T/C (\<=Slow)"
              shape = record
              ];
         
         "CONFIG_SAM_PLL_LOCKING_RANGE" [
-             label = "CONFIG_SAM_PLL_LOCKING_RANGE (321) | SAM PLL locking range"
+             label = "CONFIG_SAM_PLL_LOCKING_RANGE | SAM PLL locking range"
              shape = record
              ];
         
         "CONFIG_SAM_PLL_STEP_RESPONSE" [
-             label = "CONFIG_SAM_PLL_STEP_RESPONSE (322) | SAM PLL step response"
+             label = "CONFIG_SAM_PLL_STEP_RESPONSE | SAM PLL step response"
              shape = record
              ];
         
         "CONFIG_SAM_PLL_BANDWIDTH" [
-             label = "CONFIG_SAM_PLL_BANDWIDTH (323) | SAM PLL bandwidth in Hz"
+             label = "CONFIG_SAM_PLL_BANDWIDTH | SAM PLL bandwidth in Hz"
              shape = record
              ];
         
         "CONFIG_SAM_PLL_TAUR" [
-             label = "CONFIG_SAM_PLL_TAUR (324) | SAM PLL tauR"
+             label = "CONFIG_SAM_PLL_TAUR | SAM PLL tauR"
              shape = record
              ];
         
         "CONFIG_SAM_PLL_TAUI" [
-             label = "CONFIG_SAM_PLL_TAUI (325) | SAM PLL tauI"
+             label = "CONFIG_SAM_PLL_TAUI | SAM PLL tauI"
              shape = record
              ];
         
         "CONFIG_SAM_SIDEBAND" [
-             label = "CONFIG_SAM_SIDEBAND (326) | SAM Sideband"
+             label = "CONFIG_SAM_SIDEBAND | SAM Sideband"
              shape = record
              ];
         
         "CONFIG_RESET_SER_EEPROM" [
-             label = "CONFIG_RESET_SER_EEPROM (341) | Reset Config EEPROM"
+             label = "CONFIG_RESET_SER_EEPROM | Reset Config EEPROM"
              shape = record
              ];
         
         "CONFIG_TUNE_POWER_LEVEL" [
-             label = "CONFIG_TUNE_POWER_LEVEL (P00) | Tune Power Level"
+             label = "CONFIG_TUNE_POWER_LEVEL | Tune Power Level"
              shape = record
              ];
         
         "CONFIG_TUNE_TONE_MODE" [
-             label = "CONFIG_TUNE_TONE_MODE (P99) | Tune Tone (SSB)"
+             label = "CONFIG_TUNE_TONE_MODE | Tune Tone (SSB)"
              shape = record
              ];
         
         "CONFIG_CW_PA_BIAS" [
-             label = "CONFIG_CW_PA_BIAS (260) | CW PA Bias (If \>0 )"
+             label = "CONFIG_CW_PA_BIAS | CW PA Bias (If \>0 )"
              shape = record
              ];
         
         "CONFIG_REDUCE_POWER_ON_LOW_BANDS" [
-             label = "CONFIG_REDUCE_POWER_ON_LOW_BANDS (P0A) | Reduce Power on Low Bands"
+             label = "CONFIG_REDUCE_POWER_ON_LOW_BANDS | Reduce Power on Low Bands"
              shape = record
              ];
         
         "CONFIG_PA_BIAS" [
-             label = "CONFIG_PA_BIAS (261) | PA Bias"
-             shape = record
-             ];
-        
-        "CONFIG_2200M_5W_ADJUST" [
-             label = "CONFIG_2200M_5W_ADJUST (P01) | 2200m 5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_630M_5W_ADJUST" [
-             label = "CONFIG_630M_5W_ADJUST (P02) | 630m  5W PWR Adjust"
+             label = "CONFIG_PA_BIAS | PA Bias"
              shape = record
              ];
         
         "CONFIG_160M_5W_ADJUST" [
-             label = "CONFIG_160M_5W_ADJUST (P03) | 160m  5W PWR Adjust"
+             label = "CONFIG_160M_5W_ADJUST | 160m  5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_80M_5W_ADJUST" [
-             label = "CONFIG_80M_5W_ADJUST (P04) | 80m   5W PWR Adjust"
+             label = "CONFIG_80M_5W_ADJUST | 80m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_60M_5W_ADJUST" [
-             label = "CONFIG_60M_5W_ADJUST (P05) | 60m   5W PWR Adjust"
+             label = "CONFIG_60M_5W_ADJUST | 60m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_40M_5W_ADJUST" [
-             label = "CONFIG_40M_5W_ADJUST (P06) | 40m   5W PWR Adjust"
+             label = "CONFIG_40M_5W_ADJUST | 40m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_30M_5W_ADJUST" [
-             label = "CONFIG_30M_5W_ADJUST (P07) | 30m   5W PWR Adjust"
+             label = "CONFIG_30M_5W_ADJUST | 30m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_20M_5W_ADJUST" [
-             label = "CONFIG_20M_5W_ADJUST (P08) | 20m   5W PWR Adjust"
+             label = "CONFIG_20M_5W_ADJUST | 20m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_17M_5W_ADJUST" [
-             label = "CONFIG_17M_5W_ADJUST (P09) | 17m   5W PWR Adjust"
+             label = "CONFIG_17M_5W_ADJUST | 17m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_15M_5W_ADJUST" [
-             label = "CONFIG_15M_5W_ADJUST (P10) | 15m   5W PWR Adjust"
+             label = "CONFIG_15M_5W_ADJUST | 15m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_12M_5W_ADJUST" [
-             label = "CONFIG_12M_5W_ADJUST (P11) | 12m   5W PWR Adjust"
+             label = "CONFIG_12M_5W_ADJUST | 12m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_10M_5W_ADJUST" [
-             label = "CONFIG_10M_5W_ADJUST (P12) | 10m   5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_6M_5W_ADJUST" [
-             label = "CONFIG_6M_5W_ADJUST (P13) | 6m    5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_4M_5W_ADJUST" [
-             label = "CONFIG_4M_5W_ADJUST (P14) | 4m    5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_2M_5W_ADJUST" [
-             label = "CONFIG_2M_5W_ADJUST (P15) | 2m    5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_70CM_5W_ADJUST" [
-             label = "CONFIG_70CM_5W_ADJUST (P16) | 70cm  5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_23CM_5W_ADJUST" [
-             label = "CONFIG_23CM_5W_ADJUST (P17) | 23cm  5W PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_2200M_FULL_POWER_ADJUST" [
-             label = "CONFIG_2200M_FULL_POWER_ADJUST (O01) | 2200m Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_630M_FULL_POWER_ADJUST" [
-             label = "CONFIG_630M_FULL_POWER_ADJUST (O02) | 630m  Full PWR Adjust"
+             label = "CONFIG_10M_5W_ADJUST | 10m   5W PWR Adjust"
              shape = record
              ];
         
         "CONFIG_160M_FULL_POWER_ADJUST" [
-             label = "CONFIG_160M_FULL_POWER_ADJUST (O03) | 160m  Full PWR Adjust"
+             label = "CONFIG_160M_FULL_POWER_ADJUST | 160m  Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_80M_FULL_POWER_ADJUST" [
-             label = "CONFIG_80M_FULL_POWER_ADJUST (O04) | 80m   Full PWR Adjust"
+             label = "CONFIG_80M_FULL_POWER_ADJUST | 80m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_60M_FULL_POWER_ADJUST" [
-             label = "CONFIG_60M_FULL_POWER_ADJUST (O05) | 60m   Full PWR Adjust"
+             label = "CONFIG_60M_FULL_POWER_ADJUST | 60m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_40M_FULL_POWER_ADJUST" [
-             label = "CONFIG_40M_FULL_POWER_ADJUST (O06) | 40m   Full PWR Adjust"
+             label = "CONFIG_40M_FULL_POWER_ADJUST | 40m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_30M_FULL_POWER_ADJUST" [
-             label = "CONFIG_30M_FULL_POWER_ADJUST (O07) | 30m   Full PWR Adjust"
+             label = "CONFIG_30M_FULL_POWER_ADJUST | 30m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_20M_FULL_POWER_ADJUST" [
-             label = "CONFIG_20M_FULL_POWER_ADJUST (O08) | 20m   Full PWR Adjust"
+             label = "CONFIG_20M_FULL_POWER_ADJUST | 20m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_17M_FULL_POWER_ADJUST" [
-             label = "CONFIG_17M_FULL_POWER_ADJUST (O09) | 17m   Full PWR Adjust"
+             label = "CONFIG_17M_FULL_POWER_ADJUST | 17m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_15M_FULL_POWER_ADJUST" [
-             label = "CONFIG_15M_FULL_POWER_ADJUST (O10) | 15m   Full PWR Adjust"
+             label = "CONFIG_15M_FULL_POWER_ADJUST | 15m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_12M_FULL_POWER_ADJUST" [
-             label = "CONFIG_12M_FULL_POWER_ADJUST (O11) | 12m   Full PWR Adjust"
+             label = "CONFIG_12M_FULL_POWER_ADJUST | 12m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_10M_FULL_POWER_ADJUST" [
-             label = "CONFIG_10M_FULL_POWER_ADJUST (O12) | 10m   Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_6M_FULL_POWER_ADJUST" [
-             label = "CONFIG_6M_FULL_POWER_ADJUST (O13) | 6m    Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_4M_FULL_POWER_ADJUST" [
-             label = "CONFIG_4M_FULL_POWER_ADJUST (O14) | 4m    Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_2M_FULL_POWER_ADJUST" [
-             label = "CONFIG_2M_FULL_POWER_ADJUST (O15) | 2m    Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_70CM_FULL_POWER_ADJUST" [
-             label = "CONFIG_70CM_FULL_POWER_ADJUST (O16) | 70cm  Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_23CM_FULL_POWER_ADJUST" [
-             label = "CONFIG_23CM_FULL_POWER_ADJUST (O17) | 23cm  Full PWR Adjust"
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_2200M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_2200M_ADJ (C01) | 2200m Coupling Adj."
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_630M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_630M_ADJ (C02) | 630m Coupling Adj."
+             label = "CONFIG_10M_FULL_POWER_ADJUST | 10m   Full PWR Adjust"
              shape = record
              ];
         
         "CONFIG_FWD_REV_COUPLING_160M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_160M_ADJ (C03) | 160m Coupling Adj."
+             label = "CONFIG_FWD_REV_COUPLING_160M_ADJ | 160m Coupling Adj."
              shape = record
              ];
         
         "CONFIG_FWD_REV_COUPLING_80M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_80M_ADJ (C04) | 80m  Coupling Adj."
+             label = "CONFIG_FWD_REV_COUPLING_80M_ADJ | 80m  Coupling Adj."
              shape = record
              ];
         
         "CONFIG_FWD_REV_COUPLING_40M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_40M_ADJ (C05) | 40m  Coupling Adj."
+             label = "CONFIG_FWD_REV_COUPLING_40M_ADJ | 40m  Coupling Adj."
              shape = record
              ];
         
         "CONFIG_FWD_REV_COUPLING_20M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_20M_ADJ (C06) | 20m  Coupling Adj."
+             label = "CONFIG_FWD_REV_COUPLING_20M_ADJ | 20m  Coupling Adj."
              shape = record
              ];
         
         "CONFIG_FWD_REV_COUPLING_15M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_15M_ADJ (C07) | 15m  Coupling Adj."
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_6M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_6M_ADJ (C08) | 6m   Coupling Adj."
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_2M_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_2M_ADJ (C09) | 2m   Coupling Adj."
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_70CM_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_70CM_ADJ (C10) | 70cm Coupling Adj."
-             shape = record
-             ];
-        
-        "CONFIG_FWD_REV_COUPLING_23CM_ADJ" [
-             label = "CONFIG_FWD_REV_COUPLING_23CM_ADJ (C11) | 23cm Coupling Adj."
+             label = "CONFIG_FWD_REV_COUPLING_15M_ADJ | 15m  Coupling Adj."
              shape = record
              ];
         
         "MENU_FP_SSB_01" [
-             label = "MENU_FP_SSB_01 (600) | SSB Filter 1"
+             label = "MENU_FP_SSB_01 | SSB Filter 1"
              shape = record
              ];
         
         "MENU_FP_SSB_02" [
-             label = "MENU_FP_SSB_02 (600) | SSB Filter 2"
+             label = "MENU_FP_SSB_02 | SSB Filter 2"
              shape = record
              ];
         
         "MENU_FP_SSB_03" [
-             label = "MENU_FP_SSB_03 (600) | SSB Filter 3"
+             label = "MENU_FP_SSB_03 | SSB Filter 3"
              shape = record
              ];
         
         "MENU_FP_SSB_04" [
-             label = "MENU_FP_SSB_04 (600) | SSB Filter 4"
+             label = "MENU_FP_SSB_04 | SSB Filter 4"
              shape = record
              ];
         
         "MENU_FP_CW_01" [
-             label = "MENU_FP_CW_01 (600) | CW Filter 1"
+             label = "MENU_FP_CW_01 | CW Filter 1"
              shape = record
              ];
         
         "MENU_FP_CW_02" [
-             label = "MENU_FP_CW_02 (600) | CW Filter 2"
+             label = "MENU_FP_CW_02 | CW Filter 2"
              shape = record
              ];
         
         "MENU_FP_CW_03" [
-             label = "MENU_FP_CW_03 (600) | CW Filter 3"
+             label = "MENU_FP_CW_03 | CW Filter 3"
              shape = record
              ];
         
         "MENU_FP_CW_04" [
-             label = "MENU_FP_CW_04 (600) | CW Filter 4"
+             label = "MENU_FP_CW_04 | CW Filter 4"
              shape = record
              ];
         
         "MENU_FP_AM_01" [
-             label = "MENU_FP_AM_01 (600) | AM/SAM Filter 1"
+             label = "MENU_FP_AM_01 | AM/SAM Filter 1"
              shape = record
              ];
         
         "MENU_FP_AM_02" [
-             label = "MENU_FP_AM_02 (600) | AM/SAM Filter 2"
+             label = "MENU_FP_AM_02 | AM/SAM Filter 2"
              shape = record
              ];
         
         "MENU_FP_AM_03" [
-             label = "MENU_FP_AM_03 (600) | AM/SAM Filter 3"
+             label = "MENU_FP_AM_03 | AM/SAM Filter 3"
              shape = record
              ];
         
         "MENU_FP_AM_04" [
-             label = "MENU_FP_AM_04 (600) | AM/SAM Filter 4"
+             label = "MENU_FP_AM_04 | AM/SAM Filter 4"
              shape = record
              ];
         
         "CONFIG_AM_TX_FILTER_DISABLE" [
-             label = "CONFIG_AM_TX_FILTER_DISABLE (330) | AM  TX Audio Filter"
+             label = "CONFIG_AM_TX_FILTER_DISABLE | AM  TX Audio Filter"
              shape = record
              ];
         
         "CONFIG_SSB_TX_FILTER" [
-             label = "CONFIG_SSB_TX_FILTER (332) | SSB TX Audio Filter2"
+             label = "CONFIG_SSB_TX_FILTER | SSB TX Audio Filter2"
              shape = record
              ];
         
         "INFO_DISPLAY" [
-             label = "INFO_DISPLAY (I01) | Display"
+             label = "INFO_DISPLAY | Display"
              shape = record
              ];
         
         "INFO_DISPLAY_CTRL" [
-             label = "INFO_DISPLAY_CTRL (I02) | Disp. Controller"
+             label = "INFO_DISPLAY_CTRL | Disp. Controller"
              shape = record
              ];
         
         "INFO_SI570" [
-             label = "INFO_SI570 (I02) | SI570"
+             label = "INFO_SI570 | SI570"
              shape = record
              ];
         
         "INFO_EEPROM" [
-             label = "INFO_EEPROM (I03) | EEPROM"
+             label = "INFO_EEPROM | EEPROM"
              shape = record
              ];
         
         "INFO_TP" [
-             label = "INFO_TP (I04) | Touchscreen"
+             label = "INFO_TP | Touchscreen"
              shape = record
              ];
         
         "INFO_CPU" [
-             label = "INFO_CPU (I07) | CPU"
+             label = "INFO_CPU | CPU"
              shape = record
              ];
         
         "INFO_FLASH" [
-             label = "INFO_FLASH (I07) | Flash Size (kB)"
+             label = "INFO_FLASH | Flash Size (kB)"
              shape = record
              ];
         
         "INFO_RAM" [
-             label = "INFO_RAM (I08) | RAM Size (kB)"
+             label = "INFO_RAM | RAM Size (kB)"
              shape = record
              ];
         
         "INFO_FW_VERSION" [
-             label = "INFO_FW_VERSION (I08) | Firmware"
+             label = "INFO_FW_VERSION | Firmware"
              shape = record
              ];
         
         "INFO_BUILD" [
-             label = "INFO_BUILD (I08) | Build"
+             label = "INFO_BUILD | Build"
              shape = record
              ];
         
         "INFO_BL_VERSION" [
-             label = "INFO_BL_VERSION (I08) | Bootloader"
+             label = "INFO_BL_VERSION | Bootloader"
              shape = record
              ];
         
         "INFO_RFMOD" [
-             label = "INFO_RFMOD (I05) | RF Bands Mod"
+             label = "INFO_RFMOD | RF Bands Mod"
              shape = record
              ];
         
         "INFO_VHFUHFMOD" [
-             label = "INFO_VHFUHFMOD (I06) | V/UHF Mod"
+             label = "INFO_VHFUHFMOD | V/UHF Mod"
              shape = record
              ];
         
         "MENU_DEBUG_TX_AUDIO" [
-             label = "MENU_DEBUG_TX_AUDIO (028) | TX Audio via USB"
+             label = "MENU_DEBUG_TX_AUDIO | TX Audio via USB"
              shape = record
              ];
         
@@ -1258,10 +1163,6 @@
             
             MENU_POW -> CONFIG_PA_BIAS
             
-            MENU_POW -> CONFIG_2200M_5W_ADJUST
-            
-            MENU_POW -> CONFIG_630M_5W_ADJUST
-            
             MENU_POW -> CONFIG_160M_5W_ADJUST
             
             MENU_POW -> CONFIG_80M_5W_ADJUST
@@ -1281,20 +1182,6 @@
             MENU_POW -> CONFIG_12M_5W_ADJUST
             
             MENU_POW -> CONFIG_10M_5W_ADJUST
-            
-            MENU_POW -> CONFIG_6M_5W_ADJUST
-            
-            MENU_POW -> CONFIG_4M_5W_ADJUST
-            
-            MENU_POW -> CONFIG_2M_5W_ADJUST
-            
-            MENU_POW -> CONFIG_70CM_5W_ADJUST
-            
-            MENU_POW -> CONFIG_23CM_5W_ADJUST
-            
-            MENU_POW -> CONFIG_2200M_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_630M_FULL_POWER_ADJUST
             
             MENU_POW -> CONFIG_160M_FULL_POWER_ADJUST
             
@@ -1316,20 +1203,6 @@
             
             MENU_POW -> CONFIG_10M_FULL_POWER_ADJUST
             
-            MENU_POW -> CONFIG_6M_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_4M_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_2M_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_70CM_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_23CM_FULL_POWER_ADJUST
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_2200M_ADJ
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_630M_ADJ
-            
             MENU_POW -> CONFIG_FWD_REV_COUPLING_160M_ADJ
             
             MENU_POW -> CONFIG_FWD_REV_COUPLING_80M_ADJ
@@ -1339,14 +1212,6 @@
             MENU_POW -> CONFIG_FWD_REV_COUPLING_20M_ADJ
             
             MENU_POW -> CONFIG_FWD_REV_COUPLING_15M_ADJ
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_6M_ADJ
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_2M_ADJ
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_70CM_ADJ
-            
-            MENU_POW -> CONFIG_FWD_REV_COUPLING_23CM_ADJ
             
         }  ## END subgraph MENU_DEBUG
     
@@ -1443,6 +1308,8 @@
             MENU_DISPLAY -> MENU_SPECTRUM_CENTER_LINE_COLOUR
             
             MENU_DISPLAY -> CONFIG_SPECTRUM_FFT_WINDOW_TYPE
+            
+            MENU_DISPLAY -> MENU_SCOPE_LIGHT_ENABLE
             
             MENU_DISPLAY -> MENU_SCOPE_SPEED
             

@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-04T09:26:44  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-06T07:59:46  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,245 +11,226 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-04T09:26:44  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-06T07:59:46  by "./ui_menu_structure_mdtable.py"
 
 
 
-## Standard Menu (STD, `MENU_BASE`)
+## Standard Menu (`MENU_BASE`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **LSB/USB Auto Select**       (031) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency. | 
-| **Digital Modes**             (030) | Disable appearance of digital modes when pressing Mode button | 
-| **CW Mode**                   (030) | Disable appearance of CW mode when pressing Mode button | 
-| **AM Mode**                   (030) | Disable appearance of AM mode when pressing Mode button | 
-| **SyncAM Mode**               (SAM) | Disable appearance of SyncAM modeswhen pressing Mode button | 
-| **FM Mode**                   (040) | Disable appearance of FM mode when pressing Mode button | 
-| **FM Sub Tone Gen**           (041) | Enable generation of CTCSS tones during FM transmissions. | 
-| **FM Sub Tone Det**           (042) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
-| **FM Tone Burst**             (043) | Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
-| **FM Deviation**              (045) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
-| **RF Gain**                   (051) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
-| **AGC Mode**                  (050) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
-| **Custom AGC (+=Slower)**     (052) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
-| **RX Codec Gain**             (053) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
-| **RX/TX Freq Xlate**          (055) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
-| **Mic/Line Select**           (060) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
-| **Mic Input Gain**            (061) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
-| **Line Input Gain**           (062) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
-| **TX Audio Compress**         (065) | Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
-| **TX ALC Release Time**       (063) | If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level. | 
-| **TX ALC Input Gain**         (064) | If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level. | 
-| **RX NB Setting**             (054) | Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active. | 
-| **DSP NR Strength**           (010) | Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active. | 
-| **TCXO Off/On/Stop**          (090) | The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement). | 
-| **TCXO Temp. (C/F)**          (091) | Show the measure TCXO temperature in Celsius or Fahrenheit. | 
-| **Backup Config**             (197) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
-| **Restore Config**            (198) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
-| **Restart Codec**             (198) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **LSB/USB Auto Select**       (                  MENU_SSB_AUTO_MODE_SELECT) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency. | 
+| **Digital Modes**             (                          MENU_DIGI_DISABLE) | Disable appearance of digital modes when pressing Mode button | 
+| **CW Mode**                   (                            MENU_CW_DISABLE) | Disable appearance of CW mode when pressing Mode button | 
+| **AM Mode**                   (                            MENU_AM_DISABLE) | Disable appearance of AM mode when pressing Mode button | 
+| **SyncAM Mode**               (                             MENU_DEMOD_SAM) | Disable appearance of SyncAM modeswhen pressing Mode button | 
+| **FM Mode**                   (                        MENU_FM_MODE_ENABLE) | Disable appearance of FM mode when pressing Mode button | 
+| **FM Sub Tone Gen**           (                MENU_FM_GEN_SUBAUDIBLE_TONE) | Enable generation of CTCSS tones during FM transmissions. | 
+| **FM Sub Tone Det**           (                MENU_FM_DET_SUBAUDIBLE_TONE) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
+| **FM Tone Burst**             (                    MENU_FM_TONE_BURST_MODE) | Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
+| **FM Deviation**              (                           MENU_FM_DEV_MODE) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
+| **RF Gain**                   (                           MENU_RF_GAIN_ADJ) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
+| **AGC Mode**                  (                              MENU_AGC_MODE) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
+| **Custom AGC (+=Slower)**     (                            MENU_CUSTOM_AGC) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
+| **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
+| **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
+| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
+| **Mic Input Gain**            (                              MENU_MIC_GAIN) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
+| **Line Input Gain**           (                             MENU_LINE_GAIN) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
+| **TX Audio Compress**         (                  MENU_TX_COMPRESSION_LEVEL) | Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
+| **TX ALC Release Time**       (                           MENU_ALC_RELEASE) | If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level. | 
+| **TX ALC Input Gain**         (                     MENU_ALC_POSTFILT_GAIN) | If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level. | 
+| **RX NB Setting**             (                 MENU_NOISE_BLANKER_SETTING) | Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active. | 
+| **DSP NR Strength**           (                       MENU_DSP_NR_STRENGTH) | Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active. | 
+| **TCXO Off/On/Stop**          (                             MENU_TCXO_MODE) | The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement). | 
+| **TCXO Temp. (C/F)**          (                              MENU_TCXO_C_F) | Show the measure TCXO temperature in Celsius or Fahrenheit. | 
+| **Backup Config**             (                         MENU_BACKUP_CONFIG) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
+| **Restore Config**            (                        MENU_RESTORE_CONFIG) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
+| **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
 
 
-## Configuration Menu (CON, `MENU_CONF`)
+## Configuration Menu (`MENU_CONF`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **Save Out-Of-Band Freq.**    (232) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
-| **TX on Out-Of-Band Freq.**   (207) | Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load! | 
-| **Transmit Disable**          (203) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made. | 
-| **Menu SW on TX disable**     (204) | Control if the screen automatically adapts Encoder value focus when switching between RX and TX. | 
-| **TX Mute LineOut**           (205) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
-| **TX Initial Muting Time**    (206) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
-| **Max Volume**                (210) | :soon:                                         | 
-| **Max RX Gain (0=Max)**       (211) | :soon:                                         | 
-| **Key Beep**                  (212) | If ON each keypress will generate a short beep | 
-| **Beep Frequency**            (213) | Set beep frequency in Hz.                      | 
-| **Beep Volume**               (214) | Set beep volume.                               | 
-| **CAT Mode**                  (220) | Enabled the FT 817 emulation via USB. See Wiki for more information. | 
-| **CAT Running In Sandbox**    (530) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
-| **CAT-DIQ-FREQ-XLAT**         (400) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF, it reports the displayed frequency. If ON, it reports the center frequency, which is more useful with SDR programs. | 
-| **XVTR Offs/Mult**            (280) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
-| **XVTR Offset**               (281) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
-| **Step Button Swap**          (201) | If ON, Step- behaves like Step+ and vice versa. | 
-| **Band+/- Button Swap**       (202) | If ON, Band- behaves like Band+ and vice versa. | 
-| **Reverse Touchscreen**       (122) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
-| **Voltmeter Cal.**            (208) | Adjusts the displayed value of the voltmeter.  | 
-| **Freq. Calibrate**           (230) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
-| **Pwr. Det. Null**            (271) | :soon:                                         | 
-| **SWR/PWR Meter FWD/REV Swap** (276) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
-| **RX IQ Balance (80m)**       (240) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
-| **RX IQ Phase   (80m)**       (241) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
-| **RX IQ Balance (10m)**       (242) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
-| **RX IQ Phase   (10m)**       (243) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable. See Wiki Adjustments and Calibration. | 
-| **TX IQ Balance (80m)**       (250) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
-| **TX IQ Phase   (80m)**       (251) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
-| **TX IQ Balance (10m)**       (252) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
-| **TX IQ Phase   (10m)**       (253) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
-| **TX IQ Balance (80m,CW)**    (250) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF). See Wiki Adjustments and Calibration. | 
-| **TX IQ Phase   (80m,CW)**    (251) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
-| **TX IQ Balance (10m,CW)**    (252) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
-| **TX IQ Phase   (10m,CW)**    (253) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
-| **DSP NR BufLen**             (310) | DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
-| **DSP NR FIR NumTaps**        (311) | DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
-| **DSP NR Post-AGC**           (312) | DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC. | 
-| **DSP Notch ConvRate**        (313) | DSP LMS automatic notch filter:                | 
-| **DSP Notch BufLen**          (314) | DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
-| **DSP Notch FIRNumTap**       (315) | DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
-| **NB AGC T/C (<=Slow)**       (320) | Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu. | 
-| **SAM PLL locking range**     (321) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
-| **SAM PLL step response**     (322) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
-| **SAM PLL bandwidth in Hz**   (323) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
-| **SAM PLL tauR**              (324) | :soon:                                         | 
-| **SAM PLL tauI**              (325) | :soon:                                         | 
-| **SAM Sideband**              (326) | :soon:                                         | 
-| **Reset Config EEPROM**       (341) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Save Out-Of-Band Freq.**    (                CONFIG_FREQ_MEM_LIMIT_RELAX) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
+| **TX on Out-Of-Band Freq.**   (                       CONFIG_TX_OUT_ENABLE) | Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load! | 
+| **Transmit Disable**          (                          CONFIG_TX_DISABLE) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made. | 
+| **Menu SW on TX disable**     (       CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH) | Control if the screen automatically adapts Encoder value focus when switching between RX and TX. | 
+| **TX Mute LineOut**           (                    CONFIG_MUTE_LINE_OUT_TX) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
+| **TX Initial Muting Time**    (              CONFIG_TXRX_SWITCH_AUDIO_MUTE) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
+| **Max Volume**                (                          CONFIG_MAX_VOLUME) | Set maximum speaker&headphone volume.          | 
+| **Max RX Gain (0=Max)**       (                         CONFIG_MAX_RX_GAIN) | :soon:                                         | 
+| **Key Beep**                  (                         CONFIG_BEEP_ENABLE) | If ON each keypress will generate a short beep | 
+| **Beep Frequency**            (                           CONFIG_BEEP_FREQ) | Set beep frequency in Hz.                      | 
+| **Beep Volume**               (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
+| **CAT Mode**                  (                          CONFIG_CAT_ENABLE) | Enabled the FT 817 emulation via USB. See Wiki for more information. | 
+| **CAT Running In Sandbox**    (                      CONFIG_CAT_IN_SANDBOX) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
+| **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF, it reports the displayed frequency. If ON, it reports the center frequency, which is more useful with SDR programs. | 
+| **XVTR Offs/Mult**            (                    CONFIG_XVTR_OFFSET_MULT) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
+| **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
+| **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
+| **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
+| **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
+| **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
+| **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
+| **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) | :soon:                                         | 
+| **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
+| **RX IQ Balance (80m)**       (                  CONFIG_80M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (80m)**       (                 CONFIG_80M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Balance (10m)**       (                  CONFIG_10M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (10m)**       (                 CONFIG_10M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (80m)**       (                  CONFIG_80M_TX_IQ_GAIN_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (80m)**       (                 CONFIG_80M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (10m)**       (                  CONFIG_10M_TX_IQ_GAIN_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (10m)**       (                 CONFIG_10M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (80m,CW)**    (        CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF). See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (80m,CW)**    (       CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (10m,CW)**    (        CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **TX IQ Phase   (10m,CW)**    (       CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **DSP NR BufLen**             (   CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH) | DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
+| **DSP NR FIR NumTaps**        (                  CONFIG_DSP_NR_FFT_NUMTAPS) | DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
+| **DSP NR Post-AGC**           (              CONFIG_DSP_NR_POST_AGC_SELECT) | DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC. | 
+| **DSP Notch ConvRate**        (             CONFIG_DSP_NOTCH_CONVERGE_RATE) | DSP LMS automatic notch filter:                | 
+| **DSP Notch BufLen**          (CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH) | DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
+| **DSP Notch FIRNumTap**       (               CONFIG_DSP_NOTCH_FFT_NUMTAPS) | DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
+| **NB AGC T/C (<=Slow)**       (                   CONFIG_AGC_TIME_CONSTANT) | Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu. | 
+| **SAM PLL locking range**     (               CONFIG_SAM_PLL_LOCKING_RANGE) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
+| **SAM PLL step response**     (               CONFIG_SAM_PLL_STEP_RESPONSE) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
+| **SAM PLL bandwidth in Hz**   (                   CONFIG_SAM_PLL_BANDWIDTH) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
+| **SAM PLL tauR**              (                        CONFIG_SAM_PLL_TAUR) | :soon:                                         | 
+| **SAM PLL tauI**              (                        CONFIG_SAM_PLL_TAUI) | :soon:                                         | 
+| **SAM Sideband**              (                        CONFIG_SAM_SIDEBAND) | :soon:                                         | 
+| **Reset Config EEPROM**       (                    CONFIG_RESET_SER_EEPROM) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
-## Display Menu (DIS, `MENU_DISPLAY`)
+## Display Menu (`MENU_DISPLAY`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **LCD Auto Blank**            (090) | :soon:                                         | 
-| **Step Size Marker**          (091) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
-| **Filter BW Display**         (092) | Colour of the horizontal Filter Bandwidth indicator bar. | 
-| **Spectrum Type**             (109) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
-| **Spectrum Magnify**          (105) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
-| **Spectrum Size**             (117) | Change height of spectrum display              | 
-| **Spectrum Filter**           (101) | Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum. | 
-| **Spec FreqScale Colour**     (104) | Colour of the small frequency digits under the spectrum display. | 
-| **Spec Line Colour**          (108) | Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display. | 
-| **Spectrum FFT Wind.**        (340) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
-| **Scope 1/Speed**             (100) | Lower Values: Higher refresh rate              | 
-| **Scope AGC Adj.**            (106) | :soon:                                         | 
-| **Scope Trace Colour**        (102) | :soon:                                         | 
-| **Scope Grid Colour**         (103) | :soon:                                         | 
-| **Scope Div.**                (107) | :soon:                                         | 
-| **Scope NoSig Adj.**          (115) | :soon:                                         | 
-| **Wfall 1/Speed**             (114) | Lower Values: Higher refresh rate.             | 
-| **Wfall Colours**             (110) | Select colour scheme for waterfall display.    | 
-| **Wfall Step Size**           (111) | How many lines are moved in a single screen update | 
-| **Wfall Brightness**          (112) | :soon:                                         | 
-| **Wfall Contrast**            (113) | :soon:                                         | 
-| **Wfall NoSig Adj.**          (116) | :soon:                                         | 
-| **Upper Meter Colour**        (122) | Set the colour of the scale of combined S/Power-Meter | 
-| **Lower Meter Colour**        (123) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
-| **dBm display**               (120) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals. | 
-| **S-Meter**                   (121) | Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength. | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | :soon:                                         | 
+| **Step Size Marker**          (               CONFIG_FREQ_STEP_MARKER_LINE) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
+| **Filter BW Display**         (               CONFIG_DISP_FILTER_BANDWIDTH) | Colour of the horizontal Filter Bandwidth indicator bar. | 
+| **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
+| **Spectrum Magnify**          (                      MENU_SPECTRUM_MAGNIFY) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
+| **Spectrum Size**             (                         MENU_SPECTRUM_SIZE) | Change height of spectrum display              | 
+| **Spectrum Filter**           (              MENU_SPECTRUM_FILTER_STRENGTH) | Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum. | 
+| **Spec FreqScale Colour**     (             MENU_SPECTRUM_FREQSCALE_COLOUR) | Colour of the small frequency digits under the spectrum display. | 
+| **Spec Line Colour**          (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display. | 
+| **Spectrum FFT Wind.**        (            CONFIG_SPECTRUM_FFT_WINDOW_TYPE) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
+| **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
+| **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
+| **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | :soon:                                         | 
+| **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | :soon:                                         | 
+| **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | :soon:                                         | 
+| **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | :soon:                                         | 
+| **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | :soon:                                         | 
+| **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
+| **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
+| **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
+| **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | :soon:                                         | 
+| **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | :soon:                                         | 
+| **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | :soon:                                         | 
+| **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
+| **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
+| **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals. | 
+| **S-Meter**                   (                               MENU_S_METER) | Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength. | 
 
 
-## CW Mode Settings (CW , `MENU_CW`)
+## CW Mode Settings (`MENU_CW`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **CW Keyer Mode**             (070) | Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM) | 
-| **CW Keyer Speed**            (071) | Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode. | 
-| **CW Sidetone Gain**          (072) | Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode. | 
-| **CW Side/Offset Freq**       (073) | Sidetone Frequency (also Offset frequency, see CW Freq. Offset below) | 
-| **CW Paddle Reverse**         (074) | Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles. | 
-| **CW TX->RX Delay**           (075) | How long to stay in CW mode after stop sending a signal. | 
-| **CW Freq. Offset**           (076) | TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone. | 
-| **CW LSB/USB Select**         (031) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **CW Keyer Mode**             (                            MENU_KEYER_MODE) | Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM) | 
+| **CW Keyer Speed**            (                           MENU_KEYER_SPEED) | Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode. | 
+| **CW Sidetone Gain**          (                         MENU_SIDETONE_GAIN) | Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode. | 
+| **CW Side/Offset Freq**       (                    MENU_SIDETONE_FREQUENCY) | Sidetone Frequency (also Offset frequency, see CW Freq. Offset below) | 
+| **CW Paddle Reverse**         (                        MENU_PADDLE_REVERSE) | Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles. | 
+| **CW TX->RX Delay**           (                        MENU_CW_TX_RX_DELAY) | How long to stay in CW mode after stop sending a signal. | 
+| **CW Freq. Offset**           (                        MENU_CW_OFFSET_MODE) | TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone. | 
+| **CW LSB/USB Select**         (                   MENU_CW_AUTO_MODE_SELECT) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode | 
 
 
-## Filter Selection (FIL, `MENU_FILTER`)
+## Filter Selection (`MENU_FILTER`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **SSB Filter 1**              (600) | Filter bandwidth #1 when toggling with filter select button in LSB or USB. | 
-| **SSB Filter 2**              (600) | Filter bandwidth #2 when toggling with filter select button in LSB or USB. | 
-| **SSB Filter 3**              (600) | Filter bandwidth #3 when toggling with filter select button in LSB or USB. | 
-| **SSB Filter 4**              (600) | Filter bandwidth #4 when toggling with filter select button in LSB or USB. | 
-| **CW Filter 1**               (600) | Filter bandwidth #1 when toggling with filter select button in CW. | 
-| **CW Filter 2**               (600) | Filter bandwidth #2 when toggling with filter select button in CW. | 
-| **CW Filter 3**               (600) | Filter bandwidth #3 when toggling with filter select button in CW. | 
-| **CW Filter 4**               (600) | Filter bandwidth #4 when toggling with filter select button in CW. | 
-| **AM/SAM Filter 1**           (600) | Filter bandwidth #1 when toggling with filter select button in AM & SAM. | 
-| **AM/SAM Filter 2**           (600) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
-| **AM/SAM Filter 3**           (600) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
-| **AM/SAM Filter 4**           (600) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
-| **AM  TX Audio Filter**       (330) | :soon:                                         | 
-| **SSB TX Audio Filter2**      (332) | :soon:                                         | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **SSB Filter 1**              (                             MENU_FP_SSB_01) | Filter bandwidth #1 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 2**              (                             MENU_FP_SSB_02) | Filter bandwidth #2 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 3**              (                             MENU_FP_SSB_03) | Filter bandwidth #3 when toggling with filter select button in LSB or USB. | 
+| **SSB Filter 4**              (                             MENU_FP_SSB_04) | Filter bandwidth #4 when toggling with filter select button in LSB or USB. | 
+| **CW Filter 1**               (                              MENU_FP_CW_01) | Filter bandwidth #1 when toggling with filter select button in CW. | 
+| **CW Filter 2**               (                              MENU_FP_CW_02) | Filter bandwidth #2 when toggling with filter select button in CW. | 
+| **CW Filter 3**               (                              MENU_FP_CW_03) | Filter bandwidth #3 when toggling with filter select button in CW. | 
+| **CW Filter 4**               (                              MENU_FP_CW_04) | Filter bandwidth #4 when toggling with filter select button in CW. | 
+| **AM/SAM Filter 1**           (                              MENU_FP_AM_01) | Filter bandwidth #1 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 2**           (                              MENU_FP_AM_02) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 3**           (                              MENU_FP_AM_03) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
+| **AM/SAM Filter 4**           (                              MENU_FP_AM_04) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
+| **AM  TX Audio Filter**       (                CONFIG_AM_TX_FILTER_DISABLE) | :soon:                                         | 
+| **SSB TX Audio Filter2**      (                       CONFIG_SSB_TX_FILTER) | :soon:                                         | 
 
 
-## PA Configuration (POW, `MENU_POW`)
+## PA Configuration (`MENU_POW`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **Tune Power Level**          (P00) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
-| **Tune Tone (SSB)**           (P99) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
-| **CW PA Bias (If >0 )**       (260) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
-| **Reduce Power on Low Bands** (P0A) | If set (recommended!)  frequencies below 8Mhz require higher power adjust values. This permits better control of generated power on these frequencies. | 
-| **PA Bias**                   (261) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
-| **2200m 5W PWR Adjust**       (P01) | :soon:                                         | 
-| **630m  5W PWR Adjust**       (P02) | :soon:                                         | 
-| **160m  5W PWR Adjust**       (P03) | :soon:                                         | 
-| **80m   5W PWR Adjust**       (P04) | :soon:                                         | 
-| **60m   5W PWR Adjust**       (P05) | :soon:                                         | 
-| **40m   5W PWR Adjust**       (P06) | :soon:                                         | 
-| **30m   5W PWR Adjust**       (P07) | :soon:                                         | 
-| **20m   5W PWR Adjust**       (P08) | :soon:                                         | 
-| **17m   5W PWR Adjust**       (P09) | :soon:                                         | 
-| **15m   5W PWR Adjust**       (P10) | :soon:                                         | 
-| **12m   5W PWR Adjust**       (P11) | :soon:                                         | 
-| **10m   5W PWR Adjust**       (P12) | :soon:                                         | 
-| **6m    5W PWR Adjust**       (P13) | :soon:                                         | 
-| **4m    5W PWR Adjust**       (P14) | :soon:                                         | 
-| **2m    5W PWR Adjust**       (P15) | :soon:                                         | 
-| **70cm  5W PWR Adjust**       (P16) | :soon:                                         | 
-| **23cm  5W PWR Adjust**       (P17) | :soon:                                         | 
-| **2200m Full PWR Adjust**     (O01) | :soon:                                         | 
-| **630m  Full PWR Adjust**     (O02) | :soon:                                         | 
-| **160m  Full PWR Adjust**     (O03) | :soon:                                         | 
-| **80m   Full PWR Adjust**     (O04) | :soon:                                         | 
-| **60m   Full PWR Adjust**     (O05) | :soon:                                         | 
-| **40m   Full PWR Adjust**     (O06) | :soon:                                         | 
-| **30m   Full PWR Adjust**     (O07) | :soon:                                         | 
-| **20m   Full PWR Adjust**     (O08) | :soon:                                         | 
-| **17m   Full PWR Adjust**     (O09) | :soon:                                         | 
-| **15m   Full PWR Adjust**     (O10) | :soon:                                         | 
-| **12m   Full PWR Adjust**     (O11) | :soon:                                         | 
-| **10m   Full PWR Adjust**     (O12) | :soon:                                         | 
-| **6m    Full PWR Adjust**     (O13) | :soon:                                         | 
-| **4m    Full PWR Adjust**     (O14) | :soon:                                         | 
-| **2m    Full PWR Adjust**     (O15) | :soon:                                         | 
-| **70cm  Full PWR Adjust**     (O16) | :soon:                                         | 
-| **23cm  Full PWR Adjust**     (O17) | :soon:                                         | 
-| **2200m Coupling Adj.**       (C01) | :soon:                                         | 
-| **630m Coupling Adj.**        (C02) | :soon:                                         | 
-| **160m Coupling Adj.**        (C03) | :soon:                                         | 
-| **80m  Coupling Adj.**        (C04) | :soon:                                         | 
-| **40m  Coupling Adj.**        (C05) | :soon:                                         | 
-| **20m  Coupling Adj.**        (C06) | :soon:                                         | 
-| **15m  Coupling Adj.**        (C07) | :soon:                                         | 
-| **6m   Coupling Adj.**        (C08) | :soon:                                         | 
-| **2m   Coupling Adj.**        (C09) | :soon:                                         | 
-| **70cm Coupling Adj.**        (C10) | :soon:                                         | 
-| **23cm Coupling Adj.**        (C11) | :soon:                                         | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Tune Power Level**          (                    CONFIG_TUNE_POWER_LEVEL) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
+| **Tune Tone (SSB)**           (                      CONFIG_TUNE_TONE_MODE) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
+| **CW PA Bias (If >0 )**       (                          CONFIG_CW_PA_BIAS) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
+| **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz require higher power adjust values. This permits better control of generated power on these frequencies. | 
+| **PA Bias**                   (                             CONFIG_PA_BIAS) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
+| **160m  5W PWR Adjust**       (                      CONFIG_160M_5W_ADJUST) | :soon:                                         | 
+| **80m   5W PWR Adjust**       (                       CONFIG_80M_5W_ADJUST) | :soon:                                         | 
+| **60m   5W PWR Adjust**       (                       CONFIG_60M_5W_ADJUST) | :soon:                                         | 
+| **40m   5W PWR Adjust**       (                       CONFIG_40M_5W_ADJUST) | :soon:                                         | 
+| **30m   5W PWR Adjust**       (                       CONFIG_30M_5W_ADJUST) | :soon:                                         | 
+| **20m   5W PWR Adjust**       (                       CONFIG_20M_5W_ADJUST) | :soon:                                         | 
+| **17m   5W PWR Adjust**       (                       CONFIG_17M_5W_ADJUST) | :soon:                                         | 
+| **15m   5W PWR Adjust**       (                       CONFIG_15M_5W_ADJUST) | :soon:                                         | 
+| **12m   5W PWR Adjust**       (                       CONFIG_12M_5W_ADJUST) | :soon:                                         | 
+| **10m   5W PWR Adjust**       (                       CONFIG_10M_5W_ADJUST) | :soon:                                         | 
+| **160m  Full PWR Adjust**     (              CONFIG_160M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **80m   Full PWR Adjust**     (               CONFIG_80M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **60m   Full PWR Adjust**     (               CONFIG_60M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **40m   Full PWR Adjust**     (               CONFIG_40M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **30m   Full PWR Adjust**     (               CONFIG_30M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **20m   Full PWR Adjust**     (               CONFIG_20M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **17m   Full PWR Adjust**     (               CONFIG_17M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **15m   Full PWR Adjust**     (               CONFIG_15M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **12m   Full PWR Adjust**     (               CONFIG_12M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **10m   Full PWR Adjust**     (               CONFIG_10M_FULL_POWER_ADJUST) | :soon:                                         | 
+| **160m Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_160M_ADJ) | :soon:                                         | 
+| **80m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_80M_ADJ) | :soon:                                         | 
+| **40m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_40M_ADJ) | :soon:                                         | 
+| **20m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_20M_ADJ) | :soon:                                         | 
+| **15m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_15M_ADJ) | :soon:                                         | 
 
 
-## System Info (INF, `MENU_SYSINFO`)
+## System Info (`MENU_SYSINFO`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **Display**                   (I01) | :soon:                                         | 
-| **Disp. Controller**          (I02) | :soon:                                         | 
-| **SI570**                     (I02) | :soon:                                         | 
-| **EEPROM**                    (I03) | :soon:                                         | 
-| **Touchscreen**               (I04) | :soon:                                         | 
-| **CPU**                       (I07) | :soon:                                         | 
-| **Flash Size (kB)**           (I07) | :soon:                                         | 
-| **RAM Size (kB)**             (I08) | :soon:                                         | 
-| **Firmware**                  (I08) | :soon:                                         | 
-| **Build**                     (I08) | :soon:                                         | 
-| **Bootloader**                (I08) | :soon:                                         | 
-| **RF Bands Mod**              (I05) | :soon:                                         | 
-| **V/UHF Mod**                 (I06) | :soon:                                         | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Display**                   (                               INFO_DISPLAY) | :soon:                                         | 
+| **Disp. Controller**          (                          INFO_DISPLAY_CTRL) | :soon:                                         | 
+| **SI570**                     (                                 INFO_SI570) | :soon:                                         | 
+| **EEPROM**                    (                                INFO_EEPROM) | :soon:                                         | 
+| **Touchscreen**               (                                    INFO_TP) | :soon:                                         | 
+| **CPU**                       (                                   INFO_CPU) | :soon:                                         | 
+| **Flash Size (kB)**           (                                 INFO_FLASH) | :soon:                                         | 
+| **RAM Size (kB)**             (                                   INFO_RAM) | :soon:                                         | 
+| **Firmware**                  (                            INFO_FW_VERSION) | :soon:                                         | 
+| **Build**                     (                                 INFO_BUILD) | :soon:                                         | 
+| **Bootloader**                (                            INFO_BL_VERSION) | :soon:                                         | 
+| **RF Bands Mod**              (                                 INFO_RFMOD) | :soon:                                         | 
+| **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | :soon:                                         | 
 
 
-## Debug/Exper. Settings (INF, `MENU_DEBUG`)
+## Debug/Exper. Settings (`MENU_DEBUG`)
     
-| LABEL                         ( ID) | DESCRIPTION                                    | 
-| ----------------------------------- | ---------------------------------------------- | 
-| **TX Audio via USB**          (028) | :soon:                                         | 
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | :soon:                                         | 
 
 
 [//]: # ( EOFILE                                                                       )
