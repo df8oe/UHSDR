@@ -3049,8 +3049,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         //
         if(ts.dmod_mode != DEMOD_SAM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
         {
-        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
-        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+        arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+        arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
         }
 
         switch(dmod_mode)
@@ -3079,7 +3079,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
             break;
         case DEMOD_SAM:
-        	AudioDriver_DemodSAM(blockSize);
+        	AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
         	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
 
 //            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
@@ -3111,7 +3111,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
         {
             // Do decimation down to lower rate to reduce processor load
-            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM)
+            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
             {
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
             }
@@ -3120,14 +3120,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             if(ads.af_disabled == false) {
                 if (ts.dsp_inhibit == false)
                 {
-                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && (dmod_mode != DEMOD_SAM))       // No notch in CW
+                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW))       // No notch in CW
                     {
                         AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
-                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE))&& (dmod_mode != DEMOD_SAM))      // Do this if enabled and "Pre-AGC" DSP NR enabled
+                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
                         AudioDriver_NoiseReduction(blockSizeDecim);
                     }
@@ -3146,7 +3146,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // DSP noise reduction using LMS (Least Mean Squared) algorithm
             // This is the post-filter, post-AGC instance
             //
-            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit)&& (dmod_mode != DEMOD_SAM))     // Do DSP NR if enabled and if post-DSP NR enabled
+            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))     // Do DSP NR if enabled and if post-DSP NR enabled
             {
                 AudioDriver_NoiseReduction(blockSizeDecim);
             }
