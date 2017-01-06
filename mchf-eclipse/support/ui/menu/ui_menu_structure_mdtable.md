@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-06T15:14:00  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-06T17:42:36  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-06T15:14:00  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-06T17:42:36  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -24,6 +24,9 @@ generated at  2017-01-06T15:14:00  by "./ui_menu_structure_mdtable.py"
 | **CW Mode**                   (                            MENU_CW_DISABLE) | Disable appearance of CW mode when pressing Mode button | 
 | **AM Mode**                   (                            MENU_AM_DISABLE) | Disable appearance of AM mode when pressing Mode button | 
 | **SyncAM Mode**               (                             MENU_DEMOD_SAM) | Disable appearance of SyncAM modeswhen pressing Mode button | 
+| **SAM PLL locking range**     (                 MENU_SAM_PLL_LOCKING_RANGE) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
+| **SAM PLL step response**     (                 MENU_SAM_PLL_STEP_RESPONSE) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
+| **SAM PLL bandwidth in Hz**   (                     MENU_SAM_PLL_BANDWIDTH) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
 | **FM Mode**                   (                        MENU_FM_MODE_ENABLE) | Disable appearance of FM mode when pressing Mode button | 
 | **FM Sub Tone Gen**           (                MENU_FM_GEN_SUBAUDIBLE_TONE) | Enable generation of CTCSS tones during FM transmissions. | 
 | **FM Sub Tone Det**           (                MENU_FM_DET_SUBAUDIBLE_TONE) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
@@ -95,12 +98,6 @@ generated at  2017-01-06T15:14:00  by "./ui_menu_structure_mdtable.py"
 | **DSP Notch BufLen**          (CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH) | DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
 | **DSP Notch FIRNumTap**       (               CONFIG_DSP_NOTCH_FFT_NUMTAPS) | DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
 | **NB AGC T/C (<=Slow)**       (                   CONFIG_AGC_TIME_CONSTANT) | Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu. | 
-| **SAM PLL locking range**     (               CONFIG_SAM_PLL_LOCKING_RANGE) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
-| **SAM PLL step response**     (               CONFIG_SAM_PLL_STEP_RESPONSE) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
-| **SAM PLL bandwidth in Hz**   (                   CONFIG_SAM_PLL_BANDWIDTH) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
-| **SAM PLL tauR**              (                        CONFIG_SAM_PLL_TAUR) | :soon:                                         | 
-| **SAM PLL tauI**              (                        CONFIG_SAM_PLL_TAUI) | :soon:                                         | 
-| **SAM Sideband**              (                        CONFIG_SAM_SIDEBAND) | :soon:                                         | 
 | **Reset Config EEPROM**       (                    CONFIG_RESET_SER_EEPROM) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
