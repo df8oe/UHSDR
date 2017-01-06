@@ -1089,6 +1089,14 @@ static float   FirState_Q_FREEDV[60+IQ_BUFSZ];
 arm_fir_instance_f32    FIR_I_FREEDV;
 arm_fir_instance_f32    FIR_Q_FREEDV;
 
+// Audio RX - Decimator (numTaps+blockSize-1)
+arm_fir_decimate_instance_f32   DECIMATE_SAM_I;
+static float32_t           __attribute__ ((section (".ccm"))) decimSAMIState[I_BLOCK_SIZE + I_NUM_TAPS];
+
+// Audio RX - Decimator
+arm_fir_decimate_instance_f32   DECIMATE_SAM_Q;
+static float32_t           __attribute__ ((section (".ccm"))) decimSAMQState[Q_BLOCK_SIZE + Q_NUM_TAPS];
+
 
 
 /*
@@ -1122,6 +1130,28 @@ void 	AudioFilter_InitRxHilbertFIR(void)
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_I,fc.rx_i_num_taps,(float32_t *)&fc.rx_filt_i[0], &FirState_I[0],fc.rx_i_block_size); // load "I" with "I" coefficients
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
     //
+    // Set up RX SAM decimation/filter
+    if (FilterPathInfo[ts.filter_path].FIR_numTaps != NULL)
+    {
+        DECIMATE_SAM_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+        DECIMATE_SAM_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+        DECIMATE_SAM_I.pCoeffs = FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
+        DECIMATE_SAM_Q.pCoeffs = FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+    }
+    else
+    {
+        DECIMATE_SAM_I.numTaps = 0;
+        DECIMATE_SAM_Q.numTaps = 0;
+        DECIMATE_SAM_I.pCoeffs = NULL;
+        DECIMATE_SAM_Q.pCoeffs = NULL;
+    }
+    DECIMATE_SAM_I.M = ads.decimation_rate;
+    DECIMATE_SAM_Q.M = ads.decimation_rate;
+    DECIMATE_SAM_I.pState = decimSAMIState;            // Filter state variables
+    DECIMATE_SAM_Q.pState = decimSAMQState;
+    arm_fill_f32(0.0,decimSAMIState, I_BLOCK_SIZE + I_NUM_TAPS);
+    arm_fill_f32(0.0,decimSAMQState, Q_BLOCK_SIZE + Q_NUM_TAPS);
+
 }
 
 

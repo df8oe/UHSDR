@@ -81,8 +81,8 @@ static void AudioDriver_ClearAudioDelayBuffer()
 
 //
 // Audio RX - Decimator
-static	arm_fir_decimate_instance_f32	DECIMATE_RX;
-float32_t			__attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+static  arm_fir_decimate_instance_f32   DECIMATE_RX;
+float32_t           __attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
@@ -525,55 +525,6 @@ void AudioDriver_Init(void)
     //
     ads.decimation_rate	=	RX_DECIMATION_RATE_12KHZ;		// Decimation rate, when enabled
 
-
-// definitions for synchronous AM demodulation = SAM
-    adb.DF = 1.0;
-    //ads.pll_fmax_int = 2500;
-    adb.pll_fmax = (float32_t)ads.pll_fmax_int;
-    // DX adjustments: zeta = 0.15, omegaN = 100.0
-    // very stable, but does not lock very fast
-    // standard settings: zeta = 1.0, omegaN = 250.0
-    // maybe user can choose between slow (DX), medium, fast SAM PLL
-    // zeta / omegaN
-    // DX = 0.2, 70
-    // medium 0.6, 200
-    // fast 1.0, 500
-    //ads.zeta_int = 80; // zeta * 100 !!!
-    // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    //ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
-    adb.omegaN = (float32_t)ads.omegaN_int;
-    adb.zeta = (float32_t)ads.zeta_int / 100.0;
-      //pll
-    adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
-    adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
-    adb.g1 = (1.0 - exp(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
-    adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
-          * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
-      //fade leveler
-//    ads.tauR_int = 20; // -->  / 1000 = 0.02
-//    ads.tauI_int = 140; // --> / 100 = 1.4
-    adb.tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
-    adb.tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
-    adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
-    adb.onem_mtauR = (1.0 - adb.mtauR);
-    adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
-    adb.onem_mtauI = (1.0 - adb.mtauI);
-    //sideband separation
-    adb.c0[0] = -0.328201924180698;
-    adb.c0[1] = -0.744171491539427;
-    adb.c0[2] = -0.923022915444215;
-    adb.c0[3] = -0.978490468768238;
-    adb.c0[4] = -0.994128272402075;
-    adb.c0[5] = -0.998458978159551;
-    adb.c0[6] = -0.999790306259206;
-
-    adb.c1[0] = -0.0991227952747244;
-    adb.c1[1] = -0.565619728761389;
-    adb.c1[2] = -0.857467122550052;
-    adb.c1[3] = -0.959123933111275;
-    adb.c1[4] = -0.988739372718090;
-    adb.c1[5] = -0.996959189310611;
-    adb.c1[6] = -0.999282492800792;
 
     //
     //
@@ -1184,6 +1135,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     DECIMATE_RX.pState = decimState;			// Filter state variables
     arm_fill_f32(0.0,decimState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
 
+
     // Set up RX interpolation/filter
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     if (FilterPathInfo[ts.filter_path].interpolate != NULL)
@@ -1203,6 +1155,56 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 
 
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
+
+    // definitions and intializations for synchronous AM demodulation = SAM
+    //    adb.DF = 1.0; //ads.decimation_rate;
+        adb.DF = ads.decimation_rate;
+        //ads.pll_fmax_int = 2500;
+        adb.pll_fmax = (float32_t)ads.pll_fmax_int;
+        // DX adjustments: zeta = 0.15, omegaN = 100.0
+        // very stable, but does not lock very fast
+        // standard settings: zeta = 1.0, omegaN = 250.0
+        // maybe user can choose between slow (DX), medium, fast SAM PLL
+        // zeta / omegaN
+        // DX = 0.2, 70
+        // medium 0.6, 200
+        // fast 1.0, 500
+        //ads.zeta_int = 80; // zeta * 100 !!!
+        // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+        //ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
+        adb.omegaN = (float32_t)ads.omegaN_int;
+        adb.zeta = (float32_t)ads.zeta_int / 100.0;
+          //pll
+        adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+        adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
+        adb.g1 = (1.0 - exp(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
+        adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
+              * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
+          //fade leveler
+    //    ads.tauR_int = 20; // -->  / 1000 = 0.02
+    //    ads.tauI_int = 140; // --> / 100 = 1.4
+        adb.tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
+        adb.tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
+        adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
+        adb.onem_mtauR = (1.0 - adb.mtauR);
+        adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
+        adb.onem_mtauI = (1.0 - adb.mtauI);
+        //sideband separation
+        adb.c0[0] = -0.328201924180698;
+        adb.c0[1] = -0.744171491539427;
+        adb.c0[2] = -0.923022915444215;
+        adb.c0[3] = -0.978490468768238;
+        adb.c0[4] = -0.994128272402075;
+        adb.c0[5] = -0.998458978159551;
+        adb.c0[6] = -0.999790306259206;
+
+        adb.c1[0] = -0.0991227952747244;
+        adb.c1[1] = -0.565619728761389;
+        adb.c1[2] = -0.857467122550052;
+        adb.c1[3] = -0.959123933111275;
+        adb.c1[4] = -0.988739372718090;
+        adb.c1[5] = -0.996959189310611;
+        adb.c1[6] = -0.999282492800792;
 
     AudioFilter_InitRxHilbertFIR(); // this switches the Hilbert/FIR-filters
 
@@ -2734,8 +2736,13 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 //		uint8_t sbmode = 0;             // sideband mode
 		int j, k;
 
+		// First of all: decimation of I and Q path
+        arm_fir_decimate_f32(&DECIMATE_SAM_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+        arm_fir_decimate_f32(&DECIMATE_SAM_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+
 		// Wheatley 2011 cuteSDR & Warren Pratt�s WDSP, 2016
-        for(int i = 0; i < blockSize; i++)
+        for(int i = 0; i < blockSize / adb.DF; i++)
+//            for(int i = 0; i < blockSize / ads.decimation_rate; i++) // adb.DF; i++)
         {   // NCO
 //            Sin = sinf(phs);
 //            Cos = cosf(phs);
@@ -2882,6 +2889,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
 void set_SAM_PLL_parameters()
 {
+//        adb.DF = 1.0;
+        adb.DF = ads.decimation_rate;
         adb.pll_fmax = (float32_t) ads.pll_fmax_int;
         adb.zeta = (float32_t)ads.zeta_int / 100.0;
         adb.omegaN = (float32_t)ads.omegaN_int;
@@ -3038,7 +3047,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-        if(ts.dmod_mode != DEMOD_SAM || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
+        if(ts.dmod_mode != DEMOD_SAM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
         {
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM & SAM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
@@ -3102,7 +3111,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
         {
             // Do decimation down to lower rate to reduce processor load
-            if (DECIMATE_RX.numTaps > 0)
+            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM)
             {
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
             }
