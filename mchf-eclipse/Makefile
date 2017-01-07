@@ -9,6 +9,7 @@
 # Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
 # Rev. 2016-04-06 cleanup - Stephan HB9ocq
 # Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
+# Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
 
 # set these environent to your individual values
 PRJ  = mchf
@@ -41,6 +42,12 @@ CFLAGS  = $(MACHFLAGS)  \
           -ffunction-sections -O2 -Wall -Wno-unused-function -D_GNU_SOURCE -DCORTEX_M4 \
           $(EXTRACFLAGS)
 
+# propagate version info from source to environment variables
+PROJECT_VERSION_FILE := hardware/mchf_board.h
+$(eval  $(shell  sed -n -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell  sed -n -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell  sed -n -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
 LDFLAGS := $(MACHFLAGS)
 
@@ -354,6 +361,10 @@ $(PRJ).bin:  $(LPRJ).elf
 
 $(PRJ).handbook:
 	@support/ui/menu/mk-menu-handbook auto
+
+$(PRJ).version:
+	# the build artifacts SHOULD identify as
+	@printf "Version %s.%s.%s%s\n" $(TRX4M_VER_MAJOR) $(TRX4M_VER_MINOR) $(TRX4M_VER_RELEASE) $(TRX4M_VER_TAINT)
 
 # cleaning rule
 clean:  
