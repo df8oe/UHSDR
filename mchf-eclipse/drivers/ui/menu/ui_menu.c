@@ -14,6 +14,7 @@
 ************************************************************************************/
 // Common
 //
+#include "mchf_version.h"
 #include "mchf_board.h"
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
@@ -522,12 +523,13 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_FW_VERSION:
     {
-        snprintf(out,32,"%d.%d.%d",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE);
+        snprintf(out,32, "%s", TRX4M_VERSION+4);
     }
     break;
     case INFO_BUILD:
     {
-        outs  = __DATE__ " - " __TIME__;
+        snprintf(out,32, "%s", TRX4M_BUILD_DAT+4);
+
     }
     break;
     default:

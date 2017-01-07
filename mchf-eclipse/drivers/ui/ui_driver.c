@@ -13,6 +13,7 @@
 ************************************************************************************/
 
 // Common
+#include "mchf_version.h"
 #include "mchf_board.h"
 #include "profiling.h"
 
