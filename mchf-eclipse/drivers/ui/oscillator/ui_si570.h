@@ -32,8 +32,6 @@ typedef enum
 
 
 
-Si570_ResultCodes 	Si570_XetFrequency(ulong freq, int calib, int temp_factor, uchar test);
-
 Si570_ResultCodes Si570_ChangeToNextFrequency();
 bool Si570_IsNextStepLarge();
 Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_factor);

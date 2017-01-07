@@ -444,11 +444,18 @@ static Si570_ResultCodes Si570_PrepareChangeFrequency(float new_freq)
 
 }
 
+/**
+ * @returns true if the next prepared step will be a large one, requiring sound muting etc. Requires a call to Si570_PrepareNextFrequency to have correct information
+ */
 bool Si570_IsNextStepLarge()
 {
     return os.next_is_small == false;
 }
 
+/**
+ * @brief execute the prepared frequency change. May be called multiple times in case of I2C issues
+ * @returns SI570_OK or SI570_I2C_ERROR if I2C communication failed (which can happen at very high I2C speeds).  SI570_ERROR_VERIFY should never happen anymore.
+ */
 Si570_ResultCodes Si570_ChangeToNextFrequency()
 {
     Si570_ResultCodes retval = SI570_OK;
@@ -457,19 +464,18 @@ Si570_ResultCodes Si570_ChangeToNextFrequency()
 
     retval = Si570_WriteRegs(os.next_is_small);
 
+    // TODO: remove this handling, since it was almost certainly caused
+    // by a wrong interpretation of the data sheet regarding small steps.
     if (retval == SI570_ERROR_VERIFY && os.next_is_small == true)
     {
+        //
         // sometimes the small change simply does not work
         // for unknown reasons, so we execute a large step
         // instead to recover.
-        // TODO: Maybe this should be handled on  the application layer
-        // as this introduces some noise without muting
-        // The frequencies are not random, i.e. it is possible to reproduce the issue
-        // e.g. going from higher frequencies towards 33.901 Mhz in 100 khz steps
-        // shows this problem (from a 1 mhz distance, e.g. 34.901 Mhz).
-        // but it also happens at much smaller step width.
         retval = Si570_WriteRegs(false);
     }
+
+    // If everything is fine, get on with remembering our current configuration
     if (retval == SI570_OK) {
         Si570_CopyConfig(next_config_ptr,cur_config_ptr);
     }
@@ -668,6 +674,14 @@ uint8_t Si570_ResetConfiguration()
     return retval;
 }
 
+/**
+ * @brief prepares all necessary information for the next frequency change
+ * @param freq frequency in Hz to which the LO should be tuned. This is the true LO frequency, i.e. four times the center frequency of the IQ signal
+ * @param calib the calibration correction value for the real vs. data sheet frequency of the Si570.
+ * @param temp_factor the SoftTCXO code calculates a temperature correct value which is used to make a virtual tcxo out of the Si570.
+ *
+ * @returns SI570_TUNE_IMPOSSIBLE if tuning to the desired frequency is not possible at all (multiple reasons), SI570_OK if it is possible and within spec, SI570_TUNE_LIMITED if possible but out of spec
+ */
 Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_factor)
 {
     Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;

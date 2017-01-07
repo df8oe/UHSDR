@@ -43,7 +43,7 @@
      inkscape:zoom="1.2340178"
      inkscape:cx="517.51007"
      inkscape:cy="408.55994"
-     inkscape:current-layer="layer1-2"
+     inkscape:current-layer="svg4869"
      id="namedview4873"
      showgrid="true"
      inkscape:snap-grids="true"
@@ -254,7 +254,7 @@
      height="33.756519"
      width="56.059933"
      id="rect3152-5-23"
-     style="fill:#ffdd55" />
+     style="fill:#94a1ff;fill-opacity:1" />
   <rect
      y="606.89667"
      x="426.47745"
@@ -608,13 +608,13 @@
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Arial, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-   x="141.10291"
+   x="140.57375"
    y="121.46041"
    id="text5076"><tspan
      sodipodi:role="line"
      id="tspan5078"
-     x="141.10291"
-     y="121.46041">SNAP</tspan></text>
+     x="140.57375"
+     y="121.46041">METER</tspan></text>
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Arial, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -645,6 +645,7 @@
      id="tspan5090"
      x="159.98187"
      y="121.77613">VFO A/B</tspan></text>
+
 
 
 
@@ -763,7 +764,7 @@
        x="25.100033"
        y="147.3286"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial"
-       id="tspan5136">- SAM</tspan><tspan
+       id="tspan5136">- SAM  ---- SAM-L-SAM-U-AM</tspan><tspan
        sodipodi:role="line"
        x="25.100033"
        y="151.73831"
@@ -1340,7 +1341,7 @@
          height="120"
          x="60"
          y="633.70081" /></flowRegion><flowPara
-       id="flowPara424"></flowPara></flowRoot>  <text
+       id="flowPara424" /></flowRoot>  <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777767px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Arial, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      x="104.58285"
