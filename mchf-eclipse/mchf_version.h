@@ -12,10 +12,10 @@
 **  Licence:		CC BY-NC-SA 3.0                                                **
 ************************************************************************************/
 
-// trailing characters are needed for identifying version and building date+time in binary
-#define		TRX4M_VERSION			"fwv-1.5.7"
-#define		TRX4M_BUILD_DAT			"fwt-"__DATE__ " - " __TIME__
+#define 	TRX4M_VER_MAJOR			"1"
+#define 	TRX4M_VER_MINOR			"5"
+#define 	TRX4M_VER_RELEASE		"7"
 
-#define 	TRX4M_VER_MAJOR			1
-#define 	TRX4M_VER_MINOR			5
-#define 	TRX4M_VER_RELEASE		7
+// trailing characters are needed for identifying version and building date+time in binary
+#define		TRX4M_VERSION			"fwv-"TRX4M_VER_MAJOR"."TRX4M_VER_MINOR"."TRX4M_VER_RELEASE
+#define		TRX4M_BUILD_DAT			"fwt-"__DATE__ " - " __TIME__

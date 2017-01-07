@@ -3362,12 +3362,12 @@ static void UiDriver_TimeScheduler()
         Codec_MuteDAC(false);                      // make sure that audio is un-muted
 
 
-        if((ts.version_number_major != TRX4M_VER_MAJOR) || (ts.version_number_release != TRX4M_VER_RELEASE) || (ts.version_number_minor != TRX4M_VER_MINOR))        // Yes - check for new version
+        if((ts.version_number_major != atoi(TRX4M_VER_MAJOR)) || (ts.version_number_release != atoi(TRX4M_VER_RELEASE)) || (ts.version_number_minor != atoi(TRX4M_VER_MINOR)))        // Yes - check for new version
         {
 
-            ts.version_number_major = TRX4M_VER_MAJOR;    // save new F/W version
-            ts.version_number_release = TRX4M_VER_RELEASE;
-            ts.version_number_minor = TRX4M_VER_MINOR;
+            ts.version_number_major = atoi(TRX4M_VER_MAJOR);    // save new F/W version
+            ts.version_number_release = atoi(TRX4M_VER_RELEASE);
+            ts.version_number_minor = atoi(TRX4M_VER_MINOR);
 
             UiSpectrum_ClearDisplay();         // clear display under spectrum scope
             UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
@@ -5829,7 +5829,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     // Show third line
     info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
 
-    snprintf(tx,100,"FW: %d.%d.%d / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
+    snprintf(tx,100,"FW: %s.%s.%s / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
     UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
 
     // Show fourth line
