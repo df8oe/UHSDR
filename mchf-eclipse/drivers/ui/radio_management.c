@@ -303,33 +303,50 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
     if((ts.tune_freq != ts.tune_freq_req) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
+
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
+            Si570_ResultCodes lo_prep_result = Si570_PrepareNextFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor);
             // first check and mute output if a large step is to be done
-            if(Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 1) == SI570_LARGE_STEP)     // did the tuning require that a large tuning step occur?
+            if(Si570_IsNextStepLarge() == true)     // did the tuning require that a large tuning step occur?
             {
-                if (ts.audio_dac_muting_buffer_count < 25)
+                // 18 is a little more than 10ms (15 ==10ms) which is max for the Si570 to change the frequency
+                if (ts.audio_dac_muting_buffer_count < 18)
                 {
-                    ts.audio_dac_muting_buffer_count = 25;
+                    ts.audio_dac_muting_buffer_count = 18;
                 }
-                if (ts.audio_processor_input_mute_counter < 25)
+                if (ts.audio_processor_input_mute_counter < 18)
                 {
-                    ts.audio_processor_input_mute_counter = 25;
+                    ts.audio_processor_input_mute_counter = 18;
                 }
             }
-            // Set frequency
-            ts.last_lo_result = Si570_SetFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor, 0);
+
             ts.last_tuning = ts.sysclock;
+
+
+            ts.last_lo_result  = lo_prep_result;
+
+            Si570_ResultCodes lo_exec_result = SI570_TUNE_IMPOSSIBLE;
+            if (lo_prep_result != SI570_TUNE_IMPOSSIBLE)
+            {
+                // Set frequency
+                lo_exec_result = Si570_ChangeToNextFrequency();
+            }
 
             // if i2c error or verify error, there is a chance that we can fix that, so we mark this
             // as NOT executed, in all other cases we assume the change has happened (but may prevent TX)
-            if (ts.last_lo_result != SI570_I2C_ERROR && ts.last_lo_result != SI570_ERROR_VERIFY)
+            if (lo_exec_result != SI570_I2C_ERROR && lo_exec_result != SI570_ERROR_VERIFY)
             {
                 df.temp_factor_changed = false;
                 ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
                 // Save current freq
                 df.tune_old = dial_freq*TUNE_MULT;
             }
+            else
+            {
+                ts.last_lo_result = lo_exec_result;
+            }
+
             if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED)
             {
 
@@ -373,7 +390,7 @@ void RadioManagement_MuteTemporarilyRxAudio()
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
     // we check with the si570 code if the frequency is tunable, we do not tune to it.
-    return Si570_SetFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor, 1);
+    return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor);
 }
 
 

@@ -536,6 +536,7 @@
     <File name="usb/usbd/core/inc" path="" type="2"/>
     <File name="cmsis_lib/include" path="" type="2"/>
     <File name="drivers/keyboard/usb/usbh_bsp.h" path="drivers/keyboard/usb/usbh_bsp.h" type="1"/>
+	<File name="mchf_version.h" path="mchf_version.h" type="1"/>
     <File name="drivers/freedv/codebookres.c" path="drivers/freedv/codebookres.c" type="1"/>
     <File name="usb/usbd/class/audio/inc/usbd_audio_out_if.h" path="usb/usbd/class/audio/inc/usbd_audio_out_if.h" type="1"/>
     <File name="usb/usbd/class/audio/src/usbd_audio_out_if.c" path="usb/usbd/class/audio/src/usbd_audio_out_if.c" type="1"/>

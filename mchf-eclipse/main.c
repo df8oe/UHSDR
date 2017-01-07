@@ -551,6 +551,8 @@ int main(void)
     mchf_hw_i2c1_init();
     mchf_hw_i2c2_init();
 
+    // temporarily remember the setting until dsp is going to be activated
+    // TODO: Needs to be checked, if this is the best way to get the noise blanker to work properly
     ts.temp_nb = ts.nb_setting;
     ts.nb_setting = 0;
 
@@ -584,23 +586,7 @@ int main(void)
     {
         // UI events processing
         UiDriver_MainHandler();
-        CatDriverFT817CheckAndExecute();
-        // Audio driver processing
-        //audio_driver_thread();
-
-        // USB Host driver processing
-        //usbh_driver_thread();
-
         // Reset WD - not working
         //wd_reset();
-
-        // TODO: Make that nicer and move out from here
-        // The observation is that enabling the NB too early somehow made it not working properly
-        // Maybe that can be fixed at some point
-        if(ts.temp_nb < 0x80 && ts.sysclock > 50)		// load NB setting after processing first audio data
-        {
-            ts.nb_setting = ts.temp_nb;
-            ts.temp_nb = 0xff;
-        }
     }
 }
