@@ -33,6 +33,8 @@
 // Encoders
 #include "ui_rotary.h"
 
+#include "cat_driver.h"
+
 // Codec control
 #include "codec.h"
 
@@ -3357,7 +3359,16 @@ static void UiDriver_TimeScheduler()
     {
         startup_done_flag = true;                  // set flag so that we do this only once
 
+        if(ts.temp_nb < 0x80)       // load NB setting after processing first audio data
+        {
+            ts.nb_setting = ts.temp_nb;
+            ts.temp_nb = 0xff;
+        }
+
         ts.dsp_inhibit = 0;                 // allow DSP to function
+
+
+
         audio_spkr_volume_update_request = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
         Codec_MuteDAC(false);                      // make sure that audio is un-muted
 
@@ -5958,6 +5969,8 @@ void UiDriver_MainHandler()
 {
 
     uint32_t now = ts.sysclock;
+
+    CatDriverFT817CheckAndExecute();
 
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV

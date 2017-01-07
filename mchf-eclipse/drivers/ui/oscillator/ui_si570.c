@@ -90,10 +90,13 @@ typedef struct {
 typedef struct OscillatorState
 {
     Si570_FreqConfig    cur_config;
+    Si570_FreqConfig    next_config;
 
     float               fxtal;
 
-    uint8_t             regs[6];
+    uint8_t             cur_regs[6];
+
+    bool                next_is_small;
 
     float               fout;       // contains startup frequency info of Si570
 
@@ -105,7 +108,7 @@ typedef struct OscillatorState
 } OscillatorState;
 
 
-#define SMOOTH_DELTA (0.0030)
+#define SMOOTH_DELTA (0.0035)
 // Datasheet says 0.0035  == 3500PPM but there have been issues if we get close to that value.
 // to play it safe, we make the delta range a little smaller.
 // if you want to play with it, tune to the end of the 10m band, set 100 khz step width and dial around
@@ -165,7 +168,7 @@ static Si570_ResultCodes Si570_VerifyFrequencyRegisters()
         // memset(regs, 0, 6);
         // trx4m_hw_i2c_ReadData(os.si570_address, 7, regs, 5);
 
-        if(memcmp(regs, (uchar*)os.regs, 6) != 0)
+        if(memcmp(regs, (uchar*)os.cur_regs, 6) != 0)
         {
             retval = SI570_ERROR_VERIFY;
         }
@@ -211,7 +214,7 @@ static Si570_ResultCodes Si570_SmallFrequencyChange()
     if (ret == 0)
     {
         // Write as block, registers 7-12
-        ret = mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6);
+        ret = mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.cur_regs, 6);
         if (ret == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
@@ -241,7 +244,7 @@ static Si570_ResultCodes Si570_LargeFrequencyChange()
     if (Si570_SetRegisterBits(os.si570_address, SI570_REG_137, &reg_137, SI570_FREEZE_DCO) == 0)
     {
         // Write as block, registers 7-12
-        if(mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.regs, 6) == 0)
+        if(mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.cur_regs, 6) == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
         }
@@ -297,7 +300,7 @@ static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* 
     if (fdiff <= SMOOTH_DELTA && Si570_FDCO_InRange(fdco))
     {
         new_config->rfreq = fdco / (float64_t)os.fxtal;
-        new_config->fdco = fdco;
+        new_config->fdco = cur_config->fdco; // since we do only a small step, our fdco remains the same, so that we can keep an eye on the +/-3500ppm  rule
         new_config->n1 = cur_config->n1;
         new_config->hsdiv = cur_config->hsdiv;
 
@@ -359,7 +362,7 @@ static bool Si570_FindConfigForFreq(float new_freq,Si570_FreqConfig* config) {
     return retval;
 }
 
-static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_small) {
+static Si570_ResultCodes Si570_ConfigToRegs(Si570_FreqConfig* config, uint8_t regs[6]) {
 
     uint32_t   frac_bits;
     uint16_t whole;
@@ -372,26 +375,34 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
 
     for(i = 0; i < 6; i++)
     {
-        os.regs[i] = 0;
+        regs[i] = 0;
     }
 
-    os.regs[0] = (hsdiv_regVal << 5);
+    regs[0] = (hsdiv_regVal << 5);
 
-    os.regs[0] = Si570_SetBits(os.regs[0], 0xE0, (n1_regVal >> 2));
-    os.regs[1] = (n1_regVal & 3) << 6;
+    regs[0] = Si570_SetBits(regs[0], 0xE0, (n1_regVal >> 2));
+    regs[1] = (n1_regVal & 3) << 6;
 
     whole = floorf(config->rfreq);
     frac_bits = floorf((config->rfreq - whole) * POW_2_28);
 
     for(i = 5; i >= 3; i--)
     {
-        os.regs[i] = frac_bits & 0xFF;
+        regs[i] = frac_bits & 0xFF;
         frac_bits = frac_bits >> 8;
     }
 
-    os.regs[2] = Si570_SetBits(os.regs[2], 0xF0, (frac_bits & 0xF));
-    os.regs[2] = Si570_SetBits(os.regs[2], 0x0F, (whole & 0xF) << 4);
-    os.regs[1] = Si570_SetBits(os.regs[1], 0xC0, (whole >> 4) & 0x3F);
+    regs[2] = Si570_SetBits(regs[2], 0xF0, (frac_bits & 0xF));
+    regs[2] = Si570_SetBits(regs[2], 0x0F, (whole & 0xF) << 4);
+    regs[1] = Si570_SetBits(regs[1], 0xC0, (whole >> 4) & 0x3F);
+
+    return retval;
+}
+
+
+static Si570_ResultCodes Si570_WriteRegs(bool is_small) {
+
+    Si570_ResultCodes retval = SI570_OK;
 
     if(is_small)
     {
@@ -413,58 +424,62 @@ static Si570_ResultCodes Si570_WriteConfig(Si570_FreqConfig* config, bool is_sma
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_si570_change_frequency
-//* Object              :
-//* Input Parameters    : input frequency (float), test: 0 = tune, 1 = calculate, but do not actually tune to see if a large tuning step will occur
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static Si570_ResultCodes Si570_ChangeFrequency(float new_freq, uchar test)
+static Si570_ResultCodes Si570_PrepareChangeFrequency(float new_freq)
 {
     Si570_ResultCodes retval = SI570_OK;
-    Si570_FreqConfig new_config;
-    Si570_FreqConfig* cur_config_ptr = (Si570_FreqConfig*)&os.cur_config;
+    Si570_FreqConfig* next_config_ptr = &os.next_config;
+    Si570_FreqConfig* cur_config_ptr = &os.cur_config;
 
-    bool    is_small = Si570_FindSmoothRFreqForFreq(new_freq,cur_config_ptr,&new_config);
+    os.next_is_small = Si570_FindSmoothRFreqForFreq(new_freq,cur_config_ptr,next_config_ptr);
 
-    if (test == false ) {
-        if (is_small == false) {
-            if (!Si570_FindConfigForFreq(new_freq,&new_config))
-            {
-                CriticalError(102);
-            }
-        }
-        retval = Si570_WriteConfig(&new_config,is_small);
-        if (retval == SI570_ERROR_VERIFY && is_small == true)
-        {
-            // sometimes the small change simply does not work
-            // for unknown reasons, so we execute a large step
-            // instead to recover.
-            // TODO: Maybe this should be handled on  the application layer
-            // as this introduces some noise without muting
-            // The frequencies are not random, i.e. it is possible to reproduce the issue
-            // e.g. going from higher frequencies towards 33.901 Mhz in 100 khz steps
-            // shows this problem (from a 1 mhz distance, e.g. 34.901 Mhz).
-            // but it also happens at much smaller step width.
-            retval = Si570_WriteConfig(&new_config,false);
-        }
-        if (retval == SI570_OK) {
-            Si570_CopyConfig(&new_config,cur_config_ptr);
-        }
-        else
-        {
-            Si570_ClearConfig(cur_config_ptr);
-        }
+    if (os.next_is_small == false && Si570_FindConfigForFreq(new_freq,next_config_ptr) == false)
+    {
+        retval = SI570_TUNE_IMPOSSIBLE;
     }
     else
     {
-        if (is_small == false) {
-            retval = SI570_LARGE_STEP;
-        }
+        Si570_ConfigToRegs(next_config_ptr,os.cur_regs);
+    }
+    return retval;
+
+}
+
+bool Si570_IsNextStepLarge()
+{
+    return os.next_is_small == false;
+}
+
+Si570_ResultCodes Si570_ChangeToNextFrequency()
+{
+    Si570_ResultCodes retval = SI570_OK;
+    Si570_FreqConfig* next_config_ptr = &os.next_config;
+    Si570_FreqConfig* cur_config_ptr = &os.cur_config;
+
+    retval = Si570_WriteRegs(os.next_is_small);
+
+    if (retval == SI570_ERROR_VERIFY && os.next_is_small == true)
+    {
+        // sometimes the small change simply does not work
+        // for unknown reasons, so we execute a large step
+        // instead to recover.
+        // TODO: Maybe this should be handled on  the application layer
+        // as this introduces some noise without muting
+        // The frequencies are not random, i.e. it is possible to reproduce the issue
+        // e.g. going from higher frequencies towards 33.901 Mhz in 100 khz steps
+        // shows this problem (from a 1 mhz distance, e.g. 34.901 Mhz).
+        // but it also happens at much smaller step width.
+        retval = Si570_WriteRegs(false);
+    }
+    if (retval == SI570_OK) {
+        Si570_CopyConfig(next_config_ptr,cur_config_ptr);
+    }
+    else
+    {
+        Si570_ClearConfig(cur_config_ptr);
     }
     return retval;
 }
+
 
 static int32_t Si570_ConvExternalTemp(uint8_t *temp)
 {
@@ -566,7 +581,6 @@ void Si570_CalculateStartupFrequency()
     }
 }
 
-
 float   Si570_GetStartupFrequency()
 {
     return os.fout;
@@ -622,24 +636,24 @@ uint8_t Si570_ResetConfiguration()
         }  while(ret & SI570_RECALL);
     }
 
-    if (retval == 0 && Si570_ReadRegisters(&(os.regs[0])) != 0)
+    if (retval == 0 && Si570_ReadRegisters(&(os.cur_regs[0])) != 0)
     {
         retval = 4;
     }
     else
     {
-        hsdiv_curr = ((os.regs[0] & 0xE0) >> 5) + 4;
+        hsdiv_curr = ((os.cur_regs[0] & 0xE0) >> 5) + 4;
 
-        n1_curr = 1 + ((os.regs[0] & 0x1F) << 2) + ((os.regs[1] & 0xC0) >> 6);
+        n1_curr = 1 + ((os.cur_regs[0] & 0x1F) << 2) + ((os.cur_regs[1] & 0xC0) >> 6);
 
 
-        rfreq_int = (os.regs[1] & 0x3F);
-        rfreq_int = (rfreq_int << 4) + ((os.regs[2] & 0xF0) >> 4);
+        rfreq_int = (os.cur_regs[1] & 0x3F);
+        rfreq_int = (rfreq_int << 4) + ((os.cur_regs[2] & 0xF0) >> 4);
 
-        rfreq_frac = (os.regs[2] & 0x0F);
-        rfreq_frac = (rfreq_frac << 8) + os.regs[3];
-        rfreq_frac = (rfreq_frac << 8) + os.regs[4];
-        rfreq_frac = (rfreq_frac << 8) + os.regs[5];
+        rfreq_frac = (os.cur_regs[2] & 0x0F);
+        rfreq_frac = (rfreq_frac << 8) + os.cur_regs[3];
+        rfreq_frac = (rfreq_frac << 8) + os.cur_regs[4];
+        rfreq_frac = (rfreq_frac << 8) + os.cur_regs[5];
 
         float64_t rfreq = rfreq_int + (float64_t)rfreq_frac / POW_2_28;
         os.fxtal = (os.fout * n1_curr * hsdiv_curr) / rfreq;
@@ -654,33 +668,32 @@ uint8_t Si570_ResetConfiguration()
     return retval;
 }
 
-
-Si570_ResultCodes Si570_SetFrequency(ulong freq, int calib, int temp_factor, uchar test)
+Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_factor)
 {
     Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
 
     if (Si570_IsPresent() == true) {
-        float		freq_calc, freq_scale, temp_scale, temp;
+        float       freq_calc, freq_scale, temp_scale, temp;
 
-        freq_scale = (float)freq;		// get frequency
-        freq_calc = freq_scale;		// copy frequency
-        freq_scale /= 14000000;		// get scaling factor since our calibrations are referenced to 14.000 MHz
+        freq_scale = (float)freq;       // get frequency
+        freq_calc = freq_scale;     // copy frequency
+        freq_scale /= 14000000;     // get scaling factor since our calibrations are referenced to 14.000 MHz
 
-        temp = (float)calib;			// get calibration factor
-        temp *= (freq_scale);		// scale calibration for operating frequency but double magnitude of calibration factor
+        temp = (float)calib;            // get calibration factor
+        temp *= (freq_scale);       // scale calibration for operating frequency but double magnitude of calibration factor
 
-        freq_calc -= temp;				// subtract calibration factor
+        freq_calc -= temp;              // subtract calibration factor
 
-        temp_scale = (float)temp_factor;	// get temperature factor
-        temp_scale /= 14000000;		// calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
+        temp_scale = (float)temp_factor;    // get temperature factor
+        temp_scale /= 14000000;     // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
 
-        freq_calc *= (1 + temp_scale);	// rescale by temperature correction factor
+        freq_calc *= (1 + temp_scale);  // rescale by temperature correction factor
 
         // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
         if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
         {
             // tuning inside known working spec
-            retval = Si570_ChangeFrequency((float64_t)freq_calc/1000000.0, test);
+            retval = Si570_PrepareChangeFrequency((float64_t)freq_calc/1000000.0);
             if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ) && *(__IO uint32_t*)(SRAM2_BASE+5) != 0x29)
             {
                 // outside official spec but known to work
@@ -693,7 +706,6 @@ Si570_ResultCodes Si570_SetFrequency(ulong freq, int calib, int temp_factor, uch
     }
     return retval;
 }
-
 
 uint8_t Si570_InitExternalTempSensor()
 {
