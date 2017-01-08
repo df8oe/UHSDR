@@ -2752,7 +2752,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             aq = Cos * adb.q_buffer[i];
             bq = Sin * adb.q_buffer[i];
 
-            if (ads.sam_sideband != 0)
+            if (ads.sam_sideband != SAM_SIDEBAND_BOTH)
             {
               a[0] = dsI;
               b[0] = bi;
@@ -2788,17 +2788,17 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             switch(ads.sam_sideband)
             {
-            case 0: //both sidebands
+            case SAM_SIDEBAND_BOTH:
               {
                 audio = corr[0];
                 break;
               }
-            case 2: //USB
+            case SAM_SIDEBAND_USB:
               {
                 audio = (ai_ps - bi_ps) + (aq_ps + bq_ps);
                 break;
               }
-            case 1: //LSB
+            case SAM_SIDEBAND_LSB:
               {
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 break;
