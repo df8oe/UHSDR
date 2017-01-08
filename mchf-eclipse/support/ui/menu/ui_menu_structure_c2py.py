@@ -21,30 +21,16 @@ AFTERLAST WARNING: BINDS EVEN TIGHTER TO WRITING DISCIPLINE IN C SYNTAX ! ! !
 
 """
 
+import subprocess
+
 # this points from HERE to the 'mchf-eclipse' directory of our project
 MCHF_BASEDIR = r"../../../"
 
 # the ONLY C-source we do read AND understand
 INPUT_C_SRC = MCHF_BASEDIR + r"drivers/ui/menu/ui_menu_structure.c"
 
-
-# to identify the build we rely on contents of this file
-vers_data = None
-with open(MCHF_BASEDIR + r"versions.txt", 'r') as f:
-    vers_data = f.readlines()
-
-## vers_data  contains just two lines:
-## the first contains "the field headers",  identifiers are bracketed in '<>'
-## e.g. """<bootloader testing> <firmware testing> <bootloader stable> <firmware stable>"""
-## the second contains "the field values",   COMMA separated,  ATTENTION: also a leading COMMA is there, who knows what for...
-## e.g. """,---,1.5.6,2.0.0,1.4.0"""
-## and odd line endings (!)
-
-#print("##DBG## vers_data[0] = {!r}".format(vers_data[0].strip()))
-#print("##DBG## vers_data[1] = {!r}".format(vers_data[1].split(',')))
-
-VERSIONSID = vers_data[1].split(',')[1:]  ## yank the first, empty element
-BUILD_ID = VERSIONSID[1]  ## 1 = arbitrarily made selection for <firmware testing>
+# reading version from mchf.bin
+BUILD_ID = subprocess.check_output('grep -aPo "(?<=fwv-)[^fwt]+" ../../../mchf.bin | cut -d "" -f 1', shell = True)
 
 #print("##DBG## BUILD_ID = '{}'".format(BUILD_ID))
 
