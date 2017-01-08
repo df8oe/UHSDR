@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-08T19:28:21  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.7 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.7 - UI Menu Overview
 
-generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-08T19:28:21  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -63,7 +63,7 @@ generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
 | **TX Mute LineOut**           (                    CONFIG_MUTE_LINE_OUT_TX) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
 | **TX Initial Muting Time**    (              CONFIG_TXRX_SWITCH_AUDIO_MUTE) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
 | **Max Volume**                (                          CONFIG_MAX_VOLUME) | Set maximum speaker&headphone volume.          | 
-| **Max RX Gain (0=Max)**       (                         CONFIG_MAX_RX_GAIN) | :soon:                                         | 
+| **Max RX Gain (0=Max)**       (                         CONFIG_MAX_RX_GAIN) | Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions. | 
 | **Key Beep**                  (                         CONFIG_BEEP_ENABLE) | If ON each keypress will generate a short beep | 
 | **Beep Frequency**            (                           CONFIG_BEEP_FREQ) | Set beep frequency in Hz.                      | 
 | **Beep Volume**               (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
@@ -106,7 +106,7 @@ generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | :soon:                                         | 
+| **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | After x seconds LCD turns dark and LCD data sctios stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen. | 
 | **Step Size Marker**          (               CONFIG_FREQ_STEP_MARKER_LINE) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
 | **Filter BW Display**         (               CONFIG_DISP_FILTER_BANDWIDTH) | Colour of the horizontal Filter Bandwidth indicator bar. | 
 | **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
@@ -118,17 +118,17 @@ generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
 | **Spectrum FFT Wind.**        (            CONFIG_SPECTRUM_FFT_WINDOW_TYPE) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
 | **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
 | **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
-| **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | :soon:                                         | 
-| **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | :soon:                                         | 
-| **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | :soon:                                         | 
-| **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | :soon:                                         | 
-| **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | :soon:                                         | 
+| **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | Adjusting of scope / waterfall AGC for fitting graphs to screen | 
+| **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | Set color of scope                             | 
+| **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set color of scope grid                        | 
+| **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | Set rf range for scope                         | 
+| **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | Set scope line corresponding to NO SIGNAL      | 
 | **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
 | **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | :soon:                                         | 
 | **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | :soon:                                         | 
-| **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | :soon:                                         | 
+| **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | Set NO SIGNAL state for waterfall              | 
 | **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals. | 
@@ -165,8 +165,8 @@ generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
 | **AM/SAM Filter 2**           (                              MENU_FP_AM_02) | Filter bandwidth #2 when toggling with filter select button in AM & SAM. | 
 | **AM/SAM Filter 3**           (                              MENU_FP_AM_03) | Filter bandwidth #3 when toggling with filter select button in AM & SAM. | 
 | **AM/SAM Filter 4**           (                              MENU_FP_AM_04) | Filter bandwidth #4 when toggling with filter select button in AM & SAM. | 
-| **AM  TX Audio Filter**       (                CONFIG_AM_TX_FILTER_DISABLE) | :soon:                                         | 
-| **SSB TX Audio Filter2**      (                       CONFIG_SSB_TX_FILTER) | :soon:                                         | 
+| **AM  TX Audio Filter**       (                CONFIG_AM_TX_FILTER_DISABLE) | Select if AM-TX signal is filtered (strongly recommended to agree to regulations) | 
+| **SSB TX Audio Filter2**      (                       CONFIG_SSB_TX_FILTER) | Select if SSB-TX signal is filtered (strongly recommended to agree to regulations) | 
 
 
 ## PA Configuration (`MENU_POW`)
@@ -209,19 +209,19 @@ generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **Display**                   (                               INFO_DISPLAY) | :soon:                                         | 
-| **Disp. Controller**          (                          INFO_DISPLAY_CTRL) | :soon:                                         | 
-| **SI570**                     (                                 INFO_SI570) | :soon:                                         | 
-| **EEPROM**                    (                                INFO_EEPROM) | :soon:                                         | 
-| **Touchscreen**               (                                    INFO_TP) | :soon:                                         | 
-| **CPU**                       (                                   INFO_CPU) | :soon:                                         | 
-| **Flash Size (kB)**           (                                 INFO_FLASH) | :soon:                                         | 
-| **RAM Size (kB)**             (                                   INFO_RAM) | :soon:                                         | 
-| **Firmware**                  (                            INFO_FW_VERSION) | :soon:                                         | 
-| **Build**                     (                                 INFO_BUILD) | :soon:                                         | 
-| **Bootloader**                (                            INFO_BL_VERSION) | :soon:                                         | 
-| **RF Bands Mod**              (                                 INFO_RFMOD) | :soon:                                         | 
-| **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | :soon:                                         | 
+| **Display**                   (                               INFO_DISPLAY) | Displays working mode (SPI/parallel            | 
+| **Disp. Controller**          (                          INFO_DISPLAY_CTRL) | identified LCD controller chip                 | 
+| **SI570**                     (                                 INFO_SI570) | startup frequency and I2C addrss of SI570      | 
+| **EEPROM**                    (                                INFO_EEPROM) | type of serial EEPROM and its capacity         | 
+| **Touchscreen**               (                                    INFO_TP) | touchscreen state                              | 
+| **CPU**                       (                                   INFO_CPU) | identification of fitted MCU                   | 
+| **Flash Size (kB)**           (                                 INFO_FLASH) | flash size of MCU                              | 
+| **RAM Size (kB)**             (                                   INFO_RAM) | RAM size of MCU                                | 
+| **Firmware**                  (                            INFO_FW_VERSION) | firmware version                               | 
+| **Build**                     (                                 INFO_BUILD) | firmware: timestamp of building                | 
+| **Bootloader**                (                            INFO_BL_VERSION) | bootloader version                             | 
+| **RF Bands Mod**              (                                 INFO_RFMOD) | RF bands expansion PCB present?                | 
+| **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | VHF/UHF bands expansion PCB present?           | 
 
 
 ## Debug/Exper. Settings (`MENU_DEBUG`)

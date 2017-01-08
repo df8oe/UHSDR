@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-8724 723,-8724 723,4 -4,4"/>
 <text text-anchor="middle" x="359.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v1.5.7 &#45; Menus Overview</text>
-<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;08T18:50:44 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;01&#45;08T19:28:19 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3081.5"/>

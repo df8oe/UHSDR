@@ -97,7 +97,7 @@ const MenuDescriptor baseGroup[] =
 
 const MenuDescriptor displayGroup[] =
 {
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc(":soon:") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc("After x seconds LCD turns dark and LCD data sctios stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen.") },
     { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE, NULL, "Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected step size") },
     { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH, NULL, "Filter BW Display", UiMenuDesc("Colour of the horizontal Filter Bandwidth indicator bar.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE, NULL, "Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
@@ -109,17 +109,17 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE, NULL, "Spectrum FFT Wind.", UiMenuDesc("Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE, NULL, "Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc(":soon:") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc("Adjusting of scope / waterfall AGC for fitting graphs to screen") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set color of scope") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set color of scope grid") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc("Set rf range for scope") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc("Set scope line corresponding to NO SIGNAL") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED, NULL, "Wfall 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME, NULL, "Wfall Colours", UiMenuDesc("Select colour scheme for waterfall display.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE, NULL, "Wfall Step Size", UiMenuDesc("How many lines are moved in a single screen update") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET, NULL, "Wfall Brightness", UiMenuDesc(":soon:") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST, NULL, "Wfall Contrast", UiMenuDesc(":soon:") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST, NULL, "Wfall NoSig Adj.", UiMenuDesc(":soon:") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST, NULL, "Wfall NoSig Adj.", UiMenuDesc("Set NO SIGNAL state for waterfall") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP, NULL, "Upper Meter Colour", UiMenuDesc("Set the colour of the scale of combined S/Power-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY, NULL, "dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals.")},
@@ -153,7 +153,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX, NULL, "TX Mute LineOut", UiMenuDesc("During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here.") },
     { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE, NULL, "TX Initial Muting Time", UiMenuDesc("When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches!") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME, NULL, "Max Volume", UiMenuDesc("Set maximum speaker&headphone volume.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN, NULL, "Max RX Gain (0=Max)", UiMenuDesc(":soon:") },
+    { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN, NULL, "Max RX Gain (0=Max)", UiMenuDesc("Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions.") },
 
     // UI Behavior / Key Beep
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, NULL, "Key Beep", UiMenuDesc("If ON each keypress will generate a short beep") },
@@ -297,28 +297,28 @@ const MenuDescriptor filterGroup[] =
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
 //    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4", UiMenuDesc(":soon:") },
 
-    { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE, NULL,"AM  TX Audio Filter", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE, NULL,"AM  TX Audio Filter", UiMenuDesc("Select if AM-TX signal is filtered (strongly recommended to agree to regulations)") },
 //    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE, NULL,"SSB TX Audio Filter", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER, NULL,"SSB TX Audio Filter2", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER, NULL,"SSB TX Audio Filter2", UiMenuDesc("Select if SSB-TX signal is filtered (strongly recommended to agree to regulations)") },
     { MENU_FILTER, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
 
 const MenuDescriptor infoGroup[] =
 {
-    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY, NULL,"Display", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY_CTRL, NULL,"Disp. Controller", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_SI570, NULL,"SI570", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_EEPROM, NULL,"EEPROM", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_TP, NULL,"Touchscreen", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_CPU, NULL,"CPU", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_FLASH, NULL,"Flash Size (kB)", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_RAM, NULL,"RAM Size (kB)", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION, NULL,"Firmware", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_BUILD, NULL,"Build", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION, NULL,"Bootloader", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_RFMOD, NULL,"RF Bands Mod", UiMenuDesc(":soon:") },
-    { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD, NULL,"V/UHF Mod", UiMenuDesc(":soon:") },
+    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY, NULL,"Display", UiMenuDesc("Displays working mode (SPI/parallel") },
+    { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY_CTRL, NULL,"Disp. Controller", UiMenuDesc("identified LCD controller chip") },
+    { MENU_SYSINFO, MENU_INFO, INFO_SI570, NULL,"SI570", UiMenuDesc("startup frequency and I2C addrss of SI570") },
+    { MENU_SYSINFO, MENU_INFO, INFO_EEPROM, NULL,"EEPROM", UiMenuDesc("type of serial EEPROM and its capacity") },
+    { MENU_SYSINFO, MENU_INFO, INFO_TP, NULL,"Touchscreen", UiMenuDesc("touchscreen state") },
+    { MENU_SYSINFO, MENU_INFO, INFO_CPU, NULL,"CPU", UiMenuDesc("identification of fitted MCU") },
+    { MENU_SYSINFO, MENU_INFO, INFO_FLASH, NULL,"Flash Size (kB)", UiMenuDesc("flash size of MCU") },
+    { MENU_SYSINFO, MENU_INFO, INFO_RAM, NULL,"RAM Size (kB)", UiMenuDesc("RAM size of MCU") },
+    { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION, NULL,"Firmware", UiMenuDesc("firmware version") },
+    { MENU_SYSINFO, MENU_INFO, INFO_BUILD, NULL,"Build", UiMenuDesc("firmware: timestamp of building") },
+    { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION, NULL,"Bootloader", UiMenuDesc("bootloader version") },
+    { MENU_SYSINFO, MENU_INFO, INFO_RFMOD, NULL,"RF Bands Mod", UiMenuDesc("RF bands expansion PCB present?") },
+    { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD, NULL,"V/UHF Mod", UiMenuDesc("VHF/UHF bands expansion PCB present?") },
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
