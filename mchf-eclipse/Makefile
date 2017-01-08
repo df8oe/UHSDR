@@ -31,6 +31,14 @@ else
   PREFIX = /usr
 endif
 
+# Under MacOS we have to use gsed instead of sed
+# This mechanism can be used also for other flavours
+OS := $(shell uname)
+SED = sed
+ifeq ($(OS),Darwin)
+  SED = gsed
+endif
+
 # choose what Keil-Library you want to use
 #SCMSIS_LIB_VERSION = arm_cortexM4lf_math
 CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
@@ -44,9 +52,9 @@ CFLAGS  = $(MACHFLAGS)  \
 
 # propagate version info from source to environment variables
 PROJECT_VERSION_FILE := mchf_version.h
-$(eval  $(shell  sed -n -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell  sed -n -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell  sed -n -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
 LDFLAGS := $(MACHFLAGS)
