@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-07T16:27:57  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-08T14:49:00  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.6 - UI Menu Overview
 
-generated at  2017-01-07T16:27:57  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-08T14:49:00  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -77,7 +77,8 @@ generated at  2017-01-07T16:27:57  by "./ui_menu_structure_mdtable.py"
 | **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
-| **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) | :soon:                                         | 
+| **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
+| **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when “Disp. Pwr (mW)”, is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
 | **RX IQ Balance (80m)**       (                  CONFIG_80M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
 | **RX IQ Phase   (80m)**       (                 CONFIG_80M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
@@ -175,33 +176,33 @@ generated at  2017-01-07T16:27:57  by "./ui_menu_structure_mdtable.py"
 | **Tune Power Level**          (                    CONFIG_TUNE_POWER_LEVEL) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
 | **Tune Tone (SSB)**           (                      CONFIG_TUNE_TONE_MODE) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
 | **CW PA Bias (If >0 )**       (                          CONFIG_CW_PA_BIAS) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
-| **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz require higher power adjust values. This permits better control of generated power on these frequencies. | 
+| **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values. This permits better control of generated power on these frequencies. | 
 | **PA Bias**                   (                             CONFIG_PA_BIAS) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
-| **160m  5W PWR Adjust**       (                      CONFIG_160M_5W_ADJUST) | :soon:                                         | 
-| **80m   5W PWR Adjust**       (                       CONFIG_80M_5W_ADJUST) | :soon:                                         | 
-| **60m   5W PWR Adjust**       (                       CONFIG_60M_5W_ADJUST) | :soon:                                         | 
-| **40m   5W PWR Adjust**       (                       CONFIG_40M_5W_ADJUST) | :soon:                                         | 
-| **30m   5W PWR Adjust**       (                       CONFIG_30M_5W_ADJUST) | :soon:                                         | 
-| **20m   5W PWR Adjust**       (                       CONFIG_20M_5W_ADJUST) | :soon:                                         | 
-| **17m   5W PWR Adjust**       (                       CONFIG_17M_5W_ADJUST) | :soon:                                         | 
-| **15m   5W PWR Adjust**       (                       CONFIG_15M_5W_ADJUST) | :soon:                                         | 
-| **12m   5W PWR Adjust**       (                       CONFIG_12M_5W_ADJUST) | :soon:                                         | 
-| **10m   5W PWR Adjust**       (                       CONFIG_10M_5W_ADJUST) | :soon:                                         | 
-| **160m  Full PWR Adjust**     (              CONFIG_160M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **80m   Full PWR Adjust**     (               CONFIG_80M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **60m   Full PWR Adjust**     (               CONFIG_60M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **40m   Full PWR Adjust**     (               CONFIG_40M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **30m   Full PWR Adjust**     (               CONFIG_30M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **20m   Full PWR Adjust**     (               CONFIG_20M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **17m   Full PWR Adjust**     (               CONFIG_17M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **15m   Full PWR Adjust**     (               CONFIG_15M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **12m   Full PWR Adjust**     (               CONFIG_12M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **10m   Full PWR Adjust**     (               CONFIG_10M_FULL_POWER_ADJUST) | :soon:                                         | 
-| **160m Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_160M_ADJ) | :soon:                                         | 
-| **80m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_80M_ADJ) | :soon:                                         | 
-| **40m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_40M_ADJ) | :soon:                                         | 
-| **20m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_20M_ADJ) | :soon:                                         | 
-| **15m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_15M_ADJ) | :soon:                                         | 
+| **160m  5W PWR Adjust**       (                      CONFIG_160M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **80m   5W PWR Adjust**       (                       CONFIG_80M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **60m   5W PWR Adjust**       (                       CONFIG_60M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **40m   5W PWR Adjust**       (                       CONFIG_40M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **30m   5W PWR Adjust**       (                       CONFIG_30M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **20m   5W PWR Adjust**       (                       CONFIG_20M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **17m   5W PWR Adjust**       (                       CONFIG_17M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **15m   5W PWR Adjust**       (                       CONFIG_15M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **12m   5W PWR Adjust**       (                       CONFIG_12M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **10m   5W PWR Adjust**       (                       CONFIG_10M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **160m  Full PWR Adjust**     (              CONFIG_160M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **80m   Full PWR Adjust**     (               CONFIG_80M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **60m   Full PWR Adjust**     (               CONFIG_60M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **40m   Full PWR Adjust**     (               CONFIG_40M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **30m   Full PWR Adjust**     (               CONFIG_30M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **20m   Full PWR Adjust**     (               CONFIG_20M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **17m   Full PWR Adjust**     (               CONFIG_17M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **15m   Full PWR Adjust**     (               CONFIG_15M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **12m   Full PWR Adjust**     (               CONFIG_12M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **10m   Full PWR Adjust**     (               CONFIG_10M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **160m Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_160M_ADJ) | Power Meter Adjustment factor for the 160m band power values. See Wiki. | 
+| **80m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_80M_ADJ) | Power Meter Adjustment factor for the 80m band power values. See Wiki. | 
+| **40m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_40M_ADJ) | Power Meter Adjustment factor for the 40m and 60m band power values. See Wiki. | 
+| **20m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_20M_ADJ) | Power Meter Adjustment factor for the 20m and 30m band power values. See Wiki. | 
+| **15m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_15M_ADJ) | Power Meter Adjustment factor for the 10m - 17m bands power values. See Wiki. | 
 
 
 ## System Info (`MENU_SYSINFO`)

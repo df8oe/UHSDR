@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-07T16:27:55  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-08T14:48:57  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.6 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-07T16:27:55  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.6 - Menus Overview\ngenerated at  2017-01-08T14:48:57  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -502,6 +502,11 @@
              shape = record
              ];
         
+        "CONFIG_FWD_REV_PWR_DISP" [
+             label = "CONFIG_FWD_REV_PWR_DISP | Pwr. Display mW"
+             shape = record
+             ];
+        
         "CONFIG_RF_FWD_PWR_NULL" [
              label = "CONFIG_RF_FWD_PWR_NULL | Pwr. Det. Null"
              shape = record
@@ -959,6 +964,8 @@
             MENU_CONF -> CONFIG_VOLTMETER_CALIBRATION
             
             MENU_CONF -> CONFIG_FREQUENCY_CALIBRATE
+            
+            MENU_CONF -> CONFIG_FWD_REV_PWR_DISP
             
             MENU_CONF -> CONFIG_RF_FWD_PWR_NULL
             
