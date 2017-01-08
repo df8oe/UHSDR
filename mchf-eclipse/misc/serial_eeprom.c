@@ -328,9 +328,11 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
     uint8_t ser_eeprom_type = EEPROM_SER_UNKNOWN;
 
     // serial EEPROM init
-    //  Write_24Cxx(0,0xFF,16);     //enable to reset EEPROM and force new copyvirt2ser
     if(SerialEEPROM_24Cxx_Read(0,8) > 0xFF)  // Issue with Ser EEPROM, either not available or other problems
-        ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM available
+	{
+		ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM available
+		mchf_hw_i2c2_reset();
+	}
     else
     {
         if(SerialEEPROM_24Cxx_Read(0,16) != 0xFF)

@@ -549,7 +549,7 @@ int main(void)
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();
-    mchf_hw_i2c2_reset();
+//    mchf_hw_i2c2_reset();
     mchf_hw_i2c2_init();
 
     // temporarily remember the setting until dsp is going to be activated
