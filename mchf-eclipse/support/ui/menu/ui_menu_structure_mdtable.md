@@ -2,18 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-08T17:58:42  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v1.5.7
- - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v1.5.7 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v1.5.7
- - UI Menu Overview
+# mcHF FW v1.5.7 - UI Menu Overview
 
-generated at  2017-01-08T17:58:42  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-08T18:50:46  by "./ui_menu_structure_mdtable.py"
 
 
 

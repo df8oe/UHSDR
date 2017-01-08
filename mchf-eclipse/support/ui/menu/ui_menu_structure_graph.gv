@@ -1,0 +1,1352 @@
+
+#  
+#  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
+#  
+#  generated at  2017-01-08T18:50:44  by "./ui_menu_structure_graph.py"
+#  
+#  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
+#  
+#  (see <http://www.graphviz.org/content/dot-language> )
+#  
+
+    digraph mcHF_menus {
+       
+        graph [ fontsize = 14,
+                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-08T18:50:44  by \"./ui_menu_structure_graph.py\"",
+              ];
+       
+        rankdir=LR
+        nodesep=.05
+       
+        #  -  -  -  -
+
+        "MENU_TOP" [
+            shape = none
+            image = "mcHF-logo.png"
+            label = ""
+        ];
+
+
+        "MENU_BASE" [
+             label = "MENU_BASE | Standard Menu"
+             shape = record
+             ];
+        
+        "MENU_CONF" [
+             label = "MENU_CONF | Configuration Menu"
+             shape = record
+             ];
+        
+        "MENU_DISPLAY" [
+             label = "MENU_DISPLAY | Display Menu"
+             shape = record
+             ];
+        
+        "MENU_CW" [
+             label = "MENU_CW | CW Mode Settings"
+             shape = record
+             ];
+        
+        "MENU_FILTER" [
+             label = "MENU_FILTER | Filter Selection"
+             shape = record
+             ];
+        
+        "MENU_POW" [
+             label = "MENU_POW | PA Configuration"
+             shape = record
+             ];
+        
+        "MENU_SYSINFO" [
+             label = "MENU_SYSINFO | System Info"
+             shape = record
+             ];
+        
+        "MENU_DEBUG" [
+             label = "MENU_DEBUG | Debug/Exper. Settings"
+             shape = record
+             ];
+        
+        "MENU_SSB_AUTO_MODE_SELECT" [
+             label = "MENU_SSB_AUTO_MODE_SELECT | LSB/USB Auto Select"
+             shape = record
+             ];
+        
+        "MENU_DIGI_DISABLE" [
+             label = "MENU_DIGI_DISABLE | Digital Modes"
+             shape = record
+             ];
+        
+        "MENU_CW_DISABLE" [
+             label = "MENU_CW_DISABLE | CW Mode"
+             shape = record
+             ];
+        
+        "MENU_AM_DISABLE" [
+             label = "MENU_AM_DISABLE | AM Mode"
+             shape = record
+             ];
+        
+        "MENU_DEMOD_SAM" [
+             label = "MENU_DEMOD_SAM | SyncAM Mode"
+             shape = record
+             ];
+        
+        "MENU_SAM_PLL_LOCKING_RANGE" [
+             label = "MENU_SAM_PLL_LOCKING_RANGE | SAM PLL locking range"
+             shape = record
+             ];
+        
+        "MENU_SAM_PLL_STEP_RESPONSE" [
+             label = "MENU_SAM_PLL_STEP_RESPONSE | SAM PLL step response"
+             shape = record
+             ];
+        
+        "MENU_SAM_PLL_BANDWIDTH" [
+             label = "MENU_SAM_PLL_BANDWIDTH | SAM PLL bandwidth in Hz"
+             shape = record
+             ];
+        
+        "MENU_FM_MODE_ENABLE" [
+             label = "MENU_FM_MODE_ENABLE | FM Mode"
+             shape = record
+             ];
+        
+        "MENU_FM_GEN_SUBAUDIBLE_TONE" [
+             label = "MENU_FM_GEN_SUBAUDIBLE_TONE | FM Sub Tone Gen"
+             shape = record
+             ];
+        
+        "MENU_FM_DET_SUBAUDIBLE_TONE" [
+             label = "MENU_FM_DET_SUBAUDIBLE_TONE | FM Sub Tone Det"
+             shape = record
+             ];
+        
+        "MENU_FM_TONE_BURST_MODE" [
+             label = "MENU_FM_TONE_BURST_MODE | FM Tone Burst"
+             shape = record
+             ];
+        
+        "MENU_FM_DEV_MODE" [
+             label = "MENU_FM_DEV_MODE | FM Deviation"
+             shape = record
+             ];
+        
+        "MENU_RF_GAIN_ADJ" [
+             label = "MENU_RF_GAIN_ADJ | RF Gain"
+             shape = record
+             ];
+        
+        "MENU_AGC_MODE" [
+             label = "MENU_AGC_MODE | AGC Mode"
+             shape = record
+             ];
+        
+        "MENU_CUSTOM_AGC" [
+             label = "MENU_CUSTOM_AGC | Custom AGC (+=Slower)"
+             shape = record
+             ];
+        
+        "MENU_CODEC_GAIN_MODE" [
+             label = "MENU_CODEC_GAIN_MODE | RX Codec Gain"
+             shape = record
+             ];
+        
+        "MENU_RX_FREQ_CONV" [
+             label = "MENU_RX_FREQ_CONV | RX/TX Freq Xlate"
+             shape = record
+             ];
+        
+        "MENU_MIC_LINE_MODE" [
+             label = "MENU_MIC_LINE_MODE | Mic/Line Select"
+             shape = record
+             ];
+        
+        "MENU_MIC_GAIN" [
+             label = "MENU_MIC_GAIN | Mic Input Gain"
+             shape = record
+             ];
+        
+        "MENU_LINE_GAIN" [
+             label = "MENU_LINE_GAIN | Line Input Gain"
+             shape = record
+             ];
+        
+        "MENU_TX_COMPRESSION_LEVEL" [
+             label = "MENU_TX_COMPRESSION_LEVEL | TX Audio Compress"
+             shape = record
+             ];
+        
+        "MENU_ALC_RELEASE" [
+             label = "MENU_ALC_RELEASE | TX ALC Release Time"
+             shape = record
+             ];
+        
+        "MENU_ALC_POSTFILT_GAIN" [
+             label = "MENU_ALC_POSTFILT_GAIN | TX ALC Input Gain"
+             shape = record
+             ];
+        
+        "MENU_NOISE_BLANKER_SETTING" [
+             label = "MENU_NOISE_BLANKER_SETTING | RX NB Setting"
+             shape = record
+             ];
+        
+        "MENU_DSP_NR_STRENGTH" [
+             label = "MENU_DSP_NR_STRENGTH | DSP NR Strength"
+             shape = record
+             ];
+        
+        "MENU_TCXO_MODE" [
+             label = "MENU_TCXO_MODE | TCXO Off/On/Stop"
+             shape = record
+             ];
+        
+        "MENU_TCXO_C_F" [
+             label = "MENU_TCXO_C_F | TCXO Temp. (C/F)"
+             shape = record
+             ];
+        
+        "MENU_BACKUP_CONFIG" [
+             label = "MENU_BACKUP_CONFIG | Backup Config"
+             shape = record
+             ];
+        
+        "MENU_RESTORE_CONFIG" [
+             label = "MENU_RESTORE_CONFIG | Restore Config"
+             shape = record
+             ];
+        
+        "MENU_RESTART_CODEC" [
+             label = "MENU_RESTART_CODEC | Restart Codec"
+             shape = record
+             ];
+        
+        "CONFIG_LCD_AUTO_OFF_MODE" [
+             label = "CONFIG_LCD_AUTO_OFF_MODE | LCD Auto Blank"
+             shape = record
+             ];
+        
+        "CONFIG_FREQ_STEP_MARKER_LINE" [
+             label = "CONFIG_FREQ_STEP_MARKER_LINE | Step Size Marker"
+             shape = record
+             ];
+        
+        "CONFIG_DISP_FILTER_BANDWIDTH" [
+             label = "CONFIG_DISP_FILTER_BANDWIDTH | Filter BW Display"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_MODE" [
+             label = "MENU_SPECTRUM_MODE | Spectrum Type"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_MAGNIFY" [
+             label = "MENU_SPECTRUM_MAGNIFY | Spectrum Magnify"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_SIZE" [
+             label = "MENU_SPECTRUM_SIZE | Spectrum Size"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_FILTER_STRENGTH" [
+             label = "MENU_SPECTRUM_FILTER_STRENGTH | Spectrum Filter"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_FREQSCALE_COLOUR" [
+             label = "MENU_SPECTRUM_FREQSCALE_COLOUR | Spec FreqScale Colour"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
+             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | Spec Line Colour"
+             shape = record
+             ];
+        
+        "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
+             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE | Spectrum FFT Wind."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_LIGHT_ENABLE" [
+             label = "MENU_SCOPE_LIGHT_ENABLE | Scope Light"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_SPEED" [
+             label = "MENU_SCOPE_SPEED | Scope 1/Speed"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_AGC_ADJUST" [
+             label = "MENU_SCOPE_AGC_ADJUST | Scope AGC Adj."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_TRACE_COLOUR" [
+             label = "MENU_SCOPE_TRACE_COLOUR | Scope Trace Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_GRID_COLOUR" [
+             label = "MENU_SCOPE_GRID_COLOUR | Scope Grid Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_DB_DIVISION" [
+             label = "MENU_SCOPE_DB_DIVISION | Scope Div."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_NOSIG_ADJUST" [
+             label = "MENU_SCOPE_NOSIG_ADJUST | Scope NoSig Adj."
+             shape = record
+             ];
+        
+        "MENU_WFALL_SPEED" [
+             label = "MENU_WFALL_SPEED | Wfall 1/Speed"
+             shape = record
+             ];
+        
+        "MENU_WFALL_COLOR_SCHEME" [
+             label = "MENU_WFALL_COLOR_SCHEME | Wfall Colours"
+             shape = record
+             ];
+        
+        "MENU_WFALL_STEP_SIZE" [
+             label = "MENU_WFALL_STEP_SIZE | Wfall Step Size"
+             shape = record
+             ];
+        
+        "MENU_WFALL_OFFSET" [
+             label = "MENU_WFALL_OFFSET | Wfall Brightness"
+             shape = record
+             ];
+        
+        "MENU_WFALL_CONTRAST" [
+             label = "MENU_WFALL_CONTRAST | Wfall Contrast"
+             shape = record
+             ];
+        
+        "MENU_WFALL_NOSIG_ADJUST" [
+             label = "MENU_WFALL_NOSIG_ADJUST | Wfall NoSig Adj."
+             shape = record
+             ];
+        
+        "MENU_METER_COLOUR_UP" [
+             label = "MENU_METER_COLOUR_UP | Upper Meter Colour"
+             shape = record
+             ];
+        
+        "MENU_METER_COLOUR_DOWN" [
+             label = "MENU_METER_COLOUR_DOWN | Lower Meter Colour"
+             shape = record
+             ];
+        
+        "MENU_DBM_DISPLAY" [
+             label = "MENU_DBM_DISPLAY | dBm display"
+             shape = record
+             ];
+        
+        "MENU_S_METER" [
+             label = "MENU_S_METER | S-Meter"
+             shape = record
+             ];
+        
+        "MENU_KEYER_MODE" [
+             label = "MENU_KEYER_MODE | CW Keyer Mode"
+             shape = record
+             ];
+        
+        "MENU_KEYER_SPEED" [
+             label = "MENU_KEYER_SPEED | CW Keyer Speed"
+             shape = record
+             ];
+        
+        "MENU_SIDETONE_GAIN" [
+             label = "MENU_SIDETONE_GAIN | CW Sidetone Gain"
+             shape = record
+             ];
+        
+        "MENU_SIDETONE_FREQUENCY" [
+             label = "MENU_SIDETONE_FREQUENCY | CW Side/Offset Freq"
+             shape = record
+             ];
+        
+        "MENU_PADDLE_REVERSE" [
+             label = "MENU_PADDLE_REVERSE | CW Paddle Reverse"
+             shape = record
+             ];
+        
+        "MENU_CW_TX_RX_DELAY" [
+             label = "MENU_CW_TX_RX_DELAY | CW TX-\>RX Delay"
+             shape = record
+             ];
+        
+        "MENU_CW_OFFSET_MODE" [
+             label = "MENU_CW_OFFSET_MODE | CW Freq. Offset"
+             shape = record
+             ];
+        
+        "MENU_CW_AUTO_MODE_SELECT" [
+             label = "MENU_CW_AUTO_MODE_SELECT | CW LSB/USB Select"
+             shape = record
+             ];
+        
+        "CONFIG_FREQ_MEM_LIMIT_RELAX" [
+             label = "CONFIG_FREQ_MEM_LIMIT_RELAX | Save Out-Of-Band Freq."
+             shape = record
+             ];
+        
+        "CONFIG_TX_OUT_ENABLE" [
+             label = "CONFIG_TX_OUT_ENABLE | TX on Out-Of-Band Freq."
+             shape = record
+             ];
+        
+        "CONFIG_TX_DISABLE" [
+             label = "CONFIG_TX_DISABLE | Transmit Disable"
+             shape = record
+             ];
+        
+        "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH" [
+             label = "CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH | Menu SW on TX disable"
+             shape = record
+             ];
+        
+        "CONFIG_MUTE_LINE_OUT_TX" [
+             label = "CONFIG_MUTE_LINE_OUT_TX | TX Mute LineOut"
+             shape = record
+             ];
+        
+        "CONFIG_TXRX_SWITCH_AUDIO_MUTE" [
+             label = "CONFIG_TXRX_SWITCH_AUDIO_MUTE | TX Initial Muting Time"
+             shape = record
+             ];
+        
+        "CONFIG_MAX_VOLUME" [
+             label = "CONFIG_MAX_VOLUME | Max Volume"
+             shape = record
+             ];
+        
+        "CONFIG_MAX_RX_GAIN" [
+             label = "CONFIG_MAX_RX_GAIN | Max RX Gain (0=Max)"
+             shape = record
+             ];
+        
+        "CONFIG_BEEP_ENABLE" [
+             label = "CONFIG_BEEP_ENABLE | Key Beep"
+             shape = record
+             ];
+        
+        "CONFIG_BEEP_FREQ" [
+             label = "CONFIG_BEEP_FREQ | Beep Frequency"
+             shape = record
+             ];
+        
+        "CONFIG_BEEP_VOLUME" [
+             label = "CONFIG_BEEP_VOLUME | Beep Volume"
+             shape = record
+             ];
+        
+        "CONFIG_CAT_ENABLE" [
+             label = "CONFIG_CAT_ENABLE | CAT Mode"
+             shape = record
+             ];
+        
+        "CONFIG_CAT_IN_SANDBOX" [
+             label = "CONFIG_CAT_IN_SANDBOX | CAT Running In Sandbox"
+             shape = record
+             ];
+        
+        "CONFIG_CAT_XLAT" [
+             label = "CONFIG_CAT_XLAT | CAT-DIQ-FREQ-XLAT"
+             shape = record
+             ];
+        
+        "CONFIG_XVTR_OFFSET_MULT" [
+             label = "CONFIG_XVTR_OFFSET_MULT | XVTR Offs/Mult"
+             shape = record
+             ];
+        
+        "CONFIG_XVTR_FREQUENCY_OFFSET" [
+             label = "CONFIG_XVTR_FREQUENCY_OFFSET | XVTR Offset"
+             shape = record
+             ];
+        
+        "CONFIG_STEP_SIZE_BUTTON_SWAP" [
+             label = "CONFIG_STEP_SIZE_BUTTON_SWAP | Step Button Swap"
+             shape = record
+             ];
+        
+        "CONFIG_BAND_BUTTON_SWAP" [
+             label = "CONFIG_BAND_BUTTON_SWAP | Band+/- Button Swap"
+             shape = record
+             ];
+        
+        "MENU_REVERSE_TOUCHSCREEN" [
+             label = "MENU_REVERSE_TOUCHSCREEN | Reverse Touchscreen"
+             shape = record
+             ];
+        
+        "CONFIG_VOLTMETER_CALIBRATION" [
+             label = "CONFIG_VOLTMETER_CALIBRATION | Voltmeter Cal."
+             shape = record
+             ];
+        
+        "CONFIG_FREQUENCY_CALIBRATE" [
+             label = "CONFIG_FREQUENCY_CALIBRATE | Freq. Calibrate"
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_PWR_DISP" [
+             label = "CONFIG_FWD_REV_PWR_DISP | Pwr. Display mW"
+             shape = record
+             ];
+        
+        "CONFIG_RF_FWD_PWR_NULL" [
+             label = "CONFIG_RF_FWD_PWR_NULL | Pwr. Det. Null"
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_SENSE_SWAP" [
+             label = "CONFIG_FWD_REV_SENSE_SWAP | SWR/PWR Meter FWD/REV Swap"
+             shape = record
+             ];
+        
+        "CONFIG_80M_RX_IQ_GAIN_BAL" [
+             label = "CONFIG_80M_RX_IQ_GAIN_BAL | RX IQ Balance (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_RX_IQ_PHASE_BAL" [
+             label = "CONFIG_80M_RX_IQ_PHASE_BAL | RX IQ Phase   (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_RX_IQ_GAIN_BAL" [
+             label = "CONFIG_10M_RX_IQ_GAIN_BAL | RX IQ Balance (10m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_RX_IQ_PHASE_BAL" [
+             label = "CONFIG_10M_RX_IQ_PHASE_BAL | RX IQ Phase   (10m)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_80M_TX_IQ_GAIN_BAL | TX IQ Balance (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_80M_TX_IQ_PHASE_BAL | TX IQ Phase   (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_10M_TX_IQ_GAIN_BAL | TX IQ Balance (10m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_10M_TX_IQ_PHASE_BAL | TX IQ Phase   (10m)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (80m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (80m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH" [
+             label = "CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH | DSP NR BufLen"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NR_FFT_NUMTAPS" [
+             label = "CONFIG_DSP_NR_FFT_NUMTAPS | DSP NR FIR NumTaps"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NR_POST_AGC_SELECT" [
+             label = "CONFIG_DSP_NR_POST_AGC_SELECT | DSP NR Post-AGC"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_CONVERGE_RATE" [
+             label = "CONFIG_DSP_NOTCH_CONVERGE_RATE | DSP Notch ConvRate"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH" [
+             label = "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH | DSP Notch BufLen"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_FFT_NUMTAPS" [
+             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS | DSP Notch FIRNumTap"
+             shape = record
+             ];
+        
+        "CONFIG_AGC_TIME_CONSTANT" [
+             label = "CONFIG_AGC_TIME_CONSTANT | NB AGC T/C (\<=Slow)"
+             shape = record
+             ];
+        
+        "CONFIG_RESET_SER_EEPROM" [
+             label = "CONFIG_RESET_SER_EEPROM | Reset Config EEPROM"
+             shape = record
+             ];
+        
+        "CONFIG_TUNE_POWER_LEVEL" [
+             label = "CONFIG_TUNE_POWER_LEVEL | Tune Power Level"
+             shape = record
+             ];
+        
+        "CONFIG_TUNE_TONE_MODE" [
+             label = "CONFIG_TUNE_TONE_MODE | Tune Tone (SSB)"
+             shape = record
+             ];
+        
+        "CONFIG_CW_PA_BIAS" [
+             label = "CONFIG_CW_PA_BIAS | CW PA Bias (If \>0 )"
+             shape = record
+             ];
+        
+        "CONFIG_REDUCE_POWER_ON_LOW_BANDS" [
+             label = "CONFIG_REDUCE_POWER_ON_LOW_BANDS | Reduce Power on Low Bands"
+             shape = record
+             ];
+        
+        "CONFIG_PA_BIAS" [
+             label = "CONFIG_PA_BIAS | PA Bias"
+             shape = record
+             ];
+        
+        "CONFIG_160M_5W_ADJUST" [
+             label = "CONFIG_160M_5W_ADJUST | 160m  5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_80M_5W_ADJUST" [
+             label = "CONFIG_80M_5W_ADJUST | 80m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_60M_5W_ADJUST" [
+             label = "CONFIG_60M_5W_ADJUST | 60m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_40M_5W_ADJUST" [
+             label = "CONFIG_40M_5W_ADJUST | 40m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_30M_5W_ADJUST" [
+             label = "CONFIG_30M_5W_ADJUST | 30m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_20M_5W_ADJUST" [
+             label = "CONFIG_20M_5W_ADJUST | 20m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_17M_5W_ADJUST" [
+             label = "CONFIG_17M_5W_ADJUST | 17m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_15M_5W_ADJUST" [
+             label = "CONFIG_15M_5W_ADJUST | 15m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_12M_5W_ADJUST" [
+             label = "CONFIG_12M_5W_ADJUST | 12m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_10M_5W_ADJUST" [
+             label = "CONFIG_10M_5W_ADJUST | 10m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_160M_FULL_POWER_ADJUST" [
+             label = "CONFIG_160M_FULL_POWER_ADJUST | 160m  Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_80M_FULL_POWER_ADJUST" [
+             label = "CONFIG_80M_FULL_POWER_ADJUST | 80m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_60M_FULL_POWER_ADJUST" [
+             label = "CONFIG_60M_FULL_POWER_ADJUST | 60m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_40M_FULL_POWER_ADJUST" [
+             label = "CONFIG_40M_FULL_POWER_ADJUST | 40m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_30M_FULL_POWER_ADJUST" [
+             label = "CONFIG_30M_FULL_POWER_ADJUST | 30m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_20M_FULL_POWER_ADJUST" [
+             label = "CONFIG_20M_FULL_POWER_ADJUST | 20m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_17M_FULL_POWER_ADJUST" [
+             label = "CONFIG_17M_FULL_POWER_ADJUST | 17m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_15M_FULL_POWER_ADJUST" [
+             label = "CONFIG_15M_FULL_POWER_ADJUST | 15m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_12M_FULL_POWER_ADJUST" [
+             label = "CONFIG_12M_FULL_POWER_ADJUST | 12m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_10M_FULL_POWER_ADJUST" [
+             label = "CONFIG_10M_FULL_POWER_ADJUST | 10m   Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_160M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_160M_ADJ | 160m Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_80M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_80M_ADJ | 80m  Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_40M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_40M_ADJ | 40m  Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_20M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_20M_ADJ | 20m  Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_15M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_15M_ADJ | 15m  Coupling Adj."
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_01" [
+             label = "MENU_FP_SSB_01 | SSB Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_02" [
+             label = "MENU_FP_SSB_02 | SSB Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_03" [
+             label = "MENU_FP_SSB_03 | SSB Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_04" [
+             label = "MENU_FP_SSB_04 | SSB Filter 4"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_01" [
+             label = "MENU_FP_CW_01 | CW Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_02" [
+             label = "MENU_FP_CW_02 | CW Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_03" [
+             label = "MENU_FP_CW_03 | CW Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_04" [
+             label = "MENU_FP_CW_04 | CW Filter 4"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_01" [
+             label = "MENU_FP_AM_01 | AM/SAM Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_02" [
+             label = "MENU_FP_AM_02 | AM/SAM Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_03" [
+             label = "MENU_FP_AM_03 | AM/SAM Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_04" [
+             label = "MENU_FP_AM_04 | AM/SAM Filter 4"
+             shape = record
+             ];
+        
+        "CONFIG_AM_TX_FILTER_DISABLE" [
+             label = "CONFIG_AM_TX_FILTER_DISABLE | AM  TX Audio Filter"
+             shape = record
+             ];
+        
+        "CONFIG_SSB_TX_FILTER" [
+             label = "CONFIG_SSB_TX_FILTER | SSB TX Audio Filter2"
+             shape = record
+             ];
+        
+        "INFO_DISPLAY" [
+             label = "INFO_DISPLAY | Display"
+             shape = record
+             ];
+        
+        "INFO_DISPLAY_CTRL" [
+             label = "INFO_DISPLAY_CTRL | Disp. Controller"
+             shape = record
+             ];
+        
+        "INFO_SI570" [
+             label = "INFO_SI570 | SI570"
+             shape = record
+             ];
+        
+        "INFO_EEPROM" [
+             label = "INFO_EEPROM | EEPROM"
+             shape = record
+             ];
+        
+        "INFO_TP" [
+             label = "INFO_TP | Touchscreen"
+             shape = record
+             ];
+        
+        "INFO_CPU" [
+             label = "INFO_CPU | CPU"
+             shape = record
+             ];
+        
+        "INFO_FLASH" [
+             label = "INFO_FLASH | Flash Size (kB)"
+             shape = record
+             ];
+        
+        "INFO_RAM" [
+             label = "INFO_RAM | RAM Size (kB)"
+             shape = record
+             ];
+        
+        "INFO_FW_VERSION" [
+             label = "INFO_FW_VERSION | Firmware"
+             shape = record
+             ];
+        
+        "INFO_BUILD" [
+             label = "INFO_BUILD | Build"
+             shape = record
+             ];
+        
+        "INFO_BL_VERSION" [
+             label = "INFO_BL_VERSION | Bootloader"
+             shape = record
+             ];
+        
+        "INFO_RFMOD" [
+             label = "INFO_RFMOD | RF Bands Mod"
+             shape = record
+             ];
+        
+        "INFO_VHFUHFMOD" [
+             label = "INFO_VHFUHFMOD | V/UHF Mod"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_TX_AUDIO" [
+             label = "MENU_DEBUG_TX_AUDIO | TX Audio via USB"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_I2C1_SPEED" [
+             label = "MENU_DEBUG_I2C1_SPEED | I2C1 Bus Speed"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_I2C2_SPEED" [
+             label = "MENU_DEBUG_I2C2_SPEED | I2C2 Bus Speed"
+             shape = record
+             ];
+        
+        #  -  -  -  -
+
+        subgraph "MENU_CONF" {
+            label = "MENU_CONF beef.0f.dead.e5e1"
+
+    
+            MENU_CONF -> CONFIG_FREQ_MEM_LIMIT_RELAX
+            
+            MENU_CONF -> CONFIG_TX_OUT_ENABLE
+            
+            MENU_CONF -> CONFIG_TX_DISABLE
+            
+            MENU_CONF -> CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH
+            
+            MENU_CONF -> CONFIG_MUTE_LINE_OUT_TX
+            
+            MENU_CONF -> CONFIG_TXRX_SWITCH_AUDIO_MUTE
+            
+            MENU_CONF -> CONFIG_MAX_VOLUME
+            
+            MENU_CONF -> CONFIG_MAX_RX_GAIN
+            
+            MENU_CONF -> CONFIG_BEEP_ENABLE
+            
+            MENU_CONF -> CONFIG_BEEP_FREQ
+            
+            MENU_CONF -> CONFIG_BEEP_VOLUME
+            
+            MENU_CONF -> CONFIG_CAT_ENABLE
+            
+            MENU_CONF -> CONFIG_CAT_IN_SANDBOX
+            
+            MENU_CONF -> CONFIG_CAT_XLAT
+            
+            MENU_CONF -> CONFIG_XVTR_OFFSET_MULT
+            
+            MENU_CONF -> CONFIG_XVTR_FREQUENCY_OFFSET
+            
+            MENU_CONF -> CONFIG_STEP_SIZE_BUTTON_SWAP
+            
+            MENU_CONF -> CONFIG_BAND_BUTTON_SWAP
+            
+            MENU_CONF -> MENU_REVERSE_TOUCHSCREEN
+            
+            MENU_CONF -> CONFIG_VOLTMETER_CALIBRATION
+            
+            MENU_CONF -> CONFIG_FREQUENCY_CALIBRATE
+            
+            MENU_CONF -> CONFIG_FWD_REV_PWR_DISP
+            
+            MENU_CONF -> CONFIG_RF_FWD_PWR_NULL
+            
+            MENU_CONF -> CONFIG_FWD_REV_SENSE_SWAP
+            
+            MENU_CONF -> CONFIG_80M_RX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_80M_RX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_10M_RX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_10M_RX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_80M_TX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_80M_TX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_10M_TX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_10M_TX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_80M_TX_IQ_GAIN_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH
+            
+            MENU_CONF -> CONFIG_DSP_NR_FFT_NUMTAPS
+            
+            MENU_CONF -> CONFIG_DSP_NR_POST_AGC_SELECT
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_CONVERGE_RATE
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_FFT_NUMTAPS
+            
+            MENU_CONF -> CONFIG_AGC_TIME_CONSTANT
+            
+            MENU_CONF -> CONFIG_RESET_SER_EEPROM
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_FILTER" {
+            label = "MENU_FILTER beef.0f.dead.e5e1"
+
+    
+            MENU_FILTER -> MENU_FP_SSB_01
+            
+            MENU_FILTER -> MENU_FP_SSB_02
+            
+            MENU_FILTER -> MENU_FP_SSB_03
+            
+            MENU_FILTER -> MENU_FP_SSB_04
+            
+            MENU_FILTER -> MENU_FP_CW_01
+            
+            MENU_FILTER -> MENU_FP_CW_02
+            
+            MENU_FILTER -> MENU_FP_CW_03
+            
+            MENU_FILTER -> MENU_FP_CW_04
+            
+            MENU_FILTER -> MENU_FP_AM_01
+            
+            MENU_FILTER -> MENU_FP_AM_02
+            
+            MENU_FILTER -> MENU_FP_AM_03
+            
+            MENU_FILTER -> MENU_FP_AM_04
+            
+            MENU_FILTER -> CONFIG_AM_TX_FILTER_DISABLE
+            
+            MENU_FILTER -> CONFIG_SSB_TX_FILTER
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_BASE" {
+            label = "MENU_BASE beef.0f.dead.e5e1"
+
+    
+            MENU_BASE -> MENU_SSB_AUTO_MODE_SELECT
+            
+            MENU_BASE -> MENU_DIGI_DISABLE
+            
+            MENU_BASE -> MENU_CW_DISABLE
+            
+            MENU_BASE -> MENU_AM_DISABLE
+            
+            MENU_BASE -> MENU_DEMOD_SAM
+            
+            MENU_BASE -> MENU_SAM_PLL_LOCKING_RANGE
+            
+            MENU_BASE -> MENU_SAM_PLL_STEP_RESPONSE
+            
+            MENU_BASE -> MENU_SAM_PLL_BANDWIDTH
+            
+            MENU_BASE -> MENU_FM_MODE_ENABLE
+            
+            MENU_BASE -> MENU_FM_GEN_SUBAUDIBLE_TONE
+            
+            MENU_BASE -> MENU_FM_DET_SUBAUDIBLE_TONE
+            
+            MENU_BASE -> MENU_FM_TONE_BURST_MODE
+            
+            MENU_BASE -> MENU_FM_DEV_MODE
+            
+            MENU_BASE -> MENU_RF_GAIN_ADJ
+            
+            MENU_BASE -> MENU_AGC_MODE
+            
+            MENU_BASE -> MENU_CUSTOM_AGC
+            
+            MENU_BASE -> MENU_CODEC_GAIN_MODE
+            
+            MENU_BASE -> MENU_RX_FREQ_CONV
+            
+            MENU_BASE -> MENU_MIC_LINE_MODE
+            
+            MENU_BASE -> MENU_MIC_GAIN
+            
+            MENU_BASE -> MENU_LINE_GAIN
+            
+            MENU_BASE -> MENU_TX_COMPRESSION_LEVEL
+            
+            MENU_BASE -> MENU_ALC_RELEASE
+            
+            MENU_BASE -> MENU_ALC_POSTFILT_GAIN
+            
+            MENU_BASE -> MENU_NOISE_BLANKER_SETTING
+            
+            MENU_BASE -> MENU_DSP_NR_STRENGTH
+            
+            MENU_BASE -> MENU_TCXO_MODE
+            
+            MENU_BASE -> MENU_TCXO_C_F
+            
+            MENU_BASE -> MENU_BACKUP_CONFIG
+            
+            MENU_BASE -> MENU_RESTORE_CONFIG
+            
+            MENU_BASE -> MENU_RESTART_CODEC
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_TOP" {
+            label = "MENU_TOP beef.0f.dead.e5e1"
+
+    
+            MENU_TOP -> MENU_BASE
+            
+            MENU_TOP -> MENU_CONF
+            
+            MENU_TOP -> MENU_DISPLAY
+            
+            MENU_TOP -> MENU_CW
+            
+            MENU_TOP -> MENU_FILTER
+            
+            MENU_TOP -> MENU_POW
+            
+            MENU_TOP -> MENU_SYSINFO
+            
+            MENU_TOP -> MENU_DEBUG
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_POW" {
+            label = "MENU_POW beef.0f.dead.e5e1"
+
+    
+            MENU_POW -> CONFIG_TUNE_POWER_LEVEL
+            
+            MENU_POW -> CONFIG_TUNE_TONE_MODE
+            
+            MENU_POW -> CONFIG_CW_PA_BIAS
+            
+            MENU_POW -> CONFIG_REDUCE_POWER_ON_LOW_BANDS
+            
+            MENU_POW -> CONFIG_PA_BIAS
+            
+            MENU_POW -> CONFIG_160M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_80M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_60M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_40M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_30M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_20M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_17M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_15M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_12M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_10M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_160M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_80M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_60M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_40M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_30M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_20M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_17M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_15M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_12M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_10M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_160M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_80M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_40M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_20M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_15M_ADJ
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_SYSINFO" {
+            label = "MENU_SYSINFO beef.0f.dead.e5e1"
+
+    
+            MENU_SYSINFO -> INFO_DISPLAY
+            
+            MENU_SYSINFO -> INFO_DISPLAY_CTRL
+            
+            MENU_SYSINFO -> INFO_SI570
+            
+            MENU_SYSINFO -> INFO_EEPROM
+            
+            MENU_SYSINFO -> INFO_TP
+            
+            MENU_SYSINFO -> INFO_CPU
+            
+            MENU_SYSINFO -> INFO_FLASH
+            
+            MENU_SYSINFO -> INFO_RAM
+            
+            MENU_SYSINFO -> INFO_FW_VERSION
+            
+            MENU_SYSINFO -> INFO_BUILD
+            
+            MENU_SYSINFO -> INFO_BL_VERSION
+            
+            MENU_SYSINFO -> INFO_RFMOD
+            
+            MENU_SYSINFO -> INFO_VHFUHFMOD
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_CW" {
+            label = "MENU_CW beef.0f.dead.e5e1"
+
+    
+            MENU_CW -> MENU_KEYER_MODE
+            
+            MENU_CW -> MENU_KEYER_SPEED
+            
+            MENU_CW -> MENU_SIDETONE_GAIN
+            
+            MENU_CW -> MENU_SIDETONE_FREQUENCY
+            
+            MENU_CW -> MENU_PADDLE_REVERSE
+            
+            MENU_CW -> MENU_CW_TX_RX_DELAY
+            
+            MENU_CW -> MENU_CW_OFFSET_MODE
+            
+            MENU_CW -> MENU_CW_AUTO_MODE_SELECT
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_DEBUG" {
+            label = "MENU_DEBUG beef.0f.dead.e5e1"
+
+    
+            MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
+            
+            MENU_DEBUG -> MENU_DEBUG_I2C1_SPEED
+            
+            MENU_DEBUG -> MENU_DEBUG_I2C2_SPEED
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+
+        subgraph "MENU_DISPLAY" {
+            label = "MENU_DISPLAY beef.0f.dead.e5e1"
+
+    
+            MENU_DISPLAY -> CONFIG_LCD_AUTO_OFF_MODE
+            
+            MENU_DISPLAY -> CONFIG_FREQ_STEP_MARKER_LINE
+            
+            MENU_DISPLAY -> CONFIG_DISP_FILTER_BANDWIDTH
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_MODE
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_MAGNIFY
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_SIZE
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_FILTER_STRENGTH
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_FREQSCALE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_CENTER_LINE_COLOUR
+            
+            MENU_DISPLAY -> CONFIG_SPECTRUM_FFT_WINDOW_TYPE
+            
+            MENU_DISPLAY -> MENU_SCOPE_LIGHT_ENABLE
+            
+            MENU_DISPLAY -> MENU_SCOPE_SPEED
+            
+            MENU_DISPLAY -> MENU_SCOPE_AGC_ADJUST
+            
+            MENU_DISPLAY -> MENU_SCOPE_TRACE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_GRID_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_DB_DIVISION
+            
+            MENU_DISPLAY -> MENU_SCOPE_NOSIG_ADJUST
+            
+            MENU_DISPLAY -> MENU_WFALL_SPEED
+            
+            MENU_DISPLAY -> MENU_WFALL_COLOR_SCHEME
+            
+            MENU_DISPLAY -> MENU_WFALL_STEP_SIZE
+            
+            MENU_DISPLAY -> MENU_WFALL_OFFSET
+            
+            MENU_DISPLAY -> MENU_WFALL_CONTRAST
+            
+            MENU_DISPLAY -> MENU_WFALL_NOSIG_ADJUST
+            
+            MENU_DISPLAY -> MENU_METER_COLOUR_UP
+            
+            MENU_DISPLAY -> MENU_METER_COLOUR_DOWN
+            
+            MENU_DISPLAY -> MENU_DBM_DISPLAY
+            
+            MENU_DISPLAY -> MENU_S_METER
+            
+        }  ## END subgraph MENU_DEBUG
+    
+        #  -  -  -  -
+    }
+
+#EOFILE
+
