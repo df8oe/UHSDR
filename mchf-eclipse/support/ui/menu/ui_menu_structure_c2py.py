@@ -44,7 +44,6 @@ with open(MCHF_BASEDIR + r"versions.txt", 'r') as f:
 #print("##DBG## vers_data[1] = {!r}".format(vers_data[1].split(',')))
 
 VERSIONSID = vers_data[1].split(',')[1:]  ## yank the first, empty element
-
 BUILD_ID = VERSIONSID[1]  ## 1 = arbitrarily made selection for <firmware testing>
 
 #print("##DBG## BUILD_ID = '{}'".format(BUILD_ID))
