@@ -43,7 +43,7 @@ CFLAGS  = $(MACHFLAGS)  \
           $(EXTRACFLAGS)
 
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := hardware/mchf_board.h
+PROJECT_VERSION_FILE := mchf_version.h
 $(eval  $(shell  sed -n -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell  sed -n -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell  sed -n -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))

@@ -35,6 +35,7 @@ uint16_t MCHF_I2C_ReadBlock(I2C_TypeDef* bus, uchar I2CAddr,uint8_t* addr_ptr, u
 
 void 	mchf_hw_i2c1_init();
 void 	mchf_hw_i2c1_reset();
+void 	mchf_hw_i2c2_reset();
 
 void    mchf_hw_i2c2_init();
 

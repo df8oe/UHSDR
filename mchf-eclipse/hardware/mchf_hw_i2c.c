@@ -284,6 +284,11 @@ void mchf_hw_i2c1_reset(void)
     MchfHw_I2C_Reset(I2C1);
 }
 
+void mchf_hw_i2c2_reset(void)
+{
+    MchfHw_I2C_Reset(I2C2);
+}
+
 uint16_t mchf_hw_i2c1_WriteRegister(uchar I2CAddr, uchar RegisterAddr, uchar RegisterValue)
 {
     uint16_t res = MCHF_I2C_WriteRegister(I2C1, I2CAddr, &RegisterAddr, 1, RegisterValue);
