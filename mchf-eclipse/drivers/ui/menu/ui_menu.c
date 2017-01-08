@@ -2396,7 +2396,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "  %u", ts.pa_bias);
         break;
-    case CONFIG_FWD_REV_PWR_DISP:   // Enable/disable swap of FWD/REV A/D inputs on power sensor
+    case CONFIG_FWD_REV_PWR_DISP:   // Enable/disable display of FWD/REV A/D inputs on power sensor
         temp_var_u8 = swrm.pwr_meter_disp;
         UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
         swrm.pwr_meter_disp = temp_var_u8;
