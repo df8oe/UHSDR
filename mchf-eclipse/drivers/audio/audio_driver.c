@@ -2807,16 +2807,17 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             // "fade leveler", taken from Warren Pratts� WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
+            if(ads.fade_leveler)
+            {
             dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
             dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
             audio = audio + dc_insert - dc27;
+            }
 
             adb.a_buffer[i] = audio;
 
-
             // determine phase error
             phzerror = atan2f(corr[1], corr[0]);
-
 
 /*            // the following does not work!
 
