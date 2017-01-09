@@ -192,6 +192,7 @@ void RadioManagement_SetDemodMode(uint32_t new_mode);
 void RadioManagement_HandleRxIQSignalCodecGain();
 const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_offset_mode);
 uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry);
+bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode);
 
 
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */

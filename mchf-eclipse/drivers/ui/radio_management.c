@@ -1083,19 +1083,10 @@ uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
                    retval = DEMOD_SAM;
                 break;
             case DEMOD_SAM:
-                if(ads.sam_sideband == 0)
+                ads.sam_sideband ++;
+                if (ads.sam_sideband > SAM_SIDEBAND_MAX)
                 {
-                    ads.sam_sideband = 1;
-                    retval = DEMOD_SAM;
-                }
-                else if(ads.sam_sideband == 1)
-                {
-                    ads.sam_sideband = 2;
-                    retval = DEMOD_SAM;
-                }
-                else //if(ads.sam_sideband == 2)
-                {
-                    ads.sam_sideband = 0;
+                    ads.sam_sideband = SAM_SIDEBAND_BOTH;
                     retval = DEMOD_AM;
                 }
                 break;
@@ -1122,12 +1113,21 @@ uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
     return retval;
 }
 
+
+bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode)
+{
+    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && ads.sam_sideband == 0) || (dmod_mode == DEMOD_FM));
+}
+
 bool RadioManagement_LSBActive(uint16_t dmod_mode)
 {
     bool    is_lsb;
 
     switch(dmod_mode)        // determine if the receiver is set to LSB or USB or FM
     {
+    case DEMOD_SAM:
+        is_lsb = ads.sam_sideband == 1;
+        break;
     case DEMOD_LSB:
         is_lsb = true;      // it is LSB
         break;

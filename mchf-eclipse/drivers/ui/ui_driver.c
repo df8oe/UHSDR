@@ -1816,11 +1816,11 @@ void UiDriver_ShowMode()
         txt = "LSB";
         break;
     case DEMOD_SAM:
-        if(ads.sam_sideband == 1)
+        if(ads.sam_sideband == SAM_SIDEBAND_LSB)
         {
             txt = "SAM-L";
         }
-        else if (ads.sam_sideband == 2)
+        else if (ads.sam_sideband == SAM_SIDEBAND_USB)
         {
             txt = "SAM-U";
         }
@@ -4633,69 +4633,66 @@ void UiDriver_DisplayFilterBW()
     int	lpos;
     uint32_t clr;
 
-    if(ts.menu_mode)	// bail out if in menu mode
-        return;
+    if(ts.menu_mode == 0)
+    {// bail out if in menu mode
+        // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 
+        const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
+        const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
+        offset = path_p->offset;
+        width = filter_p->width;
 
+        if (offset == 0)
+        {
+            offset = width/2;
+        }
 
-    // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
+        calc = IQ_SAMPLE_RATE/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
 
-    const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
-    const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
-    offset = path_p->offset;
-    width = filter_p->width;
+        if(!sd.magnify)	 	// is magnify mode on?
+        {
+            lpos = 130-(AudioDriver_GetTranslateFreq()/187);
+        }
+        else	 	// magnify mode is on
+        {
+            lpos = 130;								// line is alway in center in "magnify" mode
+        }
 
-    if (offset == 0)
-    {
-        offset = width/2;
+        offset /= calc;							// calculate filter center frequency offset in pixels
+        width /= calc;							// calculate width of line in pixels
+
+        if(RadioManagement_UsesBothSidebands(ts.dmod_mode))	 	// special cases - AM, SAM and FM, which are double-sidebanded
+        {
+            lpos -= width;					// line starts "width" below center
+            width *= 2;						// the width is double in AM & SAM, above and below center
+        }
+        else if(RadioManagement_LSBActive(ts.dmod_mode))	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
+        {
+            lpos -= (offset + (width/2));	// if LSB it will be below zero Hz
+        }
+        else				// USB mode
+        {
+            lpos += (offset - (width/2));			// if USB it will be above zero Hz
+        }
+
+        // get color for line
+        UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
+        //	erase old line by clearing whole area
+        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
+
+        if(POS_SPECTRUM_IND_X + lpos < POS_SPECTRUM_IND_X)			// prevents line to leave left border
+        {
+            width = width + lpos;
+            lpos = 0;
+        }
+        if(lpos + width > 256)										// prevents line to leave right border
+        {
+            width = 256 - lpos;
+        }
+
+        // draw line
+        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
     }
-
-    calc = IQ_SAMPLE_RATE/((1 << sd.magnify) * FILT_DISPLAY_WIDTH);		// magnify mode is on
-
-    if(!sd.magnify)	 	// is magnify mode on?
-    {
-        lpos = 130-(AudioDriver_GetTranslateFreq()/187);
-    }
-    else	 	// magnify mode is on
-    {
-        lpos = 130;								// line is alway in center in "magnify" mode
-    }
-
-    offset /= calc;							// calculate filter center frequency offset in pixels
-    width /= calc;							// calculate width of line in pixels
-
-    if((ts.dmod_mode == DEMOD_AM) ||(ts.dmod_mode == DEMOD_SAM) || (ts.dmod_mode == DEMOD_FM))	 	// special cases - AM, SAM and FM, which are double-sidebanded
-    {
-        lpos -= width;					// line starts "width" below center
-        width *= 2;						// the width is double in AM & SAM, above and below center
-    }
-    else if(RadioManagement_LSBActive(ts.dmod_mode))	// not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
-    {
-        lpos -= (offset + (width/2));	// if LSB it will be below zero Hz
-    }
-    else				// USB mode
-    {
-        lpos += (offset - (width/2));			// if USB it will be above zero Hz
-    }
-
-    // get color for line
-    UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
-    //	erase old line by clearing whole area
-    UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), 256, LCD_DIR_HORIZONTAL, Black);
-
-    if(POS_SPECTRUM_IND_X + lpos < POS_SPECTRUM_IND_X)			// prevents line to leave left border
-    {
-        width = width + lpos;
-        lpos = 0;
-    }
-    if(lpos + width > 256)										// prevents line to leave right border
-	{
-	    width = 256 - lpos;
-	}
-
-    // draw line
-    UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
-
 }
 //
 //
