@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-10T07:41:18  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-10T13:00:15  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.7 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.7 - UI Menu Overview
 
-generated at  2017-01-10T07:41:18  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-10T13:00:15  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -79,7 +79,7 @@ generated at  2017-01-10T07:41:18  by "./ui_menu_structure_mdtable.py"
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Select 1Hz step size and measure TX frequency and adjust until both match. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
-| **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when â€œDisp. Pwr (mW)â€�, is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
+| **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
 | **RX IQ Balance (80m)**       (                  CONFIG_80M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
 | **RX IQ Phase   (80m)**       (                 CONFIG_80M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
@@ -127,8 +127,8 @@ generated at  2017-01-10T07:41:18  by "./ui_menu_structure_mdtable.py"
 | **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
-| **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | :soon:                                         | 
-| **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | :soon:                                         | 
+| **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | Set to input level which waterfall uses for lowest level | 
+| **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | Adjust to fit your personal input level range to displayable color range for waterfall | 
 | **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | Set NO SIGNAL state for waterfall              | 
 | **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
