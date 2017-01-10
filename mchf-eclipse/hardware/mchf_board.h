@@ -482,8 +482,8 @@ extern const ButtonMap  bm[BUTTON_NUM];
 #define DEMOD_LSB				1
 #define DEMOD_CW				2
 #define DEMOD_AM				3
-#define	DEMOD_FM				4
-#define	DEMOD_SAM				5
+#define	DEMOD_SAM				4
+#define	DEMOD_FM				5
 #define DEMOD_DIGI				6
 #define DEMOD_MAX_MODE			6
 
