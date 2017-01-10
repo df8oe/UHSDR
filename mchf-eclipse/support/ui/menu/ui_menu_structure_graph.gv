@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-08T19:28:19  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-10T07:41:15  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-08T19:28:19  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-10T07:41:15  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -104,6 +104,11 @@
         
         "MENU_SAM_PLL_BANDWIDTH" [
              label = "MENU_SAM_PLL_BANDWIDTH | SAM PLL bandwidth in Hz"
+             shape = record
+             ];
+        
+        "MENU_SAM_FADE_LEVELER" [
+             label = "MENU_SAM_FADE_LEVELER | SAM Fade Leveler"
              shape = record
              ];
         
@@ -1070,6 +1075,8 @@
             MENU_BASE -> MENU_SAM_PLL_STEP_RESPONSE
             
             MENU_BASE -> MENU_SAM_PLL_BANDWIDTH
+            
+            MENU_BASE -> MENU_SAM_FADE_LEVELER
             
             MENU_BASE -> MENU_FM_MODE_ENABLE
             
