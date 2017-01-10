@@ -2711,11 +2711,11 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 	//*****************************
 		static float32_t Sin = 0.0;
 		static float32_t Cos = 0.0;
-		static float32_t phzerror = 0.1;
-		static float32_t phs = 0.1;
+		static float32_t phzerror = 0.0;
+		static float32_t phs = 0.0;
 		static float32_t fil_out = 0.0;
 		static float32_t del_out = 0.0;
-		static float32_t omega2 = 0.01;
+		static float32_t omega2 = 0.0;
 		static float32_t dc27 = 0.0;
 		static float32_t dc_insert = 0.0;
 		static uint16_t  count = 0;
@@ -2807,16 +2807,17 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             // "fade leveler", taken from Warren Pratts� WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
+            if(ads.fade_leveler)
+            {
             dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
             dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
             audio = audio + dc_insert - dc27;
+            }
 
             adb.a_buffer[i] = audio;
 
-
             // determine phase error
             phzerror = atan2f(corr[1], corr[0]);
-
 
 /*            // the following does not work!
 
@@ -2873,7 +2874,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             while (phs < 0.0) phs += (2.0 * PI);
         }
         count++;
-        if(count > 40) // to display the exact carrier frequency that the PLL is tuned to
+        if(count > 50) // to display the exact carrier frequency that the PLL is tuned to
 //        if(0)
         // in the small frequency display
             // we calculate carrier offset here and the display function is

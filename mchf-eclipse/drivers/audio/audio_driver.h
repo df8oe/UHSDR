@@ -188,10 +188,11 @@ typedef struct AudioDriverState
     int                     zeta_int; // zeta * 100
     int                     omegaN_int;
     uint8_t                 sam_sideband; // 0 = both, 1 = LSB, 2 = USB
-#define SAM_SIDEBAND_BOTH 0
-#define SAM_SIDEBAND_LSB 1
-#define SAM_SIDEBAND_USB 2
-#define SAM_SIDEBAND_MAX (SAM_SIDEBAND_USB)
+    uint8_t                 fade_leveler;
+    #define SAM_SIDEBAND_BOTH 0
+    #define SAM_SIDEBAND_LSB 1
+    #define SAM_SIDEBAND_USB 2
+    #define SAM_SIDEBAND_MAX (SAM_SIDEBAND_USB)
 //    int                     tauR_int;
 //    int                     tauI_int;
 
