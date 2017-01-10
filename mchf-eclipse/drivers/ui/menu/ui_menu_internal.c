@@ -501,6 +501,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
                         UiMenu_UpdateMenuEntry(menu[idx].entryItem, 0, idx);
                     }
                 }
+                ts.menu_var = 0;
             }
 
             UiMenu_DisplayValue(
