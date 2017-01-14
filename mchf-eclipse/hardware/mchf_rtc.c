@@ -28,7 +28,7 @@ static void RTC_LSE_Config() {
     RTC_WriteProtectionCmd(DISABLE);
     RTC_WaitForSynchro();
     RTC_WriteProtectionCmd(ENABLE);
-    RTC_WriteBackupRegister(RTC_PRESENCE_REG, RTC_PRESENCE_INIT_VAL);
+    RTC_WriteBackupRegister(RTC_PRESENCE_REG, RTC_PRESENCE_OK_VAL);
 }
 
 #if 0
@@ -61,31 +61,33 @@ bool MchfRtc_enabled()
     if (status == RTC_PRESENCE_INIT_VAL || status == RTC_PRESENCE_OK_VAL) {
         if (status == RTC_PRESENCE_INIT_VAL)
         {
-            RTC_WriteProtectionCmd(DISABLE);
-            RTC_WaitForSynchro();
-            RTC_WriteProtectionCmd(ENABLE);
-            RTC_WriteBackupRegister(RTC_PRESENCE_REG,RTC_PRESENCE_OK_VAL);
+            // ok, there is a battery, so let us now start the oscillator
+            RTC_LSE_Config();
+
+            // very first start of rtc
+            RTC_InitTypeDef rtc_init;
+
+            rtc_init.RTC_HourFormat = RTC_HourFormat_24;
+            // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
+            // rtc_init.RTC_AsynchPrediv = 123;   // 117; // 111; // 47; // 54; // 128 -1 = 127;
+            // rtc_init.RTC_SynchPrediv =  234;   // 246; // 606; // 547; // 250 -1 = 249;
+            // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
+             rtc_init.RTC_AsynchPrediv = 127; // 32768 = 128 * 256
+             rtc_init.RTC_SynchPrediv =  255;
+
+            RTC_Init(&rtc_init);
         }
+
         RTC_ClearITPendingBit(RTC_IT_WUT);
         EXTI->PR = 0x00400000;
         retval = true;
         // get date/time
+
+
     } else {
-        RTC_LSE_Config();
-
-        // very first start of rtc
-        RTC_InitTypeDef rtc_init;
-
-        rtc_init.RTC_HourFormat = RTC_HourFormat_24;
-        // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
-        // rtc_init.RTC_AsynchPrediv = 123;   // 117; // 111; // 47; // 54; // 128 -1 = 127;
-        // rtc_init.RTC_SynchPrediv =  234;   // 246; // 606; // 547; // 250 -1 = 249;
-        // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
-         rtc_init.RTC_AsynchPrediv = 127; // 32768 = 128 * 256
-         rtc_init.RTC_SynchPrediv =  255;
-
-        RTC_Init(&rtc_init);
-
+        // if we find the RTC_PRESENCE_INIT_VAL in the backup register next time we boot
+        // we know there is a battery present.
+        RTC_WriteBackupRegister(RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
         retval = false;
     }
 #endif
