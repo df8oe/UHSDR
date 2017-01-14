@@ -31,6 +31,11 @@ typedef struct DialFrequency
     int     temp_factor;
     bool    temp_factor_changed;
     uchar   temp_enabled;
+#define TCXO_MODE_MASK 0x0f
+#define TCXO_UNIT_MASK 0xf0
+#define TCXO_UNIT_C 0x00
+#define TCXO_UNIT_F 0xf0
+
 
     // Virtual segments
     uint8_t dial_digits[9];
@@ -44,6 +49,30 @@ typedef struct DialFrequency
 extern __IO DialFrequency               df;
 
 
+inline uint8_t RadioManagement_TcxoGetMode()
+{
+    return (df.temp_enabled & TCXO_MODE_MASK);
+}
+inline void RadioManagement_TcxoSetMode(uint8_t mode)
+{
+    df.temp_enabled = (df.temp_enabled & ~TCXO_MODE_MASK) | (mode & TCXO_MODE_MASK) ;
+}
+
+inline bool RadioManagement_TcxoIsEnabled()
+{
+    return (RadioManagement_TcxoGetMode())!= TCXO_OFF;
+}
+
+inline void RadioManagement_TcxoSetUnit(uint8_t unit)
+{
+    df.temp_enabled = (df.temp_enabled & ~TCXO_UNIT_MASK) | (unit & TCXO_UNIT_MASK);
+}
+
+inline bool RadioManagement_TcxoIsFahrenheit()
+{
+    return (df.temp_enabled & TCXO_UNIT_MASK) == TCXO_UNIT_F;
+}
+
 // LO temperature compensation
 typedef struct LoTcxo
 {
@@ -55,7 +84,7 @@ typedef struct LoTcxo
 
     int32_t temp;
 
-    bool    sensor_absent;
+    bool    sensor_present;
     bool    lo_error;
     int   last;
 

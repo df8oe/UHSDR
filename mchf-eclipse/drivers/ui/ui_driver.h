@@ -273,7 +273,7 @@ typedef struct PowerMeter
 void 	UiDriver_Init(void);
 void 	UiDriver_MainHandler(void);
 
-void 	UiDriver_CreateTemperatureDisplay(uchar enabled,uchar create);
+void 	UiDriver_CreateTemperatureDisplay();
 void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void    UiDriver_RefreshEncoderDisplay();

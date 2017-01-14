@@ -20,6 +20,7 @@
 
 // serial EEPROM driver
 #include "mchf_hw_i2c.h"
+#include "mchf_rtc.h"
 
 // Audio Driver
 #include "audio_driver.h"
@@ -448,8 +449,6 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 }
 
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : MiscInit
 //* Object              :
@@ -494,6 +493,7 @@ static void wd_reset(void)
  */
 #include "Trace.h"
 
+
 // Power on
 int main(void)
 {
@@ -524,6 +524,12 @@ int main(void)
     test_call_cpp();
 #endif
 
+    ts.rtc_present = MchfRtc_enabled();
+    if (ts.rtc_present)
+    {
+        bm = &bm_sets[1][0];
+    }
+
     // HW init
     mchf_board_init();
 
@@ -534,6 +540,7 @@ int main(void)
 
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
+
 
     // Show logo & HW Info
     UiDriver_ShowStartUpScreen(100);

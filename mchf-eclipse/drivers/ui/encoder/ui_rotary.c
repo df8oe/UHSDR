@@ -22,6 +22,94 @@
 // Encoder 1-4 Array
 __IO EncoderSelection		encSel[4];
 
+typedef struct
+{
+ GPIO_TypeDef* pio;
+ uint16_t pin;
+ uint8_t source;
+ uint8_t af;
+} pin_t;
+
+
+typedef struct  {
+    TIM_TypeDef* tim;
+    pin_t pin[2];
+
+} encoder_io_t;
+
+const encoder_io_t encoderIO[4] =
+{
+        {
+                .tim = TIM3,
+                .pin =
+                {
+                    { ENC_ONE_CH1_PIO, ENC_ONE_CH1, ENC_ONE_CH1_SOURCE, GPIO_AF_TIM3 } ,
+                    { ENC_ONE_CH2_PIO, ENC_ONE_CH2, ENC_ONE_CH2_SOURCE, GPIO_AF_TIM3 }
+                }
+        },
+        {
+                .tim = TIM4,
+                .pin =
+                {
+                    { ENC_TWO_CH1_PIO, ENC_TWO_CH1, ENC_TWO_CH1_SOURCE, GPIO_AF_TIM4 } ,
+                    { ENC_TWO_CH2_PIO, ENC_TWO_CH2, ENC_TWO_CH2_SOURCE, GPIO_AF_TIM4 }
+                }
+        },
+        {
+                .tim = TIM5,
+                .pin =
+                {
+                    { ENC_THREE_CH1_PIO, ENC_THREE_CH1, ENC_THREE_CH1_SOURCE, GPIO_AF_TIM5 } ,
+                    { ENC_THREE_CH2_PIO, ENC_THREE_CH2, ENC_THREE_CH2_SOURCE, GPIO_AF_TIM5 }
+                }
+        },
+        {
+                .tim = TIM8,
+                .pin =
+                {
+                    { FREQ_ENC_CH1_PIO, FREQ_ENC_CH1, FREQ_ENC_CH1_SOURCE, GPIO_AF_TIM8 } ,
+                    { FREQ_ENC_CH2_PIO, FREQ_ENC_CH2, FREQ_ENC_CH2_SOURCE, GPIO_AF_TIM8 }
+                }
+        }
+};
+
+void UiRotaryEncoderInit(uint8_t id)
+{
+    const encoder_io_t* encIO = &encoderIO[id];
+    // Init encoder one
+    encSel[id].value_old      = 0;
+    encSel[id].value_new          = ENCODER_RANGE;
+    encSel[id].de_detent          = 0;
+    encSel[id].tim                = encIO->tim;
+
+    TIM_TimeBaseInitTypeDef     TIM_TimeBaseStructure;
+    GPIO_InitTypeDef            GPIO_InitStructure;
+
+    GPIO_StructInit(&GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+
+    for (uint32_t pinIdx = 0; pinIdx < 2; pinIdx++)
+    {
+    GPIO_InitStructure.GPIO_Pin = encIO->pin[pinIdx].pin;
+    GPIO_Init(encIO->pin[pinIdx].pio, &GPIO_InitStructure);
+    GPIO_PinAFConfig(encIO->pin[pinIdx].pio, encIO->pin[pinIdx].source, encIO->pin[pinIdx].af);
+    }
+
+    TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2); // range + 3 + 3
+    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+
+    TIM_EncoderInterfaceConfig(encIO->tim,TIM_EncoderMode_TI12,TIM_ICPolarity_Falling,TIM_ICPolarity_Falling);
+
+    TIM_TimeBaseInit(encIO->tim, &TIM_TimeBaseStructure);
+    TIM_Cmd(encIO->tim, ENABLE);
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiRotaryFreqEncoderInit
 //* Object              :
@@ -31,41 +119,8 @@ __IO EncoderSelection		encSel[4];
 //*----------------------------------------------------------------------------
 void UiRotaryFreqEncoderInit(void)
 {
-    // Init encoder one
-    encSel[ENCFREQ].value_old 		= 0;
-    encSel[ENCFREQ].value_new			= ENCODER_RANGE;
-    encSel[ENCFREQ].de_detent			= 0;
-    encSel[ENCFREQ].tim 				= TIM8;
-
-    TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
-    GPIO_InitTypeDef 			GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-
-    GPIO_InitStructure.GPIO_Pin = FREQ_ENC_CH1;
-    GPIO_Init(FREQ_ENC_CH1_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = FREQ_ENC_CH2;
-    GPIO_Init(FREQ_ENC_CH2_PIO, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(FREQ_ENC_CH1_PIO, FREQ_ENC_CH1_SOURCE, GPIO_AF_TIM8);
-    GPIO_PinAFConfig(FREQ_ENC_CH2_PIO, FREQ_ENC_CH2_SOURCE, GPIO_AF_TIM8);
-
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
-
-    TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
-    TIM_EncoderInterfaceConfig(TIM8,TIM_EncoderMode_TI12,TIM_ICPolarity_Falling,TIM_ICPolarity_Falling);
-
-    TIM_TimeBaseInit(TIM8, &TIM_TimeBaseStructure);
-    TIM_Cmd(TIM8, ENABLE);
+    UiRotaryEncoderInit(ENCFREQ);
 }
 
 //*----------------------------------------------------------------------------
@@ -77,42 +132,8 @@ void UiRotaryFreqEncoderInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderOneInit(void)
 {
-    // Init encoder one
-    encSel[ENC1].value_old 		= 0;
-    encSel[ENC1].value_new			= ENCODER_RANGE;
-    encSel[ENC1].de_detent			= 0;
-    encSel[ENC1].tim 				= TIM3;
-
-
-    TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
-    GPIO_InitTypeDef 			GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-
-    GPIO_InitStructure.GPIO_Pin = ENC_ONE_CH1;
-    GPIO_Init(ENC_ONE_CH1_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = ENC_ONE_CH2;
-    GPIO_Init(ENC_ONE_CH2_PIO, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(ENC_ONE_CH1_PIO, ENC_ONE_CH1_SOURCE, GPIO_AF_TIM3);
-    GPIO_PinAFConfig(ENC_ONE_CH2_PIO, ENC_ONE_CH2_SOURCE, GPIO_AF_TIM3);
-
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-
-    TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
-    TIM_EncoderInterfaceConfig(TIM3,TIM_EncoderMode_TI12,TIM_ICPolarity_Falling,TIM_ICPolarity_Falling);
-
-    TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
-    TIM_Cmd(TIM3, ENABLE);
+    UiRotaryEncoderInit(ENC1);
 }
 
 //*----------------------------------------------------------------------------
@@ -124,42 +145,8 @@ void UiRotaryEncoderOneInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderTwoInit(void)
 {
-    // Init encoder two
-    encSel[ENC2].value_old 		= 0;
-    encSel[ENC2].value_new			= ENCODER_RANGE;
-    encSel[ENC2].de_detent			= 0;
-    encSel[ENC2].tim 				= TIM4;
-
-
-    TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
-    GPIO_InitTypeDef 			GPIO_InitStructure;
-
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-
-    GPIO_InitStructure.GPIO_Pin = ENC_TWO_CH1;
-    GPIO_Init(ENC_TWO_CH1_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = ENC_TWO_CH2;
-    GPIO_Init(ENC_TWO_CH2_PIO, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(ENC_TWO_CH1_PIO, ENC_TWO_CH1_SOURCE, GPIO_AF_TIM4);
-    GPIO_PinAFConfig(ENC_TWO_CH2_PIO, ENC_TWO_CH2_SOURCE, GPIO_AF_TIM4);
-
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-
-    TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
-    TIM_EncoderInterfaceConfig(TIM4,TIM_EncoderMode_TI12,TIM_ICPolarity_Falling,TIM_ICPolarity_Falling);
-
-    TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-    TIM_Cmd(TIM4, ENABLE);
-
-
+    UiRotaryEncoderInit(ENC2);
 }
 
 //*----------------------------------------------------------------------------
@@ -171,41 +158,8 @@ void UiRotaryEncoderTwoInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderThreeInit(void)
 {
-    // Init encoder three
-    encSel[ENC3].value_old 		= 0;
-    encSel[ENC3].value_new			= ENCODER_RANGE;
-    encSel[ENC3].de_detent			= 0;
-    encSel[ENC3].tim 				= TIM5;
-
-    TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
-    GPIO_InitTypeDef 			GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-
-    GPIO_InitStructure.GPIO_Pin = ENC_THREE_CH1;
-    GPIO_Init(ENC_THREE_CH1_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = ENC_THREE_CH2;
-    GPIO_Init(ENC_THREE_CH2_PIO, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(ENC_THREE_CH1_PIO, ENC_THREE_CH1_SOURCE, GPIO_AF_TIM5);
-    GPIO_PinAFConfig(ENC_THREE_CH2_PIO, ENC_THREE_CH2_SOURCE, GPIO_AF_TIM5);
-
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
-
-    TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2);	// range + 3 + 3
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
-    TIM_EncoderInterfaceConfig(TIM5,TIM_EncoderMode_TI12,TIM_ICPolarity_Falling,TIM_ICPolarity_Falling);
-
-    TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
-    TIM_Cmd(TIM5, ENABLE);
+    UiRotaryEncoderInit(ENC3);
 }
 
 

@@ -850,7 +850,10 @@ uint8_t RadioManagement_GetBand(ulong freq)
 
 
 
-
+/*
+ * @brief measure local oscillator temperature and calculates compensation value
+ * @return true if the temperature value has been measured
+ */
 bool RadioManagement_HandleLoTemperatureDrift()
 {
     int32_t temp = 0;
@@ -858,21 +861,17 @@ bool RadioManagement_HandleLoTemperatureDrift()
     float   dtemp, remain, t_index;
     uchar   tblp;
 
-    uint8_t temp_enabled = df.temp_enabled & 0x0f;
+    uint8_t temp_mode = RadioManagement_TcxoGetMode();
 
     bool retval = false;
 
-    // No need to process if no chip avail or updates are disabled
-    if((lo.sensor_absent == false) &&(temp_enabled != TCXO_STOP))
+    // No need to process if no chip avail or tcxo is disabled
+    if((lo.sensor_present == true) && RadioManagement_TcxoIsEnabled())
     {
-        // lo.skip++;
-        // if(lo.skip >= LO_COMP_SKP)
         {
-            // lo.skip = 0;
             // Get current temperature
             if(Si570_ReadExternalTempSensor(&temp) == 0)
             {
-
                 // Get temperature from sensor with its maximum precision
                 dtemp = (float)temp;    // get temperature
                 dtemp /= 10000;         // convert to decimal degrees
@@ -880,7 +879,7 @@ bool RadioManagement_HandleLoTemperatureDrift()
                 remain = dtemp - remain;    // get fractional portion
 
                 // Compensate only if enabled
-                if((temp_enabled == TCXO_ON))
+                if((temp_mode == TCXO_ON))
                 {
                     // Temperature to unsigned table pointer
                     t_index  = (uchar)((temp%1000000)/100000);
