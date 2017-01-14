@@ -36,7 +36,7 @@
 
 // use the STM32 internal RTC with an external quartz and
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
-// #define USE_RTC_LSE
+#define USE_RTC_LSE
 
 // HW libs
 #include "stm32f4xx_rcc.h"
@@ -293,7 +293,6 @@
 #define BUTTON_PWR_SOURCE		GPIO_PinSource13
 #define BUTTON_PWR_PIO       	GPIOC
 // pin 14
-#ifndef USE_RTC_LSE
 #define BUTTON_M1				GPIO_Pin_14
 #define BUTTON_M1_SOURCE		GPIO_PinSource14
 #define BUTTON_M1_PIO       	GPIOC
@@ -301,16 +300,15 @@
 #define BUTTON_F3				GPIO_Pin_15
 #define BUTTON_F3_SOURCE		GPIO_PinSource15
 #define BUTTON_F3_PIO       	GPIOC
-#else
-#define BUTTON_M1               GPIO_Pin_14
-#define BUTTON_M1_SOURCE        GPIO_PinSource14
-#define BUTTON_M1_PIO           GPIOD
-// pin 15
-#define BUTTON_F3               GPIO_Pin_15
-#define BUTTON_F3_SOURCE        GPIO_PinSource15
-#define BUTTON_F3_PIO           GPIOD
 
-#endif
+#define BUTTON_M1_RTC               GPIO_Pin_14
+#define BUTTON_M1_SOURCE        GPIO_PinSource14
+#define BUTTON_M1_PIO_RTC           GPIOD
+// pin 15
+#define BUTTON_F3_RTC               GPIO_Pin_15
+#define BUTTON_F3_SOURCE_RTC        GPIO_PinSource15
+#define BUTTON_F3_PIO_RTC           GPIOD
+
 //
 // -----------------------------------------------------------------------------
 // ---- 						PORT D										----
@@ -484,7 +482,8 @@ enum
     BUTTON_NUM // How many buttons we have defined
 };
 
-extern const ButtonMap  bm[BUTTON_NUM];
+extern const ButtonMap*  bm;
+extern const ButtonMap  bm_sets[2][BUTTON_NUM];
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
