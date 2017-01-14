@@ -104,10 +104,9 @@ static void     UiDriver_HandleVoltage();
 #if 0
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 #endif
-void 			UiDriver_CreateTemperatureDisplay(uchar enabled,uchar create);
 static void     UiDriver_CreateVoltageDisplay();
 
-static void 	UiDriver_RefreshTemperatureDisplay(uchar enabled,int temp);
+static void 	UiDriver_RefreshTemperatureDisplay(int temp);
 static void 	UiDriver_HandleLoTemperature();
 
 static void 	UiDriver_CreateMainFreqDisplay();
@@ -882,7 +881,7 @@ void UiDriver_Init()
     sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
     // Temp sensor setup
-    lo.sensor_absent = Si570_InitExternalTempSensor();
+    lo.sensor_present = Si570_InitExternalTempSensor() == 0;
 
     // Read SI570 settings
     lo.lo_error = 0 != Si570_ResetConfiguration();
@@ -2094,14 +2093,7 @@ static void UiDriver_CreateDesktop()
     UiDriver_CreateVoltageDisplay();
 
     // Create temperature
-    if((lo.sensor_absent == 0) && (df.temp_enabled & 0x0f))
-    {
-        UiDriver_CreateTemperatureDisplay(1,1);
-    }
-    else
-    {
-        UiDriver_CreateTemperatureDisplay(0,1);
-    }
+    UiDriver_CreateTemperatureDisplay();
 
     // Set correct frequency
     UiDriver_FrequencyUpdateLOandDisplay(true);
@@ -5096,89 +5088,78 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
  * @param create set to true in order to draw the static parts of the UI too.
  * @param enabled set to true in order to enable actual display of temperature
  */
-void UiDriver_CreateTemperatureDisplay(uchar enabled,uchar create)
+#define POS_TEMP_IND_X_DATA (POS_TEMP_IND_X + 43)
+void UiDriver_CreateTemperatureDisplay()
 {
-    const char *label, *txt, *value_str = NULL;
+    const char *label, *txt;
     uint32_t label_color, txt_color;
+
+    bool enabled = lo.sensor_present == true && RadioManagement_TcxoIsEnabled();
 
     label = "TCXO";
     label_color = Black;
-    txt = "*";
-    txt_color = enabled?Red:Grey;
 
-    if(create)
+    // Top part - name and temperature display
+    UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,13,109,Grey);
+
+    if (enabled)
     {
-        // Top part - name and temperature display
-        UiLcdHy28_DrawEmptyRect( POS_TEMP_IND_X,POS_TEMP_IND_Y,13,109,Grey);
-        value_str = (df.temp_enabled & 0xf0)?"  --.-F":"  --.-C";
+        txt = RadioManagement_TcxoIsFahrenheit()?"*---.-F":"*---.-C";
+        txt_color = Grey;
     }
-
-    if((df.temp_enabled & 0x0f) == TCXO_STOP)	 	// if temperature update is disabled, don't update display!
+    else
     {
-        txt = " ";
-        value_str = "STOPPED";
+        if (lo.sensor_present == false)
+        {
+            txt = "SENSOR!";
+            txt_color = Red;
+        }
+        else
+        {
+            txt = "*  OFF ";
+            txt_color = Grey;
+        }
     }
 
     // Label
     UiLcdHy28_PrintText((POS_TEMP_IND_X + 1), (POS_TEMP_IND_Y + 1),label,label_color,Grey,0);
     // Lock Indicator
-    UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), txt,txt_color,Black,0);	// show/delete asterisk
-    // Show Initial Temp Value or "STOPPED"
-    if (value_str)
-    {
-        UiLcdHy28_PrintText((POS_TEMP_IND_X + 50),(POS_TEMP_IND_Y + 1), value_str,Grey,Black,0);
-    }
+    UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1), txt,txt_color,Black,0);	// show base string
 }
 
-// FIXME: This can be simplified, see FreqDisplay Code
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateTemperatureDisplay
-//* Object              : refresh ui
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriver_RefreshTemperatureDisplay(uchar enabled,int temp)
+/**
+ * @brief display measured temperature and current state of TCXO
+ * @param temp in tenth of degrees Celsius (10 == 1 degree C)
+ */
+static void UiDriver_RefreshTemperatureDisplay(int temp)
 {
-    uint8_t temp_enabled = df.temp_enabled & 0x0f;
-    bool is_fahrenheit = (df.temp_enabled & 0xf0) != false;
+    uint32_t clr =  RadioManagement_TcxoGetMode() ==TCXO_ON ? Blue:Red;
 
-    if((temp_enabled) == TCXO_STOP)	 	// if temperature update is disabled, don't update display!
-    {
-        UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1), " ",Grey,Black,0);	// delete asterisk
-        UiLcdHy28_PrintText((POS_TEMP_IND_X + 49),(POS_TEMP_IND_Y + 1), "STOPPED",Grey,Black,0);
-    }
-    else
-    {
-        uint32_t clr = temp_enabled==TCXO_ON?Blue:Red;
-        UiLcdHy28_PrintText((POS_TEMP_IND_X + 45),(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
+    UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
 
-        if((temp < 0) || (temp > 1000))	 // is the temperature out of range?
+    if (temp != lo.last)
+    {
+        char out[10];
+        char* txt_ptr;
+        if((temp < 0) || (temp > 1000))  // is the temperature out of range?
         {
-            UiLcdHy28_PrintText((POS_TEMP_IND_X + 49 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),"---.-",Grey,Black,0);
+            txt_ptr = "RANGE!";
         }
-        else if (temp != lo.last)
-        {
+        else {
             lo.last = temp;
-            char out[10];
 
             int32_t ttemp = lo.last;
-            if(is_fahrenheit)
+            if(RadioManagement_TcxoIsFahrenheit())
             {
-                ttemp *= 9;			// multiply by 1.8
-                ttemp /= 5;
-                ttemp += 320;	// Add 32 degrees
+                ttemp = ((ttemp *9)/5) + 320;			// multiply by 1.8 and add 32 degrees
             }
             snprintf(out,10,"%3ld.%1ld",ttemp/10,(ttemp)%10);
-            UiLcdHy28_PrintText((POS_TEMP_IND_X + 49 + SMALL_FONT_WIDTH*1),(POS_TEMP_IND_Y + 1),out,Grey,Black,0);
+            txt_ptr = out;
         }
+        UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA + SMALL_FONT_WIDTH*1,(POS_TEMP_IND_Y + 1),txt_ptr,Grey,Black,0);
     }
 }
 
-/*
- * @brief measure local oscillator temperature and calculates compensation value
- * @return true if the temperature value has been measured
- */
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverHandleLoTemperature
 //* Object              : display LO temperature and compensate drift
@@ -5190,7 +5171,7 @@ static void UiDriver_HandleLoTemperature()
 {
     if (RadioManagement_HandleLoTemperatureDrift())
     {
-        UiDriver_RefreshTemperatureDisplay(1,lo.temp/1000); // precision is 0.1 represent by lowest digit
+        UiDriver_RefreshTemperatureDisplay(lo.temp/1000); // precision is 0.1 represent by lowest digit
     }
 }
 
@@ -5909,6 +5890,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
 typedef enum {
     SCTimer_ENCODER_KEYS =0, // 10ms
+    SCTimer_RTC, // 100 * 10ms
     SCTimer_LODRIFT, // 64 * 10ms
     SCTimer_VOLTAGE, // 8 * 10ms
     SCTimer_SMETER, // 4 * 10ms
@@ -6030,15 +6012,26 @@ void UiDriver_MainHandler()
             if (UiDriver_TimerExpireAndRewind(SCTimer_LODRIFT,now,64))
             {
                 UiDriver_HandleLoTemperature();
-                ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
 #if 1
+                ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
+
                 uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
-                snprintf(str,10,"Load%3u%%",(unsigned int)load);
-                UiLcdHy28_PrintText(0,80,str,White,Black,0);
+                snprintf(str,20,"Load%3u%%",(unsigned int)load);
+                UiLcdHy28_PrintText(0,79,str,White,Black,0);
 #endif
-
+            }
+            if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,100))
+            {
+                if (ts.rtc_present)
+                {
+                    RTC_TimeTypeDef rtc;
+                    RTC_GetTime(RTC_Format_BIN, &rtc);
+                    char str[20];
+                    snprintf(str,20,"Time %2u:%02u:%02u",rtc.RTC_Hours,rtc.RTC_Minutes,rtc.RTC_Seconds);
+                    UiLcdHy28_PrintText(0,90,str,White,Black,0);
+                }
             }
             break;
         case STATE_TASK_CHECK:

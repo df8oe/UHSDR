@@ -20,6 +20,7 @@
 
 // serial EEPROM driver
 #include "mchf_hw_i2c.h"
+#include "mchf_rtc.h"
 
 // Audio Driver
 #include "audio_driver.h"
@@ -448,8 +449,6 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 }
 
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : MiscInit
 //* Object              :
@@ -493,6 +492,7 @@ static void wd_reset(void)
 }
  */
 #include "Trace.h"
+
 
 // Power on
 int main(void)
@@ -576,6 +576,8 @@ int main(void)
     {
         cat_driver_init();
     }
+
+    ts.rtc_present = MchfRtc_enabled();
 
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();

@@ -332,6 +332,8 @@
     <File name="drivers/audio/filters/iir_8k5_hpf_fm_squelch.c" path="drivers/audio/filters/iir_8k5_hpf_fm_squelch.c" type="1"/>
     <File name="drivers/freedv/golaydectable.h" path="drivers/freedv/golaydectable.h" type="1"/>
     <File name="hardware/mchf_hw_i2c.c" path="hardware/mchf_hw_i2c.c" type="1"/>
+    <File name="hardware/mchf_rtc.c" path="hardware/mchf_rtc.c" type="1"/>
+    <File name="hardware/mchf_rtc.h" path="hardware/mchf_rtc.h" type="1"/>
     <File name="cmsis_lib/source/stm32f4xx_exti.c" path="cmsis_lib/source/stm32f4xx_exti.c" type="1"/>
     <File name="drivers/freedv/bpf.h" path="drivers/freedv/bpf.h" type="1"/>
     <File name="usb/otg/inc/usb_regs.h" path="usb/otg/inc/usb_regs.h" type="1"/>

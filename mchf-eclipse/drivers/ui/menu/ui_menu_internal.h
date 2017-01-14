@@ -205,6 +205,9 @@ enum
     MENU_DEBUG_I2C1_SPEED,
     MENU_DEBUG_I2C2_SPEED,
     //
+    CONFIG_RTC_HOUR,
+    CONFIG_RTC_MIN,
+    CONFIG_RTC_SEC,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 

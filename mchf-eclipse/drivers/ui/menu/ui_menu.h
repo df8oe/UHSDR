@@ -55,6 +55,7 @@ enum MENU_INFO_ITEM
     INFO_FW_VERSION,
     INFO_BL_VERSION,
     INFO_BUILD,
+    INFO_RTC
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);

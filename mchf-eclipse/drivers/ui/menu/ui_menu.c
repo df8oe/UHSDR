@@ -532,6 +532,12 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
     }
     break;
+    case INFO_RTC:
+    {
+        snprintf(out,32, "%s", ts.rtc_present?"Yes":"N/A");
+
+    }
+    break;
     default:
         outs = "NO INFO";
     }
@@ -1536,7 +1542,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
           break;
     }
     case MENU_TCXO_MODE:    // TCXO On/Off
-        temp_var_u8 = (df.temp_enabled & 0x0f);     // get current setting without upper nibble
+        temp_var_u8 = RadioManagement_TcxoGetMode();     // get current setting without upper nibble
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
                                               0,
                                               TCXO_TEMP_STATE_MAX,
@@ -1544,50 +1550,34 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               1
                                              );
 
-        if(lo.sensor_absent)            // no sensor present
+        if(lo.sensor_present == false)            // no sensor present
         {
             temp_var_u8 = TCXO_OFF; // force TCXO disabled
         }
 
-        df.temp_enabled = temp_var_u8 | (df.temp_enabled & 0xf0);   // overlay new temperature setting with old status of upper nibble
+        RadioManagement_TcxoSetMode(temp_var_u8);   // overlay new temperature setting with old status of upper nibble
+        if(var_change)
+        {
+            UiDriver_CreateTemperatureDisplay();
+        }
 
         switch(temp_var_u8) {
         case TCXO_OFF:
             txt_ptr = " OFF";
-            if(var_change)
-            {
-                UiDriver_CreateTemperatureDisplay(0,1);
-            }
             break;
         case TCXO_ON:
             txt_ptr = "  ON";
-            if(var_change)
-            {
-                Si570_InitExternalTempSensor();
-                UiDriver_CreateTemperatureDisplay(1,1);
-            }
             break;
         case TCXO_STOP:
             txt_ptr = "STOP";
-            if(var_change)
-            {
-                UiDriver_CreateTemperatureDisplay(0,1);
-            }
             break;
         }
         break;
 
     case MENU_TCXO_C_F: // TCXO display C/F mode
-        if(df.temp_enabled & 0xf0)  // Yes - Is Fahrenheit mode enabled?
-        {
-            temp_var_u8 = 1;    // yes - set to 1
-        }
-        else
-        {
-            temp_var_u8 = 0;    // no - Celsius
-        }
+        temp_var_u8 = (RadioManagement_TcxoIsFahrenheit() == true) ? 1 : 0;  // Yes - Is Fahrenheit mode enabled?
 
-        if((df.temp_enabled & 0x0f) != TCXO_STOP)       // is temperature display enabled at all?
+        if(RadioManagement_TcxoIsEnabled())       // is temperature display enabled at all?
         {
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
                     0,
@@ -1595,15 +1585,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                     0,
                     1
             );
-
-            if(temp_var_u8)                 // Fahrenheit mode?
-            {
-                df.temp_enabled |= 0xf0;    // set upper nybble
-            }
-            else
-            {// Celsius mode?
-                df.temp_enabled &= 0x0f;    // clear upper nybble
-            }
+            RadioManagement_TcxoSetUnit(temp_var_u8 != 0? TCXO_UNIT_F: TCXO_UNIT_C);
         }
         else
         {
@@ -1611,7 +1593,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         if(var_change)      // update screen if a change was made
         {
-            UiDriver_CreateTemperatureDisplay(1,1);
+            UiDriver_CreateTemperatureDisplay();
         }
 
         txt_ptr =temp_var_u8?"F":"C";
@@ -3099,6 +3081,56 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, " %3ukHz",(unsigned int)(ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 );
         break;
 
+    case CONFIG_RTC_HOUR:
+    {
+        RTC_TimeTypeDef rtc;
+        RTC_GetTime(RTC_Format_BIN, &rtc);
+
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Hours,
+                                              0,
+                                              23,
+                                              0,
+                                              1);
+        if(var_change)      // did something change?
+        {
+            RTC_SetTime(RTC_Format_BIN, &rtc);
+        }
+        snprintf(options,32, "  %2u", rtc.RTC_Hours);
+        break;
+    }
+    case CONFIG_RTC_MIN:
+    {
+        RTC_TimeTypeDef rtc;
+        RTC_GetTime(RTC_Format_BIN, &rtc);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Minutes,
+                                              0,
+                                              59,
+                                              0,
+                                              1);
+        if(var_change)      // did something change?
+        {
+            RTC_SetTime(RTC_Format_BIN, &rtc);
+        }
+        snprintf(options,32, "  %2u", rtc.RTC_Minutes);
+        break;
+    }
+    case CONFIG_RTC_SEC:
+    {
+        RTC_TimeTypeDef rtc;
+        RTC_GetTime(RTC_Format_BIN, &rtc);
+
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Seconds,
+                                              0,
+                                              59,
+                                              0,
+                                              1);
+        if(var_change)      // did something change?
+        {
+            RTC_SetTime(RTC_Format_BIN, &rtc);
+        }
+        snprintf(options,32, "  %2u", rtc.RTC_Seconds);
+        break;
+    }
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
