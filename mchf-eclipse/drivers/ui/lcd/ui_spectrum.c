@@ -1361,12 +1361,49 @@ void UiSpectrum_RedrawSpectrumDisplay()
     }
 }
 
+static void UiSpectrum_DisplayDbm()
+{
+    // TODO: Move to UI Driver
+    bool display_something = false;
+    if( ts.txrx_mode == TRX_MODE_RX)
+    {
+        long val;
+        const char* unit_label;
+
+        switch(ts.display_dbm)
+        {
+        case DISPLAY_S_METER_DBM:
+            display_something = true;
+            val = sm.dbm;
+            unit_label = "dBm   ";
+            break;
+        case DISPLAY_S_METER_DBMHZ:
+            display_something = true;
+            val = sm.dbmhz;
+            unit_label = "dBm/Hz";
+            break;
+        }
+
+        if (display_something == true) {
+            char txt[12];
+            snprintf(txt,12,"%4ld%s", val, unit_label);
+            UiLcdHy28_PrintTextCentered(161,64,SMALL_FONT_WIDTH * 11,txt,White,Blue,0);
+        }
+    }
+
+    // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
+    if (display_something == false)
+    {
+        UiLcdHy28_DrawFullRect(161, 64, 15, SMALL_FONT_WIDTH * 11 , Black);
+    }
+}
+
 static void UiSpectrum_CalculateDBm()
 {
     //###########################################################################################################################################
     //###########################################################################################################################################
     // dBm/Hz-display DD4WH June, 9th 2016
-    // this will be renewed every 200ms
+    // this will be rensewed every 200ms
     // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
     // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
     // so the additional processor load and additional RAM usage should be close to zero
@@ -1374,14 +1411,10 @@ static void UiSpectrum_CalculateDBm()
     //
 
     // FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
-
-
     if(ts.sysclock > ts.dBm_count + 19)
     {
         if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
-            char txt[12];
-
             float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
             float32_t cons = -225; //- 227.0;
             float32_t  Lbin, Ubin;
@@ -1550,29 +1583,11 @@ static void UiSpectrum_CalculateDBm()
             //        long dbm_Hz = (long) m_AverageMag;
             sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
             sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
-
-            // TODO: Move to UI Driver
-            if (ts.display_dbm == DISPLAY_S_METER_DBM)
-            {
-                snprintf(txt,12,"%4lddBm   ", (long)m_AverageMagdbm);
-            }
-            else if (ts.display_dbm == DISPLAY_S_METER_DBMHZ)
-            {
-                snprintf(txt,12,"%4lddBm/Hz", (long)m_AverageMagdbmhz);
-            }
-            UiLcdHy28_PrintTextCentered(161,64,SMALL_FONT_WIDTH * 11,txt,White,Blue,0);
-
-            //            snprintf(txt,12,"%4ld bins", (long)(Ubin-Lbin));
-            // TODO: make coordinates constant variables
-        }
-        else if (ts.display_dbm == DISPLAY_S_METER_STD)
-        {
-                UiLcdHy28_DrawFullRect(162, 64, 15, SMALL_FONT_WIDTH * 10 , Black);
         }
         ts.dBm_count = ts.sysclock;				// reset timer
+        UiSpectrum_DisplayDbm();
     }
 }
-
 
 // function builds text which is displayed above waterfall/scope area
 void UiGet_Wfscope_Bar_Text(char* wfbartext)
