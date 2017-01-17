@@ -13,5 +13,6 @@
 #define HARDWARE_MCHF_RTC_H_
 
 bool MchfRtc_enabled();
+void MchfRtc_FullReset();
 
 #endif /* HARDWARE_MCHF_RTC_H_ */

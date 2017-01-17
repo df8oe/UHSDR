@@ -31,6 +31,12 @@ static void RTC_LSE_Config() {
     RTC_WriteBackupRegister(RTC_PRESENCE_REG, RTC_PRESENCE_OK_VAL);
 }
 
+void MchfRtc_FullReset() {
+    RCC_BackupResetCmd(ENABLE);
+}
+
+
+
 #if 0
 static void RTC_LSI_Config() {
     RCC_LSICmd(ENABLE);

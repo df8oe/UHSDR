@@ -332,6 +332,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_HOUR, &ts.rtc_present,"RTC Hour", UiMenuDesc("Sets the Real Time Clock Hour. Needs HW Modifications.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_MIN, &ts.rtc_present,"RTC Min", UiMenuDesc("Sets the Real Time Clock Minutes. Needs HW Modifications.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_SEC, &ts.rtc_present,"RTC Seconds", UiMenuDesc("Sets the Real Time Clock Seconds. Needs HW Modifications.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_RESET, &ts.rtc_present,"RTC Reset", UiMenuDesc("Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completeted") },
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
