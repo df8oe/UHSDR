@@ -712,7 +712,10 @@ enum
 //
 //
 #define	TX_POWER_FACTOR_MIN		3		// Minimum power factor setting (3 = 0.03)
-#define	TX_POWER_FACTOR_MAX		85		// Maximum power factor setting (75 = 0.75)
+#define TX_POWER_FACTOR_MAX_INTERNAL 55 // we limit power factor  to 55 (.55) . This limit is independent of the possible scale factor 4 for the power factor
+#define	TX_POWER_FACTOR_MAX		(TX_POWER_FACTOR_MAX_INTERNAL*4)		// Please keep in mind that this is only a setting value maximum. Depending on the flags this reduced by 4 before further use.
+                                        //And the true maximum is defined above in TX_POWER_FACTOR_MAX_INTERNAL
+
 //
 // Default power factors for 5 watt and FULL settings in percent
 // These power factors are based on the original fixed values
@@ -1099,6 +1102,7 @@ typedef struct TransceiverState
 #define FLAGS2_KEY_BEEP_ENABLE 			0x04    // 1 if key/button beep is enabled
 #define FLAGS2_LOW_BAND_BIAS_REDUCE 	0x08    // 1 if bias values for lower bands  below 8Mhz have lower influence factor
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
+#define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
 
     uint32_t	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.

@@ -765,10 +765,21 @@ void RadioManagement_SetBandPowerFactor(uchar band)
         break;
     }
 
+    if (((df.tune_new < 8000000 * TUNE_MULT) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))
+        || ((df.tune_new >= 8000000 * TUNE_MULT) && (ts.flags2 & FLAGS2_HIGH_BAND_BIAS_REDUCE)))
+        // reduction for frequencies < 8 MHz
+    {
+        pf_temp = pf_temp / 4;
+    };
+
+    // limit hard limit for power factor since it otherwise may overdrive the PA section
+    if (pf_temp > TX_POWER_FACTOR_MAX_INTERNAL/100)
+    {
+        pf_temp = TX_POWER_FACTOR_MAX_INTERNAL/100;
+    }
+
     ts.tx_power_factor *= pf_temp;  // rescale this for the actual power level
 
-    if((df.tune_new < 8000000 * 4) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))        // reduction for frequencies < 8 MHz
-        ts.tx_power_factor = ts.tx_power_factor / 4;
 }
 
 

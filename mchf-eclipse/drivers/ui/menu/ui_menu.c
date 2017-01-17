@@ -2640,7 +2640,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_23CM_FULL_POWER_ADJUST:     // 23cm 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
         break;
-    case CONFIG_REDUCE_POWER_ON_LOW_BANDS:  // Step size button swap on/off
+    case CONFIG_REDUCE_POWER_ON_LOW_BANDS:
         temp_var_u8 = ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
         if(var_change)
@@ -2649,6 +2649,17 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 ts.flags2 |= FLAGS2_LOW_BAND_BIAS_REDUCE;
             else
                 ts.flags2 &= ~FLAGS2_LOW_BAND_BIAS_REDUCE;
+        }
+        break;
+    case CONFIG_REDUCE_POWER_ON_HIGH_BANDS:
+        temp_var_u8 = ts.flags2 & FLAGS2_HIGH_BAND_BIAS_REDUCE;
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+            if(temp_var_u8)
+                ts.flags2 |= FLAGS2_HIGH_BAND_BIAS_REDUCE;
+            else
+                ts.flags2 &= ~FLAGS2_HIGH_BAND_BIAS_REDUCE;
         }
         break;
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
