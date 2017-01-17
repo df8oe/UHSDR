@@ -32,6 +32,7 @@
 #include "ui_lcd_hy28.h" // for colors!
 
 #include "mchf_hw_i2c.h"
+#include "mchf_rtc.h"
 
 // Codec control
 #include "codec.h"
@@ -3131,6 +3132,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %2u", rtc.RTC_Seconds);
         break;
     }
+    case CONFIG_RTC_RESET:
+        txt_ptr = "Do it!";
+        clr = White;
+        if(var>=1)
+        {
+            MchfRtc_FullReset();
+            txt_ptr = " Done!";
+            clr = Green;
+        }
+        break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

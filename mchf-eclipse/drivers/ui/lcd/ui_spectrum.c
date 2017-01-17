@@ -1386,15 +1386,16 @@ static void UiSpectrum_DisplayDbm()
 
         if (display_something == true) {
             char txt[12];
-            snprintf(txt,12,"%4ld%s", val, unit_label);
-            UiLcdHy28_PrintTextCentered(161,64,SMALL_FONT_WIDTH * 11,txt,White,Blue,0);
+            snprintf(txt,12,"%4ld      ", val);
+            UiLcdHy28_PrintText(161,64,txt,White,Blue,0);
+            UiLcdHy28_PrintText(161+SMALL_FONT_WIDTH * 4,64,unit_label,White,Blue,4);
         }
     }
 
     // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
     if (display_something == false)
     {
-        UiLcdHy28_DrawFullRect(161, 64, 15, SMALL_FONT_WIDTH * 11 , Black);
+        UiLcdHy28_DrawFullRect(161, 64, 15, SMALL_FONT_WIDTH * 10 , Black);
     }
 }
 
