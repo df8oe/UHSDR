@@ -560,8 +560,8 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
-                                              TX_POWER_FACTOR_MAX,
-                                              bandInfo[band_mode].default_pf,
+                                              RadioManagement_IsPowerFactorReduce(df.tune_old/TUNE_MULT)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
+                                              TX_POWER_FACTOR_MIN,
                                               1
                                              );
 
@@ -569,7 +569,9 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
         {
             RadioManagement_SetBandPowerFactor(ts.band);	// yes, update the power factor
             if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
+            {
                 Codec_TxSidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
+            }
         }
     }
     else	// not enabled
