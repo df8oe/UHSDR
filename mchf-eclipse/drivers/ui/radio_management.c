@@ -714,6 +714,16 @@ void RadioManagement_SetHWFiltersForFrequency(ulong freq)
     }
 }
 
+/**
+ * @brief shall the stored power factor be interpreted as coarse or fine (4*resolution of coarse)
+ * @param freq in Hertz
+ */
+bool RadioManagement_IsPowerFactorReduce(uint32_t freq)
+{
+    return (((freq < 8000000) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))
+        || ((freq >= 8000000) && (ts.flags2 & FLAGS2_HIGH_BAND_BIAS_REDUCE))) != 0;
+
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverSetBandPowerFactor
@@ -727,59 +737,52 @@ void RadioManagement_SetHWFiltersForFrequency(ulong freq)
 
 void RadioManagement_SetBandPowerFactor(uchar band)
 {
-    float   pf_temp;    // used as a holder for percentage of power output scaling
+    float32_t   pf_bandvalue, pf_levelscale;    // used as a holder for percentage of power output scaling
 
+    // FIXME: This code needs fixing, the hack for TX Outside should at least reduce power factor for lower bands
     if (band >= MAX_BANDS)
     {
         if(ts.flags1 & FLAGS1_TX_OUTSIDE_BANDS)
         {               // TX outside bands **very dirty hack**: I use constant for power
-          pf_temp = 12; // because no factor is known outside bands
+          pf_bandvalue = 12; // because no factor is known outside bands
         }               // I never will use this function (DF8OE)
         else
         {
-          pf_temp = 3; // use very low value in case of wrong call to this function
+          pf_bandvalue = 3; // use very low value in case of wrong call to this function
         }
     }
     else
     {
-        pf_temp = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
+        pf_bandvalue = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
     }
-    //
-    ts.tx_power_factor = pf_temp/100;   // preliminarily scale to percent, which is the default for 5 watts
+
+    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old/TUNE_MULT)? 400: 100;
+
 
     // now rescale to power levels <5 watts, is so-configured
-
     switch(ts.power_level)
     {
     case    PA_LEVEL_0_5W:
-        pf_temp = 0.316;        // rescale for 10% of 5 watts (0.5 watts)
+        pf_levelscale = 0.316;        // rescale for 10% of 5 watts (0.5 watts)
         break;
     case    PA_LEVEL_1W:
-        pf_temp = 0.447;        // rescale for 20% of 5 watts (1.0 watts)
+        pf_levelscale = 0.447;        // rescale for 20% of 5 watts (1.0 watts)
         break;
     case    PA_LEVEL_2W:
-        pf_temp = 0.6324;       // rescale for 40% of 5 watts (2 watts)
+        pf_levelscale = 0.6324;       // rescale for 40% of 5 watts (2 watts)
         break;
     default:                    // 100% is 5 watts or full power!!
-        pf_temp = 1;
+        pf_levelscale = 1;
         break;
     }
 
-    if (((df.tune_new < 8000000 * TUNE_MULT) && (ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE))
-        || ((df.tune_new >= 8000000 * TUNE_MULT) && (ts.flags2 & FLAGS2_HIGH_BAND_BIAS_REDUCE)))
-        // reduction for frequencies < 8 MHz
-    {
-        pf_temp = pf_temp / 4;
-    };
+
+    float32_t power_factor = pf_levelscale * pf_bandvalue;  // rescale this for the actual power level
 
     // limit hard limit for power factor since it otherwise may overdrive the PA section
-    if (pf_temp > TX_POWER_FACTOR_MAX_INTERNAL/100)
-    {
-        pf_temp = TX_POWER_FACTOR_MAX_INTERNAL/100;
-    }
-
-    ts.tx_power_factor *= pf_temp;  // rescale this for the actual power level
-
+    ts.tx_power_factor =
+            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL/100) ?
+            TX_POWER_FACTOR_MAX_INTERNAL/100 : power_factor;
 }
 
 
