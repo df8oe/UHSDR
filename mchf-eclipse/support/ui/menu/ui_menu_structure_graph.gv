@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-17T20:06:26  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-18T08:57:22  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-17T20:06:26  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-18T08:57:22  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -642,6 +642,11 @@
              shape = record
              ];
         
+        "CONFIG_REDUCE_POWER_ON_HIGH_BANDS" [
+             label = "CONFIG_REDUCE_POWER_ON_HIGH_BANDS | Reduce Power on High Bands"
+             shape = record
+             ];
+        
         "CONFIG_PA_BIAS" [
              label = "CONFIG_PA_BIAS | PA Bias"
              shape = record
@@ -1168,6 +1173,8 @@
             MENU_POW -> CONFIG_CW_PA_BIAS
             
             MENU_POW -> CONFIG_REDUCE_POWER_ON_LOW_BANDS
+            
+            MENU_POW -> CONFIG_REDUCE_POWER_ON_HIGH_BANDS
             
             MENU_POW -> CONFIG_PA_BIAS
             
