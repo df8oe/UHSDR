@@ -781,8 +781,8 @@ void RadioManagement_SetBandPowerFactor(uchar band)
 
     // limit hard limit for power factor since it otherwise may overdrive the PA section
     ts.tx_power_factor =
-            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL/100) ?
-            TX_POWER_FACTOR_MAX_INTERNAL/100 : power_factor;
+            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
+            TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
 }
 
 

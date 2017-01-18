@@ -712,8 +712,8 @@ enum
 //
 //
 #define	TX_POWER_FACTOR_MIN		3		// Minimum power factor setting (3 = 0.03)
-#define TX_POWER_FACTOR_MAX_INTERNAL 55 // we limit power factor  to 55 (.55) . This limit is independent of the possible scale factor 4 for the power factor
-#define	TX_POWER_FACTOR_MAX		(TX_POWER_FACTOR_MAX_INTERNAL*4)		// Please keep in mind that this is only a setting value maximum. Depending on the flags this reduced by 4 before further use.
+#define TX_POWER_FACTOR_MAX_INTERNAL 0.55 // we limit power factor  to 55 (.55) . This limit is independent of the possible scale factor 4 for the power factor
+#define	TX_POWER_FACTOR_MAX		(TX_POWER_FACTOR_MAX_INTERNAL*400.0)		// Please keep in mind that this is only a setting value maximum. Depending on the flags this reduced by 4 before further use.
                                         //And the true maximum is defined above in TX_POWER_FACTOR_MAX_INTERNAL
 
 //
