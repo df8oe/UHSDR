@@ -524,12 +524,6 @@ int main(void)
     test_call_cpp();
 #endif
 
-    ts.rtc_present = MchfRtc_enabled();
-    if (ts.rtc_present)
-    {
-        bm = &bm_sets[1][0];
-    }
-
     // HW init
     mchf_board_init();
 

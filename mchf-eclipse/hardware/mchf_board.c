@@ -154,7 +154,7 @@ const ButtonMap bm_sets[2][18] =
 const ButtonMap* bm = &bm_sets[0][0];
 
 
-static void mchf_board_keypad_init(void)
+static void mchf_board_keypad_init(ButtonMap* bm)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -675,9 +675,6 @@ void mchf_board_init(void)
     // LED init
     mchf_board_led_init();
 
-    // Init keypad hw
-    mchf_board_keypad_init();
-
     // Touchscreen Init
     mchf_board_touchscreen_init();
 
@@ -695,6 +692,22 @@ void mchf_board_init(void)
     ts.display_type = UiLcdHy28_Init();
     // we could now implement some error strategy if no display is present
     // i.e. 0 is returned
+
+
+    ts.rtc_present = MchfRtc_enabled();
+
+    // we need to find out which keyboard layout before we init the GPIOs to use it.
+    // at this point we have to have called the display init and the rtc init
+    // in order to know which one to use.
+    // parallel display never has a STM32 based rtc, so we do not need to check for RTC
+    if ((ts.display_type == DISPLAY_HY28A_SPI || ts.display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
+    {
+        bm = &bm_sets[1][0];
+    }
+
+    // Init keypad hw based on button map bm
+    mchf_board_keypad_init(bm);
+
 
     // Encoders init
     UiRotaryFreqEncoderInit();
