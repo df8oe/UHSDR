@@ -3670,7 +3670,8 @@ static void UiDriver_CheckEncoderOne()
             {
                 // Convert to Audio Gain incr/decr
                 ts.st_gain = change_and_limit_uint(ts.st_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
-                UiDriver_DisplaySidetoneGain(1);
+                Codec_TxSidetoneSetgain(ts.txrx_mode);
+                UiDriver_DisplaySidetoneGain(true);
             }
             else	 		// In voice mode - adjust audio compression level
             {
