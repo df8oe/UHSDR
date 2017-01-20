@@ -332,7 +332,7 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
             vcalc = log10f(vcalc);	// get the log
             vcalc *= 10;			// convert to deciBels and calibrate for the per-step value of the codec
 
-            float vcalc1 = 6.0 *(float)ts.st_gain;
+            float vcalc1 = 6.0 *((float)ts.st_gain-5);
             // get the sidetone gain (level) setting
             // offset by # of dB the desired sidetone gain
 

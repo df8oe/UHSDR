@@ -1129,7 +1129,7 @@ typedef struct TransceiverState
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
     uchar	waterfall_color_scheme;			// stores waterfall color scheme
     uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
-    ulong	waterfall_offset;			// offset for waterfall display
+    int32_t	waterfall_offset;			// offset for waterfall display
     ulong	waterfall_contrast;			// contrast setting for waterfall display
     uchar	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
     uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
