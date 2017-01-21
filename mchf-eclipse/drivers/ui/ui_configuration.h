@@ -46,7 +46,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 // Configuration Value Definitions Follow
 //
 //
-#define SIDETONE_MAX_GAIN   10      // Maximum sidetone gain
+#define SIDETONE_MAX_GAIN   15      // Maximum sidetone gain
 #define DEFAULT_SIDETONE_GAIN   5   // Default sidetone gain
 //
 #define MIN_KEYER_SPEED     5       // Minimum keyer speed
