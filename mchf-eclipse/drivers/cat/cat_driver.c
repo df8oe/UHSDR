@@ -184,12 +184,216 @@ uint8_t cat_driver_has_data()
     return len < 0?len+CAT_BUFFER_SIZE:len;
 }
 
+// based on CHIRP ft817.py, gcc needs reversal of allocations inside 8bit
+typedef struct {
+    u8  mode:3,
+    unknown1:3,
+    tag_default:1,
+    tag_on_off:1;
+
+    u8 freq_range:3,
+    is_fm_narrow:1,
+    is_cwdig_narrow:1,
+    is_duplex:1,
+    duplex:2;
+
+    u8 unknown3:4,
+    att:1,
+    ipo:1,
+    unknown2:1,
+    skip:1;
+
+    u8  fm_step:3,
+        am_step:3,
+        ssb_step:2;
+
+    u8 tmode:2,
+    unknown4:6;
+
+    u8 tx_freq_range:3,
+    tx_mode:3,
+    unknown5:2;
+
+    u8 tone:6,
+    unknown_toneflag:1,
+    unknown6:1;
+
+    u8  dcs:7,
+    unknown7:1;
+
+    u16 rit; // ul16
+    u32 freq; // ul32
+    u32 offset; // ul32
+    u8  name[8];
+} __attribute__((packed)) ft817_memory_t ;
+
+typedef struct {
+    u8  fst:1,
+        lock:1,
+        nb:1,
+        pbt:1,
+        unknownb:1,
+        dsp:1,
+        agc:2;
+    u8  vox:1,
+        vlt:1,
+        bk:1,
+        kyr:1,
+        unknown5:1,
+        cw_paddle:1,
+        pwr_meter_mode:2;
+    u8  vfob_band_select:4,
+        vfoa_band_select:4;
+    u8  unknowna;
+    u8  backlight:2,
+        color:2,
+        contrast:4;
+    u8  beep_freq:1,
+        beep_volume:7;
+    u8  arts_beep:2,
+        main_step:1,
+        cw_id:1,
+        scope:1,
+        pkt_rate:1,
+        resume_scan:2;
+    u8  op_filter:2,
+        lock_mode:2,
+        cw_pitch:4;
+    u8  sql_rf_gain:1,
+        ars_144:1,
+        ars_430:1,
+        cw_weight:5;
+    u8  cw_delay;
+    u8  unknown8:1,
+        sidetone:7;
+    u8  batt_chg:2,
+        cw_speed:6;
+    u8  disable_amfm_dial:1,
+        vox_gain:7;
+    u8  cat_rate:2,
+        emergency:1,
+        vox_delay:5;
+    u8  dig_mode:3,
+        mem_group:1,
+        unknown9:1,
+        apo_time:3;
+    u8  dcs_inv:2,
+        unknown10:1,
+        tot_time:5;
+    u8  mic_scan:1,
+        ssb_mic:7;
+    u8  mic_key:1,
+        am_mic:7;
+    u8  unknown11:1,
+        fm_mic:7;
+    u8  unknown12:1,
+        dig_mic:7;
+    u8  extended_menu:1,
+        pkt_mic:7;
+    u8  unknown14:1,
+        pkt9600_mic:7;
+    s16 dig_shift; // il16
+    s16 dig_disp;  // il16
+    s8  r_lsb_car;
+    s8  r_usb_car;
+    s8  t_lsb_car;
+    s8  t_usb_car;
+    u8  unknown15:2,
+        menu_item:6;
+    u8  unknown16:4,
+        menu_sel:4;
+    u16 unknown17;
+    u8  art:1,
+        scn_mode:2,
+        dw:1,
+        pri:1,
+        unknown18:1,
+        tx_power:2;
+    u8  spl:1,
+        unknown:1,
+        uhf_antenna:1,
+        vhf_antenna:1,
+        air_antenna:1,
+        bc_antenna:1,
+        sixm_antenna:1,
+        hf_antenna:1;
+} __attribute__((packed)) ft871_settings_t ;
+
+typedef struct {
+    uint8_t len;
+    uint8_t count;
+} ft817_block_t;
+
+// FT817 (not ND!)
+const ft817_block_t cloneblock_len[] =
+{
+        {2,1},      //0  -> 2
+        {40,1},     // -> 42
+        {208,1},    // -> 250
+        {182,1},    // -> 432
+        {208,1},    // -> 640
+        {182,1},    // -> 822
+        {198,1},    // -> 1020
+        {53,1},     // -> 1073
+        {130,40},   // -> 6273 (+5200)
+        {118,1},    // -> 6391
+        {118,1}     // -> 6509
+};
+
+/*
+@0x4:
+    ft817_settings_t settings;
+@0x2A: -> @42 -> block [2]
+        struct mem_struct vfoa[15]; // block[2+3]
+        struct mem_struct vfob[15]; // block[4+5]
+        struct mem_struct home[4]; //  block[6]...
+        struct mem_struct qmb;
+        struct mem_struct mtqmb;
+        struct mem_struct mtune;   //  ...block[6]
+
+@0x3FD: @1021               // block[7]+1
+        u8 visible[25];
+        u8 pmsvisible;
+
+@0x417: @1047
+        u8 filled[25];      // block[7]+27
+        u8 pmsfilled;
+
+@0x431: @1073
+        struct mem_struct memory[200]; block[9]-block[48]
+        struct mem_struct pms[2]; block[49]
+
+@0x18cf: @6351
+        u8 callsign[7];
+
+@0x1979: @6521
+        struct mem_struct sixtymeterchannels[5]; // not FT817, only ND US
+
+*/
 
 // #define DEBUG_FT817
+typedef enum {
+    CLONEOUT_INIT = 0,
+    CLONEOUT_BLOCK_SEND,
+    CLONEOUT_BLOCK_ACK_WAIT,
+    CLONEOUT_BLOCK_ACK_NACK,
+    CLONEOUT_DONE
+
+} ft817_clone_out_st;
+
+typedef enum {
+    CAT_INIT = 0,
+    CAT_CAT,
+    CAT_CLONEOUT,
+    CAT_CLONEIN
+} ft817_cat_st;
+
 
 struct FT817
 {
     uint8_t req[5];
+    ft817_cat_st state;
+    ft817_clone_out_st cloneout_state;
 #ifdef DEBUG_FT817
 #define FT817_MAX_CMD 100
     uint8_t reqs[FT817_MAX_CMD*5];
@@ -248,7 +452,152 @@ static const yaesu_cmd_set_t ncmd[] =
 
 struct FT817 ft817;
 
-void CatDriverFT817CheckAndExecute()
+
+uint8_t CatDriver_Clone_Checksum(uint8_t* buf, size_t len)
+{
+    uint8_t retval = 0;
+    for (int idx = 0; idx < len; idx++)
+    {
+        retval += buf[idx];
+    }
+    return retval;
+}
+
+void CatDriver_BlockPrepare(uint8_t num, uint8_t idx, uint8_t rpt, uint8_t* buf, size_t maxlen)
+{
+    buf[0] = num;
+    if (num == 7)
+    {
+        buf[2] = 0x1; // Memory[0] visible;
+        buf[2+26] = 0x1; // Memory[0] filled;
+    }
+    if (num == 8)
+    {
+        ft817_memory_t* mem = (ft817_memory_t*)&buf[1];
+        mem->freq=__builtin_bswap32(700100); // need to convert big / little endian!!
+        mem->tag_on_off = 1;
+        mem->freq_range = 0;
+        mem->am_step = 1;
+        mem->ssb_step = 1;
+        mem->tone = 0x08;
+        memcpy(&mem->name[0],"A1234567",8);
+    }
+    buf[cloneblock_len[idx ].len+1] = CatDriver_Clone_Checksum(&buf[1],cloneblock_len[idx].len);
+}
+
+void CatDriver_BlockSend(uint8_t* buf, size_t len)
+{
+    cat_driver_put_data(buf,len);
+}
+
+#define CLONE_CMD_ACK (0x06)
+
+bool CatDriver_BlockAck()
+{
+    bool retval = false;
+
+    while(cat_driver_has_data())
+    {
+        uint8_t c;
+        cat_driver_get_data(&c,1);
+        if (c == CLONE_CMD_ACK)
+        {
+            retval = true;
+            break;
+        }
+    }
+    return retval;
+}
+
+// FIXME: Remove After Use!
+size_t ft817_sizeof = sizeof(ft817_memory_t);
+
+static void CatDriver_HandleCloneOut()
+{
+    static uint16_t blockIdx = 0;
+    static uint16_t blockRpt = 0;
+    static uint16_t blockNum = 0;
+    static uint8_t buf[256];
+    static uint32_t last_sysclk;
+
+    switch (ft817.cloneout_state)
+    {
+    case CLONEOUT_INIT:
+    {
+        blockIdx = 0;
+        blockRpt = 0;
+        blockNum = 0;
+        ft817.cloneout_state = CLONEOUT_BLOCK_SEND;
+        break;
+    }
+    case CLONEOUT_BLOCK_SEND:
+    {
+        CatDriver_BlockPrepare(blockNum,blockIdx,blockRpt,buf,256);
+        CatDriver_BlockSend(buf,cloneblock_len[blockIdx].len+2);
+        // +2 since we added blocknum and checksum, each 8bit.
+        ft817.cloneout_state = CLONEOUT_BLOCK_ACK_WAIT;
+        last_sysclk = ts.sysclock + 100;
+        break;
+    }
+    case CLONEOUT_BLOCK_ACK_WAIT:
+    {
+        if (CatDriver_BlockAck())
+        {
+            blockNum++;
+            blockRpt++;
+            if (blockRpt == cloneblock_len[blockIdx].count)
+            {
+               blockIdx++;
+               blockRpt = 0;
+            }
+
+            if (blockIdx == 11)
+            {
+                ft817.cloneout_state = CLONEOUT_DONE;
+            }
+            else
+            {
+                ft817.cloneout_state = CLONEOUT_BLOCK_SEND;
+            }
+        }
+        else
+        {
+            if (last_sysclk < ts.sysclock)
+            {
+                // after a while we will give up
+                ft817.cloneout_state = CLONEOUT_BLOCK_ACK_NACK;
+            }
+        }
+        break;
+    }
+    case CLONEOUT_BLOCK_ACK_NACK:
+    {
+        ft817.cloneout_state = CLONEOUT_DONE;
+        break;
+    }
+    case CLONEOUT_DONE:
+    {
+        // go back to normal CAT MODE and prepare for next round
+        ft817.cloneout_state = CLONEOUT_INIT;
+        ft817.state = CAT_CAT;
+        break;
+    }
+    }
+
+}
+
+bool CatDriver_CloneOutStart()
+{
+    bool retval = false;
+    if (ft817.state == CAT_CAT || ft817.state == CAT_INIT)
+    {
+        retval = true;
+        ft817.state = CAT_CLONEOUT;
+        ft817.cloneout_state = CLONEOUT_INIT;
+    }
+    return retval;
+}
+void CatDriver_FT817CheckAndExecute()
 {
     uint8_t bc = 0;
     uint8_t resp[32];
@@ -256,9 +605,16 @@ void CatDriverFT817CheckAndExecute()
     if (cat_driver_state() == 0xFF)
     {
         cat_buffer_reset();
+        ft817.state = CAT_CAT;
+        ft817.cloneout_state = CLONEOUT_INIT;
     }
     else
     {
+        if (ft817.state == CAT_CLONEOUT)
+        {
+            CatDriver_HandleCloneOut();
+            return;
+        }
         cat_driver_sync_data();
 
         while (cat_driver_get_data(ft817.req,5))
@@ -297,14 +653,6 @@ void CatDriverFT817CheckAndExecute()
                 f *= TUNE_MULT*10;
                 df.tune_new = f - fdelta;
 
-                // FIXME: Remove disabled code below once proper operations has been verified
-                // Code below disabled since frequency change is executed in main loop.
-                // this introduces some milliseconds delay but this may happen anyway since too quick
-                // changes of frequency are blocked by frequency change code. It also prevents
-                // overload  by rapid stream of frequency change requests from CAT
-#if 0
-                UiDriver_FrequencyUpdateLOandDisplay(true);
-#endif
                 resp[0] = 0;
                 bc = 1;
                 if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
@@ -401,7 +749,9 @@ void CatDriverFT817CheckAndExecute()
                 if  (new_mode != ts.dmod_mode || new_lsb != ts.cw_lsb )
                 {
                     if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
+                    {
                         ts.cat_band_index = ts.band;
+                    }
                     ts.cw_lsb = new_lsb;
                     RadioManagement_SetDemodMode(new_mode);
                     UiDriver_UpdateDisplayAfterParamChange();

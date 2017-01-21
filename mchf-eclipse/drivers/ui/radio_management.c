@@ -1105,6 +1105,10 @@ uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
                 break;
             case DEMOD_DIGI:
                 ts.digi_lsb = !ts.digi_lsb;
+                break;
+            case DEMOD_FM:
+                // toggle between narrow and wide fm
+                ts.flags2 ^= FLAGS2_FM_MODE_DEVIATION_5KHZ;
             }
             // if there is no explicit alternative mode
             // we return the original mode.
