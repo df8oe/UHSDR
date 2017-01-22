@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-01-18T08:57:25  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-01-22T17:02:43  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.7 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.7 - UI Menu Overview
 
-generated at  2017-01-18T08:57:25  by "./ui_menu_structure_mdtable.py"
+generated at  2017-01-22T17:02:43  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -224,6 +224,7 @@ generated at  2017-01-18T08:57:25  by "./ui_menu_structure_mdtable.py"
 | **Bootloader**                (                            INFO_BL_VERSION) | bootloader version                             | 
 | **RF Bands Mod**              (                                 INFO_RFMOD) | RF bands expansion PCB present?                | 
 | **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | VHF/UHF bands expansion PCB present?           | 
+| **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
 
 
@@ -232,8 +233,9 @@ generated at  2017-01-18T08:57:25  by "./ui_menu_structure_mdtable.py"
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
-| **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temp sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
+| **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
 | **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
+| **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory a FT817 Clone Info (to be used with CHIRP). | 
 
 
 [//]: # ( EOFILE                                                                       )

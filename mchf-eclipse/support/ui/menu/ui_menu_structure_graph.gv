@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-18T08:57:22  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-22T17:02:42  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-18T08:57:22  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-22T17:02:42  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -912,6 +912,11 @@
              shape = record
              ];
         
+        "INFO_VBAT" [
+             label = "INFO_VBAT | Backup RAM Battery"
+             shape = record
+             ];
+        
         "INFO_RTC" [
              label = "INFO_RTC | Real Time Clock"
              shape = record
@@ -929,6 +934,11 @@
         
         "MENU_DEBUG_I2C2_SPEED" [
              label = "MENU_DEBUG_I2C2_SPEED | I2C2 Bus Speed"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_CLONEOUT" [
+             label = "MENU_DEBUG_CLONEOUT | FT817 Clone Transmit"
              shape = record
              ];
         
@@ -1262,6 +1272,8 @@
             
             MENU_SYSINFO -> INFO_VHFUHFMOD
             
+            MENU_SYSINFO -> INFO_VBAT
+            
             MENU_SYSINFO -> INFO_RTC
             
         }  ## END subgraph MENU_DEBUG
@@ -1301,6 +1313,8 @@
             MENU_DEBUG -> MENU_DEBUG_I2C1_SPEED
             
             MENU_DEBUG -> MENU_DEBUG_I2C2_SPEED
+            
+            MENU_DEBUG -> MENU_DEBUG_CLONEOUT
             
         }  ## END subgraph MENU_DEBUG
     
