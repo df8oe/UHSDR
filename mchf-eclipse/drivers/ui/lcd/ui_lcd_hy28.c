@@ -1296,7 +1296,7 @@ uchar UiLcdHy28_InitA(void)
 		}
       #else
         {
-        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); /* set SRAM internal timing */
+        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); 	// set SRAM internal timing
         UiLcdHy28_WriteReg(0x01,0x0000);	// set SS and SM bit
         UiLcdHy28_WriteReg(0x02,0x0700);	// set 1 line inversion
         UiLcdHy28_WriteReg(0x03,0x1038);    // set GRAM write direction and BGR=1 and ORG = 1
@@ -1317,7 +1317,7 @@ uchar UiLcdHy28_InitA(void)
         // NPI: UiLcdHy28_WriteReg(0x0c,0x0001);    // RGB interface setting
         UiLcdHy28_Delay(200000);			// delay 200 ms
         UiLcdHy28_WriteReg(0x10,0x1590);	// SAP, BT[3:0], AP, DSTB, SLP, STB
-        // NPI: UiLcdHy28_WriteReg(0x10, 0x1090); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
+        // NPI: UiLcdHy28_WriteReg(0x10, 0x1090); // SAP, BT[3:0], AP, DSTB, SLP, STB
         UiLcdHy28_WriteReg(0x11,0x0227);	// set DC1[2:0], DC0[2:0], VC[2:0]
         UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x12,0x009c);	// internal reference voltage init
