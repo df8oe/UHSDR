@@ -1203,7 +1203,7 @@ uchar UiLcdHy28_InitA(void)
     // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
     if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
     {
-        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); 	// set SRAM internal timing
+        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); 	// set SRAM internal timing I guess this is the relevant line for getting LCDs to work which are "out-of-specs"...
         UiLcdHy28_WriteReg(0x01,0x0000);	// set SS and SM bit
         UiLcdHy28_WriteReg(0x02,0x0700);	// set 1 line inversion
         UiLcdHy28_WriteReg(0x03,0x1038);    // set GRAM write direction and BGR=1 and ORG = 1
@@ -1239,7 +1239,7 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x20,0x0000);	// GRAM horizontal address
         UiLcdHy28_WriteReg(0x21,0x0000);	// GRAM vertical address
 
-        /* NPI:
+//        /* NPI:
          // ----------- Adjust the Gamma Curve ----------
         UiLcdHy28_WriteReg(0x30, 0x0000);
         UiLcdHy28_WriteReg(0x31, 0x0707);
@@ -1251,7 +1251,7 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x39, 0x0707);
         UiLcdHy28_WriteReg(0x3C, 0x0002);
         UiLcdHy28_WriteReg(0x3D, 0x1D04);
-        */
+//        */
 
         UiLcdHy28_WriteReg(0x50,0x0000);	// horizontal GRAM start address
         UiLcdHy28_WriteReg(0x51,0x00ef);	// horizontal GRAM end address
