@@ -14,5 +14,6 @@
 
 bool MchfRtc_enabled();
 void MchfRtc_FullReset();
+void MchfRtc_Start();
 
 #endif /* HARDWARE_MCHF_RTC_H_ */

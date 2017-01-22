@@ -155,7 +155,7 @@ const ButtonMap bm_sets[2][18] =
 const ButtonMap* bm = &bm_sets[0][0];
 
 
-static void mchf_board_keypad_init(ButtonMap* bm)
+static void mchf_board_keypad_init(const ButtonMap* bm)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 

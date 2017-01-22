@@ -539,6 +539,12 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
     }
     break;
+    case INFO_VBAT:
+    {
+        snprintf(out,32, "%s", ts.vbat_present?"Yes":"N/A");
+
+    }
+    break;
     default:
         outs = "NO INFO";
     }
@@ -1894,7 +1900,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.waterfall_vert_step_size);
         break;
     case MENU_WFALL_OFFSET: // set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall_offset,
+        UiDriverMenuItemChangeInt32(var, mode, &ts.waterfall_offset,
                                      WATERFALL_OFFSET_MIN,
                                      WATERFALL_OFFSET_MAX,
                                      WATERFALL_OFFSET_DEFAULT,
@@ -3145,12 +3151,26 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %2u", rtc.RTC_Seconds);
         break;
     }
+    case CONFIG_RTC_START:
+        txt_ptr = "Do it!";
+        clr = White;
+        if(var>=1)
+        {
+            MchfRtc_Start();
+            mchf_reboot();
+            // TODO: we will not reach this but in future we may switch the keyboard dynamically...
+            txt_ptr = " Done!";
+            clr = Green;
+        }
+        break;
+
     case CONFIG_RTC_RESET:
         txt_ptr = "Do it!";
         clr = White;
         if(var>=1)
         {
             MchfRtc_FullReset();
+
             txt_ptr = " Done!";
             clr = Green;
         }
