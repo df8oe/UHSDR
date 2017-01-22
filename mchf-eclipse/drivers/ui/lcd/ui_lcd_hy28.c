@@ -1296,6 +1296,7 @@ uchar UiLcdHy28_InitA(void)
 		}
       #else
         {
+        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); /* set SRAM internal timing */
         UiLcdHy28_WriteReg(0x01,0x0000);	// set SS and SM bit
         UiLcdHy28_WriteReg(0x02,0x0700);	// set 1 line inversion
         UiLcdHy28_WriteReg(0x03,0x1038);    // set GRAM write direction and BGR=1 and ORG = 1
@@ -1304,6 +1305,7 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x09,0x0000);	// set non-display area refresh cycle
         UiLcdHy28_WriteReg(0x0a,0x0000);	// FMARK function
         UiLcdHy28_WriteReg(0x0c,0x0001);	// RGB interface setting
+        // NPI: UiLcdHy28_WriteReg(0x0c,0x0000);    // RGB interface setting
         UiLcdHy28_WriteReg(0x0d,0x0000);	// frame marker position
         UiLcdHy28_WriteReg(0x0f,0x0000);	// RGB interface polarity
 
@@ -1312,18 +1314,38 @@ uchar UiLcdHy28_InitA(void)
         UiLcdHy28_WriteReg(0x11,0x0007);	// DC1[2:0], DC0[2:0], VC[2:0]
         UiLcdHy28_WriteReg(0x12,0x0000);	// VREG1OUT voltage
         UiLcdHy28_WriteReg(0x13,0x0000);	// VDV[4:0] for VCOM amplitude
+        // NPI: UiLcdHy28_WriteReg(0x0c,0x0001);    // RGB interface setting
         UiLcdHy28_Delay(200000);			// delay 200 ms
         UiLcdHy28_WriteReg(0x10,0x1590);	// SAP, BT[3:0], AP, DSTB, SLP, STB
+        // NPI: UiLcdHy28_WriteReg(0x10, 0x1090); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
         UiLcdHy28_WriteReg(0x11,0x0227);	// set DC1[2:0], DC0[2:0], VC[2:0]
         UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x12,0x009c);	// internal reference voltage init
+        // NPI: UiLcdHy28_WriteReg(0x12, 0x001F);
         UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x13,0x1900);	// set VDV[4:0] for VCOM amplitude
+        // NPI: UiLcdHy28_WriteReg(0x13, 0x1500);
         UiLcdHy28_WriteReg(0x29,0x0023);	// VCM[5:0] for VCOMH
+        // NPI: UiLcdHy28_WriteReg(0x29,0x0027);    // VCM[5:0] for VCOMH
         UiLcdHy28_WriteReg(0x2b,0x000d);	// set frame rate: changed from 0e to 0d on 03/28/2016
         UiLcdHy28_Delay(50000);				// delay 50 ms
         UiLcdHy28_WriteReg(0x20,0x0000);	// GRAM horizontal address
         UiLcdHy28_WriteReg(0x21,0x0000);	// GRAM vertical address
+
+        /* NPI:
+         // ----------- Adjust the Gamma Curve ----------
+        UiLcdHy28_WriteReg(0x30, 0x0000);
+        UiLcdHy28_WriteReg(0x31, 0x0707);
+        UiLcdHy28_WriteReg(0x32, 0x0307);
+        UiLcdHy28_WriteReg(0x35, 0x0200);
+        UiLcdHy28_WriteReg(0x36, 0x0008);
+        UiLcdHy28_WriteReg(0x37, 0x0004);
+        UiLcdHy28_WriteReg(0x38, 0x0000);
+        UiLcdHy28_WriteReg(0x39, 0x0707);
+        UiLcdHy28_WriteReg(0x3C, 0x0002);
+        UiLcdHy28_WriteReg(0x3D, 0x1D04);
+        */
+
         UiLcdHy28_WriteReg(0x50,0x0000);	// horizontal GRAM start address
         UiLcdHy28_WriteReg(0x51,0x00ef);	// horizontal GRAM end address
         UiLcdHy28_WriteReg(0x52,0x0000);	// vertical GRAM start address
@@ -1341,6 +1363,7 @@ uchar UiLcdHy28_InitA(void)
         // panel control
         UiLcdHy28_WriteReg(0x90,0x0010);
         UiLcdHy28_WriteReg(0x92,0x0000);
+        // NPI: UiLcdHy28_WriteReg(0x92, 0x0600);
         // activate display using 262k colours
         UiLcdHy28_WriteReg(0x07,0x0133);
 	}
