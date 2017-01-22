@@ -1244,6 +1244,7 @@ typedef struct TransceiverState
 
 
     bool rtc_present; // a supported rtc was found and is active
+    bool vbat_present; // we detected a working vbat mod
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
