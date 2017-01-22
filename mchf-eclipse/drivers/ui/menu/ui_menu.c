@@ -3155,6 +3155,17 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
+     case MENU_DEBUG_CLONEOUT:
+        txt_ptr = "Do it!";
+        clr = White;
+        if(var>=1)
+        {
+            CatDriver_CloneOutStart();
+            txt_ptr = " Done!";
+            clr = Green;
+        }
+        break;
+
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

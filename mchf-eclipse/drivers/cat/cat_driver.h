@@ -50,6 +50,7 @@ uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_has_data();
 
-void CatDriverFT817CheckAndExecute();
+void CatDriver_FT817CheckAndExecute();
+bool CatDriver_CloneOutStart();
 
 #endif

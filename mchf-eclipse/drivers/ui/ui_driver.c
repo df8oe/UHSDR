@@ -1832,7 +1832,9 @@ void UiDriver_ShowMode()
         txt = "AM";
         break;
     case DEMOD_FM:
-        txt = "FM";
+
+
+        txt = (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)?"FM-W":"FM-N";
         {
             if(ts.txrx_mode == TRX_MODE_RX)
             {
@@ -5950,7 +5952,7 @@ void UiDriver_MainHandler()
 
     uint32_t now = ts.sysclock;
 
-    CatDriverFT817CheckAndExecute();
+    CatDriver_FT817CheckAndExecute();
 
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
