@@ -3176,12 +3176,24 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
      case MENU_DEBUG_CLONEOUT:
-        txt_ptr = "Do it!";
+        txt_ptr = " Do it!";
         clr = White;
         if(var>=1)
         {
             CatDriver_CloneOutStart();
-            txt_ptr = " Done!";
+            txt_ptr = "Working";
+            var = 1;
+            clr = Green;
+        }
+        break;
+     case MENU_DEBUG_CLONEIN:
+        txt_ptr = " Do it!";
+        clr = White;
+        if(var>=1)
+        {
+            CatDriver_CloneInStart();
+            txt_ptr = "Waiting";
+            var = 1;
             clr = Green;
         }
         break;
