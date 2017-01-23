@@ -156,8 +156,7 @@ uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len)
     uint8_t res = 0;
     if (cat_driver_has_data() >= Len)
     {
-        int i;
-        for  (i = 0; i < Len; i++)
+        for  (int i = 0; i < Len; i++)
         {
             cat_buffer_remove(&Buf[i]);
         }
@@ -380,6 +379,16 @@ typedef enum {
     CLONEOUT_DONE
 
 } ft817_clone_out_st;
+// #define DEBUG_FT817
+typedef enum {
+    CLONEIN_INIT = 0,
+    CLONEIN_BLOCK_RECV,
+    CLONEIN_BLOCK_RECV_START,
+    CLONEIN_FINAL_PROCESSING,
+    CLONEIN_DONE
+
+} ft817_clone_in_st;
+
 
 typedef enum {
     CAT_INIT = 0,
@@ -394,6 +403,8 @@ struct FT817
     uint8_t req[5];
     ft817_cat_st state;
     ft817_clone_out_st cloneout_state;
+    ft817_clone_in_st clonein_state;
+
 #ifdef DEBUG_FT817
 #define FT817_MAX_CMD 100
     uint8_t reqs[FT817_MAX_CMD*5];
@@ -485,12 +496,37 @@ void CatDriver_BlockPrepare(uint8_t num, uint8_t idx, uint8_t rpt, uint8_t* buf,
     buf[cloneblock_len[idx ].len+1] = CatDriver_Clone_Checksum(&buf[1],cloneblock_len[idx].len);
 }
 
+bool CatDriver_BlockRecv(uint8_t num, uint8_t idx, uint8_t rpt, uint8_t* buf, size_t len)
+{
+    bool retval = false;
+
+    if (buf[0] == num  && (buf[len - 1]  == CatDriver_Clone_Checksum(&buf[1],len-2)))
+    {
+        if (num == 8)
+        {
+            // we simply set the dial frequency here just for the show!
+            ft817_memory_t* mem = (ft817_memory_t*)&buf[1];
+            df.tune_new = __builtin_bswap32(mem[0].freq) * (10 * TUNE_MULT);
+        }
+        retval = true;
+    }
+
+    return retval;
+}
+
+#define CLONE_CMD_ACK (0x06)
+
+void CatDriver_CloneSendAck()
+{
+    uint8_t cmd_ack = CLONE_CMD_ACK;
+    cat_driver_put_data(&cmd_ack,1);
+}
+
 void CatDriver_BlockSend(uint8_t* buf, size_t len)
 {
     cat_driver_put_data(buf,len);
 }
 
-#define CLONE_CMD_ACK (0x06)
 
 bool CatDriver_BlockAck()
 {
@@ -509,8 +545,6 @@ bool CatDriver_BlockAck()
     return retval;
 }
 
-// FIXME: Remove After Use!
-size_t ft817_sizeof = sizeof(ft817_memory_t);
 
 static void CatDriver_HandleCloneOut()
 {
@@ -586,6 +620,93 @@ static void CatDriver_HandleCloneOut()
 
 }
 
+static void CatDriver_HandleCloneIn()
+{
+    static uint16_t blockIdx = 0;
+    static uint16_t blockRpt = 0;
+    static uint16_t blockNum = 0;
+    static uint8_t buf[256];
+    static uint8_t blockWant = 0;
+    static uint32_t last_sysclk;
+
+    switch (ft817.clonein_state)
+    {
+    case CLONEIN_INIT:
+    {
+        blockIdx = 0;
+        blockRpt = 0;
+        blockNum = 0;
+        ft817.clonein_state = CLONEIN_BLOCK_RECV_START;
+        break;
+    }
+    case CLONEIN_BLOCK_RECV_START:
+    {
+        last_sysclk = ts.sysclock + 600; // that is 6s, enough to start the CAT clone transmit on the PC
+        blockWant = cloneblock_len[blockIdx].len + 2; // two more for blocknum and checksum
+        ft817.clonein_state = CLONEIN_BLOCK_RECV;
+        break;
+    }
+    case CLONEIN_BLOCK_RECV:
+    {
+        // we can ask for the full amount since our buffer will be able to hold all of the packets contents
+        if (cat_driver_get_data(buf,blockWant))
+        {
+            // analyse block
+            if (CatDriver_BlockRecv(blockNum,blockIdx,blockRpt,buf,blockWant))
+            {
+                // now continue
+                CatDriver_CloneSendAck();
+                blockNum++;
+                blockRpt++;
+                if (blockRpt == cloneblock_len[blockIdx].count)
+                {
+                    blockIdx++;
+                    blockRpt = 0;
+                }
+                if (blockIdx == 11)
+                {
+                    // we are done receiving, so now lets do the final data processing
+                    ft817.clonein_state = CLONEIN_FINAL_PROCESSING;
+                }
+                else
+                {
+                    ft817.clonein_state = CLONEIN_BLOCK_RECV_START;
+                }
+
+            }
+            else
+            {
+                ft817.clonein_state = CLONEIN_DONE;
+            }
+        }
+        else if (last_sysclk <= ts.sysclock)
+        {
+            // timeout
+            ft817.clonein_state = CLONEIN_DONE;
+        }
+        break;
+    }
+    case CLONEIN_FINAL_PROCESSING:
+    {
+        // TODO: Now that all infos have been received, do the processing of it
+        // TBW
+
+        // once done, get back to normal CAT operation
+        ft817.clonein_state = CLONEIN_DONE;
+        break;
+    }
+    case CLONEIN_DONE:
+    {
+        // go back to normal CAT MODE and prepare for next round
+        ft817.clonein_state = CLONEIN_INIT;
+        ft817.state = CAT_CAT;
+        break;
+    }
+    }
+
+}
+
+
 bool CatDriver_CloneOutStart()
 {
     bool retval = false;
@@ -597,6 +718,20 @@ bool CatDriver_CloneOutStart()
     }
     return retval;
 }
+
+bool CatDriver_CloneInStart()
+{
+    bool retval = false;
+    if (ft817.state == CAT_CAT || ft817.state == CAT_INIT)
+    {
+        retval = true;
+        ft817.state = CAT_CLONEIN;
+        ft817.clonein_state = CLONEIN_INIT;
+    }
+    return retval;
+}
+
+
 void CatDriver_FT817CheckAndExecute()
 {
     uint8_t bc = 0;
@@ -615,6 +750,12 @@ void CatDriver_FT817CheckAndExecute()
             CatDriver_HandleCloneOut();
             return;
         }
+        if (ft817.state == CAT_CLONEIN)
+        {
+            CatDriver_HandleCloneIn();
+            return;
+        }
+
         cat_driver_sync_data();
 
         while (cat_driver_get_data(ft817.req,5))

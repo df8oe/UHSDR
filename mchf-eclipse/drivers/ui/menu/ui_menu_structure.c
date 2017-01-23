@@ -337,6 +337,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_SEC, &ts.rtc_present,"RTC Seconds", UiMenuDesc("Sets the Real Time Clock Seconds. Needs HW Modifications.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_RESET, &ts.vbat_present,"RTC Reset", UiMenuDesc("Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory a FT817 Clone Info (to be used with CHIRP).") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from a FT817 Clone Info (to be used with CHIRP).") },
 
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
