@@ -762,8 +762,6 @@ void UiSpectrum_RedrawScopeDisplay()
         spec_height = spec_height + SPEC_LIGHT_MORE_POINTS;
     }
     ulong i;
-    uint32_t	max_ptr;	// throw-away pointer for ARM maxval and minval functions
-
 
     if(ts.spectrum_scheduler == 0 && (ts.scope_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
@@ -844,9 +842,7 @@ void UiSpectrum_RedrawScopeDisplay()
         //
         case 4:
         {
-            q15_t	max1, min1;
-            q15_t	mean1;
-            float32_t	sig;
+            float32_t	sig, min1=100000;
             //
             // De-linearize data with dB/division
             // AND flip data round ! = mirror values from right to left and vice versa (had to be done because of the new FFT lib) DDD4WH april 2016
@@ -854,6 +850,7 @@ void UiSpectrum_RedrawScopeDisplay()
             {
                 sig = log10(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+                if (sig < min1) min1 = sig;
                 if(sig > 1)											// is the value greater than 1?
                 {
                     //					sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
@@ -864,48 +861,18 @@ void UiSpectrum_RedrawScopeDisplay()
                     sd.FFT_DspData[SPEC_BUFF_LEN - i - 1] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
                 }
             }
+
             //
-            arm_copy_q15(sd.FFT_DspData, sd.FFT_TempData, SPEC_BUFF_LEN);
+            // Vertically adjust spectrum scope so that the baseline is at the bottom
             //
-            // Find peak and average to vertically adjust display
-            arm_max_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &max1, &max_ptr);		// find maximum element
-            arm_min_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &min1, &max_ptr);		// find minimum element
-            arm_mean_q15(sd.FFT_TempData, SPEC_BUFF_LEN, &mean1);				// find mean value
-            //
-            // Vertically adjust spectrum scope so that the strongest signals are adjusted to the top
-            //
-            if(max1 > spec_height)  	// is result higher than display
-            {
-                sd.display_offset -= sd.agc_rate;	// yes, adjust downwards quickly
-                //				if(max1 > spec_height+(spec_height/2))			// is it WAY above top of screen?
-                //					sd.display_offset -= sd.agc_rate*3;	// yes, adjust downwards REALLY quickly
-            }
-            //
-            // Prevent "empty" spectrum display from filling with "noise" by checking the peak/average of what was found
-            //
-            else if(((max1*10/mean1) <= (q15_t)ts.spectrum_scope_nosig_adjust) && (max1 < spec_height+(spec_height/2)))	 	// was "average" signal ratio below set threshold and average is not insanely strong??
-            {
-                if((min1 > 2) && (max1 > 2))	 		// prevent the adjustment from going downwards, "into the weeds"
-                {
-                    sd.display_offset -= sd.agc_rate;	// yes, adjust downwards
-                    if(sd.display_offset < (-(spec_height + SPECTRUM_SCOPE_ADJUST_OFFSET)))
-                        sd.display_offset = (-(spec_height + SPECTRUM_SCOPE_ADJUST_OFFSET));
-                }
-            }
-            else
-                sd.display_offset += (sd.agc_rate/3);	// no, adjust upwards more slowly
-            //
-            //
-            if((min1 <= 2) && (max1 <= 2))	 	// ARGH - We must already be in the weeds, below the bottom - let's adjust upwards quickly to get it back onto the display!
-            {
-                sd.display_offset += sd.agc_rate*10;
-            }
-            //
-            // used for debugging
-            //				char txt[32];
-            //				sprintf(txt, " %d,%d,%d,%d ", (int)(max1*100/mean1), (int)(min1), (int)(max1),(int)mean1);
-            //				sprintf(txt, " %d,%d,%d,%d ", (int)sd.display_offset*100, (int)min1*100,(int)max1*100,(int)spec_height);
-            //				UiLcdHy28_PrintText    ((POS_RIT_IND_X + 1), (POS_RIT_IND_Y + 20),txt,White,Grid,0);
+            sd.display_offset -= sd.agc_rate*min1/5;
+
+
+           
+            //                         char txt[32];
+            //                         uint32_t    max_ptr;        // throw-away pointer for ARM maxval AND minval functions
+            //                         sprintf(txt, " %d,%d,%d ", (int)sd.agc_rate*1000, (int)(min1), (int)sd.display_offset*100);
+            //                         UiDriver_ShowDebugText(txt);
 
             //
             //
@@ -923,7 +890,6 @@ void UiSpectrum_RedrawScopeDisplay()
             // compiler can heavily optimize this since we  all these values being power of 2 value
             //        if(sd.magnify != 0)	 	// is magnify mode on?
 
-            arm_copy_q15(sd.FFT_DspData, sd.FFT_TempData, SPEC_BUFF_LEN);
 
             // After the above manipulation, clip the result to make sure that it is within the range of the palette table
             for(i = 0; i < SPEC_BUFF_LEN; i++)
@@ -975,7 +941,6 @@ void UiSpectrum_RedrawScopeDisplay()
 void UiSpectrum_RedrawWaterfall()
 {
     ulong i;
-    uint32_t	max_ptr;	// throw-away pointer for ARM maxval AND minval functions
 
     if((ts.spectrum_scheduler == 0 ) && (ts.waterfall_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
@@ -1046,7 +1011,7 @@ void UiSpectrum_RedrawWaterfall()
         //
         case 4:
         {
-            float32_t	max, min, mean, offset;
+            float32_t	min1=100000;
             float32_t	sig;
             //
             // De-linearize data with dB/division
@@ -1055,6 +1020,7 @@ void UiSpectrum_RedrawWaterfall()
             {
                 sig = log10(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+                if (sig < min1) min1 = sig;
                 if(sig > 1)											// is the value greater than 1?
                     sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
                 else
@@ -1078,45 +1044,15 @@ void UiSpectrum_RedrawWaterfall()
                 }
             }
 
-            // Find peak and average to vertically adjust display
-            arm_max_f32(&sd.FFT_Samples[0],  SPEC_BUFF_LEN, &max, &max_ptr);        // find maximum element in center portion
-            arm_min_f32(&sd.FFT_Samples[0],  SPEC_BUFF_LEN, &min, &max_ptr);        // find minimum element in center portion
-            arm_mean_f32(&sd.FFT_Samples[0], SPEC_BUFF_LEN, &mean);                // find mean value in center portion
+            //
+            // Adjust the sliding window so that the lowest signal is always black
+            //
+            sd.display_offset -= sd.agc_rate*min1/5;
 
-            //
-            // Calculate "brightness" offset for amplitude value
-            //
-            offset = ts.waterfall_offset -100;
-
-            if((max - offset) >= NUMBER_WATERFALL_COLOURS - 1)	 	// is result higher than display brightness
-            {
-                sd.display_offset -= sd.agc_rate;	// yes, adjust downwards quickly
-                //				if(max1 > SPECTRUM_HEIGHT+(SPECTRUM_HEIGHT/2))			// is it WAY above top of screen?
-                //					sd.display_offset -= sd.agc_rate*3;	// yes, adjust downwards REALLY quickly
-            }
-            //
-            // Prevent "empty" spectrum display from filling with "noise" by checking the peak/average of what was found
-            //
-            else if(((max*10/mean) <= (q15_t)ts.waterfall_nosig_adjust) && (max < SPECTRUM_HEIGHT+(SPECTRUM_HEIGHT/2)))	 	// was "average" signal ratio below set threshold and average is not insanely strong??
-            {
-                if((min > 2) && (max > 2))	 		// prevent the adjustment from going downwards, "into the weeds"
-                {
-                    sd.display_offset -= sd.agc_rate;	// yes, adjust downwards
-                    if(sd.display_offset < (-(SPECTRUM_HEIGHT + SPECTRUM_SCOPE_ADJUST_OFFSET)))
-                    {
-                        sd.display_offset = (-(SPECTRUM_HEIGHT + SPECTRUM_SCOPE_ADJUST_OFFSET));
-                    }
-                }
-            }
-            else
-            {
-                sd.display_offset += (sd.agc_rate/3);	// no, adjust upwards more slowly
-            }
-
-            if((min <= 2) && (max <= 2))	 	// ARGH - We must already be in the weeds, below the bottom - let's adjust upwards quickly to get it back onto the display!
-            {
-                sd.display_offset += sd.agc_rate*10;
-            }
+            //                         char txt[32];
+            //                         uint32_t    max_ptr;        // throw-away pointer for ARM maxval AND minval functions
+            //                         sprintf(txt, " %d,%d,%d ", (int)sd.agc_rate*1000, (int)(min1), (int)sd.display_offset*100);
+            //                         UiDriver_ShowDebugText(txt);
 
             sd.state++;
             break;
