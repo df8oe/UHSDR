@@ -740,8 +740,8 @@ void MchfBoard_HandlePowerDown() {
         powerdown_delay++;      // yes - do the powerdown delay
         if(powerdown_delay > POWERDOWN_DELAY_COUNT)     // is it time to power down
         {
-            POWER_DOWN_PIO->BSRRL = POWER_DOWN;         // yes - kill the power
-            powerdown_delay = POWERDOWN_DELAY_COUNT;    // limit count if power button is being held down/stuck for a while
+            mchf_powerdown();
+            // never reached
         }
     }
 }

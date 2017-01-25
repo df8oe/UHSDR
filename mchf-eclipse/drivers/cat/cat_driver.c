@@ -183,22 +183,46 @@ uint8_t cat_driver_has_data()
     return len < 0?len+CAT_BUFFER_SIZE:len;
 }
 
+/*
+
+    DUPLEX = ["", "-", "+", "split"]
+    # narrow modes has to be at end
+    MODES = ["LSB", "USB", "CW", "CWR", "AM", "FM", "DIG", "PKT", "NCW",
+             "NCWR", "NFM"]
+    TMODES = ["", "Tone", "TSQL", "DTCS"]
+    STEPSFM = [5.0, 6.25, 10.0, 12.5, 15.0, 20.0, 25.0, 50.0]
+    STEPSAM = [2.5, 5.0, 9.0, 10.0, 12.5, 25.0]
+    STEPSSSB = [1.0, 2.5, 5.0]
+
+    # warning ranges has to be in this exact order
+    VALID_BANDS = [
+                    (100000, 33000000),  0  // USED
+                    (33000000, 56000000), 1
+                    (76000000, 108000000), 2  // NOT USED
+                    (108000000, 137000000), 3 // NOT USED
+                    (137000000, 154000000), 4
+                    (420000000, 470000000) 5
+                    ]
+ */
 // based on CHIRP ft817.py, gcc needs reversal of allocations inside 8bit
 typedef struct {
-    u8  mode:3,
+    u8  mode:3, // LSB, USB, ...
     unknown1:3,
-    tag_default:1,
-    tag_on_off:1;
+    tag_default:1, // do we show the automatically generate name CH-XXX
+    tag_on_off:1; // do we show the stored name?
 
     u8 freq_range:3,
     is_fm_narrow:1,
     is_cwdig_narrow:1,
-    is_duplex:1,
-    duplex:2;
-
+    is_duplex:1, // is a duplex memory
+    duplex:2; // how to interpret the offset with relation to the freq entry
+    // 0 -> no offset / second freq
+    // 1 -> - RX is freq - offset
+    // 2 -> + RX is freq + offset
+    // 3 -> split frequency, offset is used to store second frequency
     u8 unknown3:4,
-    att:1,
-    ipo:1,
+    att:1, // attenuator on, NOT USED
+    ipo:1, // IPO attenuator on, NOT USED
     unknown2:1,
     skip:1;
 
@@ -209,8 +233,8 @@ typedef struct {
     u8 tmode:2,
     unknown4:6;
 
-    u8 tx_freq_range:3,
-    tx_mode:3,
+    u8 tx_freq_range:3,  // VFO B?
+    tx_mode:3, // VFO B?
     unknown5:2;
 
     u8 tone:6,
@@ -221,9 +245,9 @@ typedef struct {
     unknown7:1;
 
     u16 rit; // ul16
-    u32 freq; // ul32
-    u32 offset; // ul32
-    u8  name[8];
+    u32 freq; // ul32 -> USED VFO A
+    u32 offset; // ul32 -> USED, VFO B
+    u8  name[8];  // USED
 } __attribute__((packed)) ft817_memory_t ;
 
 typedef struct {
