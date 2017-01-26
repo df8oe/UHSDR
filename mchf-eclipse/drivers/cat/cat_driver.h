@@ -52,5 +52,6 @@ uint8_t cat_driver_has_data();
 
 void CatDriver_FT817CheckAndExecute();
 bool CatDriver_CloneOutStart();
+bool CatDriver_CloneInStart();
 
 #endif

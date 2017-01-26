@@ -20,15 +20,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <soft_tcxo.h>
 
 #include "mchf_hw_i2c.h"
 
 #include "freedv_mchf.h"
 // SI570 control
 #include "ui_si570.h"
-#include "ui_soft_tcxo.h"
-
-// Codec control
 #include "codec.h"
 #include "audio_driver.h"
 #include "audio_management.h"
@@ -68,8 +66,6 @@
 
 // SWR/Power meter
 SWRMeter                    swrm;
-
-__IO LoTcxo                     lo;
 
 // ------------------------------------------------
 // Frequency public
@@ -861,102 +857,6 @@ uint8_t RadioManagement_GetBand(ulong freq)
     band_scan_old = band_scan;  // update band change detector
     return band_scan;       // return with the band
 }
-
-
-
-/*
- * @brief measure local oscillator temperature and calculates compensation value
- * @return true if the temperature value has been measured
- */
-bool RadioManagement_HandleLoTemperatureDrift()
-{
-    int32_t temp = 0;
-    int     comp, comp_p;
-    float   dtemp, remain, t_index;
-    uchar   tblp;
-
-    uint8_t temp_mode = RadioManagement_TcxoGetMode();
-
-    bool retval = false;
-
-    // No need to process if no chip avail or tcxo is disabled
-    if((lo.sensor_present == true) && RadioManagement_TcxoIsEnabled())
-    {
-        {
-            // Get current temperature
-            if(Si570_ReadExternalTempSensor(&temp) == 0)
-            {
-                // Get temperature from sensor with its maximum precision
-                dtemp = (float)temp;    // get temperature
-                dtemp /= 10000;         // convert to decimal degrees
-                remain = truncf(dtemp); // get integer portion of temperature
-                remain = dtemp - remain;    // get fractional portion
-
-                // Compensate only if enabled
-                if((temp_mode == TCXO_ON))
-                {
-                    // Temperature to unsigned table pointer
-                    t_index  = (uchar)((temp%1000000)/100000);
-                    t_index *= 10;
-                    t_index += (uchar)((temp%100000)/10000);
-
-                    // Check for overflow - keep within the lookup table
-                    if((t_index < 0) || (t_index > 150))        // the temperature sensor function "wraps around" below zero
-                    {
-                        t_index = 0;                        // point at the bottom of the temperature table
-                        dtemp = 0;                          // zero out fractional calculations
-                        remain = 0;
-                    }
-                    else if(t_index > 98)                   // High temperature - limit to maximum
-                    {
-                        t_index = 98;                       // Point to (near) top of table
-                        dtemp = 0;                          // zero out fractional calculations
-                        remain = 0;
-                    }
-
-                    tblp = (uchar)t_index;                      // convert to index
-                    // Check for overflow
-                    if(tblp < 100)
-                    {
-                        // Value from freq table
-                        comp = tcxo_table_20m[tblp];                // get the first entry in the table
-                        comp_p = tcxo_table_20m[tblp + 1];          // get the next entry in the table to determine fraction of frequency step
-
-                        comp_p = comp_p - comp; //                  // get frequency difference between the two steps
-
-                        dtemp = (float)comp_p;  // change it to float for the calculation
-                        dtemp *= remain;        // get proportion of temperature difference between the two steps using the fraction
-
-                        comp += (int)dtemp;     // add the compensation value to the lower of the two frequency steps
-
-                        // Change needed ?
-                        if(lo.comp != comp)         // is it there a difference?
-                        {
-                            // Update frequency, without reflecting it on the LCD
-                            df.temp_factor = comp;
-                            df.temp_factor_changed = true;
-                            lo.comp = comp;
-                        }
-                    }
-                }
-                // Refresh UI
-                retval = true;
-                lo.temp = temp;
-            }
-            else
-            {
-                // TODO: Find out why the MCP9801 crashes the I2C bus if
-                // used with FreeDV
-                // Github Issue #589
-                mchf_hw_i2c1_reset();
-            }
-
-        }
-    }
-    return retval;
-}
-
-
 
 const int ptt_break_time = 15;
 

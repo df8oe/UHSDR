@@ -484,7 +484,8 @@
     <File name="usb/usbd/core/src/usbd_core.c" path="usb/usbd/core/src/usbd_core.c" type="1"/>
     <File name="drivers/ui/lcd/ui_spectrum.c" path="drivers/ui/lcd/ui_spectrum.c" type="1"/>
     <File name="cmsis/core_cm4.h" path="cmsis/core_cm4.h" type="1"/>
-    <File name="drivers/ui/oscillator/ui_soft_tcxo.h" path="drivers/ui/oscillator/ui_soft_tcxo.h" type="1"/>
+    <File name="drivers/ui/oscillator/soft_tcxo.h" path="drivers/ui/oscillator/soft_tcxo.h" type="1"/>
+    <File name="drivers/ui/oscillator/soft_tcxo.c" path="drivers/ui/oscillator/soft_tcxo.c" type="1"/>
     <File name="drivers/freedv/quantise.h" path="drivers/freedv/quantise.h" type="1"/>
     <File name="drivers/audio/filters/fir_rx_decimate_4_min_lpf.c" path="drivers/audio/filters/fir_rx_decimate_4_min_lpf.c" type="1"/>
     <File name="cmsis/arm_math.h" path="cmsis/arm_math.h" type="1"/>

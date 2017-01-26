@@ -559,6 +559,7 @@ int main(void)
 
     profileTimedEventInit();
 
+
     // Audio HW init
     AudioDriver_Init();
 
