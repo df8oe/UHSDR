@@ -379,7 +379,8 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
     // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
     if(txrx_mode == TRX_MODE_TX)        // in transmit mode?
     {
-        if(ts.iq_freq_mode || (ts.flags1& FLAGS1_MUTE_LINEOUT_TX))  // is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
+        // at CW we transmit without translation, no matter what the iq_freq_mode for RX is
+        if((ts.iq_freq_mode && ts.dmod_mode != DEMOD_CW) || (ts.flags1& FLAGS1_MUTE_LINEOUT_TX))  // is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
         {
             Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);  // yes - mute LINE OUT during transmit
         }
