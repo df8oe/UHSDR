@@ -32,6 +32,7 @@
 // Open issues
 // - in internal keyer pause between dits and dots is too long
 //   Not changes as issue had not been reported yet
+// - Try interpolation with smoothing table to use less RAM
 // ----------------------------------------------------------------------------
 
 // Common
@@ -92,6 +93,7 @@ static void    CwGen_TestFirstPaddle();
 
 static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 {
+    0.0,
 		0.0000686004957883,
 		0.0000945542356652,
 		0.0001383179721175,
