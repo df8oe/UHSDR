@@ -4019,9 +4019,8 @@ static void UiDriver_ChangeEncoderTwoMode()
         {
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
         }
-
-        UiDriver_DisplayEncoderTwoMode();
     }
+    UiDriver_DisplayEncoderTwoMode();
 }
 
 static void UiDriver_DisplayEncoderTwoMode()
@@ -4075,6 +4074,7 @@ static void UiDriver_ChangeEncoderThreeMode()
             ts.enc_thr_mode = ENC_THREE_MODE_RIT;
         }
     }
+    UiDriver_DisplayEncoderThreeMode();
 }
 
 static void UiDriver_DisplayEncoderThreeMode()
