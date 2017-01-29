@@ -47,7 +47,7 @@
 #include "cw_gen.h"
 
 #include "radio_management.h"
-
+#include "soft_tcxo.h"
 
 static void 	UiDriver_PublicsInit();
 
@@ -892,12 +892,6 @@ void UiDriver_Init()
 
     sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
-    // Temp sensor setup
-    lo.sensor_present = Si570_InitExternalTempSensor() == 0;
-
-    // Read SI570 settings
-    lo.lo_error = 0 != Si570_ResetConfiguration();
-
     // Reset inter driver requests flag
     ts.LcdRefreshReq	= 0;
     ts.new_band 		= ts.band;
@@ -977,10 +971,6 @@ static void UiDriver_PublicsInit()
     pwmt.p_curr				= 0;
     pwmt.pwr_aver 			= 0;
 
-    // LO tcxo
-    lo.skip					= 0;
-    lo.comp					= 0;
-    lo.last                 = -100;
 }
 
 
@@ -4029,9 +4019,8 @@ static void UiDriver_ChangeEncoderTwoMode()
         {
             ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
         }
-
-        UiDriver_DisplayEncoderTwoMode();
     }
+    UiDriver_DisplayEncoderTwoMode();
 }
 
 static void UiDriver_DisplayEncoderTwoMode()
@@ -4085,6 +4074,7 @@ static void UiDriver_ChangeEncoderThreeMode()
             ts.enc_thr_mode = ENC_THREE_MODE_RIT;
         }
     }
+    UiDriver_DisplayEncoderThreeMode();
 }
 
 static void UiDriver_DisplayEncoderThreeMode()
@@ -5119,11 +5109,12 @@ void UiDriver_CreateTemperatureDisplay()
  */
 static void UiDriver_DisplayTemperature(int temp)
 {
+    static int last_disp_temp = -100;
     uint32_t clr =  RadioManagement_TcxoGetMode() ==TCXO_ON ? Blue:Red;
 
     UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
 
-    if (temp != lo.last)
+    if (temp != last_disp_temp)
     {
         char out[10];
         char* txt_ptr;
@@ -5132,9 +5123,9 @@ static void UiDriver_DisplayTemperature(int temp)
             txt_ptr = "RANGE!";
         }
         else {
-            lo.last = temp;
+            last_disp_temp = temp;
 
-            int32_t ttemp = lo.last;
+            int32_t ttemp = last_disp_temp;
             if(RadioManagement_TcxoIsFahrenheit())
             {
                 ttemp = ((ttemp *9)/5) + 320;			// multiply by 1.8 and add 32 degrees
@@ -5155,7 +5146,7 @@ static void UiDriver_DisplayTemperature(int temp)
 //*----------------------------------------------------------------------------
 static void UiDriver_HandleLoTemperature()
 {
-    if (RadioManagement_HandleLoTemperatureDrift())
+    if (SoftTcxo_HandleLoTemperatureDrift())
     {
         UiDriver_DisplayTemperature(lo.temp/1000); // precision is 0.1 represent by lowest digit
     }

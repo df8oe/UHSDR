@@ -27,6 +27,7 @@
 #include "math.h"
 #include "codec.h"
 #include "radio_management.h"
+#include "soft_tcxo.h"
 
 // LCD
 #include "ui_lcd_hy28.h" // for colors!

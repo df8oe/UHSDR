@@ -28,6 +28,7 @@
 #include "codec.h"
 //
 #include "ui_si570.h"
+#include "soft_tcxo.h"
 //
 // Eeprom items
 #include "eeprom.h"
@@ -685,6 +686,7 @@ void mchf_board_init(void)
     // Get startup frequency of Si570, by DF8OE, 201506
     Si570_CalculateStartupFrequency();
 
+    SoftTcxo_Init();
 
     // Codec control interface
     mchf_hw_i2c2_init();

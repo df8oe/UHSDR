@@ -73,28 +73,6 @@ inline bool RadioManagement_TcxoIsFahrenheit()
     return (df.temp_enabled & TCXO_UNIT_MASK) == TCXO_UNIT_F;
 }
 
-// LO temperature compensation
-typedef struct LoTcxo
-{
-    ulong   skip;
-
-    // Current compensation value
-    // loaded to LO
-    int     comp;
-
-    int32_t temp;
-
-    bool    sensor_present;
-    bool    lo_error;
-    int   last;
-
-} LoTcxo;
-
-
-// ------------------------------------------------
-// LO Tcxo
-extern __IO LoTcxo                     lo;
-
 
 typedef enum
 {
@@ -205,7 +183,6 @@ bool RadioManagement_UpdatePowerAndVSWR();
 void    RadioManagement_SetHWFiltersForFrequency(ulong freq);
 void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
-bool RadioManagement_HandleLoTemperatureDrift();
 void RadioManagement_HandlePttOnOff();
 void RadioManagement_MuteTemporarilyRxAudio();
 uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode);

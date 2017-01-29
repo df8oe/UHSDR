@@ -243,6 +243,7 @@ SRC =  \
     drivers/ui/lcd/ui_lcd_hy28_fonts.c  \
     drivers/ui/lcd/ui_spectrum.c  \
     drivers/ui/oscillator/ui_si570.c  \
+    drivers/ui/oscillator/soft_tcxo.c  \
     drivers/ui/radio_management.c  \
     drivers/ui/ui_configuration.c  \
     drivers/ui/ui_driver.c  \
