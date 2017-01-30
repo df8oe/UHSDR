@@ -377,24 +377,19 @@ void Codec_VolumeSpkr(uint8_t vol)
 void Codec_VolumeLineOut(uint8_t txrx_mode)
 {
     // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
-    if(txrx_mode == TRX_MODE_TX)        // in transmit mode?
+    if (
+            (txrx_mode == TRX_MODE_TX)
+            &&
+            ((ts.flags1& FLAGS1_MUTE_LINEOUT_TX) || (ts.iq_freq_mode && ts.dmod_mode != DEMOD_CW))
+       )
     {
         // at CW we transmit without translation, no matter what the iq_freq_mode for RX is
-        if((ts.iq_freq_mode && ts.dmod_mode != DEMOD_CW) || (ts.flags1& FLAGS1_MUTE_LINEOUT_TX))  // is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
-        {
-            Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);  // yes - mute LINE OUT during transmit
-        }
-        else
-        {
-            // audio is NOT to be muted during transmit
-            // this is used for generating the CW Tone since a single channel (I or Q)
-            // will have a sine waveform with the frequency of the CW sidetone if we do not translate frequency
-            Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0x78);   // value selected for 0.5VRMS at AGC setting
-        }
+        // is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
+        Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);  // yes - mute LINE OUT during transmit
     }
     else    // receive mode - LINE OUT always enabled
     {
-        Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0x78);   // value selected for 0.5VRMS at AGC setting
+        Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,ts.lineout_gain + 0x2F);   // value selected for 0.5VRMS at AGC setting
     }
 }
 

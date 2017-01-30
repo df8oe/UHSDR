@@ -155,6 +155,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE, NULL, "TX Initial Muting Time", UiMenuDesc("When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches!") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME, NULL, "Max Volume", UiMenuDesc("Set maximum speaker&headphone volume.") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN, NULL, "Max RX Gain (0=Max)", UiMenuDesc("Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_LINEOUT_GAIN, NULL, "Lineout Gain", UiMenuDesc("Set the constant gain level for the analog lineout jack") },
 
     // UI Behavior / Key Beep
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, NULL, "Key Beep", UiMenuDesc("If ON each keypress will generate a short beep") },

@@ -2190,6 +2190,19 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "    %u", ts.max_rf_gain);
         break;
+    case CONFIG_LINEOUT_GAIN:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.lineout_gain,
+                                              LINEOUT_GAIN_MIN,
+                                              LINEOUT_GAIN_MAX,
+                                              LINEOUT_GAIN_DEFAULT,
+                                              1
+                                             );
+        if(var_change)
+        {
+            Codec_VolumeLineOut(ts.txrx_mode);
+        }
+        snprintf(options,32, "%3u", ts.lineout_gain);
+        break;
     case CONFIG_BEEP_ENABLE:    //
         temp_var_u8 = ts.flags2 & FLAGS2_KEY_BEEP_ENABLE;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
