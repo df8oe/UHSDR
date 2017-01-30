@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-01-22T17:02:42  by "./ui_menu_structure_graph.py"
+#  generated at  2017-01-30T12:38:42  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-22T17:02:42  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-01-30T12:38:42  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -439,6 +439,11 @@
         
         "CONFIG_MAX_RX_GAIN" [
              label = "CONFIG_MAX_RX_GAIN | Max RX Gain (0=Max)"
+             shape = record
+             ];
+        
+        "CONFIG_LINEOUT_GAIN" [
+             label = "CONFIG_LINEOUT_GAIN | Lineout Gain"
              shape = record
              ];
         
@@ -942,6 +947,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_CLONEIN" [
+             label = "MENU_DEBUG_CLONEIN | FT817 Clone Receive"
+             shape = record
+             ];
+        
         #  -  -  -  -
 
         subgraph "MENU_CONF" {
@@ -963,6 +973,8 @@
             MENU_CONF -> CONFIG_MAX_VOLUME
             
             MENU_CONF -> CONFIG_MAX_RX_GAIN
+            
+            MENU_CONF -> CONFIG_LINEOUT_GAIN
             
             MENU_CONF -> CONFIG_BEEP_ENABLE
             
@@ -1315,6 +1327,8 @@
             MENU_DEBUG -> MENU_DEBUG_I2C2_SPEED
             
             MENU_DEBUG -> MENU_DEBUG_CLONEOUT
+            
+            MENU_DEBUG -> MENU_DEBUG_CLONEIN
             
         }  ## END subgraph MENU_DEBUG
     
