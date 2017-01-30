@@ -870,6 +870,7 @@ typedef struct TransceiverState
     Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
 
     int 	rf_gain;			// RF gain control
+    uint8_t lineout_gain;            // lineout gain to control lineout level
 
 
 #define MAX_RF_CODEC_GAIN_VAL       9       // Maximum RF gain setting

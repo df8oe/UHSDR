@@ -64,10 +64,15 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //
 #define MAX_RF_GAIN         50      // Maximum RF gain setting
 #define DEFAULT_RF_GAIN     50      // Default RF gain setting
-//
-//
+
+#define MAX_RF_GAIN         50      // Maximum RF gain setting
+
+#define LINEOUT_GAIN_DEFAULT    0x49    // Default lineout gain setting in dB steps
+#define LINEOUT_GAIN_MIN        1       //  min lineout gain setting in dB steps
+#define LINEOUT_GAIN_MAX        0x50    //  max lineout gain setting in dB steps
+
 #define MAX_AUDIO_GAIN      30      // Maximum audio gain setting
-#define MAX_DIG_GAIN      31      // Maximum audio gain setting
+#define MAX_DIG_GAIN        31      // Maximum audio gain setting
 #define DEFAULT_AUDIO_GAIN  16      // Default audio gain
 #define DEFAULT_DIG_GAIN    16      // Default audio gain
 
@@ -525,7 +530,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_I2C1_SPEED                   369     //
 #define EEPROM_I2C2_SPEED                   370     //
 #define EEPROM_SAM_FADE_LEVELER             371
-#define EEPROM_FIRST_UNUSED 				372		// change this if new value ids are introduced
+#define EEPROM_LINEOUT_GAIN                 372
+#define EEPROM_FIRST_UNUSED 				373		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

@@ -236,6 +236,7 @@ void TransceiverStateInit(void)
     ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;			// this variable is used in the active RX audio processing function
     ts.rx_gain[RX_AUDIO_DIG].active_value = 1;			// this variable is used in the active RX audio processing function
     ts.rf_gain			= DEFAULT_RF_GAIN;		//
+    ts.lineout_gain     = LINEOUT_GAIN_DEFAULT;
     ts.max_rf_gain		= MAX_RF_GAIN_DEFAULT;			// setting for maximum gain (e.g. minimum S-meter reading)
     ts.rf_codec_gain	= DEFAULT_RF_CODEC_GAIN_VAL;		// Set default RF gain (0 = lowest, 8 = highest, 9 = "Auto")
     ts.rit_value		= 0;					// RIT value
