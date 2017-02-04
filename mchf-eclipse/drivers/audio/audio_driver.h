@@ -295,8 +295,8 @@ typedef struct SMeter
 #define	AGC_CUSTOM_DEFAULT	12		// Default custom AGC setting (approx. equal to "medium")
 #define AGC_CUSTOM_FAST_WARNING	2	// Value at or below which setting the custom AGC is likely to degrade audio
 //
-#define	MAX_RF_GAIN_MAX		6		// Maximum setting for "Max RF gain"
-#define	MAX_RF_GAIN_DEFAULT	3
+#define	MAX_RF_GAIN_MAX		30		// Maximum setting for "Max RF gain"
+#define	MAX_RF_GAIN_DEFAULT	10
 //
 // Noise blanker constants
 //
