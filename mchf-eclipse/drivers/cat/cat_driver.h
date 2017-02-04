@@ -29,17 +29,15 @@ typedef enum
 
 
 // Exports
-void cat_driver_init(void);
-void cat_driver_stop(void);
-void cat_driver_thread(void);
+void CatDriver_InitInterface(void);
+void CatDriver_StopInterface(void);
 
-CatInterfaceState cat_driver_state();
-uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len);
-uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len);
-uint8_t cat_driver_has_data();
-int cat_buffer_add(uint8_t c);
+CatInterfaceState CatDriver_GetInterfaceState();
 
-void CatDriver_FT817CheckAndExecute();
+int CatDriver_InterfaceBufferAddData(uint8_t c);
+
+void CatDriver_HandleProtocol();
+
 bool CatDriver_CloneOutStart();
 bool CatDriver_CloneInStart();
 

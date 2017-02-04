@@ -5926,7 +5926,7 @@ void UiDriver_MainHandler()
 
     uint32_t now = ts.sysclock;
 
-    CatDriver_FT817CheckAndExecute();
+    CatDriver_HandleProtocol();
 
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV

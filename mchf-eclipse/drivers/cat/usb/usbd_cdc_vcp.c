@@ -240,7 +240,7 @@ uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 
     for (i = 0; i < Len; i++)
     {
-        cat_buffer_add(Buf[i]);
+        CatDriver_InterfaceBufferAddData(Buf[i]);
     }
     return USBD_OK;
 }

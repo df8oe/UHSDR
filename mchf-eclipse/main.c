@@ -577,7 +577,7 @@ int main(void)
 
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {
-        cat_driver_init();
+        CatDriver_InitInterface();
     }
 
 #ifdef USE_FREEDV
