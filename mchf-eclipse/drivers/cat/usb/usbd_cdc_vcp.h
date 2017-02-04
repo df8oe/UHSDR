@@ -51,6 +51,14 @@ typedef struct
     uint8_t changed;
 } LINE_CODING;
 
+typedef struct {
+    uint16_t
+    dtr:1,
+    rts:1;
+} CdcVcp_CtrlLines_t;
+
+extern __IO CdcVcp_CtrlLines_t  cdcvcp_ctrllines;
+
 
 #define DEFAULT_CONFIG                  0
 #define OTHER_CONFIG                    1

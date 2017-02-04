@@ -28,18 +28,6 @@ typedef enum
 } CatInterfaceProtocol;
 
 
-// CAT driver public structure
-typedef struct CatDriver
-{
-    uchar	enabled;
-    CatInterfaceState state;
-    CatInterfaceProtocol protocol;
-    uint32_t lastbufferadd_time;
-
-} CatDriver;
-
-extern __IO CatDriver kd;
-
 // Exports
 void cat_driver_init(void);
 void cat_driver_stop(void);
@@ -49,9 +37,13 @@ CatInterfaceState cat_driver_state();
 uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len);
 uint8_t cat_driver_has_data();
+int cat_buffer_add(uint8_t c);
 
 void CatDriver_FT817CheckAndExecute();
 bool CatDriver_CloneOutStart();
 bool CatDriver_CloneInStart();
+
+bool CatDriver_CWKeyPressed();
+bool CatDriver_CatPttActive();
 
 #endif

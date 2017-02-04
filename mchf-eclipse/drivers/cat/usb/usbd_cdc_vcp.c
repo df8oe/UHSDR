@@ -35,8 +35,9 @@
 
 #include "usbd_cdc_core.h"
 
-// TODO: create proper header file
-extern int cat_buffer_add(uint8_t c);
+#include "cat_driver.h"
+
+__IO CdcVcp_CtrlLines_t  cdcvcp_ctrllines;
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -168,6 +169,8 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
         break;
 
     case SET_CONTROL_LINE_STATE:
+        // byte 3 aka buf[2] has DTR (Bit0) and RTS (Bit1).
+
         //printf("Set control line state\n");
         /* Not  needed for this driver */
         break;

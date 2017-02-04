@@ -39,6 +39,7 @@
 #include "mchf_board.h"
 #include "softdds.h"
 #include "cw_gen.h"
+#include "cat_driver.h"
 
 
 // States
@@ -374,7 +375,7 @@ static void CwGen_CheckKeyerState(void)
 bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
 
-    if(ts.keyer_mode == CW_MODE_STRAIGHT)
+    if(ts.keyer_mode == CW_MODE_STRAIGHT || CatDriver_CatPttActive())
     {
         return CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
     }
@@ -388,6 +389,15 @@ bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval;
+
+    bool cat_ptt_active = CatDriver_CatPttActive();
+    bool cat_cw_key_pressed = CatDriver_CWKeyPressed();
+
+    // simulate interrupt if we do a virtual key via RS232
+    if (cat_ptt_active && cat_cw_key_pressed)
+    {
+        CwGen_DahIRQ();
+    }
 
     // Exit to RX if key_timer is zero and break_timer is zero as well
     if(ps.key_timer == 0)
@@ -447,7 +457,8 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 
         // Key released ?, then shape falling edge until the end of the smooth table is reached
         //
-        if(mchf_ptt_dah_line_pressed() == false && (ps.key_timer == 2))
+
+        if((mchf_ptt_dah_line_pressed() == false && ( cat_ptt_active && CatDriver_CWKeyPressed() == false)) && (ps.key_timer == 2))
         {
             ps.key_timer = 1;	// begin of falling edge
         }
