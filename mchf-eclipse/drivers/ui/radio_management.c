@@ -882,8 +882,8 @@ uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
 void RadioManagement_HandlePttOnOff()
 {
     static uint32_t ptt_break_timer = ptt_break_time;
-    // Not when tuning
 
+    // Not when tuning
     if(ts.tune == false)
     {
         // PTT on
@@ -899,10 +899,10 @@ void RadioManagement_HandlePttOnOff()
             // the ptt request has been processed
             ts.ptt_req = false;
         }
-        else if (!kd.enabled)
+        else if (CatDriver_CatPttActive() == false)
         {
-            // When CAT driver is running
-            // skip auto return to RX
+            // When CAT driver "pressed" PTT skip auto return to RX
+
             // PTT off for all non-CW modes
             if(ts.dmod_mode != DEMOD_CW || ts.tx_stop_req == true)
             {

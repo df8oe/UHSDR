@@ -32,8 +32,6 @@ __ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
 extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 // extern uint32_t USBD_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev);
 
-// CAT driver state
-__IO CatDriver                  kd;
 
 //void OTG_FS_WKUP_IRQHandler(void)
 //{
@@ -46,6 +44,24 @@ __IO CatDriver                  kd;
 //EXTI_ClearITPendingBit(EXTI_Line18);
 //}
 
+// CAT driver internal structure
+typedef struct CatDriver
+{
+    bool    cat_ptt_active;
+    CatInterfaceState state;
+    CatInterfaceProtocol protocol;
+    uint32_t lastbufferadd_time;
+
+} CatDriver;
+
+// CAT driver state
+CatDriver                  cat_driver;
+
+
+/**
+ * @brief returns true if the current TX state has been initiated by a CAT PTT command
+ */
+bool CatDriver_CatPttActive() { return cat_driver.cat_ptt_active; }
 
 void cat_driver_init(void)
 {
@@ -65,8 +81,13 @@ void cat_driver_stop(void)
 
 void cat_driver_thread(void)
 {
-    if(!kd.enabled)
+    if(!cat_driver.cat_ptt_active)
         return;
+}
+
+bool CatDriver_CWKeyPressed()
+{
+    return cdcvcp_ctrllines.dtr != 0;
 }
 
 #define CAT_BUFFER_SIZE 256
@@ -104,7 +125,7 @@ int cat_buffer_add(uint8_t c)
         /* there is room */
         cat_buffer[cat_head] = c;
         cat_head = next_head;
-        kd.lastbufferadd_time = ts.sysclock;
+        cat_driver.lastbufferadd_time = ts.sysclock;
         ret ++;
     }
     return ret;
@@ -135,7 +156,7 @@ void cat_driver_sync_data( void)
 
     if (bufsz)
     {
-        if ( ts.sysclock - CAT_DRIVER_TIMEOUT > kd.lastbufferadd_time)
+        if ( ts.sysclock - CAT_DRIVER_TIMEOUT > cat_driver.lastbufferadd_time)
         {
             // if we are here the first bufsz bytes are older than 200ms
             // if in the meantime new bytes arrive, no problem, we keep them
@@ -924,12 +945,15 @@ void CatDriver_FT817CheckAndExecute()
             }
             break;
             case 8: /* PTT ON */
+                resp[0] = cat_driver.cat_ptt_active?0xF0:0x00;
+                /* 0xF0 if PTT was already on */
+
                 if(RadioManagement_IsTxDisabled() == false)
                 {
-                    ts.ptt_req = 1;
-                    kd.enabled = 1;
+                    ts.ptt_req = true;
+                    cat_driver.cat_ptt_active = true;
                 }
-                resp[0] = 0; /* 0xF0 if PTT was already on */
+
                 bc = 1;
                 break;
             case 15:
@@ -941,9 +965,9 @@ void CatDriver_FT817CheckAndExecute()
                 bc = 1;
                 break;
             case 136: /* 0x88 PTT OFF */
-                resp[0] = 0; /* 0xF0 if PTT was already off */
-                ts.ptt_req = 0;
-                kd.enabled = 0;
+                resp[0] = cat_driver.cat_ptt_active?0x00:0xF0; /* 0xF0 if PTT was already off */
+                ts.ptt_req = false;
+                cat_driver.cat_ptt_active = false;
                 bc = 1;
                 break;
             case 167: /* A7 */
