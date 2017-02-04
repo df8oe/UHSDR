@@ -374,15 +374,24 @@ static void CwGen_CheckKeyerState(void)
  */
 bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
+    bool retval;
+
 
     if(ts.keyer_mode == CW_MODE_STRAIGHT || CatDriver_CatPttActive())
     {
-        return CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
+        // we make sure the remaining code will see the "right" keyer mode
+        // since we are running in an interrupt, none will change that outside
+        // and we can safely restore after we're done
+        uint8_t keyer_mode = ts.keyer_mode;
+        ts.keyer_mode = CW_MODE_STRAIGHT;
+        retval = CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
+        ts.keyer_mode = keyer_mode;
     }
     else
     {
-        return CwGen_ProcessIambic(i_buffer,q_buffer,blockSize);
+        retval = CwGen_ProcessIambic(i_buffer,q_buffer,blockSize);
     }
+    return retval;
 }
 
 
@@ -393,7 +402,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
     bool cat_ptt_active = CatDriver_CatPttActive();
     bool cat_cw_key_pressed = CatDriver_CWKeyPressed();
 
-    // simulate interrupt if we do a virtual key via RS232
+    // simulate paddle interrupt if we do virtual keying via CAT / RS232
     if (cat_ptt_active && cat_cw_key_pressed)
     {
         CwGen_DahIRQ();
@@ -458,7 +467,16 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
         // Key released ?, then shape falling edge until the end of the smooth table is reached
         //
 
-        if((mchf_ptt_dah_line_pressed() == false && ( cat_ptt_active && CatDriver_CWKeyPressed() == false)) && (ps.key_timer == 2))
+        if
+        (
+                (ps.key_timer == 2)
+                &&
+                (
+                        (mchf_ptt_dah_line_pressed() == false)
+                        &&
+                        (cat_ptt_active == false || CatDriver_CWKeyPressed() == false)
+                )
+        )
         {
             ps.key_timer = 1;	// begin of falling edge
         }
