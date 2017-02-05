@@ -2264,11 +2264,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             if(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
             {
-                cat_driver_init();
+                CatDriver_InitInterface();
             }
             else
             {
-                cat_driver_stop();
+                CatDriver_StopInterface();
             }
         }
         break;

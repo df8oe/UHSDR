@@ -169,12 +169,15 @@ static uint16_t VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
         break;
 
     case SET_CONTROL_LINE_STATE:
-        // byte 3 aka buf[2] has DTR (Bit0) and RTS (Bit1).
+    {
+        // we get wValue here as buffer
+        uint16_t wValue = *(uint16_t*)&(Buf[0]);
+        cdcvcp_ctrllines.dtr = (wValue & 0x01)?1:0;
+        cdcvcp_ctrllines.rts = (wValue & 0x02)?1:0;
 
-        //printf("Set control line state\n");
         /* Not  needed for this driver */
         break;
-
+    }
     case SEND_BREAK:
         /* Not  needed for this driver */
         break;
@@ -237,7 +240,7 @@ uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 
     for (i = 0; i < Len; i++)
     {
-        cat_buffer_add(Buf[i]);
+        CatDriver_InterfaceBufferAddData(Buf[i]);
     }
     return USBD_OK;
 }

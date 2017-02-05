@@ -542,7 +542,7 @@ static uint8_t  usbd_cdc_Setup (void  *pdev,
         else /* No Data request */
         {
             /* Transfer the command to the interface layer */
-            APP_FOPS.pIf_Ctrl(req->bRequest, NULL, 0);
+            APP_FOPS.pIf_Ctrl(req->bRequest, (uint8_t*)&req->wValue, 0);
         }
 
         return USBD_OK;

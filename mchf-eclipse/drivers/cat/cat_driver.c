@@ -63,7 +63,7 @@ CatDriver                  cat_driver;
  */
 bool CatDriver_CatPttActive() { return cat_driver.cat_ptt_active; }
 
-void cat_driver_init(void)
+void CatDriver_InitInterface(void)
 {
     // Start driver
     USBD_Init(	&USB_OTG_dev,
@@ -73,16 +73,10 @@ void cat_driver_init(void)
                 &USR_cb);
 }
 
-void cat_driver_stop(void)
+void CatDriver_StopInterface(void)
 {
     // Stop driver
     USBD_DeInit(&USB_OTG_dev);
-}
-
-void cat_driver_thread(void)
-{
-    if(!cat_driver.cat_ptt_active)
-        return;
 }
 
 bool CatDriver_CWKeyPressed()
@@ -90,17 +84,27 @@ bool CatDriver_CWKeyPressed()
     return cdcvcp_ctrllines.dtr != 0;
 }
 
+
+CatInterfaceState CatDriver_GetInterfaceState()
+{
+    return USBD_User_GetStatus();
+}
+
+
 #define CAT_BUFFER_SIZE 256
 __IO uint8_t cat_buffer[CAT_BUFFER_SIZE];
 __IO int32_t cat_head = 0;
 __IO int32_t cat_tail = 0;
 
-CatInterfaceState cat_driver_state()
+static uint8_t CatDriver_InterfaceBufferHasData()
 {
-    return USBD_User_GetStatus();
+    int32_t len = cat_head - cat_tail;
+    return len < 0?len+CAT_BUFFER_SIZE:len;
 }
 
-int cat_buffer_remove(uint8_t* c_ptr)
+
+
+static int cat_buffer_remove(uint8_t* c_ptr)
 {
 	int ret = 0;
 
@@ -115,7 +119,7 @@ int cat_buffer_remove(uint8_t* c_ptr)
 }
 
 /* no room left in the buffer returns 0 */
-int cat_buffer_add(uint8_t c)
+int CatDriver_InterfaceBufferAddData(uint8_t c)
 {
 	int ret = 0;
     int32_t next_head = (cat_head + 1) % CAT_BUFFER_SIZE;
@@ -131,7 +135,7 @@ int cat_buffer_add(uint8_t c)
     return ret;
 }
 
-void cat_buffer_reset()
+static void cat_buffer_reset()
 {
     cat_tail = cat_head;
 }
@@ -147,9 +151,9 @@ void cat_buffer_reset()
  * at least at startup or if the external program stops without completely sending the
  * request data, we expire old data in the request data buffer.
  */
-void cat_driver_sync_data( void)
+static void cat_driver_sync_data( void)
 {
-    uint32_t bufsz = cat_driver_has_data();
+    uint32_t bufsz = CatDriver_InterfaceBufferHasData();
     // we now know how much data is available
     // this MUST BE DONE BEFORE find out how old the data is
     // otherwise a race condition  can occur and we throw away new data.
@@ -172,10 +176,10 @@ void cat_driver_sync_data( void)
     }
 }
 
-uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len)
+static uint8_t CatDriver_InterfaceBufferGetData(uint8_t* Buf,uint32_t Len)
 {
     uint8_t res = 0;
-    if (cat_driver_has_data() >= Len)
+    if (CatDriver_InterfaceBufferHasData() >= Len)
     {
         for  (int i = 0; i < Len; i++)
         {
@@ -187,7 +191,7 @@ uint8_t cat_driver_get_data(uint8_t* Buf,uint32_t Len)
 }
 
 
-uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len)
+static uint8_t CatDriver_InterfaceBufferPutData(uint8_t* Buf,uint32_t Len)
 {
     uint8_t res = 0;
     if (USBD_User_GetStatus())
@@ -198,11 +202,6 @@ uint8_t cat_driver_put_data(uint8_t* Buf,uint32_t Len)
     return res;
 }
 
-uint8_t cat_driver_has_data()
-{
-    int32_t len = cat_head - cat_tail;
-    return len < 0?len+CAT_BUFFER_SIZE:len;
-}
 
 /*
 
@@ -564,12 +563,12 @@ bool CatDriver_BlockRecv(uint8_t num, uint8_t idx, uint8_t rpt, uint8_t* buf, si
 void CatDriver_CloneSendAck()
 {
     uint8_t cmd_ack = CLONE_CMD_ACK;
-    cat_driver_put_data(&cmd_ack,1);
+    CatDriver_InterfaceBufferPutData(&cmd_ack,1);
 }
 
 void CatDriver_BlockSend(uint8_t* buf, size_t len)
 {
-    cat_driver_put_data(buf,len);
+    CatDriver_InterfaceBufferPutData(buf,len);
 }
 
 
@@ -577,10 +576,10 @@ bool CatDriver_BlockAck()
 {
     bool retval = false;
 
-    while(cat_driver_has_data())
+    while(CatDriver_InterfaceBufferHasData())
     {
         uint8_t c;
-        cat_driver_get_data(&c,1);
+        CatDriver_InterfaceBufferGetData(&c,1);
         if (c == CLONE_CMD_ACK)
         {
             retval = true;
@@ -694,7 +693,7 @@ static void CatDriver_HandleCloneIn()
     case CLONEIN_BLOCK_RECV:
     {
         // we can ask for the full amount since our buffer will be able to hold all of the packets contents
-        if (cat_driver_get_data(buf,blockWant))
+        if (CatDriver_InterfaceBufferGetData(buf,blockWant))
         {
             // analyse block
             if (CatDriver_BlockRecv(blockNum,blockIdx,blockRpt,buf,blockWant))
@@ -777,12 +776,12 @@ bool CatDriver_CloneInStart()
 }
 
 
-void CatDriver_FT817CheckAndExecute()
+void CatDriver_HandleProtocol()
 {
     uint8_t bc = 0;
     uint8_t resp[32];
 
-    if (cat_driver_state() == 0xFF)
+    if (CatDriver_GetInterfaceState() == 0xFF)
     {
         cat_buffer_reset();
         ft817.state = CAT_CAT;
@@ -803,7 +802,7 @@ void CatDriver_FT817CheckAndExecute()
 
         cat_driver_sync_data();
 
-        while (cat_driver_get_data(ft817.req,5))
+        while (CatDriver_InterfaceBufferGetData(ft817.req,5))
         {
 #ifdef DEBUG_FT817
             int debug_idx;
@@ -1025,7 +1024,7 @@ void CatDriver_FT817CheckAndExecute()
                 // while (1);
             }
         }
-        cat_driver_put_data(resp,bc);
+        CatDriver_InterfaceBufferPutData(resp,bc);
         /* Return data back */
     }
 }
