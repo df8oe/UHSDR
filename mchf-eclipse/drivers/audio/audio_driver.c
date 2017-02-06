@@ -3072,7 +3072,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //            adb.i_buffer[i] += M_c1 * adb.q_buffer[i];
         }
         // see fig. 5
-        arm_scale_f32 (adb.i_buffer, M_c2 / , adb.i_buffer, blockSize);
+        arm_scale_f32 (adb.i_buffer, M_c2, adb.i_buffer, blockSize);
 //        arm_scale_f32 (adb.q_buffer, M_c2, adb.q_buffer, blockSize);
     }
 
