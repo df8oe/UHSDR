@@ -2910,6 +2910,20 @@ void set_SAM_PLL_parameters()
         adb.onem_mtauI = (1.0 - adb.mtauI);
 }
 
+float32_t teta1_old = 0.0;
+float32_t teta2_old = 0.0;
+float32_t teta3_old = 0.0;
+float32_t M_c1, M_c2;
+uint8_t IQ_auto_counter;
+
+float32_t sign_new(float32_t x) {
+  if(x < 0)
+    return -1.0;
+    else
+      if(x > 0)
+        return 1.0;
+          else return 0.0;
+}
 
 //
 //*----------------------------------------------------------------------------
@@ -3007,6 +3021,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
+    // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
+    arm_scale_f32 (adb.i_buffer, 1.6, adb.i_buffer, blockSize);
+
+
+    if(!ts.iq_auto_correction)
+    {
     // Apply I/Q amplitude correction
     arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var.i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, ts.rx_adj_gain_var.q, adb.q_buffer, blockSize); // TODO: we need only scale one channel! DD4WH, Dec 2016
@@ -3014,6 +3034,48 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     // Apply I/Q phase correction
     AudioDriver_IQPhaseAdjust(ts.txrx_mode,adb.i_buffer, adb.q_buffer,blockSize);
+    }
+    else
+    {
+        static float32_t teta1 = 0.0;
+        static float32_t teta2 = 0.0;
+        static float32_t teta3 = 0.0;
+        for(i = 0; i < blockSize; i++)
+        {
+            teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
+            teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
+            teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
+//            teta1 += sign_new(adb.q_buffer[i]) * adb.i_buffer[i]; // eq (34)
+//            teta2 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (35)
+//            teta3 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (36)
+            IQ_auto_counter++;
+        }
+        if(IQ_auto_counter >= 3)
+        {
+            teta1 = -0.01 * (teta1 / (float32_t)blockSize / 4.0) + 0.99 * teta1_old; // eq (34) and first order lowpass
+            teta2 = 0.01 * (teta2 / (float32_t)blockSize / 4.0) + 0.99 * teta2_old; // eq (35) and first order lowpass
+            teta3 = 0.01 * (teta3 / (float32_t)blockSize / 4.0) + 0.99 * teta3_old; // eq (36) and first order lowpass
+            M_c1 = teta1 / teta2; // eq (30)
+            M_c2 = sqrtf((teta3 * teta3 - teta1 * teta1) / (teta2 * teta2)); // eq (31)
+            teta1_old = teta1;
+            teta2_old = teta2;
+            teta3_old = teta3;
+            teta1 = 0.0;
+            teta2 = 0.0;
+            teta3 = 0.0;
+            IQ_auto_counter = 0;
+        }
+                // first correct Q and then correct I --> this order is crucially important!
+        for(i = 0; i < blockSize; i++)
+        {   // see fig. 5
+            adb.q_buffer[i] += M_c1 * adb.i_buffer[i];
+//            adb.i_buffer[i] += M_c1 * adb.q_buffer[i];
+        }
+        // see fig. 5
+        arm_scale_f32 (adb.i_buffer, M_c2 / , adb.i_buffer, blockSize);
+//        arm_scale_f32 (adb.q_buffer, M_c2, adb.q_buffer, blockSize);
+    }
+
 
     if(iq_freq_mode)            // is receive frequency conversion to be done?
     {

@@ -433,6 +433,7 @@ void TransceiverStateInit(void)
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
     ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
+    ts.iq_auto_correction = 0;              // disable/enable automatic IQ correction
 
     ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
     ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW

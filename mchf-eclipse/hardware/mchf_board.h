@@ -1198,6 +1198,8 @@ typedef struct TransceiverState
     uchar	s_meter;				// defines S-Meter style/configuration
 	uint8_t	meter_colour_up;
 	uint8_t	meter_colour_down;
+	uchar   iq_auto_correction;     // switch variable for automatic IQ correction
+
 #define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
 #define DISPLAY_S_METER_DBMHZ 2
