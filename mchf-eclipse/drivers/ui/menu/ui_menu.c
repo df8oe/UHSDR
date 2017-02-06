@@ -2276,13 +2276,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var >= 1)        // setting increase?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.freq_cal += df.tuning_step;
+            ts.freq_cal += 1;
             var_change = 1;
         }
         else if(var <= -1)      // setting decrease?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.freq_cal -= df.tuning_step;
+            ts.freq_cal -= 1;
             var_change = 1;
         }
         if(ts.freq_cal < MIN_FREQ_CAL)
