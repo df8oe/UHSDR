@@ -519,8 +519,8 @@ extern const ButtonMap  bm_sets[2][BUTTON_NUM];
 #define		TRANSVT_FREQ_A	 	42000000
 
 //
-#define		MIN_FREQ_CAL		-9999		// Minimum and maximum range of frequency calibration in Hz (referenced to 14.000 MHz)
-#define		MAX_FREQ_CAL		9999
+#define		MIN_FREQ_CAL		-999		// Minimum and maximum range of frequency calibration in 10xppm
+#define		MAX_FREQ_CAL		999
 //
 // Total bands supported
 //

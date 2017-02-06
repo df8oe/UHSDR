@@ -302,7 +302,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
-            Si570_ResultCodes lo_prep_result = Si570_PrepareNextFrequency(ts.tune_freq_req,ts.freq_cal,df.temp_factor);
+            Si570_ResultCodes lo_prep_result = Si570_PrepareNextFrequency(ts.tune_freq_req, df.temp_factor);
             // first check and mute output if a large step is to be done
             if(Si570_IsNextStepLarge() == true)     // did the tuning require that a large tuning step occur?
             {
@@ -386,7 +386,7 @@ void RadioManagement_MuteTemporarilyRxAudio()
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
     // we check with the si570 code if the frequency is tunable, we do not tune to it.
-    return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX),ts.freq_cal,df.temp_factor);
+    return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
 }
 
 

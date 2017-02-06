@@ -34,13 +34,13 @@ typedef enum
 
 Si570_ResultCodes Si570_ChangeToNextFrequency();
 bool Si570_IsNextStepLarge();
-Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_factor);
-
+Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int temp_factor);
+void Si570_SetPPM(float32_t ppm);
 
 
 
 uchar   Si570_ResetConfiguration();
-void 	Si570_CalculateStartupFrequency();
+void 	Si570_Init();
 float   Si570_GetStartupFrequency();
 uint8_t Si570_GetI2CAddress();
 
