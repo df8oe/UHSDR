@@ -92,7 +92,9 @@ typedef struct OscillatorState
     Si570_FreqConfig    cur_config;
     Si570_FreqConfig    next_config;
 
-    float               fxtal;
+    float32_t               fxtal;      // base fxtal value
+    float32_t               fxtal_ppm;  // Frequency Correction of fxtal_calc
+    float32_t               fxtal_calc; // ppm corrected fxtal value
 
     uint8_t             cur_regs[6];
 
@@ -283,11 +285,11 @@ static float64_t Si570_FDCO_InRange(float64_t fdco){
     return (fdco >= fdco_min && fdco <= fdco_max);
 }
 
-static float64_t Si570_GetFDCOForFreq(float new_freq, uint8_t n1, uint8_t hsdiv){
-    return ((float64_t)new_freq * (float64_t)(n1 * hsdiv));
+static float64_t Si570_GetFDCOForFreq(float64_t new_freq, uint8_t n1, uint8_t hsdiv){
+    return (new_freq * (float64_t)(n1 * hsdiv));
 }
 
-static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
+static bool Si570_FindSmoothRFreqForFreq(float64_t new_freq,const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
     float64_t fdco = Si570_GetFDCOForFreq(new_freq, cur_config->n1, cur_config->hsdiv);
     bool retval = false;
     float64_t fdiff = (fdco - cur_config->fdco)/cur_config->fdco;
@@ -299,7 +301,7 @@ static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* 
 
     if (fdiff <= SMOOTH_DELTA && Si570_FDCO_InRange(fdco))
     {
-        new_config->rfreq = fdco / (float64_t)os.fxtal;
+        new_config->rfreq = fdco / (float64_t)os.fxtal_calc;
         new_config->fdco = cur_config->fdco; // since we do only a small step, our fdco remains the same, so that we can keep an eye on the +/-3500ppm  rule
         new_config->n1 = cur_config->n1;
         new_config->hsdiv = cur_config->hsdiv;
@@ -310,7 +312,7 @@ static bool Si570_FindSmoothRFreqForFreq(float new_freq,const Si570_FreqConfig* 
 }
 
 
-static bool Si570_FindConfigForFreq(float new_freq,Si570_FreqConfig* config) {
+static bool Si570_FindConfigForFreq(float64_t new_freq,Si570_FreqConfig* config) {
     uchar   i;
     uint16_t  divider_max, curr_div;
     bool retval = false;
@@ -354,7 +356,7 @@ static bool Si570_FindConfigForFreq(float new_freq,Si570_FreqConfig* config) {
             config->n1 =n1;
             config->hsdiv = hsdiv;
             config->fdco = fdco;
-            config->rfreq = fdco / os.fxtal;
+            config->rfreq = fdco / os.fxtal_calc;
 
             retval = true;
         }
@@ -424,7 +426,7 @@ static Si570_ResultCodes Si570_WriteRegs(bool is_small) {
 }
 
 
-static Si570_ResultCodes Si570_PrepareChangeFrequency(float new_freq)
+static Si570_ResultCodes Si570_PrepareChangeFrequency(float64_t new_freq)
 {
     Si570_ResultCodes retval = SI570_OK;
     Si570_FreqConfig* next_config_ptr = &os.next_config;
@@ -524,65 +526,62 @@ static void Si570_CalcSufHelper()
 }
 
 
-void Si570_CalculateStartupFrequency()
+void Si570_Init()
 {
-    if(os.fout < 5)
+    os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
+    uchar dummy;
+
+    // test for hardware address of SI570
+    os.si570_address = (0x55 << 1);
+    if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
     {
-        os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
-        uchar dummy;
+        os.si570_address = (0x50 << 1);
+    }
 
-        // test for hardware address of SI570
-        os.si570_address = (0x55 << 1);
-        if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
-        {
-            os.si570_address = (0x50 << 1);
-        }
+    // make sure everything is cleared and in initial state
+    Si570_ResetConfiguration();
+    Si570_CalcSufHelper();
 
-        // make sure everything is cleared and in initial state
-        Si570_ResetConfiguration();
+    if(os.fout > 39.2 && os.fout < 39.3)
+    {
+        // its a 20 or 50 ppm device, use regs 7+
+        os.base_reg = 7;
         Si570_CalcSufHelper();
+    }
 
-        if(os.fout > 39.2 && os.fout < 39.3)
+    // all known startup frequencies
+    static const float suf_table[] =
+    {
+            10,
+            10.356,
+            14.05,
+            14.1,
+            15,
+            16.0915,
+            22.5792,
+            34.285,
+            56.32,
+            63,
+            76.8,
+            100,
+            122,
+            125,
+            156.25,
+            0
+    };
+    // test if startup frequency is known
+    int i;
+    for (i = 0; suf_table[i] != 0; i++)
+    {
+        float test = os.fout - suf_table[i];
+        if (test < 0)
         {
-            // its a 20 or 50 ppm device, use regs 7+
-            os.base_reg = 7;
-            Si570_CalcSufHelper();
+            test = -test;
         }
-
-        // all known startup frequencies
-        static const float suf_table[] =
+        if (test < 0.2)
         {
-                10,
-                10.356,
-                14.05,
-                14.1,
-                15,
-                16.0915,
-                22.5792,
-                34.285,
-                56.32,
-                63,
-                76.8,
-                100,
-                122,
-                125,
-                156.25,
-                0
-        };
-        // test if startup frequency is known
-        int i;
-        for (i = 0; suf_table[i] != 0; i++)
-        {
-            float test = os.fout - suf_table[i];
-            if (test < 0)
-            {
-                test = -test;
-            }
-            if (test < 0.2)
-            {
-                os.fout = suf_table[i];
-                break;
-            }
+            os.fout = suf_table[i];
+            break;
         }
     }
 }
@@ -597,6 +596,15 @@ uint8_t   Si570_GetI2CAddress()
     return os.si570_address;
 }
 
+/**
+ * @brief Sets a new PPM value AND corrects the internally used xtal frequency accordingly
+ * @param ppm ppm value
+ */
+void Si570_SetPPM(float32_t ppm)
+{
+    os.fxtal_ppm = ppm;
+    os.fxtal_calc = os.fxtal + (os.fxtal / 1000000.0) * os.fxtal_ppm;
+}
 
 uint8_t Si570_ResetConfiguration()
 {
@@ -611,7 +619,7 @@ uint8_t Si570_ResetConfiguration()
     uchar   n1_curr;
 
     // Reset publics
-    os.fxtal        = FACTORY_FXTAL;
+    os.fxtal_calc        = FACTORY_FXTAL;
     os.present = false;
 
     res = mchf_hw_i2c1_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
@@ -664,6 +672,8 @@ uint8_t Si570_ResetConfiguration()
         float64_t rfreq = rfreq_int + (float64_t)rfreq_frac / POW_2_28;
         os.fxtal = (os.fout * n1_curr * hsdiv_curr) / rfreq;
 
+        Si570_SetPPM(os.fxtal_ppm);
+
         os.cur_config.rfreq = rfreq;
         os.cur_config.n1 = n1_curr;
         os.cur_config.hsdiv = hsdiv_curr;
@@ -682,23 +692,16 @@ uint8_t Si570_ResetConfiguration()
  *
  * @returns SI570_TUNE_IMPOSSIBLE if tuning to the desired frequency is not possible at all (multiple reasons), SI570_OK if it is possible and within spec, SI570_TUNE_LIMITED if possible but out of spec
  */
-Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_factor)
+Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int temp_factor)
 {
     Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
 
     if (Si570_IsPresent() == true) {
-        float       freq_calc, freq_scale, temp_scale, temp;
+        float64_t  freq_calc, temp_scale, temp;
 
-        freq_scale = (float)freq;       // get frequency
-        freq_calc = freq_scale;     // copy frequency
-        freq_scale /= 14000000;     // get scaling factor since our calibrations are referenced to 14.000 MHz
+        freq_calc = freq;     // copy frequency
 
-        temp = (float)calib;            // get calibration factor
-        temp *= (freq_scale);       // scale calibration for operating frequency but double magnitude of calibration factor
-
-        freq_calc -= temp;              // subtract calibration factor
-
-        temp_scale = (float)temp_factor;    // get temperature factor
+        temp_scale = temp_factor;    // get temperature factor
         temp_scale /= 14000000;     // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
 
         freq_calc *= (1 + temp_scale);  // rescale by temperature correction factor
@@ -707,7 +710,7 @@ Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int calib, int temp_fac
         if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
         {
             // tuning inside known working spec
-            retval = Si570_PrepareChangeFrequency((float64_t)freq_calc/1000000.0);
+            retval = Si570_PrepareChangeFrequency(freq_calc/((float64_t)1000000.0));
             if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ) && *(__IO uint32_t*)(SRAM2_BASE+5) != 0x29)
             {
                 // outside official spec but known to work

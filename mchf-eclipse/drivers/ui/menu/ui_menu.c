@@ -23,6 +23,8 @@
 #include "serial_eeprom.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
@@ -2276,19 +2278,23 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var >= 1)        // setting increase?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.freq_cal += 1;
+            ts.freq_cal += 1; // df.tuning_step;
             var_change = 1;
         }
         else if(var <= -1)      // setting decrease?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.freq_cal -= 1;
+            ts.freq_cal -= 1 ; // df.tuning_step;
             var_change = 1;
         }
         if(ts.freq_cal < MIN_FREQ_CAL)
+        {
             ts.freq_cal = MIN_FREQ_CAL;
+        }
         else if(ts.freq_cal > MAX_FREQ_CAL)
+        {
             ts.freq_cal = MAX_FREQ_CAL;
+        }
         //
         if(mode == MENU_PROCESS_VALUE_SETDEFAULT)
         {
@@ -2298,9 +2304,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         if(var_change)
         {
-            UiDriver_UpdateFrequency(true,UFM_AUTOMATIC);   // Update LO frequency without checking encoder but overriding "frequency didn't change" detect
+            Si570_SetPPM(((float32_t)ts.freq_cal)/10.0);
+            RadioManagement_ChangeFrequency(true, df.tune_new/TUNE_MULT,ts.txrx_mode);
+            // Update LO frequency by overriding "frequency didn't change" detect
         }
-        snprintf(options,32, "   %d", ts.freq_cal);
+        snprintf(options,32, "%4d.%d ppm", ts.freq_cal/10,abs(ts.freq_cal)%10 );
         break;
     //
     case CONFIG_FREQ_LIMIT_RELAX:   // Enable/disable Frequency tuning limits

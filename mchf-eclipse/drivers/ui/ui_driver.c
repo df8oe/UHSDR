@@ -867,6 +867,7 @@ void UiDriver_Init()
     // Driver publics init
     UiDriver_PublicsInit();
 
+    Si570_SetPPM((float)ts.freq_cal/10.0);
     // Init frequency publics
     UiDriver_InitFrequency();
 
