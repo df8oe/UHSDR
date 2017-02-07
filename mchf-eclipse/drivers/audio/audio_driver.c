@@ -3114,6 +3114,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     {
                         Codec_RestartI2S();
                         ts.twinpeaks_tested = 2;
+                        // TODO: we should set a maximum number of codec resets
+                        // and print out a message, if twinpeaks remains after the
+                        // 10th reset for example --> could then be a severe hardware error !
                     }
                     else
                     {
