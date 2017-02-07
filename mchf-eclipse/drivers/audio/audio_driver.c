@@ -3046,7 +3046,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     }
 
     else
-    {
+    {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
+        // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158–164.
+        // http://doc.utwente.nl/66726/1/moseley.pdf
 
         for(i = 0; i < blockSize; i++)
         {
@@ -3058,11 +3060,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //            teta3 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (36)
             IQ_auto_counter++;
         }
-        if(IQ_auto_counter >= 4)
+        if(IQ_auto_counter >= 8)
         {
-            adb.teta1 = -0.01 * (adb.teta1 / blockSize / 4.0 ) + 0.99 * adb.teta1_old; // eq (34) and first order lowpass
-            adb.teta2 =  0.01 * (adb.teta2 / blockSize / 4.0 ) + 0.99 * adb.teta2_old; // eq (35) and first order lowpass
-            adb.teta3 =  0.01 * (adb.teta3 / blockSize / 4.0 ) + 0.99 * adb.teta3_old; // eq (36) and first order lowpass
+            adb.teta1 = -0.01 * (adb.teta1 / blockSize / 8.0 ) + 0.99 * adb.teta1_old; // eq (34) and first order lowpass
+            adb.teta2 =  0.01 * (adb.teta2 / blockSize / 8.0 ) + 0.99 * adb.teta2_old; // eq (35) and first order lowpass
+            adb.teta3 =  0.01 * (adb.teta3 / blockSize / 8.0 ) + 0.99 * adb.teta3_old; // eq (36) and first order lowpass
             if(adb.teta2 != 0.0)
             {
                 adb.M_c1 = adb.teta1 / adb.teta2; // eq (30)
