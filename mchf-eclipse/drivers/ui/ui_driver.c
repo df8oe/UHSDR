@@ -867,7 +867,6 @@ void UiDriver_Init()
     // Driver publics init
     UiDriver_PublicsInit();
 
-    Si570_SetPPM((float)ts.freq_cal/10.0);
     // Init frequency publics
     UiDriver_InitFrequency();
 
@@ -877,6 +876,7 @@ void UiDriver_Init()
         UiDriver_KeyTestScreen();
     }
 
+    Si570_SetPPM((float)ts.freq_cal/10.0);
 
     df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
     df.tune_old = 0;
