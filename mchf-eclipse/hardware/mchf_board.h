@@ -1119,7 +1119,6 @@ typedef struct TransceiverState
     ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
     ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
-    bool	freq_cal_adjust_flag;			// set TRUE if frequency calibration is in process
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
 
 #define VFO_MEM_MODE_SPLIT 0x80

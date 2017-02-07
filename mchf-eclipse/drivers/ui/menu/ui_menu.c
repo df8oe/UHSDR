@@ -31,6 +31,48 @@
 #include "radio_management.h"
 #include "soft_tcxo.h"
 
+void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, uint16_t digitsAfter)
+{
+    char formatstr[16],numberstr[32];
+
+    int32_t mult_digits = pow10(digitsAfter);
+
+    snprintf(formatstr,16,(digitsBefore + digitsBefore > 0)?"%%%dd":"%%d",digitsBefore + digitsAfter);
+
+    snprintf(numberstr, 31, formatstr, (int32_t)(f * mult_digits));
+
+    int32_t num_len = strnlen(numberstr,32);
+
+    int idx = 0;
+    for (idx= 0; idx < num_len - digitsAfter && idx < maxchar; idx++)
+    {
+        buf[idx] = numberstr[idx];
+    }
+
+    if (idx == 0 || buf[idx-1] == '-')
+    {
+        buf[idx++] = '0';
+    }
+    else if (buf[idx-1] == ' ')
+    {
+        buf[idx-1] = '0';
+    }
+
+    buf[idx++] = '.';
+
+    for (int i= num_len - digitsAfter; i < num_len && i < maxchar; i++)
+    {
+        char c = numberstr[i];
+        if (c == ' ')
+        {
+            c = '0';
+        }
+        buf[idx++] = c;
+    }
+    buf[idx] = '\0';
+}
+
+
 // LCD
 #include "ui_lcd_hy28.h" // for colors!
 
@@ -634,18 +676,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
     if(mode == MENU_PROCESS_VALUE_CHANGE)
     {
-        if(select == CONFIG_FREQUENCY_CALIBRATE)    // signal if we are in FREQUENCY CALIBRATE mode for alternate frequency steps
-            ts.freq_cal_adjust_flag = 1;
-        else                                // NOT in frequency calibrate mode
-        {
-            if(ts.freq_cal_adjust_flag)     // had frequency calibrate mode been active?
-            {
-                ts.freq_cal_adjust_flag = 0;
-                UiDriver_ChangeTuningStep(0);   // force to valid frequency step size for normal tuning
-                UiDriver_ChangeTuningStep(1);
-            }
-        }
-        //
         if(select == CONFIG_XVTR_FREQUENCY_OFFSET)  // signal if we are in XVTR FREQUENCY OFFSET adjust mode for alternate frequency steps
             ts.xvtr_adjust_flag = 1;
         else                                // NOT in transverter mode
@@ -2325,7 +2355,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             Si570_SetPPM(((float32_t)ts.freq_cal)/10.0);
             // Update LO PPM (will automatically adjust frequency)
         }
-        snprintf(options,32, "%4d.%d ppm", ts.freq_cal/10,abs(ts.freq_cal)%10 );
+        {
+            char numstr[16];
+            float2fixedstr(numstr, 16, ((float32_t)ts.freq_cal)/10.0, 4, 1);
+            snprintf(options,32, "%sppm", numstr );
+        }
         break;
     //
     case CONFIG_FREQ_LIMIT_RELAX:   // Enable/disable Frequency tuning limits

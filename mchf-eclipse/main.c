@@ -375,7 +375,6 @@ void TransceiverStateInit(void)
     ts.last_tuning		= 0;					// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
     ts.lcd_blanking_time = 0;					// this holds the system time after which the LCD is blanked - if blanking is enabled
     ts.lcd_blanking_flag = 0;					// if TRUE, the LCD is blanked completely (e.g. backlight is off)
-    ts.freq_cal_adjust_flag = 0;				// set TRUE if frequency calibration is in process
     ts.xvtr_adjust_flag = 0;					// set TRUE if transverter offset adjustment is in process
     ts.vfo_mem_mode = 0;						// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
