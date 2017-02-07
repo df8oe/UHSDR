@@ -2956,6 +2956,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     static uint8_t  IQ_auto_counter = 0;
     static ulong    twinpeaks_counter = 0;
+    static uint8_t  codec_restarts = 0;
 
     static ulong        i, beep_idx = 0;
 
@@ -3054,7 +3055,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 1000) // wait 667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
+        if(twinpeaks_counter > 4000) // wait 667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
         {
             ts.twinpeaks_tested = 0;
             twinpeaks_counter = 0;
@@ -3068,9 +3069,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
         if(IQ_auto_counter >= 8)
         {
-            adb.teta1 = -0.01 * (adb.teta1 / blockSize / 8.0 ) + 0.99 * adb.teta1_old; // eq (34) and first order lowpass
-            adb.teta2 =  0.01 * (adb.teta2 / blockSize / 8.0 ) + 0.99 * adb.teta2_old; // eq (35) and first order lowpass
-            adb.teta3 =  0.01 * (adb.teta3 / blockSize / 8.0 ) + 0.99 * adb.teta3_old; // eq (36) and first order lowpass
+            adb.teta1 = -0.003 * (adb.teta1 / blockSize / 8.0 ) + 0.997 * adb.teta1_old; // eq (34) and first order lowpass
+            adb.teta2 =  0.003 * (adb.teta2 / blockSize / 8.0 ) + 0.997 * adb.teta2_old; // eq (35) and first order lowpass
+            adb.teta3 =  0.003 * (adb.teta3 / blockSize / 8.0 ) + 0.997 * adb.teta3_old; // eq (36) and first order lowpass
             if(adb.teta2 != 0.0)// prevent divide-by-zero
             {
                 adb.M_c1 = adb.teta1 / adb.teta2; // eq (30)
@@ -3107,16 +3108,22 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {   // Moseley & Slump (2006) eq. (33)
                     // this gives us the phase error between I & Q in radians
                     float32_t phase_IQ = asinf(adb.teta1 / adb.teta3);
-                    if (phase_IQ > PI/8.0 || phase_IQ < -PI/8.0)
-                        // threshold of 22.5 degrees phase shift == PI / 8
+                    if ((phase_IQ > 0.3926990817 || phase_IQ < -0.3926990817) && codec_restarts < 5)
+                        // threshold of 22.5 degrees phase shift == PI / 8 == 0.3926990817
                         // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
                         // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
                     {
                         Codec_RestartI2S();
                         ts.twinpeaks_tested = 2;
+                        codec_restarts++;
                         // TODO: we should set a maximum number of codec resets
                         // and print out a message, if twinpeaks remains after the
-                        // 10th reset for example --> could then be a severe hardware error !
+                        // 5th reset for example --> could then be a severe hardware error !
+                        if(codec_restarts >= 4)
+                        {
+                            // PRINT OUT WARNING MESSAGE
+
+                        }
                     }
                     else
                     {
