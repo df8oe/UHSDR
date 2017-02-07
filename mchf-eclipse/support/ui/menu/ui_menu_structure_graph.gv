@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-06T19:11:24  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-07T12:33:21  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v1.5.7 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v1.5.8 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.7 - Menus Overview\ngenerated at  2017-02-06T19:11:24  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.8 - Menus Overview\ngenerated at  2017-02-07T12:33:21  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -527,6 +527,11 @@
              shape = record
              ];
         
+        "CONFIG_IQ_AUTO_CORRECTION" [
+             label = "CONFIG_IQ_AUTO_CORRECTION | RX IQ Auto Correction"
+             shape = record
+             ];
+        
         "CONFIG_80M_RX_IQ_GAIN_BAL" [
              label = "CONFIG_80M_RX_IQ_GAIN_BAL | RX IQ Balance (80m)"
              shape = record
@@ -1007,6 +1012,8 @@
             MENU_CONF -> CONFIG_RF_FWD_PWR_NULL
             
             MENU_CONF -> CONFIG_FWD_REV_SENSE_SWAP
+            
+            MENU_CONF -> CONFIG_IQ_AUTO_CORRECTION
             
             MENU_CONF -> CONFIG_80M_RX_IQ_GAIN_BAL
             

@@ -697,7 +697,7 @@ Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int temp_factor)
     Si570_ResultCodes retval = SI570_TUNE_IMPOSSIBLE;
 
     if (Si570_IsPresent() == true) {
-        float64_t  freq_calc, temp_scale, temp;
+        float64_t  freq_calc, temp_scale;
 
         freq_calc = freq;     // copy frequency
 
