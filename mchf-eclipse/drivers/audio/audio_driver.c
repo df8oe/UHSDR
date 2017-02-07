@@ -3036,7 +3036,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
 
 
-    if(!ts.iq_auto_correction)
+    if(!ts.iq_auto_correction) // Manual IQ imbalance correction
     {
     // Apply I/Q amplitude correction
     arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var.i, adb.i_buffer, blockSize);
@@ -3046,7 +3046,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     AudioDriver_IQPhaseAdjust(ts.txrx_mode,adb.i_buffer, adb.q_buffer,blockSize);
     }
 
-    else
+    else // Automatic IQ imbalance correction
     {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
         // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158–164.
         // http://doc.utwente.nl/66726/1/moseley.pdf
@@ -3054,7 +3054,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 1000) // wait 250ms: with 32 IQ samples per block and 48ksps (0.66667ms/block) means 375 blocks
+        if(twinpeaks_counter > 1000) // wait 667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
         {
             ts.twinpeaks_tested = 0;
             twinpeaks_counter = 0;
@@ -3064,9 +3064,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             adb.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
             adb.teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
             adb.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
-//            teta1 += sign_new(adb.q_buffer[i]) * adb.i_buffer[i]; // eq (34)
-//            teta2 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (35)
-//            teta3 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (36)
             IQ_auto_counter++;
         }
         if(IQ_auto_counter >= 8)
@@ -3074,7 +3071,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             adb.teta1 = -0.01 * (adb.teta1 / blockSize / 8.0 ) + 0.99 * adb.teta1_old; // eq (34) and first order lowpass
             adb.teta2 =  0.01 * (adb.teta2 / blockSize / 8.0 ) + 0.99 * adb.teta2_old; // eq (35) and first order lowpass
             adb.teta3 =  0.01 * (adb.teta3 / blockSize / 8.0 ) + 0.99 * adb.teta3_old; // eq (36) and first order lowpass
-            if(adb.teta2 != 0.0)
+            if(adb.teta2 != 0.0)// prevent divide-by-zero
             {
                 adb.M_c1 = adb.teta1 / adb.teta2; // eq (30)
             }
@@ -3084,11 +3081,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
 
             float32_t help = (adb.teta2 * adb.teta2);
-            if(help > 0.0)
+            if(help > 0.0)// prevent divide-by-zero
             {
-                help = (adb.teta3 * adb.teta3 - adb.teta1 * adb.teta1) / help;
+                help = (adb.teta3 * adb.teta3 - adb.teta1 * adb.teta1) / help; // eq (31)
             }
-            if (help > 0.0)
+            if (help > 0.0)// prevent sqrtf of negative value
             {
                 adb.M_c2 = sqrtf(help); // eq (31)
             }
@@ -3096,14 +3093,24 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 adb.M_c2 = 1.0;
             }
+            // Test and fix of the "twinpeak syndrome"
+            // which occurs sporadically and can -to our knowledge- only be fixed
+            // by a reset of the codec
+            // It can be identified by a totally non-existing mirror rejection,
+            // so I & Q have essentially the same phase
+            // We use this to identify the snydrome and reset the codec accordingly:
             // calculate phase between I & Q
-            if(adb.teta3 != 0.0 && !ts.twinpeaks_tested)
+            if(adb.teta3 != 0.0 && !ts.twinpeaks_tested) // prevent divide-by-zero
                 // twinpeak_tested = 2 --> wait for system to warm up
                 // twinpeak_tested = 0 --> go and test the IQ phase
                 // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
-                {
-                    float32_t phase_IQ = asinf(adb.teta1 / adb.teta3); // Moseley & Slump (2006) eq. (33)
-                    if (phase_IQ > PI/8.0 || phase_IQ < -PI/8.0) // threshold of 22.5 degrees
+                {   // Moseley & Slump (2006) eq. (33)
+                    // this gives us the phase error between I & Q in radians
+                    float32_t phase_IQ = asinf(adb.teta1 / adb.teta3);
+                    if (phase_IQ > PI/8.0 || phase_IQ < -PI/8.0)
+                        // threshold of 22.5 degrees phase shift == PI / 8
+                        // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
+                        // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
                     {
                         Codec_RestartI2S();
                         ts.twinpeaks_tested = 2;
@@ -3125,11 +3132,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         for(i = 0; i < blockSize; i++)
         {   // see fig. 5
             adb.q_buffer[i] += adb.M_c1 * adb.i_buffer[i];
-//            adb.i_buffer[i] += M_c1 * adb.q_buffer[i];
         }
         // see fig. 5
         arm_scale_f32 (adb.i_buffer, adb.M_c2, adb.i_buffer, blockSize);
-//        arm_scale_f32 (adb.q_buffer, M_c2, adb.q_buffer, blockSize);
     }
 
 
