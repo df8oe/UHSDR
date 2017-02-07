@@ -2323,8 +2323,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var_change)
         {
             Si570_SetPPM(((float32_t)ts.freq_cal)/10.0);
-            RadioManagement_ChangeFrequency(true, df.tune_new/TUNE_MULT,ts.txrx_mode);
-            // Update LO frequency by overriding "frequency didn't change" detect
+            // Update LO PPM (will automatically adjust frequency)
         }
         snprintf(options,32, "%4d.%d ppm", ts.freq_cal/10,abs(ts.freq_cal)%10 );
         break;

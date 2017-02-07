@@ -85,6 +85,7 @@ typedef struct {
     uint8_t n1;
     float64_t fdco;
     float64_t rfreq;
+    float64_t freq;
 } Si570_FreqConfig;
 
 typedef struct OscillatorState
@@ -92,9 +93,9 @@ typedef struct OscillatorState
     Si570_FreqConfig    cur_config;
     Si570_FreqConfig    next_config;
 
-    float32_t               fxtal;      // base fxtal value
-    float32_t               fxtal_ppm;  // Frequency Correction of fxtal_calc
-    float32_t               fxtal_calc; // ppm corrected fxtal value
+    float64_t               fxtal;      // base fxtal value
+    float64_t               fxtal_ppm;  // Frequency Correction of fxtal_calc
+    float64_t               fxtal_calc; // ppm corrected fxtal value
 
     uint8_t             cur_regs[6];
 
@@ -289,8 +290,8 @@ static float64_t Si570_GetFDCOForFreq(float64_t new_freq, uint8_t n1, uint8_t hs
     return (new_freq * (float64_t)(n1 * hsdiv));
 }
 
-static bool Si570_FindSmoothRFreqForFreq(float64_t new_freq,const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
-    float64_t fdco = Si570_GetFDCOForFreq(new_freq, cur_config->n1, cur_config->hsdiv);
+static bool Si570_FindSmoothRFreqForFreq(const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
+    float64_t fdco = Si570_GetFDCOForFreq(new_config->freq, cur_config->n1, cur_config->hsdiv);
     bool retval = false;
     float64_t fdiff = (fdco - cur_config->fdco)/cur_config->fdco;
 
@@ -312,7 +313,7 @@ static bool Si570_FindSmoothRFreqForFreq(float64_t new_freq,const Si570_FreqConf
 }
 
 
-static bool Si570_FindConfigForFreq(float64_t new_freq,Si570_FreqConfig* config) {
+static bool Si570_FindConfigForFreq(Si570_FreqConfig* config) {
     uchar   i;
     uint16_t  divider_max, curr_div;
     bool retval = false;
@@ -322,8 +323,8 @@ static bool Si570_FindConfigForFreq(float64_t new_freq,Si570_FreqConfig* config)
     uint8_t   hsdiv;
     float64_t fdco;
 
-    divider_max = (ushort)floorf(fdco_max / new_freq);
-    curr_div    = (ushort)ceilf (fdco_min / new_freq);
+    divider_max = (ushort)floorf(fdco_max / config->freq);
+    curr_div    = (ushort)ceilf (fdco_min / config->freq);
 
     // for each available divisor hsdiv we calculate the n1 range
     // and see if an acceptable n1 (1,all even numbers between 2..128)
@@ -351,7 +352,7 @@ static bool Si570_FindConfigForFreq(float64_t new_freq,Si570_FreqConfig* config)
         }
     }
     if (n1_found) {
-        fdco = Si570_GetFDCOForFreq(new_freq,n1,hsdiv);
+        fdco = Si570_GetFDCOForFreq(config->freq,n1,hsdiv);
         if (Si570_FDCO_InRange(fdco)) {
             config->n1 =n1;
             config->hsdiv = hsdiv;
@@ -432,15 +433,17 @@ static Si570_ResultCodes Si570_PrepareChangeFrequency(float64_t new_freq)
     Si570_FreqConfig* next_config_ptr = &os.next_config;
     Si570_FreqConfig* cur_config_ptr = &os.cur_config;
 
-    os.next_is_small = Si570_FindSmoothRFreqForFreq(new_freq,cur_config_ptr,next_config_ptr);
+    next_config_ptr->freq = new_freq;
 
-    if (os.next_is_small == false && Si570_FindConfigForFreq(new_freq,next_config_ptr) == false)
+    os.next_is_small = Si570_FindSmoothRFreqForFreq(cur_config_ptr,next_config_ptr);
+
+    if (os.next_is_small == false && Si570_FindConfigForFreq(next_config_ptr) == false)
     {
         retval = SI570_TUNE_IMPOSSIBLE;
     }
     else
     {
-        Si570_ConfigToRegs(next_config_ptr,os.cur_regs);
+        retval = Si570_ConfigToRegs(next_config_ptr,os.cur_regs);
     }
     return retval;
 
@@ -603,7 +606,11 @@ uint8_t   Si570_GetI2CAddress()
 void Si570_SetPPM(float32_t ppm)
 {
     os.fxtal_ppm = ppm;
-    os.fxtal_calc = os.fxtal + (os.fxtal / 1000000.0) * os.fxtal_ppm;
+    os.fxtal_calc = os.fxtal + (os.fxtal / (float64_t)1000000.0) * os.fxtal_ppm;
+    if (Si570_PrepareChangeFrequency(os.cur_config.freq) == SI570_OK)
+    {
+        Si570_ChangeToNextFrequency();
+    }
 }
 
 uint8_t Si570_ResetConfiguration()
@@ -619,7 +626,7 @@ uint8_t Si570_ResetConfiguration()
     uchar   n1_curr;
 
     // Reset publics
-    os.fxtal_calc        = FACTORY_FXTAL;
+    os.fxtal        = FACTORY_FXTAL;
     os.present = false;
 
     res = mchf_hw_i2c1_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
@@ -670,7 +677,7 @@ uint8_t Si570_ResetConfiguration()
         rfreq_frac = (rfreq_frac << 8) + os.cur_regs[5];
 
         float64_t rfreq = rfreq_int + (float64_t)rfreq_frac / POW_2_28;
-        os.fxtal = (os.fout * n1_curr * hsdiv_curr) / rfreq;
+        os.fxtal = ((float64_t)os.fout * (float64_t)(n1_curr *hsdiv_curr)) / rfreq;
 
         Si570_SetPPM(os.fxtal_ppm);
 
