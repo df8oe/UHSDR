@@ -16,6 +16,7 @@
 - switched frequency calibration from Hz to ppm (which is frequency-independent)
 - introduced RX IQ autocorrection (must be enabled in config menue)
 - introduced twin-peaks autocorrection
+- I2C-speed now is user-selectable to get max. speed out of your mcHF
 
 
 20161231 [DF8OE]
