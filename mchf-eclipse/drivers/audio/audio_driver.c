@@ -3101,7 +3101,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     float32_t phase_IQ = asinf(adb.teta1 / adb.teta3); // Moseley & Slump (2006) eq. (33)
                     if (phase_IQ > 30.0 || phase_IQ < -30.0)
                     {
-                        // FIXME: RESET CODEC HERE
+                        Codec_RestartI2S();
                     }
                     else
                     {
