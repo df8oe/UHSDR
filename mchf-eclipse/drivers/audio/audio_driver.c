@@ -2954,7 +2954,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 
-    static uint8_t IQ_auto_counter = 0;
+    static uint8_t  IQ_auto_counter = 0;
+    static ulong    twinpeaks_counter = 0;
 
     static ulong        i, beep_idx = 0;
 
@@ -3049,7 +3050,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
         // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158–164.
         // http://doc.utwente.nl/66726/1/moseley.pdf
-
+        twinpeaks_counter++;
+        if(twinpeaks_counter > 375) // wait 250ms: with 32 IQ samples per block and 48ksps (0.66667ms/block) means 375 blocks
+        {
+            ts.twinpeaks_tested = 0;
+        }
         for(i = 0; i < blockSize; i++)
         {
             adb.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
@@ -3087,6 +3092,22 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 adb.M_c2 = 1.0;
             }
+            // calculate phase between I & Q
+            if(adb.teta3 != 0.0 && !ts.twinpeaks_tested)
+                // twinpeak_tested = 2 --> wait for system to warm up
+                // twinpeak_tested = 0 --> go and test the IQ phase
+                // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+                {
+                    float32_t phase_IQ = asinf(adb.teta1 / adb.teta3); // Moseley & Slump (2006) eq. (33)
+                    if (phase_IQ > 30.0 || phase_IQ < -30.0)
+                    {
+                        // FIXME: RESET CODEC HERE
+                    }
+                    else
+                    {
+                        ts.twinpeaks_tested = 1;
+                    }
+                }
             adb.teta1_old = adb.teta1;
             adb.teta2_old = adb.teta2;
             adb.teta3_old = adb.teta3;
