@@ -12,6 +12,12 @@
 #########################################################################
 #########################################################################
 
+201702xx [DF8OE]
+- switched frequency calibration from Hz to ppm (which is frequency-independent)
+- introduced RX IQ autocorrection (must be enabled in config menue)
+- introduced twin-peaks autocorrection
+
+
 20161231 [DF8OE]
 - frequency translation +/- 12KHz uses now more efficient algorithm
 - plopping / klicking sound at PTT is removed
@@ -22,6 +28,7 @@
 - implementing a "menu manual" which is automatically created with every
   new build - can be found in support/ui/menu and is published in
   GitHub WIKI
+
 
 20161115 [DF8OE]
 - minor bugfixes
