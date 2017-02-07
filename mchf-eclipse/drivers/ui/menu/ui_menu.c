@@ -1586,6 +1586,24 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
+        case CONFIG_IQ_AUTO_CORRECTION:    // On/Off
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.iq_auto_correction,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+
+            switch(ts.iq_auto_correction) {
+            case 0:
+                txt_ptr = " OFF";
+                break;
+            case 1:
+                txt_ptr = "  ON";
+                break;
+            }
+            break;
+
     case MENU_TCXO_C_F: // TCXO display C/F mode
         temp_var_u8 = (RadioManagement_TcxoIsFahrenheit() == true) ? 1 : 0;  // Yes - Is Fahrenheit mode enabled?
 

@@ -531,7 +531,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_I2C2_SPEED                   370     //
 #define EEPROM_SAM_FADE_LEVELER             371
 #define EEPROM_LINEOUT_GAIN                 372
-#define EEPROM_FIRST_UNUSED 				373		// change this if new value ids are introduced
+#define EEPROM_IQ_AUTO_CORRECTION           373     // Receive IQ auto correction ON/OFF
+#define EEPROM_FIRST_UNUSED 				374		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
