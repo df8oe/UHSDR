@@ -3050,10 +3050,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
         // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158–164.
         // http://doc.utwente.nl/66726/1/moseley.pdf
-        twinpeaks_counter++;
+        if (ts.twinpeaks_tested == 2)
+        {
+            twinpeaks_counter++;
+        }
         if(twinpeaks_counter > 375) // wait 250ms: with 32 IQ samples per block and 48ksps (0.66667ms/block) means 375 blocks
         {
             ts.twinpeaks_tested = 0;
+            twinpeaks_counter = 0;
         }
         for(i = 0; i < blockSize; i++)
         {
@@ -3102,6 +3106,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if (phase_IQ > 30.0 || phase_IQ < -30.0)
                     {
                         Codec_RestartI2S();
+                        ts.twinpeaks_tested = 2;
                     }
                     else
                     {
