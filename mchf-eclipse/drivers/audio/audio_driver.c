@@ -3054,7 +3054,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 375) // wait 250ms: with 32 IQ samples per block and 48ksps (0.66667ms/block) means 375 blocks
+        if(twinpeaks_counter > 1000) // wait 250ms: with 32 IQ samples per block and 48ksps (0.66667ms/block) means 375 blocks
         {
             ts.twinpeaks_tested = 0;
             twinpeaks_counter = 0;
@@ -3103,7 +3103,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
                 {
                     float32_t phase_IQ = asinf(adb.teta1 / adb.teta3); // Moseley & Slump (2006) eq. (33)
-                    if (phase_IQ > 30.0 || phase_IQ < -30.0)
+                    if (phase_IQ > PI/8.0 || phase_IQ < -PI/8.0) // threshold of 22.5 degrees
                     {
                         Codec_RestartI2S();
                         ts.twinpeaks_tested = 2;
