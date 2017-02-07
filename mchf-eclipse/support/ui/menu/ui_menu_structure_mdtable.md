@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-06T12:25:40  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-06T19:11:26  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.7 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.7 - UI Menu Overview
 
-generated at  2017-02-06T12:25:40  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-06T19:11:26  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -78,7 +78,7 @@ generated at  2017-02-06T12:25:40  by "./ui_menu_structure_mdtable.py"
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
 | **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
-| **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Step size is always 1Hz. Measure TX frequency. It must be displayed frequency +(USB) or -(LSB) sidetone frequency. Or receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
+| **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
 | **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
