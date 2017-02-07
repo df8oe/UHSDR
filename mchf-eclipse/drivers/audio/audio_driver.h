@@ -117,7 +117,14 @@ typedef struct
     float32_t               onem_mtauI;
     float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
     float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
-
+    float32_t               teta1;
+    float32_t               teta2;
+    float32_t               teta3;
+    float32_t               teta1_old;
+    float32_t               teta2_old;
+    float32_t               teta3_old;
+    float32_t               M_c1;
+    float32_t               M_c2;
 
 } AudioDriverBuffer;
 

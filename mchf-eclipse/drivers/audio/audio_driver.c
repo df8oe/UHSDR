@@ -1206,6 +1206,13 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         adb.c1[5] = -0.996959189310611;
         adb.c1[6] = -0.999282492800792;
 
+        adb.M_c1 = 0.0;
+        adb.M_c2 = 1.0;
+        adb.teta1_old = 0.0;
+        adb.teta2_old = 0.0;
+        adb.teta3_old = 0.0;
+
+
     AudioFilter_InitRxHilbertFIR(); // this switches the Hilbert/FIR-filters
 
     // Unlock - re-enable filtering
@@ -2911,6 +2918,21 @@ void set_SAM_PLL_parameters()
 }
 
 
+
+
+float32_t sign_new (float32_t x) {
+    return x < 0 ? -1.0 : ( x > 0 ? 1.0 : 0.0);
+}
+
+/*float64_t sign_new(float64_t x) {
+  if(x < 0)
+    return -1.0;
+    else
+      if(x > 0)
+        return 1.0;
+          else return 0.0;
+}*/
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -2931,6 +2953,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
+
+    static uint8_t IQ_auto_counter = 0;
 
     static ulong        i, beep_idx = 0;
 
@@ -3007,13 +3031,79 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
+    // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
+//    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
+
+
+    if(!ts.iq_auto_correction)
+    {
     // Apply I/Q amplitude correction
     arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var.i, adb.i_buffer, blockSize);
     arm_scale_f32(adb.q_buffer, ts.rx_adj_gain_var.q, adb.q_buffer, blockSize); // TODO: we need only scale one channel! DD4WH, Dec 2016
 
-
     // Apply I/Q phase correction
     AudioDriver_IQPhaseAdjust(ts.txrx_mode,adb.i_buffer, adb.q_buffer,blockSize);
+    }
+
+    else
+    {
+
+        for(i = 0; i < blockSize; i++)
+        {
+            adb.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
+            adb.teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
+            adb.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
+//            teta1 += sign_new(adb.q_buffer[i]) * adb.i_buffer[i]; // eq (34)
+//            teta2 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (35)
+//            teta3 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (36)
+            IQ_auto_counter++;
+        }
+        if(IQ_auto_counter >= 4)
+        {
+            adb.teta1 = -0.01 * (adb.teta1 / blockSize / 4.0 ) + 0.99 * adb.teta1_old; // eq (34) and first order lowpass
+            adb.teta2 =  0.01 * (adb.teta2 / blockSize / 4.0 ) + 0.99 * adb.teta2_old; // eq (35) and first order lowpass
+            adb.teta3 =  0.01 * (adb.teta3 / blockSize / 4.0 ) + 0.99 * adb.teta3_old; // eq (36) and first order lowpass
+            if(adb.teta2 != 0.0)
+            {
+                adb.M_c1 = adb.teta1 / adb.teta2; // eq (30)
+            }
+            else
+            {
+                adb.M_c1 = 0.0;
+            }
+
+            float32_t help = (adb.teta2 * adb.teta2);
+            if(help > 0.0)
+            {
+                help = (adb.teta3 * adb.teta3 - adb.teta1 * adb.teta1) / help;
+            }
+            if (help > 0.0)
+            {
+                adb.M_c2 = sqrtf(help); // eq (31)
+            }
+            else
+            {
+                adb.M_c2 = 1.0;
+            }
+            adb.teta1_old = adb.teta1;
+            adb.teta2_old = adb.teta2;
+            adb.teta3_old = adb.teta3;
+            adb.teta1 = 0.0;
+            adb.teta2 = 0.0;
+            adb.teta3 = 0.0;
+            IQ_auto_counter = 0;
+        }
+                // first correct Q and then correct I --> this order is crucially important!
+        for(i = 0; i < blockSize; i++)
+        {   // see fig. 5
+            adb.q_buffer[i] += adb.M_c1 * adb.i_buffer[i];
+//            adb.i_buffer[i] += M_c1 * adb.q_buffer[i];
+        }
+        // see fig. 5
+        arm_scale_f32 (adb.i_buffer, adb.M_c2, adb.i_buffer, blockSize);
+//        arm_scale_f32 (adb.q_buffer, M_c2, adb.q_buffer, blockSize);
+    }
+
 
     if(iq_freq_mode)            // is receive frequency conversion to be done?
     {
