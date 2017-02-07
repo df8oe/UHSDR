@@ -3032,7 +3032,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
     // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
-    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
+//    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
 
 
     if(!ts.iq_auto_correction)
