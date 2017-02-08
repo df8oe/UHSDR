@@ -364,7 +364,7 @@ void Codec_VolumeSpkr(uint8_t vol)
 
     lv += 0x2F; // volume offset, all lower values including 0x2F represent muting
     // Reg 02: Speaker - variable volume, change at zero crossing in order to prevent audible clicks
-    Codec_WriteRegister(W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN));
+    Codec_WriteRegister(W8731_LEFT_HEADPH_OUT,lv); // (lv | W8731_HEADPH_OUT_ZCEN));
 }
 /**
  * @brief audio volume control in TX and RX modes for lineout [right headphone]
