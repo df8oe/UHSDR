@@ -1051,7 +1051,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ads.omegaN_int);
         break;
-/*    case MENU_SAM_FADE_LEVELER:     // Enable/Disable fade leveler for SAM
+    case MENU_SAM_FADE_LEVELER:     // Enable/Disable fade leveler for SAM
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ads.fade_leveler,
                                               0,
                                               1,
@@ -1067,7 +1067,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         txt_ptr = "    OFF";        //
         }
         break;
-*/
+
 /*    case MENU_SAM_SIDEBAND:  //
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ads.sam_sideband,
                                               0,

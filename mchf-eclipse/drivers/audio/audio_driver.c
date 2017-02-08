@@ -1774,6 +1774,8 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
 {
     static ulong 		i;
     static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
+    static float32_t    w = 0.0;
+    static float32_t    wold = 0.0;
 
     //
     // AGC function - Look-ahead type by KA7OEI, revised September 2015 to eliminate possible low-order, low-frequency instabilities associated with steady-state signals.
@@ -1839,6 +1841,19 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
     agc_delay_inbuf %= ads.agc_delay_buflen;
     agc_delay_outbuf %= ads.agc_delay_buflen;
 
+    // I have decided to put the DC elimination AFTER the AGC
+    // because we need the carrier DC for the calmness and functioning of the AGC
+    // DD4WH 2017-02-08
+    if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
+    {
+    // eliminate DC in the audio before application of AGC gain
+        for(i = 0; i < blockSize; i++)
+        {
+            w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            adb.a_buffer[i] = w - wold;
+            wold = w;
+        }
+    }
     // Now apply pre-calculated AGC values to delayed audio
 
     arm_mult_f32(adb.a_buffer, adb.agc_valbuf, adb.a_buffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
@@ -2747,9 +2762,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 }
                 else
                 {
+                    // DC Filter is now put AFTER the AGC in the AGC subroutine
                 // DC Filter
-                dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-                audio = audio - dc27;
+//                dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+//                audio = audio - dc27;
                 }
                 adb.a_buffer[i] = audio;
             }
@@ -2829,9 +2845,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                     }
                     else
                     {
+                        // DC Filter is now put AFTER the AGC in the AGC subroutine
                         // DC Filter
-                        dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-                        audio = audio - dc27;
+//                        dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+//                        audio = audio - dc27;
                     }
 
                     adb.a_buffer[i] = audio;
