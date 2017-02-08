@@ -2135,31 +2135,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
     }
 }
 
-/*
-float32_t fastdcblock_ff(float32_t* input, float32_t* output, int input_size, float32_t last_dc_level)
-{ //  (c) András Retzler
-  //  taken from libcsdr: https://github.com/simonyiszk/csdr
-  //this DC block filter does moving average block-by-block.
-  //this is the most computationally efficient
-  //input and output buffer is allowed to be the same
-  //http://www.digitalsignallabs.com/dcblock.pdf
-  float32_t avg=0.0;
-  for(int i=0;i<input_size;i++) //@fastdcblock_ff: calculate block average
-  {
-    avg+=input[i];
-  }
-  avg/=input_size;
 
-  float32_t avgdiff=avg-last_dc_level;
-  //DC removal level will change lineraly from last_dc_level to avg.
-  for(int i=0;i<input_size;i++) //@fastdcblock_ff: remove DC component
-  {
-    float32_t dc_removal_level=last_dc_level+avgdiff*((float32_t)i/input_size);
-    output[i]=input[i]-dc_removal_level;
-  }
-  return avg;
-}
-*/
 //
 //
 //*----------------------------------------------------------------------------
@@ -2751,9 +2727,6 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 		static float32_t dsQ;             // delayed sample, Q path
         static float32_t corr[2];
         static float32_t audio;
-//        static float32_t abs_y, r;
-
-//		uint8_t sbmode = 0;             // sideband mode
 		int j, k;
 
 		// First of all: decimation of I and Q path
@@ -2784,158 +2757,119 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
         case DEMOD_SAM:
 
-		// Wheatley 2011 cuteSDR & Warren Prattï¿½s WDSP, 2016
-        for(int i = 0; i < blockSize / adb.DF; i++)
-//            for(int i = 0; i < blockSize / ads.decimation_rate; i++) // adb.DF; i++)
-        {   // NCO
-//            Sin = sinf(phs);
-//            Cos = cosf(phs);
-            sincosf(phs,&Sin,&Cos);
-            ai = Cos * adb.i_buffer[i];
-            bi = Sin * adb.i_buffer[i];
-            aq = Cos * adb.q_buffer[i];
-            bq = Sin * adb.q_buffer[i];
+                // Wheatley 2011 cuteSDR & Warren Prattï¿½s WDSP, 2016
+                for(int i = 0; i < blockSize / adb.DF; i++)
+                {   // NCO
+                    sincosf(phs,&Sin,&Cos);
+                    ai = Cos * adb.i_buffer[i];
+                    bi = Sin * adb.i_buffer[i];
+                    aq = Cos * adb.q_buffer[i];
+                    bq = Sin * adb.q_buffer[i];
 
-            if (ads.sam_sideband != SAM_SIDEBAND_BOTH)
-            {
-              a[0] = dsI;
-              b[0] = bi;
-              c[0] = dsQ;
-              d[0] = aq;
-              dsI = ai;
-              dsQ = bq;
+                    if (ads.sam_sideband != SAM_SIDEBAND_BOTH)
+                    {
+                      a[0] = dsI;
+                      b[0] = bi;
+                      c[0] = dsQ;
+                      d[0] = aq;
+                      dsI = ai;
+                      dsQ = bq;
 
-              for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
-              {
-                k = 3 * j;
-                a[k + 3] = adb.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
-                b[k + 3] = adb.c1[j] * (b[k] - b[k + 5]) + b[k + 2];
-                c[k + 3] = adb.c0[j] * (c[k] - c[k + 5]) + c[k + 2];
-                d[k + 3] = adb.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
-              }
-              ai_ps = a[OUT_IDX];
-              bi_ps = b[OUT_IDX];
-              bq_ps = c[OUT_IDX];
-              aq_ps = d[OUT_IDX];
+                      for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
+                      {
+                            k = 3 * j;
+                            a[k + 3] = adb.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
+                            b[k + 3] = adb.c1[j] * (b[k] - b[k + 5]) + b[k + 2];
+                            c[k + 3] = adb.c0[j] * (c[k] - c[k + 5]) + c[k + 2];
+                            d[k + 3] = adb.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
+                      }
+                      ai_ps = a[OUT_IDX];
+                      bi_ps = b[OUT_IDX];
+                      bq_ps = c[OUT_IDX];
+                      aq_ps = d[OUT_IDX];
 
-              for (j = OUT_IDX + 2; j > 0; j--)
-              {
-                a[j] = a[j - 1];
-                b[j] = b[j - 1];
-                c[j] = c[j - 1];
-                d[j] = d[j - 1];
-              }
-            }
+                      for (j = OUT_IDX + 2; j > 0; j--)
+                      {
+                            a[j] = a[j - 1];
+                            b[j] = b[j - 1];
+                            c[j] = c[j - 1];
+                            d[j] = d[j - 1];
+                      }
+                    }
 
-            corr[0] = +ai + bq;
-            corr[1] = -bi + aq;
+                    corr[0] = +ai + bq;
+                    corr[1] = -bi + aq;
 
-            switch(ads.sam_sideband)
-            {
-            case SAM_SIDEBAND_BOTH:
-              {
-                audio = corr[0];
-                break;
-              }
-            case SAM_SIDEBAND_USB:
-              {
-                audio = (ai_ps - bi_ps) + (aq_ps + bq_ps);
-                break;
-              }
-            case SAM_SIDEBAND_LSB:
-              {
-                audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
-                break;
-              }
-            }
+                    switch(ads.sam_sideband)
+                    {
+                    case SAM_SIDEBAND_BOTH:
+                      {
+                        audio = corr[0];
+                        break;
+                      }
+                    case SAM_SIDEBAND_USB:
+                      {
+                        audio = (ai_ps - bi_ps) + (aq_ps + bq_ps);
+                        break;
+                      }
+                    case SAM_SIDEBAND_LSB:
+                      {
+                        audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
+                        break;
+                      }
+                    }
 
-            // "fade leveler", taken from Warren Prattsï¿½ WDSP / HPSDR, 2016
-            // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
-            if(ads.fade_leveler)
-            {
-            dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-            dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
-            audio = audio + dc_insert - dc27;
-            }
-            else
-            {
-            // DC Filter
-            dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-            audio = audio - dc27;
-            }
+                    // "fade leveler", taken from Warren Prattsï¿½ WDSP / HPSDR, 2016
+                    // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
+                    if(ads.fade_leveler)
+                    {
+                        dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+                        dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
+                        audio = audio + dc_insert - dc27;
+                    }
+                    else
+                    {
+                        // DC Filter
+                        dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+                        audio = audio - dc27;
+                    }
 
-            adb.a_buffer[i] = audio;
+                    adb.a_buffer[i] = audio;
 
-            // determine phase error
-            phzerror = atan2f(corr[1], corr[0]);
+                    // determine phase error
+                    phzerror = atan2f(corr[1], corr[0]);
 
-/*            // the following does not work!
+                        del_out = fil_out;
+                        // correct frequency 1st step
+                        omega2 = omega2 + adb.g2 * phzerror;
+                        if (omega2 < adb.omega_min)
+                        {
+                            omega2 = adb.omega_min;
+                        }
+                        else if (omega2 > adb.omega_max)
+                        {
+                            omega2 = adb.omega_max;
+                        }
+                        // correct frequency 2nd step
+                        fil_out = adb.g1 * phzerror + omega2;
+                        phs = phs + del_out;
 
-
-            // first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
-            //
-//          y  corr[1] = -bi + aq;
-//          x  corr[0] = +ai + bq;
-//            y = (i_prev * adb.q_buffer[i]) - (adb.i_buffer[i] * q_prev);
-//            x = (i_prev * adb.i_buffer[i]) + (adb.q_buffer[i] * q_prev);
-            //
-            // What follows is adapted from "Fixed-Point Atan2 With Self Normalization", public domain code by "Jim Shima".
-            // The result is "approximate" - but plenty good enough for speech-grade communications!
-            //
-            // Do calculation of arc-tangent (with quadrant preservation) of of I and Q channels, comparing with previous sample.
-            // Because the result is absolute (we are using ratios!) there is no need to apply any sort of amplitude limiting
-            //
-            abs_y = fabs(corr[1]) + 2e-16;        // prevent us from taking "zero divided by zero" (indeterminate value) by setting this to be ALWAYS at least slightly higher than zero
-            //
-            if(corr[0] >= 0)                      // Quadrant 1 or 4
-            {
-                r = (corr[0] - abs_y) / (corr[0] + abs_y);
-                phzerror = FM_DEMOD_COEFF1 - FM_DEMOD_COEFF1 * r;
-            }
-            else                            // Quadrant 2 or 3
-            {
-                r = (corr[0] + abs_y) / abs_y - corr[0];
-                phzerror = FM_DEMOD_COEFF2 - FM_DEMOD_COEFF1 * r;
-            }
-            //
-            if (corr[1] < 0)                      // Quadrant 3 or 4 - flip sign
-            {
-                phzerror = -phzerror;
-            }
-*/
-
-                del_out = fil_out;
-                // correct frequency 1st step
-                omega2 = omega2 + adb.g2 * phzerror;
-                if (omega2 < adb.omega_min)
-                {
-                    omega2 = adb.omega_min;
+                    // wrap round 2PI, modulus
+                    while (phs >= 2.0 * PI) phs -= (2.0 * PI);
+                    while (phs < 0.0) phs += (2.0 * PI);
                 }
-                else if (omega2 > adb.omega_max)
-                {
-                    omega2 = adb.omega_max;
+                count++;
+                if(count > 50) // to display the exact carrier frequency that the PLL is tuned to
+                // in the small frequency display
+                // we calculate carrier offset here and the display function is
+                // then called in UiDriver_MainHandler approx. every 40-80ms
+                { // to make this smoother, a simple lowpass/exponential averager here . . .
+                    carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (adb.DF * 2.0 * PI);
+                    carrier = carrier + 0.9 * lowpass;
+                    ads.carrier_freq_offset =  (int)carrier;
+                    count = 0;
+                    lowpass = carrier;
                 }
-                // correct frequency 2nd step
-                fil_out = adb.g1 * phzerror + omega2;
-                phs = phs + del_out;
-
-            // wrap round 2PI, modulus
-            while (phs >= 2.0 * PI) phs -= (2.0 * PI);
-            while (phs < 0.0) phs += (2.0 * PI);
-        }
-        count++;
-        if(count > 50) // to display the exact carrier frequency that the PLL is tuned to
-//        if(0)
-        // in the small frequency display
-            // we calculate carrier offset here and the display function is
-            // then called in UiDriver_MainHandler approx. every 40-80ms
-        { // to make this smoother, a simple lowpass/exponential averager here . . .
-            carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (adb.DF * 2.0 * PI);
-            carrier = carrier + 0.9 * lowpass;
-            ads.carrier_freq_offset =  (int)carrier;
-            count = 0;
-            lowpass = carrier;
-        }
         break;
         }
 }
@@ -3332,7 +3266,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
             }
 
-            // Scale audio to according to AGC setting, demodulation mode and required fixed levels and scaling
+            // Scale audio according to AGC setting, demodulation mode and required fixed levels and scaling
             float32_t scale_gain;
             if(dmod_mode == DEMOD_AM)
             {
