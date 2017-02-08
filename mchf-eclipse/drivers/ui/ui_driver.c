@@ -2939,13 +2939,9 @@ void UiDriver_ChangeTuningStep(uchar is_up)
     ulong 	idx = df.selected_idx;
     uint8_t idx_limit = T_STEP_MAX_STEPS -1;
 
-    if(ts.freq_cal_adjust_flag)
+    if((!ts.xvtr_adjust_flag) && (!ts.xverter_mode))
     {
-        idx_limit = T_STEP_1KHZ_IDX;
-    }
-    else if((!ts.freq_cal_adjust_flag) && (!ts.xvtr_adjust_flag) && (!ts.xverter_mode))
-    {
-        // are we NOT in "transverter adjust" or "frequency calibrate adjust" or transverter mode *NOT* on?
+        // are we NOT in "transverter adjust" or transverter mode *NOT* on?
         idx_limit = T_STEP_100KHZ_IDX;
     }
 
