@@ -525,6 +525,7 @@ void AudioDriver_Init(void)
     //
     ads.decimation_rate	=	RX_DECIMATION_RATE_12KHZ;		// Decimation rate, when enabled
 
+    ads.fade_leveler = 0;
 
     //
     //
@@ -1786,8 +1787,10 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
         for(i = 0; i < blockSize; i++)
         {
             if((ts.dmod_mode == DEMOD_AM))		// if in AM, get the recovered DC voltage from the detected carrier
-            {
-                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+            { // TODO: cleanup
+                // but leave this here for the moment, we are still testing 2017-02-08
+//                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+                ads.agc_calc = fabs(adb.a_buffer[i]) * ads.agc_val;
             }
             else	 							// not AM - get the amplitude of the recovered audio
             {
@@ -2132,6 +2135,31 @@ static void AudioDriver_DemodFM(int16_t blockSize)
     }
 }
 
+/*
+float32_t fastdcblock_ff(float32_t* input, float32_t* output, int input_size, float32_t last_dc_level)
+{ //  (c) András Retzler
+  //  taken from libcsdr: https://github.com/simonyiszk/csdr
+  //this DC block filter does moving average block-by-block.
+  //this is the most computationally efficient
+  //input and output buffer is allowed to be the same
+  //http://www.digitalsignallabs.com/dcblock.pdf
+  float32_t avg=0.0;
+  for(int i=0;i<input_size;i++) //@fastdcblock_ff: calculate block average
+  {
+    avg+=input[i];
+  }
+  avg/=input_size;
+
+  float32_t avgdiff=avg-last_dc_level;
+  //DC removal level will change lineraly from last_dc_level to avg.
+  for(int i=0;i<input_size;i++) //@fastdcblock_ff: remove DC component
+  {
+    float32_t dc_removal_level=last_dc_level+avgdiff*((float32_t)i/input_size);
+    output[i]=input[i]-dc_removal_level;
+  }
+  return avg;
+}
+*/
 //
 //
 //*----------------------------------------------------------------------------
@@ -2142,78 +2170,63 @@ static void AudioDriver_DemodFM(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
- static void AudioDriver_DemodAM(int16_t blockSize)
+/*
+static void AudioDriver_DemodAM(int16_t blockSize)
 {
     ulong i, j;
-    bool testSAM = 0; // put 0 for normal function, only put 1 with very low RF gain and manual (off) AGC
-    if(!testSAM)  // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
-    {
         j = 0;
+        static float32_t last_dc_level;
         for(i = 0; i < blockSize; i++)	 					// interleave I and Q data, putting result in "b" buffer
         {
-            adb.b_buffer[j] = adb.i_buffer[i];
+            adb.a_buffer[j] = adb.i_buffer[i];
             j++;
-            adb.b_buffer[j] = adb.q_buffer[i];
+            adb.a_buffer[j] = adb.q_buffer[i];
             j++;
         }
         //
         // perform complex vector magnitude calculation on interleaved data in "b" to recover
         // instantaneous carrier power:  sqrtf(b[n]^2+b[n+1]^2) - put result in "a"
         //
-        arm_cmplx_mag_f32(adb.b_buffer, adb.a_buffer, blockSize);	// use optimized (fast) ARM function
-    }
-    // this is the very experimental demodulator for DSB
-    // demodulates only the real part = I
-    //
-    if(testSAM)  // this is DSB demodulation WITHOUT phasing, this is NOT used in the mcHF at the moment
-    {
-        for(i = 0; i < blockSize; i++)	 			// put I into buffer a
-        {
-            adb.a_buffer[i] = adb.i_buffer[i];
-        }
-    }
+        arm_cmplx_mag_f32(adb.a_buffer, adb.b_buffer, blockSize);	// use optimized (fast) ARM function
+        last_dc_level = fastdcblock_ff(adb.b_buffer, adb.a_buffer, blockSize, last_dc_level);
+
     //
     // Now produce signal/carrier level for AGC
     //
-    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
-    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
+//    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+//    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
 }
 
-
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_demod_am_exp  (experimental! rewritten to eliminate the need for interleaving, DD4WH april 2016)
-//* Object              : AM demodulator
-//* Object              :
-//* Input Parameters    : size - size of buffer on which to operate
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void AudioDriver_DemodAmExperimental(int16_t blockSize)
 {
     ulong i;
-    float32_t sqrt;
+    float32_t sqrt, w;
+    static float32_t wold;
         //
         // uses optimized ARM sqrt function, but not the arm_cmplx_mag, because the latter needs the data in interleaved format!
         // this could possibly make this even faster than first interleaving and then calculating magnitude
     	// (because arm_cmplx_mag uses the same sqrt function )
 
     for(i = 0; i < blockSize; i++) {
-    	 arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &sqrt);
-    	 adb.a_buffer[i] = sqrt;
+       arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &sqrt);
+//       sqrt = sqrtf(adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i]);
+//    	 adb.a_buffer[i] = sqrt;
+         // DC removal filter -----------------------
+         w = sqrt + wold * 0.9999; // yes, I want a superb bass response ;-)
+         adb.a_buffer[i] = w - wold;
+         wold = w;
     }
 
     //
     // Now produce signal/carrier level for AGC
     //
-    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
+//    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
     //
-    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
+//    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
 
 }
-
+*/
 ////
 //
 //
@@ -2747,6 +2760,30 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         arm_fir_decimate_f32(&DECIMATE_SAM_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
         arm_fir_decimate_f32(&DECIMATE_SAM_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
 
+        switch(ts.dmod_mode)
+        {
+        case DEMOD_AM:
+            for(int i = 0; i < blockSize / adb.DF; i++)
+            {
+                arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &audio);
+                if(ads.fade_leveler)
+                { // this does not eliminate DC properly !
+                dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+                dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
+                audio = audio + dc_insert - dc27;
+                }
+                else
+                {
+                // DC Filter
+                dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+                audio = audio - dc27;
+                }
+                adb.a_buffer[i] = audio;
+            }
+        break;
+
+        case DEMOD_SAM:
+
 		// Wheatley 2011 cuteSDR & Warren Prattï¿½s WDSP, 2016
         for(int i = 0; i < blockSize / adb.DF; i++)
 //            for(int i = 0; i < blockSize / ads.decimation_rate; i++) // adb.DF; i++)
@@ -2819,6 +2856,12 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
             dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
             audio = audio + dc_insert - dc27;
+            }
+            else
+            {
+            // DC Filter
+            dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+            audio = audio - dc27;
             }
 
             adb.a_buffer[i] = audio;
@@ -2893,6 +2936,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             count = 0;
             lowpass = carrier;
         }
+        break;
+        }
 }
 
 void set_SAM_PLL_parameters()
@@ -2923,15 +2968,6 @@ void set_SAM_PLL_parameters()
 float32_t sign_new (float32_t x) {
     return x < 0 ? -1.0 : ( x > 0 ? 1.0 : 0.0);
 }
-
-/*float64_t sign_new(float64_t x) {
-  if(x < 0)
-    return -1.0;
-    else
-      if(x > 0)
-        return 1.0;
-          else return 0.0;
-}*/
 
 //
 //*----------------------------------------------------------------------------
@@ -3055,7 +3091,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 4000) // wait 667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
+        if(twinpeaks_counter > 4000) // wait 2.667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
         {
             ts.twinpeaks_tested = 0;
             twinpeaks_counter = 0;
@@ -3181,7 +3217,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // which case there is ***NO*** audio phase shift applied to the I/Q channels.
         //
         //
-        if(ts.dmod_mode != DEMOD_SAM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
+        if(ts.dmod_mode != DEMOD_SAM && ts.dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
         {
         arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
         arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
@@ -3202,7 +3238,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
             }
             break;
-        case DEMOD_AM:
+/*        case DEMOD_AM:
             if (ts.AM_experiment)
             {
                 AudioDriver_DemodAmExperimental(blockSize);
@@ -3211,7 +3247,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 AudioDriver_DemodAM(blockSize);
             }
-            break;
+            break; */
+        case DEMOD_AM:
         case DEMOD_SAM:
         	AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
         	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
@@ -3245,7 +3282,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
         {
             // Do decimation down to lower rate to reduce processor load
-            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
             {
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
             }
