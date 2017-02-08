@@ -6004,7 +6004,7 @@ void UiDriver_MainHandler()
                     RTC_GetTime(RTC_Format_BIN, &rtc);
                     char str[20];
                     snprintf(str,20,"Time %2u:%02u:%02u",rtc.RTC_Hours,rtc.RTC_Minutes,rtc.RTC_Seconds);
-                    UiLcdHy28_PrintText(0,90,str,White,Black,0);
+                    UiLcdHy28_PrintText(0,110,str,White,Black,0);
                 }
             }
             break;
