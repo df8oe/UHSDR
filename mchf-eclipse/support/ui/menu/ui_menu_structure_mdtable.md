@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-07T12:33:24  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-09T08:02:01  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.8 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.8 - UI Menu Overview
 
-generated at  2017-02-07T12:33:24  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-09T08:02:01  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -27,7 +27,7 @@ generated at  2017-02-07T12:33:24  by "./ui_menu_structure_mdtable.py"
 | **SAM PLL locking range**     (                 MENU_SAM_PLL_LOCKING_RANGE) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
 | **SAM PLL step response**     (                 MENU_SAM_PLL_STEP_RESPONSE) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
 | **SAM PLL bandwidth in Hz**   (                     MENU_SAM_PLL_BANDWIDTH) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
-| **SAM Fade Leveler**          (                      MENU_SAM_FADE_LEVELER) | Fade leveler of the SAM demodulator can be switched ON/OFF. If ON, it can be expected to better remove the effect of selective fading. | 
+| **SAM Fade Leveler**          (                      MENU_SAM_FADE_LEVELER) | Fade leveler (in AM/SAM mode) ON/OFF. Fade leveler is helpful in situations with very fast QSB of the carrier ´flutter´. It is designed to remove the rapidly changing carrier and replace it with a more stable carrier. If there is no QSB on the carrier, there is no change. | 
 | **FM Mode**                   (                        MENU_FM_MODE_ENABLE) | Disable appearance of FM mode when pressing Mode button | 
 | **FM Sub Tone Gen**           (                MENU_FM_GEN_SUBAUDIBLE_TONE) | Enable generation of CTCSS tones during FM transmissions. | 
 | **FM Sub Tone Det**           (                MENU_FM_DET_SUBAUDIBLE_TONE) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
