@@ -1866,7 +1866,7 @@ void AGC_prep()
     max_gain = 1000.0; // 1000.0; max gain to be applied??? or is this AGC threshold = knee level?
     fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF
     max_input = 32768.0; // 1.0; //
-    out_targ = 2000.0; // target value of audio after AGC
+    out_targ = 12000.0; // target value of audio after AGC
     var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
 
     tau_fast_backaverage = 0.250;    // tau_fast_backaverage
@@ -1881,29 +1881,29 @@ void AGC_prep()
   //calculate internal parameters
     switch (ts.agc_wdsp_mode)
   {
-    case 0: //agcOFF
+    case 5: //agcOFF
       break;
-    case 2: //agcLONG
+    case 1: //agcLONG
       hangtime = 2.000;
       tau_decay = 2.000;
       hang_enable = 1;
       break;
-    case 3: //agcSLOW
+    case 2: //agcSLOW
       hangtime = 1.000;
       tau_decay = 0.500;
       hang_enable = 1;
       break;
-    case 4: //agcMED
+    case 3: //agcMED
       hang_thresh = 1.0;
       hangtime = 0.000;
       tau_decay = 0.250;
       break;
-    case 5: //agcFAST
+    case 4: //agcFAST
       hang_thresh = 1.0;
       hangtime = 0.000;
       tau_decay = 0.050;
       break;
-    case 1: //agcFrank
+    case 0: //agcFrank
       hang_enable = 0;
       hang_thresh = 0.100; // from which level on should hang be enabled
       hangtime = 2.000; // hang time, if enabled
@@ -1963,11 +1963,11 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
   int i, j, k;
   float32_t mult;
 
-    if (ts.agc_wdsp_mode == 0)  // AGC OFF
+    if (ts.agc_wdsp_mode == 5)  // AGC OFF
     {
       for (i = 0; i < blockSize; i++)
       {
-          adb.a_buffer[i] = adb.a_buffer[i] * fixed_gain;
+          adb.a_buffer[i] = adb.a_buffer[i] * ads.agc_rf_gain;
       }
       return;
     }

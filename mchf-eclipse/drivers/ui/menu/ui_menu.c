@@ -975,28 +975,28 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         case MENU_AGC_WDSP_MODE: // AGC mode
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_mode,
-                                                  1, // FIXME: set this to 0 again when bug with AGC==OFF is fixed
+                                                  0, //
                                                   5,
                                                   2,
                                                   1
                                                  );
             switch(ts.agc_wdsp_mode) {
-            case 1:
+            case 0:
                 txt_ptr = "very LONG";
                 break;
-            case 2:
+            case 1:
                 txt_ptr = "     LONG";
                 break;
-            case 3:
+            case 2:
                 txt_ptr = "     SLOW";
                 break;
-            case 4:
+            case 3:
                 txt_ptr = "      MED";
                 break;
-            case 5:
+            case 4:
                 txt_ptr = "      FAST";
                 break;
-            case 0:
+            case 5:
                 txt_ptr = "     OFF ";
                 clr = Red;
                 break;
