@@ -894,7 +894,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     //      else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_15K)  {   // if it was 15 kHz bandwidth
     //          strcpy(options, "15 kHz");
     //      }
-            else    {                       // it was anything else (10 kHz - hope!)
+            else    {                <       // it was anything else (10 kHz - hope!)
                 strcpy(options, "10 kHz");
             }
             //
@@ -1050,39 +1050,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_AGC_WDSP_SLOPE:      // RF gain control adjust
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_slope,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_slope,
                                             0,
-                                            MAX_RF_GAIN,
-                                            DEFAULT_RF_GAIN,
+                                            200,
+                                            40,
                                             1
                                            );
         if(var_change)
         {
-            AudioManagement_CalcRFGain();
+            AGC_prep();
         }
-
-        if(ts.rf_gain < 20)
+        snprintf(options, 32, "  %d/ 10dB ", ts.agc_wdsp_slope);
+        break;
+    case MENU_AGC_WDSP_THRESH:      // RF gain control adjust
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_thresh,
+                                            -20,
+                                            120,
+                                            40,
+                                            1
+                                           );
+        if(var_change)
         {
-            clr = Red;
+            AGC_prep();
         }
-        else if(ts.rf_gain < 30)
-        {
-            clr = Orange;
-        }
-        else if(ts.rf_gain < 40)
-        {
-            clr = Yellow;
-        }
-        else
-        {
-            clr = White;
-        }
-
-        if(var_change)      // did RFGain get changed?
-        {
-            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
-        }
-        snprintf(options, 32, "  %d", ts.rf_gain);
+        snprintf(options, 32, "  %ddB ", ts.agc_wdsp_thresh);
         break;
 
     case MENU_SAM_PLL_LOCKING_RANGE:      //
@@ -1159,6 +1150,22 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 break;
             default:
             txt_ptr = "Standard AGC";        //
+            }
+            break;
+        case MENU_AGC_WDSP_HANG_ENABLE:     //
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_hang_enable,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+            switch(ts.agc_wdsp_hang_enable)
+            {
+            case 1:       //
+                txt_ptr = " ON  ";        //
+                break;
+            default:
+            txt_ptr = " OFF ";        //
             }
             break;
 /*    case MENU_SAM_SIDEBAND:  //

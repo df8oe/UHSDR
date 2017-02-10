@@ -1790,7 +1790,7 @@ float32_t out_targ;
 float32_t tau_fast_backaverage;
 float32_t tau_fast_decay;
 float32_t pop_ratio;
-uint8_t hang_enable;
+//uint8_t hang_enable;
 float32_t tau_hang_backmult;
 float32_t hangtime;
 float32_t hang_thresh;
@@ -1859,12 +1859,12 @@ void AGC_prep()
     fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF
     max_input = 32768.0; // 1.0; //
     out_targ = 12000.0; // target value of audio after AGC
-    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-//    var_gain = pow (10.0, (double)slope / 20.0 / 10.0);
+//    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
+    var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0);
     tau_fast_backaverage = 0.250;    // tau_fast_backaverage
     tau_fast_decay = 0.005;          // tau_fast_decay
     pop_ratio = 5.0;                 // pop_ratio
-    hang_enable = 0;                 // hang_enable
+//    hang_enable = 0;                 // hang_enable
     tau_hang_backmult = 0.500;       // tau_hang_backmult
     hangtime = 0.250;                // hangtime
     hang_thresh = 0.250;             // hang_thresh
@@ -1878,12 +1878,12 @@ void AGC_prep()
     case 1: //agcLONG
       hangtime = 2.000;
       tau_decay = 2.000;
-      hang_enable = 1;
+      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
       tau_decay = 0.500;
-      hang_enable = 1;
+      ts.agc_wdsp_hang_enable = 1;
       break;
     case 3: //agcMED
       hang_thresh = 1.0;
@@ -1896,7 +1896,7 @@ void AGC_prep()
       tau_decay = 0.050;
       break;
     case 0: //agcFrank
-      hang_enable = 1;
+      ts.agc_wdsp_hang_enable = 0;
       hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
@@ -2011,7 +2011,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
             }
             else
             {
-              if (hang_enable && (hang_backaverage > hang_level))
+              if (ts.agc_wdsp_hang_enable  && (hang_backaverage > hang_level))
               {
                 state = 2;
                 hang_counter = (int)(hangtime * IQ_SAMPLE_RATE_F / ads.decimation_rate);
