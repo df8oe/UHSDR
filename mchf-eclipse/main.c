@@ -13,14 +13,16 @@
  ************************************************************************************/
 
 // Common
-#include "hardware/mchf_board.h"
-#include "drivers/ui/ui_configuration.h"
-#include "misc/config_storage.h"
+#include "mchf_board.h"
 #include <stdio.h>
+#include "mchf_rtc.h"
+
+#if 0
+#include "ui_configuration.h"
+#include "config_storage.h"
 
 // serial EEPROM driver
-#include "hardware/mchf_hw_i2c.h"
-#include "hardware/mchf_rtc.h"
+#include "mchf_hw_i2c.h"
 
 // Audio Driver
 #include "drivers/audio/audio_driver.h"
@@ -516,22 +518,24 @@ static void wd_reset(void)
  */
 #include "Trace.h"
 
+#endif
 
 // Power on
-int main(void)
+int mchfMain(void)
 {
 
-    trace_puts("Hello mcHF World!");
+    ///trace_puts("Hello mcHF World!");
     // trace_printf(" %u\n", 1u);
-
 
 
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
     // Set default transceiver state
-    TransceiverStateInit();
+    ///TransceiverStateInit();
 
     mchf_board_detect_ramsize();
+#if 0
+
     //	FLASH_OB_Unlock();
     //	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
     //	FLASH_OB_Launch();
@@ -546,13 +550,12 @@ int main(void)
 #ifdef TESTCPLUSPLUS
     test_call_cpp();
 #endif
-
+#endif
     // HW init
     mchf_board_init();
-
     MchfBoard_GreenLed(LED_STATE_ON);
 
-
+#if 0
     ConfigStorage_Init();
 
     // test if touchscreen is present
@@ -623,4 +626,5 @@ int main(void)
         // Reset WD - not working
         //wd_reset();
     }
+#endif
 }

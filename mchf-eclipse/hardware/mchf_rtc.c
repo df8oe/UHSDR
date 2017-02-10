@@ -10,8 +10,11 @@
 ************************************************************************************/
 #include "mchf_board.h"
 #include "mchf_rtc.h"
+#include "stm32f4xx_hal_rtc.h"
+#include "stm32f4xx_hal_rtc_ex.h"
+#include "stm32f4xx_hal_rcc.h"
+#include "rtc.h"
 
-#ifdef USE_RTC_LSE
 /* Private macros */
 /* Internal status registers for RTC */
 #define RTC_PRESENCE_REG                   RTC_BKP_DR0
@@ -19,25 +22,36 @@
 #define RTC_PRESENCE_OK_VAL                0x0002       // then we set this value to rembember a clock is present
 //#define RTC_PRESENCE_ACK_VAL               0x0003       // if we find this value after power on, we assume user enabled RTC
 //#define RTC_PRESENCE_NACK_VAL              0x0004       // if we find this value after power on, we assume user decided against using RTC
+#ifdef USE_RTC_LSE
 
 static void RTC_LSE_Config() {
-    RCC_LSEConfig(RCC_LSE_ON);
 
-    while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET);
+    RCC_OscInitTypeDef RCC_OscInitStruct;
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
-    RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);
-    RCC_RTCCLKCmd(ENABLE);
-    RTC_WriteProtectionCmd(DISABLE);
-    RTC_WaitForSynchro();
-    RTC_WriteProtectionCmd(ENABLE);
-    RTC_WriteBackupRegister(RTC_PRESENCE_REG, RTC_PRESENCE_OK_VAL);
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+    RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+
+    PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+
+    HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+
+    __HAL_RCC_RTC_ENABLE();
+
+    HAL_RTCEx_BKUPWrite(&hrtc,RTC_PRESENCE_REG,RTC_PRESENCE_OK_VAL);
+
+
 }
 
 void MchfRtc_FullReset() {
-    RCC_BackupResetCmd(ENABLE);
+    __HAL_RCC_BACKUPRESET_FORCE();
 }
-
-
 
 #if 0
 static void RTC_LSI_Config() {
@@ -58,21 +72,21 @@ static void RTC_LSI_Config() {
 
 void MchfRtc_Start()
 {
+
+
     // ok, there is a battery, so let us now start the oscillator
-        RTC_LSE_Config();
+    RTC_LSE_Config();
 
-        // very first start of rtc
-        RTC_InitTypeDef rtc_init;
+    // very first start of rtc
+    hrtc.Instance = RTC;
+    hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+    hrtc.Init.AsynchPrediv = 127;
+    hrtc.Init.SynchPrediv = 255;
+    hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+    hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+    hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 
-        rtc_init.RTC_HourFormat = RTC_HourFormat_24;
-        // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
-        // rtc_init.RTC_AsynchPrediv = 123;   // 117; // 111; // 47; // 54; // 128 -1 = 127;
-        // rtc_init.RTC_SynchPrediv =  234;   // 246; // 606; // 547; // 250 -1 = 249;
-        // internal clock, 32kHz, see www.st.com/resource/en/application_note/dm00025071.pdf
-         rtc_init.RTC_AsynchPrediv = 127; // 32768 = 128 * 256
-         rtc_init.RTC_SynchPrediv =  255;
-
-        RTC_Init(&rtc_init);
+    HAL_RTC_Init(&hrtc);
 }
 
 bool MchfRtc_enabled()
@@ -80,21 +94,20 @@ bool MchfRtc_enabled()
     bool retval = false;
 #ifdef USE_RTC_LSE
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
+    __HAL_RCC_PWR_CLK_ENABLE();
 
-    PWR_BackupAccessCmd(ENABLE);
+    HAL_PWR_EnableBkUpAccess();
 
-    uint32_t status = RTC_ReadBackupRegister(RTC_PRESENCE_REG);
+    uint32_t status = HAL_RTCEx_BKUPRead(&hrtc,RTC_PRESENCE_REG);
 
     if (status == RTC_PRESENCE_OK_VAL) {
-        RTC_ClearITPendingBit(RTC_IT_WUT);
-        EXTI->PR = 0x00400000;
+
         retval = true;
         ts.vbat_present = true;
     } else if (status == 0) {
         // if we find the RTC_PRESENCE_INIT_VAL in the backup register next time we boot
         // we know there is a battery present.
-        RTC_WriteBackupRegister(RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
+        HAL_RTCEx_BKUPWrite(&hrtc,RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
     } else {
         ts.vbat_present = true;
     }
