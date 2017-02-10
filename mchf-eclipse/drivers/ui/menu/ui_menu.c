@@ -1049,6 +1049,42 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %d", ts.rf_gain);
         break;
 
+    case MENU_AGC_WDSP_SLOPE:      // RF gain control adjust
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_slope,
+                                            0,
+                                            MAX_RF_GAIN,
+                                            DEFAULT_RF_GAIN,
+                                            1
+                                           );
+        if(var_change)
+        {
+            AudioManagement_CalcRFGain();
+        }
+
+        if(ts.rf_gain < 20)
+        {
+            clr = Red;
+        }
+        else if(ts.rf_gain < 30)
+        {
+            clr = Orange;
+        }
+        else if(ts.rf_gain < 40)
+        {
+            clr = Yellow;
+        }
+        else
+        {
+            clr = White;
+        }
+
+        if(var_change)      // did RFGain get changed?
+        {
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
+        }
+        snprintf(options, 32, "  %d", ts.rf_gain);
+        break;
+
     case MENU_SAM_PLL_LOCKING_RANGE:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ads.pll_fmax_int,
                                             50,

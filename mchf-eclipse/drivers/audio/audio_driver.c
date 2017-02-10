@@ -1851,14 +1851,6 @@ void AGC_prep()
     0.250,                      // hang_thresh
     0.100);                     // tau_hang_decay
  */
-/*  GOOD WORKING VARIABLES
-    max_gain = 1.0;                    // max_gain
-    var_gain = 0.0015; // 1.5                      // var_gain
-    fixed_gain = 1.0;                     // fixed_gain
-    max_input = 1.0;                 // max_input
-    out_target = 0.00005; //0.0001; // 1.0                // out_target
-
- */
     tau_attack = 0.001;               // tau_attack
     tau_decay = 0.250;                // tau_decay
     n_tau = 1;                        // n_tau
@@ -1868,7 +1860,7 @@ void AGC_prep()
     max_input = 32768.0; // 1.0; //
     out_targ = 12000.0; // target value of audio after AGC
     var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-
+//    var_gain = pow (10.0, (double)slope / 20.0 / 10.0);
     tau_fast_backaverage = 0.250;    // tau_fast_backaverage
     tau_fast_decay = 0.005;          // tau_fast_decay
     pop_ratio = 5.0;                 // pop_ratio
@@ -1904,26 +1896,23 @@ void AGC_prep()
       tau_decay = 0.050;
       break;
     case 0: //agcFrank
-      hang_enable = 0;
-      hang_thresh = 0.100; // from which level on should hang be enabled
-      hangtime = 2.000; // hang time, if enabled
+      hang_enable = 1;
+      hang_thresh = 0.300; // from which level on should hang be enabled
+      hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
-      tau_decay = 3.000; // time constant decay long
+      tau_decay = 4.000; // time constant decay long
       tau_fast_decay = 0.05;          // tau_fast_decay
       tau_fast_backaverage = 0.250; // time constant exponential averager
-
-/*    // sehr gut!
- *     hang_thresh = 0.100;
-      hangtime = 2.000;
-      tau_decay = 2.000;
-      tau_hang_backmult = 0.500;
-      tau_fast_backaverage = 0.250;
-      out_targ = 0.0004;
-      var_gain = 0.001; */
       break;
     default:
       break;
   }
+
+//  float32_t noise_offset = 10.0 * log10f(fhigh - rxa[channel].nbp0.p->flow)
+//          * size / rate);
+//  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
+
+
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack);
   in_index = attack_buffsize + out_index;
   attack_mult = 1.0 - expf(-1.0 / (sample_rate * tau_attack));
