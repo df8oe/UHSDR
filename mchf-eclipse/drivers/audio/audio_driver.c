@@ -449,7 +449,7 @@ int32_t AudioDriver_GetTranslateFreq()
 }
 
 static void AudioDriver_InitFilters(void);
-static void AGC_prep(void);
+void AGC_prep(void);
 //
 // THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
 //*----------------------------------------------------------------------------
@@ -1771,11 +1771,11 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, AudioSampl
  *
  *******************************************************************************************************************/
 // AGC
-#define MAX_SAMPLE_RATE     (24000.0)
-#define MAX_N_TAU           (8)
-#define MAX_TAU_ATTACK      (0.01)
-#define RB_SIZE       (int) (MAX_SAMPLE_RATE * MAX_N_TAU * MAX_TAU_ATTACK + 1)
-int8_t AGC_mode = 2;
+//#define MAX_SAMPLE_RATE     (24000.0)
+//#define MAX_N_TAU           (8)
+//#define MAX_TAU_ATTACK      (0.01)
+//#define RB_SIZE       (int) (MAX_SAMPLE_RATE * MAX_N_TAU * MAX_TAU_ATTACK + 1)
+//int8_t AGC_mode = 2;
 int pmode = 1; // if 0, calculate magnitude by max(|I|, |Q|), if 1, calculate sqrtf(I*I+Q*Q)
 float32_t out_sample[2];
 float32_t abs_out_sample;
@@ -1795,10 +1795,10 @@ float32_t tau_hang_backmult;
 float32_t hangtime;
 float32_t hang_thresh;
 float32_t tau_hang_decay;
-float32_t ring[RB_SIZE * 2];
-float32_t abs_ring[RB_SIZE];
+float32_t ring[96];
+float32_t abs_ring[96];
 //assign constants
-int ring_buffsize = RB_SIZE;
+int ring_buffsize = 96;
 //do one-time initialization
 int out_index = -1;
 float32_t ring_max = 0.0;
@@ -1879,17 +1879,19 @@ void AGC_prep()
     tau_hang_decay = 0.100;          // tau_hang_decay
 
   //calculate internal parameters
-    switch (AGC_mode)
+    switch (ts.agc_wdsp_mode)
   {
     case 0: //agcOFF
       break;
     case 2: //agcLONG
       hangtime = 2.000;
       tau_decay = 2.000;
+      hang_enable = 1;
       break;
     case 3: //agcSLOW
       hangtime = 1.000;
       tau_decay = 0.500;
+      hang_enable = 1;
       break;
     case 4: //agcMED
       hang_thresh = 1.0;
@@ -1906,15 +1908,9 @@ void AGC_prep()
       hang_thresh = 0.100; // from which level on should hang be enabled
       hangtime = 2.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
-
       tau_decay = 3.000; // time constant decay long
       tau_fast_decay = 0.05;          // tau_fast_decay
       tau_fast_backaverage = 0.250; // time constant exponential averager
-      max_gain = 1000.0; // max gain to be applied??? or is this AGC threshold = knee level?
-      fixed_gain = 1.0; // if AGC == OFF
-      max_input = 1.0; //
-      out_targ = 0.2; // target value of audio after AGC
-      var_gain = 30.0;  // slope of the AGC -->
 
 /*    // sehr gut!
  *     hang_thresh = 0.100;
@@ -1962,10 +1958,12 @@ void AGC_prep()
 
 void AudioDriver_RxAGCWDSP(int16_t blockSize)
 {
+  static float32_t    w = 0.0;
+  static float32_t    wold = 0.0;
   int i, j, k;
   float32_t mult;
 
-    if (AGC_mode == 0)  // AGC OFF
+    if (ts.agc_wdsp_mode == 0)  // AGC OFF
     {
       for (i = 0; i < blockSize; i++)
       {
@@ -2133,6 +2131,16 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
       mult = (out_target - slope_constant * vo) / volts;
       adb.a_buffer[i] = out_sample[0] * mult;
 
+    }
+    if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
+    {
+    // eliminate DC in the audio before application of AGC gain
+        for(i = 0; i < blockSize; i++)
+        {
+            w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            adb.a_buffer[i] = w - wold;
+            wold = w;
+        }
     }
   }
 

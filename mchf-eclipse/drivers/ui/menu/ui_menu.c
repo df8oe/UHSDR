@@ -972,6 +972,47 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Orange;
         }
         break;
+
+        case MENU_AGC_WDSP_MODE: // AGC mode
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_mode,
+                                                  1, // FIXME: set this to 0 again when bug with AGC==OFF is fixed
+                                                  5,
+                                                  2,
+                                                  1
+                                                 );
+            switch(ts.agc_wdsp_mode) {
+            case 1:
+                txt_ptr = "very LONG";
+                break;
+            case 2:
+                txt_ptr = "     LONG";
+                break;
+            case 3:
+                txt_ptr = "     SLOW";
+                break;
+            case 4:
+                txt_ptr = "      MED";
+                break;
+            case 5:
+                txt_ptr = "      FAST";
+                break;
+            case 0:
+                txt_ptr = "     OFF ";
+                clr = Red;
+                break;
+            }
+
+            if(var_change)
+            {
+                // now set the AGC parameters
+                AGC_prep();
+            }
+            if(ts.txrx_mode == TRX_MODE_TX) // Orange if in TX mode
+            {
+                clr = Orange;
+            }
+            break;
+
     case MENU_RF_GAIN_ADJ:      // RF gain control adjust
         var_change = UiDriverMenuItemChangeInt(var, mode, &ts.rf_gain,
                                             0,
@@ -1068,6 +1109,22 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
+        case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+            switch(ts.agc_wdsp)
+            {
+            case 1:       //
+                txt_ptr = "    WDSP AGC";        //
+                break;
+            default:
+            txt_ptr = "Standard AGC";        //
+            }
+            break;
 /*    case MENU_SAM_SIDEBAND:  //
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ads.sam_sideband,
                                               0,

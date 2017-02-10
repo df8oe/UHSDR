@@ -437,6 +437,7 @@ void TransceiverStateInit(void)
     // twinpeak_tested = 0 --> go and test the IQ phase
     // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
     ts.agc_wdsp = 0;
+    ts.agc_wdsp_mode = 2;
 
     ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
     ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
