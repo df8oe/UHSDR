@@ -1912,6 +1912,7 @@ void AGC_prep()
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
 
+    max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
 
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack);
   in_index = attack_buffsize + out_index;

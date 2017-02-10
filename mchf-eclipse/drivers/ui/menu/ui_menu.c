@@ -1054,13 +1054,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                             0,
                                             200,
                                             40,
-                                            1
+                                            10
                                            );
         if(var_change)
         {
             AGC_prep();
         }
-        snprintf(options, 32, "  %d/ 10dB ", ts.agc_wdsp_slope);
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_slope / 10);
         break;
     case MENU_AGC_WDSP_THRESH:      // RF gain control adjust
         var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_thresh,
@@ -1073,7 +1073,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             AGC_prep();
         }
-        snprintf(options, 32, "  %ddB ", ts.agc_wdsp_thresh);
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_thresh);
         break;
 
     case MENU_SAM_PLL_LOCKING_RANGE:      //
@@ -1162,10 +1162,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             switch(ts.agc_wdsp_hang_enable)
             {
             case 1:       //
-                txt_ptr = " ON  ";        //
+                txt_ptr = "  ON";        //
                 break;
             default:
-            txt_ptr = " OFF ";        //
+            txt_ptr = " OFF";        //
             }
             break;
 /*    case MENU_SAM_SIDEBAND:  //
