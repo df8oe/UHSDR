@@ -1194,6 +1194,7 @@ void RadioManagement_HandleRxIQSignalCodecGain()
         rfg_timer = 0;
     }
 
+    // rfg_calc = (auto_rfg + 1) * 2 + 13; --> 9 * 2 + 13 = 31 !
     rfg_calc += 1;  // offset to prevent zero
     rfg_calc *= 2;  // double the range of adjustment
     rfg_calc += 13; // offset, as bottom of range of A/D gain control is not useful (e.g. ADC saturates before RX hardware)
