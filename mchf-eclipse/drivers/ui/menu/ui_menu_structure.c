@@ -73,6 +73,11 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ, NULL, "RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE, NULL, "AGC Mode", UiMenuDesc("Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
     { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC, NULL, "Custom AGC (+=Slower)", UiMenuDesc("If AGC is set to CUSTOM, this controls the speed setting of AGC") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC WDSP switch", UiMenuDesc("jhasgjdhasgf") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_MODE, NULL, "AGC WDSP Mode", UiMenuDesc("jhasgjdhasgf") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("jhasgjdhasgf") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_ENABLE, NULL, "AGC Hang enable", UiMenuDesc("jhasgjdhasgf") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_THRESH, NULL, "AGC Threshold", UiMenuDesc("jhasgjdhasgf") },
     { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best.") },
 
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV, NULL, "RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },

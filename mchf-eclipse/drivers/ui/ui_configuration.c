@@ -58,6 +58,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_SIDETONE_GAIN,&ts.st_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN},
     { ConfigEntry_Int32_16, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL},
     { ConfigEntry_UInt8, EEPROM_AGC_MODE,&ts.agc_mode,AGC_DEFAULT,0,AGC_MAX_MODE},
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_MODE,&ts.agc_wdsp_mode, 2,0,5},
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SWITCH,&ts.agc_wdsp, 0,0,1},
     { ConfigEntry_UInt8, EEPROM_MIC_GAIN,&ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_LINE_GAIN,&ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX},
     { ConfigEntry_UInt32_16, EEPROM_SIDETONE_FREQ,&ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX},
