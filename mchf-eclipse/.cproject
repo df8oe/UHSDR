@@ -307,7 +307,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|usb|support|stdio|misc|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+						<entry excluding="misc/TestCPlusPlusBuild.cpp|misc/test_fdmdv.c|misc/profiling.c|drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|usb|support|stdio|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 						<entry excluding="lcd/ui_spectrum.c|menu|ui_driver.c|ui_configuration.c|radio_management.c|encoder" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers/ui"/>
 					</sourceEntries>
 				</configuration>
@@ -523,7 +523,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|xmain.c|usb|support|stdio|misc|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="misc/TestCPlusPlusBuild.cpp|misc/test_fdmdv.c|misc/profiling.c|drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|xmain.c|usb|support|stdio|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="lcd/ui_spectrum.c|menu|ui_driver.c|ui_configuration.c|radio_management.c|encoder" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers/ui"/>
 					</sourceEntries>
 				</configuration>
@@ -903,7 +903,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|xmain.c|usb|support|stdio|misc|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="misc/TestCPlusPlusBuild.cpp|misc/test_fdmdv.c|misc/profiling.c|drivers|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/startup_stm32f407xx.s|basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f407xx.s|xmain.c|usb|support|stdio|libs|cmsis_lib|cmsis_boot|cmsis|usb/otg/src/usb_otg.c|drivers/fat_fs|bootloader" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="lcd/ui_spectrum.c|menu|ui_driver.c|ui_configuration.c|radio_management.c|encoder" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers/ui"/>
 					</sourceEntries>
 				</configuration>

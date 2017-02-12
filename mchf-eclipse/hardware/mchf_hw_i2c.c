@@ -297,12 +297,12 @@ void mchf_hw_i2c1_init()
  */
 void mchf_hw_i2c2_init()
 {
-    MchfHw_I2C_GpioInit(I2C2);
+    ///MchfHw_I2C_GpioInit(I2C2);
 
     // Enable the I2C2 peripheral clock
     ///RCC_APB1PeriphClockCmd(I2C2_CLK, ENABLE);
 
-    MchfHw_I2C_Init(I2C2);
+    ///MchfHw_I2C_Init(I2C2);
 }
 
 void mchf_hw_i2c1_reset(void)

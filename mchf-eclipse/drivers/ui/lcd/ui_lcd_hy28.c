@@ -444,6 +444,9 @@ void UiLcdHy28_FSMCConfig(void)
 
 static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 {
+    // TODO: Find out why not working with HAL as expected
+    // maybe we need only Transmit, don't know. Test with TP since this was
+    // not working (detection failed)
     uint8_t dummy;
     while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_TXE)  == RESET) {}
     HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);

@@ -564,9 +564,7 @@ int mchfMain(void)
     UiLcdHy28_PrintText(0,0,"Hello mcHF!",White,Black,0);
     UiLcdHy28_PrintTextRight(319,240-13,"!FHcm olleH",White,Black,0);
 
-#if 0
     ConfigStorage_Init();
-#endif
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
 

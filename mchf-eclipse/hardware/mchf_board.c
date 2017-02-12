@@ -634,7 +634,7 @@ void mchf_board_init(void)
     SoftTcxo_Init();
 
     // Codec control interface
-    ///mchf_hw_i2c2_init();
+    mchf_hw_i2c2_init();
 
     // LCD Init
     ts.display_type = UiLcdHy28_Init();

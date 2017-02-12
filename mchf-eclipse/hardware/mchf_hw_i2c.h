@@ -15,6 +15,7 @@
 #ifndef __MCHF_HW_I2C_H
 #define __MCHF_HW_I2C_H
 
+#include "i2c.h"
 
 #define I2C_BUS_SPEED_MULT                      20000 // 20kHz is multiplier for config var
 
