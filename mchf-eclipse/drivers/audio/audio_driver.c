@@ -1878,12 +1878,12 @@ void AGC_prep()
     case 1: //agcLONG
       hangtime = 2.000;
       tau_decay = 2.000;
-      ts.agc_wdsp_hang_enable = 1;
+//      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
       tau_decay = 0.500;
-      ts.agc_wdsp_hang_enable = 1;
+//      ts.agc_wdsp_hang_enable = 1;
       break;
     case 3: //agcMED
       hang_thresh = 1.0;
@@ -1912,7 +1912,7 @@ void AGC_prep()
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
 
-    max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
+  max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
 
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack);
   in_index = attack_buffsize + out_index;
@@ -3399,7 +3399,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     }
 #endif
 
-    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
     // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
 //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
@@ -3515,6 +3514,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         arm_scale_f32 (adb.i_buffer, adb.M_c2, adb.i_buffer, blockSize);
     }
 
+    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
     if(iq_freq_mode)            // is receive frequency conversion to be done?
     {
