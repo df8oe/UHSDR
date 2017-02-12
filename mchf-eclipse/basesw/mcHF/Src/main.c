@@ -45,6 +45,7 @@
 #include "stm32f4xx_hal.h"
 #include "adc.h"
 #include "dac.h"
+#include "dma.h"
 #include "i2c.h"
 #include "i2s.h"
 #include "rtc.h"
@@ -96,6 +97,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
