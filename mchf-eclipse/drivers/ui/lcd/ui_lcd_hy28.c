@@ -14,6 +14,7 @@
 
 // Common
 #include "mchf_board.h"
+#include "spi.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -135,7 +136,7 @@ void UiLcdHy28_BacklightDimHandler()
 
 static uint16_t lcd_spi_prescaler;
 
-static SPI_HandleTypeDef SPI_Handle;
+// static SPI_HandleTypeDef SPI_Handle;
 
 void UiLcdHy28_SpiInit(bool hispeed)
 {
@@ -146,7 +147,10 @@ void UiLcdHy28_SpiInit(bool hispeed)
 
 
     // Enable the SPI periph
-    __HAL_RCC_SPI2_CLK_ENABLE();
+    // the main init is already done earlier, we need this if we want to use our own code to access SPI
+    __HAL_SPI_ENABLE(&hspi2);
+
+#if 0
 
     // Common SPI settings
     GPIO_InitStructure.Mode  = GPIO_MODE_AF_PP;
@@ -179,9 +183,12 @@ void UiLcdHy28_SpiInit(bool hispeed)
     SPI_Handle.Instance            = SPI2;
     HAL_SPI_DeInit(&SPI_Handle);
     HAL_SPI_Init(&SPI_Handle);
-
+#endif
     // Common misc pins settings
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+
     // Configure GPIO PIN for Chip select
     GPIO_InitStructure.Pin = lcd_cs;
     HAL_GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
@@ -191,13 +198,15 @@ void UiLcdHy28_SpiInit(bool hispeed)
     HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 
     // Deselect : Chip Select high
-    lcd_cs_pio-> BSRR = lcd_cs;
+    GPIO_SetBits(lcd_cs_pio, lcd_cs);
 }
 
 DMA_HandleTypeDef DMA_Handle;
 
 void UiLcdHy28_SpiDmaPrepare()
 {
+#if 0
+    // TODO: All handled by CubeMX generated HAL code
     //Enable the Direct Memory Access peripheral clocks
     __HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -229,8 +238,10 @@ void UiLcdHy28_SpiDmaPrepare()
     HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
     ///DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
+#endif
 }
 
+#if 0
 // FIXME: This is not going to work perfectly with the HAL callbacks...
 void DMA1_Stream4_IRQHandler(void)
 {
@@ -241,6 +252,7 @@ void DMA1_Stream4_IRQHandler(void)
         __HAL_DMA_CLEAR_FLAG(&DMA_Handle, DMA_IT_TC);
     }
 }
+#endif
 
 inline void UiLcdHy28_SpiDmaStop()
 {
@@ -258,7 +270,7 @@ void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint32_t size)
     // and finally we can move that into an interrupt, of course.
     if (size > 0)  {
         UiLcdHy28_SpiDmaStop();
-        HAL_DMA_Start(&DMA_Handle,(uint32_t)buffer,(uint32_t)&(SPI2->DR),size);
+        HAL_SPI_Transmit_DMA(&hspi2,buffer,size);
     }
 }
 
@@ -266,14 +278,15 @@ void UiLcdHy28_SpiDeInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    __HAL_SPI_DISABLE(&SPI_Handle);
-    HAL_SPI_DeInit(&SPI_Handle);
+    __HAL_SPI_DISABLE(&hspi2);
+    HAL_SPI_DeInit(&hspi2);
 
     // Set as inputs
     GPIO_InitStructure.Mode		= GPIO_MODE_INPUT;
     GPIO_InitStructure.Speed	= GPIO_SPEED_LOW;
     GPIO_InitStructure.Pull		= GPIO_NOPULL;
 
+#if 0
     // SPI SCK pin configuration
     GPIO_InitStructure.Pin		= LCD_SCK;
     HAL_GPIO_Init(LCD_SCK_PIO, &GPIO_InitStructure);
@@ -285,7 +298,7 @@ void UiLcdHy28_SpiDeInit()
     // SPI  MISO pins configuration
     GPIO_InitStructure.Pin		=  LCD_MISO;
     HAL_GPIO_Init(LCD_MISO_PIO, &GPIO_InitStructure);
-
+#endif
     // Configure GPIO PIN for Chip select
     GPIO_InitStructure.Pin		= lcd_cs;
     HAL_GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
@@ -431,12 +444,9 @@ void UiLcdHy28_FSMCConfig(void)
 
 static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 {
-    while (__HAL_SPI_GET_FLAG(&SPI_Handle, SPI_FLAG_TXE)  == RESET) {}
-    HAL_SPI_Transmit(&SPI_Handle, &byte, 1,0);
-
-    //while (__HAL_SPI_GET_FLAG(&SPI_Handle, SPI_FLAG_RXNE) == RESET) {}
-    //SPI_I2S_ReceiveData(SPI2);
-
+    uint8_t dummy;
+    while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_TXE)  == RESET) {}
+    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);
 }
 
 static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
@@ -466,11 +476,25 @@ static void UiLcdHy28_LcdSpiFinishTransfer()
 
 uint8_t UiLcdHy28_SpiReadByte(void)
 {
-    uchar byte = 0;
+    uint8_t dummy = 0;
     uint8_t retval = 0;
 
-    /* Send a Transmit and Receive Byte through the SPI peripheral */
-    HAL_SPI_TransmitReceive(&SPI_Handle, &byte,&retval,1,1000);
+    /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
+    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,100);
+
+    return retval;
+}
+
+uint8_t UiLcdHy28_SpiReadByteFast(void)
+{
+    uint8_t dummy = 0;
+    uint8_t retval = 0;
+
+    /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
+    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI2->DR = 0;
+    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    retval = SPI2->DR;
 
     return retval;
 }
@@ -524,7 +548,7 @@ unsigned short UiLcdHy28_LcdReadDataSpi()
 
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SpiSendByte(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
+    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
 
     UiLcdHy28_SpiReadByte();                                /* Dummy read 1                 */
 
@@ -1321,9 +1345,6 @@ uint8_t UiLcdHy28_Init(void)
         // no success, no SPI found
         retval = DISPLAY_HY28B_SPI;
 
-        // SPI disable
-        UiLcdHy28_SpiDeInit();
-
         // Select interface, spi HY28B second
         display_use_spi = DISPLAY_HY28B_SPI;
 
@@ -1454,9 +1475,9 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
         if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
         {
             UiLcdHy28_TouchscreenStartSpiTransfer();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
+            UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
             x = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
+            UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
             y = UiLcdHy28_SpiReadByte();
             UiLcdHy28_TouchscreenFinishSpiTransfer();
 
@@ -1512,10 +1533,10 @@ static void UiLcdHy28_TouchscreenReadData()
 {
 
     UiLcdHy28_TouchscreenStartSpiTransfer();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
-    ts.tp_x = UiLcdHy28_SpiReadByte();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
-    ts.tp_y = UiLcdHy28_SpiReadByte();
+    UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X);
+    ts.tp_x = UiLcdHy28_SpiReadByteFast();
+    UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
+    ts.tp_y = UiLcdHy28_SpiReadByteFast();
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 }
 

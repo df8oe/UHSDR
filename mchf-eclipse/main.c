@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include "mchf_rtc.h"
 
-#if 0
+
 #include "ui_configuration.h"
 #include "config_storage.h"
 
@@ -48,8 +48,9 @@
 //
 //
 //
-#include "drivers/cat/cat_driver.h"
+#if 0
 
+#include "cat_driver.h"
 
 
 
@@ -185,6 +186,9 @@ void EXTI1_IRQHandler(void)
 /*
  * @brief Interrupt Handler for Power Button Press
  */
+#if 0
+// removed since hal provides interrupt handler
+// not sure if we keep the hal handler event
 void EXTI15_10_IRQHandler(void)
 {
     // power button interrupt
@@ -196,6 +200,7 @@ void EXTI15_10_IRQHandler(void)
     // Clear interrupt pending bit
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_13);
 }
+#endif
 #if 0
 /*void TIM5_IRQHandler(void)
 {
@@ -554,20 +559,24 @@ int mchfMain(void)
     // HW init
     mchf_board_init();
     MchfBoard_GreenLed(LED_STATE_ON);
+    UiLcdHy28_BacklightEnable(true);
+    UiLcdHy28_LcdClear(Black);
+    UiLcdHy28_PrintText(0,0,"Hello mcHF!",White,Black,0);
+    UiLcdHy28_PrintTextRight(319,240-13,"!FHcm olleH",White,Black,0);
 
 #if 0
     ConfigStorage_Init();
-
+#endif
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
 
 
     // Show logo & HW Info
-    UiDriver_ShowStartUpScreen(100);
+    ///UiDriver_ShowStartUpScreen(100);
 
+#if 0
     // Extra init
     MiscInit();
-
     // Usb Host driver init
     //keyb_driver_init();
 
@@ -627,4 +636,5 @@ int mchfMain(void)
         //wd_reset();
     }
 #endif
+    return 0;
 }

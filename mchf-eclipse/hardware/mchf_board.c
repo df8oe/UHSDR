@@ -531,7 +531,7 @@ static void mchf_board_band_cntr_init(void)
     BAND2_PIO->BSRR = BAND2;
 }
 
-static void mchf_board_touchscreen_init(void)
+static void mchf_board_touchscreen_init()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -547,7 +547,7 @@ static void mchf_board_touchscreen_init(void)
     GPIO_InitStructure.Pin = TP_CS;
     HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
 
-    TP_CS_PIO->BSRR = TP_CS;
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 #if 0
 //*----------------------------------------------------------------------------
@@ -608,6 +608,10 @@ void mchf_board_init(void)
     __GPIOD_CLK_ENABLE();
     __GPIOE_CLK_ENABLE();
 
+    // LED init
+    mchf_board_led_init();
+    MchfBoard_RedLed(LED_STATE_ON);
+
     // Power up hardware
     mchf_board_power_down_init();
 
@@ -617,14 +621,12 @@ void mchf_board_init(void)
     // Debugging on
     mchf_board_debug_init();
 
-    // LED init
-    mchf_board_led_init();
 
     // Touchscreen Init
     mchf_board_touchscreen_init();
 
     // I2C init
-    ///mchf_hw_i2c1_init();
+    mchf_hw_i2c1_init();
 
     // Get startup frequency of Si570, by DF8OE, 201506
     ///Si570_Init();
@@ -673,6 +675,7 @@ void mchf_board_init(void)
     // Init watchdog - not working
     //mchf_board_watchdog_init();
 #endif
+
 }
 
 /*
