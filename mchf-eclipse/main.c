@@ -181,22 +181,22 @@ void EXTI1_IRQHandler(void)
     // Clears the EXTI's line pending bit
     EXTI_ClearITPendingBit(EXTI_Line1);
 }
-
+#endif
 /*
  * @brief Interrupt Handler for Power Button Press
  */
 void EXTI15_10_IRQHandler(void)
 {
     // power button interrupt
-    if(EXTI_GetITStatus(EXTI_Line13) != RESET)
+    if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_13) != RESET)
     {
         //		if(!GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13))	// Signal power off
 
     }
     // Clear interrupt pending bit
-    EXTI_ClearITPendingBit(EXTI_Line13);
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_13);
 }
-
+#if 0
 /*void TIM5_IRQHandler(void)
 {
   if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET)

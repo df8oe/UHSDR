@@ -1472,5 +1472,8 @@ inline bool is_splitmode()
 #define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
 #define STM32_UUID ((uint32_t *)STM32_UNIQUE_ADDRESS)
 
+#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
+#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
+#define GPIO_ReadInputDataBit(PORT,PIN) { (PORT)->BSRR = (PINS) << 16U; }
 
 #endif

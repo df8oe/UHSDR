@@ -15,10 +15,6 @@
 #ifndef __UI_LCD_HY28_H
 #define __UI_LCD_HY28_H
 
-#include "arm_math.h"
-#include "math.h"
-#include "ui_driver.h"
-#include "ui_spectrum.h"
 #include "mchf_board.h"
 
 #define MAX_X  320

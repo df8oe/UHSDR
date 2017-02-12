@@ -13,7 +13,6 @@
 ************************************************************************************/
 
 #include "mchf_board.h"
-#if 0
 #include "ui_configuration.h"
 #include "ui_lcd_hy28.h"
 #include <stdio.h>
@@ -21,19 +20,17 @@
 #include "mchf_hw_i2c.h"
 #include "mchf_rtc.h"
 
-#include "ui_lcd_hy28.h"
-//
 #include "ui_driver.h"
+
 #include "ui_rotary.h"
-//
+
 #include "codec.h"
-//
+
 #include "ui_si570.h"
 #include "soft_tcxo.h"
 //
 // Eeprom items
 #include "eeprom.h"
-#endif
 
 // Transceiver state public structure
 __IO __attribute__ ((section (".ccm"))) TransceiverState ts;
@@ -189,89 +186,47 @@ static void mchf_board_ptt_init(void)
     HAL_GPIO_Init(PTT_CNTR_PIO, &GPIO_InitStructure);
 }
 
-#if 0
 static void mchf_board_keyer_irq_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // Enable the BUTTON Clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     // Configure PADDLE_DASH pin as input
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
 
-    GPIO_InitStructure.GPIO_Pin   = PADDLE_DAH;
-    GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin   = PADDLE_DAH;
+    HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
 
-    // Connect Button EXTI Line to PADDLE_DASH GPIO Pin
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE,EXTI_PinSource0);
 
-    // Configure PADDLE_DASH EXTI line
-    EXTI_InitStructure.EXTI_Line    = EXTI_Line0;
-    EXTI_InitStructure.EXTI_Mode    = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+    GPIO_InitStructure.Pin   = PADDLE_DIT;
+    HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
 
-    // Enable and set PADDLE_DASH EXTI Interrupt to the lowest priority
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+    HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-    // Configure PADDLE_DOT pin as input
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-
-    GPIO_InitStructure.GPIO_Pin   = PADDLE_DIT;
-    GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
-
-    // Connect Button EXTI Line to PADDLE_DOT GPIO Pin
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE,EXTI_PinSource1);
-
-    // Configure PADDLE_DOT EXTI line
-    EXTI_InitStructure.EXTI_Line    = EXTI_Line1;
-    EXTI_InitStructure.EXTI_Mode    = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    // Enable and set PADDLE_DOT EXTI Interrupt to the lowest priority
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
 }
 
 static void mchf_board_power_button_irq_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
+    ///EXTI_InitTypeDef EXTI_InitStructure;
+    ///NVIC_InitTypeDef NVIC_InitStructure;
 
     // Enable the BUTTON Clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    ///RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     // Configure pin as input
-    GPIO_InitStructure.GPIO_Pin   = BUTTON_PWR;
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin   = BUTTON_PWR;
+    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    HAL_GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
 
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+    /*
     // Connect Button EXTI Line to GPIO Pin
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC,EXTI_PinSource13);
 
@@ -288,8 +243,8 @@ static void mchf_board_power_button_irq_init(void)
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+    */
 }
-#endif
 
 #if 0
 // this function is commented out because it is static (i.e. local only) and not used
@@ -680,12 +635,12 @@ void mchf_board_init(void)
     ///mchf_hw_i2c2_init();
 
     // LCD Init
-    ///ts.display_type = UiLcdHy28_Init();
+    ts.display_type = UiLcdHy28_Init();
     // we could now implement some error strategy if no display is present
     // i.e. 0 is returned
 
 
-    ///ts.rtc_present = MchfRtc_enabled();
+    ts.rtc_present = MchfRtc_enabled();
 
     // we need to find out which keyboard layout before we init the GPIOs to use it.
     // at this point we have to have called the display init and the rtc init
@@ -760,7 +715,7 @@ void mchf_board_post_init(void)
     ///mchf_board_set_system_tick_value();
 
     // Init power button IRQ
-    ///mchf_board_power_button_irq_init();
+    mchf_board_power_button_irq_init();
 
     // PTT control
     mchf_board_ptt_init();
@@ -773,16 +728,14 @@ void mchf_board_post_init(void)
         MchfRtc_SetPpm(ts.rtc_calib);
     }
 }
-#if 0
 void mchf_reboot()
 {
-    Si570_ResetConfiguration();       // restore SI570 to factory default
+    ///Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
     NVIC_SystemReset();         // restart mcHF
 }
 
 // #pragma GCC optimize("O0")
-#endif
 
 static volatile bool busfault_detected;
 
