@@ -21,6 +21,8 @@
 #include "ui_configuration.h"
 #include "config_storage.h"
 #include "serial_eeprom.h"
+#include "ui_spectrum.h"
+#include "rtc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3363,51 +3365,51 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
+        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
 
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Hours,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Hours,
                                               0,
                                               23,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Hours);
+        snprintf(options,32, "  %2u", rtc.Hours);
         break;
     }
     case CONFIG_RTC_MIN:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Minutes,
+        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Minutes,
                                               0,
                                               59,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Minutes);
+        snprintf(options,32, "  %2u", rtc.Minutes);
         break;
     }
     case CONFIG_RTC_SEC:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
+        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
 
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Seconds,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Seconds,
                                               0,
                                               59,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Seconds);
+        snprintf(options,32, "  %2u", rtc.Seconds);
         break;
     }
 

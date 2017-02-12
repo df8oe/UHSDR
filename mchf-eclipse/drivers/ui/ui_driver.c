@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ui_menu.h"
+#include "rtc.h"
+#include "adc.h"
 //
 //
 #include "ui.h"
@@ -2987,7 +2989,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
-        retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
+        retval = HAL_GPIO_ReadPin(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
     }
     return retval;
 }
@@ -5051,7 +5053,7 @@ static void UiDriver_HandleVoltage()
         // Collect samples
         if(pwmt.p_curr < POWER_SAMPLES_CNT)
         {
-            val_p = ADC_GetConversionValue(ADC1);
+            val_p = HAL_ADC_GetValue(&hadc1);
 
             // Add to accumulator
             pwmt.pwr_aver = pwmt.pwr_aver + val_p;
@@ -5915,7 +5917,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_PrintTextCentered(0, 165,320, tx, clr, Black, 0);
     //
 
-    if(ts.ee_init_stat != FLASH_COMPLETE)        // Show error code if problem with EEPROM init
+    if(ts.ee_init_stat != HAL_OK)        // Show error code if problem with EEPROM init
     {
         snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
         UiLcdHy28_PrintTextCentered(0,180,320,tx,White,Black,0);
@@ -5923,8 +5925,8 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     else
     {
         ushort adc2, adc3;
-        adc2 = ADC_GetConversionValue(ADC2);
-        adc3 = ADC_GetConversionValue(ADC3);
+        adc2 = HAL_ADC_GetValue(&hadc2);
+        adc3 = HAL_ADC_GetValue(&hadc3);
         if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
         {
             txp = "SWR Bridge resistor mod NOT completed!";
@@ -6088,9 +6090,10 @@ void UiDriver_MainHandler()
                 if (ts.rtc_present)
                 {
                     RTC_TimeTypeDef rtc;
-                    RTC_GetTime(RTC_Format_BIN, &rtc);
+
+                    HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
                     char str[20];
-                    snprintf(str,20,"Time %2u:%02u:%02u",rtc.RTC_Hours,rtc.RTC_Minutes,rtc.RTC_Seconds);
+                    snprintf(str,20,"Time %2u:%02u:%02u",rtc.Hours,rtc.Minutes,rtc.Seconds);
                     UiLcdHy28_PrintText(0,110,str,White,Black,0);
                 }
             }

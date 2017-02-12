@@ -606,7 +606,7 @@ void UiConfiguration_LoadEepromValues(void)
             bias_val = 255;
 
         // Set DAC Channel1 DHR12L register with bias value
-        DAC_SetChannel2Data(DAC_Align_8b_R,bias_val);
+        HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,bias_val);
     }
 
     ts.alc_decay_var = ts.alc_decay;
