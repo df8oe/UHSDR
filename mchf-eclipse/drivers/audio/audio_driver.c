@@ -1853,10 +1853,11 @@ void AGC_prep()
  */
     tau_attack = 0.001;               // tau_attack
     tau_decay = 0.250;                // tau_decay
-    n_tau = 1;                        // n_tau
+    n_tau = 4;                        // n_tau
 
-    max_gain = 1000.0; // 1000.0; max gain to be applied??? or is this AGC threshold = knee level?
-    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF
+//    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
+//  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
+    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
     max_input = 32768.0; // 1.0; //
     out_targ = 12000.0; // target value of audio after AGC
 //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
@@ -1948,6 +1949,14 @@ void AGC_prep()
 
 void AudioDriver_RxAGCWDSP(int16_t blockSize)
 {
+    // TODO:
+    // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
+    // maybe this can be indicated by a coloured line in the spectrum display !??
+    // hang time adjust
+    // hang threshold adjust
+    // "LED" that indicates that the input signal is higher than the hang threshold --> has to be seen when in menu mode
+    //
+
   static float32_t    w = 0.0;
   static float32_t    wold = 0.0;
   int i, j, k;
