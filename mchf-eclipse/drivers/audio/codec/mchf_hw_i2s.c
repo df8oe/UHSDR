@@ -21,9 +21,106 @@
 
 #include "i2s.h"
 
-static DMA_InitTypeDef DMA_InitStructure, DMA_InitStructure2;
-
 static uint32_t txbuf, rxbuf, szbuf;
+
+void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s)
+{
+#ifdef PROFILE_EVENTS
+    // we stop during interrupt
+    // at the end we start again
+    // profileCycleCount_stop();
+    profileTimedEventStart(ProfileAudioInterrupt);
+#endif
+
+#ifdef USE_24_BITS
+    static int32_t *src, *dst, sz;
+#else
+    static int16_t *src, *dst, sz;
+#endif
+
+#ifdef EXEC_PROFILING
+    // Profiling pin (high level)
+    GPIOE->BSRRL = GPIO_Pin_10;
+#endif
+
+    ts.audio_int_counter++;   // generating a time base for encoder handling
+
+    // Transfer complete interrupt
+    // Point to 2nd half of buffers
+    sz = szbuf/2;
+
+#ifdef USE_24_BITS
+    src = (int32_t *)(rxbuf) + sz;
+    dst = (int32_t *)(txbuf) + sz;
+#else
+    src = (int16_t *)(rxbuf) + sz;
+    dst = (int16_t *)(txbuf) + sz;
+#endif
+
+    // Handle 2nd half
+    AudioDriver_I2SCallback(src, dst, sz, 0);
+
+#ifdef EXEC_PROFILING
+    // Profiling pin (low level)
+    GPIOE->BSRRH = GPIO_Pin_10;
+#endif
+#ifdef PROFILE_EVENTS
+    // we stopped during interrupt
+    // now we start again
+    // profileCycleCount_start();
+    profileTimedEventStop(ProfileAudioInterrupt);
+#endif
+}
+
+void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
+{
+#ifdef PROFILE_EVENTS
+    // we stop during interrupt
+    // at the end we start again
+    // profileCycleCount_stop();
+    profileTimedEventStart(ProfileAudioInterrupt);
+#endif
+
+#ifdef USE_24_BITS
+    static int32_t *src, *dst, sz;
+#else
+    static int16_t *src, *dst, sz;
+#endif
+
+#ifdef EXEC_PROFILING
+    // Profiling pin (high level)
+    GPIOE->BSRRL = GPIO_Pin_10;
+#endif
+
+    ts.audio_int_counter++;   // generating a time base for encoder handling
+
+    // Half Transfer complete interrupt
+    // Point to 1st half of buffers
+    sz = szbuf/2;
+
+
+#ifdef USE_24_BITS
+    src = (int32_t *)(rxbuf);
+    dst = (int32_t *)(txbuf);
+#else
+    src = (int16_t *)(rxbuf);
+    dst = (int16_t *)(txbuf);
+#endif
+
+    // Handle 1st half
+    AudioDriver_I2SCallback(src, dst, sz, 1);
+
+#ifdef EXEC_PROFILING
+    // Profiling pin (low level)
+    GPIOE->BSRRH = GPIO_Pin_10;
+#endif
+#ifdef PROFILE_EVENTS
+    // we stopped during interrupt
+    // now we start again
+    // profileCycleCount_start();
+    profileTimedEventStop(ProfileAudioInterrupt);
+#endif
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_Block_Init
@@ -128,36 +225,8 @@ void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
     txbuf = txAddr;
     rxbuf = rxAddr;
     szbuf = Size;
-#if 0
-    // Configure the tx buffer address and size
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)txAddr;
-    DMA_InitStructure.DMA_BufferSize = (uint32_t)Size;
 
-    // Configure the DMA Stream with the new parameters
-    DMA_Init(AUDIO_I2S_DMA_STREAM, &DMA_InitStructure);
-
-    // Configure the rx buffer address and size
-    DMA_InitStructure2.DMA_Memory0BaseAddr = (uint32_t)rxAddr;
-    DMA_InitStructure2.DMA_BufferSize = (uint32_t)Size;
-
-    // Configure the DMA Stream with the new parameters
-    DMA_Init(AUDIO_I2S_EXT_DMA_STREAM, &DMA_InitStructure2);
-
-    // Enable the I2S DMA Streams
-    DMA_Cmd(AUDIO_I2S_DMA_STREAM, ENABLE);
-    DMA_Cmd(AUDIO_I2S_EXT_DMA_STREAM, ENABLE);
-
-    // If the I2S peripheral is still not enabled, enable it
-    if ((CODEC_I2S->I2SCFGR & 0x0400) == 0)
-    {
-        I2S_Cmd(CODEC_I2S, ENABLE);
-    }
-
-    if ((CODEC_I2S_EXT->I2SCFGR & 0x0400) == 0)
-    {
-        I2S_Cmd(CODEC_I2S_EXT, ENABLE);
-    }
-#endif
+    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)txAddr,(uint16_t*)rxAddr,Size);
 }
 
 //*----------------------------------------------------------------------------
@@ -170,19 +239,7 @@ void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
 //*----------------------------------------------------------------------------
 void I2S_Block_Stop(void)
 {
-#if 0
-    I2S_Cmd(CODEC_I2S_EXT, DISABLE);
-    I2S_Cmd(CODEC_I2S,     DISABLE);
-
-    DMA_Cmd(AUDIO_I2S_EXT_DMA_STREAM, DISABLE);
-    DMA_Cmd(AUDIO_I2S_DMA_STREAM,     DISABLE);
-
-    SPI_I2S_DMACmd(CODEC_I2S_EXT, SPI_I2S_DMAReq_Rx, DISABLE);
-
-    NVIC_DisableIRQ(AUDIO_I2S_EXT_DMA_IRQ);
-
-    DMA_ITConfig(AUDIO_I2S_EXT_DMA_STREAM, DMA_IT_TC | DMA_IT_HT, DISABLE);
-#endif
+    HAL_I2S_DMAStop(&hi2s3);
 }
 
 //*----------------------------------------------------------------------------
@@ -193,81 +250,3 @@ void I2S_Block_Stop(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void DMA1_Stream2_IRQHandler(void)
-{
-#if 0
-#ifdef PROFILE_EVENTS
-    // we stop during interrupt
-    // at the end we start again
-    // profileCycleCount_stop();
-    profileTimedEventStart(ProfileAudioInterrupt);
-#endif
-
-#ifdef USE_24_BITS
-    static int32_t *src, *dst, sz;
-#else
-    static int16_t *src, *dst, sz;
-#endif
-
-#ifdef EXEC_PROFILING
-    // Profiling pin (high level)
-    GPIOE->BSRRL = GPIO_Pin_10;
-#endif
-
-    ts.audio_int_counter++;   // generating a time base for encoder handling
-
-    // Transfer complete interrupt
-    if (DMA_GetFlagStatus(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_TC) != RESET)
-    {
-        // Point to 2nd half of buffers
-        sz = szbuf/2;
-
-#ifdef USE_24_BITS
-        src = (int32_t *)(rxbuf) + sz;
-        dst = (int32_t *)(txbuf) + sz;
-#else
-        src = (int16_t *)(rxbuf) + sz;
-        dst = (int16_t *)(txbuf) + sz;
-#endif
-
-        // Handle 2nd half
-        AudioDriver_I2SCallback(src, dst, sz, 0);
-
-        // Clear the Interrupt flag
-        DMA_ClearFlag(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_TC);
-    }
-
-    // Half Transfer complete interrupt
-    if (DMA_GetFlagStatus(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_HT) != RESET)
-    {
-        // Point to 1st half of buffers
-        sz = szbuf/2;
-
-
-#ifdef USE_24_BITS
-        src = (int32_t *)(rxbuf);
-        dst = (int32_t *)(txbuf);
-#else
-        src = (int16_t *)(rxbuf);
-        dst = (int16_t *)(txbuf);
-#endif
-
-        // Handle 1st half
-        AudioDriver_I2SCallback(src, dst, sz, 1);
-
-        // Clear the Interrupt flag
-        DMA_ClearFlag(AUDIO_I2S_EXT_DMA_STREAM, AUDIO_I2S_EXT_DMA_FLAG_HT);
-    }
-
-#ifdef EXEC_PROFILING
-    // Profiling pin (low level)
-    GPIOE->BSRRH = GPIO_Pin_10;
-#endif
-#ifdef PROFILE_EVENTS
-    // we stopped during interrupt
-    // now we start again
-    // profileCycleCount_start();
-    profileTimedEventStop(ProfileAudioInterrupt);
-#endif
-#endif
-}

@@ -14,16 +14,16 @@
 
 // Common
 #include "mchf_board.h"
+#include "cat_driver.h"
 
 #include <stdio.h>
-
+#if USE_USB
 #include "usbd_cdc_core.h"
 #include "usbd_usr.h"
 #include "usb_conf.h"
 #include "usbd_desc.h"
 #include "usbd_cdc_vcp.h"
 #include "usbd_audio_core.h"
-#include "cat_driver.h"
 #include "audio_driver.h"
 #include "radio_management.h"
 
@@ -43,7 +43,7 @@ extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
 //}
 //EXTI_ClearITPendingBit(EXTI_Line18);
 //}
-
+#endif
 // CAT driver internal structure
 typedef struct CatDriver
 {
@@ -62,7 +62,16 @@ CatDriver                  cat_driver;
  * @brief returns true if the current TX state has been initiated by a CAT PTT command
  */
 bool CatDriver_CatPttActive() { return cat_driver.cat_ptt_active; }
+bool CatDriver_CWKeyPressed()
+{
+#if USE_USB
+    return cdcvcp_ctrllines.dtr != 0;
+#else
+    return 0;
+#endif
+}
 
+#if USE_USB
 void CatDriver_InitInterface(void)
 {
     // Start driver
@@ -77,11 +86,6 @@ void CatDriver_StopInterface(void)
 {
     // Stop driver
     USBD_DeInit(&USB_OTG_dev);
-}
-
-bool CatDriver_CWKeyPressed()
-{
-    return cdcvcp_ctrllines.dtr != 0;
 }
 
 
@@ -1065,3 +1069,4 @@ void CatDriver_HandleProtocol()
     }
 }
 
+#endif

@@ -900,9 +900,7 @@ void RadioManagement_HandlePttOnOff()
             // the ptt request has been processed
             ts.ptt_req = false;
         }
-#ifdef USE_USB
         else if (CatDriver_CatPttActive() == false)
-#endif
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
