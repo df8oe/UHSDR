@@ -17,16 +17,13 @@
 // some special switches
 //#define 	DEBUG_BUILD
 
-#define USE_FREEDV //uncomment to use freedv instead of SNAP function
+//#define USE_FREEDV //uncomment to use freedv instead of SNAP function
 // #define DEBUG_FREEDV
 // hardware specific switches
 //#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
 // #define USE_FREEDV_AND_SNAP // experimental!!!
 
-#ifndef USE_FREEDV
-  #define USE_SNAP
-#endif
 
 #ifdef USE_FREEDV_AND_SNAP
   #define USE_SNAP
@@ -92,7 +89,7 @@
 // -----------------------------------------------------------------------------
 // pin 0
 #define ENC_THREE_CH1 			GPIO_PIN_0
-#define ENC_THREE_CH1_SOURCE	GPIO_PinSource0
+#define ENC_THREE_CH1_SOURCE	GPIO_
 #define ENC_THREE_CH1_PIO       GPIOA
 // pin 1
 #define ENC_THREE_CH2 			GPIO_PIN_1

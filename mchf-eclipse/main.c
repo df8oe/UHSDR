@@ -16,7 +16,7 @@
 #include "mchf_board.h"
 #include <stdio.h>
 #include "mchf_rtc.h"
-
+#include "ui_spectrum.h"
 
 #include "ui_configuration.h"
 #include "config_storage.h"
@@ -219,12 +219,13 @@ void EXTI15_10_IRQHandler(void)
     }
   }
 }*/
+#endif
 
 void TransceiverStateInit(void)
 {
     // Defaults always
     ts.txrx_mode 		= TRX_MODE_RX;				// start in RX
-    ts.samp_rate		= I2S_AudioFreq_48k;			// set sampling rate
+    ts.samp_rate		= I2S_AUDIOFREQ_48K;			// set sampling rate
 
     ts.enc_one_mode 	= ENC_ONE_MODE_AUDIO_GAIN;
     ts.enc_two_mode 	= ENC_TWO_MODE_RF_GAIN;
@@ -479,14 +480,6 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : MiscInit
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void MiscInit(void)
 {
     // Init Soft DDS
@@ -521,9 +514,8 @@ static void wd_reset(void)
 	}
 }
  */
-#include "Trace.h"
+// #include "Trace.h"
 
-#endif
 
 // Power on
 int mchfMain(void)
@@ -536,7 +528,7 @@ int mchfMain(void)
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
     // Set default transceiver state
-    ///TransceiverStateInit();
+    TransceiverStateInit();
 
     mchf_board_detect_ramsize();
 #if 0
@@ -572,9 +564,9 @@ int mchfMain(void)
     // Show logo & HW Info
     UiDriver_ShowStartUpScreen(100);
 
-#if 0
     // Extra init
     MiscInit();
+
     // Usb Host driver init
     //keyb_driver_init();
 
@@ -615,12 +607,12 @@ int mchfMain(void)
     UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
-
+#ifdef USE_USB
     if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
     {
         CatDriver_InitInterface();
     }
-
+#endif
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
 #endif
@@ -633,6 +625,5 @@ int mchfMain(void)
         // Reset WD - not working
         //wd_reset();
     }
-#endif
     return 0;
 }

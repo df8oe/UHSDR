@@ -101,7 +101,10 @@ bool MchfRtc_enabled()
     uint32_t status = HAL_RTCEx_BKUPRead(&hrtc,RTC_PRESENCE_REG);
 
     if (status == RTC_PRESENCE_OK_VAL) {
-
+        __HAL_RCC_RTC_ENABLE();
+        __HAL_RCC_CLEAR_RESET_FLAGS();
+        HAL_RTCEx_EnableBypassShadow(&hrtc);
+        // FIXME: Why do we need to set BYPSHAD ? ABP1 CLK should be high enough....
         retval = true;
         ts.vbat_present = true;
     } else if (status == 0) {

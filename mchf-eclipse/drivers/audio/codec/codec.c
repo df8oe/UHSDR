@@ -91,7 +91,7 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
 
-    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, &Byte1, 1, Byte2);
+    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
 
     return res;
 }
@@ -155,9 +155,9 @@ void Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 
     // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
     // master clock: 12.5 Mhz
-    if(AudioFreq == I2S_AudioFreq_48k) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
-    if(AudioFreq == I2S_AudioFreq_32k) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
-    if(AudioFreq == I2S_AudioFreq_8k ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
+    if(AudioFreq == I2S_AUDIOFREQ_48K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
+    if(AudioFreq == I2S_AUDIOFREQ_32K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
+    if(AudioFreq == I2S_AUDIOFREQ_8K ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
 
     // Reg 09: Active Control
     // and now we start the Codec Digital Interface
@@ -442,6 +442,7 @@ void Codec_LineInGainAdj(uchar gain)
  */
 static void Codec_AudioInterface_Init(uint32_t AudioFreq)
 {
+#if 0
     I2S_InitTypeDef I2S_InitStructure;
 
     // Enable the CODEC_I2S peripheral clock
@@ -461,10 +462,12 @@ static void Codec_AudioInterface_Init(uint32_t AudioFreq)
 
     // Initialise the I2S extended channel for RX
     I2S_FullDuplexConfig(CODEC_I2S_EXT, &I2S_InitStructure);
+#endif
 }
 
 static void Codec_GPIO_Init()
 {
+#if 0
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_StructInit(&GPIO_InitStructure);
@@ -500,6 +503,7 @@ static void Codec_GPIO_Init()
     GPIO_PinAFConfig(CODEC_I2S_WS_PIO,	CODEC_I2S_WS_SOURCE,  CODEC_I2S_GPIO_AF);
     GPIO_PinAFConfig(CODEC_I2S_SDO_PIO,	CODEC_I2S_SDO_SOURCE, CODEC_I2S_GPIO_AF);
     GPIO_PinAFConfig(CODEC_I2S_SDO_PIO, CODEC_I2S_SDI_SOURCE, CODEC_I2S_GPIO_AF);
+#endif
 }
 
 /**

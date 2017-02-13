@@ -35,6 +35,7 @@ static uint32_t txbuf, rxbuf, szbuf;
 //*----------------------------------------------------------------------------
 void I2S_Block_Init(void)
 {
+#if 0
     // Enable the DMA clock
     RCC_AHB1PeriphClockCmd(AUDIO_I2S_DMA_CLOCK, ENABLE);
 
@@ -111,6 +112,7 @@ void I2S_Block_Init(void)
 
     // Enable the I2S DMA request
     SPI_I2S_DMACmd(CODEC_I2S_EXT, SPI_I2S_DMAReq_Rx, ENABLE);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -126,7 +128,7 @@ void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
     txbuf = txAddr;
     rxbuf = rxAddr;
     szbuf = Size;
-
+#if 0
     // Configure the tx buffer address and size
     DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)txAddr;
     DMA_InitStructure.DMA_BufferSize = (uint32_t)Size;
@@ -155,6 +157,7 @@ void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
     {
         I2S_Cmd(CODEC_I2S_EXT, ENABLE);
     }
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -167,6 +170,7 @@ void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
 //*----------------------------------------------------------------------------
 void I2S_Block_Stop(void)
 {
+#if 0
     I2S_Cmd(CODEC_I2S_EXT, DISABLE);
     I2S_Cmd(CODEC_I2S,     DISABLE);
 
@@ -178,6 +182,7 @@ void I2S_Block_Stop(void)
     NVIC_DisableIRQ(AUDIO_I2S_EXT_DMA_IRQ);
 
     DMA_ITConfig(AUDIO_I2S_EXT_DMA_STREAM, DMA_IT_TC | DMA_IT_HT, DISABLE);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -190,6 +195,7 @@ void I2S_Block_Stop(void)
 //*----------------------------------------------------------------------------
 void DMA1_Stream2_IRQHandler(void)
 {
+#if 0
 #ifdef PROFILE_EVENTS
     // we stop during interrupt
     // at the end we start again
@@ -262,5 +268,6 @@ void DMA1_Stream2_IRQHandler(void)
     // now we start again
     // profileCycleCount_start();
     profileTimedEventStop(ProfileAudioInterrupt);
+#endif
 #endif
 }

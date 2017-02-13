@@ -868,7 +868,6 @@ void UiDriver_Init()
 {
     // Driver publics init
     UiDriver_PublicsInit();
-
     // Init frequency publics
     UiDriver_InitFrequency();
 
@@ -891,7 +890,6 @@ void UiDriver_Init()
     AudioFilter_InitTxHilbertFIR();
 
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
-
 
     sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
@@ -949,7 +947,6 @@ static void UiDriver_PublicsInit()
 
     // SWR meter init
     swrm.skip 				= 0;
-
     swrm.p_curr				= 0;
     swrm.fwd_calc			= 0;
     swrm.rev_calc			= 0;
@@ -6010,10 +6007,10 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 void UiDriver_MainHandler()
 {
 
-    uint32_t now = ts.sysclock;
-
+    uint32_t now = HAL_GetTick()/10;
+#ifdef USE_USB
     CatDriver_HandleProtocol();
-
+#endif
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
     if (ts.dvmode == true)
@@ -6081,7 +6078,7 @@ void UiDriver_MainHandler()
                 uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
-                snprintf(str,20,"Load%3u%%",(unsigned int)load);
+                snprintf(str,20,"L%3u%%",(unsigned int)load);
                 UiLcdHy28_PrintText(0,79,str,White,Black,0);
 #endif
             }
@@ -6090,11 +6087,12 @@ void UiDriver_MainHandler()
                 if (ts.rtc_present)
                 {
                     RTC_TimeTypeDef rtc;
-
+                    __HAL_RTC_WRITEPROTECTION_DISABLE(&hrtc);
+                    HAL_RTC_WaitForSynchro(&hrtc);
                     HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
                     char str[20];
-                    snprintf(str,20,"Time %2u:%02u:%02u",rtc.Hours,rtc.Minutes,rtc.Seconds);
-                    UiLcdHy28_PrintText(0,110,str,White,Black,0);
+                    snprintf(str,20,"%2u:%02u:%02u",rtc.Hours,rtc.Minutes,rtc.Seconds);
+                    UiLcdHy28_PrintText(6*8,79,str,White,Black,0);
                 }
             }
             break;

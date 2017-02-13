@@ -6,6 +6,7 @@
 #include "math.h"
 #include "audio_driver.h"
 #include "softdds.h"
+#include "fm_subaudible_tone_table.h"
 
 //
 //

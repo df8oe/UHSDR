@@ -656,13 +656,13 @@ void mchf_board_init(void)
     // Init keypad hw based on button map bm
     mchf_board_keypad_init(bm);
 
-#if 0
     // Encoders init
     UiRotaryFreqEncoderInit();
     UiRotaryEncoderOneInit();
     UiRotaryEncoderTwoInit();
     UiRotaryEncoderThreeInit();
 
+#if 0
     // Init DACs
 //	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
     mchf_board_dac1_init();

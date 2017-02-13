@@ -17,7 +17,7 @@
 #include "ui_driver.h"
 #include "stdlib.h"
 #include "ui_rotary.h"
-
+#include "tim.h"
 // ------------------------------------------------
 // Encoder 1-4 Array
 __IO EncoderSelection		encSel[4];
@@ -26,13 +26,13 @@ typedef struct
 {
  GPIO_TypeDef* pio;
  uint16_t pin;
- uint8_t source;
  uint8_t af;
 } pin_t;
 
 
 typedef struct  {
     TIM_TypeDef* tim;
+    TIM_HandleTypeDef * htim;
     pin_t pin[2];
 
 } encoder_io_t;
@@ -41,34 +41,38 @@ const encoder_io_t encoderIO[4] =
 {
         {
                 .tim = TIM3,
+                .htim = &htim3,
                 .pin =
                 {
-                    { ENC_ONE_CH1_PIO, ENC_ONE_CH1, ENC_ONE_CH1_SOURCE, GPIO_AF_TIM3 } ,
-                    { ENC_ONE_CH2_PIO, ENC_ONE_CH2, ENC_ONE_CH2_SOURCE, GPIO_AF_TIM3 }
+                    { ENC_ONE_CH1_PIO, ENC_ONE_CH1, GPIO_AF2_TIM3 } ,
+                    { ENC_ONE_CH2_PIO, ENC_ONE_CH2, GPIO_AF2_TIM3 }
                 }
         },
         {
                 .tim = TIM4,
+                .htim = &htim4,
                 .pin =
                 {
-                    { ENC_TWO_CH1_PIO, ENC_TWO_CH1, ENC_TWO_CH1_SOURCE, GPIO_AF_TIM4 } ,
-                    { ENC_TWO_CH2_PIO, ENC_TWO_CH2, ENC_TWO_CH2_SOURCE, GPIO_AF_TIM4 }
+                    { ENC_TWO_CH1_PIO, ENC_TWO_CH1, GPIO_AF2_TIM4 } ,
+                    { ENC_TWO_CH2_PIO, ENC_TWO_CH2, GPIO_AF2_TIM4 }
                 }
         },
         {
                 .tim = TIM5,
+                .htim = &htim5,
                 .pin =
                 {
-                    { ENC_THREE_CH1_PIO, ENC_THREE_CH1, ENC_THREE_CH1_SOURCE, GPIO_AF_TIM5 } ,
-                    { ENC_THREE_CH2_PIO, ENC_THREE_CH2, ENC_THREE_CH2_SOURCE, GPIO_AF_TIM5 }
+                    { ENC_THREE_CH1_PIO, ENC_THREE_CH1, GPIO_AF2_TIM5 } ,
+                    { ENC_THREE_CH2_PIO, ENC_THREE_CH2, GPIO_AF2_TIM5 }
                 }
         },
         {
                 .tim = TIM8,
+                .htim = &htim8,
                 .pin =
                 {
-                    { FREQ_ENC_CH1_PIO, FREQ_ENC_CH1, FREQ_ENC_CH1_SOURCE, GPIO_AF_TIM8 } ,
-                    { FREQ_ENC_CH2_PIO, FREQ_ENC_CH2, FREQ_ENC_CH2_SOURCE, GPIO_AF_TIM8 }
+                    { FREQ_ENC_CH1_PIO, FREQ_ENC_CH1, GPIO_AF3_TIM8 } ,
+                    { FREQ_ENC_CH2_PIO, FREQ_ENC_CH2, GPIO_AF3_TIM8 }
                 }
         }
 };
@@ -81,22 +85,24 @@ void UiRotaryEncoderInit(uint8_t id)
     encSel[id].value_new          = ENCODER_RANGE;
     encSel[id].de_detent          = 0;
     encSel[id].tim                = encIO->tim;
+    HAL_TIM_Encoder_Start(encIO->htim, TIM_CHANNEL_1 | TIM_CHANNEL_2);
 
-    TIM_TimeBaseInitTypeDef     TIM_TimeBaseStructure;
+#if 0
     GPIO_InitTypeDef            GPIO_InitStructure;
 
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_InitStructure.Mode  = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
 
     for (uint32_t pinIdx = 0; pinIdx < 2; pinIdx++)
     {
-    GPIO_InitStructure.GPIO_Pin = encIO->pin[pinIdx].pin;
-    GPIO_Init(encIO->pin[pinIdx].pio, &GPIO_InitStructure);
-    GPIO_PinAFConfig(encIO->pin[pinIdx].pio, encIO->pin[pinIdx].source, encIO->pin[pinIdx].af);
+        GPIO_InitStructure.Alternate = encIO->pin[pinIdx].af;
+        GPIO_InitStructure.Pin = encIO->pin[pinIdx].pin;
+        GPIO_Init(encIO->pin[pinIdx].pio, &GPIO_InitStructure);
     }
+
+
+    TIM_TimeBaseInitTypeDef     TIM_TimeBaseStructure;
 
     TIM_TimeBaseStructure.TIM_Period = (ENCODER_RANGE/ENCODER_LOG_D) + (ENCODER_FLICKR_BAND*2); // range + 3 + 3
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
@@ -107,6 +113,7 @@ void UiRotaryEncoderInit(uint8_t id)
 
     TIM_TimeBaseInit(encIO->tim, &TIM_TimeBaseStructure);
     TIM_Cmd(encIO->tim, ENABLE);
+#endif
 }
 
 
@@ -119,7 +126,7 @@ void UiRotaryEncoderInit(uint8_t id)
 //*----------------------------------------------------------------------------
 void UiRotaryFreqEncoderInit(void)
 {
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
+    ///RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
     UiRotaryEncoderInit(ENCFREQ);
 }
 
@@ -132,7 +139,7 @@ void UiRotaryFreqEncoderInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderOneInit(void)
 {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    ///RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
     UiRotaryEncoderInit(ENC1);
 }
 
@@ -145,7 +152,7 @@ void UiRotaryEncoderOneInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderTwoInit(void)
 {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+    ///RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
     UiRotaryEncoderInit(ENC2);
 }
 
@@ -158,7 +165,7 @@ void UiRotaryEncoderTwoInit(void)
 //*----------------------------------------------------------------------------
 void UiRotaryEncoderThreeInit(void)
 {
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+    ///RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
     UiRotaryEncoderInit(ENC3);
 }
 
@@ -170,7 +177,7 @@ int UiDriverEncoderRead(const uint32_t encId)
 
     if (encId < ENC_MAX)
     {
-        encSel[encId].value_new = TIM_GetCounter(encSel[encId].tim);
+        encSel[encId].value_new = encSel[encId].tim->CNT;
         // Ignore lower value flickr
         if (encSel[encId].value_new < ENCODER_FLICKR_BAND)
         {

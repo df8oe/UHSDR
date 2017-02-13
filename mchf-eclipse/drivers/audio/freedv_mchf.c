@@ -13,14 +13,25 @@
  ************************************************************************************/
 #include "freedv_mchf.h"
 
+#include "profiling.h"
+#include "ui_lcd_hy28.h"
+
+
+void fdv_clear_display()
+{ char clr_string[freedv_rx_buffer_max];
+
+  snprintf(clr_string,freedv_rx_buffer_max,"                                                                           ");
+  UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
+  UiLcdHy28_PrintText(5,92,clr_string,Yellow,Black,4);
+
+}
 
 #ifdef USE_FREEDV
 
 #include "freedv_api.h"
 #include "codec2_fdmdv.h"
 
-#include "profiling.h"
-#include "ui_lcd_hy28.h"
 
 struct freedv *f_FREEDV;
 
@@ -218,15 +229,6 @@ void fdv_print_SNR()
 
 }
 
-void fdv_clear_display()
-{ char clr_string[freedv_rx_buffer_max];
-
-  snprintf(clr_string,freedv_rx_buffer_max,"                                                                           ");
-  UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
-  UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
-  UiLcdHy28_PrintText(5,92,clr_string,Yellow,Black,4);
-
-}
 
 
 void FreeDV_mcHF_HandleFreeDV()

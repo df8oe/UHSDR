@@ -16,6 +16,7 @@
 #include "radio_management.h"
 #include "mchf_board.h"
 #include "profiling.h"
+#include "adc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -899,7 +900,9 @@ void RadioManagement_HandlePttOnOff()
             // the ptt request has been processed
             ts.ptt_req = false;
         }
+#ifdef USE_USB
         else if (CatDriver_CatPttActive() == false)
+#endif
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
@@ -1114,13 +1117,13 @@ bool RadioManagement_UpdatePowerAndVSWR()
             // Get next sample
             if(!(ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE))       // is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
             {
-                val_p = ADC_GetConversionValue(ADC2); // forward
-                val_s = ADC_GetConversionValue(ADC3); // return
+                val_p = HAL_ADC_GetValue(&hadc2); // forward
+                val_s = HAL_ADC_GetValue(&hadc3); // return
             }
             else        // FWD/REV bits should be swapped
             {
-                val_p = ADC_GetConversionValue(ADC3); // forward
-                val_s = ADC_GetConversionValue(ADC2); // return
+                val_p = HAL_ADC_GetValue(&hadc3); // forward
+                val_s = HAL_ADC_GetValue(&hadc2); // return
             }
 
             // Add to accumulator to average A/D values
