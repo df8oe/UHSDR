@@ -46,12 +46,15 @@
 #include "i2s.h"
 
 #include "gpio.h"
+#include "dma.h"
 
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
 I2S_HandleTypeDef hi2s3;
+DMA_HandleTypeDef hdma_spi3_tx;
+DMA_HandleTypeDef hdma_i2s3_ext_rx;
 
 /* I2S3 init function */
 void MX_I2S3_Init(void)
@@ -62,7 +65,7 @@ void MX_I2S3_Init(void)
   hi2s3.Init.Standard = I2S_STANDARD_PHILIPS;
   hi2s3.Init.DataFormat = I2S_DATAFORMAT_16B;
   hi2s3.Init.MCLKOutput = I2S_MCLKOUTPUT_DISABLE;
-  hi2s3.Init.AudioFreq = I2S_AUDIOFREQ_8K;
+  hi2s3.Init.AudioFreq = I2S_AUDIOFREQ_48K;
   hi2s3.Init.CPOL = I2S_CPOL_LOW;
   hi2s3.Init.ClockSource = I2S_CLOCK_PLL;
   hi2s3.Init.FullDuplexMode = I2S_FULLDUPLEXMODE_ENABLE;
@@ -86,12 +89,12 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
     __HAL_RCC_SPI3_CLK_ENABLE();
   
     /**I2S3 GPIO Configuration    
-    PA4     ------> I2S3_WS
+    PA15     ------> I2S3_WS
     PC10     ------> I2S3_CK
     PC11     ------> I2S3_ext_SD
     PC12     ------> I2S3_SD 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Pin = GPIO_PIN_15;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -112,6 +115,48 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
     GPIO_InitStruct.Alternate = GPIO_AF5_I2S3ext;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+    /* Peripheral DMA init*/
+  
+    hdma_spi3_tx.Instance = DMA1_Stream5;
+    hdma_spi3_tx.Init.Channel = DMA_CHANNEL_0;
+    hdma_spi3_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_spi3_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi3_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi3_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_spi3_tx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_spi3_tx.Init.Mode = DMA_CIRCULAR;
+    hdma_spi3_tx.Init.Priority = DMA_PRIORITY_HIGH;
+    hdma_spi3_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_spi3_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_spi3_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+    hdma_spi3_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    if (HAL_DMA_Init(&hdma_spi3_tx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(i2sHandle,hdmatx,hdma_spi3_tx);
+
+    hdma_i2s3_ext_rx.Instance = DMA1_Stream0;
+    hdma_i2s3_ext_rx.Init.Channel = DMA_CHANNEL_3;
+    hdma_i2s3_ext_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_i2s3_ext_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_i2s3_ext_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_i2s3_ext_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_i2s3_ext_rx.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_i2s3_ext_rx.Init.Mode = DMA_CIRCULAR;
+    hdma_i2s3_ext_rx.Init.Priority = DMA_PRIORITY_HIGH;
+    hdma_i2s3_ext_rx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_i2s3_ext_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_i2s3_ext_rx.Init.MemBurst = DMA_MBURST_INC4;
+    hdma_i2s3_ext_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    if (HAL_DMA_Init(&hdma_i2s3_ext_rx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(i2sHandle,hdmarx,hdma_i2s3_ext_rx);
+
   /* USER CODE BEGIN SPI3_MspInit 1 */
 
   /* USER CODE END SPI3_MspInit 1 */
@@ -130,15 +175,18 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
     __HAL_RCC_SPI3_CLK_DISABLE();
   
     /**I2S3 GPIO Configuration    
-    PA4     ------> I2S3_WS
+    PA15     ------> I2S3_WS
     PC10     ------> I2S3_CK
     PC11     ------> I2S3_ext_SD
     PC12     ------> I2S3_SD 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_15);
 
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12);
 
+    /* Peripheral DMA DeInit*/
+    HAL_DMA_DeInit(i2sHandle->hdmatx);
+    HAL_DMA_DeInit(i2sHandle->hdmarx);
   }
   /* USER CODE BEGIN SPI3_MspDeInit 1 */
 
