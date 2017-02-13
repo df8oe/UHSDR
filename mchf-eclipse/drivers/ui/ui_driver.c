@@ -6087,8 +6087,6 @@ void UiDriver_MainHandler()
                 if (ts.rtc_present)
                 {
                     RTC_TimeTypeDef rtc;
-                    __HAL_RTC_WRITEPROTECTION_DISABLE(&hrtc);
-                    HAL_RTC_WaitForSynchro(&hrtc);
                     HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
                     char str[20];
                     snprintf(str,20,"%2u:%02u:%02u",rtc.Hours,rtc.Minutes,rtc.Seconds);
