@@ -432,14 +432,14 @@ void TransceiverStateInit(void)
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
     ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
-//    ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
+    ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = 2;                // twinpeak_tested = 2 --> wait for system to warm up
     // twinpeak_tested = 0 --> go and test the IQ phase
     // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
-//    ts.agc_wdsp = 0;
+    ts.agc_wdsp = 0;
     ts.agc_wdsp_mode = 2;
     ts.agc_wdsp_slope = 70;
-//    ts.agc_wdsp_hang_enable = 0;
+    ts.agc_wdsp_hang_enable = 0;
     ts.agc_wdsp_thresh = 60;
 
     ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW

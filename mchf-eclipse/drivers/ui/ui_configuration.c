@@ -59,11 +59,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL},
     { ConfigEntry_UInt8, EEPROM_AGC_MODE,&ts.agc_mode,AGC_DEFAULT,0,AGC_MAX_MODE},
     { ConfigEntry_UInt8, EEPROM_AGC_WDSP_MODE,&ts.agc_wdsp_mode, 2,0,5},
-//    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SWITCH,&ts.agc_wdsp, 0,0,1},
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_SLOPE,&ts.agc_wdsp_slope, 70,0,200},
-//    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_HANG_ENABLE,&ts.agc_wdsp_hang_enable, 0,0,1},
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_THRESHOLD,&ts.agc_wdsp_thresh, 60,-20,120},
-
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SWITCH,&ts.agc_wdsp, 0,0,1},
     { ConfigEntry_UInt8, EEPROM_MIC_GAIN,&ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_LINE_GAIN,&ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX},
     { ConfigEntry_UInt32_16, EEPROM_SIDETONE_FREQ,&ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX},
@@ -81,7 +77,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_PA_BIAS,&ts.pa_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS},
     { ConfigEntry_UInt8, EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,DEFAULT_PA_BIAS,0,MAX_PA_BIAS},
 
-//    { ConfigEntry_UInt8, EEPROM_IQ_AUTO_CORRECTION,&ts.iq_auto_correction,0,0, 1},
+    { ConfigEntry_UInt8, EEPROM_IQ_AUTO_CORRECTION,&ts.iq_auto_correction,0,0, 1},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_80M_GAIN_BALANCE,&ts.tx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10M_GAIN_BALANCE,&ts.tx_iq_gain_balance[IQ_10M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_80M_PHASE_BALANCE,&ts.tx_iq_phase_balance[IQ_80M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE},
@@ -171,7 +167,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_BANDWIDTH,&ads.omegaN_int, 250,15,1000},
     { ConfigEntry_Int32_16, EEPROM_I2C1_SPEED,&ts.i2c_speed[0], I2C1_SPEED_DEFAULT,1,20},
     { ConfigEntry_Int32_16, EEPROM_I2C2_SPEED,&ts.i2c_speed[1], I2C2_SPEED_DEFAULT,1,20},
-//    { ConfigEntry_UInt8, EEPROM_SAM_FADE_LEVELER,&ads.fade_leveler,1,0,1},
+    { ConfigEntry_UInt8, EEPROM_SAM_FADE_LEVELER,&ads.fade_leveler,1,0,1},
     { ConfigEntry_UInt8, EEPROM_LINEOUT_GAIN,&ts.lineout_gain,LINEOUT_GAIN_DEFAULT,LINEOUT_GAIN_MIN,LINEOUT_GAIN_MAX},
 
     UI_C_EEPROM_BAND_5W_PF( 0,80,m)

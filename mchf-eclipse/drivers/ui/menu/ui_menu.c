@@ -1077,41 +1077,39 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_thresh);
         break;
 
-    case MENU_AGC_WDSP_SWITCH:    // On/Off
-        temp_var_u8 = ts.flags2 & FLAGS2_AGC_WDSP;
-                var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-                if(var_change)
-                {
-                    if(temp_var_u8)
-                    {
-                        ts.flags2 |= FLAGS2_AGC_WDSP;
-                        txt_ptr = "Standard AGC";        //
-                    }
-                    else
-                    {
-                        ts.flags2 &= ~FLAGS2_AGC_WDSP;
-                        txt_ptr = "    WDSP AGC";        //
-                    }
-                }
-        break;
+        case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+            switch(ts.agc_wdsp)
+            {
+            case 1:       //
+                txt_ptr = "    WDSP AGC";        //
+                break;
+            default:
+            txt_ptr = "Standard AGC";        //
+            }
+            break;
 
-    case MENU_AGC_WDSP_HANG_ENABLE:    // On/Off
-        temp_var_u8 = ts.flags2 & FLAGS2_AGC_WDSP_HANG_ENABLE;
-                var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-                if(var_change)
-                {
-                    if(temp_var_u8)
-                    {
-                        ts.flags2 |= FLAGS2_AGC_WDSP_HANG_ENABLE;
-                        txt_ptr = " OFF";        //
-                    }
-                    else
-                    {
-                        ts.flags2 &= ~FLAGS2_AGC_WDSP_HANG_ENABLE;
-                        txt_ptr = "  ON";        //
-                    }
-                }
-        break;
+            case MENU_AGC_WDSP_HANG_ENABLE:     //
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_hang_enable,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+            switch(ts.agc_wdsp_hang_enable)
+            {
+            case 1:       //
+                txt_ptr = "  ON";        //
+                break;
+            default:
+            txt_ptr = " OFF";        //
+            }
+            break;
 
             case MENU_SAM_PLL_LOCKING_RANGE:      //
                 var_change = UiDriverMenuItemChangeInt(var, mode, &ads.pll_fmax_int,
@@ -1724,21 +1722,21 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
         case CONFIG_IQ_AUTO_CORRECTION:    // On/Off
-            temp_var_u8 = ts.flags2 & FLAGS2_RX_IQ_AUTO_CORRECTION;
-                    var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-                    if(var_change)
-                    {
-                        if(temp_var_u8)
-                        {
-                            ts.flags2 |= FLAGS2_RX_IQ_AUTO_CORRECTION;
-                            txt_ptr = " OFF";
-                        }
-                        else
-                        {
-                            ts.flags2 &= ~FLAGS2_RX_IQ_AUTO_CORRECTION;
-                            txt_ptr = "  ON";
-                        }
-                    }
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.iq_auto_correction,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+
+            switch(ts.iq_auto_correction) {
+            case 0:
+                txt_ptr = " OFF";
+                break;
+            case 1:
+                txt_ptr = "  ON";
+                break;
+            }
             break;
 
     case MENU_TCXO_C_F: // TCXO display C/F mode

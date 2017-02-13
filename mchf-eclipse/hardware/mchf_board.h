@@ -1104,10 +1104,6 @@ typedef struct TransceiverState
 #define FLAGS2_LOW_BAND_BIAS_REDUCE 	0x08    // 1 if bias values for lower bands  below 8Mhz have lower influence factor
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
 #define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
-#define FLAGS2_RX_IQ_AUTO_CORRECTION    0x80    // 1 if RX IQ imbalance autocorrection ON
-#define FLAGS2_AGC_WDSP                 0x100   // 1 if WDSP AGC is ON
-#define FLAGS2_AGC_WDSP_HANG_ENABLE     0x200   // 1 if hang AGC ON, if in WDSP AGC mode
-#define FLAGS2_SAM_FADE_LEVELER         0x400   // 1 if fade leveler for AM/SAM is ON
 
     uint32_t	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.
@@ -1201,12 +1197,12 @@ typedef struct TransceiverState
     uchar	s_meter;				// defines S-Meter style/configuration
 	uint8_t	meter_colour_up;
 	uint8_t	meter_colour_down;
-//	uchar   iq_auto_correction;     // switch variable for automatic IQ correction
+	uchar   iq_auto_correction;     // switch variable for automatic IQ correction
 	uint8_t twinpeaks_tested;
-//	uint8_t agc_wdsp;
+	uint8_t agc_wdsp;
 	uint8_t agc_wdsp_mode;
 	uint8_t agc_wdsp_slope;
-//	uint8_t agc_wdsp_hang_enable;
+	uint8_t agc_wdsp_hang_enable;
 	int     agc_wdsp_thresh;
 
 #define DISPLAY_S_METER_STD   0

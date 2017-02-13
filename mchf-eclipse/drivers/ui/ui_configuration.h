@@ -529,12 +529,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_SAM_PLL_BANDWIDTH            368     //
 #define EEPROM_I2C1_SPEED                   369     //
 #define EEPROM_I2C2_SPEED                   370     //
-#define EEPROM_AGC_WDSP_THRESHOLD           371
-//#define EEPROM_SAM_FADE_LEVELER             371
+#define EEPROM_SAM_FADE_LEVELER             371
 #define EEPROM_LINEOUT_GAIN                 372
-#define EEPROM_AGC_WDSP_SLOPE               373
-//#define EEPROM_IQ_AUTO_CORRECTION           373     // Receive IQ auto correction ON/OFF
-//#define EEPROM_AGC_WDSP_SWITCH              374
+#define EEPROM_IQ_AUTO_CORRECTION           373     // Receive IQ auto correction ON/OFF
+#define EEPROM_AGC_WDSP_SWITCH              374
 #define EEPROM_AGC_WDSP_MODE                375
 
 #define EEPROM_FIRST_UNUSED 				376		// change this if new value ids are introduced

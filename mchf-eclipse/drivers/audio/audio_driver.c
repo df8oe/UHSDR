@@ -1897,7 +1897,7 @@ void AGC_prep()
       tau_decay = 0.050;
       break;
     case 0: //agcFrank
-      ts.flags2 |= FLAGS2_AGC_WDSP_HANG_ENABLE; // disable hang
+      ts.agc_wdsp_hang_enable = 0;
       hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
@@ -2021,7 +2021,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
             }
             else
             {
-              if ((ts.flags2 & FLAGS2_AGC_WDSP_HANG_ENABLE)  && (hang_backaverage > hang_level))
+              if (ts.agc_wdsp_hang_enable  && (hang_backaverage > hang_level))
               {
                 state = 2;
                 hang_counter = (int)(hangtime * IQ_SAMPLE_RATE_F / ads.decimation_rate);
@@ -3413,7 +3413,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
 
 
-    if(!(ts.flags2 & FLAGS2_RX_IQ_AUTO_CORRECTION)) // Manual IQ imbalance correction
+    if(!ts.iq_auto_correction) // Manual IQ imbalance correction
     {
     // Apply I/Q amplitude correction
     arm_scale_f32(adb.i_buffer, ts.rx_adj_gain_var.i, adb.i_buffer, blockSize);
@@ -3653,7 +3653,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
 
             // now process the samples and perform the receiver AGC function
-            if(ts.flags2 & FLAGS2_AGC_WDSP)
+            if(ts.agc_wdsp)
             {
                 AudioDriver_RxAGCWDSP(blockSizeDecim);
             }
