@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-14T15:20:53  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-14T17:10:15  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.9 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-14T15:20:53  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-14T17:10:15  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -167,13 +167,23 @@
              shape = record
              ];
         
+        "MENU_AGC_WDSP_THRESH" [
+             label = "MENU_AGC_WDSP_THRESH | AGC Threshold"
+             shape = record
+             ];
+        
         "MENU_AGC_WDSP_HANG_ENABLE" [
              label = "MENU_AGC_WDSP_HANG_ENABLE | AGC Hang enable"
              shape = record
              ];
         
-        "MENU_AGC_WDSP_THRESH" [
-             label = "MENU_AGC_WDSP_THRESH | AGC Threshold"
+        "MENU_AGC_WDSP_HANG_TIME" [
+             label = "MENU_AGC_WDSP_HANG_TIME | AGC Hang time"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_HANG_THRESH" [
+             label = "MENU_AGC_WDSP_HANG_THRESH | AGC Hang threshold"
              shape = record
              ];
         
@@ -1164,9 +1174,13 @@
             
             MENU_BASE -> MENU_AGC_WDSP_SLOPE
             
+            MENU_BASE -> MENU_AGC_WDSP_THRESH
+            
             MENU_BASE -> MENU_AGC_WDSP_HANG_ENABLE
             
-            MENU_BASE -> MENU_AGC_WDSP_THRESH
+            MENU_BASE -> MENU_AGC_WDSP_HANG_TIME
+            
+            MENU_BASE -> MENU_AGC_WDSP_HANG_THRESH
             
             MENU_BASE -> MENU_CODEC_GAIN_MODE
             
