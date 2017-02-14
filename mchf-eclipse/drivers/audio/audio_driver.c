@@ -1763,12 +1763,10 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, AudioSampl
 #endif
 
 /*******************************************************************************************************************
- *
- *
- *  AGC TEST
+ *  AGC WDSP TEST
  *  code taken from wdsp lib by Warren Pratt
- *
- *
+ *  http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
+ *  the AGC code is licensed under the GPL license
  *******************************************************************************************************************/
 // AGC
 //#define MAX_SAMPLE_RATE     (24000.0)
@@ -1896,7 +1894,7 @@ void AGC_prep()
       hangtime = 0.000;
       tau_decay = 0.050;
       break;
-    case 0: //agcFrank
+    case 0: //agcFrank --> very long
       ts.agc_wdsp_hang_enable = 0;
       hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
@@ -1915,7 +1913,7 @@ void AGC_prep()
 
   max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
 
-  attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack);
+  attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
   in_index = attack_buffsize + out_index;
   attack_mult = 1.0 - expf(-1.0 / (sample_rate * tau_attack));
   decay_mult = 1.0 - expf(-1.0 / (sample_rate * tau_decay));
@@ -1948,6 +1946,7 @@ void AGC_prep()
 
 
 void AudioDriver_RxAGCWDSP(int16_t blockSize)
+
 {
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -2009,13 +2008,13 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
       case 0:
         {
           if (ring_max >= volts)
-          {
+          { // ATTACK
             volts += (ring_max - volts) * attack_mult;
           }
           else
-          {
+          { // DECAY
             if (volts > pop_ratio * fast_backaverage)
-            {
+            { // short time constant detector
               state = 1;
               volts += (ring_max - volts) * fast_decay_mult;
             }
@@ -2028,7 +2027,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
                 decay_type = 1;
               }
               else
-              {
+              {// long time constant detector
                 state = 3;
                 volts += (ring_max - volts) * decay_mult;
                 decay_type = 0;
@@ -2040,14 +2039,14 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
       case 1:
         {
           if (ring_max >= volts)
-          {
+          { // ATTACK
             state = 0;
             volts += (ring_max - volts) * attack_mult;
           }
           else
           {
             if (volts > save_volts)
-            {
+            {// short time constant detector
               volts += (ring_max - volts) * fast_decay_mult;
             }
             else
@@ -2059,12 +2058,12 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
               else
               {
                 if (decay_type == 0)
-                {
+                {// long time constant detector
                   state = 3;
                   volts += (ring_max - volts) * decay_mult;
                 }
                 else
-                {
+                { // hang time constant
                   state = 4;
                   volts += (ring_max - volts) * hang_decay_mult;
                 }
@@ -2074,7 +2073,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           break;
         }
       case 2:
-        {
+        { // ATTACK
           if (ring_max >= volts)
           {
             state = 0;
@@ -2084,7 +2083,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           else
           {
             if (hang_counter == 0)
-            {
+            { // hang time constant
               state = 4;
               volts += (ring_max - volts) * hang_decay_mult;
             }
@@ -2094,13 +2093,13 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
       case 3:
         {
           if (ring_max >= volts)
-          {
+          { // ATTACK
             state = 0;
             save_volts = volts;
             volts += (ring_max - volts) * attack_mult;
           }
           else
-          {
+          { // DECAY
             volts += (ring_max - volts) * decay_mult;
           }
           break;
@@ -2108,19 +2107,28 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
       case 4:
         {
           if (ring_max >= volts)
-          {
+          { // ATTACK
             state = 0;
             save_volts = volts;
             volts += (ring_max - volts) * attack_mult;
           }
           else
-          {
+          { // HANG DECAY
             volts += (ring_max - volts) * hang_decay_mult;
           }
           break;
         }
       }
-      if (volts < min_volts) volts = min_volts;
+      if (volts < min_volts)
+          {
+                  volts = min_volts; // no AGC action is taking place
+                  ts.agc_wdsp_action = 0;
+          }
+      else
+          {
+          // TODO: place LED indicator for AGC action HERE
+                  ts.agc_wdsp_action = 1;
+          }
 
       float32_t vo =  log10f(inv_max_input * volts);
       if(vo > 0.0)
@@ -3145,17 +3153,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             {
                 arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &audio);
                 if(ads.fade_leveler)
-                { // this does not eliminate DC properly !
+                {
                 dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
                 dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
                 audio = audio + dc_insert - dc27;
-                }
-                else
-                {
-                    // DC Filter is now put AFTER the AGC in the AGC subroutine
-                // DC Filter
-//                dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-//                audio = audio - dc27;
                 }
                 adb.a_buffer[i] = audio;
             }
@@ -3232,13 +3233,6 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                         dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
                         dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr[0];
                         audio = audio + dc_insert - dc27;
-                    }
-                    else
-                    {
-                        // DC Filter is now put AFTER the AGC in the AGC subroutine
-                        // DC Filter
-//                        dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
-//                        audio = audio - dc27;
                     }
 
                     adb.a_buffer[i] = audio;
@@ -3431,7 +3425,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 4000) // wait 2.667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
+        if(twinpeaks_counter > 1000) // wait 0.667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
         {
             ts.twinpeaks_tested = 0;
             twinpeaks_counter = 0;

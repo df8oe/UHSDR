@@ -1090,7 +1090,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 txt_ptr = "    WDSP AGC";        //
                 break;
             default:
-            txt_ptr = "Standard AGC";        //
+                txt_ptr = "Standard AGC";        //
             }
             break;
 
