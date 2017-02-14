@@ -1205,8 +1205,10 @@ typedef struct TransceiverState
 	uint8_t agc_wdsp_hang_enable;
 	int     agc_wdsp_thresh;
 	int     agc_wdsp_hang_thresh;
-	uint16_t agc_wdsp_hang_time;
+	int agc_wdsp_hang_time;
 	uint8_t agc_wdsp_action;
+	uint8_t agc_wdsp_switch_mode;
+	uint8_t agc_wdsp_hang_action;
 
 #define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
