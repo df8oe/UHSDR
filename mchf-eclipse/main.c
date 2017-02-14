@@ -440,8 +440,8 @@ void TransceiverStateInit(void)
     ts.agc_wdsp_mode = 2;
     ts.agc_wdsp_slope = 70;
     ts.agc_wdsp_hang_enable = 0;
-    ts.agc_wdsp_hang_time = 250;
-    ts.agc_wdsp_hang_thresh = 85;
+    ts.agc_wdsp_hang_time = 500;
+    ts.agc_wdsp_hang_thresh = 45;
     ts.agc_wdsp_thresh = 60;
     ts.agc_wdsp_action = 0;
     ts.agc_wdsp_switch_mode = 1;
