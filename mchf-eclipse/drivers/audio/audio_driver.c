@@ -1952,12 +1952,14 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
 {
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
-    // maybe this can be indicated by a coloured line in the spectrum display !??
+    // --> DONE
     // hang time adjust
     // hang threshold adjust
     // "LED" that indicates that the input signal is higher than the hang threshold --> has to be seen when in menu mode
     //
-
+    // Be careful: the original source code has no comments,
+    // all comments added by DD4WH, February 2017: comments could be wrong, misinterpreting or highly misleading!
+    //
   static float32_t    w = 0.0;
   static float32_t    wold = 0.0;
   int i, j, k;
@@ -2007,7 +2009,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
 
       switch (state)
       {
-      case 0:
+      case 0: // starting point after ATTACK
         {
           if (ring_max >= volts)
           { // ATTACK
@@ -2021,7 +2023,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
               volts += (ring_max - volts) * fast_decay_mult;
             }
             else
-            {
+            { // hang AGC enabled and being activated
               if (ts.agc_wdsp_hang_enable  && (hang_backaverage > hang_level))
               {
                 state = 2;
@@ -2038,7 +2040,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           }
           break;
         }
-      case 1:
+      case 1: // short time constant decay
         {
           if (ring_max >= volts)
           { // ATTACK
@@ -2074,7 +2076,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           }
           break;
         }
-      case 2:
+      case 2: // Hang is enabled and active, hang counter still counting
         { // ATTACK
           if (ring_max >= volts)
           {
@@ -2092,7 +2094,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           }
           break;
         }
-      case 3:
+      case 3: // long time constant decay in progress
         {
           if (ring_max >= volts)
           { // ATTACK
@@ -2106,7 +2108,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           }
           break;
         }
-      case 4:
+      case 4: // hang was enabled and counter has counted to zero --> hang decay
         {
           if (ring_max >= volts)
           { // ATTACK
@@ -2128,7 +2130,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
           }
       else
           {
-          // TODO: place LED indicator for AGC action HERE
+          // LED indicator for AGC action
                   ts.agc_wdsp_action = 1;
           }
 
@@ -2143,7 +2145,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
     }
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
     {
-    // eliminate DC in the audio before application of AGC gain
+    // eliminate DC in the audio after the AGC
         for(i = 0; i < blockSize; i++)
         {
             w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
