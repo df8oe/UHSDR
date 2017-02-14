@@ -190,7 +190,7 @@ USBH_StatusTypeDef USBH_HID_MouseInit(USBH_HandleTypeDef *phost)
     HID_Handle->length = sizeof(mouse_report_data);
   }
   HID_Handle->pData = (uint8_t *)mouse_report_data;
-  fifo_init(&HID_Handle->fifo, phost->device.Data, HID_QUEUE_SIZE * sizeof(mouse_report_data));
+  hid_fifo_init(&HID_Handle->fifo, phost->device.Data, HID_QUEUE_SIZE * sizeof(mouse_report_data));
 
   return USBH_OK;  
 }
@@ -228,7 +228,7 @@ static USBH_StatusTypeDef USBH_HID_MouseDecode(USBH_HandleTypeDef *phost)
     return USBH_FAIL;
   }
   /*Fill report */
-  if(fifo_read(&HID_Handle->fifo, &mouse_report_data, HID_Handle->length) ==  HID_Handle->length)
+  if(hid_fifo_read(&HID_Handle->fifo, &mouse_report_data, HID_Handle->length) ==  HID_Handle->length)
   {
     
     /*Decode report */

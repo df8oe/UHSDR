@@ -333,7 +333,7 @@ USBH_StatusTypeDef USBH_HID_KeybdInit(USBH_HandleTypeDef *phost)
     HID_Handle->length = (sizeof(keybd_report_data)/sizeof(uint32_t));
   }
   HID_Handle->pData = (uint8_t*)keybd_report_data;
-  fifo_init(&HID_Handle->fifo, phost->device.Data, HID_QUEUE_SIZE * sizeof(keybd_report_data));
+  hid_fifo_init(&HID_Handle->fifo, phost->device.Data, HID_QUEUE_SIZE * sizeof(keybd_report_data));
   
   return USBH_OK;    
 }
@@ -372,7 +372,7 @@ static USBH_StatusTypeDef USBH_HID_KeybdDecode(USBH_HandleTypeDef *phost)
     return USBH_FAIL;
   }
   /*Fill report */
-  if(fifo_read(&HID_Handle->fifo, &keybd_report_data, HID_Handle->length) ==  HID_Handle->length)
+  if(hid_fifo_read(&HID_Handle->fifo, &keybd_report_data, HID_Handle->length) ==  HID_Handle->length)
   {
     
     keybd_info.lctrl=(uint8_t)HID_ReadItem((HID_Report_ItemTypedef *) &imp_0_lctrl, 0);

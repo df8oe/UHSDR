@@ -13,13 +13,13 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_version.h"
 #include "mchf_board.h"
 #include "profiling.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <src/mchf_version.h>
 #include "ui_menu.h"
 #include "rtc.h"
 #include "adc.h"

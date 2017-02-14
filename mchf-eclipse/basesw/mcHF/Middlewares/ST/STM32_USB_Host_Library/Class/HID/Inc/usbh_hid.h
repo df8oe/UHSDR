@@ -315,11 +315,11 @@ HID_TypeTypeDef USBH_HID_GetDeviceType(USBH_HandleTypeDef *phost);
 
 uint8_t USBH_HID_GetPollInterval(USBH_HandleTypeDef *phost);
 
-void fifo_init(FIFO_TypeDef * f, uint8_t * buf, uint16_t size);
+void hid_fifo_init(FIFO_TypeDef * f, uint8_t * buf, uint16_t size);
 
-uint16_t  fifo_read(FIFO_TypeDef * f, void * buf, uint16_t  nbytes);
+uint16_t  hid_fifo_read(FIFO_TypeDef * f, void * buf, uint16_t  nbytes);
 
-uint16_t  fifo_write(FIFO_TypeDef * f, const void * buf, uint16_t  nbytes);
+uint16_t  hid_fifo_write(FIFO_TypeDef * f, const void * buf, uint16_t  nbytes);
 
 /**
   * @}

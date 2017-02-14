@@ -371,7 +371,7 @@ static USBH_StatusTypeDef USBH_HID_Process(USBH_HandleTypeDef *phost)
                             HID_Handle->length) == USBH_OK)
     {
       
-      fifo_write(&HID_Handle->fifo, HID_Handle->pData, HID_Handle->length);  
+      hid_fifo_write(&HID_Handle->fifo, HID_Handle->pData, HID_Handle->length);  
       HID_Handle->state = HID_SYNC;
     }
     
@@ -407,7 +407,7 @@ static USBH_StatusTypeDef USBH_HID_Process(USBH_HandleTypeDef *phost)
     {
       if(HID_Handle->DataReady == 0)
       {
-        fifo_write(&HID_Handle->fifo, HID_Handle->pData, HID_Handle->length);
+        hid_fifo_write(&HID_Handle->fifo, HID_Handle->pData, HID_Handle->length);
         HID_Handle->DataReady = 1;
         USBH_HID_EventCallback(phost);
 #if (USBH_USE_OS == 1)
@@ -703,7 +703,7 @@ uint8_t USBH_HID_GetPollInterval(USBH_HandleTypeDef *phost)
   * @param  size: Fifo Size
   * @retval none
   */
-void fifo_init(FIFO_TypeDef * f, uint8_t * buf, uint16_t size)
+void hid_fifo_init(FIFO_TypeDef * f, uint8_t * buf, uint16_t size)
 {
      f->head = 0;
      f->tail = 0;
@@ -720,7 +720,7 @@ void fifo_init(FIFO_TypeDef * f, uint8_t * buf, uint16_t size)
   * @param  nbytes: number of item to read
   * @retval number of read items
   */
-uint16_t  fifo_read(FIFO_TypeDef * f, void * buf, uint16_t  nbytes)
+uint16_t  hid_fifo_read(FIFO_TypeDef * f, void * buf, uint16_t  nbytes)
 {
   uint16_t  i;
   uint8_t * p;
@@ -758,7 +758,7 @@ uint16_t  fifo_read(FIFO_TypeDef * f, void * buf, uint16_t  nbytes)
   * @param  nbytes: number of item to write
   * @retval number of written items
   */
-uint16_t  fifo_write(FIFO_TypeDef * f, const void * buf, uint16_t  nbytes)
+uint16_t  hid_fifo_write(FIFO_TypeDef * f, const void * buf, uint16_t  nbytes)
 {
   uint16_t  i;
   const uint8_t * p;
