@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-11T10:44:45  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-14T15:20:53  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v1.5.8 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v1.5.9 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.8 - Menus Overview\ngenerated at  2017-02-11T10:44:45  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-14T15:20:53  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -149,6 +149,31 @@
         
         "MENU_CUSTOM_AGC" [
              label = "MENU_CUSTOM_AGC | Custom AGC (+=Slower)"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_SWITCH" [
+             label = "MENU_AGC_WDSP_SWITCH | AGC WDSP switch"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_MODE" [
+             label = "MENU_AGC_WDSP_MODE | AGC WDSP Mode"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_SLOPE" [
+             label = "MENU_AGC_WDSP_SLOPE | AGC WDSP Slope"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_HANG_ENABLE" [
+             label = "MENU_AGC_WDSP_HANG_ENABLE | AGC Hang enable"
+             shape = record
+             ];
+        
+        "MENU_AGC_WDSP_THRESH" [
+             label = "MENU_AGC_WDSP_THRESH | AGC Threshold"
              shape = record
              ];
         
@@ -1132,6 +1157,16 @@
             MENU_BASE -> MENU_AGC_MODE
             
             MENU_BASE -> MENU_CUSTOM_AGC
+            
+            MENU_BASE -> MENU_AGC_WDSP_SWITCH
+            
+            MENU_BASE -> MENU_AGC_WDSP_MODE
+            
+            MENU_BASE -> MENU_AGC_WDSP_SLOPE
+            
+            MENU_BASE -> MENU_AGC_WDSP_HANG_ENABLE
+            
+            MENU_BASE -> MENU_AGC_WDSP_THRESH
             
             MENU_BASE -> MENU_CODEC_GAIN_MODE
             

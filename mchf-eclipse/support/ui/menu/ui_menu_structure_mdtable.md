@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-11T10:44:47  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-14T15:21:02  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v1.5.8 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v1.5.8 - UI Menu Overview
+# mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-02-11T10:44:47  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-14T15:21:02  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -36,6 +36,11 @@ generated at  2017-02-11T10:44:47  by "./ui_menu_structure_mdtable.py"
 | **RF Gain**                   (                           MENU_RF_GAIN_ADJ) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
 | **AGC Mode**                  (                              MENU_AGC_MODE) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
 | **Custom AGC (+=Slower)**     (                            MENU_CUSTOM_AGC) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
+| **AGC WDSP switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
+| **AGC WDSP Mode**             (                         MENU_AGC_WDSP_MODE) | Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC. | 
+| **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the most silent signal after the AGC action has taken place. Given in dB. | 
+| **AGC Hang enable**           (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: I enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
+| **AGC Threshold**             (                       MENU_AGC_WDSP_THRESH) | ´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold. | 
 | **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
 | **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
