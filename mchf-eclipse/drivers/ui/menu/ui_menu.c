@@ -1093,7 +1093,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_AGC_WDSP_HANG_TIME:      //
-        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.agc_wdsp_hang_time,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_time,
                                             10,
                                             5000,
                                             250,

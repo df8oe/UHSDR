@@ -2008,6 +2008,14 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
 
       fast_backaverage = fast_backmult * abs_out_sample + onemfast_backmult * fast_backaverage;
       hang_backaverage = hang_backmult * abs_out_sample + onemhang_backmult * hang_backaverage;
+      if(hang_backaverage > hang_level)
+      {
+          ts.agc_wdsp_hang_action = 1;
+      }
+      else
+      {
+          ts.agc_wdsp_hang_action = 0;
+      }
 
       if ((abs_out_sample >= ring_max) && (abs_out_sample > 0.0))
       {

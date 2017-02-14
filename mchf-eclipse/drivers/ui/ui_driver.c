@@ -6036,17 +6036,25 @@ void UiDriver_MainHandler()
                 UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
             }
             char* txt = "???";
+            uint16_t AGC_color = Blue;
+            uint16_t AGC_color2 = White;
+            if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
+            {
+                AGC_color = Orange;
+                AGC_color2 = Black;
+            }
+
             if(ts.agc_wdsp == 1)
             {
-            if(ts.agc_wdsp_action == 1)
+                if(ts.agc_wdsp_action == 1)
+                    {
+                        txt = "AGC";
+                    }
+                else
                 {
-                    txt = "AGC";
+                    txt = "   ";
                 }
-            else
-            {
-                txt = "   ";
-            }
-            UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,White,Blue,0);
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
             }
             else
             {
