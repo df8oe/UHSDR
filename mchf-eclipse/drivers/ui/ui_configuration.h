@@ -534,8 +534,11 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_IQ_AUTO_CORRECTION           373     // Receive IQ auto correction ON/OFF
 #define EEPROM_AGC_WDSP_SWITCH              374
 #define EEPROM_AGC_WDSP_MODE                375
+#define EEPROM_AGC_WDSP_THRESH              376
+#define EEPROM_AGC_WDSP_SLOPE               377
+#define EEPROM_AGC_WDSP_HANG                378
 
-#define EEPROM_FIRST_UNUSED 				376		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				379		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

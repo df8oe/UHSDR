@@ -1895,7 +1895,7 @@ void AGC_prep()
       tau_decay = 0.050;
       break;
     case 0: //agcFrank --> very long
-      ts.agc_wdsp_hang_enable = 0;
+//      ts.agc_wdsp_hang_enable = 0;
       hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
