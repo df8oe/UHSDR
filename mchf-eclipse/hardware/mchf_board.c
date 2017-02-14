@@ -188,6 +188,7 @@ static void mchf_board_ptt_init(void)
 
 static void mchf_board_keyer_irq_init(void)
 {
+#if 0
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // Configure PADDLE_DASH pin as input
@@ -204,7 +205,7 @@ static void mchf_board_keyer_irq_init(void)
 
     HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
     HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
+#endif
 }
 
 static void mchf_board_power_button_irq_init(void)

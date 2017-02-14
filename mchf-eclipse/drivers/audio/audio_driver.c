@@ -37,7 +37,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_configuration.h"
 #include "ui_driver.h"
-#include "i2s.h"
+#include "mchf_hw_i2s.h"
 
 typedef struct {
     __packed int16_t l;
@@ -575,19 +575,8 @@ void AudioDriver_Init(void)
     // Audio Filter Init init
     AudioDriver_InitFilters();
 
-
-
-    // Codec init
-    Codec_MCUInterfaceInit(ts.samp_rate);
-
-    // Codec settle delay
-    non_os_delay();
-
-    // I2S hardware init
-    I2S_Block_Init();
-
     // Start DMA transfers
-    I2S_Block_Process((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
+    MchfHw_Codec_StartDMA((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
     Codec_Reset(ts.samp_rate,word_size);
 

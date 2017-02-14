@@ -48,7 +48,6 @@
 //
 //
 //
-#if 0
 
 #include "cat_driver.h"
 
@@ -85,6 +84,7 @@ uchar wd_init_enabled = 0;
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+#if 0
 void CriticalError(ulong error)
 {
     NVIC_SystemReset();
@@ -130,77 +130,8 @@ void SysTick_Handler(void)
 {
 
 }
-
-/*
- * @brief Interrupt Handler for Paddles DAH and/or PTT
- */
-void EXTI0_IRQHandler(void)
-{
-    // Checks whether the User Button EXTI line is asserted
-    //
-    // WARNING:
-    // Due to an apparent HARDWARE bug in the MCU this interrupt seems to be occasionally triggered by transitions
-    // of lines OTHER than the PADDLE_DAH (PE0) line, specifically the PC4 and PC5 (Step- and Step+) lines.
-    //
-    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-    {
-        // Call handler
-        if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
-        {	// was DAH line low?
-            CwGen_DahIRQ();		// Yes - go to CW state machine
-        }
-        // PTT activate
-        else if(ts.dmod_mode != DEMOD_SAM)
-        {
-            if(mchf_ptt_dah_line_pressed())
-            {	// was PTT line low?
-                ts.ptt_req = 1;		// yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-            }
-        }
-    }
-
-    // Clears the EXTI's line pending bit
-    EXTI_ClearITPendingBit(EXTI_Line0);
-}
-
-/*
- * @brief Interrupt Handler for Paddles DIT
- */
-void EXTI1_IRQHandler(void)
-{
-    // Checks whether the User Button EXTI line (paddle DIT) is asserted
-    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
-    {
-        // Call handler
-        // was Dit line low?  (Validate to prevent extraneous interrupts)
-        if(ts.dmod_mode == DEMOD_CW && mchf_dit_line_pressed())
-        {
-            CwGen_DitIRQ();
-        }
-    }	// do nothing if not in CW mode!
-
-    // Clears the EXTI's line pending bit
-    EXTI_ClearITPendingBit(EXTI_Line1);
-}
 #endif
-/*
- * @brief Interrupt Handler for Power Button Press
- */
-#if 0
-// removed since hal provides interrupt handler
-// not sure if we keep the hal handler event
-void EXTI15_10_IRQHandler(void)
-{
-    // power button interrupt
-    if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_13) != RESET)
-    {
-        //		if(!GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_13))	// Signal power off
 
-    }
-    // Clear interrupt pending bit
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_13);
-}
-#endif
 #if 0
 /*void TIM5_IRQHandler(void)
 {
@@ -220,6 +151,36 @@ void EXTI15_10_IRQHandler(void)
   }
 }*/
 #endif
+
+void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
+{
+    switch(GPIO_Pin)
+    {
+    case BUTTON_PWR:
+        break;
+    case PADDLE_DAH:
+        // Call handler
+        if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
+        {   // was DAH line low?
+            CwGen_DahIRQ();     // Yes - go to CW state machine
+        }
+        // PTT activate
+        else if(ts.dmod_mode != DEMOD_SAM)
+        {
+            if(mchf_ptt_dah_line_pressed())
+            {   // was PTT line low?
+                ts.ptt_req = 1;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+            }
+        }
+        break;
+    case PADDLE_DIT:
+        if(ts.dmod_mode == DEMOD_CW && mchf_dit_line_pressed())
+        {
+            CwGen_DitIRQ();
+        }
+        break;
+    }
+}
 
 void TransceiverStateInit(void)
 {
@@ -551,10 +512,6 @@ int mchfMain(void)
     // HW init
     mchf_board_init();
     MchfBoard_GreenLed(LED_STATE_ON);
-    UiLcdHy28_BacklightEnable(true);
-    UiLcdHy28_LcdClear(Black);
-    UiLcdHy28_PrintText(0,0,"Hello mcHF!",White,Black,0);
-    UiLcdHy28_PrintTextRight(319,240-13,"!FHcm olleH",White,Black,0);
 
     ConfigStorage_Init();
     // test if touchscreen is present
@@ -616,7 +573,7 @@ int mchfMain(void)
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
 #endif
-
+    MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop
     for(;;)
     {

@@ -12,13 +12,11 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#ifndef __I2S_H
-#define __I2S_H
+#ifndef __MCHF_HW_I2S_H
+#define __MCHF_HW_I2S_H
 
-void I2S_Block_Init(void);
-
-void I2S_Block_Process(uint32_t txAddr, uint32_t rxAddr, uint32_t Size);
-void I2S_Block_Stop(void);
+void MchfHw_Codec_StartDMA(uint32_t txAddr, uint32_t rxAddr, uint32_t Size);
+void MchfHw_Codec_StopDMA(void);
 
 #endif
 
