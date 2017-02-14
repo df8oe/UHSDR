@@ -73,11 +73,11 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ, NULL, "RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE, NULL, "AGC Mode", UiMenuDesc("Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
     { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC, NULL, "Custom AGC (+=Slower)", UiMenuDesc("If AGC is set to CUSTOM, this controls the speed setting of AGC") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC WDSP switch", UiMenuDesc("jhasgjdhasgf") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_MODE, NULL, "AGC WDSP Mode", UiMenuDesc("jhasgjdhasgf") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("jhasgjdhasgf") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_ENABLE, NULL, "AGC Hang enable", UiMenuDesc("jhasgjdhasgf") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_THRESH, NULL, "AGC Threshold", UiMenuDesc("jhasgjdhasgf") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC WDSP switch", UiMenuDesc("You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_MODE, NULL, "AGC WDSP Mode", UiMenuDesc("Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("Slope of the AGC is the difference between the loudest signal and the most silent signal after the AGC action has taken place. Given in dB.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_ENABLE, NULL, "AGC Hang enable", UiMenuDesc("Enable/Disable Hang AGC function: I enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_THRESH, NULL, "AGC Threshold", UiMenuDesc("´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold.") },
     { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best.") },
 
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV, NULL, "RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },

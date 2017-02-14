@@ -6035,6 +6035,25 @@ void UiDriver_MainHandler()
             {
                 UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
             }
+            char* txt = "???";
+            if(ts.agc_wdsp == 1)
+            {
+            if(ts.agc_wdsp_action == 1)
+                {
+                    txt = "AGC";
+                }
+            else
+            {
+                txt = "   ";
+            }
+            UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,White,Blue,0);
+            }
+            else
+            {
+                txt = "   ";
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,Black,Black,0);
+
+            }
             break;
         default:
             break;
