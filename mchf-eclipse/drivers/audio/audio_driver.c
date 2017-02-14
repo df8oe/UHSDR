@@ -1867,11 +1867,16 @@ void AGC_prep()
     pop_ratio = 5.0;                 // pop_ratio
 //    hang_enable = 0;                 // hang_enable
     tau_hang_backmult = 0.500;       // tau_hang_backmult
-    hangtime = 0.250;                // hangtime
-    hang_thresh = 0.250;             // hang_thresh
+//    hangtime = 0.250;                // hangtime
+    hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
+//    hang_thresh = 0.250;             // hang_thresh
+
     tau_hang_decay = 0.100;          // tau_hang_decay
 
   //calculate internal parameters
+
+    if(ts.agc_wdsp_switch_mode)
+    {
     switch (ts.agc_wdsp_mode)
   {
     case 5: //agcOFF
@@ -1879,10 +1884,12 @@ void AGC_prep()
     case 1: //agcLONG
       hangtime = 2.000;
       tau_decay = 2.000;
+      hang_thresh = 1.0;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
+      hang_thresh = 1.0;
       tau_decay = 0.500;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
@@ -1906,9 +1913,10 @@ void AGC_prep()
       tau_fast_backaverage = 0.250; // time constant exponential averager
       break;
     default:
-      break;
+        break;
   }
-
+    ts.agc_wdsp_switch_mode = 0;
+    }
 //  float32_t noise_offset = 10.0 * log10f(fhigh - rxa[channel].nbp0.p->flow)
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
@@ -1935,6 +1943,18 @@ void AGC_prep()
   slope_constant = (out_target * (1.0 - 1.0 / var_gain)) / tmp;
 
   inv_max_input = 1.0 / max_input;
+
+  if (max_input > min_volts)
+  {
+      float32_t convert = powf (10.0, (float32_t)ts.agc_wdsp_hang_thresh / 20.0);
+      tmp = (convert - min_volts) / (max_input - min_volts);
+      if(tmp < 1e-8) tmp = 1e-8;
+      hang_thresh = 1.0 + 0.125 * log10f (tmp);
+  }
+  else
+  {
+      hang_thresh = 1.0;
+  }
 
   tmp = powf (10.0, (hang_thresh - 1.0) / 0.125);
   hang_level = (max_input * tmp + (out_target /

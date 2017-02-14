@@ -1041,6 +1041,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var_change)
         {
             // now set the AGC parameters
+            ts.agc_wdsp_switch_mode = 1; // set flag to 1 for parameter change
             AGC_prep();
         }
         if(ts.txrx_mode == TRX_MODE_TX) // Orange if in TX mode
@@ -1075,6 +1076,34 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             AGC_prep();
         }
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_thresh);
+        break;
+
+    case MENU_AGC_WDSP_HANG_THRESH:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_thresh,
+                                            -20,
+                                            120,
+                                            40,
+                                            1
+                                           );
+        if(var_change)
+        {
+            AGC_prep();
+        }
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_hang_thresh);
+        break;
+
+    case MENU_AGC_WDSP_HANG_TIME:      //
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.agc_wdsp_hang_time,
+                                            10,
+                                            5000,
+                                            250,
+                                            10
+                                           );
+        if(var_change)
+        {
+            AGC_prep();
+        }
+        snprintf(options, 32, "  %dms", ts.agc_wdsp_hang_time);
         break;
 
         case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
