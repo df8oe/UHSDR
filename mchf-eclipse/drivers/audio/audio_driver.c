@@ -1856,8 +1856,10 @@ void AGC_prep()
 //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
 //  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
     fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
-    max_input = 32768.0; // 1.0; //
-    out_targ = 12000.0; // target value of audio after AGC
+    max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
+    //32767.0; // maximum value of 16-bit audio //  1.0; //
+    out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
+    //12000.0; // target value of audio after AGC
 //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
     var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0);
     tau_fast_backaverage = 0.250;    // tau_fast_backaverage
