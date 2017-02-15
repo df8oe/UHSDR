@@ -1855,7 +1855,7 @@ void AGC_prep()
 
 //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
 //  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
-    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
+//    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
     max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
     //32767.0; // maximum value of 16-bit audio //  1.0; //
     out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
@@ -1922,7 +1922,7 @@ void AGC_prep()
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
 
   max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
-
+  fixed_gain = max_gain / 10.0;
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
   in_index = attack_buffsize + out_index;
   attack_mult = 1.0 - expf(-1.0 / (sample_rate * tau_attack));
@@ -1989,7 +1989,7 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
     {
       for (i = 0; i < blockSize; i++)
       {
-          adb.a_buffer[i] = adb.a_buffer[i] * ads.agc_rf_gain;
+          adb.a_buffer[i] = adb.a_buffer[i] * fixed_gain;
       }
       return;
     }
