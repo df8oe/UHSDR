@@ -1458,18 +1458,18 @@ static void UiSpectrum_CalculateDBm()
             {
                 if(i < (buff_len_int/4))	 		// build left half of magnitude data
                 {
-                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
                 }
                 else	 							// build right half of magnitude data
                 {
-                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4]*SCOPE_PREAMP_GAIN;	// get data
+                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
                 }
             }
 
             // determine the sum of all the bin values in the passband
             for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
             {
-                sum_db = sum_db + sd.FFT_Samples[c];
+                sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
             }
 
             if (sum_db > 0)
