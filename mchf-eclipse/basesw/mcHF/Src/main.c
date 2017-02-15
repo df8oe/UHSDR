@@ -46,6 +46,7 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
+#include "fatfs.h"
 #include "i2c.h"
 #include "i2s.h"
 #include "rtc.h"
@@ -113,6 +114,7 @@ int main(void)
   MX_TIM8_Init();
   MX_USB_DEVICE_Init();
   MX_USB_HOST_Init();
+  MX_FATFS_Init();
 
   /* USER CODE BEGIN 2 */
 
