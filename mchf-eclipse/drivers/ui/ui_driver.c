@@ -6040,7 +6040,7 @@ void UiDriver_MainHandler()
             uint16_t AGC_color2 = White;
             if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
             {
-                AGC_color = Orange;
+                AGC_color = White;
                 AGC_color2 = Black;
             }
 
