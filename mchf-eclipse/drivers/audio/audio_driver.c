@@ -3549,6 +3549,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         arm_scale_f32 (adb.i_buffer, adb.M_c2, adb.i_buffer, blockSize);
     }
 
+    // Spectrum display sample collect for magnify == 0
     AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
     if(iq_freq_mode)            // is receive frequency conversion to be done?
@@ -3563,6 +3564,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
+    // Spectrum display sample collect for magnify != 0
     AudioDriver_SpectrumZoomProcessSamples(blockSize);
 
     //  Demodulation, optimized using fast ARM math functions as much as possible
