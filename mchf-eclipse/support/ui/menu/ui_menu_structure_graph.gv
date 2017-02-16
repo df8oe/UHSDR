@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-14T17:10:15  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-16T08:44:56  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.9 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-14T17:10:15  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-16T08:44:56  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -389,6 +389,11 @@
         
         "MENU_DBM_DISPLAY" [
              label = "MENU_DBM_DISPLAY | dBm display"
+             shape = record
+             ];
+        
+        "MENU_DBM_CALIBRATE" [
+             label = "MENU_DBM_CALIBRATE | dBm calibrate"
              shape = record
              ];
         
@@ -1445,6 +1450,8 @@
             MENU_DISPLAY -> MENU_METER_COLOUR_DOWN
             
             MENU_DISPLAY -> MENU_DBM_DISPLAY
+            
+            MENU_DISPLAY -> MENU_DBM_CALIBRATE
             
             MENU_DISPLAY -> MENU_S_METER
             

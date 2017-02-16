@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-14T17:10:19  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-16T08:44:59  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-02-14T17:10:19  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-16T08:44:59  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -142,6 +142,7 @@ generated at  2017-02-14T17:10:19  by "./ui_menu_structure_mdtable.py"
 | **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. At the moment, this value is quite accurate to +-3dB, but only when the spectrum display is in magnify x 1 mode. Accuracy is lower for very very weak and very very strong signals. | 
+| **dBm calibrate**             (                         MENU_DBM_CALIBRATE) | dBm display calibration.                       | 
 | **S-Meter**                   (                               MENU_S_METER) | Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength. | 
 
 
