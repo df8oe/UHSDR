@@ -13,45 +13,45 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
-#include "ui_configuration.h"
-#include "config_storage.h"
+#include "hardware/mchf_board.h"
+#include "drivers/ui/ui_configuration.h"
+#include "misc/config_storage.h"
 #include <stdio.h>
 
 // serial EEPROM driver
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "hardware/mchf_hw_i2c.h"
+#include "hardware/mchf_rtc.h"
 
 // Audio Driver
-#include "audio_driver.h"
-#include "audio_management.h"
-#include "cw_gen.h"
+#include "drivers/audio/audio_driver.h"
+#include "drivers/audio/audio_management.h"
+#include "drivers/audio/cw/cw_gen.h"
 
-#include "freedv_mchf.h"
+#include "drivers/audio/freedv_mchf.h"
 // UI Driver
-#include "ui_driver.h"
-#include "ui_lcd_hy28.h"
-#include "ui_menu.h"
-#include "ui_si570.h"
-#include "codec.h"
-#include "profiling.h"
+#include "drivers/ui/ui_driver.h"
+#include "drivers/ui/lcd/ui_lcd_hy28.h"
+#include "drivers/ui/menu/ui_menu.h"
+#include "drivers/ui/oscillator/ui_si570.h"
+#include "drivers/audio/codec/codec.h"
+#include "misc/profiling.h"
 // Keyboard Driver
 // #include "keyb_driver.h"
 
 // Misc
-#include "softdds.h"
+#include "drivers/audio/softdds/softdds.h"
 
 // Eeprom
-#include "eeprom.h"
+#include "misc/v_eprom/eeprom.h"
 //
 //
 //
-#include "cat_driver.h"
+#include "drivers/cat/cat_driver.h"
 
 
 
 
-#include "TestCPlusPlusInterface.h"
+#include "misc/TestCPlusPlusInterface.h"
 // ----------------------------------------------------
 // Create a time reference incremented by 1 mS and 10mS
 //__IO uint32_t LocalTime_1MS  = 0;
