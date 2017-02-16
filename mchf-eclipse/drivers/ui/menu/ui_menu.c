@@ -1092,6 +1092,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_hang_thresh);
         break;
 
+     case MENU_DBM_CALIBRATE:      //
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.dbm_constant,
+                                            -100,
+                                            100,
+                                            0,
+                                            1
+                                           );
+        snprintf(options, 32, "  %ddB", ts.dbm_constant);
+        break;
+
     case MENU_AGC_WDSP_HANG_TIME:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_time,
                                             10,

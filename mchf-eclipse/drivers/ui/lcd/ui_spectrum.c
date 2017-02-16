@@ -1340,7 +1340,7 @@ static void UiSpectrum_CalculateDBm()
     //###########################################################################################################################################
     //###########################################################################################################################################
     // dBm/Hz-display DD4WH June, 9th 2016
-    // this will be rensewed every 200ms
+    // this will be renewed every 200ms
     // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
     // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
     // so the additional processor load and additional RAM usage should be close to zero
@@ -1348,16 +1348,18 @@ static void UiSpectrum_CalculateDBm()
     //
 
     // FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
+    // probably because of differing gains in the IIR filters used as decimation filters in the Zoom FFT
     if(ts.sysclock > ts.dBm_count + 19)
     {
         if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
             float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
-            float32_t cons = -225; //- 227.0;
+
+            float32_t cons = (float32_t)ts.dbm_constant - 225; // -225; //- 227.0;
             float32_t  Lbin, Ubin;
             float32_t bw_LSB = 0.0;
             float32_t bw_USB = 0.0;
-            float64_t sum_db = 0.0;
+            float32_t sum_db = 0.0;
             int posbin = 0;
             float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
             float32_t width;
@@ -1441,8 +1443,8 @@ static void UiSpectrum_CalculateDBm()
             }
             // calculate upper and lower limit for determination of signal strength
             // = filter passband is between the lower bin Lbin and the upper bin Ubin
-            Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-            Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+            Lbin = (float32_t)posbin - roundf(bw_LSB / bin_BW);
+            Ubin = (float32_t)posbin + roundf(bw_USB / bin_BW); // the bin on the upper sideband side
 
             // take care of filter bandwidths that are larger than the displayed FFT bins
             if(Lbin < 0)
@@ -1471,6 +1473,12 @@ static void UiSpectrum_CalculateDBm()
             {
                 sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
             }
+            // we have to account for the larger number of bins that are summed up when using higher
+            // magnifications
+            // for example: if we have 34 bins to sum up for sd.magnify == 1, we sum up 68 bins for sd.magnify == 2
+
+//            sum_db /= (float32_t)sd.magnify + 1;
+            cons = cons - 3.0 * (sd.magnify);
 
             if (sum_db > 0)
             {
