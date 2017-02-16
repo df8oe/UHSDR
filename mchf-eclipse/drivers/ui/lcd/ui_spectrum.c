@@ -1478,7 +1478,7 @@ static void UiSpectrum_CalculateDBm()
             // for example: if we have 34 bins to sum up for sd.magnify == 1, we sum up 68 bins for sd.magnify == 2
 
 //            sum_db /= (float32_t)sd.magnify + 1;
-            cons = cons - 3.0 * (sd.magnify);
+//            cons = cons - 3.0 * (sd.magnify);
 
             if (sum_db > 0)
             {
