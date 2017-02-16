@@ -578,6 +578,8 @@ void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
 void set_SAM_PLL_parameters (void);
 void AGC_prep(void);
+float log10f_fast(float X);
+//float log10f_fast
 //uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS
