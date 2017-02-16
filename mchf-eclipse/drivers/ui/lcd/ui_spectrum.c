@@ -1349,7 +1349,7 @@ static void UiSpectrum_CalculateDBm()
 
     // FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
     // probably because of differing gains in the IIR filters used as decimation filters in the Zoom FFT
-    if(ts.sysclock > ts.dBm_count + 19)
+//    if(ts.sysclock > ts.dBm_count + 19)
     {
         if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
@@ -1529,7 +1529,7 @@ static void UiSpectrum_CalculateDBm()
             sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
             sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
         }
-        ts.dBm_count = ts.sysclock;				// reset timer
+//        ts.dBm_count = ts.sysclock;				// reset timer
         UiSpectrum_DisplayDbm();
     }
 }

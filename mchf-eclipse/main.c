@@ -430,7 +430,7 @@ void TransceiverStateInit(void)
     ts.AM_experiment = 1;					// for AM demodulation experiments, not for "public" use
     ts.s_meter = 0;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
-    ts.dBm_count = 0;						// timer start
+//    ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = 2;                // twinpeak_tested = 2 --> wait for system to warm up
