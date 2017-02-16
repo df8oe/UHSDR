@@ -1192,7 +1192,7 @@ typedef struct TransceiverState
 
     bool	AM_experiment;			// for AM demodulation experiments, not for "public" use
 //    bool	dBm_Hz_Test;			// for testing only
-    ulong	dBm_count;				// timer for calculating RX dBm
+//    ulong	dBm_count;				// timer for calculating RX dBm
     uchar 	display_dbm;			// display dbm or dbm/Hz or OFF
     uchar	s_meter;				// defines S-Meter style/configuration
 	uint8_t	meter_colour_up;
