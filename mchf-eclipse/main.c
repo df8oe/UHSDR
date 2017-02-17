@@ -219,6 +219,8 @@ void TransceiverStateInit(void)
     ts.txrx_mode 		= TRX_MODE_RX;				// start in RX
     ts.samp_rate		= I2S_AudioFreq_48k;			// set sampling rate
 
+	ts.audio_processor_input_mute_counter = SSB_RX_DELAY;
+	 
     ts.enc_one_mode 	= ENC_ONE_MODE_AUDIO_GAIN;
     ts.enc_two_mode 	= ENC_TWO_MODE_RF_GAIN;
     ts.enc_thr_mode		= ENC_THREE_MODE_RIT;
