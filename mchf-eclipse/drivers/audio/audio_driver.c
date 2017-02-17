@@ -1869,7 +1869,7 @@ void AGC_prep()
     0.100);                     // tau_hang_decay
  */
     tau_attack = 0.001;               // tau_attack
-    tau_decay = 0.250;                // tau_decay
+//    tau_decay = ts.agc_wdsp_tau_decay / 1000.0; // 0.250;                // tau_decay
     n_tau = 4;                        // n_tau
 
 //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
@@ -1890,7 +1890,7 @@ void AGC_prep()
     hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
 //    hang_thresh = 0.250;             // hang_thresh
 
-    tau_hang_decay = 0.100;          // tau_hang_decay
+//    tau_hang_decay = 0.100;          // tau_hang_decay
 
   //calculate internal parameters
 
@@ -1902,32 +1902,32 @@ void AGC_prep()
       break;
     case 1: //agcLONG
       hangtime = 2.000;
-      tau_decay = 2.000;
+      ts.agc_wdsp_tau_decay = 2000;
 //      hang_thresh = 1.0;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
 //      hang_thresh = 1.0;
-      tau_decay = 0.500;
+      ts.agc_wdsp_tau_decay = 500;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 3: //agcMED
 //      hang_thresh = 1.0;
       hangtime = 0.000;
-      tau_decay = 0.250;
+      ts.agc_wdsp_tau_decay = 250;
       break;
     case 4: //agcFAST
 //      hang_thresh = 1.0;
       hangtime = 0.000;
-      tau_decay = 0.050;
+      ts.agc_wdsp_tau_decay = 50;
       break;
     case 0: //agcFrank --> very long
 //      ts.agc_wdsp_hang_enable = 0;
 //      hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
-      tau_decay = 4.000; // time constant decay long
+      ts.agc_wdsp_tau_decay = 4000; // time constant decay long
       tau_fast_decay = 0.05;          // tau_fast_decay
       tau_fast_backaverage = 0.250; // time constant exponential averager
       break;
@@ -1939,7 +1939,8 @@ void AGC_prep()
 //  float32_t noise_offset = 10.0 * log10f(fhigh - rxa[channel].nbp0.p->flow)
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
-
+  tau_hang_decay = (float32_t)ts.agc_wdsp_tau_hang_decay / 1000.0;
+  tau_decay = (float32_t)ts.agc_wdsp_tau_decay / 1000.0;
   max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
   fixed_gain = max_gain / 10.0;
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
