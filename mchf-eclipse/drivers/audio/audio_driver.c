@@ -545,7 +545,7 @@ void AudioDriver_Init(void)
     //
     ads.decimation_rate	=	RX_DECIMATION_RATE_12KHZ;		// Decimation rate, when enabled
 
-    ads.fade_leveler = 0;
+//    ads.fade_leveler = 0;
 
     //
     //
@@ -1869,7 +1869,7 @@ void AGC_prep()
     0.100);                     // tau_hang_decay
  */
     tau_attack = 0.001;               // tau_attack
-    tau_decay = 0.250;                // tau_decay
+//    tau_decay = ts.agc_wdsp_tau_decay / 1000.0; // 0.250;                // tau_decay
     n_tau = 4;                        // n_tau
 
 //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
@@ -1890,7 +1890,7 @@ void AGC_prep()
     hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
 //    hang_thresh = 0.250;             // hang_thresh
 
-    tau_hang_decay = 0.100;          // tau_hang_decay
+//    tau_hang_decay = 0.100;          // tau_hang_decay
 
   //calculate internal parameters
 
@@ -1902,32 +1902,32 @@ void AGC_prep()
       break;
     case 1: //agcLONG
       hangtime = 2.000;
-      tau_decay = 2.000;
-      hang_thresh = 1.0;
+      ts.agc_wdsp_tau_decay = 2000;
+//      hang_thresh = 1.0;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
-      hang_thresh = 1.0;
-      tau_decay = 0.500;
+//      hang_thresh = 1.0;
+      ts.agc_wdsp_tau_decay = 500;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 3: //agcMED
-      hang_thresh = 1.0;
+//      hang_thresh = 1.0;
       hangtime = 0.000;
-      tau_decay = 0.250;
+      ts.agc_wdsp_tau_decay = 250;
       break;
     case 4: //agcFAST
-      hang_thresh = 1.0;
+//      hang_thresh = 1.0;
       hangtime = 0.000;
-      tau_decay = 0.050;
+      ts.agc_wdsp_tau_decay = 50;
       break;
     case 0: //agcFrank --> very long
 //      ts.agc_wdsp_hang_enable = 0;
-      hang_thresh = 0.300; // from which level on should hang be enabled
+//      hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
-      tau_decay = 4.000; // time constant decay long
+      ts.agc_wdsp_tau_decay = 4000; // time constant decay long
       tau_fast_decay = 0.05;          // tau_fast_decay
       tau_fast_backaverage = 0.250; // time constant exponential averager
       break;
@@ -1939,7 +1939,8 @@ void AGC_prep()
 //  float32_t noise_offset = 10.0 * log10f(fhigh - rxa[channel].nbp0.p->flow)
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
-
+  tau_hang_decay = (float32_t)ts.agc_wdsp_tau_hang_decay / 1000.0;
+  tau_decay = (float32_t)ts.agc_wdsp_tau_decay / 1000.0;
   max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
   fixed_gain = max_gain / 10.0;
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
@@ -2290,7 +2291,7 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
     agc_delay_inbuf %= ads.agc_delay_buflen;
     agc_delay_outbuf %= ads.agc_delay_buflen;
 
-    // I have decided to put the DC elimination AFTER the AGC detection
+    // DC elimination AFTER the AGC detection
     // because we need the carrier DC for the calmness and functioning of the AGC
     // DD4WH 2017-02-08
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
@@ -3729,13 +3730,27 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
             // Scale audio according to AGC setting, demodulation mode and required fixed levels and scaling
             float32_t scale_gain;
-            if(dmod_mode == DEMOD_AM)
+            if(dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
             {
-                scale_gain = ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING);
+                if(ts.agc_wdsp)
+                {
+                    scale_gain = post_agc_gain_scaling * 0.5; // ignore ts.max_rf_gain  --> has no meaning with WDSP AGC; and take into account AM scaling factor
+                }
+                else
+                {
+                    scale_gain = ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING);
+                }
             }
             else        // Not AM
             {
-                scale_gain = ads.post_agc_gain * post_agc_gain_scaling;
+                if(ts.agc_wdsp)
+                {
+                    scale_gain = post_agc_gain_scaling * 0.333; // ignore ts.max_rf_gain --> has no meaning with WDSP AGC
+                }
+                else
+                {
+                    scale_gain = ads.post_agc_gain * post_agc_gain_scaling;
+                }
             }
             arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 
