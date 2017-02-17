@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-16T09:37:03  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-17T18:26:47  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-02-16T09:37:03  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-17T18:26:47  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -39,10 +39,12 @@ generated at  2017-02-16T09:37:03  by "./ui_menu_structure_mdtable.py"
 | **AGC WDSP switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
 | **AGC WDSP Mode**             (                         MENU_AGC_WDSP_MODE) | Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC. | 
 | **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the most silent signal after the AGC action has taken place. Given in dB. | 
+| **AGC WDSP Decay**            (                    MENU_AGC_WDSP_TAU_DECAY) | Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds. | 
 | **AGC Threshold**             (                       MENU_AGC_WDSP_THRESH) | ´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold. | 
 | **AGC Hang enable**           (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: I enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
 | **AGC Hang time**             (                    MENU_AGC_WDSP_HANG_TIME) | Hang AGC: hang time is the time period over which the AGC gain is held constant when in AGC Hang mode. After this period the gain is increased fast. | 
 | **AGC Hang threshold**        (                  MENU_AGC_WDSP_HANG_THRESH) | ´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place. | 
+| **AGC Hang Decay**            (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
 | **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
 | **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
