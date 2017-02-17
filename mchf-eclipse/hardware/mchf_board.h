@@ -66,6 +66,7 @@
 #include "ui_si570.h"
 //
 #include "comp.h"
+
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"
@@ -1465,7 +1466,6 @@ inline bool is_splitmode()
 #define STM32_GetSignature()    ((*(uint16_t *) (STM32_DBGMCU_IDCODE)) & 0x0FFF)
 #define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
 #define STM32_UUID ((uint32_t *)STM32_UNIQUE_ADDRESS)
-
 
 
 #endif

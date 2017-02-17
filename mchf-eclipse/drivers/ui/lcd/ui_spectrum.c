@@ -848,7 +848,7 @@ void UiSpectrum_RedrawScopeDisplay()
             // AND flip data round ! = mirror values from right to left and vice versa (had to be done because of the new FFT lib) DDD4WH april 2016
             for(i = 0; i < (SPEC_BUFF_LEN); i++)
             {
-                sig = log10(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
+                sig = log10f_fast(sd.FFT_AVGData[i]) * sd.db_scale;		// take FFT data, do a log10 and multiply it to scale it to get desired dB/divistion
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
                 if (sig < min1) min1 = sig;
                 if(sig > 1)											// is the value greater than 1?
@@ -1018,7 +1018,7 @@ void UiSpectrum_RedrawWaterfall()
             //
             for(i = 0; i < (SPEC_BUFF_LEN); i++)
             {
-                sig = log10(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+                sig = log10f_fast(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
                 if (sig < min1) min1 = sig;
                 if(sig > 1)											// is the value greater than 1?
@@ -1478,12 +1478,12 @@ static void UiSpectrum_CalculateDBm()
             // for example: if we have 34 bins to sum up for sd.magnify == 1, we sum up 68 bins for sd.magnify == 2
 
 //            sum_db /= (float32_t)sd.magnify + 1;
-            cons = cons - 3.0 * (sd.magnify);
+//            cons = cons - 3.0 * (sd.magnify);
 
             if (sum_db > 0)
             {
-                sm.dbm = slope * log10 (sum_db) + cons;
-                sm.dbmhz = slope * log10 (sum_db) -  10 * log10 ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
+                sm.dbm = slope * log10f_fast (sum_db) + cons;
+                sm.dbmhz = slope * log10f_fast (sum_db) -  10 * log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
             }
             else
             {
