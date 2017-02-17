@@ -149,10 +149,11 @@ void ConfigStorage_CopySerial2RAMCache()
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_RAMCACHE;
 }
 
-void ConfigStorage_CopyRAMCache2Serial()
+uint16_t ConfigStorage_CopyRAMCache2Serial()
 {
-    SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_I2C;
+    return retval;
 }
 
 // copy data from flash storage to serial EEPROM

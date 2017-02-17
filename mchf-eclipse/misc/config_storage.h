@@ -26,7 +26,7 @@ void ConfigStorage_CopyFlash2Serial(void);
 void ConfigStorage_CopySerial2Flash(void);
 
 void ConfigStorage_CopySerial2RAMCache();
-void ConfigStorage_CopyRAMCache2Serial();
+uint16_t ConfigStorage_CopyRAMCache2Serial();
 
 
 #endif

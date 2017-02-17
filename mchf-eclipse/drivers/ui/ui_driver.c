@@ -1314,12 +1314,20 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
+                    uint16_t done = -1;
                     UiSpectrum_ClearDisplay();			// clear display under spectrum scope
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
                         UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+                    {
                         UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
-                    UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+                    }
+                    done = UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+
+                    if (done!=0)
+                    {
+                        UiLcdHy28_PrintText(60,160,"Saving settings failed       ",Red,Black,0);
+                    }
                     non_os_delay_multi(6);
                     ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
                     UiDriver_FButton_F1MenuExit();
