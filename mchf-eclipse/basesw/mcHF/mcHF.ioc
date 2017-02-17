@@ -1,19 +1,20 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_6
-ADC1.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,master,ClockPrescaler
+ADC1.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV8
+ADC1.ContinuousConvMode=ENABLE
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,master,ClockPrescaler,ContinuousConvMode
 ADC1.NbrOfConversionFlag=1
 ADC1.Rank-0\#ChannelRegularConversion=1
 ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_3CYCLES
 ADC1.master=1
 ADC2.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_3
-ADC2.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
+ADC2.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV8
 ADC2.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,ClockPrescaler
 ADC2.NbrOfConversionFlag=1
 ADC2.Rank-0\#ChannelRegularConversion=1
 ADC2.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_3CYCLES
 ADC3.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_2
-ADC3.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
+ADC3.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV8
 ADC3.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,ClockPrescaler
 ADC3.NbrOfConversionFlag=1
 ADC3.Rank-0\#ChannelRegularConversion=1
