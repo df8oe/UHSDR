@@ -1092,6 +1092,34 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_hang_thresh);
         break;
 
+    case MENU_AGC_WDSP_TAU_DECAY:      //
+       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_decay,
+                                           100,
+                                           5000,
+                                           1000,
+                                           100
+                                          );
+       if(var_change)
+       {
+           AGC_prep();
+       }
+       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_decay);
+       break;
+
+    case MENU_AGC_WDSP_TAU_HANG_DECAY:      //
+       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_hang_decay,
+                                           100,
+                                           5000,
+                                           1000,
+                                           100
+                                          );
+       if(var_change)
+       {
+           AGC_prep();
+       }
+       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_hang_decay);
+       break;
+
      case MENU_DBM_CALIBRATE:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ts.dbm_constant,
                                             -100,

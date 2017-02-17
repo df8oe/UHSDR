@@ -63,6 +63,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_AGC_WDSP_HANG,&ts.agc_wdsp_hang_enable, 0,0,1},
     { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_THRESH,&ts.agc_wdsp_thresh, 20,-20,120},
     { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SLOPE,&ts.agc_wdsp_slope, 70,0,200},
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY,&ts.agc_wdsp_tau_decay, 500,100,5000},
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_HANG_DECAY,&ts.agc_wdsp_tau_hang_decay, 500,100,5000},
     { ConfigEntry_UInt8, EEPROM_MIC_GAIN,&ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_LINE_GAIN,&ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX},
     { ConfigEntry_UInt32_16, EEPROM_SIDETONE_FREQ,&ts.sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX},
