@@ -36,15 +36,9 @@ float32_t m_AverageMagdbm = 0.0;
 float32_t m_AttackAvedbmhz = 0.0;
 float32_t m_DecayAvedbmhz = 0.0;
 float32_t m_AverageMagdbmhz = 0.0;
-// ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
-// Tau     ALPHA
-//  10ms   0.8647
-//  30ms   0.4866
-//  50ms   0.3297
-// 100ms   0.1812
-// 500ms   0.0391
-float32_t m_AttackAlpha = 0.8647;
-float32_t m_DecayAlpha  = 0.3297;
+// ALPHA = 1 - e^(-T/Tau)
+float32_t m_AttackAlpha = 0.5; //0.8647;
+float32_t m_DecayAlpha  = 0.05; //0.3297;
 
 
 static void     UiSpectrum_FrequencyBarText();
@@ -1340,16 +1334,11 @@ static void UiSpectrum_CalculateDBm()
     //###########################################################################################################################################
     //###########################################################################################################################################
     // dBm/Hz-display DD4WH June, 9th 2016
-    // this will be renewed every 200ms
     // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
     // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
     // so the additional processor load and additional RAM usage should be close to zero
     // this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
     //
-
-    // FIXME: since implementation of the Zoom FFT, the dBm display does only show correct values when in 1x magnify mode!
-    // probably because of differing gains in the IIR filters used as decimation filters in the Zoom FFT
-//    if(ts.sysclock > ts.dBm_count + 19)
     {
         if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
