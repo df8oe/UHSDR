@@ -287,6 +287,11 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
 
         while(count < length)
         {
+            if (length - count < page)
+            {
+                // make sure we do not read more than asked for! Buffer Overflow!
+                page = (length - count);
+            }
             SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
             retVal = MCHF_I2C_ReadBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
             count+=page;
