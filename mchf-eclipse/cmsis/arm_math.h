@@ -439,6 +439,8 @@ typedef double float64_t;
 #define __SIMD32_TYPE __unaligned int32_t
 #define CMSIS_UNUSED
 
+#elif defined ( _MSC_VER )
+#define __SIMD32_TYPE int32_t
 #else
 #error Unknown compiler
 #endif
