@@ -115,6 +115,10 @@ extern "C" {
 #define __INLINE         inline                                    /*!< inline keyword for COSMIC Compiler. Use -pc99 on compile line */
 #define __STATIC_INLINE  static inline
 
+#elif defined ( _MSC_VER )
+#define __INLINE         inline  
+#define __STATIC_INLINE  static inline
+
 #else
 #error Unknown compiler
 #endif
