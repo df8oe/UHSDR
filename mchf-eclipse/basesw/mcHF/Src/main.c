@@ -114,8 +114,8 @@ int main(void)
   MX_TIM8_Init();
   MX_USB_DEVICE_Init();
   MX_USB_HOST_Init();
-  MX_FATFS_Init();
-  MX_FSMC_Init();
+  // MX_FATFS_Init();
+  // MX_FSMC_Init();
   MX_TIM4_Init();
 
   /* USER CODE BEGIN 2 */

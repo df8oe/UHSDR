@@ -31,7 +31,7 @@
 //
 // Eeprom items
 #include "eeprom.h"
-
+#include "adc.h"
 // Transceiver state public structure
 __IO __attribute__ ((section (".ccm"))) TransceiverState ts;
 
@@ -281,7 +281,6 @@ static void mchf_board_dac0_init(void)
 }
 #endif
 
-#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_dac1_init
 //* Object              :
@@ -292,6 +291,11 @@ static void mchf_board_dac0_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_dac1_init(void)
 {
+    HAL_DAC_Start(&hdac,2);
+    HAL_DAC_SetValue(&hdac,2,DAC_ALIGN_8B_R,220);
+    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
+#if 0
+
     GPIO_InitTypeDef GPIO_InitStructure;
     DAC_InitTypeDef  DAC_InitStructure;
 
@@ -319,8 +323,9 @@ static void mchf_board_dac1_init(void)
 
     // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
     DAC_SetChannel2Data(DAC_Align_8b_R, 220);
-}
+#endif
 
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_adc1_init
 //* Object              : ADC1 used for power supply measurements
@@ -330,6 +335,8 @@ static void mchf_board_dac1_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc1_init(void)
 {
+    HAL_ADC_Start(&hadc1);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -371,6 +378,7 @@ static void mchf_board_adc1_init(void)
 
     // ADC2 regular Software Start Conv
     ADC_SoftwareStartConv(ADC1);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -382,6 +390,8 @@ static void mchf_board_adc1_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc2_init(void)
 {
+    HAL_ADC_Start(&hadc2);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -423,6 +433,7 @@ static void mchf_board_adc2_init(void)
 
     // ADC2 regular Software Start Conv
     ADC_SoftwareStartConv(ADC2);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -434,6 +445,8 @@ static void mchf_board_adc2_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc3_init(void)
 {
+    HAL_ADC_Start(&hadc3);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -475,8 +488,8 @@ static void mchf_board_adc3_init(void)
 
     // ADC3 regular Software Start Conv
     ADC_SoftwareStartConv(ADC3);
-}
 #endif
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_power_down_init
@@ -663,7 +676,6 @@ void mchf_board_init(void)
     UiRotaryEncoderTwoInit();
     UiRotaryEncoderThreeInit();
 
-#if 0
     // Init DACs
 //	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
     mchf_board_dac1_init();
@@ -675,7 +687,6 @@ void mchf_board_init(void)
 
     // Init watchdog - not working
     //mchf_board_watchdog_init();
-#endif
 
 }
 

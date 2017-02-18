@@ -62,8 +62,12 @@ defined in linker script */
 .word  _sbss
 /* end address for the .bss section. defined in linker script */
 .word  _ebss
+/* start address for the .ccm section. defined in linker script */
+.word  _sccram
+/* end address for the .ccm section. defined in linker script */
+.word  _eccram
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
-
+.word  _estack
 /**
  * @brief  This is the code that gets called when the processor first
  *          starts execution following a reset event. Only the absolutely
