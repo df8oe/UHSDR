@@ -946,7 +946,6 @@ static void UiDriver_PublicsInit()
     //abst.blink_skip 		= 0;
 
     // SWR meter init
-    swrm.skip 				= 0;
     swrm.p_curr				= 0;
     swrm.fwd_calc			= 0;
     swrm.rev_calc			= 0;

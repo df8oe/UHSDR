@@ -252,7 +252,7 @@ static void mchf_board_power_button_irq_init(void)
 // just remove #if 0 if function needs to be used. Reason is to include only used code
 // if possible
 
-static void mchf_board_dac0_init(void)
+static void mchf_board_dac1_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     DAC_InitTypeDef  DAC_InitStructure;

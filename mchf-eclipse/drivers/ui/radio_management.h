@@ -105,15 +105,13 @@ extern const BandInfo bandInfo[MAX_BAND_NUM];
 // SWR and RF power meter public
 typedef struct SWRMeter
 {
-    ulong   skip;
-
     float fwd_calc;         // forward power readings in A/D units
     float rev_calc;         // reverse power readings in A/D units
     float fwd_pwr;          // forward power in watts
     float rev_pwr;          // reverse power in watts
     float fwd_dbm;          // forward power in dBm
     float rev_dbm;          // reverse power in dBm
-    float vswr;         // vswr
+    float vswr;             // vswr
     float vswr_dampened;        // dampened VSWR reading
     bool  pwr_meter_disp;       // TRUE if numerical FWD/REV power metering (in milliwatts) is to be displayed
     bool  pwr_meter_was_disp;   // TRUE if numerical FWD/REV power metering WAS displayed (used to clear it)
