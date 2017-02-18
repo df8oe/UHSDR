@@ -289,10 +289,10 @@ static void mchf_board_dac0_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void mchf_board_dac1_init(void)
+static void mchf_board_dac2_init(void)
 {
-    HAL_DAC_Start(&hdac,2);
-    HAL_DAC_SetValue(&hdac,2,DAC_ALIGN_8B_R,220);
+    HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,220);
     // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
 #if 0
 
@@ -678,7 +678,7 @@ void mchf_board_init(void)
 
     // Init DACs
 //	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
-    mchf_board_dac1_init();
+    mchf_board_dac2_init();
 
     // Enable all ADCs
     mchf_board_adc1_init();

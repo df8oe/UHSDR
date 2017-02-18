@@ -1410,7 +1410,7 @@ inline void MchfBoard_SetPaBiasValue(uint16_t bias)
 {
     // Set DAC Channel 1 DHR12L register
     // DAC_SetChannel2Data(DAC_Align_8b_R,bias);
-    HAL_DAC_SetValue(NULL, DAC_CHANNEL_2, DAC_ALIGN_8B_R, bias);
+    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_8B_R, bias);
 
 }
 
