@@ -49,8 +49,20 @@
 /** @defgroup USBD_AUDIO_Exported_Defines
   * @{
   */ 
-#define AUDIO_OUT_EP                                  0x01
-#define USB_AUDIO_CONFIG_DESC_SIZ                     109
+///#define AUDIO_OUT_EP                                  0x01
+
+// #define USB_AUDIO_CONFIG_DESC_SIZ                     109
+
+#define AUDIO_BOTH
+#if  defined(AUDIO_BOTH)
+#define AUDIO_IN
+#define AUDIO_OUT
+#define USB_AUDIO_CONFIG_DESC_SIZ                        (9+101+73 + 8 + 66 + 9 +7)
+#elif defined(AUDIO_OUT)
+#define USB_AUDIO_CONFIG_DESC_SIZ                        (109 + 8)
+#endif
+
+
 #define AUDIO_INTERFACE_DESC_SIZE                     9
 #define USB_AUDIO_DESC_SIZ                            0x09
 #define AUDIO_STANDARD_ENDPOINT_DESC_SIZE             0x09
@@ -138,13 +150,15 @@ USBD_AUDIO_ControlTypeDef;
 
 typedef struct
 {
-  __IO uint32_t             alt_setting; 
+  __IO uint32_t             alt_setting[USBD_MAX_NUM_INTERFACES+1];
   uint8_t                   buffer[AUDIO_TOTAL_BUF_SIZE];
   AUDIO_OffsetTypeDef       offset;
   uint8_t                    rd_enable;  
   uint16_t                   rd_ptr;  
   uint16_t                   wr_ptr;  
-  USBD_AUDIO_ControlTypeDef control;   
+  USBD_AUDIO_ControlTypeDef control;
+  uint32_t SendFlag;
+  uint32_t PlayFlag;
 }
 USBD_AUDIO_HandleTypeDef; 
 
