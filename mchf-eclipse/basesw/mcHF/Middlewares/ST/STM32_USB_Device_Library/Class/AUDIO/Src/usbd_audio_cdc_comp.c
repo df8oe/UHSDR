@@ -62,10 +62,11 @@
   */ 
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbd_audio.h"
+#include "usbd_audio_cdc_comp.h"
 #include "usbd_cdc_if.h"
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
+#include "mchf_board.h"
 
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
@@ -188,6 +189,102 @@
                                        (uint8_t)((((frq * channels * 2)/1000) >> 8) & 0xFF)
 #define SAMPLE_FREQ(frq)               (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
 
+// local stuff
+#define USB_AUDIO_IN_NUM_BUF 8
+#define USB_AUDIO_IN_PKT_SIZE   (AUDIO_IN_PACKET/2)
+// size in samples not size in bytes
+#define USB_AUDIO_IN_BUF_SIZE (USB_AUDIO_IN_NUM_BUF * USB_AUDIO_IN_PKT_SIZE)
+
+
+
+
+static volatile int16_t in_buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
+static int16_t Silence[USB_AUDIO_IN_PKT_SIZE];
+static volatile uint16_t in_buffer_tail;
+static volatile uint16_t in_buffer_head;
+static volatile uint16_t in_buffer_overflow;
+
+
+void audio_in_put_buffer(int16_t sample)
+{
+    in_buffer[in_buffer_head] = sample;
+    in_buffer_head=  (in_buffer_head + 1) %USB_AUDIO_IN_BUF_SIZE;
+    // now test buffer full
+    if (in_buffer_head == in_buffer_tail)
+    {
+        // ok. We loose data now, should never ever happen, but so what
+        // will cause minor distortion if only a few bytes.
+        in_buffer_overflow++;
+    }
+}
+volatile int16_t* audio_in_buffer_next_pkt()
+{
+    uint16_t room;
+    uint16_t temp_head = in_buffer_head;
+    room = ((((temp_head < in_buffer_tail)?USB_AUDIO_IN_BUF_SIZE:0) + temp_head) - in_buffer_tail);
+    if (room >= USB_AUDIO_IN_PKT_SIZE)
+    {
+        return &in_buffer[in_buffer_tail];
+    }
+    else
+    {
+
+        return NULL;
+    }
+}
+void audio_in_buffer_pop_pkt(int16_t* ptr)
+{
+    if (ptr)
+    {
+        // there was data and pkt has been used
+        // free  the space
+        in_buffer_tail = (in_buffer_tail+USB_AUDIO_IN_PKT_SIZE)%USB_AUDIO_IN_BUF_SIZE;
+    }
+}
+
+static void audio_in_fill_ep_fifo(void *pdev)
+  {
+      uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
+      static uint16_t fill_buffer = (USB_AUDIO_IN_NUM_BUF/2) + 1;
+      if (fill_buffer == 0 && pkt)
+      {
+          USBD_LL_Transmit(pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
+          audio_in_buffer_pop_pkt((int16_t*)pkt);
+      }
+      else
+      {
+          if (fill_buffer == 0)
+          {
+              fill_buffer = USB_AUDIO_IN_NUM_BUF/2 + 1;
+          }
+          fill_buffer--;
+          // transmit something if we do not have enough in buffer
+          USBD_LL_Transmit(pdev,AUDIO_IN_EP, (uint8_t*)Silence, AUDIO_IN_PACKET);
+      }
+  }
+
+UsbAudioUnit usbUnits[UnitMax] =
+{
+    {
+        .cs  = AUDIO_CONTROL_VOLUME,
+        .cn  = AUDIO_OUT_STREAMING_CTRL,
+        .min = -31 * 0x100,
+        .max = 0 * 0x100,
+        .res = 0x100,
+        .cur = -16* 0x100,
+        .ptr = &ts.tx_gain[TX_AUDIO_DIG]
+    },
+    {
+        .cs  = AUDIO_CONTROL_VOLUME,
+        .cn  = 0x06,
+        .min = -31 * 0x100,
+        .max = 0 * 0x100,
+        .res = 0x100,
+        .cur = -16* 0x100,
+        .ptr = &ts.rx_gain[RX_AUDIO_DIG].value
+    }
+
+};
 
 
 static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev, 
@@ -1011,6 +1108,7 @@ static uint8_t  *USBD_AUDIO_GetCfgDesc (uint16_t *length)
   return USBD_AUDIO_CfgDesc;
 }
 
+
 /**
   * @brief  USBD_AUDIO_DataIn
   *         handle data IN Stage
@@ -1021,9 +1119,21 @@ static uint8_t  *USBD_AUDIO_GetCfgDesc (uint16_t *length)
 static uint8_t  USBD_AUDIO_DataIn (USBD_HandleTypeDef *pdev, 
                               uint8_t epnum)
 {
-
-  /* Only OUT data are processed */
-  return USBD_OK;
+    uint8_t retval = USBD_OK;
+#ifdef AUDIO_IN
+    if (epnum == (AUDIO_IN_EP & 0x7f))
+    {
+        USBD_LL_FlushEP(pdev,AUDIO_IN_EP); //very important!!!
+        audio_in_fill_ep_fifo(pdev);
+    }
+#endif
+    if (epnum == (CDC_IN_EP & 0x7f))
+    {
+        switchToCdc(pdev);
+        retval = USBD_CDC.DataIn(pdev,epnum);
+        switchToAudio(pdev);
+    }
+  return retval;
 }
 
 /**
@@ -1034,6 +1144,8 @@ static uint8_t  USBD_AUDIO_DataIn (USBD_HandleTypeDef *pdev,
   */
 static uint8_t  USBD_AUDIO_EP0_RxReady (USBD_HandleTypeDef *pdev)
 {
+  uint8_t retval = USBD_OK;
+
   USBD_AUDIO_HandleTypeDef   *haudio;
   haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
   
@@ -1047,8 +1159,15 @@ static uint8_t  USBD_AUDIO_EP0_RxReady (USBD_HandleTypeDef *pdev)
       haudio->control.len = 0;
     }
   } 
+  else
+  {
+      switchToCdc(pdev);
+      retval = USBD_CDC.EP0_RxReady(pdev);
+      switchToAudio(pdev);
+  }
 
-  return USBD_OK;
+
+  return retval;
 }
 /**
   * @brief  USBD_AUDIO_EP0_TxReady

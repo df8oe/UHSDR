@@ -50,7 +50,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbd_audio.h"
+#include "usbd_audio_cdc_comp.h"
 /* USER CODE BEGIN INCLUDE */
 /* USER CODE END INCLUDE */
 
