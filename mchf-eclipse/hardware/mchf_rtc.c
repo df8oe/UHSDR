@@ -109,7 +109,7 @@ bool MchfRtc_SetPpm(int16_t ppm)
     {
         uint32_t calm;
         uint32_t calp;
-        float64_t ppm2pulses = rint((float64_t)ts.rtc_calib * 1.048576); //  = (32 * 32768) / 1000.0000
+        float64_t ppm2pulses = rint((float64_t)ppm * 1.048576); //  = (32 * 32768) / 1000.0000
         if (ppm2pulses <= 0.0) // important, we must make sure to not set calp if 0ppm
         {
             calm = - ppm2pulses;
