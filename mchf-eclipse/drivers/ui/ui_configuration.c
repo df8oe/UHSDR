@@ -26,6 +26,7 @@
 // Virtual eeprom
 #include "eeprom.h"
 #include "mchf_hw_i2c.h"
+#include "mchf_rtc.h"
 
 // If more EEPROM variables are added, make sure that you add to this table - and the index to it in "eeprom.h"
 // and correct MAX_VAR_ADDR in mchf_board.h
@@ -175,6 +176,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_I2C2_SPEED,&ts.i2c_speed[1], I2C2_SPEED_DEFAULT,1,20},
     { ConfigEntry_UInt8, EEPROM_SAM_FADE_LEVELER,&ads.fade_leveler,1,0,1},
     { ConfigEntry_UInt8, EEPROM_LINEOUT_GAIN,&ts.lineout_gain,LINEOUT_GAIN_DEFAULT,LINEOUT_GAIN_MIN,LINEOUT_GAIN_MAX},
+    { ConfigEntry_Int16, EEPROM_RTC_CALIB,&ts.rtc_calib,RTC_CALIB_PPM_DEFAULT, RTC_CALIB_PPM_MIN, RTC_CALIB_PPM_MAX},
 
     UI_C_EEPROM_BAND_5W_PF( 0,80,m)
     UI_C_EEPROM_BAND_5W_PF(1,60,m)
@@ -273,6 +275,19 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr,
     }
 }
 
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_Int16(uint16_t addr, volatile int16_t* val_ptr, int16_t default_val, int16_t min_val, int16_t max_val )
+{
+    int16_t value;
+    if(ConfigStorage_ReadVariable(addr, (uint16_t*)&value) == 0)
+    {
+        *val_ptr = value;
+        if (*val_ptr < min_val || *val_ptr > max_val || ts.load_eeprom_defaults)
+        {
+            *val_ptr = default_val;
+        }
+    }
+}
+
 
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt32_16(uint16_t addr, volatile uint32_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
 {
@@ -320,6 +335,11 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val )
 {
     ConfigStorage_WriteVariable(addr, set_val);
+}
+
+static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Int16(uint16_t addr, int16_t set_val, int16_t default_val )
+{
+    ConfigStorage_WriteVariable(addr, (uint16_t)set_val);
 }
 
 static void __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val )
@@ -439,6 +459,10 @@ void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
     case ConfigEntry_Int32_16:
         UiReadSettingEEPROM_Int32_16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
         break;
+    case ConfigEntry_Int16:
+        UiReadSettingEEPROM_Int16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+        break;
+
 //  case ConfigEntry_Bool:
 //    UiReadSettingEEPROM_Bool(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
 //    break;
@@ -461,6 +485,9 @@ void UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
         break;
     case ConfigEntry_Int32_16:
         UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        break;
+    case ConfigEntry_Int16:
+        UiWriteSettingEEPROM_Int16(ced_ptr->id,*(int16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
         break;
 //  case ConfigEntry_Bool:
 //    UiWriteSettingEEPROM_Bool(ced_ptr->id,*(bool*)ced_ptr->val_ptr,ced_ptr->val_default);

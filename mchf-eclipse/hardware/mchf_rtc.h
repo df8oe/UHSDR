@@ -12,6 +12,12 @@
 #ifndef HARDWARE_MCHF_RTC_H_
 #define HARDWARE_MCHF_RTC_H_
 
+#define RTC_CALIB_PPM_MAX 488
+#define RTC_CALIB_PPM_MIN -487
+#define RTC_CALIB_PPM_DEFAULT 0
+
+
+
 bool MchfRtc_enabled();
 void MchfRtc_FullReset();
 void MchfRtc_Start();
