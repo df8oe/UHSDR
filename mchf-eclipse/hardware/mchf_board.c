@@ -778,6 +778,11 @@ void mchf_board_post_init(void)
 
     // Init keyer interface
     mchf_board_keyer_irq_init();
+
+    if (ts.rtc_present)
+    {
+        MchfRtc_SetPpm(ts.rtc_calib);
+    }
 }
 
 void mchf_reboot()

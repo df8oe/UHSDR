@@ -1261,6 +1261,7 @@ typedef struct TransceiverState
 
 
     bool rtc_present; // a supported rtc was found and is active
+    int16_t rtc_calib; // ppm variation value, unit 1 ppm
     bool vbat_present; // we detected a working vbat mod
 } TransceiverState;
 //

@@ -102,4 +102,30 @@ bool MchfRtc_enabled()
     return retval;
 }
 
-
+bool MchfRtc_SetPpm(int16_t ppm)
+{
+    bool retval = false;
+    if (ppm >= RTC_CALIB_PPM_MIN && ppm <= RTC_CALIB_PPM_MAX)
+    {
+        uint32_t calm;
+        uint32_t calp;
+        float64_t ppm2pulses = rint((float64_t)ts.rtc_calib * 1.048576); //  = (32 * 32768) / 1000.0000
+        if (ppm2pulses <= 0.0) // important, we must make sure to not set calp if 0ppm
+        {
+            calm = - ppm2pulses;
+            calp = 0;
+        }
+        else
+        {
+            calm = 512 - ppm2pulses;
+            if (calm > 512)
+            {
+                calm = 0;
+            }
+            calp = 1;
+        }
+        RTC_SmoothCalibConfig(RTC_SmoothCalibPeriod_32sec,calp,calm);
+        retval = true;
+    }
+    return retval;
+}

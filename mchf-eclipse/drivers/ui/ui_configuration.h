@@ -22,7 +22,8 @@ enum
     ConfigEntry_UInt8,
     ConfigEntry_UInt16,
     ConfigEntry_UInt32_16,
-    ConfigEntry_Int32_16
+    ConfigEntry_Int32_16,
+    ConfigEntry_Int16,
 //  ConfigEntry_Bool,
 };
 
@@ -540,8 +541,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DBM_CALIBRATE                379
 #define EEPROM_AGC_WDSP_TAU_DECAY           380
 #define EEPROM_AGC_WDSP_TAU_HANG_DECAY      381
+#define EEPROM_RTC_CALIB                    382
 
-#define EEPROM_FIRST_UNUSED 				382		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				383		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
