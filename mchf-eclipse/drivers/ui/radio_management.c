@@ -1291,3 +1291,30 @@ uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode
     }
     return  retval;
 }
+
+void RadioManagement_ToggleVfoAB()
+{
+    uint8_t vfo_new,vfo_active;
+
+    if(is_vfo_b())          // LSB on VFO mode byte set?
+    {
+        vfo_new = VFO_A;
+        vfo_active = VFO_B;
+        ts.vfo_mem_mode &= ~VFO_MEM_MODE_VFO_B; // yes, it's now VFO-B mode, so clear it, setting it to VFO A mode
+    }
+    else                            // LSB on VFO mode byte NOT set?
+    {
+        ts.vfo_mem_mode |= VFO_MEM_MODE_VFO_B;          // yes, it's now in VFO-A mode, so set it, setting it to VFO B mode
+        vfo_new = VFO_B;
+        vfo_active = VFO_A;
+    }
+    vfo[vfo_active].band[ts.band].dial_value = df.tune_old; //band_dial_value[ts.band];     // save "VFO B" settings
+    vfo[vfo_active].band[ts.band].decod_mode = ts.dmod_mode;    //band_decod_mode[ts.band];
+
+    df.tune_new = vfo[vfo_new].band[ts.band].dial_value;
+
+    if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
+    {
+        RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
+    }
+}
