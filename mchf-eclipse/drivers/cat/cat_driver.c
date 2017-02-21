@@ -466,24 +466,24 @@ static const yaesu_cmd_set_t ncmd[] =
 {
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x00 } }, /* lock on */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x80 } }, /* lock off */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x08 } }, /* ptt on */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x88 } }, /* ptt off */
-    { 0, { 0x00, 0x00, 0x00, 0x00, 0x01 } }, /* set freq */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main LSB */
-    { 1, { 0x01, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main USB */
-    { 1, { 0x02, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main CW */
-    { 1, { 0x03, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main CWR */
-    { 1, { 0x04, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main AM */
-    { 1, { 0x08, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main FM */
-    { 1, { 0x88, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main FM-N */
-    { 1, { 0x0a, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main DIG */
-    { 1, { 0x0c, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main PKT */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x08 } }, /* ptt on */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x88 } }, /* ptt off */
+    +{ 0, { 0x00, 0x00, 0x00, 0x00, 0x01 } }, /* set freq */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main LSB */
+    +{ 1, { 0x01, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main USB */
+    +{ 1, { 0x02, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main CW */
+    +{ 1, { 0x03, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main CWR */
+    +{ 1, { 0x04, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main AM */
+    +{ 1, { 0x08, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main FM */
+    +{ 1, { 0x88, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main FM-N */
+    +{ 1, { 0x0a, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main DIG */
+    +{ 1, { 0x0c, 0x00, 0x00, 0x00, 0x07 } }, /* mode set main PKT */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x05 } }, /* clar on */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x85 } }, /* clar off */
     { 0, { 0x00, 0x00, 0x00, 0x00, 0xf5 } }, /* set clar freq */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x81 } }, /* toggle vfo a/b */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x02 } }, /* split on */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x82 } }, /* split off */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x81 } }, /* toggle vfo a/b */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x02 } }, /* split on */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x82 } }, /* split off */
     { 1, { 0x09, 0x00, 0x00, 0x00, 0x09 } }, /* set RPT shift MINUS */
     { 1, { 0x49, 0x00, 0x00, 0x00, 0x09 } }, /* set RPT shift PLUS */
     { 1, { 0x89, 0x00, 0x00, 0x00, 0x09 } }, /* set RPT shift SIMPLEX */
@@ -494,16 +494,35 @@ static const yaesu_cmd_set_t ncmd[] =
     { 1, { 0x8a, 0x00, 0x00, 0x00, 0x0a } }, /* set CTCSS/DCS off */
     { 0, { 0x00, 0x00, 0x00, 0x00, 0x0b } }, /* set CTCSS tone */
     { 0, { 0x00, 0x00, 0x00, 0x00, 0x0c } }, /* set DCS code */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0xe7 } }, /* get RX status  */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0xf7 } }, /* get TX status  */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0xe7 } }, /* get RX status  */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0xf7 } }, /* get TX status  */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x03 } }, /* get FREQ and MODE status */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x00 } }, /* pwr wakeup sequence */
-    { 1, { 0x00, 0x00, 0x00, 0x00, 0x0f } }, /* pwr on */
+    +{ 1, { 0x00, 0x00, 0x00, 0x00, 0x0f } }, /* pwr on */
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x8f } }, /* pwr off */
-    { 0, { 0x00, 0x00, 0x00, 0x00, 0xbb } }, /* eeprom read */
+    ?{ 0, { 0x00, 0x00, 0x00, 0x00, 0xbb } }, /* eeprom read */
 }
 #endif
 
+typedef enum
+{
+    FT817_SET_FREQ      = 0x01,
+    FT817_GET_FREQ      = 0x03,
+    FT817_SPLIT_ON      = 0x02,
+    FT817_SPLIT_OFF     = 0x82,
+    FT817_PTT_ON        = 0x08,
+    FT817_PTT_OFF       = 0x88,
+    FT817_MODE_SET      = 0x07,
+    FT817_PWR_ON        = 0x0f,
+    FT817_TOGGLE_VFO    = 0x81,
+    FT817_A7            = 0xa7,
+    FT817_EEPROM_READ   = 0xbb,
+    FT817_EEPROM_WRITE  = 0xbc,
+    FT817_READ_TX_STATE = 0xbd,
+    FT817_READ_RX_STATE = 0xe7,
+    FT817_PTT_STATE     = 0xf7,
+    FT817_NOOP          = 0xff
+} Ft817_CatCmd_t;
 
 struct FT817 ft817;
 
@@ -813,9 +832,9 @@ void CatDriver_HandleProtocol()
             ft817.cmd_cntr++;
 #endif
 
-            switch(ft817.req[4])
+            switch((Ft817_CatCmd_t)ft817.req[4])
             {
-            case 1: /* SET FREQ */
+            case FT817_SET_FREQ:
             {
                 ulong f = 0;
                 ulong fdelta;
@@ -827,7 +846,9 @@ void CatDriver_HandleProtocol()
                     // translated RX frequency
                 }
                 else
+                {
                     fdelta = 0;
+                }
 
                 int fidx;
                 for (fidx = 0; fidx < 4; fidx++)
@@ -841,11 +862,13 @@ void CatDriver_HandleProtocol()
                 resp[0] = 0;
                 bc = 1;
                 if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)			// if running in sandbox store active band
+                {
                     ts.cat_band_index = ts.band;
+                }
             }
             break;
 
-            case 3: /* READ FREQ */
+            case FT817_GET_FREQ:
             {
                 ulong fdelta;
 
@@ -856,7 +879,9 @@ void CatDriver_HandleProtocol()
                     // translated RX frequency
                 }
                 else
+                {
                     fdelta = 0;
+                }
 
                 ulong f = (df.tune_new + fdelta  + (TUNE_MULT*10/2))/ (TUNE_MULT*10);
                 ulong fbcd = 0;
@@ -884,7 +909,7 @@ void CatDriver_HandleProtocol()
             case DEMOD_CW:
                 resp[4] = 2 + (ts.cw_lsb==true?1:0);
                 break;
-            // return 3 if CW in LSB aka CW-R
+                // return 3 if CW in LSB aka CW-R
             case DEMOD_SAM:
             case DEMOD_AM:
                 resp[4] = 4;
@@ -943,7 +968,7 @@ void CatDriver_HandleProtocol()
                 }
             }
             break;
-            case 8: /* PTT ON */
+            case FT817_PTT_ON:
                 resp[0] = cat_driver.cat_ptt_active?0xF0:0x00;
                 /* 0xF0 if PTT was already on */
 
@@ -955,21 +980,32 @@ void CatDriver_HandleProtocol()
 
                 bc = 1;
                 break;
-            case 15:
+            case FT817_PWR_ON:
                 resp[0] = 0;
                 bc = 1;
                 break;
-            case 129: // SWITCH VFO
+            case FT817_TOGGLE_VFO:
+                UiDriver_ToggleVfoAB();
                 resp[0] = 0;
                 bc = 1;
                 break;
-            case 136: /* 0x88 PTT OFF */
+            case FT817_SPLIT_ON:
+                UiDriver_SetSplitMode(true);
+                resp[0] = 0;
+                bc = 1;
+                break;
+            case FT817_SPLIT_OFF:
+                UiDriver_SetSplitMode(false);
+                resp[0] = 0;
+                bc = 1;
+                break;
+            case FT817_PTT_OFF:
                 resp[0] = cat_driver.cat_ptt_active?0x00:0xF0; /* 0xF0 if PTT was already off */
                 ts.ptt_req = false;
                 cat_driver.cat_ptt_active = false;
                 bc = 1;
                 break;
-            case 167: /* A7 */
+            case FT817_A7: /* A7 */
                 resp[0]=0xA7;
                 resp[1]=0x02;
                 resp[2]=0x00;
@@ -981,18 +1017,18 @@ void CatDriver_HandleProtocol()
                 resp[8]=0xBF;
                 bc = 9;
                 break;
-            case 187: /* BB */
+            case FT817_EEPROM_READ:
                 resp[0]=0x00;
                 resp[1]=0x00;
                 resp[2]=0x00;
                 resp[3]=0x00;
                 bc = 4;
                 break;
-            case 188: /* BC Write EEPROM */
+            case FT817_EEPROM_WRITE:
                 resp[0] = 0;
                 bc = 1;
                 break;
-            case 189: /* BD Read TX Status */
+            case FT817_READ_TX_STATE:
                 if(RadioManagement_IsTxDisabled()||(ts.txrx_mode != TRX_MODE_TX))
                 {
                     resp[0] = 0;
@@ -1003,19 +1039,19 @@ void CatDriver_HandleProtocol()
                 }
                 bc = 1;
                 break;
-            case 231: /* E7 */
+            case FT817_READ_RX_STATE: /* E7 */
                 resp[0] = (uint8_t)round(sm.s_count*0.5);	//S-Meter signal
                 bc = 1;
                 break;
-            case 247: /* F7 */
+            case FT817_PTT_STATE:
                 // FT-817 responds 0xFF if not TX and 0x00 if TX
                 // This differs from KA7OEI description but has been verified
                 // with the real thing.
                 resp[0]=ts.txrx_mode == TRX_MODE_TX?0x00:0xFF;
                 if(RadioManagement_IsTxDisabled())
-              	  {
-              	  resp[0] =0xFF;
-              	  }
+                {
+                    resp[0] =0xFF;
+                }
                 bc = 1;
                 break;
             case 255: /* FF sent out by HRD */

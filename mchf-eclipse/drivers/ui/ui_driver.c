@@ -1118,6 +1118,96 @@ void UiDriver_EncoderDisplaySimple(const uint8_t column, const uint8_t row, cons
     UiDriver_EncoderDisplay(column, row, label, encoder_active,
                            temp, color);
 }
+
+void UiDriver_DisplaySplitFreqLabels()
+{
+    // in SPLIT mode?
+    const char *split_rx, *split_tx;
+    if (!(is_vfo_b()))
+    {
+        split_rx = "(A) RX->";  // Place identifying marker for RX frequency
+        split_tx = "(B) TX->";  // Place identifying marker for TX frequency
+    }
+    else
+    {
+        split_rx = "(B) RX->";  // Place identifying marker for RX frequency
+        split_tx = "(A) TX->";  // Place identifying marker for TX frequency
+    }
+    UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
+                        POS_TUNE_FREQ_Y, split_rx, RX_Grey, Black,
+                        0);  // Place identifying marker for RX frequency
+    UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
+                        POS_TUNE_SPLIT_FREQ_Y_TX, split_tx, TX_Grey, Black,
+                        0);  // Place identifying marker for TX frequency
+}
+
+void UiDriver_CopyVfoAB()
+{
+    // not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
+        __IO VfoReg* vfo_store;
+        if(is_vfo_b())      // are we in VFO B mode?
+        {
+            vfo_store = &vfo[VFO_A].band[ts.band];
+        }
+        else        // we were in VFO A mode
+        {
+            vfo_store = &vfo[VFO_B].band[ts.band];
+        }
+        vfo_store->dial_value = df.tune_new;
+        vfo_store->decod_mode = ts.dmod_mode;                   // copy active VFO (A) settings into B
+
+        UiDriver_FrequencyUpdateLOandDisplay(true);
+
+        if (ts.menu_mode == false)
+        {
+            UiSpectrum_ClearDisplay();          // clear display under spectrum scope
+            UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
+            non_os_delay_multi(18);
+            UiSpectrum_InitSpectrumDisplay();           // init spectrum scope
+        }
+}
+
+void UiDriver_ToggleVfoAB()
+{
+
+    uint32_t old_dmod_mode = ts.dmod_mode;
+
+    RadioManagement_ToggleVfoAB();
+
+    UiDriver_FButton_F4ActiveVFO();
+
+    //
+    // do frequency/display update
+    if(is_splitmode())      // in SPLIT mode?
+    {
+        UiDriver_DisplaySplitFreqLabels();
+    }
+
+    // Change decode mode if need to
+    if(ts.dmod_mode != old_dmod_mode)
+    {
+        UiDriver_UpdateDisplayAfterParamChange();
+    }
+    else
+    {
+        UiDriver_FrequencyUpdateLOandDisplay(true);
+    }
+}
+
+void UiDriver_SetSplitMode(bool mode_active)
+{
+        if(mode_active)      // are we in SPLIT mode?
+        {
+            ts.vfo_mem_mode |= VFO_MEM_MODE_SPLIT;      // yes - turn on MSB to activate SPLIT
+        }
+        else // are we NOT in SPLIT mode?
+        {
+            ts.vfo_mem_mode &= ~VFO_MEM_MODE_SPLIT; // yes - turn off MSB to turn off SPLIT
+        }
+        UiDriver_CreateMainFreqDisplay();      //
+        UiDriver_FrequencyUpdateLOandDisplay(true);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessKeyboard
 //* Object              : process hardcoded buttons click and hold
@@ -1269,7 +1359,7 @@ static void UiDriver_ProcessKeyboard()
                 }
                 else	 			// not in menu mode - toggle between VFO/SPLIT and Memory mode
                 {
-                    ts.vfo_mem_flag = ! ts.vfo_mem_flag;
+                    RadioManagement_ToggleVfoMem();
                     UiDriver_FButton_F3MemSplit();
 
                 }
@@ -1277,24 +1367,7 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F4_PRESSED:	// Press-and-hold button F4
                 if(!ts.menu_mode)
                 {
-                    // not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
-                    __IO VfoReg* vfo_store;
-                    if(is_vfo_b())	 	// are we in VFO B mode?
-                    {
-                        vfo_store = &vfo[VFO_A].band[ts.band];
-                    }
-                    else	 	// we were in VFO A mode
-                    {
-                        vfo_store = &vfo[VFO_B].band[ts.band];
-                    }
-                    vfo_store->dial_value = df.tune_new;
-                    vfo_store->decod_mode = ts.dmod_mode;					// copy active VFO (A) settings into B
-                    UiDriver_FrequencyUpdateLOandDisplay(true);
-                    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
-                    UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
-                    non_os_delay_multi(18);
-
-                    UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
+                    UiDriver_CopyVfoAB();
                 }
                 break;
             case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
@@ -1560,31 +1633,6 @@ static void UiDriver_PressHoldStep(uchar is_up)
     UiDriver_ShowStep(df.selected_idx);		// update display
 }
 
-//
-
-void UiDriver_DisplaySplitFreqLabels()
-{
-    // in SPLIT mode?
-    const char *split_rx, *split_tx;
-    if (!(is_vfo_b()))
-    {
-        split_rx = "(A) RX->";  // Place identifying marker for RX frequency
-        split_tx = "(B) TX->";  // Place identifying marker for TX frequency
-    }
-    else
-    {
-        split_rx = "(B) RX->";  // Place identifying marker for RX frequency
-        split_tx = "(A) TX->";  // Place identifying marker for TX frequency
-    }
-    UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
-                        POS_TUNE_FREQ_Y, split_rx, RX_Grey, Black,
-                        0);  // Place identifying marker for RX frequency
-    UiLcdHy28_PrintText(POS_TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
-                        POS_TUNE_SPLIT_FREQ_Y_TX, split_tx, TX_Grey, Black,
-                        0);  // Place identifying marker for TX frequency
-}
-
-
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverProcessFunctionKeyClick
 //* Object              : process function buttons click
@@ -1679,16 +1727,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
         {
             if(!ts.vfo_mem_flag)	 		// update screen if in VFO (not memory) mode
             {
-                if(is_splitmode())	 	// are we in SPLIT mode?
-                {
-                    ts.vfo_mem_mode &= ~VFO_MEM_MODE_SPLIT;	// yes - turn off MSB to turn off SPLIT
-                }
-                else if(!(is_splitmode()))	 	// are we NOT in SPLIT mode?
-                {
-                    ts.vfo_mem_mode |= VFO_MEM_MODE_SPLIT;		// yes - turn on MSB to activate SPLIT
-                }
-                UiDriver_CreateMainFreqDisplay();      //
-                UiDriver_FrequencyUpdateLOandDisplay(true);
+                UiDriver_SetSplitMode(!is_splitmode());
             }
             else	 		// in memory mode
             {
@@ -1717,44 +1756,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
         }
         else	 	// NOT menu mode
         {
-            uint8_t vfo_new,vfo_active;
-
-            if(is_vfo_b())		 	// LSB on VFO mode byte set?
-            {
-                vfo_new = VFO_A;
-                vfo_active = VFO_B;
-                ts.vfo_mem_mode &= ~VFO_MEM_MODE_VFO_B;	// yes, it's now VFO-B mode, so clear it, setting it to VFO A mode
-            }
-            else	 						// LSB on VFO mode byte NOT set?
-            {
-                ts.vfo_mem_mode |= VFO_MEM_MODE_VFO_B;			// yes, it's now in VFO-A mode, so set it, setting it to VFO B mode
-                vfo_new = VFO_B;
-                vfo_active = VFO_A;
-            }
-            vfo[vfo_active].band[ts.band].dial_value = df.tune_old;	//band_dial_value[ts.band];		// save "VFO B" settings
-            vfo[vfo_active].band[ts.band].decod_mode = ts.dmod_mode;	//band_decod_mode[ts.band];
-
-            df.tune_new = vfo[vfo_new].band[ts.band].dial_value;
-
-            UiDriver_FButton_F4ActiveVFO();
-
-            //
-            // do frequency/display update
-            if(is_splitmode())	 	// in SPLIT mode?
-            {
-                UiDriver_DisplaySplitFreqLabels();
-            }
-
-            // Change decode mode if need to
-            if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
-            {
-                RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
-                UiDriver_UpdateDisplayAfterParamChange();
-            }
-            else
-            {
-                UiDriver_FrequencyUpdateLOandDisplay(true);
-            }
+            UiDriver_ToggleVfoAB();
         }
     }
 
