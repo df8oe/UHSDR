@@ -6147,12 +6147,12 @@ void UiDriver_MainHandler()
                 {
                     txt = "   ";
                 }
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
             }
             else
             {
                 txt = "   ";
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,Black,Black,0);
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,Black,Black,0);
 
             }
             break;

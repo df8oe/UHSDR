@@ -148,7 +148,7 @@ const ButtonMap bm_sets[2][18] =
 };
 
 // the inital button map is the default one
-const ButtonMap* bm = &bm_sets[0][0];
+const ButtonMap* bm = &bm_sets[1][0];
 
 static void mchf_board_keypad_init(const ButtonMap* bm)
 {

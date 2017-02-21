@@ -140,7 +140,8 @@ bool MchfRtc_SetPpm(int16_t ppm)
             }
             calp = 1;
         }
-        RTC_SmoothCalibConfig(RTC_SmoothCalibPeriod_32sec,calp,calm);
+        HAL_RTCEx_SetSmoothCalib(&hrtc,RTC_SMOOTHCALIB_PERIOD_32SEC,calp,calm);
+
         retval = true;
     }
     return retval;
