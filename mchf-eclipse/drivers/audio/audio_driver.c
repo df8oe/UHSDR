@@ -1880,7 +1880,7 @@ void AGC_prep()
     out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
     //12000.0; // target value of audio after AGC
 //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0);
+    var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
     tau_fast_backaverage = 0.250;    // tau_fast_backaverage
     tau_fast_decay = 0.005;          // tau_fast_decay
     pop_ratio = 5.0;                 // pop_ratio
@@ -2766,18 +2766,13 @@ static void AudioDriver_SnapCarrier (void)
     float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 
     //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
-    // FIXME: this is not the right calculation, at least it is a professional programmers blabla . . .
-    // In order for me to understand and to be sure it is the right calculation, I have got to change it, even if it is not a const anymore, sorry! DD4WH, 2016_08_30
     const int posbin = buff_len_int/4  - (buff_len_int * (AudioDriver_GetTranslateFreq()/(IQ_SAMPLE_RATE/8)))/16;
-    // maybe this would be right AND satisfy the professional programmers search for "elegance" ;-)
-
     const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
     const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
     const float32_t offset = centre_f - (width/2.0);
 
     //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
     //	= determine bandwith separately for lower and upper sideband
-
     switch(ts.dmod_mode)
     {
     case DEMOD_LSB:
