@@ -9,7 +9,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  License:		CC BY-NC-SA 3.0                                                **
+**  License:		GNU GPLv3                                                      **
 ************************************************************************************/
 
 #include "filters.h"

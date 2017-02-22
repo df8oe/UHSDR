@@ -9,7 +9,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
+**  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
@@ -74,7 +74,7 @@
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
 #define		ATTRIB_STRING2			"KA7OEI, DF8OE and others."
-#define		ATTRIB_STRING3			"Licensed under CC BY-NC-SA 3.0"
+#define		ATTRIB_STRING3			"Licensed under GNU GPLv3      "
 //
 // -----------------------------------------------------------------------------
 #define CODEC_I2C					I2C2

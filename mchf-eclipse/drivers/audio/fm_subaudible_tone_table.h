@@ -9,7 +9,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:	Created October 2015, KA7OEI                               **
-**  Licence:	CC BY-NC-SA 3.0                                                	   **
+**  Licence:	GNU GPLv3                                                      	   **
 ************************************************************************************/
 
 #ifndef __SUBAUDIBLE_TONE_TABLE

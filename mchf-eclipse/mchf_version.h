@@ -9,7 +9,7 @@
 **  File name: mchf_version.h                                                      **
 **  Description: this file carries version number                                  **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
+**  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
 #define 	TRX4M_VER_MAJOR			"1"

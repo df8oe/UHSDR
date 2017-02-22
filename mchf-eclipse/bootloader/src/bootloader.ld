@@ -8,7 +8,7 @@
 **  File name: bootloader.ld                                                       **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                            **
+**  Licence:		GNU GPLv3                                                  **
 ************************************************************************************/
 
 /* entry */

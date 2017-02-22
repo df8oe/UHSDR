@@ -9,7 +9,7 @@
 **  File name: system_bootloader.c                                                 **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                            **
+**  Licence:		GNU GPLv3                                                  **
 ************************************************************************************/
 
 #include "stm32f4xx.h"

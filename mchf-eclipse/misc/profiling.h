@@ -9,7 +9,7 @@
 **  File name:                                                                     **
 **  Description: Simple Timing Profiler                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:        CC BY-NC-SA 3.0                                                **
+**  Licence:        GNU GPLv3                                                      **
 ************************************************************************************/
 
 #ifndef __PROFILING_H

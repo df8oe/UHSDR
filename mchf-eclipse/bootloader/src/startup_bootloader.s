@@ -8,7 +8,7 @@
 **  File name: startup_bootloader.s                                                **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                            **
+**  Licence:		GNU GPLv3                                                  **
 ************************************************************************************/
 
   .syntax unified

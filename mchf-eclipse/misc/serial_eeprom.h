@@ -9,7 +9,7 @@
 **  File name:                                                                     **
 **  Description: Serial EEPROM Functions by DF8OE                                                                  **
 **  Last Modified:                                                                 **
-**  Licence:        CC BY-NC-SA 3.0                                                **
+**  Licence:        GNU GPLv3                                                      **
 ************************************************************************************/
 
 #ifndef __SERIAL_EEPROM_H

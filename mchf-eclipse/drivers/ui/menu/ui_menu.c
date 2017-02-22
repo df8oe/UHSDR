@@ -10,7 +10,7 @@
 **  File name:    	ui_menu.c                                                      **
 **  Description:    main user interface configuration/adjustment menu system       **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                                **
+**  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 // Common
 //

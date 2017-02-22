@@ -11,7 +11,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:      CC BY-NC-SA 3.0                                                **
+**  Licence:      GNU GPLv3                                                      **
 ************************************************************************************/
 #include "mchf_board.h"
 #include "mchf_types.h"

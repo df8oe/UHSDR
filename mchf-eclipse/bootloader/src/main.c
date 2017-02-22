@@ -9,7 +9,7 @@
 **  File name: main.c                                                              **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:		CC BY-NC-SA 3.0                                            **
+**  Licence:		GNU GPLv3                                                  **
 ************************************************************************************/
 
 #include "usbh_core.h"
