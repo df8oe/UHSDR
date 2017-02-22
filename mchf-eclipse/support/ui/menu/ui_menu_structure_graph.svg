@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9489 723,-9489 723,4 -4,4"/>
 <text text-anchor="middle" x="359.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v1.5.9 &#45; Menus Overview</text>
-<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;02&#45;22T18:41:22 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;02&#45;22T19:17:49 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3387.5"/>
@@ -2261,15 +2261,15 @@
 </g>
 <!-- INFO_LICENCE -->
 <g id="node189" class="node"><title>INFO_LICENCE</title>
-<polygon fill="none" stroke="black" points="428.5,-309.5 428.5,-355.5 624.5,-355.5 624.5,-309.5 428.5,-309.5"/>
+<polygon fill="none" stroke="black" points="466.5,-309.5 466.5,-355.5 586.5,-355.5 586.5,-309.5 466.5,-309.5"/>
 <text text-anchor="middle" x="526.5" y="-340.3" font-family="Times,serif" font-size="14.00">INFO_LICENCE</text>
-<polyline fill="none" stroke="black" points="428.5,-332.5 624.5,-332.5 "/>
-<text text-anchor="middle" x="526.5" y="-317.3" font-family="Times,serif" font-size="14.00">FW licensed under GNU GPLv3</text>
+<polyline fill="none" stroke="black" points="466.5,-332.5 586.5,-332.5 "/>
+<text text-anchor="middle" x="526.5" y="-317.3" font-family="Times,serif" font-size="14.00">FW licensed under</text>
 </g>
 <!-- MENU_SYSINFO&#45;&gt;INFO_LICENCE -->
 <g id="edge152" class="edge"><title>MENU_SYSINFO&#45;&gt;INFO_LICENCE</title>
-<path fill="none" stroke="black" d="M232.081,-717.348C242.526,-642.488 279.032,-409.023 334,-360.5 356.971,-340.223 387.876,-330.839 418.148,-327.16"/>
-<polygon fill="black" stroke="black" points="418.781,-330.614 428.378,-326.124 418.076,-323.65 418.781,-330.614"/>
+<path fill="none" stroke="black" d="M232.081,-717.348C242.526,-642.488 279.032,-409.023 334,-360.5 366.859,-331.494 415.953,-324.778 456.205,-325.168"/>
+<polygon fill="black" stroke="black" points="456.151,-328.667 466.233,-325.411 456.321,-321.669 456.151,-328.667"/>
 </g>
 <!-- MENU_DEBUG_TX_AUDIO -->
 <g id="node190" class="node"><title>MENU_DEBUG_TX_AUDIO</title>

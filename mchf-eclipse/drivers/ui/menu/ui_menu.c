@@ -575,25 +575,21 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_BUILD:
     {
         snprintf(out,32, "%s", TRX4M_BUILD_DAT+4);
-
     }
     break;
     case INFO_RTC:
     {
         snprintf(out,32, "%s", ts.rtc_present?"Yes":"N/A");
-
     }
     break;
     case INFO_VBAT:
     {
         snprintf(out,32, "%s", ts.vbat_present?"Yes":"N/A");
-
     }
     break;
     case INFO_LICENCE:
     {
-        outs="";
-
+        snprintf(out,32, "%s", TRX4M_LICENCE);
     }
     break;
     default:

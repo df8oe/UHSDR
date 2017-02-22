@@ -19,3 +19,4 @@
 // trailing characters are needed for identifying version and building date+time in binary
 #define		TRX4M_VERSION			"fwv-"TRX4M_VER_MAJOR"."TRX4M_VER_MINOR"."TRX4M_VER_RELEASE
 #define		TRX4M_BUILD_DAT			"fwt-"__DATE__ " - " __TIME__
+#define		TRX4M_LICENCE			"GNU GPLv3"

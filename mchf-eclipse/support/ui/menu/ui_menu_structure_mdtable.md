@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-22T18:41:23  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-02-22T18:41:23  by "./ui_menu_structure_mdtable.py"
+generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -234,7 +234,7 @@ generated at  2017-02-22T18:41:23  by "./ui_menu_structure_mdtable.py"
 | **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | VHF/UHF bands expansion PCB present?           | 
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
-| **FW licensed under GNU GPLv3** (                               INFO_LICENCE) | Display license of firmware                    | 
+| **FW licensed under **        (                               INFO_LICENCE) | Display license of firmware                    | 
 
 
 ## Debug/Exper. Settings (`MENU_DEBUG`)
