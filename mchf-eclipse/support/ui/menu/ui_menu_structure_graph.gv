@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-17T18:26:44  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-22T11:19:03  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.9 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-17T18:26:44  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-22T11:19:03  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -582,26 +582,6 @@
              shape = record
              ];
         
-        "CONFIG_80M_RX_IQ_GAIN_BAL" [
-             label = "CONFIG_80M_RX_IQ_GAIN_BAL | RX IQ Balance (80m)"
-             shape = record
-             ];
-        
-        "CONFIG_80M_RX_IQ_PHASE_BAL" [
-             label = "CONFIG_80M_RX_IQ_PHASE_BAL | RX IQ Phase   (80m)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_RX_IQ_GAIN_BAL" [
-             label = "CONFIG_10M_RX_IQ_GAIN_BAL | RX IQ Balance (10m)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_RX_IQ_PHASE_BAL" [
-             label = "CONFIG_10M_RX_IQ_PHASE_BAL | RX IQ Phase   (10m)"
-             shape = record
-             ];
-        
         "CONFIG_80M_TX_IQ_GAIN_BAL" [
              label = "CONFIG_80M_TX_IQ_GAIN_BAL | TX IQ Balance (80m)"
              shape = record
@@ -1064,14 +1044,6 @@
             MENU_CONF -> CONFIG_FWD_REV_SENSE_SWAP
             
             MENU_CONF -> CONFIG_IQ_AUTO_CORRECTION
-            
-            MENU_CONF -> CONFIG_80M_RX_IQ_GAIN_BAL
-            
-            MENU_CONF -> CONFIG_80M_RX_IQ_PHASE_BAL
-            
-            MENU_CONF -> CONFIG_10M_RX_IQ_GAIN_BAL
-            
-            MENU_CONF -> CONFIG_10M_RX_IQ_PHASE_BAL
             
             MENU_CONF -> CONFIG_80M_TX_IQ_GAIN_BAL
             

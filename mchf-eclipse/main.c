@@ -574,6 +574,15 @@ int main(void)
     ts.temp_nb = ts.nb_setting;
     ts.nb_setting = 0;
 
+	// disable rx iq settings in menu when autocorr is enabled
+	if(ts.iq_auto_correction == 1)
+	{
+	  ts.display_rx_iq = false;
+	}
+	else
+	{
+	  ts.display_rx_iq = true;
+	}
     profileTimedEventInit();
 
 

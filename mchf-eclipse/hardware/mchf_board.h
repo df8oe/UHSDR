@@ -1199,6 +1199,7 @@ typedef struct TransceiverState
 	uint8_t	meter_colour_up;
 	uint8_t	meter_colour_down;
 	uchar   iq_auto_correction;     // switch variable for automatic IQ correction
+	bool	display_rx_iq;
 	uint8_t twinpeaks_tested;
 	uint8_t agc_wdsp;
 	uint8_t agc_wdsp_mode;

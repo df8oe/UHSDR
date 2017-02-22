@@ -1588,7 +1588,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV)  //  display numbers for all but the highest value
         {
-            snprintf(options,32,"  %d",ts.tx_comp_level);
+            snprintf(options,32,"    %d",ts.tx_comp_level);
         }
         else                    // show "CUSTOM" (Stored Value) for highest value
         {
@@ -1800,11 +1800,18 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             switch(ts.iq_auto_correction) {
             case 0:
                 txt_ptr = " OFF";
+                ts.display_rx_iq = true;
                 break;
             case 1:
                 txt_ptr = "  ON";
+                ts.display_rx_iq = false;
                 break;
             }
+            if(var_change)
+            {
+          	  UiMenu_RenderMenu(MENU_RENDER_ONLY);
+			}
+
             break;
 
     case MENU_TCXO_C_F: // TCXO display C/F mode
