@@ -1043,6 +1043,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             // now set the AGC parameters
             ts.agc_wdsp_switch_mode = 1; // set flag to 1 for parameter change
             AGC_prep();
+            UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
         if(ts.txrx_mode == TRX_MODE_TX) // Orange if in TX mode
         {
@@ -3396,6 +3397,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %2u", rtc.RTC_Seconds);
         break;
     }
+
     case CONFIG_RTC_CALIB:
      {
          var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.rtc_calib,

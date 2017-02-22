@@ -1485,9 +1485,6 @@ static void UiSpectrum_CalculateDBm()
             // IIR filter with one element analog to 1st order RC filter
             // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
             // whether the signal is increasing (attack) or decreasing (decay)
-            // m_AttackAlpha = 0.8647; //  ALPHA = 1 - e^(-T/Tau), T = 0.02s (because dbm routine is called every 20ms!)
-            // Tau = 10ms = 0.01s attack time
-            // m_DecayAlpha = 0.0392; // 500ms decay time
             //
             m_AttackAvedbm = (1.0 - m_AttackAlpha) * m_AttackAvedbm + m_AttackAlpha * sm.dbm;
             m_DecayAvedbm = (1.0 - m_DecayAlpha) * m_DecayAvedbm + m_DecayAlpha * sm.dbm;

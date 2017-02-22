@@ -3745,6 +3745,8 @@ static void UiDriver_CheckEncoderTwo()
                 switch(ts.enc_two_mode)
                 {
                 case ENC_TWO_MODE_RF_GAIN:
+                    if(!ts.agc_wdsp)
+                    {
                     if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
                     {
                         // Convert to Audio Gain incr/decr
@@ -3754,6 +3756,12 @@ static void UiDriver_CheckEncoderTwo()
                     else	 		// it is FM - change squelch setting
                     {
                         ts.fm_sql_threshold = change_and_limit_uint(ts.fm_sql_threshold,pot_diff_step,0,FM_SQUELCH_MAX);
+                    }
+                    }
+                    else
+                    {
+                        ts.agc_wdsp_thresh = change_and_limit_int(ts.agc_wdsp_thresh,pot_diff_step,-20,120);
+                        AGC_prep();
                     }
                     UiDriver_DisplayRfGain(1);    // change on screen
                     break;
@@ -4413,9 +4421,12 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
     char	temp[5];
     const char* label = ts.dmod_mode==DEMOD_FM?"SQL":"RFG";
     int32_t value;
+    if(ts.agc_wdsp && ts.dmod_mode != DEMOD_FM)
+    {
+        label = "AGC";
+    }
 
-
-    if(ts.dmod_mode != DEMOD_FM)	 	// If not FM, use RF gain
+    if(ts.dmod_mode != DEMOD_FM && !ts.agc_wdsp)	 	// If not FM, use RF gain
     {
         if(encoder_active)
         {
@@ -4431,13 +4442,23 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
         }
         value = ts.rf_gain;
     }
-    else	 						// it is FM, display squelch instead
+    else if(!ts.agc_wdsp)	 						// it is FM, display squelch instead
     {
         value = ts.fm_sql_threshold;
     }
+    else // it is WDSP AGC and NOT FM
+    {
+        value = ts.agc_wdsp_thresh;
+    }
 
-    snprintf(temp,5," %02ld",value);
-
+    if(!ts.agc_wdsp)
+    {
+        snprintf(temp,5," %02ld",value);
+    }
+    else
+    {
+        snprintf(temp,5," %02ld",value);
+    }
     UiDriver_EncoderDisplay(0,1,label, encoder_active, temp, color);
 
 }
