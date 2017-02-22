@@ -3768,11 +3768,21 @@ static void UiDriver_CheckEncoderTwo()
 
                     // Update DSP/NB setting
                 case ENC_TWO_MODE_SIG_PROC:
-                    if(is_dsp_nb())	 	// is it in noise blanker mode?
+                    if(ts.agc_wdsp == 0)
                     {
-                        ts.nb_setting = (uchar)change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
+                        if(is_dsp_nb())	 	// is it in noise blanker mode?
+                        {
+                            ts.nb_setting = (uchar)change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
+                        }
+                        // Signal processor setting
                     }
-                    // Signal processor setting
+                    else
+                    {
+                        //                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
+                        ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
+                        ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
+                        AGC_prep();
+                    }
                     UiDriver_DisplayNoiseBlanker(1);
                     break;
                 case ENC_TWO_MODE_NR:
@@ -4475,9 +4485,12 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
     uint32_t 	color = encoder_active?White:Grey;
     char	temp[5];
     const char *label, *val_txt;
-    int32_t value;
+    int32_t value = 0;
     bool is_active = false;
     label = "NB";
+//    label = "DEC";
+    if(ts.agc_wdsp == 0)
+    {
 
     //
     // Noise blanker settings display
@@ -4510,7 +4523,38 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
         val_txt = temp;
     }
 
-    UiDriver_EncoderDisplay(1,1,label, is_active & encoder_active, val_txt, color);
+    }
+    else
+    {
+    switch(ts.agc_wdsp_mode)
+    {
+        case 0:
+            label = "vLO";
+        break;
+        case 1:
+            label = "LON";
+        break;
+        case 2:
+            label = "SLO";
+        break;
+        case 3:
+            label = "MED";
+        break;
+        case 4:
+            label = "FAS";
+        break;
+        case 5:
+            label = "OFF";
+        break;
+        default:
+            label = "???";
+        break;
+    }
+    value = (int32_t)(ts.agc_wdsp_tau_decay / 10.0);
+    snprintf(temp,5,"%3ld",value);
+    val_txt = temp;
+    }
+    UiDriver_EncoderDisplay(1,1,label, encoder_active, val_txt, color);
 }
 
 #define NOTCH_DELTA_Y (2*ENC_ROW_H)

@@ -1893,7 +1893,6 @@ void AGC_prep()
 //    tau_hang_decay = 0.100;          // tau_hang_decay
 
   //calculate internal parameters
-
     if(ts.agc_wdsp_switch_mode)
     {
     switch (ts.agc_wdsp_mode)
@@ -1914,12 +1913,12 @@ void AGC_prep()
       break;
     case 3: //agcMED
 //      hang_thresh = 1.0;
-      hangtime = 0.000;
+      hangtime = 0.250;
       ts.agc_wdsp_tau_decay = 250;
       break;
     case 4: //agcFAST
 //      hang_thresh = 1.0;
-      hangtime = 0.000;
+      hangtime = 0.100;
       ts.agc_wdsp_tau_decay = 50;
       break;
     case 0: //agcFrank --> very long
