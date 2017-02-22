@@ -3343,6 +3343,183 @@ void set_SAM_PLL_parameters()
         adb.onem_mtauI = (1.0 - adb.mtauI);
 }
 
+// help functions for Spectral Noise Blanker
+// aus lmath.c !!!
+// WDSP library, Warren Pratt
+
+//const int nnn = 4;
+
+#define nnn 4
+float32_t   zzz[(nnn-1) * 4];
+
+void dR (int n, float32_t* r, float32_t* y)
+{
+  int i, j, k;
+    float32_t alpha, beta, gamma;
+  float32_t* z; // = (double *) malloc0 ((n - 1) * sizeof (double));
+    y[0] = -r[1];
+    alpha = -r[1];
+    beta = 1.0;
+    for (k = 0; k < n - 1; k++)
+    {
+        beta *= 1.0 - alpha * alpha;
+        gamma = 0.0;
+        for (i = k + 1, j = 0; i > 0; i--, j++)
+            gamma += r[i] * y[j];
+        alpha = - (r[k + 2] + gamma) / beta;
+        for (i = 0, j = k; i <= k; i++, j--)
+            z[i] = y[i] + alpha * y[j];
+    memcpy (y, z, (k + 1) * sizeof (float32_t));
+        y[k + 1] = alpha;
+    }
+}
+
+void trI (
+    int n,
+    float32_t* r,
+    float32_t* B
+    )
+{
+    int i, j, ni, nj;
+    float32_t gamma, t, scale, b;
+  float32_t* y;// = (double *) malloc0 ((n - 1) * sizeof (double));
+  float32_t* v;// = (double *) malloc0 ((n - 1) * sizeof (double));
+    scale = 1.0 / r[0];
+    for (i = 0; i < n; i++)
+        r[i] *= scale;
+    dR(n - 1, r, y);
+
+    t = 0.0;
+    for (i = 0; i < n - 1; i++)
+        t += r[i + 1] * y[i];
+    gamma = 1.0 / (1.0 + t);
+    for (i = 0, j = n - 2; i < n - 1; i++, j--)
+        v[i] = gamma * y[j];
+    B[0] = gamma;
+    for (i = 1, j = n - 2; i < n; i++, j--)
+        B[i] = v[j];
+    for (i = 1; i <= (n - 1) / 2; i++)
+        for (j = i; j < n - i; j++)
+            B[i * n + j] = B[(i - 1) * n + (j - 1)] + (v[n - j - 1] * v[n - i - 1] - v[i - 1] * v[j - 1]) / gamma;
+    for (i = 0; i <= (n - 1)/2; i++)
+        for (j = i; j < n - i; j++)
+        {
+            b = B[i * n + j] *= scale;
+            B[j * n + i] = b;
+            ni = n - i - 1;
+            nj = n - j - 1;
+            B[ni * n + nj] = b;
+            B[nj * n + ni] = b;
+        }
+}
+
+
+void asolve(int xsize, int asize, float32_t* x, float32_t* a)
+{
+    int i, j, k;
+    float32_t beta, alpha, t;
+  float32_t* r;// = (double *) malloc0 ((asize + 1) * sizeof (double));
+  float32_t* z;// = (double *) malloc0 ((asize + 1) * sizeof (double));
+    for (i = 0; i <= asize; i++)
+    {
+    for (j = 0; j < xsize; j++)
+      r[i] += x[j] * x[j - i];
+    }
+    z[0] = 1.0;
+    beta = r[0];
+    for (k = 0; k < asize; k++)
+    {
+        alpha = 0.0;
+        for (j = 0; j <= k; j++)
+            alpha -= z[j] * r[k + 1 - j];
+        alpha /= beta;
+        for (i = 0; i <= (k + 1) / 2; i++)
+        {
+            t = z[k + 1 - i] + alpha * z[i];
+            z[i] = z[i] + alpha * z[k + 1 - i];
+            z[k + 1 - i] = t;
+        }
+        beta *= 1.0 - alpha * alpha;
+    }
+    for (i = 0; i < asize; i++)
+  {
+        a[i] = - z[i + 1];
+    if (a[i] != a[i]) a[i] = 0.0;
+  }
+}
+
+void median (int n, float32_t* a, float32_t* med)
+{
+    int S0, S1, i, j, m, k;
+    float32_t x, t;
+    S0 = 0;
+    S1 = n - 1;
+    k = n / 2;
+    while (S1 > S0 + 1)
+    {
+        m = (S0 + S1) / 2;
+        t = a[m];
+        a[m] = a[S0 + 1];
+        a[S0 + 1] = t;
+        if (a[S0] > a[S1])
+        {
+            t = a[S0];
+            a[S0] = a[S1];
+            a[S1] = t;
+        }
+        if (a[S0 + 1] > a[S1])
+        {
+            t = a[S0 + 1];
+            a[S0 + 1] = a[S1];
+            a[S1] = t;
+        }
+        if (a[S0] > a[S0 + 1])
+        {
+            t = a[S0];
+            a[S0] = a[S0 + 1];
+            a[S0 + 1] = t;
+        }
+        i = S0 + 1;
+        j = S1;
+        x = a[S0 + 1];
+    do i++; while (a[i] < x);
+        do j--; while (a[j] > x);
+        while (j >= i)
+        {
+            t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+      do i++; while (a[i] < x);
+            do j--; while (a[j] > x);
+        }
+        a[S0 + 1] = a[j];
+        a[j] = x;
+        if (j >= k) S1 = j - 1;
+        if (j <= k) S0 = i;
+    }
+    if (S1 == S0 + 1 && a[S1] < a[S0])
+    {
+        t = a[S0];
+        a[S0] = a[S1];
+        a[S1] = t;
+    }
+  *med = a[k];
+}
+
+
+
+void exec_SNB(uint16_t blockSize)
+{
+    if(0)
+    {
+
+
+
+    }
+}
+
+
+
 
 
 
@@ -3693,6 +3870,19 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
                 }
             }
+
+
+            //
+            // This is the right place for the SNB
+            // Spectral Noise Blanker
+            //
+            // we try to implement the SNB from the WDSP lib
+            // by Warren Pratt
+            //
+            // I have no idea whether it will be possible to implement it, because of processor load and very complex implementation issues
+            // DD4WH Feb, 22nd, 2017
+
+            exec_SNB(blockSizeDecim);
 
             // now process the samples and perform the receiver AGC function
             if(ts.agc_wdsp)
