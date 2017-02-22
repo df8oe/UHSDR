@@ -590,6 +590,12 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
     }
     break;
+    case INFO_LICENCE:
+    {
+        outs="";
+
+    }
+    break;
     default:
         outs = "NO INFO";
     }

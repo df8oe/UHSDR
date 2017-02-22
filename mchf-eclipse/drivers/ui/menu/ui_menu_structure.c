@@ -336,6 +336,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_VHFUHFMOD, NULL,"V/UHF Mod", UiMenuDesc("VHF/UHF bands expansion PCB present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_VBAT, NULL,"Backup RAM Battery", UiMenuDesc("Battery Support for Backup RAM present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
+    { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW licensed under GNU GPLv3", UiMenuDesc("Display license of firmware") },
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

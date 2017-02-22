@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-02-22T17:49:46  by "./ui_menu_structure_graph.py"
+#  generated at  2017-02-22T18:41:22  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v1.5.9 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-22T17:49:46  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v1.5.9 - Menus Overview\ngenerated at  2017-02-22T18:41:22  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -962,6 +962,11 @@
              shape = record
              ];
         
+        "INFO_LICENCE" [
+             label = "INFO_LICENCE | FW licensed under GNU GPLv3"
+             shape = record
+             ];
+        
         "MENU_DEBUG_TX_AUDIO" [
              label = "MENU_DEBUG_TX_AUDIO | TX Audio via USB"
              shape = record
@@ -1334,6 +1339,8 @@
             MENU_SYSINFO -> INFO_VBAT
             
             MENU_SYSINFO -> INFO_RTC
+            
+            MENU_SYSINFO -> INFO_LICENCE
             
         }  ## END subgraph MENU_DEBUG
     
