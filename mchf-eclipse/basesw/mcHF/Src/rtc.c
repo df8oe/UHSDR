@@ -64,10 +64,12 @@ void MX_RTC_Init(void)
   hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+#if 0
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
   {
     Error_Handler();
   }
+#endif
 
 }
 
