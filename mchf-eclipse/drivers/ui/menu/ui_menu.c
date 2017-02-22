@@ -1156,6 +1156,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
             case 1:       //
                 txt_ptr = "    WDSP AGC";        //
+                if(ts.s_meter == 0) // old school S-Meter does not work with WDSP AGC, so we switch to dBm S-Meter in that case!
+                    {
+                        ts.s_meter = 1;
+                    }
                 break;
             default:
                 txt_ptr = "Standard AGC";        //
