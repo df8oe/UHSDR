@@ -1811,10 +1811,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 ts.display_rx_iq = false;
                 break;
             }
-            if(var_change)
-            {
-          	  UiMenu_RenderMenu(MENU_RENDER_ONLY);
-			}
+//            if(var_change) temporarily disabled because function does not provide dynamical hiding recently
+//            {
+//          	  UiMenu_RenderMenu(MENU_RENDER_ONLY);
+//			}
 
             break;
 
