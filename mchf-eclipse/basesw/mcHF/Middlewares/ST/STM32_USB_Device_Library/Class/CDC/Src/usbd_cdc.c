@@ -685,6 +685,9 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   * @param  epnum: endpoint number
   * @retval status
   */
+
+// FIXME: Internal external ref
+extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {      
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
@@ -696,7 +699,8 @@ static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
   NAKed till the end of the application Xfer */
   if(pdev->pClassData != NULL)
   {
-    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Receive(hcdc->RxBuffer, &hcdc->RxLength);
+    //((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Receive(hcdc->RxBuffer, &hcdc->RxLength);
+      ((USBD_CDC_ItfTypeDef *)&USBD_Interface_fops_FS)->Receive(hcdc->RxBuffer, &hcdc->RxLength);
 
     return USBD_OK;
   }

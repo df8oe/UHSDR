@@ -168,12 +168,12 @@
 #define CDC_DATA_IF                 0x01
 #define CDC_TOTAL_IF_NUM            0x02
 
-#define AUDIO_OUT_EP                    0x02
-#define AUDIO_IN_EP                     0x83
-#define AUDIO_CTRL_IF                   0x02
-#define AUDIO_OUT_IF                    0x03
+#define AUDIO_OUT_EP                0x02
+#define AUDIO_IN_EP                 0x83
+#define AUDIO_CTRL_IF               0x02
+#define AUDIO_OUT_IF                0x03
 #define AUDIO_IN_IF                 0x04
-#define AUDIO_TOTAL_IF_NUM              0x03
+#define AUDIO_TOTAL_IF_NUM          0x03
 
 #define USBD_AUDIO_OUT_CHANNELS 2
 
@@ -896,6 +896,9 @@ static void* audioClassData;
 static void* cdcUserData;
 static void* audioUserData;
 
+// FIXME: Use Include
+extern USBD_AUDIO_ItfTypeDef  USBD_AUDIO_fops_FS;
+
 static inline void switchToCdc(USBD_HandleTypeDef *pdev)
 {
     pdev->pClassData = cdcClassData;
@@ -918,6 +921,13 @@ static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev,
                  AUDIO_OUT_EP,
                  USBD_EP_TYPE_ISOC,
                  AUDIO_OUT_PACKET);
+
+  /* Open EP IN */
+  USBD_LL_OpenEP(pdev,
+              AUDIO_IN_EP,
+              USBD_EP_TYPE_ISOC,
+              AUDIO_IN_PACKET);
+
   
   /* Allocate Audio structure */
   pdev->pClassData = USBD_malloc(sizeof (USBD_AUDIO_HandleTypeDef));
@@ -950,10 +960,12 @@ static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev,
   // return USBD_OK;
 
   audioClassData = pdev->pClassData;
-  audioUserData = pdev->pUserData;
+  audioUserData = &USBD_AUDIO_fops_FS;
+  USBD_CDC_RegisterInterface(pdev,&USBD_Interface_fops_FS);
   uint8_t retval = USBD_CDC.Init(pdev,cfgidx);
   cdcClassData = pdev->pClassData;
-  cdcUserData = pdev->pUserData;
+  cdcUserData = &USBD_Interface_fops_FS;
+  switchToAudio(pdev);
   return retval;
 }
 
@@ -1003,7 +1015,7 @@ static uint8_t  USBD_AUDIO_Setup (USBD_HandleTypeDef *pdev,
   uint16_t len;
   uint8_t *pbuf;
   uint8_t ret = USBD_OK;
-  haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
+  haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData;
   
   switch (req->bmRequest & USB_REQ_TYPE_MASK)
   {
@@ -1064,7 +1076,6 @@ static uint8_t  USBD_AUDIO_Setup (USBD_HandleTypeDef *pdev,
         haudio->alt_setting[req->wIndex] = (uint8_t)(req->wValue);
 
 #ifdef AUDIO_IN
-// interface 2 is AUDIO_IN
                 if (haudio->alt_setting[AUDIO_IN_IF] == 1)
                 {
                     if (!haudio->SendFlag)
@@ -1147,14 +1158,15 @@ static uint8_t  USBD_AUDIO_EP0_RxReady (USBD_HandleTypeDef *pdev)
   uint8_t retval = USBD_OK;
 
   USBD_AUDIO_HandleTypeDef   *haudio;
-  haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
+  haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData; //pdev->pClassData;
   
   if (haudio->control.cmd == AUDIO_REQ_SET_CUR)
   {/* In this driver, to simplify code, only SET_CUR request is managed */
 
     if (haudio->control.unit == AUDIO_OUT_STREAMING_CTRL)
     {
-     ((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->MuteCtl(haudio->control.data[0]);     
+     // ((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->MuteCtl(haudio->control.data[0]);
+        ((USBD_AUDIO_ItfTypeDef *)audioUserData)->MuteCtl(haudio->control.data[0]);
       haudio->control.cmd = 0;
       haudio->control.len = 0;
     }
@@ -1188,7 +1200,19 @@ static uint8_t  USBD_AUDIO_EP0_TxReady (USBD_HandleTypeDef *pdev)
   */
 static uint8_t  USBD_AUDIO_SOF (USBD_HandleTypeDef *pdev)
 {
-  return USBD_OK;
+    USBD_AUDIO_HandleTypeDef* haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData; //pdev->pClassData;
+
+#ifdef AUDIO_IN
+    if (haudio->SendFlag == 1)
+    {
+        USBD_LL_FlushEP(pdev,AUDIO_IN_EP);//very important!!!
+        audio_in_fill_ep_fifo(pdev);
+        haudio->SendFlag = 2;
+    }
+#endif
+
+
+   return USBD_CDC.SOF != NULL?USBD_CDC.SOF(pdev):USBD_OK;
 }
 
 /**
@@ -1201,7 +1225,7 @@ void  USBD_AUDIO_Sync (USBD_HandleTypeDef *pdev, AUDIO_OffsetTypeDef offset)
 {
   int8_t shift = 0;
   USBD_AUDIO_HandleTypeDef   *haudio;
-  haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
+  haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData;  //pdev->pClassData;
   
   haudio->offset =  offset; 
   
@@ -1285,7 +1309,7 @@ static uint8_t  USBD_AUDIO_DataOut (USBD_HandleTypeDef *pdev,
                               uint8_t epnum)
 {
   USBD_AUDIO_HandleTypeDef   *haudio;
-  haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
+  haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData; // pdev->pClassData;
   
   if (epnum == AUDIO_OUT_EP)
   {
@@ -1321,6 +1345,12 @@ static uint8_t  USBD_AUDIO_DataOut (USBD_HandleTypeDef *pdev,
                            AUDIO_OUT_PACKET);  
       
   }
+  else
+  {
+      switchToCdc(pdev);
+      USBD_CDC.DataOut(pdev,epnum);
+      switchToAudio(pdev);
+  }
   
   return USBD_OK;
 }
@@ -1354,7 +1384,7 @@ static void AUDIO_REQ_GetCurrent(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef 
 static void AUDIO_REQ_SetCurrent(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 { 
   USBD_AUDIO_HandleTypeDef   *haudio;
-  haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
+  haudio = (USBD_AUDIO_HandleTypeDef*) audioClassData; // pdev->pClassData;
   
   if (req->wLength)
   {
