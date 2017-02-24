@@ -3882,7 +3882,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // I have no idea whether it will be possible to implement it, because of processor load and very complex implementation issues
             // DD4WH Feb, 22nd, 2017
 
-            exec_SNB(blockSizeDecim);
+//            exec_SNB(blockSizeDecim);
 
             // now process the samples and perform the receiver AGC function
             if(ts.agc_wdsp)
