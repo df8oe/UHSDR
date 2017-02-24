@@ -3342,7 +3342,7 @@ void set_SAM_PLL_parameters()
         adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
         adb.onem_mtauI = (1.0 - adb.mtauI);
 }
-
+/*
 // help functions for Spectral Noise Blanker
 // aus lmath.c !!!
 // WDSP library, Warren Pratt
@@ -3518,7 +3518,7 @@ void exec_SNB(uint16_t blockSize)
     }
 }
 
-
+*/
 
 
 
