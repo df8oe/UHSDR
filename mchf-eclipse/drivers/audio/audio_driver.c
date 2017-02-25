@@ -98,6 +98,9 @@ float log10f_fast(float X) {
 }
 
 
+//static   float32_t               NR_FFT_buffer[2048];
+//static   float32_t               NR_iFFT_buffer[2048];
+
 //
 // Audio RX - Decimator
 static  arm_fir_decimate_instance_f32   DECIMATE_RX;
@@ -1901,32 +1904,32 @@ void AGC_prep()
       break;
     case 1: //agcLONG
       hangtime = 2.000;
-      ts.agc_wdsp_tau_decay = 2000;
+//      ts.agc_wdsp_tau_decay = 2000;
 //      hang_thresh = 1.0;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 2: //agcSLOW
       hangtime = 1.000;
 //      hang_thresh = 1.0;
-      ts.agc_wdsp_tau_decay = 500;
+//      ts.agc_wdsp_tau_decay = 500;
 //      ts.agc_wdsp_hang_enable = 1;
       break;
     case 3: //agcMED
 //      hang_thresh = 1.0;
       hangtime = 0.250;
-      ts.agc_wdsp_tau_decay = 250;
+//      ts.agc_wdsp_tau_decay = 250;
       break;
     case 4: //agcFAST
 //      hang_thresh = 1.0;
       hangtime = 0.100;
-      ts.agc_wdsp_tau_decay = 50;
+//      ts.agc_wdsp_tau_decay = 50;
       break;
     case 0: //agcFrank --> very long
 //      ts.agc_wdsp_hang_enable = 0;
 //      hang_thresh = 0.300; // from which level on should hang be enabled
       hangtime = 3.000; // hang time, if enabled
       tau_hang_backmult = 0.500; // time constant exponential averager
-      ts.agc_wdsp_tau_decay = 4000; // time constant decay long
+//      ts.agc_wdsp_tau_decay = 4000; // time constant decay long
       tau_fast_decay = 0.05;          // tau_fast_decay
       tau_fast_backaverage = 0.250; // time constant exponential averager
       break;
@@ -1939,7 +1942,7 @@ void AGC_prep()
 //          * size / rate);
 //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
   tau_hang_decay = (float32_t)ts.agc_wdsp_tau_hang_decay / 1000.0;
-  tau_decay = (float32_t)ts.agc_wdsp_tau_decay / 1000.0;
+  tau_decay = (float32_t)ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 1000.0;
   max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
   fixed_gain = max_gain / 10.0;
   attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
@@ -3811,7 +3814,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         case DEMOD_AM:
         case DEMOD_SAM:
         	AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
-        	// TODO: the above is "real" SAM, old SAM mode (below) should be renamed and implemented as DSB (double sideband mode)
+        	// TODO: the above is "real" SAM, old SAM mode (below) could be renamed and implemented as DSB (double sideband mode)
+        	// if anybody needs that
 
 //            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
 //            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB

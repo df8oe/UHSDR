@@ -539,11 +539,16 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_AGC_WDSP_SLOPE               377
 #define EEPROM_AGC_WDSP_HANG                378
 #define EEPROM_DBM_CALIBRATE                379
-#define EEPROM_AGC_WDSP_TAU_DECAY           380
+#define EEPROM_AGC_WDSP_TAU_DECAY_0         380
 #define EEPROM_AGC_WDSP_TAU_HANG_DECAY      381
 #define EEPROM_RTC_CALIB                    382
+#define EEPROM_AGC_WDSP_TAU_DECAY_1         383
+#define EEPROM_AGC_WDSP_TAU_DECAY_2         384
+#define EEPROM_AGC_WDSP_TAU_DECAY_3         385
+#define EEPROM_AGC_WDSP_TAU_DECAY_4         386
 
-#define EEPROM_FIRST_UNUSED 				383		// change this if new value ids are introduced
+
+#define EEPROM_FIRST_UNUSED 				387		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
