@@ -26,8 +26,8 @@
   */
  
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USB_AUDIO_H
-#define __USB_AUDIO_H
+#ifndef __USB_AUDIO_COMP_H
+#define __USB_AUDIO_COMP_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -35,7 +35,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include  "usbd_ioreq.h"
-
+#include  "usbd_desc.h"
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{
   */
@@ -53,42 +53,16 @@
 
 // #define USB_AUDIO_CONFIG_DESC_SIZ                     109
 
-#define AUDIO_BOTH
-#if  defined(AUDIO_BOTH)
-#define AUDIO_IN
-#define AUDIO_OUT
-#define USB_AUDIO_CONFIG_DESC_SIZ                        (9+101+73 + 8 + 66 + 9 +7)
-#elif defined(AUDIO_OUT)
-#define USB_AUDIO_CONFIG_DESC_SIZ                        (109 + 8)
-#endif
 
+#define USBD_AUDIO_OUT_CHANNELS 2
+#define USBD_AUDIO_IN_CHANNELS 2
 
-#define AUDIO_INTERFACE_DESC_SIZE                     9
-#define USB_AUDIO_DESC_SIZ                            0x09
-#define AUDIO_STANDARD_ENDPOINT_DESC_SIZE             0x09
-#define AUDIO_STREAMING_ENDPOINT_DESC_SIZE            0x07
+#define USBD_AUDIO_IN_OUT_DIV 1
+// USBD_IN_AUDIO_IN_OUT_DIV must be set to an integer number between 3 and 1
+// in order to keep within the limits of the existing code in audio_driver.c audio_rx_processor
 
-#define AUDIO_DESCRIPTOR_TYPE                         0x21
-#define USB_DEVICE_CLASS_AUDIO                        0x01
-#define AUDIO_SUBCLASS_AUDIOCONTROL                   0x01
-#define AUDIO_SUBCLASS_AUDIOSTREAMING                 0x02
-#define AUDIO_PROTOCOL_UNDEFINED                      0x00
-#define AUDIO_STREAMING_GENERAL                       0x01
-#define AUDIO_STREAMING_FORMAT_TYPE                   0x02
+#define USBD_AUDIO_IN_FREQ (USBD_AUDIO_FREQ/USBD_AUDIO_IN_OUT_DIV)
 
-/* Audio Descriptor Types */
-#define AUDIO_INTERFACE_DESCRIPTOR_TYPE               0x24
-#define AUDIO_ENDPOINT_DESCRIPTOR_TYPE                0x25
-
-/* Audio Control Interface Descriptor Subtypes */
-#define AUDIO_CONTROL_HEADER                          0x01
-#define AUDIO_CONTROL_INPUT_TERMINAL                  0x02
-#define AUDIO_CONTROL_OUTPUT_TERMINAL                 0x03
-#define AUDIO_CONTROL_FEATURE_UNIT                    0x06
-
-#define AUDIO_INPUT_TERMINAL_DESC_SIZE                0x0C
-#define AUDIO_OUTPUT_TERMINAL_DESC_SIZE               0x09
-#define AUDIO_STREAMING_INTERFACE_DESC_SIZE           0x07
 
 #define AUDIO_CONTROL_MUTE                            0x0001
 
@@ -101,6 +75,7 @@
 #define AUDIO_REQ_SET_CUR                             0x01
 
 #define AUDIO_OUT_STREAMING_CTRL                      0x02
+
 
 
 #define AUDIO_OUT_PACKET                              (uint32_t)(((USBD_AUDIO_FREQ * 2 * 2) /1000)) 
@@ -233,7 +208,7 @@ extern UsbAudioUnit usbUnits[UnitMax];
 }
 #endif
 
-#endif  /* __USB_AUDIO_H */
+#endif  /* __USB_AUDIO_COMP_H */
 /**
   * @}
   */ 
