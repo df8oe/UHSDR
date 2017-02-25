@@ -1096,7 +1096,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_AGC_WDSP_TAU_DECAY:      //
-       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_decay,
+       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode],
                                            100,
                                            5000,
                                            1000,
@@ -1106,7 +1106,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
        {
            AGC_prep();
        }
-       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_decay);
+       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode]);
        break;
 
     case MENU_AGC_WDSP_TAU_HANG_DECAY:      //

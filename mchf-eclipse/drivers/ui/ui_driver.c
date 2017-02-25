@@ -4550,7 +4550,7 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
             label = "???";
         break;
     }
-    value = (int32_t)(ts.agc_wdsp_tau_decay / 10.0);
+    value = (int32_t)(ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 10.0);
     snprintf(temp,5,"%3ld",value);
     val_txt = temp;
     }

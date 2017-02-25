@@ -446,7 +446,13 @@ void TransceiverStateInit(void)
     ts.agc_wdsp_action = 0;
     ts.agc_wdsp_switch_mode = 1;
     ts.agc_wdsp_hang_action = 0;
-    ts.agc_wdsp_tau_decay = 500;
+    ts.agc_wdsp_tau_decay[0] = 4000;
+    ts.agc_wdsp_tau_decay[1] = 2000;
+    ts.agc_wdsp_tau_decay[2] = 500;
+    ts.agc_wdsp_tau_decay[3] = 250;
+    ts.agc_wdsp_tau_decay[4] = 50;
+    ts.agc_wdsp_tau_decay[5] = 500;
+
     ts.agc_wdsp_tau_hang_decay = 200;
     ts.dbm_constant = 0;
 

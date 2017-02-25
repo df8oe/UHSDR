@@ -1212,7 +1212,7 @@ typedef struct TransceiverState
 	uint8_t agc_wdsp_switch_mode;
 	uint8_t agc_wdsp_hang_action;
 	int dbm_constant;
-	int agc_wdsp_tau_decay;
+	int agc_wdsp_tau_decay[6];
 	int agc_wdsp_tau_hang_decay;
 
 #define DISPLAY_S_METER_STD   0

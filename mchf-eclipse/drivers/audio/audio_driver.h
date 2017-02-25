@@ -125,6 +125,8 @@ typedef struct
     float32_t               teta3_old;
     float32_t               M_c1;
     float32_t               M_c2;
+ //   float32_t               NR_FFT_buffer[2048];
+ //   float32_t               NR_iFFT_buffer[2048];
 
 } AudioDriverBuffer;
 
