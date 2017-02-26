@@ -104,7 +104,8 @@ typedef struct _USBD_CDC_Itf
   int8_t (* DeInit)        (void);
   int8_t (* Control)       (uint8_t, uint8_t * , uint16_t);   
   int8_t (* Receive)       (uint8_t *, uint32_t *);  
-
+  int8_t (* SOF) (USBD_HandleTypeDef *pdev);
+  int8_t (* DataIn) (USBD_HandleTypeDef *pdev);
 }USBD_CDC_ItfTypeDef;
 
 

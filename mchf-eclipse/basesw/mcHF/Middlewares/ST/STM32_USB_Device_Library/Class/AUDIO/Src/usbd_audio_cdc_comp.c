@@ -457,11 +457,10 @@ static uint8_t  USBD_AUDIO_Setup (USBD_HandleTypeDef *pdev,
       break;
       
     case USB_REQ_SET_INTERFACE :
-      if ((uint8_t)(req->wValue) <= USBD_MAX_NUM_INTERFACES)
+      if ((uint8_t)(req->wIndex) <= USBD_MAX_NUM_INTERFACES)
       {
         haudio->alt_setting[req->wIndex] = (uint8_t)(req->wValue);
 
-#ifdef AUDIO_IN
                 if (haudio->alt_setting[AUDIO_IN_IF] == 1)
                 {
                     if (!haudio->SendFlag)
@@ -474,7 +473,6 @@ static uint8_t  USBD_AUDIO_Setup (USBD_HandleTypeDef *pdev,
                     haudio->SendFlag = 0;
                     USBD_LL_FlushEP(pdev,AUDIO_IN_EP);
                 }
-#endif
       }
       else
       {

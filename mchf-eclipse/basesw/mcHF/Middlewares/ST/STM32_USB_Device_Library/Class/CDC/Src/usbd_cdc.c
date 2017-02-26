@@ -60,6 +60,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc.h"
+#include "usbd_cdc_if.h"
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
 
@@ -104,6 +105,7 @@
   */
 
 
+
 static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev, 
                                uint8_t cfgidx);
 
@@ -130,6 +132,8 @@ static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 
 uint8_t  *USBD_CDC_GetDeviceQualifierDescriptor (uint16_t *length);
+
+static uint8_t  USBD_CDC_SOF (USBD_HandleTypeDef *pdev);
 
 /* USB Standard Device Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_CDC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] __ALIGN_END =
@@ -165,7 +169,7 @@ USBD_ClassTypeDef  USBD_CDC =
   USBD_CDC_EP0_RxReady,
   USBD_CDC_DataIn,
   USBD_CDC_DataOut,
-  NULL,
+  USBD_CDC_SOF,
   NULL,
   NULL,     
   USBD_CDC_GetHSCfgDesc,  
@@ -667,9 +671,32 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   
   if(pdev->pClassData != NULL)
   {
-    
-    hcdc->TxState = 0;
 
+    hcdc->TxState = ((USBD_CDC_ItfTypeDef *)&USBD_Interface_fops_FS)->DataIn(pdev);
+
+    return USBD_OK;
+  }
+  else
+  {
+    return USBD_FAIL;
+  }
+}
+
+
+/**
+  * @brief  USBD_CDC_DataIn
+  *         Data sent on non-control IN endpoint
+  * @param  pdev: device instance
+  * @param  epnum: endpoint number
+  * @retval status
+  */
+static uint8_t  USBD_CDC_SOF (USBD_HandleTypeDef *pdev)
+{
+  // USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
+
+  if(pdev->pClassData != NULL)
+  {
+    ((USBD_CDC_ItfTypeDef *)&USBD_Interface_fops_FS)->SOF(pdev);
     return USBD_OK;
   }
   else
@@ -686,8 +713,6 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   * @retval status
   */
 
-// FIXME: Internal external ref
-extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {      
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;

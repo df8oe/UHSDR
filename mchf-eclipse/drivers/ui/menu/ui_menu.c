@@ -3367,7 +3367,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;
-        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Hours,
                                               0,
@@ -3384,7 +3386,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_RTC_MIN:
     {
         RTC_TimeTypeDef rtc;
-        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
+
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Minutes,
                                               0,
                                               59,
@@ -3400,7 +3405,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_RTC_SEC:
     {
         RTC_TimeTypeDef rtc;
-        HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Seconds,
                                               0,

@@ -76,6 +76,13 @@
   * @{
   */  
 /* USER CODE BEGIN EXPORTED_TYPES */
+ typedef struct {
+     uint16_t
+     dtr:1,
+     rts:1;
+ } CdcVcp_CtrlLines_t;
+
+extern __IO CdcVcp_CtrlLines_t  cdcvcp_ctrllines;
 /* USER CODE END EXPORTED_TYPES */
 
 /**

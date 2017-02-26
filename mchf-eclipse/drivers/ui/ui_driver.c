@@ -21,7 +21,7 @@
 #include <math.h>
 #include <src/mchf_version.h>
 #include "ui_menu.h"
-#include "rtc.h"
+#include "mchf_rtc.h"
 #include "adc.h"
 //
 //
@@ -6015,9 +6015,8 @@ void UiDriver_MainHandler()
 {
 
     uint32_t now = HAL_GetTick()/10;
-#ifdef USE_USB
+
     CatDriver_HandleProtocol();
-#endif
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
     if (ts.dvmode == true)
@@ -6054,7 +6053,6 @@ void UiDriver_MainHandler()
     // display options  (waterfall/scope, DSP settings etc.)
     // Nothing with short intervals < 100ms  and/or need for very regular intervals between calls
     // should be placed in here.
-
     if(UiDriver_TimerIsExpired(SCTimer_MAIN,now,1))            // bail out if it is not time to do this task
     {
         switch(drv_state)
@@ -6093,10 +6091,13 @@ void UiDriver_MainHandler()
             {
                 if (ts.rtc_present)
                 {
-                    RTC_TimeTypeDef rtc;
-                    HAL_RTC_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+                    RTC_TimeTypeDef sTime;
+
+
+                    MchfRtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+
                     char str[20];
-                    snprintf(str,20,"%2u:%02u:%02u",rtc.Hours,rtc.Minutes,rtc.Seconds);
+                    snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
                     UiLcdHy28_PrintText(6*8,79,str,White,Black,0);
                 }
             }
@@ -6158,6 +6159,7 @@ void UiDriver_MainHandler()
             break;
         default:
             break;
+
         }
         if (drv_state < STATE_MAX)
         {

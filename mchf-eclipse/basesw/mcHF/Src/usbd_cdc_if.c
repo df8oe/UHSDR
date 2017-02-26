@@ -43,6 +43,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
+#include "cat_driver.h"
+#include "usb_device.h"
+#include "usbd_composite.h"
+#include "usbd_composite_desc.h"
+
 /* USER CODE BEGIN INCLUDE */
 /* USER CODE END INCLUDE */
 
@@ -70,13 +75,12 @@
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  4
-#define APP_TX_DATA_SIZE  4
+#define APP_RX_DATA_SIZE  64
+#define APP_TX_DATA_SIZE  2048
 /* USER CODE END PRIVATE_DEFINES */
 /**
   * @}
   */ 
-
 /** @defgroup USBD_CDC_Private_Macros
   * @{
   */ 
@@ -90,13 +94,21 @@
 /** @defgroup USBD_CDC_Private_Variables
   * @{
   */
+
+
 /* Create buffer for reception and transmission           */
 /* It's up to user to redefine and/or remove those define */
 /* Received Data over USB are stored in this buffer       */
 uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 
 /* Send Data over USB CDC are stored in this buffer       */
-uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
+uint8_t UserTxBufferFS   [APP_TX_DATA_SIZE];
+
+uint32_t CDC_Tx_PtrIn  = 0;
+uint32_t CDC_Tx_PtrOut = 0;
+uint32_t CDC_Tx_Length  = 0;
+
+uint8_t  CDC_Tx_State = 0;
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 /* USER CODE END PRIVATE_VARIABLES */
@@ -108,7 +120,7 @@ uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 /** @defgroup USBD_CDC_IF_Exported_Variables
   * @{
   */ 
-  extern USBD_HandleTypeDef hUsbDeviceFS;
+  __IO CdcVcp_CtrlLines_t  cdcvcp_ctrllines;
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 /* USER CODE END EXPORTED_VARIABLES */
 
@@ -123,6 +135,8 @@ static int8_t CDC_Init_FS     (void);
 static int8_t CDC_DeInit_FS   (void);
 static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length);
 static int8_t CDC_Receive_FS  (uint8_t* pbuf, uint32_t *Len);
+static int8_t  CDC_SOF (USBD_HandleTypeDef *pdev);
+static int8_t  CDC_DataIn (USBD_HandleTypeDef *pdev);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
@@ -136,8 +150,13 @@ USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
   CDC_Init_FS,
   CDC_DeInit_FS,
   CDC_Control_FS,  
-  CDC_Receive_FS
+  CDC_Receive_FS,
+  CDC_SOF,
+  CDC_DataIn
 };
+
+
+
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -228,6 +247,13 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
   case CDC_SET_CONTROL_LINE_STATE:
+  {
+      // we get wValue here as buffer
+      uint16_t wValue = *(uint16_t*)&(pbuf[0]);
+      cdcvcp_ctrllines.dtr = (wValue & 0x01)?1:0;
+      cdcvcp_ctrllines.rts = (wValue & 0x02)?1:0;
+      break;
+  }
 
     break;
 
@@ -261,6 +287,11 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+    for (uint32_t i = 0; i < *Len; i++)
+    {
+        CatDriver_InterfaceBufferAddData(Buf[i]);
+    }
+
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);
@@ -282,12 +313,22 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 7 */ 
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
+  uint32_t tx_counter = 0;
+
+  while (tx_counter < Len)
+  {
+      UserTxBufferFS[CDC_Tx_PtrIn] = *(Buf+tx_counter);
+
+      CDC_Tx_PtrIn++;
+
+      /* To avoid buffer overflow */
+      if (CDC_Tx_PtrIn >= APP_TX_DATA_SIZE)
+      {
+          CDC_Tx_PtrIn = 0;
+      }
+
+      tx_counter++;
   }
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
   /* USER CODE END 7 */ 
   return result;
 }
@@ -305,3 +346,107 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
+
+static void CDC_InitiateTransmit(USBD_HandleTypeDef *pdev)
+{
+    uint16_t USB_Tx_ptr;
+    uint16_t USB_Tx_length;
+
+    if (CDC_Tx_Length > CDC_DATA_FS_IN_PACKET_SIZE)
+    {
+        USB_Tx_ptr = CDC_Tx_PtrOut;
+        USB_Tx_length = CDC_DATA_FS_IN_PACKET_SIZE;
+
+        CDC_Tx_PtrOut += CDC_DATA_FS_IN_PACKET_SIZE;
+        CDC_Tx_Length -= CDC_DATA_FS_IN_PACKET_SIZE;
+    }
+    else
+    {
+        USB_Tx_ptr = CDC_Tx_PtrOut;
+        USB_Tx_length = CDC_Tx_Length;
+
+        CDC_Tx_PtrOut += CDC_Tx_Length;
+        CDC_Tx_Length = 0;
+    }
+
+    CDC_Tx_State = 1;
+
+    USBD_CDC_SetTxBuffer(pdev,
+            &UserTxBufferFS[USB_Tx_ptr],
+            USB_Tx_length);
+    /* Prepare the available data buffer to be sent on IN endpoint */
+    USBD_CDC_TransmitPacket(pdev);
+
+}
+
+/**
+  * @brief  Handle_USBAsynchXfer
+  *         Send data to USB
+  * @param  pdev: instance
+  * @retval None
+  */
+static void CDC_Handle_USBAsynchXfer (USBD_HandleTypeDef *pdev)
+{
+
+    if(CDC_Tx_State != 1)
+    {
+
+        if (CDC_Tx_PtrOut == APP_TX_DATA_SIZE)
+        {
+            CDC_Tx_PtrOut = 0;
+        }
+
+        if(CDC_Tx_PtrOut == CDC_Tx_PtrIn)
+        {
+            CDC_Tx_Length = 0;
+            CDC_Tx_State = 0;
+        }
+        else
+        {
+            if(CDC_Tx_PtrOut > CDC_Tx_PtrIn) /* rollback */
+            {
+                CDC_Tx_Length = APP_TX_DATA_SIZE - CDC_Tx_PtrOut;
+
+            }
+            else
+            {
+                CDC_Tx_Length = CDC_Tx_PtrIn - CDC_Tx_PtrOut;
+
+            }
+            CDC_InitiateTransmit(pdev);
+        }
+    }
+}
+
+static int8_t  CDC_DataIn (USBD_HandleTypeDef *pdev)
+{
+    if (CDC_Tx_State == 1)
+    {
+        if (CDC_Tx_Length == 0)
+        {
+            CDC_Tx_State = 0;
+        }
+        else
+        {
+            CDC_InitiateTransmit(pdev);
+        }
+    }
+
+    return CDC_Tx_State;
+}
+
+static int8_t  CDC_SOF (USBD_HandleTypeDef *pdev)
+{
+    static uint32_t FrameCount = 0;
+
+    if (FrameCount++ == 2) // every second frame
+    {
+        /* Reset the frame counter */
+        FrameCount = 0;
+
+        /* Check the data to be sent through IN pipe */
+        CDC_Handle_USBAsynchXfer(pdev);
+    }
+
+    return USBD_OK;
+}

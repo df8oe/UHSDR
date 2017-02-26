@@ -15,35 +15,13 @@
 // Common
 #include "mchf_board.h"
 #include "cat_driver.h"
+#include "usb_device.h"
+#include "usbd_cdc_if.h"
 
 #include <stdio.h>
-#if USE_USB
-#include "usbd_cdc_core.h"
-#include "usbd_usr.h"
-#include "usb_conf.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_vcp.h"
-#include "usbd_audio_core.h"
 #include "audio_driver.h"
 #include "radio_management.h"
 
-__ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END ;
-
-extern USB_OTG_CORE_HANDLE           USB_OTG_dev;
-// extern uint32_t USBD_OTG_ISR_Handler (USB_OTG_CORE_HANDLE *pdev);
-
-
-//void OTG_FS_WKUP_IRQHandler(void)
-//{
-//if(USB_OTG_dev.cfg.low_power)
-//{
-//	*(uint32_t *)(0xE000ED10) &= 0xFFFFFFF9 ;
-//	SystemInit();
-//	USB_OTG_UngateClock(&USB_OTG_dev);
-//}
-//EXTI_ClearITPendingBit(EXTI_Line18);
-//}
-#endif
 // CAT driver internal structure
 typedef struct CatDriver
 {
@@ -61,37 +39,27 @@ CatDriver                  cat_driver;
 /**
  * @brief returns true if the current TX state has been initiated by a CAT PTT command
  */
-bool CatDriver_CatPttActive() { return cat_driver.cat_ptt_active; }
+bool CatDriver_CatPttActive()
+{
+    return cat_driver.cat_ptt_active;
+}
 bool CatDriver_CWKeyPressed()
 {
-#if USE_USB
     return cdcvcp_ctrllines.dtr != 0;
-#else
-    return 0;
-#endif
 }
 
-#if USE_USB
 void CatDriver_InitInterface(void)
 {
-    // Start driver
-    USBD_Init(	&USB_OTG_dev,
-                USB_OTG_FS_CORE_ID,
-                &USR_desc,
-                &AUDIO_cb,
-                &USR_cb);
 }
 
 void CatDriver_StopInterface(void)
 {
-    // Stop driver
-    USBD_DeInit(&USB_OTG_dev);
 }
 
 
 CatInterfaceState CatDriver_GetInterfaceState()
 {
-    return USBD_User_GetStatus();
+    return hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED?CAT_CONNECTED:CAT_DISCONNECTED;
 }
 
 
@@ -198,9 +166,9 @@ static uint8_t CatDriver_InterfaceBufferGetData(uint8_t* Buf,uint32_t Len)
 static uint8_t CatDriver_InterfaceBufferPutData(uint8_t* Buf,uint32_t Len)
 {
     uint8_t res = 0;
-    if (USBD_User_GetStatus())
+    if (CatDriver_GetInterfaceState() == CAT_CONNECTED && Len > 0)
     {
-        VCP_DataTx(Buf,Len);
+        while (CDC_Transmit_FS(Buf,Len) == USBD_BUSY);
         res = 1;
     }
     return res;
@@ -230,12 +198,12 @@ static uint8_t CatDriver_InterfaceBufferPutData(uint8_t* Buf,uint32_t Len)
  */
 // based on CHIRP ft817.py, gcc needs reversal of allocations inside 8bit
 typedef struct {
-    u8  mode:3, // LSB, USB, ...
+    uint8_t  mode:3, // LSB, USB, ...
     unknown1:3,
     tag_default:1, // do we show the automatically generate name CH-XXX
     tag_on_off:1; // do we show the stored name?
 
-    u8 freq_range:3,
+    uint8_t freq_range:3,
     is_fm_narrow:1,
     is_cwdig_narrow:1,
     is_duplex:1, // is a duplex memory
@@ -244,119 +212,119 @@ typedef struct {
     // 1 -> - RX is freq - offset
     // 2 -> + RX is freq + offset
     // 3 -> split frequency, offset is used to store second frequency
-    u8 unknown3:4,
+    uint8_t unknown3:4,
     att:1, // attenuator on, NOT USED
     ipo:1, // IPO attenuator on, NOT USED
     unknown2:1,
     skip:1;
 
-    u8  fm_step:3,
+    uint8_t  fm_step:3,
         am_step:3,
         ssb_step:2;
 
-    u8 tmode:2,
+    uint8_t tmode:2,
     unknown4:6;
 
-    u8 tx_freq_range:3,  // VFO B?
+    uint8_t tx_freq_range:3,  // VFO B?
     tx_mode:3, // VFO B?
     unknown5:2;
 
-    u8 tone:6,
+    uint8_t tone:6,
     unknown_toneflag:1,
     unknown6:1;
 
-    u8  dcs:7,
+    uint8_t  dcs:7,
     unknown7:1;
 
-    u16 rit; // ul16
-    u32 freq; // ul32 -> USED VFO A
-    u32 offset; // ul32 -> USED, VFO B
-    u8  name[8];  // USED
+    uint16_t rit; // ul16
+    uint32_t freq; // ul32 -> USED VFO A
+    uint32_t offset; // ul32 -> USED, VFO B
+    uint8_t  name[8];  // USED
 } __attribute__((packed)) ft817_memory_t ;
 
 typedef struct {
-    u8  fst:1,
+    uint8_t  fst:1,
         lock:1,
         nb:1,
         pbt:1,
         unknownb:1,
         dsp:1,
         agc:2;
-    u8  vox:1,
+    uint8_t  vox:1,
         vlt:1,
         bk:1,
         kyr:1,
         unknown5:1,
         cw_paddle:1,
         pwr_meter_mode:2;
-    u8  vfob_band_select:4,
+    uint8_t  vfob_band_select:4,
         vfoa_band_select:4;
-    u8  unknowna;
-    u8  backlight:2,
+    uint8_t  unknowna;
+    uint8_t  backlight:2,
         color:2,
         contrast:4;
-    u8  beep_freq:1,
+    uint8_t  beep_freq:1,
         beep_volume:7;
-    u8  arts_beep:2,
+    uint8_t  arts_beep:2,
         main_step:1,
         cw_id:1,
         scope:1,
         pkt_rate:1,
         resume_scan:2;
-    u8  op_filter:2,
+    uint8_t  op_filter:2,
         lock_mode:2,
         cw_pitch:4;
-    u8  sql_rf_gain:1,
+    uint8_t  sql_rf_gain:1,
         ars_144:1,
         ars_430:1,
         cw_weight:5;
-    u8  cw_delay;
-    u8  unknown8:1,
+    uint8_t  cw_delay;
+    uint8_t  unknown8:1,
         sidetone:7;
-    u8  batt_chg:2,
+    uint8_t  batt_chg:2,
         cw_speed:6;
-    u8  disable_amfm_dial:1,
+    uint8_t  disable_amfm_dial:1,
         vox_gain:7;
-    u8  cat_rate:2,
+    uint8_t  cat_rate:2,
         emergency:1,
         vox_delay:5;
-    u8  dig_mode:3,
+    uint8_t  dig_mode:3,
         mem_group:1,
         unknown9:1,
         apo_time:3;
-    u8  dcs_inv:2,
+    uint8_t  dcs_inv:2,
         unknown10:1,
         tot_time:5;
-    u8  mic_scan:1,
+    uint8_t  mic_scan:1,
         ssb_mic:7;
-    u8  mic_key:1,
+    uint8_t  mic_key:1,
         am_mic:7;
-    u8  unknown11:1,
+    uint8_t  unknown11:1,
         fm_mic:7;
-    u8  unknown12:1,
+    uint8_t  unknown12:1,
         dig_mic:7;
-    u8  extended_menu:1,
+    uint8_t  extended_menu:1,
         pkt_mic:7;
-    u8  unknown14:1,
+    uint8_t  unknown14:1,
         pkt9600_mic:7;
-    s16 dig_shift; // il16
-    s16 dig_disp;  // il16
-    s8  r_lsb_car;
-    s8  r_usb_car;
-    s8  t_lsb_car;
-    s8  t_usb_car;
-    u8  unknown15:2,
+    int16_t dig_shift; // il16
+    int16_t dig_disp;  // il16
+    int8_t  r_lsb_car;
+    int8_t  r_usb_car;
+    int8_t  t_lsb_car;
+    int8_t  t_usb_car;
+    uint8_t  unknown15:2,
         menu_item:6;
-    u8  unknown16:4,
+    uint8_t  unknown16:4,
         menu_sel:4;
-    u16 unknown17;
-    u8  art:1,
+    uint16_t unknown17;
+    uint8_t  art:1,
         scn_mode:2,
         dw:1,
         pri:1,
         unknown18:1,
         tx_power:2;
-    u8  spl:1,
+    uint8_t  spl:1,
         unknown:1,
         uhf_antenna:1,
         vhf_antenna:1,
@@ -399,19 +367,19 @@ const ft817_block_t cloneblock_len[] =
         struct mem_struct mtune;   //  ...block[6]
 
 @0x3FD: @1021               // block[7]+1
-        u8 visible[25];
-        u8 pmsvisible;
+        uint8_t visible[25];
+        uint8_t pmsvisible;
 
 @0x417: @1047
-        u8 filled[25];      // block[7]+27
-        u8 pmsfilled;
+        uint8_t filled[25];      // block[7]+27
+        uint8_t pmsfilled;
 
 @0x431: @1073
         struct mem_struct memory[200]; block[9]-block[48]
         struct mem_struct pms[2]; block[49]
 
 @0x18cf: @6351
-        u8 callsign[7];
+        uint8_t callsign[7];
 
 @0x1979: @6521
         struct mem_struct sixtymeterchannels[5]; // not FT817, only ND US
@@ -804,7 +772,7 @@ void CatDriver_HandleProtocol()
     uint8_t bc = 0;
     uint8_t resp[32];
 
-    if (CatDriver_GetInterfaceState() == 0xFF)
+    if (CatDriver_GetInterfaceState() == CAT_DISCONNECTED)
     {
         cat_buffer_reset();
         ft817.state = CAT_CAT;
@@ -1068,5 +1036,3 @@ void CatDriver_HandleProtocol()
         /* Return data back */
     }
 }
-
-#endif

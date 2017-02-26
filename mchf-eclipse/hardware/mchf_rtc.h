@@ -16,10 +16,12 @@
 #define RTC_CALIB_PPM_MIN -487
 #define RTC_CALIB_PPM_DEFAULT 0
 
-
+#include "rtc.h"
 
 bool MchfRtc_enabled();
 void MchfRtc_FullReset();
 void MchfRtc_Start();
+bool MchfRtc_SetPpm(int16_t ppm);
+void MchfRtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format);
 
 #endif /* HARDWARE_MCHF_RTC_H_ */

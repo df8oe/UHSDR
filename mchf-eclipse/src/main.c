@@ -476,8 +476,25 @@ static void wd_reset(void)
 }
  */
 // #include "Trace.h"
-
-
+#if 0
+void timeTest1()
+{
+    static uint32_t time = 0;
+    if (time != RTC->TR)
+    {
+        MchfBoard_RedLed(LED_STATE_TOGGLE);
+        time = RTC->TR;
+    }
+}
+void timeTest()
+{
+    MchfRtc_Start();
+    while (1)
+    {
+        timeTest1();
+    }
+}
+#endif
 // Power on
 int mchfMain(void)
 {
@@ -513,6 +530,8 @@ int mchfMain(void)
     mchf_board_init();
     MchfBoard_GreenLed(LED_STATE_ON);
 
+
+    // MchfRtc_FullReset();
     ConfigStorage_Init();
     // test if touchscreen is present
     UiLcdHy28_TouchscreenPresenceDetection();
@@ -520,6 +539,7 @@ int mchfMain(void)
 
     // Show logo & HW Info
     UiDriver_ShowStartUpScreen(100);
+
 
     // Extra init
     MiscInit();
@@ -533,6 +553,7 @@ int mchfMain(void)
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();
     mchf_hw_i2c2_init();
+
 
     // temporarily remember the setting until dsp is going to be activated
     // TODO: Needs to be checked, if this is the best way to get the noise blanker to work properly
@@ -564,15 +585,11 @@ int mchfMain(void)
     UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
-#ifdef USE_USB
-    if (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
-    {
-        CatDriver_InitInterface();
-    }
-#endif
+
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
 #endif
+
     MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop
     for(;;)

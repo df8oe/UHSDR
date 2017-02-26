@@ -130,6 +130,7 @@ USBD_ClassTypeDef  USBD_COMP =
         USBD_COMP_GetDeviceQualifierDesc,
 };
 
+USBD_COMP_ItfTypeDef USBD_COMP_fops_FS;
 
 /* USB Standard Device Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_COMP_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] __ALIGN_END=
@@ -248,15 +249,23 @@ static uint8_t  USBD_COMP_Setup (USBD_HandleTypeDef *pdev,
     switch (req->bmRequest & USB_REQ_TYPE_MASK)
     {
     case USB_REQ_TYPE_CLASS :
-        for (int i = 0; i < CLASS_NUM; i++)
+        switch(req->bmRequest & USB_REQ_RECIPIENT_MASK)
         {
-            if (req->wIndex == dev_instance[i].ctrlIf)
+        case USB_REQ_RECIPIENT_INTERFACE:
+            for (int i = 0; i < CLASS_NUM; i++)
             {
-                switchToClass(pdev,&dev_instance[i]);
-                ret = dev_instance[i].class->Setup(pdev,req);
-                done = 1;
-                break;
+                uint8_t interface = req->wValue >> 8;
+                if (interface >= dev_instance[i].minIf && interface <= dev_instance[i].maxIf)
+                {
+                    switchToClass(pdev,&dev_instance[i]);
+                    ret = dev_instance[i].class->Setup(pdev,req);
+                    done = 1;
+                    break;
+                }
             }
+            break;
+        default:
+            break;
         }
         if (done != 1)
         {
@@ -285,11 +294,11 @@ static uint8_t  USBD_COMP_Setup (USBD_HandleTypeDef *pdev,
 
         case USB_REQ_GET_INTERFACE :
         case USB_REQ_SET_INTERFACE :
-            if ((uint8_t)(req->wValue) <= USBD_MAX_NUM_INTERFACES)
+            if ((uint8_t)(req->wIndex) <= USBD_MAX_NUM_INTERFACES)
             {
                 for (int i = 0; i < CLASS_NUM; i++)
                 {
-                    if (req->wValue >= dev_instance[i].minIf && req->wValue <= dev_instance[i].maxIf)
+                    if (req->wIndex >= dev_instance[i].minIf && req->wIndex <= dev_instance[i].maxIf)
                     {
                         switchToClass(pdev,&dev_instance[i]);
                         ret = dev_instance[i].class->Setup(pdev,req);
@@ -340,9 +349,9 @@ static uint8_t  USBD_COMP_DataIn (USBD_HandleTypeDef *pdev,
         uint8_t epnum)
 {
     uint8_t retval = USBD_OK;
-    if ((epnum & 0x7f) < USBD_MAX_EP)
+    if (epnum <= USBD_MAX_EP)
     {
-        uint8_t classIdx = usbdEpMap.in[epnum & 0x7f];
+        uint8_t classIdx = usbdEpMap.in[epnum];
 
         if (classIdx < CLASS_NUM)
         {
@@ -486,7 +495,7 @@ static uint8_t  USBD_COMP_DataOut (USBD_HandleTypeDef *pdev,
         uint8_t epnum)
 {
     uint8_t retval = USBD_OK;
-    if (epnum < USBD_MAX_EP)
+    if (epnum <= USBD_MAX_EP)
     {
         uint8_t classIdx = usbdEpMap.out[epnum];
 

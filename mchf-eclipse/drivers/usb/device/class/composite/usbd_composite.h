@@ -84,7 +84,7 @@
 #define CLASS_NUM 2
 #define CLASS_UNUSED 0xFF
 
-extern usbd_ep_map_t usbdEpMap;
+extern const usbd_ep_map_t usbdEpMap;
 
 extern USBD_ClassCompInfo dev_instance[CLASS_NUM];
 

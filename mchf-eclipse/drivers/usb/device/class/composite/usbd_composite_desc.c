@@ -69,6 +69,8 @@
 #include "mchf_board.h"
 #include "usbd_cdc.h"
 #include "usbd_audio_cdc_comp.h"
+#include "usbd_audio_if.h"
+#include "usbd_cdc_if.h"
 
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
@@ -475,3 +477,29 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x00,                              // Unused. (bLockDelayUnits)
         0x00,0x00,                         // Unused. (wLockDelay)
 } ;
+
+
+const usbd_ep_map_t usbdEpMap =
+{
+        .in = { CLASS_UNUSED, CLASS_CDC, CLASS_CDC, CLASS_AUDIO },
+        .out = { CLASS_UNUSED, CLASS_CDC, CLASS_AUDIO, CLASS_UNUSED }
+};
+
+USBD_ClassCompInfo dev_instance[CLASS_NUM] =
+{
+        {
+                .class = &USBD_AUDIO,
+                .userData = &USBD_AUDIO_fops_FS,
+                .ctrlIf = AUDIO_CTRL_IF,
+                .minIf = AUDIO_CTRL_IF,
+                .maxIf = AUDIO_IN_IF
+        },
+        {
+                .class = &USBD_CDC,
+                .userData = &USBD_Interface_fops_FS,
+                .ctrlIf = CDC_CTRL_IF,
+                .minIf = CDC_CTRL_IF,
+                .maxIf = CDC_DATA_IF
+        }
+};
+

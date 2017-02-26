@@ -142,13 +142,13 @@ const ButtonMap bm_sets[2][18] =
                 {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
                 {BUTTON_F5_PIO,     BUTTON_F5},     // 14
                 {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},                // 16 Power Button
+                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 Power Button
                 {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
         }
 };
 
 // the inital button map is the default one
-const ButtonMap* bm = &bm_sets[1][0];
+const ButtonMap* bm = &bm_sets[0][0];
 
 static void mchf_board_keypad_init(const ButtonMap* bm)
 {
