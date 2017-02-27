@@ -166,7 +166,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt32_16, EEPROM_MANUAL_NOTCH,&ts.notch_frequency,800,200,5000},
     { ConfigEntry_UInt32_16, EEPROM_MANUAL_PEAK,&ts.peak_frequency,750,200,5000},
     { ConfigEntry_UInt8, EEPROM_DISPLAY_DBM,&ts.display_dbm,0,0,2},
-    { ConfigEntry_UInt8, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
+    { ConfigEntry_Int32_16, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
     { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
 	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20},
     { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.treble_gain,0,-20,20},
