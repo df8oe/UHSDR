@@ -2325,7 +2325,7 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
 static void AudioDriver_DemodFM(int16_t blockSize)
 {
 
-    float r, s, angle, abs_y, x, y, a, b;
+    float r, s, angle, x, y, a, b;
     ulong i;
     bool tone_det_enabled;
     static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;		// used in FM detection and low/high pass processing
@@ -2354,7 +2354,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         //
         y = (i_prev * adb.q_buffer[i]) - (adb.i_buffer[i] * q_prev);
         x = (i_prev * adb.i_buffer[i]) + (adb.q_buffer[i] * q_prev);
-        //
+/*        //
         // What follows is adapted from "Fixed-Point Atan2 With Self Normalization", public domain code by "Jim Shima".
         // The result is "approximate" - but plenty good enough for speech-grade communications!
         //
@@ -2378,6 +2378,9 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         {
             angle = -angle;
         }
+
+*/
+        angle = atan2f(y,x);
         //
         // we now have our audio in "angle"
         //
