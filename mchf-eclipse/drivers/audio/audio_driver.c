@@ -2325,7 +2325,7 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
 static void AudioDriver_DemodFM(int16_t blockSize)
 {
 
-    float r, s, angle, abs_y, x, y, a, b;
+    float r, s, angle, x, y, a, b;
     ulong i;
     bool tone_det_enabled;
     static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;		// used in FM detection and low/high pass processing
@@ -2354,7 +2354,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         //
         y = (i_prev * adb.q_buffer[i]) - (adb.i_buffer[i] * q_prev);
         x = (i_prev * adb.i_buffer[i]) + (adb.q_buffer[i] * q_prev);
-        //
+/*        //
         // What follows is adapted from "Fixed-Point Atan2 With Self Normalization", public domain code by "Jim Shima".
         // The result is "approximate" - but plenty good enough for speech-grade communications!
         //
@@ -2378,6 +2378,9 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         {
             angle = -angle;
         }
+
+*/
+        angle = atan2f(y,x);
         //
         // we now have our audio in "angle"
         //
@@ -2409,35 +2412,38 @@ static void AudioDriver_DemodFM(int16_t blockSize)
         q_prev = adb.q_buffer[i];		// save "previous" value of each channel to allow detection of the change of angle in next go-around
         i_prev = adb.i_buffer[i];
     }
-    //
-    ads.am_fm_agc = sqrtf((q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;		// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
-    //
-    // Do "AGC" on FM signal:  Calculate/smooth signal level ONLY - no need for audio scaling
-    //
-    ads.agc_calc = ads.am_fm_agc * ads.agc_val;
-    //
-    if(ads.agc_calc < ads.agc_knee)	 	// is audio below AGC "knee" value?
+    if(!ts.agc_wdsp)
     {
-        ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
-        ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-        ads.agc_val += ads.agc_val* AGC_DECAY_FM * ads.agc_var;	// Yes - Increase gain for AGC DECAY (always fast in FM)
-    }
-    else
-    {
-        ads.agc_var = ads.agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
-        ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
-        ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
-        if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
+        //
+        ads.am_fm_agc = sqrtf((q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;		// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
+        //
+        // Do "AGC" on FM signal:  Calculate/smooth signal level ONLY - no need for audio scaling
+        //
+        ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+        //
+        if(ads.agc_calc < ads.agc_knee)	 	// is audio below AGC "knee" value?
         {
-            ads.agc_val = AGC_VAL_MIN;
+            ads.agc_var = ads.agc_knee - ads.agc_calc;	// calculate difference between agc value and "knee" value
+            ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+            ads.agc_val += ads.agc_val* AGC_DECAY_FM * ads.agc_var;	// Yes - Increase gain for AGC DECAY (always fast in FM)
         }
-    }
-    if(ads.agc_val >= ads.agc_rf_gain)	 	// limit AGC to reasonable values when low/no signals present
-    {
-        ads.agc_val = ads.agc_rf_gain;
-        if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+        else
         {
-            ads.agc_val = ads.agc_val_max;
+            ads.agc_var = ads.agc_calc - ads.agc_knee;	// calculate difference between agc value and "knee" value
+            ads.agc_var /= ads.agc_knee;	// calculate ratio of difference between knee value and this value
+            ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;	// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
+            if(ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
+            {
+                ads.agc_val = AGC_VAL_MIN;
+            }
+        }
+        if(ads.agc_val >= ads.agc_rf_gain)	 	// limit AGC to reasonable values when low/no signals present
+        {
+            ads.agc_val = ads.agc_rf_gain;
+            if(ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
+            {
+                ads.agc_val = ads.agc_val_max;
+            }
         }
     }
     //
@@ -3968,6 +3974,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                         adb.b_buffer,
                         blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+                if(ts.agc_wdsp)
+                {
+                    AudioDriver_RxAGCWDSP(blockSizeDecim);
+                }
+
         }
 
         // this is the biquad filter, a highshelf filter
