@@ -168,8 +168,8 @@ static uint8_t CatDriver_InterfaceBufferPutData(uint8_t* Buf,uint32_t Len)
     uint8_t res = 0;
     if (CatDriver_GetInterfaceState() == CAT_CONNECTED && Len > 0)
     {
-        while (CDC_Transmit_FS(Buf,Len) == USBD_BUSY);
-        res = 1;
+        ;
+        res = CDC_Transmit_FS(Buf,Len) == USBD_OK;
     }
     return res;
 }
@@ -420,7 +420,7 @@ struct FT817
     ft817_cat_st state;
     ft817_clone_out_st cloneout_state;
     ft817_clone_in_st clonein_state;
-
+// #define DEBUG_FT817
 #ifdef DEBUG_FT817
 #define FT817_MAX_CMD 100
     uint8_t reqs[FT817_MAX_CMD*5];

@@ -142,6 +142,108 @@
 
 
 
+#define OUT_PACKET_NUM                                   4
+/* Total size of the audio transfer buffer */
+#define TOTAL_OUT_BUF_SIZE                           ((uint32_t)(AUDIO_OUT_PACKET * OUT_PACKET_NUM))
+
+
+uint8_t  IsocOutBuff [TOTAL_OUT_BUF_SIZE * 2];
+uint8_t* IsocOutWrPtr = IsocOutBuff;
+uint8_t* IsocOutRdPtr = IsocOutBuff;
+
+static void audio_out_packet(USBD_HandleTypeDef* pdev, USBD_AUDIO_HandleTypeDef   *haudio, USBD_AUDIO_ItfTypeDef *ops)
+{
+    // mchf_board_green_led(PlayFlag != 0);
+    // during init the first buffer part was already set up to receive data
+    // if we end up here, one chunk of data has arrived. Thats cool. And it is
+    // a good time to hand over the packet to the next layer.
+    // we do that now, since we can be sure that there is at least one packet of
+    // data.
+    // The buffer implementation is quite interesting, since it uses
+    // OUT_PACKET_NUM + 1 slots but allocates OUT_PACKET_NUM *  2 slots
+    // just to be on the save side I guess. Don't know which side this is, though.
+
+    /* If all available buffers have been consumed, stop playing */
+    if (IsocOutWrPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
+    {
+        /* All buffers are full: roll back */
+        IsocOutWrPtr = IsocOutBuff;
+    }
+    else
+    {
+        /* Increment the buffer pointer */
+        IsocOutWrPtr += AUDIO_OUT_PACKET;
+    }
+
+    /* Toggle the frame index */
+    /*
+    ((USB_OTG_CORE_HANDLE*)pdev)->dev.out_ep[epnum].even_odd_frame =
+        (((USB_OTG_CORE_HANDLE*)pdev)->dev.out_ep[epnum].even_odd_frame)? 0:1;
+
+*/
+    /* Prepare Out endpoint to receive next audio packet */
+   USBD_LL_PrepareReceive(pdev,
+                     AUDIO_OUT_EP,
+                     (uint8_t*)(IsocOutWrPtr),
+                     AUDIO_OUT_PACKET);
+
+    if (haudio->PlayFlag)
+    {
+        haudio->PlayFlag = 5;
+        /* Start playing received packet */
+        ops->AudioCmd(IsocOutRdPtr,
+                AUDIO_OUT_PACKET,
+                AUDIO_CMD_PLAY);
+
+        /* Increment the Buffer pointer or roll it back when all buffers all full */
+        if (IsocOutRdPtr >= (IsocOutBuff + (AUDIO_OUT_PACKET * OUT_PACKET_NUM)))
+        {
+            /* Roll back to the start of buffer */
+            IsocOutRdPtr = IsocOutBuff;
+        }
+        else
+        {
+            /* Increment to the next sub-buffer */
+            IsocOutRdPtr += AUDIO_OUT_PACKET;
+        }
+    }
+
+    /* Increment the Buffer pointer or roll it back when all buffers are full */
+
+    /* Trigger the start of streaming only when half buffer is full */
+    if (haudio->PlayFlag == 0)
+    {
+        if (IsocOutWrPtr >= (IsocOutBuff + ((AUDIO_OUT_PACKET * OUT_PACKET_NUM) / 2)))
+        {
+            /* Enable start of Streaming */
+            haudio->PlayFlag = 5;
+        }
+    }
+}
+
+static void audio_out_packet_prepare(USBD_HandleTypeDef* pdev, USBD_AUDIO_HandleTypeDef   *haudio, USBD_AUDIO_ItfTypeDef *ops)
+{
+    if (haudio->PlayFlag)
+    {
+        haudio->PlayFlag--;
+        if (haudio->PlayFlag == 0)
+        {
+            /* Pause the audio stream */
+            ops->AudioCmd(IsocOutBuff,   /* Samples buffer pointer */
+                    AUDIO_OUT_PACKET,          /* Number of samples in Bytes */
+                    AUDIO_CMD_PAUSE);          /* Command to be processed */
+
+            /* Stop entering play loop */
+            haudio->PlayFlag = 0;
+
+            /* Reset buffer pointers */
+            IsocOutRdPtr = IsocOutBuff;
+            IsocOutWrPtr = IsocOutBuff;
+        }
+    }
+}
+
+
 
 
 // local stuff
@@ -153,39 +255,45 @@
 
 
 
-static volatile int16_t in_buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
 static int16_t Silence[USB_AUDIO_IN_PKT_SIZE];
-static volatile uint16_t in_buffer_tail;
-static volatile uint16_t in_buffer_head;
-static volatile uint16_t in_buffer_overflow;
 
+typedef struct {
+    int16_t  buffer[USB_AUDIO_IN_BUF_SIZE]; //buffer for filtered PCM data from Recv.
+    uint16_t buffer_tail;
+    uint16_t buffer_head;
+    uint16_t buffer_overflow;
+} audio_buffer_t;
+
+static volatile audio_buffer_t in;
 
 void audio_in_put_buffer(int16_t sample)
 {
-    in_buffer[in_buffer_head] = sample;
-    in_buffer_head=  (in_buffer_head + 1) %USB_AUDIO_IN_BUF_SIZE;
+    in.buffer[in.buffer_head] = sample;
+    in.buffer_head=  (in.buffer_head + 1) %USB_AUDIO_IN_BUF_SIZE;
     // now test buffer full
-    if (in_buffer_head == in_buffer_tail)
+    if (in.buffer_head == in.buffer_tail)
     {
         // ok. We loose data now, should never ever happen, but so what
         // will cause minor distortion if only a few bytes.
-        in_buffer_overflow++;
+        in.buffer_overflow++;
     }
 }
+
 volatile int16_t* audio_in_buffer_next_pkt()
 {
+    int16_t *retval;
     uint16_t room;
-    uint16_t temp_head = in_buffer_head;
-    room = ((((temp_head < in_buffer_tail)?USB_AUDIO_IN_BUF_SIZE:0) + temp_head) - in_buffer_tail);
+    uint16_t temp_head = in.buffer_head;
+    room = ((((temp_head < in.buffer_tail)?USB_AUDIO_IN_BUF_SIZE:0) + temp_head) - in.buffer_tail);
     if (room >= USB_AUDIO_IN_PKT_SIZE)
     {
-        return &in_buffer[in_buffer_tail];
+        retval = (int16_t*)&in.buffer[in.buffer_tail];
     }
     else
     {
-
-        return NULL;
+        retval = NULL;
     }
+    return retval;
 }
 void audio_in_buffer_pop_pkt(int16_t* ptr)
 {
@@ -193,7 +301,7 @@ void audio_in_buffer_pop_pkt(int16_t* ptr)
     {
         // there was data and pkt has been used
         // free  the space
-        in_buffer_tail = (in_buffer_tail+USB_AUDIO_IN_PKT_SIZE)%USB_AUDIO_IN_BUF_SIZE;
+        in.buffer_tail = (in.buffer_tail+USB_AUDIO_IN_PKT_SIZE)%USB_AUDIO_IN_BUF_SIZE;
     }
 }
 
@@ -201,6 +309,7 @@ static void audio_in_fill_ep_fifo(void *pdev)
   {
       uint8_t *pkt = (uint8_t*)audio_in_buffer_next_pkt();
       static uint16_t fill_buffer = (USB_AUDIO_IN_NUM_BUF/2) + 1;
+
       if (fill_buffer == 0 && pkt)
       {
           USBD_LL_Transmit(pdev,AUDIO_IN_EP, pkt, AUDIO_IN_PACKET);
@@ -231,7 +340,7 @@ UsbAudioUnit usbUnits[UnitMax] =
     },
     {
         .cs  = AUDIO_CONTROL_VOLUME,
-        .cn  = 0x06,
+        .cn  = AUDIO_IN_STREAMING_CTRL,
         .min = -31 * 0x100,
         .max = 0 * 0x100,
         .res = 0x100,
@@ -330,8 +439,6 @@ __ALIGN_BEGIN static uint8_t USBD_AUDIO_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIE
   * @retval status
   */
 
-// FIXME: Use Include
-extern USBD_AUDIO_ItfTypeDef  USBD_AUDIO_fops_FS;
 
 static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev, 
                                uint8_t cfgidx)
@@ -362,11 +469,12 @@ static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev,
   {
     haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
     memset(haudio,0,sizeof(USBD_AUDIO_HandleTypeDef));
+#if 0
     haudio->offset = AUDIO_OFFSET_UNKNOWN;
     haudio->wr_ptr = 0; 
     haudio->rd_ptr = 0;  
     haudio->rd_enable = 0;
-    
+#endif
     /* Initialize the Audio output Hardware layer */
     if (((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->Init(USBD_AUDIO_FREQ, AUDIO_DEFAULT_VOLUME, 0) != USBD_OK)
     {
@@ -376,7 +484,7 @@ static uint8_t  USBD_AUDIO_Init (USBD_HandleTypeDef *pdev,
     /* Prepare Out endpoint to receive 1st packet */ 
     USBD_LL_PrepareReceive(pdev,
                            AUDIO_OUT_EP,
-                           haudio->buffer,                        
+                           IsocOutBuff,
                            AUDIO_OUT_PACKET);      
   }
   return USBD_OK;
@@ -396,6 +504,10 @@ static uint8_t  USBD_AUDIO_DeInit (USBD_HandleTypeDef *pdev,
   /* Open EP OUT */
   USBD_LL_CloseEP(pdev,
               AUDIO_OUT_EP);
+
+  /* Open EP OUT */
+  USBD_LL_CloseEP(pdev,
+              AUDIO_IN_EP);
 
   /* DeInit  physical Interface components */
   if(pdev->pClassData != NULL)
@@ -541,9 +653,23 @@ static uint8_t  USBD_AUDIO_EP0_RxReady (USBD_HandleTypeDef *pdev)
 
     if (haudio->control.unit == AUDIO_OUT_STREAMING_CTRL)
     {
-      ((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->MuteCtl(haudio->control.data[0]);
+      // ((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->MuteCtl(haudio->control.data[0]);
+      int16_t val = (int16_t)((uint16_t)haudio->control.data[0] | ((uint16_t)haudio->control.data[1])<<8) ;
+      retval =((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->VolumeCtl((val/0x100)+31);
+      usbUnits[UnitVolumeTX].cur = val;
+
       haudio->control.cmd = 0;
       haudio->control.len = 0;
+    }
+    else
+    {
+        // ((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->MuteCtl(haudio->control.data[0]);
+        int16_t val = (int16_t)((uint16_t)haudio->control.data[0] | ((uint16_t)haudio->control.data[1])<<8) ;
+        retval =((USBD_AUDIO_ItfTypeDef *)pdev->pUserData)->InVolumeCtl((val/0x100)+31);
+        usbUnits[UnitVolumeTX].cur = val;
+
+        haudio->control.cmd = 0;
+        haudio->control.len = 0;
     }
   } 
   return retval;
@@ -576,9 +702,11 @@ static uint8_t  USBD_AUDIO_SOF (USBD_HandleTypeDef *pdev)
         haudio->SendFlag = 2;
     }
 
-   return USBD_OK;
+    audio_out_packet_prepare(pdev, haudio, (USBD_AUDIO_ItfTypeDef *)pdev->pUserData);
+    return USBD_OK;
 }
 
+#if 0
 /**
   * @brief  USBD_AUDIO_SOF
   *         handle SOF event
@@ -637,7 +765,7 @@ void  USBD_AUDIO_Sync (USBD_HandleTypeDef *pdev, AUDIO_OffsetTypeDef offset)
       haudio->offset = AUDIO_OFFSET_NONE;           
   }
 }
-
+#endif
 /**
   * @brief  USBD_AUDIO_IsoINIncomplete
   *         handle data ISO IN Incomplete event
@@ -677,8 +805,12 @@ static uint8_t  USBD_AUDIO_DataOut (USBD_HandleTypeDef *pdev,
   
   if (epnum == AUDIO_OUT_EP)
   {
+
+    audio_out_packet(pdev, haudio, (USBD_AUDIO_ItfTypeDef *)pdev->pUserData);
+
+#if 0
     /* Increment the Buffer pointer or roll it back when all buffers are full */
-    
+
     haudio->wr_ptr += AUDIO_OUT_PACKET;
     
     if (haudio->wr_ptr == AUDIO_TOTAL_BUF_SIZE)
@@ -707,7 +839,7 @@ static uint8_t  USBD_AUDIO_DataOut (USBD_HandleTypeDef *pdev,
                            AUDIO_OUT_EP,
                            &haudio->buffer[haudio->wr_ptr], 
                            AUDIO_OUT_PACKET);  
-      
+#endif
   }
   
   return USBD_OK;
@@ -725,7 +857,31 @@ static void AUDIO_REQ_GetCurrent(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef 
   USBD_AUDIO_HandleTypeDef   *haudio;
   haudio = (USBD_AUDIO_HandleTypeDef*) pdev->pClassData;
   
+  UsbAudioUnit *unit = &usbUnits[HIBYTE(req->wIndex) == AUDIO_OUT_STREAMING_CTRL?UnitVolumeTX:UnitVolumeRX];
+  // find the right unit by index
+
   memset(haudio->control.data, 0, 64);
+  int16_t* word =(int16_t*) &haudio->control.data[0];
+
+  switch(req->bRequest)
+  {
+  case AUDIO_REQ_GET_MIN:
+      word[0] = unit->min;
+      break;
+  case AUDIO_REQ_GET_MAX:
+      word[0] = unit->max;
+      break;
+  case AUDIO_REQ_GET_RES:
+      word[0] = unit->res;
+      break;
+  case AUDIO_REQ_GET_CUR:
+      // we load the current value from the application layer and convert it.
+      // not the most beautiful approach
+      unit->cur = (((int16_t)(*unit->ptr))-31)*0x100;
+      word[0] = unit->cur;
+      break;
+  }
+
   /* Send the current mute state */
   USBD_CtlSendData (pdev, 
                     haudio->control.data,

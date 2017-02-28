@@ -2500,7 +2500,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             ts.flags1 &= ~FLAGS1_CAT_MODE_ACTIVE;
         if (var_change)
         {
-#ifdef USE_USB
             if(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
             {
                 CatDriver_InitInterface();
@@ -2509,7 +2508,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
                 CatDriver_StopInterface();
             }
-#endif
         }
         break;
     case CONFIG_FREQUENCY_CALIBRATE:        // Frequency Calibration

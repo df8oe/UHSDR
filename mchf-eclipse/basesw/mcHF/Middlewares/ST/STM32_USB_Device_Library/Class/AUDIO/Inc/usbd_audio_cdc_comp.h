@@ -75,6 +75,7 @@
 #define AUDIO_REQ_SET_CUR                             0x01
 
 #define AUDIO_OUT_STREAMING_CTRL                      0x02
+#define AUDIO_IN_STREAMING_CTRL                       0x06
 
 
 
@@ -83,7 +84,7 @@
     
 /* Number of sub-packets in the audio transfer buffer. You can modify this value but always make sure
   that it is an even number and higher than 3 */
-#define AUDIO_OUT_PACKET_NUM                          80
+#define AUDIO_OUT_PACKET_NUM                          16
 /* Total size of the audio transfer buffer */
 #define AUDIO_TOTAL_BUF_SIZE                          ((uint32_t)(AUDIO_OUT_PACKET * AUDIO_OUT_PACKET_NUM))
     
@@ -93,6 +94,7 @@ typedef enum
   AUDIO_CMD_START = 1,
   AUDIO_CMD_PLAY,
   AUDIO_CMD_STOP,
+  AUDIO_CMD_PAUSE
 }AUDIO_CMD_TypeDef;
 
 
@@ -126,11 +128,11 @@ USBD_AUDIO_ControlTypeDef;
 typedef struct
 {
   __IO uint32_t             alt_setting[USBD_MAX_NUM_INTERFACES+1];
-  uint8_t                   buffer[AUDIO_TOTAL_BUF_SIZE];
-  AUDIO_OffsetTypeDef       offset;
-  uint8_t                    rd_enable;  
-  uint16_t                   rd_ptr;  
-  uint16_t                   wr_ptr;  
+  // uint8_t                   buffer[AUDIO_TOTAL_BUF_SIZE];
+  // AUDIO_OffsetTypeDef       offset;
+  // uint8_t                    rd_enable;
+  // uint16_t                   rd_ptr;
+  // uint16_t                   wr_ptr;
   USBD_AUDIO_ControlTypeDef control;
   uint32_t SendFlag;
   uint32_t PlayFlag;
@@ -147,6 +149,7 @@ typedef struct
     int8_t  (*MuteCtl)      (uint8_t cmd);
     int8_t  (*PeriodicTC)   (uint8_t cmd);
     int8_t  (*GetState)     (void);
+    int8_t  (*InVolumeCtl)    (uint8_t vol);
 }USBD_AUDIO_ItfTypeDef;
 /**
   * @}

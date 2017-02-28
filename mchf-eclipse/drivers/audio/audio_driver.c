@@ -29,9 +29,7 @@
 #include "audio_management.h"
 #include "dds_table.h"
 #include "radio_management.h"
-#ifdef USE_USB
-#include "usbd_audio_core.h"
-#endif
+#include "usbd_audio_if.h"
 #include "ui_spectrum.h"
 #include "filters.h"
 #include "ui_lcd_hy28.h"
@@ -3556,7 +3554,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     static ulong        i, beep_idx = 0;
 
     float               post_agc_gain_scaling;
-#ifdef USE_USB
     if (tx_audio_source == TX_AUDIO_DIGIQ)
     {
 
@@ -3572,7 +3569,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
         }
     }
-#endif
+
     AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
     // ------------------------
     // Split stereo channels
@@ -4044,7 +4041,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
         }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
-#ifdef USE_USB
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
             if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
@@ -4057,9 +4053,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
             }
         }
-#endif
     }
-#ifdef USE_USB
     // calculate the first index we read so that we are not loosing
     // values.
     // For 1 and 2,4 we do not need to shift modulus
@@ -4071,7 +4065,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         modulus++;
         modulus%=USBD_AUDIO_IN_OUT_DIV;
     }
-#endif
 }
 
 
@@ -4608,7 +4601,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
-#ifdef USE_USB
     if (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ)
     {
         // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
@@ -4629,7 +4621,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
         signal_active = true;
     }
     else
-#endif
         if (ts.dvmode) {
 #ifdef USE_FREEDV
         AudioDriver_TxProcessorDigital(src,dst,blockSize);
@@ -4778,7 +4769,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
             ts.audio_dac_muting_buffer_count--;
         }
     }
-#ifdef USE_USB
     switch (ts.stream_tx_audio)
     {
     case STREAM_TX_AUDIO_OFF:
@@ -4812,7 +4802,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
             audio_in_put_buffer(adb.a_buffer[i]);
         }
     }
-#endif
 }
 
 
