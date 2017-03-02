@@ -66,7 +66,8 @@ void MX_RTC_Init(void)
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
   {
-    Error_Handler();
+    // we ignore the problem here, since not all mcHF have a RTC
+    // Error_Handler();
   }
 }
 

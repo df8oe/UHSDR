@@ -5962,6 +5962,7 @@ typedef enum {
     SCTimer_VOLTAGE, // 8 * 10ms
     SCTimer_SMETER, // 4 * 10ms
     SCTimer_MAIN, // 4 * 10ms
+    SCTimer_AGC, // 25 * 10ms
     SCTimer_NUM
 } SysClockTimers;
 
@@ -6125,36 +6126,33 @@ void UiDriver_MainHandler()
             UiDriver_ProcessKeyboard();
             break;
         case STATE_DISPLAY_SAM_CARRIER:
-            if(ts.dmod_mode == DEMOD_SAM)
+            if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,25))
             {
-                UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
-            }
-            char* txt = "???";
-            uint16_t AGC_color = Blue;
-            uint16_t AGC_color2 = White;
-            if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
-            {
-                AGC_color = White;
-                AGC_color2 = Black;
-            }
-
-            if(ts.agc_wdsp == 1)
-            {
-                if(ts.agc_wdsp_action == 1)
+                if(ts.dmod_mode == DEMOD_SAM)
+                {
+                    UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
+                }
+                const char* txt = "   ";
+                uint16_t AGC_color = Black;
+                uint16_t AGC_color2 = Black;
+                if(ts.agc_wdsp == 1)
+                {
+                    if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
+                    {
+                        AGC_color = White;
+                        AGC_color2 = Black;
+                    }
+                    else
+                    {
+                        AGC_color = Blue;
+                        AGC_color2 = White;
+                    }
+                    if(ts.agc_wdsp_action == 1)
                     {
                         txt = "AGC";
                     }
-                else
-                {
-                    txt = "   ";
                 }
                 UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
-            }
-            else
-            {
-                txt = "   ";
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,Black,Black,0);
-
             }
             break;
         default:
