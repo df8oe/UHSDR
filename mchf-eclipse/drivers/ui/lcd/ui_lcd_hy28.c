@@ -15,6 +15,7 @@
 // Common
 #include "mchf_board.h"
 #include "spi.h"
+#include "fsmc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -394,6 +395,7 @@ void UiLcdHy28_Reset()
 
 void UiLcdHy28_FSMCConfig(void)
 {
+    MX_FSMC_Init();
 #if 0
     FSMC_NORSRAMInitTypeDef        FSMC_NORSRAMInitStructure;
     FSMC_NORSRAMTimingInitTypeDef     p;
@@ -583,20 +585,23 @@ void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
+    uint16_t retval;
     if(display_use_spi)
     {
         // Write 16-bit Index (then Read Reg)
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
-
         // Read 16-bit Reg
-        return UiLcdHy28_LcdReadDataSpi();
+        retval = UiLcdHy28_LcdReadDataSpi();
     }
+    else
+    {
 
-    // Write 16-bit Index (then Read Reg)
-    LCD_REG = LCD_Reg;
-
-    // Read 16-bit Reg
-    return (LCD_RAM);
+        // Write 16-bit Index (then Read Reg)
+        LCD_REG = LCD_Reg;
+        // Read 16-bit Reg
+        retval = LCD_RAM;
+    }
+    return retval;
 }
 
 static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
