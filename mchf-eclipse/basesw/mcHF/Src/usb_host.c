@@ -80,17 +80,17 @@ void MX_USB_HOST_Init(void)
 {
   /* Init Host Library,Add Supported Class and Start the library*/
   USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
-
+#if 0
   USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS);
 
   USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS);
-
+#endif
   USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
-
+#if 0
   USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
 
   USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS);
-
+#endif
   USBH_Start(&hUsbHostHS);
 }
 
