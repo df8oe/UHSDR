@@ -46,12 +46,12 @@ CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 # compilation options
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 CFLAGS  = $(MACHFLAGS)  \
-          -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall -Wno-unused-function -D_GNU_SOURCE -DCORTEX_M4 \
+          -DARM_MATH_CM4 -D_GNU_SOURCE -DCORTEX_M4 -DSTM32F407xx -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE  \
+          -ffunction-sections -fdata-sections -flto -O2 -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
           $(EXTRACFLAGS)
 
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := mchf_version.h
+PROJECT_VERSION_FILE := src/mchf_version.h
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
@@ -59,50 +59,12 @@ TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean
 
 LDFLAGS := $(MACHFLAGS)
 
-LIBS := -lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
+LIBS := -lm -lg -lc -lgcc -lnosys \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
-	-Llibs
+	-Llibs 
 
 # Every subdirectory with header files must be mentioned here
-SUBDIRS :=  \
-    .  \
-    cmsis  \
-    cmsis_boot  \
-    cmsis_lib/include  \
-    cmsis_lib/source  \
-    \
-    drivers \
-    drivers/audio  \
-    drivers/audio/codec  \
-    drivers/audio/cw  \
-    drivers/audio/filters  \
-    drivers/audio/softdds  \
-    drivers/cat  \
-    drivers/cat/usb  \
-    drivers/diag \
-    drivers/diag/arm \
-    drivers/keyboard  \
-    drivers/keyboard/usb  \
-    drivers/ui  \
-    drivers/ui/encoder  \
-    drivers/ui/lcd  \
-    drivers/ui/menu  \
-    drivers/ui/oscillator  \
-    drivers/freedv  \
-    \
-    hardware  \
-    \
-    misc  \
-    misc/v_eprom  \
-    \
-    usb  \
-    usb/otg/inc  \
-    usb/usbd/class/audio/inc  \
-    usb/usbd/class/cdc/inc  \
-    usb/usbd/core/inc  \
-    usb/usbh/class/HID/inc  \
-    usb/usbh/core/inc  \
-
+include include.mak
 
 # every source-file has to be mentioned here 
 
@@ -146,8 +108,8 @@ endif
 
 # how to compile individual object files
 OBJS :=
-OBJS += $(SRC:.c=.o)
-OBJS += $(SRCCXX:.cpp=.o)
+OBJS += $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(SRC:.c=.o)))
+
 .c.o:
 	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
@@ -186,7 +148,7 @@ all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
 # compilation
 $(LPRJ).elf:  $(OBJS) $(SRC)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
 
 $(PRJ).bin:  $(LPRJ).elf
 	$(ECHO) "  [OBJC] $@"

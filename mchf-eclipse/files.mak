@@ -1,4 +1,14 @@
-SRC=\
+SRC := \
+misc/v_eprom/eeprom.c \
+src/main.c \
+misc/TestCPlusPlusBuild.cpp \
+misc/config_storage.c \
+misc/profiling.c \
+misc/serial_eeprom.c \
+hardware/mchf_board.c \
+hardware/mchf_hw_i2c.c \
+hardware/mchf_rtc.c \
+drivers/usb/device/class/composite/usbd_composite.c \
 drivers/usb/device/class/composite/usbd_composite_desc.c \
 drivers/ui/oscillator/soft_tcxo.c \
 drivers/ui/oscillator/ui_si570.c \
@@ -19,8 +29,8 @@ drivers/audio/filters/fir_rx_decimate_4.c \
 drivers/audio/filters/fir_rx_decimate_4_min_lpf.c \
 drivers/audio/filters/fir_rx_interpolate_16.c \
 drivers/audio/filters/fir_rx_interpolate_16_10kHz.c \
-drivers/audio/filters/iir_10k_neu.c \
 drivers/audio/filters/iir_10k.c \
+drivers/audio/filters/iir_10k_neu.c \
 drivers/audio/filters/iir_15k_hpf_fm_squelch.c \
 drivers/audio/filters/iir_1_4k.c \
 drivers/audio/filters/iir_1_6k.c \
@@ -74,8 +84,8 @@ basesw/mcHF/Src/fsmc.c \
 basesw/mcHF/Src/gpio.c \
 basesw/mcHF/Src/i2c.c \
 basesw/mcHF/Src/i2s.c \
-basesw/mcHF/Src/main.c \
 basesw/mcHF/Src/rtc.c \
+basesw/mcHF/Src/main.c \
 basesw/mcHF/Src/spi.c \
 basesw/mcHF/Src/stm32f4xx_hal_msp.c \
 basesw/mcHF/Src/stm32f4xx_it.c \
@@ -92,8 +102,8 @@ basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_core.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ctlreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ioreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_pipes.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Src/usbh_mtp_ptp.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Src/usbh_mtp.c \
+basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Src/usbh_mtp_ptp.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_bot.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c \
@@ -122,8 +132,8 @@ basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dac.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dac_ex.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dcmi.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dcmi_ex.c \
-basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dfsdm.c \
+basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dsi.c \
@@ -153,8 +163,8 @@ basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
-basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_qspi.c \
+basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rng.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rtc.c \
@@ -450,5 +460,4 @@ basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/BasicMathFunctions/arm_sub_f32.c \
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/BasicMathFunctions/arm_sub_q15.c \
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/BasicMathFunctions/arm_sub_q31.c \
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/BasicMathFunctions/arm_sub_q7.c \
-
 
