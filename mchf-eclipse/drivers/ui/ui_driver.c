@@ -5865,6 +5865,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 {
     uint16_t    i;
     char   tx[100];
+    char   temp_buf[32];
     const char* txp;
     uint32_t clr;
     const char* info_out;
@@ -5883,9 +5884,11 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
 	// looking for bootloader version, only works or DF8OE bootloader
     // Show third line
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION);
+    strncpy(temp_buf, info_out, 32);
     info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
 
-    snprintf(tx,100,"FW: %s.%s.%s-HAL / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
+    snprintf(tx,100,"FW: %s / BL: %s", temp_buf, info_out);
     UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
 
     // Show fourth line

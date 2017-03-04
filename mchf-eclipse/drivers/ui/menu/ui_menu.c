@@ -571,7 +571,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_FW_VERSION:
     {
-        snprintf(out,32, "%s", TRX4M_VERSION+4);
+        snprintf(out,32, "%s-HAL", TRX4M_VERSION+4);
     }
     break;
     case INFO_BUILD:
