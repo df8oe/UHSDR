@@ -5885,7 +5885,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     // Show third line
     info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
 
-    snprintf(tx,100,"FW: %s.%s.%s / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
+    snprintf(tx,100,"FW: %s.%s.%s-HAL / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
     UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
 
     // Show fourth line
