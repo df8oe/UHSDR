@@ -444,6 +444,7 @@ void UiLcdHy28_FSMCConfig(void)
 #endif
 }
 
+#if 0
 static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 {
     // TODO: Find out why not working with HAL as expected
@@ -453,6 +454,7 @@ static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
     while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_TXE)  == RESET) {}
     HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);
 }
+#endif
 
 static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
 {
@@ -492,7 +494,6 @@ uint8_t UiLcdHy28_SpiReadByte(void)
 
 uint8_t UiLcdHy28_SpiReadByteFast(void)
 {
-    uint8_t dummy = 0;
     uint8_t retval = 0;
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */

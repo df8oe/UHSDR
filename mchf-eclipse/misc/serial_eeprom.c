@@ -200,26 +200,6 @@ static void SerialEEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* deva
     }
 }
 
-
-static uint16_t SerialEEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Type)
-{
-#if 0
-    uint8_t devaddr;
-
-    SerialEEPROM_24Cxx_AdjustAddrs(Mem_Type,&devaddr,&Addr);
-
-    I2C_GenerateSTART(SERIALEEPROM_I2C, ENABLE);
-    I2C_EventCompleteOrReturn(I2C2,I2C_EVENT_MASTER_MODE_SELECT, 0xFF00)
-    // Test on I2C2 EV5, Start transmitted successfully and clear it
-    // Send Memory device slave Address for write
-    I2C_Send7bitAddress(SERIALEEPROM_I2C, devaddr, I2C_Direction_Transmitter);
-    // Test on I2C2 EV6 and clear it
-    I2C_EventCompleteOrReturn(I2C2,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED, 0xFD00)
-
-    // we reach this only if all macros above did not return with an error code
-#endif
-    return 0;
-}
 static uint16_t SerialEEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 {
     uint8_t devaddr;

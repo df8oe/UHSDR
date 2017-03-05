@@ -240,7 +240,6 @@ static uint8_t* USBD_COMP_FindDescriptor(uint8_t desc_type)
 static uint8_t  USBD_COMP_Setup (USBD_HandleTypeDef *pdev,
         USBD_SetupReqTypedef *req)
 {
-    USBD_COMP_HandleTypeDef   *hcomp;
     uint16_t len;
     uint8_t *pbuf;
     uint8_t ret = USBD_OK;

@@ -71,7 +71,6 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void Error_Handler(void);
-void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -80,7 +79,13 @@ void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN 0 */
 #ifdef BOOTLOADER_BUILD
-extern ApplicationTypeDef Appli_state;
+void MX_USB_HOST_Process(void);
+#include "bootloader/bootloader_main.h"
+
+#else
+
+#include "mchf_main.h"
+
 #endif
 /* USER CODE END 0 */
 

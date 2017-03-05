@@ -110,7 +110,8 @@ void BSP_Init(void)
     STM_EVAL_LEDInit(BLON);
 }
 
-int bootloader_main(void)
+
+int bootloader_main()
 {
     /* initialization */
     BSP_Init();
