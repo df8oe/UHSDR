@@ -3861,14 +3861,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             if(ads.af_disabled == false) {
                 if (ts.dsp_inhibit == false)
                 {
-                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW))       // No notch in CW
+                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
                         AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
-                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)))      // Do this if enabled and "Pre-AGC" DSP NR enabled
+                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
                         AudioDriver_NoiseReduction(blockSizeDecim);
                     }
@@ -3907,7 +3907,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // DSP noise reduction using LMS (Least Mean Squared) algorithm
             // This is the post-filter, post-AGC instance
             //
-            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit))     // Do DSP NR if enabled and if post-DSP NR enabled
+            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
             {
                 AudioDriver_NoiseReduction(blockSizeDecim);
             }
