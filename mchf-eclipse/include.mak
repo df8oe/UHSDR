@@ -29,6 +29,7 @@ drivers/ui/menu \
 drivers/cat \
 drivers/audio/filters \
 src \
+src/bootloader \
 drivers/diag \
 basesw/mcHF/Middlewares/Third_Party/FatFs/src \
 basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers \

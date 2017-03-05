@@ -1,4 +1,4 @@
-BOOTLOADERSRC := \
+BLSRC := \
 src/bootloader/bootloader_main.c \
 src/bootloader/command.c \
 src/bootloader/flash_if.c \

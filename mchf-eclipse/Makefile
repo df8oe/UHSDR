@@ -45,10 +45,11 @@ CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
 
 # compilation options
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
-CFLAGS  = $(MACHFLAGS)  \
+BASECFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -D_GNU_SOURCE -DCORTEX_M4 -DSTM32F407xx -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE  \
           -ffunction-sections -fdata-sections -flto -O2 -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
           $(EXTRACFLAGS)
+
 
 # propagate version info from source to environment variables
 PROJECT_VERSION_FILE := src/mchf_version.h
@@ -57,11 +58,13 @@ $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
-LDFLAGS := $(MACHFLAGS)
+LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs
 
-LIBS := -lm -lg -lc -lgcc -lnosys \
-        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
-	-Llibs 
+LIBS := -lm -lc -lgcc -lnosys \
+        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
+
+bootloader.elf : CFLAGS = ${BASECFLAGS} -DBOOTLOADER_BUILD
+mchf.elf : CFLAGS = ${BASECFLAGS}
 
 # Every subdirectory with header files must be mentioned here
 include include.mak
@@ -71,8 +74,7 @@ include include.mak
 
 include files.mak
 
-SRCCXX = \
-    misc/TestCPlusPlusBuild.cpp  \
+include bootloader.mak
 
 # ------------- nothing to change below this line ---------------------- 
 
@@ -107,20 +109,25 @@ else ifeq ($(shell uname), CYGWIN_NT-10.0)
 endif
 
 # how to compile individual object files
-OBJS :=
-OBJS += $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(SRC:.c=.o)))
+OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
+BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
 
 .c.o:
 	$(ECHO) "  [CC] $@"
 	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 
-%.o: %.cxx
+.cxx.o:
 	$(ECHO) "  [CXX] $@"
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
-%.o: %.cpp
+.cpp.o:
 	$(ECHO) "  [CXX] $@"
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+
+%.bin: %.elf
+	$(ECHO) "  [OBJC] $@"
+	$(OS) $<
+	$(OC) -v -O binary $< $@
 
 # ---------------------------------------------------------
 #  BUILT-IN HELP
@@ -140,20 +147,24 @@ help:
 
 .PHONY: all clean docs docs-clean help
 
+bootloader: bootloader.bin bootloader.elf
+
+
 all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
 	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
 # compilation
-$(LPRJ).elf:  $(OBJS) $(SRC)
+$(LPRJ).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
 
-$(PRJ).bin:  $(LPRJ).elf
-	$(ECHO) "  [OBJC] $@"
-	$(OS) $<
-	$(OC) -v -O binary $< $(PRJ).bin
+# compilation
+bootloader.elf:  $(BLOBJS) 
+	$(ECHO) "  [LD] $@"
+	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH_BOOT.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+
 
 $(PRJ).handbook:
 	@support/ui/menu/mk-menu-handbook auto
@@ -166,9 +177,11 @@ $(PRJ).version:
 clean:  
 	# remove the executables, map, dmp and all object files (.o)
 	$(RM) $(call FixPath,$(OBJS))
+	$(RM) $(call FixPath,$(BLOBJS))
 	$(RM) $(call FixPath,$(LPRJ).elf)
 	$(RM) $(call FixPath,$(PRJ).bin)
 	$(RM) $(call FixPath,$(LPRJ).map)
+	$(RM) $(call FixPath,bootloader.elf)
 	$(RM) $(call FixPath,*~)
 
 handy:  
