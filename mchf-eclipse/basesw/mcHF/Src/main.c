@@ -79,7 +79,9 @@ void MX_USB_HOST_Process(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+#ifdef BOOTLOADER_BUILD
+extern ApplicationTypeDef Appli_state;
+#endif
 /* USER CODE END 0 */
 
 int main(void)
@@ -99,6 +101,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+#ifndef BOOTLOADER_BUILD
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
@@ -113,25 +116,43 @@ int main(void)
   MX_TIM5_Init();
   MX_TIM8_Init();
   MX_USB_DEVICE_Init();
-  // MX_USB_HOST_Init();
-  // MX_FATFS_Init();
+#else
+  MX_USB_HOST_Init();
+  MX_FATFS_Init();
+#endif
   // MX_FSMC_Init();
+#ifndef BOOTLOADER_BUILD
   MX_TIM4_Init();
-
+#endif
   /* USER CODE BEGIN 2 */
-  mchfMain();
+#ifndef BOOTLOADER_BUILD
+   mchfMain();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+#else
+  bootloader_main();
   while (1)
   {
   /* USER CODE END WHILE */
-    // MX_USB_HOST_Process();
+    MX_USB_HOST_Process();
+    /* Mass Storage Application State Machine */
+     switch(Appli_state)
+     {
+     case APPLICATION_START:
+       BL_MSC_Application();
+       Appli_state = APPLICATION_IDLE;
+       break;
 
+     case APPLICATION_IDLE:
+     default:
+       break;
+     }
   /* USER CODE BEGIN 3 */
 
   }
+#endif
   /* USER CODE END 3 */
 
 }

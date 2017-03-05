@@ -61,7 +61,7 @@ uint32_t sectorError = 0;
 
 flashEraseOp.Sector = sector;
 flashEraseOp.NbSectors = 1;
-flashEraseOp.VoltageRange = VOLTAGE_RANGE;
+flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
 flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
 
 return HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
@@ -674,7 +674,7 @@ static uint16_t Flash_PageTransfer(uint16_t VirtAddress, uint16_t Data)
 
     flashEraseOp.Sector = OldPageId;
     flashEraseOp.NbSectors = 1;
-    flashEraseOp.VoltageRange = VOLTAGE_RANGE;
+    flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
     flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
 
     FlashStatus = HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);

@@ -161,6 +161,7 @@ static volatile int16_t out_buffer[USB_AUDIO_OUT_BUF_SIZE]; //buffer for filtere
 static volatile uint16_t out_buffer_tail;
 static volatile uint16_t out_buffer_head;
 static volatile uint16_t out_buffer_overflow;
+static volatile uint16_t out_buffer_underflow;
 
 static void audio_out_put_buffer(int16_t sample)
 {
@@ -223,6 +224,7 @@ void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len)
     {
         if (fill_buffer == 0)
         {
+            out_buffer_underflow++;
             fill_buffer = 1;
         }
         if (audio_out_buffer_next_pkt((USB_AUDIO_OUT_BUF_SIZE*2)/3) != NULL)

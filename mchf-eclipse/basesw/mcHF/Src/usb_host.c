@@ -51,6 +51,7 @@
 #include "usbh_msc.h"
 #include "usbh_hid.h"
 #include "usbh_mtp.h"
+#include "fatfs.h"
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostHS;
@@ -109,7 +110,25 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 {
 
   /* USER CODE BEGIN 1 */
+    switch(id)
+    {
+    case HOST_USER_SELECT_CONFIGURATION:
+      break;
 
+    case HOST_USER_DISCONNECTION:
+      Appli_state = APPLICATION_IDLE;
+      // BSP_LED_Off(LED4);
+      // BSP_LED_Off(LED5);
+      f_mount(NULL, (TCHAR const*)"", 0);
+      break;
+
+    case HOST_USER_CLASS_ACTIVE:
+      Appli_state = APPLICATION_START;
+      break;
+
+    default:
+      break;
+    }
   /* USER CODE END 1 */
 }
 	

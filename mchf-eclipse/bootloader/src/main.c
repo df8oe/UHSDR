@@ -16,15 +16,12 @@
 #include "usbh_usr.h"
 #include "usbh_msc_core.h"
 #include "flash_if.h"
-#include "mchf.h"
-
-USB_OTG_CORE_HANDLE          USB_OTG_Core;
-USBH_HOST                    USB_Host;
+#include "mchf_boot_hw.h"
 
 pFunction Jump_To_Application;
 uint32_t JumpAddress;
 
-int main(void)
+int bootloader_main(void)
 {
     /* initialization */
     BSP_Init();
@@ -66,11 +63,11 @@ int main(void)
     /* Init upgrade mode display */
     STM_EVAL_LEDOn(BLON);
 
-    USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
+    // USBH_Init(&USB_OTG_Core, USB_OTG_HS_CORE_ID, &USB_Host, &USBH_MSC_cb, &USR_Callbacks);
 
     while (1)
     {
         /* Host Task handler */
-        USBH_Process(&USB_OTG_Core, &USB_Host);
+        // USBH_Process(&USB_OTG_Core, &USB_Host);
     }
 }
