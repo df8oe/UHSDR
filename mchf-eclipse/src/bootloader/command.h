@@ -36,7 +36,7 @@ extern "C" {
 /* Exported functions ------------------------------------------------------- */
 void COMMAND_UPLOAD(void);
 void COMMAND_DOWNLOAD(void);
-void COMMAND_JUMP(void);
+void COMMAND_ResetMCU(void);
 void COMMAND_ProgramFlashMemory(void);
 
 void UWP_Fail_Handler();

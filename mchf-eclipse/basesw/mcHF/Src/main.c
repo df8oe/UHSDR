@@ -106,7 +106,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-#ifndef BOOTLOADER_BUILD
+#ifdef BOOTLOADER_BUILD
+  bootloader_main();
+#else
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
@@ -121,7 +123,8 @@ int main(void)
   MX_TIM5_Init();
   MX_TIM8_Init();
   MX_USB_DEVICE_Init();
-#else
+#endif
+#ifdef BOOTLOADER_BUILD
   MX_USB_HOST_Init();
   MX_FATFS_Init();
 #endif
@@ -137,7 +140,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 #else
-  bootloader_main();
   while (1)
   {
   /* USER CODE END WHILE */

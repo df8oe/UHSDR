@@ -59,7 +59,7 @@ void Wait(int time)
     // we show the error message until user presses power...
     if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
     {
-        STM_EVAL_LEDOn(ON);
+        STM_EVAL_LEDOn(PWR_HOLD);
     }
 }
 
@@ -67,7 +67,7 @@ void Wait(int time)
 // USB error handling
 void Fail_Handler(char count)
 {
-    STM_EVAL_LEDOff(BLON);
+    STM_EVAL_LEDOff(BACKLIGHT);
     Wait(300);
 
     while(1)
@@ -76,9 +76,9 @@ void Fail_Handler(char count)
 
       for(i = 0; i < count; i++)
       {
-        STM_EVAL_LEDOn(BLON);
+        STM_EVAL_LEDOn(BACKLIGHT);
         Wait(100);
-        STM_EVAL_LEDOff(BLON);
+        STM_EVAL_LEDOff(BACKLIGHT);
         Wait(100);
       }
       Wait(300);
@@ -88,12 +88,12 @@ void Fail_Handler(char count)
 // flash programming error
 void FPE_Fail_Handler(void)
 {
-    STM_EVAL_LEDOn(BLON);
+    STM_EVAL_LEDOn(BACKLIGHT);
     STM_EVAL_LEDOff(LEDRED);
     STM_EVAL_LEDOff(LEDGREEN);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDRED);
         STM_EVAL_LEDToggle(LEDGREEN);
         Wait(250);
@@ -103,11 +103,11 @@ void FPE_Fail_Handler(void)
 // no flash memory left for file
 void FME_Fail_Handler(void)
 {
-    STM_EVAL_LEDOn(BLON);
+    STM_EVAL_LEDOn(BACKLIGHT);
     STM_EVAL_LEDOn(LEDRED);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDRED);
         Wait(250);
     }
@@ -116,12 +116,12 @@ void FME_Fail_Handler(void)
 // flash erase error
 void FEE_Fail_Handler(void)
 {
-    STM_EVAL_LEDOn(BLON);
+    STM_EVAL_LEDOn(BACKLIGHT);
     STM_EVAL_LEDOn(LEDRED);
     STM_EVAL_LEDOn(LEDGREEN);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDRED);
         STM_EVAL_LEDToggle(LEDGREEN);
         Wait(250);
@@ -131,11 +131,11 @@ void FEE_Fail_Handler(void)
 // flash is write protected, disk not mounted
 void UWP_Fail_Handler(void)
 {
-    STM_EVAL_LEDOff(BLON);
+    STM_EVAL_LEDOff(BACKLIGHT);
     STM_EVAL_LEDOn(LEDGREEN);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDGREEN);
         Wait(250);
     }
@@ -144,11 +144,11 @@ void UWP_Fail_Handler(void)
 // flash is read protected
 void UNS_Fail_Handler(void)
 {
-    STM_EVAL_LEDOn(BLON);
+    STM_EVAL_LEDOn(BACKLIGHT);
     STM_EVAL_LEDOn(LEDGREEN);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDGREEN);
         Wait(250);
     }
@@ -157,11 +157,11 @@ void UNS_Fail_Handler(void)
 // binary file not found for reading
 void FNF_Fail_Handler(void)
 {
-    STM_EVAL_LEDOff(BLON);
+    STM_EVAL_LEDOff(BACKLIGHT);
     STM_EVAL_LEDOn(LEDRED);
     while(1)
     {
-        STM_EVAL_LEDToggle(BLON);
+        STM_EVAL_LEDToggle(BACKLIGHT);
         STM_EVAL_LEDToggle(LEDRED);
         Wait(250);
     }
@@ -240,6 +240,9 @@ void COMMAND_UPLOAD(void)
   */
 void COMMAND_DOWNLOAD(void)
 {
+    /* Flash unlock */
+    FLASH_If_FlashUnlock();
+
     /* Reading for flash active: Red LED on */
     STM_EVAL_LEDOn(LEDRED);
     /* Open the binary file to be downloaded */
@@ -273,6 +276,9 @@ void COMMAND_DOWNLOAD(void)
         /* Toggle backlight and red LED in counterwise infinite loop: the binary file is not available */
         FNF_Fail_Handler();
     }
+
+    FLASH_If_FlashLock();
+
 }
 
 /**
@@ -280,7 +286,7 @@ void COMMAND_DOWNLOAD(void)
   * @param  None
   * @retval None
   */
-void COMMAND_JUMP(void)
+void COMMAND_ResetMCU(void)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
     /* Software reset */

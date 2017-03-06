@@ -10,8 +10,8 @@ typedef enum
 {
     LEDGREEN = 0,
     LEDRED = 1,
-    ON = 2,
-    BLON = 3
+    PWR_HOLD = 2,
+    BACKLIGHT = 3
 } Led_TypeDef;
 
 typedef enum
@@ -35,11 +35,11 @@ typedef enum
 #define LEDRED_GPIO_PORT                 GPIOB
 #define LEDRED_GPIO_CLK                  RCC_AHB1Periph_GPIOB
 
-#define ON_PIN                           GPIO_PIN_8
-#define ON_GPIO_PORT                     GPIOC
+#define POWER_ON_PIN                           GPIO_PIN_8
+#define POWER_ON_GPIO_PORT                     GPIOC
 
-#define BLON_PIN                         GPIO_PIN_2
-#define BLON_GPIO_PORT                   GPIOD
+#define BACKLIGHT_ON_PIN                         GPIO_PIN_2
+#define BACKLIGHT_ON_GPIO_PORT                   GPIOD
 
 #define BUTTONn                          2
 

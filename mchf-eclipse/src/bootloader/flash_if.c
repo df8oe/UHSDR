@@ -20,12 +20,18 @@
 
 static uint32_t FLASH_If_GetSectorNumber(uint32_t Address);
 
-void FLASH_If_FlashUnlock(void)
+void FLASH_If_FlashUnlock()
 {
     HAL_FLASH_Unlock();
 }
 
-FlagStatus FLASH_If_ReadOutProtectionStatus(void)
+void FLASH_If_FlashLock()
+{
+    HAL_FLASH_Lock();
+}
+
+
+FlagStatus FLASH_If_ReadOutProtectionStatus()
 {
     FLASH_OBProgramInitTypeDef OBInit;
 

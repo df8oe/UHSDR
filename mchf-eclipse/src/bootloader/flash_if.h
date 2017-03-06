@@ -65,8 +65,9 @@ extern const char* author; */
 
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void FLASH_If_FlashUnlock(void);
-FlagStatus FLASH_If_ReadOutProtectionStatus(void);
+void FLASH_If_FlashUnlock();
+void FLASH_If_FlashLock();
+FlagStatus FLASH_If_ReadOutProtectionStatus();
 uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length);
 HAL_StatusTypeDef FLASH_If_ProgramWord(uint32_t Address, uint32_t Data);
 
