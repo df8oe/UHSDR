@@ -180,12 +180,16 @@ static void audio_out_put_buffer(int16_t sample)
         out_buffer_overflow++;
     }
 }
+
+volatile uint16_t audio_out_buffer_fill()
+{
+    uint16_t temp_head = out_buffer_head;
+    return ((((temp_head < out_buffer_tail)?USB_AUDIO_OUT_BUF_SIZE:0) + temp_head) - out_buffer_tail);
+}
+
 volatile int16_t* audio_out_buffer_next_pkt(uint32_t len)
 {
-    uint16_t room;
-    uint16_t temp_head = out_buffer_head;
-    room = ((((temp_head < out_buffer_tail)?USB_AUDIO_OUT_BUF_SIZE:0) + temp_head) - out_buffer_tail);
-    if (room >= len)
+    if (audio_out_buffer_fill() >= len)
     {
         return &out_buffer[out_buffer_tail];
     }
@@ -297,6 +301,9 @@ static int8_t AUDIO_DeInit_FS(uint32_t options)
  * @param  cmd: Command opcode
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
+
+static uint16_t fill;
+
 static int8_t AUDIO_AudioCmd_FS (uint8_t* pbuf, uint32_t size, uint8_t cmd)
 {
     /* USER CODE BEGIN 2 */
@@ -324,11 +331,39 @@ static int8_t AUDIO_AudioCmd_FS (uint8_t* pbuf, uint32_t size, uint8_t cmd)
             {
                 uint16_t* pkt = (uint16_t*)pbuf;
                 uint32_t count;
-                for (count =0; count < size/2; count++)
-                {
+                static bool too_high = false;
 
+                fill =  audio_out_buffer_fill();
+                // USB_AUDIO_OUT_NUM_BUF * USB_AUDIO_OUT_PKT_SIZE
+                bool is_low_space = fill > (3*(USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
+                bool is_high_space = fill < (USB_AUDIO_OUT_NUM_BUF/4 * USB_AUDIO_OUT_PKT_SIZE);
+                bool is_high_ok = fill > (3*(USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
+                bool is_low_ok = fill < ((USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
+
+                uint16_t num_samples = size/2;
+
+                if (is_high_ok)
+                {
+                    too_high = false;
+                } else  {
+                    too_high = is_high_space;
+                }
+
+
+                if (is_low_space)
+                {
+                    num_samples-=2;
+                }
+                for (count =0; count < num_samples; count++)
+                {
                     audio_out_put_buffer(pkt[count]);
                 }
+                if (too_high)
+                {
+                    audio_out_put_buffer(pkt[num_samples-2]);
+                    audio_out_put_buffer(pkt[num_samples-1]);
+                }
+
             }
             AudioState = AUDIO_STATE_PLAYING;
             return USBD_OK;

@@ -72,11 +72,11 @@ typedef struct
 } LMSData;
 
 
-float32_t	__attribute__ ((section (".ccm"))) audio_delay_buffer	[AGC_DELAY_BUFSIZE+16];
+float32_t	__attribute__ ((section (".ccm"))) audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
 static void AudioDriver_ClearAudioDelayBuffer()
 {
-    arm_fill_f32(0, audio_delay_buffer, AGC_DELAY_BUFSIZE+16);
+    arm_fill_f32(0, audio_delay_buffer, AUDIO_DELAY_BUFSIZE);
 }
 
 // This is a fast approximation to log2()
@@ -1112,7 +1112,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
 
     ads.agc_decimation_scaling = ads.decimation_rate;
-    ads.agc_delay_buflen = AGC_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
+    ads.agc_delay_buflen = AUDIO_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
 
     // Set up ZOOM FFT FIR decimation filters
     // switch right FIR decimation filter depending on sd.magnify
@@ -4079,81 +4079,88 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //* Output Parameters   : data via "adb.i_buffer" and "adb.q_buffer"
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void AudioDriver_TxCompressor(int16_t blockSize, float gain_scaling)
+static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float gain_scaling)
 {
+    static uint32_t		alc_delay_inbuf = 0, alc_delay_outbuf;
 
-    ulong i;
-    static ulong		alc_delay_inbuf = 0, alc_delay_outbuf = 0;
-    static float		alc_calc, alc_var;
-
-    if(!ts.tune)        // do post-filter gain calculations if we are NOT in TUNE mode
+    if (ts.tx_comp_level > -1)
     {
-        // perform post-filter gain operation
-        // this is part of the compression
-        //
-        float32_t gain_calc = (float)ts.alc_tx_postfilt_gain_var;       // get post-filter gain setting
-        gain_calc /= 2;                                 // halve it
-        gain_calc += 0.5;                               // offset it so that 2 = unity
-
-        arm_scale_f32(adb.i_buffer, (float32_t)gain_calc, adb.i_buffer, blockSize);      // use optimized function to apply scaling to I/Q buffers
-        if (ts.dmod_mode != DEMOD_FM) {
-            arm_scale_f32(adb.q_buffer, (float32_t)gain_calc, adb.q_buffer, blockSize);
-        }
-    }
-
-    // ------------------------
-    // Do ALC processing on audio buffer - look-ahead type by KA7OEI
-    for(i = 0; i < blockSize; i++)
-    {
-        if(!ts.tune)	 	// if NOT in TUNE mode, do ALC processing
+        if(!ts.tune)        // do post-filter gain calculations if we are NOT in TUNE mode
         {
-            // perform ALC on post-filtered audio (You will notice the striking similarity to the AGC code!)
+            // perform post-filter gain operation
+            // this is part of the compression
             //
-            alc_calc = fabs(adb.i_buffer[i] * ads.alc_val);	// calculate current level by scaling it with ALC value (both channels will be the same amplitude-wise)
-            if(alc_calc < ALC_KNEE)	 	// is audio below ALC "knee" value?
-            {
-                alc_var = ALC_KNEE - alc_calc;	// calculate difference between ALC value and "knee" value
-                alc_var /= ALC_KNEE;			// calculate ratio of difference between knee value and this value
-                ads.alc_val += ads.alc_val * ads.alc_decay * alc_var;	// (ALC DECAY) Yes - Increase gain slowly
-            }
-            else
-            {
-                alc_var = alc_calc - ALC_KNEE;			// calculate difference between ALC value and "knee" value
-                alc_var /= ALC_KNEE;			// calculate ratio of difference between knee value and this value
-                ads.alc_val -= ads.alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
-                if(ads.alc_val <= ALC_VAL_MIN)	// Prevent zero or "negative" gain values
-                {
-                    ads.alc_val = ALC_VAL_MIN;
-                }
-            }
-            if(ads.alc_val >= ALC_VAL_MAX)	// limit to fixed values within the code
-            {
-                ads.alc_val = ALC_VAL_MAX;
-            }
+            float32_t gain_calc = ((float32_t)ts.alc_tx_postfilt_gain_var)/2.0 +0.5 ;
+            // get post-filter gain setting
+            // offset it so that 2 = unity
+
+            arm_scale_f32(buffer, gain_calc, buffer, blockSize);      // use optimized function to apply scaling to I/Q buffers
         }
-        else	 	// are we in TUNE mode?
+
+
+
+        // ------------------------
+        // Do ALC processing on audio buffer - look-ahead type by KA7OEI
+        if (false)
         {
-            ads.alc_val = ALC_VAL_MAX;		// yes, disable ALC and set to MAXIMUM ALC gain (e.g. unity - no gain reduction)
+            arm_fill_f32(ALC_VAL_MAX * gain_scaling, adb.agc_valbuf, blockSize);
         }
-        adb.agc_valbuf[i] = (ads.alc_val * gain_scaling);	// store in "running" ALC history buffer for later application to audio data
+        else
+        {
+            // since both values are marked as volatile, we copy them before using them, saves some cpu cycles.
+            static float32_t alc_val;
+            alc_val = ads.alc_val;
+            float32_t alc_decay = ads.alc_decay;
+
+            for(uint16_t i = 0; i < blockSize; i++)
+            {
+                // perform ALC on post-filtered audio (You will notice the striking similarity to the AGC code!)
+
+                // calculate current level by scaling it with ALC value
+                float32_t alc_var = fabsf(buffer[i] * alc_val)/ALC_KNEE - 1.0; // calculate difference between ALC value and "knee" value
+                if(alc_var < 0)	 	// is audio below ALC "knee" value?
+                {
+                    // alc_var is a negative value, so the resulting expression is negative
+                    // but we want to increase the alc_val -> we subtract it
+                    alc_val -= alc_val * alc_decay * alc_var;	// (ALC DECAY) Yes - Increase gain slowly
+                }
+                else
+                {
+                    // alc_var is a positive value
+                    alc_val -= alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
+                    if(alc_val < ALC_VAL_MIN)	// Prevent zero or "negative" gain values
+                    {
+                        alc_val = ALC_VAL_MIN;
+                    }
+                }
+                if(alc_val > ALC_VAL_MAX)	// limit to fixed values within the code
+                {
+                    alc_val = ALC_VAL_MAX;
+                }
+
+                adb.agc_valbuf[i] = (alc_val * gain_scaling);	// store in "running" ALC history buffer for later application to audio data
+            }
+
+            // copy final alc_val back into "storage"
+            ads.alc_val = alc_val;
+
+        }
+
+        // Delay the post-ALC audio slightly so that the ALC's "attack" will very slightly lead the audio being acted upon by the ALC.
+        // This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
+        // decimation rate so that it is constant for all settings.
+
+        // Update the in/out pointers to the ALC delay buffer
+        alc_delay_inbuf += blockSize;
+        alc_delay_outbuf = alc_delay_inbuf + blockSize;
+        alc_delay_inbuf %= AUDIO_DELAY_BUFSIZE;
+        alc_delay_outbuf %= AUDIO_DELAY_BUFSIZE;
+
+        arm_copy_f32(buffer, &audio_delay_buffer[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
+        arm_copy_f32(&audio_delay_buffer[alc_delay_outbuf], buffer, blockSize);	// take old data out of the delay buffer
+
+        arm_mult_f32(buffer, adb.agc_valbuf, buffer, blockSize);		// Apply ALC gain corrections to TX audio channels
     }
-    //
-    // Delay the post-ALC audio slightly so that the ALC's "attack" will very slightly lead the audio being acted upon by the ALC.
-    // This eliminates a "click" that can occur when a very strong signal appears due to the ALC lag.  The delay is adjusted based on
-    // decimation rate so that it is constant for all settings.
-    //
-    arm_copy_f32(adb.a_buffer, (float32_t *)&audio_delay_buffer[alc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32((float32_t *)&audio_delay_buffer[alc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
-    //
-    // Update the in/out pointers to the ALC delay buffer
-    //
-    alc_delay_inbuf += blockSize;
-    alc_delay_outbuf = alc_delay_inbuf + blockSize;
-    alc_delay_inbuf %= ALC_DELAY_BUFSIZE;
-    alc_delay_outbuf %= ALC_DELAY_BUFSIZE;
-    //
-    arm_mult_f32(adb.i_buffer, adb.agc_valbuf, adb.i_buffer, blockSize);		// Apply ALC gain corrections to both TX audio channels
-    arm_mult_f32(adb.q_buffer, adb.agc_valbuf, adb.q_buffer, blockSize);
 }
 
 // Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
@@ -4329,7 +4336,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
 
     AudioDriver_TxFilterAudio(true,ts.tx_audio_source != TX_AUDIO_DIG,adb.a_buffer,adb.i_buffer, blockSize);
 
-    AudioDriver_TxCompressor(blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+    AudioDriver_TxCompressor(adb.i_buffer, blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
     //
     // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "i" and puts it into "a".
     //
@@ -4641,6 +4648,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
             if (external_tx_mute == false)
             {
                 signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer,blockSize);
+
             }
         }
 
@@ -4666,7 +4674,10 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
                 AudioDriver_TxFilterAudio(true,tx_audio_source != TX_AUDIO_DIG, adb.a_buffer,adb.a_buffer, blockSize);
             }
 
-            //
+
+            // Do the TX ALC and speech compression/processing
+            AudioDriver_TxCompressor(adb.a_buffer, blockSize, SSB_ALC_GAIN_CORRECTION);
+
             // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
             // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
             // + 0 deg to I data
@@ -4674,7 +4685,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
             // - 90 deg to Q data
             arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
-            AudioDriver_TxCompressor(blockSize, SSB_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
 
             if(iq_freq_mode)
             {
@@ -4716,11 +4726,13 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
             //
             // + 0 deg to I data
             // AudioDriver_delay_f32((arm_fir_instance_f32 *)&FIR_I_TX,(float32_t *)(adb.a_buffer),(float32_t *)(adb.i_buffer),blockSize);
+
+            AudioDriver_TxCompressor(adb.a_buffer, blockSize, AM_ALC_GAIN_CORRECTION);    // Do the TX ALC and speech compression/processing
+
             arm_fir_f32(&FIR_I_TX,adb.a_buffer,adb.i_buffer,blockSize);
             // - 90 deg to Q data
             arm_fir_f32(&FIR_Q_TX,adb.a_buffer,adb.q_buffer, blockSize);
 
-            AudioDriver_TxCompressor(blockSize, AM_ALC_GAIN_CORRECTION);	// Do the TX ALC and speech compression/processing
             //
             // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
             // and putting them back together!  [KA7OEI]

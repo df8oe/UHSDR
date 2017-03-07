@@ -3652,7 +3652,7 @@ static void UiDriver_CheckEncoderOne()
             else	 		// In voice mode - adjust audio compression level
             {
                 // Convert to Audio Gain incr/decr
-                ts.tx_comp_level = change_and_limit_uint(ts.tx_comp_level,pot_diff_step,0,TX_AUDIO_COMPRESSION_MAX);
+                ts.tx_comp_level = change_and_limit_int(ts.tx_comp_level,pot_diff_step,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX);
                 AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
                 UiDriver_DisplayCmpLevel(1);	// update on-screen display
             }
@@ -4168,15 +4168,19 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
     char	temp[5];
     const char* outs;
 
-    if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
+    if (ts.tx_comp_level == TX_AUDIO_COMPRESSION_MIN)
+    {
+        outs ="OFF";
+    }
+    else if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
     {
         snprintf(temp,5," %02d",ts.tx_comp_level);
         outs = temp;
     }
-    else	 				// show "CUS" (Custom Value) for highest value
+    else
     {
+        color = Yellow; // Custom value - use yellow
         outs ="CUS";
-        color = Yellow;	// Custom value - use yellow
     }
 
     UiDriver_EncoderDisplay(1,0,"CMP" , encoder_active, outs, color);

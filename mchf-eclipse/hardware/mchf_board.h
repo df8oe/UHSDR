@@ -991,7 +991,7 @@ typedef struct TransceiverState
     uchar 	tx_audio_source;
     ulong	tx_mic_gain_mult;
     uchar	tx_gain[TX_AUDIO_NUM];
-    uchar	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
+    int16_t	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
 
     // Global tuning flag - in every demod mode
     uchar 	tune;

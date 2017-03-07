@@ -470,7 +470,8 @@ enum	{
 //
 // Factors used in audio compressor adjustment limits
 //
-#define	TX_AUDIO_COMPRESSION_MAX		13	// 0 = least compression, 12 = most, 13 = EEPROM values ("CUS" = CUSTOM) - custom selected by user
+#define	TX_AUDIO_COMPRESSION_MIN		-1	// -1 = OFF
+#define TX_AUDIO_COMPRESSION_MAX        13  // 0 = least compression, 12 = most, 13 = EEPROM values ("CUS" = CUSTOM) - custom selected by user
 #define	TX_AUDIO_COMPRESSION_SV			13
 #define	TX_AUDIO_COMPRESSION_DEFAULT	2
 //
@@ -536,12 +537,9 @@ enum	{
 #define DSP_SWITCH_TREBLE			99
 #define DSP_SWITCH_MAX				6 // bass & treble not used here
 //
-#define	AGC_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
+#define	AUDIO_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 // This is divided by the decimation rate so that the time delay is constant.
-//
-#define	ALC_DELAY_BUFSIZE		(BUFF_LEN/2)*5		// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
-//
-//
+
 #define CLOCKS_PER_DMA_CYCLE	10656			// Number of 16 MHz clock cycles per DMA cycle
 #define	CLOCKS_PER_CENTISECOND	160000			// Number of 16 MHz clock cycles per 0.01 second timing cycle
 //

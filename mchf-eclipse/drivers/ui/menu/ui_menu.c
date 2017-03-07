@@ -1577,8 +1577,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %d", (int)ts.alc_tx_postfilt_gain_var);
         break;
     case MENU_TX_COMPRESSION_LEVEL:     // ALC TX Post-filter gain (Compressor level)
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_comp_level,
-                                              0,
+        var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.tx_comp_level,
+                                              -1,
                                               TX_AUDIO_COMPRESSION_MAX,
                                               TX_AUDIO_COMPRESSION_DEFAULT,
                                               1
@@ -1594,13 +1594,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
         }
 
-        if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV)  //  display numbers for all but the highest value
+        if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV && 0 <= ts.tx_comp_level)  //  display numbers for all but the highest value
         {
             snprintf(options,32,"    %d",ts.tx_comp_level);
         }
         else                    // show "CUSTOM" (Stored Value) for highest value
         {
-            txt_ptr = "CUSTOM";
+            if (ts.tx_comp_level == TX_AUDIO_COMPRESSION_MIN)
+            {
+                txt_ptr = "OFF";
+            }
+            else
+            {
+                txt_ptr = "CUS";
+            }
         }
         break;
     case MENU_KEYER_MODE:   // Keyer mode

@@ -220,13 +220,15 @@ static const AlcParams alc_params[] =
  */
 void AudioManagement_CalcTxCompLevel()
 {
-    if (ts.tx_comp_level < 13)
+    int16_t tx_comp_level = ts.tx_comp_level;
+
+    if (TX_AUDIO_COMPRESSION_MIN < tx_comp_level && tx_comp_level < TX_AUDIO_COMPRESSION_SV)
     {
         ts.alc_tx_postfilt_gain_var = alc_params[ts.tx_comp_level].tx_postfilt_gain;      // restore "pristine" EEPROM values
         ts.alc_decay_var = alc_params[ts.tx_comp_level].alc_decay;
 
     }
-    else if (ts.tx_comp_level == 13)                    // get the speech compressor setting
+    else if (tx_comp_level == TX_AUDIO_COMPRESSION_SV)                    // get the speech compressor setting
     {
         // read saved values from EEPROM
         ts.alc_tx_postfilt_gain_var = ts.alc_tx_postfilt_gain;      // restore "pristine" EEPROM values
