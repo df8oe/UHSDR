@@ -16,6 +16,8 @@
 #include "mchf_boot_hw.h"
 #include "command.h"
 #include "fatfs.h"
+#include "usb_host.h"
+
 #include <unistd.h>
 
 
@@ -33,9 +35,16 @@ static void mcHF_PowerHoldOn()
     STM_EVAL_LEDOff(PWR_HOLD);
 }
 
+extern USBH_HandleTypeDef hUsbHostHS;
+static uint8_t mcHF_USBConnected()
+{
+    return hUsbHostHS.device.is_connected;
+}
+
 
 int BL_MSC_Application(void)
 {
+
     /* Register the file system object to the FatFs module */
     if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
     {
@@ -63,8 +72,8 @@ int BL_MSC_Application(void)
         while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 0))
         {}
 
-        /* Waiting User Button Pressed */
-        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 1))
+        /* Waiting User Button Pressed or usb drive removed. If drive is removed, we go straight to reboot */
+        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 1) && mcHF_USBConnected() != 0)
         {
             /* switch off if power button is pressed */
             if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
@@ -73,8 +82,8 @@ int BL_MSC_Application(void)
             }
         }
 
-        /* Waiting User Button Released */
-        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 0))
+        /* Waiting User Button Released or usb drive removed.  If drive is removed, we go straight to reboot */
+        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 0) && mcHF_USBConnected() != 0)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
@@ -116,7 +125,7 @@ int bootloader_main()
     if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)		// no reboot requested?
     {
         // we wait for a longer time
-        HAL_Delay(1000);
+        HAL_Delay(300);
     }
     mcHF_PowerHoldOn();
 
