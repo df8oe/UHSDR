@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-03-08T12:07:20  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
+generated at  2017-03-08T12:07:20  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -19,11 +19,11 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **LSB/USB Auto Select**       (                  MENU_SSB_AUTO_MODE_SELECT) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency. | 
+| **LSB/USB Auto Select**       (                  MENU_SSB_AUTO_MODE_SELECT) | If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for each band by its frequency. | 
 | **Digital Modes**             (                          MENU_DIGI_DISABLE) | Disable appearance of digital modes when pressing Mode button | 
 | **CW Mode**                   (                            MENU_CW_DISABLE) | Disable appearance of CW mode when pressing Mode button | 
 | **AM Mode**                   (                            MENU_AM_DISABLE) | Disable appearance of AM mode when pressing Mode button | 
-| **SyncAM Mode**               (                             MENU_DEMOD_SAM) | Disable appearance of SyncAM modeswhen pressing Mode button | 
+| **SyncAM Mode**               (                             MENU_DEMOD_SAM) | Disable appearance of SyncAM modes when pressing Mode button | 
 | **SAM PLL locking range**     (                 MENU_SAM_PLL_LOCKING_RANGE) | SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier. | 
 | **SAM PLL step response**     (                 MENU_SAM_PLL_STEP_RESPONSE) | Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive. | 
 | **SAM PLL bandwidth in Hz**   (                     MENU_SAM_PLL_BANDWIDTH) | Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100]. | 
@@ -31,26 +31,26 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 | **FM Mode**                   (                        MENU_FM_MODE_ENABLE) | Disable appearance of FM mode when pressing Mode button | 
 | **FM Sub Tone Gen**           (                MENU_FM_GEN_SUBAUDIBLE_TONE) | Enable generation of CTCSS tones during FM transmissions. | 
 | **FM Sub Tone Det**           (                MENU_FM_DET_SUBAUDIBLE_TONE) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
-| **FM Tone Burst**             (                    MENU_FM_TONE_BURST_MODE) | Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
+| **FM Tone Burst**             (                    MENU_FM_TONE_BURST_MODE) | Enabled sending of short tone at beginning of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
 | **FM Deviation**              (                           MENU_FM_DEV_MODE) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
 | **RF Gain**                   (                           MENU_RF_GAIN_ADJ) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
 | **AGC Mode**                  (                              MENU_AGC_MODE) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
 | **Custom AGC (+=Slower)**     (                            MENU_CUSTOM_AGC) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
 | **AGC WDSP switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
 | **AGC WDSP Mode**             (                         MENU_AGC_WDSP_MODE) | Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC. | 
-| **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the most silent signal after the AGC action has taken place. Given in dB. | 
+| **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the quietest signal after the AGC action has taken place. Given in dB. | 
 | **AGC WDSP Decay**            (                    MENU_AGC_WDSP_TAU_DECAY) | Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds. | 
 | **AGC Threshold**             (                       MENU_AGC_WDSP_THRESH) | ´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold. | 
-| **AGC Hang enable**           (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: I enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
+| **AGC Hang enable**           (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: If enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
 | **AGC Hang time**             (                    MENU_AGC_WDSP_HANG_TIME) | Hang AGC: hang time is the time period over which the AGC gain is held constant when in AGC Hang mode. After this period the gain is increased fast. | 
 | **AGC Hang threshold**        (                  MENU_AGC_WDSP_HANG_THRESH) | ´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place. | 
 | **AGC Hang Decay**            (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
-| **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best. | 
+| **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
-| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select used signal input for transmit (except in CW). Also changeable via long press on M3 | 
+| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select the required signal input for transmit (except in CW). Also changeable via long press on M3 | 
 | **Mic Input Gain**            (                              MENU_MIC_GAIN) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
 | **Line Input Gain**           (                             MENU_LINE_GAIN) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
-| **TX Audio Compress**         (                  MENU_TX_COMPRESSION_LEVEL) | Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
+| **TX Audio Compress**         (                  MENU_TX_COMPRESSION_LEVEL) | Control the TX audio compressor. Higher values give more compression. Set to CUSTOM for user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
 | **TX ALC Release Time**       (                           MENU_ALC_RELEASE) | If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level. | 
 | **TX ALC Input Gain**         (                     MENU_ALC_POSTFILT_GAIN) | If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level. | 
 | **RX NB Setting**             (                 MENU_NOISE_BLANKER_SETTING) | Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active. | 
@@ -68,9 +68,9 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **Save Out-Of-Band Freq.**    (                CONFIG_FREQ_MEM_LIMIT_RELAX) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
 | **TX on Out-Of-Band Freq.**   (                       CONFIG_TX_OUT_ENABLE) | Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load! | 
-| **Transmit Disable**          (                          CONFIG_TX_DISABLE) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made. | 
+| **Transmit Disable**          (                          CONFIG_TX_DISABLE) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but no transmission is made. | 
 | **Menu SW on TX disable**     (       CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH) | Control if the screen automatically adapts Encoder value focus when switching between RX and TX. | 
-| **TX Mute LineOut**           (                    CONFIG_MUTE_LINE_OUT_TX) | During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
+| **TX Mute LineOut**           (                    CONFIG_MUTE_LINE_OUT_TX) | During transmission with frequency translation off, line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
 | **TX Initial Muting Time**    (              CONFIG_TXRX_SWITCH_AUDIO_MUTE) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
 | **Max Volume**                (                          CONFIG_MAX_VOLUME) | Set maximum speaker&headphone volume.          | 
 | **Max RX Gain (0=Max)**       (                         CONFIG_MAX_RX_GAIN) | Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions. | 
@@ -114,8 +114,8 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | After x seconds LCD turns dark and LCD data sctios stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen. | 
-| **Step Size Marker**          (               CONFIG_FREQ_STEP_MARKER_LINE) | If enabled, you'll see a line under the digit which is currently representing the selected step size | 
+| **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | After x seconds LCD turns dark and LCD data sections stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen. | 
+| **Step Size Marker**          (               CONFIG_FREQ_STEP_MARKER_LINE) | If enabled, you'll see a line under the digit which is currently representing the selected tuning step size | 
 | **Filter BW Display**         (               CONFIG_DISP_FILTER_BANDWIDTH) | Colour of the horizontal Filter Bandwidth indicator bar. | 
 | **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
 | **Spectrum Magnify**          (                      MENU_SPECTRUM_MAGNIFY) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
@@ -127,15 +127,15 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 | **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
 | **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
 | **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | Adjusting of scope / waterfall AGC for fitting graphs to screen | 
-| **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | Set color of scope                             | 
-| **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set color of scope grid                        | 
+| **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | Set colour of scope                            | 
+| **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set colour of scope grid                       | 
 | **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | Set rf range for scope                         | 
 | **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | Set scope line corresponding to NO SIGNAL      | 
 | **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
 | **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | Set to input level which waterfall uses for lowest level | 
-| **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | Adjust to fit your personal input level range to displayable color range for waterfall | 
+| **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | Adjust to fit your personal input level range to displayable colour range for waterfall | 
 | **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | Set NO SIGNAL state for waterfall              | 
 | **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
@@ -153,9 +153,9 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 | **CW Sidetone Gain**          (                         MENU_SIDETONE_GAIN) | Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode. | 
 | **CW Side/Offset Freq**       (                    MENU_SIDETONE_FREQUENCY) | Sidetone Frequency (also Offset frequency, see CW Freq. Offset below) | 
 | **CW Paddle Reverse**         (                        MENU_PADDLE_REVERSE) | Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles. | 
-| **CW TX->RX Delay**           (                        MENU_CW_TX_RX_DELAY) | How long to stay in CW mode after stop sending a signal. | 
+| **CW TX->RX Delay**           (                        MENU_CW_TX_RX_DELAY) | How long to stay in CW TX mode after stop sending a signal. | 
 | **CW Freq. Offset**           (                        MENU_CW_OFFSET_MODE) | TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone. | 
-| **CW LSB/USB Select**         (                   MENU_CW_AUTO_MODE_SELECT) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode | 
+| **CW LSB/USB Select**         (                   MENU_CW_AUTO_MODE_SELECT) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode | 
 
 
 ## Filter Selection (`MENU_FILTER`)
@@ -182,7 +182,7 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **Tune Power Level**          (                    CONFIG_TUNE_POWER_LEVEL) | Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level. | 
+| **Tune Power Level**          (                    CONFIG_TUNE_POWER_LEVEL) | Select the power level for TUNE operation. May be set using the selected power level or have a fixed power level. | 
 | **Tune Tone (SSB)**           (                      CONFIG_TUNE_TONE_MODE) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
 | **CW PA Bias (If >0 )**       (                          CONFIG_CW_PA_BIAS) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
 | **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
@@ -244,8 +244,8 @@ generated at  2017-02-22T19:17:51  by "./ui_menu_structure_mdtable.py"
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
 | **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
 | **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
-| **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory a FT817 Clone Info (to be used with CHIRP). | 
-| **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from a FT817 Clone Info (to be used with CHIRP). | 
+| **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
+| **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 
 
 [//]: # ( EOFILE                                                                       )

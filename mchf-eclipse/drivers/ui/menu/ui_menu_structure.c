@@ -56,11 +56,11 @@ const MenuDescriptor topGroup[] =
 const MenuDescriptor baseGroup[] =
 {
 //    { MENU_BASE, MENU_ITEM, MENU_SSB_NARROW_FILT,"029","CW Filt in SSB Mode", UiMenuDesc(":soon:") },
-    { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT, NULL, "LSB/USB Auto Select", UiMenuDesc("If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for bands by its frequency.")},
+    { MENU_BASE, MENU_ITEM, MENU_SSB_AUTO_MODE_SELECT, NULL, "LSB/USB Auto Select", UiMenuDesc("If enabled, the appropriate sideband mode for SSB and FreeDV is chosen as default for each band by its frequency.")},
     { MENU_BASE, MENU_ITEM, MENU_DIGI_DISABLE,  NULL,"Digital Modes", UiMenuDesc("Disable appearance of digital modes when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_CW_DISABLE, NULL, "CW Mode", UiMenuDesc("Disable appearance of CW mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_AM_DISABLE, NULL, "AM Mode", UiMenuDesc("Disable appearance of AM mode when pressing Mode button")},
-    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,  NULL,"SyncAM Mode",UiMenuDesc("Disable appearance of SyncAM modeswhen pressing Mode button")  },
+    { MENU_BASE, MENU_ITEM, MENU_DEMOD_SAM,  NULL,"SyncAM Mode",UiMenuDesc("Disable appearance of SyncAM modes when pressing Mode button")  },
     { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_LOCKING_RANGE, NULL, "SAM PLL locking range", UiMenuDesc("SAM PLL Locking Range in Hz: this determines how far up and down from the carrier frequency of an AM station we can offtune the receiver, so that the PLL will still lock to the carrier.") },
     { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_STEP_RESPONSE, NULL, "SAM PLL step response", UiMenuDesc("Step response = Zeta = damping factor of the SAM PLL. Sets the stability and transient response of the PLL. Larger values give faster lock even if you are offtune, but PLL is also more sensitive.") },
     { MENU_BASE, MENU_ITEM, MENU_SAM_PLL_BANDWIDTH, NULL, "SAM PLL bandwidth in Hz", UiMenuDesc("Bandwidth of the PLL loop = OmegaN in Hz: smaller bandwidth = more stable lock. FAST LOCK SAM PLL - set Step response and PLL bandwidth to large values [eg. 80 / 350]; DX (SLOW & STABLE) SAM PLL - set Step response and PLL bandwidth to small values [eg. 30 / 100].") },
@@ -68,28 +68,28 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_FM_MODE_ENABLE, NULL, "FM Mode", UiMenuDesc("Disable appearance of FM mode when pressing Mode button")},
     { MENU_BASE, MENU_ITEM, MENU_FM_GEN_SUBAUDIBLE_TONE, NULL, "FM Sub Tone Gen", UiMenuDesc("Enable generation of CTCSS tones during FM transmissions.") },
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE, NULL, "FM Sub Tone Det", UiMenuDesc("Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected.") },
-    { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE, NULL, "FM Tone Burst", UiMenuDesc("Enabled sending of short tone at begin of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz.") },
+    { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE, NULL, "FM Tone Burst", UiMenuDesc("Enabled sending of short tone at beginning of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz.") },
     { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE, NULL, "FM Deviation", UiMenuDesc("Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX") },
     { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ, NULL, "RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
     { MENU_BASE, MENU_ITEM, MENU_AGC_MODE, NULL, "AGC Mode", UiMenuDesc("Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
     { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC, NULL, "Custom AGC (+=Slower)", UiMenuDesc("If AGC is set to CUSTOM, this controls the speed setting of AGC") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC WDSP switch", UiMenuDesc("You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_MODE, NULL, "AGC WDSP Mode", UiMenuDesc("Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC.") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("Slope of the AGC is the difference between the loudest signal and the most silent signal after the AGC action has taken place. Given in dB.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("Slope of the AGC is the difference between the loudest signal and the quietest signal after the AGC action has taken place. Given in dB.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_TAU_DECAY, NULL, "AGC WDSP Decay", UiMenuDesc("Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_THRESH, NULL, "AGC Threshold", UiMenuDesc("´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold.") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_ENABLE, NULL, "AGC Hang enable", UiMenuDesc("Enable/Disable Hang AGC function: I enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC.") },
+    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_ENABLE, NULL, "AGC Hang enable", UiMenuDesc("Enable/Disable Hang AGC function: If enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_TIME, NULL, "AGC Hang time", UiMenuDesc("Hang AGC: hang time is the time period over which the AGC gain is held constant when in AGC Hang mode. After this period the gain is increased fast.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_THRESH, NULL, "AGC Hang threshold", UiMenuDesc("´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_TAU_HANG_DECAY, NULL, "AGC Hang Decay", UiMenuDesc("Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds.") },
-    { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the dynamic range is used best.") },
+    { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used.") },
 
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV, NULL, "RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },
-    { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE, NULL, "Mic/Line Select", UiMenuDesc("Select used signal input for transmit (except in CW). Also changeable via long press on M3") },
+    { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE, NULL, "Mic/Line Select", UiMenuDesc("Select the required signal input for transmit (except in CW). Also changeable via long press on M3") },
     { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN, NULL, "Mic Input Gain", UiMenuDesc("Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input") },
     { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN, NULL, "Line Input Gain", UiMenuDesc("LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input") },
 
-    { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL, NULL, "TX Audio Compress", UiMenuDesc("Control the TX audio compressor. Higher values == more compression. Set to CUSTOM to set user defined compression parameters. See below. Also changeable via Encoder 1 (CMP).") },
+    { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL, NULL, "TX Audio Compress", UiMenuDesc("Control the TX audio compressor. Higher values give more compression. Set to CUSTOM for user defined compression parameters. See below. Also changeable via Encoder 1 (CMP).") },
     { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE, NULL, "TX ALC Release Time", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level.") },
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN, NULL, "TX ALC Input Gain", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level.") },
 
@@ -107,8 +107,8 @@ const MenuDescriptor baseGroup[] =
 
 const MenuDescriptor displayGroup[] =
 {
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc("After x seconds LCD turns dark and LCD data sctios stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen.") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE, NULL, "Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected step size") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc("After x seconds LCD turns dark and LCD data sections stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen.") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE, NULL, "Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected tuning step size") },
     { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH, NULL, "Filter BW Display", UiMenuDesc("Colour of the horizontal Filter Bandwidth indicator bar.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE, NULL, "Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY, NULL, "Spectrum Magnify", UiMenuDesc("Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting.") },
@@ -120,15 +120,15 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE, NULL, "Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc("Adjusting of scope / waterfall AGC for fitting graphs to screen") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set color of scope") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set color of scope grid") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set colour of scope") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set colour of scope grid") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc("Set rf range for scope") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc("Set scope line corresponding to NO SIGNAL") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED, NULL, "Wfall 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME, NULL, "Wfall Colours", UiMenuDesc("Select colour scheme for waterfall display.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE, NULL, "Wfall Step Size", UiMenuDesc("How many lines are moved in a single screen update") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET, NULL, "Wfall Brightness", UiMenuDesc("Set to input level which waterfall uses for lowest level") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST, NULL, "Wfall Contrast", UiMenuDesc("Adjust to fit your personal input level range to displayable color range for waterfall") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST, NULL, "Wfall Contrast", UiMenuDesc("Adjust to fit your personal input level range to displayable colour range for waterfall") },
     { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST, NULL, "Wfall NoSig Adj.", UiMenuDesc("Set NO SIGNAL state for waterfall") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP, NULL, "Upper Meter Colour", UiMenuDesc("Set the colour of the scale of combined S/Power-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
@@ -146,9 +146,9 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN, NULL, "CW Sidetone Gain", UiMenuDesc("Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode.") },
     { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY, NULL, "CW Side/Offset Freq", UiMenuDesc("Sidetone Frequency (also Offset frequency, see CW Freq. Offset below)") },
     { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE, NULL, "CW Paddle Reverse", UiMenuDesc("Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles.") },
-    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW mode after stop sending a signal.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW TX mode after stop sending a signal.") },
     { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE, NULL, "CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone.") },
-    { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. Long press on Mode button to get the other sideband mode")},
+    { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
     { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -158,10 +158,10 @@ const MenuDescriptor confGroup[] =
     // Unused in firmware: { MENU_CONF, MENU_ITEM, CONFIG_FREQ_LIMIT_RELAX,"231","Freq. Limit Disable", UiMenuDesc(":soon:") },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQ_MEM_LIMIT_RELAX, NULL, "Save Out-Of-Band Freq.", UiMenuDesc("Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button)") },
     { MENU_CONF, MENU_ITEM, CONFIG_TX_OUT_ENABLE, NULL, "TX on Out-Of-Band Freq.", UiMenuDesc("Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load!") },
-    { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE, NULL, "Transmit Disable", UiMenuDesc("Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but not transmission is made.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_TX_DISABLE, NULL, "Transmit Disable", UiMenuDesc("Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but no transmission is made.") },
     { MENU_CONF, MENU_ITEM, CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH, NULL, "Menu SW on TX disable", UiMenuDesc("Control if the screen automatically adapts Encoder value focus when switching between RX and TX.") },
 
-    { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX, NULL, "TX Mute LineOut", UiMenuDesc("During transmission with frequency translation off line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_MUTE_LINE_OUT_TX, NULL, "TX Mute LineOut", UiMenuDesc("During transmission with frequency translation off, line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here.") },
     { MENU_CONF, MENU_ITEM, CONFIG_TXRX_SWITCH_AUDIO_MUTE, NULL, "TX Initial Muting Time", UiMenuDesc("When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches!") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_VOLUME, NULL, "Max Volume", UiMenuDesc("Set maximum speaker&headphone volume.") },
     { MENU_CONF, MENU_ITEM, CONFIG_MAX_RX_GAIN, NULL, "Max RX Gain (0=Max)", UiMenuDesc("Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions.") },
@@ -234,7 +234,7 @@ const MenuDescriptor confGroup[] =
 
 const MenuDescriptor powGroup[] =
 {
-    { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL, NULL, "Tune Power Level", UiMenuDesc("Select the power level for TUNE operation. May be set to follow the selected power level or have a fixed power level.") },
+    { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL, NULL, "Tune Power Level", UiMenuDesc("Select the power level for TUNE operation. May be set using the selected power level or have a fixed power level.") },
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_TONE_MODE, NULL, "Tune Tone (SSB)", UiMenuDesc("Select if single tone or two tone is generated during TUNE operation. Not persistent.") },
     { MENU_POW, MENU_ITEM, CONFIG_CW_PA_BIAS, NULL, "CW PA Bias (If >0 )", UiMenuDesc("If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW") },
     { MENU_POW, MENU_ITEM, CONFIG_REDUCE_POWER_ON_LOW_BANDS, NULL, "Reduce Power on Low Bands", UiMenuDesc("If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values (four times). This permits better control of generated power on these frequencies.") },
@@ -351,8 +351,8 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_SEC, &ts.rtc_present,"RTC Seconds", UiMenuDesc("Sets the Real Time Clock Seconds. Needs HW Modifications.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_RESET, &ts.vbat_present,"RTC Reset", UiMenuDesc("Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_CALIB, &ts.rtc_present,"RTC Calibration", UiMenuDesc("Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory a FT817 Clone Info (to be used with CHIRP).") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from a FT817 Clone Info (to be used with CHIRP).") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
 
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
