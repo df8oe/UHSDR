@@ -39,10 +39,6 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
-# choose what Keil-Library you want to use
-#SCMSIS_LIB_VERSION = arm_cortexM4lf_math
-CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
-
 # compilation options
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 BASECFLAGS  = $(MACHFLAGS)  \
@@ -158,12 +154,12 @@ all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
 # compilation
 $(LPRJ).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
 
 # compilation
 bootloader.elf:  $(BLOBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -TSTM32F407VG_FLASH_BOOT.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Tarm-gcc-link-bootloader.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
 
 
 $(PRJ).handbook:
@@ -182,6 +178,8 @@ clean:
 	$(RM) $(call FixPath,$(PRJ).bin)
 	$(RM) $(call FixPath,$(LPRJ).map)
 	$(RM) $(call FixPath,bootloader.elf)
+	$(RM) $(call FixPath,bootloader.elf.map)
+	$(RM) $(call FixPath,bootloader.bin)
 	$(RM) $(call FixPath,*~)
 
 handy:  

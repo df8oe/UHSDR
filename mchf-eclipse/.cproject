@@ -221,7 +221,7 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1298670015" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1910327674" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.1573540236" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" useByScannerDiscovery="false" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link.ld}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.295724467" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="mchf-eclipse"/>
@@ -341,7 +341,7 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.1880822349" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="" valueType="string"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.1267042653" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link.ld}&quot;"/>
 								</option>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.2086019819" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1298670015"/>
@@ -434,7 +434,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nodeflibs.1382913242" name="Do not use default libraries (-nodefaultlibs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nodeflibs" value="false" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostdlibs.1348830386" name="No startup or default libs (-nostdlib)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostdlibs" value="false" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.1431291428" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link.ld}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.1628555515" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/DebugLib}&quot;"/>
@@ -1979,7 +1979,7 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1618291363" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1129260695" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.1468228996" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" useByScannerDiscovery="false" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH_BOOT.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link-bootloader.ld}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1545154085" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="m"/>
@@ -2099,7 +2099,7 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.442882318" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" value="" valueType="string"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.1917159223" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH_BOOT.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link-bootloader.ld}&quot;"/>
 								</option>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1748542853" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1618291363"/>
@@ -2241,7 +2241,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nodeflibs.1186467560" name="Do not use default libraries (-nodefaultlibs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nodeflibs" value="false" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostdlibs.1646335771" name="No startup or default libs (-nostdlib)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.nostdlibs" value="false" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.604590339" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/STM32F407VG_FLASH_BOOT.ld}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/arm-gcc-link-bootloader.ld}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.1530588692" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/DebugLib}&quot;"/>
