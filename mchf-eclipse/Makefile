@@ -88,6 +88,7 @@ CC = @${PREFIX}/bin/arm-none-eabi-gcc
 CXX = @${PREFIX}/bin/arm-none-eabi-g++
 OC = @${PREFIX}/bin/arm-none-eabi-objcopy
 OS = @${PREFIX}/bin/arm-none-eabi-size
+HEX2DFU = support/hex2dfu/hex2dfu.py
 
 ifdef SystemRoot  # WINxx
     CC = arm-none-eabi-gcc
@@ -141,6 +142,16 @@ BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
 	$(OS) $<
 	$(OC) -v -O binary $< $@
 
+%.hex: %.elf
+	$(ECHO) "  [BIN] $@"
+	$(OS) $<
+	$(OC) -v -O ihex $< $@
+
+%.dfu: %.hex
+	$(ECHO) "  [H2D] $@"
+	$(OS) $<
+	$(HEX2DFU) $< $@
+
 # ---------------------------------------------------------
 #  BUILT-IN HELP
 #
@@ -159,7 +170,7 @@ help:
 
 .PHONY: all clean docs docs-clean help
 
-bootloader: bootloader.bin bootloader.elf
+bootloader: bootloader.bin bootloader.dfu
 
 
 all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
