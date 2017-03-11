@@ -64,7 +64,9 @@
 
 /* Valid pages in read and write defines */
 #define READ_FROM_VALID_PAGE  ((uint8_t)0x00)
-#define WRITE_IN_VALID_PAGE   ((uint8_t)0x01)
+#define RECEIVE_WRITE_PAGE   ((uint8_t)0x01)
+#define WRITE_TO_VALID_PAGE   ((uint8_t)0x02)
+
 
 /* Page full define */
 #define PAGE_FULL             ((uint8_t)0x80)
