@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-03-08T12:07:20  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-03-11T11:18:33  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v1.5.9 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # mcHF FW v1.5.9 - UI Menu Overview
 
-generated at  2017-03-08T12:07:20  by "./ui_menu_structure_mdtable.py"
+generated at  2017-03-11T11:18:33  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -80,7 +80,7 @@ generated at  2017-03-08T12:07:20  by "./ui_menu_structure_mdtable.py"
 | **Beep Volume**               (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
 | **CAT Mode**                  (                          CONFIG_CAT_ENABLE) | Enabled the FT 817 emulation via USB. See Wiki for more information. | 
 | **CAT Running In Sandbox**    (                      CONFIG_CAT_IN_SANDBOX) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
-| **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If OFF, it reports the displayed frequency. If ON, it reports the center frequency, which is more useful with SDR programs. | 
+| **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If ON, it reports the displayed frequency. If OFF, it reports the center frequency, which is more useful with SDR programs. | 
 | **XVTR Offs/Mult**            (                    CONFIG_XVTR_OFFSET_MULT) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
 | **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
