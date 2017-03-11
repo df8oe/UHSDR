@@ -8,9 +8,7 @@ install:
 script:
     - cd mchf-eclipse
     - make all
-    - cd bootloader/src
-    - make
-    - cd ../..
+    - make bootloader
 before_deploy:
     - sudo apt-get install -y doxygen graphviz
     - make docs > /dev/null && tar -czf docs.tar.gz -C .. docs

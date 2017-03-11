@@ -49,9 +49,17 @@ BASECFLAGS  = $(MACHFLAGS)  \
 
 # propagate version info from source to environment variables
 PROJECT_VERSION_FILE := src/mchf_version.h
+
+ifdef MSYSTEM
 $(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_MINOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_RELEASE/{s!\#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+else
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+endif
+
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
 LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs

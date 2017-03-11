@@ -7,7 +7,7 @@ MEMORY
 	ram1 (rwx) : ORIGIN = 0x10000000, LENGTH = 64k
 }
 
-_estack = ORIGIN(ram) + LENGTH(ram);
+_estack = ORIGIN(ram) + LENGTH(ram) -8;  /* -8 keeps older DF8OE bootloaders (before 2.0.2-HAL) happy */
 
 SECTIONS
 {
