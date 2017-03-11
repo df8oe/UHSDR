@@ -49,9 +49,9 @@ BASECFLAGS  = $(MACHFLAGS)  \
 
 # propagate version info from source to environment variables
 PROJECT_VERSION_FILE := src/mchf_version.h
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_MINOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_RELEASE/{s!\#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
 LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs
@@ -76,17 +76,25 @@ include bootloader.mak
 
 INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
 
+CC = @${PREFIX}/bin/arm-none-eabi-gcc
+CXX = @${PREFIX}/bin/arm-none-eabi-g++
+OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+OS = @${PREFIX}/bin/arm-none-eabi-size
+
 ifdef SystemRoot  # WINxx
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
     OS = arm-none-eabi-size
-else
-    CC = @${PREFIX}/bin/arm-none-eabi-gcc
-    CXX = @${PREFIX}/bin/arm-none-eabi-g++
-    OC = @${PREFIX}/bin/arm-none-eabi-objcopy
-    OS = @${PREFIX}/bin/arm-none-eabi-size
 endif
+
+ifdef MSYSTEM
+    CC = arm-none-eabi-gcc
+    CXX = arm-none-eabi-g++
+    OC = arm-none-eabi-objcopy
+    OS = arm-none-eabi-size
+endif
+
 
 ECHO = @echo
 
