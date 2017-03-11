@@ -1,5 +1,12 @@
 #  -*- makefile -*-
+# if you want to build in a different directory than this one
+# go to the directory, figure out the path from the new diretory you are in to this one and call make like this
+# make -f replace_with_pfad_to_makefile/Makefile ROOTLOC=replace_with_pfad_to_makefile desired_maketarget
+# for example to build the bootloader in the build-bl folder inside this directory
+# make -f ../Makefile ROOTLOC=".." bootloader 
 
+ROOTLOC=.
+VPATH=$(ROOTLOC)
 # Author: Harald Baumgart DL4SAI
 # everybody may  copy, use or modify this file
 # there is no guarantee for anything by the author
@@ -48,7 +55,7 @@ BASECFLAGS  = $(MACHFLAGS)  \
 
 
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := src/mchf_version.h
+PROJECT_VERSION_FILE := $(ROOTLOC)/src/mchf_version.h
 
 ifdef MSYSTEM
 $(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
@@ -71,24 +78,24 @@ bootloader.elf : CFLAGS = ${BASECFLAGS} -DBOOTLOADER_BUILD
 mchf.elf : CFLAGS = ${BASECFLAGS}
 
 # Every subdirectory with header files must be mentioned here
-include include.mak
+include $(ROOTLOC)/include.mak
 
 # every source-file has to be mentioned here 
 
 
-include files.mak
+include $(ROOTLOC)/files.mak
 
-include bootloader.mak
+include $(ROOTLOC)/bootloader.mak
 
 # ------------- nothing to change below this line ---------------------- 
 
-INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
+INC_DIRS = $(foreach d, $(SUBDIRS), -I$(ROOTLOC)/$d)
 
 CC = @${PREFIX}/bin/arm-none-eabi-gcc
 CXX = @${PREFIX}/bin/arm-none-eabi-g++
 OC = @${PREFIX}/bin/arm-none-eabi-objcopy
 OS = @${PREFIX}/bin/arm-none-eabi-size
-HEX2DFU = support/hex2dfu/hex2dfu.py
+HEX2DFU = $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 ifdef SystemRoot  # WINxx
     CC = arm-none-eabi-gcc
@@ -125,16 +132,23 @@ endif
 OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
 BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
 
+.S.o:
+	$(ECHO) "  [CC] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
+	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 .c.o:
 	$(ECHO) "  [CC] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 
 .cxx.o:
 	$(ECHO) "  [CXX] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
 .cpp.o:
 	$(ECHO) "  [CXX] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
 %.bin: %.elf
@@ -181,16 +195,16 @@ all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
 # compilation
 $(LPRJ).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
 
 # compilation
 bootloader.elf:  $(BLOBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Tarm-gcc-link-bootloader.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link-bootloader.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
 
 
 $(PRJ).handbook:
-	@support/ui/menu/mk-menu-handbook auto
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook auto
 
 $(PRJ).version:
 	# the build artifacts SHOULD identify as
@@ -225,29 +239,29 @@ docs:
 docs-clean:  
 	# remove docs
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
-	$(RM) --recursive --verbose $(call FixPath,../docs)
+	$(RM) --recursive --verbose $(call FixPath,$(ROOTLOC)/../docs)
 
 handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	@support/ui/menu/mk-menu-handbook
+	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
 
 handbook-test:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook in different directory for test purposes
-	@support/ui/menu/mk-menu-handbook test
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook test
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
-	$(RM) support/ui/menu/mcHF-logo.png
-	$(RM) support/ui/menu/ui_menu_structure.py*
-	$(RM) support/ui/menu/ui_menu_structure_graph.gv
-	$(RM) support/ui/menu/ui_menu_structure_graph.svg
-	$(RM) support/ui/menu/ui_menu_structure_graph.png
-	$(RM) support/ui/menu/ui_menu_structure_mdtable.md
-	$(RM) support/ui/menu/menu-handbook-build.timestamp
+	$(RM) $(ROOTLOC)/support/ui/menu/mcHF-logo.png
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure.py*
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.gv
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.svg
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.png
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_mdtable.md
+	$(RM) $(ROOTLOC)/support/ui/menu/menu-handbook-build.timestamp
 
 release:  
 	# generate quick operating guide
-	@inkscape --export-png=useful_manuals/mcHF-quick-manual.png useful_manuals/mcHF-quick-manual.svg
-	@inkscape --export-pdf=useful_manuals/mcHF-quick-manual.pdf useful_manuals/mcHF-quick-manual.svg
+	@inkscape --export-png=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.png $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
+	@inkscape --export-pdf=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.pdf $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
 
 # EOFILE

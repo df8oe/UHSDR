@@ -18,3 +18,5 @@ language.settings.xml
 /DebugLib/
 /DebugBootloader/
 /ReleaseBootloader/
+/build-bl/
+/build-fw/
