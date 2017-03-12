@@ -62,4 +62,15 @@ void STM_EVAL_LEDToggle(Led_TypeDef Led);
 void STM_EVAL_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode);
 uint32_t STM_EVAL_PBGetState(Button_TypeDef Button);
 
+inline void mcHF_PowerHoldOff()
+{
+    STM_EVAL_LEDOn(PWR_HOLD);
+}
+
+inline void mcHF_PowerHoldOn()
+{
+    STM_EVAL_LEDOff(PWR_HOLD);
+}
+
+
 #endif   /* __MCHF_H */

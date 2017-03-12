@@ -63,7 +63,7 @@ void Wait(int time)
     // we show the error message until user presses power...
     if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
     {
-        STM_EVAL_LEDOn(PWR_HOLD);
+        mcHF_PowerHoldOff();
     }
 }
 

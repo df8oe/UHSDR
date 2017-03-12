@@ -25,16 +25,6 @@ FATFS USBDISKFatFs;           /* File system object for USB disk logical drive *
 FIL MyFile;                   /* File object */
 char USBDISKPath[4];          /* USB Host logical drive path */
 
-static void mcHF_PowerHoldOff()
-{
-    STM_EVAL_LEDOn(PWR_HOLD);
-}
-
-static void mcHF_PowerHoldOn()
-{
-    STM_EVAL_LEDOff(PWR_HOLD);
-}
-
 extern USBH_HandleTypeDef hUsbHostHS;
 static uint8_t mcHF_USBConnected()
 {
@@ -51,6 +41,11 @@ void BL_Idle_Application(void)
         STM_EVAL_LEDToggle(LEDGREEN);
         tick = now + 1024;
     }
+    if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
+    {
+        mcHF_PowerHoldOff();
+    }
+
 }
 
 int BL_MSC_Application(void)
