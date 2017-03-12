@@ -1844,7 +1844,6 @@
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
-									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -1854,7 +1853,6 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.70253187" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.58831126" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -1906,7 +1904,6 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.375478544" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.2050947748" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
@@ -2258,10 +2255,8 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Drivers/CMSIS/Device"/>
 						<entry excluding="Src/stm32f4xx_hal_timebase_tim_template.c|Src/stm32f4xx_hal_timebase_rtc_wakeup_template.c|Src/stm32f4xx_hal_timebase_rtc_alarm_template.c|Src/stm32f4xx_hal_msp_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Drivers/STM32F4xx_HAL_Driver"/>
-						<entry excluding="Third_Party/FatFs/src/drivers/sram_diskio.c|Third_Party/FatFs/src/drivers/sdram_diskio.c|Third_Party/FatFs/src/drivers/sd_diskio.c|Third_Party/FatFs/src/option/ccsbcs.c|Third_Party/FatFs/src/option/cc950.c|Third_Party/FatFs/src/option/cc949.c|Third_Party/FatFs/src/option/cc936.c|Third_Party/FatFs/src/option/cc932.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio.c|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Host_Library/Core/Src/usbh_conf_template.c|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_if_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Middlewares"/>
-						<entry excluding="usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="hardware"/>
-						<entry excluding="test_fdmdv.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="misc"/>
+						<entry excluding="ST/STM32_USB_Device_Library/Class/CDC|ST/STM32_USB_Device_Library/Class/AUDIO|Third_Party/FatFs/src/drivers/sram_diskio.c|Third_Party/FatFs/src/drivers/sdram_diskio.c|Third_Party/FatFs/src/drivers/sd_diskio.c|Third_Party/FatFs/src/option/ccsbcs.c|Third_Party/FatFs/src/option/cc950.c|Third_Party/FatFs/src/option/cc949.c|Third_Party/FatFs/src/option/cc936.c|Third_Party/FatFs/src/option/cc932.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio.c|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Host_Library/Core/Src/usbh_conf_template.c|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_if_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Middlewares"/>
+						<entry excluding="usbd_cdc_if.c|usbd_audio_if.c|usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
 						<entry excluding="main.c|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
@@ -2780,8 +2775,8 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Drivers/CMSIS/Device"/>
 						<entry excluding="Src/stm32f4xx_hal_timebase_tim_template.c|Src/stm32f4xx_hal_timebase_rtc_wakeup_template.c|Src/stm32f4xx_hal_timebase_rtc_alarm_template.c|Src/stm32f4xx_hal_msp_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Drivers/STM32F4xx_HAL_Driver"/>
-						<entry excluding="Third_Party/FatFs/src/drivers/sram_diskio.c|Third_Party/FatFs/src/drivers/sdram_diskio.c|Third_Party/FatFs/src/drivers/sd_diskio.c|Third_Party/FatFs/src/option/ccsbcs.c|Third_Party/FatFs/src/option/cc950.c|Third_Party/FatFs/src/option/cc949.c|Third_Party/FatFs/src/option/cc936.c|Third_Party/FatFs/src/option/cc932.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio.c|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Host_Library/Core/Src/usbh_conf_template.c|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_if_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Middlewares"/>
-						<entry excluding="usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
+						<entry excluding="ST/STM32_USB_Device_Library/Class/CDC|ST/STM32_USB_Device_Library/Class/AUDIO|Third_Party/FatFs/src/drivers/sram_diskio.c|Third_Party/FatFs/src/drivers/sdram_diskio.c|Third_Party/FatFs/src/drivers/sd_diskio.c|Third_Party/FatFs/src/option/ccsbcs.c|Third_Party/FatFs/src/option/cc950.c|Third_Party/FatFs/src/option/cc949.c|Third_Party/FatFs/src/option/cc936.c|Third_Party/FatFs/src/option/cc932.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio.c|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Host_Library/Core/Src/usbh_conf_template.c|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_if_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Middlewares"/>
+						<entry excluding="usbd_cdc_if.c|usbd_audio_if.c|usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="hardware"/>
 						<entry excluding="test_fdmdv.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="misc"/>
 						<entry excluding="main.c|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>

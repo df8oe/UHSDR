@@ -156,6 +156,7 @@ int main(void)
      default:
        break;
      }
+     BL_Idle_Application();
   /* USER CODE BEGIN 3 */
 
   }

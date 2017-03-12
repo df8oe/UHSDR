@@ -15,8 +15,42 @@
 #include "flash_if.h"
 #include "stm32f4xx_hal_flash_ex.h"
 
+/* Base address of the Flash sectors */
+
+static const uint32_t flash_sector_max = 24;
+static const uint32_t flash_sector_addr[] = {
+0x08000000, /* Base @ of Sector 0, 16 Kbyte */
+0x08004000, /* Base @ of Sector 1, 16 Kbyte */
+0x08008000, /* Base @ of Sector 2, 16 Kbyte */
+0x0800C000, /* Base @ of Sector 3, 16 Kbyte */
+0x08010000, /* Base @ of Sector 4, 64 Kbyte */
+0x08020000, /* Base @ of Sector 5, 128 Kbyte */
+0x08040000, /* Base @ of Sector 6, 128 Kbyte */
+0x08060000, /* Base @ of Sector 7, 128 Kbyte */
+0x08080000, /* Base @ of Sector 8, 128 Kbyte */
+0x080A0000, /* Base @ of Sector 9, 128 Kbyte */
+0x080C0000, /* Base @ of Sector 10, 128 Kbyte */
+0x080E0000, /* Base @ of Sector 11, 128 Kbyte */
+0x08100000, /* Base @ of Sector 12, 128 Kbyte */
+0x08104000, /* Base @ of Sector 13, 16 Kbyte */
+0x08108000, /* Base @ of Sector 14, 16 Kbyte */
+0x0810C000, /* Base @ of Sector 15, 16 Kbyte */
+0x08110000, /* Base @ of Sector 16, 64 Kbyte */
+0x08120000, /* Base @ of Sector 17, 128 Kbyte */
+0x08140000, /* Base @ of Sector 18, 128 Kbyte */
+0x08160000, /* Base @ of Sector 19, 128 Kbyte */
+0x08180000, /* Base @ of Sector 20, 128 Kbyte */
+0x081A0000, /* Base @ of Sector 21, 128 Kbyte */
+0x081C0000, /* Base @ of Sector 22, 128 Kbyte */
+0x081E0000, /* Base @ of Sector 23, 128 Kbyte */
+0x08200000, /* End+1@ of Sector 23, 128 Kbyte */
+};
+
+
+
 #define RESET 0
 #define SET 1
+#define FLASH_NO_SECTOR (0xFFFFFFFF)
 
 static uint32_t FLASH_If_GetSectorNumber(uint32_t Address);
 
@@ -92,55 +126,15 @@ HAL_StatusTypeDef FLASH_If_ProgramWord(uint32_t Address, uint32_t Data)
   */
 static uint32_t FLASH_If_GetSectorNumber(uint32_t Address)
 {
-    uint32_t sector = 0;
+    uint32_t sector = FLASH_NO_SECTOR;
 
-    if(Address < ADDR_FLASH_SECTOR_1 && Address >= ADDR_FLASH_SECTOR_0)
+    for (int idx = 0; idx < flash_sector_max; idx++)
     {
-        sector = FLASH_SECTOR_0;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_2 && Address >= ADDR_FLASH_SECTOR_1)
-    {
-        sector = FLASH_SECTOR_1;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_3 && Address >= ADDR_FLASH_SECTOR_2)
-    {
-        sector = FLASH_SECTOR_2;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_4 && Address >= ADDR_FLASH_SECTOR_3)
-    {
-        sector = FLASH_SECTOR_3;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_5 && Address >= ADDR_FLASH_SECTOR_4)
-    {
-        sector = FLASH_SECTOR_4;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_6 && Address >= ADDR_FLASH_SECTOR_5)
-    {
-        sector = FLASH_SECTOR_5;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_7 && Address >= ADDR_FLASH_SECTOR_6)
-    {
-        sector = FLASH_SECTOR_6;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_8 && Address >= ADDR_FLASH_SECTOR_7)
-    {
-        sector = FLASH_SECTOR_7;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_9 && Address >= ADDR_FLASH_SECTOR_8)
-    {
-        sector = FLASH_SECTOR_8;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_10 && Address >= ADDR_FLASH_SECTOR_9)
-    {
-        sector = FLASH_SECTOR_9;
-    }
-    else if(Address < ADDR_FLASH_SECTOR_11 && Address >= ADDR_FLASH_SECTOR_10)
-    {
-        sector = FLASH_SECTOR_10;
-    }
-    else
-    {
-        sector = FLASH_SECTOR_11;
+        if (Address >= flash_sector_addr[idx] && Address < flash_sector_addr[idx])
+        {
+            sector = idx;
+            break;
+        }
     }
     return sector;
 }

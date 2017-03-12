@@ -24,6 +24,7 @@ extern "C" {
 
 
 int BL_MSC_Application();
+void BL_Idle_Application();
 int bootloader_main();
 
 extern ApplicationTypeDef Appli_state;

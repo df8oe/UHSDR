@@ -41,6 +41,17 @@ static uint8_t mcHF_USBConnected()
     return hUsbHostHS.device.is_connected;
 }
 
+void BL_Idle_Application(void)
+{
+    static uint32_t tick;
+    uint32_t now = HAL_GetTick();
+
+    if (now >= tick)
+    {
+        STM_EVAL_LEDToggle(LEDGREEN);
+        tick = now + 1024;
+    }
+}
 
 int BL_MSC_Application(void)
 {
@@ -49,7 +60,7 @@ int BL_MSC_Application(void)
     if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
     {
         /* FatFs Initialization Error */
-        UWP_Fail_Handler();
+        FlashFail_Handler(BL_ERR_USBPROBLEM);
     }
     else
     {
@@ -149,6 +160,10 @@ int bootloader_main()
             /* Initialize user application's Stack Pointer */
             __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
             Jump_To_Application();
+        }
+        while(1)
+        {
+            BootFail_Handler(2);
         }
     }
 

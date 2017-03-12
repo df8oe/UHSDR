@@ -31,6 +31,16 @@ extern "C" {
 #include "flash_if.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef enum {
+    BL_ERR_USBPROBLEM = 1,
+    BL_ERR_NOIMAGE = 2,
+    BL_ERR_FLASHTOOSMALL = 3,
+    BL_ERR_WRITEDISK = 4,
+    BL_ERR_FLASHPROG = 5,
+    BL_ERR_FLASHERASE = 6,
+    BL_ERR_FLASHPROTECT = 7,
+} mchf_bootloader_error_t;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
@@ -39,7 +49,10 @@ void COMMAND_DOWNLOAD(void);
 void COMMAND_ResetMCU(void);
 void COMMAND_ProgramFlashMemory(void);
 
-void UWP_Fail_Handler();
+
+
+void BootFail_Handler(uint8_t count);
+void FlashFail_Handler(mchf_bootloader_error_t errcode);
 
 #ifdef __cplusplus
 }

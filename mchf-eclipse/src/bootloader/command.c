@@ -1,23 +1,23 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /**
-  ******************************************************************************
-  * @author  MCD Application Team
-  * @version V1.0.0
-  * @date    28-October-2011
-  * @brief   This file provides all the IAP command functions.
-  ******************************************************************************
-  * @attention
-  *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  *
-  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @author  MCD Application Team
+ * @version V1.0.0
+ * @date    28-October-2011
+ * @brief   This file provides all the IAP command functions.
+ ******************************************************************************
+ * @attention
+ *
+ * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+ * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
+ * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
+ * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
+ * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
+ * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+ *
+ * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "command.h"
@@ -29,16 +29,18 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 2.0.2-HAL"
+#define VERSION                    "Version: 2.1.3-HAL"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
+
+// 64k flash are in use for bootloader and config memory
 
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static uint8_t RAM_Buf[BUFFER_SIZE] =
 {
-    0x00
+        0x00
 };
 static uint32_t TmpProgramCounter = 0x00, TmpReadSize = 0x00 , RamAddress = 0x00;
 static uint32_t LastPGAddress = APPLICATION_ADDRESS;
@@ -53,6 +55,8 @@ static FIL fileR;
 // #define STM_EVAL_LEDOn(a)
 // #define STM_EVAL_LEDToggle(a)
 
+
+
 void Wait(int time)
 {
     HAL_Delay(time);
@@ -65,114 +69,57 @@ void Wait(int time)
 
 
 // USB error handling
-void Fail_Handler(char count)
+void FlashFail_Handler(mchf_bootloader_error_t redCount)
 {
-    STM_EVAL_LEDOff(BACKLIGHT);
-    Wait(300);
-
-    while(1)
-    {
-      char i;
-
-      for(i = 0; i < count; i++)
-      {
-        STM_EVAL_LEDOn(BACKLIGHT);
-        Wait(100);
-        STM_EVAL_LEDOff(BACKLIGHT);
-        Wait(100);
-      }
-      Wait(300);
-    }
-}
-
-// flash programming error
-void FPE_Fail_Handler(void)
-{
-    STM_EVAL_LEDOn(BACKLIGHT);
-    STM_EVAL_LEDOff(LEDRED);
     STM_EVAL_LEDOff(LEDGREEN);
+    STM_EVAL_LEDOff(LEDRED);
+
     while(1)
     {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDRED);
-        STM_EVAL_LEDToggle(LEDGREEN);
-        Wait(250);
+        STM_EVAL_LEDOff(BACKLIGHT);
+        Wait(600);
+        for(int i = 0; i < redCount; i++)
+        {
+            STM_EVAL_LEDOff(LEDRED);
+            Wait(300);
+            STM_EVAL_LEDOn(LEDRED);
+            Wait(300);
+            STM_EVAL_LEDOff(LEDRED);
+            Wait(300);
+        }
+        Wait(600);
+        STM_EVAL_LEDOn(BACKLIGHT);
+        Wait(900);
     }
 }
 
-// no flash memory left for file
-void FME_Fail_Handler(void)
-{
-    STM_EVAL_LEDOn(BACKLIGHT);
-    STM_EVAL_LEDOn(LEDRED);
-    while(1)
-    {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDRED);
-        Wait(250);
-    }
-}
 
-// flash erase error
-void FEE_Fail_Handler(void)
-{
-    STM_EVAL_LEDOn(BACKLIGHT);
-    STM_EVAL_LEDOn(LEDRED);
-    STM_EVAL_LEDOn(LEDGREEN);
-    while(1)
-    {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDRED);
-        STM_EVAL_LEDToggle(LEDGREEN);
-        Wait(250);
-    }
-}
-
-// flash is write protected, disk not mounted
-void UWP_Fail_Handler(void)
+// USB error handling
+void BootFail_Handler(uint8_t count)
 {
     STM_EVAL_LEDOff(BACKLIGHT);
-    STM_EVAL_LEDOn(LEDGREEN);
-    while(1)
-    {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDGREEN);
-        Wait(250);
-    }
-}
+    Wait(700);
 
-// flash is read protected
-void UNS_Fail_Handler(void)
-{
-    STM_EVAL_LEDOn(BACKLIGHT);
-    STM_EVAL_LEDOn(LEDGREEN);
     while(1)
     {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDGREEN);
-        Wait(250);
-    }
-}
-
-// binary file not found for reading
-void FNF_Fail_Handler(void)
-{
-    STM_EVAL_LEDOff(BACKLIGHT);
-    STM_EVAL_LEDOn(LEDRED);
-    while(1)
-    {
-        STM_EVAL_LEDToggle(BACKLIGHT);
-        STM_EVAL_LEDToggle(LEDRED);
-        Wait(250);
+        for(uint8_t i = 0; i < count; i++)
+        {
+            Wait(300);
+            STM_EVAL_LEDOn(BACKLIGHT);
+            Wait(300);
+            STM_EVAL_LEDOff(BACKLIGHT);
+            Wait(700);
+        }
+        Wait(700);
     }
 }
 
 
 /**
-  * @brief IAP Read all flash memory
-  * @param  None
-  * @retval None
-  */
+ * @brief IAP Read all flash memory
+ * @param  None
+ * @retval None
+ */
 void COMMAND_UPLOAD(void)
 {
     __IO uint32_t address = APPLICATION_ADDRESS;
@@ -180,7 +127,8 @@ void COMMAND_UPLOAD(void)
 
     uint32_t tmpcounter = 0x00, indexoffset = 0x00;
     FlagStatus readoutstatus = !0;
-    uint16_t bytesWritten;
+    UINT bytesWritten;
+    FRESULT res = FR_OK;
 
     f_unlink(VERSION);
     f_unlink(AUTHOR);
@@ -197,15 +145,16 @@ void COMMAND_UPLOAD(void)
         indexoffset = (APPLICATION_ADDRESS - USER_FLASH_STARTADDRESS);
 
         /* Open binary file to write on it */
-        if ((f_open(&file, UPLOAD_FILENAME, FA_CREATE_ALWAYS | FA_WRITE) == FR_OK))
+        res = f_open(&file, UPLOAD_FILENAME, FA_CREATE_ALWAYS | FA_WRITE);
+        if (res == FR_OK)
         {
             /* Read flash memory */
-            while ((indexoffset != USER_FLASH_SIZE))
+            while ((indexoffset != USER_FLASH_SIZE() && res == FR_OK))
             {
                 for (counterread = 0; counterread < BUFFER_SIZE; counterread++)
                 {
                     /* Check the read bytes versus the end of flash */
-                    if (indexoffset + counterread != USER_FLASH_SIZE)
+                    if (indexoffset + counterread != USER_FLASH_SIZE())
                     {
                         tmpcounter = counterread;
                         RAM_Buf[tmpcounter] = (*(uint8_t*)(address++));
@@ -217,7 +166,7 @@ void COMMAND_UPLOAD(void)
                     }
                 }
                 /* Write buffer to file */
-                f_write (&file, RAM_Buf, BUFFER_SIZE, (void *)&bytesWritten);
+                res = f_write (&file, RAM_Buf, BUFFER_SIZE, &bytesWritten);
 
                 /* Number of byte written  */
                 indexoffset = indexoffset + counterread;
@@ -226,18 +175,22 @@ void COMMAND_UPLOAD(void)
             /* Close file and filesystem */
             f_close (&file);
         }
+        if (res != FR_OK)
+        {
+            FlashFail_Handler(BL_ERR_WRITEDISK);
+        }
     }
     else
     {
-        UNS_Fail_Handler();
+        FlashFail_Handler(BL_ERR_FLASHPROTECT);
     }
 }
 
 /**
-  * @brief  IAP write memory
-  * @param  None
-  * @retval None
-  */
+ * @brief  IAP write memory
+ * @param  None
+ * @retval None
+ */
 void COMMAND_DOWNLOAD(void)
 {
     /* Flash unlock */
@@ -250,19 +203,14 @@ void COMMAND_DOWNLOAD(void)
     {
         uint32_t res;
         /* Erase FLASH sectors to download image */
+        if (fileR.fsize > USER_FLASH_SIZE())
+        {
+            FlashFail_Handler(BL_ERR_FLASHTOOSMALL);
+        }
         if ( (res = FLASH_If_EraseSectors(APPLICATION_ADDRESS,fileR.fsize)) != HAL_OK)
         {
-            if (res == HAL_FLASH_ERROR_OPERATION)
-            {
-                /* Toggle backlight and LED red in infinite loop: No available Flash memory size for
-                       the binary file */
-                FME_Fail_Handler();
-            }
-            else
-            {
-                /* Toggle backlight, green + red LED in infinite loop: Flash erase error */
-                FEE_Fail_Handler();
-            }
+            /* Flash erase error */
+            FlashFail_Handler(BL_ERR_FLASHERASE);
         }
         /* Program flash memory */
         COMMAND_ProgramFlashMemory();
@@ -273,8 +221,8 @@ void COMMAND_DOWNLOAD(void)
     }
     else
     {
-        /* Toggle backlight and red LED in counterwise infinite loop: the binary file is not available */
-        FNF_Fail_Handler();
+        /* the binary file is not available */
+        FlashFail_Handler(BL_ERR_NOIMAGE);
     }
 
     FLASH_If_FlashLock();
@@ -282,10 +230,10 @@ void COMMAND_DOWNLOAD(void)
 }
 
 /**
-  * @brief  IAP jump to user program
-  * @param  None
-  * @retval None
-  */
+ * @brief  IAP jump to user program
+ * @param  None
+ * @retval None
+ */
 void COMMAND_ResetMCU(void)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
@@ -294,10 +242,10 @@ void COMMAND_ResetMCU(void)
 }
 
 /**
-  * @brief  Programs the internal Flash memory
-  * @param  None
-  * @retval None
-  */
+ * @brief  Programs the internal Flash memory
+ * @param  None
+ * @retval None
+ */
 void COMMAND_ProgramFlashMemory(void)
 {
     __IO uint32_t programcounter = 0x00;
@@ -331,10 +279,10 @@ void COMMAND_ProgramFlashMemory(void)
             TmpProgramCounter = programcounter;
             /* Write word into flash memory */
             if (FLASH_If_ProgramWord((LastPGAddress - TmpProgramCounter + TmpReadSize), \
-                                     *(__IO uint32_t *)(RamAddress - programcounter + TmpReadSize)) != HAL_OK)
+                    *(__IO uint32_t *)(RamAddress - programcounter + TmpReadSize)) != HAL_OK)
             {
-                /* Toggle all LEDs and backlight in infinite loop: Flash programming error */
-                FPE_Fail_Handler();
+                /* Flash programming error */
+                FlashFail_Handler(BL_ERR_FLASHPROG);
             }
         }
         /* Update last programmed address value */
@@ -343,7 +291,7 @@ void COMMAND_ProgramFlashMemory(void)
 }
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /*******************(C)COPYRIGHT 2011 STMicroelectronics *****END OF FILE******/
