@@ -19,22 +19,22 @@ big USB-A plug.
 
 ### Flashing New Firmware And Saving Old Firmware
 
-1 Place binary of the new firmware with the name "mchf.bin" on in the root directory of the drive.
+1. Place binary of the new firmware with the name "mchf.bin" on in the root directory of the drive.
 1 turn off mcHF and connect drive.
 1. Press BAND- button and hold it. 
 1. Then press power button and release it after a second once you see the LCD screen light up. 
 1. Release BAND- button once you see the green LED light up. Now the dumping of the whole firmware flash into MCHFOLD.BIN starts. Resulting file will have a size of 960kByte, independent of the actually flash size. 
 1. Then the red LED lights up too, indicating the write process start. 
-1. When finished, backlight goes dark, both red and green led remain steadily on.
+1. When finished, backlight goes dark, both red and green led remain steadily on. If not, and red led starts flashing, see error codes section below.
 1. Remove USB drive or press BAND- to reboot into new firmware, press Power to power off
 
 ### Only Saving Old Firmware
-1. turn off mcHF and connect drive.
+1. Turn off mcHF and connect drive.
 1. Press BAND- button and hold it. 
 1. Then press power button.
 1. Release both buttons once you see the LCD screen light up. 
 1. Release BAND- button once you see the green LED light up. Now the dumping of the firmware into MCHFOLD.BIN starts.
-1. When finished, backlight goes dark, green led remains steadily on.
+1. When finished, backlight goes dark, green led remains steadily on. If not, and red led starts flashing, see error codes section below.
 1. Remove USB drive or press BAND- to reboot, press Power to power off
 
 
@@ -74,7 +74,7 @@ The red led is flashing in bursts of:
 
 ### History
 
-03/05/2017
+03/12/2017 [DB4PLE]
 Ported to HAL, now supports all tested USB pen drives (also previously not working ones!)
 Some changes to the error led codes (simplified the coding to allow easier communication)
 
