@@ -221,11 +221,13 @@ clean:
 	$(RM) $(call FixPath,bootloader.elf)
 	$(RM) $(call FixPath,bootloader.elf.map)
 	$(RM) $(call FixPath,bootloader.bin)
+	$(RM) $(call FixPath,bootloader.dfu)
 	$(RM) $(call FixPath,*~)
 
 handy:  
 	# rm all .o (but not executables, .map and .dmp)
 	$(RM) $(call FixPath,$(OBJS))
+	$(RM) $(call FixPath,$(BLOBJS))
 	$(RM) $(call FixPath,*~)
 
 gcc-version:  
