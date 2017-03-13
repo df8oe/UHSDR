@@ -32,13 +32,15 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
+    BL_ERR_NONE = 0,
     BL_ERR_USBPROBLEM = 1,
     BL_ERR_NOIMAGE = 2,
     BL_ERR_FLASHTOOSMALL = 3,
     BL_ERR_WRITEDISK = 4,
-    BL_ERR_FLASHPROG = 5,
-    BL_ERR_FLASHERASE = 6,
-    BL_ERR_FLASHPROTECT = 7,
+    BL_ERR_READDISK = 5,
+    BL_ERR_FLASHPROG = 6,
+    BL_ERR_FLASHERASE = 7,
+    BL_ERR_FLASHPROTECT = 8,
 } mchf_bootloader_error_t;
 
 /* Exported constants --------------------------------------------------------*/
@@ -47,7 +49,6 @@ typedef enum {
 void COMMAND_UPLOAD(void);
 void COMMAND_DOWNLOAD(void);
 void COMMAND_ResetMCU(void);
-void COMMAND_ProgramFlashMemory(void);
 
 
 

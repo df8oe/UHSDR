@@ -29,7 +29,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 2.2.1-HAL"
+#define VERSION                    "Version: 2.2.2-HAL"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
@@ -42,20 +42,12 @@ static uint8_t RAM_Buf[BUFFER_SIZE] =
 {
         0x00
 };
-static uint32_t TmpProgramCounter = 0x00, TmpReadSize = 0x00 , RamAddress = 0x00;
-static uint32_t LastPGAddress = APPLICATION_ADDRESS;
 
 static FIL file;
 static FIL fileR;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-
-// #define STM_EVAL_LEDOff(a)
-// #define STM_EVAL_LEDOn(a)
-// #define STM_EVAL_LEDToggle(a)
-
-
 
 void Wait(int time)
 {
@@ -116,17 +108,57 @@ void BootFail_Handler(uint8_t count)
 
 
 /**
- * @brief IAP Read all flash memory
- * @param  None
- * @retval None
+ * @brief  Programs the internal Flash memory
+ */
+mchf_bootloader_error_t COMMAND_ProgramFlashMemory()
+{
+    mchf_bootloader_error_t retval = BL_ERR_NONE;
+
+    uint8_t readflag = TRUE;
+    uint32_t LastPGAddress = APPLICATION_ADDRESS;
+
+    do
+    {
+        UINT BytesRead;
+
+        /* Read maximum 32 Kbyte from the selected file */
+        if(f_read (&fileR, RAM_Buf, BUFFER_SIZE, &BytesRead) != FR_OK)
+        {
+            retval = BL_ERR_READDISK;
+        }
+        else
+        {
+            /* The read data < "BUFFER_SIZE" Kbyte */
+            if (BytesRead < BUFFER_SIZE)
+            {
+                readflag = FALSE;
+            }
+
+            /* Program flash memory */
+            for (   uint32_t programcounter = 0;
+                    programcounter < BytesRead;
+                    programcounter+=4,LastPGAddress += 4)
+            {
+                uint32_t* RAM_Address = (uint32_t*)&RAM_Buf[programcounter];
+
+                if (flashIf_ProgramWord(LastPGAddress, *RAM_Address) != HAL_OK)
+                {
+                    /* Flash programming error */
+                    retval = BL_ERR_FLASHPROG;
+                }
+            }
+        }
+    } while ((readflag == TRUE) && retval == BL_ERR_NONE);
+
+    return retval;
+}
+
+/**
+ * @brief read flash and write to image on disk
  */
 void COMMAND_UPLOAD(void)
 {
-    __IO uint32_t address = APPLICATION_ADDRESS;
-    __IO uint32_t counterread = 0x00;
 
-    uint32_t tmpcounter = 0x00, indexoffset = 0x00;
-    FlagStatus readoutstatus = !0;
     UINT bytesWritten;
     FRESULT res = FR_OK;
 
@@ -135,43 +167,32 @@ void COMMAND_UPLOAD(void)
     /* green LED on command upload */
     STM_EVAL_LEDOn(LEDGREEN);
     /* Get the read out protection status */
-    readoutstatus = FLASH_If_ReadOutProtectionStatus();
+    FlagStatus readoutstatus = flashIf_ReadOutProtectionStatus();
     if (readoutstatus == 0)
     {
         /* Remove UPLOAD file if exist on flash disk */
         f_unlink (UPLOAD_FILENAME);
 
         /* Init written byte counter */
-        indexoffset = (APPLICATION_ADDRESS - USER_FLASH_STARTADDRESS);
+        uint32_t offset = 0;
+        uint8_t* address = (uint8_t*)APPLICATION_ADDRESS;
+
 
         /* Open binary file to write on it */
         res = f_open(&file, UPLOAD_FILENAME, FA_CREATE_ALWAYS | FA_WRITE);
         if (res == FR_OK)
         {
+            uint32_t counterread = 0;
             /* Read flash memory */
-            while ((indexoffset != USER_FLASH_SIZE() && res == FR_OK))
+            while ((offset != flashIf_userFlashSize() && res == FR_OK))
             {
-                for (counterread = 0; counterread < BUFFER_SIZE; counterread++)
+                for (counterread = 0; counterread < BUFFER_SIZE && offset != flashIf_userFlashSize(); counterread++,offset++)
                 {
-                    /* Check the read bytes versus the end of flash */
-                    if (indexoffset + counterread != USER_FLASH_SIZE())
-                    {
-                        tmpcounter = counterread;
-                        RAM_Buf[tmpcounter] = (*(uint8_t*)(address++));
-                    }
-                    /* In this case all flash was read */
-                    else
-                    {
-                        break;
-                    }
+                        RAM_Buf[counterread] = address[offset];
                 }
                 /* Write buffer to file */
-                res = f_write (&file, RAM_Buf, BUFFER_SIZE, &bytesWritten);
-
-                /* Number of byte written  */
-                indexoffset = indexoffset + counterread;
+                res = f_write (&file, RAM_Buf, counterread, &bytesWritten);
             }
-
             /* Close file and filesystem */
             f_close (&file);
         }
@@ -187,33 +208,34 @@ void COMMAND_UPLOAD(void)
 }
 
 /**
- * @brief  IAP write memory
- * @param  None
- * @retval None
+ * @brief  read file and flash it
  */
 void COMMAND_DOWNLOAD(void)
 {
+    mchf_bootloader_error_t retval = BL_ERR_NONE;
+
     /* Flash unlock */
-    FLASH_If_FlashUnlock();
+    flashIf_FlashUnlock();
 
     /* Reading for flash active: Red LED on */
     STM_EVAL_LEDOn(LEDRED);
+
     /* Open the binary file to be downloaded */
     if (f_open(&fileR, DOWNLOAD_FILENAME, FA_READ) == FR_OK)
     {
-        uint32_t res;
         /* Erase FLASH sectors to download image */
-        if (fileR.fsize > USER_FLASH_SIZE())
+        if (fileR.fsize > flashIf_userFlashSize())
         {
-            FlashFail_Handler(BL_ERR_FLASHTOOSMALL);
-        }
-        if ( (res = FLASH_If_EraseSectors(APPLICATION_ADDRESS,fileR.fsize)) != HAL_OK)
+            retval = BL_ERR_FLASHTOOSMALL;
+        } else if ( flashIf_EraseSectors(APPLICATION_ADDRESS,fileR.fsize) != HAL_OK)
         {
             /* Flash erase error */
-            FlashFail_Handler(BL_ERR_FLASHERASE);
+            retval = BL_ERR_FLASHERASE;
+        } else
+        {
+            /* Program flash memory */
+            retval = COMMAND_ProgramFlashMemory();
         }
-        /* Program flash memory */
-        COMMAND_ProgramFlashMemory();
 
         /* Close file and filesystem */
         f_close (&fileR);
@@ -222,17 +244,19 @@ void COMMAND_DOWNLOAD(void)
     else
     {
         /* the binary file is not available */
-        FlashFail_Handler(BL_ERR_NOIMAGE);
+        retval = BL_ERR_NOIMAGE;
     }
 
-    FLASH_If_FlashLock();
+    flashIf_FlashLock();
 
+    if (retval != BL_ERR_NONE)
+    {
+        FlashFail_Handler(retval);
+    }
 }
 
 /**
- * @brief  IAP jump to user program
- * @param  None
- * @retval None
+ * @brief  reset to restart mchf
  */
 void COMMAND_ResetMCU(void)
 {
@@ -240,58 +264,3 @@ void COMMAND_ResetMCU(void)
     /* Software reset */
     NVIC_SystemReset();
 }
-
-/**
- * @brief  Programs the internal Flash memory
- * @param  None
- * @retval None
- */
-void COMMAND_ProgramFlashMemory(void)
-{
-    __IO uint32_t programcounter = 0x00;
-    uint8_t readflag = TRUE;
-    uint16_t BytesRead;
-
-    /* RAM Address Initialization */
-    RamAddress = (uint32_t) & RAM_Buf;
-
-    /* Erase address init */
-    LastPGAddress = APPLICATION_ADDRESS;
-
-    /* While file still contain data */
-    while ((readflag == TRUE))
-    {
-        /* Read maximum 512 Kbyte from the selected file */
-        f_read (&fileR, RAM_Buf, BUFFER_SIZE, (void *)&BytesRead);
-
-        /* Temp variable */
-        TmpReadSize = BytesRead;
-
-        /* The read data < "BUFFER_SIZE" Kbyte */
-        if (TmpReadSize < BUFFER_SIZE)
-        {
-            readflag = FALSE;
-        }
-
-        /* Program flash memory */
-        for (programcounter = TmpReadSize; programcounter != 0; programcounter -= 4)
-        {
-            TmpProgramCounter = programcounter;
-            /* Write word into flash memory */
-            if (FLASH_If_ProgramWord((LastPGAddress - TmpProgramCounter + TmpReadSize), \
-                    *(__IO uint32_t *)(RamAddress - programcounter + TmpReadSize)) != HAL_OK)
-            {
-                /* Flash programming error */
-                FlashFail_Handler(BL_ERR_FLASHPROG);
-            }
-        }
-        /* Update last programmed address value */
-        LastPGAddress = LastPGAddress + TmpReadSize;
-    }
-}
-
-/**
- * @}
- */
-
-/*******************(C)COPYRIGHT 2011 STMicroelectronics *****END OF FILE******/

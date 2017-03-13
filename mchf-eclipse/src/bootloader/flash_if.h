@@ -41,7 +41,7 @@ extern const char* author; */
 
 /* Define the address from where user application will be loaded.
    Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
-#define APPLICATION_ADDRESS        (uint32_t)0x08010000
+#define APPLICATION_ADDRESS        ((uint32_t)0x08010000)
 
 /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
 #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
@@ -50,18 +50,20 @@ extern const char* author; */
 #define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
 #define MCHF_FLASHRESERVED      64
 
-/* Define the user application size */
-#define USER_FLASH_SIZE()   ((STM32_GetFlashSize() - MCHF_FLASHRESERVED)*1024)
-#define MAX_FLASH_SIZE()    (USER_FLASH_END_ADDRESS+1 - APPLICATION_ADDRESS)
+/**
+ * @brief real user flash size of microprocessor (flash size - bootloader/config flash size)
+ * @returns size of user flash in bytes
+ */
+inline uint32_t flashIf_userFlashSize()  {  return ((STM32_GetFlashSize() - MCHF_FLASHRESERVED)*1024); }
 
 
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void FLASH_If_FlashUnlock();
-void FLASH_If_FlashLock();
-FlagStatus FLASH_If_ReadOutProtectionStatus();
-uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length);
-HAL_StatusTypeDef FLASH_If_ProgramWord(uint32_t Address, uint32_t Data);
+void flashIf_FlashUnlock();
+void flashIf_FlashLock();
+FlagStatus flashIf_ReadOutProtectionStatus();
+uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length);
+HAL_StatusTypeDef flashIf_ProgramWord(uint32_t Address, uint32_t Data);
 
 
 #ifdef __cplusplus

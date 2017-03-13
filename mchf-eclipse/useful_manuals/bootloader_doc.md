@@ -67,9 +67,11 @@ The red led is flashing in bursts of:
 |2 		|mchf.bin not found on USB drive		|
 |3		|flash memory too small for mchf.bin	|
 |4		|problems writing MCHFOLD.BIN to drive	|
-|5		|STM32F4 flash programming error		|
-|6		|STM32F4 flash erase error				|
-|7		|STM32F4 flash write protected			|
+|5		|problems reading mchf.bin from disk	|
+|6		|STM32F4 flash programming error		|
+|7		|STM32F4 flash erase error				|
+|8		|STM32F4 flash write protected			|
+
 
 
 ### History

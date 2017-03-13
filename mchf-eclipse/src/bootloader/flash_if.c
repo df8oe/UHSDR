@@ -54,18 +54,18 @@ static const uint32_t flash_sector_addr[] = {
 
 static uint32_t FLASH_If_GetSectorNumber(uint32_t Address);
 
-void FLASH_If_FlashUnlock()
+void flashIf_FlashUnlock()
 {
     HAL_FLASH_Unlock();
 }
 
-void FLASH_If_FlashLock()
+void flashIf_FlashLock()
 {
     HAL_FLASH_Lock();
 }
 
 
-FlagStatus FLASH_If_ReadOutProtectionStatus()
+FlagStatus flashIf_ReadOutProtectionStatus()
 {
     FLASH_OBProgramInitTypeDef OBInit;
 
@@ -89,7 +89,7 @@ FlagStatus FLASH_If_ReadOutProtectionStatus()
   *  HAL_OK: Erase sectors done with success
   *  Anything else: Erase error
   */
-uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length)
+uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length)
 {
     FLASH_EraseInitTypeDef flashEraseOp;
     uint32_t sectorError = 0;
@@ -97,7 +97,7 @@ uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length)
 
     /* Erase Flash sectors */
     uint32_t startsector = FLASH_If_GetSectorNumber(Address);
-    uint32_t endsector = FLASH_If_GetSectorNumber(Address+Length);
+    uint32_t endsector = FLASH_If_GetSectorNumber(Address+Length-1);
 
     if (startsector != FLASH_NO_SECTOR && endsector != FLASH_NO_SECTOR)
 
@@ -120,7 +120,7 @@ uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length)
   * retval FLASH Status: The returned value can be: FLASH_ERROR_PG,
   * FLASH_ERROR_WRP, HAL_OK or FLASH_TIMEOUT.
   */
-HAL_StatusTypeDef FLASH_If_ProgramWord(uint32_t Address, uint32_t Data)
+HAL_StatusTypeDef flashIf_ProgramWord(uint32_t Address, uint32_t Data)
 {
     return HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,Address, Data);
 }
