@@ -144,19 +144,7 @@ int main(void)
   {
   /* USER CODE END WHILE */
     MX_USB_HOST_Process();
-    /* Mass Storage Application State Machine */
-     switch(Appli_state)
-     {
-     case APPLICATION_START:
-       BL_MSC_Application();
-       Appli_state = APPLICATION_IDLE;
-       break;
-
-     case APPLICATION_IDLE:
-     default:
-       break;
-     }
-     BL_Idle_Application();
+    BL_Application();
   /* USER CODE BEGIN 3 */
 
   }

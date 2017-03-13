@@ -338,7 +338,7 @@ static int8_t AUDIO_AudioCmd_FS (uint8_t* pbuf, uint32_t size, uint8_t cmd)
                 bool is_low_space = fill > (3*(USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
                 bool is_high_space = fill < (USB_AUDIO_OUT_NUM_BUF/4 * USB_AUDIO_OUT_PKT_SIZE);
                 bool is_high_ok = fill > (3*(USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
-                bool is_low_ok = fill < ((USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
+                // bool is_low_ok = fill < ((USB_AUDIO_OUT_NUM_BUF/4) * USB_AUDIO_OUT_PKT_SIZE);
 
                 uint16_t num_samples = size/2;
 

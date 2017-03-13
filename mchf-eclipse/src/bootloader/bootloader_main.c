@@ -118,7 +118,6 @@ void BSP_Init(void)
 }
 
 
-
 int bootloader_main()
 {
     /* initialization */
@@ -126,9 +125,9 @@ int bootloader_main()
     mcHF_PowerHoldOff();
 
 
-// *(__IO uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
-// *(__IO ;uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
-    if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)		// no reboot requested?
+// *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
+// *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+    if( *(uint32_t*)(SRAM2_BASE) != 0x55)		// no reboot requested?
     {
         // we wait for a longer time
         HAL_Delay(300);
@@ -144,22 +143,19 @@ int bootloader_main()
            and roughly check if it points to a RAM SPACE address
             */
 
-        if (((*(__IO uint32_t*)APPLICATION_ADDRESS) & 0x2FF00000 ) == 0x20000000)
+        uint32_t* const APPLICATION_PTR = (uint32_t*)APPLICATION_ADDRESS;
+
+        if ( ( APPLICATION_PTR[0] & 0x2FF00000 ) == 0x20000000)
         {
             pFunction Jump_To_Application;
-            uint32_t JumpAddress;
-
             /* Jump to user application */
-            JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
-            Jump_To_Application = (pFunction) JumpAddress;
+            Jump_To_Application = (pFunction) APPLICATION_PTR[1];
             /* Initialize user application's Stack Pointer */
-            __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
+            __set_MSP(APPLICATION_PTR[0]);
             Jump_To_Application();
         }
-        while(1)
-        {
-            BootFail_Handler(2);
-        }
+        BootFail_Handler(2);
+        // never reached, is endless loop
     }
 
     /* Init upgrade mode display */
@@ -167,4 +163,25 @@ int bootloader_main()
     // now give user a chance to let go off the BAND- button
     HAL_Delay(3000);
     return 0;
+}
+
+
+extern ApplicationTypeDef Appli_state;
+
+void BL_Application()
+{
+    switch(Appli_state)
+    {
+    case APPLICATION_START:
+      BL_MSC_Application();
+      Appli_state = APPLICATION_IDLE;
+      break;
+
+    case APPLICATION_IDLE:
+    default:
+      break;
+
+    }
+
+    BL_Idle_Application();
 }

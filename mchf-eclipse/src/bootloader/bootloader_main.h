@@ -16,19 +16,13 @@
 #ifndef _BOOTLOADER_MAIN_H
 #define _BOOTLOADER_MAIN_H
 
-#include "usb_host.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-int BL_MSC_Application();
-void BL_Idle_Application();
+void BL_Application();
 int bootloader_main();
-
-extern ApplicationTypeDef Appli_state;
-
 #ifdef __cplusplus
 }
 #endif
