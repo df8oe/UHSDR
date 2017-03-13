@@ -276,6 +276,7 @@ void EXTI15_10_IRQHandler(void)
 /**
 * @brief This function handles USB On The Go FS global interrupt.
 */
+#ifndef BOOTLOADER_BUILD
 void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */
@@ -286,7 +287,7 @@ void OTG_FS_IRQHandler(void)
 
   /* USER CODE END OTG_FS_IRQn 1 */
 }
-
+#endif
 /**
 * @brief This function handles USB On The Go HS global interrupt.
 */

@@ -93,19 +93,24 @@ uint32_t FLASH_If_EraseSectors(uint32_t Address, uint32_t Length)
 {
     FLASH_EraseInitTypeDef flashEraseOp;
     uint32_t sectorError = 0;
+    uint32_t retval = HAL_ERROR;
 
     /* Erase Flash sectors */
     uint32_t startsector = FLASH_If_GetSectorNumber(Address);
     uint32_t endsector = FLASH_If_GetSectorNumber(Address+Length);
 
+    if (startsector != FLASH_NO_SECTOR && endsector != FLASH_NO_SECTOR)
 
-    /* Erase FLASH sectors to download image */
-    flashEraseOp.Sector = startsector;
-    flashEraseOp.NbSectors = endsector - startsector + 1;
-    flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
-    flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
+    {
+        /* Erase FLASH sectors to download image */
+        flashEraseOp.Sector = startsector;
+        flashEraseOp.NbSectors = endsector - startsector + 1;
+        flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
+        flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
 
-    return HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
+        retval = HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
+    }
+    return retval;
 }
 
 /**
@@ -130,7 +135,7 @@ static uint32_t FLASH_If_GetSectorNumber(uint32_t Address)
 
     for (int idx = 0; idx < flash_sector_max; idx++)
     {
-        if (Address >= flash_sector_addr[idx] && Address < flash_sector_addr[idx])
+        if (Address >= flash_sector_addr[idx] && Address < flash_sector_addr[idx+1])
         {
             sector = idx;
             break;
