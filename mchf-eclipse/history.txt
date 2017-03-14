@@ -12,7 +12,8 @@
 #########################################################################
 #########################################################################
 
-201702xx [DF8OE]
+20170314 [DF8OE]
+- last state using old STM libraries. It is frozen now.
 - switched frequency calibration from Hz to ppm (which is frequency-independent)
 - introduced RX IQ autocorrection (must be enabled in config menue)
 - introduced twin-peaks autocorrection
