@@ -23,6 +23,7 @@ extern "C" {
 
 void BL_Application();
 int bootloader_main();
+void bootTypeSelector();
 #ifdef __cplusplus
 }
 #endif

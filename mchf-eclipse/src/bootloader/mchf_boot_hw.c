@@ -16,16 +16,16 @@
 #include "mchf_boot_hw.h"
 
 
-GPIO_TypeDef* GPIO_PORT[LEDn] = {LEDGREEN_GPIO_PORT, LEDRED_GPIO_PORT, POWER_ON_GPIO_PORT, BACKLIGHT_ON_GPIO_PORT};
-const uint16_t GPIO_PIN[LEDn] = {LEDGREEN_PIN, LEDRED_PIN, POWER_ON_PIN, BACKLIGHT_ON_PIN};
+static GPIO_TypeDef* GPIO_PORT[LEDn] = {LEDGREEN_GPIO_PORT, LEDRED_GPIO_PORT, POWER_ON_GPIO_PORT, BACKLIGHT_ON_GPIO_PORT};
+static const uint16_t GPIO_PIN[LEDn] = {LEDGREEN_PIN, LEDRED_PIN, POWER_ON_PIN, BACKLIGHT_ON_PIN};
 
-GPIO_TypeDef* BUTTON_PORT[BUTTONn] = {BANDM_BUTTON_GPIO_PORT,POWER_BUTTON_GPIO_PORT};
+static GPIO_TypeDef* BUTTON_PORT[BUTTONn] = {BANDM_BUTTON_GPIO_PORT,POWER_BUTTON_GPIO_PORT, BANDP_BUTTON_GPIO_PORT};
 
-const uint16_t BUTTON_PIN[BUTTONn] = {BANDM_BUTTON_PIN,POWER_BUTTON_PIN};
+static const uint16_t BUTTON_PIN[BUTTONn] = {BANDM_BUTTON_PIN,POWER_BUTTON_PIN, BANDP_BUTTON_PIN};
 
-const uint8_t BUTTON_IRQn[BUTTONn] = {BANDM_BUTTON_EXTI_IRQn,POWER_BUTTON_EXTI_IRQn};
+static const uint8_t BUTTON_IRQn[BUTTONn] = {BANDM_BUTTON_EXTI_IRQn,POWER_BUTTON_EXTI_IRQn,BANDP_BUTTON_EXTI_IRQn};
 
-void STM_EVAL_LEDInit(Led_TypeDef Led)
+void mchfBl_LEDInit(Led_TypeDef Led)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -40,22 +40,22 @@ void STM_EVAL_LEDInit(Led_TypeDef Led)
     HAL_GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
 }
 
-void STM_EVAL_LEDOn(Led_TypeDef Led)
+void mchfBl_PinOn(Led_TypeDef Led)
 {
     GPIO_PORT[Led]->BSRR = GPIO_PIN[Led];
 }
 
-void STM_EVAL_LEDOff(Led_TypeDef Led)
+void mchfBl_PinOff(Led_TypeDef Led)
 {
     GPIO_PORT[Led]->BSRR = GPIO_PIN[Led] << 16U;
 }
 
-void STM_EVAL_LEDToggle(Led_TypeDef Led)
+void mchfBl_PinToggle(Led_TypeDef Led)
 {
     GPIO_PORT[Led]->ODR ^= GPIO_PIN[Led];
 }
 
-void STM_EVAL_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
+void mchfBl_ButtonInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -80,7 +80,7 @@ void STM_EVAL_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
     HAL_GPIO_Init(BUTTON_PORT[Button], &GPIO_InitStructure);
 }
 
-uint32_t STM_EVAL_PBGetState(Button_TypeDef Button)
+uint32_t mchfBl_ButtonGetState(Button_TypeDef Button)
 {
     return HAL_GPIO_ReadPin(BUTTON_PORT[Button], BUTTON_PIN[Button]);
 }

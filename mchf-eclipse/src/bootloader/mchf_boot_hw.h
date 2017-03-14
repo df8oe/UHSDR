@@ -17,7 +17,8 @@ typedef enum
 typedef enum
 {
     BUTTON_BANDM = 0,
-    BUTTON_POWER = 1
+    BUTTON_POWER = 1,
+    BUTTON_BANDP = 2
 } Button_TypeDef;
 
 typedef enum
@@ -41,12 +42,18 @@ typedef enum
 #define BACKLIGHT_ON_PIN                         GPIO_PIN_2
 #define BACKLIGHT_ON_GPIO_PORT                   GPIOD
 
-#define BUTTONn                          2
+#define BUTTONn                          3
 
 #define BANDM_BUTTON_PIN                GPIO_PIN_0
 #define BANDM_BUTTON_GPIO_PORT          GPIOB
 #define BANDM_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
 #define BANDM_BUTTON_EXTI_IRQn          EXTI0_IRQn
+
+#define BANDP_BUTTON_PIN                GPIO_PIN_2
+#define BANDP_BUTTON_GPIO_PORT          GPIOB
+#define BANDP_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
+#define BANDP_BUTTON_EXTI_IRQn          EXTI0_IRQn
+
 
 #define POWER_BUTTON_PIN                GPIO_PIN_13
 #define POWER_BUTTON_GPIO_PORT          GPIOC
@@ -55,21 +62,21 @@ typedef enum
 #define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
 
-void STM_EVAL_LEDInit(Led_TypeDef Led);
-void STM_EVAL_LEDOn(Led_TypeDef Led);
-void STM_EVAL_LEDOff(Led_TypeDef Led);
-void STM_EVAL_LEDToggle(Led_TypeDef Led);
-void STM_EVAL_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode);
-uint32_t STM_EVAL_PBGetState(Button_TypeDef Button);
+void mchfBl_LEDInit(Led_TypeDef Led);
+void mchfBl_PinOn(Led_TypeDef Led);
+void mchfBl_PinOff(Led_TypeDef Led);
+void mchfBl_PinToggle(Led_TypeDef Led);
+void mchfBl_ButtonInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode);
+uint32_t mchfBl_ButtonGetState(Button_TypeDef Button);
 
 inline void mcHF_PowerHoldOff()
 {
-    STM_EVAL_LEDOn(PWR_HOLD);
+    mchfBl_PinOn(PWR_HOLD);
 }
 
 inline void mcHF_PowerHoldOn()
 {
-    STM_EVAL_LEDOff(PWR_HOLD);
+    mchfBl_PinOff(PWR_HOLD);
 }
 
 

@@ -17,6 +17,7 @@
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
+#include "bootloader_main.h"
 
 #include <unistd.h>
 
@@ -38,10 +39,10 @@ void BL_Idle_Application(void)
 
     if (now >= tick)
     {
-        STM_EVAL_LEDToggle(LEDGREEN);
+        mchfBl_PinToggle(LEDGREEN);
         tick = now + 1024;
     }
-    if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
+    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
     {
         mcHF_PowerHoldOff();
     }
@@ -61,7 +62,7 @@ int BL_MSC_Application(void)
     {
         // just before we start, we check the BANDM button.
         // If still pressed, we will also flash the memory afer reading it
-        __IO uint32_t was_download = (STM_EVAL_PBGetState(BUTTON_BANDM) == 0);
+        __IO uint32_t was_download = (mchfBl_ButtonGetState(BUTTON_BANDM) == 0);
         /* Reads all flash memory */
         COMMAND_UPLOAD();
 
@@ -72,28 +73,28 @@ int BL_MSC_Application(void)
             COMMAND_DOWNLOAD();
         }
 
-        STM_EVAL_LEDOff(BACKLIGHT);
+        mchfBl_PinOff(BACKLIGHT);
 
         /* Waiting User Button Released */
-        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 0))
+        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 0))
         {}
 
         /* Waiting User Button Pressed or usb drive removed. If drive is removed, we go straight to reboot */
-        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 1) && mcHF_USBConnected() != 0)
+        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 1) && mcHF_USBConnected() != 0)
         {
             /* switch off if power button is pressed */
-            if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
+            if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
             {
                 mcHF_PowerHoldOff();
             }
         }
 
         /* Waiting User Button Released or usb drive removed.  If drive is removed, we go straight to reboot */
-        while ((STM_EVAL_PBGetState(BUTTON_BANDM) == 0) && mcHF_USBConnected() != 0)
+        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 0) && mcHF_USBConnected() != 0)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
-        COMMAND_ResetMCU();
+        COMMAND_ResetMCU(0x55);
     }
 
     // this below is a trick to get sbrk() linked in at the right time so that
@@ -108,15 +109,31 @@ void BSP_Init(void)
     // we assume that the clock for all required GPIO Ports has been turn on!!
 
     /* Initialize LEDs and User_Button on mchf --------------------*/
-    STM_EVAL_PBInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
-    STM_EVAL_PBInit(BUTTON_POWER, BUTTON_MODE_GPIO);
+    mchfBl_ButtonInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+    mchfBl_ButtonInit(BUTTON_POWER, BUTTON_MODE_GPIO);
+    mchfBl_ButtonInit(BUTTON_BANDP, BUTTON_MODE_GPIO);
 
-    STM_EVAL_LEDInit(LEDGREEN);
-    STM_EVAL_LEDInit(LEDRED);
-    STM_EVAL_LEDInit(PWR_HOLD);
-    STM_EVAL_LEDInit(BACKLIGHT);
+    mchfBl_LEDInit(LEDGREEN);
+    mchfBl_LEDInit(LEDRED);
+    mchfBl_LEDInit(PWR_HOLD);
+    mchfBl_LEDInit(BACKLIGHT);
 }
 
+/**
+ * @brief jump to a STM32 Application by giving the start address of the ISR Vector structure of that application
+ */
+
+__attribute__ ( ( naked ) ) void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
+{
+    uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
+
+    if ( ( APPLICATION_PTR[0] & 0x2FF00000 ) == 0x20000000)
+    {
+        __set_MSP(APPLICATION_PTR[0]);
+        /* Jump to user application */
+        ((pFunction) APPLICATION_PTR[1])();
+    }
+}
 
 int bootloader_main()
 {
@@ -134,32 +151,26 @@ int bootloader_main()
     }
     mcHF_PowerHoldOn();
 
+    if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
+    {
+        // BANDM pressed, DFU boot requested
+        COMMAND_ResetMCU(0x99);
+    }
     /* Test if BAND- button on mchf is NOT pressed */
-    if (STM_EVAL_PBGetState(BUTTON_BANDM) == 1)
+    else if (mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
     {
         /* Check Vector Table: Test if user code is programmed starting from address
            "APPLICATION_ADDRESS"
            We do that be reading the stack pointer value stored at APPLICATION_ADDRESS
            and roughly check if it points to a RAM SPACE address
-            */
-
-        uint32_t* const APPLICATION_PTR = (uint32_t*)APPLICATION_ADDRESS;
-
-        if ( ( APPLICATION_PTR[0] & 0x2FF00000 ) == 0x20000000)
-        {
-            pFunction Jump_To_Application;
-            /* Jump to user application */
-            Jump_To_Application = (pFunction) APPLICATION_PTR[1];
-            /* Initialize user application's Stack Pointer */
-            __set_MSP(APPLICATION_PTR[0]);
-            Jump_To_Application();
-        }
+         */
+        mchfBl_JumpToApplication(APPLICATION_ADDRESS);
         BootFail_Handler(2);
         // never reached, is endless loop
     }
 
     /* Init upgrade mode display */
-    STM_EVAL_LEDOn(BACKLIGHT);
+    mchfBl_PinOn(BACKLIGHT);
     // now give user a chance to let go off the BAND- button
     HAL_Delay(3000);
     return 0;
@@ -184,4 +195,17 @@ void BL_Application()
     }
 
     BL_Idle_Application();
+}
+
+
+void mchfBl_CheckAndGoForDfuBoot()
+{
+
+    if( *(uint32_t*)(SRAM2_BASE) == 0x99)
+    {
+        *(uint32_t*)(SRAM2_BASE) = 0;
+        __HAL_REMAPMEMORY_SYSTEMFLASH();
+        mchfBl_JumpToApplication(0);
+        // start the STM32F4xx bootloader at address 0x00000000;
+    }
 }

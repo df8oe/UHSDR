@@ -187,7 +187,7 @@ help:
 bootloader: bootloader.bin bootloader.dfu
 
 
-all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
+all:  $(LPRJ).elf $(LPRJ).dfu $(PRJ).bin $(PRJ).handbook
 	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
 	@echo "using \c"
 	$(CC) --version | grep gcc
@@ -216,6 +216,7 @@ clean:
 	$(RM) $(call FixPath,$(OBJS))
 	$(RM) $(call FixPath,$(BLOBJS))
 	$(RM) $(call FixPath,$(LPRJ).elf)
+	$(RM) $(call FixPath,$(LPRJ).dfu)
 	$(RM) $(call FixPath,$(PRJ).bin)
 	$(RM) $(call FixPath,$(LPRJ).map)
 	$(RM) $(call FixPath,bootloader.elf)

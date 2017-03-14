@@ -48,7 +48,7 @@ typedef enum {
 /* Exported functions ------------------------------------------------------- */
 void COMMAND_UPLOAD(void);
 void COMMAND_DOWNLOAD(void);
-void COMMAND_ResetMCU(void);
+void COMMAND_ResetMCU(uint32_t code);
 
 
 

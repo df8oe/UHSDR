@@ -99,13 +99,20 @@ int main(void)
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+#ifdef BOOTLOADER_BUILD
+  mchfBl_CheckAndGoForDfuBoot();
+  //  we need to do this as early as possible
+#endif
   HAL_Init();
+
+
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+
 #ifdef BOOTLOADER_BUILD
   bootloader_main();
 #else

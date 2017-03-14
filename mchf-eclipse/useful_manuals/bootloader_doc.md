@@ -1,14 +1,22 @@
 # DF8OE Bootloader Usage
 
 
-The DF8OE bootloader is responsible for starting the firmware of the mcHF and is also able to flash new firmware from a USB drive into the mcHF and/or to dump the current firmware on a USB drive connected to the (big) USB-A socket. 
+The DF8OE bootloader is responsible for starting the firmware of the mcHF. it is also able to flash new firmware and bootloader.
+The bootloader supports two ways to install new software on the mcHF, via USB drive or via DFU Upload. 
+In most cases, the most convenient way is to use a USB drive to install new firmware using the a USB drive connected to the (big) USB-A socket. 
+To install a new bootloader (or new firmware) the alternate method is to run a DFU upload using a PC connected via USB cable to the small (Mini USB connector) and an appropriate DFU upload tool (e.g. Windows: DFUSe, Linux: dfu-util). 
+
 
 ### Installing The Bootloader
 
 The procedure to install the DF8OE in its DFU form (bootloader.dfu) is the same as for the M0NKA bootloader (using DFUSe). See bootloader\_install.odt or bootloader\_install.pdf 
 If you own a ST-Link, you can simply flash the bootloader.bin/bootloader.hex/bootloader.elf using your favorite ST flash tool at adress 0x08000000.
 
-### Prerequisites
+## Firmware Update Procedures Using a USB Drive
+
+The USB drive approach can be used to upload new firmware with any need for special software. 
+
+### Prerequisites 
 
 1. You need the DF8OE bootloader to be installed (once) on your mcHF
 1. You need USB drive formatted with a single partition with the filesystem FAT or FAT32 (not exFAT, NTFS or anything else!). Normal USB pen drives formatted under Windows or Linux fulfill this criteria.
@@ -17,7 +25,7 @@ If you own a ST-Link, you can simply flash the bootloader.bin/bootloader.hex/boo
 For firmware-upgrade you must plug the USB-key to mchf
 big USB-A plug.
 
-### Flashing New Firmware And Saving Old Firmware
+### Flashing New Firmware And Saving Old Firmware 
 
 1. Place binary of the new firmware with the name "mchf.bin" on in the root directory of the drive.
 1 turn off mcHF and connect drive.
@@ -72,6 +80,44 @@ The red led is flashing in bursts of:
 |7		|STM32F4 flash erase error				|
 |8		|STM32F4 flash write protected			|
 
+
+## Firmware and Bootload Update Procedures Using an USB Cable and DFU Upload
+
+Both firmware and bootloader can be updated using the DFU Upload method. You will need a PC with proper STM DFU software installed. On Windows, the DfuSE tool from STM will do the job, on Linux install the dfu-util package.
+
+### Prerequisites 
+
+1. You need the DF8OE bootloader to be installed (once) on your mcHF
+1. Install the DFU software on your PC including the provided driver if necessary. 
+1. Connect PC and mcHF (small USB connector) using a Mini-USB cable.
+1. Get the appropriate DFU file (__bootloader.dfu__ or __firmware.dfu__)
+
+### Starting The mcHF in DFU mode
+
+1. Turn mcHF off
+1. Press and hold Band+
+1. Press and hold Power
+1. After two second you can release the Band+ button but keep the Power button pressed permanently. You will see the white backlight, which stays on. You will not see any led flashing etc. All communication is done using the USB bus only. 
+1. Your PC should now recognize a new USB device "STM BOOTLOADER", manufacturer is "STMicroelectronics"
+1. Keep the power button pressed until the very end of the instructions given below. 
+
+#### Windows DfuSE Instructions
+
+1. Start the DFU applicaton (if not already started) and upload as instructed. For the correct use of DfuSE see the bootloader_install.pdf. You don't have to do the first steps (since you started in the DFU using the bootloader) but then you need to follow the steps (A) to (D).
+1. (A) Make sure you see "STM Device in DFU Mode"
+1. (B) Select the file to upload using "Choose". 
+1. (C) Select checkbox "Verify after Download"
+1. (D) Press "Upgrade". __DO NOT USE__ "Upload". 
+1. After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upload of a new firmware.bin, no problem. However, if you do this during the upload of a new bootloader, you may temporarily brick your mcHF and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
+
+ 
+#### Linux dfu-util
+
+1. "dfu-util -D mchf.dfu -a 0" or "dfu-util -D bootloader.dfu -a 0"
+After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upload of a new firmware.bin, no problem. However, if you do this during the upload of a new bootloader, you may temporarily brick your mcHF and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
+
+  
+    
 
 
 ### History

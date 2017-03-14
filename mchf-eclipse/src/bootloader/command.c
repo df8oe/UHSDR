@@ -53,7 +53,7 @@ void Wait(int time)
 {
     HAL_Delay(time);
     // we show the error message until user presses power...
-    if(STM_EVAL_PBGetState(BUTTON_POWER) == 0)
+    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
     {
         mcHF_PowerHoldOff();
     }
@@ -63,24 +63,24 @@ void Wait(int time)
 // USB error handling
 void FlashFail_Handler(mchf_bootloader_error_t redCount)
 {
-    STM_EVAL_LEDOff(LEDGREEN);
-    STM_EVAL_LEDOff(LEDRED);
+    mchfBl_PinOff(LEDGREEN);
+    mchfBl_PinOff(LEDRED);
 
     while(1)
     {
-        STM_EVAL_LEDOff(BACKLIGHT);
+        mchfBl_PinOff(BACKLIGHT);
         Wait(600);
         for(int i = 0; i < redCount; i++)
         {
-            STM_EVAL_LEDOff(LEDRED);
+            mchfBl_PinOff(LEDRED);
             Wait(300);
-            STM_EVAL_LEDOn(LEDRED);
+            mchfBl_PinOn(LEDRED);
             Wait(300);
-            STM_EVAL_LEDOff(LEDRED);
+            mchfBl_PinOff(LEDRED);
             Wait(300);
         }
         Wait(600);
-        STM_EVAL_LEDOn(BACKLIGHT);
+        mchfBl_PinOn(BACKLIGHT);
         Wait(900);
     }
 }
@@ -89,7 +89,7 @@ void FlashFail_Handler(mchf_bootloader_error_t redCount)
 // USB error handling
 void BootFail_Handler(uint8_t count)
 {
-    STM_EVAL_LEDOff(BACKLIGHT);
+    mchfBl_PinOff(BACKLIGHT);
     Wait(700);
 
     while(1)
@@ -97,9 +97,9 @@ void BootFail_Handler(uint8_t count)
         for(uint8_t i = 0; i < count; i++)
         {
             Wait(300);
-            STM_EVAL_LEDOn(BACKLIGHT);
+            mchfBl_PinOn(BACKLIGHT);
             Wait(300);
-            STM_EVAL_LEDOff(BACKLIGHT);
+            mchfBl_PinOff(BACKLIGHT);
             Wait(700);
         }
         Wait(700);
@@ -165,7 +165,7 @@ void COMMAND_UPLOAD(void)
     f_unlink(VERSION);
     f_unlink(AUTHOR);
     /* green LED on command upload */
-    STM_EVAL_LEDOn(LEDGREEN);
+    mchfBl_PinOn(LEDGREEN);
     /* Get the read out protection status */
     FlagStatus readoutstatus = flashIf_ReadOutProtectionStatus();
     if (readoutstatus == 0)
@@ -218,7 +218,7 @@ void COMMAND_DOWNLOAD(void)
     flashIf_FlashUnlock();
 
     /* Reading for flash active: Red LED on */
-    STM_EVAL_LEDOn(LEDRED);
+    mchfBl_PinOn(LEDRED);
 
     /* Open the binary file to be downloaded */
     if (f_open(&fileR, DOWNLOAD_FILENAME, FA_READ) == FR_OK)
@@ -258,9 +258,9 @@ void COMMAND_DOWNLOAD(void)
 /**
  * @brief  reset to restart mchf
  */
-void COMMAND_ResetMCU(void)
+void COMMAND_ResetMCU(uint32_t code)
 {
-    *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+    *(__IO uint32_t*)(SRAM2_BASE) = code;
     /* Software reset */
     NVIC_SystemReset();
 }
