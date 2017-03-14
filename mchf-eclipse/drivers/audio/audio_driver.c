@@ -667,11 +667,11 @@ void AudioDriver_SetRxAudioProcessingSAM(uint8_t dmod_mode)
 
 void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom, float scaling)
 {
-        coeffsTo[0] = coeffsFrom[0]/scaling;
-        coeffsTo[1] = coeffsFrom[1]/scaling;
-        coeffsTo[2] = coeffsFrom[2]/scaling;
-        coeffsTo[3] = coeffsFrom[3]/scaling;
-        coeffsTo[4] = coeffsFrom[4]/scaling;
+    coeffsTo[0] = coeffsFrom[0]/scaling;
+    coeffsTo[1] = coeffsFrom[1]/scaling;
+    coeffsTo[2] = coeffsFrom[2]/scaling;
+    coeffsTo[3] = coeffsFrom[3]/scaling;
+    coeffsTo[4] = coeffsFrom[4]/scaling;
 }
 
 void AudioDriver_CalcHighShelf(float32_t coeffs[6], float32_t f0, float32_t S, float32_t gain, float32_t FS)
@@ -3238,7 +3238,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             lowpass = carrier;
         }
     }
-        break;
+    break;
     }
 }
 
@@ -3588,126 +3588,128 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-    AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
-    // ------------------------
-    // Split stereo channels
-    for(uint32_t i = 0; i < blockSize; i++)
+    if (ads.af_disabled == 0 )
     {
-        if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
+        AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
+        // ------------------------
+        // Split stereo channels
+        for(uint32_t i = 0; i < blockSize; i++)
         {
-            ads.adc_quarter_clip = 1;
-            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
+            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
             {
-                ads.adc_half_clip = 1;
-                if(src[i].l > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
+                ads.adc_quarter_clip = 1;
+                if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
                 {
-                    ads.adc_clip = 1;
-                }
-            }
-        }
-        adb.i_buffer[i] = (float32_t)src[i].l;
-        adb.q_buffer[i] = (float32_t)src[i].r;
-    }
-
-#ifdef USE_SNAP
-    if (sc.snap) {
-        if (sc.state == 0)
-        {
-            for(i = 0; i < blockSize; i++)
-            {
-                sc.counter += blockSize;
-                if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-                {
-
-                    // collect samples for snap carrier FFT
-                    sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
-                    sc.samp_ptr++;
-                    sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
-                    sc.samp_ptr++;
-                    // obtain samples for snap carrier mode
-                    if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+                    ads.adc_half_clip = 1;
+                    if(src[i].l > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
                     {
-                        sc.samp_ptr = 0;
-                        sc.state    = 1;
-                        sc.counter = 0;
+                        ads.adc_clip = 1;
                     }
                 }
             }
+            adb.i_buffer[i] = (float32_t)src[i].l;
+            adb.q_buffer[i] = (float32_t)src[i].r;
         }
-        else if (sc.state == 1)
-        {
-            AudioDriver_SnapCarrier(); // tunes the mcHF to the largest signal in the filterpassband
+
+#ifdef USE_SNAP
+        if (sc.snap) {
+            if (sc.state == 0)
+            {
+                for(i = 0; i < blockSize; i++)
+                {
+                    sc.counter += blockSize;
+                    if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
+                    {
+
+                        // collect samples for snap carrier FFT
+                        sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
+                        sc.samp_ptr++;
+                        sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
+                        sc.samp_ptr++;
+                        // obtain samples for snap carrier mode
+                        if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
+                        {
+                            sc.samp_ptr = 0;
+                            sc.state    = 1;
+                            sc.counter = 0;
+                        }
+                    }
+                }
+            }
+            else if (sc.state == 1)
+            {
+                AudioDriver_SnapCarrier(); // tunes the mcHF to the largest signal in the filterpassband
+            }
         }
-    }
 #endif
 
 
-    // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
-    //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
+        // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
+        //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
 
 
-    AudioDriver_RxHandleIqCorrection(blockSize);
+        AudioDriver_RxHandleIqCorrection(blockSize);
 
 
-    // Spectrum display sample collect for magnify == 0
-    AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
+        // Spectrum display sample collect for magnify == 0
+        AudioDriver_SpectrumNoZoomProcessSamples(blockSize);
 
-    if(iq_freq_mode)            // is receive frequency conversion to be done?
-    {
-        if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)           // Yes - "RX LO LOW" mode
+        if(iq_freq_mode)            // is receive frequency conversion to be done?
         {
-            AudioDriver_FreqConversion(blockSize, 1);
+            if(iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ)           // Yes - "RX LO LOW" mode
+            {
+                AudioDriver_FreqConversion(blockSize, 1);
+            }
+            else                                // it is in "RX LO LOW" mode
+            {
+                AudioDriver_FreqConversion(blockSize, 0);
+            }
         }
-        else                                // it is in "RX LO LOW" mode
-        {
-            AudioDriver_FreqConversion(blockSize, 0);
-        }
-    }
 
-    // Spectrum display sample collect for magnify != 0
-    AudioDriver_SpectrumZoomProcessSamples(blockSize);
+        // Spectrum display sample collect for magnify != 0
+        AudioDriver_SpectrumZoomProcessSamples(blockSize);
 
-    //  Demodulation, optimized using fast ARM math functions as much as possible
+        //  Demodulation, optimized using fast ARM math functions as much as possible
 
-    bool dvmode_signal = false;
+        bool dvmode_signal = false;
 
 #ifdef USE_FREEDV
-    if (ts.dvmode == true)
-    {
-        dvmode_signal = AudioDriver_RxProcessorDigital(src,dst,blockSize);
-    }
+        if (ts.dvmode == true)
+        {
+            dvmode_signal = AudioDriver_RxProcessorDigital(src,dst,blockSize);
+        }
 #endif
 
-    if (dvmode_signal == false)
-    {
-        // ------------------------
-        // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
-        // In AM and SAM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected, in
-        // which case there is ***NO*** audio phase shift applied to the I/Q channels.
-        //
-        //
-        if(ts.dmod_mode != DEMOD_SAM && ts.dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
+        if (dvmode_signal == false)
         {
-            arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
-            arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
-        }
+            // ------------------------
+            // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
+            // In AM and SAM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected, in
+            // which case there is ***NO*** audio phase shift applied to the I/Q channels.
+            //
+            //
+            if(ts.dmod_mode != DEMOD_SAM && ts.dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
+            {
+                arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+                arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+            }
 
-        switch(dmod_mode)
-        {
-        case DEMOD_LSB:
-            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
-            break;
-        case DEMOD_CW:
-            if(!ts.cw_lsb)  // is this USB RX mode?  (LSB of mode byte was zero)
+            switch(dmod_mode)
             {
-                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
-            }
-            else    // No, it is LSB RX mode
-            {
+            case DEMOD_LSB:
                 arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
-            }
-            break;
-            /*        case DEMOD_AM:
+                break;
+            case DEMOD_CW:
+                if(!ts.cw_lsb)  // is this USB RX mode?  (LSB of mode byte was zero)
+                {
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                }
+                else    // No, it is LSB RX mode
+                {
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                }
+                break;
+                /*        case DEMOD_AM:
             if (ts.AM_experiment)
             {
                 AudioDriver_DemodAmExperimental(blockSize);
@@ -3717,48 +3719,47 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 AudioDriver_DemodAM(blockSize);
             }
             break; */
-        case DEMOD_AM:
-        case DEMOD_SAM:
-            AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
-            // TODO: the above is "real" SAM, old SAM mode (below) could be renamed and implemented as DSB (double sideband mode)
-            // if anybody needs that
+            case DEMOD_AM:
+            case DEMOD_SAM:
+                AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
+                // TODO: the above is "real" SAM, old SAM mode (below) could be renamed and implemented as DSB (double sideband mode)
+                // if anybody needs that
 
-            //            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
-            //            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
-            //            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
+                //            arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.f_buffer, blockSize);   // difference of I and Q - LSB
+                //            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.e_buffer, blockSize);   // sum of I and Q - USB
+                //            arm_add_f32(adb.e_buffer, adb.f_buffer, adb.a_buffer, blockSize);   // sum of LSB & USB = DSB
 
-            break;
-        case DEMOD_FM:
-            AudioDriver_DemodFM(blockSize);
-            break;
-        case DEMOD_DIGI:
-            // if we are here, the digital codec (e.g. because of no signal) asked to decode
-            // using analog demodulation in the respective sideband
-            if (ts.digi_lsb)
-            {
-                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
-            }
-            else
-            {
+                break;
+            case DEMOD_FM:
+                AudioDriver_DemodFM(blockSize);
+                break;
+            case DEMOD_DIGI:
+                // if we are here, the digital codec (e.g. because of no signal) asked to decode
+                // using analog demodulation in the respective sideband
+                if (ts.digi_lsb)
+                {
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                }
+                else
+                {
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                }
+                break;
+            case DEMOD_USB:
+            default:
                 arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                break;
             }
-            break;
-        case DEMOD_USB:
-        default:
-            arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
-            break;
-        }
 
-        if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
-        {
-            // Do decimation down to lower rate to reduce processor load
-            if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+            if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
             {
-                arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
-            }
+                // Do decimation down to lower rate to reduce processor load
+                if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+                {
+                    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                }
 
 
-            if(ads.af_disabled == false) {
                 if (ts.dsp_inhibit == false)
                 {
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
@@ -3779,115 +3780,108 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
                 }
-            }
 
 
-            //
-            // This is the right place for the SNB
-            // Spectral Noise Blanker
-            //
-            // we try to implement the SNB from the WDSP lib
-            // by Warren Pratt
-            //
-            // I have no idea whether it will be possible to implement it, because of processor load and very complex implementation issues
-            // DD4WH Feb, 22nd, 2017
+                //
+                // This is the right place for the SNB
+                // Spectral Noise Blanker
+                //
+                // we try to implement the SNB from the WDSP lib
+                // by Warren Pratt
+                //
+                // I have no idea whether it will be possible to implement it, because of processor load and very complex implementation issues
+                // DD4WH Feb, 22nd, 2017
 
-            //            exec_SNB(blockSizeDecim);
+                //            exec_SNB(blockSizeDecim);
 
-            // now process the samples and perform the receiver AGC function
-            if(ts.agc_wdsp)
-            {
-                AudioDriver_RxAGCWDSP(blockSizeDecim);
-            }
-            else
-            {
-                AudioDriver_RxAgcProcessor(blockSizeDecim);
-            }
-
-            // DSP noise reduction using LMS (Least Mean Squared) algorithm
-            // This is the post-filter, post-AGC instance
-            //
-            if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ads.af_disabled) && (!ts.dsp_inhibit) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
-            {
-                AudioDriver_NoiseReduction(blockSizeDecim);
-            }
-            //
-            // Calculate scaling based on decimation rate since this affects the audio gain
-            if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
-            {
-                post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
-            }
-            else
-            {
-                post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
-            }
-
-            // Scale audio according to AGC setting, demodulation mode and required fixed levels and scaling
-            float32_t scale_gain;
-            if(dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
-            {
+                // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
-                    scale_gain = post_agc_gain_scaling * 0.5; // ignore ts.max_rf_gain  --> has no meaning with WDSP AGC; and take into account AM scaling factor
+                    AudioDriver_RxAGCWDSP(blockSizeDecim);
                 }
                 else
                 {
-                    scale_gain = ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING);
+                    AudioDriver_RxAgcProcessor(blockSizeDecim);
                 }
-            }
-            else        // Not AM
-            {
-                if(ts.agc_wdsp)
+
+                // DSP noise reduction using LMS (Least Mean Squared) algorithm
+                // This is the post-filter, post-AGC instance
+                //
+                if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
-                    scale_gain = post_agc_gain_scaling * 0.333; // ignore ts.max_rf_gain --> has no meaning with WDSP AGC
+                    AudioDriver_NoiseReduction(blockSizeDecim);
+                }
+                //
+                // Calculate scaling based on decimation rate since this affects the audio gain
+                if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
+                {
+                    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
                 }
                 else
                 {
-                    scale_gain = ads.post_agc_gain * post_agc_gain_scaling;
+                    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
                 }
-            }
-            arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 
-            // this is the biquad filter, a notch, peak, and lowshelf filter
-            if (!ads.af_disabled)
-            {
+                // Scale audio according to AGC setting, demodulation mode and required fixed levels and scaling
+                float32_t scale_gain;
+                if(dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
+                {
+                    if(ts.agc_wdsp)
+                    {
+                        scale_gain = post_agc_gain_scaling * 0.5; // ignore ts.max_rf_gain  --> has no meaning with WDSP AGC; and take into account AM scaling factor
+                    }
+                    else
+                    {
+                        scale_gain = ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING);
+                    }
+                }
+                else        // Not AM
+                {
+                    if(ts.agc_wdsp)
+                    {
+                        scale_gain = post_agc_gain_scaling * 0.333; // ignore ts.max_rf_gain --> has no meaning with WDSP AGC
+                    }
+                    else
+                    {
+                        scale_gain = ads.post_agc_gain * post_agc_gain_scaling;
+                    }
+                }
+                arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+
+                // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
-            }
 
-            // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
-            if (INTERPOLATE_RX.phaseLength > 0)
+                // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
+                if (INTERPOLATE_RX.phaseLength > 0)
+                {
+                    arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer,(float32_t *) adb.b_buffer, blockSizeDecim);
+                }
+                // additional antialias filter for specific bandwidths
+                // IIR ARMA-type lattice filter
+                if (IIR_AntiAlias.numStages > 0)   // yes, we want an interpolation IIR filter
+                {
+                    arm_iir_lattice_f32(&IIR_AntiAlias, adb.b_buffer, adb.b_buffer, blockSize);
+                }
+
+            } // end NOT in FM mode
+            else if(ts.dmod_mode == DEMOD_FM)           // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
             {
-                arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer,(float32_t *) adb.b_buffer, blockSizeDecim);
-            }
-            // additional antialias filter for specific bandwidths
-            // IIR ARMA-type lattice filter
-            if ((!ads.af_disabled) && (IIR_AntiAlias.numStages > 0))   // yes, we want an interpolation IIR filter
-            {
-                arm_iir_lattice_f32(&IIR_AntiAlias, adb.b_buffer, adb.b_buffer, blockSize);
-            }
+                arm_scale_f32(
+                        adb.a_buffer,
+                        (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
+                                adb.b_buffer,
+                                blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+                if(ts.agc_wdsp)
+                {
+                    AudioDriver_RxAGCWDSP(blockSizeDecim);
+                }
 
-        } // end NOT in FM mode
-        else if(ts.dmod_mode == DEMOD_FM)           // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
-        {
-            arm_scale_f32(
-                    adb.a_buffer,
-                    (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
-                            adb.b_buffer,
-                            blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-            if(ts.agc_wdsp)
-            {
-                AudioDriver_RxAGCWDSP(blockSizeDecim);
             }
 
-        }
-
-        // this is the biquad filter, a highshelf filter
-        if (ads.af_disabled == false)
-        {
+            // this is the biquad filter, a highshelf filter
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
         }
     }
-
 
     bool do_mute_output =
             ts.audio_dac_muting_flag
