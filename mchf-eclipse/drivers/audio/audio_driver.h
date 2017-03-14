@@ -576,8 +576,8 @@ void AudioDriver_Init(void);
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
 void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
-void set_SAM_PLL_parameters (void);
-void AGC_prep(void);
+void AudioDriver_SetSamPllParameters (void);
+void AudioDriver_SetupAGC(void);
 float log10f_fast(float X);
 //float log10f_fast
 //uchar audio_check_nr_dsp_state(void);

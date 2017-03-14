@@ -886,7 +886,7 @@ void UiDriver_Init()
 
     AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
 
-    AudioFilter_InitRxHilbertFIR();
+    AudioFilter_InitRxHilbertFIR(ts.dmod_mode);
     AudioFilter_InitTxHilbertFIR();
 
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
@@ -3762,7 +3762,7 @@ static void UiDriver_CheckEncoderTwo()
                         else
                         {
                             ts.agc_wdsp_thresh = change_and_limit_int(ts.agc_wdsp_thresh,pot_diff_step,-20,120);
-                            AGC_prep();
+                            AudioDriver_SetupAGC();
                         }
                     }
                     else	 		// it is FM - change squelch setting
@@ -3788,7 +3788,7 @@ static void UiDriver_CheckEncoderTwo()
                         //                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
                         ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
                         ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
-                        AGC_prep();
+                        AudioDriver_SetupAGC();
                     }
                     UiDriver_DisplayNoiseBlanker(1);
                     break;
