@@ -122,6 +122,9 @@ After successful flashing you can let go of the Power button, not earlier. If yo
 
 ### History
 
+03/14/2017 [DB4PLE]
+Added DFU Update support via USB using Band+ button
+
 03/12/2017 [DB4PLE]
 Ported to HAL, now supports all tested USB pen drives (also previously not working ones!)
 Some changes to the error led codes (simplified the coding to allow easier communication)

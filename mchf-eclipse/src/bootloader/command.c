@@ -29,7 +29,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 2.2.2-HAL"
+#define VERSION                    "Version: 2.2.3-HAL"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
