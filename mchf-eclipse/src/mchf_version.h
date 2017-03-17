@@ -12,8 +12,8 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#define 	TRX4M_VER_MAJOR			"1"
-#define 	TRX4M_VER_MINOR			"7"
+#define 	TRX4M_VER_MAJOR			"2"
+#define 	TRX4M_VER_MINOR			"0"
 #define 	TRX4M_VER_RELEASE		"0"
 
 // trailing characters are needed for identifying version and building date+time in binary
