@@ -31,7 +31,7 @@ extern arm_fir_decimate_instance_f32 DECIMATE_SAM_Q;
 
 // Audio filter select enumeration
 //
-void 	AudioFilter_InitRxHilbertFIR(void);
+void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode);
 //void    AudioFilter_CalcRxPhaseAdj(void);
 void 	AudioFilter_InitTxHilbertFIR(void);
 //void    AudioFilter_CalcTxPhaseAdj(void);

@@ -13,14 +13,16 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_version.h"
 #include "mchf_board.h"
 #include "profiling.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <src/mchf_version.h>
 #include "ui_menu.h"
+#include "mchf_rtc.h"
+#include "adc.h"
 //
 //
 #include "ui.h"
@@ -866,7 +868,6 @@ void UiDriver_Init()
 {
     // Driver publics init
     UiDriver_PublicsInit();
-
     // Init frequency publics
     UiDriver_InitFrequency();
 
@@ -885,11 +886,10 @@ void UiDriver_Init()
 
     AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
 
-    AudioFilter_InitRxHilbertFIR();
+    AudioFilter_InitRxHilbertFIR(ts.dmod_mode);
     AudioFilter_InitTxHilbertFIR();
 
     AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
-
 
     sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
 
@@ -946,8 +946,6 @@ static void UiDriver_PublicsInit()
     //abst.blink_skip 		= 0;
 
     // SWR meter init
-    swrm.skip 				= 0;
-
     swrm.p_curr				= 0;
     swrm.fwd_calc			= 0;
     swrm.rev_calc			= 0;
@@ -1315,12 +1313,20 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
+                    uint16_t done = -1;
                     UiSpectrum_ClearDisplay();			// clear display under spectrum scope
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
                         UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
                     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+                    {
                         UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
-                    UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+                    }
+                    done = UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+
+                    if (done!=0)
+                    {
+                        UiLcdHy28_PrintText(60,160,"Saving settings failed       ",Red,Black,0);
+                    }
                     non_os_delay_multi(6);
                     ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
                     UiDriver_FButton_F1MenuExit();
@@ -2987,7 +2993,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
-        retval = GPIO_ReadInputDataBit(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
+        retval = HAL_GPIO_ReadPin(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
     }
     return retval;
 }
@@ -3646,7 +3652,7 @@ static void UiDriver_CheckEncoderOne()
             else	 		// In voice mode - adjust audio compression level
             {
                 // Convert to Audio Gain incr/decr
-                ts.tx_comp_level = change_and_limit_uint(ts.tx_comp_level,pot_diff_step,0,TX_AUDIO_COMPRESSION_MAX);
+                ts.tx_comp_level = change_and_limit_int(ts.tx_comp_level,pot_diff_step,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX);
                 AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
                 UiDriver_DisplayCmpLevel(1);	// update on-screen display
             }
@@ -3756,7 +3762,7 @@ static void UiDriver_CheckEncoderTwo()
                         else
                         {
                             ts.agc_wdsp_thresh = change_and_limit_int(ts.agc_wdsp_thresh,pot_diff_step,-20,120);
-                            AGC_prep();
+                            AudioDriver_SetupAGC();
                         }
                     }
                     else	 		// it is FM - change squelch setting
@@ -3782,7 +3788,7 @@ static void UiDriver_CheckEncoderTwo()
                         //                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
                         ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
                         ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
-                        AGC_prep();
+                        AudioDriver_SetupAGC();
                     }
                     UiDriver_DisplayNoiseBlanker(1);
                     break;
@@ -4162,15 +4168,19 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
     char	temp[5];
     const char* outs;
 
-    if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
+    if (ts.tx_comp_level == TX_AUDIO_COMPRESSION_MIN)
+    {
+        outs ="OFF";
+    }
+    else if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_MAX)	 	// 	display numbers for all but the highest value
     {
         snprintf(temp,5," %02d",ts.tx_comp_level);
         outs = temp;
     }
-    else	 				// show "CUS" (Custom Value) for highest value
+    else
     {
+        color = Yellow; // Custom value - use yellow
         outs ="CUS";
-        color = Yellow;	// Custom value - use yellow
     }
 
     UiDriver_EncoderDisplay(1,0,"CMP" , encoder_active, outs, color);
@@ -5051,7 +5061,7 @@ static void UiDriver_HandleVoltage()
         // Collect samples
         if(pwmt.p_curr < POWER_SAMPLES_CNT)
         {
-            val_p = ADC_GetConversionValue(ADC1);
+            val_p = HAL_ADC_GetValue(&hadc1);
 
             // Add to accumulator
             pwmt.pwr_aver = pwmt.pwr_aver + val_p;
@@ -5859,6 +5869,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 {
     uint16_t    i;
     char   tx[100];
+    char   temp_buf[32];
     const char* txp;
     uint32_t clr;
     const char* info_out;
@@ -5877,9 +5888,11 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
 
 	// looking for bootloader version, only works or DF8OE bootloader
     // Show third line
+    info_out = UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION);
+    strncpy(temp_buf, info_out, 32);
     info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
 
-    snprintf(tx,100,"FW: %s.%s.%s / BL: %s",TRX4M_VER_MAJOR,TRX4M_VER_MINOR,TRX4M_VER_RELEASE,info_out);
+    snprintf(tx,100,"FW: %s / BL: %s", temp_buf, info_out);
     UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
 
     // Show fourth line
@@ -5915,7 +5928,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_PrintTextCentered(0, 165,320, tx, clr, Black, 0);
     //
 
-    if(ts.ee_init_stat != FLASH_COMPLETE)        // Show error code if problem with EEPROM init
+    if(ts.ee_init_stat != HAL_OK)        // Show error code if problem with EEPROM init
     {
         snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
         UiLcdHy28_PrintTextCentered(0,180,320,tx,White,Black,0);
@@ -5923,8 +5936,8 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     else
     {
         ushort adc2, adc3;
-        adc2 = ADC_GetConversionValue(ADC2);
-        adc3 = ADC_GetConversionValue(ADC3);
+        adc2 = HAL_ADC_GetValue(&hadc2);
+        adc3 = HAL_ADC_GetValue(&hadc3);
         if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
         {
             txp = "SWR Bridge resistor mod NOT completed!";
@@ -5956,6 +5969,7 @@ typedef enum {
     SCTimer_VOLTAGE, // 8 * 10ms
     SCTimer_SMETER, // 4 * 10ms
     SCTimer_MAIN, // 4 * 10ms
+    SCTimer_AGC, // 25 * 10ms
     SCTimer_NUM
 } SysClockTimers;
 
@@ -6008,10 +6022,9 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 void UiDriver_MainHandler()
 {
 
-    uint32_t now = ts.sysclock;
+    uint32_t now = HAL_GetTick()/10;
 
     CatDriver_HandleProtocol();
-
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
     if (ts.dvmode == true)
@@ -6048,7 +6061,6 @@ void UiDriver_MainHandler()
     // display options  (waterfall/scope, DSP settings etc.)
     // Nothing with short intervals < 100ms  and/or need for very regular intervals between calls
     // should be placed in here.
-
     if(UiDriver_TimerIsExpired(SCTimer_MAIN,now,1))            // bail out if it is not time to do this task
     {
         switch(drv_state)
@@ -6079,7 +6091,7 @@ void UiDriver_MainHandler()
                 uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
-                snprintf(str,20,"Load%3u%%",(unsigned int)load);
+                snprintf(str,20,"L%3u%%",(unsigned int)load);
                 UiLcdHy28_PrintText(0,79,str,White,Black,0);
 #endif
             }
@@ -6087,11 +6099,14 @@ void UiDriver_MainHandler()
             {
                 if (ts.rtc_present)
                 {
-                    RTC_TimeTypeDef rtc;
-                    RTC_GetTime(RTC_Format_BIN, &rtc);
+                    RTC_TimeTypeDef sTime;
+
+
+                    MchfRtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+
                     char str[20];
-                    snprintf(str,20,"Time %2u:%02u:%02u",rtc.RTC_Hours,rtc.RTC_Minutes,rtc.RTC_Seconds);
-                    UiLcdHy28_PrintText(0,110,str,White,Black,0);
+                    snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
+                    UiLcdHy28_PrintText(6*8,79,str,White,Black,0);
                 }
             }
             break;
@@ -6118,40 +6133,38 @@ void UiDriver_MainHandler()
             UiDriver_ProcessKeyboard();
             break;
         case STATE_DISPLAY_SAM_CARRIER:
-            if(ts.dmod_mode == DEMOD_SAM)
+            if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,25))
             {
-                UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
-            }
-            char* txt = "???";
-            uint16_t AGC_color = Blue;
-            uint16_t AGC_color2 = White;
-            if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
-            {
-                AGC_color = White;
-                AGC_color2 = Black;
-            }
-
-            if(ts.agc_wdsp == 1)
-            {
-                if(ts.agc_wdsp_action == 1)
+                if(ts.dmod_mode == DEMOD_SAM)
+                {
+                    UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
+                }
+                const char* txt = "   ";
+                uint16_t AGC_color = Black;
+                uint16_t AGC_color2 = Black;
+                if(ts.agc_wdsp == 1)
+                {
+                    if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
+                    {
+                        AGC_color = White;
+                        AGC_color2 = Black;
+                    }
+                    else
+                    {
+                        AGC_color = Blue;
+                        AGC_color2 = White;
+                    }
+                    if(ts.agc_wdsp_action == 1)
                     {
                         txt = "AGC";
                     }
-                else
-                {
-                    txt = "   ";
                 }
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
-            }
-            else
-            {
-                txt = "   ";
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,Black,Black,0);
-
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
             }
             break;
         default:
             break;
+
         }
         if (drv_state < STATE_MAX)
         {

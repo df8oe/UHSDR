@@ -20,20 +20,18 @@
 #include "mchf_hw_i2c.h"
 #include "mchf_rtc.h"
 
-#include "ui_lcd_hy28.h"
-//
 #include "ui_driver.h"
+
 #include "ui_rotary.h"
-//
+
 #include "codec.h"
-//
+
 #include "ui_si570.h"
 #include "soft_tcxo.h"
 //
 // Eeprom items
 #include "eeprom.h"
-
-
+#include "adc.h"
 // Transceiver state public structure
 __IO __attribute__ ((section (".ccm"))) TransceiverState ts;
 
@@ -42,18 +40,15 @@ static void mchf_board_led_init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
-    GPIO_StructInit(&GPIO_InitStructure);
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.Pin = GREEN_LED;
+    HAL_GPIO_Init(GREEN_LED_PIO, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Pin = GREEN_LED;
-    GPIO_Init(GREEN_LED_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = RED_LED;
-    GPIO_Init(RED_LED_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = RED_LED;
+    HAL_GPIO_Init(RED_LED_PIO, &GPIO_InitStructure);
 }
 
 // DO NOT ENABLE UNLESS ALL TOUCHSCREEN SETUP CODE IS DISABLED
@@ -147,7 +142,7 @@ const ButtonMap bm_sets[2][18] =
                 {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
                 {BUTTON_F5_PIO,     BUTTON_F5},     // 14
                 {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},                // 16 Power Button
+                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 Power Button
                 {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
         }
 };
@@ -155,20 +150,16 @@ const ButtonMap bm_sets[2][18] =
 // the inital button map is the default one
 const ButtonMap* bm = &bm_sets[0][0];
 
-
 static void mchf_board_keypad_init(const ButtonMap* bm)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     ulong i;
 
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
     // Common init
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
 
     // Init all from public struct declaration (ui driver)
     // we init all but the last button which is the TP virtual button
@@ -176,8 +167,8 @@ static void mchf_board_keypad_init(const ButtonMap* bm)
     // FIXME: Decide if TP pin can be setup here as well.
     for(i = 0; i < (BUTTON_NUM -1); i++)
     {
-        GPIO_InitStructure.GPIO_Pin = bm[i].button;
-        GPIO_Init(bm[i].port, &GPIO_InitStructure);
+        GPIO_InitStructure.Pin = bm[i].button;
+        HAL_GPIO_Init(bm[i].port, &GPIO_InitStructure);
     }
 }
 
@@ -185,101 +176,58 @@ static void mchf_board_ptt_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_StructInit(&GPIO_InitStructure);
 
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
 
     // RX/TX control pin init
-    GPIO_InitStructure.GPIO_Pin = PTT_CNTR;
-    GPIO_Init(PTT_CNTR_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = PTT_CNTR;
+    HAL_GPIO_Init(PTT_CNTR_PIO, &GPIO_InitStructure);
 }
 
 static void mchf_board_keyer_irq_init(void)
 {
+#if 0
     GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // Enable the BUTTON Clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     // Configure PADDLE_DASH pin as input
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
 
-    GPIO_InitStructure.GPIO_Pin   = PADDLE_DAH;
-    GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin   = PADDLE_DAH;
+    HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
 
-    // Connect Button EXTI Line to PADDLE_DASH GPIO Pin
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE,EXTI_PinSource0);
 
-    // Configure PADDLE_DASH EXTI line
-    EXTI_InitStructure.EXTI_Line    = EXTI_Line0;
-    EXTI_InitStructure.EXTI_Mode    = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+    GPIO_InitStructure.Pin   = PADDLE_DIT;
+    HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
 
-    // Enable and set PADDLE_DASH EXTI Interrupt to the lowest priority
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-
-    // Configure PADDLE_DOT pin as input
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-
-    GPIO_InitStructure.GPIO_Pin   = PADDLE_DIT;
-    GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
-
-    // Connect Button EXTI Line to PADDLE_DOT GPIO Pin
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE,EXTI_PinSource1);
-
-    // Configure PADDLE_DOT EXTI line
-    EXTI_InitStructure.EXTI_Line    = EXTI_Line1;
-    EXTI_InitStructure.EXTI_Mode    = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    // Enable and set PADDLE_DOT EXTI Interrupt to the lowest priority
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+    HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+#endif
 }
 
 static void mchf_board_power_button_irq_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
+    ///EXTI_InitTypeDef EXTI_InitStructure;
+    ///NVIC_InitTypeDef NVIC_InitStructure;
 
     // Enable the BUTTON Clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    ///RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     // Configure pin as input
-    GPIO_InitStructure.GPIO_Pin   = BUTTON_PWR;
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin   = BUTTON_PWR;
+    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    HAL_GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
 
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+    /*
     // Connect Button EXTI Line to GPIO Pin
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC,EXTI_PinSource13);
 
@@ -296,6 +244,7 @@ static void mchf_board_power_button_irq_init(void)
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+    */
 }
 
 #if 0
@@ -303,7 +252,7 @@ static void mchf_board_power_button_irq_init(void)
 // just remove #if 0 if function needs to be used. Reason is to include only used code
 // if possible
 
-static void mchf_board_dac0_init(void)
+static void mchf_board_dac1_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
     DAC_InitTypeDef  DAC_InitStructure;
@@ -340,8 +289,13 @@ static void mchf_board_dac0_init(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void mchf_board_dac1_init(void)
+static void mchf_board_dac2_init(void)
 {
+    HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,220);
+    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
+#if 0
+
     GPIO_InitTypeDef GPIO_InitStructure;
     DAC_InitTypeDef  DAC_InitStructure;
 
@@ -369,8 +323,9 @@ static void mchf_board_dac1_init(void)
 
     // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
     DAC_SetChannel2Data(DAC_Align_8b_R, 220);
-}
+#endif
 
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_adc1_init
 //* Object              : ADC1 used for power supply measurements
@@ -380,6 +335,8 @@ static void mchf_board_dac1_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc1_init(void)
 {
+    HAL_ADC_Start(&hadc1);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -421,6 +378,7 @@ static void mchf_board_adc1_init(void)
 
     // ADC2 regular Software Start Conv
     ADC_SoftwareStartConv(ADC1);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -432,6 +390,8 @@ static void mchf_board_adc1_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc2_init(void)
 {
+    HAL_ADC_Start(&hadc2);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -473,6 +433,7 @@ static void mchf_board_adc2_init(void)
 
     // ADC2 regular Software Start Conv
     ADC_SoftwareStartConv(ADC2);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -484,6 +445,8 @@ static void mchf_board_adc2_init(void)
 //*----------------------------------------------------------------------------
 static void mchf_board_adc3_init(void)
 {
+    HAL_ADC_Start(&hadc3);
+#if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
     GPIO_InitTypeDef 		GPIO_InitStructure;
@@ -525,6 +488,7 @@ static void mchf_board_adc3_init(void)
 
     // ADC3 regular Software Start Conv
     ADC_SoftwareStartConv(ADC3);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -539,18 +503,15 @@ static void mchf_board_power_down_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_StructInit(&GPIO_InitStructure);
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-
-    GPIO_InitStructure.GPIO_Pin = POWER_DOWN;
-    GPIO_Init(POWER_DOWN_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = POWER_DOWN;
+    HAL_GPIO_Init(POWER_DOWN_PIO, &GPIO_InitStructure);
 
     // Set initial state - low to enable main regulator
-    POWER_DOWN_PIO->BSRRH = POWER_DOWN;
+    POWER_DOWN_PIO->BSRR = POWER_DOWN  << 16U;
 }
 
 // Band control GPIOs setup
@@ -569,44 +530,40 @@ static void mchf_board_band_cntr_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_StructInit(&GPIO_InitStructure);
+    GPIO_InitStructure.Mode 	= GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull 	= GPIO_NOPULL;
+    GPIO_InitStructure.Speed 	= GPIO_SPEED_LOW;
 
-    GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_NOPULL;
-    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_2MHz;
-
-    GPIO_InitStructure.GPIO_Pin = BAND0|BAND1|BAND2;
-    GPIO_Init(BAND0_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = BAND0|BAND1|BAND2;
+    HAL_GPIO_Init(BAND0_PIO, &GPIO_InitStructure);
 
     // Set initial state - low (20m band)
-    BAND0_PIO->BSRRH = BAND0;
-    BAND1_PIO->BSRRH = BAND1;
+    BAND0_PIO->BSRR = BAND0 << 16U;
+    BAND1_PIO->BSRR = BAND1 << 16U;
 
     // Pulse the latch relays line, active low, so set high to disable
-    BAND2_PIO->BSRRL = BAND2;
+    BAND2_PIO->BSRR = BAND2;
 }
 
-static void mchf_board_touchscreen_init(void)
+static void mchf_board_touchscreen_init()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_UP;
-    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_100MHz;
+    GPIO_InitStructure.Mode 	= GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull 	= GPIO_PULLUP;
+    GPIO_InitStructure.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
 
-    GPIO_InitStructure.GPIO_Pin = TP_IRQ;
-    GPIO_Init(TP_IRQ_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = TP_IRQ;
+    HAL_GPIO_Init(TP_IRQ_PIO, &GPIO_InitStructure);
 
-    GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
+    GPIO_InitStructure.Mode 	= GPIO_MODE_OUTPUT_PP;
 
-    GPIO_InitStructure.GPIO_Pin = TP_CS;
-    GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = TP_CS;
+    HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
 
-    GPIO_SetBits(TP_CS_PIO,TP_CS);
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
-
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_watchdog_init
 //* Object              :
@@ -654,16 +611,20 @@ static void mchf_board_set_system_tick_value(void)
 //	NVIC_Init(&NVIC_InitStructure);
 }
 
-
+#endif
 
 void mchf_board_init(void)
 {
     // Enable clock on all ports
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+    __GPIOA_CLK_ENABLE();
+    __GPIOB_CLK_ENABLE();
+    __GPIOC_CLK_ENABLE();
+    __GPIOD_CLK_ENABLE();
+    __GPIOE_CLK_ENABLE();
+
+    // LED init
+    mchf_board_led_init();
+    MchfBoard_RedLed(LED_STATE_ON);
 
     // Power up hardware
     mchf_board_power_down_init();
@@ -674,8 +635,6 @@ void mchf_board_init(void)
     // Debugging on
     mchf_board_debug_init();
 
-    // LED init
-    mchf_board_led_init();
 
     // Touchscreen Init
     mchf_board_touchscreen_init();
@@ -711,7 +670,6 @@ void mchf_board_init(void)
     // Init keypad hw based on button map bm
     mchf_board_keypad_init(bm);
 
-
     // Encoders init
     UiRotaryFreqEncoderInit();
     UiRotaryEncoderOneInit();
@@ -720,7 +678,7 @@ void mchf_board_init(void)
 
     // Init DACs
 //	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
-    mchf_board_dac1_init();
+    mchf_board_dac2_init();
 
     // Enable all ADCs
     mchf_board_adc1_init();
@@ -729,6 +687,7 @@ void mchf_board_init(void)
 
     // Init watchdog - not working
     //mchf_board_watchdog_init();
+
 }
 
 /*
@@ -753,7 +712,7 @@ void MchfBoard_HandlePowerDown() {
  */
 void mchf_powerdown()
 {
-    GPIO_SetBits(POWER_DOWN_PIO,POWER_DOWN);
+    POWER_DOWN_PIO->BSRR = POWER_DOWN;
     for(;;) {}
 }
 //*----------------------------------------------------------------------------
@@ -768,7 +727,7 @@ void mchf_board_post_init(void)
 {
     // Set system tick interrupt
     // Currently used for UI driver processing only
-    mchf_board_set_system_tick_value();
+    ///mchf_board_set_system_tick_value();
 
     // Init power button IRQ
     mchf_board_power_button_irq_init();
@@ -784,10 +743,9 @@ void mchf_board_post_init(void)
         MchfRtc_SetPpm(ts.rtc_calib);
     }
 }
-
 void mchf_reboot()
 {
-    Si570_ResetConfiguration();       // restore SI570 to factory default
+    ///Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
     NVIC_SystemReset();         // restart mcHF
 }
@@ -895,9 +853,9 @@ void mchf_board_detect_ramsize() {
 
 static void MchfBoard_BandFilterPulseRelays()
 {
-    BAND2_PIO->BSRRH = BAND2;
+    BAND2_PIO->BSRR = BAND2 << 16U;
     non_os_delay();
-    BAND2_PIO->BSRRL = BAND2;
+    BAND2_PIO->BSRR = BAND2;
 }
 
 /**
@@ -929,20 +887,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 0:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group -Set(High/High)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1;
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1;
 
         break;
     }
@@ -950,20 +908,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 1:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1;
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         break;
     }
@@ -971,20 +929,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 2:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1;
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         break;
     }
@@ -992,20 +950,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 3:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRH = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1 << 16U;
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Set(High/High)
-        BAND0_PIO->BSRRL = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0;
+        BAND1_PIO->BSRR = BAND1;
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRRH = BAND0;
-        BAND1_PIO->BSRRL = BAND1;
+        BAND0_PIO->BSRR = BAND0 << 16U;
+        BAND1_PIO->BSRR = BAND1;
 
         break;
     }

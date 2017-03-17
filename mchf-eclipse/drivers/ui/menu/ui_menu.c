@@ -14,13 +14,15 @@
 ************************************************************************************/
 // Common
 //
-#include "mchf_version.h"
+#include <src/mchf_version.h>
 #include "mchf_board.h"
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
 #include "ui_configuration.h"
 #include "config_storage.h"
 #include "serial_eeprom.h"
+#include "ui_spectrum.h"
+#include "rtc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -569,7 +571,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_FW_VERSION:
     {
-        snprintf(out,32, "%s", TRX4M_VERSION+4);
+        snprintf(out,32, "%s-HAL", TRX4M_VERSION+4);
     }
     break;
     case INFO_BUILD:
@@ -1044,7 +1046,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             // now set the AGC parameters
             ts.agc_wdsp_switch_mode = 1; // set flag to 1 for parameter change
-            AGC_prep();
+            AudioDriver_SetupAGC();
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
         if(ts.txrx_mode == TRX_MODE_TX) // Orange if in TX mode
@@ -1062,7 +1064,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            AGC_prep();
+            AudioDriver_SetupAGC();
         }
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_slope / 10);
         break;
@@ -1076,7 +1078,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            AGC_prep();
+            AudioDriver_SetupAGC();
         }
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_thresh);
         break;
@@ -1090,7 +1092,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            AGC_prep();
+            AudioDriver_SetupAGC();
         }
         snprintf(options, 32, "  %ddB", ts.agc_wdsp_hang_thresh);
         break;
@@ -1104,7 +1106,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                           );
        if(var_change)
        {
-           AGC_prep();
+           AudioDriver_SetupAGC();
        }
        snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode]);
        break;
@@ -1118,7 +1120,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                           );
        if(var_change)
        {
-           AGC_prep();
+           AudioDriver_SetupAGC();
        }
        snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_hang_decay);
        break;
@@ -1142,7 +1144,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                            );
         if(var_change)
         {
-            AGC_prep();
+            AudioDriver_SetupAGC();
         }
         snprintf(options, 32, "  %dms", ts.agc_wdsp_hang_time);
         break;
@@ -1194,7 +1196,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                    );
                 if(var_change)
                 {
-                    set_SAM_PLL_parameters();
+                    AudioDriver_SetSamPllParameters();
                 }
                 snprintf(options, 32, "  %d", ads.pll_fmax_int);
                 break;
@@ -1208,7 +1210,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                    );
                 if(var_change)
                 {
-                    set_SAM_PLL_parameters();
+                    AudioDriver_SetSamPllParameters();
 
 
                 }
@@ -1224,7 +1226,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                    );
                 if(var_change)
                 {
-                    set_SAM_PLL_parameters();
+                    AudioDriver_SetSamPllParameters();
 
                 }
                 snprintf(options, 32, "  %d", ads.omegaN_int);
@@ -1575,8 +1577,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %d", (int)ts.alc_tx_postfilt_gain_var);
         break;
     case MENU_TX_COMPRESSION_LEVEL:     // ALC TX Post-filter gain (Compressor level)
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_comp_level,
-                                              0,
+        var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.tx_comp_level,
+                                              -1,
                                               TX_AUDIO_COMPRESSION_MAX,
                                               TX_AUDIO_COMPRESSION_DEFAULT,
                                               1
@@ -1592,13 +1594,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
         }
 
-        if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV)  //  display numbers for all but the highest value
+        if(ts.tx_comp_level < TX_AUDIO_COMPRESSION_SV && 0 <= ts.tx_comp_level)  //  display numbers for all but the highest value
         {
             snprintf(options,32,"    %d",ts.tx_comp_level);
         }
         else                    // show "CUSTOM" (Stored Value) for highest value
         {
-            txt_ptr = "CUSTOM";
+            if (ts.tx_comp_level == TX_AUDIO_COMPRESSION_MIN)
+            {
+                txt_ptr = "OFF";
+            }
+            else
+            {
+                txt_ptr = "CUS";
+            }
         }
         break;
     case MENU_KEYER_MODE:   // Keyer mode
@@ -3363,51 +3372,58 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Hours,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Hours,
                                               0,
                                               23,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Hours);
+        snprintf(options,32, "  %2u", rtc.Hours);
         break;
     }
     case CONFIG_RTC_MIN:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Minutes,
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
+
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Minutes,
                                               0,
                                               59,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Minutes);
+        snprintf(options,32, "  %2u", rtc.Minutes);
         break;
     }
     case CONFIG_RTC_SEC:
     {
         RTC_TimeTypeDef rtc;
-        RTC_GetTime(RTC_Format_BIN, &rtc);
+        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.RTC_Seconds,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &rtc.Seconds,
                                               0,
                                               59,
                                               0,
                                               1);
         if(var_change)      // did something change?
         {
-            RTC_SetTime(RTC_Format_BIN, &rtc);
+            HAL_RTC_SetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         }
-        snprintf(options,32, "  %2u", rtc.RTC_Seconds);
+        snprintf(options,32, "  %2u", rtc.Seconds);
         break;
     }
 
@@ -3450,6 +3466,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
+#ifdef USE_USB
      case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
@@ -3472,7 +3489,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
-
+#endif
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

@@ -15,10 +15,12 @@
 #ifndef __CAT_DRIVER_H
 #define __CAT_DRIVER_H
 
-typedef enum CatInterfaceState
+#include "mchf_types.h"
+
+typedef enum
 {
-    DISCONNECTED = 0,
-    CONNECTED
+    CAT_DISCONNECTED = 0,
+    CAT_CONNECTED
 } CatInterfaceState;
 
 typedef enum

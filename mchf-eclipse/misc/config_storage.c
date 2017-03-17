@@ -62,17 +62,17 @@ uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value)
 //* Object              :
 //* Object              :
 //* Input Parameters    : addr to write to, 16 bit value as data
-//* Output Parameters   : returns FLASH_COMPLETE if OK, otherwise various error codes.
+//* Output Parameters   : returns HAL_OK if OK, otherwise various error codes.
 //*                       FLASH_ERROR_OPERATION is also returned if eeprom_in_use contains bogus values.
 //* Functions called    :
 //*----------------------------------------------------------------------------
 uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
 {
-    FLASH_Status status = FLASH_ERROR_OPERATION;
+    HAL_StatusTypeDef status = FLASH_ERROR_OPERATION;
     if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
     {
         SerialEEPROM_UpdateVariable(addr, value);
-        status = FLASH_COMPLETE;
+        status = HAL_OK;
     }
     else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO || ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_TOO_SMALL)
     {
@@ -87,7 +87,7 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
         highbyte = (uint8_t)((0x00FF)&(value >> 8));
         config_ramcache[addr*2] = highbyte;
         config_ramcache[addr*2+1] = lowbyte;
-        status = FLASH_COMPLETE;
+        status = HAL_OK;
     }
     return status;
 }
@@ -149,10 +149,11 @@ void ConfigStorage_CopySerial2RAMCache()
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_RAMCACHE;
 }
 
-void ConfigStorage_CopyRAMCache2Serial()
+uint16_t ConfigStorage_CopyRAMCache2Serial()
 {
-    SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_I2C;
+    return retval;
 }
 
 // copy data from flash storage to serial EEPROM

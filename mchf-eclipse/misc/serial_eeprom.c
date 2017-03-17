@@ -164,7 +164,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
 typedef struct
 {
     uint8_t devaddr;
-    uint8_t addr[2]; // 0 -> upper or single, 1 -> lower, second;
+    uint16_t addr;
     uint16_t addr_size;
 } SerialEEPROM_24CXX_Descriptor;
 
@@ -200,36 +200,13 @@ static void SerialEEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* deva
     }
 }
 
-
-static uint16_t SerialEEPROM_24Cxx_ackPollingSinglePoll(uint32_t Addr, uint8_t Mem_Type)
+static uint16_t SerialEEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 {
     uint8_t devaddr;
 
     SerialEEPROM_24Cxx_AdjustAddrs(Mem_Type,&devaddr,&Addr);
 
-    I2C_GenerateSTART(SERIALEEPROM_I2C, ENABLE);
-    I2C_EventCompleteOrReturn(I2C2,I2C_EVENT_MASTER_MODE_SELECT, 0xFF00)
-    // Test on I2C2 EV5, Start transmitted successfully and clear it
-    // Send Memory device slave Address for write
-    I2C_Send7bitAddress(SERIALEEPROM_I2C, devaddr, I2C_Direction_Transmitter);
-    // Test on I2C2 EV6 and clear it
-    I2C_EventCompleteOrReturn(I2C2,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED, 0xFD00)
-
-    // we reach this only if all macros above did not return with an error code
-    return 0;
-}
-static uint16_t SerialEEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
-{
-    int i = 10;
-    uint16_t retVal;
-
-    for (; i; i--)
-    {
-        if ((retVal = SerialEEPROM_24Cxx_ackPollingSinglePoll(Addr, Mem_Type)) != 0xFD00)
-        {
-            break;
-        }
-    }
+    uint16_t retVal = HAL_I2C_IsDeviceReady(&hi2c2,devaddr,100,100); // != HAL_OK?0xFD00:0;
     return retVal;
 }
 
@@ -237,23 +214,21 @@ static void SerialEEPROM_24Cxx_StartTransfer_Prep(uint32_t Addr, uint8_t Mem_Typ
 {
     SerialEEPROM_24Cxx_AdjustAddrs(Mem_Type,&eeprom_desc_ptr->devaddr,&Addr);
 
+    eeprom_desc_ptr->addr = (uint16_t)((0xFFFF)&(Addr));
     if (Mem_Type > 8)
     {
-        eeprom_desc_ptr->addr[1] = (uint8_t)((0x00FF)&(Addr));
-        eeprom_desc_ptr->addr[0] = (uint8_t)((0x00FF)&((Addr)>>8));
-        eeprom_desc_ptr->addr_size = 2;
+        eeprom_desc_ptr->addr_size = I2C_MEMADD_SIZE_16BIT;
     }
     else
     {
-        eeprom_desc_ptr->addr[0] = (uint8_t)((0x00FF)&Addr);
-        eeprom_desc_ptr->addr_size = 1;
+        eeprom_desc_ptr->addr_size = I2C_MEMADD_SIZE_8BIT;
     }
 }
 
 uint16_t SerialEEPROM_24Cxx_Write(uint32_t Addr, uint8_t Data, uint8_t Mem_Type)
 {
     SerialEEPROM_24Cxx_StartTransfer_Prep(Addr, Mem_Type,&serialEeprom_desc);
-    uint16_t retVal = MCHF_I2C_WriteRegister(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,Data);
+    uint16_t retVal = MCHF_I2C_WriteRegister(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,Data);
 
     if (!retVal)
     {
@@ -268,7 +243,7 @@ uint16_t SerialEEPROM_24Cxx_Read(uint32_t Addr, uint8_t Mem_Type)
 {
     uint8_t value;
     SerialEEPROM_24Cxx_StartTransfer_Prep(Addr, Mem_Type,&serialEeprom_desc);
-    uint16_t retVal = MCHF_I2C_ReadRegister(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&value);
+    uint16_t retVal = MCHF_I2C_ReadRegister(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,&value);
     if (!retVal)
     {
         retVal = value;
@@ -293,7 +268,7 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
                 page = (length - count);
             }
             SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
-            retVal = MCHF_I2C_ReadBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
+            retVal = MCHF_I2C_ReadBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,&buffer[count],page);
             count+=page;
             if (retVal)
             {
@@ -306,17 +281,21 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
 
 uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
-    uint16_t retVal = 0xFFFF;
+    uint16_t retVal = 0;
     if (Mem_Type < SERIAL_EEPROM_DESC_NUM) {
         uint32_t page, count;
         count = 0;
 
         page =SerialEEPROM_eepromTypeDescs[Mem_Type].pagesize;
 
-        while(count < length)
+        while(retVal == 0 && count < length)
         {
             SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
-            retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,&serialEeprom_desc.addr[0],serialEeprom_desc.addr_size,&buffer[count],page);
+            if (length - count < page)
+            {
+                page = length - count;
+            }
+            retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,&buffer[count],page);
             count+=page;
             if (retVal)
             {

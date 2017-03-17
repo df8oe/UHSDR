@@ -91,7 +91,7 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
 
-    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, &Byte1, 1, Byte2);
+    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
 
     return res;
 }
@@ -104,8 +104,6 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
  */
 void Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 {
-    //printf("codec init, freq = %d\n\r",AudioFreq);
-
     // Reset register
     if(Codec_WriteRegister(W8731_RESET, 0) != 0)
         return;
@@ -155,9 +153,9 @@ void Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 
     // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
     // master clock: 12.5 Mhz
-    if(AudioFreq == I2S_AudioFreq_48k) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
-    if(AudioFreq == I2S_AudioFreq_32k) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
-    if(AudioFreq == I2S_AudioFreq_8k ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
+    if(AudioFreq == I2S_AUDIOFREQ_48K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
+    if(AudioFreq == I2S_AUDIOFREQ_32K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
+    if(AudioFreq == I2S_AUDIOFREQ_8K ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
 
     // Reg 09: Active Control
     // and now we start the Codec Digital Interface
@@ -431,86 +429,4 @@ void Codec_LineInGainAdj(uchar gain)
     l_gain |= 0x100;    // set MSB of control word for "LRINBOTH" flag
 
     Codec_WriteRegister(W8731_LEFT_LINE_IN,l_gain);
-}
-
-
-
-/**
- * @brief initializes I2S, assumes I2S PLL already enabled in startup file!
- * @param AudioFreq sample rate in Hertz
- *
- */
-static void Codec_AudioInterface_Init(uint32_t AudioFreq)
-{
-    I2S_InitTypeDef I2S_InitStructure;
-
-    // Enable the CODEC_I2S peripheral clock
-    RCC_APB1PeriphClockCmd(CODEC_I2S_CLK, ENABLE);
-
-    // CODEC_I2S peripheral configuration for master TX
-    SPI_I2S_DeInit(CODEC_I2S);
-    I2S_InitStructure.I2S_AudioFreq = AudioFreq;
-    I2S_InitStructure.I2S_Standard = I2S_Standard_Phillips;
-    I2S_InitStructure.I2S_DataFormat = I2S_DataFormat_16b;
-    I2S_InitStructure.I2S_CPOL = I2S_CPOL_Low;
-    I2S_InitStructure.I2S_Mode = I2S_Mode_MasterTx;
-    I2S_InitStructure.I2S_MCLKOutput = I2S_MCLKOutput_Disable;	// using MCO2
-
-    // Initialise the I2S main channel for TX
-    I2S_Init(CODEC_I2S, &I2S_InitStructure);
-
-    // Initialise the I2S extended channel for RX
-    I2S_FullDuplexConfig(CODEC_I2S_EXT, &I2S_InitStructure);
-}
-
-static void Codec_GPIO_Init()
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    // CODEC_I2S output pins configuration: WS, SCK SD0 and SDI pins
-    GPIO_InitStructure.GPIO_Pin 	= CODEC_I2S_SCK | CODEC_I2S_SDO | CODEC_I2S_SDI;
-    GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed 	= GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_OType 	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd 	= GPIO_PuPd_NOPULL;
-    GPIO_Init(CODEC_I2S_SDO_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.GPIO_Pin = CODEC_I2S_WS;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(CODEC_I2S_WS_PIO, &GPIO_InitStructure);
-
-    // Configure MCO2 (PC9)
-    GPIO_InitStructure.GPIO_Pin = CODEC_CLOCK;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(CODEC_CLOCK_PIO, &GPIO_InitStructure);
-
-    // Output I2S PLL via MCO2 pin - 12.288 Mhz
-    RCC_MCO2Config(RCC_MCO2Source_PLLI2SCLK, RCC_MCO2Div_3);
-
-    // Connect pins to I2S peripheral
-    GPIO_PinAFConfig(CODEC_I2S_SDO_PIO, CODEC_I2S_SCK_SOURCE, CODEC_I2S_GPIO_AF);
-    GPIO_PinAFConfig(CODEC_I2S_WS_PIO,	CODEC_I2S_WS_SOURCE,  CODEC_I2S_GPIO_AF);
-    GPIO_PinAFConfig(CODEC_I2S_SDO_PIO,	CODEC_I2S_SDO_SOURCE, CODEC_I2S_GPIO_AF);
-    GPIO_PinAFConfig(CODEC_I2S_SDO_PIO, CODEC_I2S_SDI_SOURCE, CODEC_I2S_GPIO_AF);
-}
-
-/**
- * @brief initializes the required STM peripheral, does not initialize the codec itself
- * @param AudioFreq sample rate in Hertz
- */
-void Codec_MCUInterfaceInit(uint32_t AudioFreq)
-{
-    // Configure the Codec related IOs
-    Codec_GPIO_Init();
-
-    // Configure the I2S peripheral
-    Codec_AudioInterface_Init(AudioFreq);
 }

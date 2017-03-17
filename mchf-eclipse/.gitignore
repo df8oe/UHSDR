@@ -15,3 +15,8 @@ mchf.elf
 mchf.map
 language.settings.xml
 /DebugSemihosting/
+/DebugLib/
+/DebugBootloader/
+/ReleaseBootloader/
+/build-bl/
+/build-fw/

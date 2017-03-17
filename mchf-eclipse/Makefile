@@ -1,5 +1,12 @@
 #  -*- makefile -*-
+# if you want to build in a different directory than this one
+# go to the directory, figure out the path from the new diretory you are in to this one and call make like this
+# make -f replace_with_pfad_to_makefile/Makefile ROOTLOC=replace_with_pfad_to_makefile desired_maketarget
+# for example to build the bootloader in the build-bl folder inside this directory
+# make -f ../Makefile ROOTLOC=".." bootloader 
 
+ROOTLOC=.
+VPATH=$(ROOTLOC)
 # Author: Harald Baumgart DL4SAI
 # everybody may  copy, use or modify this file
 # there is no guarantee for anything by the author
@@ -39,270 +46,71 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
-# choose what Keil-Library you want to use
-#SCMSIS_LIB_VERSION = arm_cortexM4lf_math
-CMSIS_LIB_VERSION = arm_cortexM4lf_math_r4p5
-
 # compilation options
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
-CFLAGS  = $(MACHFLAGS)  \
-          -DARM_MATH_CM4 -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER  \
-          -ffunction-sections -O2 -Wall -Wno-unused-function -D_GNU_SOURCE -DCORTEX_M4 \
+BASECFLAGS  = $(MACHFLAGS)  \
+          -DARM_MATH_CM4 -D_GNU_SOURCE -DCORTEX_M4 -DSTM32F407xx -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE  \
+          -ffunction-sections -fdata-sections -flto -O2 -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
           $(EXTRACFLAGS)
 
+
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := mchf_version.h
+PROJECT_VERSION_FILE := $(ROOTLOC)/src/mchf_version.h
+
+ifdef MSYSTEM
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_MINOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_RELEASE/{s!\#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+else
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+endif
+
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
-LDFLAGS := $(MACHFLAGS)
+LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs
 
-LIBS := -lm -lg -lc -lgcc -l$(CMSIS_LIB_VERSION) \
-        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu  \
-	-Llibs
+LIBS := -lm -lc -lgcc -lnosys \
+        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
+
+bootloader.elf : CFLAGS = ${BASECFLAGS} -DBOOTLOADER_BUILD
+mchf.elf : CFLAGS = ${BASECFLAGS}
 
 # Every subdirectory with header files must be mentioned here
-SUBDIRS :=  \
-    .  \
-    cmsis  \
-    cmsis_boot  \
-    cmsis_lib/include  \
-    cmsis_lib/source  \
-    \
-    drivers \
-    drivers/audio  \
-    drivers/audio/codec  \
-    drivers/audio/cw  \
-    drivers/audio/filters  \
-    drivers/audio/softdds  \
-    drivers/cat  \
-    drivers/cat/usb  \
-    drivers/diag \
-    drivers/diag/arm \
-    drivers/keyboard  \
-    drivers/keyboard/usb  \
-    drivers/ui  \
-    drivers/ui/encoder  \
-    drivers/ui/lcd  \
-    drivers/ui/menu  \
-    drivers/ui/oscillator  \
-    drivers/freedv  \
-    \
-    hardware  \
-    \
-    misc  \
-    misc/v_eprom  \
-    \
-    usb  \
-    usb/otg/inc  \
-    usb/usbd/class/audio/inc  \
-    usb/usbd/class/cdc/inc  \
-    usb/usbd/core/inc  \
-    usb/usbh/class/HID/inc  \
-    usb/usbh/core/inc  \
-
+include $(ROOTLOC)/include.mak
 
 # every source-file has to be mentioned here 
 
-SRC =  \
-    main.c  \
-    \
-    cmsis_boot/startup/startup_stm32f4xx.c  \
-    cmsis_boot/system_stm32f4xx.c  \
-    \
-    cmsis_lib/source/misc.c  \
-    cmsis_lib/source/stm32f4xx_adc.c  \
-    cmsis_lib/source/stm32f4xx_dac.c  \
-    cmsis_lib/source/stm32f4xx_dma.c  \
-    cmsis_lib/source/stm32f4xx_exti.c  \
-    cmsis_lib/source/stm32f4xx_flash.c  \
-    cmsis_lib/source/stm32f4xx_fsmc.c  \
-    cmsis_lib/source/stm32f4xx_gpio.c  \
-    cmsis_lib/source/stm32f4xx_i2c.c  \
-    cmsis_lib/source/stm32f4xx_pwr.c  \
-    cmsis_lib/source/stm32f4xx_rcc.c  \
-    cmsis_lib/source/stm32f4xx_rtc.c  \
-    cmsis_lib/source/stm32f4xx_spi.c  \
-    cmsis_lib/source/stm32f4xx_syscfg.c  \
-    cmsis_lib/source/stm32f4xx_tim.c  \
-    cmsis_lib/source/stm32f4xx_usart.c  \
-    cmsis_lib/source/stm32f4xx_wwdg.c  \
-    \
-    drivers/audio/audio_driver.c  \
-    drivers/audio/audio_filter.c  \
-    drivers/audio/audio_management.c  \
-    drivers/audio/freedv_mchf.c  \
-    drivers/audio/freedv_test_data.c  \
-    drivers/audio/codec/codec.c  \
-    drivers/audio/codec/i2s.c  \
-    drivers/audio/cw/cw_gen.c  \
-    drivers/audio/filters/fir_rx_decimate_4.c  \
-    drivers/audio/filters/fir_rx_decimate_4_min_lpf.c  \
-    drivers/audio/filters/fir_rx_interpolate_16.c  \
-    drivers/audio/filters/fir_rx_interpolate_16_10kHz.c  \
-    drivers/audio/filters/iir_10k.c  \
-    drivers/audio/filters/iir_10k_neu.c  \
-    drivers/audio/filters/iir_15k_hpf_fm_squelch.c  \
-    drivers/audio/filters/iir_1_4k.c  \
-    drivers/audio/filters/iir_1_6k.c  \
-    drivers/audio/filters/iir_1_8k.c  \
-    drivers/audio/filters/iir_2_1k.c  \
-    drivers/audio/filters/iir_2_3k.c  \
-    drivers/audio/filters/iir_2_5k.c  \
-    drivers/audio/filters/iir_2_7k.c  \
-    drivers/audio/filters/iir_2_9k.c  \
-    drivers/audio/filters/iir_2k7_tx_bpf.c  \
-    drivers/audio/filters/iir_2k7_tx_bpf_fm.c  \
-    drivers/audio/filters/iir_300hz.c  \
-    drivers/audio/filters/iir_3_2k.c  \
-    drivers/audio/filters/iir_3_4k.c  \
-    drivers/audio/filters/iir_3_6k.c  \
-    drivers/audio/filters/iir_3_8k.c  \
-    drivers/audio/filters/iir_3k.c  \
-    drivers/audio/filters/iir_4_2k.c  \
-    drivers/audio/filters/iir_4_4k.c  \
-    drivers/audio/filters/iir_4_6k.c  \
-    drivers/audio/filters/iir_4_8k.c  \
-    drivers/audio/filters/iir_4k.c  \
-    drivers/audio/filters/iir_500hz.c  \
-    drivers/audio/filters/iir_5_5k.c  \
-    drivers/audio/filters/iir_5k.c  \
-    drivers/audio/filters/iir_6_5k.c  \
-    drivers/audio/filters/iir_6k.c  \
-    drivers/audio/filters/iir_7_5k.c  \
-    drivers/audio/filters/iir_7k.c  \
-    drivers/audio/filters/iir_8_5k.c  \
-    drivers/audio/filters/iir_8k.c  \
-    drivers/audio/filters/iir_8k5_hpf_fm_squelch.c  \
-    drivers/audio/filters/iir_9_5k.c  \
-    drivers/audio/filters/iir_9k.c  \
-    drivers/audio/filters/iir_antialias.c  \
-    drivers/audio/filters/iq_rx_filter.c  \
-    drivers/audio/filters/iq_rx_filter_am.c  \
-    drivers/audio/filters/iq_tx_filter.c  \
-    drivers/audio/softdds/softdds.c  \
-    drivers/audio/softdds/dds_table.c  \
-    \
-    drivers/cat/cat_driver.c  \
-    drivers/cat/usb/usbd_bsp.c  \
-    drivers/cat/usb/usbd_cdc_vcp.c  \
-    drivers/cat/usb/usbd_desc.c  \
-    drivers/cat/usb/usbd_usr.c  \
-    \
-    drivers/diag/Trace.c  \
-    drivers/diag/trace_impl.c  \
-    \
-    drivers/freedv/codebook.c \
-    drivers/freedv/codebookd.c \
-    drivers/freedv/codebookdt.c \
-    drivers/freedv/codebookge.c \
-    drivers/freedv/codebookjnd.c \
-    drivers/freedv/codebookjvm.c \
-    drivers/freedv/codebooklspmelvq.c \
-    drivers/freedv/codebookmel.c \
-    drivers/freedv/codebookres.c \
-    drivers/freedv/codebookvq.c \
-    drivers/freedv/codebookvqanssi.c \
-    drivers/freedv/codec2.c \
-    drivers/freedv/codec2_fft.c \
-    drivers/freedv/cohpsk.c \
-    drivers/freedv/dump.c \
-    drivers/freedv/fdmdv.c \
-    drivers/freedv/fifo.c \
-    drivers/freedv/fm.c \
-    drivers/freedv/fmfsk.c \
-    drivers/freedv/freedv_api.c \
-    drivers/freedv/freedv_data_channel.c \
-    drivers/freedv/freedv_vhf_framing.c \
-    drivers/freedv/fsk.c \
-    drivers/freedv/golay23.c \
-    drivers/freedv/interp.c \
-    drivers/freedv/kiss_fft.c \
-    drivers/freedv/kiss_fftr.c \
-    drivers/freedv/linreg.c \
-    drivers/freedv/lpc.c \
-    drivers/freedv/lsp.c \
-    drivers/freedv/modem_stats.c \
-    drivers/freedv/nlp.c \
-    drivers/freedv/octave.c \
-    drivers/freedv/pack.c \
-    drivers/freedv/phase.c \
-    drivers/freedv/postfilter.c \
-    drivers/freedv/quantise.c \
-    drivers/freedv/sine.c \
-    drivers/freedv/varicode.c \
-    \
-    drivers/keyboard/keyb_driver.c  \
-    drivers/keyboard/usb/usbh_bsp.c  \
-    drivers/keyboard/usb/usbh_usr.c  \
-    \
-    drivers/ui/encoder/ui_rotary.c  \
-    drivers/ui/lcd/ui_lcd_hy28.c  \
-    drivers/ui/lcd/ui_lcd_hy28_fonts.c  \
-    drivers/ui/lcd/ui_spectrum.c  \
-    drivers/ui/oscillator/ui_si570.c  \
-    drivers/ui/oscillator/soft_tcxo.c  \
-    drivers/ui/radio_management.c  \
-    drivers/ui/ui_configuration.c  \
-    drivers/ui/ui_driver.c  \
-    \
-    drivers/ui/menu/ui_menu.c  \
-    drivers/ui/menu/ui_menu_structure.c  \
-    drivers/ui/menu/ui_menu_internal.c  \
-    \
-    hardware/mchf_board.c  \
-    hardware/mchf_hw_i2c.c  \
-    hardware/mchf_rtc.c  \
-    \
-    misc/v_eprom/eeprom.c  \
-    misc/config_storage.c  \
-    misc/serial_eeprom.c  \
-    misc/profiling.c  \
-    \
-    stdio/printf.c  \
-    syscalls/syscalls.c  \
-    \
-    usb/otg/src/usb_core.c  \
-    usb/otg/src/usb_dcd.c  \
-    usb/otg/src/usb_dcd_int.c  \
-    usb/otg/src/usb_hcd.c  \
-    usb/otg/src/usb_hcd_int.c  \
-    \
-    usb/usbd/class/audio/src/usbd_audio_core.c  \
-    usb/usbd/class/audio/src/usbd_audio_out_if.c  \
-    usb/usbd/class/cdc/src/usbd_cdc_core.c  \
-    usb/usbd/core/src/usbd_core.c  \
-    usb/usbd/core/src/usbd_ioreq.c  \
-    usb/usbd/core/src/usbd_req.c  \
-    \
-    usb/usbh/class/HID/src/usbh_hid_core.c  \
-    usb/usbh/class/HID/src/usbh_hid_keybd.c  \
-    usb/usbh/class/HID/src/usbh_hid_mouse.c  \
-    usb/usbh/core/src/usbh_core.c  \
-    usb/usbh/core/src/usbh_hcs.c  \
-    usb/usbh/core/src/usbh_ioreq.c  \
-    usb/usbh/core/src/usbh_stdreq.c  \
 
-SRCCXX = \
-    misc/TestCPlusPlusBuild.cpp  \
+include $(ROOTLOC)/files.mak
+
+include $(ROOTLOC)/bootloader.mak
 
 # ------------- nothing to change below this line ---------------------- 
 
-INC_DIRS = $(foreach d, $(SUBDIRS), -I$d)
+INC_DIRS = $(foreach d, $(SUBDIRS), -I$(ROOTLOC)/$d)
+
+CC = @${PREFIX}/bin/arm-none-eabi-gcc
+CXX = @${PREFIX}/bin/arm-none-eabi-g++
+OC = @${PREFIX}/bin/arm-none-eabi-objcopy
+OS = @${PREFIX}/bin/arm-none-eabi-size
+HEX2DFU = $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 ifdef SystemRoot  # WINxx
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
     OS = arm-none-eabi-size
-else
-    CC = @${PREFIX}/bin/arm-none-eabi-gcc
-    CXX = @${PREFIX}/bin/arm-none-eabi-g++
-    OC = @${PREFIX}/bin/arm-none-eabi-objcopy
-    OS = @${PREFIX}/bin/arm-none-eabi-size
 endif
+
+ifdef MSYSTEM
+    CC = arm-none-eabi-gcc
+    CXX = arm-none-eabi-g++
+    OC = arm-none-eabi-objcopy
+    OS = arm-none-eabi-size
+endif
+
 
 ECHO = @echo
 
@@ -321,20 +129,42 @@ else ifeq ($(shell uname), CYGWIN_NT-10.0)
 endif
 
 # how to compile individual object files
-OBJS :=
-OBJS += $(SRC:.c=.o)
-OBJS += $(SRCCXX:.cpp=.o)
+OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
+BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
+
+.S.o:
+	$(ECHO) "  [CC] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
+	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 .c.o:
 	$(ECHO) "  [CC] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 
-%.o: %.cxx
+.cxx.o:
 	$(ECHO) "  [CXX] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 
-%.o: %.cpp
+.cpp.o:
 	$(ECHO) "  [CXX] $@"
+	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+
+%.bin: %.elf
+	$(ECHO) "  [OBJC] $@"
+	$(OS) $<
+	$(OC) -v -O binary $< $@
+
+%.hex: %.elf
+	$(ECHO) "  [BIN] $@"
+	$(OS) $<
+	$(OC) -v -O ihex $< $@
+
+%.dfu: %.hex
+	$(ECHO) "  [H2D] $@"
+	$(OS) $<
+	$(HEX2DFU) $< $@
 
 # ---------------------------------------------------------
 #  BUILT-IN HELP
@@ -354,23 +184,27 @@ help:
 
 .PHONY: all clean docs docs-clean help
 
-all:  $(LPRJ).elf $(PRJ).bin $(PRJ).handbook
+bootloader: bootloader.bin bootloader.dfu
+
+
+all:  $(LPRJ).elf $(LPRJ).dfu $(PRJ).bin $(PRJ).handbook
 	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
 # compilation
-$(LPRJ).elf:  $(OBJS) $(SRC)
+$(LPRJ).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Tarm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o${LPRJ}.elf $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
 
-$(PRJ).bin:  $(LPRJ).elf
-	$(ECHO) "  [OBJC] $@"
-	$(OS) $<
-	$(OC) -v -O binary $< $(PRJ).bin
+# compilation
+bootloader.elf:  $(BLOBJS) 
+	$(ECHO) "  [LD] $@"
+	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link-bootloader.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+
 
 $(PRJ).handbook:
-	@support/ui/menu/mk-menu-handbook auto
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook auto
 
 $(PRJ).version:
 	# the build artifacts SHOULD identify as
@@ -380,14 +214,21 @@ $(PRJ).version:
 clean:  
 	# remove the executables, map, dmp and all object files (.o)
 	$(RM) $(call FixPath,$(OBJS))
+	$(RM) $(call FixPath,$(BLOBJS))
 	$(RM) $(call FixPath,$(LPRJ).elf)
+	$(RM) $(call FixPath,$(LPRJ).dfu)
 	$(RM) $(call FixPath,$(PRJ).bin)
 	$(RM) $(call FixPath,$(LPRJ).map)
+	$(RM) $(call FixPath,bootloader.elf)
+	$(RM) $(call FixPath,bootloader.elf.map)
+	$(RM) $(call FixPath,bootloader.bin)
+	$(RM) $(call FixPath,bootloader.dfu)
 	$(RM) $(call FixPath,*~)
 
 handy:  
 	# rm all .o (but not executables, .map and .dmp)
 	$(RM) $(call FixPath,$(OBJS))
+	$(RM) $(call FixPath,$(BLOBJS))
 	$(RM) $(call FixPath,*~)
 
 gcc-version:  
@@ -401,29 +242,29 @@ docs:
 docs-clean:  
 	# remove docs
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
-	$(RM) --recursive --verbose $(call FixPath,../docs)
+	$(RM) --recursive --verbose $(call FixPath,$(ROOTLOC)/../docs)
 
 handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	@support/ui/menu/mk-menu-handbook
+	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
 
 handbook-test:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook in different directory for test purposes
-	@support/ui/menu/mk-menu-handbook test
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook test
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
-	$(RM) support/ui/menu/mcHF-logo.png
-	$(RM) support/ui/menu/ui_menu_structure.py*
-	$(RM) support/ui/menu/ui_menu_structure_graph.gv
-	$(RM) support/ui/menu/ui_menu_structure_graph.svg
-	$(RM) support/ui/menu/ui_menu_structure_graph.png
-	$(RM) support/ui/menu/ui_menu_structure_mdtable.md
-	$(RM) support/ui/menu/menu-handbook-build.timestamp
+	$(RM) $(ROOTLOC)/support/ui/menu/mcHF-logo.png
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure.py*
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.gv
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.svg
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.png
+	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_mdtable.md
+	$(RM) $(ROOTLOC)/support/ui/menu/menu-handbook-build.timestamp
 
 release:  
 	# generate quick operating guide
-	@inkscape --export-png=useful_manuals/mcHF-quick-manual.png useful_manuals/mcHF-quick-manual.svg
-	@inkscape --export-pdf=useful_manuals/mcHF-quick-manual.pdf useful_manuals/mcHF-quick-manual.svg
+	@inkscape --export-png=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.png $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
+	@inkscape --export-pdf=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.pdf $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
 
 # EOFILE

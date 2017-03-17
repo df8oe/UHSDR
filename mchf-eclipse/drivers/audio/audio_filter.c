@@ -567,7 +567,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     // These are the "new" AM/SAM filters, January 2017
     // designed for an IIR lowpass stopband frequency that is exactly the same as the filter bandwidth
     // In sideband-selected SAM, there is no FIR filter, so the IIR has to do all the work
-    // Let´s try them
+    // Letï¿½s try them
     //###################################################################################################################################
 
     {
@@ -1102,7 +1102,7 @@ static float32_t           __attribute__ ((section (".ccm"))) decimSAMQState[Q_B
 /*
  * @brief Initialize RX Hilbert filters
  */
-void 	AudioFilter_InitRxHilbertFIR(void)
+void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode)
 {
     ulong i;
 
@@ -1131,26 +1131,29 @@ void 	AudioFilter_InitRxHilbertFIR(void)
     arm_fir_init_f32((arm_fir_instance_f32 *)&FIR_Q,fc.rx_q_num_taps,(float32_t *)&fc.rx_filt_q[0], &FirState_Q[0],fc.rx_q_block_size);     // load "Q" with "Q" coefficients
     //
     // Set up RX SAM decimation/filter
-    if (FilterPathInfo[ts.filter_path].FIR_numTaps != 0)
+    if (dmod_mode == DEMOD_SAM || dmod_mode == DEMOD_AM)
     {
-        DECIMATE_SAM_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
-        DECIMATE_SAM_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
-        DECIMATE_SAM_I.pCoeffs = (float32_t *)&fc.rx_filt_i[0]; //FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
-        DECIMATE_SAM_Q.pCoeffs = (float32_t *)&fc.rx_filt_q[0]; //FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+        if (FilterPathInfo[ts.filter_path].FIR_numTaps != 0)
+        {
+            DECIMATE_SAM_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+            DECIMATE_SAM_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
+            DECIMATE_SAM_I.pCoeffs = (float32_t *)&fc.rx_filt_i[0]; //FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
+            DECIMATE_SAM_Q.pCoeffs = (float32_t *)&fc.rx_filt_q[0]; //FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+        }
+        else
+        {
+            DECIMATE_SAM_I.numTaps = 0;
+            DECIMATE_SAM_Q.numTaps = 0;
+            DECIMATE_SAM_I.pCoeffs = NULL;
+            DECIMATE_SAM_Q.pCoeffs = NULL;
+        }
+        DECIMATE_SAM_I.M = ads.decimation_rate;
+        DECIMATE_SAM_Q.M = ads.decimation_rate;
+        DECIMATE_SAM_I.pState = decimSAMIState;            // Filter state variables
+        DECIMATE_SAM_Q.pState = decimSAMQState;
+        arm_fill_f32(0.0,decimSAMIState, I_BLOCK_SIZE + I_NUM_TAPS);
+        arm_fill_f32(0.0,decimSAMQState, Q_BLOCK_SIZE + Q_NUM_TAPS);
     }
-    else
-    {
-        DECIMATE_SAM_I.numTaps = 0;
-        DECIMATE_SAM_Q.numTaps = 0;
-        DECIMATE_SAM_I.pCoeffs = NULL;
-        DECIMATE_SAM_Q.pCoeffs = NULL;
-    }
-    DECIMATE_SAM_I.M = ads.decimation_rate;
-    DECIMATE_SAM_Q.M = ads.decimation_rate;
-    DECIMATE_SAM_I.pState = decimSAMIState;            // Filter state variables
-    DECIMATE_SAM_Q.pState = decimSAMQState;
-    arm_fill_f32(0.0,decimSAMIState, I_BLOCK_SIZE + I_NUM_TAPS);
-    arm_fill_f32(0.0,decimSAMQState, Q_BLOCK_SIZE + Q_NUM_TAPS);
 
 }
 
