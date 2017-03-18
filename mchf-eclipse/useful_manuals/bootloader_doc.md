@@ -1,20 +1,20 @@
 # DF8OE Bootloader Usage
 
 
-The DF8OE bootloader is responsible for starting the firmware of the mcHF. it is also able to flash new firmware and bootloader.
-The bootloader supports two ways to install new software on the mcHF, via USB drive or via DFU Upload. 
-In most cases, the most convenient way is to use a USB drive to install new firmware using the a USB drive connected to the (big) USB-A socket. 
+The DF8OE bootloader is responsible for starting the firmware of the mcHF. It is also able to flash new firmware and bootloader.
+The bootloader supports two different ways to install new software on the mcHF, via USB drive or via DFU Upload. 
+In most cases, the most convenient way is to use a USB drive to install new firmware with the USB drive connected to the (big) USB-A socket. 
 To install a new bootloader (or new firmware) the alternate method is to run a DFU upload using a PC connected via USB cable to the small (Mini USB connector) and an appropriate DFU upload tool (e.g. Windows: DFUSe, Linux: dfu-util). 
 
 
 ### Installing The Bootloader
 
-The procedure to install the DF8OE in its DFU form (bootloader.dfu) is the same as for the M0NKA bootloader (using DFUSe). See bootloader\_install.odt or bootloader\_install.pdf 
+The procedure to install the DF8OE bootloader in its DFU form (bootloader.dfu) is the same as for the M0NKA bootloader (using DFUSe). See bootloader\_install.odt or bootloader\_install.pdf 
 If you own a ST-Link, you can simply flash the bootloader.bin/bootloader.hex/bootloader.elf using your favorite ST flash tool at adress 0x08000000.
 
 ## Firmware Update Procedures Using a USB Drive
 
-The USB drive approach can be used to upload new firmware with any need for special software. 
+The USB drive approach can be used to upload new firmware without any need for special software. 
 
 ### Prerequisites 
 
@@ -22,60 +22,60 @@ The USB drive approach can be used to upload new firmware with any need for spec
 1. You need USB drive formatted with a single partition with the filesystem FAT or FAT32 (not exFAT, NTFS or anything else!). Normal USB pen drives formatted under Windows or Linux fulfill this criteria.
 
 
-For firmware-upgrade you must plug the USB-key to mchf
+For the firmware-upgrade you must plug the USB-key into the mchf
 big USB-A plug.
 
 ### Flashing New Firmware And Saving Old Firmware 
 
-1. Place binary of the new firmware with the name "mchf.bin" on in the root directory of the drive.
-1 turn off mcHF and connect drive.
+1. Place the binary file of the new firmware with the name "mchf.bin" into the root directory of the USB drive.
+1 turn off the mcHF and connect the USB drive.
 1. Press BAND- button and hold it. 
-1. Then press power button and release it after a second once you see the LCD screen light up. 
-1. Release BAND- button once you see the green LED light up. Now the dumping of the whole firmware flash into MCHFOLD.BIN starts. Resulting file will have a size of 960kByte, independent of the actually flash size. 
-1. Then the red LED lights up too, indicating the write process start. 
-1. When finished, backlight goes dark, both red and green led remain steadily on. If not, and red led starts flashing, see error codes section below.
-1. Remove USB drive or press BAND- to reboot into new firmware, press Power to power off
+1. Then press the power button and release it after a second once you see the LCD screen light up. 
+1. Release BAND- button once you see the green LED light up. Now the dumping of the whole firmware flash into MCHFOLD.BIN starts. The resulting file will have a size of 960kByte, independent of the actual flash size. 
+1. Then the red LED lights up too, indicating the write process has started. 
+1. When the update has finished, the backlight goes dark, both red and green LEDs remain steadily on. If not, and the red LED starts flashing, see the error codes section below.
+1. Remove the USB drive and press BAND- to reboot into the new firmware, press Power to power off.
 
 ### Only Saving Old Firmware
-1. Turn off mcHF and connect drive.
+1. Turn off the mcHF and connect the USB drive.
 1. Press BAND- button and hold it. 
 1. Then press power button.
 1. Release both buttons once you see the LCD screen light up. 
 1. Release BAND- button once you see the green LED light up. Now the dumping of the firmware into MCHFOLD.BIN starts.
-1. When finished, backlight goes dark, green led remains steadily on. If not, and red led starts flashing, see error codes section below.
-1. Remove USB drive or press BAND- to reboot, press Power to power off
+1. When finished, the backlight goes dark and the  green LED remains steadily on. If not, and the red LED starts flashing, see the error codes section below.
+1. Remove the USB drive and press BAND- to reboot, press Power to power off
 
 
 ### Error Handling and Codes
-During normal operation of the bootloader (just pressing power), a flashing backlight indicates 
+During normal operation of the bootloader (by just pressing the power button), a flashing backlight indicates 
 that the bootloader did not identify a valid firmware in flash. This can happen either because you 
-never flashed one, the flashed binary was not a valid mcHF binary, you erase the flash memory (e.g. 
-with an external debugger tool like the ST-Link) or in worst case, you have a defect in the processor 
+never flashed one, or the flashed binary was not a valid mcHF binary, or you erased the flash memory (e.g. 
+with an external debugger tool like the ST-Link), or in the worst case, you could have a defect in the processor 
 flash memory.
 
-If in firmware update mode backlight remains on with a slowly blining green led in firmware update mode, your USB drive was not detected.
-You can remove the device and try to plug it in again, or you can try another key. Remember to press BAND- before pluging in the drive if you want to upgrade your firmware. Otherwise only the old firmware is written to your drive.
+If during firmware update mode the LCD backlight remains on with a slowly blinking green LED, your USB drive was not detected.
+You can remove the USB drive and try to plug it in again, or you can try another key. Remember to follow the steps in "Flashing New Firmware and Saving Old Firmware" as shown above when plugging in the drive if you want to upgrade your firmware. Do not just press BAND- button as only the old firmware is written to your drive.
 
-If in firmware update mode (start with Band- pressed) right after starting the mcHF you see a black screen with one or more leds turned on or blinking, you don't have the DF8OE bootloader but most likely the mcHF M0NKA bootloader. See his pages for instructions how to use it or replace the bootloader with this one. The M0NKA bootloader needs a Windows software to flash the image and is usin the small Mini-USB port.
+If in firmware update mode (start with Band- pressed) right after starting the mcHF you see a black screen with one or more LEDs turned on or blinking, you don't have the DF8OE bootloader but most likely the mcHF M0NKA bootloader installed. See his pages for instructions how to use it or replace the bootloader with this one. The M0NKA bootloader needs a Windows software to flash the image and it uses the small Mini-USB port.
 
 If everything else seems to be ok, your USB key is incompatible. Try another key. 
-Keys manufacturedcby "SanDisk" are widely distributed, easy to purchase and seem 
+Keys manufactured by "SanDisk" are widely distributed, easy to purchase and seem 
 to work well. 
 
 For the firmware update mode there are a number of error conditions reported through a visual code.
-If firmware reading/writing process ends in an error this is shown by turning the backlight off, 
-turning the green led off and blinking the red led in burst, turning the backlight on and off (green remains off) and repeating the red led flash burst. This stops only if you press Power for a little while, which turns the mcHF off.
+If firmware reading/writing process ends in an error this is shown by turning off the LCD backlight then
+turning the green LED off, blinking the red LED in bursts, then turning the LCD backlight on and off again (green LED remains off) and repeating the red LED flash bursts. This will stop if you press Power for a little while, which turns the mcHF off.
  
 
-The red led is flashing in bursts of:
+The red LED is flashing in bursts of:
 
 |Flashes|  Error                            	|
 |-------|---------------------------------------|
 |1		|USB problems							|
-|2 		|mchf.bin not found on USB drive		|
-|3		|flash memory too small for mchf.bin	|
-|4		|problems writing MCHFOLD.BIN to drive	|
-|5		|problems reading mchf.bin from disk	|
+|2 		|mchf.bin not found on the USB drive		|
+|3		|flash memory is too small for mchf.bin	|
+|4		|problems writing MCHFOLD.BIN to the USB drive	|
+|5		|problems reading mchf.bin from the USB drive	|
 |6		|STM32F4 flash programming error		|
 |7		|STM32F4 flash erase error				|
 |8		|STM32F4 flash write protected			|
@@ -89,15 +89,15 @@ Both firmware and bootloader can be updated using the DFU Upload method. You wil
 
 1. You need the DF8OE bootloader to be installed (once) on your mcHF
 1. Install the DFU software on your PC including the provided driver if necessary. 
-1. Connect PC and mcHF (small USB connector) using a Mini-USB cable.
+1. Connect PC and mcHF using the small USB connector with a Mini-USB cable.
 1. Get the appropriate DFU file (__bootloader.dfu__ or __firmware.dfu__)
 
 ### Starting The mcHF in DFU mode
 
-1. Turn mcHF off
+1. Turn the mcHF off
 1. Press and hold Band+
 1. Press and hold Power
-1. After two second you can release the Band+ button but keep the Power button pressed permanently. You will see the white backlight, which stays on. You will not see any led flashing etc. All communication is done using the USB bus only. 
+1. After two seconds you can release the Band+ button but keep the Power button pressed permanently. You will see the LCD white backlight, which stays on. You will not see any LED flashing etc. All communication is only through the USB bus. 
 1. Your PC should now recognize a new USB device "STM BOOTLOADER", manufacturer is "STMicroelectronics"
 1. Keep the power button pressed until the very end of the instructions given below. 
 
@@ -146,6 +146,6 @@ connector via schottky-diode and (poly)fuse 0.5A to make
 USB-sticks work.
 I took STM AN3990 as base and adapted pin layout to mchf also
 new blink codes due to mchf has less LEDS than DISCO-board where
-AN3990 is written for.
+AN3990 is written.
 
 DF8OE, Andreas						10/19/2016
