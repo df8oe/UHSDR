@@ -184,13 +184,14 @@ help:
 
 .PHONY: all clean docs docs-clean help
 
-bootloader: bootloader.bin bootloader.dfu
-
 
 all:  $(LPRJ).elf $(LPRJ).dfu $(PRJ).bin $(PRJ).handbook
-	# compile the ARM-executables .bin and .elf for mcHF SDR TRx, generate .map and .dmp
+	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 	@echo "using \c"
 	$(CC) --version | grep gcc
+
+bootloader:  bootloader.bin bootloader.dfu
+	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
 $(LPRJ).elf:  $(OBJS) 
@@ -225,16 +226,6 @@ clean:
 	$(RM) $(call FixPath,bootloader.dfu)
 	$(RM) $(call FixPath,*~)
 
-handy:  
-	# rm all .o (but not executables, .map and .dmp)
-	$(RM) $(call FixPath,$(OBJS))
-	$(RM) $(call FixPath,$(BLOBJS))
-	$(RM) $(call FixPath,*~)
-
-gcc-version:  
-	# the build will be done using
-	$(CC) --version | grep gcc
-
 docs:  
 	# generate source docs as per "Doxyfile"
 	doxygen Doxyfile
@@ -244,13 +235,17 @@ docs-clean:
 	# as defined in file "Doxyfile" OUTPUT_DIRECTORY
 	$(RM) --recursive --verbose $(call FixPath,$(ROOTLOC)/../docs)
 
-handbook-ui-menu:  
-	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
+gcc-version:  
+	# the build will be done using
+	$(CC) --version | grep gcc
 
 handbook-test:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook in different directory for test purposes
 	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook test
+
+handbook-ui-menu:  
+	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
+	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
@@ -261,6 +256,12 @@ handbook-ui-menu-clean:
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.png
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_mdtable.md
 	$(RM) $(ROOTLOC)/support/ui/menu/menu-handbook-build.timestamp
+
+handy:  
+	# rm all .o (but not executables, .map and .dmp)
+	$(RM) $(call FixPath,$(OBJS))
+	$(RM) $(call FixPath,$(BLOBJS))
+	$(RM) $(call FixPath,*~)
 
 release:  
 	# generate quick operating guide
