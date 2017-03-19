@@ -24,6 +24,10 @@ extern "C" {
 void BL_Application();
 int bootloader_main();
 void bootTypeSelector();
+void mchfBl_CheckAndGoForDfuBoot();
+void BL_InfoScreen();
+void BL_PrintLine(const char* txt);
+
 #ifdef __cplusplus
 }
 #endif

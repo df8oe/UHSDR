@@ -3,6 +3,8 @@ src/bootloader/bootloader_main.c \
 src/bootloader/command.c \
 src/bootloader/flash_if.c \
 src/bootloader/mchf_boot_hw.c \
+drivers/ui/lcd/ui_lcd_hy28.c \
+drivers/ui/lcd/ui_lcd_hy28_fonts.c \
 misc/v_eprom/eeprom.c \
 misc/config_storage.c \
 misc/profiling.c \

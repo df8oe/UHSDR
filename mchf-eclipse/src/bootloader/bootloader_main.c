@@ -18,6 +18,8 @@
 #include "fatfs.h"
 #include "usb_host.h"
 #include "bootloader_main.h"
+#include "ui_lcd_hy28.h"
+
 
 #include <unistd.h>
 
@@ -30,6 +32,64 @@ extern USBH_HandleTypeDef hUsbHostHS;
 static uint8_t mcHF_USBConnected()
 {
     return hUsbHostHS.device.is_connected;
+}
+
+
+static const char*  bl_help[] =
+{
+        "mcHF Bootloader - USB Drive Mode",
+        "",
+        "Release Band- to skip firmware update",
+
+        "mcHF Bootloader - DFU Update Mode",
+        "Keep Power pressed until finish.",
+        "Release Band+ to start DFU Mode.",
+        "Screen will go white. This is ok.",
+        "PC should recognize new USB device.",
+};
+
+static void BL_DisplayInit()
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Mode     = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull     = GPIO_PULLUP;
+    GPIO_InitStructure.Speed    = GPIO_SPEED_FREQ_VERY_HIGH;
+
+    GPIO_InitStructure.Pin = TP_IRQ;
+    HAL_GPIO_Init(TP_IRQ_PIO, &GPIO_InitStructure);
+
+    GPIO_InitStructure.Mode     = GPIO_MODE_OUTPUT_PP;
+
+    GPIO_InitStructure.Pin = TP_CS;
+    HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
+
+    UiLcdHy28_Init();
+    UiLcdHy28_LcdClear(Black);
+    mchfBl_PinOn(BACKLIGHT);
+
+}
+
+void BL_InfoScreen()
+{
+    BL_DisplayInit();
+    BL_PrintLine(bl_help[0]);
+    BL_PrintLine(bl_help[1]);
+    BL_PrintLine(bl_help[2]);
+    BL_PrintLine(bl_help[1]);
+}
+
+void BL_InfoScreenDFU()
+{
+    BL_DisplayInit();
+    BL_PrintLine(bl_help[3]);
+    BL_PrintLine(bl_help[1]);
+    BL_PrintLine(bl_help[4]);
+    BL_PrintLine(bl_help[5]);
+    BL_PrintLine(bl_help[6]);
+    BL_PrintLine(bl_help[7]);
 }
 
 void BL_Idle_Application(void)
@@ -52,6 +112,7 @@ void BL_Idle_Application(void)
 int BL_MSC_Application(void)
 {
 
+    BL_PrintLine("USB Drive detected.");
     /* Register the file system object to the FatFs module */
     if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
     {
@@ -64,16 +125,32 @@ int BL_MSC_Application(void)
         // If still pressed, we will also flash the memory afer reading it
         __IO uint32_t was_download = (mchfBl_ButtonGetState(BUTTON_BANDM) == 0);
         /* Reads all flash memory */
+        BL_PrintLine("Saving Flash to \"mchfold.bin\".");
         COMMAND_UPLOAD();
 
         /* Check if BAND- Button was pressed */
         if (was_download)
         {
             /* Writes Flash memory */
+            BL_PrintLine("Updating firmware using \"mchf.bin\".");
             COMMAND_DOWNLOAD();
         }
+        else
+        {
+            BL_PrintLine("Skipping firmware update.");
+        }
 
-        mchfBl_PinOff(BACKLIGHT);
+        BL_PrintLine("");
+        BL_PrintLine("Finished.");
+        BL_PrintLine("");
+        BL_PrintLine("Remove drive or press Band- to reboot.");
+        BL_PrintLine("Press Power to switch off.");
+
+        // if we don't have a display, turn off backlight
+        if (mchf_display.DeviceCode == 0x0000)
+        {
+            mchfBl_PinOff(BACKLIGHT);
+        }
 
         /* Waiting User Button Released */
         while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 0))
@@ -153,7 +230,9 @@ int bootloader_main()
 
     if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
     {
+        BL_InfoScreenDFU();
         // BANDM pressed, DFU boot requested
+        while (mchfBl_ButtonGetState(BUTTON_BANDP) == 0) {};
         COMMAND_ResetMCU(0x99);
     }
     /* Test if BAND- button on mchf is NOT pressed */
@@ -170,6 +249,7 @@ int bootloader_main()
     }
 
     /* Init upgrade mode display */
+    BL_InfoScreen();
     mchfBl_PinOn(BACKLIGHT);
     // now give user a chance to let go off the BAND- button
     HAL_Delay(3000);
@@ -208,4 +288,14 @@ void mchfBl_CheckAndGoForDfuBoot()
         mchfBl_JumpToApplication(0);
         // start the STM32F4xx bootloader at address 0x00000000;
     }
+}
+
+#include "mchf_board_config.h"
+
+static uint8_t current_line;
+
+void BL_PrintLine(const char* txt)
+{
+    UiLcdHy28_PrintText(4,4+current_line*16,txt,Yellow,Black,0);
+    current_line++;
 }

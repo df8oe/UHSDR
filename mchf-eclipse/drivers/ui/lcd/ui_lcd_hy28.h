@@ -15,7 +15,7 @@
 #ifndef __UI_LCD_HY28_H
 #define __UI_LCD_HY28_H
 
-#include "mchf_board.h"
+#include "mchf_types.h"
 
 #define MAX_X  320
 #define MAX_Y  240
@@ -74,14 +74,25 @@
 
 // ----------------------------------------------------------
 
-#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
-#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+typedef enum
+{
+    DISPLAY_NONE = 0,
+    DISPLAY_HY28A_SPI,
+    DISPLAY_HY28B_SPI,
+    DISPLAY_HY28B_PARALLEL
+} mchf_display_types_t;
 
-// ----------------------------------------------------------
-// Dual purpose pins (parallel + serial)
-#define LCD_CS 					LCD_CSA
-#define LCD_CS_SOURCE			LCD_CSA_SOURCE
-#define LCD_CS_PIO	         	LCD_CSA_PIO
+
+typedef struct
+{
+    uint8_t display_type;           // existence/identification of display type
+    uint16_t DeviceCode;      // LCD ident code
+    uint16_t use_spi;
+    int16_t lcd_cs;
+    GPIO_TypeDef* lcd_cs_pio;
+} mchf_display_t;
+
+extern mchf_display_t mchf_display;
 
 // ----------------------------------------------------------
 void 	UiLcdHy28_LcdClear(ushort Color);
@@ -113,17 +124,28 @@ void    UiLcdHy28_BulkPixel_BufferFlush();
 uint8_t 	UiLcdHy28_Init();
 
 void    UiLcdHy28_BacklightEnable(bool on);
-void    UiLcdHy28_BacklightDimHandler();
+
+typedef struct
+{
+    uint8_t state;
+    uint8_t raw;
+    uint8_t x;
+    uint8_t y;
+    uint8_t present;
+    uint8_t reversed;
+} mchf_touchscreen_t;
+
 
 #define TP_DATASETS_VALID		0x04   // number of sets that must be identical for marked as VALID
 #define TP_DATASETS_WAIT		0x01   // first dataset received
 #define TP_DATASETS_PROCESSED	0xff
 #define TP_DATASETS_NONE		0x00
 
-void    UiLcdHy28_TouchscreenDetectPress();
-void    UiLcdHy28_TouchscreenPresenceDetection();
-void 	UiLcdHy28_TouchscreenReadCoordinates(bool do_translate);	// true == corrected data, false == raw data
-bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
+extern mchf_touchscreen_t mchf_touchscreen;
 
+void    UiLcdHy28_TouchscreenDetectPress();
+void 	UiLcdHy28_TouchscreenReadCoordinates();
+bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
+void    UiLcdHy28_TouchscreenInit(bool is_reversed);
 
 #endif

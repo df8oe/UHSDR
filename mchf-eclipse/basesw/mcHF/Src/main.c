@@ -81,7 +81,6 @@ void Error_Handler(void);
 #ifdef BOOTLOADER_BUILD
 void MX_USB_HOST_Process(void);
 #include "bootloader/bootloader_main.h"
-
 #else
 
 #include "mchf_main.h"
@@ -114,6 +113,8 @@ int main(void)
   MX_GPIO_Init();
 
 #ifdef BOOTLOADER_BUILD
+  MX_DMA_Init();
+  MX_SPI2_Init();
   bootloader_main();
 #else
   MX_DMA_Init();
