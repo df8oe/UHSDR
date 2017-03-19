@@ -76,82 +76,6 @@ __IO uint32_t TimingDelay = 0;
 
 uchar wd_init_enabled = 0;
 
-//*----------------------------------------------------------------------------
-//* Function Name       : CriticalError
-//* Object              : should never be here, really
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-#if 0
-void CriticalError(ulong error)
-{
-    NVIC_SystemReset();
-}
-
-void NMI_Handler(void)
-{
-    CriticalError(1);
-}
-
-void HardFault_Handler(void)
-{
-    CriticalError(2);
-}
-
-void MemManage_Handler(void)
-{
-    CriticalError(3);
-}
-
-/* void BusFault_Handler(void)
-{
-    CriticalError(4);
-}
- */
-
-void UsageFault_Handler(void)
-{
-    CriticalError(5);
-}
-
-void SVC_Handler(void)
-{
-    CriticalError(6);
-}
-
-void DebugMon_Handler(void)
-{
-    CriticalError(7);
-}
-
-void SysTick_Handler(void)
-{
-
-}
-#endif
-
-#if 0
-/*void TIM5_IRQHandler(void)
-{
-  if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET)
-  {
-    // Get the Input Capture value
-    tmpCC4[CaptureNumber++] = TIM_GetCapture4(TIM5);
-
-    // Clear CC4 Interrupt pending bit
-    TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
-
-    if (CaptureNumber >= 2)
-    {
-      // Compute the period length
-      PeriodValue = (uint16_t)(0xFFFF - tmpCC4[0] + tmpCC4[1] + 1);
-    }
-  }
-}*/
-#endif
-
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
     switch(GPIO_Pin)
@@ -377,11 +301,10 @@ void TransceiverStateInit(void)
     ts.load_freq_mode_defaults = 0;					// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
-    ts.tp_present = 0;						// default no touchscreen
-	ts.tp_raw = 0;							// default translated coordinates
-    ts.tp_x = 0xFF;							// invalid position
-    ts.tp_y = 0xFF;							// invalid position
-    ts.tp_state = 0;						// touchscreen state machine init
+
+    ts.tp = &mchf_touchscreen;
+    ts.display = &mchf_display;
+
     ts.show_tp_coordinates = 0;					// dont show coordinates on LCD
     ts.rfmod_present = 0;						// rfmod not present
     ts.vhfuhfmod_present = 0;					// VHF/UHF mod not present
@@ -533,8 +456,11 @@ int mchfMain(void)
 
     // MchfRtc_FullReset();
     ConfigStorage_Init();
-    // test if touchscreen is present
-    UiLcdHy28_TouchscreenPresenceDetection();
+
+    // init mchf_touchscreen to see if it is present
+    // we don't care about the screen being reverse or not
+    // here, so we simply set reverse to false
+    UiLcdHy28_TouchscreenInit(false);
 
 
     // Show logo & HW Info

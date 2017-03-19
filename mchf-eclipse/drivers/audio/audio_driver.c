@@ -4822,7 +4822,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     }
 
     // Perform LCD backlight PWM brightness function
-    UiLcdHy28_BacklightDimHandler();
+    UiDriver_BacklightDimHandler();
 
     tcount+=CLOCKS_PER_DMA_CYCLE;		// add the number of clock cycles that would have passed between DMA cycles
     if(tcount > CLOCKS_PER_CENTISECOND)	 	// has enough clock cycles for 0.01 second passed?

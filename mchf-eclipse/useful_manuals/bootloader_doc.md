@@ -6,11 +6,14 @@ The bootloader supports two different ways to install new software on the mcHF, 
 In most cases, the most convenient way is to use a USB drive to install new firmware with the USB drive connected to the (big) USB-A socket. 
 To install a new bootloader (or new firmware) the alternate method is to run a DFU upload using a PC connected via USB cable to the small (Mini USB connector) and an appropriate DFU upload tool (e.g. Windows: DFUSe, Linux: dfu-util). 
 
+The bootloader uses the two leds and the display to interact with the user. If the display is connected correctly, you will see instructions and messages on screen, otherwise you will have to watch the leds.
+
 
 ### Installing The Bootloader
 
 The procedure to install the DF8OE bootloader in its DFU form (bootloader.dfu) is the same as for the M0NKA bootloader (using DFUSe). See bootloader\_install.odt or bootloader\_install.pdf 
 If you own a ST-Link, you can simply flash the bootloader.bin/bootloader.hex/bootloader.elf using your favorite ST flash tool at adress 0x08000000.
+
 
 ## Firmware Update Procedures Using a USB Drive
 

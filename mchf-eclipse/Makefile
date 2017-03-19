@@ -50,7 +50,7 @@ endif
 MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
 BASECFLAGS  = $(MACHFLAGS)  \
           -DARM_MATH_CM4 -D_GNU_SOURCE -DCORTEX_M4 -DSTM32F407xx -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE  \
-          -ffunction-sections -fdata-sections -flto -O2 -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
+          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
           $(EXTRACFLAGS)
 
 
@@ -71,11 +71,11 @@ TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean
 
 LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs
 
-LIBS := -lm -lc -lgcc -lnosys \
+LIBS := -lm -lc -lnosys \
         -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
 
-bootloader.elf : CFLAGS = ${BASECFLAGS} -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS}
+bootloader.elf : CFLAGS = ${BASECFLAGS} -Os -DBOOTLOADER_BUILD
+mchf.elf : CFLAGS = ${BASECFLAGS} -O2
 
 # Every subdirectory with header files must be mentioned here
 include $(ROOTLOC)/include.mak

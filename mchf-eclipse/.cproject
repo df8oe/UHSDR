@@ -95,6 +95,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1134137507" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -108,6 +109,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.2147099817" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -158,6 +160,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1485167743" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -526,7 +529,7 @@
 									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="STM32F407VG"/>
 									<listOptionValue builtIn="false" value="STM32F4XX"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
@@ -576,7 +579,7 @@
 									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="STM32F407VG"/>
 									<listOptionValue builtIn="false" value="STM32F4XX"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
@@ -625,7 +628,7 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.1964694686" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.2083680376" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers}&quot;"/>
@@ -885,7 +888,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="OS_USE_TRACE_SEMIHOSTING_STDOUT"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1969972230" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
@@ -899,7 +902,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="OS_USE_TRACE_SEMIHOSTING_STDOUT"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.367706623" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
@@ -965,7 +968,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
-									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="OS_USE_TRACE_SEMIHOSTING_STDOUT"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.491749856" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
@@ -1385,6 +1388,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.199841687" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -1399,6 +1403,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.412993490" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -1449,6 +1454,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.2071183613" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -1769,7 +1775,7 @@
 				<configuration artifactName="bootloader" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1988579444" name="DebugBootloader" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
 					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1988579444." name="/" resourcePath="">
 						<toolChain errorParsers="" id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug.817528440" name="Cross ARM GCC" nonInternalBuilderId="ilg.gnuarmeclipse.managedbuild.cross.builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug">
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.316896669" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.more" valueType="enumerated"/>
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.316896669" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.size" valueType="enumerated"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength.1908941379" name="Message length (-fmessage-length=0)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.messagelength" useByScannerDiscovery="true" value="false" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar.1155573504" name="'char' is signed (-fsigned-char)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.signedchar" useByScannerDiscovery="true" value="false" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections.1837041571" name="Function sections (-ffunction-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.functionsections" useByScannerDiscovery="true" value="true" valueType="boolean"/>
@@ -1848,6 +1854,8 @@
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
+									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1858623994" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -1861,6 +1869,8 @@
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
+									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1334759524" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -1912,6 +1922,8 @@
 									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="TRACE"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
+									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1818837667" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -2257,6 +2269,7 @@
 						<entry excluding="Src/stm32f4xx_hal_timebase_tim_template.c|Src/stm32f4xx_hal_timebase_rtc_wakeup_template.c|Src/stm32f4xx_hal_timebase_rtc_alarm_template.c|Src/stm32f4xx_hal_msp_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Drivers/STM32F4xx_HAL_Driver"/>
 						<entry excluding="ST/STM32_USB_Device_Library/Class/CDC|ST/STM32_USB_Device_Library/Class/AUDIO|Third_Party/FatFs/src/drivers/sram_diskio.c|Third_Party/FatFs/src/drivers/sdram_diskio.c|Third_Party/FatFs/src/drivers/sd_diskio.c|Third_Party/FatFs/src/option/ccsbcs.c|Third_Party/FatFs/src/option/cc950.c|Third_Party/FatFs/src/option/cc949.c|Third_Party/FatFs/src/option/cc936.c|Third_Party/FatFs/src/option/cc932.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio.c|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Host_Library/Core/Src/usbh_conf_template.c|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_if_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="basesw/mcHF/Middlewares"/>
 						<entry excluding="usbd_cdc_if.c|usbd_audio_if.c|usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
+						<entry excluding="ui_spectrum.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="drivers/ui/lcd"/>
 						<entry excluding="main.c|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
@@ -2372,6 +2385,7 @@
 									<listOptionValue builtIn="false" value="CORTEX_M4"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.664577427" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -2383,6 +2397,7 @@
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1088135933" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>
@@ -2432,6 +2447,7 @@
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="BOOTLOADER_BUILD"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1991822870" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Inc}&quot;"/>

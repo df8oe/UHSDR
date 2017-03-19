@@ -347,7 +347,7 @@ bool filter_path_change = false;
 // check if touched point is within rectangle of valid action
 inline bool UiDriver_CheckTouchCoordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
 {
-    return (ts.tp_x <= x_right && ts.tp_x >= x_left && ts.tp_y >= y_down && ts.tp_y <= y_up);
+    return (ts.tp->x <= x_right && ts.tp->x >= x_left && ts.tp->y >= y_down && ts.tp->y <= y_up);
 }
 
 
@@ -423,7 +423,7 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 
 inline bool is_touchscreen_pressed()
 {
-    return (ts.tp_state == TP_DATASETS_VALID);	// touchscreen data available
+    return (ts.tp->state == TP_DATASETS_VALID);	// touchscreen data available
 }
 
 
@@ -635,7 +635,7 @@ void UiDriver_HandleTouchScreen()
     if (ts.show_tp_coordinates)					// show coordinates for coding purposes
     {
         char text[10];
-        snprintf(text,10,"%02d%s%02d%s",ts.tp_x," : ",ts.tp_y,"  ");
+        snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
         UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
     }
     if(!ts.menu_mode)						// normal operational screen
@@ -741,7 +741,7 @@ void UiDriver_HandleTouchScreen()
                 }
             }
 
-            uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp_x-line)*TUNE_MULT;
+            uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp->x-line)*TUNE_MULT;
             df.tune_new = lround((df.tune_new + tunediff)/step) * step;
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
@@ -815,7 +815,7 @@ void UiDriver_HandleTouchScreen()
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
     }
-    ts.tp_state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
+    ts.tp->state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
 }
 
 void UiDriver_HandlePowerLevelChange(uint8_t power_level)
@@ -876,6 +876,8 @@ void UiDriver_Init()
     {
         UiDriver_KeyTestScreen();
     }
+
+    UiLcdHy28_TouchscreenInit(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN);
 
     Si570_SetPPM((float)ts.freq_cal/10.0);
 
@@ -5596,7 +5598,7 @@ static void UiDriver_KeyTestScreen()
 				break;
 			case	BUTTON_BNDM_PRESSED:
 				txt = "        BND-        ";
-				ts.tp_raw = !ts.tp_raw;
+				ts.tp->raw = !ts.tp->raw;
 				
 				if(rbcount > 75)
 				{
@@ -5618,12 +5620,12 @@ static void UiDriver_KeyTestScreen()
 
 			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 			    {
-			  		if(ts.tp_raw)
+			  		if(ts.tp->raw)
 			  		{
-					  snprintf(txt_buf,40,"Touchscr. x:%02x y:%02x",ts.tp_x,ts.tp_y);	//show touched coordinates
+					  snprintf(txt_buf,40,"Touchscr. x:%02x y:%02x",ts.tp->x,ts.tp->y);	//show touched coordinates
 					}
 					else
-					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp_x,ts.tp_y);	//show touched coordinates
+					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp->x,ts.tp->y);	//show touched coordinates
 					{
 					}
 					txt = txt_buf;
@@ -5659,7 +5661,7 @@ static void UiDriver_KeyTestScreen()
 			}
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
-			if(ts.tp_raw && ts.tp_present)			// show translation of touchscreen if present
+			if(ts.tp->raw && ts.tp->present)			// show translation of touchscreen if present
 			{
 			  UiLcdHy28_PrintText(10,200,"touch is raw       ",White,Blue,1);
 			}
@@ -5760,8 +5762,8 @@ static bool UiDriver_TouchscreenCalibration()
             {
                 non_os_delay();
             }
-            UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
-            ts.tp_state = TP_DATASETS_NONE;
+            UiLcdHy28_TouchscreenReadCoordinates();
+            ts.tp->state = TP_DATASETS_NONE;
 
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
             UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
@@ -5841,22 +5843,22 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 
         if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
         {
-            if(abs(ts.tp_x - cross[0]) < 4 && abs(ts.tp_y - cross[1]) < 4)
+            if(abs(ts.tp->x - cross[0]) < 4 && abs(ts.tp->y - cross[1]) < 4)
             {
                 datavalid++;
-                *xt_corr += (ts.tp_x - cross[0]);
-                *yt_corr += (ts.tp_y - cross[1]);
+                *xt_corr += (ts.tp->x - cross[0]);
+                *yt_corr += (ts.tp->y - cross[1]);
                 clr_fg = Green;
-                snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+                snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp->x-cross[0],ts.tp->y-cross[1]);	//show misajustments
             }
             else
             {
                 clr_fg = Red;
-                snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp_x-cross[0],ts.tp_y-cross[1]);	//show misajustments
+                snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp->x-cross[0],ts.tp->y-cross[1]);	//show misajustments
             }
             samples++;
             UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
-			ts.tp_state = TP_DATASETS_PROCESSED;
+			ts.tp->state = TP_DATASETS_PROCESSED;
         }
     }
     while(datavalid < 3);
@@ -5920,7 +5922,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     snprintf(tx,100,"LCD: %s",info_out);
     UiLcdHy28_PrintTextCentered(0,150,320,tx,Grey1,Black,0);
 
-    txp = ts.tp_present?"Touchscreen: Yes":"Touchscreen: No";
+    txp = ts.tp->present?"Touchscreen: Yes":"Touchscreen: No";
     UiLcdHy28_PrintTextCentered(0,180,320,txp,Grey1,Black,0);
 
     info_out = UiMenu_GetSystemInfo(&clr,INFO_SI570);
@@ -6177,5 +6179,41 @@ void UiDriver_MainHandler()
             // wrap state to first state
             drv_state = 0;
         }
+    }
+}
+
+/*
+ * This handler creates a software pwm for the LCD backlight. It needs to be called
+ * very regular to work properly. Right now it is activated from the audio interrupt
+ * at a rate of 1.5khz The rate itself is not too critical,
+ * just needs to be high and very regular.
+ */
+void UiDriver_BacklightDimHandler()
+{
+    static uchar lcd_dim = 0, lcd_dim_prescale = 0;
+
+    if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
+    {
+
+        if(!lcd_dim_prescale)       // Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
+        {
+            if(lcd_dim < ts.lcd_backlight_brightness)
+            {
+                UiLcdHy28_BacklightEnable(false);   // LCD backlight off
+            }
+            else
+            {
+                UiLcdHy28_BacklightEnable(true);   // LCD backlight on
+            }
+            //
+            lcd_dim++;
+            lcd_dim &= 3;   // limit brightness PWM count to 0-3
+        }
+        lcd_dim_prescale++;
+        lcd_dim_prescale &= 3;  // limit prescale count to 0-3
+    }
+    else if(!ts.menu_mode)
+    { // LCD is to be blanked - if NOT in menu mode
+        UiLcdHy28_BacklightEnable(false);
     }
 }

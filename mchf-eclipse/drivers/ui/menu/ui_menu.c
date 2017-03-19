@@ -469,14 +469,14 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     {
     case INFO_DISPLAY:
     {
-        outs = display_types[ts.display_type];
+        outs = display_types[ts.display->display_type];
         break;
     }
     case INFO_DISPLAY_CTRL:
     {
         // const char* disp_com = ts.display_type==3?"parallel":"SPI";
         // snprintf(out,32,"ILI%04x %s",ts.DeviceCode,disp_com);
-        snprintf(out,32,"ILI%04x",ts.DeviceCode);
+        snprintf(out,32,"ILI%04x",ts.display->DeviceCode);
         break;
     }
     case INFO_SI570:
@@ -495,7 +495,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     }
     break;
     case INFO_TP:
-        outs = (ts.tp_present == 0)?"n/a":"XPT2046";
+        outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;
     case INFO_RFMOD:
         outs = (ts.rfmod_present == 0)?"n/a":"present";
@@ -2129,10 +2129,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             if (temp_var_u8)
             {
                 ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN;
+                ts.tp->reversed = 1;
             }
             else
             {
                 ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN;
+                ts.tp->reversed = 0;
             }
         }
         break;
@@ -2167,11 +2169,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_speed,
                                     WATERFALL_SPEED_MIN,
                                     WATERFALL_SPEED_MAX,
-                                    ts.display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
+                                    ts.display->display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
                                     1
                                    );
         //
-        if(ts.display_type != DISPLAY_HY28B_PARALLEL)
+        if(ts.display->display_type != DISPLAY_HY28B_PARALLEL)
         {
             if(ts.waterfall_speed <= WATERFALL_SPEED_WARN_SPI)
                 clr = Red;

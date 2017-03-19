@@ -13,19 +13,28 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "mchf_board_config.h"
 #include "spi.h"
 #include "fsmc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "arm_math.h"
-#include "math.h"
-#include "ui_driver.h"
-#include "ui_spectrum.h"
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
+
+mchf_display_t mchf_display;
+
+#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
+#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+
+// ----------------------------------------------------------
+// Dual purpose pins (parallel + serial)
+#define LCD_CS                  LCD_CSA
+#define LCD_CS_SOURCE           LCD_CSA_SOURCE
+#define LCD_CS_PIO              LCD_CSA_PIO
+
+
 
 #define USE_SPI_DMA
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
@@ -34,23 +43,242 @@
 extern sFONT GL_Font8x8;
 extern sFONT GL_Font8x12;
 extern sFONT GL_Font8x12_bold;
+extern sFONT GL_Font8x12_bold_short;
 extern sFONT GL_Font12x12;
 extern sFONT GL_Font16x24;
 
+
 static sFONT *fontList[] =
 {
+#ifndef BOOTLOADER_BUILD
         &GL_Font8x12_bold,
         &GL_Font16x24,
         &GL_Font12x12,
         &GL_Font8x12,
         &GL_Font8x8,
+#else
+        &GL_Font8x12_bold_short,
+#endif
+};
+
+typedef struct  {
+    uint16_t reg;
+    uint16_t val;
+} RegisterValue_t;
+
+static const RegisterValue_t ili9320[] =
+{
+        {0xE5,0x8000},   // Set the internal vcore voltage
+        {0x00,  0x0001},    // Start internal OSC.
+
+        // Direction related
+        {0x01,  0x0100},    // set SS and SM bit
+
+        {0x02,  0x0700},    // set 1 line inversionc
+        {0x03,  0x1038},    // set GRAM write direction and BGR=1 and ORG = 1.
+        {0x04,  0x0000},    // Resize register
+        {0x08,  0x0202},    // set the back porch and front porch
+        {0x09,  0x0000},    // set non-display area refresh cycle ISC[3:0]
+        {0x0A, 0x0000},    // FMARK function
+        {0x0C, 0x0000},    // RGB interface setting
+        {0x0D, 0x0000},    // Frame marker Position
+        {0x0F, 0x0000},    // RGB interface polarity
+
+        // Power On sequence
+        {0x10, 0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+        {0x11, 0x0000},    // DC1[2:0], DC0[2:0], VC[2:0]
+        {0x12, 0x0000},    // VREG1OUT voltage
+        {0x13, 0x0000},    // VDV[4:0] for VCOM amplitude
+        {0x00, 300},            // Dis-charge capacitor power voltage (300ms)
+        {0x10, 0x17B0},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+        {0x11, 0x0137},    // DC1[2:0], DC0[2:0], VC[2:0]
+        {0x00, 100},             // Delay 100 ms
+        {0x12, 0x0139},    // VREG1OUT voltage
+        {0x00, 100},             // Delay 100 ms
+        {0x13, 0x1d00},    // VDV[4:0] for VCOM amplitude
+        {0x29, 0x0013},    // VCM[4:0] for VCOMH
+        {0x00, 100},             // Delay 100 ms
+        {0x20, 0x0000},    // GRAM horizontal Address
+        {0x21, 0x0000},    // GRAM Vertical Address
+
+        // Adjust the Gamma Curve
+        {0x30, 0x0007},
+        {0x31, 0x0007},
+        {0x32, 0x0007},
+        {0x35, 0x0007},
+        {0x36, 0x0007},
+        {0x37, 0x0700},
+        {0x38, 0x0700},
+        {0x39, 0x0700},
+        {0x3C, 0x0700},
+        {0x3D, 0x1F00},
+
+        // Set GRAM area
+        {0x50, 0x0000},    // Horizontal GRAM Start Address
+        {0x51, 0x00EF},    // Horizontal GRAM End Address
+        {0x52, 0x0000},    // Vertical GRAM Start Address
+        {0x53, 0x013F},    // Vertical GRAM End Address
+
+        // Direction related
+        {0x60,  0xA700},    // Gate Scan Line
+        {0x61,  0x0001},    // NDL,VLE, REV
+
+        {0x6A, 0x0000},    // set scrolling line
+
+        // Partial Display Control
+        {0x80, 0x0000},
+        {0x81, 0x0000},
+        {0x82, 0x0000},
+        {0x83, 0x0000},
+        {0x84, 0x0000},
+        {0x85, 0x0000},
+
+        // Panel Control
+        {0x90, 0x0010},
+        {0x92, 0x0000},
+        {0x93, 0x0003},
+        {0x95, 0x0110},
+        {0x97, 0x0000},
+        {0x98, 0x0000},
+
+        // Set GRAM write direction
+        {0x03, 0x1038},
+
+        // 262K color and display ON
+        {0x07, 0x0173},
+
+        // delay 50 ms
+        {0x00, 50},
+
+};
+
+static const RegisterValue_t spdfd5408b[] =
+{
+
+    {0x01,0x0000},   // (SS bit 8) - 0x0100 will flip 180 degree
+    {0x02,0x0700},   // LCD Driving Waveform Contral
+    {0x03,0x1038},   // Entry Mode (AM bit 3)
+
+    {0x04,0x0000},   // Scaling Control register
+    {0x08,0x0207},   // Display Control 2
+    {0x09,0x0000},   // Display Control 3
+    {0x0A,0x0000},   // Frame Cycle Control
+    {0x0C,0x0000},   // External Display Interface Control 1
+    {0x0D,0x0000},    // Frame Maker Position
+    {0x0F,0x0000},   // External Display Interface Control 2
+    {0x00, 50},
+    {0x07,0x0101},   // Display Control
+    {0x00, 50},
+    {0x10,0x16B0},    // Power Control 1
+    {0x11,0x0001},    // Power Control 2
+    {0x17,0x0001},    // Power Control 3
+    {0x12,0x0138},    // Power Control 4
+    {0x13,0x0800},    // Power Control 5
+    {0x29,0x0009},   // NVM read data 2
+    {0x2a,0x0009},   // NVM read data 3
+    {0xa4,0x0000},
+    {0x50,0x0000},
+    {0x51,0x00EF},
+    {0x52,0x0000},
+    {0x53,0x013F},
+
+    {0x60,0x2700},   // Driver Output Control (GS bit 15)
+
+    {0x61,0x0003},   // Driver Output Control
+    {0x6A,0x0000},   // Vertical Scroll Control
+
+    {0x80,0x0000},   // Display Position ?C Partial Display 1
+    {0x81,0x0000},   // RAM Address Start ?C Partial Display 1
+    {0x82,0x0000},   // RAM address End - Partial Display 1
+    {0x83,0x0000},   // Display Position ?C Partial Display 2
+    {0x84,0x0000},   // RAM Address Start ?C Partial Display 2
+    {0x85,0x0000},   // RAM address End ?C Partail Display2
+    {0x90,0x0013},   // Frame Cycle Control
+    {0x92,0x0000},    // Panel Interface Control 2
+    {0x93,0x0003},   // Panel Interface control 3
+    {0x95,0x0110},   // Frame Cycle Control
+    {0x07,0x0173},
 };
 
 
-int16_t lcd_cs;
-GPIO_TypeDef* lcd_cs_pio;
+static const RegisterValue_t ili932x[] =
+{
+    // NPI: {0xE5, 0x78F0},   // set SRAM internal timing I guess this is the relevant line for getting LCDs to work which are "out-of-specs"...
+    {0x01,0x0000},    // set SS and SM bit
+    {0x02,0x0700},    // set 1 line inversion
+    {0x03,0x1038},    // set GRAM write direction and BGR=1 and ORG = 1
+    {0x04,0x0000},    // resize register
+    {0x08,0x0207},    // set the back porch and front porch
+    {0x09,0x0000},    // set non-display area refresh cycle
+    {0x0a,0x0000},    // FMARK function
+    {0x0c,0x0001},    // RGB interface setting
+    // NPI: {0x0c,0x0000},    // RGB interface setting
+    {0x0d,0x0000},    // frame marker position
+    {0x0f,0x0000},    // RGB interface polarity
 
-uint16_t display_use_spi;
+    // Power On sequence
+    {0x10,0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+    {0x11,0x0007},    // DC1[2:0], DC0[2:0], VC[2:0]
+    {0x12,0x0000},    // VREG1OUT voltage
+    {0x13,0x0000},    // VDV[4:0] for VCOM amplitude
+    // NPI: {0x0c,0x0001},    // RGB interface setting
+    {0x00, 200},         // delay 200 ms
+    {0x10,0x1590},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+    // NPI: {0x10, 0x1090}, // SAP, BT[3:0], AP, DSTB, SLP, STB
+    {0x11,0x0227},    // set DC1[2:0], DC0[2:0], VC[2:0]
+    {0x00, 50},              // delay 50 ms
+    {0x12,0x009c},    // internal reference voltage init
+    // NPI: {0x12, 0x001F},
+    {0x00, 50},              // delay 50 ms
+    {0x13,0x1900},    // set VDV[4:0] for VCOM amplitude
+    // NPI: {0x13, 0x1500},
+    {0x29,0x0023},    // VCM[5:0] for VCOMH
+    // NPI: {0x29,0x0027},    // VCM[5:0] for VCOMH
+    {0x2b,0x000d},    // set frame rate: changed from 0e to 0d on 03/28/2016
+    {0x00, 50},              // delay 50 ms
+    {0x20,0x0000},    // GRAM horizontal address
+    {0x21,0x0000},    // GRAM vertical address
+
+//        /* NPI:
+     // ----------- Adjust the Gamma Curve ----------
+    {0x30, 0x0000},
+    {0x31, 0x0707},
+    {0x32, 0x0307},
+    {0x35, 0x0200},
+    {0x36, 0x0008},
+    {0x37, 0x0004},
+    {0x38, 0x0000},
+    {0x39, 0x0707},
+    {0x3C, 0x0002},
+    {0x3D, 0x1D04},
+//        */
+
+    {0x50,0x0000},    // horizontal GRAM start address
+    {0x51,0x00ef},    // horizontal GRAM end address
+    {0x52,0x0000},    // vertical GRAM start address
+    {0x53,0x013f},    // vertical GRAM end address
+    {0x60,0xa700},    // gate scan line
+    {0x61,0x0001},    // NDL, VLE, REV
+    {0x6a,0x0000},    // set scrolling line
+    // partial display control
+    {0x80,0x0000},
+    {0x81,0x0000},
+    {0x82,0x0000},
+    {0x83,0x0000},
+    {0x84,0x0000},
+    {0x85,0x0000},
+    // panel control
+    {0x90,0x0010},
+    {0x92,0x0000},
+    // NPI: {0x92, 0x0600},
+    // activate display using 262k colours
+    {0x07,0x0133},
+};
+
+
+
+
+
 
 const uint8_t touchscreentable [] = {0x07,0x09,
         0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,
@@ -69,7 +297,6 @@ typedef struct
     uint16_t height;
 } lcd_bulk_transfer_header_t;
 
-static void UiLcdHy28_Delay(ulong delay);
 static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
 
 
@@ -99,41 +326,7 @@ void UiLcdHy28_BacklightEnable(bool on)
         LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
     }
 }
-/*
- * This handler creates a software pwm for the LCD backlight. It needs to be called
- * very regular to work properly. Right now it is activated from the audio interrupt
- * at a rate of 1.5khz The rate itself is not too critical,
- * just needs to be high and very regular.
- */
-void UiLcdHy28_BacklightDimHandler()
-{
-    static uchar lcd_dim = 0, lcd_dim_prescale = 0;
 
-    if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
-    {
-
-        if(!lcd_dim_prescale)       // Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
-        {
-            if(lcd_dim < ts.lcd_backlight_brightness)
-            {
-                UiLcdHy28_BacklightEnable(false);   // LCD backlight off
-            }
-            else
-            {
-                UiLcdHy28_BacklightEnable(true);   // LCD backlight on
-            }
-            //
-            lcd_dim++;
-            lcd_dim &= 3;   // limit brightness PWM count to 0-3
-        }
-        lcd_dim_prescale++;
-        lcd_dim_prescale &= 3;  // limit prescale count to 0-3
-    }
-    else if(!ts.menu_mode)
-    { // LCD is to be blanked - if NOT in menu mode
-        UiLcdHy28_BacklightEnable(false);
-    }
-}
 
 static uint16_t lcd_spi_prescaler;
 
@@ -191,69 +384,19 @@ void UiLcdHy28_SpiInit(bool hispeed)
     GPIO_InitStructure.Pull = GPIO_NOPULL;
 
     // Configure GPIO PIN for Chip select
-    GPIO_InitStructure.Pin = lcd_cs;
-    HAL_GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = mchf_display.lcd_cs;
+    HAL_GPIO_Init(mchf_display.lcd_cs_pio, &GPIO_InitStructure);
 
     // Configure GPIO PIN for Reset
     GPIO_InitStructure.Pin = LCD_RESET;
     HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 
     // Deselect : Chip Select high
-    GPIO_SetBits(lcd_cs_pio, lcd_cs);
+    GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
 DMA_HandleTypeDef DMA_Handle;
 
-void UiLcdHy28_SpiDmaPrepare()
-{
-#if 0
-    // TODO: All handled by CubeMX generated HAL code
-    //Enable the Direct Memory Access peripheral clocks
-    __HAL_RCC_DMA1_CLK_ENABLE();
-
-    DMA_Handle.Init.Channel = DMA_CHANNEL_0;                                          //SPI2 Tx DMA is DMA1/Stream4/Channel0
-    DMA_Handle.Init.Direction = DMA_MEMORY_TO_PERIPH;                                //Sending data from memory to the peripheral's Tx register
-    DMA_Handle.Init.PeriphInc  = DMA_PINC_DISABLE;                       //Don't increment the peripheral 'memory'
-    DMA_Handle.Init.MemInc  = DMA_MINC_ENABLE;                                //Increment the memory location
-    DMA_Handle.Init.Priority  = DMA_PRIORITY_HIGH;                                    //Priority is high to avoid saturating the FIFO since we are in direct mode
-    DMA_Handle.Init.FIFOMode  = DMA_FIFOMODE_DISABLE;                                 //Operate in 'direct mode' without FIFO
-    DMA_Handle.Init.Mode  = DMA_NORMAL;                                          //Normal mode (not circular)
-
-    /*
-    DMA_Handle.DMA_PeripheralBaseAddr  = (uint32_t)&(SPI2->DR);                      //Set the SPI2 Tx
-    DMA_Handle.Init.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_Byte;                //Byte size memory transfers
-    DMA_Handle.Init.DMA_MemoryDataSize  = DMA_MemoryDataSize_Byte;                        //Byte size memory transfers
-    DMA_Handle.Init.DMA_BufferSize  = 0;                                               //Define the number of bytes to send
-    DMA_Handle.Init.DMA_Memory0BaseAddr  = (uint32_t)0;                              //Set the memory location
-*/
-    HAL_DMA_Init(&DMA_Handle);
-
-    ///SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);        //Enable the DMA Transmit Request
-
-
-    //Enable the transfer complete interrupt for DMA1 Stream4
-    ///DMA_ITConfig(DMA1_Stream4, DMA_IT_TC, ENABLE);                                       //Enable the Transfer Complete interrupt
-
-
-    HAL_NVIC_SetPriority(DMA1_Stream4_IRQn,1,0);
-    HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
-
-    ///DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
-#endif
-}
-
-#if 0
-// FIXME: This is not going to work perfectly with the HAL callbacks...
-void DMA1_Stream4_IRQHandler(void)
-{
-    //Check if the transfer complete interrupt flag has been set
-    if(__HAL_DMA_GET_IT_SOURCE(&DMA_Handle,DMA_IT_TC ) == SET)
-    {
-        //Clear the DMA1 Stream4 Transfer Complete flag
-        __HAL_DMA_CLEAR_FLAG(&DMA_Handle, DMA_IT_TC);
-    }
-}
-#endif
 
 inline void UiLcdHy28_SpiDmaStop()
 {
@@ -301,15 +444,15 @@ void UiLcdHy28_SpiDeInit()
     HAL_GPIO_Init(LCD_MISO_PIO, &GPIO_InitStructure);
 #endif
     // Configure GPIO PIN for Chip select
-    GPIO_InitStructure.Pin		= lcd_cs;
-    HAL_GPIO_Init(lcd_cs_pio, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin		= mchf_display.lcd_cs;
+    HAL_GPIO_Init(mchf_display.lcd_cs_pio, &GPIO_InitStructure);
 }
 
 inline void UiLcdHy28_SpiLcdCsDisable() {
-    lcd_cs_pio->BSRR = lcd_cs;
+    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs;
 }
 inline void UiLcdHy28_SpiLcdCsEnable() {
-    lcd_cs_pio->BSRR = lcd_cs <<16U;
+    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs <<16U;
 }
 
 void UiLcdHy28_ParallelInit()
@@ -383,65 +526,19 @@ void UiLcdHy28_Reset()
 {
     // Reset
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    UiLcdHy28_Delay(50000);
+    HAL_Delay(50);
 
     GPIO_ResetBits(LCD_RESET_PIO, LCD_RESET);
-    UiLcdHy28_Delay(50000);
+    HAL_Delay(50);
 
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    UiLcdHy28_Delay(100000);
+    HAL_Delay(100);
 }
 
 
 void UiLcdHy28_FSMCConfig(void)
 {
     MX_FSMC_Init();
-#if 0
-    FSMC_NORSRAMInitTypeDef        FSMC_NORSRAMInitStructure;
-    FSMC_NORSRAMTimingInitTypeDef     p;
-
-    // Enable FSMC clock
-    RCC_AHB3PeriphClockCmd(RCC_AHB3Periph_FSMC, ENABLE);
-
-    //-- FSMC Configuration ------------------------------------------------------
-    //----------------------- SRAM Bank 3 ----------------------------------------
-    // FSMC_Bank1_NORSRAM4 configuration
-    p.FSMC_AddressSetupTime       = 6;		// slow external RAM interface to LCD to reduce corruption on slower LCDs
-    p.FSMC_AddressHoldTime        = 0;
-    p.FSMC_DataSetupTime          = 15;		// slow external RAM interface to LCD to reduce corruption on slower LCDs
-    p.FSMC_BusTurnAroundDuration  = 0;
-    p.FSMC_CLKDivision            = 0;
-    p.FSMC_DataLatency            = 0;
-    p.FSMC_AccessMode             = FSMC_AccessMode_A;
-
-    // Color LCD configuration ------------------------------------
-    //   LCD configured as follow:
-    //     - Data/Address MUX = Disable
-    //     - Memory Type = SRAM
-    //     - Data Width = 16bit
-    //     - Write Operation = Enable
-    //     - Extended Mode = Enable
-    //     - Asynchronous Wait = Disable
-
-    FSMC_NORSRAMInitStructure.FSMC_Bank			= FSMC_Bank1_NORSRAM1;
-    FSMC_NORSRAMInitStructure.FSMC_DataAddressMux	= FSMC_DataAddressMux_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_MemoryType		= FSMC_MemoryType_SRAM;
-    FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth	= FSMC_MemoryDataWidth_16b;
-    FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode	= FSMC_BurstAccessMode_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_AsynchronousWait	= FSMC_AsynchronousWait_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity	= FSMC_WaitSignalPolarity_Low;
-    FSMC_NORSRAMInitStructure.FSMC_WrapMode		= FSMC_WrapMode_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_WaitSignalActive	= FSMC_WaitSignalActive_BeforeWaitState;
-    FSMC_NORSRAMInitStructure.FSMC_WriteOperation	= FSMC_WriteOperation_Enable;
-    FSMC_NORSRAMInitStructure.FSMC_WaitSignal		= FSMC_WaitSignal_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_ExtendedMode		= FSMC_ExtendedMode_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_WriteBurst		= FSMC_WriteBurst_Disable;
-    FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct	= &p;
-    FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct	= &p;
-    FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure);
-
-    FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM1, ENABLE);
-#endif
 }
 
 #if 0
@@ -478,7 +575,7 @@ static inline void UiLcdHy28_SpiFinishTransfer()
 static void UiLcdHy28_LcdSpiFinishTransfer()
 {
     UiLcdHy28_SpiFinishTransfer();
-    GPIO_SetBits(lcd_cs_pio, lcd_cs);
+    GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
 uint8_t UiLcdHy28_SpiReadByte(void)
@@ -538,7 +635,7 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
     //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
     //	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
 
-    if(display_use_spi)
+    if(mchf_display.use_spi)
     {
         UiLcdHy28_SpiSendByteFast((data >>   8));      /* Write D8..D15                */
         UiLcdHy28_SpiSendByteFast((data & 0xFF));      /* Write D0..D7                 */
@@ -570,9 +667,9 @@ unsigned short UiLcdHy28_LcdReadDataSpi()
     return value;
 }
 
-void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
+void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
-    if(display_use_spi)
+    if(mchf_display.use_spi)
     {
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
         UiLcdHy28_WriteDataSpi(LCD_RegValue);
@@ -587,7 +684,7 @@ void UiLcdHy28_WriteReg( unsigned short LCD_Reg, unsigned short LCD_RegValue)
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
     uint16_t retval;
-    if(display_use_spi)
+    if(mchf_display.use_spi)
     {
         // Write 16-bit Index (then Read Reg)
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
@@ -613,7 +710,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 
 static void UiLcdHy28_WriteRAM_Prepare()
 {
-    if(display_use_spi)
+    if(mchf_display.use_spi)
     {
         UiLcdHy28_WriteIndexSpi(0x0022);
         UiLcdHy28_WriteDataSpiStart();
@@ -627,7 +724,7 @@ static void UiLcdHy28_WriteRAM_Prepare()
 static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
 
-    if (display_use_spi == 0) {
+    if (mchf_display.use_spi == 0) {
         uint32_t i = len;
         for (; i; i--)
         {
@@ -656,7 +753,7 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 
 static void UiLcdHy28_FinishWaitBulkWrite()
 {
-    if(display_use_spi)         // SPI enabled?
+    if(mchf_display.use_spi)         // SPI enabled?
     {
 #ifdef USE_SPI_DMA
         UiLcdHy28_SpiDmaStop();
@@ -685,23 +782,6 @@ static void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort hei
 
 static void UiLcdHy28_CloseBulkWrite(void)
 {
-
-#if 0
-    if(display_use_spi)         // SPI enabled?
-    {
-#ifdef USE_SPI_DMA
-        UiLcdHy28_SpiDmaStop();
-#endif
-        UiLcdHy28_LcdSpiFinishTransfer();
-    }
-#endif
-#if 0
-    UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-    UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-    UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-    UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-    UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and switch increment mode
-#endif
 }
 
 
@@ -744,7 +824,7 @@ inline void UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len)
     // since as for now, it will not benefit from it.
     // this can be changed if someone write DMA code for the parallel
     // interface (memory to memory DMA)
-    if(display_use_spi)         // SPI enabled?
+    if(mchf_display.use_spi)         // SPI enabled?
     {
         for (uint32_t idx = 0; idx < len; idx++)
         {
@@ -774,7 +854,7 @@ void UiLcdHy28_LcdClear(ushort Color)
 {
     UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
 #ifdef USE_SPI_DMA
-    if (display_use_spi > 0) {
+    if (mchf_display.use_spi > 0) {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -890,7 +970,7 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 {
 
 #ifdef USE_SPI_DMA
-    if (display_use_spi > 0) {
+    if (mchf_display.use_spi > 0) {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -1063,283 +1143,67 @@ void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uin
     }
 }
 
+void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t count)
+{
+    for (uint16_t idx = 0; idx < count; idx++)
+    {
+        if (regvals[idx].reg == 0)
+        {
+            HAL_Delay(regvals[idx].val);
+        }
+        else
+        {
+            UiLcdHy28_WriteReg(regvals[idx].reg, regvals[idx].val);
+        }
+    }
+}
 
-uchar UiLcdHy28_InitA(void)
+uint16_t UiLcdHy28_InitA(void)
 {
 
-    // Read LCD ID
-    ts.DeviceCode = UiLcdHy28_ReadReg(0x00);
+    uint16_t retval = UiLcdHy28_ReadReg(0x00);
 
-    if(ts.DeviceCode == 0x0000 || ts.DeviceCode == 0xffff)
-        return 1;
-
-    // HY28A - SPI interface only (ILI9320 controller)
-    if(ts.DeviceCode == 0x9320)
+    if(retval == 0x9320)
     {
-        // Start Initial Sequence
-        UiLcdHy28_WriteReg(0xE5,0x8000);   // Set the internal vcore voltage
-        UiLcdHy28_WriteReg(0x00,  0x0001);    // Start internal OSC.
-
-        // Direction related
-        UiLcdHy28_WriteReg(0x01,  0x0100);    // set SS and SM bit
-
-        UiLcdHy28_WriteReg(0x02,  0x0700);    // set 1 line inversion
-        UiLcdHy28_WriteReg(0x03,  0x1038);    // set GRAM write direction and BGR=1 and ORG = 1.
-        UiLcdHy28_WriteReg(0x04,  0x0000);    // Resize register
-        UiLcdHy28_WriteReg(0x08,  0x0202);    // set the back porch and front porch
-        UiLcdHy28_WriteReg(0x09,  0x0000);    // set non-display area refresh cycle ISC[3:0]
-        UiLcdHy28_WriteReg(0x0A, 0x0000);    // FMARK function
-        UiLcdHy28_WriteReg(0x0C, 0x0000);    // RGB interface setting
-        UiLcdHy28_WriteReg(0x0D, 0x0000);    // Frame marker Position
-        UiLcdHy28_WriteReg(0x0F, 0x0000);    // RGB interface polarity
-
-        // Power On sequence
-        UiLcdHy28_WriteReg(0x10, 0x0000);    // SAP, BT[3:0], AP, DSTB, SLP, STB
-        UiLcdHy28_WriteReg(0x11, 0x0000);    // DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_WriteReg(0x12, 0x0000);    // VREG1OUT voltage
-        UiLcdHy28_WriteReg(0x13, 0x0000);    // VDV[4:0] for VCOM amplitude
-        UiLcdHy28_Delay(300000);            // Dis-charge capacitor power voltage (300ms)
-        UiLcdHy28_WriteReg(0x10, 0x17B0);    // SAP, BT[3:0], AP, DSTB, SLP, STB
-        UiLcdHy28_WriteReg(0x11, 0x0137);    // DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_Delay(100000);             // Delay 100 ms
-        UiLcdHy28_WriteReg(0x12, 0x0139);    // VREG1OUT voltage
-        UiLcdHy28_Delay(100000);             // Delay 100 ms
-        UiLcdHy28_WriteReg(0x13, 0x1d00);    // VDV[4:0] for VCOM amplitude
-        UiLcdHy28_WriteReg(0x29, 0x0013);    // VCM[4:0] for VCOMH
-        UiLcdHy28_Delay(100000);             // Delay 100 ms
-        UiLcdHy28_WriteReg(0x20, 0x0000);    // GRAM horizontal Address
-        UiLcdHy28_WriteReg(0x21, 0x0000);    // GRAM Vertical Address
-
-        // Adjust the Gamma Curve
-        UiLcdHy28_WriteReg(0x30, 0x0007);
-        UiLcdHy28_WriteReg(0x31, 0x0007);
-        UiLcdHy28_WriteReg(0x32, 0x0007);
-        UiLcdHy28_WriteReg(0x35, 0x0007);
-        UiLcdHy28_WriteReg(0x36, 0x0007);
-        UiLcdHy28_WriteReg(0x37, 0x0700);
-        UiLcdHy28_WriteReg(0x38, 0x0700);
-        UiLcdHy28_WriteReg(0x39, 0x0700);
-        UiLcdHy28_WriteReg(0x3C, 0x0700);
-        UiLcdHy28_WriteReg(0x3D, 0x1F00);
-
-        // Set GRAM area
-        UiLcdHy28_WriteReg(0x50, 0x0000);    // Horizontal GRAM Start Address
-        UiLcdHy28_WriteReg(0x51, 0x00EF);    // Horizontal GRAM End Address
-        UiLcdHy28_WriteReg(0x52, 0x0000);    // Vertical GRAM Start Address
-        UiLcdHy28_WriteReg(0x53, 0x013F);    // Vertical GRAM End Address
-
-        // Direction related
-        UiLcdHy28_WriteReg(0x60,  0xA700);    // Gate Scan Line
-        UiLcdHy28_WriteReg(0x61,  0x0001);    // NDL,VLE, REV
-
-        UiLcdHy28_WriteReg(0x6A, 0x0000);    // set scrolling line
-
-        // Partial Display Control
-        UiLcdHy28_WriteReg(0x80, 0x0000);
-        UiLcdHy28_WriteReg(0x81, 0x0000);
-        UiLcdHy28_WriteReg(0x82, 0x0000);
-        UiLcdHy28_WriteReg(0x83, 0x0000);
-        UiLcdHy28_WriteReg(0x84, 0x0000);
-        UiLcdHy28_WriteReg(0x85, 0x0000);
-
-        // Panel Control
-        UiLcdHy28_WriteReg(0x90, 0x0010);
-        UiLcdHy28_WriteReg(0x92, 0x0000);
-        UiLcdHy28_WriteReg(0x93, 0x0003);
-        UiLcdHy28_WriteReg(0x95, 0x0110);
-        UiLcdHy28_WriteReg(0x97, 0x0000);
-        UiLcdHy28_WriteReg(0x98, 0x0000);
-
-        // Set GRAM write direction
-        UiLcdHy28_WriteReg(0x03, 0x1038);
-
-        // 262K color and display ON
-        UiLcdHy28_WriteReg(0x07, 0x0173);
-
-        // delay 50 ms
-        UiLcdHy28_Delay(50000);
+        // HY28A - SPI interface only (ILI9320 controller)
+        UiLcdHy28_SendRegisters(ili9320, sizeof(ili9320)/sizeof(RegisterValue_t));
     }
-
-    // HY28A - Parallel interface only (SPFD5408B controller)
-    if(ts.DeviceCode == 0x5408)
+    else if(retval == 0x5408)
     {
-        UiLcdHy28_WriteReg(0x01,0x0000);   // (SS bit 8) - 0x0100 will flip 180 degree
-        UiLcdHy28_WriteReg(0x02,0x0700);   // LCD Driving Waveform Contral
-        UiLcdHy28_WriteReg(0x03,0x1038);   // Entry Mode (AM bit 3)
-
-        UiLcdHy28_WriteReg(0x04,0x0000);   // Scaling Control register
-        UiLcdHy28_WriteReg(0x08,0x0207);   // Display Control 2
-        UiLcdHy28_WriteReg(0x09,0x0000);   // Display Control 3
-        UiLcdHy28_WriteReg(0x0A,0x0000);   // Frame Cycle Control
-        UiLcdHy28_WriteReg(0x0C,0x0000);   // External Display Interface Control 1
-        UiLcdHy28_WriteReg(0x0D,0x0000);    // Frame Maker Position
-        UiLcdHy28_WriteReg(0x0F,0x0000);   // External Display Interface Control 2
-        UiLcdHy28_Delay(50000);
-        UiLcdHy28_WriteReg(0x07,0x0101);   // Display Control
-        UiLcdHy28_Delay(50000);
-        UiLcdHy28_WriteReg(0x10,0x16B0);    // Power Control 1
-        UiLcdHy28_WriteReg(0x11,0x0001);    // Power Control 2
-        UiLcdHy28_WriteReg(0x17,0x0001);    // Power Control 3
-        UiLcdHy28_WriteReg(0x12,0x0138);    // Power Control 4
-        UiLcdHy28_WriteReg(0x13,0x0800);    // Power Control 5
-        UiLcdHy28_WriteReg(0x29,0x0009);   // NVM read data 2
-        UiLcdHy28_WriteReg(0x2a,0x0009);   // NVM read data 3
-        UiLcdHy28_WriteReg(0xa4,0x0000);
-        UiLcdHy28_WriteReg(0x50,0x0000);
-        UiLcdHy28_WriteReg(0x51,0x00EF);
-        UiLcdHy28_WriteReg(0x52,0x0000);
-        UiLcdHy28_WriteReg(0x53,0x013F);
-
-        UiLcdHy28_WriteReg(0x60,0x2700);   // Driver Output Control (GS bit 15)
-
-        UiLcdHy28_WriteReg(0x61,0x0003);   // Driver Output Control
-        UiLcdHy28_WriteReg(0x6A,0x0000);   // Vertical Scroll Control
-
-        UiLcdHy28_WriteReg(0x80,0x0000);   // Display Position ?C Partial Display 1
-        UiLcdHy28_WriteReg(0x81,0x0000);   // RAM Address Start ?C Partial Display 1
-        UiLcdHy28_WriteReg(0x82,0x0000);   // RAM address End - Partial Display 1
-        UiLcdHy28_WriteReg(0x83,0x0000);   // Display Position ?C Partial Display 2
-        UiLcdHy28_WriteReg(0x84,0x0000);   // RAM Address Start ?C Partial Display 2
-        UiLcdHy28_WriteReg(0x85,0x0000);   // RAM address End ?C Partail Display2
-        UiLcdHy28_WriteReg(0x90,0x0013);   // Frame Cycle Control
-        UiLcdHy28_WriteReg(0x92,0x0000);    // Panel Interface Control 2
-        UiLcdHy28_WriteReg(0x93,0x0003);   // Panel Interface control 3
-        UiLcdHy28_WriteReg(0x95,0x0110);   // Frame Cycle Control
-        UiLcdHy28_WriteReg(0x07,0x0173);
+        // HY28A - Parallel interface only (SPFD5408B controller)
+        UiLcdHy28_SendRegisters(spdfd5408b, sizeof(spdfd5408b)/sizeof(RegisterValue_t));
     }
-
-    // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
-    if((ts.DeviceCode == 0x9325) || (ts.DeviceCode == 0x9328))
+    else if((retval == 0x9325) || (retval == 0x9328))
     {
-        // NPI: UiLcdHy28_WriteReg(0xE5, 0x78F0); 	// set SRAM internal timing I guess this is the relevant line for getting LCDs to work which are "out-of-specs"...
-        UiLcdHy28_WriteReg(0x01,0x0000);	// set SS and SM bit
-        UiLcdHy28_WriteReg(0x02,0x0700);	// set 1 line inversion
-        UiLcdHy28_WriteReg(0x03,0x1038);    // set GRAM write direction and BGR=1 and ORG = 1
-        UiLcdHy28_WriteReg(0x04,0x0000);	// resize register
-        UiLcdHy28_WriteReg(0x08,0x0207);	// set the back porch and front porch
-        UiLcdHy28_WriteReg(0x09,0x0000);	// set non-display area refresh cycle
-        UiLcdHy28_WriteReg(0x0a,0x0000);	// FMARK function
-        UiLcdHy28_WriteReg(0x0c,0x0001);	// RGB interface setting
-        // NPI: UiLcdHy28_WriteReg(0x0c,0x0000);    // RGB interface setting
-        UiLcdHy28_WriteReg(0x0d,0x0000);	// frame marker position
-        UiLcdHy28_WriteReg(0x0f,0x0000);	// RGB interface polarity
-
-        // Power On sequence
-        UiLcdHy28_WriteReg(0x10,0x0000);	// SAP, BT[3:0], AP, DSTB, SLP, STB
-        UiLcdHy28_WriteReg(0x11,0x0007);	// DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_WriteReg(0x12,0x0000);	// VREG1OUT voltage
-        UiLcdHy28_WriteReg(0x13,0x0000);	// VDV[4:0] for VCOM amplitude
-        // NPI: UiLcdHy28_WriteReg(0x0c,0x0001);    // RGB interface setting
-        UiLcdHy28_Delay(200000);			// delay 200 ms
-        UiLcdHy28_WriteReg(0x10,0x1590);	// SAP, BT[3:0], AP, DSTB, SLP, STB
-        // NPI: UiLcdHy28_WriteReg(0x10, 0x1090); // SAP, BT[3:0], AP, DSTB, SLP, STB
-        UiLcdHy28_WriteReg(0x11,0x0227);	// set DC1[2:0], DC0[2:0], VC[2:0]
-        UiLcdHy28_Delay(50000);				// delay 50 ms
-        UiLcdHy28_WriteReg(0x12,0x009c);	// internal reference voltage init
-        // NPI: UiLcdHy28_WriteReg(0x12, 0x001F);
-        UiLcdHy28_Delay(50000);				// delay 50 ms
-        UiLcdHy28_WriteReg(0x13,0x1900);	// set VDV[4:0] for VCOM amplitude
-        // NPI: UiLcdHy28_WriteReg(0x13, 0x1500);
-        UiLcdHy28_WriteReg(0x29,0x0023);	// VCM[5:0] for VCOMH
-        // NPI: UiLcdHy28_WriteReg(0x29,0x0027);    // VCM[5:0] for VCOMH
-        UiLcdHy28_WriteReg(0x2b,0x000d);	// set frame rate: changed from 0e to 0d on 03/28/2016
-        UiLcdHy28_Delay(50000);				// delay 50 ms
-        UiLcdHy28_WriteReg(0x20,0x0000);	// GRAM horizontal address
-        UiLcdHy28_WriteReg(0x21,0x0000);	// GRAM vertical address
-
-//        /* NPI:
-         // ----------- Adjust the Gamma Curve ----------
-        UiLcdHy28_WriteReg(0x30, 0x0000);
-        UiLcdHy28_WriteReg(0x31, 0x0707);
-        UiLcdHy28_WriteReg(0x32, 0x0307);
-        UiLcdHy28_WriteReg(0x35, 0x0200);
-        UiLcdHy28_WriteReg(0x36, 0x0008);
-        UiLcdHy28_WriteReg(0x37, 0x0004);
-        UiLcdHy28_WriteReg(0x38, 0x0000);
-        UiLcdHy28_WriteReg(0x39, 0x0707);
-        UiLcdHy28_WriteReg(0x3C, 0x0002);
-        UiLcdHy28_WriteReg(0x3D, 0x1D04);
-//        */
-
-        UiLcdHy28_WriteReg(0x50,0x0000);	// horizontal GRAM start address
-        UiLcdHy28_WriteReg(0x51,0x00ef);	// horizontal GRAM end address
-        UiLcdHy28_WriteReg(0x52,0x0000);	// vertical GRAM start address
-        UiLcdHy28_WriteReg(0x53,0x013f);	// vertical GRAM end address
-        UiLcdHy28_WriteReg(0x60,0xa700);	// gate scan line
-        UiLcdHy28_WriteReg(0x61,0x0001);	// NDL, VLE, REV
-        UiLcdHy28_WriteReg(0x6a,0x0000);	// set scrolling line
-        // partial display control
-        UiLcdHy28_WriteReg(0x80,0x0000);
-        UiLcdHy28_WriteReg(0x81,0x0000);
-        UiLcdHy28_WriteReg(0x82,0x0000);
-        UiLcdHy28_WriteReg(0x83,0x0000);
-        UiLcdHy28_WriteReg(0x84,0x0000);
-        UiLcdHy28_WriteReg(0x85,0x0000);
-        // panel control
-        UiLcdHy28_WriteReg(0x90,0x0010);
-        UiLcdHy28_WriteReg(0x92,0x0000);
-        // NPI: UiLcdHy28_WriteReg(0x92, 0x0600);
-        // activate display using 262k colours
-        UiLcdHy28_WriteReg(0x07,0x0133);
+        // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
+        UiLcdHy28_SendRegisters(ili932x, sizeof(ili932x)/sizeof(RegisterValue_t));
 	}
+    else
+    {
+        retval = 0x0000;
+    }
 
-    return 0;
+    return retval;
 }
-
-#if 0
-static void UiLcdHy28_Test(void)
-{
-    // Backlight on - only when all is drawn
-    //LCD_BACKLIGHT_PIO->BSRRL = LCD_BACKLIGHT;
-
-    // Clear all
-    //UiLcdHy28_LcdClear(Black);
-
-    // Vertical line
-    //UiLcdHy28_DrawStraightLine(20,20,200,LCD_DIR_VERTICAL,White);
-
-    // Horizontal line
-    //UiLcdHy28_DrawStraightLine(20,20,200,LCD_DIR_HORIZONTAL,White);
-
-    // Gradient line
-    //UiLcdHy28_DrawHorizLineWithGrad(20,20,200,0x80);
-
-    // Draw empty rectangular
-    //UiLcdHy28_DrawEmptyRect(40,40,100,100,White);
-
-    // Draw full rectangular
-    //UiLcdHy28_DrawFullRect(40,40,100,100,White);
-
-    // Draw button
-    //UiLcdHy28_DrawBottomButton(0,224,28,62,Grey);
-
-    // Print text
-    //UiLcdHy28_PrintText(0,  0,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,0);
-    //UiLcdHy28_PrintText(0, 30,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,1);
-    //UiLcdHy28_PrintText(0,130,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,2);
-    //UiLcdHy28_PrintText(0,170,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,3);
-    //UiLcdHy28_PrintText(0,210,"1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",White,Blue,4);
-}
-
-#endif
 
 
 /*
  * brief Identifies and initializes to HY28x display family
  *
+ * @param devicecode_ptr pointer to a variable to store the device code of the controller in
  * @returns 0 if no display detected, DISPLAY_HY28x_xxx otherwise, see header
  */
-uint8_t UiLcdHy28_Init(void)
+uint8_t UiLcdHy28_Init()
 {
     uint8_t retval = DISPLAY_HY28A_SPI;
     // Backlight
     UiLcdHy28_BacklightInit();
 
     // Select interface, spi HY28A first
-    display_use_spi = DISPLAY_HY28A_SPI;
+    mchf_display.use_spi = DISPLAY_HY28A_SPI;
 
-    lcd_cs = LCD_D11;
-    lcd_cs_pio = LCD_D11_PIO;
+    mchf_display.lcd_cs = LCD_D11;
+    mchf_display.lcd_cs_pio = LCD_D11_PIO;
 
     // Try SPI Init
     UiLcdHy28_SpiInit(false);
@@ -1349,16 +1213,17 @@ uint8_t UiLcdHy28_Init(void)
     UiLcdHy28_Reset();
 
     // LCD Init
-    if(UiLcdHy28_InitA() != 0)
+    mchf_display.DeviceCode = UiLcdHy28_InitA();
+    if(mchf_display.DeviceCode == 0x0000)
     {
         // no success, no SPI found
         retval = DISPLAY_HY28B_SPI;
 
         // Select interface, spi HY28B second
-        display_use_spi = DISPLAY_HY28B_SPI;
+        mchf_display.use_spi = DISPLAY_HY28B_SPI;
 
-        lcd_cs = LCD_CS;
-        lcd_cs_pio = LCD_CS_PIO;
+        mchf_display.lcd_cs = LCD_CS;
+        mchf_display.lcd_cs_pio = LCD_CS_PIO;
 
         // Try SPI Init
         UiLcdHy28_SpiInit(HY28BHISPEED);
@@ -1369,12 +1234,13 @@ uint8_t UiLcdHy28_Init(void)
 
         // LCD Init
     }
-    if(UiLcdHy28_InitA() != 0)
+    mchf_display.DeviceCode = UiLcdHy28_InitA();
+    if(mchf_display.DeviceCode == 0x0000)
     {
         // no success, no SPI found
         // SPI disable
         // Select parallel
-        display_use_spi = 0;
+        mchf_display.use_spi = 0;
 
         // Parallel init
         UiLcdHy28_ParallelInit();
@@ -1384,13 +1250,12 @@ uint8_t UiLcdHy28_Init(void)
         UiLcdHy28_Reset();
 
         // LCD Init
-        retval = UiLcdHy28_InitA() != 0?DISPLAY_NONE:DISPLAY_HY28B_PARALLEL;   // on error here
+        mchf_display.DeviceCode = UiLcdHy28_InitA();
+
+        retval =  mchf_display.DeviceCode != 0?DISPLAY_NONE:DISPLAY_HY28B_PARALLEL;   // on error here
     }
 
-    if (display_use_spi != 0)
-    {
-        UiLcdHy28_SpiDmaPrepare();
-    }
+    mchf_display.display_type = retval;
     return retval;
 }
 
@@ -1409,16 +1274,17 @@ static inline void UiLcdHy28_SetSpiPrescaler(const uint16_t baudrate_prescaler)
     SPI2->CR1 = tmpreg;
 }
 
+mchf_touchscreen_t mchf_touchscreen;
 
 void UiLcdHy28_TouchscreenDetectPress()
 {
-    if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && ts.tp_state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
-        UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
+    if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
+        UiLcdHy28_TouchscreenReadCoordinates();
 
-    if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && ts.tp_state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+    if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
     {
-        ts.tp_state = 0;
-        ts.tp_x = ts.tp_y = 0xff;
+        mchf_touchscreen.state = 0;
+        mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
     }
 }
 /*
@@ -1427,10 +1293,10 @@ void UiLcdHy28_TouchscreenDetectPress()
  */
 bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
     bool retval = false;
-    UiLcdHy28_TouchscreenReadCoordinates(!ts.tp_raw);
-    if(ts.tp_state > TP_DATASETS_WAIT && ts.tp_state != TP_DATASETS_PROCESSED)
+    UiLcdHy28_TouchscreenReadCoordinates();
+    if(mchf_touchscreen.state > TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
-        ts.tp_state = TP_DATASETS_NONE;     // tp data processed
+        mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
         retval = true;
     }
     return retval;
@@ -1467,7 +1333,7 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 #define XPT2046_CH_DFR_X    0x10
 #define XPT2046_CONV_START  0x80
 
-void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
+void UiLcdHy28_TouchscreenReadCoordinates()
 {
     uchar i,x,y;
 
@@ -1479,9 +1345,9 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
     TP_DATASETS_PROCESSED 0xff = data was already processed by calling function
      */
 
-    if(ts.tp_state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
+    if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
     {
-        if(ts.tp_state > TP_DATASETS_NONE && ts.tp_state < TP_DATASETS_VALID)	// first pass finished, get data
+        if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
         {
             UiLcdHy28_TouchscreenStartSpiTransfer();
             UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
@@ -1491,10 +1357,10 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
             UiLcdHy28_TouchscreenFinishSpiTransfer();
 
 
-            if(do_translate)						//do translation with correction table
+            if(mchf_touchscreen.raw == false)						//do translation with correction table
             {
 
-                if(!(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN))
+                if(mchf_touchscreen.reversed == false)
                 {
               	  for(i=0; touchscreentable[i] < x && i < 60; i++);
               	  x = 60-i;
@@ -1518,21 +1384,21 @@ void UiLcdHy28_TouchscreenReadCoordinates(bool do_translate)
                 for(i=0; touchscreentable[i] < y && i < 60; i++);
                 y = i--;
             }
-            if(x == ts.tp_x && y == ts.tp_y)		// got identical data
+            if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
-                ts.tp_state++;						// touch data valid
+                mchf_touchscreen.state++;						// touch data valid
             }
             else
             {
                 // set new data
-                ts.tp_x = x;
-                ts.tp_y = y;
-                ts.tp_state = TP_DATASETS_WAIT;		// restart machine
+                mchf_touchscreen.x = x;
+                mchf_touchscreen.y = y;
+                mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
             }
         }
         else
         {
-            ts.tp_state = TP_DATASETS_WAIT;			// do next first data read
+            mchf_touchscreen.state = TP_DATASETS_WAIT;			// do next first data read
         }
     }
 }
@@ -1543,41 +1409,33 @@ static void UiLcdHy28_TouchscreenReadData()
 
     UiLcdHy28_TouchscreenStartSpiTransfer();
     UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X);
-    ts.tp_x = UiLcdHy28_SpiReadByteFast();
+    mchf_touchscreen.x = UiLcdHy28_SpiReadByteFast();
     UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
-    ts.tp_y = UiLcdHy28_SpiReadByteFast();
+    mchf_touchscreen.y = UiLcdHy28_SpiReadByteFast();
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 }
 
-void UiLcdHy28_TouchscreenPresenceDetection(void)
+bool UiLcdHy28_TouchscreenPresenceDetection(void)
 {
+    bool retval = false;
     UiLcdHy28_TouchscreenReadData();
     UiLcdHy28_TouchscreenReadData();
-    if(ts.tp_x != 0xff && ts.tp_y != 0xff && ts.tp_x != 0 && ts.tp_y != 0)
+
+    mchf_touchscreen.state = TP_DATASETS_PROCESSED;
+
+    if(mchf_touchscreen.x != 0xff && mchf_touchscreen.y != 0xff && mchf_touchscreen.x != 0 && mchf_touchscreen.y != 0)
     {// touchscreen data valid?
-        ts.tp_present = 1;                      // yes - touchscreen present!
+        retval = true;                      // yes - touchscreen present!
     }
-
-    ts.tp_state = TP_DATASETS_PROCESSED;
+    return retval;
 }
 
-
-
-#pragma GCC optimize("O0")
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLcdHy28_Delay
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiLcdHy28_Delay(ulong delay)
+void UiLcdHy28_TouchscreenInit(bool is_reversed)
 {
-    ulong    i,k;
-
-    for ( k = 0 ; (k < delay ); k++ )
-        for ( i = 0 ; (i < US_DELAY ); i++ )
-        {
-            asm("");
-        }
+    mchf_touchscreen.raw = 0;                         // default translated coordinates
+    mchf_touchscreen.x = 0xFF;                        // invalid position
+    mchf_touchscreen.y = 0xFF;                        // invalid position
+    mchf_touchscreen.reversed = is_reversed;
+    mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
+

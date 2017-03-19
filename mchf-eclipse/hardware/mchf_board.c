@@ -651,7 +651,8 @@ void mchf_board_init(void)
     mchf_hw_i2c2_init();
 
     // LCD Init
-    ts.display_type = UiLcdHy28_Init();
+    // TODO: remove cast, once volatile is gone for DeviceCode
+    UiLcdHy28_Init();
     // we could now implement some error strategy if no display is present
     // i.e. 0 is returned
 
@@ -662,7 +663,7 @@ void mchf_board_init(void)
     // at this point we have to have called the display init and the rtc init
     // in order to know which one to use.
     // parallel display never has a STM32 based rtc, so we do not need to check for RTC
-    if ((ts.display_type == DISPLAY_HY28A_SPI || ts.display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
+    if ((ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
     {
         bm = &bm_sets[1][0];
     }
