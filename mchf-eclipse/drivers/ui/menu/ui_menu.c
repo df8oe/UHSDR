@@ -554,17 +554,25 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_BL_VERSION:
     {
         const uint8_t* begin = (uint8_t*)0x8000000;
-        outs = "no DF8OE BL";
+        outs = "Unknown BL";
 
         // We search for string "Version: " in bootloader memory
         for(int i=0; i < 32768-8; i++)
         {
-            if( begin[i] == 0x56 && begin[i+1] == 0x65 && begin[i+2] == 0x72
-                    && begin[i+3] == 0x73 && begin[i+4] == 0x69 && begin[i+5] == 0x6f
-                    && begin[i+6] == 0x6e && begin[i+7] == 0x3a && begin[i+8] == 0x20)
+            if( begin[i] == 'V' && begin[i+1] == 'e' && begin[i+2] == 'r'
+                    && begin[i+3] == 's' && begin[i+4] == 'i' && begin[i+5] == 'o'
+                    && begin[i+6] == 'n' && begin[i+7] == ':' && begin[i+8] == ' ')
             {
                 snprintf(out,32, "%s", &begin[i+9]);
                 outs = out;
+                break;
+            }
+            else if (begin[i] == 'M' && begin[i+1] == '0' && begin[i+2] == 'N'
+                    && begin[i+3] == 'K' && begin[i+4] == 'A' && begin[i+5] == ' '
+                    && begin[i+6] == '2' && begin[i+7] == '0')
+            {
+                outs = "M0NKA BL";
+                break;
             }
         }
     }

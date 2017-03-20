@@ -44,7 +44,7 @@ static const char*  bl_help[] =
         "mcHF Bootloader - DFU Update Mode",
         "Keep Power pressed until finish.",
         "Release Band+ to start DFU Mode.",
-        "Screen will go white. This is ok.",
+        "Screen may go white. This is ok.",
         "PC should recognize new USB device.",
 };
 
