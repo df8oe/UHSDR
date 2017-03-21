@@ -112,6 +112,8 @@ void BL_Idle_Application(void)
 int BL_MSC_Application(void)
 {
 
+    mcHF_PowerHoldOn(); // make sure we have uninterrupted power
+
     BL_PrintLine("USB Drive detected.");
     /* Register the file system object to the FatFs module */
     if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
