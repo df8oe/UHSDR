@@ -569,9 +569,16 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             }
             else if (begin[i] == 'M' && begin[i+1] == '0' && begin[i+2] == 'N'
                     && begin[i+3] == 'K' && begin[i+4] == 'A' && begin[i+5] == ' '
-                    && begin[i+6] == '2' && begin[i+7] == '0')
+                    && begin[i+6] == '2' && begin[i+11] == 0xb5)
             {
-                outs = "M0NKA BL";
+                outs = "M0NKA 0.0.0.9";
+                break;
+            }
+            else if (begin[i] == 'M' && begin[i+1] == '0' && begin[i+2] == 'N'
+                    && begin[i+3] == 'K' && begin[i+4] == 'A' && begin[i+5] == ' '
+                    && begin[i+6] == '2' && begin[i+11] == 0xd1)
+            {
+                outs = "M0NKA 0.0.0.14";
                 break;
             }
         }
