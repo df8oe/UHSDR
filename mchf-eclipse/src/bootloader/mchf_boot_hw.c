@@ -25,10 +25,49 @@ static const uint16_t BUTTON_PIN[BUTTONn] = {BANDM_BUTTON_PIN,POWER_BUTTON_PIN, 
 
 static const uint8_t BUTTON_IRQn[BUTTONn] = {BANDM_BUTTON_EXTI_IRQn,POWER_BUTTON_EXTI_IRQn,BANDP_BUTTON_EXTI_IRQn};
 
+void mchfBl_PortClock(uint32_t port)
+{
+
+    /* Enable the BUTTON Clock */
+    switch(port)
+    {
+    case (uint32_t)GPIOA:
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOB:
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOC:
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOD:
+        __HAL_RCC_GPIOD_CLK_ENABLE();
+        break;
+#if 0
+    case (uint32_t)GPIOE:
+        __HAL_RCC_GPIOE_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOF:
+        __HAL_RCC_GPIOF_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOG:
+        __HAL_RCC_GPIOG_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOH:
+        __HAL_RCC_GPIOH_CLK_ENABLE();
+        break;
+    case (uint32_t)GPIOI:
+        __HAL_RCC_GPIOI_CLK_ENABLE();
+        break;
+#endif
+    }
+}
+
 void mchfBl_LEDInit(Led_TypeDef Led)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
+    mchfBl_PortClock((uint32_t)GPIO_PORT[Led]);
     /* Enable the GPIO_LED Clock */
 
     /* Configure the GPIO_LED pin */
@@ -59,7 +98,7 @@ void mchfBl_ButtonInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Enable the BUTTON Clock */
+    mchfBl_PortClock((uint32_t)BUTTON_PORT[Button]);
 
     /* Configure Button pin as input */
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;

@@ -110,13 +110,11 @@ int main(void)
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
 
 #ifdef BOOTLOADER_BUILD
-  MX_DMA_Init();
-  MX_SPI2_Init();
   bootloader_main();
 #else
+  MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
