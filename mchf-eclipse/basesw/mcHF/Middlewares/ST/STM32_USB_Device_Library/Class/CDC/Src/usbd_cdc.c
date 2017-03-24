@@ -634,7 +634,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     else
     {
       ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(req->bRequest,
-                                                        (uint8_t*)req,
+                                                        (uint8_t*)&req->wValue,
                                                         0);
     }
     break;
