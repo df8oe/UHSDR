@@ -36,3 +36,4 @@ basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
 drivers/usb/device/class/composite \
+
