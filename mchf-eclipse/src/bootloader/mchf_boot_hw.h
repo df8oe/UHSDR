@@ -28,37 +28,33 @@ typedef enum
     BUTTON_MODE_EXTI = 1
 } ButtonMode_TypeDef;
 
-#define LEDn                             4
+#define LEDn                            4
 
-#define LEDGREEN_PIN                     GPIO_PIN_9
-#define LEDGREEN_GPIO_PORT               GPIOB
+#define LEDGREEN_PIN                    GPIO_PIN_9
+#define LEDGREEN_GPIO_PORT              GPIOB
 
-#define LEDRED_PIN                       GPIO_PIN_12
-#define LEDRED_GPIO_PORT                 GPIOB
-#define LEDRED_GPIO_CLK                  RCC_AHB1Periph_GPIOB
+#define LEDRED_PIN                      GPIO_PIN_12
+#define LEDRED_GPIO_PORT                GPIOB
 
-#define POWER_ON_PIN                           GPIO_PIN_8
-#define POWER_ON_GPIO_PORT                     GPIOC
+#define POWER_ON_PIN                    GPIO_PIN_8
+#define POWER_ON_GPIO_PORT              GPIOC
 
-#define BACKLIGHT_ON_PIN                         GPIO_PIN_2
-#define BACKLIGHT_ON_GPIO_PORT                   GPIOD
+#define BACKLIGHT_ON_PIN                GPIO_PIN_2
+#define BACKLIGHT_ON_GPIO_PORT          GPIOD
 
-#define BUTTONn                          3
+#define BUTTONn                         3
 
 #define BANDM_BUTTON_PIN                GPIO_PIN_0
 #define BANDM_BUTTON_GPIO_PORT          GPIOB
-#define BANDM_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
 #define BANDM_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
 #define BANDP_BUTTON_PIN                GPIO_PIN_2
 #define BANDP_BUTTON_GPIO_PORT          GPIOB
-#define BANDP_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOB
 #define BANDP_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
 
 #define POWER_BUTTON_PIN                GPIO_PIN_13
 #define POWER_BUTTON_GPIO_PORT          GPIOC
-#define POWER_BUTTON_GPIO_CLK           RCC_AHB1Periph_GPIOC
 #define POWER_BUTTON_EXTI_LINE          EXTI_Line0
 #define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn
 

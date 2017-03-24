@@ -20,6 +20,11 @@
 #include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
 
+#include "dma.h"
+#include "spi.h"
+#include "gpio.h"
+
+
 
 #include <unistd.h>
 
@@ -50,6 +55,10 @@ static const char*  bl_help[] =
 
 static void BL_DisplayInit()
 {
+    MX_DMA_Init();
+    MX_SPI2_Init();
+    MX_GPIO_Init();
+
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_InitStructure.Mode     = GPIO_MODE_INPUT;
@@ -94,6 +103,7 @@ void BL_InfoScreenDFU()
 
 void BL_Idle_Application(void)
 {
+    static bool power_was_up = false;
     static uint32_t tick;
     uint32_t now = HAL_GetTick();
 
@@ -102,9 +112,15 @@ void BL_Idle_Application(void)
         mchfBl_PinToggle(LEDGREEN);
         tick = now + 1024;
     }
-    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
+    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0 && power_was_up == true)
     {
+        // we only switch off, if power button was at least once seen as being released and pressed in the idle loop
         mcHF_PowerHoldOff();
+    }
+    else
+    {
+        // okay, power button is not pressed currently
+        power_was_up = true;
     }
 
 }
