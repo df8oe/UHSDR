@@ -1252,7 +1252,7 @@ uint8_t UiLcdHy28_Init()
         // LCD Init
         mchf_display.DeviceCode = UiLcdHy28_InitA();
 
-        retval =  mchf_display.DeviceCode != 0?DISPLAY_NONE:DISPLAY_HY28B_PARALLEL;   // on error here
+        retval =  mchf_display.DeviceCode != 0?DISPLAY_HY28B_PARALLEL:DISPLAY_NONE;   // on error here
     }
 
     mchf_display.display_type = retval;
