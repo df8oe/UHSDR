@@ -173,7 +173,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_BEEP_VOLUME, NULL, "Beep Volume", UiMenuDesc("Set beep volume.") },
 
     // USB CAT Related
-    { MENU_CONF, MENU_ITEM, CONFIG_CAT_ENABLE, NULL, "CAT Mode", UiMenuDesc("Enabled the FT 817 emulation via USB. See Wiki for more information.") },
+    //{ MENU_CONF, MENU_ITEM, CONFIG_CAT_ENABLE, NULL, "CAT Mode", UiMenuDesc("Enabled the FT 817 emulation via USB. See Wiki for more information.") },
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX, NULL, "CAT Running In Sandbox", UiMenuDesc("If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies.") },
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_XLAT, NULL, "CAT-DIQ-FREQ-XLAT", UiMenuDesc("Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If ON, it reports the displayed frequency. If OFF, it reports the center frequency, which is more useful with SDR programs.") },
 

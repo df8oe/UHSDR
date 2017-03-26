@@ -872,12 +872,16 @@ void UiDriver_Init()
     UiDriver_InitFrequency();
 
     // Load stored data from eeprom or calibrate touchscreen
-    if (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false)
+    bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
+
+    // now run all inits which need to be done BEFORE going into test screen mode
+    UiLcdHy28_TouchscreenInit(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN);
+
+    if (run_keytest)
     {
         UiDriver_KeyTestScreen();
     }
 
-    UiLcdHy28_TouchscreenInit(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN);
 
     Si570_SetPPM((float)ts.freq_cal/10.0);
 
