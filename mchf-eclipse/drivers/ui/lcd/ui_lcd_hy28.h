@@ -131,8 +131,8 @@ typedef struct
     uint8_t raw;
     uint8_t x;
     uint8_t y;
-    uint8_t present;
-    uint8_t reversed;
+    bool present;
+    bool reversed;
 } mchf_touchscreen_t;
 
 
