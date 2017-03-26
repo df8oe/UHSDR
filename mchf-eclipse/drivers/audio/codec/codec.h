@@ -68,7 +68,7 @@ void     Codec_VolumeSpkr(uint8_t vol);
 void 	 Codec_LineInGainAdj(uint8_t gain);
 void 	 Codec_MuteDAC(bool state);
 
-void     Codec_Reset(uint32_t AudioFreq,uint32_t word_size);
+uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size);
 void     Codec_RestartI2S();
 void     Codec_TxSidetoneSetgain(uint8_t mode);
 void     Codec_SwitchMicTxRxMode(uint8_t mode);

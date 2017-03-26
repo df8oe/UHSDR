@@ -57,7 +57,8 @@ enum MENU_INFO_ITEM
     INFO_BUILD,
     INFO_RTC,
     INFO_VBAT,
-    INFO_LICENCE
+    INFO_LICENCE,
+    INFO_CODEC,
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);

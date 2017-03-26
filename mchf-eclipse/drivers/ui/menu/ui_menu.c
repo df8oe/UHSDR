@@ -604,6 +604,11 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         snprintf(out,32, "%s", ts.vbat_present?"Yes":"N/A");
     }
     break;
+    case INFO_CODEC:
+    {
+        snprintf(out,32, "%s", ts.codec_present?"Yes":"N/A");
+    }
+    break;
     case INFO_LICENCE:
     {
         snprintf(out,32, "%s", TRX4M_LICENCE);
