@@ -2144,12 +2144,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             if (temp_var_u8)
             {
                 ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN;
-                ts.tp->reversed = 1;
+                ts.tp->reversed = true;
             }
             else
             {
                 ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN;
-                ts.tp->reversed = 0;
+                ts.tp->reversed = false;
             }
         }
         break;

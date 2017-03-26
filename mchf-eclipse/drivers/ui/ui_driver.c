@@ -875,7 +875,7 @@ void UiDriver_Init()
     bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
 
     // now run all inits which need to be done BEFORE going into test screen mode
-    UiLcdHy28_TouchscreenInit(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN);
+    UiLcdHy28_TouchscreenInit(ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN?true:false);
 
     if (run_keytest)
     {
