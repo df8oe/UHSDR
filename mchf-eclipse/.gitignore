@@ -13,6 +13,7 @@ bootloader.hex
 mchf.bin
 mchf.elf
 mchf.map
+mchf.dfu
 language.settings.xml
 /DebugSemihosting/
 /DebugLib/
