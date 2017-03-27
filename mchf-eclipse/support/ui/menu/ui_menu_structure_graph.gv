@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-03-26T17:48:01  by "./ui_menu_structure_graph.py"
+#  generated at  2017-03-27T07:59:44  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v2.2.1 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v2.2.2 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.2.1 - Menus Overview\ngenerated at  2017-03-26T17:48:01  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.2.2 - Menus Overview\ngenerated at  2017-03-27T07:59:44  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -947,6 +947,11 @@
              shape = record
              ];
         
+        "INFO_CODEC" [
+             label = "INFO_CODEC | Audio Codec Presence"
+             shape = record
+             ];
+        
         "INFO_VBAT" [
              label = "INFO_VBAT | Backup RAM Battery"
              shape = record
@@ -1328,6 +1333,8 @@
             MENU_SYSINFO -> INFO_RFMOD
             
             MENU_SYSINFO -> INFO_VHFUHFMOD
+            
+            MENU_SYSINFO -> INFO_CODEC
             
             MENU_SYSINFO -> INFO_VBAT
             

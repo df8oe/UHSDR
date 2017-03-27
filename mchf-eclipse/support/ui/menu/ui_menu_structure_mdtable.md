@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-03-26T17:48:04  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-03-27T07:59:47  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.2.1 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.2.2 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v2.2.1 - UI Menu Overview
+# mcHF FW v2.2.2 - UI Menu Overview
 
-generated at  2017-03-26T17:48:04  by "./ui_menu_structure_mdtable.py"
+generated at  2017-03-27T07:59:47  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -231,6 +231,7 @@ generated at  2017-03-26T17:48:04  by "./ui_menu_structure_mdtable.py"
 | **Bootloader**                (                            INFO_BL_VERSION) | bootloader version                             | 
 | **RF Bands Mod**              (                                 INFO_RFMOD) | RF bands expansion PCB present?                | 
 | **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | VHF/UHF bands expansion PCB present?           | 
+| **Audio Codec Presence**      (                                 INFO_CODEC) | Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec. | 
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
 | **FW licensed under **        (                               INFO_LICENCE) | Display license of firmware                    | 
