@@ -177,6 +177,12 @@ static SerialEEPROM_24CXX_Descriptor serialEeprom_desc;
 #define MEM_DEVICE_WRITE_ADDR 0xA0
 // serial eeprom functions by DF8OE
 
+static uint16_t SerialEEPROM_24Cxx_DeviceConnected()
+{
+    uint16_t retVal = HAL_I2C_IsDeviceReady(&hi2c2,MEM_DEVICE_WRITE_ADDR,100,100);
+    return retVal;
+}
+
 
 static void SerialEEPROM_24Cxx_AdjustAddrs(const uint8_t Mem_Type, uint8_t* devaddr_ptr, uint32_t* Addr_ptr)
 {
@@ -312,10 +318,10 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
     uint8_t ser_eeprom_type = EEPROM_SER_UNKNOWN;
 
     // serial EEPROM init
-    if(SerialEEPROM_24Cxx_Read(0,8) > 0xFF)  // Issue with Ser EEPROM, either not available or other problems
+    if(SerialEEPROM_24Cxx_DeviceConnected() != HAL_OK && SerialEEPROM_24Cxx_Detect() == false)  // Issue with Ser EEPROM, either not available or other problems
 	{
 		ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM available
-		mchf_hw_i2c2_reset();
+		// mchf_hw_i2c2_reset();
 	}
     else
     {
@@ -468,7 +474,7 @@ void  SerialEEPROM_Clear()
 
 bool SerialEEPROM_Exists()
 {
-    return SerialEEPROM_24Cxx_Read(0,8) != 0xFE00;
+    return SerialEEPROM_24Cxx_Read(0,8)  < 0x100;
 }
 
 
