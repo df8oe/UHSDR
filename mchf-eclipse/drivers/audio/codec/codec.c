@@ -102,64 +102,68 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
  * @param AudioFreq sample rate in Hertz
  * @param word_size should be set to WORD_SIZE_16, since we have not yet implemented any other word_size
  */
-void Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
+uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 {
+    uint32_t retval = HAL_OK;
+
+    retval = Codec_WriteRegister(W8731_RESET, 0);
     // Reset register
-    if(Codec_WriteRegister(W8731_RESET, 0) != 0)
-        return;
-
-    // Reg 00: Left Line In (0dB, mute off)
-    Codec_WriteRegister(W8731_LEFT_LINE_IN,0x001F);
-
-    // Reg 01: Right Line In (0dB, mute off)
-    Codec_WriteRegister(W8731_RIGHT_LINE_IN,0x001F);
-
-    // Reg 02: Left Headphone out (0dB)
-    //Codec_WriteRegister(0x02,0x0079);
-    // Reg 03: Right Headphone out (0dB)
-    //Codec_WriteRegister(0x03,0x0079);
-
-    Codec_VolumeSpkr(0); // mute speaker
-    Codec_VolumeLineOut(ts.txrx_mode); // configure lineout according to mode
-
-
-    // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
-    Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
-            W8731_ANLG_AU_PATH_CNTR_DACSEL |
-            W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
-            W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
-
-    // Reg 05: Digital Audio Path Control(all filters disabled)
-    // De-emphasis control, bx11x - 48kHz
-    //                      bx00x - off
-    // DAC soft mute		b1xxx - mute on
-    //						b0xxx - mute off
-    //
-    Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
-
-    // Reg 06: Power Down Control (Clk off, Osc off, Mic off))
-    Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);
-
-
-    // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
-    if(word_size == WORD_SIZE_16)
+    if( retval == HAL_OK)
     {
-        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_16B);
-    }
-    else
-    {
-        Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_32B);
-    }
+        // Reg 00: Left Line In (0dB, mute off)
+        Codec_WriteRegister(W8731_LEFT_LINE_IN,0x001F);
 
-    // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
-    // master clock: 12.5 Mhz
-    if(AudioFreq == I2S_AUDIOFREQ_48K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
-    if(AudioFreq == I2S_AUDIOFREQ_32K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
-    if(AudioFreq == I2S_AUDIOFREQ_8K ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
+        // Reg 01: Right Line In (0dB, mute off)
+        Codec_WriteRegister(W8731_RIGHT_LINE_IN,0x001F);
 
-    // Reg 09: Active Control
-    // and now we start the Codec Digital Interface
-    Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
+        // Reg 02: Left Headphone out (0dB)
+        //Codec_WriteRegister(0x02,0x0079);
+        // Reg 03: Right Headphone out (0dB)
+        //Codec_WriteRegister(0x03,0x0079);
+
+        Codec_VolumeSpkr(0); // mute speaker
+        Codec_VolumeLineOut(ts.txrx_mode); // configure lineout according to mode
+
+
+        // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
+        Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
+                W8731_ANLG_AU_PATH_CNTR_DACSEL |
+                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
+                W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
+
+        // Reg 05: Digital Audio Path Control(all filters disabled)
+        // De-emphasis control, bx11x - 48kHz
+        //                      bx00x - off
+        // DAC soft mute		b1xxx - mute on
+        //						b0xxx - mute off
+        //
+        Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
+
+        // Reg 06: Power Down Control (Clk off, Osc off, Mic off))
+        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);
+
+
+        // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
+        if(word_size == WORD_SIZE_16)
+        {
+            Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_16B);
+        }
+        else
+        {
+            Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_32B);
+        }
+
+        // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
+        // master clock: 12.5 Mhz
+        if(AudioFreq == I2S_AUDIOFREQ_48K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
+        if(AudioFreq == I2S_AUDIOFREQ_32K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
+        if(AudioFreq == I2S_AUDIOFREQ_8K ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
+
+        // Reg 09: Active Control
+        // and now we start the Codec Digital Interface
+        Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
+    }
+    return retval;
 }
 
 /**

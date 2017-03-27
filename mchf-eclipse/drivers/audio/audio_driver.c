@@ -576,7 +576,7 @@ void AudioDriver_Init(void)
     // Start DMA transfers
     MchfHw_Codec_StartDMA((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
-    Codec_Reset(ts.samp_rate,word_size);
+    ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
 #ifdef USE_SNAP
     // initialize FFT structure used for snap carrier
