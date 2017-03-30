@@ -17,6 +17,12 @@
 // some special switches
 //#define 	DEBUG_BUILD
 
+//#define alternate_NR
+
+#ifdef alternate_NR
+#define NR_FFT_SIZE 128
+#endif
+
 #define USE_FREEDV //uncomment to use freedv instead of SNAP function
 // #define DEBUG_FREEDV
 // hardware specific switches

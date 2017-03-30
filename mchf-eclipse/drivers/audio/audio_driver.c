@@ -3572,6 +3572,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     static int beep_idx = 0;
 
     float post_agc_gain_scaling;
+
+#ifdef alternate_NR
+    static int trans_count_in=0;
+    static int outbuff_count=0;
+    static int NR_fill_in_pt=0;
+    static FDV_IQ_Buffer* out_buffer = NULL;
+//#define NR_FFT_SIZE   128
+    #endif
+
+
     if (tx_audio_source == TX_AUDIO_DIGIQ)
     {
 
@@ -3769,11 +3779,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
+#ifndef alternate_NR
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
                         AudioDriver_NoiseReduction(blockSizeDecim);
                     }
-                }
+#endif
+                  }
 
                 // Apply audio  bandpass filter
                 if ((IIR_PreFilter.numStages > 0))   // yes, we want an audio IIR filter
@@ -3812,6 +3824,74 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     AudioDriver_NoiseReduction(blockSizeDecim);
                 }
                 //
+
+#ifdef alternate_NR
+                           // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer
+                           // the freedv_iq_buffer  consist of an array of 320 complex (2*float) samples
+                           // for NR reduction we use a maximum of 256 real samples
+                           // so we use the freedv_iq buffers in a way, that we use the first half of each array for the input
+                           // and the second half for the output
+                           // .real and .imag are loosing there meaning here as they represent consecutive real samples
+
+                           if (ads.decimation_rate == 4)   //  to make sure, that we are at 12Ksamples
+
+                           {
+                             for (int k = 0; k < blockSizeDecim; k=k+2) //transfer our noisy audio to our NR-input buffer
+                             {
+                                 fdv_iq_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.a_buffer[k];
+                                 fdv_iq_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.a_buffer[k+1];
+                                 //trans_count_in++;
+                                 trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
+                             }
+
+                             if (trans_count_in >= (NR_FFT_SIZE/2))  // buffer limited to 320!! as in FreeDV used
+                                                                 //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
+                             {
+                                 NR_in_buffer_add(&fdv_iq_buff[NR_fill_in_pt]); // save pointer to full buffer
+                                 trans_count_in=0;                              // set counter to 0
+                                 NR_fill_in_pt++;                               // increase pointer index
+                                 NR_fill_in_pt %= FDV_BUFFER_IQ_NUM;            // make sure, that index stays in range
+
+                                //at this point we have transfered one complete block of 128 (?) samples to one buffer
+                             }
+
+                             //**********************************************************************************
+                             //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
+                             //as soon as "fdv_audio_has_data" we can start harvesting the output
+                             //**********************************************************************************
+
+                             if (out_buffer == NULL && NR_out_has_data() > 1)
+                             {
+                                 NR_out_buffer_peek(&out_buffer);
+                             }
+
+                             if (out_buffer != NULL)  //NR-routine has finished it's job
+                             {
+                                 for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+                                 {
+                                     adb.a_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                                     adb.a_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                                     outbuff_count++;
+                                     //outbuff_count++;
+                                 }
+
+                                 if (outbuff_count >= (NR_FFT_SIZE/2)) // we reached the end of the buffer comming from NR
+                                 {
+                                     outbuff_count = 0;
+                                     NR_out_buffer_remove(&out_buffer);
+                                     out_buffer = NULL;
+                                     NR_out_buffer_peek(&out_buffer);
+                                 }
+                             }
+
+                           }
+
+#endif
+
+
+
+
+
                 // Calculate scaling based on decimation rate since this affects the audio gain
                 if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
                 {
