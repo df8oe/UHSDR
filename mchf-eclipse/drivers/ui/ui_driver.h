@@ -362,4 +362,27 @@ int8_t fdv_audio_has_data();
 int32_t fdv_audio_has_room();
 #endif
 
+#ifdef alternate_NR
+
+int NR_in_buffer_peek(FDV_IQ_Buffer** c_ptr);
+int NR_in_buffer_remove(FDV_IQ_Buffer** c_ptr);
+/* no room left in the buffer returns 0 */
+int NR_in_buffer_add(FDV_IQ_Buffer* c);
+void NR_in_buffer_reset();
+int8_t NR_in_has_data();
+int32_t NR_in_has_room();
+
+
+int NR_out_buffer_peek(FDV_IQ_Buffer** c_ptr);
+int NR_out_buffer_remove(FDV_IQ_Buffer** c_ptr);
+/* no room left in the buffer returns 0 */
+int NR_out_buffer_add(FDV_IQ_Buffer* c);
+void NR_out_buffer_reset();
+int8_t NR_out_has_data();
+int32_t NR_out_has_room();
+#endif
+
+
+
+
 #endif

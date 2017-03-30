@@ -6039,6 +6039,17 @@ void UiDriver_MainHandler()
     }
 #endif // USE_FREEDV
 
+#ifdef alternate_NR
+   if (ts.dsp_mode == DSP_SWITCH_NR)
+   {
+
+       alternateNR_handle();
+
+   }
+
+#endif
+
+
     if (ts.tx_stop_req == true  || ts.ptt_req == true)
     {
         RadioManagement_HandlePttOnOff();

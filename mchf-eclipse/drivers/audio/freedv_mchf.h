@@ -36,3 +36,10 @@ void fdv_clear_display();
 void fdv_print_SNR();
 
 #endif
+
+#ifdef alternate_NR
+
+void alternateNR_handle();
+
+
+#endif

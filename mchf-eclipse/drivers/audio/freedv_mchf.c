@@ -502,3 +502,224 @@ void  FreeDV_mcHF_init()
 
 
 
+#ifdef alternate_NR
+
+__IO int32_t NR_in_head = 0;
+__IO int32_t NR_in_tail = 0;
+__IO int32_t NR_out_head = 0;
+__IO int32_t NR_out_tail = 0;
+
+FDV_IQ_Buffer* NR_in_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
+
+FDV_IQ_Buffer* NR_out_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
+
+
+int NR_in_buffer_peek(FDV_IQ_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (NR_in_head != NR_in_tail)
+    {
+        FDV_IQ_Buffer* c = NR_in_buffers[NR_in_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+
+int NR_in_buffer_remove(FDV_IQ_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (NR_in_head != NR_in_tail)
+    {
+        FDV_IQ_Buffer* c = NR_in_buffers[NR_in_tail];
+        NR_in_tail = (NR_in_tail + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int NR_in_buffer_add(FDV_IQ_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (NR_in_head + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
+
+    if (next_head != NR_in_tail)
+    {
+        /* there is room */
+        NR_in_buffers[NR_in_head] = c;
+        NR_in_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void NR_in_buffer_reset()
+{
+    NR_in_tail = NR_in_head;
+}
+
+int8_t NR_in_has_data()
+{
+    int32_t len = NR_in_head - NR_in_tail;
+    return len < 0?len+FDV_BUFFER_IQ_FIFO_SIZE:len;
+}
+
+int32_t NR_in_has_room()
+{
+    // FIXME: Since we cannot completely fill the buffer
+    // we need to say full 1 element earlier
+    return FDV_BUFFER_IQ_FIFO_SIZE - 1 - NR_in_has_data();
+}
+
+
+//*********Out Buffer handling
+
+int NR_out_buffer_peek(FDV_IQ_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (NR_out_head != NR_out_tail)
+    {
+        FDV_IQ_Buffer* c = NR_out_buffers[NR_out_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+
+int NR_out_buffer_remove(FDV_IQ_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (NR_out_head != NR_out_tail)
+    {
+        FDV_IQ_Buffer* c = NR_out_buffers[NR_out_tail];
+        NR_out_tail = (NR_out_tail + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int NR_out_buffer_add(FDV_IQ_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (NR_out_head + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
+
+    if (next_head != NR_out_tail)
+    {
+        /* there is room */
+        NR_out_buffers[NR_out_head] = c;
+        NR_out_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void NR_out_buffer_reset()
+{
+    NR_out_tail = NR_out_head;
+}
+
+int8_t NR_out_has_data()
+{
+    int32_t len = NR_out_head - NR_out_tail;
+    return len < 0?len+FDV_BUFFER_IQ_FIFO_SIZE:len;
+}
+
+int32_t NR_out_has_room()
+{
+    // FIXME: Since we cannot completely fill the buffer
+    // we need to say full 1 element earlier
+    return FDV_BUFFER_IQ_FIFO_SIZE - 1 - NR_out_has_data();
+}
+
+
+
+void alternateNR_handle()
+{
+        static uint16_t NR_current_buffer_idx = 0;
+        static bool NR_was_here = false;
+        static uint16_t sawcount = 0; // just to generate some sawtooth noise
+
+        if (NR_was_here == false)
+        {
+            NR_was_here = true;
+            NR_current_buffer_idx = 0;
+            NR_in_buffer_reset();
+            NR_out_buffer_reset();
+        }
+        if ( NR_in_has_data() && NR_out_has_room())
+        {   // audio data is ready to be processed
+
+                NR_current_buffer_idx %= FDV_BUFFER_IQ_NUM;
+
+                FDV_IQ_Buffer* input_buf = NULL;
+                NR_in_buffer_remove(&input_buf); //&input_buffer points to the current valid audio data
+
+      //***********************************************************************************
+
+
+      // inside here do all the necessary noise reduction stuff!!!!!
+
+
+      // here are the current input samples:  input_buf->samples
+
+
+      // NR_output samples have to be placed here: fdv_iq_buff[NR_current_buffer_idx].samples
+      // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
+
+
+      // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
+
+
+      //***********************************************************************************
+      // here I'm just copying the input samples back without doing anything
+
+           /*     for (int k=0; k < NR_FFT_SIZE/2;  k++)  //copying complex samples (actually 2 reals)
+                {
+                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].real = input_buf->samples[k].real;
+                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].imag = input_buf->samples[k].imag;
+
+
+                }
+            */
+
+      //end of copy routine
+
+      // or here I'm adding some sawtooth noise
+
+                for (int k=0; k < NR_FFT_SIZE/2;  k++)  //copying complex samples (actually 2 reals)
+                                {
+                                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].real = input_buf->samples[k].real+100*sawcount;
+                                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].imag = input_buf->samples[k].imag+100*sawcount;
+
+                                    sawcount++;
+                                    if (sawcount > 15) sawcount=0;
+                                }
+     // end of sawtooth noise                           }
+
+
+
+
+
+                NR_out_buffer_add(&fdv_iq_buff[NR_current_buffer_idx]);
+
+                NR_current_buffer_idx++;
+
+        }
+
+}
+
+
+
+
+
+#endif
