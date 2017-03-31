@@ -647,7 +647,6 @@ void alternateNR_handle()
 {
         static uint16_t NR_current_buffer_idx = 0;
         static bool NR_was_here = false;
-        static uint16_t sawcount = 0; // just to generate some sawtooth noise
 
         if (NR_was_here == false)
         {
@@ -656,6 +655,7 @@ void alternateNR_handle()
             NR_in_buffer_reset();
             NR_out_buffer_reset();
         }
+
         if ( NR_in_has_data() && NR_out_has_room())
         {   // audio data is ready to be processed
 
@@ -664,60 +664,42 @@ void alternateNR_handle()
                 FDV_IQ_Buffer* input_buf = NULL;
                 NR_in_buffer_remove(&input_buf); //&input_buffer points to the current valid audio data
 
-      //***********************************************************************************
-
-
       // inside here do all the necessary noise reduction stuff!!!!!
-
-
       // here are the current input samples:  input_buf->samples
-
-
       // NR_output samples have to be placed here: fdv_iq_buff[NR_current_buffer_idx].samples
       // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
-
-
       // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
 
 
-      //***********************************************************************************
-      // here I'm just copying the input samples back without doing anything
-
-           /*     for (int k=0; k < NR_FFT_SIZE/2;  k++)  //copying complex samples (actually 2 reals)
-                {
-                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].real = input_buf->samples[k].real;
-                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].imag = input_buf->samples[k].imag;
-
-
-                }
-            */
-
-      //end of copy routine
-
-      // or here I'm adding some sawtooth noise
-
-                for (int k=0; k < NR_FFT_SIZE/2;  k++)  //copying complex samples (actually 2 reals)
-                                {
-                                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].real = input_buf->samples[k].real+100*sawcount;
-                                    fdv_iq_buff[NR_current_buffer_idx].samples[k + NR_FFT_SIZE].imag = input_buf->samples[k].imag+100*sawcount;
-
-                                    sawcount++;
-                                    if (sawcount > 15) sawcount=0;
-                                }
-     // end of sawtooth noise                           }
-
-
-
-
+                do_alternate_NR(&input_buf->samples[0].real,&fdv_iq_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
 
                 NR_out_buffer_add(&fdv_iq_buff[NR_current_buffer_idx]);
-
                 NR_current_buffer_idx++;
 
         }
 
 }
 
+
+
+
+void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
+{
+    static uint16_t sawcount = 0; // just to generate some overlaying sawtooth noise
+
+    // inside here do all the necessary noise reduction stuff!!!!!
+
+    for (int k=0; k < NR_FFT_SIZE;  k++)
+                                    {
+                                        outputsamples[k] = inputsamples[k] + 100 * sawcount;// overlay sawtooth
+                                        //outputsamples[k] = inputsamples[k];  just copy back
+
+                                        sawcount++;
+                                        if (sawcount > 15) sawcount=0;
+                                    }
+
+
+}
 
 
 

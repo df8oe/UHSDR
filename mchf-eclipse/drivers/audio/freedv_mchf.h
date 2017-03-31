@@ -41,5 +41,6 @@ void fdv_print_SNR();
 
 void alternateNR_handle();
 
+void do_alternate_NR();
 
 #endif
