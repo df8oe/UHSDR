@@ -14,10 +14,9 @@ mchf.bin
 mchf.elf
 mchf.map
 mchf.dfu
-language.settings.xml
-/DebugSemihosting/
-/DebugLib/
-/DebugBootloader/
-/ReleaseBootloader/
-/build-bl/
-/build-fw/
+DebugSemihosting/
+DebugLib/
+DebugBootloader/
+ReleaseBootloader/
+build-bl/
+build-fw/
