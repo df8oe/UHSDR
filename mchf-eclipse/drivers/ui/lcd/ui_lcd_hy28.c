@@ -61,6 +61,10 @@ static sFONT *fontList[] =
 #endif
 };
 
+// we can do this here since fontList is an array variable not just a pointer!
+static const uint8_t fontCount = sizeof(fontList)/sizeof(fontList[0]);
+
+
 typedef struct  {
     uint16_t reg;
     uint16_t val;
@@ -1022,18 +1026,8 @@ void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkCol
 
 const sFONT   *UiLcdHy28_Font(uint8_t font)
 {
-    const sFONT   *cf;
-
-    if (font >4)
-    {
-        cf = fontList[0];
-    }
-    else
-    {
-        cf = fontList[font];
-    }
-
-    return cf;
+    // if we have an illegal font number, we return the first font
+    return fontList[font < fontCount ? font : 0];
 }
 
 void UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor,uchar font)
