@@ -24,13 +24,14 @@
 #include "stm32f4xx.h"
 #include "fatfs.h"
 #include "mchf_boot_hw.h"
+#include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 3.2.0"
+#define VERSION                    "Version: 3.2.1"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)

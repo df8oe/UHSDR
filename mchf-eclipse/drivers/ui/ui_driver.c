@@ -2277,10 +2277,10 @@ static void UiDriver_DrawSMeterLabels()
         if(i)
         {
             // Draw text
-            UiLcdHy28_PrintText(((POS_SM_IND_X + 113) - 6 + i*20),(POS_SM_IND_Y + 5),num,Green,Black,4);
+            UiLcdHy28_PrintText(((POS_SM_IND_X + 108) - 6 + i*20),(POS_SM_IND_Y + 5),num,Green,Black,4);
 
             // Draw vert lines
-            UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 113) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
+            UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 108) + i*20),(POS_SM_IND_Y + 15),5,LCD_DIR_VERTICAL,Green);
         }
     }
 

@@ -143,14 +143,18 @@ int BL_MSC_Application(void)
         // If still pressed, we will also flash the memory afer reading it
         __IO uint32_t was_download = (mchfBl_ButtonGetState(BUTTON_BANDM) == 0);
         /* Reads all flash memory */
-        BL_PrintLine("Saving Flash to \"mchfold.bin\".");
+		if(was_download)
+		{
+        BL_PrintLine("Firmware will be updated...");
+		}
+        BL_PrintLine("Saving Flash to \"mchfold.bin\"...");
         COMMAND_UPLOAD();
 
         /* Check if BAND- Button was pressed */
         if (was_download)
         {
             /* Writes Flash memory */
-            BL_PrintLine("Updating firmware using \"mchf.bin\".");
+            BL_PrintLine("Updating firmware using \"mchf.bin\"...");
             COMMAND_DOWNLOAD();
         }
         else
