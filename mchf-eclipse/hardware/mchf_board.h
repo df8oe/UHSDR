@@ -42,13 +42,24 @@
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
 #define USE_RTC_LSE
 
-#include "stm32f4xx_hal.h"
+#include "mchf_mcu.h"
 // HW libs
+#ifdef STM32F7
+#include "stm32f7xx_hal_rcc.h"
+#include "stm32f7xx_hal_gpio.h"
+#include "stm32f7xx_hal_spi.h"
+#include "stm32f7xx_hal_dma.h"
+#include "stm32f7xx_hal_i2c.h"
+#include "stm32f7xx_hal_adc.h"
+#include "stm32f7xx_hal_dac.h"
+#include "stm32f7xx_hal_tim.h"
+#include "stm32f7xx_hal_rtc.h"
+#include "stm32f7xx_hal_pwr.h"
+#include "stm32f7xx_hal_flash.h"
+#include "core_cm7.h"
+#else
 #include "stm32f4xx_hal_rcc.h"
 #include "stm32f4xx_hal_gpio.h"
-//#include "stm32f4xx_hal_exti.h"
-//#include "stm32f4xx_hal_usart.h"
-// #include "stm32f4xx_hal_syscfg.h"
 #include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_dma.h"
 #include "stm32f4xx_hal_i2c.h"
@@ -57,14 +68,12 @@
 #include "stm32f4xx_hal_tim.h"
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_pwr.h"
-// #include "stm32f4xx_hal_fsmc.h"
-// #include "stm32f4xx_hal_wwdg.h"
 #include "stm32f4xx_hal_flash.h"
 #include "core_cm4.h"
+#endif
 
 #include "freedv_api.h"
 
-#include "stm32f4xx.h"
 #include "mchf_types.h"
 #include "audio_filter.h"
 #include "ui_si570.h"

@@ -21,7 +21,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "command.h"
-#include "stm32f4xx.h"
+#include "mchf_mcu.h"
 #include "fatfs.h"
 #include "mchf_boot_hw.h"
 #include "bootloader_main.h"

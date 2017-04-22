@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
+#include "mchf_mcu.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef  void (*pFunction)(void);

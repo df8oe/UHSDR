@@ -92,16 +92,15 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+#ifdef BOOTLOADER_BUILD
+  mchfBl_CheckAndGoForDfuBoot();
+  //  we need to do this as early as possible
+#endif
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-#ifdef BOOTLOADER_BUILD
-  mchfBl_CheckAndGoForDfuBoot();
-  //  we need to do this as early as possible
-#endif
   HAL_Init();
 
 
@@ -150,8 +149,9 @@ int main(void)
   {
   /* USER CODE END WHILE */
     MX_USB_HOST_Process();
+
+    /* USER CODE BEGIN 3 */
     BL_Application();
-  /* USER CODE BEGIN 3 */
 
   }
 #endif

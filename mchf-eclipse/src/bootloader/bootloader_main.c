@@ -209,7 +209,8 @@ void BSP_Init(void)
  * @brief jump to a STM32 Application by giving the start address of the ISR Vector structure of that application
  */
 
-__attribute__ ( ( naked ) ) void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
+// __attribute__ ( ( naked ) )
+void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
     uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
@@ -290,12 +291,18 @@ void BL_Application()
 void mchfBl_CheckAndGoForDfuBoot()
 {
 
-    if( *(uint32_t*)(SRAM2_BASE) == 0x99)
+    if(*(uint32_t*)(SRAM2_BASE) == 0x99)
     {
         *(uint32_t*)(SRAM2_BASE) = 0;
+#ifndef STM32F7
         __HAL_REMAPMEMORY_SYSTEMFLASH();
-        mchfBl_JumpToApplication(0);
-        // start the STM32F4xx bootloader at address 0x00000000;
+
+        const uint32_t dfu_boot_start = 0x00000000;
+#else
+        const uint32_t dfu_boot_start = 0x1FF00000;
+#endif
+        mchfBl_JumpToApplication(dfu_boot_start);
+        // start the STM32Fxxx bootloader at address dfu_boot_start;
     }
 }
 

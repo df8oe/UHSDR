@@ -15,37 +15,8 @@
 #define __MCHF_BOARD_CONFIG_H
 
 #include "mchf_types.h"
-#include "stm32f4xx.h"
+#include "mchf_mcu.h"
 
-#if 0
-#include "stm32f4xx_hal.h"
-// HW libs
-#include "stm32f4xx_hal_rcc.h"
-#include "stm32f4xx_hal_gpio.h"
-//#include "stm32f4xx_hal_exti.h"
-//#include "stm32f4xx_hal_usart.h"
-// #include "stm32f4xx_hal_syscfg.h"
-#include "stm32f4xx_hal_spi.h"
-#include "stm32f4xx_hal_dma.h"
-#include "stm32f4xx_hal_i2c.h"
-#include "stm32f4xx_hal_adc.h"
-#include "stm32f4xx_hal_dac.h"
-#include "stm32f4xx_hal_tim.h"
-#include "stm32f4xx_hal_rtc.h"
-#include "stm32f4xx_hal_pwr.h"
-// #include "stm32f4xx_hal_fsmc.h"
-// #include "stm32f4xx_hal_wwdg.h"
-#include "stm32f4xx_hal_flash.h"
-#include "core_cm4.h"
-
-#include "freedv_api.h"
-
-#include "audio_filter.h"
-#include "ui_si570.h"
-//
-#include "comp.h"
-#include "dac.h"
-#endif
 //
 // -----------------------------------------------------------------------------
 #define		DEVICE_STRING			"mcHF QRP Transceiver"

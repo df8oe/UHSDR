@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+<language name="Assembly Source File">
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/hardware</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/freedv</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/oscillator</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc/v_eprom</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/lcd</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/encoder</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/codec</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/softdds</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/cw</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/menu</includepath>
+<includepath workspace_path="true">/mchf-eclipse/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/cat</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/filters</includepath>
+<includepath workspace_path="true">/mchf-eclipse/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/diag</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/usb/device/class/composite</includepath>
+
+</language>
+<language name="C Source File">
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/hardware</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/freedv</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/oscillator</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc/v_eprom</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/lcd</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/encoder</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/codec</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/softdds</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/cw</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/menu</includepath>
+<includepath workspace_path="true">/mchf-eclipse/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/cat</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/filters</includepath>
+<includepath workspace_path="true">/mchf-eclipse/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/diag</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/usb/device/class/composite</includepath>
+
+</language>
+<language name="C++ Source File">
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/hardware</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/freedv</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/oscillator</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc/v_eprom</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/lcd</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/encoder</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/codec</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/softdds</includepath>
+<includepath workspace_path="true">/mchf-eclipse/misc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/cw</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/ui/menu</includepath>
+<includepath workspace_path="true">/mchf-eclipse/</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/cat</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/audio/filters</includepath>
+<includepath workspace_path="true">/mchf-eclipse/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/diag</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc</includepath>
+<includepath workspace_path="true">/mchf-eclipse/drivers/usb/device/class/composite</includepath>
+
+</language>
+<language name="Object File">
+
+</language>
+</section>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+<language name="Assembly Source File">
+<macro>
+<name>DEBUG</name><value/>
+</macro>
+<macro>
+<name>USE_FULL_ASSERT</name><value/>
+</macro>
+<macro>
+<name>TRACE</name><value/>
+</macro>
+<macro>
+<name>USE_HAL_DRIVER</name><value/>
+</macro>
+<macro>
+<name>ARM_MATH_CM4</name><value/>
+</macro>
+<macro>
+<name>_GNU_SOURCE</name><value/>
+</macro>
+<macro>
+<name>CORTEX_M4</name><value/>
+</macro>
+<macro>
+<name>STM32F407xx</name><value/>
+</macro>
+
+</language>
+<language name="C Source File">
+<macro>
+<name>ARM_MATH_CM4</name><value/>
+</macro>
+<macro>
+<name>_GNU_SOURCE</name><value/>
+</macro>
+<macro>
+<name>CORTEX_M4</name><value/>
+</macro>
+<macro>
+<name>STM32F407xx</name><value/>
+</macro>
+<macro>
+<name>USE_HAL_DRIVER</name><value/>
+</macro>
+<macro>
+<name>DEBUG</name><value/>
+</macro>
+<macro>
+<name>USE_FULL_ASSERT</name><value/>
+</macro>
+<macro>
+<name>TRACE</name><value/>
+</macro>
+
+</language>
+<language name="C++ Source File">
+<macro>
+<name>ARM_MATH_CM4</name><value/>
+</macro>
+<macro>
+<name>CORTEX_M4</name><value/>
+</macro>
+<macro>
+<name>STM32F407xx</name><value/>
+</macro>
+<macro>
+<name>_GNU_SOURCE</name><value/>
+</macro>
+<macro>
+<name>USE_HAL_DRIVER</name><value/>
+</macro>
+<macro>
+<name>DEBUG</name><value/>
+</macro>
+<macro>
+<name>USE_FULL_ASSERT</name><value/>
+</macro>
+<macro>
+<name>TRACE</name><value/>
+</macro>
+
+</language>
+<language name="Object File">
+
+</language>
+</section>
+</cdtprojectproperties>

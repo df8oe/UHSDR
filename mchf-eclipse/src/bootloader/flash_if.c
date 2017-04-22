@@ -13,7 +13,11 @@
 ************************************************************************************/
 
 #include "flash_if.h"
+#ifdef STM32F7
+#include "stm32f7xx_hal_flash_ex.h"
+#else
 #include "stm32f4xx_hal_flash_ex.h"
+#endif
 
 /* Base address of the Flash sectors */
 

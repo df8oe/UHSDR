@@ -80,14 +80,24 @@ void MX_USB_HOST_Process(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+#ifdef BOOTLOADER_BUILD
+void MX_USB_HOST_Process(void);
+#include "bootloader/bootloader_main.h"
+#else
 
+#include "mchf_main.h"
+
+#endif
 /* USER CODE END 0 */
 
 int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+#ifdef BOOTLOADER_BUILD
+  mchfBl_CheckAndGoForDfuBoot();
+  //  we need to do this as early as possible
+#endif
   /* USER CODE END 1 */
 
   /* MPU Configuration----------------------------------------------------------*/
@@ -107,6 +117,9 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+#ifdef BOOTLOADER_BUILD
+  bootloader_main();
+#else
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -131,8 +144,20 @@ int main(void)
   MX_FATFS_Init();
   MX_USB_DEVICE_Init();
   MX_TIM3_Init();
+#endif
 
   /* USER CODE BEGIN 2 */
+#ifdef BOOTLOADER_BUILD
+  MX_USB_HOST_Init();
+  MX_FATFS_Init();
+#endif
+#ifndef BOOTLOADER_BUILD
+   mchfMain();
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+#else
 
   /* USER CODE END 2 */
 
@@ -144,8 +169,10 @@ int main(void)
     MX_USB_HOST_Process();
 
   /* USER CODE BEGIN 3 */
+    BL_Application();
 
   }
+#endif
   /* USER CODE END 3 */
 
 }

@@ -14,8 +14,33 @@
 
 // Common
 #include "mchf_board_config.h"
+
+#ifdef STM32F4
+    #define USE_DISPLAY_SPI
+#endif
+
+#define USE_DISPLAY_PAR
+#define USE_SPI_DMA
+// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
+
+
+
 #include "spi.h"
+
+#ifdef USE_DISPLAY_PAR
+#ifdef STM32F7
+#include "fmc.h"
+#define MEM_Init() MX_FMC_Init()
+
+#else
 #include "fsmc.h"
+#define MEM_Init() MX_FSMC_Init()
+#endif
+
+#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
+#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +50,6 @@
 
 mchf_display_t mchf_display;
 
-#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
-#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
 
 // ----------------------------------------------------------
 // Dual purpose pins (parallel + serial)
@@ -36,8 +59,6 @@ mchf_display_t mchf_display;
 
 
 
-#define USE_SPI_DMA
-// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
 // Saved fonts
 extern sFONT GL_Font8x8;
@@ -304,6 +325,16 @@ typedef struct
 static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
 
 
+static inline bool UiLcdHy28_SpiDisplayUsed()
+{
+    bool retval = false;
+#ifdef USE_DISPLAY_SPI
+    retval = mchf_display.use_spi;
+#endif
+    return retval;
+}
+
+
 void UiLcdHy28_BacklightInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -542,7 +573,7 @@ void UiLcdHy28_Reset()
 
 void UiLcdHy28_FSMCConfig(void)
 {
-    MX_FSMC_Init();
+    MEM_Init();
 }
 
 #if 0
@@ -639,13 +670,15 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
     //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
     //	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
 
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_SpiSendByteFast((data >>   8));      /* Write D8..D15                */
         UiLcdHy28_SpiSendByteFast((data & 0xFF));      /* Write D0..D7                 */
     }
     else
+    {
         LCD_RAM = data;
+    }
 }
 
 unsigned short UiLcdHy28_LcdReadDataSpi()
@@ -673,7 +706,7 @@ unsigned short UiLcdHy28_LcdReadDataSpi()
 
 void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
         UiLcdHy28_WriteDataSpi(LCD_RegValue);
@@ -688,7 +721,7 @@ void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
     uint16_t retval;
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         // Write 16-bit Index (then Read Reg)
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
@@ -714,7 +747,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 
 static void UiLcdHy28_WriteRAM_Prepare()
 {
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteIndexSpi(0x0022);
         UiLcdHy28_WriteDataSpiStart();
@@ -728,14 +761,16 @@ static void UiLcdHy28_WriteRAM_Prepare()
 static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
 
-    if (mchf_display.use_spi == 0) {
+    if(UiLcdHy28_SpiDisplayUsed() == false)
+    {
         uint32_t i = len;
         for (; i; i--)
         {
             UiLcdHy28_WriteDataOnly(*(pixel++));
         }
     }
-    else {
+    else
+    {
 #ifdef USE_SPI_DMA
         uint32_t i;
         for (i = 0; i < len; i++)
@@ -757,7 +792,7 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 
 static void UiLcdHy28_FinishWaitBulkWrite()
 {
-    if(mchf_display.use_spi)         // SPI enabled?
+    if(UiLcdHy28_SpiDisplayUsed())         // SPI enabled?
     {
 #ifdef USE_SPI_DMA
         UiLcdHy28_SpiDmaStop();
@@ -828,7 +863,7 @@ inline void UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len)
     // since as for now, it will not benefit from it.
     // this can be changed if someone write DMA code for the parallel
     // interface (memory to memory DMA)
-    if(mchf_display.use_spi)         // SPI enabled?
+    if(UiLcdHy28_SpiDisplayUsed())         // SPI enabled?
     {
         for (uint32_t idx = 0; idx < len; idx++)
         {
@@ -858,7 +893,8 @@ void UiLcdHy28_LcdClear(ushort Color)
 {
     UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
 #ifdef USE_SPI_DMA
-    if (mchf_display.use_spi > 0) {
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -974,7 +1010,8 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 {
 
 #ifdef USE_SPI_DMA
-    if (mchf_display.use_spi > 0) {
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -1152,8 +1189,47 @@ void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t count)
     }
 }
 
-uint16_t UiLcdHy28_InitA(void)
+uint16_t UiLcdHy28_InitA(uint32_t display_type)
 {
+
+    switch(display_type)
+    {
+
+    case DISPLAY_HY28A_SPI:
+        mchf_display.use_spi = true;
+        // this is were HY28A have the CS line
+        mchf_display.lcd_cs = LCD_D11;
+        mchf_display.lcd_cs_pio = LCD_D11_PIO;
+
+        UiLcdHy28_SpiInit(false);
+        // HY28A works only with less then 32 Mhz, so we do low speed
+        break;
+    case DISPLAY_HY28B_SPI:
+        mchf_display.use_spi = true;
+        // this is were HY28A have the CS line
+        mchf_display.lcd_cs = LCD_CS;
+        mchf_display.lcd_cs_pio = LCD_CS_PIO;
+
+        UiLcdHy28_SpiInit(HY28BHISPEED);
+        // HY28B works sometimes faster
+        break;
+    case DISPLAY_HY28B_PARALLEL:
+        // Select parallel
+        mchf_display.use_spi = false;
+
+        // set CS for HY28B pinout
+        mchf_display.lcd_cs = LCD_CS;
+        mchf_display.lcd_cs_pio = LCD_CS_PIO;
+
+        // Parallel init
+        UiLcdHy28_ParallelInit();
+        UiLcdHy28_FSMCConfig();
+        break;
+    }
+
+    UiLcdHy28_Reset();
+
+
 
     uint16_t retval = UiLcdHy28_ReadReg(0x00);
 
@@ -1189,64 +1265,41 @@ uint16_t UiLcdHy28_InitA(void)
  */
 uint8_t UiLcdHy28_Init()
 {
-    uint8_t retval = DISPLAY_HY28A_SPI;
+    uint8_t retval = DISPLAY_NONE;
+
+    mchf_display.DeviceCode = 0x0000;
     // Backlight
     UiLcdHy28_BacklightInit();
 
-    // Select interface, spi HY28A first
-    mchf_display.use_spi = DISPLAY_HY28A_SPI;
 
-    mchf_display.lcd_cs = LCD_D11;
-    mchf_display.lcd_cs_pio = LCD_D11_PIO;
 
-    // Try SPI Init
-    UiLcdHy28_SpiInit(false);
-    // HY28A works only with less then 32 Mhz, so we do low speed
+    #ifdef USE_DISPLAY_SPI
 
-    // Reset
-    UiLcdHy28_Reset();
+    mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28A_SPI);
 
-    // LCD Init
-    mchf_display.DeviceCode = UiLcdHy28_InitA();
-    if(mchf_display.DeviceCode == 0x0000)
+    if(mchf_display.DeviceCode != 0x0000)
     {
-        // no success, no SPI found
-        retval = DISPLAY_HY28B_SPI;
-
-        // Select interface, spi HY28B second
-        mchf_display.use_spi = DISPLAY_HY28B_SPI;
-
-        mchf_display.lcd_cs = LCD_CS;
-        mchf_display.lcd_cs_pio = LCD_CS_PIO;
-
-        // Try SPI Init
-        UiLcdHy28_SpiInit(HY28BHISPEED);
-        // Some HY28B work with 50 Mhz, so we do high speed
-
-        // Reset
-        UiLcdHy28_Reset();
-
-        // LCD Init
+        retval = DISPLAY_HY28A_SPI;
     }
-    mchf_display.DeviceCode = UiLcdHy28_InitA();
-    if(mchf_display.DeviceCode == 0x0000)
+
+    if (retval == DISPLAY_NONE)
     {
-        // no success, no SPI found
-        // SPI disable
-        // Select parallel
-        mchf_display.use_spi = 0;
+        mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28B_SPI);
+        if(mchf_display.DeviceCode != 0x0000)
+        {
+            retval = DISPLAY_HY28B_SPI;
+        }
+    }
 
-        // Parallel init
-        UiLcdHy28_ParallelInit();
-        UiLcdHy28_FSMCConfig();
+    #endif
 
-        // Reset
-        UiLcdHy28_Reset();
-
-        // LCD Init
-        mchf_display.DeviceCode = UiLcdHy28_InitA();
-
-        retval =  mchf_display.DeviceCode != 0?DISPLAY_HY28B_PARALLEL:DISPLAY_NONE;   // on error here
+    if (retval == DISPLAY_NONE)
+    {
+        mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28B_PARALLEL);
+        if(mchf_display.DeviceCode != 0x0000)
+        {
+            retval = DISPLAY_HY28B_PARALLEL;
+        }
     }
 
     mchf_display.display_type = retval;

@@ -3,8 +3,7 @@
 #define __MCHF_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
-#include "stm32f407xx.h"
+#include "mchf_mcu.h"
 #include "mchf_board_config.h"
 
 typedef enum

@@ -87,7 +87,7 @@ typedef struct
 {
     uint8_t display_type;           // existence/identification of display type
     uint16_t DeviceCode;      // LCD ident code
-    uint16_t use_spi;
+    bool use_spi;
     int16_t lcd_cs;
     GPIO_TypeDef* lcd_cs_pio;
 } mchf_display_t;
