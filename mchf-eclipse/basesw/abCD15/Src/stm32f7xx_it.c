@@ -40,9 +40,9 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 extern HCD_HandleTypeDef hhcd_USB_OTG_HS;
 extern DMA_HandleTypeDef hdma_spi2_tx;
-extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 extern TIM_HandleTypeDef htim1;
 

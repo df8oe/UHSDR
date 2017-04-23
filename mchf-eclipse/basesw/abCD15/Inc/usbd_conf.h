@@ -82,7 +82,7 @@
 /*---------- -----------*/
 #define USBD_SELF_POWERED     1
 /*---------- -----------*/
-#define USBD_CDC_INTERVAL     1000
+#define USBD_AUDIO_FREQ     48000
 
 /****************************************/
 /* #define for FS and HS identification */

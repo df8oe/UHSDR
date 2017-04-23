@@ -52,8 +52,8 @@
 #include "sai.h"
 #include "spi.h"
 #include "tim.h"
+#include "usb_device.h"
 #include "usb_host.h"
-#include "usb_otg_fs.h"
 #include "gpio.h"
 #include "fmc.h"
 
@@ -120,6 +120,7 @@ int main(void)
   MX_TIM8_Init();
   MX_USB_HOST_Init();
   MX_FATFS_Init();
+  MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
 
