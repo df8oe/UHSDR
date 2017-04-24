@@ -13,8 +13,44 @@
  ************************************************************************************/
 #include "freedv_mchf.h"
 
+
+#ifdef alternate_NR
+#include "lpc.h"
+#endif
+
 #include "profiling.h"
 #include "ui_lcd_hy28.h"
+
+#ifdef debug_alternate_NR
+
+const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078,738.378113,
+        446.268219,635.763123,1062.71118,955.245667,22.6679211,-1130.45386,-1737.12817,
+        -1728.79114,-1594.82227,-1545.75671,-1208.91003,-252.898315,993.880493,1820.26538,
+        1915.65186,1597.90259,1248.58838,809.456909,28.6509247,-961.62677,-1604.66443,-1499.18225,
+        -824.882935,-85.1342163,432.899261,782.52063,1029.38452,1040.57166,692.128662,138.820541,
+        -286.785767,-420.356415,-384.165161,-348.958527,-308.304718,-171.111633,-4000,  //last value:4.52698851,
+        -5.53196001,-368.999939,-1031.19165,-1766.01074,-2290.01587,-2293.98853,-1514.0238,
+        23.0157223,1797.16394,3018.3894,3231.77148,2702.38745,2085.92676,1685.99255,1145.43176,
+        -31.9259377,-1722.42847,-3112.2937,-3453.61426,-2790.31763,-1812.12769,-1028.70874,
+        -269.048218,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
+        -548.479553,-1549.47034,-2692.18213,-3288.44702,-2873.70239,-1761.34033,-636.71936,
+        250.664383,1198.7804,2336.43726,3121.80615,2848.64355,1556.67969,110.084801,-724.328186,
+        -1013.82141,-1265.38879,-1506.06091,-1177.04529,-35.6577721,1209.823,1520.28088,679.406555,
+        -514.541626,-1245.55945,-1508.29407,-1707.93408,-1736.12427,-965.137085,752.618347,2518.7168,
+        3185.57031,2563.83838,1472.3927,613.243835,-172.269989,-1311.97058,-2534.06421,-2982.73169,
+        -2282.05859,-1025.64673,12.714426,809.696228,1828.12854,2977.01709,3388.77612,2460.82178,
+        751.800781,-567.183105,-1026.46143,-1190.80762,-1635.05701,-2060.84619,-1785.74683,-841.740173,
+        -62.468441
+
+};
+
+
+
+#endif
+
+
+
+
 
 
 void fdv_clear_display()
@@ -686,12 +722,16 @@ void alternateNR_handle()
 void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 {
     static uint16_t sawcount = 0; // just to generate some overlaying sawtooth noise
+    float32_t lpc_coeff[11];
+    float32_t* Energy=0;
 
     // inside here do all the necessary noise reduction stuff!!!!!
 
+    alt_noise_blanking(inputsamples,NR_FFT_SIZE,10,Energy);
+
     for (int k=0; k < NR_FFT_SIZE;  k++)
                                     {
-                                        outputsamples[k] = inputsamples[k] + 100 * sawcount;// overlay sawtooth
+                                        outputsamples[k] = inputsamples[k];// + 100 * sawcount;// overlay sawtooth
                                         //outputsamples[k] = inputsamples[k];  just copy back
 
                                         sawcount++;
@@ -699,9 +739,191 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
                                     }
 
 
+
+
+
+
+
+
 }
 
 
+//alt noise blanking is trying to localize some impulse noise within the samples and after that
+//trying to replace corrupted samples by linear predicted samples.
+//therefore, first we calculate the lpc coefficients which represent the actual status of the
+//speech or sound generating "instrument" (in case of speech this is an estimation of the current
+//filter-function of the voice generating tract behind our lips :-) )
+//after finding this function we inverse filter the actual samples by this function
+//so we are eliminating the speech, but not the noise. After that we threshold the remaining samples by some
+//level and so detecting impulse noise's positions within the current frame - if one (or more) impulses are there.
+//finally some area around the impulse position will be replaced by predicted samples from both sides (forward and
+//backward prediction)
+//hopefully we have enough processor power left....
 
+void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
+{
+#define boundary_blank 20 // for first trials very large!!!!
+#define impulse_length 7 // has to be odd!!!!
+#define PL             3 // has to be (impulse_length-1)/2 !!!!
+
+    arm_fir_instance_f32 LPC;
+    float32_t lpcs[order+1]; // we reserve one more than "order" because of a leading "1"
+    float32_t reverse_lpcs[order+1]; //this takes the reversed order lpc coefficients
+    static float32_t firStateF32[NR_FFT_SIZE + 10 - 1];  //order 10 is hard-coded here!!!
+    float32_t tempsamp[NR_FFT_SIZE];
+    float32_t sigma2; //taking the variance of the inpo
+    float32_t lpc_power;
+    float32_t impulse_threshold;
+    int impulse_positions[5];  //we allow a maximum of 5 impulses per frame
+    int search_pos=0;
+    int impulse_count=0;
+    float32_t R[11];  // takes the autocorrelation results
+    float32_t sum,e,k,alfa;
+    float32_t any[order+1];  //some buffer for levinson durben
+
+    float32_t Rfw[impulse_length+order]; // takes the forward predicted audio restauration
+    float32_t Rbw[impulse_length+order]; // takes the backward predicted audio restauration
+    float32_t Wfw[impulse_length],Wbw[impulse_length]; // taking linear windows for the combination of fwd and bwd
+
+    int s=0;
+
+#ifdef debug_alternate_NR
+    for (int i=0; i<128;i++)
+        insamp[i]=NR_test_samp[i];
+#endif
+
+
+    for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
+    {                                     // will be a constant window later!
+        Wfw[i]=1.0*(i+1)/impulse_length;
+        Wbw[impulse_length-i-1]=Wfw[i];
+    }
+
+    // calculate the autocorrelation of insamp (moving by max. of #order# samples)
+      for(int j=0; j < order+1; j++) {
+        R[j] = 0.0;
+        for(int i=0; i < Nsam-j; i++)
+          R[j] += insamp[i]*insamp[i+j];
+      }
+    // end of autocorrelation
+
+
+
+//alternative levinson durben algorithm
+
+
+
+  R[0] = R[0] * (1. + 1.e-9);
+
+  lpcs[0] = 1;   //set lpcs[0] to 1
+
+  for (int i=1; i < order+1; i++)
+      lpcs[i]=0;                      // fill rest of array with zeros
+
+  alfa = R[0];
+
+  for (int m = 1; m <= order; m++)
+   {
+     s = 0;
+     for (int u = 1; u < m; u++)
+        s = s + lpcs[u] * R[m-u];
+
+     k = -(R[m] + s) / alfa;
+
+     for (int v = 1;v < m; v++)
+         any[v] = lpcs[v] + k * lpcs[m-v];
+
+     for (int w = 1; w < m; w++)
+         lpcs[w] = any[w];
+
+    lpcs[m] = k;
+    alfa = alfa * (1 - k * k);
+  }
+
+    // end of levinson durben algorithm
+
+    for (int o = 0; o < order+1; o++ )             //store the reverse order coefficients separately
+        reverse_lpcs[order-o]=lpcs[o];        // for the matched impulse filter
+
+    arm_fir_init_f32(&LPC,order+1,&reverse_lpcs[0],&firStateF32[0],NR_FFT_SIZE);                                         // we are using the same function as used in freedv
+
+    arm_fir_f32(&LPC,insamp,tempsamp,Nsam); //do the inverse filtering to eliminate voice and enhance the impulses
+
+    arm_fir_init_f32(&LPC,order+1,&lpcs[0],&firStateF32[0],NR_FFT_SIZE);                                         // we are using the same function as used in freedv
+
+    arm_fir_f32(&LPC,tempsamp,tempsamp,Nsam); // do a matched filtering to detect an impulse in our now voiceless signal
+
+    arm_var_f32(tempsamp,NR_FFT_SIZE,&sigma2); //calculate sigma2 of the original signal ? or tempsignal
+
+    arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares of the lpc's
+
+    impulse_threshold = 3 * sqrt(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
+
+    search_pos=boundary_blank;  // for first trials avoid the boundaries to the other frames
+    impulse_count=0;
+
+    do {        //going through the filtered samples to find an impulse larger than the threshold
+
+        if ((tempsamp[search_pos] > impulse_threshold)||(tempsamp[search_pos] < (-impulse_threshold)))
+            {
+            impulse_positions[impulse_count]=search_pos - order;  // save the impulse positions and correct it by the filter delay
+            impulse_count++;
+            search_pos+=PL;   //  set search_pos a bit away, cause we are already repairing this area later
+                              //  and the next impulse should not be that close
+            }
+
+        search_pos++;
+
+        } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));//-10 avoid upper boundary
+
+                        //boundary handling has to be fixed later
+                        //as a result we now will not find any impulse in these areas
+
+
+
+// at this point we have the positions of the impulses  -> t.b.d: have to check for too closes impulses!
+
+
+
+
+
+// from here: reconstruction of the impulse-distorted audio part:
+
+// first we form the forward and backward prediction transfer functions from the lpcs
+// that is easy, as they are just the negated coefficients  without the leading "1"
+// we can do this in place of the lpcs, as they are not used here anymore and being recalculated in the next frame!
+
+    arm_negate_f32(&lpcs[1],&lpcs[1],order);
+    arm_negate_f32(&reverse_lpcs[1],&reverse_lpcs[1],order);
+
+
+    for (int j=0; j<impulse_count; j++)
+        {
+        for (int k = 0; k<order; k++)   // we have to copy some samples from the original signal as
+            {                           // basis for the reconstructions - could be done by memcopy
+                Rfw[k]=insamp[impulse_positions[j]-PL-order+k];
+                Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k];
+            }
+
+            for (int i = 0; i < impulse_length; i++) //now we calculate the forward and backward predictions
+                {
+                    arm_dot_prod_f32(&lpcs[1],&Rfw[i],order,&Rfw[i+order]);
+                    arm_dot_prod_f32(&reverse_lpcs[1],&Rbw[impulse_length-i],order,&Rbw[impulse_length-i-1]);
+
+                }
+
+                arm_mult_f32(&Wfw[0],&Rfw[order],&Rfw[order],impulse_length); // do the windowing, or better: weighing
+                arm_mult_f32(&Wbw[0],&Rbw[0],&Rbw[0],impulse_length);
+
+                //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
+
+                arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+
+        }
+
+// Achtung: Ich muss noch die Grenzen absichern bzgl. dem Einbeziehen der basis_samples!!!!!
+
+
+}
 
 #endif

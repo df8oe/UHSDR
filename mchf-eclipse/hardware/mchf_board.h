@@ -17,7 +17,8 @@
 // some special switches
 //#define 	DEBUG_BUILD
 
-//#define alternate_NR
+#define alternate_NR
+#define debug_alternate_NR
 
 #ifdef alternate_NR
 #define NR_FFT_SIZE 128
