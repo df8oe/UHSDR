@@ -18,8 +18,8 @@
 
 typedef struct {
     uint32_t size; // in Bytes
-    uint16_t pagesize; // in Bytes
     bool supported; // i.e. big enough to be used
+	uint16_t pagesize; // in Bytes
     const char* name;
 } SerialEEPROM_EEPROMTypeDescriptor;
 
