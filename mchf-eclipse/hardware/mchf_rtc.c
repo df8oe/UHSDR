@@ -10,9 +10,17 @@
 ************************************************************************************/
 #include "mchf_board.h"
 #include "mchf_rtc.h"
+
+#ifdef STM32F4
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_rtc_ex.h"
 #include "stm32f4xx_hal_rcc.h"
+#else
+#include "stm32f7xx_hal_rtc.h"
+#include "stm32f7xx_hal_rtc_ex.h"
+#include "stm32f7xx_hal_rcc.h"
+#endif
+
 #include "rtc.h"
 
 /* Private macros */

@@ -84,7 +84,10 @@ void MchfHw_I2C_ChangeSpeed(I2C_TypeDef* bus)
 
 
     HAL_I2C_DeInit(hi2c);
+#ifndef STM32F7
+    // FIXME: F7PORT: I2C Clock Timing works differently on the F7, we need to supply correct register values instead of a simple speed value
     hi2c->Init.ClockSpeed = ts.i2c_speed[speedIdx] * I2C_BUS_SPEED_MULT;
+#endif
     HAL_I2C_Init(hi2c);
 
 }

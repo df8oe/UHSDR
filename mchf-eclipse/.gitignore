@@ -25,3 +25,4 @@ build-fw/
 .settings/language.settings.xml
 /DebugBootloaderF7/
 /DebugLibF7/
+/DebugF7/

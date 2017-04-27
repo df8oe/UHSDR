@@ -56,8 +56,10 @@ static const char*  bl_help[] =
 
 static void BL_DisplayInit()
 {
+#ifdef STM32F4
     MX_DMA_Init();
     MX_SPI2_Init();
+#endif
     MX_GPIO_Init();
 
 	mchf_board_touchscreen_init();
@@ -246,7 +248,7 @@ int bootloader_main()
         COMMAND_ResetMCU(0x99);
     }
     /* Test if BAND- button on mchf is NOT pressed */
-    else if (mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
+    else if (0 && mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
     {
         /* Check Vector Table: Test if user code is programmed starting from address
            "APPLICATION_ADDRESS"

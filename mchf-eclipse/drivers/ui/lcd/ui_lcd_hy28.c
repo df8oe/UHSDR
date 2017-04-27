@@ -28,18 +28,22 @@
 #include "spi.h"
 
 #ifdef USE_DISPLAY_PAR
-#ifdef STM32F7
-#include "fmc.h"
-#define MEM_Init() MX_FMC_Init()
 
-#else
-#include "fsmc.h"
-#define MEM_Init() MX_FSMC_Init()
-#endif
+    #ifdef STM32F7
+        #include "fmc.h"
+        #define MEM_Init() MX_FMC_Init()
+    #else
+        #include "fsmc.h"
+        #define MEM_Init() MX_FSMC_Init()
+    #endif
 
-#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
-#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+    #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
 
+    #if defined(STM32F4)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+    #elif defined(STM32F7)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60004000))
+    #endif
 #endif
 
 #include <stdio.h>
@@ -348,6 +352,8 @@ void UiLcdHy28_BacklightInit(void)
 
     // Backlight off
     LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
+    LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT;
+
 }
 
 void UiLcdHy28_BacklightEnable(bool on)
@@ -561,13 +567,13 @@ void UiLcdHy28_Reset()
 {
     // Reset
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(50);
+    HAL_Delay(1);
 
     GPIO_ResetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(50);
+    HAL_Delay(1);
 
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(100);
+    HAL_Delay(300);
 }
 
 
@@ -678,6 +684,8 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
     else
     {
         LCD_RAM = data;
+        __DMB();
+
     }
 }
 
@@ -714,7 +722,9 @@ void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
     else
     {
         LCD_REG = LCD_Reg;
+        __DMB();
         LCD_RAM = LCD_RegValue;
+        __DMB();
     }
 }
 
@@ -734,6 +744,7 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
         // Write 16-bit Index (then Read Reg)
         LCD_REG = LCD_Reg;
         // Read 16-bit Reg
+        __DMB();
         retval = LCD_RAM;
     }
     return retval;
@@ -755,6 +766,7 @@ static void UiLcdHy28_WriteRAM_Prepare()
     else
     {
         LCD_REG = 0x22;
+        __DMB();
     }
 }
 
@@ -775,7 +787,7 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
         uint32_t i;
         for (i = 0; i < len; i++)
         {
-            pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
+            pixel[i] = __REV16(pixel[i]); // reverse byte order;
         }
         UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
 #else

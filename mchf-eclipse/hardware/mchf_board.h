@@ -13,7 +13,7 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
-
+#include "mchf_mcu.h"
 // some special switches
 //#define 	DEBUG_BUILD
 
@@ -50,6 +50,7 @@
 #include "stm32f7xx_hal_spi.h"
 #include "stm32f7xx_hal_dma.h"
 #include "stm32f7xx_hal_i2c.h"
+#include "stm32f7xx_hal_i2s.h"
 #include "stm32f7xx_hal_adc.h"
 #include "stm32f7xx_hal_dac.h"
 #include "stm32f7xx_hal_tim.h"

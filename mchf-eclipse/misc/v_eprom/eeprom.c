@@ -27,8 +27,11 @@
 
 // Common
 #include "mchf_board.h"
+#ifdef STM32F7
+#include "stm32f7xx_hal_flash_ex.h"
+#else
 #include "stm32f4xx_hal_flash_ex.h"
-
+#endif
 /* Includes ------------------------------------------------------------------*/
 #include "eeprom.h"
 
