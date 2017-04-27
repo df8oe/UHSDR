@@ -1095,14 +1095,11 @@ inline bool is_splitmode()
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
-#define STM32_DBGMCU_IDCODE        0xE0042000
-#define STM32_FLASH_ADDRESS        0x1FFF7A22
-#define STM32_UNIQUE_ADDRESS       0x1FFF7A10
 
-#define STM32_GetRevision()     (*(uint16_t *) (STM32_DBGMCU_IDCODE + 2))
-#define STM32_GetSignature()    ((*(uint16_t *) (STM32_DBGMCU_IDCODE)) & 0x0FFF)
-#define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
-#define STM32_UUID ((uint32_t *)STM32_UNIQUE_ADDRESS)
+#define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
+#define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
+#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
+#define STM32_UUID ((uint32_t *)UID_BASE)
 
 
 #endif

@@ -216,7 +216,8 @@ void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
     uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
-    if ( ( APPLICATION_PTR[0] & 0x2FF00000 ) == 0x20000000)
+    // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
+    if (APPLICATION_PTR[0] <= 0x20000000 + (1024 * 1024) && ( APPLICATION_PTR[0] > 0x20000000))
     {
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
@@ -243,12 +244,12 @@ int bootloader_main()
     if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
     {
         BL_InfoScreenDFU();
-        // BANDM pressed, DFU boot requested
+        // BANDP pressed, DFU boot requested
         while (mchfBl_ButtonGetState(BUTTON_BANDP) == 0) {};
         COMMAND_ResetMCU(0x99);
     }
     /* Test if BAND- button on mchf is NOT pressed */
-    else if (0 && mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
+    else if (mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
     {
         /* Check Vector Table: Test if user code is programmed starting from address
            "APPLICATION_ADDRESS"
@@ -289,7 +290,10 @@ void BL_Application()
     BL_Idle_Application();
 }
 
-
+/*
+ * This does not work if data cache is enabled, since we then need to flush the SRAM2_BASE write
+ * but here flash should not be enabled anyway!
+ */
 void mchfBl_CheckAndGoForDfuBoot()
 {
 

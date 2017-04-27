@@ -286,6 +286,9 @@ void COMMAND_DOWNLOAD(void)
 void COMMAND_ResetMCU(uint32_t code)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = code;
+#ifdef STM32F7
+    SCB_CleanDCache();
+#endif
     /* Software reset */
     NVIC_SystemReset();
 }
