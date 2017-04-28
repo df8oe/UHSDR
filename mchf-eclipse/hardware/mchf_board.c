@@ -105,23 +105,23 @@ static void mchf_board_debug_init(void)
 const ButtonMap bm_sets[2][18] =
 {
         {
-                {BUTTON_M2_PIO,     BUTTON_M2},     // 0
-                {BUTTON_G2_PIO,     BUTTON_G2},     // 1
-                {BUTTON_G3_PIO,     BUTTON_G3},     // 2
-                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3
-                {BUTTON_G4_PIO,     BUTTON_G4},     // 4
-                {BUTTON_M3_PIO,     BUTTON_M3},     // 5
-                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6
-                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7
-                {BUTTON_M1_PIO,     BUTTON_M1},     // 8
-                {BUTTON_F3_PIO,     BUTTON_F3},     // 9
-                {BUTTON_F1_PIO,     BUTTON_F1},     // 10
-                {BUTTON_F2_PIO,     BUTTON_F2},     // 11
-                {BUTTON_F4_PIO,     BUTTON_F4},     // 12
-                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
-                {BUTTON_F5_PIO,     BUTTON_F5},     // 14
-                {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},                // 16 Power Button
+                {BUTTON_M2_PIO,     BUTTON_M2},     // 0 / S3
+                {BUTTON_G2_PIO,     BUTTON_G2},     // 1 / S2
+                {BUTTON_G3_PIO,     BUTTON_G3},     // 2 / S1
+                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3 / S4
+                {BUTTON_G4_PIO,     BUTTON_G4},     // 4 / S5
+                {BUTTON_M3_PIO,     BUTTON_M3},     // 5 / S6
+                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6 / S7
+                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7 / S8
+                {BUTTON_M1_PIO,     BUTTON_M1},     // 8 / S9
+                {BUTTON_F3_PIO,     BUTTON_F3},     // 9 / S10
+                {BUTTON_F1_PIO,     BUTTON_F1},     // 10 / S11
+                {BUTTON_F2_PIO,     BUTTON_F2},     // 11 / S12
+                {BUTTON_F4_PIO,     BUTTON_F4},     // 12 / S13
+                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13 / S14
+                {BUTTON_F5_PIO,     BUTTON_F5},     // 14 / S15
+                {BUTTON_G1_PIO,     BUTTON_G1},     // 15 / S16
+                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 / S17 Power Button
                 {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
         },
         // alternative mapping for RTC Modification
@@ -748,6 +748,9 @@ void mchf_reboot()
 {
     ///Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+#ifdef STM32F7
+    SCB_CleanDCache();
+#endif
     NVIC_SystemReset();         // restart mcHF
 }
 

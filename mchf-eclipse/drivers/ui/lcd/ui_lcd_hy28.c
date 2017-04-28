@@ -498,68 +498,6 @@ inline void UiLcdHy28_SpiLcdCsEnable() {
 
 void UiLcdHy28_ParallelInit()
 {
-#if 0
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    // Port D usage - data and control
-    // SRAM Data lines,  NOE, NE1, A16 and NWE configuration
-    GPIO_InitStructure.Pin =    LCD_D2 |LCD_D3 |
-            LCD_RD |LCD_WR |
-            LCD_CSA|LCD_D15|
-            LCD_D16|LCD_D17|
-            LCD_RS |LCD_D0 |
-            LCD_D1;
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(LCD_D2_PIO,  LCD_D2_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D3_PIO,  LCD_D3_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_RD_PIO,  LCD_RD_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_WR_PIO,  LCD_WR_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_CSA_PIO, LCD_CSA_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D15_PIO, LCD_D15_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D16_PIO, LCD_D16_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D17_PIO, LCD_D17_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_RS_PIO,  LCD_RS_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D0_PIO,  LCD_D0_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D1_PIO,  LCD_D1_SOURCE,  GPIO_AF_FSMC);
-
-    // Data port on port E
-    GPIO_InitStructure.Pin =    LCD_D4 |LCD_D5 |
-            LCD_D6 |LCD_D7 |
-            LCD_D10|LCD_D11|
-            LCD_D12|LCD_D13|
-            LCD_D14;
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(LCD_D4_PIO,  LCD_D4_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D5_PIO,  LCD_D5_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D6_PIO,  LCD_D6_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D7_PIO,  LCD_D7_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D10_PIO, LCD_D10_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D11_PIO, LCD_D11_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D12_PIO, LCD_D12_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D13_PIO, LCD_D13_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D14_PIO, LCD_D14_SOURCE, GPIO_AF_FSMC);
-
-    // Configure GPIO PIN for Reset
-    GPIO_InitStructure.Pin		= LCD_RESET;
-    GPIO_InitStructure.GPIO_Mode		= GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_Speed	= GPIO_Speed_50MHz;
-    HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
-#endif
 }
 
 
