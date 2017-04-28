@@ -173,6 +173,7 @@ uint16_t Flash_InitA(void)
     uint16_t retval = 0x80;
 
 
+    // FIXME: F7PORT: How to get rid of this? After change, boards needs reflash
     // if the process can do dual bank mode,
     // switch this ON, otherwise we have already the correct
     // sector layout

@@ -2995,8 +2995,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     // TODO: This is fragile code, as it depends on being called multiple times in short periods (ms)
     // This works, since regularily the button matrix is queried.
-    // FIXME: F7PORT
-    ///UiLcdHy28_TouchscreenDetectPress();
+    UiLcdHy28_TouchscreenDetectPress();
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
@@ -5498,8 +5497,12 @@ static void UiDriver_KeyTestScreen()
 	poweroffcount = rbcount = enccount = 0;
 	p_o_state = rb_state = new_state = 0;
 	char txt_buf[40];
-	char* txt;
-	for(i = 0; i <= 17; i++)	 			// scan all buttons
+	const char* txt;
+
+	const int mchf_numButtons = 18;
+    // FIXME: F7PORT: We have more keys, replace 18 with constant
+
+	for(i = 0; i < mchf_numButtons ; i++)	 			// scan all buttons
 	{
 		if(UiDriver_IsButtonPressed(i))	 		// is one button being pressed?
 		{
@@ -5520,7 +5523,7 @@ static void UiDriver_KeyTestScreen()
 			j = 99;		// load with flag value
 			k = 0;
 
-			for(i = 0; i <= 17; i++)
+			for(i = 0; i < mchf_numButtons ; i++)
 			{
 				// scan all buttons
 				if(UiDriver_IsButtonPressed(i))
@@ -5554,72 +5557,33 @@ static void UiDriver_KeyTestScreen()
 				j = 18+t;					// add encoders behind buttons;
 			}
 
+			if (j < mchf_numButtons)
+			{
+			    txt = bm[j].label;
+			}
+			else
+			{
+			    txt = NULL;
+			}
 			switch(j)	 				// decode button to text
 			{
 			case	BUTTON_POWER_PRESSED:
-				txt = "        POWER       ";
 				if(poweroffcount > 75)
 				{
-					txt = "  powering off...   ";
+					txt = "powering off...";
 					p_o_state = 1;
 				}
 				poweroffcount++;
 				break;
-			case	BUTTON_M1_PRESSED:
-				txt = "         M1         ";
-				break;
-			case	BUTTON_M2_PRESSED:
-				txt = "         M2         ";
-				break;
-			case	BUTTON_M3_PRESSED:
-				txt = "         M3         ";
-				break;
-			case	BUTTON_G1_PRESSED:
-				txt = "         G1         ";
-				break;
-			case	BUTTON_G2_PRESSED:
-				txt = "         G2         ";
-				break;
-			case	BUTTON_G3_PRESSED:
-				txt = "         G3         ";
-				break;
-			case	BUTTON_G4_PRESSED:
-				txt = "         G4         ";
-				break;
-			case	BUTTON_F1_PRESSED:
-				txt = "         F1         ";
-				break;
-			case	BUTTON_F2_PRESSED:
-				txt = "         F2         ";
-				break;
-			case	BUTTON_F3_PRESSED:
-				txt = "         F3         ";
-				break;
-			case	BUTTON_F4_PRESSED:
-				txt = "         F4         ";
-				break;
-			case	BUTTON_F5_PRESSED:
-				txt = "         F5         ";
-				break;
 			case	BUTTON_BNDM_PRESSED:
-				txt = "        BND-        ";
 				ts.tp->raw = !ts.tp->raw;
 				
 				if(rbcount > 75)
 				{
-					txt = "    rebooting...    ";
+					txt = "rebooting...";
 					rb_state = 1;
 				}
 				rbcount++;
-				break;
-			case	BUTTON_BNDP_PRESSED:
-				txt = "        BND+        ";
-				break;
-			case	BUTTON_STEPM_PRESSED:
-				txt = "       STEP-        ";
-				break;
-			case	BUTTON_STEPP_PRESSED:
-				txt = "      STEP+         ";
 				break;
 			case	TOUCHSCREEN_ACTIVE:
 
@@ -5647,22 +5611,25 @@ static void UiDriver_KeyTestScreen()
 			txt = txt_buf;
 			break;
 			default:
-				if(!enccount)
-				{
-					txt = "       <none>       ";				// no button pressed
-				}
-				else
-				{
-					txt = "";
-					enccount--;
-				}
-				poweroffcount = 0;
-				rbcount = 0;
+			    if (txt == NULL)
+			    {
+			        if(!enccount)
+			        {
+			            txt = "<none>";				// no button pressed
+			        }
+			        else
+			        {
+			            txt = "";
+			            enccount--;
+			        }
+			        poweroffcount = 0;
+			        rbcount = 0;
+			    }
 			}
 			//
 			if(txt[0])
 			{
-				UiLcdHy28_PrintText(10,120,txt,White,Blue,1);			// identify button on screen
+				UiLcdHy28_PrintTextCentered(10,120,300,txt,White,Blue,1);			// identify button on screen
 			}
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen

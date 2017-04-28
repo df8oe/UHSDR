@@ -91,6 +91,7 @@ typedef struct ButtonMap
 {
     GPIO_TypeDef 	*port;
     ushort			button;
+    const char*     label;
 
 } ButtonMap;
 

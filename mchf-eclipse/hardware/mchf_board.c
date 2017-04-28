@@ -105,45 +105,45 @@ static void mchf_board_debug_init(void)
 const ButtonMap bm_sets[2][18] =
 {
         {
-                {BUTTON_M2_PIO,     BUTTON_M2},     // 0 / S3
-                {BUTTON_G2_PIO,     BUTTON_G2},     // 1 / S2
-                {BUTTON_G3_PIO,     BUTTON_G3},     // 2 / S1
-                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3 / S4
-                {BUTTON_G4_PIO,     BUTTON_G4},     // 4 / S5
-                {BUTTON_M3_PIO,     BUTTON_M3},     // 5 / S6
-                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6 / S7
-                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7 / S8
-                {BUTTON_M1_PIO,     BUTTON_M1},     // 8 / S9
-                {BUTTON_F3_PIO,     BUTTON_F3},     // 9 / S10
-                {BUTTON_F1_PIO,     BUTTON_F1},     // 10 / S11
-                {BUTTON_F2_PIO,     BUTTON_F2},     // 11 / S12
-                {BUTTON_F4_PIO,     BUTTON_F4},     // 12 / S13
-                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13 / S14
-                {BUTTON_F5_PIO,     BUTTON_F5},     // 14 / S15
-                {BUTTON_G1_PIO,     BUTTON_G1},     // 15 / S16
-                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 / S17 Power Button
-                {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
+                {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
+                {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
+                {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
+                {BUTTON_STEPM_PIO,  BUTTON_STEPM, "Step-"},  // 6 / S7
+                {BUTTON_STEPP_PIO,  BUTTON_STEPP, "Step+"},  // 7 / S8
+                {BUTTON_M1_PIO,     BUTTON_M1, "M1"},     // 8 / S9
+                {BUTTON_F3_PIO,     BUTTON_F3, "F3"},     // 9 / S10
+                {BUTTON_F1_PIO,     BUTTON_F1, "F1"},     // 10 / S11
+                {BUTTON_F2_PIO,     BUTTON_F2, "F2"},     // 11 / S12
+                {BUTTON_F4_PIO,     BUTTON_F4, "F4"},     // 12 / S13
+                {BUTTON_BNDP_PIO,   BUTTON_BNDP, "Band+"},   // 13 / S14
+                {BUTTON_F5_PIO,     BUTTON_F5, "F5"},     // 14 / S15
+                {BUTTON_G1_PIO,     BUTTON_G1, "G1"},     // 15 / S16
+                {BUTTON_PWR_PIO, BUTTON_PWR, "Power"},       // 16 / S17 Power Button
+                {TP_IRQ_PIO,TP_IRQ, "Touch"}                 // 17 TP "Button"
         },
         // alternative mapping for RTC Modification
         {
-                {BUTTON_M2_PIO,     BUTTON_M2},     // 0
-                {BUTTON_G2_PIO,     BUTTON_G2},     // 1
-                {BUTTON_G3_PIO,     BUTTON_G3},     // 2
-                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3
-                {BUTTON_G4_PIO,     BUTTON_G4},     // 4
-                {BUTTON_M3_PIO,     BUTTON_M3},     // 5
-                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6
-                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7
-                {BUTTON_M1_PIO_RTC,     BUTTON_M1_RTC},     // 8
-                {BUTTON_F3_PIO_RTC,     BUTTON_F3_RTC},     // 9
-                {BUTTON_F1_PIO,     BUTTON_F1},     // 10
-                {BUTTON_F2_PIO,     BUTTON_F2},     // 11
-                {BUTTON_F4_PIO,     BUTTON_F4},     // 12
-                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
-                {BUTTON_F5_PIO,     BUTTON_F5},     // 14
-                {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 Power Button
-                {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
+                {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
+                {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
+                {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
+                {BUTTON_STEPM_PIO,  BUTTON_STEPM, "Step-"},  // 6 / S7
+                {BUTTON_STEPP_PIO,  BUTTON_STEPP, "Step+"},  // 7 / S8
+                {BUTTON_M1_PIO,     BUTTON_M1_RTC, "M1"},     // 8 / S9
+                {BUTTON_F3_PIO,     BUTTON_F3_RTC, "F3"},     // 9 / S10
+                {BUTTON_F1_PIO,     BUTTON_F1, "F1"},     // 10 / S11
+                {BUTTON_F2_PIO,     BUTTON_F2, "F2"},     // 11 / S12
+                {BUTTON_F4_PIO,     BUTTON_F4, "F4"},     // 12 / S13
+                {BUTTON_BNDP_PIO,   BUTTON_BNDP, "Band+"},   // 13 / S14
+                {BUTTON_F5_PIO,     BUTTON_F5, "F5"},     // 14 / S15
+                {BUTTON_G1_PIO,     BUTTON_G1, "G1"},     // 15 / S16
+                {BUTTON_PWR_PIO, BUTTON_PWR, "Power"},       // 16 / S17 Power Button
+                {TP_IRQ_PIO,TP_IRQ, "Touch"}                 // 17 TP "Button"
         }
 };
 

@@ -1108,13 +1108,13 @@ void UiLcdHy28_PrintTextRight(uint16_t Xpos, uint16_t Ypos, const char *str,cons
 
 void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uint16_t bbW,const char* txt,uint32_t clr_fg,uint32_t clr_bg,uint8_t font)
 {
-    const uint16_t bbH = UiLcdHy28_TextHeight(0);
-    const uint16_t txtW = UiLcdHy28_TextWidth(txt,0);
+    const uint16_t bbH = UiLcdHy28_TextHeight(font);
+    const uint16_t txtW = UiLcdHy28_TextWidth(txt,font);
     const uint16_t bbOffset = txtW>bbW?0:((bbW - txtW)+1)/2;
 
     // we draw the part of  the box not used by text.
     UiLcdHy28_DrawFullRect(bbX,bbY,bbH,bbOffset,clr_bg);
-    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,font);
 
     // if the text is smaller than the box, we need to draw the end part of the
     // box
@@ -1275,13 +1275,16 @@ mchf_touchscreen_t mchf_touchscreen;
 
 void UiLcdHy28_TouchscreenDetectPress()
 {
-    if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
-        UiLcdHy28_TouchscreenReadCoordinates();
-
-    if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+    if (mchf_touchscreen.present)
     {
-        mchf_touchscreen.state = 0;
-        mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
+        if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
+            UiLcdHy28_TouchscreenReadCoordinates();
+
+        if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+        {
+            mchf_touchscreen.state = 0;
+            mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
+        }
     }
 }
 /*
