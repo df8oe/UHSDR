@@ -124,13 +124,13 @@ int main(void)
   MX_SPI2_Init();
   MX_SPI3_Init();
   MX_SPI6_Init();
-  MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM5_Init();
   MX_TIM8_Init();
   MX_USB_HOST_Init();
   MX_FATFS_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM3_Init();
 
   /* USER CODE BEGIN 2 */
 
