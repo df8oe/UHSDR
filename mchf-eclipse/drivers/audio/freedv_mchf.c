@@ -28,11 +28,11 @@ const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078
         -1728.79114,-1594.82227,-1545.75671,-1208.91003,-252.898315,993.880493,1820.26538,
         1915.65186,1597.90259,1248.58838,809.456909,28.6509247,-961.62677,-1604.66443,-1499.18225,
         -824.882935,-85.1342163,432.899261,782.52063,1029.38452,1040.57166,692.128662,138.820541,
-        -286.785767,-420.356415,-384.165161,-348.958527,-308.304718,-171.111633,-4000,  //last value:4.52698851,
+        -286.785767,-420.356415,-384.165161,-348.958527,-308.304718,-171.111633,4.52698851,  //last value:4.52698851,
         -5.53196001,-368.999939,-1031.19165,-1766.01074,-2290.01587,-2293.98853,-1514.0238,
         23.0157223,1797.16394,3018.3894,3231.77148,2702.38745,2085.92676,1685.99255,1145.43176,
         -31.9259377,-1722.42847,-3112.2937,-3453.61426,-2790.31763,-1812.12769,-1028.70874,
-        -269.048218,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
+        -4000.000,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
         -548.479553,-1549.47034,-2692.18213,-3288.44702,-2873.70239,-1761.34033,-636.71936,
         250.664383,1198.7804,2336.43726,3121.80615,2848.64355,1556.67969,110.084801,-724.328186,
         -1013.82141,-1265.38879,-1506.06091,-1177.04529,-35.6577721,1209.823,1520.28088,679.406555,
@@ -779,13 +779,14 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     int impulse_count=0;
     float32_t R[11];  // takes the autocorrelation results
     float32_t sum,e,k,alfa;
+
     float32_t any[order+1];  //some buffer for levinson durben
 
     float32_t Rfw[impulse_length+order]; // takes the forward predicted audio restauration
     float32_t Rbw[impulse_length+order]; // takes the backward predicted audio restauration
     float32_t Wfw[impulse_length],Wbw[impulse_length]; // taking linear windows for the combination of fwd and bwd
 
-    int s=0;
+    float32_t s;
 
 #ifdef debug_alternate_NR
     for (int i=0; i<128;i++)
@@ -800,10 +801,17 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     }
 
     // calculate the autocorrelation of insamp (moving by max. of #order# samples)
-      for(int j=0; j < order+1; j++) {
-        R[j] = 0.0;
-        for(int i=0; i < Nsam-j; i++)
-          R[j] += insamp[i]*insamp[i+j];
+      for(int i=0; i < (order+1); i++) {
+
+          arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]);
+
+   /*       for (int j=0; j< Nsam-i; j++  )
+          {
+              y++;
+              sum += NR_test_samp[j] * NR_test_samp[j+i];
+          }
+          R[i]=sum;
+*/
       }
     // end of autocorrelation
 
@@ -813,7 +821,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
 
 
-  R[0] = R[0] * (1. + 1.e-9);
+  R[0] = R[0] * (1.0 + 1.0e-9);
 
   lpcs[0] = 1;   //set lpcs[0] to 1
 
@@ -824,7 +832,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
   for (int m = 1; m <= order; m++)
    {
-     s = 0;
+     s = 0.0;
      for (int u = 1; u < m; u++)
         s = s + lpcs[u] * R[m-u];
 
