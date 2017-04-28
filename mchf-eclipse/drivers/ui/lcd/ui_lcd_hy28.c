@@ -1433,6 +1433,7 @@ void UiLcdHy28_TouchscreenInit(bool is_reversed)
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
     mchf_touchscreen.reversed = is_reversed;
-    mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
+    /// FIXME: F7PORT no touch detect
+    /// mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
 

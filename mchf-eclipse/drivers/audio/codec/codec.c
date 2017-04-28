@@ -85,14 +85,14 @@
  */
 static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
 {
-    uchar   res;
+    uchar   res = 0;
 
     // Assemble 2-byte data in WM8731 format
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
-
+#ifdef STM32F4
     res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
-
+#endif
     return res;
 }
 

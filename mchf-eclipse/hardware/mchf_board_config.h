@@ -358,10 +358,14 @@
 // pin 4
 #ifdef MCHF_BOARD_0P5
 #define TP_IRQ                  GPIO_PIN_14
+#define TP_IRQ_PIO              GPIOA
+#elif defined (STM32F7)
+#define TP_IRQ                  GPIO_PIN_4
+#define TP_IRQ_PIO              GPIOG
 #else
 #define TP_IRQ                  GPIO_PIN_4
-#endif
 #define TP_IRQ_PIO              GPIOA
+#endif
 
 #define DAC0                    GPIO_PIN_4
 #define DAC0_PIO                GPIOA

@@ -431,8 +431,7 @@ int mchfMain(void)
 
     // Set default transceiver state
     TransceiverStateInit();
-
-    mchf_board_detect_ramsize();
+    // mchf_board_detect_ramsize();
 #if 0
 
     //	FLASH_OB_Unlock();

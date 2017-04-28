@@ -2995,7 +2995,8 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     // TODO: This is fragile code, as it depends on being called multiple times in short periods (ms)
     // This works, since regularily the button matrix is queried.
-    UiLcdHy28_TouchscreenDetectPress();
+    // FIXME: F7PORT
+    ///UiLcdHy28_TouchscreenDetectPress();
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {

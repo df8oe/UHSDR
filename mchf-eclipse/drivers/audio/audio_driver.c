@@ -19,7 +19,11 @@
 #include <stdio.h>
 #include <math.h>
 #include "codec.h"
+
+#ifdef STM32F4
 #include "i2s.h"
+#endif
+
 #include "cw_gen.h"
 
 #include <limits.h>
@@ -576,8 +580,11 @@ void AudioDriver_Init(void)
     // Audio Filter Init init
     AudioDriver_InitFilters();
 
+#ifdef STM32F4
+    // FIXME: F7PORT
     // Start DMA transfers
     MchfHw_Codec_StartDMA((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
+#endif
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
@@ -3029,8 +3036,10 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
     }
 }
 
+#if 0
 static uint16_t modulus = 0;
 // used to divide usb audio out sample rate, set to 0 for 48khz, do not change
+#endif
 
 #ifdef USE_FREEDV
 //
@@ -3600,11 +3609,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
-            {
-                audio_in_put_buffer(src[i].l);
-                audio_in_put_buffer(src[i].r);
-            }
+#ifdef STM32F4
+            // FIXME: F7PORT
+            audio_in_put_buffer(src[i].l);
+            audio_in_put_buffer(src[i].r);
+#endif
         }
     }
 
@@ -4073,15 +4082,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
-            if (i%USBD_AUDIO_IN_OUT_DIV == modulus)
-            {
-                float32_t val = adb.a_buffer[i] * usb_audio_gain;
-                audio_in_put_buffer(val);
-                if (USBD_AUDIO_IN_CHANNELS == 2)
-                {
-                    audio_in_put_buffer(val);
-                }
-            }
+            float32_t val = adb.a_buffer[i] * usb_audio_gain;
+#ifdef STM32F4
+            // FIXME: F7PORT
+            audio_in_put_buffer(val);
+            audio_in_put_buffer(val);
+#endif
         }
     }
     // calculate the first index we read so that we are not loosing
@@ -4090,11 +4096,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     // since (SIZE/2) % USBD_AUDIO_IN_OUT_DIV == 0
     // if someone needs lower rates, just add formula or values
     // but this would bring us down to less than 12khz bitrate
+#if 0
     if (USBD_AUDIO_IN_OUT_DIV == 3)
     {
         modulus++;
         modulus%=USBD_AUDIO_IN_OUT_DIV;
     }
+#endif
 }
 
 
@@ -4640,8 +4648,12 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
     // let the normal processing happen
     if (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ)
     {
+#ifdef STM32F4
+            // FIXME: F7PORT
+
         // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
         audio_out_fill_tx_buffer((int16_t*)src,2*blockSize);
+#endif
     }
 
     if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune)
@@ -4818,30 +4830,39 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
     case STREAM_TX_AUDIO_DIGIQ:
         for(int i = 0; i < blockSize; i++)
         {
-            //
+
+#ifdef STM32F4
+            // FIXME: F7PORT
+
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             audio_in_put_buffer(dst[i].r);
             audio_in_put_buffer(dst[i].l);
+#endif
         }
         break;
     case STREAM_TX_AUDIO_SRC:
         for(int i = 0; i < blockSize; i++)
         {
-            //
+#ifdef STM32F4
+            // FIXME: F7PORT
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             audio_in_put_buffer(src[i].r);
             audio_in_put_buffer(src[i].l);
+#endif
         }
         break;
     case STREAM_TX_AUDIO_FILT:
         for(int i = 0; i < blockSize; i++)
         {
+#ifdef STM32F4
+            // FIXME: F7PORT
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIG
             // TODO: certain modulation modes will destroy the "a_buffer" during IQ signal creation (AM does at least)
             audio_in_put_buffer(adb.a_buffer[i]);
             audio_in_put_buffer(adb.a_buffer[i]);
+#endif
         }
     }
 }
