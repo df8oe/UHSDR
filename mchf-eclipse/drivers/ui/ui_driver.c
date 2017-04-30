@@ -2999,7 +2999,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
-        retval = HAL_GPIO_ReadPin(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
+        retval = HAL_GPIO_ReadPin(buttons.map[button_num].port,buttons.map[button_num].button) == 0;		// in normal mode - return key value
     }
     return retval;
 }
@@ -5499,10 +5499,7 @@ static void UiDriver_KeyTestScreen()
 	char txt_buf[40];
 	const char* txt;
 
-	const int mchf_numButtons = 18;
-    // FIXME: F7PORT: We have more keys, replace 18 with constant
-
-	for(i = 0; i < mchf_numButtons ; i++)	 			// scan all buttons
+	for(i = 0; i < buttons.num ; i++)	 			// scan all buttons
 	{
 		if(UiDriver_IsButtonPressed(i))	 		// is one button being pressed?
 		{
@@ -5523,7 +5520,7 @@ static void UiDriver_KeyTestScreen()
 			j = 99;		// load with flag value
 			k = 0;
 
-			for(i = 0; i < mchf_numButtons ; i++)
+			for(i = 0; i < buttons.num ; i++)
 			{
 				// scan all buttons
 				if(UiDriver_IsButtonPressed(i))
@@ -5557,9 +5554,9 @@ static void UiDriver_KeyTestScreen()
 				j = 18+t;					// add encoders behind buttons;
 			}
 
-			if (j < mchf_numButtons)
+			if (j < buttons.num)
 			{
-			    txt = bm[j].label;
+			    txt = buttons.map[j].label;
 			}
 			else
 			{
@@ -5597,11 +5594,19 @@ static void UiDriver_KeyTestScreen()
 					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp->x,ts.tp->y);	//show touched coordinates
 					{
 					}
-					txt = txt_buf;
+	                UiLcdHy28_PrintTextCentered(10,210,300,txt_buf,White,Blue,0);           // identify button on screen
+					txt = "Touch";
 				}
 				else
 				{
-					txt = "";
+				    if (mchf_touchscreen.present)
+				    {
+				        txt = "Touch (no coord.)";
+				    }
+				    else
+				    {
+				        txt = "Touch (no cntrlr)";
+				    }
 				}
 				break;
 			case	18+ENC1:							// handle encoder event
@@ -5615,7 +5620,7 @@ static void UiDriver_KeyTestScreen()
 			    {
 			        if(!enccount)
 			        {
-			            txt = "<none>";				// no button pressed
+			            txt = "<no button>";				// no button pressed
 			        }
 			        else
 			        {
@@ -5626,21 +5631,24 @@ static void UiDriver_KeyTestScreen()
 			        rbcount = 0;
 			    }
 			}
-			//
+
 			if(txt[0])
 			{
 				UiLcdHy28_PrintTextCentered(10,120,300,txt,White,Blue,1);			// identify button on screen
 			}
+
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
-			if(ts.tp->raw && ts.tp->present)			// show translation of touchscreen if present
+
+			if(ts.tp->present)			// show translation of touchscreen if present
 			{
-			  UiLcdHy28_PrintText(10,200,"touch is raw       ",White,Blue,1);
+			    txt = ts.tp->raw?"touch coordinates: raw":"touch coordinates: translate";
 			}
 			else
 			{
-			  UiLcdHy28_PrintText(10,200,"touch is translated",White,Blue,1);
+			    txt = "touch controller: no";
 			}
+			UiLcdHy28_PrintTextCentered(10,200,300,txt,White,Blue,0);
 
 			if(p_o_state == 1)
 			{

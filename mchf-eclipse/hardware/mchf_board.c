@@ -148,7 +148,8 @@ const ButtonMap bm_sets[2][18] =
 };
 
 // the inital button map is the default one
-const ButtonMap* bm = &bm_sets[0][0];
+mchf_buttons_t buttons = { .map = &bm_sets[0][0], .num = 18 };
+
 
 static void mchf_board_keypad_init(const ButtonMap* bm)
 {
@@ -665,11 +666,11 @@ void mchf_board_init(void)
     // parallel display never has a STM32 based rtc, so we do not need to check for RTC
     if ((ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
     {
-        bm = &bm_sets[1][0];
+        buttons.map = &bm_sets[1][0];
     }
 
     // Init keypad hw based on button map bm
-    mchf_board_keypad_init(bm);
+    mchf_board_keypad_init(buttons.map);
 
     // Encoders init
     UiRotaryFreqEncoderInit();

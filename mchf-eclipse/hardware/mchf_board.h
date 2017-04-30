@@ -95,6 +95,12 @@ typedef struct ButtonMap
 
 } ButtonMap;
 
+typedef struct
+{
+    const ButtonMap* map;
+    uint32_t num;
+} mchf_buttons_t;
+
 // Button definitions
 //
 enum
@@ -121,7 +127,7 @@ enum
     BUTTON_NUM // How many buttons we have defined
 };
 
-extern const ButtonMap*  bm;
+extern mchf_buttons_t  buttons;
 extern const ButtonMap  bm_sets[2][BUTTON_NUM];
 
 // -----------------------------------------------------------------------------
