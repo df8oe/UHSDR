@@ -1062,6 +1062,7 @@ inline bool mchf_dit_line_pressed() {
 
 unsigned int mchf_board_get_ramsize();
 void mchf_board_detect_ramsize();
+void mchf_board_touchscreen_init();
 
 // in main.c
 void CriticalError(ulong error);

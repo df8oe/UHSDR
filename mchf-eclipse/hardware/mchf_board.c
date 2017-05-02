@@ -545,7 +545,7 @@ static void mchf_board_band_cntr_init(void)
     BAND2_PIO->BSRR = BAND2;
 }
 
-static void mchf_board_touchscreen_init()
+void mchf_board_touchscreen_init()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
