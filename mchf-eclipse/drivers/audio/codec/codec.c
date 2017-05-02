@@ -93,6 +93,10 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
 #ifdef STM32F4
     res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
 #endif
+#ifdef STM32F7
+    res = MCHF_I2C_WriteRegister(CODEC_ANA_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
+#endif
+
     return res;
 }
 

@@ -18,7 +18,14 @@
 #include "mchf_hw_i2s.h"
 
 #include "audio_driver.h"
+
+#ifdef STM32F4
 #include "i2s.h"
+#endif
+
+#ifdef STM32F7
+#include "sai.h"
+#endif
 
 static uint32_t txbuf, rxbuf, szbuf;
 
@@ -79,6 +86,12 @@ void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s)
     MchfHw_Codec_HandleBlock(0);
 }
 
+void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
+{
+    MchfHw_Codec_HandleBlock(0);
+}
+
+
 /**
  * @brief HAL Handler for Codec DMA Interrupt
  */
@@ -87,16 +100,35 @@ void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
     MchfHw_Codec_HandleBlock(1);
 }
 
+
+void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
+{
+    MchfHw_Codec_HandleBlock(1);
+}
+
+
 void MchfHw_Codec_StartDMA(uint32_t txAddr, uint32_t rxAddr, uint32_t Size)
 {
     txbuf = txAddr;
     rxbuf = rxAddr;
     szbuf = Size;
 
+#ifdef STM32F4
     HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)txAddr,(uint16_t*)rxAddr,Size);
+#endif
+#ifdef STM32F7
+    HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)rxAddr,Size);
+    HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)txAddr,Size);
+#endif
 }
 
 void MchfHw_Codec_StopDMA(void)
 {
+#ifdef STM32F4
     HAL_I2S_DMAStop(&hi2s3);
+#endif
+#ifdef STM32F7
+    HAL_SAI_DMAStop(&hsai_BlockA1);
+    HAL_SAI_DMAStop(&hsai_BlockB1);
+#endif
 }

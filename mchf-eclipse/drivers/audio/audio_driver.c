@@ -580,11 +580,8 @@ void AudioDriver_Init(void)
     // Audio Filter Init init
     AudioDriver_InitFilters();
 
-#ifdef STM32F4
-    // FIXME: F7PORT
     // Start DMA transfers
     MchfHw_Codec_StartDMA((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
-#endif
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
