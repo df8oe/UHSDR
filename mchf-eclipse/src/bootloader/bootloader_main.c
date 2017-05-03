@@ -14,6 +14,7 @@
 
 #include "flash_if.h"
 #include "mchf_boot_hw.h"
+#include "hardware/mchf_board.h"
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
@@ -59,21 +60,7 @@ static void BL_DisplayInit()
     MX_SPI2_Init();
     MX_GPIO_Init();
 
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    GPIO_InitStructure.Mode     = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull     = GPIO_PULLUP;
-    GPIO_InitStructure.Speed    = GPIO_SPEED_FREQ_VERY_HIGH;
-
-    GPIO_InitStructure.Pin = TP_IRQ;
-    HAL_GPIO_Init(TP_IRQ_PIO, &GPIO_InitStructure);
-
-    GPIO_InitStructure.Mode     = GPIO_MODE_OUTPUT_PP;
-
-    GPIO_InitStructure.Pin = TP_CS;
-    HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
-
-    GPIO_SetBits(TP_CS_PIO, TP_CS);
+	mchf_board_touchscreen_init();
 
     UiLcdHy28_Init();
     UiLcdHy28_LcdClear(Black);
