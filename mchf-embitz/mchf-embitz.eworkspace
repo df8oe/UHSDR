@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<EmBitz_workspace_file>
+	<Workspace title="mchf-embitz workspace">
+		<Project filename="stm32f4xx_hal.ebp" />
+		<Project filename="cmsis_dsp.ebp" />
+		<Project filename="mchf.ebp" active="1">
+			<Depends filename="stm32f4xx_hal.ebp" />
+			<Depends filename="cmsis_dsp.ebp" />
+		</Project>
+		<Project filename="bootloader.ebp">
+			<Depends filename="stm32f4xx_hal.ebp" />
+		</Project>
+	</Workspace>
+</EmBitz_workspace_file>

@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<EmBitz_project_file>
+	<EmBitzVersion release="1.11" revision="0" />
+	<FileVersion major="1" minor="0" />
+	<Project>
+		<Option title="stm32f4xx_hal" />
+		<Option pch_mode="2" />
+		<Option compiler="armgcc_eb" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\libstm32f4xxhal.a" />
+				<Option object_output="obj\Debug\" />
+				<Option type="1" />
+				<Option compiler="armgcc_eb" />
+				<Option projectDeviceOptionsRelation="0" />
+				<Compiler>
+					<Add option="-O0" />
+					<Add option="-g2" />
+				</Compiler>
+				<Cpp>
+					<Add option="-O0" />
+					<Add option="-g2" />
+				</Cpp>
+				<Assembler>
+					<Add option="--gdwarf-2" />
+				</Assembler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\libstm32f4xxhal.a" />
+				<Option object_output="obj\Release\" />
+				<Option type="1" />
+				<Option compiler="armgcc_eb" />
+				<Option projectDeviceOptionsRelation="0" />
+				<Compiler>
+					<Add option="-fdata-sections" />
+					<Add option="-ffunction-sections" />
+					<Add option="-O2" />
+				</Compiler>
+				<Cpp>
+					<Add option="-O2" />
+				</Cpp>
+				<Linker>
+					<Add option="-Wl,--gc-sections" />
+				</Linker>
+			</Target>
+			<Target title="ReleaseSmall">
+				<Option output="bin\ReleaseSmall\libstm32f4xxhal.a" />
+				<Option object_output="obj\ReleaseSmall\" />
+				<Option type="1" />
+				<Option compiler="armgcc_eb" />
+				<Option projectDeviceOptionsRelation="0" />
+				<Compiler>
+					<Add option="-fdata-sections" />
+					<Add option="-ffunction-sections" />
+					<Add option="-Os" />
+				</Compiler>
+				<Cpp>
+					<Add option="-Os" />
+				</Cpp>
+				<Linker>
+					<Add option="-Wl,--gc-sections" />
+				</Linker>
+			</Target>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="Release;ReleaseSmall;" />
+		</VirtualTargets>
+		<Device>
+			<Add option="$device=cortex-m4" />
+			<Add option="$fpu=fpv4-sp-d16" />
+		</Device>
+		<Compiler>
+			<Add option="-mfloat-abi=hard" />
+			<Add option="-std=gnu11" />
+			<Add option="-Wall" />
+			<Add option="-fdata-sections" />
+			<Add option="-ffunction-sections" />
+			<Add symbol="ARM_MATH_CM4" />
+			<Add symbol="_GNU_SOURCE" />
+			<Add symbol="CORTEX_M4" />
+			<Add symbol="STM32F407xx" />
+			<Add symbol="USE_HAL_DRIVER" />
+			<Add symbol="DEBUG" />
+			<Add symbol="USE_FULL_ASSERT" />
+			<Add symbol="TRACE" />
+			<Add symbol="__FPU_PRESENT=1U" />
+		</Compiler>
+		<Cpp>
+			<Add option="-mfloat-abi=hard" />
+			<Add option="-std=gnu11" />
+			<Add option="-Wall" />
+			<Add option="-fdata-sections" />
+			<Add option="-ffunction-sections" />
+		</Cpp>
+		<Linker>
+			<Add option="-Wl,--gc-sections" />
+			<Add option="-flto" />
+		</Linker>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_adc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_adc_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_can.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cec.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_conf_template.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cortex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_crc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cryp.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cryp_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dac.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dac_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dcmi.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dcmi_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_def.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dfsdm.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma2d.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dsi.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_eth.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ramfunc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_fmpi2c.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_fmpi2c_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_hash.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_hash_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_hcd.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2c.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2c_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2s.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2s_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_irda.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_iwdg.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_lptim.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_ltdc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_ltdc_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_nand.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_nor.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pccard.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pcd.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pcd_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_qspi.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rng.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rtc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rtc_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_sai.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_sai_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_sd.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_sdram.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_smartcard.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_spdifrx.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_spi.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_sram.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_usart.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_wwdg.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_ll_fmc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_ll_fsmc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_ll_sdmmc.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_ll_usb.h" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_can.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cortex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_crc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cryp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cryp_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dcmi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dcmi_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dfsdm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma2d.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dsi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_eth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ramfunc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_fmpi2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_fmpi2c_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hash_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2c_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2s.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2s_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_irda.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_iwdg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_lptim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_ltdc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_ltdc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_msp_template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_nand.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_nor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pccard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pwr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pwr_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_qspi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rcc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rcc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rng.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sai.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sai_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sdram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_smartcard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spdifrx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_timebase_rtc_alarm_template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_timebase_rtc_wakeup_template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_timebase_tim_template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_usart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_wwdg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_fmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_fsmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_sdmmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_usb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Inc\stm32f4xx_hal_conf.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</EmBitz_project_file>
