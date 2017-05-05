@@ -529,6 +529,8 @@ static void mchf_board_power_down_init(void)
 //
 static void mchf_board_band_cntr_init(void)
 {
+#ifdef STM32F4
+    // FIXME: USE HAL Init here as well, this handles also the multiple Ports case
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_InitStructure.Mode 	= GPIO_MODE_OUTPUT_PP;
@@ -537,7 +539,7 @@ static void mchf_board_band_cntr_init(void)
 
     GPIO_InitStructure.Pin = BAND0|BAND1|BAND2;
     HAL_GPIO_Init(BAND0_PIO, &GPIO_InitStructure);
-
+#endif
     // Set initial state - low (20m band)
     BAND0_PIO->BSRR = BAND0 << 16U;
     BAND1_PIO->BSRR = BAND1 << 16U;
