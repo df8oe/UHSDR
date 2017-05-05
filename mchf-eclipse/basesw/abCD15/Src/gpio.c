@@ -153,11 +153,17 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PGPin PGPin */
-  GPIO_InitStruct.Pin = Power_Button_Pin|TP_IRQ_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = Power_Button_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(Power_Button_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = TP_IRQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+  HAL_GPIO_Init(TP_IRQ_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PGPin PGPin PGPin PGPin */
   GPIO_InitStruct.Pin = Button_G1_Pin|opt_SW_E4_Pin|Button_G4_Pin|Button_F3_Pin;
@@ -210,8 +216,8 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PEPin PEPin */
   GPIO_InitStruct.Pin = keyer_dash_Pin|keyer_dot_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 }
