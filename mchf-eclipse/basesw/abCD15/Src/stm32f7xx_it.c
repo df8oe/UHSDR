@@ -173,6 +173,7 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f7xx.s).                    */
 /******************************************************************************/
 
+#ifndef BOOTLOADER_BUILD
 /**
 * @brief This function handles EXTI line0 interrupt.
 */
@@ -246,7 +247,6 @@ void DMA2_Stream2_IRQHandler(void)
 /**
 * @brief This function handles USB On The Go FS global interrupt.
 */
-#ifndef BOOTLOADER_BUILD
 void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */

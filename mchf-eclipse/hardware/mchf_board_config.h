@@ -36,8 +36,12 @@
 
 #ifdef STM32F4
 
-#define CODEC_I2C                   I2C2
-#define SERIALEEPROM_I2C            I2C2
+#define SI570_I2C               (&hi2c1)
+
+#define CODEC_ANA_I2C               (&hi2c2)
+#define CODEC_IQ_I2C                (&hi2c2)
+
+#define SERIALEEPROM_I2C            (&hi2c2)
 
 // -----------------------------------------------------------------------------
 //						PORT PINS ALLOCATION
@@ -328,13 +332,16 @@
 
 #ifdef STM32F7
 
-#define CODEC_ANA_I2C               I2C2
+#define SI570_I2C               (&hi2c1)
+
+
+#define CODEC_ANA_I2C               (&hi2c2)
 #define CODEC_ANA_SAI               SAI1
 
-#define CODEC_IQ_I2C                I2C4
+#define CODEC_IQ_I2C                (&hi2c4)
 #define CODEC_IQ_SAI                SAI2
 
-#define SERIALEEPROM_I2C            I2C2
+#define SERIALEEPROM_I2C            (&hi2c2)
 
 
 // -----------------------------------------------------------------------------
@@ -350,8 +357,8 @@
 #define ENC_THREE_CH2           GPIO_PIN_1
 #define ENC_THREE_CH2_PIO       GPIOA
 // pin 2
-#define ADC3_FWD                GPIO_PIN_2
-#define ADC3_FWD_PIO            GPIOA
+#define XADC3_FWD                GPIO_PIN_2
+#define XXADC3_FWD_PIO            GPIOA
 // pin 3
 #define ADC2_RET                GPIO_PIN_3
 #define ADC2_RET_PIO            GPIOA
@@ -371,14 +378,11 @@
 #define DAC0_PIO                GPIOA
 // pin 5
 //#define DAC1                  GPIO_PIN_5
-//#define DAC1_SOURCE               GPIO_PinSource5
 //#define DAC1_PIO                  GPIOA
 // pin 6
 #define ADC1_PWR                GPIO_PIN_6
 #define ADC1_PWR_PIO            GPIOA
 // pin 7
-#define BAND0                   GPIO_PIN_7
-#define BAND0_PIO               GPIOA
 // pin 8
 #define BAND1                   GPIO_PIN_8
 #define BAND1_PIO               GPIOA
@@ -635,6 +639,8 @@
 #define BUTTON_M1_PIO           GPIOF
 // pin 1
 // pin 2
+#define ADC3_FWD                GPIO_PIN_3
+#define ADC3_FWD_PIO            GPIOF
 // pin 3
 // pin 4
 // pin 5
@@ -663,7 +669,11 @@
 // ----                         PORT G                                      ----
 // -----------------------------------------------------------------------------
 // pin 0
+#define BAND0                   GPIO_PIN_0
+#define BAND0_PIO               GPIOG
 // pin 1
+#define BAND3                   GPIO_PIN_1
+#define BAND3_PIO               GPIOG
 // pin 2
 #define BUTTON_PWR              GPIO_PIN_2
 #define BUTTON_PWR_PIO          GPIOG

@@ -48,10 +48,6 @@ typedef struct {
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
-// ---------------------------------
-// DMA buffers for I2S
-__IO int16_t 	tx_buffer[BUFF_LEN+1];
-__IO int16_t    rx_buffer[BUFF_LEN+1];
 
 static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize);
 
@@ -580,10 +576,12 @@ void AudioDriver_Init(void)
     // Audio Filter Init init
     AudioDriver_InitFilters();
 
-    // Start DMA transfers
-    MchfHw_Codec_StartDMA((uint32_t)&tx_buffer, (uint32_t)&rx_buffer, BUFF_LEN);
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
+
+    // Start DMA transfers
+    MchfHw_Codec_StartDMA();
+
 
 #ifdef USE_SNAP
     // initialize FFT structure used for snap carrier
