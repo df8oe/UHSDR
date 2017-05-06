@@ -401,7 +401,12 @@ void Codec_VolumeSpkr(uint8_t vol)
     lv += 0x2F; // volume offset, all lower values including 0x2F represent muting
     // Reg 02: Speaker - variable volume, change at zero crossing in order to prevent audible clicks
 //    Codec_WriteRegister(W8731_LEFT_HEADPH_OUT,lv); // (lv | W8731_HEADPH_OUT_ZCEN));
+#ifdef STM32F4
     Codec_WriteRegister(CODEC_ANA_I2C, W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN));
+#else
+    // both outputs are used for lineout/headphones
+    Codec_WriteRegister(CODEC_ANA_I2C, W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH));
+#endif
 }
 /**
  * @brief audio volume control in TX and RX modes for lineout [right headphone]
@@ -413,6 +418,11 @@ void Codec_VolumeSpkr(uint8_t vol)
 
 void Codec_VolumeLineOut(uint8_t txrx_mode)
 {
+
+#ifdef STM32F4
+    // we do not have a special lineout yet on the STM32F7: lineout/headphones share a port.
+    // And since we have a dedidacted IQ codec, there is no need to switch of the lineout or headphones here
+    // FIXME: F7PORT -> CW Sidetone needs to be "generate" specifically by copying the IQ output to the lineout channel, not yet possible due to required SW changes
     // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
     if (
             (txrx_mode == TRX_MODE_TX)
@@ -428,6 +438,7 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
     {
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT,ts.lineout_gain + 0x2F);   // value selected for 0.5VRMS at AGC setting
     }
+#endif
 }
 
 /**

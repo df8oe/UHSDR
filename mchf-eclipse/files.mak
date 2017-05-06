@@ -1,6 +1,6 @@
 SRC := \
 misc/v_eprom/eeprom.c \
-src/main.c \
+src/mchf_main.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/config_storage.c \
 misc/profiling.c \

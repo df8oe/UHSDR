@@ -520,11 +520,7 @@
 #define XBUTTON_F3               GPIO_PIN_15
 #define XBUTTON_F3_PIO           GPIOC
 
-#define BUTTON_M1_RTC           GPIO_PIN_14
-#define BUTTON_M1_PIO_RTC       GPIOD
 // pin 15
-#define BUTTON_F3_RTC           GPIO_PIN_15
-#define BUTTON_F3_PIO_RTC       GPIOD
 
 //
 // -----------------------------------------------------------------------------
@@ -637,6 +633,9 @@
 // pin 0
 #define BUTTON_M1               GPIO_PIN_0
 #define BUTTON_M1_PIO           GPIOF
+#define BUTTON_M1_RTC           GPIO_PIN_0
+#define BUTTON_M1_PIO_RTC       GPIOF
+
 // pin 1
 // pin 2
 #define ADC3_FWD                GPIO_PIN_3
@@ -664,6 +663,9 @@
 // pin 15
 #define BUTTON_F3               GPIO_PIN_15
 #define BUTTON_F3_PIO           GPIOG
+
+#define BUTTON_F3_RTC           GPIO_PIN_15
+#define BUTTON_F3_PIO_RTC       GPIOG
 
 // -----------------------------------------------------------------------------
 // ----                         PORT G                                      ----
