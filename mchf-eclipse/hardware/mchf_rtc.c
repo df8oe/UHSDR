@@ -133,6 +133,10 @@ bool MchfRtc_enabled()
         HAL_RTCEx_BKUPWrite(&hrtc,RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
     } else {
         ts.vbat_present = true;
+#ifdef STM32F7
+        // we have an RTC in any case
+        retval = true;
+#endif
     }
 #endif
     return retval;

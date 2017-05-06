@@ -38,6 +38,7 @@
 
 #define SI570_I2C               (&hi2c1)
 
+#define CODEC_I2C               (&hi2c2)
 #define CODEC_ANA_I2C               (&hi2c2)
 #define CODEC_IQ_I2C                (&hi2c2)
 

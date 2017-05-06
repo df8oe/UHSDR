@@ -100,6 +100,7 @@ void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s)
     MchfHw_Codec_HandleBlock(0);
 }
 
+#ifdef STM32F7
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
 {
     if (hi2s == &hsai_BlockA2)
@@ -125,7 +126,7 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
         MchfHw_Codec_HandleBlock(1);
     }
 }
-
+#endif
 
 void MchfHw_Codec_StartDMA()
 {
