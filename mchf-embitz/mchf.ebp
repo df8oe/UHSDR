@@ -16,9 +16,8 @@
 				<Compiler>
 					<Add option="-std=gnu11" />
 					<Add option="-Wunused-function" />
-					<Add option="-O0" />
+					<Add option="-O2" />
 					<Add option="-g2" />
-					<Add option="-fgnu89-inline" />
 				</Compiler>
 				<Cpp>
 					<Add option="-std=gnu++11" />
@@ -29,7 +28,7 @@
 					<Add option="--gdwarf-2" />
 				</Assembler>
 				<Linker>
-					<Add option="-T..\mchf-eclipse\arm-gcc-link-1024k.ld" />
+					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
 					<Add library="bin\Debug\libstm32f4xxhal.a" />
 					<Add library="bin\Debug\libcmsisdsp.a" />
 				</Linker>
@@ -655,9 +654,42 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />
+		<Unit filename="Readme.md" />
 		<Extensions>
 			<code_completion />
-			<debugger />
+			<debugger>
+				<target_debugging_settings target="Debug" active_interface="ST-link">
+					<debug_interface interface_id="OpenOCD" ip_address="" ip_port="" path="" executable="" description="" dont_start_server="false" backoff_time="" options="0" reg_filter="0" active_family="" gdb_before_conn="" gdb_after_conn="">
+						<family_options family_id="All">
+							<option opt_id="ID_BOARD_CH" opt_value="" />
+							<option opt_id="ID_INTERFACE_CH" opt_value="stlink-v2" />
+							<option opt_id="ID_TARGET_CH" opt_value="stm32f4x" />
+							<option opt_id="ID_TEXTCTRL1" opt_value="1800" />
+							<option opt_id="ID_HW_BKP_LIMIT" opt_value="" />
+							<option opt_id="ID_RESET_CH" opt_value="halt" />
+							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
+							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
+							<option opt_id="ID_ADD_COMMANDS" opt_value="" />
+							<option opt_id="ID_ADD_CMNDS" opt_value="" />
+						</family_options>
+					</debug_interface>
+					<debug_interface interface_id="ST-link" ip_address="localhost" ip_port="4242" path="${EMBITZ}\share\contrib" executable="STLinkGDB.exe" description="" dont_start_server="false" backoff_time="1000" options="0" reg_filter="0" active_family="STMicroelectronics" gdb_before_conn="" gdb_after_conn="">
+						<family_options family_id="STMicroelectronics">
+							<option opt_id="ID_JTAG_SWD" opt_value="swd" />
+							<option opt_id="ID_VECTOR_START" opt_value="0x08000000" />
+							<option opt_id="ID_RESET_TYPE" opt_value="System" />
+							<option opt_id="ID_LOAD_PROGRAM" opt_value="1" />
+							<option opt_id="ID_SEMIHOST_CHECK" opt_value="0" />
+							<option opt_id="ID_RAM_EXEC" opt_value="0" />
+							<option opt_id="ID_VEC_TABLE" opt_value="1" />
+							<option opt_id="ID_DONT_CONN_RESET" opt_value="0" />
+							<option opt_id="ID_ALL_MODE_DEBUG" opt_value="0" />
+							<option opt_id="ID_DEV_ADDR" opt_value="" />
+							<option opt_id="ID_VERBOSE_LEVEL" opt_value="3" />
+						</family_options>
+					</debug_interface>
+				</target_debugging_settings>
+			</debugger>
 			<envvars />
 			<DoxyBlocks>
 				<comment_style block="0" line="0" />
