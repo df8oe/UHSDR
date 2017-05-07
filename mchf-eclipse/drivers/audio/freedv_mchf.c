@@ -763,8 +763,8 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 {
 #define boundary_blank 20 // for first trials very large!!!!
-#define impulse_length 7 // has to be odd!!!!
-#define PL             3 // has to be (impulse_length-1)/2 !!!!
+#define impulse_length 15 // has to be odd!!!! 7 / 3 should be enough
+#define PL             7 // has to be (impulse_length-1)/2 !!!!
 
     arm_fir_instance_f32 LPC;
     float32_t lpcs[order+1]; // we reserve one more than "order" because of a leading "1"
@@ -796,8 +796,8 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
     {                                     // will be a constant window later!
-        Wfw[i]=1.0*(i+1)/impulse_length;
-        Wbw[impulse_length-i-1]=Wfw[i];
+        Wbw[i]=1.0*i/(impulse_length-1);
+        Wfw[impulse_length-i-1]=Wbw[i];
     }
 
     // calculate the autocorrelation of insamp (moving by max. of #order# samples)
@@ -861,6 +861,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     arm_fir_f32(&LPC,tempsamp,tempsamp,Nsam); // do a matched filtering to detect an impulse in our now voiceless signal
 
+
     arm_var_f32(tempsamp,NR_FFT_SIZE,&sigma2); //calculate sigma2 of the original signal ? or tempsignal
 
     arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares of the lpc's
@@ -902,7 +903,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 // we can do this in place of the lpcs, as they are not used here anymore and being recalculated in the next frame!
 
     arm_negate_f32(&lpcs[1],&lpcs[1],order);
-    arm_negate_f32(&reverse_lpcs[1],&reverse_lpcs[1],order);
+    arm_negate_f32(&reverse_lpcs[0],&reverse_lpcs[0],order);
 
 
     for (int j=0; j<impulse_count; j++)
@@ -910,13 +911,13 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
         for (int k = 0; k<order; k++)   // we have to copy some samples from the original signal as
             {                           // basis for the reconstructions - could be done by memcopy
                 Rfw[k]=insamp[impulse_positions[j]-PL-order+k];
-                Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k];
-            }
+                Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
+            }                                                               //bis hier alles ok
 
             for (int i = 0; i < impulse_length; i++) //now we calculate the forward and backward predictions
                 {
-                    arm_dot_prod_f32(&lpcs[1],&Rfw[i],order,&Rfw[i+order]);
-                    arm_dot_prod_f32(&reverse_lpcs[1],&Rbw[impulse_length-i],order,&Rbw[impulse_length-i-1]);
+                    arm_dot_prod_f32(&reverse_lpcs[0],&Rfw[i],order,&Rfw[i+order]);
+                    arm_dot_prod_f32(&lpcs[1],&Rbw[impulse_length-i],order,&Rbw[impulse_length-i-1]);
 
                 }
 
