@@ -691,11 +691,13 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
                                     {
-                                        outputsamples[k] = inputsamples[k] + 100 * sawcount;// overlay sawtooth
+//                                        outputsamples[k] = inputsamples[k] + 100 * sawcount;// overlay sawtooth
                                         //outputsamples[k] = inputsamples[k];  just copy back
 
-                                        sawcount++;
-                                        if (sawcount > 15) sawcount=0;
+//                                        sawcount++;
+//                                        if (sawcount > 15) sawcount=0;
+// 1.
+
                                     }
 
 
