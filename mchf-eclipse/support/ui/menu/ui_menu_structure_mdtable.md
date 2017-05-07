@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-03-27T07:59:47  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-05-07T13:19:52  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.2.2 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.2.4 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v2.2.2 - UI Menu Overview
+# mcHF FW v2.2.4 - UI Menu Overview
 
-generated at  2017-03-27T07:59:47  by "./ui_menu_structure_mdtable.py"
+generated at  2017-05-07T13:19:52  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -246,6 +246,7 @@ generated at  2017-03-27T07:59:47  by "./ui_menu_structure_mdtable.py"
 | **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
+| **new Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | toggle new noiseblanker for testing purposes   | 
 
 
 [//]: # ( EOFILE                                                                       )

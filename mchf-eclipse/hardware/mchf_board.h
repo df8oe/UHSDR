@@ -883,6 +883,7 @@ typedef struct TransceiverState
     int16_t rtc_calib; // ppm variation value, unit 1 ppm
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
+	bool new_nb; // new noise blanker
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

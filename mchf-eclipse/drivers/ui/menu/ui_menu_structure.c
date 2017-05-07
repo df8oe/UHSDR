@@ -354,6 +354,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_CALIB, &ts.rtc_present,"RTC Calibration", UiMenuDesc("Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"new Noiseblanker", UiMenuDesc("toggle new noiseblanker for testing purposes") },
 
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

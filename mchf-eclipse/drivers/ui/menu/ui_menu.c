@@ -3512,6 +3512,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
+    case MENU_DEBUG_NEW_NB:
+        temp_var_u8 = ts.new_nb;
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+		  ts.new_nb = temp_var_u8;
+        }
+        break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

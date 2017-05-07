@@ -352,6 +352,7 @@ void TransceiverStateInit(void)
     ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
     ts.FDV_TX_out_start_pt=0;
     ts.FDV_TX_in_start_pt=0;
+	ts.new_nb = false;	// new nb OFF at poweron
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
