@@ -375,11 +375,11 @@
 #define TP_IRQ_PIO              GPIOA
 #endif
 
-#define DAC0                    GPIO_PIN_4
-#define DAC0_PIO                GPIOA
+#define DAC_CH1                 GPIO_PIN_4
+#define DAC_CH1_PIO             GPIOA
 // pin 5
-//#define DAC1                  GPIO_PIN_5
-//#define DAC1_PIO                  GPIOA
+#define DAC_CH2                 GPIO_PIN_5
+#define DAC_CH2_PIO             GPIOA
 // pin 6
 #define ADC1_PWR                GPIO_PIN_6
 #define ADC1_PWR_PIO            GPIOA
@@ -654,9 +654,11 @@
 #define BUTTON_E3               GPIO_PIN_10
 #define BUTTON_E3_PIO           GPIOF
 // pin 11
-#define BUTTON_S18               GPIO_PIN_11
-#define BUTTON_S18_PIO           GPIOF
+#define BUTTON_S18              GPIO_PIN_11
+#define BUTTON_S18_PIO          GPIOF
 // pin 12
+#define BLUE_LED                GPIO_PIN_12
+#define BLUE_LED_PIO            GPIOF
 // pin 13
 #define BUTTON_E1               GPIO_PIN_13
 #define BUTTON_E1_PIO           GPIOF
@@ -682,9 +684,9 @@
 #define BUTTON_PWR_PIO          GPIOG
 // pin 3
 // pin 4
-#define AUDIO_PA_EN             GPIO_PIN_4
-#define AUDIO_PA_EN_PIO         GPIOG
 // pin 5
+#define AUDIO_PA_EN             GPIO_PIN_5
+#define AUDIO_PA_EN_PIO         GPIOG
 // pin 6
 #define BUTTON_G1               GPIO_PIN_6
 #define BUTTON_G1_PIO           GPIOG
@@ -708,6 +710,7 @@
 
 #define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
 #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
-#define GPIO_ReadInputDataBit(PORT,PINS) ((PORT)->BSRR = (PINS) << 16U)
+#define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
+#define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 
 #endif

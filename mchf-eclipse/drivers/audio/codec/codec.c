@@ -87,7 +87,32 @@ typedef struct
 
 __IO mchf_codec_t mchf_codecs[DMA_AUDIO_NUM];
 
-
+#ifdef STM32F7
+/**
+ * @brief controls volume on "external" PA via DAC
+ * @param vol volume in range of 0 to 80, where 80 is max volume
+ */
+static void AudioPA_Volume(uint8_t vol)
+{
+    uint32_t lv = vol>0x50?0x50:vol;
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,vol * (4095/0x50));
+}
+/**
+ * @brief controls sound delivery on "external" PA via DAC
+ * @param enable  true == amplification, false == powerdown
+ */
+static void AudioPA_Enable(bool enable)
+{
+    if (enable)
+    {
+        GPIO_SetBits(AUDIO_PA_EN_PIO,AUDIO_PA_EN);
+    }
+    else
+    {
+        GPIO_ResetBits(AUDIO_PA_EN_PIO,AUDIO_PA_EN);
+    }
+}
+#endif
 /**
  * @brief writes 16 bit data word to codec register
  * @returns I2C error code
@@ -194,8 +219,15 @@ uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
     if (retval == 0)
     {
         mchf_codecs[0].present = true;
+
+#ifdef STM32F7
+        AudioPA_Enable(true);
+#endif
+
         Codec_VolumeSpkr(0); // mute speaker
         Codec_VolumeLineOut(ts.txrx_mode); // configure lineout according to mode
+
+
     }
     return retval;
 }
@@ -406,6 +438,9 @@ void Codec_VolumeSpkr(uint8_t vol)
 #else
     // both outputs are used for lineout/headphones
     Codec_WriteRegister(CODEC_ANA_I2C, W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH));
+
+    // external PA Control
+    AudioPA_Volume(vol);
 #endif
 }
 /**

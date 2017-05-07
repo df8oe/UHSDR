@@ -650,7 +650,7 @@
 		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\src\main.c">
+		<Unit filename="..\mchf-eclipse\src\mchf_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />

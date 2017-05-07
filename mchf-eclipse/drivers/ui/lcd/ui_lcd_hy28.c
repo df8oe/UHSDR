@@ -355,20 +355,18 @@ void UiLcdHy28_BacklightInit(void)
     HAL_GPIO_Init(LCD_BACKLIGHT_PIO, &GPIO_InitStructure);
 
     // Backlight off
-    LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
-    LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT;
-
+    GPIO_ResetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
 }
 
 void UiLcdHy28_BacklightEnable(bool on)
 {
     if (on)
     {
-        LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT;
+        GPIO_SetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
     }
     else
     {
-        LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
+        GPIO_ResetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
     }
 }
 
@@ -494,10 +492,10 @@ void UiLcdHy28_SpiDeInit()
 }
 
 inline void UiLcdHy28_SpiLcdCsDisable() {
-    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs;
+    GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 inline void UiLcdHy28_SpiLcdCsEnable() {
-    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs <<16U;
+    GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
 void UiLcdHy28_ParallelInit()
@@ -626,9 +624,6 @@ static inline void UiLcdHy28_WriteDataSpiStart()
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
-    //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
-    //	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
-
     if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_SpiSendByte((data >>   8));      /* Write D8..D15                */

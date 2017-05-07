@@ -986,13 +986,13 @@ inline void MchfBoard_GreenLed(ledstate_t state)
     switch(state)
     {
     case LED_STATE_ON:
-        GREEN_LED_PIO->BSRR = GREEN_LED;
+        GPIO_SetBits(GREEN_LED_PIO, GREEN_LED);
         break;
     case LED_STATE_OFF:
-        GREEN_LED_PIO->BSRR = GREEN_LED << 16U;
+        GPIO_ResetBits(GREEN_LED_PIO, GREEN_LED);
         break;
     default:
-        GREEN_LED_PIO->ODR ^= GREEN_LED;
+        GPIO_ToggleBits(GREEN_LED_PIO, GREEN_LED);
         break;
     }
 }
@@ -1002,17 +1002,34 @@ inline void MchfBoard_RedLed(ledstate_t state)
     switch(state)
     {
     case LED_STATE_ON:
-        RED_LED_PIO->BSRR = RED_LED;
+        GPIO_SetBits(RED_LED_PIO, RED_LED);
         break;
     case LED_STATE_OFF:
-        RED_LED_PIO->BSRR = RED_LED << 16U;
+        GPIO_ResetBits(RED_LED_PIO, RED_LED);
         break;
     default:
-        RED_LED_PIO->ODR ^= RED_LED;
+        GPIO_ToggleBits(RED_LED_PIO, RED_LED);
         break;
     }
 }
 
+#ifdef STM32F7
+inline void MchfBoard_BlueLed(ledstate_t state)
+{
+    switch(state)
+    {
+    case LED_STATE_ON:
+        GPIO_SetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    case LED_STATE_OFF:
+        GPIO_ResetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    default:
+        GPIO_ToggleBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    }
+}
+#endif
 /**
  * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
  * @param tx_enable true == TX Paths, false == RX Paths
@@ -1022,7 +1039,7 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
     // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
     if (tx_enable)
     {
-        PTT_CNTR_PIO->BSRR     = PTT_CNTR;     // TX on and switch CODEC audio paths
+        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
         // Antenna Direction Output
         // BPF Direction Output (U1,U2)
         // PTT Optocoupler LED On (ACC Port) (U6)
@@ -1033,7 +1050,7 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
     }
     else
     {
-        PTT_CNTR_PIO->BSRR     = PTT_CNTR << 16U;     // TX off
+        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
         // Antenna Direction Input
         // BPF Direction Input (U1,U2)
         // PTT Optocoupler LED Off (ACC Port) (U6)

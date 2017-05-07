@@ -248,95 +248,22 @@ static void mchf_board_power_button_irq_init(void)
     */
 }
 
-#if 0
-// this function is commented out because it is static (i.e. local only) and not used
-// just remove #if 0 if function needs to be used. Reason is to include only used code
-// if possible
-
-static void mchf_board_dac1_init(void)
+static void mchf_board_dac_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    DAC_InitTypeDef  DAC_InitStructure;
 
-    // DAC Periph clock enable
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
-
-    // DAC channel 1 (DAC_OUT1 = PA.4)
-    GPIO_InitStructure.GPIO_Pin  = DAC0;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DAC0_PIO, &GPIO_InitStructure);
-
-    // DAC channel1 Configuration
-    DAC_InitStructure.DAC_Trigger 						= DAC_Trigger_None;
-    DAC_InitStructure.DAC_WaveGeneration 				= DAC_WaveGeneration_None;
-    DAC_InitStructure.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bits7_0;//DAC_TriangleAmplitude_4095;
-    DAC_InitStructure.DAC_OutputBuffer 				= DAC_OutputBuffer_Enable;
-    DAC_Init(DAC_Channel_1, &DAC_InitStructure);
-
-    // Enable DAC Channel1
-    DAC_Cmd(DAC_Channel_1, ENABLE);
-
-    // Set DAC Channel1 DHR12L register - JFET attenuator off (0V)
-    DAC_SetChannel1Data(DAC_Align_8b_R, 0x00);
-}
+#ifdef STM32F7
+    HAL_DAC_Start(&hdac,DAC_CHANNEL_1);
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_8B_R,0);
+    // AUDIO PA volume zero
 #endif
-
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_dac1_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void mchf_board_dac2_init(void)
-{
-    HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
-    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,220);
-    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
-#if 0
-
-    GPIO_InitTypeDef GPIO_InitStructure;
-    DAC_InitTypeDef  DAC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // DAC Periph clock enable
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
-
-    // DAC channel 1 (DAC_OUT2 = PA.5)
-    GPIO_InitStructure.GPIO_Pin  = DAC1;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DAC0_PIO, &GPIO_InitStructure);
-
-    // DAC channel1 Configuration
-    DAC_InitStructure.DAC_Trigger 						= DAC_Trigger_None;
-    DAC_InitStructure.DAC_WaveGeneration 				= DAC_WaveGeneration_None;
-    DAC_InitStructure.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bits7_0;//DAC_TriangleAmplitude_4095;
-    DAC_InitStructure.DAC_OutputBuffer 				= DAC_OutputBuffer_Enable;
-    DAC_Init(DAC_Channel_2, &DAC_InitStructure);
-
-    // Enable DAC Channel2
-    DAC_Cmd(DAC_Channel_2, ENABLE);
-
-    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
-    DAC_SetChannel2Data(DAC_Align_8b_R, 220);
-#endif
-
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_adc1_init
-//* Object              : ADC1 used for power supply measurements
-//* Input Parameters    :
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
 static void mchf_board_adc1_init(void)
 {
     HAL_ADC_Start(&hadc1);
+
 #if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
@@ -681,8 +608,7 @@ void mchf_board_init(void)
     UiRotaryEncoderThreeInit();
 
     // Init DACs
-//	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
-    mchf_board_dac2_init();
+    mchf_board_dac_init();
 
     // Enable all ADCs
     mchf_board_adc1_init();
@@ -860,9 +786,10 @@ void mchf_board_detect_ramsize() {
 
 static void MchfBoard_BandFilterPulseRelays()
 {
-    BAND2_PIO->BSRR = BAND2 << 16U;
+    // FIXME: Replace non_os_delay with HAL_Delay
+    GPIO_ResetBits(BAND2_PIO, BAND2);
     non_os_delay();
-    BAND2_PIO->BSRR = BAND2;
+    GPIO_SetBits(BAND2_PIO, BAND2);
 }
 
 /**
@@ -894,20 +821,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 0:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group -Set(High/High)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -915,20 +842,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 1:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -936,20 +863,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 2:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -957,20 +884,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 3:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Set(High/High)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         break;
     }
