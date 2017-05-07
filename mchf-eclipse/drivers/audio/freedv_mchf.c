@@ -930,9 +930,6 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
         }
 
-// Achtung: Ich muss noch die Grenzen absichern bzgl. dem Einbeziehen der basis_samples!!!!!
-
-
 }
 
 #endif
