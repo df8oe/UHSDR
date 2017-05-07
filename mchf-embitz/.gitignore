@@ -1,0 +1,4 @@
+*.depend
+*.elay
+/obj/
+/bin/
