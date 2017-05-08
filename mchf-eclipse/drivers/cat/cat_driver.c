@@ -45,12 +45,7 @@ bool CatDriver_CatPttActive()
 }
 bool CatDriver_CWKeyPressed()
 {
-    // FIXME: F7PORT: Need to restore this line of code
-#ifndef STM32F7
     return cdcvcp_ctrllines.dtr != 0;
-#else
-    return false;
-#endif
 }
 
 void CatDriver_InitInterface(void)

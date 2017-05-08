@@ -142,7 +142,7 @@ int main(void)
   MX_TIM3_Init();
   // MX_USB_HOST_Init();
   // MX_FATFS_Init();
-  // MX_USB_DEVICE_Init();
+  MX_USB_DEVICE_Init();
 #endif
 
   /* USER CODE BEGIN 2 */
