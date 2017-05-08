@@ -146,7 +146,7 @@ typedef struct FilterPathDescriptor_s
 
 
     // arm_fir_instance_f32*
-    const uint8_t FIR_numTaps;
+    const uint16_t FIR_numTaps;
     const float *FIR_I_coeff_file;
     // arm_fir_instance_f32*
     const float *FIR_Q_coeff_file;
