@@ -14,7 +14,7 @@
 				<Option compiler="armgcc_eb" />
 				<Option projectDeviceOptionsRelation="0" />
 				<Compiler>
-					<Add option="-O0" />
+					<Add option="-O2" />
 					<Add option="-g2" />
 				</Compiler>
 				<Cpp>
