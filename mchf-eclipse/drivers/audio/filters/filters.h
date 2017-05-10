@@ -8,8 +8,11 @@
 #define I_BLOCK_SIZE		IQ_BUFSZ
 #define Q_BLOCK_SIZE        IQ_BUFSZ
 
-#define I_NUM_TAPS			89
-#define Q_NUM_TAPS			89
+#define I_NUM_TAPS          89
+#define Q_NUM_TAPS          89
+
+#define I_NUM_TAPS_HI      199
+#define Q_NUM_TAPS_HI      199
 
 typedef struct {
     const float32_t* i;
@@ -18,6 +21,7 @@ typedef struct {
 } IQ_FilterDescriptor;
 
 extern const arm_fir_decimate_instance_f32 FirRxDecimate;
+extern const arm_fir_decimate_instance_f32 FirRxDecimate_sideband_supp;
 extern const arm_fir_decimate_instance_f32 FirZoomFFTDecimate[6];
 extern const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate;
@@ -41,9 +45,13 @@ extern const float i_rx_4k5_coeffs[I_NUM_TAPS];
 extern const float i_rx_5k_coeffs[I_NUM_TAPS];
 extern const float i_rx_6k_coeffs[I_NUM_TAPS];
 extern const float i_rx_7k5_coeffs[I_NUM_TAPS];
-extern const float i_rx_coeffs[I_NUM_TAPS];
+//extern const float i_rx_coeffs[I_NUM_TAPS];
+extern const float i_rx_wow_coeffs[I_NUM_TAPS_HI];
+extern const float i_rx_new_coeffs[I_NUM_TAPS_HI];
 
-extern const float q_rx_coeffs[Q_NUM_TAPS];
+extern const float q_rx_new_coeffs[Q_NUM_TAPS_HI];
+extern const float q_rx_wow_coeffs[Q_NUM_TAPS_HI];
+//extern const float q_rx_coeffs[Q_NUM_TAPS];
 extern const float q_rx_10k_coeffs[Q_NUM_TAPS];
 extern const float q_rx_3k6_coeffs[Q_NUM_TAPS];
 extern const float q_rx_4k5_coeffs[Q_NUM_TAPS];

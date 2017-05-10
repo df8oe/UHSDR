@@ -105,7 +105,10 @@ float log10f_fast(float X) {
 //
 // Audio RX - Decimator
 static  arm_fir_decimate_instance_f32   DECIMATE_RX;
-float32_t           __attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t           __attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + 43];//FIR_RXAUDIO_NUM_TAPS];
+// Audio RX - Decimator in Q-path
+static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+float32_t           __attribute__ ((section (".ccm"))) decimQState[FIR_RXAUDIO_BLOCK_SIZE + 43]; //FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
@@ -1095,16 +1098,23 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     {
         DECIMATE_RX.numTaps = FilterPathInfo[ts.filter_path].dec->numTaps;      // Number of taps in FIR filter
         DECIMATE_RX.pCoeffs = FilterPathInfo[ts.filter_path].dec->pCoeffs;       // Filter coefficients
+        DECIMATE_RX_Q.numTaps = FilterPathInfo[ts.filter_path].dec->numTaps;      // Number of taps in FIR filter
+        DECIMATE_RX_Q.pCoeffs = FilterPathInfo[ts.filter_path].dec->pCoeffs;       // Filter coefficients
     }
     else
     {
         DECIMATE_RX.numTaps = 0;
         DECIMATE_RX.pCoeffs = NULL;
+        DECIMATE_RX_Q.numTaps = 0;
+        DECIMATE_RX_Q.pCoeffs = NULL;
     }
 
-    DECIMATE_RX.M = ads.decimation_rate;			// Decimation factor  (48 kHz / 4 = 12 kHz)
-    DECIMATE_RX.pState = decimState;			// Filter state variables
-    arm_fill_f32(0.0,decimState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
+    DECIMATE_RX.M = ads.decimation_rate;            // Decimation factor  (48 kHz / 4 = 12 kHz)
+    DECIMATE_RX.pState = decimState;            // Filter state variables
+    arm_fill_f32(0.0,decimState,FIR_RXAUDIO_BLOCK_SIZE + 43);
+    DECIMATE_RX_Q.M = ads.decimation_rate;            // Decimation factor  (48 kHz / 4 = 12 kHz)
+    DECIMATE_RX_Q.pState = decimQState;            // Filter state variables
+    arm_fill_f32(0.0,decimQState,FIR_RXAUDIO_BLOCK_SIZE + 43);
 
 
     // Set up RX interpolation/filter
@@ -3700,23 +3710,42 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             //
             if(ts.dmod_mode != DEMOD_SAM && ts.dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
             {
+                if(1)
+                {
+                // TODO HILBERT
+                // decimation of both channels here for LSB/USB/CW, if Filter BW <= 3k6
+                arm_fir_decimate_f32(&DECIMATE_RX, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+                arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+                }
+                else
+                {
                 arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
                 arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer,blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+                }
             }
 
             switch(dmod_mode)
             {
             case DEMOD_LSB:
-                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                if(1)
+                {
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
+                }
+                else
+                {
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                }
                 break;
             case DEMOD_CW:
                 if(!ts.cw_lsb)  // is this USB RX mode?  (LSB of mode byte was zero)
                 {
-                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
                 }
                 else    // No, it is LSB RX mode
                 {
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
                 }
                 break;
                 /*        case DEMOD_AM:
@@ -3757,16 +3786,26 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 break;
             case DEMOD_USB:
             default:
-                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                if(1)
+                {
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
+                }
+                else
+                {
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                }
                 break;
             }
 
             if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
             {
                 // Do decimation down to lower rate to reduce processor load
-                if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+                if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM &&
+                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB) && 1)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
-                    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                    // TODO HILBERT
+                    // for filter BW <= 3k6 and LSB/USB/CW, don´t do decimation, we are already in 12ksps
+//                    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
 
 
