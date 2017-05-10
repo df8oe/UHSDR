@@ -1405,8 +1405,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
     case MENU_RX_FREQ_CONV:     // Enable/Disable receive frequency conversion
+  		;
+  		uchar firstmode = FREQ_IQ_CONV_MODE_OFF;
+		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_FM)
+		{
+		  firstmode = FREQ_IQ_CONV_P6KHZ;
+		}
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.iq_freq_mode,
-                                              0,
+                                              firstmode,
                                               FREQ_IQ_CONV_MODE_MAX,
                                               FREQ_IQ_CONV_MODE_DEFAULT,
                                               1
