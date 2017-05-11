@@ -3713,6 +3713,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 if(1)
                 {
                 // TODO HILBERT
+                //    FilterInfo[ts.filter_path].width >= 3600
                 // decimation of both channels here for LSB/USB/CW, if Filter BW <= 3k6
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
