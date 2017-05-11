@@ -24,7 +24,6 @@ basesw/mcHF/Src/stm32f4xx_hal_msp.c \
 basesw/mcHF/Src/stm32f4xx_it.c \
 basesw/mcHF/Src/usb_device.c \
 basesw/mcHF/Src/usb_host.c \
-basesw/mcHF/Src/usbd_audio_if.c \
 basesw/mcHF/Src/usbd_cdc_if.c \
 basesw/mcHF/Src/usbd_conf.c \
 basesw/mcHF/Src/usbd_desc.c \
@@ -50,13 +49,11 @@ basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_mouse.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_parser.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Src/usbh_cdc.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Src/usbh_audio.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc_if_template.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Src/usbd_audio_cdc_comp.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
