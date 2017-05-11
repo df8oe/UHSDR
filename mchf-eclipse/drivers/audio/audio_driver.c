@@ -3708,12 +3708,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // which case there is ***NO*** audio phase shift applied to the I/Q channels.
             //
             //
-            if(ts.dmod_mode != DEMOD_SAM && ts.dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
+            if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
             {
-                if(1)
+                if(ts.filter_path < 48)
                 {
                 // TODO HILBERT
-                //    FilterInfo[ts.filter_path].width >= 3600
+                //    FilterPathInfo[ts.filter_path].ID >= 12
                 // decimation of both channels here for LSB/USB/CW, if Filter BW <= 3k6
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
@@ -3730,7 +3730,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             switch(dmod_mode)
             {
             case DEMOD_LSB:
-                if(1)
+                if(ts.filter_path < 48)
                 {
                     arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
                 }
@@ -3787,7 +3787,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 break;
             case DEMOD_USB:
             default:
-                if(1)
+                if(ts.filter_path < 48)
                 {
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
                 }
@@ -3802,11 +3802,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 // Do decimation down to lower rate to reduce processor load
                 if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM &&
-                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB) && 1)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && ts.filter_path < 48)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
                     // TODO HILBERT
                     // for filter BW <= 3k6 and LSB/USB/CW, don´t do decimation, we are already in 12ksps
-//                    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                    arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
 
 
@@ -3927,9 +3927,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                            }
 
 #endif
-
-
-
 
 
                 // Calculate scaling based on decimation rate since this affects the audio gain
