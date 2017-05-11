@@ -88,6 +88,7 @@
 			<Add symbol="USE_FULL_ASSERT" />
 			<Add symbol="TRACE" />
 			<Add symbol="__FPU_PRESENT=1U" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include" />
 		</Compiler>
 		<Cpp>
 			<Add option="-mfloat-abi=hard" />
@@ -916,22 +917,6 @@
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\DSP_Lib\Source\TransformFunctions\arm_rfft_q31.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\arm_common_tables.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\arm_const_structs.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\arm_math.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\cmsis_armcc.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\cmsis_armcc_V6.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\cmsis_gcc.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cm0.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cm0plus.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cm3.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cm4.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cm7.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cmFunc.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cmInstr.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_cmSimd.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_sc000.h" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include\core_sc300.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
