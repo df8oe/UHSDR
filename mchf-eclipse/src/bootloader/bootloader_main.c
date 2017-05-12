@@ -62,7 +62,7 @@ static void BL_DisplayInit()
 #endif
     MX_GPIO_Init();
 
-	mchf_board_touchscreen_init();
+	// mchf_board_touchscreen_init();
 
     UiLcdHy28_Init();
     UiLcdHy28_LcdClear(Black);

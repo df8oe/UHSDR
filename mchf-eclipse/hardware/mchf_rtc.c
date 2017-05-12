@@ -123,6 +123,20 @@ bool MchfRtc_enabled()
     if (status == RTC_PRESENCE_OK_VAL) {
         __HAL_RCC_RTC_ENABLE();
         __HAL_RCC_CLEAR_RESET_FLAGS();
+
+        hrtc.Instance = RTC;
+        hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+        hrtc.Init.AsynchPrediv = 127;
+        hrtc.Init.SynchPrediv = 255;
+        hrtc.Init.OutPut = RTC_OUTPUT_ALARMA;
+        hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+        hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+
+        if (HAL_RTC_Init(&hrtc) != HAL_OK)
+        {
+          Error_Handler();
+        }
+
         // HAL_RTCEx_EnableBypassShadow(&hrtc);
         // FIXME: Why do we need to set BYPSHAD ? ABP1 CLK should be high enough....
         retval = true;
@@ -133,10 +147,6 @@ bool MchfRtc_enabled()
         HAL_RTCEx_BKUPWrite(&hrtc,RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
     } else {
         ts.vbat_present = true;
-#ifdef STM32F7
-        // we have an RTC in any case
-        retval = true;
-#endif
     }
 #endif
     return retval;
