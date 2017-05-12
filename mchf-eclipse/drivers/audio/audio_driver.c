@@ -3709,11 +3709,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             //
             //
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
-            {
-                if(ts.filter_path < 48 && dmod_mode != DEMOD_FM)
+            {   // FilterPathInfo[ts.filter_path].FIR_I_coeff_file == &i_rx_new_coeffs
+
+                //                if(ts.filter_path < 48 && dmod_mode != DEMOD_FM)
+                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs && dmod_mode != DEMOD_FM)
                 {
                 // TODO HILBERT
-                //    FilterPathInfo[ts.filter_path].ID >= 12
+                //    FilterPathInfo[ts.filter_path].id >= 12
                 // decimation of both channels here for LSB/USB/CW, if Filter BW <= 3k6
                 arm_fir_decimate_f32(&DECIMATE_RX, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
@@ -3730,7 +3732,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             switch(dmod_mode)
             {
             case DEMOD_LSB:
-                if(ts.filter_path < 48)
+//                if(ts.filter_path < 48)
+                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)
                 {
                     arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
                 }
@@ -3787,7 +3790,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 break;
             case DEMOD_USB:
             default:
-                if(ts.filter_path < 48)
+//                if(ts.filter_path < 48)
+                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)
                 {
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
                 }
