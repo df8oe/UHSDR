@@ -40,10 +40,12 @@ void 	AudioFilter_InitTxHilbertFIR(void);
 
 typedef struct FilterCoeffs
 {
-    float   rx_filt_q[128];
+    //    float   rx_filt_q[128];
+    float   rx_filt_q[199];
     uint16_t    rx_q_num_taps;
     uint32_t    rx_q_block_size;
-    float   rx_filt_i[128];
+//    float   rx_filt_i[128];
+    float   rx_filt_i[199];
     uint16_t    rx_i_num_taps;
     uint32_t    rx_i_block_size;
     //
