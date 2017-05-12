@@ -3710,7 +3710,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             //
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
             {
-                if(ts.filter_path < 48)
+                if(ts.filter_path < 48 && dmod_mode != DEMOD_FM)
                 {
                 // TODO HILBERT
                 //    FilterPathInfo[ts.filter_path].ID >= 12
