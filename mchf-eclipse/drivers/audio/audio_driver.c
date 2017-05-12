@@ -4618,7 +4618,7 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, uint16_t blockSize)
 {
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
@@ -4627,6 +4627,8 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t tune = ts.tune;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
+    AudioSample_t srcUSB[blockSize];
+    AudioSample_t * const src = (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ) ? srcUSB : srcCodec;
 
     // if we want to know if our signal will go out, look at this flag
     bool external_tx_mute = ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count >0 ;
@@ -4638,7 +4640,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const src, AudioSample_t * c
     if (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ)
     {
         // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
-        audio_out_fill_tx_buffer((int16_t*)src,2*blockSize);
+        audio_out_fill_tx_buffer((int16_t*)srcUSB,2*blockSize);
     }
 
     if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune)

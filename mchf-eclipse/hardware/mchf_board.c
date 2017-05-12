@@ -256,6 +256,9 @@ static void mchf_board_dac_init(void)
     HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_8B_R,0);
     // AUDIO PA volume zero
 #endif
+    HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,0);
+
 }
 //* Output Parameters   :
 //* Functions called    :

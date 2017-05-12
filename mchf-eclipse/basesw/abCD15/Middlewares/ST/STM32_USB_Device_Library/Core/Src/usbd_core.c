@@ -404,8 +404,6 @@ USBD_StatusTypeDef USBD_LL_DataInStage(USBD_HandleTypeDef *pdev ,uint8_t epnum, 
   else if((pdev->pClass->DataIn != NULL)&& 
           (pdev->dev_state == USBD_STATE_CONFIGURED))
   {
-      while (1) { asm("nop"); }
-
     pdev->pClass->DataIn(pdev, epnum); 
   }  
   return USBD_OK;
