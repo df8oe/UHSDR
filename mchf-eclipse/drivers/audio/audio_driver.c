@@ -72,7 +72,7 @@ typedef struct
 } LMSData;
 
 
-float32_t	__attribute__ ((section (".ccm"))) audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
+float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
 static void AudioDriver_ClearAudioDelayBuffer()
 {
@@ -105,22 +105,22 @@ float log10f_fast(float X) {
 //
 // Audio RX - Decimator
 static  arm_fir_decimate_instance_f32   DECIMATE_RX;
-float32_t           __attribute__ ((section (".ccm"))) decimState[FIR_RXAUDIO_BLOCK_SIZE + 43];//FIR_RXAUDIO_NUM_TAPS];
+float32_t           __MCHF_SPECIALMEM decimState[FIR_RXAUDIO_BLOCK_SIZE + 43];//FIR_RXAUDIO_NUM_TAPS];
 // Audio RX - Decimator in Q-path
 static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
-float32_t           __attribute__ ((section (".ccm"))) decimQState[FIR_RXAUDIO_BLOCK_SIZE + 43]; //FIR_RXAUDIO_NUM_TAPS];
+float32_t           __MCHF_SPECIALMEM decimQState[FIR_RXAUDIO_BLOCK_SIZE + 43]; //FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
-float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__MCHF_SPECIALMEM decimZoomFFTIState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_Q;
-float32_t			__attribute__ ((section (".ccm"))) decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__MCHF_SPECIALMEM decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
-float32_t			__attribute__ ((section (".ccm"))) interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+float32_t			__MCHF_SPECIALMEM interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
 // variables for RX IIR filters
 static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -442,9 +442,9 @@ extern __IO	KeypadState				ks;
 // ATTENTION: These data structures have been placed in CCM Memory (64k)
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
-__IO AudioDriverState   __attribute__ ((section (".ccm"))) ads;
-AudioDriverBuffer  __attribute__ ((section (".ccm"))) adb;
-LMSData            __attribute__ ((section (".ccm"))) lmsData;
+__IO AudioDriverState   __MCHF_SPECIALMEM ads;
+AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+LMSData            __MCHF_SPECIALMEM lmsData;
 
 #ifdef USE_SNAP
 SnapCarrier   sc;

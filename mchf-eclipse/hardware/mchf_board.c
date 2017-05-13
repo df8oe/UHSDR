@@ -33,7 +33,7 @@
 #include "eeprom.h"
 #include "adc.h"
 // Transceiver state public structure
-__IO __attribute__ ((section (".ccm"))) TransceiverState ts;
+__IO __MCHF_SPECIALMEM TransceiverState ts;
 
 
 static void mchf_board_led_init(void)

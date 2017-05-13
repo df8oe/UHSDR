@@ -36,6 +36,9 @@
 
 #ifdef STM32F4
 
+// place tagged elements in CCM 64k extra RAM (no DMA)
+#define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
+
 #define SI570_I2C               (&hi2c1)
 
 #define CODEC_I2C               (&hi2c2)
@@ -332,6 +335,10 @@
 #endif
 
 #ifdef STM32F7
+
+// compiler places tagged elements by its default rules
+#define __MCHF_SPECIALMEM
+
 
 #define SI570_I2C               (&hi2c1)
 

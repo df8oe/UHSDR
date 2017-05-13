@@ -97,7 +97,7 @@ void fdv_clear_display()
 struct freedv *f_FREEDV;
 
 FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
-FDV_IQ_Buffer __attribute__ ((section (".ccm"))) fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
 #define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
 // we allow for one more pointer to a buffer as we have buffers

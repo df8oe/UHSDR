@@ -63,6 +63,7 @@ SECTIONS
 		
 		*(vtable)
 		*(.data*)
+		*(.ccm)
 		
 		. = ALIGN(4);
 		/* preinit data */
@@ -99,8 +100,7 @@ SECTIONS
 		__bss_start__ = .;
 		_sbss = __bss_start__;
 		*(.bss*)
-        *(.ccm)
-		*(COMMON)
+ 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end__ = .;
 		_ebss = __bss_end__;
