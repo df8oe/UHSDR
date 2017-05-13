@@ -54,7 +54,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc}&quot;"/>
@@ -82,8 +81,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/diag}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/composite}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/app}&quot;"/>
 								</option>
@@ -117,7 +114,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc}&quot;"/>
@@ -145,11 +141,11 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/diag}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/composite}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/CDC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/app}&quot;"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1542448985" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -170,7 +166,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc}&quot;"/>
@@ -198,10 +193,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/diag}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/composite}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/AUDIO/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/app}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti.770213086" name="Do not use RTTI (-fno-rtti)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.533377747" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
@@ -397,7 +392,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc}&quot;"/>
@@ -425,11 +419,11 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/diag}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/composite}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/AUDIO/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/device/class/CDC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/drivers/usb/app}&quot;"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.34608003" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
