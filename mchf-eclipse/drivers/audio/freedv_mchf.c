@@ -14,9 +14,7 @@
 #include "freedv_mchf.h"
 
 
-#ifdef alternate_NR
-#include "lpc.h"
-#endif
+
 
 #include "profiling.h"
 #include "ui_lcd_hy28.h"
@@ -32,7 +30,7 @@ const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078
         -5.53196001,-368.999939,-1031.19165,-1766.01074,-2290.01587,-2293.98853,-1514.0238,
         23.0157223,1797.16394,3018.3894,3231.77148,2702.38745,2085.92676,1685.99255,1145.43176,
         -31.9259377,-1722.42847,-3112.2937,-3453.61426,-2790.31763,-1812.12769,-1028.70874,
-        -4000.000,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
+        -1812 ,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
         -548.479553,-1549.47034,-2692.18213,-3288.44702,-2873.70239,-1761.34033,-636.71936,
         250.664383,1198.7804,2336.43726,3121.80615,2848.64355,1556.67969,110.084801,-724.328186,
         -1013.82141,-1265.38879,-1506.06091,-1177.04529,-35.6577721,1209.823,1520.28088,679.406555,
@@ -44,6 +42,33 @@ const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078
 
 };
 
+
+
+const float32_t NR_test_sinus_samp[128] = {
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302
+};
 
 
 #endif
@@ -725,25 +750,14 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
     float32_t lpc_coeff[11];
     float32_t* Energy=0;
 
-    // inside here do all the necessary noise reduction stuff!!!!!
+
 
     alt_noise_blanking(inputsamples,NR_FFT_SIZE,10,Energy);
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
                                     {
-                                        outputsamples[k] = inputsamples[k];// + 100 * sawcount;// overlay sawtooth
-                                        //outputsamples[k] = inputsamples[k];  just copy back
-
-                                        sawcount++;
-                                        if (sawcount > 15) sawcount=0;
+                                        outputsamples[k] = inputsamples[k];
                                     }
-
-
-
-
-
-
-
 
 }
 
@@ -754,7 +768,8 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 //speech or sound generating "instrument" (in case of speech this is an estimation of the current
 //filter-function of the voice generating tract behind our lips :-) )
 //after finding this function we inverse filter the actual samples by this function
-//so we are eliminating the speech, but not the noise. After that we threshold the remaining samples by some
+//so we are eliminating the speech, but not the noise. Then we do a matched filtering an thereby detecting impulses
+//After that we threshold the remaining samples by some
 //level and so detecting impulse noise's positions within the current frame - if one (or more) impulses are there.
 //finally some area around the impulse position will be replaced by predicted samples from both sides (forward and
 //backward prediction)
@@ -777,10 +792,14 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     int impulse_positions[5];  //we allow a maximum of 5 impulses per frame
     int search_pos=0;
     int impulse_count=0;
+
+    static int frame_count=0;  //only used for the distortion insertion - can alter be deleted
+    int dist_level=0;//only used for the distortion insertion - can alter be deleted
+    int nr_setting = 0;
     float32_t R[11];  // takes the autocorrelation results
     float32_t sum,e,k,alfa;
 
-    float32_t any[order+1];  //some buffer for levinson durben
+    float32_t any[order+1];  //some internal buffers for the levinson durben algorithm
 
     float32_t Rfw[impulse_length+order]; // takes the forward predicted audio restauration
     float32_t Rbw[impulse_length+order]; // takes the backward predicted audio restauration
@@ -788,10 +807,63 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     float32_t s;
 
-#ifdef debug_alternate_NR
-    for (int i=0; i<128;i++)
-        insamp[i]=NR_test_samp[i];
-#endif
+#ifdef debug_alternate_NR  // generate test frames to test the noise blanker function
+                           // using the NR-setting (0..55) to select the test frame
+                           // 00 = noise blanker active on orig. audio; threshold factor=3
+                           // 01 = frame of vocal "a" undistorted
+                           // 02 .. 05 = frame of vocal "a" with different impulse distortion levels
+                           // 06 .. 09 = frame of vocal "a" with different impulse distortion levels
+                           //            noise blanker operating!!
+                           // 10 = noise blanker active on orig. audio threshold factor=3
+                           // 11  = sinusoidal signal undistorted
+                           // 12 ..15 = sinusoidal signal with different impulse distortion levels
+                           // 16 ..19 = sinusoidal signal with different impulse distortion levels
+                           //            noise blanker operating!!
+                           // 20 ..50   noise blanker active on orig. audio; threshold factor varying between 3 and 0.26
+
+    nr_setting = (int)ts.dsp_nr_strength;
+
+    if ((nr_setting > 0) && (nr_setting < 10)) // we use the vocal "a" frame
+        {
+            for (int i=0; i<128;i++)
+                insamp[i]=NR_test_samp[i];
+
+            if ((frame_count > 19) && (nr_setting > 1))    // insert a distorting pulse
+                {
+                   dist_level=nr_setting;
+                   if (dist_level > 5) dist_level=dist_level-4; // distortion level is 1...5
+                   insamp[60]=insamp[60] + dist_level*3000; // overlaying a short  distortion pulse +/-
+                   insamp[61]=insamp[60] - dist_level*1000;
+                }
+
+        }
+
+    if ((nr_setting > 10) && (nr_setting < 20)) // we use the sinus frame
+        {
+            for (int i=0; i<128;i++)
+                insamp[i]=NR_test_sinus_samp[i];
+
+            if ((frame_count > 19) && (nr_setting > 11))    // insert a distorting pulse
+                {
+                   dist_level=nr_setting-10;
+                   if (dist_level > 5) dist_level=dist_level-4;
+                   insamp[60]=insamp[60] + dist_level*1000; // overlaying a short  distortion pulse +/-
+                   insamp[61]=insamp[60] + dist_level*500;
+                   insamp[62]=insamp[60] - dist_level*200; // overlaying a short  distortion pulse +/-
+                   insamp[63]=insamp[60] - dist_level*100;
+
+
+                }
+
+
+
+        }
+
+
+frame_count++;
+if (frame_count > 20) frame_count=0;
+
+    #endif
 
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
@@ -801,32 +873,22 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     }
 
     // calculate the autocorrelation of insamp (moving by max. of #order# samples)
-      for(int i=0; i < (order+1); i++) {
-
-          arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]);
-
-   /*       for (int j=0; j< Nsam-i; j++  )
-          {
-              y++;
-              sum += NR_test_samp[j] * NR_test_samp[j+i];
-          }
-          R[i]=sum;
-*/
+      for(int i=0; i < (order+1); i++)
+      {
+          arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
       }
     // end of autocorrelation
 
 
 
-//alternative levinson durben algorithm
-
-
+//alternative levinson durben algorithm to calculate the lpc coefficients from the crosscorrelation
 
   R[0] = R[0] * (1.0 + 1.0e-9);
 
-  lpcs[0] = 1;   //set lpcs[0] to 1
+  lpcs[0] = 1;   //set lpc 0 to 1
 
   for (int i=1; i < order+1; i++)
-      lpcs[i]=0;                      // fill rest of array with zeros
+      lpcs[i]=0;                      // fill rest of array with zeros - could be done by memfill
 
   alfa = R[0];
 
@@ -864,9 +926,12 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     arm_var_f32(tempsamp,NR_FFT_SIZE,&sigma2); //calculate sigma2 of the original signal ? or tempsignal
 
-    arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares of the lpc's
+    arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares (the "power") of the lpc's
 
     impulse_threshold = 3 * sqrt(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
+
+    if ((nr_setting > 20) && (nr_setting <51))
+        impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26
 
     search_pos=boundary_blank;  // for first trials avoid the boundaries to the other frames
     impulse_count=0;
@@ -887,14 +952,6 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
                         //boundary handling has to be fixed later
                         //as a result we now will not find any impulse in these areas
-
-
-
-// at this point we have the positions of the impulses  -> t.b.d: have to check for too closes impulses!
-
-
-
-
 
 // from here: reconstruction of the impulse-distorted audio part:
 
@@ -926,8 +983,21 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
                 //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
 
+#ifdef debug_alternate_NR
+                    // in debug mode do the restoration only in some cases
+if (((ts.dsp_nr_strength > 0) && (ts.dsp_nr_strength < 6))||((ts.dsp_nr_strength > 10) && (ts.dsp_nr_strength < 16)))
+{
+            //    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+}
+else
+{
+    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+}
+#else
+
                 arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
 
+#endif
         }
 
 }

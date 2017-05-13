@@ -3809,7 +3809,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
                     // TODO HILBERT
+
                     // for filter BW <= 3k6 and LSB/USB/CW, don't do decimation, we are already in 12ksps
+
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
 
@@ -3823,12 +3825,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
-#ifndef alternate_NR
-                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
-                    {
-                        AudioDriver_NoiseReduction(blockSizeDecim);
-                    }
-#endif
+
+                    if (ts.new_nb == false) //if false, use the nr function as usual
+                      {
+                        if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
+                            {
+                              AudioDriver_NoiseReduction(blockSizeDecim);
+                            }
+                      }
                   }
 
                 // Apply audio  bandpass filter
@@ -3869,7 +3873,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 //
 
-#ifdef alternate_NR
+                if (ts.new_nb==true) //start of new nb
+                {
                            // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer
                            // the freedv_iq_buffer  consist of an array of 320 complex (2*float) samples
                            // for NR reduction we use a maximum of 256 real samples
@@ -3930,7 +3935,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                            }
 
-#endif
+                } // end of new nb
 
 
                 // Calculate scaling based on decimation rate since this affects the audio gain
