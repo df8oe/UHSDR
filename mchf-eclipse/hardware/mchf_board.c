@@ -134,8 +134,8 @@ const ButtonMap bm_sets[2][18] =
                 {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
                 {BUTTON_STEPM_PIO,  BUTTON_STEPM, "Step-"},  // 6 / S7
                 {BUTTON_STEPP_PIO,  BUTTON_STEPP, "Step+"},  // 7 / S8
-                {BUTTON_M1_PIO,     BUTTON_M1_RTC, "M1"},     // 8 / S9
-                {BUTTON_F3_PIO,     BUTTON_F3_RTC, "F3"},     // 9 / S10
+                {BUTTON_M1_PIO_RTC, BUTTON_M1_RTC, "M1"},     // 8 / S9
+                {BUTTON_F3_PIO_RTC, BUTTON_F3_RTC, "F3"},     // 9 / S10
                 {BUTTON_F1_PIO,     BUTTON_F1, "F1"},     // 10 / S11
                 {BUTTON_F2_PIO,     BUTTON_F2, "F2"},     // 11 / S12
                 {BUTTON_F4_PIO,     BUTTON_F4, "F4"},     // 12 / S13
