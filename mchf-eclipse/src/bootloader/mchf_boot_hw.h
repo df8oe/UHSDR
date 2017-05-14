@@ -11,7 +11,8 @@ typedef enum
     LEDGREEN = 0,
     LEDRED = 1,
     PWR_HOLD = 2,
-    BACKLIGHT = 3
+    BACKLIGHT = 3,
+    TPCS_PIN = 4
 } Led_TypeDef;
 
 typedef enum
@@ -40,6 +41,7 @@ typedef enum
 
 #define BACKLIGHT_ON_PIN                GPIO_PIN_2
 #define BACKLIGHT_ON_GPIO_PORT          GPIOD
+
 
 #define BUTTONn                         3
 

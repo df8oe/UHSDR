@@ -42,6 +42,15 @@ typedef int32_t audio_data_t;
 typedef int16_t audio_data_t;
 #endif
 
+#ifdef STM32F4
+#define CODEC_IQ_IDX 0
+#define CODEC_ANA_IDX  0
+#endif
+
+#ifdef STM32F7
+#define CODEC_IQ_IDX 1
+#define CODEC_ANA_IDX 0
+#endif
 
 static void MchfHw_Codec_HandleBlock(uint16_t which)
 {
@@ -68,16 +77,16 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 
     if (ts.txrx_mode != TRX_MODE_TX)
     {
-        src = (audio_data_t*)&audio_buf[1].in[offset];
-        dst = (audio_data_t*)&audio_buf[0].out[offset];
+        src = (audio_data_t*)&audio_buf[CODEC_IQ_IDX].in[offset];
+        dst = (audio_data_t*)&audio_buf[CODEC_ANA_IDX].out[offset];
     }
     else
     {
-        src = (audio_data_t*)&audio_buf[0].in[offset];
-        dst = (audio_data_t*)&audio_buf[1].out[offset];
+        src = (audio_data_t*)&audio_buf[CODEC_ANA_IDX].in[offset];
+        dst = (audio_data_t*)&audio_buf[CODEC_IQ_IDX].out[offset];
     }
 
-    // Handle 2nd half
+    // Handle half
     AudioDriver_I2SCallback(src, dst, sz, which);
 
 #ifdef EXEC_PROFILING
@@ -92,6 +101,7 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #endif
 }
 
+#ifdef STM32F4
 /**
  * @brief HAL Handler for Codec DMA Interrupt
  */
@@ -99,6 +109,15 @@ void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s)
 {
     MchfHw_Codec_HandleBlock(0);
 }
+
+/**
+ * @brief HAL Handler for Codec DMA Interrupt
+ */
+void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
+{
+    MchfHw_Codec_HandleBlock(1);
+}
+#endif
 
 #ifdef STM32F7
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
@@ -110,13 +129,6 @@ void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
 }
 
 
-/**
- * @brief HAL Handler for Codec DMA Interrupt
- */
-void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
-{
-    MchfHw_Codec_HandleBlock(1);
-}
 
 
 void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)

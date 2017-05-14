@@ -6004,7 +6004,8 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 void UiDriver_MainHandler()
 {
 
-    uint32_t now = HAL_GetTick()/10;
+    uint32_t now = ts.sysclock;
+    //        HAL_GetTick()/10;
 
     CatDriver_HandleProtocol();
     // START CALLED AS OFTEN AS POSSIBLE
@@ -6081,7 +6082,13 @@ void UiDriver_MainHandler()
 #if 1
                 ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
 
-                uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
+                // Percent audio interrupt load  = Num of cycles per audio interrupt  / ((max num of cycles between two interrupts ) / 100 )
+                //
+                // Num of cycles per audio interrupt = cycles for all counted interrupts / number of interrupts
+                // Max num of cycles between two interrupts / 100 = HCLK frequency / Interruptfrequenz -> e.g. 168000000 / 1500 / 100 = 1120
+                // FIXME: Need to figure out which clock is being used, 168000000 in mcHF, I40 UI = 168.000.000 or 216.000.000 or something else...
+
+                uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
                 snprintf(str,20,"L%3u%%",(unsigned int)load);

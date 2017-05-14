@@ -62,7 +62,18 @@ static void BL_DisplayInit()
 #endif
     MX_GPIO_Init();
 
-	// mchf_board_touchscreen_init();
+#ifdef STM32F4
+    // we need to set the touch screen CS signal to high, otherwise SPI displays
+    // will not be detectable
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Pull     = GPIO_PULLUP;
+    GPIO_InitStructure.Speed    = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Mode     = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pin = TP_CS;
+
+    HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+#endif
 
     UiLcdHy28_Init();
     UiLcdHy28_LcdClear(Black);
