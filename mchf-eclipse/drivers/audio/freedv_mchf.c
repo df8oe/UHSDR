@@ -777,9 +777,9 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
 void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 {
-#define boundary_blank 20 // for first trials very large!!!!
-#define impulse_length 15 // has to be odd!!!! 7 / 3 should be enough
-#define PL             7 // has to be (impulse_length-1)/2 !!!!
+#define boundary_blank 14 // for first trials very large!!!!
+#define impulse_length 7 // has to be odd!!!! 7 / 3 should be enough
+#define PL             3 // has to be (impulse_length-1)/2 !!!!
 
     arm_fir_instance_f32 LPC;
     float32_t lpcs[order+1]; // we reserve one more than "order" because of a leading "1"
@@ -814,6 +814,11 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
                            // 02 .. 05 = frame of vocal "a" with different impulse distortion levels
                            // 06 .. 09 = frame of vocal "a" with different impulse distortion levels
                            //            noise blanker operating!!
+                           //************
+                           // 01..09 are now using the original received audio and applying a rythmic "click" distortion
+                           // 06..09 is detecting and removing the click by restoring the predicted audio!!!
+                           //************
+                           // 5 / 9 is the biggest "click" and it is slightly noticeable in the restored audio (9)
                            // 10 = noise blanker active on orig. audio threshold factor=3
                            // 11  = sinusoidal signal undistorted
                            // 12 ..15 = sinusoidal signal with different impulse distortion levels
@@ -822,11 +827,11 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
                            // 20 ..50   noise blanker active on orig. audio; threshold factor varying between 3 and 0.26
 
     nr_setting = (int)ts.dsp_nr_strength;
-
+//*********************************from here just debug impulse / signal generation
     if ((nr_setting > 0) && (nr_setting < 10)) // we use the vocal "a" frame
         {
-            for (int i=0; i<128;i++)
-                insamp[i]=NR_test_samp[i];
+            //for (int i=0; i<128;i++)
+            //    insamp[i]=NR_test_samp[i];
 
             if ((frame_count > 19) && (nr_setting > 1))    // insert a distorting pulse
                 {
@@ -848,9 +853,9 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
                    dist_level=nr_setting-10;
                    if (dist_level > 5) dist_level=dist_level-4;
                    insamp[60]=insamp[60] + dist_level*1000; // overlaying a short  distortion pulse +/-
-                   insamp[61]=insamp[60] + dist_level*500;
-                   insamp[62]=insamp[60] - dist_level*200; // overlaying a short  distortion pulse +/-
-                   insamp[63]=insamp[60] - dist_level*100;
+                   insamp[61]=insamp[61] + dist_level*500;
+                   insamp[62]=insamp[62] - dist_level*200; // overlaying a short  distortion pulse +/-
+                   insamp[63]=insamp[63] - dist_level*100;
 
 
                 }
@@ -864,6 +869,9 @@ frame_count++;
 if (frame_count > 20) frame_count=0;
 
     #endif
+
+//*****************************end of debug impulse generation
+
 
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
@@ -948,7 +956,7 @@ if (frame_count > 20) frame_count=0;
 
         search_pos++;
 
-        } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));//-10 avoid upper boundary
+        } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));// avoid upper boundary
 
                         //boundary handling has to be fixed later
                         //as a result we now will not find any impulse in these areas
@@ -981,20 +989,20 @@ if (frame_count > 20) frame_count=0;
                 arm_mult_f32(&Wfw[0],&Rfw[order],&Rfw[order],impulse_length); // do the windowing, or better: weighing
                 arm_mult_f32(&Wbw[0],&Rbw[0],&Rbw[0],impulse_length);
 
-                //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
-
 #ifdef debug_alternate_NR
                     // in debug mode do the restoration only in some cases
 if (((ts.dsp_nr_strength > 0) && (ts.dsp_nr_strength < 6))||((ts.dsp_nr_strength > 10) && (ts.dsp_nr_strength < 16)))
 {
-            //    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+    // just let the distortion pass at setting 1...5 and 11...15
+    //    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
 }
 else
 {
+    //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
     arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
 }
 #else
-
+    //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
                 arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
 
 #endif
