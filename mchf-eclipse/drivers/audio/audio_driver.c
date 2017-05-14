@@ -3806,7 +3806,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 // Do decimation down to lower rate to reduce processor load
                 if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM &&
-                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && ts.filter_path < 48)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
                     // TODO HILBERT
                     // for filter BW <= 3k6 and LSB/USB/CW, don´t do decimation, we are already in 12ksps
