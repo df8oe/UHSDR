@@ -990,11 +990,11 @@ void CatDriver_HandleProtocol()
                 bc = 9;
                 break;
             case FT817_EEPROM_READ:
+                // we let all EEPROM read fail
+                // with a full simulation, we would return from 0 to 0x1925 two bytes: data@addr + data@(addr+1)
+                // and above 0x1925 only 1 byte.
                 resp[0]=0x00;
-                resp[1]=0x00;
-                resp[2]=0x00;
-                resp[3]=0x00;
-                bc = 4;
+                bc = 1;
                 break;
             case FT817_EEPROM_WRITE:
                 resp[0] = 0;
