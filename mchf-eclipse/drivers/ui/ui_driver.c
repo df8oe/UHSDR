@@ -1825,7 +1825,7 @@ void UiDriver_ShowMode()
     case DEMOD_FM:
 
 
-        txt = (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)?"FM-W":"FM-N";
+        txt = RadioManagement_FmDevIs5khz() ? "FM-W" : "FM-N";
         {
             if(ts.txrx_mode == TRX_MODE_RX)
             {

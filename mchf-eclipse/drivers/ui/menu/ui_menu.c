@@ -935,17 +935,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_FM_DEV_MODE:  // Select +/- 2.5 or 5 kHz deviation on RX and TX
         if(ts.iq_freq_mode)
         {
-            temp_var_u8 = ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ;
+            temp_var_u8 = RadioManagement_FmDevIs5khz();
             var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
             if(var_change)
             {
-                if(temp_var_u8) // band up/down swap is to be enabled
-                    ts.flags2 |= FLAGS2_FM_MODE_DEVIATION_5KHZ;     // set 5 kHz mode
-                else            // band up/down swap is to be disabled
-                    ts.flags2 &= ~FLAGS2_FM_MODE_DEVIATION_5KHZ;        // set 2.5 kHz mode
+                RadioManagement_FmDevSet5khz(temp_var_u8 != 0); // band up/down swap is to be enabled
             }
 
-            if(ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)               // Check state of bit indication 2.5/5 kHz
+            if(RadioManagement_FmDevIs5khz())               // Check state of bit indication 2.5/5 kHz
             {
                 txt_ptr = "+-5k (Wide)";        // Bit is set - 5 kHz
             }

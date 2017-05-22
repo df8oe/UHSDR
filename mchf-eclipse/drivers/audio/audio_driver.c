@@ -3809,7 +3809,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
                     // TODO HILBERT
-                    // for filter BW <= 3k6 and LSB/USB/CW, don´t do decimation, we are already in 12ksps
+                    // for filter BW <= 3k6 and LSB/USB/CW, don't do decimation, we are already in 12ksps
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
 
@@ -3989,7 +3989,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 arm_scale_f32(
                         adb.a_buffer,
-                        (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
+                        RadioManagement_FmDevIs5khz() ? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                                 adb.b_buffer,
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 if(ts.agc_wdsp)
@@ -4349,7 +4349,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
     float32_t fm_mod_mult;
     // Fill I and Q buffers with left channel(same as right)
     //
-    if(ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ)   // are we in 5 kHz modulation mode?
+    if(RadioManagement_FmDevIs5khz())   // are we in 5 kHz modulation mode?
     {
         fm_mod_mult = 2;    // yes - multiply all modulation factors by 2
     }

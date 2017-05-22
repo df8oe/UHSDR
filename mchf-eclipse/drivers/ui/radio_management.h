@@ -200,10 +200,14 @@ bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode);
 bool RadioManagement_IsPowerFactorReduce(uint32_t freq);
 void RadioManagement_ToggleVfoAB();
 
+bool RadioManagement_FmDevIs5khz();
+void RadioManagement_FmDevSet5khz(bool is5khz);
+
 inline void RadioManagement_ToggleVfoMem()
 {
     ts.vfo_mem_flag = ! ts.vfo_mem_flag;
 }
+
 
 
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */
