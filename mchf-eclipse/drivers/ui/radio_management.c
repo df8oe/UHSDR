@@ -1009,7 +1009,7 @@ uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
                 break;
             case DEMOD_FM:
                 // toggle between narrow and wide fm
-                ts.flags2 ^= FLAGS2_FM_MODE_DEVIATION_5KHZ;
+                RadioManagement_FmDevSet5khz( !RadioManagement_FmDevIs5khz() );
             }
             // if there is no explicit alternative mode
             // we return the original mode.
@@ -1311,5 +1311,28 @@ void RadioManagement_ToggleVfoAB()
     if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
     {
         RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
+    }
+}
+
+/**
+ * @returns true == fm deviation 5khz, false == fm deviation = 2.5khz
+ */
+bool RadioManagement_FmDevIs5khz()
+{
+    return (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ) != 0;
+}
+
+/**
+ * @param is5khz true == fm deviation 5khz, false == fm deviation = 2.5khz
+ */
+void RadioManagement_FmDevSet5khz(bool is5khz)
+{
+    if (is5khz)
+    {
+        ts.flags2 |= FLAGS2_FM_MODE_DEVIATION_5KHZ;
+    }
+    else
+    {
+        ts.flags2 &= ~FLAGS2_FM_MODE_DEVIATION_5KHZ;
     }
 }
