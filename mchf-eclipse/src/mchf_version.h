@@ -14,7 +14,7 @@
 
 #define 	TRX4M_VER_MAJOR			"2"
 #define 	TRX4M_VER_MINOR			"2"
-#define 	TRX4M_VER_RELEASE		"9"
+#define 	TRX4M_VER_RELEASE		"10"
 
 // trailing characters are needed for identifying version and building date+time in binary
 #define		TRX4M_VERSION			"fwv-"TRX4M_VER_MAJOR"."TRX4M_VER_MINOR"."TRX4M_VER_RELEASE
