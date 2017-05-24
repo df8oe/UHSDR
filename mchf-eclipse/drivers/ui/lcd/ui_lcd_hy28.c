@@ -540,7 +540,7 @@ static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 
 #ifdef USE_SPI_HAL
     uint8_t dummy;
-    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);
+    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,10);
 #else
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     SPI2->DR = byte;
@@ -571,7 +571,7 @@ uint8_t UiLcdHy28_SpiReadByte(void)
     uint8_t retval = 0;
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
-    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,100);
+    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,10);
 
     return retval;
 }
@@ -582,7 +582,7 @@ uint8_t UiLcdHy28_SpiReadByteFast(void)
 
 #ifdef USE_SPI_HAL
     uint8_t dummy = 0;
-    HAL_SPI_TransmitReceive(&hspi2, &dummy, &retval,1,0);
+    HAL_SPI_TransmitReceive(&hspi2, &dummy, &retval,1,10);
 #else
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
@@ -1354,9 +1354,21 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 #define XPT2046_CH_DFR_X    0x10
 #define XPT2046_CONV_START  0x80
 
+static void UiLcdHy28_TouchscreenReadData(uint8_t* x_p,uint8_t* y_p)
+{
+
+    UiLcdHy28_TouchscreenStartSpiTransfer();
+    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
+    *x_p = UiLcdHy28_SpiReadByteFast();
+    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
+    *y_p = UiLcdHy28_SpiReadByteFast();
+    UiLcdHy28_TouchscreenFinishSpiTransfer();
+}
+
+
+
 void UiLcdHy28_TouchscreenReadCoordinates()
 {
-    uchar i,x,y;
 
     /*
     statemachine stati:
@@ -1370,27 +1382,35 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     {
         if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
         {
-            UiLcdHy28_TouchscreenStartSpiTransfer();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
-            x = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
-            y = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_TouchscreenFinishSpiTransfer();
+            uint8_t xraw, yraw, x,y;
+
+            UiLcdHy28_TouchscreenReadData(&xraw,&yraw);
 
 
-            if(mchf_touchscreen.raw == false)						//do translation with correction table
+            if(mchf_touchscreen.raw == true)
+            {
+                x = xraw;
+                y = yraw;
+            }
+            else    //do translation with correction table
             {
 
                 if(mchf_touchscreen.reversed == false)
                 {
-              	  for(i=0; touchscreentable[i] < x && i < 60; i++);
+                  uint8_t i;
+              	  for(i=0; touchscreentable[i] < xraw && i < 60; i++);
               	  x = 60-i;
               	}
 				else
                 {					// correction of unlinearity because of mirrored x
-              	  char k = 0;
-              	  for(i=60; touchscreentable[i] > x && i > 0; i--);
+              	  uint8_t k = 0;
+
+              	  uint8_t i;
+              	  for(i=60; touchscreentable[i] > xraw && i > 0; i--);
+
               	  x = i--;
+
+
               	  if(x == 57 || (x < 7 && x > 1))	k=2;
               	  if(x == 56 || (x == 8 || x == 7))	k=3;
               	  if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
@@ -1402,9 +1422,11 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 				  x = x - k;
               	}
 
-                for(i=0; touchscreentable[i] < y && i < 60; i++);
+                uint8_t i;
+                for(i=0; touchscreentable[i] < yraw && i < 60; i++);
                 y = i--;
             }
+
             if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
                 mchf_touchscreen.state++;						// touch data valid
@@ -1424,28 +1446,17 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     }
 }
 
-
-static void UiLcdHy28_TouchscreenReadData()
-{
-
-    uint8_t message[2][4] = { { XPT2046_CONV_START|XPT2046_CH_DFR_X, 0, XPT2046_CONV_START|XPT2046_CH_DFR_X, 0 }, { 0,0,0,0 } };
-    UiLcdHy28_TouchscreenStartSpiTransfer();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X);
-    mchf_touchscreen.x = UiLcdHy28_SpiReadByteFast();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
-    mchf_touchscreen.y = UiLcdHy28_SpiReadByteFast();
-    UiLcdHy28_TouchscreenFinishSpiTransfer();
-}
-
 bool UiLcdHy28_TouchscreenPresenceDetection(void)
 {
     bool retval = false;
-    UiLcdHy28_TouchscreenReadData();
-    UiLcdHy28_TouchscreenReadData();
+    uint8_t x = 0xff, y = 0xff;
+
+    UiLcdHy28_TouchscreenReadData(&x,&y);
+    UiLcdHy28_TouchscreenReadData(&x,&y);
 
     mchf_touchscreen.state = TP_DATASETS_PROCESSED;
 
-    if(mchf_touchscreen.x != 0xff && mchf_touchscreen.y != 0xff && mchf_touchscreen.x != 0 && mchf_touchscreen.y != 0)
+    if(x != 0xff && y != 0xff && x != 0 && y != 0)
     {// touchscreen data valid?
         retval = true;                      // yes - touchscreen present!
     }
