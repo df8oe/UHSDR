@@ -1076,7 +1076,6 @@ arm_fir_instance_f32    FIR_Q;
 //static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
 static float32_t    __MCHF_SPECIALMEM FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
 static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
-static float32_t    __MCHF_SPECIALMEM    FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
 
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances

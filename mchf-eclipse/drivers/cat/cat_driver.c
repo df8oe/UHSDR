@@ -386,7 +386,7 @@ const ft817_block_t cloneblock_len[] =
 
 */
 
-// #define DEBUG_FT817
+#define DEBUG_FT817
 typedef enum {
     CLONEOUT_INIT = 0,
     CLONEOUT_BLOCK_SEND,
@@ -474,7 +474,73 @@ static const yaesu_cmd_set_t ncmd[] =
     { 1, { 0x00, 0x00, 0x00, 0x00, 0x8f } }, /* pwr off */
     ?{ 0, { 0x00, 0x00, 0x00, 0x00, 0xbb } }, /* eeprom read */
 }
+
+
+
+
 #endif
+
+typedef enum {
+    FT817EE_INVALID = 0,
+    FT817EE_DATA,
+    FT817EE_FUNC,
+    FT817EE_STOP
+} ft817_ee_entry_t;
+
+typedef struct {
+    ft817_ee_entry_t type;
+    uint16_t start;
+    uint16_t end;
+    union {
+    bool (*functionPtr)(bool read, uint16_t addr, uint8_t* data_p);
+    uint8_t value;
+    } content;
+} ft817_eeprom_emul_t;
+
+
+// here we defined the eeprom emulation
+// for some tools we may want to support either reading a fixed value
+// or even reading/writing actual information from/to mcHF
+// all other addresses will indicate failure
+
+// WSJT-X: Wants to read from 0x64, no write
+ft817_eeprom_emul_t ft817_eeprom[] =
+{
+        { .type = FT817EE_DATA,     .start = 0,     .end = 3,       .content.value = 0      }, // checksum
+        { .type = FT817EE_DATA,     .start = 4,     .end = 4,       .content.value = 0xD8   }, // radio config
+        { .type = FT817EE_DATA,     .start = 5,     .end = 5,       .content.value = 0xBF   }, // radio config
+        { .type = FT817EE_DATA,     .start = 0x64,  .end = 0x64,    .content.value = 0x00 }, // VOX Delay and other stuff, fixed value, required by WSJT-X
+        { .type = FT817EE_STOP }
+};
+
+static bool CatDriver_Ft817_EEPROM_Read(uint16_t addr,uint8_t* data_p)
+{
+    bool retval = false;
+
+    for(int idx = 0; ft817_eeprom[idx].type != FT817EE_STOP && addr >= ft817_eeprom[idx].start;idx++)
+    {
+        if (ft817_eeprom[idx].start <= addr && addr <= ft817_eeprom[idx].end)
+        {
+            switch(ft817_eeprom[idx].type)
+            {
+            case FT817EE_DATA:
+                *data_p = ft817_eeprom[idx].content.value;
+                retval = true;
+                break;
+            case FT817EE_FUNC:
+                retval = (*ft817_eeprom[idx].content.functionPtr)(true, addr,data_p);
+                break;
+            default:
+                break;
+            }
+
+            break;
+        }
+    }
+
+    return retval;
+}
+
 
 typedef enum
 {
@@ -982,13 +1048,24 @@ static void CatDriver_HandleCommands()
             bc = 9;
             break;
         case FT817_EEPROM_READ:
-            // we let all EEPROM read fail
             // with a full simulation, we would return from 0 to 0x1925 two bytes: data@addr + data@(addr+1)
-            // and above 0x1925 only 1 byte.
-            resp[0]=0x00;
-            bc = 1;
+            // and above 0x1925 only 1 byte. So we call our function and see what it returns.
+        {
+            uint16_t ee_addr = (ft817.req[0] << 8) | ft817.req[1];
+            if (CatDriver_Ft817_EEPROM_Read(ee_addr,&resp[0]) && ee_addr < 0x1925)
+            {
+                CatDriver_Ft817_EEPROM_Read(ee_addr+1,&resp[1]);
+                bc = 2;
+            }
+            else
+            {
+                resp[0]=0x00;
+                bc = 1;
+            }
             break;
+        }
         case FT817_EEPROM_WRITE:
+            // no op
             resp[0] = 0;
             bc = 1;
             break;
