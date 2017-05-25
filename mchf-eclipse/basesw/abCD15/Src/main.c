@@ -72,7 +72,6 @@
 void SystemClock_Config(void);
 void Error_Handler(void);
 static void MPU_Config(void);
-void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/

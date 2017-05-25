@@ -1354,15 +1354,31 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 #define XPT2046_CH_DFR_X    0x10
 #define XPT2046_CONV_START  0x80
 
-static void UiLcdHy28_TouchscreenReadData(uint8_t* x_p,uint8_t* y_p)
+#define  XPT2046_COMMAND_LEN 7
+
+static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
 {
 
+
+    static const uint8_t xpt2046_command[XPT2046_COMMAND_LEN] =
+    {
+            XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_REF,
+            0,  XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT|XPT2046_PD_REF,  // the measurement for first command is here, we discard this
+            0,  XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_FULL, // y measurement from previous command, next command turns off power
+            0, 0                                                                        // x measurement from previous command
+    };
+
+    uint8_t xpt_response[XPT2046_COMMAND_LEN];
+
     UiLcdHy28_TouchscreenStartSpiTransfer();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
-    *x_p = UiLcdHy28_SpiReadByteFast();
-    UiLcdHy28_SpiSendByte(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
-    *y_p = UiLcdHy28_SpiReadByteFast();
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,10);
+
     UiLcdHy28_TouchscreenFinishSpiTransfer();
+
+    *x_p = (xpt_response[5] << 8 | xpt_response[6]) >> 3;
+    *y_p = (xpt_response[3] << 8 | xpt_response[4]) >> 3;
+
 }
 
 
@@ -1382,50 +1398,44 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     {
         if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
         {
-            uint8_t xraw, yraw, x,y;
 
-            UiLcdHy28_TouchscreenReadData(&xraw,&yraw);
+            UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
 
+            uint8_t x,y;
 
-            if(mchf_touchscreen.raw == true)
+            uint8_t xraw = mchf_touchscreen.xraw >> 5;
+            uint8_t yraw = mchf_touchscreen.yraw >> 5;
+
+            if(mchf_touchscreen.reversed == false)
             {
-                x = xraw;
-                y = yraw;
+                uint8_t i;
+                for(i=0; touchscreentable[i] < xraw && i < 60; i++);
+                x = 60-i;
             }
-            else    //do translation with correction table
-            {
-
-                if(mchf_touchscreen.reversed == false)
-                {
-                  uint8_t i;
-              	  for(i=0; touchscreentable[i] < xraw && i < 60; i++);
-              	  x = 60-i;
-              	}
-				else
-                {					// correction of unlinearity because of mirrored x
-              	  uint8_t k = 0;
-
-              	  uint8_t i;
-              	  for(i=60; touchscreentable[i] > xraw && i > 0; i--);
-
-              	  x = i--;
-
-
-              	  if(x == 57 || (x < 7 && x > 1))	k=2;
-              	  if(x == 56 || (x == 8 || x == 7))	k=3;
-              	  if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
-              	  if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
-              	  if(x == 45)	k=7;
-              	  if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
-              	  if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
-              	  if(x < 31 && x > 26)	k=10;
-				  x = x - k;
-              	}
+            else
+            {					// correction of unlinearity because of mirrored x
+                uint8_t k = 0;
 
                 uint8_t i;
-                for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-                y = i--;
+                for(i=60; touchscreentable[i] > xraw && i > 0; i--);
+
+                x = i--;
+
+
+                if(x == 57 || (x < 7 && x > 1))	k=2;
+                if(x == 56 || (x == 8 || x == 7))	k=3;
+                if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
+                if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
+                if(x == 45)	k=7;
+                if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
+                if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
+                if(x < 31 && x > 26)	k=10;
+                x = x - k;
             }
+
+            uint8_t i;
+            for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+            y = i--;
 
             if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
@@ -1449,14 +1459,14 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 bool UiLcdHy28_TouchscreenPresenceDetection(void)
 {
     bool retval = false;
-    uint8_t x = 0xff, y = 0xff;
+    uint16_t x = 0xffff, y = 0xffff;
 
     UiLcdHy28_TouchscreenReadData(&x,&y);
     UiLcdHy28_TouchscreenReadData(&x,&y);
 
     mchf_touchscreen.state = TP_DATASETS_PROCESSED;
 
-    if(x != 0xff && y != 0xff && x != 0 && y != 0)
+    if(x != 0xffff && y != 0xffff && x != 0 && y != 0)
     {// touchscreen data valid?
         retval = true;                      // yes - touchscreen present!
     }
@@ -1465,7 +1475,8 @@ bool UiLcdHy28_TouchscreenPresenceDetection(void)
 
 void UiLcdHy28_TouchscreenInit(bool is_reversed)
 {
-    mchf_touchscreen.raw = 0;                         // default translated coordinates
+    mchf_touchscreen.xraw = 0;
+    mchf_touchscreen.yraw = 0;
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
     mchf_touchscreen.reversed = is_reversed;

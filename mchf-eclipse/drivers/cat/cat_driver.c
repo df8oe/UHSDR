@@ -504,7 +504,7 @@ typedef struct {
 // all other addresses will indicate failure
 
 // WSJT-X: Wants to read from 0x64, no write
-ft817_eeprom_emul_t ft817_eeprom[] =
+static const ft817_eeprom_emul_t ft817_eeprom[] =
 {
         { .type = FT817EE_DATA,     .start = 0,     .end = 3,       .content.value = 0      }, // checksum
         { .type = FT817EE_DATA,     .start = 4,     .end = 4,       .content.value = 0xD8   }, // radio config

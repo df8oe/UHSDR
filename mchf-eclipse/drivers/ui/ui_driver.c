@@ -5573,8 +5573,6 @@ static void UiDriver_KeyTestScreen()
 				poweroffcount++;
 				break;
 			case	BUTTON_BNDM_PRESSED:
-				ts.tp->raw = !ts.tp->raw;
-				
 				if(rbcount > 75)
 				{
 					txt = "rebooting...";
@@ -5586,15 +5584,8 @@ static void UiDriver_KeyTestScreen()
 
 			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 			    {
-			  		if(ts.tp->raw)
-			  		{
-					  snprintf(txt_buf,40,"Touchscr. x:%02x y:%02x",ts.tp->x,ts.tp->y);	//show touched coordinates
-					}
-					else
-					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp->x,ts.tp->y);	//show touched coordinates
-					{
-					}
-	                UiLcdHy28_PrintTextCentered(10,210,300,txt_buf,White,Blue,0);           // identify button on screen
+					snprintf(txt_buf,40,"x/y: %02d/%02d x/y raw: %04x/%04x",ts.tp->x,ts.tp->y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
+	                UiLcdHy28_PrintTextCentered(10,216,300,txt_buf,White,Blue,0);           // identify button on screen
 					txt = "Touch";
 				}
 				else
@@ -5642,12 +5633,13 @@ static void UiDriver_KeyTestScreen()
 
 			if(ts.tp->present)			// show translation of touchscreen if present
 			{
-			    txt = ts.tp->raw?"touch coordinates: raw":"touch coordinates: translate";
+			    txt = "Touch Coordinates:";
 			}
 			else
 			{
-			    txt = "touch controller: no";
+			    txt = "Touch Controller not present";
 			}
+
 			UiLcdHy28_PrintTextCentered(10,200,300,txt,White,Blue,0);
 
 			if(p_o_state == 1)

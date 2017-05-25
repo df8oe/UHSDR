@@ -128,9 +128,13 @@ void    UiLcdHy28_BacklightEnable(bool on);
 typedef struct
 {
     uint8_t state;
-    uint8_t raw;
+
+    uint16_t xraw;
+    uint16_t yraw;
+
     uint8_t x;
     uint8_t y;
+
     bool present;
     bool reversed;
 } mchf_touchscreen_t;
