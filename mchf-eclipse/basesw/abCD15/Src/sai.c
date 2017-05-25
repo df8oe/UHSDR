@@ -45,7 +45,7 @@
 #include "sai.h"
 
 #include "gpio.h"
-#include "DMA.h"
+#include "dma.h"
 
 /* USER CODE BEGIN 0 */
 

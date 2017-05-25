@@ -28,7 +28,7 @@ typedef enum
     BUTTON_MODE_EXTI = 1
 } ButtonMode_TypeDef;
 
-#define LEDn                            4
+#define LEDn                            5
 
 #define LEDGREEN_PIN                    GPIO_PIN_9
 #define LEDGREEN_GPIO_PORT              GPIOB

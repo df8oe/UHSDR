@@ -5,6 +5,8 @@
 # for example to build the bootloader in the build-bl folder inside this directory
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
+BUILDFOR=F4
+
 ROOTLOC=.
 VPATH=$(ROOTLOC)
 # Author: Harald Baumgart DL4SAI
@@ -47,12 +49,23 @@ ifeq ($(OS),Darwin)
 endif
 
 # compilation options
-MACHFLAGS := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb
-BASECFLAGS  = $(MACHFLAGS)  \
-          -DARM_MATH_CM4 -D_GNU_SOURCE -DCORTEX_M4 -DSTM32F407xx -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE  \
-          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function -D__FPU_PRESENT=1U \
-          $(EXTRACFLAGS)
+MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
+MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
 
+COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
+          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
+
+BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
+
+BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
+
+LDFLAGS_F4 := $(MACHFLAGS_F4) -flto --specs=nano.specs
+LDFLAGS_F7 := $(MACHFLAGS_F7) -flto --specs=nano.specs
+
+LIBS := -lm -lc -lnosys \
+        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
+
+# ------------- nothing to change below this line ---------------------- 
 
 # propagate version info from source to environment variables
 PROJECT_VERSION_FILE := $(ROOTLOC)/src/mchf_version.h
@@ -69,25 +82,42 @@ endif
 
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
-LDFLAGS := $(MACHFLAGS) -flto --specs=nano.specs
+	
 
-LIBS := -lm -lc -lnosys \
-        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
+ifeq ($(BUILDFOR),F4)
 
-bootloader.elf : CFLAGS = ${BASECFLAGS} -Os -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS} -O2
+bootloader.elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
+mchf.elf : CFLAGS = ${BASECFLAGS_F4} -O2
+bootloader.elf : LDFLAGS = ${LDFLAGS_F4}
+mchf.elf : LDFLAGS = ${LDFLAGS_F4} 
+	
 
-# Every subdirectory with header files must be mentioned here
-include $(ROOTLOC)/include.mak
+	# Every subdirectory with header files must be mentioned here
+	include $(ROOTLOC)/include.mak
 
-# every source-file has to be mentioned here 
+	# every source-file has to be mentioned here 
+	include $(ROOTLOC)/files.mak
+
+	include $(ROOTLOC)/bootloader.mak
+
+endif
+ifeq ($(BUILDFOR),F7)
+
+bootloader.elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
+mchf.elf : CFLAGS = ${BASECFLAGS_F7} -O2
+bootloader.elf : LDFLAGS = ${LDFLAGS_F7}
+mchf.elf : LDFLAGS = ${LDFLAGS_F7} 
 
 
-include $(ROOTLOC)/files.mak
+	# Every subdirectory with header files must be mentioned here
+	include $(ROOTLOC)/f7-include.mak
 
-include $(ROOTLOC)/bootloader.mak
+	# every source-file has to be mentioned here 
+	include $(ROOTLOC)/f7-files.mak
 
-# ------------- nothing to change below this line ---------------------- 
+	include $(ROOTLOC)/f7-bootloader.mak
+
+endif
 
 INC_DIRS = $(foreach d, $(SUBDIRS), -I$(ROOTLOC)/$d)
 
