@@ -3826,13 +3826,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
 
-                    if (ts.new_nb == false) //if false, use the nr function as usual
-                      {
+
                         if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                             {
                               AudioDriver_NoiseReduction(blockSizeDecim);
                             }
-                      }
+
                   }
 
                 // Apply audio  bandpass filter

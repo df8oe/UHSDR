@@ -731,8 +731,11 @@ void alternateNR_handle()
       // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
       // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
 
+                profileTimedEventStart(ProfileTP8);
 
                 do_alternate_NR(&input_buf->samples[0].real,&fdv_iq_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
+
+                profileTimedEventStop(ProfileTP8);
 
                 NR_out_buffer_add(&fdv_iq_buff[NR_current_buffer_idx]);
                 NR_current_buffer_idx++;
@@ -746,13 +749,12 @@ void alternateNR_handle()
 
 void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 {
-    static uint16_t sawcount = 0; // just to generate some overlaying sawtooth noise
-    float32_t lpc_coeff[11];
+
     float32_t* Energy=0;
 
 
 
-    alt_noise_blanking(inputsamples,NR_FFT_SIZE,10,Energy);
+    alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
                                     {
@@ -780,11 +782,11 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 #define boundary_blank 14 // for first trials very large!!!!
 #define impulse_length 7 // has to be odd!!!! 7 / 3 should be enough
 #define PL             3 // has to be (impulse_length-1)/2 !!!!
-
+#define order         10 // lpc's order
     arm_fir_instance_f32 LPC;
     float32_t lpcs[order+1]; // we reserve one more than "order" because of a leading "1"
     float32_t reverse_lpcs[order+1]; //this takes the reversed order lpc coefficients
-    static float32_t firStateF32[NR_FFT_SIZE + 10 - 1];  //order 10 is hard-coded here!!!
+    float32_t firStateF32[NR_FFT_SIZE + order];
     float32_t tempsamp[NR_FFT_SIZE];
     float32_t sigma2; //taking the variance of the inpo
     float32_t lpc_power;
@@ -792,12 +794,15 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     int impulse_positions[5];  //we allow a maximum of 5 impulses per frame
     int search_pos=0;
     int impulse_count=0;
-
+    static float32_t last_frame_end[order+PL]; //this takes the last samples from the previous frame to do the prediction within the boundaries
+#ifdef debug_alternate_NR
     static int frame_count=0;  //only used for the distortion insertion - can alter be deleted
     int dist_level=0;//only used for the distortion insertion - can alter be deleted
+#endif
+
     int nr_setting = 0;
     float32_t R[11];  // takes the autocorrelation results
-    float32_t sum,e,k,alfa;
+    float32_t e,k,alfa;
 
     float32_t any[order+1];  //some internal buffers for the levinson durben algorithm
 
@@ -830,15 +835,15 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 //*********************************from here just debug impulse / signal generation
     if ((nr_setting > 0) && (nr_setting < 10)) // we use the vocal "a" frame
         {
-            //for (int i=0; i<128;i++)
+            //for (int i=0; i<128;i++)          // not using vocal "a" but the original signal
             //    insamp[i]=NR_test_samp[i];
 
             if ((frame_count > 19) && (nr_setting > 1))    // insert a distorting pulse
                 {
                    dist_level=nr_setting;
                    if (dist_level > 5) dist_level=dist_level-4; // distortion level is 1...5
-                   insamp[60]=insamp[60] + dist_level*3000; // overlaying a short  distortion pulse +/-
-                   insamp[61]=insamp[60] - dist_level*1000;
+                   insamp[4]=insamp[4] + dist_level*3000; // overlaying a short  distortion pulse +/-
+                   insamp[5]=insamp[5] - dist_level*1000;
                 }
 
         }
@@ -852,10 +857,10 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
                 {
                    dist_level=nr_setting-10;
                    if (dist_level > 5) dist_level=dist_level-4;
-                   insamp[60]=insamp[60] + dist_level*1000; // overlaying a short  distortion pulse +/-
-                   insamp[61]=insamp[61] + dist_level*500;
-                   insamp[62]=insamp[62] - dist_level*200; // overlaying a short  distortion pulse +/-
-                   insamp[63]=insamp[63] - dist_level*100;
+                   insamp[24]=insamp[24] + dist_level*1000; // overlaying a short  distortion pulse +/-
+                   insamp[25]=insamp[25] + dist_level*500;
+                   insamp[26]=insamp[26] - dist_level*200; // overlaying a short  distortion pulse +/-
+                   insamp[27]=insamp[27] - dist_level*100;
 
 
                 }
@@ -872,7 +877,7 @@ if (frame_count > 20) frame_count=0;
 
 //*****************************end of debug impulse generation
 
-
+//  start of test timing zone
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
     {                                     // will be a constant window later!
@@ -936,12 +941,12 @@ if (frame_count > 20) frame_count=0;
 
     arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares (the "power") of the lpc's
 
-    impulse_threshold = 3 * sqrt(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
+    impulse_threshold = 2.5 * sqrtf(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
 
-    if ((nr_setting > 20) && (nr_setting <51))
-        impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26
+    //if ((nr_setting > 20) && (nr_setting <51))
+    //    impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26
 
-    search_pos=boundary_blank;  // for first trials avoid the boundaries to the other frames
+    search_pos = order+PL;  // lower boundary problem has been solved! - so here we start from 1 or 0?
     impulse_count=0;
 
     do {        //going through the filtered samples to find an impulse larger than the threshold
@@ -975,9 +980,21 @@ if (frame_count > 20) frame_count=0;
         {
         for (int k = 0; k<order; k++)   // we have to copy some samples from the original signal as
             {                           // basis for the reconstructions - could be done by memcopy
-                Rfw[k]=insamp[impulse_positions[j]-PL-order+k];
-                Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
-            }                                                               //bis hier alles ok
+
+               if ((impulse_positions[j]-PL-order+k) < 0)// this solves the prediction problem at the left boundary
+               {
+                   Rfw[k]=last_frame_end[impulse_positions[j]+k];//take the sample from the last frame
+               }
+               else
+               {
+                   Rfw[k]=insamp[impulse_positions[j]-PL-order+k];//take the sample from this frame as we are away from the boundary
+               }
+
+               Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
+
+
+
+            }     //bis hier alles ok
 
             for (int i = 0; i < impulse_length; i++) //now we calculate the forward and backward predictions
                 {
@@ -988,6 +1005,8 @@ if (frame_count > 20) frame_count=0;
 
                 arm_mult_f32(&Wfw[0],&Rfw[order],&Rfw[order],impulse_length); // do the windowing, or better: weighing
                 arm_mult_f32(&Wbw[0],&Rbw[0],&Rbw[0],impulse_length);
+
+
 
 #ifdef debug_alternate_NR
                     // in debug mode do the restoration only in some cases
@@ -1008,6 +1027,11 @@ else
 #endif
         }
 
+ for (int p=0; p<(order+PL); p++)
+ {
+     last_frame_end[p]=insamp[NR_FFT_SIZE-1-order-PL+p];// store 13 samples from the current frame to use at the next frame
+ }
+    //end of test timing zone
 }
 
 #endif
