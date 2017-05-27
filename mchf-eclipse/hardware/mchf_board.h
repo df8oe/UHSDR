@@ -311,7 +311,7 @@ typedef enum {
 #define CW_MAX_MODE					3
 
 // PA power level setting enumeration
-enum
+typedef enum
 {
     PA_LEVEL_FULL = 0,
     PA_LEVEL_5W,
@@ -319,7 +319,7 @@ enum
     PA_LEVEL_1W,
     PA_LEVEL_0_5W,
     PA_LEVEL_TUNE_KEEP_CURRENT
-};
+} mchf_power_level_t;
 //
 #define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
 

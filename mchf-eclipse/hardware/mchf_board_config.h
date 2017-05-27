@@ -29,11 +29,6 @@
 // -----------------------------------------------------------------------------
 
 
-
-#define		WD_REFRESH_WINDOW		80
-#define		WD_REFRESH_COUNTER		127
-
-
 #ifdef STM32F4
 
 // place tagged elements in CCM 64k extra RAM (no DMA)

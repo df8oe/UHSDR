@@ -492,7 +492,7 @@ typedef struct {
     uint16_t start;
     uint16_t end;
     union {
-    bool (*functionPtr)(bool read, uint16_t addr, uint8_t* data_p);
+    bool (*funcPtr)(bool read, uint16_t addr, uint8_t* data_p);
     uint8_t value;
     } content;
 } ft817_eeprom_emul_t;
@@ -503,15 +503,144 @@ typedef struct {
 // or even reading/writing actual information from/to mcHF
 // all other addresses will indicate failure
 
+bool CatDriver_Ft817_EEPROM_RW_Func(bool readEEPROM, uint16_t addr, uint8_t* data_p)
+{
+    bool retval = false;
+    if (readEEPROM == false)
+    {
+        switch(addr)
+        {
+
+        case 0x55:
+        {
+            uint8_t vfo_selection = data_p[0] & 0x81;
+            if (
+                    (vfo_selection == 0x81 && is_vfo_b() == false)
+                    ||
+                    (vfo_selection == 0x80 && is_vfo_b() == true)
+            )
+            {
+                // we have to switch active vfo
+                UiDriver_ToggleVfoAB();
+                retval = true;
+            }
+            break;
+        }
+        }
+    }
+    else
+    {
+        switch(addr)
+        {
+        /*
+        HRD:
+        case 0x56:
+
+        case 0x57:
+        case 0x58:
+
+        case 0x5F:
+        case 0x60:
+
+        case 0x80
+
+        case 0x7B:
+         */
+        case 0x55:
+            // Used by: HRD
+            // Bit 0: 0 -> VFO A, 1 -> VFO B
+            // Bit 5: 0 -> Memory, 1 -> MTUNE
+            // Bit 6: Unknown
+            // Bit 7: 0 -> Memory Mode, 1 -> VFO
+            *data_p = is_vfo_b()? 0x81:0x80;
+
+            // TODO: If memmode gets implmented, we need more complex handling here
+            retval = true;
+            break;
+        case 0x79:
+        {
+            // Used by: HRD
+            // Bit 0 - 1: TX Power 00 - Hi -> 11: L1 (lowest)
+            // Bit 2: Unknown
+            // Bit 3: PRI On?
+            // Bit 4: DW On?
+            // Bit 5-6: Scan Mode: 00 No, 10 Scan Up, 11 Scan Down
+            // Bit 7: ART On?
+            uint8_t powerlevel = 0;
+            switch (ts.power_level)
+            {
+            case PA_LEVEL_0_5W:
+                powerlevel = 3;
+                break;
+            case PA_LEVEL_1W:
+                powerlevel = 2;
+                break;
+            case PA_LEVEL_2W:
+                powerlevel = 1;
+                break;
+            default:
+                // we report 5W and FULL as High
+                // TODO: or shall we merge two other power settings?
+                powerlevel = 0;
+                break;
+            }
+            *data_p = powerlevel;
+            retval = true;
+            break;
+        }
+        case 0x7A:
+        {
+            // Used by: HRD, N1MM
+            // Bit 0 - 5: Antenna Select   HF/6m/FM Broadcast/Airband/2m/70cm
+            // Bit 6: Unknown
+            // Bit 7 indicates split mode
+            *data_p = is_splitmode() ? 0x80:00;
+            retval = true;
+            break;
+        }
+        }
+    }
+    return retval;
+}
+
+
 // WSJT-X: Wants to read from 0x64, no write
 static const ft817_eeprom_emul_t ft817_eeprom[] =
 {
         { .type = FT817EE_DATA,     .start = 0,     .end = 3,       .content.value = 0      }, // checksum
         { .type = FT817EE_DATA,     .start = 4,     .end = 4,       .content.value = 0xD8   }, // radio config
         { .type = FT817EE_DATA,     .start = 5,     .end = 5,       .content.value = 0xBF   }, // radio config
+        { .type = FT817EE_FUNC,     .start = 0x55,  .end = 0x55,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
         { .type = FT817EE_DATA,     .start = 0x64,  .end = 0x64,    .content.value = 0x00 }, // VOX Delay and other stuff, fixed value, required by WSJT-X
+        { .type = FT817EE_FUNC,     .start = 0x79,  .end = 0x79,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
+        { .type = FT817EE_FUNC,     .start = 0x7A,  .end = 0x7A,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
+        { .type = FT817EE_DATA,     .start = 0x7B,  .end = 0x7B,    .content.value = 0x00 }, // Chg related, not supported
+
         { .type = FT817EE_STOP }
 };
+
+static bool CatDriver_Ft817_EEPROM_Write(uint16_t addr,uint8_t* data_p)
+{
+    bool retval = false;
+
+    for(int idx = 0; ft817_eeprom[idx].type != FT817EE_STOP && addr >= ft817_eeprom[idx].start;idx++)
+    {
+        if (ft817_eeprom[idx].start <= addr && addr <= ft817_eeprom[idx].end)
+        {
+            switch(ft817_eeprom[idx].type)
+            {
+            case FT817EE_FUNC:
+                retval = (*ft817_eeprom[idx].content.funcPtr)(false, addr,data_p);
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+    }
+
+    return retval;
+}
 
 static bool CatDriver_Ft817_EEPROM_Read(uint16_t addr,uint8_t* data_p)
 {
@@ -528,7 +657,7 @@ static bool CatDriver_Ft817_EEPROM_Read(uint16_t addr,uint8_t* data_p)
                 retval = true;
                 break;
             case FT817EE_FUNC:
-                retval = (*ft817_eeprom[idx].content.functionPtr)(true, addr,data_p);
+                retval = (*ft817_eeprom[idx].content.funcPtr)(true, addr,data_p);
                 break;
             default:
                 break;
@@ -1051,24 +1180,35 @@ static void CatDriver_HandleCommands()
             // with a full simulation, we would return from 0 to 0x1925 two bytes: data@addr + data@(addr+1)
             // and above 0x1925 only 1 byte. So we call our function and see what it returns.
         {
+            resp[0] = 0;
+            resp[1] = 0;
             uint16_t ee_addr = (ft817.req[0] << 8) | ft817.req[1];
             if (CatDriver_Ft817_EEPROM_Read(ee_addr,&resp[0]) && ee_addr < 0x1925)
             {
+                // please note: in case of second addr being invalid
+                // we still return success and two bytes, second data byte is 0 in this case
                 CatDriver_Ft817_EEPROM_Read(ee_addr+1,&resp[1]);
                 bc = 2;
             }
             else
             {
-                resp[0]=0x00;
                 bc = 1;
             }
             break;
         }
         case FT817_EEPROM_WRITE:
-            // no op
+        {
+            // no op in most cases
             resp[0] = 0;
             bc = 1;
+            uint16_t ee_addr = (ft817.req[0] << 8) | ft817.req[1];
+            if (ee_addr < 0x1925)
+            {
+                CatDriver_Ft817_EEPROM_Write(ee_addr,&ft817.req[2]);
+                CatDriver_Ft817_EEPROM_Write(ee_addr+1,&ft817.req[2]);
+            }
             break;
+        }
         case FT817_READ_TX_STATE:
             if(RadioManagement_IsTxDisabled()||(ts.txrx_mode != TRX_MODE_TX))
             {
@@ -1100,9 +1240,9 @@ static void CatDriver_HandleCommands()
             // default:
             // while (1);
         }
+        CatDriver_InterfaceBufferPutData(resp,bc);
+        /* Return data back */
     }
-    CatDriver_InterfaceBufferPutData(resp,bc);
-    /* Return data back */
 }
 
 void CatDriver_HandleProtocol()

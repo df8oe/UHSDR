@@ -496,55 +496,6 @@ void mchf_board_touchscreen_init()
 
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
-#if 0
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_watchdog_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//static void mchf_board_watchdog_init(void)
-//{
-// Enable WWDG clock
-//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
-
-// WWDG clock counter = (PCLK1 (42MHz)/4096)/8 = 1281 Hz (~780 us)
-//	WWDG_SetPrescaler(WWDG_Prescaler_8);
-
-// Set Window value to 80; WWDG counter should be refreshed only when the counter
-//    is below 80 (and greater than 64) otherwise a reset will be generated
-//	WWDG_SetWindowValue(WD_REFRESH_WINDOW);
-
-// Enable WWDG and set counter value to 127, WWDG timeout = ~780 us * 64 = 49.92 ms
-// In this case the refresh window is: ~780 * (127-80) = 36.6ms < refresh window < ~780 * 64 = 49.9ms
-// -- so wd reset is every 40 mS --
-// --WWDG_Enable(WD_REFRESH_COUNTER);
-//}
-
-static void mchf_board_set_system_tick_value(void)
-{
-    RCC_ClocksTypeDef 	RCC_Clocks;
-//	NVIC_InitTypeDef 	NVIC_InitStructure;
-
-// Configure Systick clock source as HCLK
-    SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-
-// SystTick configuration
-    RCC_GetClocksFreq(&RCC_Clocks);
-
-// Need 1mS tick for responcive UI
-    SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
-
-//	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0E;
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//	NVIC_Init(&NVIC_InitStructure);
-}
-
-#endif
 
 void mchf_board_init(void)
 {
