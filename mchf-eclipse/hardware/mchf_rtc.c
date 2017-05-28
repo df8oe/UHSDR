@@ -127,6 +127,14 @@ bool MchfRtc_enabled()
 
     __HAL_RCC_RTC_ENABLE();
 
+    // if both M1 and F3 are pressed, we assume RTC being active despite the config
+    if( (HAL_GPIO_ReadPin(BUTTON_M1_PIO, BUTTON_M1) == 0) &&
+            (HAL_GPIO_ReadPin(BUTTON_F3_PIO, BUTTON_F3) == 0))
+    {
+        // we detected most likely a running RTC or someone who wants us to detect an RTC being fitted;
+        retval = true;
+    }
+
     switch(HAL_RTCEx_BKUPRead(&hrtc,RTC_PRESENCE_REG))
     {
     case 0:
