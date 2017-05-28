@@ -3,8 +3,7 @@
 #define __MCHF_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
-#include "stm32f407xx.h"
+#include "mchf_mcu.h"
 #include "mchf_board_config.h"
 
 typedef enum
@@ -12,7 +11,8 @@ typedef enum
     LEDGREEN = 0,
     LEDRED = 1,
     PWR_HOLD = 2,
-    BACKLIGHT = 3
+    BACKLIGHT = 3,
+    TPCS_PIN = 4
 } Led_TypeDef;
 
 typedef enum
@@ -28,7 +28,7 @@ typedef enum
     BUTTON_MODE_EXTI = 1
 } ButtonMode_TypeDef;
 
-#define LEDn                            4
+#define LEDn                            5
 
 #define LEDGREEN_PIN                    GPIO_PIN_9
 #define LEDGREEN_GPIO_PORT              GPIOB
@@ -42,6 +42,7 @@ typedef enum
 #define BACKLIGHT_ON_PIN                GPIO_PIN_2
 #define BACKLIGHT_ON_GPIO_PORT          GPIOD
 
+
 #define BUTTONn                         3
 
 #define BANDM_BUTTON_PIN                GPIO_PIN_0
@@ -52,12 +53,17 @@ typedef enum
 #define BANDP_BUTTON_GPIO_PORT          GPIOB
 #define BANDP_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
-
+#if  defined(STM32F4)
 #define POWER_BUTTON_PIN                GPIO_PIN_13
 #define POWER_BUTTON_GPIO_PORT          GPIOC
 #define POWER_BUTTON_EXTI_LINE          EXTI_Line0
 #define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn
-
+#elif  defined(STM32F7)
+#define POWER_BUTTON_PIN                GPIO_PIN_2
+#define POWER_BUTTON_GPIO_PORT          GPIOG
+#define POWER_BUTTON_EXTI_LINE          EXTI_Line0
+#define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn
+#endif
 
 void mchfBl_LEDInit(Led_TypeDef Led);
 void mchfBl_PinOn(Led_TypeDef Led);

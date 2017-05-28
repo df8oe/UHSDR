@@ -79,23 +79,123 @@
 
 #define W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF    (W8731_POWER_DOWN_CNTR_CLKOUTPD|W8731_POWER_DOWN_CNTR_OSCPD|W8731_POWER_DOWN_CNTR_MICPD)
 
+typedef struct
+{
+    bool present;
+} mchf_codec_t;
+
+
+__IO mchf_codec_t mchf_codecs[DMA_AUDIO_NUM];
+
+#ifdef STM32F7
+/**
+ * @brief controls volume on "external" PA via DAC
+ * @param vol volume in range of 0 to 80, where 80 is max volume
+ */
+static void AudioPA_Volume(uint8_t vol)
+{
+    uint32_t lv = vol>0x50?0x50:vol;
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,vol * (4095/0x50));
+}
+/**
+ * @brief controls sound delivery on "external" PA via DAC
+ * @param enable  true == amplification, false == powerdown
+ */
+static void AudioPA_Enable(bool enable)
+{
+    if (enable)
+    {
+        GPIO_SetBits(AUDIO_PA_EN_PIO,AUDIO_PA_EN);
+    }
+    else
+    {
+        GPIO_ResetBits(AUDIO_PA_EN_PIO,AUDIO_PA_EN);
+    }
+}
+#endif
 /**
  * @brief writes 16 bit data word to codec register
  * @returns I2C error code
  */
-static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue)
+static uint32_t Codec_WriteRegister(I2C_HandleTypeDef* hi2c, uint8_t RegisterAddr, uint16_t RegisterValue)
 {
-    uchar   res;
-
     // Assemble 2-byte data in WM8731 format
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
-
-    res = MCHF_I2C_WriteRegister(CODEC_I2C, CODEC_ADDRESS, Byte1, 1, Byte2);
-
-    return res;
+    return MCHF_I2C_WriteRegister(hi2c, CODEC_ADDRESS, Byte1, 1, Byte2);
 }
 
+static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq,uint32_t word_size)
+{
+    uint32_t retval = HAL_OK;
+
+    retval = Codec_WriteRegister(hi2c, W8731_RESET, 0);
+    // Reset register
+    if( retval == HAL_OK)
+    {
+        // Reg 00: Left Line In (0dB, mute off)
+        Codec_WriteRegister(hi2c, W8731_LEFT_LINE_IN,0x001F);
+
+        // Reg 01: Right Line In (0dB, mute off)
+        Codec_WriteRegister(hi2c, W8731_RIGHT_LINE_IN,0x001F);
+
+        // Reg 02: Left Headphone out (0dB)
+        //Codec_WriteRegister(0x02,0x0079);
+        // Reg 03: Right Headphone out (0dB)
+        //Codec_WriteRegister(0x03,0x0079);
+
+
+        // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
+        Codec_WriteRegister(hi2c, W8731_ANLG_AU_PATH_CNTR,
+                W8731_ANLG_AU_PATH_CNTR_DACSEL |
+                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
+                W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
+
+        // Reg 05: Digital Audio Path Control(all filters disabled)
+        // De-emphasis control, bx11x - 48kHz
+        //                      bx00x - off
+        // DAC soft mute        b1xxx - mute on
+        //                      b0xxx - mute off
+        //
+        Codec_WriteRegister(hi2c, W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
+
+        // Reg 06: Power Down Control (Clk off, Osc off, Mic off))
+        Codec_WriteRegister(hi2c, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);
+
+
+        // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
+        uint16_t size_reg_val = word_size == WORD_SIZE_16? W8731_DIGI_AU_INTF_FORMAT_16B : W8731_DIGI_AU_INTF_FORMAT_32B;
+
+        Codec_WriteRegister(hi2c, W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|size_reg_val);
+
+
+        // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
+        // master clock: 12.288 Mhz
+        uint16_t samp_reg_val;
+
+        switch (AudioFreq)
+        {
+        case I2S_AUDIOFREQ_32K:
+            samp_reg_val = 0x0018;
+            break;
+        case I2S_AUDIOFREQ_8K:
+            samp_reg_val = 0x000C;
+            break;
+        case I2S_AUDIOFREQ_48K:
+        default:
+            samp_reg_val = 0x0000;
+            break;
+        }
+
+        Codec_WriteRegister(hi2c, W8731_SAMPLING_CNTR,samp_reg_val);
+
+        // Reg 09: Active Control
+        // and now we start the Codec Digital Interface
+        Codec_WriteRegister(hi2c, W8731_ACTIVE_CNTR,0x0001);
+    }
+    return retval;
+
+}
 
 /**
  * @brief initializes codec
@@ -104,64 +204,30 @@ static uint32_t Codec_WriteRegister(uint8_t RegisterAddr, uint16_t RegisterValue
  */
 uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 {
-    uint32_t retval = HAL_OK;
 
-    retval = Codec_WriteRegister(W8731_RESET, 0);
-    // Reset register
-    if( retval == HAL_OK)
+    uint32_t retval;
+#ifdef STM32F4
+    retval = Codec_ResetCodec(CODEC_I2C, AudioFreq,word_size);
+#else
+    retval = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq,word_size);
+    if (retval == 0)
     {
-        // Reg 00: Left Line In (0dB, mute off)
-        Codec_WriteRegister(W8731_LEFT_LINE_IN,0x001F);
+        mchf_codecs[1].present = true;
+        retval = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq,word_size);
+    }
+#endif
+    if (retval == 0)
+    {
+        mchf_codecs[0].present = true;
 
-        // Reg 01: Right Line In (0dB, mute off)
-        Codec_WriteRegister(W8731_RIGHT_LINE_IN,0x001F);
-
-        // Reg 02: Left Headphone out (0dB)
-        //Codec_WriteRegister(0x02,0x0079);
-        // Reg 03: Right Headphone out (0dB)
-        //Codec_WriteRegister(0x03,0x0079);
+#ifdef STM32F7
+        AudioPA_Enable(true);
+#endif
 
         Codec_VolumeSpkr(0); // mute speaker
         Codec_VolumeLineOut(ts.txrx_mode); // configure lineout according to mode
 
 
-        // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
-        Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
-                W8731_ANLG_AU_PATH_CNTR_DACSEL |
-                W8731_ANLG_AU_PATH_CNTR_INSEL_LINE |
-                W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
-
-        // Reg 05: Digital Audio Path Control(all filters disabled)
-        // De-emphasis control, bx11x - 48kHz
-        //                      bx00x - off
-        // DAC soft mute		b1xxx - mute on
-        //						b0xxx - mute off
-        //
-        Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,W8731_DEEMPH_CNTR);
-
-        // Reg 06: Power Down Control (Clk off, Osc off, Mic off))
-        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);
-
-
-        // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
-        if(word_size == WORD_SIZE_16)
-        {
-            Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_16B);
-        }
-        else
-        {
-            Codec_WriteRegister(W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|W8731_DIGI_AU_INTF_FORMAT_32B);
-        }
-
-        // Reg 08: Sampling Control (Normal, 256x, 48k ADC/DAC)
-        // master clock: 12.5 Mhz
-        if(AudioFreq == I2S_AUDIOFREQ_48K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0000);
-        if(AudioFreq == I2S_AUDIOFREQ_32K) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x0018);
-        if(AudioFreq == I2S_AUDIOFREQ_8K ) Codec_WriteRegister(W8731_SAMPLING_CNTR,0x000C);
-
-        // Reg 09: Active Control
-        // and now we start the Codec Digital Interface
-        Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
     }
     return retval;
 }
@@ -172,10 +238,10 @@ uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
 void Codec_RestartI2S()
 {
     // Reg 09: Active Control
-    Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0000);
+    Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0000);
     non_os_delay();
     // Reg 09: Active Control
-    Codec_WriteRegister(W8731_ACTIVE_CNTR,0x0001);
+    Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0001);
 }
 
 /**
@@ -194,7 +260,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
 
         if(ts.tx_gain[TX_AUDIO_MIC] > 50)	 		// actively adjust microphone gain and microphone boost
         {
-            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
+            Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,
                     W8731_ANLG_AU_PATH_CNTR_DACSEL |
                     W8731_ANLG_AU_PATH_CNTR_INSEL_MIC|
                     W8731_ANLG_AU_PATH_CNTR_MICBBOOST); // mic boost on
@@ -203,7 +269,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
         }
         else
         {
-            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
+            Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,
                     W8731_ANLG_AU_PATH_CNTR_DACSEL |
                     W8731_ANLG_AU_PATH_CNTR_INSEL_MIC);	// mic boost off
 
@@ -227,9 +293,9 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
         if(ts.tx_audio_source == TX_AUDIO_MIC)  // we are in MIC IN mode
         {
             ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
-            Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,W8731_ANLG_AU_PATH_CNTR_DACSEL|W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
+            Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,W8731_ANLG_AU_PATH_CNTR_DACSEL|W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
             // Mute the microphone with the CODEC (this does so without a CLICK) and  remain/switch line in on
-            Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
+            Codec_WriteRegister(CODEC_ANA_I2C, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
             // now we power on all amps including the mic preamp and bias
         }
 
@@ -266,7 +332,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
         Codec_LineInGainAdj(0);
 
         // Reg 04: Analog Audio Path Control (DAC sel, ADC line, Mute Mic)
-        Codec_WriteRegister(W8731_ANLG_AU_PATH_CNTR,
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,
                 W8731_ANLG_AU_PATH_CNTR_DACSEL|
                 W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|
                 W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
@@ -276,7 +342,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
         // and maintain microphone bias during receive, but this seems to cause problems on receive (e.g. deafness) even
         // if the microphone is muted and "mic boost" is disabled.  (KA7OEI 20151030)
 
-        Codec_WriteRegister(W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);	// turn off mic bias
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF);	// turn off mic bias
     }
     else		// It is transmit
     {
@@ -367,7 +433,15 @@ void Codec_VolumeSpkr(uint8_t vol)
     lv += 0x2F; // volume offset, all lower values including 0x2F represent muting
     // Reg 02: Speaker - variable volume, change at zero crossing in order to prevent audible clicks
 //    Codec_WriteRegister(W8731_LEFT_HEADPH_OUT,lv); // (lv | W8731_HEADPH_OUT_ZCEN));
-    Codec_WriteRegister(W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN));
+#ifdef STM32F4
+    Codec_WriteRegister(CODEC_ANA_I2C, W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN));
+#else
+    // both outputs are used for lineout/headphones
+    Codec_WriteRegister(CODEC_ANA_I2C, W8731_LEFT_HEADPH_OUT,(lv | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH));
+
+    // external PA Control
+    AudioPA_Volume(vol);
+#endif
 }
 /**
  * @brief audio volume control in TX and RX modes for lineout [right headphone]
@@ -379,6 +453,11 @@ void Codec_VolumeSpkr(uint8_t vol)
 
 void Codec_VolumeLineOut(uint8_t txrx_mode)
 {
+
+#ifdef STM32F4
+    // we do not have a special lineout yet on the STM32F7: lineout/headphones share a port.
+    // And since we have a dedidacted IQ codec, there is no need to switch of the lineout or headphones here
+    // FIXME: F7PORT -> CW Sidetone needs to be "generate" specifically by copying the IQ output to the lineout channel, not yet possible due to required SW changes
     // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
     if (
             (txrx_mode == TRX_MODE_TX)
@@ -388,12 +467,13 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
     {
         // at CW we transmit without translation, no matter what the iq_freq_mode for RX is
         // is translate mode active OR translate mode OFF but LINE OUT to be muted during transmit
-        Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,0);  // yes - mute LINE OUT during transmit
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT,0);  // yes - mute LINE OUT during transmit
     }
     else    // receive mode - LINE OUT always enabled
     {
-        Codec_WriteRegister(W8731_RIGHT_HEADPH_OUT,ts.lineout_gain + 0x2F);   // value selected for 0.5VRMS at AGC setting
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT,ts.lineout_gain + 0x2F);   // value selected for 0.5VRMS at AGC setting
     }
+#endif
 }
 
 /**
@@ -411,11 +491,11 @@ void Codec_MuteDAC(bool state)
     //
     if(state)
     {
-        Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR|0x08));	// mute
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR|0x08));	// mute
     }
     else
     {
-        Codec_WriteRegister(W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR));		// mute off
+        Codec_WriteRegister(CODEC_ANA_I2C, W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR));		// mute off
     }
 }
 
@@ -423,7 +503,7 @@ void Codec_MuteDAC(bool state)
  * @brief Sets the Codec WM8371 line input gain for both channels
  * @param gain in range of [0-255]
  */
-void Codec_LineInGainAdj(uchar gain)
+static void Codec_InGainAdj(I2C_HandleTypeDef* hi2c, uchar gain)
 {
     uint16_t l_gain;
 
@@ -432,5 +512,23 @@ void Codec_LineInGainAdj(uchar gain)
     // Use Reg 00: Left Line In, set MSB to adjust gain of both channels simultaneously
     l_gain |= 0x100;    // set MSB of control word for "LRINBOTH" flag
 
-    Codec_WriteRegister(W8731_LEFT_LINE_IN,l_gain);
+    Codec_WriteRegister(hi2c, W8731_LEFT_LINE_IN,l_gain);
+}
+
+/**
+ * @brief Sets the Codec WM8371 line input gain for both channels
+ * @param gain in range of [0-255]
+ */
+void Codec_LineInGainAdj(uchar gain)
+{
+    Codec_InGainAdj(CODEC_ANA_I2C, gain);
+}
+
+/**
+ * @brief Sets the Codec WM8371 line input gain for both channels
+ * @param gain in range of [0-255]
+ */
+void Codec_IQInGainAdj(uchar gain)
+{
+    Codec_InGainAdj(CODEC_IQ_I2C, gain);
 }

@@ -21,7 +21,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "command.h"
-#include "stm32f4xx.h"
+#include "mchf_mcu.h"
 #include "fatfs.h"
 #include "mchf_boot_hw.h"
 #include "bootloader_main.h"
@@ -31,7 +31,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 3.2.1"
+#define VERSION                    "Version: 3.2.2"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
@@ -286,6 +286,9 @@ void COMMAND_DOWNLOAD(void)
 void COMMAND_ResetMCU(uint32_t code)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = code;
+#ifdef STM32F7
+    SCB_CleanDCache();
+#endif
     /* Software reset */
     NVIC_SystemReset();
 }

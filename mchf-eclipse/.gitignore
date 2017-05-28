@@ -23,3 +23,6 @@ build-fw/
 .settings/org.eclipse.cdt.codan.core.prefs
 .settings/org.eclipse.cdt.managedbuilder.core.prefs
 .settings/language.settings.xml
+/DebugBootloaderF7/
+/DebugLibF7/
+/DebugF7/

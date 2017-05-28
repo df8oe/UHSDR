@@ -25,7 +25,7 @@
 // SSB Hilbert TX Filter
 #include "iq_tx_filter.h"
 //
-static __IO    FilterCoeffs   __attribute__ ((section (".ccm")))     fc;
+static __IO    FilterCoeffs   __MCHF_SPECIALMEM     fc;
 
 enum
 {
@@ -1072,18 +1072,18 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
 arm_fir_instance_f32    FIR_I;
 arm_fir_instance_f32    FIR_Q;
 
-//static float32_t    __attribute__ ((section (".ccm")))    FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
-//static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
-static float32_t    __attribute__ ((section (".ccm")))    FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
-static float32_t    __attribute__ ((section (".ccm")))    FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
+//static float32_t    __MCHF_SPECIALMEM FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
+//static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
+static float32_t    __MCHF_SPECIALMEM FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
+static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
 
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances
 //
 // FIXME: I think this is to short should calculated from max blocksize
 // (BUFLEN / 4 -> Each Interrupt == BUFLEN /2, each filter gets half of the samples, i.e. one audio channel) + max numTaps
-static float   __attribute__ ((section (".ccm")))         FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
-static float   __attribute__ ((section (".ccm")))         FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   __MCHF_SPECIALMEM         FirState_I_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
+static float   __MCHF_SPECIALMEM         FirState_Q_TX[IQ_TX_NUM_TAPS_MAX+IQ_BUFSZ];
 
 arm_fir_instance_f32    FIR_I_TX;
 arm_fir_instance_f32    FIR_Q_TX;
@@ -1096,11 +1096,11 @@ arm_fir_instance_f32    FIR_Q_FREEDV;
 
 // Audio RX - Decimator (numTaps+blockSize-1)
 arm_fir_decimate_instance_f32   DECIMATE_SAM_I;
-static float32_t           __attribute__ ((section (".ccm"))) decimSAMIState[I_BLOCK_SIZE + I_NUM_TAPS];
+static float32_t           __MCHF_SPECIALMEM decimSAMIState[I_BLOCK_SIZE + I_NUM_TAPS];
 
 // Audio RX - Decimator
 arm_fir_decimate_instance_f32   DECIMATE_SAM_Q;
-static float32_t           __attribute__ ((section (".ccm"))) decimSAMQState[Q_BLOCK_SIZE + Q_NUM_TAPS];
+static float32_t           __MCHF_SPECIALMEM decimSAMQState[Q_BLOCK_SIZE + Q_NUM_TAPS];
 
 
 

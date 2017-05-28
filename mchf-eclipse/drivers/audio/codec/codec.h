@@ -66,6 +66,7 @@ void     Codec_MCUInterfaceInit(uint32_t AudioFreq);
 void 	 Codec_VolumeLineOut(uint8_t txrx_mode);
 void     Codec_VolumeSpkr(uint8_t vol);
 void 	 Codec_LineInGainAdj(uint8_t gain);
+void     Codec_IQInGainAdj(uint8_t gain);
 void 	 Codec_MuteDAC(bool state);
 
 uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size);

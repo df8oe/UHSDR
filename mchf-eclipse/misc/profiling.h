@@ -90,9 +90,13 @@ inline  ProfilingTimedEvent* profileTimedEventGet(const ProfiledEventNames pe);
 #define DWT_CYCCNT    ((volatile uint32_t *)0xE0001004)
 #define DWT_CONTROL   ((volatile uint32_t *)0xE0001000)
 #define SCB_DEMCR     ((volatile uint32_t *)0xE000EDFC)
+#define DWT_LAR       ((volatile uint32_t *)0xE0001FB0)
 
 inline void profileCycleCount_reset(){
     *SCB_DEMCR   |= 0x01000000;
+#ifdef STM32F7
+    *DWT_LAR = 0xC5ACCE55;                // <-- added unlock access to DWT (ITM, etc.)registers
+#endif
     *DWT_CYCCNT  = 0; // reset the counter
     *DWT_CONTROL = 0;
 }

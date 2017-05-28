@@ -2999,7 +2999,7 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 
     if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
     {
-        retval = HAL_GPIO_ReadPin(bm[button_num].port,bm[button_num].button) == 0;		// in normal mode - return key value
+        retval = HAL_GPIO_ReadPin(buttons.map[button_num].port,buttons.map[button_num].button) == 0;		// in normal mode - return key value
     }
     return retval;
 }
@@ -5497,8 +5497,9 @@ static void UiDriver_KeyTestScreen()
 	poweroffcount = rbcount = enccount = 0;
 	p_o_state = rb_state = new_state = 0;
 	char txt_buf[40];
-	char* txt;
-	for(i = 0; i <= 17; i++)	 			// scan all buttons
+	const char* txt;
+
+	for(i = 0; i < buttons.num ; i++)	 			// scan all buttons
 	{
 		if(UiDriver_IsButtonPressed(i))	 		// is one button being pressed?
 		{
@@ -5519,7 +5520,7 @@ static void UiDriver_KeyTestScreen()
 			j = 99;		// load with flag value
 			k = 0;
 
-			for(i = 0; i <= 17; i++)
+			for(i = 0; i < buttons.num ; i++)
 			{
 				// scan all buttons
 				if(UiDriver_IsButtonPressed(i))
@@ -5553,90 +5554,50 @@ static void UiDriver_KeyTestScreen()
 				j = 18+t;					// add encoders behind buttons;
 			}
 
+			if (j < buttons.num)
+			{
+			    txt = buttons.map[j].label;
+			}
+			else
+			{
+			    txt = NULL;
+			}
 			switch(j)	 				// decode button to text
 			{
 			case	BUTTON_POWER_PRESSED:
-				txt = "        POWER       ";
 				if(poweroffcount > 75)
 				{
-					txt = "  powering off...   ";
+					txt = "powering off...";
 					p_o_state = 1;
 				}
 				poweroffcount++;
 				break;
-			case	BUTTON_M1_PRESSED:
-				txt = "         M1         ";
-				break;
-			case	BUTTON_M2_PRESSED:
-				txt = "         M2         ";
-				break;
-			case	BUTTON_M3_PRESSED:
-				txt = "         M3         ";
-				break;
-			case	BUTTON_G1_PRESSED:
-				txt = "         G1         ";
-				break;
-			case	BUTTON_G2_PRESSED:
-				txt = "         G2         ";
-				break;
-			case	BUTTON_G3_PRESSED:
-				txt = "         G3         ";
-				break;
-			case	BUTTON_G4_PRESSED:
-				txt = "         G4         ";
-				break;
-			case	BUTTON_F1_PRESSED:
-				txt = "         F1         ";
-				break;
-			case	BUTTON_F2_PRESSED:
-				txt = "         F2         ";
-				break;
-			case	BUTTON_F3_PRESSED:
-				txt = "         F3         ";
-				break;
-			case	BUTTON_F4_PRESSED:
-				txt = "         F4         ";
-				break;
-			case	BUTTON_F5_PRESSED:
-				txt = "         F5         ";
-				break;
 			case	BUTTON_BNDM_PRESSED:
-				txt = "        BND-        ";
-				ts.tp->raw = !ts.tp->raw;
-				
 				if(rbcount > 75)
 				{
-					txt = "    rebooting...    ";
+					txt = "rebooting...";
 					rb_state = 1;
 				}
 				rbcount++;
-				break;
-			case	BUTTON_BNDP_PRESSED:
-				txt = "        BND+        ";
-				break;
-			case	BUTTON_STEPM_PRESSED:
-				txt = "       STEP-        ";
-				break;
-			case	BUTTON_STEPP_PRESSED:
-				txt = "      STEP+         ";
 				break;
 			case	TOUCHSCREEN_ACTIVE:
 
 			    if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 			    {
-			  		if(ts.tp->raw)
-			  		{
-					  snprintf(txt_buf,40,"Touchscr. x:%02x y:%02x",ts.tp->x,ts.tp->y);	//show touched coordinates
-					}
-					else
-					  snprintf(txt_buf,40,"Touchscr. x:%02d y:%02d",ts.tp->x,ts.tp->y);	//show touched coordinates
-					{
-					}
-					txt = txt_buf;
+					snprintf(txt_buf,40,"x/y: %02d/%02d x/y raw: %04x/%04x",ts.tp->x,ts.tp->y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
+	                UiLcdHy28_PrintTextCentered(10,216,300,txt_buf,White,Blue,0);           // identify button on screen
+					txt = "Touch";
 				}
 				else
 				{
-					txt = "";
+				    if (mchf_touchscreen.present)
+				    {
+				        txt = "Touch (no coord.)";
+				    }
+				    else
+				    {
+				        txt = "Touch (no cntrlr)";
+				    }
 				}
 				break;
 			case	18+ENC1:							// handle encoder event
@@ -5646,33 +5607,40 @@ static void UiDriver_KeyTestScreen()
 			txt = txt_buf;
 			break;
 			default:
-				if(!enccount)
-				{
-					txt = "       <none>       ";				// no button pressed
-				}
-				else
-				{
-					txt = "";
-					enccount--;
-				}
-				poweroffcount = 0;
-				rbcount = 0;
+			    if (txt == NULL)
+			    {
+			        if(!enccount)
+			        {
+			            txt = "<no button>";				// no button pressed
+			        }
+			        else
+			        {
+			            txt = "";
+			            enccount--;
+			        }
+			        poweroffcount = 0;
+			        rbcount = 0;
+			    }
 			}
-			//
+
 			if(txt[0])
 			{
-				UiLcdHy28_PrintText(10,120,txt,White,Blue,1);			// identify button on screen
+				UiLcdHy28_PrintTextCentered(10,120,300,txt,White,Blue,1);			// identify button on screen
 			}
+
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
 			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
-			if(ts.tp->raw && ts.tp->present)			// show translation of touchscreen if present
+
+			if(ts.tp->present)			// show translation of touchscreen if present
 			{
-			  UiLcdHy28_PrintText(10,200,"touch is raw       ",White,Blue,1);
+			    txt = "Touch Coordinates:";
 			}
 			else
 			{
-			  UiLcdHy28_PrintText(10,200,"touch is translated",White,Blue,1);
+			    txt = "Touch Controller not present";
 			}
+
+			UiLcdHy28_PrintTextCentered(10,200,300,txt,White,Blue,0);
 
 			if(p_o_state == 1)
 			{
@@ -6028,7 +5996,8 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 void UiDriver_MainHandler()
 {
 
-    uint32_t now = HAL_GetTick()/10;
+    uint32_t now = ts.sysclock;
+    //        HAL_GetTick()/10;
 
     CatDriver_HandleProtocol();
     // START CALLED AS OFTEN AS POSSIBLE
@@ -6105,7 +6074,13 @@ void UiDriver_MainHandler()
 #if 1
                 ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
 
-                uint32_t load =  pe_ptr->duration / (pe_ptr->count * (66 * 17));
+                // Percent audio interrupt load  = Num of cycles per audio interrupt  / ((max num of cycles between two interrupts ) / 100 )
+                //
+                // Num of cycles per audio interrupt = cycles for all counted interrupts / number of interrupts
+                // Max num of cycles between two interrupts / 100 = HCLK frequency / Interruptfrequenz -> e.g. 168000000 / 1500 / 100 = 1120
+                // FIXME: Need to figure out which clock is being used, 168000000 in mcHF, I40 UI = 168.000.000 or 216.000.000 or something else...
+
+                uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
                 snprintf(str,20,"L%3u%%",(unsigned int)load);

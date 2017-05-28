@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="ilg.gnuarmeclipse.debug.gdbjtag.openocd.launchConfigurationType">
 <stringAttribute key="bad_container_name" value="\mchf-eclipse\supp"/>
-<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;RTC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;GPIOC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;PWR&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;RCC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;NVIC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_DEVICE&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_GLOBAL&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
+<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;GPIOA&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_DEVICE&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_GLOBAL&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doContinue" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doDebugInRam" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doFirstReset" value="true"/>
@@ -52,14 +52,14 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug\mchf-eclipse.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="mchf-eclipse"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/mchf-eclipse"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134283264&quot; label=&quot;0x8010000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134217728&quot; label=&quot;0x8000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134250496&quot; label=&quot;0x8008000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134266880&quot; label=&quot;0x800C000&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134283264&quot; label=&quot;0x8010000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134217728&quot; label=&quot;0x8000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134250496&quot; label=&quot;0x8008000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134266880&quot; label=&quot;0x800C000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;3758157056&quot; label=&quot;0xE000ED00&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 <stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x20000000000,0x20000,0x200000,0x20010000,0x20011000,0x20001000,0x20002000,0x2001A000,0x2001D000,0x2002D000,0x2003D000,0x20030000,0x80008000,0x8008000,0x800C000"/>
 </launchConfiguration>

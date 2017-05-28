@@ -56,11 +56,24 @@ static const char*  bl_help[] =
 
 static void BL_DisplayInit()
 {
+#ifdef STM32F4
     MX_DMA_Init();
     MX_SPI2_Init();
+#endif
     MX_GPIO_Init();
 
-	mchf_board_touchscreen_init();
+#ifdef STM32F4
+    // we need to set the touch screen CS signal to high, otherwise SPI displays
+    // will not be detectable
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Pull     = GPIO_PULLUP;
+    GPIO_InitStructure.Speed    = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Mode     = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pin = TP_CS;
+
+    HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+#endif
 
     UiLcdHy28_Init();
     UiLcdHy28_LcdClear(Black);
@@ -209,11 +222,13 @@ void BSP_Init(void)
  * @brief jump to a STM32 Application by giving the start address of the ISR Vector structure of that application
  */
 
-__attribute__ ( ( naked ) ) void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
+// __attribute__ ( ( naked ) )
+void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
     uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
-    if ( ( APPLICATION_PTR[0] & 0x2FF00000 ) == 0x20000000)
+    // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
+    if (APPLICATION_PTR[0] <= 0x20000000 + (1024 * 1024) && ( APPLICATION_PTR[0] > 0x20000000))
     {
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
@@ -240,7 +255,7 @@ int bootloader_main()
     if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
     {
         BL_InfoScreenDFU();
-        // BANDM pressed, DFU boot requested
+        // BANDP pressed, DFU boot requested
         while (mchfBl_ButtonGetState(BUTTON_BANDP) == 0) {};
         COMMAND_ResetMCU(0x99);
     }
@@ -286,16 +301,25 @@ void BL_Application()
     BL_Idle_Application();
 }
 
-
+/*
+ * This does not work if data cache is enabled, since we then need to flush the SRAM2_BASE write
+ * but here flash should not be enabled anyway!
+ */
 void mchfBl_CheckAndGoForDfuBoot()
 {
 
-    if( *(uint32_t*)(SRAM2_BASE) == 0x99)
+    if(*(uint32_t*)(SRAM2_BASE) == 0x99)
     {
         *(uint32_t*)(SRAM2_BASE) = 0;
+#ifndef STM32F7
         __HAL_REMAPMEMORY_SYSTEMFLASH();
-        mchfBl_JumpToApplication(0);
-        // start the STM32F4xx bootloader at address 0x00000000;
+
+        const uint32_t dfu_boot_start = 0x00000000;
+#else
+        const uint32_t dfu_boot_start = 0x1FF00000;
+#endif
+        mchfBl_JumpToApplication(dfu_boot_start);
+        // start the STM32Fxxx bootloader at address dfu_boot_start;
     }
 }
 

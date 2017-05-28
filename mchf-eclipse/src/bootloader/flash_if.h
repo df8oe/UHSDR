@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
+#include "mchf_mcu.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef  void (*pFunction)(void);
@@ -46,8 +46,7 @@ extern const char* author; */
 /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
 #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
 
-#define STM32_FLASH_ADDRESS        0x1FFF7A22
-#define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
+#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
 #define MCHF_FLASHRESERVED      64
 
 /**

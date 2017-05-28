@@ -10,14 +10,24 @@
 ************************************************************************************/
 #include "mchf_board.h"
 #include "mchf_rtc.h"
+
+#ifdef STM32F4
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_rtc_ex.h"
 #include "stm32f4xx_hal_rcc.h"
+#else
+#include "stm32f7xx_hal_rtc.h"
+#include "stm32f7xx_hal_rtc_ex.h"
+#include "stm32f7xx_hal_rcc.h"
+#endif
+
 #include "rtc.h"
 
 /* Private macros */
 /* Internal status registers for RTC */
-#define RTC_PRESENCE_REG                   RTC_BKP_DR0
+#define RTC_PRESENCE_REG                   RTC_BKP_DR1
+// previously we used DR0 which is also used by the HAL Layer, so we move to DR1
+
 #define RTC_PRESENCE_INIT_VAL              0x0001       // if we find this value after power on, we assume battery is available
 #define RTC_PRESENCE_OK_VAL                0x0002       // then we set this value to rembember a clock is present
 //#define RTC_PRESENCE_ACK_VAL               0x0003       // if we find this value after power on, we assume user enabled RTC
@@ -78,13 +88,15 @@ static void RTC_LSI_Config() {
 }
 #endif
 
-void MchfRtc_Start()
+static void MchfRtc_StartInternal(bool doClock)
 {
 
 
-    // ok, there is a battery, so let us now start the oscillator
-    RTC_LSE_Config();
-
+    if (doClock)
+    {
+        // ok, there is a battery, so let us now start the oscillator
+        RTC_LSE_Config();
+    }
     // very first start of rtc
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
@@ -95,6 +107,12 @@ void MchfRtc_Start()
     hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 
     HAL_RTC_Init(&hrtc);
+}
+
+
+void MchfRtc_Start()
+{
+    MchfRtc_StartInternal(true);
 }
 
 #endif
@@ -109,22 +127,24 @@ bool MchfRtc_enabled()
 
     __HAL_RCC_RTC_ENABLE();
 
-    static volatile uint32_t status;
-    status = HAL_RTCEx_BKUPRead(&hrtc,RTC_PRESENCE_REG);
-
-    if (status == RTC_PRESENCE_OK_VAL) {
-        __HAL_RCC_RTC_ENABLE();
-        __HAL_RCC_CLEAR_RESET_FLAGS();
-        // HAL_RTCEx_EnableBypassShadow(&hrtc);
-        // FIXME: Why do we need to set BYPSHAD ? ABP1 CLK should be high enough....
-        retval = true;
-        ts.vbat_present = true;
-    } else if (status == 0) {
+    switch(HAL_RTCEx_BKUPRead(&hrtc,RTC_PRESENCE_REG))
+    {
+    case 0:
+        // 0 -> cleared backup ram -> no battery or reset
         // if we find the RTC_PRESENCE_INIT_VAL in the backup register next time we boot
         // we know there is a battery present.
         HAL_RTCEx_BKUPWrite(&hrtc,RTC_PRESENCE_REG,RTC_PRESENCE_INIT_VAL);
-    } else {
+        break;
+    case RTC_PRESENCE_OK_VAL:
+        retval = true;
         ts.vbat_present = true;
+        break;
+    case RTC_PRESENCE_INIT_VAL:
+        ts.vbat_present = true;
+        break;
+    default:
+        // TODO: Anything else is a problem, since who wrote a different value? Not this code!
+        break;
     }
 #endif
     return retval;

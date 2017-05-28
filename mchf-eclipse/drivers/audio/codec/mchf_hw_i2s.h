@@ -15,8 +15,26 @@
 #ifndef __MCHF_HW_I2S_H
 #define __MCHF_HW_I2S_H
 
-void MchfHw_Codec_StartDMA(uint32_t txAddr, uint32_t rxAddr, uint32_t Size);
-void MchfHw_Codec_StopDMA(void);
+#define BUFF_LEN 128
+
+typedef struct
+{
+    int16_t out[BUFF_LEN];
+    int16_t in[BUFF_LEN];
+} dma_audio_buffer_t;
+
+
+#ifdef STM32F4
+#define DMA_AUDIO_NUM 1
+#else
+#define DMA_AUDIO_NUM 2
+#endif
+
+extern __IO dma_audio_buffer_t audio_buf[DMA_AUDIO_NUM];
+
+
+void MchfHw_Codec_StartDMA();
+void MchfHw_Codec_StopDMA();
 
 #endif
 

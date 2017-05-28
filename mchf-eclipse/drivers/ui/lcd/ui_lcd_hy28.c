@@ -14,8 +14,41 @@
 
 // Common
 #include "mchf_board_config.h"
+
+#ifdef STM32F4
+    #define USE_DISPLAY_SPI
+#endif
+#ifdef STM32F7
+    #define USE_SPI_HAL
+#endif
+
+#define USE_DISPLAY_PAR
+#define USE_SPI_DMA
+
+// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
+
+
+
 #include "spi.h"
-#include "fsmc.h"
+
+#ifdef USE_DISPLAY_PAR
+
+    #ifdef STM32F7
+        #include "fmc.h"
+        #define MEM_Init() MX_FMC_Init()
+    #else
+        #include "fsmc.h"
+        #define MEM_Init() MX_FSMC_Init()
+    #endif
+
+    #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
+
+    #if defined(STM32F4)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+    #elif defined(STM32F7)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60004000))
+    #endif
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +58,6 @@
 
 mchf_display_t mchf_display;
 
-#define LCD_REG      (*((volatile unsigned short *) 0x60000000))
-#define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
 
 // ----------------------------------------------------------
 // Dual purpose pins (parallel + serial)
@@ -36,8 +67,6 @@ mchf_display_t mchf_display;
 
 
 
-#define USE_SPI_DMA
-// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
 // Saved fonts
 extern sFONT GL_Font8x8;
@@ -304,6 +333,16 @@ typedef struct
 static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
 
 
+static inline bool UiLcdHy28_SpiDisplayUsed()
+{
+    bool retval = false;
+#ifdef USE_DISPLAY_SPI
+    retval = mchf_display.use_spi;
+#endif
+    return retval;
+}
+
+
 void UiLcdHy28_BacklightInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -316,18 +355,18 @@ void UiLcdHy28_BacklightInit(void)
     HAL_GPIO_Init(LCD_BACKLIGHT_PIO, &GPIO_InitStructure);
 
     // Backlight off
-    LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
+    GPIO_ResetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
 }
 
 void UiLcdHy28_BacklightEnable(bool on)
 {
     if (on)
     {
-        LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT;
+        GPIO_SetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
     }
     else
     {
-        LCD_BACKLIGHT_PIO->BSRR = LCD_BACKLIGHT << 16U;
+        GPIO_ResetBits(LCD_BACKLIGHT_PIO, LCD_BACKLIGHT);
     }
 }
 
@@ -453,76 +492,14 @@ void UiLcdHy28_SpiDeInit()
 }
 
 inline void UiLcdHy28_SpiLcdCsDisable() {
-    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs;
+    GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 inline void UiLcdHy28_SpiLcdCsEnable() {
-    mchf_display.lcd_cs_pio->BSRR = mchf_display.lcd_cs <<16U;
+    GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
 void UiLcdHy28_ParallelInit()
 {
-#if 0
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-    // Port D usage - data and control
-    // SRAM Data lines,  NOE, NE1, A16 and NWE configuration
-    GPIO_InitStructure.Pin =    LCD_D2 |LCD_D3 |
-            LCD_RD |LCD_WR |
-            LCD_CSA|LCD_D15|
-            LCD_D16|LCD_D17|
-            LCD_RS |LCD_D0 |
-            LCD_D1;
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(LCD_D2_PIO,  LCD_D2_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D3_PIO,  LCD_D3_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_RD_PIO,  LCD_RD_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_WR_PIO,  LCD_WR_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_CSA_PIO, LCD_CSA_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D15_PIO, LCD_D15_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D16_PIO, LCD_D16_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D17_PIO, LCD_D17_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_RS_PIO,  LCD_RS_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D0_PIO,  LCD_D0_SOURCE,  GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D1_PIO,  LCD_D1_SOURCE,  GPIO_AF_FSMC);
-
-    // Data port on port E
-    GPIO_InitStructure.Pin =    LCD_D4 |LCD_D5 |
-            LCD_D6 |LCD_D7 |
-            LCD_D10|LCD_D11|
-            LCD_D12|LCD_D13|
-            LCD_D14;
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
-
-    GPIO_PinAFConfig(LCD_D4_PIO,  LCD_D4_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D5_PIO,  LCD_D5_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D6_PIO,  LCD_D6_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D7_PIO,  LCD_D7_SOURCE , GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D10_PIO, LCD_D10_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D11_PIO, LCD_D11_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D12_PIO, LCD_D12_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D13_PIO, LCD_D13_SOURCE, GPIO_AF_FSMC);
-    GPIO_PinAFConfig(LCD_D14_PIO, LCD_D14_SOURCE, GPIO_AF_FSMC);
-
-    // Configure GPIO PIN for Reset
-    GPIO_InitStructure.Pin		= LCD_RESET;
-    GPIO_InitStructure.GPIO_Mode		= GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType	= GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_Speed	= GPIO_Speed_50MHz;
-    HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
-#endif
 }
 
 
@@ -530,40 +507,46 @@ void UiLcdHy28_Reset()
 {
     // Reset
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(50);
+    HAL_Delay(1);
 
     GPIO_ResetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(50);
+    HAL_Delay(1);
 
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
-    HAL_Delay(100);
+    HAL_Delay(300);
 }
 
 
 void UiLcdHy28_FSMCConfig(void)
 {
-    MX_FSMC_Init();
+    MEM_Init();
 }
 
 #if 0
-static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
+static inline void UiLcdHy28_SpiSendByteOld(uint8_t byte)
 {
     // TODO: Find out why not working with HAL as expected
     // maybe we need only Transmit, don't know. Test with TP since this was
     // not working (detection failed)
-    uint8_t dummy;
     while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_TXE)  == RESET) {}
-    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);
+    // uint8_t dummy;
+    // HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,0);
+    HAL_SPI_Transmit(&hspi2, &byte,1,0);
 }
 #endif
 
-static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
+static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 {
 
+#ifdef USE_SPI_HAL
+    uint8_t dummy;
+    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,10);
+#else
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     SPI2->DR = byte;
     while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
     byte = SPI2->DR;
+#endif
 }
 
 uint8_t spi_dr_dummy; // used to make sure that DR is being read
@@ -588,7 +571,7 @@ uint8_t UiLcdHy28_SpiReadByte(void)
     uint8_t retval = 0;
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
-    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,100);
+    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,10);
 
     return retval;
 }
@@ -597,12 +580,17 @@ uint8_t UiLcdHy28_SpiReadByteFast(void)
 {
     uint8_t retval = 0;
 
+#ifdef USE_SPI_HAL
+    uint8_t dummy = 0;
+    HAL_SPI_TransmitReceive(&hspi2, &dummy, &retval,1,10);
+#else
+
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     SPI2->DR = 0;
     while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
     retval = SPI2->DR;
-
+#endif
     return retval;
 }
 
@@ -610,9 +598,9 @@ void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
-    UiLcdHy28_SpiSendByteFast(0);
-    UiLcdHy28_SpiSendByteFast(index);
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+    UiLcdHy28_SpiSendByte(0);
+    UiLcdHy28_SpiSendByte(index);
 
     UiLcdHy28_LcdSpiFinishTransfer();
 }
@@ -621,9 +609,9 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 {
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
-    UiLcdHy28_SpiSendByteFast((data >>   8));                    /* Write D8..D15                */
-    UiLcdHy28_SpiSendByteFast((data & 0xFF));                    /* Write D0..D7                 */
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+    UiLcdHy28_SpiSendByte((data >>   8));                    /* Write D8..D15                */
+    UiLcdHy28_SpiSendByte((data & 0xFF));                    /* Write D0..D7                 */
 
     UiLcdHy28_LcdSpiFinishTransfer();
 }
@@ -631,21 +619,22 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 static inline void UiLcdHy28_WriteDataSpiStart()
 {
     UiLcdHy28_SpiLcdCsEnable();
-    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 }
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
-    //    if(!GPIO_ReadInputDataBit(TP_IRQ_PIO,TP_IRQ))
-    //	UiLcdHy28_GetTouchscreenCoordinates(1);		// check touchscreen coordinates
-
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
-        UiLcdHy28_SpiSendByteFast((data >>   8));      /* Write D8..D15                */
-        UiLcdHy28_SpiSendByteFast((data & 0xFF));      /* Write D0..D7                 */
+        UiLcdHy28_SpiSendByte((data >>   8));      /* Write D8..D15                */
+        UiLcdHy28_SpiSendByte((data & 0xFF));      /* Write D0..D7                 */
     }
     else
+    {
         LCD_RAM = data;
+        __DMB();
+
+    }
 }
 
 unsigned short UiLcdHy28_LcdReadDataSpi()
@@ -655,7 +644,7 @@ unsigned short UiLcdHy28_LcdReadDataSpi()
 
     UiLcdHy28_SpiLcdCsEnable();
 
-    UiLcdHy28_SpiSendByteFast(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_RD | SPI_DATA);    /* Read: RS = 1, RW = 1         */
 
     UiLcdHy28_SpiReadByte();                                /* Dummy read 1                 */
 
@@ -673,7 +662,7 @@ unsigned short UiLcdHy28_LcdReadDataSpi()
 
 void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
         UiLcdHy28_WriteDataSpi(LCD_RegValue);
@@ -681,14 +670,16 @@ void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
     else
     {
         LCD_REG = LCD_Reg;
+        __DMB();
         LCD_RAM = LCD_RegValue;
+        __DMB();
     }
 }
 
 unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 {
     uint16_t retval;
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         // Write 16-bit Index (then Read Reg)
         UiLcdHy28_WriteIndexSpi(LCD_Reg);
@@ -701,6 +692,7 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
         // Write 16-bit Index (then Read Reg)
         LCD_REG = LCD_Reg;
         // Read 16-bit Reg
+        __DMB();
         retval = LCD_RAM;
     }
     return retval;
@@ -714,7 +706,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 
 static void UiLcdHy28_WriteRAM_Prepare()
 {
-    if(mchf_display.use_spi)
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteIndexSpi(0x0022);
         UiLcdHy28_WriteDataSpiStart();
@@ -722,25 +714,28 @@ static void UiLcdHy28_WriteRAM_Prepare()
     else
     {
         LCD_REG = 0x22;
+        __DMB();
     }
 }
 
 static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
 
-    if (mchf_display.use_spi == 0) {
+    if(UiLcdHy28_SpiDisplayUsed() == false)
+    {
         uint32_t i = len;
         for (; i; i--)
         {
             UiLcdHy28_WriteDataOnly(*(pixel++));
         }
     }
-    else {
+    else
+    {
 #ifdef USE_SPI_DMA
         uint32_t i;
         for (i = 0; i < len; i++)
         {
-            pixel[i] = (pixel[i] >> 8) | (pixel[i] << 8);
+            pixel[i] = __REV16(pixel[i]); // reverse byte order;
         }
         UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
 #else
@@ -757,7 +752,7 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 
 static void UiLcdHy28_FinishWaitBulkWrite()
 {
-    if(mchf_display.use_spi)         // SPI enabled?
+    if(UiLcdHy28_SpiDisplayUsed())         // SPI enabled?
     {
 #ifdef USE_SPI_DMA
         UiLcdHy28_SpiDmaStop();
@@ -828,7 +823,7 @@ inline void UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len)
     // since as for now, it will not benefit from it.
     // this can be changed if someone write DMA code for the parallel
     // interface (memory to memory DMA)
-    if(mchf_display.use_spi)         // SPI enabled?
+    if(UiLcdHy28_SpiDisplayUsed())         // SPI enabled?
     {
         for (uint32_t idx = 0; idx < len; idx++)
         {
@@ -858,7 +853,8 @@ void UiLcdHy28_LcdClear(ushort Color)
 {
     UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
 #ifdef USE_SPI_DMA
-    if (mchf_display.use_spi > 0) {
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -974,7 +970,8 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 {
 
 #ifdef USE_SPI_DMA
-    if (mchf_display.use_spi > 0) {
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
         int idx;
 
         UiLcdHy28_BulkPixel_BufferInit();
@@ -1121,13 +1118,13 @@ void UiLcdHy28_PrintTextRight(uint16_t Xpos, uint16_t Ypos, const char *str,cons
 
 void UiLcdHy28_PrintTextCentered(const uint16_t bbX,const uint16_t bbY,const uint16_t bbW,const char* txt,uint32_t clr_fg,uint32_t clr_bg,uint8_t font)
 {
-    const uint16_t bbH = UiLcdHy28_TextHeight(0);
-    const uint16_t txtW = UiLcdHy28_TextWidth(txt,0);
+    const uint16_t bbH = UiLcdHy28_TextHeight(font);
+    const uint16_t txtW = UiLcdHy28_TextWidth(txt,font);
     const uint16_t bbOffset = txtW>bbW?0:((bbW - txtW)+1)/2;
 
     // we draw the part of  the box not used by text.
     UiLcdHy28_DrawFullRect(bbX,bbY,bbH,bbOffset,clr_bg);
-    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,0);
+    UiLcdHy28_PrintText((bbX + bbOffset),bbY,txt,clr_fg,clr_bg,font);
 
     // if the text is smaller than the box, we need to draw the end part of the
     // box
@@ -1152,8 +1149,47 @@ void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t count)
     }
 }
 
-uint16_t UiLcdHy28_InitA(void)
+uint16_t UiLcdHy28_InitA(uint32_t display_type)
 {
+
+    switch(display_type)
+    {
+
+    case DISPLAY_HY28A_SPI:
+        mchf_display.use_spi = true;
+        // this is were HY28A have the CS line
+        mchf_display.lcd_cs = LCD_D11;
+        mchf_display.lcd_cs_pio = LCD_D11_PIO;
+
+        UiLcdHy28_SpiInit(false);
+        // HY28A works only with less then 32 Mhz, so we do low speed
+        break;
+    case DISPLAY_HY28B_SPI:
+        mchf_display.use_spi = true;
+        // this is were HY28A have the CS line
+        mchf_display.lcd_cs = LCD_CS;
+        mchf_display.lcd_cs_pio = LCD_CS_PIO;
+
+        UiLcdHy28_SpiInit(HY28BHISPEED);
+        // HY28B works sometimes faster
+        break;
+    case DISPLAY_HY28B_PARALLEL:
+        // Select parallel
+        mchf_display.use_spi = false;
+
+        // set CS for HY28B pinout
+        mchf_display.lcd_cs = LCD_CS;
+        mchf_display.lcd_cs_pio = LCD_CS_PIO;
+
+        // Parallel init
+        UiLcdHy28_ParallelInit();
+        UiLcdHy28_FSMCConfig();
+        break;
+    }
+
+    UiLcdHy28_Reset();
+
+
 
     uint16_t retval = UiLcdHy28_ReadReg(0x00);
 
@@ -1189,64 +1225,41 @@ uint16_t UiLcdHy28_InitA(void)
  */
 uint8_t UiLcdHy28_Init()
 {
-    uint8_t retval = DISPLAY_HY28A_SPI;
+    uint8_t retval = DISPLAY_NONE;
+
+    mchf_display.DeviceCode = 0x0000;
     // Backlight
     UiLcdHy28_BacklightInit();
 
-    // Select interface, spi HY28A first
-    mchf_display.use_spi = DISPLAY_HY28A_SPI;
 
-    mchf_display.lcd_cs = LCD_D11;
-    mchf_display.lcd_cs_pio = LCD_D11_PIO;
 
-    // Try SPI Init
-    UiLcdHy28_SpiInit(false);
-    // HY28A works only with less then 32 Mhz, so we do low speed
+    #ifdef USE_DISPLAY_SPI
 
-    // Reset
-    UiLcdHy28_Reset();
+    mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28A_SPI);
 
-    // LCD Init
-    mchf_display.DeviceCode = UiLcdHy28_InitA();
-    if(mchf_display.DeviceCode == 0x0000)
+    if(mchf_display.DeviceCode != 0x0000)
     {
-        // no success, no SPI found
-        retval = DISPLAY_HY28B_SPI;
-
-        // Select interface, spi HY28B second
-        mchf_display.use_spi = DISPLAY_HY28B_SPI;
-
-        mchf_display.lcd_cs = LCD_CS;
-        mchf_display.lcd_cs_pio = LCD_CS_PIO;
-
-        // Try SPI Init
-        UiLcdHy28_SpiInit(HY28BHISPEED);
-        // Some HY28B work with 50 Mhz, so we do high speed
-
-        // Reset
-        UiLcdHy28_Reset();
-
-        // LCD Init
+        retval = DISPLAY_HY28A_SPI;
     }
-    mchf_display.DeviceCode = UiLcdHy28_InitA();
-    if(mchf_display.DeviceCode == 0x0000)
+
+    if (retval == DISPLAY_NONE)
     {
-        // no success, no SPI found
-        // SPI disable
-        // Select parallel
-        mchf_display.use_spi = 0;
+        mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28B_SPI);
+        if(mchf_display.DeviceCode != 0x0000)
+        {
+            retval = DISPLAY_HY28B_SPI;
+        }
+    }
 
-        // Parallel init
-        UiLcdHy28_ParallelInit();
-        UiLcdHy28_FSMCConfig();
+    #endif
 
-        // Reset
-        UiLcdHy28_Reset();
-
-        // LCD Init
-        mchf_display.DeviceCode = UiLcdHy28_InitA();
-
-        retval =  mchf_display.DeviceCode != 0?DISPLAY_HY28B_PARALLEL:DISPLAY_NONE;   // on error here
+    if (retval == DISPLAY_NONE)
+    {
+        mchf_display.DeviceCode = UiLcdHy28_InitA(DISPLAY_HY28B_PARALLEL);
+        if(mchf_display.DeviceCode != 0x0000)
+        {
+            retval = DISPLAY_HY28B_PARALLEL;
+        }
     }
 
     mchf_display.display_type = retval;
@@ -1272,13 +1285,16 @@ mchf_touchscreen_t mchf_touchscreen;
 
 void UiLcdHy28_TouchscreenDetectPress()
 {
-    if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
-        UiLcdHy28_TouchscreenReadCoordinates();
-
-    if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+    if (mchf_touchscreen.present)
     {
-        mchf_touchscreen.state = 0;
-        mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
+        if(!HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state != TP_DATASETS_PROCESSED)    // fetch touchscreen data if not already processed
+            UiLcdHy28_TouchscreenReadCoordinates();
+
+        if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
+        {
+            mchf_touchscreen.state = 0;
+            mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
+        }
     }
 }
 /*
@@ -1298,8 +1314,14 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
 
 static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
 {
-    UiLcdHy28_FinishWaitBulkWrite();
-    UiLcdHy28_SetSpiPrescaler(SPI_BAUDRATEPRESCALER_4);
+    // we only have to care about other transfers if the SPI is
+    // use by the display as well
+    if (UiLcdHy28_SpiDisplayUsed())
+    {
+        UiLcdHy28_FinishWaitBulkWrite();
+        UiLcdHy28_SetSpiPrescaler(SPI_BAUDRATEPRESCALER_4);
+    }
+
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
 }
 
@@ -1307,7 +1329,12 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 {
     UiLcdHy28_SpiFinishTransfer();
     GPIO_SetBits(TP_CS_PIO, TP_CS);
-    UiLcdHy28_SetSpiPrescaler(lcd_spi_prescaler);
+    // we only have to care about other transfers if the SPI is
+    // use by the display as well
+    if (UiLcdHy28_SpiDisplayUsed())
+    {
+        UiLcdHy28_SetSpiPrescaler(lcd_spi_prescaler);
+    }
 }
 
 
@@ -1327,9 +1354,37 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 #define XPT2046_CH_DFR_X    0x10
 #define XPT2046_CONV_START  0x80
 
+#define  XPT2046_COMMAND_LEN 7
+
+static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
+{
+
+
+    static const uint8_t xpt2046_command[XPT2046_COMMAND_LEN] =
+    {
+            XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_REF,
+            0,  XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT|XPT2046_PD_REF,  // the measurement for first command is here, we discard this
+            0,  XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_FULL, // y measurement from previous command, next command turns off power
+            0, 0                                                                        // x measurement from previous command
+    };
+
+    uint8_t xpt_response[XPT2046_COMMAND_LEN];
+
+    UiLcdHy28_TouchscreenStartSpiTransfer();
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,10);
+
+    UiLcdHy28_TouchscreenFinishSpiTransfer();
+
+    *x_p = (xpt_response[5] << 8 | xpt_response[6]) >> 3;
+    *y_p = (xpt_response[3] << 8 | xpt_response[4]) >> 3;
+
+}
+
+
+
 void UiLcdHy28_TouchscreenReadCoordinates()
 {
-    uchar i,x,y;
 
     /*
     statemachine stati:
@@ -1343,41 +1398,45 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     {
         if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
         {
-            UiLcdHy28_TouchscreenStartSpiTransfer();
-            UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT);
-            x = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT);
-            y = UiLcdHy28_SpiReadByte();
-            UiLcdHy28_TouchscreenFinishSpiTransfer();
 
+            UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
 
-            if(mchf_touchscreen.raw == false)						//do translation with correction table
+            uint8_t x,y;
+
+            uint8_t xraw = mchf_touchscreen.xraw >> 5;
+            uint8_t yraw = mchf_touchscreen.yraw >> 5;
+
+            if(mchf_touchscreen.reversed == false)
             {
-
-                if(mchf_touchscreen.reversed == false)
-                {
-              	  for(i=0; touchscreentable[i] < x && i < 60; i++);
-              	  x = 60-i;
-              	}
-				else
-                {					// correction of unlinearity because of mirrored x
-              	  char k = 0;
-              	  for(i=60; touchscreentable[i] > x && i > 0; i--);
-              	  x = i--;
-              	  if(x == 57 || (x < 7 && x > 1))	k=2;
-              	  if(x == 56 || (x == 8 || x == 7))	k=3;
-              	  if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
-              	  if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
-              	  if(x == 45)	k=7;
-              	  if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
-              	  if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
-              	  if(x < 31 && x > 26)	k=10;
-				  x = x - k;
-              	}
-
-                for(i=0; touchscreentable[i] < y && i < 60; i++);
-                y = i--;
+                uint8_t i;
+                for(i=0; touchscreentable[i] < xraw && i < 60; i++);
+                x = 60-i;
             }
+            else
+            {					// correction of unlinearity because of mirrored x
+                uint8_t k = 0;
+
+                uint8_t i;
+                for(i=60; touchscreentable[i] > xraw && i > 0; i--);
+
+                x = i--;
+
+
+                if(x == 57 || (x < 7 && x > 1))	k=2;
+                if(x == 56 || (x == 8 || x == 7))	k=3;
+                if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
+                if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
+                if(x == 45)	k=7;
+                if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
+                if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
+                if(x < 31 && x > 26)	k=10;
+                x = x - k;
+            }
+
+            uint8_t i;
+            for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+            y = i--;
+
             if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
                 mchf_touchscreen.state++;						// touch data valid
@@ -1397,27 +1456,17 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     }
 }
 
-
-static void UiLcdHy28_TouchscreenReadData()
-{
-
-    UiLcdHy28_TouchscreenStartSpiTransfer();
-    UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_X);
-    mchf_touchscreen.x = UiLcdHy28_SpiReadByteFast();
-    UiLcdHy28_SpiSendByteFast(XPT2046_CONV_START|XPT2046_CH_DFR_Y);
-    mchf_touchscreen.y = UiLcdHy28_SpiReadByteFast();
-    UiLcdHy28_TouchscreenFinishSpiTransfer();
-}
-
 bool UiLcdHy28_TouchscreenPresenceDetection(void)
 {
     bool retval = false;
-    UiLcdHy28_TouchscreenReadData();
-    UiLcdHy28_TouchscreenReadData();
+    uint16_t x = 0xffff, y = 0xffff;
+
+    UiLcdHy28_TouchscreenReadData(&x,&y);
+    UiLcdHy28_TouchscreenReadData(&x,&y);
 
     mchf_touchscreen.state = TP_DATASETS_PROCESSED;
 
-    if(mchf_touchscreen.x != 0xff && mchf_touchscreen.y != 0xff && mchf_touchscreen.x != 0 && mchf_touchscreen.y != 0)
+    if(x != 0xffff && y != 0xffff && x != 0 && y != 0)
     {// touchscreen data valid?
         retval = true;                      // yes - touchscreen present!
     }
@@ -1426,7 +1475,8 @@ bool UiLcdHy28_TouchscreenPresenceDetection(void)
 
 void UiLcdHy28_TouchscreenInit(bool is_reversed)
 {
-    mchf_touchscreen.raw = 0;                         // default translated coordinates
+    mchf_touchscreen.xraw = 0;
+    mchf_touchscreen.yraw = 0;
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
     mchf_touchscreen.reversed = is_reversed;

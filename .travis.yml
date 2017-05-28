@@ -1,17 +1,38 @@
 sudo: required
 language: generic
 dist: trusty
+
+addons:
+  apt:
+    packages:
+      libc6-i386
+
+cache:
+  directories:
+    - $HOME/gcc-arm-none-eabi-6-2017-q1-update
+
 install:
+    - export GCC_DIR=$HOME/gcc-arm-none-eabi-6-2017-q1-update
+    - export GCC_ARCHIVE=$HOME/gcc-arm-none-eabi-6-2017-q1-update-linux.tar.bz2
+    - export GCC_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-6-2017-q1-update-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Linux,6-2017-q1-update
+    - if [ ! -e $GCC_DIR/bin/arm-none-eabi-g++ ]; then wget $GCC_URL -O $GCC_ARCHIVE; tar xfj $GCC_ARCHIVE -C $HOME; fi
     - sudo add-apt-repository "deb http://ftp.debian.org/debian jessie-backports main"
     - sudo apt-get -qq update
     - sudo apt-get install -t jessie-backports -y --force-yes gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 script:
     - mkdir -p mchf-eclipse/build-bl
     - mkdir -p mchf-eclipse/build-fw
+    - mkdir -p mchf-eclipse/build-bl-f7
+    - mkdir -p mchf-eclipse/build-fw-f7
     - cd mchf-eclipse/build-bl
-    - make -f ../Makefile ROOTLOC=".." bootloader
     - cd ../build-fw 
     - make -f ../Makefile ROOTLOC=".." all
+    - cd ../build-fw-f7
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" all
+    - cd ../build-bl
+    - make -f ../Makefile ROOTLOC=".." bootloader
+    - cd ../build-bl-f7
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" bootloader
 before_deploy:
     - sudo apt-get install -y doxygen graphviz
     - make docs > /dev/null && tar -czf docs.tar.gz -C .. docs

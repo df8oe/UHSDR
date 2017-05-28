@@ -13,7 +13,7 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
-
+#include "mchf_mcu.h"
 // some special switches
 //#define 	DEBUG_BUILD
 
@@ -42,13 +42,25 @@
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
 #define USE_RTC_LSE
 
-#include "stm32f4xx_hal.h"
+#include "mchf_mcu.h"
 // HW libs
+#ifdef STM32F7
+#include "stm32f7xx_hal_rcc.h"
+#include "stm32f7xx_hal_gpio.h"
+#include "stm32f7xx_hal_spi.h"
+#include "stm32f7xx_hal_dma.h"
+#include "stm32f7xx_hal_i2c.h"
+#include "stm32f7xx_hal_i2s.h"
+#include "stm32f7xx_hal_adc.h"
+#include "stm32f7xx_hal_dac.h"
+#include "stm32f7xx_hal_tim.h"
+#include "stm32f7xx_hal_rtc.h"
+#include "stm32f7xx_hal_pwr.h"
+#include "stm32f7xx_hal_flash.h"
+#include "core_cm7.h"
+#else
 #include "stm32f4xx_hal_rcc.h"
 #include "stm32f4xx_hal_gpio.h"
-//#include "stm32f4xx_hal_exti.h"
-//#include "stm32f4xx_hal_usart.h"
-// #include "stm32f4xx_hal_syscfg.h"
 #include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_dma.h"
 #include "stm32f4xx_hal_i2c.h"
@@ -57,14 +69,12 @@
 #include "stm32f4xx_hal_tim.h"
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_pwr.h"
-// #include "stm32f4xx_hal_fsmc.h"
-// #include "stm32f4xx_hal_wwdg.h"
 #include "stm32f4xx_hal_flash.h"
 #include "core_cm4.h"
+#endif
 
 #include "freedv_api.h"
 
-#include "stm32f4xx.h"
 #include "mchf_types.h"
 #include "audio_filter.h"
 #include "ui_si570.h"
@@ -81,8 +91,15 @@ typedef struct ButtonMap
 {
     GPIO_TypeDef 	*port;
     ushort			button;
+    const char*     label;
 
 } ButtonMap;
+
+typedef struct
+{
+    const ButtonMap* map;
+    uint32_t num;
+} mchf_buttons_t;
 
 // Button definitions
 //
@@ -110,7 +127,7 @@ enum
     BUTTON_NUM // How many buttons we have defined
 };
 
-extern const ButtonMap*  bm;
+extern mchf_buttons_t  buttons;
 extern const ButtonMap  bm_sets[2][BUTTON_NUM];
 
 // -----------------------------------------------------------------------------
@@ -294,7 +311,7 @@ typedef enum {
 #define CW_MAX_MODE					3
 
 // PA power level setting enumeration
-enum
+typedef enum
 {
     PA_LEVEL_FULL = 0,
     PA_LEVEL_5W,
@@ -302,7 +319,7 @@ enum
     PA_LEVEL_1W,
     PA_LEVEL_0_5W,
     PA_LEVEL_TUNE_KEEP_CURRENT
-};
+} mchf_power_level_t;
 //
 #define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
 
@@ -969,13 +986,13 @@ inline void MchfBoard_GreenLed(ledstate_t state)
     switch(state)
     {
     case LED_STATE_ON:
-        GREEN_LED_PIO->BSRR = GREEN_LED;
+        GPIO_SetBits(GREEN_LED_PIO, GREEN_LED);
         break;
     case LED_STATE_OFF:
-        GREEN_LED_PIO->BSRR = GREEN_LED << 16U;
+        GPIO_ResetBits(GREEN_LED_PIO, GREEN_LED);
         break;
     default:
-        GREEN_LED_PIO->ODR ^= GREEN_LED;
+        GPIO_ToggleBits(GREEN_LED_PIO, GREEN_LED);
         break;
     }
 }
@@ -985,17 +1002,34 @@ inline void MchfBoard_RedLed(ledstate_t state)
     switch(state)
     {
     case LED_STATE_ON:
-        RED_LED_PIO->BSRR = RED_LED;
+        GPIO_SetBits(RED_LED_PIO, RED_LED);
         break;
     case LED_STATE_OFF:
-        RED_LED_PIO->BSRR = RED_LED << 16U;
+        GPIO_ResetBits(RED_LED_PIO, RED_LED);
         break;
     default:
-        RED_LED_PIO->ODR ^= RED_LED;
+        GPIO_ToggleBits(RED_LED_PIO, RED_LED);
         break;
     }
 }
 
+#ifdef STM32F7
+inline void MchfBoard_BlueLed(ledstate_t state)
+{
+    switch(state)
+    {
+    case LED_STATE_ON:
+        GPIO_SetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    case LED_STATE_OFF:
+        GPIO_ResetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    default:
+        GPIO_ToggleBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    }
+}
+#endif
 /**
  * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
  * @param tx_enable true == TX Paths, false == RX Paths
@@ -1005,7 +1039,7 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
     // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
     if (tx_enable)
     {
-        PTT_CNTR_PIO->BSRR     = PTT_CNTR;     // TX on and switch CODEC audio paths
+        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
         // Antenna Direction Output
         // BPF Direction Output (U1,U2)
         // PTT Optocoupler LED On (ACC Port) (U6)
@@ -1016,7 +1050,7 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
     }
     else
     {
-        PTT_CNTR_PIO->BSRR     = PTT_CNTR << 16U;     // TX off
+        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
         // Antenna Direction Input
         // BPF Direction Input (U1,U2)
         // PTT Optocoupler LED Off (ACC Port) (U6)
@@ -1085,14 +1119,11 @@ inline bool is_splitmode()
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
-#define STM32_DBGMCU_IDCODE        0xE0042000
-#define STM32_FLASH_ADDRESS        0x1FFF7A22
-#define STM32_UNIQUE_ADDRESS       0x1FFF7A10
 
-#define STM32_GetRevision()     (*(uint16_t *) (STM32_DBGMCU_IDCODE + 2))
-#define STM32_GetSignature()    ((*(uint16_t *) (STM32_DBGMCU_IDCODE)) & 0x0FFF)
-#define STM32_GetFlashSize()    (*(uint16_t *) (STM32_FLASH_ADDRESS))
-#define STM32_UUID ((uint32_t *)STM32_UNIQUE_ADDRESS)
+#define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
+#define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
+#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
+#define STM32_UUID ((uint32_t *)UID_BASE)
 
 
 #endif

@@ -1198,7 +1198,7 @@ void RadioManagement_HandleRxIQSignalCodecGain()
         rfg_calc = 31;
     }
 
-    Codec_LineInGainAdj((uint8_t)rfg_calc); // set the RX gain on the codec
+    Codec_IQInGainAdj((uint8_t)rfg_calc); // set the RX gain on the codec
 
     // Now calculate the RF gain setting
     gcalc = pow10(((rfg_calc * 1.5) - 34.5) / 10) ;

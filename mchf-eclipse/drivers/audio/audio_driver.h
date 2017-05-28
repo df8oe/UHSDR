@@ -18,6 +18,7 @@
 
 #include "arm_math.h"
 #include "softdds.h"
+#include "mchf_hw_i2s.h"
 
 // 16 or 24 bits from Codec
 // 24 bits are not supported anywhere in the recent code!
@@ -42,7 +43,6 @@
 #define	FFT_IQ_BUFF_M1_HALF		(FFT_IQ_BUFF_LEN-1)/2
 #define	FFT_IQ_BUFF_P1_HALF		(FFT_IQ_BUFF_LEN+1)/2
 //
-#define BUFF_LEN 			128
 //
 //
 // -----------------------------

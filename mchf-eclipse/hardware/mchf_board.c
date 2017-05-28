@@ -33,7 +33,7 @@
 #include "eeprom.h"
 #include "adc.h"
 // Transceiver state public structure
-__IO __attribute__ ((section (".ccm"))) TransceiverState ts;
+__IO __MCHF_SPECIALMEM TransceiverState ts;
 
 
 static void mchf_board_led_init(void)
@@ -105,50 +105,51 @@ static void mchf_board_debug_init(void)
 const ButtonMap bm_sets[2][18] =
 {
         {
-                {BUTTON_M2_PIO,     BUTTON_M2},     // 0
-                {BUTTON_G2_PIO,     BUTTON_G2},     // 1
-                {BUTTON_G3_PIO,     BUTTON_G3},     // 2
-                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3
-                {BUTTON_G4_PIO,     BUTTON_G4},     // 4
-                {BUTTON_M3_PIO,     BUTTON_M3},     // 5
-                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6
-                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7
-                {BUTTON_M1_PIO,     BUTTON_M1},     // 8
-                {BUTTON_F3_PIO,     BUTTON_F3},     // 9
-                {BUTTON_F1_PIO,     BUTTON_F1},     // 10
-                {BUTTON_F2_PIO,     BUTTON_F2},     // 11
-                {BUTTON_F4_PIO,     BUTTON_F4},     // 12
-                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
-                {BUTTON_F5_PIO,     BUTTON_F5},     // 14
-                {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},                // 16 Power Button
-                {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
+                {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
+                {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
+                {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
+                {BUTTON_STEPM_PIO,  BUTTON_STEPM, "Step-"},  // 6 / S7
+                {BUTTON_STEPP_PIO,  BUTTON_STEPP, "Step+"},  // 7 / S8
+                {BUTTON_M1_PIO,     BUTTON_M1, "M1"},     // 8 / S9
+                {BUTTON_F3_PIO,     BUTTON_F3, "F3"},     // 9 / S10
+                {BUTTON_F1_PIO,     BUTTON_F1, "F1"},     // 10 / S11
+                {BUTTON_F2_PIO,     BUTTON_F2, "F2"},     // 11 / S12
+                {BUTTON_F4_PIO,     BUTTON_F4, "F4"},     // 12 / S13
+                {BUTTON_BNDP_PIO,   BUTTON_BNDP, "Band+"},   // 13 / S14
+                {BUTTON_F5_PIO,     BUTTON_F5, "F5"},     // 14 / S15
+                {BUTTON_G1_PIO,     BUTTON_G1, "G1"},     // 15 / S16
+                {BUTTON_PWR_PIO, BUTTON_PWR, "Power"},       // 16 / S17 Power Button
+                {TP_IRQ_PIO,TP_IRQ, "Touch"}                 // 17 TP "Button"
         },
         // alternative mapping for RTC Modification
         {
-                {BUTTON_M2_PIO,     BUTTON_M2},     // 0
-                {BUTTON_G2_PIO,     BUTTON_G2},     // 1
-                {BUTTON_G3_PIO,     BUTTON_G3},     // 2
-                {BUTTON_BNDM_PIO,   BUTTON_BNDM},   // 3
-                {BUTTON_G4_PIO,     BUTTON_G4},     // 4
-                {BUTTON_M3_PIO,     BUTTON_M3},     // 5
-                {BUTTON_STEPM_PIO,  BUTTON_STEPM},  // 6
-                {BUTTON_STEPP_PIO,  BUTTON_STEPP},  // 7
-                {BUTTON_M1_PIO_RTC,     BUTTON_M1_RTC},     // 8
-                {BUTTON_F3_PIO_RTC,     BUTTON_F3_RTC},     // 9
-                {BUTTON_F1_PIO,     BUTTON_F1},     // 10
-                {BUTTON_F2_PIO,     BUTTON_F2},     // 11
-                {BUTTON_F4_PIO,     BUTTON_F4},     // 12
-                {BUTTON_BNDP_PIO,   BUTTON_BNDP},   // 13
-                {BUTTON_F5_PIO,     BUTTON_F5},     // 14
-                {BUTTON_G1_PIO,     BUTTON_G1},     // 15
-                {BUTTON_PWR_PIO, BUTTON_PWR},       // 16 Power Button
-                {TP_IRQ_PIO,TP_IRQ}                 // 17 TP "Button"
+                {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
+                {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
+                {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
+                {BUTTON_STEPM_PIO,  BUTTON_STEPM, "Step-"},  // 6 / S7
+                {BUTTON_STEPP_PIO,  BUTTON_STEPP, "Step+"},  // 7 / S8
+                {BUTTON_M1_PIO_RTC, BUTTON_M1_RTC, "M1"},     // 8 / S9
+                {BUTTON_F3_PIO_RTC, BUTTON_F3_RTC, "F3"},     // 9 / S10
+                {BUTTON_F1_PIO,     BUTTON_F1, "F1"},     // 10 / S11
+                {BUTTON_F2_PIO,     BUTTON_F2, "F2"},     // 11 / S12
+                {BUTTON_F4_PIO,     BUTTON_F4, "F4"},     // 12 / S13
+                {BUTTON_BNDP_PIO,   BUTTON_BNDP, "Band+"},   // 13 / S14
+                {BUTTON_F5_PIO,     BUTTON_F5, "F5"},     // 14 / S15
+                {BUTTON_G1_PIO,     BUTTON_G1, "G1"},     // 15 / S16
+                {BUTTON_PWR_PIO, BUTTON_PWR, "Power"},       // 16 / S17 Power Button
+                {TP_IRQ_PIO,TP_IRQ, "Touch"}                 // 17 TP "Button"
         }
 };
 
 // the inital button map is the default one
-const ButtonMap* bm = &bm_sets[0][0];
+mchf_buttons_t buttons = { .map = &bm_sets[0][0], .num = 18 };
+
 
 static void mchf_board_keypad_init(const ButtonMap* bm)
 {
@@ -247,95 +248,25 @@ static void mchf_board_power_button_irq_init(void)
     */
 }
 
-#if 0
-// this function is commented out because it is static (i.e. local only) and not used
-// just remove #if 0 if function needs to be used. Reason is to include only used code
-// if possible
-
-static void mchf_board_dac1_init(void)
+static void mchf_board_dac_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    DAC_InitTypeDef  DAC_InitStructure;
 
-    // DAC Periph clock enable
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
-
-    // DAC channel 1 (DAC_OUT1 = PA.4)
-    GPIO_InitStructure.GPIO_Pin  = DAC0;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DAC0_PIO, &GPIO_InitStructure);
-
-    // DAC channel1 Configuration
-    DAC_InitStructure.DAC_Trigger 						= DAC_Trigger_None;
-    DAC_InitStructure.DAC_WaveGeneration 				= DAC_WaveGeneration_None;
-    DAC_InitStructure.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bits7_0;//DAC_TriangleAmplitude_4095;
-    DAC_InitStructure.DAC_OutputBuffer 				= DAC_OutputBuffer_Enable;
-    DAC_Init(DAC_Channel_1, &DAC_InitStructure);
-
-    // Enable DAC Channel1
-    DAC_Cmd(DAC_Channel_1, ENABLE);
-
-    // Set DAC Channel1 DHR12L register - JFET attenuator off (0V)
-    DAC_SetChannel1Data(DAC_Align_8b_R, 0x00);
-}
+#ifdef STM32F7
+    HAL_DAC_Start(&hdac,DAC_CHANNEL_1);
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_8B_R,0);
+    // AUDIO PA volume zero
 #endif
-
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_dac1_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void mchf_board_dac2_init(void)
-{
     HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
-    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,220);
-    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
-#if 0
-
-    GPIO_InitTypeDef GPIO_InitStructure;
-    DAC_InitTypeDef  DAC_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // DAC Periph clock enable
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
-
-    // DAC channel 1 (DAC_OUT2 = PA.5)
-    GPIO_InitStructure.GPIO_Pin  = DAC1;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DAC0_PIO, &GPIO_InitStructure);
-
-    // DAC channel1 Configuration
-    DAC_InitStructure.DAC_Trigger 						= DAC_Trigger_None;
-    DAC_InitStructure.DAC_WaveGeneration 				= DAC_WaveGeneration_None;
-    DAC_InitStructure.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bits7_0;//DAC_TriangleAmplitude_4095;
-    DAC_InitStructure.DAC_OutputBuffer 				= DAC_OutputBuffer_Enable;
-    DAC_Init(DAC_Channel_2, &DAC_InitStructure);
-
-    // Enable DAC Channel2
-    DAC_Cmd(DAC_Channel_2, ENABLE);
-
-    // Set DAC Channel2 DHR12L register - PA Bias (3.80 V)
-    DAC_SetChannel2Data(DAC_Align_8b_R, 220);
-#endif
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,0);
 
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_adc1_init
-//* Object              : ADC1 used for power supply measurements
-//* Input Parameters    :
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
 static void mchf_board_adc1_init(void)
 {
     HAL_ADC_Start(&hadc1);
+
 #if 0
     ADC_InitTypeDef 		ADC_InitStructure;
     ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
@@ -528,6 +459,8 @@ static void mchf_board_power_down_init(void)
 //
 static void mchf_board_band_cntr_init(void)
 {
+#ifdef STM32F4
+    // FIXME: USE HAL Init here as well, this handles also the multiple Ports case
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_InitStructure.Mode 	= GPIO_MODE_OUTPUT_PP;
@@ -536,7 +469,7 @@ static void mchf_board_band_cntr_init(void)
 
     GPIO_InitStructure.Pin = BAND0|BAND1|BAND2;
     HAL_GPIO_Init(BAND0_PIO, &GPIO_InitStructure);
-
+#endif
     // Set initial state - low (20m band)
     BAND0_PIO->BSRR = BAND0 << 16U;
     BAND1_PIO->BSRR = BAND1 << 16U;
@@ -563,55 +496,6 @@ void mchf_board_touchscreen_init()
 
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
-#if 0
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_watchdog_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//static void mchf_board_watchdog_init(void)
-//{
-// Enable WWDG clock
-//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
-
-// WWDG clock counter = (PCLK1 (42MHz)/4096)/8 = 1281 Hz (~780 us)
-//	WWDG_SetPrescaler(WWDG_Prescaler_8);
-
-// Set Window value to 80; WWDG counter should be refreshed only when the counter
-//    is below 80 (and greater than 64) otherwise a reset will be generated
-//	WWDG_SetWindowValue(WD_REFRESH_WINDOW);
-
-// Enable WWDG and set counter value to 127, WWDG timeout = ~780 us * 64 = 49.92 ms
-// In this case the refresh window is: ~780 * (127-80) = 36.6ms < refresh window < ~780 * 64 = 49.9ms
-// -- so wd reset is every 40 mS --
-// --WWDG_Enable(WD_REFRESH_COUNTER);
-//}
-
-static void mchf_board_set_system_tick_value(void)
-{
-    RCC_ClocksTypeDef 	RCC_Clocks;
-//	NVIC_InitTypeDef 	NVIC_InitStructure;
-
-// Configure Systick clock source as HCLK
-    SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-
-// SystTick configuration
-    RCC_GetClocksFreq(&RCC_Clocks);
-
-// Need 1mS tick for responcive UI
-    SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
-
-//	NVIC_InitStructure.NVIC_IRQChannel = SysTick_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0E;
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//	NVIC_Init(&NVIC_InitStructure);
-}
-
-#endif
 
 void mchf_board_init(void)
 {
@@ -642,7 +526,7 @@ void mchf_board_init(void)
     // I2C init
     mchf_hw_i2c1_init();
 
-    // Get startup frequency of Si570, by DF8OE, 201506
+    // Initialize Si570, by DF8OE, 201506
     Si570_Init();
 
     SoftTcxo_Init();
@@ -665,11 +549,11 @@ void mchf_board_init(void)
     // parallel display never has a STM32 based rtc, so we do not need to check for RTC
     if ((ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
     {
-        bm = &bm_sets[1][0];
+        buttons.map = &bm_sets[1][0];
     }
 
     // Init keypad hw based on button map bm
-    mchf_board_keypad_init(bm);
+    mchf_board_keypad_init(buttons.map);
 
     // Encoders init
     UiRotaryFreqEncoderInit();
@@ -678,8 +562,7 @@ void mchf_board_init(void)
     UiRotaryEncoderThreeInit();
 
     // Init DACs
-//	mchf_board_dac0_init();		// disabled because pin is now TP_IRQ
-    mchf_board_dac2_init();
+    mchf_board_dac_init();
 
     // Enable all ADCs
     mchf_board_adc1_init();
@@ -748,6 +631,9 @@ void mchf_reboot()
 {
     ///Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
+#ifdef STM32F7
+    SCB_CleanDCache();
+#endif
     NVIC_SystemReset();         // restart mcHF
 }
 
@@ -854,9 +740,10 @@ void mchf_board_detect_ramsize() {
 
 static void MchfBoard_BandFilterPulseRelays()
 {
-    BAND2_PIO->BSRR = BAND2 << 16U;
+    // FIXME: Replace non_os_delay with HAL_Delay
+    GPIO_ResetBits(BAND2_PIO, BAND2);
     non_os_delay();
-    BAND2_PIO->BSRR = BAND2;
+    GPIO_SetBits(BAND2_PIO, BAND2);
 }
 
 /**
@@ -888,20 +775,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 0:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group -Set(High/High)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -909,20 +796,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 1:
     {
         // Internal group - Set(High/Low)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -930,20 +817,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 2:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Reset(Low/High)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         break;
     }
@@ -951,20 +838,20 @@ void MchfBoard_SelectLpfBpf(uint8_t group)
     case 3:
     {
         // Internal group - Reset(Low/Low)
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1 << 16U;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_ResetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // External group - Set(High/High)
-        BAND0_PIO->BSRR = BAND0;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_SetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         MchfBoard_BandFilterPulseRelays();
 
         // BPF
-        BAND0_PIO->BSRR = BAND0 << 16U;
-        BAND1_PIO->BSRR = BAND1;
+        GPIO_ResetBits(BAND0_PIO, BAND0);
+        GPIO_SetBits(BAND1_PIO, BAND1);
 
         break;
     }

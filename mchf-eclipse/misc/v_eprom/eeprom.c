@@ -27,8 +27,11 @@
 
 // Common
 #include "mchf_board.h"
+#ifdef STM32F7
+#include "stm32f7xx_hal_flash_ex.h"
+#else
 #include "stm32f4xx_hal_flash_ex.h"
-
+#endif
 /* Includes ------------------------------------------------------------------*/
 #include "eeprom.h"
 
@@ -169,6 +172,19 @@ uint16_t Flash_InitA(void)
     uint16_t PageStatus0, PageStatus1;
     uint16_t retval = 0x80;
 
+
+    // FIXME: F7PORT: How to get rid of this? After change, boards needs reflash
+    // if the process can do dual bank mode,
+    // switch this ON, otherwise we have already the correct
+    // sector layout
+    #if defined (FLASH_OPTCR_nDBANK)
+        HAL_FLASH_OB_Unlock();
+        FLASH->OPTCR &= ~FLASH_OPTCR_nDBANK;
+        HAL_FLASH_OB_Launch();
+        HAL_FLASH_OB_Lock();
+    #endif
+
+
     /* Get Page0 status */
     PageStatus0 = (*(__IO uint16_t*)PAGE0_BASE_ADDRESS);
     /* Get Page1 status */
@@ -260,6 +276,7 @@ uint16_t Flash_InitA(void)
 uint16_t Flash_Init(void)
 {
     uint16_t res;
+
 
     HAL_FLASH_Unlock();
     res = Flash_InitA();
