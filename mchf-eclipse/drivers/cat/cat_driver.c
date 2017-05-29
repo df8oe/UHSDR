@@ -386,7 +386,6 @@ const ft817_block_t cloneblock_len[] =
 
 */
 
-#define DEBUG_FT817
 typedef enum {
     CLONEOUT_INIT = 0,
     CLONEOUT_BLOCK_SEND,
@@ -1205,7 +1204,7 @@ static void CatDriver_HandleCommands()
             if (ee_addr < 0x1925)
             {
                 CatDriver_Ft817_EEPROM_Write(ee_addr,&ft817.req[2]);
-                CatDriver_Ft817_EEPROM_Write(ee_addr+1,&ft817.req[2]);
+                CatDriver_Ft817_EEPROM_Write(ee_addr+1,&ft817.req[3]);
             }
             break;
         }
