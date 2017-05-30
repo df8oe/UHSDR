@@ -23,7 +23,7 @@
 #define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2017"
 //
 #define		ATTRIB_STRING1			"Additional Contributions by"
-#define		ATTRIB_STRING2			"KA7OEI, DF8OE and others."
+#define		ATTRIB_STRING2			"KA7OEI, DF8OE and YO5PTD"
 #define		ATTRIB_STRING3			"Licensed under "TRX4M_LICENCE"      "
 //
 // -----------------------------------------------------------------------------

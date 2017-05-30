@@ -460,7 +460,7 @@ int mchfMain(void)
     // init mchf_touchscreen to see if it is present
     // we don't care about the screen being reverse or not
     // here, so we simply set reverse to false
-    UiLcdHy28_TouchscreenInit(false);
+    UiLcdHy28_TouchscreenInit(false, false, false);
 
 
     // Show logo & HW Info

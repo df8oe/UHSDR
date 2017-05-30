@@ -2144,20 +2144,54 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         UiMenu_MapColors(ts.meter_colour_down,options,&clr);
         break;
-    case MENU_REVERSE_TOUCHSCREEN:  // Touchscreen x mirrored?
-        temp_var_u8 = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)? 1 : 0;
+    case MENU_REVERSE_TOUCHSCREEN_X:  // Touchscreen x mirrored?
+        temp_var_u8 = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_X)? 1 : 0;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
         if(var_change)
         {
             if (temp_var_u8)
             {
-                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN;
-                ts.tp->reversed = true;
+                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
+                ts.tp->reversed_x = true;
             }
             else
             {
-                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN;
-                ts.tp->reversed = false;
+                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
+                ts.tp->reversed_x = false;
+            }
+        }
+        break;
+    case MENU_REVERSE_TOUCHSCREEN_Y:  // Touchscreen y mirrored?
+        temp_var_u8 = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_Y)? 1 : 0;
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+            if (temp_var_u8)
+            {
+                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                ts.tp->reversed_y = true;
+            }
+            else
+            {
+                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                ts.tp->reversed_y = false;
+            }
+        }
+        break;
+    case MENU_MIRRORED_TOUCHSCREEN:  // Touchscreen mirrored?
+        temp_var_u8 = (ts.flags2 & FLAGS2_MIRRORED_TOUCHSCREEN)? 1 : 0;
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+            if (temp_var_u8)
+            {
+                ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
+                ts.tp->mirrored = true;
+            }
+            else
+            {
+                ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
+                ts.tp->mirrored = false;
             }
         }
         break;
