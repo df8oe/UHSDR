@@ -735,6 +735,15 @@ typedef struct TransceiverState
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
 #define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
 
+#ifdef STM32F4
+    // the default screen needs no reversed touch
+#define FLAGS1_CONFIG_DEFAULT (0x0000)
+#else
+    // the default screen needs reversed touch
+#define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_TOUCHSCREEN)
+#endif
+
+
     uint16_t	flags2;							// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
 #define FLAGS2_FM_MODE_ENABLE 			0x01    // 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
 #define FLAGS2_FM_MODE_DEVIATION_5KHZ 	0x02    // 0 if 2.5 kHz FM deviation, 1 for 5 kHz FM deviation
@@ -742,6 +751,8 @@ typedef struct TransceiverState
 #define FLAGS2_LOW_BAND_BIAS_REDUCE 	0x08    // 1 if bias values for lower bands  below 8Mhz have lower influence factor
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
 #define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
+
+#define FLAGS2_CONFIG_DEFAULT (FLAGS2_HIGH_BAND_BIAS_REDUCE|FLAGS2_LOW_BAND_BIAS_REDUCE)
 
     uint32_t	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
     // is NEVER reset and is used for timing certain events.

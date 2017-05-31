@@ -447,8 +447,8 @@
 #define I2C1_SDA_PIN            GPIO_PIN_7
 #define I2C1_SDA_GPIO           GPIOB
 // pin 8
-#define BUTTON_G2               GPIO_PIN_8
-#define BUTTON_G2_PIO           GPIOB
+#define BUTTON_G3               GPIO_PIN_8
+#define BUTTON_G3_PIO           GPIOB
 // pin 9
 #define GREEN_LED               GPIO_PIN_9
 #define GREEN_LED_PIO           GPIOB
@@ -594,8 +594,8 @@
 #define BUTTON_F4               GPIO_PIN_3
 #define BUTTON_F4_PIO           GPIOE
 // pin 4
-#define BUTTON_G3               GPIO_PIN_4
-#define BUTTON_G3_PIO           GPIOE
+#define BUTTON_G2               GPIO_PIN_4
+#define BUTTON_G2_PIO           GPIOE
 // pin 5
 #define BUTTON_F5               GPIO_PIN_5
 #define BUTTON_F5_PIO           GPIOE
