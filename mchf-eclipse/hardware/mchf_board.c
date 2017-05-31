@@ -540,9 +540,13 @@ void mchf_board_init(void)
     // we could now implement some error strategy if no display is present
     // i.e. 0 is returned
 
-
-    ts.rtc_present = MchfRtc_enabled();
-
+#ifdef STM32F4
+    // on a STM32F4 we can have the internal RTC only if there is an SPI display.
+    if (ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI)
+#endif
+    {
+        ts.rtc_present = MchfRtc_enabled();
+    }
     // we need to find out which keyboard layout before we init the GPIOs to use it.
     // at this point we have to have called the display init and the rtc init
     // in order to know which one to use.
