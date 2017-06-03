@@ -127,11 +127,9 @@ bool MchfRtc_enabled()
 
     __HAL_RCC_RTC_ENABLE();
 
-    // if both M1 and F3 are pressed, we assume RTC being active despite the config
-    if( (HAL_GPIO_ReadPin(BUTTON_M1_PIO, BUTTON_M1) == 0) &&
-            (HAL_GPIO_ReadPin(BUTTON_F3_PIO, BUTTON_F3) == 0))
+    if (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET)
     {
-        // we detected most likely a running RTC or someone who wants us to detect an RTC being fitted;
+        // we detected most likely a running RTC or a system capable of running an RTC since the external oscillator is running;
         retval = true;
     }
 
