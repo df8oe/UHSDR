@@ -62,8 +62,7 @@ BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 LDFLAGS_F4 := $(MACHFLAGS_F4) -flto --specs=nano.specs
 LDFLAGS_F7 := $(MACHFLAGS_F7) -flto --specs=nano.specs
 
-LIBS := -lm -lc -lnosys \
-        -L$(PREFIX)/arm-none-eabi/lib/armv7e-m/fpu 
+LIBS := -lm -lc -lnosys
 
 # ------------- nothing to change below this line ---------------------- 
 
@@ -87,9 +86,9 @@ TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean
 ifeq ($(BUILDFOR),F4)
 
 bootloader.elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS_F4} -O2
-bootloader.elf : LDFLAGS = ${LDFLAGS_F4}
-mchf.elf : LDFLAGS = ${LDFLAGS_F4} 
+mchf.elf : CFLAGS = ${BASECFLAGS_F4} -O3
+bootloader.elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
+mchf.elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 	
 
 	# Every subdirectory with header files must be mentioned here
@@ -104,9 +103,9 @@ endif
 ifeq ($(BUILDFOR),F7)
 
 bootloader.elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS_F7} -O2
-bootloader.elf : LDFLAGS = ${LDFLAGS_F7}
-mchf.elf : LDFLAGS = ${LDFLAGS_F7} 
+mchf.elf : CFLAGS = ${BASECFLAGS_F7} -O3
+bootloader.elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link-bootloader_f7.ld
+mchf.elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link_f7.ld
 
 
 	# Every subdirectory with header files must be mentioned here
@@ -226,12 +225,12 @@ bootloader:  bootloader.bin bootloader.dfu
 # compilation
 $(LPRJ).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link.ld -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
 
 # compilation
 bootloader.elf:  $(BLOBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -T$(ROOTLOC)/arm-gcc-link-bootloader.ld -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
 
 
 $(PRJ).handbook:
