@@ -31,7 +31,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 3.2.2"
+#define VERSION                    "Version: 3.2.3"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)

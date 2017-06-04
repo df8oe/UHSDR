@@ -243,8 +243,8 @@ int bootloader_main()
     mcHF_PowerHoldOff();
 
 
-// *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
-// *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+//   *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
+//    *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
     if( *(uint32_t*)(SRAM2_BASE) != 0x55)		// no reboot requested?
     {
         // we wait for a longer time
