@@ -73,6 +73,8 @@ static void BL_DisplayInit()
     GPIO_InitStructure.Pin = TP_CS;
 
     HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
+
+    GPIO_SetBits(TP_CS_PIO, TP_CS);
 #endif
 
     UiLcdHy28_Init();
