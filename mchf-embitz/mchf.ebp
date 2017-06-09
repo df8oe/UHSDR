@@ -601,6 +601,24 @@
 		<Unit filename="..\mchf-eclipse\drivers\ui\ui_driver.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usb_device.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_audio_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_cdc_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_desc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\AUDIO\Src\usbd_audio_cdc_comp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\CDC\Src\usbd_cdc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\composite\usbd_composite.c">
 			<Option compilerVar="CC" />
 		</Unit>
