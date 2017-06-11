@@ -25,6 +25,12 @@
 #include "spi.h"
 #include "gpio.h"
 
+#ifdef STM32F7
+#include "stm32f7xx_hal_flash_ex.h"
+#else
+#include "stm32f4xx_hal_flash_ex.h"
+#endif
+
 
 
 #include <unistd.h>
@@ -319,6 +325,19 @@ void mchfBl_CheckAndGoForDfuBoot()
         const uint32_t dfu_boot_start = 0x00000000;
 #else
         const uint32_t dfu_boot_start = 0x1FF00000;
+        // if in dual boot mode (which is required for proper operation
+        // we need to
+        #if defined (FLASH_OPTCR_nDBANK)
+            HAL_FLASH_OB_Unlock();
+            if (FLASH->OPTCR & (FLASH_OPTCR_nDBANK_Msk|FLASH_OPTCR_nDBOOT_Msk) != FLASH_OPTCR_nDBOOT)
+            {
+                FLASH->OPTCR |= FLASH_OPTCR_nDBOOT; // set == disable dual boot
+                FLASH->OPTCR &= ~FLASH_OPTCR_nDBANK; // unset == enabled dual bank mode
+            }
+            HAL_FLASH_OB_Launch();
+            HAL_FLASH_OB_Lock();
+        #endif
+
 #endif
         mchfBl_JumpToApplication(dfu_boot_start);
         // start the STM32Fxxx bootloader at address dfu_boot_start;
