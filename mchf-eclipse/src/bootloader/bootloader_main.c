@@ -319,7 +319,6 @@ void mchfBl_CheckAndGoForDfuBoot()
     if(*(uint32_t*)(SRAM2_BASE) == 0x99)
     {
         *(uint32_t*)(SRAM2_BASE) = 0;
-        mchfBl_PinOn(LEDRED);
 #ifndef STM32F7
         __HAL_REMAPMEMORY_SYSTEMFLASH();
 
@@ -341,8 +340,6 @@ void mchfBl_CheckAndGoForDfuBoot()
 
 #endif
         mchfBl_JumpToApplication(dfu_boot_start);
-        mchfBl_PinOn(LEDGREEN);
-        while (1) { asm("nop"); }
         // start the STM32Fxxx bootloader at address dfu_boot_start;
     }
 }
