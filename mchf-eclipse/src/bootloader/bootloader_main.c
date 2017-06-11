@@ -123,7 +123,7 @@ void BL_Idle_Application(void)
     if(mchfBl_ButtonGetState(BUTTON_POWER) == 0 && power_was_up == true)
     {
         // we only switch off, if power button was at least once seen as being released and pressed in the idle loop
-        mcHF_PowerHoldOff();
+        mcHF_PowerOff();
     }
     else
     {
@@ -192,7 +192,7 @@ int BL_MSC_Application(void)
             /* switch off if power button is pressed */
             if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
             {
-                mcHF_PowerHoldOff();
+                mcHF_PowerOff();
             }
         }
 
@@ -248,6 +248,7 @@ int bootloader_main()
 {
     /* initialization */
     BSP_Init();
+#if 0
     mcHF_PowerHoldOff();
 
 
@@ -258,7 +259,10 @@ int bootloader_main()
         // we wait for a longer time
         HAL_Delay(300);
     }
+#else
+#endif
     mcHF_PowerHoldOn();
+    HAL_Delay(50);
 
     if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
     {

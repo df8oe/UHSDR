@@ -72,6 +72,11 @@ void mchfBl_PinToggle(Led_TypeDef Led);
 void mchfBl_ButtonInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode);
 uint32_t mchfBl_ButtonGetState(Button_TypeDef Button);
 
+void mcHF_PowerOff();
+
+/*
+ * Just toggles the PowerHold Pin, but does not stop execution
+ */
 inline void mcHF_PowerHoldOff()
 {
     mchfBl_PinOn(PWR_HOLD);

@@ -31,7 +31,7 @@
 /* Private defines -----------------------------------------------------------*/
 #define UPLOAD_FILENAME            "0:mchfold.bin"
 #define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 3.2.4"
+#define VERSION                    "Version: 3.2.5"
 #define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
@@ -57,7 +57,7 @@ void Wait(int time)
     // we show the error message until user presses power...
     if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
     {
-        mcHF_PowerHoldOff();
+        mcHF_PowerOff();
     }
 }
 

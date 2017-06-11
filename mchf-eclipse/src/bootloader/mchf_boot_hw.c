@@ -123,3 +123,18 @@ uint32_t mchfBl_ButtonGetState(Button_TypeDef Button)
 {
     return HAL_GPIO_ReadPin(BUTTON_PORT[Button], BUTTON_PIN[Button]);
 }
+
+void mcHF_PowerOff()
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Pin = GPIO_PIN[PWR_HOLD];
+    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+
+    HAL_GPIO_Init(GPIO_PORT[PWR_HOLD], &GPIO_InitStructure);
+
+    while(1) { asm("nop"); }
+    // never reached
+}
