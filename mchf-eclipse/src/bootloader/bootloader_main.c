@@ -329,7 +329,7 @@ void mchfBl_CheckAndGoForDfuBoot()
         // we need to
         #if defined (FLASH_OPTCR_nDBANK)
             HAL_FLASH_OB_Unlock();
-            if (FLASH->OPTCR & (FLASH_OPTCR_nDBANK_Msk|FLASH_OPTCR_nDBOOT_Msk) != FLASH_OPTCR_nDBOOT)
+            if ((FLASH->OPTCR & (FLASH_OPTCR_nDBANK_Msk|FLASH_OPTCR_nDBOOT_Msk)) != FLASH_OPTCR_nDBOOT)
             {
                 FLASH->OPTCR |= FLASH_OPTCR_nDBOOT; // set == disable dual boot
                 FLASH->OPTCR &= ~FLASH_OPTCR_nDBANK; // unset == enabled dual bank mode
