@@ -173,7 +173,6 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f7xx.s).                    */
 /******************************************************************************/
 
-#ifndef BOOTLOADER_BUILD
 /**
 * @brief This function handles EXTI line0 interrupt.
 */
@@ -205,6 +204,7 @@ void EXTI1_IRQHandler(void)
 /**
 * @brief This function handles DMA2 stream0 global interrupt.
 */
+#ifndef BOOTLOADER_BUILD
 void DMA2_Stream0_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */

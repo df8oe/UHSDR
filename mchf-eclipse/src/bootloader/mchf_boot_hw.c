@@ -138,31 +138,3 @@ void mcHF_PowerOff()
     while(1) { asm("nop"); }
     // never reached
 }
-
-// These interrupt handlers match the one found in the main firmware but
-// do nothing, since we don't want to handle PTT / Paddle interrupts etc.
-// FIXME: This is a kind of a hack to prevent problematic hardware (protection diodes)
-// from preventing boot-up. Better fix the hardware.
-
-#ifdef STM32F7
-/**
-* @brief This function handles EXTI line0 interrupt.
-*/
-void EXTI0_IRQHandler(void)
-{
-}
-
-/**
-* @brief This function handles EXTI line1 interrupt.
-*/
-void EXTI1_IRQHandler(void)
-{
-}
-
-/**
-* @brief This function handles EXTI line[15:10] interrupts.
-*/
-void EXTI15_10_IRQHandler(void)
-{
-}
-#endif
