@@ -67,7 +67,6 @@ static void BL_DisplayInit()
     MX_SPI2_Init();
 #endif
     MX_GPIO_Init();
-    BSP_Init();
 
 #ifdef STM32F4
     // we need to set the touch screen CS signal to high, otherwise SPI displays
