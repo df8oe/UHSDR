@@ -123,3 +123,46 @@ uint32_t mchfBl_ButtonGetState(Button_TypeDef Button)
 {
     return HAL_GPIO_ReadPin(BUTTON_PORT[Button], BUTTON_PIN[Button]);
 }
+
+void mcHF_PowerOff()
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Pin = GPIO_PIN[PWR_HOLD];
+    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+
+    HAL_GPIO_Init(GPIO_PORT[PWR_HOLD], &GPIO_InitStructure);
+
+    while(1) { asm("nop"); }
+    // never reached
+}
+
+// These interrupt handlers match the one found in the main firmware but
+// do nothing, since we don't want to handle PTT / Paddle interrupts etc.
+// FIXME: This is a kind of a hack to prevent problematic hardware (protection diodes)
+// from preventing boot-up. Better fix the hardware.
+
+#ifdef STM32F7
+/**
+* @brief This function handles EXTI line0 interrupt.
+*/
+void EXTI0_IRQHandler(void)
+{
+}
+
+/**
+* @brief This function handles EXTI line1 interrupt.
+*/
+void EXTI1_IRQHandler(void)
+{
+}
+
+/**
+* @brief This function handles EXTI line[15:10] interrupts.
+*/
+void EXTI15_10_IRQHandler(void)
+{
+}
+#endif
