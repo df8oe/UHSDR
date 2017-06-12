@@ -60,6 +60,21 @@ static const char*  bl_help[] =
         "PC should recognize new USB device.",
 };
 
+void BSP_Init(void)
+{
+    // we assume that the clock for all required GPIO Ports has been turn on!!
+
+    /* Initialize LEDs and User_Button on mchf --------------------*/
+    mchfBl_ButtonInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
+    mchfBl_ButtonInit(BUTTON_POWER, BUTTON_MODE_GPIO);
+    mchfBl_ButtonInit(BUTTON_BANDP, BUTTON_MODE_GPIO);
+
+    mchfBl_LEDInit(LEDGREEN);
+    mchfBl_LEDInit(LEDRED);
+    mchfBl_LEDInit(PWR_HOLD);
+    mchfBl_LEDInit(BACKLIGHT);
+}
+
 static void BL_DisplayInit()
 {
 #ifdef STM32F4
@@ -211,21 +226,6 @@ int BL_MSC_Application(void)
     return(0);
 }
 
-
-void BSP_Init(void)
-{
-    // we assume that the clock for all required GPIO Ports has been turn on!!
-
-    /* Initialize LEDs and User_Button on mchf --------------------*/
-    mchfBl_ButtonInit(BUTTON_BANDM, BUTTON_MODE_GPIO);
-    mchfBl_ButtonInit(BUTTON_POWER, BUTTON_MODE_GPIO);
-    mchfBl_ButtonInit(BUTTON_BANDP, BUTTON_MODE_GPIO);
-
-    mchfBl_LEDInit(LEDGREEN);
-    mchfBl_LEDInit(LEDRED);
-    mchfBl_LEDInit(PWR_HOLD);
-    mchfBl_LEDInit(BACKLIGHT);
-}
 
 /**
  * @brief jump to a STM32 Application by giving the start address of the ISR Vector structure of that application
