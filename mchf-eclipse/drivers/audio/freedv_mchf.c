@@ -798,11 +798,11 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 #ifdef debug_alternate_NR
     static int frame_count=0;  //only used for the distortion insertion - can alter be deleted
     int dist_level=0;//only used for the distortion insertion - can alter be deleted
+    int nr_setting = 0;
 #endif
 
-    int nr_setting = 0;
     float32_t R[11];  // takes the autocorrelation results
-    float32_t e,k,alfa;
+    float32_t k,alfa;
 
     float32_t any[order+1];  //some internal buffers for the levinson durben algorithm
 
