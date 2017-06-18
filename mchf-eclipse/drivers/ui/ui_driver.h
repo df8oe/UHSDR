@@ -212,6 +212,19 @@ enum
 };
 //
 #define	FFT_WINDOW_DEFAULT			FFT_WINDOW_BLACKMAN
+//touch screen revert options
+enum
+{
+    TOUCH_REVERT_No=0,
+    TOUCH_REVERT_Y_Axis,
+    TOUCH_REVERT_X_Axis,
+    TOUCH_REVERT_X_Y_Axes,
+    TOUCH_REVERT_No_Flip_X_Y,
+    TOUCH_REVERT_X_Axis_Flip_X_Y,
+    TOUCH_REVERT_Y_Axis_Flip_X_Y,
+    TOUCH_REVERT_X_Y_Axes_Flip_X_Y
+};
+#define TOUCH_REVERT_DEFAULT        TOUCH_REVERT_No
 //
 #define	SPECTRUM_SIZE_DEFAULT			SPECTRUM_NORMAL
 

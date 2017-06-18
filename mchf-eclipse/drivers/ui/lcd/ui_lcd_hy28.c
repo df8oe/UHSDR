@@ -1401,12 +1401,12 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 
             UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
 
-            uint8_t x,y;
+            uint8_t x,y,z;
 
             uint8_t xraw = mchf_touchscreen.xraw >> 5;
             uint8_t yraw = mchf_touchscreen.yraw >> 5;
 
-            if(mchf_touchscreen.reversed == false)
+            if(mchf_touchscreen.reversed_x == false)
             {
                 uint8_t i;
                 for(i=0; touchscreentable[i] < xraw && i < 60; i++);
@@ -1422,20 +1422,51 @@ void UiLcdHy28_TouchscreenReadCoordinates()
                 x = i--;
 
 
-                if(x == 57 || (x < 7 && x > 1))	k=2;
-                if(x == 56 || (x == 8 || x == 7))	k=3;
-                if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
-                if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
-                if(x == 45)	k=7;
-                if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
-                if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
-                if(x < 31 && x > 26)	k=10;
-                x = x - k;
+//                if(x == 57 || (x < 7 && x > 1))	k=2;
+//                if(x == 56 || (x == 8 || x == 7))	k=3;
+//                if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
+//                if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
+//                if(x == 45)	k=7;
+//                if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
+//                if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
+//                if(x < 31 && x > 26)	k=10;
+//                x = x - k;
             }
 
-            uint8_t i;
-            for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-            y = i--;
+
+            if(mchf_touchscreen.reversed_y == true)
+            {
+                uint8_t i;
+                for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+                y = 60-i;
+            }
+            else
+            {                   // correction of unlinearity because of mirrored y
+                uint8_t k = 0;
+
+                uint8_t i;
+                for(i=60; touchscreentable[i] > yraw && i > 0; i--);
+
+                y = i--;
+
+
+                if(y == 57 || (y < 7 && y > 1)) k=2;
+                if(y == 56 || (y == 8 || y == 7))   k=3;
+                if((y < 56 && y > 50) || (y < 16 && y > 8)) k=5;;
+                if(y == 50 || (y == 17 || y == 16) || (y == 47 || y == 46)) k=6;
+                if(y == 45) k=7;
+                if((y == 49 || y == 48) || y == 44 || (y < 34 && y > 30) || (y < 21 && y > 17)) k=8;
+                if((y < 44 && y> 33) || (y < 27 && y > 20))    k=9;
+                if(y < 31 && y > 26)    k=10;
+                y = y - k;
+            }
+
+            if(mchf_touchscreen.mirrored == true)
+            {
+                z=x;
+                x=y;
+                y=z;
+            }
 
             if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
@@ -1473,13 +1504,15 @@ bool UiLcdHy28_TouchscreenPresenceDetection(void)
     return retval;
 }
 
-void UiLcdHy28_TouchscreenInit(bool is_reversed)
+void UiLcdHy28_TouchscreenInit(bool is_reversed_x, bool is_reversed_y, bool is_mirrored)
 {
     mchf_touchscreen.xraw = 0;
     mchf_touchscreen.yraw = 0;
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
-    mchf_touchscreen.reversed = is_reversed;
+    mchf_touchscreen.reversed_x = is_reversed_x;
+    mchf_touchscreen.reversed_y = is_reversed_y;
+    mchf_touchscreen.mirrored = is_mirrored;
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
 

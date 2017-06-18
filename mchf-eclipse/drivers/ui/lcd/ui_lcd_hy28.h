@@ -136,7 +136,9 @@ typedef struct
     uint8_t y;
 
     bool present;
-    bool reversed;
+    bool reversed_x;
+    bool reversed_y;
+    bool mirrored;
 } mchf_touchscreen_t;
 
 
@@ -150,6 +152,6 @@ extern mchf_touchscreen_t mchf_touchscreen;
 void    UiLcdHy28_TouchscreenDetectPress();
 void 	UiLcdHy28_TouchscreenReadCoordinates();
 bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
-void    UiLcdHy28_TouchscreenInit(bool is_reversed);
+void    UiLcdHy28_TouchscreenInit(bool is_reversed_x, bool is_reversed_y, bool is_reversed);
 
 #endif
