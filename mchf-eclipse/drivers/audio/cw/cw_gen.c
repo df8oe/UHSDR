@@ -226,7 +226,7 @@ static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 
 void CwGen_SetSpeed()
 {
-    ps.dit_time         = 1650/ts.keyer_speed;      //100;
+    ps.dit_time         = 1920/ts.keyer_speed;      //100;
 }
 
 static void CwGen_SetBreakTime()
