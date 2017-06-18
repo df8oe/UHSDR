@@ -2144,56 +2144,92 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         UiMenu_MapColors(ts.meter_colour_down,options,&clr);
         break;
-    case MENU_REVERSE_TOUCHSCREEN_X:  // Touchscreen x mirrored?
-        temp_var_u8 = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_X)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            if (temp_var_u8)
-            {
-                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
-                ts.tp->reversed_x = true;
-            }
-            else
-            {
-                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
-                ts.tp->reversed_x = false;
-            }
-        }
-        break;
-    case MENU_REVERSE_TOUCHSCREEN_Y:  // Touchscreen y mirrored?
-        temp_var_u8 = (ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_Y)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            if (temp_var_u8)
-            {
-                ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
-                ts.tp->reversed_y = true;
-            }
-            else
-            {
-                ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
-                ts.tp->reversed_y = false;
-            }
-        }
-        break;
-    case MENU_MIRRORED_TOUCHSCREEN:  // Touchscreen mirrored?
-        temp_var_u8 = (ts.flags2 & FLAGS2_MIRRORED_TOUCHSCREEN)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            if (temp_var_u8)
-            {
-                ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
-                ts.tp->mirrored = true;
-            }
-            else
-            {
-                ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
-                ts.tp->mirrored = false;
-            }
-        }
+    case MENU_REVERSE_TOUCHSCREEN:
+        temp_var_u8 = (((ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_X)? 1 : 0) << 1 )+
+                      (((ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN_Y)? 1 : 0)      )+
+                      (((ts.flags2 & FLAGS2_MIRRORED_TOUCHSCREEN) ? 1 : 0) << 2 );
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                                                      0,
+                                                      TOUCH_REVERT_X_Y_Axes_Flip_X_Y-1,
+                                                      TOUCH_REVERT_DEFAULT,
+                                                      1);
+
+                switch(temp_var_u8)
+                {
+                case TOUCH_REVERT_No:
+                    txt_ptr = "           No";//000
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = false;
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = false;
+                    ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = false;
+                    break;
+                case TOUCH_REVERT_Y_Axis:
+                    txt_ptr = "       Y Axis";//001
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = false;
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = true;
+                    ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = false;
+                    break;
+                case TOUCH_REVERT_X_Axis:
+                    txt_ptr = "       X Axis";//010
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = true;
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = false;
+                    ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = false;
+                    break;
+                case TOUCH_REVERT_X_Y_Axes:
+                    txt_ptr = "    Both Axes";//011
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = true;
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = true;
+                    ts.flags2 &= ~FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = false;
+                    break;
+                case TOUCH_REVERT_No_Flip_X_Y:
+                    txt_ptr = "None but Flip";//100
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = false;
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = false;
+                    ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = true;
+                    break;
+                case TOUCH_REVERT_X_Axis_Flip_X_Y:
+                    txt_ptr = "X Axis & Flip";//101
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = true;
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = false;
+                    ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = true;
+                    break;
+                case TOUCH_REVERT_Y_Axis_Flip_X_Y:
+                    txt_ptr = "Y Axis & Flip";//110
+                    ts.flags1 &= ~FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = false;
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = true;
+                    ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = true;
+                    break;
+                case TOUCH_REVERT_X_Y_Axes_Flip_X_Y:
+                    txt_ptr = "Both and Flip";//111
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_X;
+                    ts.tp->reversed_x = true;
+                    ts.flags1 |= FLAGS1_REVERSE_TOUCHSCREEN_Y;
+                    ts.tp->reversed_y = true;
+                    ts.flags2 |= FLAGS2_MIRRORED_TOUCHSCREEN;
+                    ts.tp->mirrored = true;
+                    break;
+                }
+
         break;
     case MENU_WFALL_STEP_SIZE:  // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,

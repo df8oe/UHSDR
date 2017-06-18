@@ -733,8 +733,8 @@ typedef struct TransceiverState
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox
 #define FLAGS1_SCOPE_LIGHT_ENABLE		0x1000  // 0 = Spectrum normal, 1 = Spectrum light
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
-#define FLAGS1_REVERSE_TOUCHSCREEN_X    0x4000  // 1 = X direcction of touchscreen is mirrored
-#define FLAGS1_REVERSE_TOUCHSCREEN_Y    0x8000  // 1 = Y direcction of touchscreen is mirrored
+#define FLAGS1_REVERSE_TOUCHSCREEN_X    0x4000  // 1 = X direction of touch screen is mirrored
+#define FLAGS1_REVERSE_TOUCHSCREEN_Y    0x8000  // 1 = Y direction of touch screen is mirrored
 
     uint16_t	flags2;							// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
 #define FLAGS2_FM_MODE_ENABLE 			0x01    // 0 if FM mode is DISABLED, 1 if FM mode is ENABLED
