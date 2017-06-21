@@ -129,10 +129,13 @@ void BL_Idle_Application(void)
         mchfBl_PinToggle(LEDGREEN);
         tick = now + 1024;
     }
-    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0 && power_was_up == true)
+    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
     {
         // we only switch off, if power button was at least once seen as being released and pressed in the idle loop
-        mcHF_PowerOff();
+        if (power_was_up == true)
+        {
+            mcHF_PowerOff();
+        }
     }
     else
     {
