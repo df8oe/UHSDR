@@ -20,9 +20,9 @@ VPATH=$(ROOTLOC)
 # Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
 # Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
 
-# set these environent to your individual values
-PRJ  = mchf
-LPRJ = mchf
+# set these environment to your individual values
+TRX_ID=mchf
+TRX_NAME=mcHF
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
 # https://launchpad.net/gcc-arm-embedded . Copy unpacked files as 'root' to /opt .
@@ -53,6 +53,7 @@ MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM
 MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
 
 COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
+	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" \
           -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
@@ -81,14 +82,15 @@ endif
 
 TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
-	
+BOOTLOADER=bl-$(TRX_ID)
+FIRMWARE=fw-$(TRX_ID)
 
 ifeq ($(BUILDFOR),F4)
 
-bootloader.elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS_F4} -O3
-bootloader.elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
-mchf.elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
+$(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O3
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 	
 
 	# Every subdirectory with header files must be mentioned here
@@ -102,10 +104,10 @@ mchf.elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 endif
 ifeq ($(BUILDFOR),F7)
 
-bootloader.elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
-mchf.elf : CFLAGS = ${BASECFLAGS_F7} -O3
-bootloader.elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link-bootloader_f7.ld
-mchf.elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link_f7.ld
+$(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O3
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link-bootloader_f7.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link_f7.ld
 
 
 	# Every subdirectory with header files must be mentioned here
@@ -214,29 +216,36 @@ help:
 .PHONY: all clean docs docs-clean help
 
 
-all:  $(LPRJ).elf $(LPRJ).dfu $(PRJ).bin $(PRJ).handbook
-	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
+all:  $(FIRMWARE) $(TRX_ID).handbook
+	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
-bootloader:  bootloader.bin bootloader.dfu
+bootloader: $(BOOTLOADER)
+	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
+	@echo "using \c"
+	$(CC) --version | grep gcc
+
+$(FIRMWARE): $(FIRMWARE).elf $(FIRMWARE).dfu $(FIRMWARE).bin
+
+$(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
-$(LPRJ).elf:  $(OBJS) 
+$(FIRMWARE).elf:  $(OBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,${LPRJ}.map -o$@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $(OBJS) $(LIBS)
 
 # compilation
-bootloader.elf:  $(BLOBJS) 
+$(BOOTLOADER).elf:  $(BLOBJS) 
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$@.map -o$@ $(BLOBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $(BLOBJS) $(LIBS)
 
 
-$(PRJ).handbook:
+$(TRX_ID).handbook:
 	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook auto
 
-$(PRJ).version:
+$(TRX_ID).version:
 	# the build artifacts SHOULD identify as
 	@printf "Version %s.%s.%s%s\n" $(TRX4M_VER_MAJOR) $(TRX4M_VER_MINOR) $(TRX4M_VER_RELEASE) $(TRX4M_VER_TAINT)
 
@@ -245,14 +254,14 @@ clean:
 	# remove the executables, map, dmp and all object files (.o)
 	$(RM) $(call FixPath,$(OBJS))
 	$(RM) $(call FixPath,$(BLOBJS))
-	$(RM) $(call FixPath,$(LPRJ).elf)
-	$(RM) $(call FixPath,$(LPRJ).dfu)
-	$(RM) $(call FixPath,$(PRJ).bin)
-	$(RM) $(call FixPath,$(LPRJ).map)
-	$(RM) $(call FixPath,bootloader.elf)
-	$(RM) $(call FixPath,bootloader.elf.map)
-	$(RM) $(call FixPath,bootloader.bin)
-	$(RM) $(call FixPath,bootloader.dfu)
+	$(RM) $(call FixPath,$(FIRMWARE).elf)
+	$(RM) $(call FixPath,$(FIRMWARE).dfu)
+	$(RM) $(call FixPath,$(FIRMWARE).bin)
+	$(RM) $(call FixPath,$(FIRMWARE).map)
+	$(RM) $(call FixPath,$(BOOTLOADER).elf)
+	$(RM) $(call FixPath,$(BOOTLOADER).dfu)
+	$(RM) $(call FixPath,$(BOOTLOADER).bin)
+	$(RM) $(call FixPath,$(BOOTLOADER).map)
 	$(RM) $(call FixPath,*~)
 
 docs:  

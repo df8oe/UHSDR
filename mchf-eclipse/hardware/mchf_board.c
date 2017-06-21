@@ -106,8 +106,8 @@ const ButtonMap bm_sets[2][18] =
 {
         {
                 {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
-                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
-                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 1 / S2
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 2 / S1
                 {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
                 {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
                 {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
@@ -127,8 +127,8 @@ const ButtonMap bm_sets[2][18] =
         // alternative mapping for RTC Modification
         {
                 {BUTTON_M2_PIO,     BUTTON_M2, "M2"},     // 0 / S3
-                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 1 / S2
-                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 2 / S1
+                {BUTTON_G3_PIO,     BUTTON_G3, "G3"},     // 1 / S2
+                {BUTTON_G2_PIO,     BUTTON_G2, "G2"},     // 2 / S1
                 {BUTTON_BNDM_PIO,   BUTTON_BNDM, "Band-"},   // 3 / S4
                 {BUTTON_G4_PIO,     BUTTON_G4, "G4"},     // 4 / S5
                 {BUTTON_M3_PIO,     BUTTON_M3, "M3"},     // 5 / S6
@@ -661,6 +661,7 @@ static volatile bool busfault_detected;
 
 #define TEST_ADDR_192 (0x20000000 + 0x0001FFFC)
 #define TEST_ADDR_256 (0x20000000 + 0x0002FFFC)
+#define TEST_ADDR_512 (0x20000000 + 0x0004FFFC)
 
 // function below mostly based on http://stackoverflow.com/questions/23411824/determining-arm-cortex-m3-ram-size-at-run-time
 
@@ -726,7 +727,9 @@ unsigned int mchf_board_get_ramsize() {
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
     SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
-    if (is_ram_at((volatile uint32_t*)TEST_ADDR_256)){
+    if (is_ram_at((volatile uint32_t*)TEST_ADDR_512)){
+        retval=512;
+    } else if (is_ram_at((volatile uint32_t*)TEST_ADDR_256)){
         retval=256;
     } else if (is_ram_at((volatile uint32_t*)TEST_ADDR_192)){
         retval=192;

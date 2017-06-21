@@ -431,24 +431,13 @@ int mchfMain(void)
 
     // Set default transceiver state
     TransceiverStateInit();
-    // mchf_board_detect_ramsize();
-#if 0
 
-    //	FLASH_OB_Unlock();
-    //	FLASH_OB_WRPConfig(OB_WRP_Sector_All,DISABLE);
-    //	FLASH_OB_Launch();
-    //	ts.test = FLASH_OB_GetWRP();
-    //	ts.test = FLASH_OB_GetRDP();
-    // Set unbuffered mode for stdout (newlib)
-    //setvbuf( stdout, 0, _IONBF, 0 );
-
-
-    //	SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
+     mchf_board_detect_ramsize();
 
 #ifdef TESTCPLUSPLUS
     test_call_cpp();
 #endif
-#endif
+
     // HW init
     mchf_board_init();
     MchfBoard_GreenLed(LED_STATE_ON);
