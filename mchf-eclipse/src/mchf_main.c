@@ -193,7 +193,7 @@ void TransceiverStateInit(void)
     //
     ts.scope_speed		= SPECTRUM_SCOPE_SPEED_DEFAULT;		// default rate of spectrum scope update
 
-    ts.waterfall_speed	= WATERFALL_SPEED_DEFAULT_SPI;		// default speed of update of the waterfall for parallel displays
+    ts.waterfall.speed	= WATERFALL_SPEED_DEFAULT_SPI;		// default speed of update of the waterfall for parallel displays
     //
     ts.spectrum_filter		= SPECTRUM_FILTER_DEFAULT;	// default filter strength for spectrum scope
     ts.scope_trace_colour	= SPEC_COLOUR_TRACE_DEFAULT;		// default colour for the spectrum scope trace
@@ -271,13 +271,13 @@ void TransceiverStateInit(void)
     ts.xvtr_adjust_flag = 0;					// set TRUE if transverter offset adjustment is in process
     ts.vfo_mem_mode = 0;						// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
-    ts.waterfall_color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
-    ts.waterfall_vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
-    ts.waterfall_offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
-    ts.waterfall_contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
+    ts.waterfall.color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
+    ts.waterfall.vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
+    ts.waterfall.offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
+    ts.waterfall.contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
     ts.spectrum_scheduler = 0;				// timer for scheduling the next update of the spectrum update
     ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
-    ts.waterfall_nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
+    ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
