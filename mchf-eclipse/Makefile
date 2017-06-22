@@ -88,7 +88,7 @@ FIRMWARE=fw-$(TRX_ID)
 ifeq ($(BUILDFOR),F4)
 
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
-$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O3
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 	
