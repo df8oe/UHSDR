@@ -5,7 +5,11 @@
 # for example to build the bootloader in the build-bl folder inside this directory
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
+# you can set the MCU you want to build for here or via environment variable (F4 or F7)
 BUILDFOR=F4
+ifndef BUILDFOR
+  BUILDFOR=F4
+endif
 
 ROOTLOC=.
 VPATH=$(ROOTLOC)
@@ -20,9 +24,14 @@ VPATH=$(ROOTLOC)
 # Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
 # Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
 
-# set these environment to your individual values
-TRX_ID=mchf
-TRX_NAME=mcHF
+
+# you can set these environment to your individual values here or via environment variables
+ifndef TRX_ID
+  TRX_ID=mchf
+endif
+ifndef TRX_NAME
+  TRX_NAME=mcHF
+endif
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
 # https://launchpad.net/gcc-arm-embedded . Copy unpacked files as 'root' to /opt .
@@ -88,7 +97,7 @@ FIRMWARE=fw-$(TRX_ID)
 ifeq ($(BUILDFOR),F4)
 
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
-$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O3
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 	
