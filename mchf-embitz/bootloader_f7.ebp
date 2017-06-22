@@ -8,7 +8,7 @@
 		<Option compiler="armgcc_eb" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\F7\Debug\bootloader.elf" />
+				<Option output="bin\F7\Debug\bl-mchf.elf" />
 				<Option object_output="obj\F7\Debug\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
@@ -27,7 +27,7 @@
 				</Assembler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\F7\Release\bootloader.elf" />
+				<Option output="bin\F7\Release\bl-mchf.elf" />
 				<Option object_output="obj\F7\Release\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
@@ -49,7 +49,7 @@
 				</ExtraCommands>
 			</Target>
 			<Target title="ReleaseSmall">
-				<Option output="bin\F7\ReleaseSmall\bootloader.elf" />
+				<Option output="bin\F7\ReleaseSmall\bl-mchf.elf" />
 				<Option object_output="obj\F7\ReleaseSmall\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />

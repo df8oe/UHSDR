@@ -8,7 +8,7 @@
 		<Option compiler="armgcc_eb" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\F7\Debug\mchf.elf" />
+				<Option output="bin\F7\Debug\fw-mchf.elf" />
 				<Option object_output="obj\F7\Debug\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
@@ -34,7 +34,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\F7\Release\mchf.elf" />
+				<Option output="bin\F7\Release\fw-mchf.elf" />
 				<Option object_output="obj\F7\Release\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
@@ -61,7 +61,7 @@
 				</ExtraCommands>
 			</Target>
 			<Target title="ReleaseSmall">
-				<Option output="bin\F7\ReleaseSmall\mchf.elf" />
+				<Option output="bin\F7\ReleaseSmall\fw-mchf.elf" />
 				<Option object_output="obj\F7\ReleaseSmall\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
