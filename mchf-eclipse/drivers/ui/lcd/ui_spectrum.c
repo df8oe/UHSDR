@@ -281,7 +281,7 @@ void UiSpectrum_CreateDrawArea()
 
         }
 
-        if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall_speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
+        if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall.speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
         {
             // print "disabled" in the middle of the screen if the waterfall or scope was disabled
             UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
@@ -636,7 +636,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     const uint16_t* wfall_scheme = NULL;
 
-    switch(ts.waterfall_color_scheme)
+    switch(ts.waterfall.color_scheme)
     {
     case WFALL_HOT_COLD:
         wfall_scheme = &waterfall_cold_hot[0];
@@ -720,7 +720,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
     }
 
-    sd.wfall_contrast = (float)ts.waterfall_contrast / 100.0;		// calculate scaling for contrast
+    sd.wfall_contrast = (float)ts.waterfall.contrast / 100.0;		// calculate scaling for contrast
 
     // Ready
     sd.enabled		= 1;
@@ -862,7 +862,7 @@ void UiSpectrum_RedrawScopeDisplay()
             sd.display_offset -= sd.agc_rate*min1/5;
 
 
-           
+
             //                         char txt[32];
             //                         uint32_t    max_ptr;        // throw-away pointer for ARM maxval AND minval functions
             //                         sprintf(txt, " %d,%d,%d ", (int)sd.agc_rate*1000, (int)(min1), (int)sd.display_offset*100);
@@ -936,9 +936,9 @@ void UiSpectrum_RedrawWaterfall()
 {
     ulong i;
 
-    if((ts.spectrum_scheduler == 0 ) && (ts.waterfall_speed > 0))	// is it time to update the scan, or is this scope to be disabled?
+    if((ts.spectrum_scheduler == 0 ) && (ts.waterfall.speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
-        ts.spectrum_scheduler = (ts.waterfall_speed-1)*2;
+        ts.spectrum_scheduler = (ts.waterfall.speed-1)*2;
 
         // Process implemented as state machine
         switch(sd.state)
@@ -1119,7 +1119,7 @@ void UiSpectrum_RedrawWaterfall()
             uchar lptr = sd.wfall_line;		// get current line of "bottom" of waterfall in circular buffer
 
             sd.wfall_line_update++;									// update waterfall line count
-            sd.wfall_line_update %= ts.waterfall_vert_step_size;	// clip it to number of lines per iteration
+            sd.wfall_line_update %= ts.waterfall.vert_step_size;	// clip it to number of lines per iteration
 
             if(!sd.wfall_line_update)	 							// if it's count is zero, it's time to move the waterfall up
             {

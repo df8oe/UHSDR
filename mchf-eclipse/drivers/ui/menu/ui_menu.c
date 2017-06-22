@@ -536,7 +536,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
         const char* i2c_size_unit = "K";
         uint i2c_size = 0;
-        
+
 		if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < 20)
 		  {
       	  i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
@@ -2056,13 +2056,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
     case MENU_WFALL_COLOR_SCHEME:   // Adjustment of dB/division of spectrum scope
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_color_scheme,
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.color_scheme,
                                     WATERFALL_COLOR_MIN,
                                     WATERFALL_COLOR_MAX,
                                     WATERFALL_COLOR_DEFAULT,
                                     1
                                    );
-        switch(ts.waterfall_color_scheme)       // convert variable to setting
+        switch(ts.waterfall.color_scheme)       // convert variable to setting
         {
         case WFALL_HOT_COLD:
             txt_ptr = "HotCold";
@@ -2162,34 +2162,34 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case MENU_WFALL_STEP_SIZE:  // set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_vert_step_size,
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.vert_step_size,
                                     WATERFALL_STEP_SIZE_MIN,
                                     WATERFALL_STEP_SIZE_MAX,
                                     WATERFALL_STEP_SIZE_DEFAULT,
                                     1
                                    );
-        snprintf(options,32, "  %u", ts.waterfall_vert_step_size);
+        snprintf(options,32, "  %u", ts.waterfall.vert_step_size);
         break;
     case MENU_WFALL_OFFSET: // set step size of of waterfall display?
-        UiDriverMenuItemChangeInt32(var, mode, &ts.waterfall_offset,
+        UiDriverMenuItemChangeInt32(var, mode, &ts.waterfall.offset,
                                      WATERFALL_OFFSET_MIN,
                                      WATERFALL_OFFSET_MAX,
                                      WATERFALL_OFFSET_DEFAULT,
                                      1
                                     );
-        snprintf(options,32, "  %u", (unsigned int)ts.waterfall_offset);
+        snprintf(options,32, "  %u", (unsigned int)ts.waterfall.offset);
         break;
     case MENU_WFALL_CONTRAST:   // set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall_contrast,
+        UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall.contrast,
                                      WATERFALL_CONTRAST_MIN,
                                      WATERFALL_CONTRAST_MAX,
                                      WATERFALL_CONTRAST_DEFAULT,
                                      2
                                     );
-        snprintf(options,32, "  %u", (unsigned int)ts.waterfall_contrast);
+        snprintf(options,32, "  %u", (unsigned int)ts.waterfall.contrast);
         break;
     case MENU_WFALL_SPEED:  // set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_speed,
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.speed,
                                     WATERFALL_SPEED_MIN,
                                     WATERFALL_SPEED_MAX,
                                     ts.display->display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
@@ -2198,20 +2198,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         //
         if(ts.display->display_type != DISPLAY_HY28B_PARALLEL)
         {
-            if(ts.waterfall_speed <= WATERFALL_SPEED_WARN_SPI)
+            if(ts.waterfall.speed <= WATERFALL_SPEED_WARN_SPI)
                 clr = Red;
-            else if(ts.waterfall_speed <= WATERFALL_SPEED_WARN1_SPI)
+            else if(ts.waterfall.speed <= WATERFALL_SPEED_WARN1_SPI)
                 clr = Yellow;
         }
         else
         {
-            if(ts.waterfall_speed <= WATERFALL_SPEED_WARN_PARALLEL)
+            if(ts.waterfall.speed <= WATERFALL_SPEED_WARN_PARALLEL)
                 clr = Red;
-            else if(ts.waterfall_speed <= WATERFALL_SPEED_WARN1_PARALLEL)
+            else if(ts.waterfall.speed <= WATERFALL_SPEED_WARN1_PARALLEL)
                 clr = Yellow;
         }
 
-        snprintf(options,32, "  %u", ts.waterfall_speed);
+        snprintf(options,32, "  %u", ts.waterfall.speed);
         break;
     case MENU_SCOPE_NOSIG_ADJUST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_scope_nosig_adjust,
@@ -2223,13 +2223,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.spectrum_scope_nosig_adjust);
         break;
     case MENU_WFALL_NOSIG_ADJUST:   // set step size of of waterfall display?
-        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall_nosig_adjust,
+        UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.nosig_adjust,
                                     WATERFALL_NOSIG_ADJUST_MIN,
                                     WATERFALL_NOSIG_ADJUST_MAX,
                                     WATERFALL_NOSIG_ADJUST_DEFAULT,
                                     1
                                    );
-        snprintf(options,32, "  %u", ts.waterfall_nosig_adjust);
+        snprintf(options,32, "  %u", ts.waterfall.nosig_adjust);
         break;
     case MENU_SPECTRUM_SIZE:    // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_size,

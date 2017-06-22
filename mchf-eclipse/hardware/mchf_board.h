@@ -130,6 +130,16 @@ enum
 extern mchf_buttons_t  buttons;
 extern const ButtonMap  bm_sets[2][BUTTON_NUM];
 
+struct mchf_waterfall
+{
+    uchar	color_scheme;			// stores waterfall color scheme
+    uchar	vert_step_size;		// vertical step size in waterfall mode
+    int32_t	offset;			// offset for waterfall display
+    ulong	contrast;			// contrast setting for waterfall display
+	uchar	speed;	// speed of update of the waterfall
+	uchar	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
+};
+
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
@@ -655,7 +665,6 @@ typedef struct TransceiverState
     uchar	scope_rescale_rate;	// rescale rate on the 'scope
     uchar	scope_agc_rate;		// agc rate on the 'scope
     uchar	spectrum_db_scale;	// db/Division scale setting on spectrum scope
-    uchar	waterfall_speed;	// speed of update of the waterfall
     //
     bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
     //
@@ -776,13 +785,9 @@ typedef struct TransceiverState
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
-    uchar	waterfall_color_scheme;			// stores waterfall color scheme
-    uchar	waterfall_vert_step_size;		// vertical step size in waterfall mode
-    int32_t	waterfall_offset;			// offset for waterfall display
-    ulong	waterfall_contrast;			// contrast setting for waterfall display
+	struct mchf_waterfall waterfall;
     uchar	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
-    uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
-    uchar	waterfall_nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
+    uchar	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope    
     uchar	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
     uchar	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
