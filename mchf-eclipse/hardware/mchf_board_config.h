@@ -17,19 +17,18 @@
 #include "mchf_types.h"
 #include "mchf_mcu.h"
 
-//
-// -----------------------------------------------------------------------------
-#define		DEVICE_STRING			"mcHF QRP Transceiver"
-#define 	AUTHOR_STRING   		"K. Atanassov - M\x60NKA 2014-2017"
-//
-#define		ATTRIB_STRING1			"Additional Contributions by"
-#define		ATTRIB_STRING2			"KA7OEI, DF8OE and others."
-#define		ATTRIB_STRING3			"Licensed under "TRX4M_LICENCE"      "
-//
-// -----------------------------------------------------------------------------
 
 
 #ifdef STM32F4
+
+#ifndef TRX_NAME
+#define TRX_NAME "mcHF"
+#endif
+#ifndef TRX_ID
+#define TRX_ID "mchf"
+#endif
+
+
 
 // place tagged elements in CCM 64k extra RAM (no DMA)
 #define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
@@ -141,8 +140,8 @@
 #define I2C1_SDA_PIN            GPIO_PIN_7
 #define I2C1_SDA_GPIO           GPIOB
 // pin 8
-#define BUTTON_G3 				GPIO_PIN_8
-#define BUTTON_G3_PIO       	GPIOB
+#define BUTTON_G2 				GPIO_PIN_8
+#define BUTTON_G2_PIO       	GPIOB
 // pin 9
 #define GREEN_LED 				GPIO_PIN_9
 #define GREEN_LED_PIO       	GPIOB
@@ -292,8 +291,8 @@
 #define BUTTON_F4				GPIO_PIN_3
 #define BUTTON_F4_PIO       	GPIOE
 // pin 4
-#define BUTTON_G2				GPIO_PIN_4
-#define BUTTON_G2_PIO       	GPIOE
+#define BUTTON_G3				GPIO_PIN_4
+#define BUTTON_G3_PIO       	GPIOE
 // pin 5
 #define BUTTON_F5				GPIO_PIN_5
 #define BUTTON_F5_PIO       	GPIOE
@@ -330,6 +329,14 @@
 #endif
 
 #ifdef STM32F7
+
+#ifndef TRX_NAME
+#define TRX_NAME "I40"
+#endif
+#ifndef TRX_ID
+#define TRX_ID "i40"
+#endif
+
 
 // compiler places tagged elements by its default rules
 #define __MCHF_SPECIALMEM
@@ -447,8 +454,8 @@
 #define I2C1_SDA_PIN            GPIO_PIN_7
 #define I2C1_SDA_GPIO           GPIOB
 // pin 8
-#define BUTTON_G3               GPIO_PIN_8
-#define BUTTON_G3_PIO           GPIOB
+#define BUTTON_G2               GPIO_PIN_8
+#define BUTTON_G2_PIO           GPIOB
 // pin 9
 #define GREEN_LED               GPIO_PIN_9
 #define GREEN_LED_PIO           GPIOB
@@ -594,8 +601,8 @@
 #define BUTTON_F4               GPIO_PIN_3
 #define BUTTON_F4_PIO           GPIOE
 // pin 4
-#define BUTTON_G2               GPIO_PIN_4
-#define BUTTON_G2_PIO           GPIOE
+#define BUTTON_G3               GPIO_PIN_4
+#define BUTTON_G3_PIO           GPIOE
 // pin 5
 #define BUTTON_F5               GPIO_PIN_5
 #define BUTTON_F5_PIO           GPIOE
@@ -710,9 +717,25 @@
 
 #endif
 
+//
+// -----------------------------------------------------------------------------
+#define     DEVICE_STRING           TRX_NAME " QRP Transceiver"
+#define     AUTHOR_STRING           "K. Atanassov - M\x60NKA 2014-2017"
+//
+#define     ATTRIB_STRING1          "Additional Contributions by"
+#define     ATTRIB_STRING2          "KA7OEI, DF8OE and others."
+#define     ATTRIB_STRING3          "Licensed under "TRX4M_LICENCE"      "
+//
+// -----------------------------------------------------------------------------
+
+
+
+
 #define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
 #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
 #define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
 #define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
+
+
 
 #endif

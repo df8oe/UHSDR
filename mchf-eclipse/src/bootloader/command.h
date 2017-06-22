@@ -45,6 +45,15 @@ typedef enum {
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
+#define BASE_PREFIX                 "fw-"
+#define BASE_FILE                  BASE_PREFIX TRX_ID
+
+#define UPLOAD_FILE                BASE_FILE  ".old"
+#define DOWNLOAD_FILE              BASE_FILE  ".bin"
+#define UPLOAD_FILENAME            "0:"  UPLOAD_FILE
+#define DOWNLOAD_FILENAME          "0:"  DOWNLOAD_FILE
+#define VERSION                    "Version: 3.3.0"
+#define AUTHOR                     "Author: DF8OE"
 /* Exported functions ------------------------------------------------------- */
 void COMMAND_UPLOAD(void);
 void COMMAND_DOWNLOAD(void);

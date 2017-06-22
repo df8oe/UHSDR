@@ -49,16 +49,18 @@ static uint8_t mcHF_USBConnected()
 
 static const char*  bl_help[] =
 {
-        "mcHF Bootloader - USB Drive Mode",
-        "",
+        TRX_NAME " Bootloader",
+        "Firmware Name: " BASE_FILE,
+        "USB Drive Mode",
         "Release Band- to skip firmware update",
-
-        "mcHF Bootloader - DFU Update Mode",
+        "",
+        "DFU Update Mode",
         "Keep Power pressed until finish.",
         "Release Band+ to start DFU Mode.",
         "Screen may go white. This is ok.",
         "PC should recognize new USB device.",
 };
+
 
 static void BL_DisplayInit()
 {
@@ -89,24 +91,31 @@ static void BL_DisplayInit()
 
 }
 
+// bin rw: 0 1 2 3 4
+// dfu     0 1 5 4 6 7 8 9
+
 void BL_InfoScreen()
 {
     BL_DisplayInit();
     BL_PrintLine(bl_help[0]);
     BL_PrintLine(bl_help[1]);
     BL_PrintLine(bl_help[2]);
-    BL_PrintLine(bl_help[1]);
+    BL_PrintLine(bl_help[4]);
+    BL_PrintLine(bl_help[3]);
+    BL_PrintLine(bl_help[4]);
 }
 
 void BL_InfoScreenDFU()
 {
     BL_DisplayInit();
-    BL_PrintLine(bl_help[3]);
+    BL_PrintLine(bl_help[0]);
     BL_PrintLine(bl_help[1]);
-    BL_PrintLine(bl_help[4]);
     BL_PrintLine(bl_help[5]);
+    BL_PrintLine(bl_help[4]);
     BL_PrintLine(bl_help[6]);
     BL_PrintLine(bl_help[7]);
+    BL_PrintLine(bl_help[8]);
+    BL_PrintLine(bl_help[9]);
 }
 
 void BL_Idle_Application(void)
@@ -120,10 +129,13 @@ void BL_Idle_Application(void)
         mchfBl_PinToggle(LEDGREEN);
         tick = now + 1024;
     }
-    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0 && power_was_up == true)
+    if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
     {
         // we only switch off, if power button was at least once seen as being released and pressed in the idle loop
-        mcHF_PowerOff();
+        if (power_was_up == true)
+        {
+            mcHF_PowerOff();
+        }
     }
     else
     {
@@ -155,14 +167,14 @@ int BL_MSC_Application(void)
 		{
         BL_PrintLine("Firmware will be updated...");
 		}
-        BL_PrintLine("Saving Flash to \"mchfold.bin\"...");
+        BL_PrintLine("Saving Flash to \"" UPLOAD_FILE  "\"...");
         COMMAND_UPLOAD();
 
         /* Check if BAND- Button was pressed */
         if (was_download)
         {
             /* Writes Flash memory */
-            BL_PrintLine("Updating firmware using \"mchf.bin\"...");
+            BL_PrintLine("Updating firmware using \"" DOWNLOAD_FILE "\"...");
             COMMAND_DOWNLOAD();
         }
         else

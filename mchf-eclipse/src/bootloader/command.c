@@ -29,10 +29,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
-#define UPLOAD_FILENAME            "0:mchfold.bin"
-#define DOWNLOAD_FILENAME          "0:mchf.bin"
-#define VERSION                    "Version: 3.2.7"
-#define AUTHOR                     "Author: DF8OE"
 
 #define BUFFER_SIZE        ((uint16_t)512*64)
 
@@ -65,10 +61,10 @@ static const char* error_help[] =
 {
         "No error",
         "USB problem",
-        "mchf.bin not found",
+        DOWNLOAD_FILE " not found",
         "Flash memory too small",
-        "Problem writing mchfold.bin",
-        "Problem reading mchf.bin",
+        "Problem writing " UPLOAD_FILE,
+        "Problem reading" DOWNLOAD_FILE,
         "Flash programming problem",
         "Flash erase problem",
         "Flash write protected",
