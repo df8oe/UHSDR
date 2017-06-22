@@ -68,8 +68,10 @@ typedef struct PaddleState
     ulong   port_state;
     ulong   cw_state;
 
-    // Smallest element duration
+    // Element duration
     ulong   dit_time;
+    ulong   dah_time;
+    ulong   pause_time;
 
     // Timers
     ulong   key_timer;
@@ -226,7 +228,9 @@ static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 
 void CwGen_SetSpeed()
 {
-    ps.dit_time         = 1650/ts.keyer_speed;      //100;
+    ps.dit_time         = 1800/ts.keyer_speed+9;  // +9 =  6ms * 1/1500 =  0,006*1500
+    ps.dah_time         = 5400/ts.keyer_speed+9;  // +9 =  6ms * 1/1500 =  0,006*1500
+    ps.pause_time       = 1800/ts.keyer_speed-9;  // -9 = -6ms * 1/1500 = -0,006*1500
 }
 
 static void CwGen_SetBreakTime()
@@ -537,7 +541,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
     {
         if (ps.port_state & CW_DAH_L)
         {
-            ps.key_timer = (ps.dit_time) * 3;
+            ps.key_timer = ps.dah_time;
             ps.cw_state  = CW_KEY_DOWN;
         }
         else
@@ -565,7 +569,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
     {
         if(ps.key_timer == 0)
         {
-            ps.key_timer = ps.dit_time;
+            ps.key_timer = ps.pause_time;
             ps.cw_state  = CW_PAUSE;
         }
         else
