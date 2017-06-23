@@ -6,7 +6,7 @@
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
 # you can set the MCU you want to build for here or via environment variable (F4 or F7)
-BUILDFOR=F4
+
 ifndef BUILDFOR
   BUILDFOR=F4
 endif
