@@ -26,6 +26,7 @@ VPATH=$(ROOTLOC)
 
 
 # you can set these environment to your individual values here or via environment variables
+# TRX_ID maximum lenght is 5 characters!!
 ifndef TRX_ID
   TRX_ID=mchf
 endif
