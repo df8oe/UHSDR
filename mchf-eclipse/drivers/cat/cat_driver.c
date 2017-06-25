@@ -22,6 +22,10 @@
 #include "audio_driver.h"
 #include "radio_management.h"
 
+uint8_t limit_4bits(uint32_t in)
+{
+    return in > 15 ? 15 : in;
+}
 // CAT driver internal structure
 typedef struct CatDriver
 {
@@ -1212,12 +1216,17 @@ static void CatDriver_HandleCommands()
             if(RadioManagement_IsTxDisabled()||(ts.txrx_mode != TRX_MODE_TX))
             {
                 resp[0] = 0;
+                bc = 1;
             }
             else
             {
-                resp[0] =((uint8_t)round(swrm.fwd_pwr)<<4)+(uint8_t)round(swrm.vswr_dampened);
+                // PWR / SWR
+                resp[0] =(limit_4bits(round(swrm.fwd_pwr))<<4)+limit_4bits(round(swrm.vswr_dampened));
+                // ALC / MOD
+                resp[1] = (limit_4bits(0)<<4)+limit_4bits(0);
+                bc = 2;
             }
-            bc = 1;
+
             break;
         case FT817_READ_RX_STATE: /* E7 */
             resp[0] = (uint8_t)round(sm.s_count*0.5);   //S-Meter signal

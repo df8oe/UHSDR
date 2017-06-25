@@ -228,9 +228,9 @@ static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 
 void CwGen_SetSpeed()
 {
-    ps.dit_time         = 1800/ts.keyer_speed+9;  // +9 =  6ms * 1/1500 =  0,006*1500
-    ps.dah_time         = 5400/ts.keyer_speed+9;  // +9 =  6ms * 1/1500 =  0,006*1500
-    ps.pause_time       = 1800/ts.keyer_speed-9;  // -9 = -6ms * 1/1500 = -0,006*1500
+    ps.dit_time         = 1800/ts.keyer_speed + CW_SMOOTH_STEPS;  // +9 =  6ms * 1/1500 =  0,006*1500
+    ps.dah_time         = 3*1800/ts.keyer_speed + CW_SMOOTH_STEPS;  // +9 =  6ms * 1/1500 =  0,006*1500
+    ps.pause_time       = 1800/ts.keyer_speed - CW_SMOOTH_STEPS;  // -9 = -6ms * 1/1500 = -0,006*1500
 }
 
 static void CwGen_SetBreakTime()
@@ -373,7 +373,7 @@ static void CwGen_CheckKeyerState(void)
 }
 
 /**
- * @brief called every 600uS from I2S IRQ, does cw tone generation
+ * @brief called every 667u (== 1500Hz) from I2S IRQ, does cw tone generation
  * @returns true if a tone is currently being active, false if silence/no tone is requested
  */
 bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
@@ -492,153 +492,168 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval = false;
-    switch(ps.cw_state)
-    {
-    case CW_IDLE:
-    {
-        // at least one paddle is still or has been recently pressed
-        if( mchf_dit_line_pressed() || mchf_ptt_dah_line_pressed()	||
-            (ps.port_state & (CW_DAH_L|CW_DIT_L)))
+
+    bool rerunStateMachine = false;
+    // we use this variable to indicate immediate rerun of the state machine
+    // only if we actively generate silence or signal, we do not rerun the machine immediately.
+
+    do {
+        rerunStateMachine = false;
+
+        switch(ps.cw_state)
         {
-            CwGen_CheckKeyerState();
-            ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
-        }
-        else
+        case CW_IDLE:
         {
-            if(ps.break_timer == 0)
+            // at least one paddle is still or has been recently pressed
+            if( mchf_dit_line_pressed() || mchf_ptt_dah_line_pressed()	||
+                    (ps.port_state & (CW_DAH_L|CW_DIT_L)))
             {
-                ts.tx_stop_req = true;
+                CwGen_CheckKeyerState();
+                ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
+                rerunStateMachine = true;
             }
             else
             {
-                ps.break_timer--;
+                if(ps.break_timer == 0)
+                {
+                    ts.tx_stop_req = true;
+                }
+                else
+                {
+                    ps.break_timer--;
+                }
+                retval = false;
             }
-            retval = false;
         }
-    }
-    break;
-    case CW_WAIT:		// This is an extra state called after detection of an element to allow the other state machines to settle.
-    {
-        // It is NECESSARY to eliminate a "glitch" at the beginning of the first Iambic Morse DIT element in a string!
-        ps.cw_state = CW_DIT_CHECK;
-    }
-    break;
-    case CW_DIT_CHECK:
-    {
-        if (ps.port_state & CW_DIT_L)
+        break;
+        case CW_WAIT:		// This is an extra state called after detection of an element to allow the other state machines to settle.
         {
-            ps.port_state |= CW_DIT_PROC;
-            ps.key_timer   = ps.dit_time;
-            ps.cw_state    = CW_KEY_DOWN;
+            // It is NECESSARY to eliminate a "glitch" at the beginning of the first Iambic Morse DIT element in a string!
+            ps.cw_state = CW_DIT_CHECK;
+            rerunStateMachine = true;
         }
-        else
+        break;
+        case CW_DIT_CHECK:
         {
-            ps.cw_state = CW_DAH_CHECK;
+            if (ps.port_state & CW_DIT_L)
+            {
+                ps.port_state |= CW_DIT_PROC;
+                ps.key_timer   = ps.dit_time;
+                ps.cw_state    = CW_KEY_DOWN;
+            }
+            else
+            {
+                ps.cw_state = CW_DAH_CHECK;
+            }
+            rerunStateMachine = true;
         }
-    }
-    break;
-    case CW_DAH_CHECK:
-    {
-        if (ps.port_state & CW_DAH_L)
+        break;
+        case CW_DAH_CHECK:
         {
-            ps.key_timer = ps.dah_time;
-            ps.cw_state  = CW_KEY_DOWN;
+            if (ps.port_state & CW_DAH_L)
+            {
+                ps.key_timer = ps.dah_time;
+                ps.cw_state  = CW_KEY_DOWN;
+            }
+            else
+            {
+                ps.cw_state  = CW_IDLE;
+                CwGen_SetBreakTime();
+            }
+            rerunStateMachine = true;
         }
-        else
-        {
-            ps.cw_state  = CW_IDLE;
-            CwGen_SetBreakTime();
-        }
-    }
-    break;
-    case CW_KEY_DOWN:
-    {
-        softdds_runf(i_buffer,q_buffer,blockSize);
-        ps.key_timer--;
-
-        // Smooth start of element - initial
-        ps.sm_tbl_ptr = 0;
-        CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
-
-        ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
-        ps.cw_state    = CW_KEY_UP;
-        retval = true;
-    }
-    break;
-    case CW_KEY_UP:
-    {
-        if(ps.key_timer == 0)
-        {
-            ps.key_timer = ps.pause_time;
-            ps.cw_state  = CW_PAUSE;
-        }
-        else
+        break;
+        case CW_KEY_DOWN:
         {
             softdds_runf(i_buffer,q_buffer,blockSize);
             ps.key_timer--;
 
-            // Smooth start of element - continue
-            if(ps.key_timer > (ps.dit_time/2))
-            {
-                CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
-            }
-            // Smooth end of element
-            if(ps.key_timer < CW_SMOOTH_STEPS)
-            {
-            	CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
-            }
+            // Smooth start of element - initial
+            ps.sm_tbl_ptr = 0;
+            CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
 
-            if(ts.keyer_mode == CW_MODE_IAM_B)
-            {
-                CwGen_CheckKeyerState();
-            }
+            ps.port_state &= ~(CW_DIT_L + CW_DAH_L);
+            ps.cw_state    = CW_KEY_UP;
             retval = true;
         }
-    }
-    break;
-    case CW_PAUSE:
-    {
-        CwGen_CheckKeyerState();
-
-        ps.key_timer--;
-        if(ps.key_timer == 0)
+        break;
+        case CW_KEY_UP:
         {
-		  if (ts.keyer_mode == CW_MODE_IAM_A || ts.keyer_mode == CW_MODE_IAM_B)
-		  {
-            if (ps.port_state & CW_DIT_PROC)
+            if(ps.key_timer == 0)
             {
-                ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
-                ps.cw_state    = CW_DAH_CHECK;
+                ps.key_timer = ps.pause_time;
+                ps.cw_state  = CW_PAUSE;
             }
             else
             {
-                ps.port_state &= ~(CW_DAH_L);
-                ps.cw_state    = CW_IDLE;
-                CwGen_SetBreakTime();
+                softdds_runf(i_buffer,q_buffer,blockSize);
+                ps.key_timer--;
+
+                // Smooth start of element - continue
+                if(ps.key_timer > (ps.dit_time/2))
+                {
+                    CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
+                }
+                // Smooth end of element
+                if(ps.key_timer < CW_SMOOTH_STEPS)
+                {
+                    CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
+                }
+
+                if(ts.keyer_mode == CW_MODE_IAM_B)
+                {
+                    CwGen_CheckKeyerState();
+                }
+                retval = true;
             }
-          }
-          else
-          {
-        	CwGen_TestFirstPaddle();
-//			if(cw_dah_requested() && ps.ultim == 0)
-			if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
-			{
-          	  ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
-              ps.cw_state    = CW_DAH_CHECK;
-			}
-			else
-			{
-          	  ps.port_state &= ~(CW_DAH_L);
-          	  ps.cw_state    = CW_IDLE;
-          	  CwGen_SetBreakTime();
-            }
-          }
         }
-    }
-    break;
-    default:
         break;
-    }
+        case CW_PAUSE:
+        {
+            CwGen_CheckKeyerState();
+
+            ps.key_timer--;
+            if(ps.key_timer == 0)
+            {
+                if (ts.keyer_mode == CW_MODE_IAM_A || ts.keyer_mode == CW_MODE_IAM_B)
+                {
+                    if (ps.port_state & CW_DIT_PROC)
+                    {
+                        ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
+                        ps.cw_state    = CW_DAH_CHECK;
+                    }
+                    else
+                    {
+                        ps.port_state &= ~(CW_DAH_L);
+                        ps.cw_state    = CW_IDLE;
+                        CwGen_SetBreakTime();
+                    }
+                }
+                else
+                {
+                    CwGen_TestFirstPaddle();
+                    //			if(cw_dah_requested() && ps.ultim == 0)
+                    if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
+                    {
+                        ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
+                        ps.cw_state    = CW_DAH_CHECK;
+                    }
+                    else
+                    {
+                        ps.port_state &= ~(CW_DAH_L);
+                        ps.cw_state    = CW_IDLE;
+                        CwGen_SetBreakTime();
+                    }
+                }
+                rerunStateMachine = true;
+            }
+        }
+        break;
+        default:
+            break;
+        }
+    } while (rerunStateMachine);
+
     return retval;
 }
 
