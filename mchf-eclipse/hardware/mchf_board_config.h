@@ -22,7 +22,7 @@
 #ifdef STM32F4
 
 #ifndef TRX_NAME
-#define TRX_NAME "mcHF"
+#define TRX_NAME "mcHF QRP"
 #endif
 #ifndef TRX_ID
 #define TRX_ID "mchf"
@@ -719,7 +719,7 @@
 
 //
 // -----------------------------------------------------------------------------
-#define     DEVICE_STRING           TRX_NAME " QRP Transceiver"
+#define     DEVICE_STRING           TRX_NAME " Transceiver"
 #define     AUTHOR_STRING           "K. Atanassov - M\x60NKA 2014-2017"
 //
 #define     ATTRIB_STRING1          "Additional Contributions by"
