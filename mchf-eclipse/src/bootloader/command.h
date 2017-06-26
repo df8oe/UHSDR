@@ -29,6 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "flash_if.h"
+#include "mchf_version.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
@@ -52,7 +53,7 @@ typedef enum {
 #define DOWNLOAD_FILE              BASE_FILE  ".bin"
 #define UPLOAD_FILENAME            "0:"  UPLOAD_FILE
 #define DOWNLOAD_FILENAME          "0:"  DOWNLOAD_FILE
-#define VERSION                    "Version: 3.3.0"
+#define VERSION                    "Version: "TRX4M_BOOT_VER
 #define AUTHOR                     "Author: DF8OE"
 /* Exported functions ------------------------------------------------------- */
 void COMMAND_UPLOAD(void);

@@ -13,8 +13,10 @@
 ************************************************************************************/
 
 #define 	TRX4M_VER_MAJOR			"2"
-#define 	TRX4M_VER_MINOR			"3"
-#define 	TRX4M_VER_RELEASE		"9"
+#define 	TRX4M_VER_MINOR			"4"
+#define 	TRX4M_VER_RELEASE		"0"
+
+#define		TRX4M_BOOT_VER			"3.4.0"
 
 // trailing characters are needed for identifying version and building date+time in binary
 #define		TRX4M_VERSION			"fwv-"TRX4M_VER_MAJOR"."TRX4M_VER_MINOR"."TRX4M_VER_RELEASE
