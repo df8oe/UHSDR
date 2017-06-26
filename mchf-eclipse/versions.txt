@@ -1,2 +1,2 @@
 <bootloader testing> <firmware testing> <bootloader stable> <firmware stable>
-,---,---,3.2.0,2.2.0
+,---,---,3.4.0,2.4.0
