@@ -107,13 +107,28 @@ void ConfigStorage_Init()
         }
         else
         {
-            // we read the "in use" signature here
-            ts.ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
-            if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO) // empty EEPROM
+            // we read the "in use" signature here, first we use a 16 bit value to keep the error code if any
+            // this was report in #857
+            uint16_t ser_eeprom_in_use = SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
+            if(ser_eeprom_in_use == SER_EEPROM_IN_USE_NO) // empty EEPROM
             {
+                ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;
+
                 ConfigStorage_CopyFlash2Serial();               // copy data from virtual to serial EEPROM
                 ConfigStorage_CheckSameContentSerialAndFlash();             // just 4 debug purposes
                 SerialEEPROM_24Cxx_Write(1, SER_EEPROM_IN_USE_I2C, ts.ser_eeprom_type);      // serial EEPROM in use now
+            }
+            else
+            {
+                // if larger than 255 I2C code reported an error
+                if (ser_eeprom_in_use > 0x00ff)
+                {
+                    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_ERROR;
+                }
+                else
+                {
+                    ts.ser_eeprom_in_use = ser_eeprom_in_use;
+                }
             }
         }
     }
