@@ -189,6 +189,7 @@ const MenuDescriptor confGroup[] =
 
     { MENU_CONF, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN, NULL, "Reverse Touchscreen", UiMenuDesc("Some touchscreens have the touch coordiantes reversed. In this case, select ON") },
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION, NULL, "Voltmeter Cal.", UiMenuDesc("Adjusts the displayed value of the voltmeter.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_SHUTDOWN_LOW_POWER, NULL, "Low power shutdown", UiMenuDesc("Shutdown if voltage below low power threshold") },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE, NULL, "Freq. Calibrate", UiMenuDesc("Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP, NULL, "Pwr. Display mW", UiMenuDesc("Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL, NULL, "Pwr. Det. Null", UiMenuDesc(" Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration.") },

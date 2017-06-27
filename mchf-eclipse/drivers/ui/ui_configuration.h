@@ -547,8 +547,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_AGC_WDSP_TAU_DECAY_3         385
 #define EEPROM_AGC_WDSP_TAU_DECAY_4         386
 
+#define EEPROM_LOW_POWER_SHUTDOWN           387
 
-#define EEPROM_FIRST_UNUSED 				387		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				388		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

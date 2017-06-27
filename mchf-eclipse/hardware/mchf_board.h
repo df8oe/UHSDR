@@ -438,6 +438,7 @@ enum
 };
 //
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
+#define LOW_POWER_SHUTDOWN_DEFAULT 0
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
 
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
@@ -713,6 +714,10 @@ typedef struct TransceiverState
 #define LCD_BLANKING_ENABLE 0x80
 #define LCD_BLANKING_TIMEMASK 0x0f
     uchar	lcd_backlight_blanking;		// for controlling backlight auto-off control
+
+#define LOW_POWER_SHUTDOWN_ENABLE 0x80
+#define LOW_POWER_SHUTDOWN_MASK 0x1f
+    uchar   low_power_shutdown;         // for automatic shutdown below threshold
     //
     uchar	tune_step;					// Used for press-and-hold tune step adjustment
     ulong	tune_step_idx_holder;		// used to hold the original step size index during the press-and-hold

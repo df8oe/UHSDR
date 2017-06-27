@@ -5108,8 +5108,17 @@ static void UiDriver_HandleVoltage()
                     col = Yellow;       // make them yellow
 
                 val_p /= 10;
+                if ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_ENABLE) && (val_p / 10 < (ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89)) {
+                    if(ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
+                    {
+                        UiDriver_PowerDownCleanup();
+                        //col = Green;
+                    }
+                }
                 snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
                 UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+
+
             }
         }
     }

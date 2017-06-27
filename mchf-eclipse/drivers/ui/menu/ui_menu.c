@@ -2418,6 +2418,38 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               );
         snprintf(options,32, "  %u", (unsigned int)ts.voltmeter_calibrate);
         break;
+    case CONFIG_SHUTDOWN_LOW_POWER:  // Automatically shutdown if voltage below threshold
+
+        temp_var_u8 = ts.low_power_shutdown;        // get control variable
+
+        temp_var_u8 &= LOW_POWER_SHUTDOWN_MASK;                           // mask off upper nybble
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                                              0,
+                                              LOW_POWER_SHUTDOWN_MASK,
+                                              LOW_POWER_SHUTDOWN_DEFAULT,
+                                              1
+                                             );
+        if(var_change)                              // timing has been changed manually
+        {
+            if(temp_var_u8)                 // is the time non-zero?
+            {
+                ts.low_power_shutdown = temp_var_u8;    // yes, copy current value into variable
+                ts.low_power_shutdown |= LOW_POWER_SHUTDOWN_ENABLE;       // set MSB to enable auto-blanking
+            }
+            else
+            {
+                ts.low_power_shutdown = 0;          // zero out variable
+            }
+
+        }
+        //
+        if(ts.low_power_shutdown & LOW_POWER_SHUTDOWN_ENABLE)         // low power shutdown enabled?
+            snprintf(options,32,"%d.%dV",((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89) / 10, ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89) % 10);  // yes - Update screen indicator with voltage
+        else
+            snprintf(options,32,"   OFF");                      // Or if turned off
+
+        break;
+
     case CONFIG_DISP_FILTER_BANDWIDTH: // Display filter bandwidth
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.filter_disp_colour,
                                               0,
