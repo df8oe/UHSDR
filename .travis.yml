@@ -33,6 +33,7 @@ script:
     - make -f ../Makefile ROOTLOC=".." bootloader
     - cd ../build-bl-f7
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader
+    - cd ..
 before_deploy:
     - sudo apt-get install -y doxygen graphviz
     - make docs > /dev/null && tar -czf docs.tar.gz -C .. docs
