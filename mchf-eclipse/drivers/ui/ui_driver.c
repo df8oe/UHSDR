@@ -912,6 +912,7 @@ void UiDriver_Init()
 
     UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
     ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
+    ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_STARTUP_TIME;
 }
 /*
  * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
@@ -5102,26 +5103,14 @@ static void UiDriver_HandleVoltage()
 
                 val_p /= 10;
 
-                if (ts.low_power_shutdown) { // if low_power_shutdown enabled use it as a reference for voltage warning colours
-
-                    if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 50)
-                        col = Red;
-                    else if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 100)
-                        col = Orange;
-                    else if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 150)
-                        col = Yellow;
+                if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 50)
+                    col = Red;
+                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 100)
+                    col = Orange;
+                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 150)
+                    col = Yellow;
                     
-                } else {
-
-                    if(val_p < 950)        // below 9.5 volts
-                        col = Red;          // display red digits
-                    else if(val_p < 1050)  // below 10.5 volts
-                        col = Orange;       // make them orange
-                    else if(val_p < 1100)  // below 11.0 volts
-                        col = Yellow;       // make them yellow
-                }
-
-                if (ts.low_power_shutdown && (val_p / 10 < ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET)) {
+                if (ts.low_power_shutdown && (val_p / 10 < ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) && ts.sysclock > ts.low_power_shutdown_time ) {
                     if(ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
                     {
                         UiDriver_PowerDownCleanup();

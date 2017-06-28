@@ -115,9 +115,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define POWER_VOLTMETER_CALIBRATE_MIN       00
 #define POWER_VOLTMETER_CALIBRATE_MAX       200
 
-#define LOW_POWER_SHUTDOWN_DEFAULT  0
-#define LOW_POWER_SHUTDOWN_MIN  0
-#define LOW_POWER_SHUTDOWN_MAX  63
+#define LOW_POWER_THRESHOLD_DEFAULT  0
+#define LOW_POWER_THRESHOLD_MIN  0
+#define LOW_POWER_THRESHOLD_MAX  126
 
 #define SWR_CAL_MIN             75
 #define SWR_CAL_MAX             150
@@ -551,9 +551,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_AGC_WDSP_TAU_DECAY_3         385
 #define EEPROM_AGC_WDSP_TAU_DECAY_4         386
 
-#define EEPROM_LOW_POWER_SHUTDOWN           387
+#define EEPROM_LOW_POWER_THRESHOLD          387
+#define EEPROM_LOW_POWER_SHUTDOWN           388
 
-#define EEPROM_FIRST_UNUSED 				388		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				389		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

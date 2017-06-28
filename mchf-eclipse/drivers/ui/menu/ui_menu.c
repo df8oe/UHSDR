@@ -2418,34 +2418,28 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               );
         snprintf(options,32, "  %u", (unsigned int)ts.voltmeter_calibrate);
         break;
-    case CONFIG_SHUTDOWN_LOW_POWER:  // Automatically shutdown if voltage below threshold
+    case MENU_LOW_POWER_SHUTDOWN:   // Auto shutdown when below low voltage threshold
+        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.low_power_shutdown,0,options,&clr);
+        break;
 
-        temp_var_u8 = ts.low_power_shutdown;        // get control variable
+    case CONFIG_LOW_POWER_THRESHOLD:  // Configure low voltage threshold
 
-        temp_var_u8 &= LOW_POWER_SHUTDOWN_MASK;                           // mask off upper nybble
+        temp_var_u8 = ts.low_power_threshold;        // get control variable
+
+        temp_var_u8 &= LOW_POWER_THRESHOLD_MASK;
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
                                               0,
-                                              LOW_POWER_SHUTDOWN_MASK,
-                                              LOW_POWER_SHUTDOWN_DEFAULT,
+                                              LOW_POWER_THRESHOLD_MASK,
+                                              LOW_POWER_THRESHOLD_DEFAULT,
                                               1
                                              );
-        if(var_change)                              // timing has been changed manually
+        if(var_change)
         {
-            if(temp_var_u8)                 // is the time non-zero?
-            {
-                ts.low_power_shutdown = temp_var_u8;    // yes, copy current value into variable
-            }
-            else
-            {
-                ts.low_power_shutdown = 0;          // zero out variable
-            }
+            ts.low_power_threshold = temp_var_u8;
 
         }
-        //
-        if(ts.low_power_shutdown)         // low power shutdown enabled?
-            snprintf(options,32,"%2d.%dV",((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + LOW_POWER_SHUTDOWN_OFFSET) / 10, ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + LOW_POWER_SHUTDOWN_OFFSET) % 10);  // yes - Update screen indicator with voltage
-        else
-            snprintf(options,32,"  OFF");                      // Or if turned off
+
+        snprintf(options,32,"%2d.%dV",((ts.low_power_threshold & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) / 10, ((ts.low_power_threshold & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) % 10);
 
         break;
 

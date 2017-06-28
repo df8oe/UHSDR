@@ -99,6 +99,7 @@ const MenuDescriptor baseGroup[] =
 
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, NULL, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, NULL, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
+    { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low power shutdown", UiMenuDesc("Shutdown automatically when power below threshold.") },
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG, NULL, "Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
     { MENU_BASE, MENU_ITEM, MENU_RESTART_CODEC, NULL, "Restart Codec", UiMenuDesc("Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help.") },
@@ -189,7 +190,7 @@ const MenuDescriptor confGroup[] =
 
     { MENU_CONF, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN, NULL, "Reverse Touchscreen", UiMenuDesc("Some touchscreens have the touch coordiantes reversed. In this case, select ON") },
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION, NULL, "Voltmeter Cal.", UiMenuDesc("Adjusts the displayed value of the voltmeter.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_SHUTDOWN_LOW_POWER, NULL, "Low power shutdown", UiMenuDesc("Shutdown if voltage below low power threshold") },
+    { MENU_CONF, MENU_ITEM, CONFIG_LOW_POWER_THRESHOLD, NULL, "Low power threshold", UiMenuDesc("Threshold for voltage warning colors and auto shutdown.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE, NULL, "Freq. Calibrate", UiMenuDesc("Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP, NULL, "Pwr. Display mW", UiMenuDesc("Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL, NULL, "Pwr. Det. Null", UiMenuDesc(" Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration.") },
