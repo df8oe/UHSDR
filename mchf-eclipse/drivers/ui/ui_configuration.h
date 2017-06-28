@@ -115,6 +115,10 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define POWER_VOLTMETER_CALIBRATE_MIN       00
 #define POWER_VOLTMETER_CALIBRATE_MAX       200
 
+#define LOW_POWER_SHUTDOWN_DEFAULT  0
+#define LOW_POWER_SHUTDOWN_MIN  0
+#define LOW_POWER_SHUTDOWN_MAX  63
+
 #define SWR_CAL_MIN             75
 #define SWR_CAL_MAX             150
 #define SWR_CAL_DEFAULT             100

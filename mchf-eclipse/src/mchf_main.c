@@ -248,7 +248,7 @@ void TransceiverStateInit(void)
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
     ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
-    ts.low_power_shutdown = 0;                  // MSB = 1 for auto-off of backlight, lower nybble holds voltage x10 for shutdown threshold
+    ts.low_power_shutdown = 0;                  // 0 for disabling, lower 6 bits holds voltage x10 for shutdown threshold
     //
     ts.tune_step		= 0;					// Used for press-and-hold step size changing mode
     ts.frequency_lock	= 0;					// TRUE if frequency knob is locked

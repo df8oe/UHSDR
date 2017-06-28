@@ -2434,7 +2434,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             if(temp_var_u8)                 // is the time non-zero?
             {
                 ts.low_power_shutdown = temp_var_u8;    // yes, copy current value into variable
-                ts.low_power_shutdown |= LOW_POWER_SHUTDOWN_ENABLE;       // set MSB to enable auto-blanking
             }
             else
             {
@@ -2443,10 +2442,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         }
         //
-        if(ts.low_power_shutdown & LOW_POWER_SHUTDOWN_ENABLE)         // low power shutdown enabled?
-            snprintf(options,32,"%d.%dV",((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89) / 10, ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89) % 10);  // yes - Update screen indicator with voltage
+        if(ts.low_power_shutdown)         // low power shutdown enabled?
+            snprintf(options,32,"%2d.%dV",((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + LOW_POWER_SHUTDOWN_OFFSET) / 10, ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + LOW_POWER_SHUTDOWN_OFFSET) % 10);  // yes - Update screen indicator with voltage
         else
-            snprintf(options,32,"   OFF");                      // Or if turned off
+            snprintf(options,32,"  OFF");                      // Or if turned off
 
         break;
 

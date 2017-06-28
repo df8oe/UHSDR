@@ -5100,15 +5100,28 @@ static void UiDriver_HandleVoltage()
 
                 uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
 
-                if(val_p < 9500)        // below 9.5 volts
-                    col = Red;          // display red digits
-                else if(val_p < 10500)  // below 10.5 volts
-                    col = Orange;       // make them orange
-                else if(val_p < 11000)  // below 11.0 volts
-                    col = Yellow;       // make them yellow
-
                 val_p /= 10;
-                if ((ts.low_power_shutdown & LOW_POWER_SHUTDOWN_ENABLE) && (val_p / 10 < (ts.low_power_shutdown & LOW_POWER_SHUTDOWN_MASK) + 89)) {
+
+                if (ts.low_power_shutdown) { // if low_power_shutdown enabled use it as a reference for voltage warning colours
+
+                    if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 50)
+                        col = Red;
+                    else if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 100)
+                        col = Orange;
+                    else if (val_p < (ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET) * 10 + 150)
+                        col = Yellow;
+                    
+                } else {
+
+                    if(val_p < 950)        // below 9.5 volts
+                        col = Red;          // display red digits
+                    else if(val_p < 1050)  // below 10.5 volts
+                        col = Orange;       // make them orange
+                    else if(val_p < 1100)  // below 11.0 volts
+                        col = Yellow;       // make them yellow
+                }
+
+                if (ts.low_power_shutdown && (val_p / 10 < ts.low_power_shutdown + LOW_POWER_SHUTDOWN_OFFSET)) {
                     if(ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
                     {
                         UiDriver_PowerDownCleanup();
