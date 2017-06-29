@@ -912,6 +912,7 @@ void UiDriver_Init()
 
     UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
     ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
+    ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_STARTUP_TIME;
 }
 /*
  * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
@@ -5100,16 +5101,26 @@ static void UiDriver_HandleVoltage()
 
                 uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
 
-                if(val_p < 9500)        // below 9.5 volts
-                    col = Red;          // display red digits
-                else if(val_p < 10500)  // below 10.5 volts
-                    col = Orange;       // make them orange
-                else if(val_p < 11000)  // below 11.0 volts
-                    col = Yellow;       // make them yellow
-
                 val_p /= 10;
+
+                if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 50)
+                    col = Red;
+                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 100)
+                    col = Orange;
+                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 150)
+                    col = Yellow;
+                    
+                if (ts.low_power_shutdown && (val_p / 10 < ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) && ts.sysclock > ts.low_power_shutdown_time ) {
+                    if(ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
+                    {
+                        UiDriver_PowerDownCleanup();
+                        //col = Green;
+                    }
+                }
                 snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
                 UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+
+
             }
         }
     }
