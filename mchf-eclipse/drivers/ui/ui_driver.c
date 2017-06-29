@@ -127,12 +127,15 @@ static void 	UiDriver_HandleLoTemperature();
 static bool	    UiDriver_LoadSavedConfigurationAtStartup();
 static bool	    UiDriver_TouchscreenCalibration();
 
-static void     UiDriver_PowerDownCleanup(void);
+static void     UiDriver_PowerDownCleanup(bool saveConfiguration);
 
 static void UiDriver_HandlePowerLevelChange(uint8_t power_level);
 static void UiDriver_HandleBandButtons(uint16_t button);
 
 static void UiDriver_KeyTestScreen();
+
+static bool UiDriver_SaveConfiguration();
+
 //
 // --------------------------------------------------------------------------
 // Controls positions and some related colours
@@ -1320,21 +1323,10 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
-                    uint16_t done = -1;
-                    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
-                    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
-                        UiLcdHy28_PrintText(60,160,"Saving settings to virt. EEPROM",Cyan,Black,0);
-                    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
-                    {
-                        UiLcdHy28_PrintText(60,160,"Saving settings to ser. EEPROM",Cyan,Black,0);
-                    }
-                    done = UiConfiguration_SaveEepromValues();	// save settings to EEPROM
+                    UiSpectrum_ClearDisplay();
+                    UiDriver_SaveConfiguration();
+                    HAL_Delay(3000);
 
-                    if (done!=0)
-                    {
-                        UiLcdHy28_PrintText(60,160,"Saving settings failed       ",Red,Black,0);
-                    }
-                    non_os_delay_multi(6);
                     ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
                     UiDriver_FButton_F1MenuExit();
 
@@ -1481,7 +1473,7 @@ static void UiDriver_ProcessKeyboard()
                     // ONLY the POWER button was pressed
                     if(ts.txrx_mode == TRX_MODE_RX)  		// only allow power-off in RX mode
                     {
-                        UiDriver_PowerDownCleanup();
+                        UiDriver_PowerDownCleanup(true);
                     }
                 }
                 break;
@@ -1508,8 +1500,7 @@ static void UiDriver_ProcessKeyboard()
                 }
                 if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
                 {
-                    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_DONT_SAVE;			// power down without saving settings
-                    UiDriver_PowerDownCleanup();
+                    UiDriver_PowerDownCleanup(false); // do not save the configuration
                 }
                 break;
             case BUTTON_STEPM_PRESSED:
@@ -4988,70 +4979,85 @@ static void UiDriver_CreateVoltageDisplay() {
     UiLcdHy28_PrintTextCentered (POS_PWR_IND_X,POS_PWR_IND_Y,LEFTBOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
 }
 
+static bool UiDriver_SaveConfiguration()
+{
+    bool savedConfiguration = true;
+
+    const char* txp;
+    uint16_t txc;
+
+    switch (ts.ser_eeprom_in_use)
+    {
+    case SER_EEPROM_IN_USE_NO:
+    case SER_EEPROM_IN_USE_TOO_SMALL:
+        txp = "Saving settings to Flash Memory";
+        break;
+    case SER_EEPROM_IN_USE_I2C:
+        txp = "Saving settings to I2C EEPROM";
+        break;
+    default:
+        txp = "Detected I2C problems: Not saving";
+        savedConfiguration = false;
+    }
+    UiLcdHy28_PrintTextCentered(60,176,260,txp,Blue,Black,0);
+
+    if (savedConfiguration)
+    {
+        // save settings
+        if (UiConfiguration_SaveEepromValues() == 0)
+        {
+            txp = "Saving settings finished";
+            txc = Green;
+        }
+        else
+        {
+            txp = "Saving settings failed";
+            txc = Red;
+            savedConfiguration = false;
+        }
+        UiLcdHy28_PrintTextCentered(60,188,260,txp,txc,Black,0);
+    }
+    return savedConfiguration;
+}
+
 
 /*
  * @brief displays the visual information that power down is being executed and saves EEPROM if requested
  */
-static void UiDriver_PowerDownCleanup(void)
+static void UiDriver_PowerDownCleanup(bool saveConfiguration)
 {
     const char* txp;
     // Power off all - high to disable main regulator
+
+    ts.powering_down = 1;   // indicate that we should be powering down
 
     UiSpectrum_ClearDisplay();   // clear display under spectrum scope
 
     // hardware based mute
     Codec_MuteDAC(true);  // mute audio when powering down
 
-    txp = "                           ";
-    UiLcdHy28_PrintText(80,148,txp,Black,Black,0);
+    txp = " ";
 
-    txp = "       Powering off...     ";
-    UiLcdHy28_PrintText(80,156,txp,Blue2,Black,0);
+    UiLcdHy28_PrintTextCentered(60,148,240,txp,Blue2,Black,0);
+    UiLcdHy28_PrintTextCentered(60,156,240,"Powering off...",Blue2,Black,0);
+    UiLcdHy28_PrintTextCentered(60,168,240,txp,Blue2,Black,0);
 
-    txp = "                           ";
-    UiLcdHy28_PrintText(80,168,txp,Blue2,Black,0);
-
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
+    if (saveConfiguration)
     {
-        txp = "Saving settings to virt. EEPROM";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+        UiDriver_SaveConfiguration();
     }
-    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+    else
     {
-        txp = "Saving settings to serial EEPROM";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
+        UiLcdHy28_PrintTextCentered(60,176,260,"...without saving settings...",Blue,Black,0);
     }
-    else if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_DONT_SAVE)
-    {
-        txp = " ...without saving settings...  ";
-        UiLcdHy28_PrintText(60,176,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-    }
-#if 0
-    if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_NO)
-    {
-        txp = "            2              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
 
-        txp = "                           ";
-        UiLcdHy28_PrintText(80,200,txp,Black,Black,0);
-        non_os_delay_multi(5);
 
-        txp = "            1              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-
-        txp = "            0              ";
-        UiLcdHy28_PrintText(80,188,txp,Blue,Black,0);
-        non_os_delay_multi(5);
-    }
-#endif
-    ts.powering_down = 1;   // indicate that we should be powering down
-
-    if(ts.ser_eeprom_in_use != SER_EEPROM_IN_USE_DONT_SAVE)
+    if(saveConfiguration)
     {
         UiConfiguration_SaveEepromValues();     // save EEPROM values
     }
+
+    HAL_Delay(3000);
 }
 
 

@@ -827,7 +827,7 @@ typedef struct TransceiverState
 #define SER_EEPROM_IN_USE_I2C         0x00
 #define SER_EEPROM_IN_USE_ERROR       0x05
 #define SER_EEPROM_IN_USE_TOO_SMALL   0x10
-#define SER_EEPROM_IN_USE_DONT_SAVE   0x20
+// #define SER_EEPROM_IN_USE_DONT_SAVE   0x20
 #define SER_EEPROM_IN_USE_RAMCACHE    0xAA
 #define SER_EEPROM_IN_USE_NO          0xFF
 
