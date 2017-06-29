@@ -28,6 +28,8 @@
 #define TRX_ID "mchf"
 #endif
 
+#define UI_BRD_MCHF
+#define RF_BRD_MCHF
 
 
 // place tagged elements in CCM 64k extra RAM (no DMA)
@@ -331,12 +333,14 @@
 #ifdef STM32F7
 
 #ifndef TRX_NAME
-#define TRX_NAME "I40"
+#define TRX_NAME "OVI40"
 #endif
 #ifndef TRX_ID
-#define TRX_ID "i40"
+#define TRX_ID "ovi40"
 #endif
 
+#define UI_BRD_OVI40
+#define RF_BRD_MCHF
 
 // compiler places tagged elements by its default rules
 #define __MCHF_SPECIALMEM
@@ -373,17 +377,6 @@
 #define ADC2_RET                GPIO_PIN_3
 #define ADC2_RET_PIO            GPIOA
 // pin 4
-#ifdef MCHF_BOARD_0P5
-#define TP_IRQ                  GPIO_PIN_14
-#define TP_IRQ_PIO              GPIOA
-#elif defined (STM32F7)
-#define TP_IRQ                  GPIO_PIN_4
-#define TP_IRQ_PIO              GPIOG
-#else
-#define TP_IRQ                  GPIO_PIN_4
-#define TP_IRQ_PIO              GPIOA
-#endif
-
 #define DAC_CH1                 GPIO_PIN_4
 #define DAC_CH1_PIO             GPIOA
 // pin 5
@@ -397,14 +390,7 @@
 #define BAND1                   GPIO_PIN_8
 #define BAND1_PIO               GPIOA
 // pin 9
-#define DEBUG_PRINT             GPIO_PIN_9
-#define DEBUG_PRINT_PIO         GPIOA
-
-#ifdef MCHF_BOARD_0P5
-#define TP_CS                   GPIO_PIN_13
-#else
 #define TP_CS                   GPIO_PIN_9
-#endif
 #define TP_CS_PIO               GPIOA
 // pin 10
 #define BAND2                   GPIO_PIN_10
@@ -693,6 +679,8 @@
 #define BUTTON_PWR_PIO          GPIOG
 // pin 3
 // pin 4
+#define TP_IRQ                  GPIO_PIN_4
+#define TP_IRQ_PIO              GPIOG
 // pin 5
 #define AUDIO_PA_EN             GPIO_PIN_5
 #define AUDIO_PA_EN_PIO         GPIOG
@@ -735,6 +723,22 @@
 #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
 #define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
 #define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
+
+/* CONFIGURATION LOGIC CHECKS */
+
+#if defined(UI_BRD_MCHF) && defined(UI_BRD_OVI40)
+#error Only one ui board can be selected: UI_BRD_MCHF, UI_BRD_OVI40
+#endif
+#if !defined(UI_BRD_MCHF) && !defined(UI_BRD_OVI40)
+#error One ui board has to be selected: UI_BRD_MCHF, UI_BRD_OVI40
+#endif
+
+#if defined(RF_BRD_MCHF) && defined(RF_BRD_OVI40)
+#error Only one rf board can be selected: RF_BRD_MCHF, RF_BRD_OVI40
+#endif
+#if !defined(RF_BRD_MCHF) && !defined(RF_BRD_OVI40)
+#error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
+#endif
 
 
 

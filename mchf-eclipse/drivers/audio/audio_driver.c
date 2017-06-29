@@ -20,10 +20,6 @@
 #include <math.h>
 #include "codec.h"
 
-#ifdef STM32F4
-#include "i2s.h"
-#endif
-
 #include "cw_gen.h"
 
 #include <limits.h>

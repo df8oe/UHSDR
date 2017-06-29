@@ -15,7 +15,7 @@
 // Common
 #include "mchf_board_config.h"
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     #define USE_DISPLAY_SPI
 #endif
 #ifdef STM32F7
@@ -33,7 +33,7 @@
 
 #ifdef USE_DISPLAY_PAR
 
-    #ifdef STM32F7
+    #ifdef UI_BRD_OVI40
         #include "fmc.h"
         #define MEM_Init() MX_FMC_Init()
     #else
@@ -43,9 +43,9 @@
 
     #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
 
-    #if defined(STM32F4)
+    #if defined(UI_BRD_MCHF)
     #define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
-    #elif defined(STM32F7)
+    #elif defined(UI_BRD_OVI40)
     #define LCD_RAM      (*((volatile unsigned short *) 0x60004000))
     #endif
 #endif

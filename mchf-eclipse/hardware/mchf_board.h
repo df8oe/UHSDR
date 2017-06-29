@@ -751,10 +751,11 @@ typedef struct TransceiverState
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
 #define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
 #define FLAGS1_CONFIG_DEFAULT (0x0000)
-#else
+#endif
+#ifdef UI_BRD_OVI40
     // the default screen needs reversed touch
 #define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_TOUCHSCREEN)
 #endif
@@ -1036,7 +1037,7 @@ inline void MchfBoard_RedLed(ledstate_t state)
     }
 }
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 inline void MchfBoard_BlueLed(ledstate_t state)
 {
     switch(state)
