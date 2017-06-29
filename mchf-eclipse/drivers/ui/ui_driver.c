@@ -915,7 +915,7 @@ void UiDriver_Init()
 
     UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
     ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
-    ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_STARTUP_TIME;
+    ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
 }
 /*
  * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
@@ -5068,65 +5068,79 @@ static void UiDriver_PowerDownCleanup(bool saveConfiguration)
 
 static void UiDriver_HandleVoltage()
 {
-    ulong	val_p, calib;
-
-    {
+     {
         // Collect samples
         if(pwmt.p_curr < POWER_SAMPLES_CNT)
         {
-            val_p = HAL_ADC_GetValue(&hadc1);
-
-            // Add to accumulator
-            pwmt.pwr_aver = pwmt.pwr_aver + val_p;
+             // Add to accumulator
+            pwmt.pwr_aver = pwmt.pwr_aver + HAL_ADC_GetValue(&hadc1);
             pwmt.p_curr++;
         }
         else
         {
 
             // Get average
-            val_p  = pwmt.pwr_aver/POWER_SAMPLES_CNT;
-
-            calib = (ulong)ts.voltmeter_calibrate;	// get local copy of calibration factor
-            calib += 900;					// offset to 1000 (nominal)
-            val_p = (calib) * val_p;		// multiply by calibration factor, sample count and A/D scale full scale count
-            val_p /= (1000);				// divide by 1000 (unity calibration factor), sample count and A/D full scale count
-
-            // Correct for divider
-            //val_p -= 550;
-            val_p *= 4;
+            uint32_t val_p  = ((pwmt.pwr_aver/POWER_SAMPLES_CNT) * (ts.voltmeter_calibrate + 900))/2500;
 
             // Reset accumulator
             pwmt.p_curr     = 0;
             pwmt.pwr_aver   = 0;
 
+            uint32_t low_power_threshold = ((ts.low_power_config & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) * 10;
+            bool low_power_shutdown_enabled = (ts.low_power_config & LOW_POWER_ENABLE_MASK) == LOW_POWER_ENABLE;
+            bool low_power_shutdown_wait = false;
+
+            if (low_power_shutdown_enabled && (val_p < low_power_threshold ))
+            {
+                // okay, voltage is too low
+                low_power_shutdown_wait = true;
+                if (ts.sysclock > ts.low_power_shutdown_time && ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
+                {
+                    UiDriver_PowerDownCleanup(true);
+                }
+            }
+            else
+            {
+                ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
+            }
+
 
             // did we detect a voltage change?
-            if(pwmt.voltage != val_p)	 	// Time to update - or was this the first time it was called?
+            if(pwmt.voltage != val_p || low_power_shutdown_wait == true)	 	// Time to update - or was this the first time it was called?
             {
+                pwmt.voltage = val_p;
+
                 char digits[6];
 
                 uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
 
-                val_p /= 10;
-
-                if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 50)
+                if (val_p < low_power_threshold + 50)
+                {
                     col = Red;
-                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 100)
-                    col = Orange;
-                else if (val_p < (ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) * 10 + 150)
-                    col = Yellow;
-                    
-                if (ts.low_power_shutdown && (val_p / 10 < ts.low_power_threshold + LOW_POWER_THRESHOLD_OFFSET) && ts.sysclock > ts.low_power_shutdown_time ) {
-                    if(ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
-                    {
-                        UiDriver_PowerDownCleanup();
-                        //col = Green;
-                    }
                 }
+                else if (val_p < low_power_threshold + 100)
+                {
+                    col = Orange;
+                }
+                else if (val_p < low_power_threshold + 150)
+                {
+                    col = Yellow;
+                }
+
+                static uint8_t voltage_blink = 0;
+                // in cease of low power shutdown coming, we let the voltage blink with 1hz
+                if (low_power_shutdown_wait == true && voltage_blink < 1 )
+                {
+                    col = Black;
+                }
+                voltage_blink++;
+                if (voltage_blink == 2)
+                {
+                    voltage_blink = 0;
+                }
+
                 snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
                 UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
-
-
             }
         }
     }
