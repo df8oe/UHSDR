@@ -5885,11 +5885,11 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     non_os_delay();
     // Show first line
     snprintf(tx,100,"%s",DEVICE_STRING);
-    UiLcdHy28_PrintText(0,30,tx,Cyan,Black,1);       // Position with original text size:  78,40
+    UiLcdHy28_PrintTextCentered(0,30,320,tx,Cyan,Black,1);       // Position with original text size:  78,40
 
     // Show second line
     snprintf(tx,100,"%s",AUTHOR_STRING);
-    UiLcdHy28_PrintText(36,60,tx,White,Black,0);     // 60,60
+    UiLcdHy28_PrintTextCentered(0,60,320,tx,White,Black,0);     // 60,60
 
 	// looking for bootloader version, only works or DF8OE bootloader
     // Show third line

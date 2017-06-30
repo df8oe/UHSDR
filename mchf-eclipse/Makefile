@@ -31,7 +31,7 @@ ifndef TRX_ID
   TRX_ID=mchf
 endif
 ifndef TRX_NAME
-  TRX_NAME=mcHF
+  TRX_NAME='mcHF QRP'
 endif
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
