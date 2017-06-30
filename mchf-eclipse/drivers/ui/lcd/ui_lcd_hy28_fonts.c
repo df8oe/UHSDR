@@ -1258,7 +1258,7 @@ const sFONT GL_Font8x12_bold =
 // only upto 0x7F
 const sFONT GL_Font8x12_bold_short =
 {
-    GL_ASCII8x12_bold_Table,
+    GL_ASCII8x12_bold_short_Table,
     8,  /* Width */
     12, /* Height */
 };
