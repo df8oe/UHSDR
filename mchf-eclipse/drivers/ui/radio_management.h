@@ -107,8 +107,11 @@ typedef struct SWRMeter
 {
     float fwd_calc;         // forward power readings in A/D units
     float rev_calc;         // reverse power readings in A/D units
-    float fwd_pwr;          // forward power in watts
-    float rev_pwr;          // reverse power in watts
+    float fwd_pwr;          // forward power in watts current measurement
+    float rev_pwr;          // reverse power in watts current measurement
+    float fwd_pwr_avg;      // forward power in watts averaged
+    float rev_pwr_avg;      // reverse power in watts averaged
+
     float fwd_dbm;          // forward power in dBm
     float rev_dbm;          // reverse power in dBm
     float vswr;             // vswr
