@@ -368,7 +368,7 @@ void FreeDV_mcHF_HandleFreeDV()
             // while (fdv_audio_has_room())
             // if (fdv_iq_has_data() && fdv_audio_has_room())
             {
-                MchfBoard_GreenLed(LED_STATE_OFF);
+                // MchfBoard_GreenLed(LED_STATE_OFF);
 
                 leave_now = false;
                 fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
@@ -481,7 +481,7 @@ void FreeDV_mcHF_HandleFreeDV()
                 }
             }
         }
-        MchfBoard_GreenLed(LED_STATE_ON);
+        // MchfBoard_GreenLed(LED_STATE_ON);
         fdv_print_ber();
         fdv_print_SNR();
         fdv_print_txt_msg();
