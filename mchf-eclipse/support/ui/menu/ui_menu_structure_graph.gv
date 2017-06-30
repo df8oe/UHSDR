@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-06-22T09:29:10  by "./ui_menu_structure_graph.py"
+#  generated at  2017-06-30T07:24:44  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v2.3.8 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v2.4.0 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.3.8 - Menus Overview\ngenerated at  2017-06-22T09:29:10  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.4.0 - Menus Overview\ngenerated at  2017-06-30T07:24:44  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -254,6 +254,11 @@
         
         "MENU_TCXO_C_F" [
              label = "MENU_TCXO_C_F | TCXO Temp. (C/F)"
+             shape = record
+             ];
+        
+        "MENU_LOW_POWER_SHUTDOWN" [
+             label = "MENU_LOW_POWER_SHUTDOWN | Low power shutdown"
              shape = record
              ];
         
@@ -549,6 +554,11 @@
         
         "CONFIG_VOLTMETER_CALIBRATION" [
              label = "CONFIG_VOLTMETER_CALIBRATION | Voltmeter Cal."
+             shape = record
+             ];
+        
+        "CONFIG_LOW_POWER_THRESHOLD" [
+             label = "CONFIG_LOW_POWER_THRESHOLD | Low power threshold"
              shape = record
              ];
         
@@ -1043,6 +1053,8 @@
             
             MENU_CONF -> CONFIG_VOLTMETER_CALIBRATION
             
+            MENU_CONF -> CONFIG_LOW_POWER_THRESHOLD
+            
             MENU_CONF -> CONFIG_FREQUENCY_CALIBRATE
             
             MENU_CONF -> CONFIG_FWD_REV_PWR_DISP
@@ -1204,6 +1216,8 @@
             MENU_BASE -> MENU_TCXO_MODE
             
             MENU_BASE -> MENU_TCXO_C_F
+            
+            MENU_BASE -> MENU_LOW_POWER_SHUTDOWN
             
             MENU_BASE -> MENU_BACKUP_CONFIG
             

@@ -256,13 +256,12 @@ enum
 // Power supply
 typedef struct PowerMeter
 {
-    ulong	 skip;
+    uint32_t    pwr_aver;
+    uint32_t    p_curr;
 
-    ulong	 pwr_aver;
-    uchar	 p_curr;
+    uint32_t    voltage;
 
-    uint32_t voltage;
-    char	 digits[6]; // voltage in millivolt upto 99.000 volt
+    bool        undervoltage_detected;
 } PowerMeter;
 
 

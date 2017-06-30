@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-06-22T09:29:13  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.3.8 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.4.0 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v2.3.8 - UI Menu Overview
+# mcHF FW v2.4.0 - UI Menu Overview
 
-generated at  2017-06-22T09:29:13  by "./ui_menu_structure_mdtable.py"
+generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -57,6 +57,7 @@ generated at  2017-06-22T09:29:13  by "./ui_menu_structure_mdtable.py"
 | **DSP NR Strength**           (                       MENU_DSP_NR_STRENGTH) | Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active. | 
 | **TCXO Off/On/Stop**          (                             MENU_TCXO_MODE) | The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement). | 
 | **TCXO Temp. (C/F)**          (                              MENU_TCXO_C_F) | Show the measure TCXO temperature in Celsius or Fahrenheit. | 
+| **Low power shutdown**        (                    MENU_LOW_POWER_SHUTDOWN) | Shutdown automatically when power below threshold. | 
 | **Backup Config**             (                         MENU_BACKUP_CONFIG) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
 | **Restore Config**            (                        MENU_RESTORE_CONFIG) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
 | **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
@@ -86,6 +87,7 @@ generated at  2017-06-22T09:29:13  by "./ui_menu_structure_mdtable.py"
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
 | **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
+| **Low power threshold**       (                 CONFIG_LOW_POWER_THRESHOLD) | Threshold for voltage warning colors and auto shutdown. | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
 | **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 

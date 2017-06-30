@@ -19,11 +19,11 @@
 
 #include "audio_driver.h"
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
 #include "i2s.h"
 #endif
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 #include "sai.h"
 #endif
 
@@ -42,12 +42,12 @@ typedef int32_t audio_data_t;
 typedef int16_t audio_data_t;
 #endif
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
 #define CODEC_IQ_IDX 0
 #define CODEC_ANA_IDX  0
 #endif
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 #define CODEC_IQ_IDX 1
 #define CODEC_ANA_IDX 0
 #endif
@@ -101,7 +101,7 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #endif
 }
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
 /**
  * @brief HAL Handler for Codec DMA Interrupt
  */
@@ -119,7 +119,7 @@ void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
 }
 #endif
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
 {
     if (hi2s == &hsai_BlockA2)
@@ -144,10 +144,10 @@ void MchfHw_Codec_StartDMA()
 {
     szbuf = BUFF_LEN;
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)audio_buf[0].out,(uint16_t*)audio_buf[0].in,szbuf);
 #endif
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
     HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)audio_buf[0].in,szbuf);
     HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)audio_buf[0].out,szbuf);
 
@@ -160,10 +160,10 @@ void MchfHw_Codec_StartDMA()
 
 void MchfHw_Codec_StopDMA(void)
 {
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     HAL_I2S_DMAStop(&hi2s3);
 #endif
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
     HAL_SAI_DMAStop(&hsai_BlockA1);
     HAL_SAI_DMAStop(&hsai_BlockB1);
     HAL_SAI_DMAStop(&hsai_BlockA2);

@@ -439,7 +439,7 @@ enum
 //
 #define	BACKLIGHT_BLANK_TIMING_DEFAULT	8		// default number of SECONDS for backlight blanking
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
-#define LOW_POWER_SHUTDOWN_STARTUP_TIME   6000        // number of DECISECONDS after power-up before low power auto shutdown is checked
+#define LOW_POWER_SHUTDOWN_DELAY_TIME   6000        // number of DECISECONDS after power-up before low power auto shutdown is checked
 
 #define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
 
@@ -715,10 +715,20 @@ typedef struct TransceiverState
 #define LCD_BLANKING_TIMEMASK 0x0f
     uchar	lcd_backlight_blanking;		// for controlling backlight auto-off control
 
-#define LOW_POWER_THRESHOLD_OFFSET 10    // value stored in the configuration variable is lower by this offset
+
+
+#define LOW_POWER_ENABLE 0x80    // bit7 shows enable / no enable
+#define LOW_POWER_ENABLE_MASK 0x80
+
+#define LOW_POWER_THRESHOLD_OFFSET 20    // value stored in the configuration variable is lower by this offset
 #define LOW_POWER_THRESHOLD_MASK 0x7f
-    uchar   low_power_threshold;        // for voltage colours and auto shutdown
-    bool    low_power_shutdown;         // auto shutdown under the threshold voltage or not
+#define LOW_POWER_THRESHOLD_DEFAULT  0
+#define LOW_POWER_THRESHOLD_MIN  0
+#define LOW_POWER_THRESHOLD_MAX  126
+
+
+
+    uchar   low_power_config;        // for voltage colours and auto shutdown
     ulong   low_power_shutdown_time;    // earliest time when auto shutdown can be executed
     //
     uchar	tune_step;					// Used for press-and-hold tune step adjustment
@@ -751,10 +761,11 @@ typedef struct TransceiverState
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
 #define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
 
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
 #define FLAGS1_CONFIG_DEFAULT (0x0000)
-#else
+#endif
+#ifdef UI_BRD_OVI40
     // the default screen needs reversed touch
 #define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_TOUCHSCREEN)
 #endif
@@ -826,7 +837,7 @@ typedef struct TransceiverState
 #define SER_EEPROM_IN_USE_I2C         0x00
 #define SER_EEPROM_IN_USE_ERROR       0x05
 #define SER_EEPROM_IN_USE_TOO_SMALL   0x10
-#define SER_EEPROM_IN_USE_DONT_SAVE   0x20
+// #define SER_EEPROM_IN_USE_DONT_SAVE   0x20
 #define SER_EEPROM_IN_USE_RAMCACHE    0xAA
 #define SER_EEPROM_IN_USE_NO          0xFF
 
@@ -1036,7 +1047,7 @@ inline void MchfBoard_RedLed(ledstate_t state)
     }
 }
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 inline void MchfBoard_BlueLed(ledstate_t state)
 {
     switch(state)

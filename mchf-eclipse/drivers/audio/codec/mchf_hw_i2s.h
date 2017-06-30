@@ -24,9 +24,9 @@ typedef struct
 } dma_audio_buffer_t;
 
 
-#ifdef STM32F4
+#if defined(UI_BRD_MCHF)
 #define DMA_AUDIO_NUM 1
-#else
+#elif defined(UI_BRD_OVI40)
 #define DMA_AUDIO_NUM 2
 #endif
 
