@@ -720,7 +720,7 @@ typedef struct TransceiverState
 #define LOW_POWER_ENABLE 0x80    // bit7 shows enable / no enable
 #define LOW_POWER_ENABLE_MASK 0x80
 
-#define LOW_POWER_THRESHOLD_OFFSET 20    // value stored in the configuration variable is lower by this offset
+#define LOW_POWER_THRESHOLD_OFFSET 30    // value stored in the configuration variable is lower by this offset
 #define LOW_POWER_THRESHOLD_MASK 0x7f
 #define LOW_POWER_THRESHOLD_DEFAULT  0
 #define LOW_POWER_THRESHOLD_MIN  0
