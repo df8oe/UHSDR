@@ -87,7 +87,7 @@ typedef struct
 
 __IO mchf_codec_t mchf_codecs[DMA_AUDIO_NUM];
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
 /**
  * @brief controls volume on "external" PA via DAC
  * @param vol volume in range of 0 to 80, where 80 is max volume
@@ -95,7 +95,7 @@ __IO mchf_codec_t mchf_codecs[DMA_AUDIO_NUM];
 static void AudioPA_Volume(uint8_t vol)
 {
     uint32_t lv = vol>0x50?0x50:vol;
-    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R,vol * (4095/0x50));
+    HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_12B_R, (lv * 4095)/0x50);
 }
 /**
  * @brief controls sound delivery on "external" PA via DAC
@@ -220,7 +220,7 @@ uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
     {
         mchf_codecs[0].present = true;
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
         AudioPA_Enable(true);
 #endif
 

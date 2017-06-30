@@ -251,7 +251,7 @@ static void mchf_board_power_button_irq_init(void)
 static void mchf_board_dac_init(void)
 {
 
-#ifdef STM32F7
+#ifdef UI_BRD_OVI40
     HAL_DAC_Start(&hdac,DAC_CHANNEL_1);
     HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1,DAC_ALIGN_8B_R,0);
     // AUDIO PA volume zero
@@ -459,7 +459,7 @@ static void mchf_board_power_down_init(void)
 //
 static void mchf_board_band_cntr_init(void)
 {
-#ifdef STM32F4
+#ifdef UI_BRD_MCHF
     // FIXME: USE HAL Init here as well, this handles also the multiple Ports case
     GPIO_InitTypeDef GPIO_InitStructure;
 

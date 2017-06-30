@@ -2419,27 +2419,38 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", (unsigned int)ts.voltmeter_calibrate);
         break;
     case MENU_LOW_POWER_SHUTDOWN:   // Auto shutdown when below low voltage threshold
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.low_power_shutdown,0,options,&clr);
+        temp_var_u8 = (ts.low_power_config & LOW_POWER_ENABLE_MASK) == LOW_POWER_ENABLE? 1 : 0 ;        // get control variable
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8, 0,options,&clr);
+        if (var_change)
+        {
+            if (temp_var_u8)
+            {
+                ts.low_power_config |= LOW_POWER_ENABLE;
+            }
+            else
+            {
+                ts.low_power_config &= ~LOW_POWER_ENABLE;
+            }
+        }
         break;
 
     case CONFIG_LOW_POWER_THRESHOLD:  // Configure low voltage threshold
 
-        temp_var_u8 = ts.low_power_threshold;        // get control variable
+        temp_var_u8 = ts.low_power_config & LOW_POWER_THRESHOLD_MASK;        // get control variable
 
-        temp_var_u8 &= LOW_POWER_THRESHOLD_MASK;
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
-                                              0,
-                                              LOW_POWER_THRESHOLD_MASK,
+                                              LOW_POWER_THRESHOLD_MIN,
+                                              LOW_POWER_THRESHOLD_MAX,
                                               LOW_POWER_THRESHOLD_DEFAULT,
                                               1
                                              );
         if(var_change)
         {
-            ts.low_power_threshold = temp_var_u8;
+            ts.low_power_config = (ts.low_power_config & ~LOW_POWER_THRESHOLD_MASK) | (temp_var_u8 & LOW_POWER_THRESHOLD_MASK);
 
         }
 
-        snprintf(options,32,"%2d.%dV",((ts.low_power_threshold & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) / 10, ((ts.low_power_threshold & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) % 10);
+        snprintf(options,32,"%2d.%dV",(temp_var_u8 + LOW_POWER_THRESHOLD_OFFSET) / 10, (temp_var_u8 + LOW_POWER_THRESHOLD_OFFSET) % 10);
 
         break;
 

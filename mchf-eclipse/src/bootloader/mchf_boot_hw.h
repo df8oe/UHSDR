@@ -53,12 +53,12 @@ typedef enum
 #define BANDP_BUTTON_GPIO_PORT          GPIOB
 #define BANDP_BUTTON_EXTI_IRQn          EXTI0_IRQn
 
-#if  defined(STM32F4)
+#if  defined(UI_BRD_MCHF)
 #define POWER_BUTTON_PIN                GPIO_PIN_13
 #define POWER_BUTTON_GPIO_PORT          GPIOC
 #define POWER_BUTTON_EXTI_LINE          EXTI_Line0
 #define POWER_BUTTON_EXTI_IRQn          EXTI0_IRQn
-#elif  defined(STM32F7)
+#elif  defined(UI_BRD_OVI40)
 #define POWER_BUTTON_PIN                GPIO_PIN_2
 #define POWER_BUTTON_GPIO_PORT          GPIOG
 #define POWER_BUTTON_EXTI_LINE          EXTI_Line0
