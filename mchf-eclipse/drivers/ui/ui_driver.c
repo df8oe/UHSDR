@@ -112,10 +112,12 @@ static void     UiDriver_DisplayMemoryLabel();
 static void 	UiDriver_DisplayDigitalMode();
 static void 	UiDriver_DisplayPowerLevel();
 static void     UiDriver_DisplayTemperature(int temp);
+static void     UiDriver_DisplayVoltage();
 
 static void 	UiDriver_HandleSMeter();
 static void 	UiDriver_HandleTXMeters();
-static void     UiDriver_HandleVoltage();
+static bool     UiDriver_HandleVoltage();
+
 #if 0
 static void 	UiDriverUpdateLoMeter(uchar val,uchar active);
 #endif
@@ -976,9 +978,9 @@ static void UiDriver_PublicsInit()
     swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
 
     // Power supply meter
-    pwmt.skip 				= 0;
     pwmt.p_curr				= 0;
     pwmt.pwr_aver 			= 0;
+    pwmt.undervoltage_detected = false;
 
 }
 
@@ -4752,16 +4754,6 @@ void UiDriver_DisplayFilterBW()
         UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X + lpos), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), (ushort)width, LCD_DIR_HORIZONTAL, clr);
     }
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverFFTWindowFunction
-//* Object              : Do windowing functions for both the Spectrum Scope and Waterfall Displays
-//* Input Parameters    : mode - select window function
-//* Input Parameters    : array "sd.FFT_Samples" - input from A/D converter after gain adjustment
-//* Output Parameters   : array "sd.FFT_Windat" - processed output to RFFT
-//* Functions called    : none
-//*----------------------------------------------------------------------------
 
 
 //*----------------------------------------------------------------------------
@@ -4875,61 +4867,67 @@ static void UiDriver_HandleSMeter()
  */
 static void UiDriver_HandleTXMeters()
 {
-    float	scale_calc;
-    char txt[32];
-    static float fwd_pwr_avg, rev_pwr_avg;
-    static uchar	old_power_level = 99;
-
     // Only in TX mode
     if(ts.txrx_mode != TRX_MODE_TX)
     {
         swrm.vswr_dampened = 0;		// reset averaged readings when not in TX mode
-        fwd_pwr_avg = -1;
-        rev_pwr_avg = -1;
+        swrm.fwd_pwr_avg = -1;
+        swrm.rev_pwr_avg = -1;
     }
     else if (RadioManagement_UpdatePowerAndVSWR())
     {
 
+        static uint8_t    old_power_level = 99;
+
         // display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
         if(swrm.pwr_meter_disp)
         {
-            if((fwd_pwr_avg < 0) || (ts.power_level != old_power_level))  	// initialize with current value if it was zero (e.g. reset) or power level changed
+            if((swrm.fwd_pwr_avg < 0) || (ts.power_level != old_power_level))  	// initialize with current value if it was zero (e.g. reset) or power level changed
             {
-                fwd_pwr_avg = swrm.fwd_pwr;
+                swrm.fwd_pwr_avg = swrm.fwd_pwr;
+            }
+            else
+            {
+                swrm.fwd_pwr_avg = (swrm.fwd_pwr_avg * (1-PWR_DAMPENING_FACTOR)) + swrm.fwd_pwr * PWR_DAMPENING_FACTOR;	// apply IIR smoothing to forward power reading
             }
 
-            fwd_pwr_avg = fwd_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to forward power reading
-            fwd_pwr_avg += swrm.fwd_pwr * PWR_DAMPENING_FACTOR;
-
-            if((rev_pwr_avg < 0) || (ts.power_level != old_power_level))  	// initialize with current value if it was zero (e.g. reset) or power level changed
+            if((swrm.rev_pwr_avg < 0) || (ts.power_level != old_power_level))  	// initialize with current value if it was zero (e.g. reset) or power level changed
             {
-                rev_pwr_avg = swrm.rev_pwr;
+                swrm.rev_pwr_avg = swrm.rev_pwr;
+            }
+            else
+            {
+                swrm.rev_pwr_avg = (swrm.rev_pwr_avg * (1-PWR_DAMPENING_FACTOR)) + swrm.rev_pwr * PWR_DAMPENING_FACTOR; // apply IIR smoothing to reverse power reading
             }
 
             old_power_level = ts.power_level;		// update power level change detector
-
-            rev_pwr_avg = rev_pwr_avg * (1-PWR_DAMPENING_FACTOR);	// apply IIR smoothing to reverse power reading
-            rev_pwr_avg += swrm.rev_pwr * PWR_DAMPENING_FACTOR;
-
-            snprintf(txt,32, "%d,%d   ", (int)(fwd_pwr_avg*1000), (int)(rev_pwr_avg*1000));		// scale to display power in milliwatts
-            UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txt,Grey,Black,0);
-            swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
         }
 
-        if((swrm.pwr_meter_was_disp) && (!swrm.pwr_meter_disp))	 	// had the numerical display been enabled - and it is now disabled?
         {
-            UiLcdHy28_PrintText    (POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,"            ",White,Black,0);	// yes - overwrite location of numerical power meter display to blank it
-            swrm.pwr_meter_was_disp = 0;	// clear flag so we don't do this again
+            char txt[16];
+            const char* txp = NULL;
+            if (swrm.pwr_meter_disp)
+            {
+                snprintf(txt,16, "%5d,%5d", (int)(swrm.fwd_pwr_avg*1000), (int)(swrm.rev_pwr_avg*1000));		// scale to display power in milliwatts
+                txp = txt;
+                swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
+            }
+            else if(swrm.pwr_meter_was_disp)	// had the numerical display been enabled - and it is now disabled?
+            {
+                txp = "           ";            // yes - overwrite location of numerical power meter display to blank it
+                swrm.pwr_meter_was_disp = 0;	// clear flag so we don't do this again
+            }
+            if (txp != NULL)
+            {
+                UiLcdHy28_PrintText(POS_PWR_NUM_IND_X, POS_PWR_NUM_IND_Y,txp,Grey,Black,0);
+            }
         }
 
-
-        // calculate and display RF power reading
-
-        scale_calc = (uchar)(swrm.fwd_pwr * 3);		// 3 dots-per-watt for RF power meter
-
-        UiDriver_UpdateTopMeterA(scale_calc);
 
         // Do selectable meter readings
+        float   btm_mtr_val = 0.0;
+        uint32_t btm_mtr_red_level = 13;
+
 
         if(ts.tx_meter_mode == METER_SWR)
         {
@@ -4942,34 +4940,34 @@ static void UiDriver_HandleTXMeters()
                 }
                 else
                 {
-                    swrm.vswr_dampened = swrm.vswr_dampened * (1 - VSWR_DAMPENING_FACTOR);
-                    swrm.vswr_dampened += swrm.vswr * VSWR_DAMPENING_FACTOR;
+                    swrm.vswr_dampened = swrm.vswr_dampened * (1 - VSWR_DAMPENING_FACTOR) + swrm.vswr * VSWR_DAMPENING_FACTOR;
                 }
-
-                scale_calc = (uchar)(swrm.vswr_dampened * 4);		// yes - four dots per unit of VSWR
-                UiDriver_UpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
+                btm_mtr_val = swrm.vswr_dampened * 4;		// yes - four dots per unit of VSWR
             }
         }
         else if(ts.tx_meter_mode == METER_ALC)
         {
-            scale_calc = ads.alc_val;		// get TX ALC value
-            scale_calc *= scale_calc;		// square the value
-            scale_calc = log10f(scale_calc);	// get the log10
-            scale_calc *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
-
-            UiDriver_UpdateBtmMeter((uchar)(scale_calc), 13);	// update the meter, setting the "red" threshold
+            btm_mtr_val = ads.alc_val;		// get TX ALC value
+            btm_mtr_val *= btm_mtr_val;		// square the value
+            btm_mtr_val = log10f(btm_mtr_val);	// get the log10
+            btm_mtr_val *= -10;		// convert it to DeciBels and switch sign and then scale it for the meter
         }
         else if(ts.tx_meter_mode == METER_AUDIO)
         {
-            scale_calc = ads.peak_audio/10000;		// get a copy of the peak TX audio (maximum reference = 30000)
+            btm_mtr_val = ads.peak_audio/10000;		// get a copy of the peak TX audio (maximum reference = 30000)
             ads.peak_audio = 0;					// reset the peak detect
-            scale_calc *= scale_calc;			// square the value
-            scale_calc = log10f(scale_calc);	// get the log10
-            scale_calc *= 10;					// convert to DeciBels and scale for the meter
-            scale_calc += 11;					// offset for meter
+            btm_mtr_val *= btm_mtr_val;			// square the value
+            btm_mtr_val = log10f(btm_mtr_val);	// get the log10
+            btm_mtr_val *= 10;					// convert to DeciBels and scale for the meter
+            btm_mtr_val += 11;					// offset for meter
 
-            UiDriver_UpdateBtmMeter((uchar)(scale_calc), 22);	// update the meter, setting the "red" threshold
+            btm_mtr_red_level = 22;	// setting the "red" threshold
         }
+
+        // calculate and display RF power reading
+        UiDriver_UpdateTopMeterA(swrm.fwd_pwr * 3);
+        // show selected bottom meter value
+        UiDriver_UpdateBtmMeter(btm_mtr_val, btm_mtr_red_level);   // update the meter, setting the "red" threshold
     }
 }
 
@@ -5063,38 +5061,89 @@ static void UiDriver_PowerDownCleanup(bool saveConfiguration)
 
 
 /*
- * @brief measures and display external voltage
+ * @brief Display external voltage
  */
-
-static void UiDriver_HandleVoltage()
+static void UiDriver_DisplayVoltage()
 {
-     {
-        // Collect samples
-        if(pwmt.p_curr < POWER_SAMPLES_CNT)
+    uint32_t low_power_threshold = ((ts.low_power_config & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) * 10;
+    // did we detect a voltage change?
+
+    uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
+
+    if (pwmt.voltage < low_power_threshold + 50)
+    {
+        col = Red;
+    }
+    else if (pwmt.voltage < low_power_threshold + 100)
+    {
+        col = Orange;
+    }
+    else if (pwmt.voltage < low_power_threshold + 150)
+    {
+        col = Yellow;
+    }
+
+    static uint8_t voltage_blink = 0;
+    // in cease of low power shutdown coming, we let the voltage blink with 1hz
+    if (pwmt.undervoltage_detected == true && voltage_blink < 1 )
+    {
+        col = Black;
+    }
+    voltage_blink++;
+    if (voltage_blink == 2)
+    {
+        voltage_blink = 0;
+    }
+
+    char digits[6];
+    snprintf(digits,6,"%2ld.%02ld",pwmt.voltage/100,pwmt.voltage%100);
+    UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+}
+
+/**
+ * @brief Measures Voltage and controls undervoltage detection
+ * @returns true if display update is required, false if not
+ */
+static bool UiDriver_HandleVoltage()
+{
+    bool retval = false;
+    // if this is set to true, we should update the display because something relevant for the user happened.
+
+    // Collect samples
+    if(pwmt.p_curr < POWER_SAMPLES_CNT)
+    {
+        // Add to accumulator
+        pwmt.pwr_aver = pwmt.pwr_aver + HAL_ADC_GetValue(&hadc1);
+        pwmt.p_curr++;
+    }
+    else
+    {
+
+        // Get average
+        uint32_t val_p  = ((pwmt.pwr_aver/POWER_SAMPLES_CNT) * (ts.voltmeter_calibrate + 900))/2500;
+
+        // Reset accumulator
+        pwmt.p_curr     = 0;
+        pwmt.pwr_aver   = 0;
+
+
+        retval = pwmt.voltage != val_p;
+
+        pwmt.voltage = val_p;
+
+
+        uint32_t low_power_threshold = ((ts.low_power_config & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) * 10;
+        bool low_power_shutdown_enabled = (ts.low_power_config & LOW_POWER_ENABLE_MASK) == LOW_POWER_ENABLE;
+
+        if (low_power_shutdown_enabled && (val_p < low_power_threshold ))
         {
-             // Add to accumulator
-            pwmt.pwr_aver = pwmt.pwr_aver + HAL_ADC_GetValue(&hadc1);
-            pwmt.p_curr++;
-        }
-        else
-        {
+            // okay, voltage is too low, we should indicate
+            pwmt.undervoltage_detected = true;
+            retval = true;
 
-            // Get average
-            uint32_t val_p  = ((pwmt.pwr_aver/POWER_SAMPLES_CNT) * (ts.voltmeter_calibrate + 900))/2500;
-
-            // Reset accumulator
-            pwmt.p_curr     = 0;
-            pwmt.pwr_aver   = 0;
-
-            uint32_t low_power_threshold = ((ts.low_power_config & LOW_POWER_THRESHOLD_MASK) + LOW_POWER_THRESHOLD_OFFSET) * 10;
-            bool low_power_shutdown_enabled = (ts.low_power_config & LOW_POWER_ENABLE_MASK) == LOW_POWER_ENABLE;
-            bool low_power_shutdown_wait = false;
-
-            if (low_power_shutdown_enabled && (val_p < low_power_threshold ))
+            if (ts.txrx_mode == TRX_MODE_RX)
             {
-                // okay, voltage is too low
-                low_power_shutdown_wait = true;
-                if (ts.sysclock > ts.low_power_shutdown_time && ts.txrx_mode == TRX_MODE_RX)         // only allow power-off in RX mode
+                if (ts.sysclock > ts.low_power_shutdown_time )         // only allow power-off in RX mode
                 {
                     UiDriver_PowerDownCleanup(true);
                 }
@@ -5102,48 +5151,22 @@ static void UiDriver_HandleVoltage()
             else
             {
                 ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
-            }
-
-
-            // did we detect a voltage change?
-            if(pwmt.voltage != val_p || low_power_shutdown_wait == true)	 	// Time to update - or was this the first time it was called?
-            {
-                pwmt.voltage = val_p;
-
-                char digits[6];
-
-                uint32_t col = COL_PWR_IND;  // Assume normal voltage, so Set normal color
-
-                if (val_p < low_power_threshold + 50)
-                {
-                    col = Red;
-                }
-                else if (val_p < low_power_threshold + 100)
-                {
-                    col = Orange;
-                }
-                else if (val_p < low_power_threshold + 150)
-                {
-                    col = Yellow;
-                }
-
-                static uint8_t voltage_blink = 0;
-                // in cease of low power shutdown coming, we let the voltage blink with 1hz
-                if (low_power_shutdown_wait == true && voltage_blink < 1 )
-                {
-                    col = Black;
-                }
-                voltage_blink++;
-                if (voltage_blink == 2)
-                {
-                    voltage_blink = 0;
-                }
-
-                snprintf(digits,6,"%2ld.%02ld",val_p/100,val_p%100);
-                UiLcdHy28_PrintText(POS_PWR_IND_X,POS_PWR_IND_Y,digits,col,Black,0);
+                // in tx mode, we extend the waiting time during the transmit, so that we don't switch off
+                // right after a transmit but let the battery some time to "regenerate"
             }
         }
+        else
+        {
+            if (pwmt.undervoltage_detected == true)
+            {
+                retval = true;
+                pwmt.undervoltage_detected = false;
+            }
+            ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
+        }
     }
+
+    return retval;
 }
 
 #if 0
@@ -6093,9 +6116,13 @@ void UiDriver_MainHandler()
             break;
         case STATE_HANDLE_POWERSUPPLY:
             MchfBoard_HandlePowerDown();
+
             if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8))
             {
-                UiDriver_HandleVoltage();
+                if (UiDriver_HandleVoltage())
+                {
+                    UiDriver_DisplayVoltage();
+                }
             }
             break;
         case STATE_LO_TEMPERATURE:
