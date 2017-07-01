@@ -5084,7 +5084,7 @@ static void UiDriver_DisplayVoltage()
     }
 
     static uint8_t voltage_blink = 0;
-    // in cease of low power shutdown coming, we let the voltage blink with 1hz
+    // in case of low power shutdown coming, we let the voltage blink with 1hz
     if (pwmt.undervoltage_detected == true && voltage_blink < 1 )
     {
         col = Black;
@@ -5161,6 +5161,7 @@ static bool UiDriver_HandleVoltage()
             {
                 retval = true;
                 pwmt.undervoltage_detected = false;
+                MchfBoard_GreenLed(LED_STATE_ON);
             }
             ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
         }
@@ -5998,6 +5999,7 @@ typedef enum {
     SCTimer_SMETER, // 4 * 10ms
     SCTimer_MAIN, // 4 * 10ms
     SCTimer_AGC, // 25 * 10ms
+    SCTimer_LEDBLINK, // 64 * 10ms
     SCTimer_NUM
 } SysClockTimers;
 
@@ -6122,6 +6124,11 @@ void UiDriver_MainHandler()
                 if (UiDriver_HandleVoltage())
                 {
                     UiDriver_DisplayVoltage();
+                }
+                if (pwmt.undervoltage_detected == true) {
+                    if (UiDriver_TimerExpireAndRewind(SCTimer_LEDBLINK, now, 64)) {
+                        MchfBoard_GreenLed(LED_STATE_TOGGLE);
+                    }
                 }
             }
             break;
