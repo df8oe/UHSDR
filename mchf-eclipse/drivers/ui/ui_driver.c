@@ -241,10 +241,11 @@ const ulong tune_steps[T_STEP_MAX_STEPS] =
     T_STEP_1HZ,
     T_STEP_10HZ,
     T_STEP_100HZ,
+    T_STEP_500HZ,
     T_STEP_1KHZ,
     T_STEP_5KHZ,
     T_STEP_9KHZ,
-	T_STEP_10KHZ,
+    T_STEP_10KHZ,
     T_STEP_100KHZ,
     T_STEP_1MHZ,
     T_STEP_10MHZ
