@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-06-30T07:24:44  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-01T07:32:01  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v2.4.0 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v2.5.3 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.4.0 - Menus Overview\ngenerated at  2017-06-30T07:24:44  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.5.3 - Menus Overview\ngenerated at  2017-07-01T07:32:01  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -142,18 +142,18 @@
              shape = record
              ];
         
+        "MENU_AGC_WDSP_SWITCH" [
+             label = "MENU_AGC_WDSP_SWITCH | AGC Mode Switch"
+             shape = record
+             ];
+        
         "MENU_AGC_MODE" [
-             label = "MENU_AGC_MODE | AGC Mode"
+             label = "MENU_AGC_MODE | AGC STD Mode"
              shape = record
              ];
         
         "MENU_CUSTOM_AGC" [
-             label = "MENU_CUSTOM_AGC | Custom AGC (+=Slower)"
-             shape = record
-             ];
-        
-        "MENU_AGC_WDSP_SWITCH" [
-             label = "MENU_AGC_WDSP_SWITCH | AGC WDSP switch"
+             label = "MENU_CUSTOM_AGC | AGC STD Custom Speed (+=Slower)"
              shape = record
              ];
         
@@ -173,27 +173,27 @@
              ];
         
         "MENU_AGC_WDSP_THRESH" [
-             label = "MENU_AGC_WDSP_THRESH | AGC Threshold"
+             label = "MENU_AGC_WDSP_THRESH | AGC WDSP Threshold"
              shape = record
              ];
         
         "MENU_AGC_WDSP_HANG_ENABLE" [
-             label = "MENU_AGC_WDSP_HANG_ENABLE | AGC Hang enable"
+             label = "MENU_AGC_WDSP_HANG_ENABLE | AGC WDSP Hang enable"
              shape = record
              ];
         
         "MENU_AGC_WDSP_HANG_TIME" [
-             label = "MENU_AGC_WDSP_HANG_TIME | AGC Hang time"
+             label = "MENU_AGC_WDSP_HANG_TIME | AGC WDSP Hang time"
              shape = record
              ];
         
         "MENU_AGC_WDSP_HANG_THRESH" [
-             label = "MENU_AGC_WDSP_HANG_THRESH | AGC Hang threshold"
+             label = "MENU_AGC_WDSP_HANG_THRESH | AGC WDSP Hang threshold"
              shape = record
              ];
         
         "MENU_AGC_WDSP_TAU_HANG_DECAY" [
-             label = "MENU_AGC_WDSP_TAU_HANG_DECAY | AGC Hang Decay"
+             label = "MENU_AGC_WDSP_TAU_HANG_DECAY | AGC WDSP Hang Decay"
              shape = record
              ];
         
@@ -258,7 +258,7 @@
              ];
         
         "MENU_LOW_POWER_SHUTDOWN" [
-             label = "MENU_LOW_POWER_SHUTDOWN | Low power shutdown"
+             label = "MENU_LOW_POWER_SHUTDOWN | Low Voltage Shutdown"
              shape = record
              ];
         
@@ -558,7 +558,7 @@
              ];
         
         "CONFIG_LOW_POWER_THRESHOLD" [
-             label = "CONFIG_LOW_POWER_THRESHOLD | Low power threshold"
+             label = "CONFIG_LOW_POWER_THRESHOLD | Low Voltage Threshold"
              shape = record
              ];
         
@@ -1171,11 +1171,11 @@
             
             MENU_BASE -> MENU_RF_GAIN_ADJ
             
+            MENU_BASE -> MENU_AGC_WDSP_SWITCH
+            
             MENU_BASE -> MENU_AGC_MODE
             
             MENU_BASE -> MENU_CUSTOM_AGC
-            
-            MENU_BASE -> MENU_AGC_WDSP_SWITCH
             
             MENU_BASE -> MENU_AGC_WDSP_MODE
             

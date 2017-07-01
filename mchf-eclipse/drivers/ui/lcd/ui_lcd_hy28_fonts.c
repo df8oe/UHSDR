@@ -1232,6 +1232,7 @@ const sFONT GL_Font16x24 =
     GL_ASCII16x24_Table,
     16, /* Width */
     24, /* Height */
+    .maxCode = 0x7f
 };
 
 const sFONT GL_Font12x12 =
@@ -1239,6 +1240,7 @@ const sFONT GL_Font12x12 =
     GL_ASCII12x12_Table,
     12, /* Width */
     12, /* Height */
+    .maxCode = 0x7f
 };
 
 const sFONT GL_Font8x12 =
@@ -1246,6 +1248,7 @@ const sFONT GL_Font8x12 =
     GL_ASCII8x12_Table,
     8, /* Width */
     12, /* Height */
+    .maxCode = 0x7f
 };
 
 const sFONT GL_Font8x12_bold =
@@ -1253,14 +1256,16 @@ const sFONT GL_Font8x12_bold =
     GL_ASCII8x12_bold_Table,
     8, 	/* Width */
     12, /* Height */
+    .maxCode = 0xff
 };
 
 // only upto 0x7F
 const sFONT GL_Font8x12_bold_short =
 {
-    GL_ASCII8x12_bold_Table,
+    GL_ASCII8x12_bold_short_Table,
     8,  /* Width */
     12, /* Height */
+    .maxCode = 0x7f
 };
 
 
@@ -1269,4 +1274,5 @@ const sFONT GL_Font8x8 =
     GL_ASCII8x8_Table,
     8, /* Width */
     8, /* Height */
+    .maxCode = 0x7f
 };

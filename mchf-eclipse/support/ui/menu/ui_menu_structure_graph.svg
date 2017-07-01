@@ -9,8 +9,8 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 9642)">
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9642 723,-9642 723,4 -4,4"/>
-<text text-anchor="middle" x="359.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v2.4.0 &#45; Menus Overview</text>
-<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;06&#45;30T07:24:44 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="359.5" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v2.5.3 &#45; Menus Overview</text>
+<text text-anchor="middle" x="359.5" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;01T07:32:01 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="mcHF-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3489.5"/>
@@ -291,41 +291,41 @@
 <path fill="none" stroke="black" d="M228.621,-8566.76C229.002,-8627.8 239.156,-8793.39 334,-8873.5 362.955,-8897.96 403.611,-8906.1 440.018,-8907.55"/>
 <polygon fill="black" stroke="black" points="440.08,-8911.05 450.16,-8907.79 440.246,-8904.06 440.08,-8911.05"/>
 </g>
-<!-- MENU_AGC_MODE -->
-<g id="node25" class="node"><title>MENU_AGC_MODE</title>
-<polygon fill="none" stroke="black" points="456.5,-8826.5 456.5,-8872.5 596.5,-8872.5 596.5,-8826.5 456.5,-8826.5"/>
-<text text-anchor="middle" x="526.5" y="-8857.3" font-family="Times,serif" font-size="14.00">MENU_AGC_MODE</text>
-<polyline fill="none" stroke="black" points="456.5,-8849.5 596.5,-8849.5 "/>
-<text text-anchor="middle" x="526.5" y="-8834.3" font-family="Times,serif" font-size="14.00">AGC Mode</text>
-</g>
-<!-- MENU_BASE&#45;&gt;MENU_AGC_MODE -->
-<g id="edge72" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_MODE</title>
-<path fill="none" stroke="black" d="M230.154,-8566.78C234.205,-8621.21 252.412,-8757.13 334,-8822.5 365.017,-8847.35 408.293,-8854.99 445.86,-8856.03"/>
-<polygon fill="black" stroke="black" points="446.248,-8859.53 456.29,-8856.15 446.332,-8852.53 446.248,-8859.53"/>
-</g>
-<!-- MENU_CUSTOM_AGC -->
-<g id="node26" class="node"><title>MENU_CUSTOM_AGC</title>
-<polygon fill="none" stroke="black" points="447,-8775.5 447,-8821.5 606,-8821.5 606,-8775.5 447,-8775.5"/>
-<text text-anchor="middle" x="526.5" y="-8806.3" font-family="Times,serif" font-size="14.00">MENU_CUSTOM_AGC</text>
-<polyline fill="none" stroke="black" points="447,-8798.5 606,-8798.5 "/>
-<text text-anchor="middle" x="526.5" y="-8783.3" font-family="Times,serif" font-size="14.00">Custom AGC (+=Slower)</text>
-</g>
-<!-- MENU_BASE&#45;&gt;MENU_CUSTOM_AGC -->
-<g id="edge73" class="edge"><title>MENU_BASE&#45;&gt;MENU_CUSTOM_AGC</title>
-<path fill="none" stroke="black" d="M232.307,-8566.8C240.328,-8613.95 265.471,-8720.51 334,-8771.5 363.053,-8793.12 401.617,-8801.31 436.52,-8803.56"/>
-<polygon fill="black" stroke="black" points="436.578,-8807.06 446.736,-8804.05 436.919,-8800.07 436.578,-8807.06"/>
-</g>
 <!-- MENU_AGC_WDSP_SWITCH -->
-<g id="node27" class="node"><title>MENU_AGC_WDSP_SWITCH</title>
-<polygon fill="none" stroke="black" points="428,-8724.5 428,-8770.5 625,-8770.5 625,-8724.5 428,-8724.5"/>
-<text text-anchor="middle" x="526.5" y="-8755.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_SWITCH</text>
-<polyline fill="none" stroke="black" points="428,-8747.5 625,-8747.5 "/>
-<text text-anchor="middle" x="526.5" y="-8732.3" font-family="Times,serif" font-size="14.00">AGC WDSP switch</text>
+<g id="node25" class="node"><title>MENU_AGC_WDSP_SWITCH</title>
+<polygon fill="none" stroke="black" points="428,-8826.5 428,-8872.5 625,-8872.5 625,-8826.5 428,-8826.5"/>
+<text text-anchor="middle" x="526.5" y="-8857.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_SWITCH</text>
+<polyline fill="none" stroke="black" points="428,-8849.5 625,-8849.5 "/>
+<text text-anchor="middle" x="526.5" y="-8834.3" font-family="Times,serif" font-size="14.00">AGC Mode Switch</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_SWITCH -->
-<g id="edge74" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_SWITCH</title>
-<path fill="none" stroke="black" d="M235.555,-8566.76C247.838,-8605.67 278.248,-8683.35 334,-8720.5 358.495,-8736.82 388.67,-8745.13 417.762,-8749"/>
-<polygon fill="black" stroke="black" points="417.659,-8752.51 427.996,-8750.19 418.467,-8745.56 417.659,-8752.51"/>
+<g id="edge72" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_SWITCH</title>
+<path fill="none" stroke="black" d="M230.154,-8566.78C234.205,-8621.21 252.412,-8757.13 334,-8822.5 357.424,-8841.27 387.84,-8850.22 417.509,-8853.92"/>
+<polygon fill="black" stroke="black" points="417.217,-8857.41 427.53,-8854.98 417.955,-8850.45 417.217,-8857.41"/>
+</g>
+<!-- MENU_AGC_MODE -->
+<g id="node26" class="node"><title>MENU_AGC_MODE</title>
+<polygon fill="none" stroke="black" points="456.5,-8775.5 456.5,-8821.5 596.5,-8821.5 596.5,-8775.5 456.5,-8775.5"/>
+<text text-anchor="middle" x="526.5" y="-8806.3" font-family="Times,serif" font-size="14.00">MENU_AGC_MODE</text>
+<polyline fill="none" stroke="black" points="456.5,-8798.5 596.5,-8798.5 "/>
+<text text-anchor="middle" x="526.5" y="-8783.3" font-family="Times,serif" font-size="14.00">AGC STD Mode</text>
+</g>
+<!-- MENU_BASE&#45;&gt;MENU_AGC_MODE -->
+<g id="edge73" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_MODE</title>
+<path fill="none" stroke="black" d="M232.307,-8566.8C240.328,-8613.95 265.471,-8720.51 334,-8771.5 365.64,-8795.04 408.56,-8802.66 445.747,-8804.02"/>
+<polygon fill="black" stroke="black" points="445.996,-8807.53 456.07,-8804.24 446.148,-8800.53 445.996,-8807.53"/>
+</g>
+<!-- MENU_CUSTOM_AGC -->
+<g id="node27" class="node"><title>MENU_CUSTOM_AGC</title>
+<polygon fill="none" stroke="black" points="414,-8724.5 414,-8770.5 639,-8770.5 639,-8724.5 414,-8724.5"/>
+<text text-anchor="middle" x="526.5" y="-8755.3" font-family="Times,serif" font-size="14.00">MENU_CUSTOM_AGC</text>
+<polyline fill="none" stroke="black" points="414,-8747.5 639,-8747.5 "/>
+<text text-anchor="middle" x="526.5" y="-8732.3" font-family="Times,serif" font-size="14.00">AGC STD Custom Speed (+=Slower)</text>
+</g>
+<!-- MENU_BASE&#45;&gt;MENU_CUSTOM_AGC -->
+<g id="edge74" class="edge"><title>MENU_BASE&#45;&gt;MENU_CUSTOM_AGC</title>
+<path fill="none" stroke="black" d="M235.555,-8566.76C247.838,-8605.67 278.248,-8683.35 334,-8720.5 354.506,-8734.16 378.993,-8742.21 403.493,-8746.74"/>
+<polygon fill="black" stroke="black" points="403.172,-8750.23 413.61,-8748.42 404.317,-8743.33 403.172,-8750.23"/>
 </g>
 <!-- MENU_AGC_WDSP_MODE -->
 <g id="node28" class="node"><title>MENU_AGC_WDSP_MODE</title>
@@ -368,7 +368,7 @@
 <polygon fill="none" stroke="black" points="428,-8520.5 428,-8566.5 625,-8566.5 625,-8520.5 428,-8520.5"/>
 <text text-anchor="middle" x="526.5" y="-8551.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_THRESH</text>
 <polyline fill="none" stroke="black" points="428,-8543.5 625,-8543.5 "/>
-<text text-anchor="middle" x="526.5" y="-8528.3" font-family="Times,serif" font-size="14.00">AGC Threshold</text>
+<text text-anchor="middle" x="526.5" y="-8528.3" font-family="Times,serif" font-size="14.00">AGC WDSP Threshold</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_THRESH -->
 <g id="edge78" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_THRESH</title>
@@ -380,7 +380,7 @@
 <polygon fill="none" stroke="black" points="405,-8469.5 405,-8515.5 648,-8515.5 648,-8469.5 405,-8469.5"/>
 <text text-anchor="middle" x="526.5" y="-8500.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_HANG_ENABLE</text>
 <polyline fill="none" stroke="black" points="405,-8492.5 648,-8492.5 "/>
-<text text-anchor="middle" x="526.5" y="-8477.3" font-family="Times,serif" font-size="14.00">AGC Hang enable</text>
+<text text-anchor="middle" x="526.5" y="-8477.3" font-family="Times,serif" font-size="14.00">AGC WDSP Hang enable</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_ENABLE -->
 <g id="edge79" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_ENABLE</title>
@@ -392,7 +392,7 @@
 <polygon fill="none" stroke="black" points="414.5,-8418.5 414.5,-8464.5 638.5,-8464.5 638.5,-8418.5 414.5,-8418.5"/>
 <text text-anchor="middle" x="526.5" y="-8449.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_HANG_TIME</text>
 <polyline fill="none" stroke="black" points="414.5,-8441.5 638.5,-8441.5 "/>
-<text text-anchor="middle" x="526.5" y="-8426.3" font-family="Times,serif" font-size="14.00">AGC Hang time</text>
+<text text-anchor="middle" x="526.5" y="-8426.3" font-family="Times,serif" font-size="14.00">AGC WDSP Hang time</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_TIME -->
 <g id="edge80" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_TIME</title>
@@ -404,7 +404,7 @@
 <polygon fill="none" stroke="black" points="405.5,-8367.5 405.5,-8413.5 647.5,-8413.5 647.5,-8367.5 405.5,-8367.5"/>
 <text text-anchor="middle" x="526.5" y="-8398.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_HANG_THRESH</text>
 <polyline fill="none" stroke="black" points="405.5,-8390.5 647.5,-8390.5 "/>
-<text text-anchor="middle" x="526.5" y="-8375.3" font-family="Times,serif" font-size="14.00">AGC Hang threshold</text>
+<text text-anchor="middle" x="526.5" y="-8375.3" font-family="Times,serif" font-size="14.00">AGC WDSP Hang threshold</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_THRESH -->
 <g id="edge81" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_HANG_THRESH</title>
@@ -416,7 +416,7 @@
 <polygon fill="none" stroke="black" points="391,-8316.5 391,-8362.5 662,-8362.5 662,-8316.5 391,-8316.5"/>
 <text text-anchor="middle" x="526.5" y="-8347.3" font-family="Times,serif" font-size="14.00">MENU_AGC_WDSP_TAU_HANG_DECAY</text>
 <polyline fill="none" stroke="black" points="391,-8339.5 662,-8339.5 "/>
-<text text-anchor="middle" x="526.5" y="-8324.3" font-family="Times,serif" font-size="14.00">AGC Hang Decay</text>
+<text text-anchor="middle" x="526.5" y="-8324.3" font-family="Times,serif" font-size="14.00">AGC WDSP Hang Decay</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_AGC_WDSP_TAU_HANG_DECAY -->
 <g id="edge82" class="edge"><title>MENU_BASE&#45;&gt;MENU_AGC_WDSP_TAU_HANG_DECAY</title>
@@ -572,7 +572,7 @@
 <polygon fill="none" stroke="black" points="409,-7653.5 409,-7699.5 644,-7699.5 644,-7653.5 409,-7653.5"/>
 <text text-anchor="middle" x="526.5" y="-7684.3" font-family="Times,serif" font-size="14.00">MENU_LOW_POWER_SHUTDOWN</text>
 <polyline fill="none" stroke="black" points="409,-7676.5 644,-7676.5 "/>
-<text text-anchor="middle" x="526.5" y="-7661.3" font-family="Times,serif" font-size="14.00">Low power shutdown</text>
+<text text-anchor="middle" x="526.5" y="-7661.3" font-family="Times,serif" font-size="14.00">Low Voltage Shutdown</text>
 </g>
 <!-- MENU_BASE&#45;&gt;MENU_LOW_POWER_SHUTDOWN -->
 <g id="edge95" class="edge"><title>MENU_BASE&#45;&gt;MENU_LOW_POWER_SHUTDOWN</title>
@@ -860,7 +860,7 @@
 <polygon fill="none" stroke="black" points="403,-6429.5 403,-6475.5 650,-6475.5 650,-6429.5 403,-6429.5"/>
 <text text-anchor="middle" x="526.5" y="-6460.3" font-family="Times,serif" font-size="14.00">CONFIG_LOW_POWER_THRESHOLD</text>
 <polyline fill="none" stroke="black" points="403,-6452.5 650,-6452.5 "/>
-<text text-anchor="middle" x="526.5" y="-6437.3" font-family="Times,serif" font-size="14.00">Low power threshold</text>
+<text text-anchor="middle" x="526.5" y="-6437.3" font-family="Times,serif" font-size="14.00">Low Voltage Threshold</text>
 </g>
 <!-- MENU_CONF&#45;&gt;CONFIG_LOW_POWER_THRESHOLD -->
 <g id="edge21" class="edge"><title>MENU_CONF&#45;&gt;CONFIG_LOW_POWER_THRESHOLD</title>

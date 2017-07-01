@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-07-01T07:32:05  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.4.0 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.5.3 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v2.4.0 - UI Menu Overview
+# mcHF FW v2.5.3 - UI Menu Overview
 
-generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py"
+generated at  2017-07-01T07:32:05  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -34,17 +34,17 @@ generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py"
 | **FM Tone Burst**             (                    MENU_FM_TONE_BURST_MODE) | Enabled sending of short tone at beginning of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
 | **FM Deviation**              (                           MENU_FM_DEV_MODE) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
 | **RF Gain**                   (                           MENU_RF_GAIN_ADJ) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
-| **AGC Mode**                  (                              MENU_AGC_MODE) | Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
-| **Custom AGC (+=Slower)**     (                            MENU_CUSTOM_AGC) | If AGC is set to CUSTOM, this controls the speed setting of AGC | 
-| **AGC WDSP switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
+| **AGC Mode Switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
+| **AGC STD Mode**              (                              MENU_AGC_MODE) | Standard AGC: Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
+| **AGC STD Custom Speed (+=Slower)** (                            MENU_CUSTOM_AGC) | Standard AGC:  If AGC STD Mode is set to CUSTOM, this controls the speed setting of AGC | 
 | **AGC WDSP Mode**             (                         MENU_AGC_WDSP_MODE) | Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC. | 
 | **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the quietest signal after the AGC action has taken place. Given in dB. | 
 | **AGC WDSP Decay**            (                    MENU_AGC_WDSP_TAU_DECAY) | Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds. | 
-| **AGC Threshold**             (                       MENU_AGC_WDSP_THRESH) | ´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold. | 
-| **AGC Hang enable**           (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: If enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
-| **AGC Hang time**             (                    MENU_AGC_WDSP_HANG_TIME) | Hang AGC: hang time is the time period over which the AGC gain is held constant when in AGC Hang mode. After this period the gain is increased fast. | 
-| **AGC Hang threshold**        (                  MENU_AGC_WDSP_HANG_THRESH) | ´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place. | 
-| **AGC Hang Decay**            (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
+| **AGC WDSP Threshold**        (                       MENU_AGC_WDSP_THRESH) | ´Threshold´ = ´Knee´ of the AGC: input signal level from which on the AGC action takes place. AGC threshold should be placed/adjusted just above the band noise for every particular RX situation to allow for optimal AGC action. The blue AGC box indicates when AGC action takes place and helps in adjusting this threshold. | 
+| **AGC WDSP Hang enable**      (                  MENU_AGC_WDSP_HANG_ENABLE) | Enable/Disable Hang AGC function: If enabled: after the signal has decreased, the gain of the AGC is held constant for a certain time period (the hang time) in order to allow for speech pauses without disturbing noise because of fast acting AGC. | 
+| **AGC WDSP Hang time**        (                    MENU_AGC_WDSP_HANG_TIME) | Hang AGC: hang time is the time period over which the AGC gain is held constant when in AGC Hang mode. After this period the gain is increased fast. | 
+| **AGC WDSP Hang threshold**   (                  MENU_AGC_WDSP_HANG_THRESH) | ´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place. | 
+| **AGC WDSP Hang Decay**       (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
 | **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
 | **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select the required signal input for transmit (except in CW). Also changeable via long press on M3 | 
@@ -57,7 +57,7 @@ generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py"
 | **DSP NR Strength**           (                       MENU_DSP_NR_STRENGTH) | Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active. | 
 | **TCXO Off/On/Stop**          (                             MENU_TCXO_MODE) | The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement). | 
 | **TCXO Temp. (C/F)**          (                              MENU_TCXO_C_F) | Show the measure TCXO temperature in Celsius or Fahrenheit. | 
-| **Low power shutdown**        (                    MENU_LOW_POWER_SHUTDOWN) | Shutdown automatically when power below threshold. | 
+| **Low Voltage Shutdown**      (                    MENU_LOW_POWER_SHUTDOWN) | Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX). | 
 | **Backup Config**             (                         MENU_BACKUP_CONFIG) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
 | **Restore Config**            (                        MENU_RESTORE_CONFIG) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
 | **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
@@ -87,7 +87,7 @@ generated at  2017-06-30T07:24:47  by "./ui_menu_structure_mdtable.py"
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
 | **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
-| **Low power threshold**       (                 CONFIG_LOW_POWER_THRESHOLD) | Threshold for voltage warning colors and auto shutdown. | 
+| **Low Voltage Threshold**     (                 CONFIG_LOW_POWER_THRESHOLD) | Voltage threshold for voltage warning colors and auto shutdown. | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
 | **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
