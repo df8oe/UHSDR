@@ -1064,6 +1064,12 @@ bool RadioManagement_LSBActive(uint16_t dmod_mode)
     return is_lsb;
 }
 
+bool RadioManagement_USBActive(uint16_t dmod_mode)
+{
+    return RadioManagement_UsesBothSidebands(dmod_mode) == false && RadioManagement_LSBActive(dmod_mode) == false;
+}
+
+
 static void RadioManagement_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
     float pwr;
