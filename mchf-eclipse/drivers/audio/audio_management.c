@@ -351,7 +351,7 @@ void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
     switch(dmod_mode)
     {
     case DEMOD_CW:
-        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.sidetone_freq;
+        tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
         break;
     default:
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;

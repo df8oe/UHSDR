@@ -216,18 +216,18 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
         switch(ts.cw_offset_mode)
         {
         case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            tune_freq -= ts.sidetone_freq;
+            tune_freq -= ts.cw_sidetone_freq;
             // lower LO by sidetone amount
             break;
         case CW_OFFSET_LSB_SHIFT:   // LSB?
-            tune_freq += ts.sidetone_freq;
+            tune_freq += ts.cw_sidetone_freq;
             // raise LO by sidetone amount
             break;
         case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
             if(ts.cw_lsb)
-                tune_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
+                tune_freq += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
             else
-                tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
+                tune_freq -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
         }
     }
 

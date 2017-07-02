@@ -137,11 +137,14 @@ void TransceiverStateInit(void)
     ts.agc_custom_decay	= AGC_CUSTOM_DEFAULT;			// Default setting for AGC custom setting - higher = slower
 
     ts.st_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
-    ts.keyer_mode		= CW_MODE_IAM_B;			// CW keyer mode
-    ts.keyer_speed		= DEFAULT_KEYER_SPEED;			// CW keyer speed
-    ts.sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
-    ts.paddle_reverse	= 0;					// Paddle defaults to NOT reversed
+
+    ts.cw_keyer_mode		= CW_MODE_IAM_B;			// CW keyer mode
+    ts.cw_keyer_speed		= DEFAULT_KEYER_SPEED;			// CW keyer speed
+    ts.cw_sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
+    ts.cw_paddle_reverse	= 0;					// Paddle defaults to NOT reversed
     ts.cw_rx_delay		= CW_RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
+    ts.cw_keyer_weight        = CW_KEYER_WEIGHT_DEFAULT;
+
     ts.audio_spkr_unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
 
     ts.nb_setting		= 0;					// Noise Blanker setting
