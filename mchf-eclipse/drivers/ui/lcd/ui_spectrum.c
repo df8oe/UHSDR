@@ -1346,12 +1346,12 @@ static void UiSpectrum_CalculateDBm()
 
             float32_t cons = (float32_t)ts.dbm_constant - 225; // -225; //- 227.0;
             float32_t  Lbin, Ubin;
-            float32_t bw_LSB = 0.0;
-            float32_t bw_USB = 0.0;
+            float32_t bw_LOWER = 0.0;
+            float32_t bw_UPPER = 0.0;
             float32_t sum_db = 0.0;
             int posbin = 0;
             float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
-            float32_t width;
+
 
             float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / buff_len);
             // width of a 256 tap FFT bin = 187.5Hz
@@ -1387,53 +1387,41 @@ static void UiSpectrum_CalculateDBm()
                 posbin = (buff_len_int / 4) + (buff_len_int / 8);
             }
 
-            width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+            float32_t width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+            float32_t offset = (float32_t)FilterPathInfo[ts.filter_path].offset;
+
+            if (offset == 0)
+            {
+                        offset = width/2;
+            }
+
+            float32_t lf_freq = offset - width/2;
+            float32_t uf_freq = offset + width/2;
 
             //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
             //	= determine bandwith separately for lower and upper sideband
 
-            switch(ts.dmod_mode)
+            if (RadioManagement_UsesBothSidebands(ts.dmod_mode) == true)
             {
-            case DEMOD_LSB:
-                bw_USB = 0.0;
-                bw_LSB = width;
-                break;
-            case DEMOD_USB:
-                bw_LSB = 0.0;
-                bw_USB = width;
-                break;
-            case DEMOD_CW:
-                if(ts.cw_lsb)
-                {
-                    bw_USB = 0.0;
-                    bw_LSB = width;
-                }
-                else
-                {
-                    bw_LSB = 0.0;
-                    bw_USB = width;
-                }
-                break;
-            case DEMOD_DIGI:
-                if(ts.digi_lsb == true)
-                {
-                    bw_USB = 0.0;
-                    bw_LSB = width;
-                }
-                else
-                {
-                    bw_LSB = 0.0;
-                    bw_USB = width;
-                }
-                break;
-            default:
-                bw_LSB = width;
-                bw_USB = width;
+                bw_UPPER = uf_freq;
+                bw_LOWER = -uf_freq;
             }
+            else if (RadioManagement_LSBActive(ts.dmod_mode) == true)
+            {
+                bw_UPPER = -lf_freq;
+                bw_LOWER = -uf_freq;
+            }
+            else // USB
+            {
+                bw_UPPER = uf_freq;
+                bw_LOWER = lf_freq;
+            }
+
+
             // calculate upper and lower limit for determination of signal strength
             // = filter passband is between the lower bin Lbin and the upper bin Ubin
-            Lbin = (float32_t)posbin - roundf(bw_LSB / bin_BW);
-            Ubin = (float32_t)posbin + roundf(bw_USB / bin_BW); // the bin on the upper sideband side
+            Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
+            Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
 
             // take care of filter bandwidths that are larger than the displayed FFT bins
             if(Lbin < 0)
