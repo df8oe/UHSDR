@@ -333,19 +333,9 @@ typedef enum
 //
 #define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
 
-#define	US_DELAY			15  // 15 gives 1 uS delay in loop without optimization(O0)
-
-#define	CW_SIDETONE_FREQ_DEFAULT	750	// Default CW Audio Sidetone and TX offset frequency
-//
-#define	CW_SIDETONE_FREQ_MIN		400
-#define	CW_SIDETONE_FREQ_MAX		1000
-//
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
 #define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
-//
-#define	CW_RX_DELAY_MAX			50	// Maximum TX to RX turnaround setting
-#define	CW_RX_DELAY_DEFAULT		8
 //
 
 // Audio sources for TX modulation
@@ -630,11 +620,24 @@ typedef struct TransceiverState
     uchar	new_digi_mode;
 
     // Current CW mode
-    uchar	keyer_mode;
-    uchar	keyer_speed;
-    ulong	sidetone_freq;
-    uchar	paddle_reverse;
-    uchar	cw_rx_delay;
+    uint8_t	cw_keyer_mode;
+    uint8_t	cw_keyer_speed;
+    uint8_t	cw_paddle_reverse;
+
+    uint8_t cw_keyer_weight;   // cw dit/pause ratio 100 = 1.00 -> dit == pause == dah / 3
+#define CW_KEYER_WEIGHT_DEFAULT (100)
+#define CW_KEYER_WEIGHT_MAX     (150)
+#define CW_KEYER_WEIGHT_MIN      (50)
+
+    uint8_t cw_rx_delay; // break time
+#define CW_RX_DELAY_DEFAULT     8
+#define CW_RX_DELAY_MAX         50  // Maximum TX to RX turnaround setting
+
+    uint32_t cw_sidetone_freq;
+#define CW_SIDETONE_FREQ_DEFAULT    750 // Default CW Audio Sidetone and TX offset frequency in Hz
+#define CW_SIDETONE_FREQ_MIN        400
+#define CW_SIDETONE_FREQ_MAX        1000
+
     ulong	audio_spkr_unmute_delay_count;
 
     uchar	power_level;

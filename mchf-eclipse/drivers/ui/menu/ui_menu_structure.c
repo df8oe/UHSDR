@@ -144,6 +144,7 @@ const MenuDescriptor cwGroup[] =
 //    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode", UiMenuDesc(":soon:") },
     { MENU_CW, MENU_ITEM, MENU_KEYER_MODE, NULL, "CW Keyer Mode", UiMenuDesc("Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM)") },
     { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED, NULL, "CW Keyer Speed", UiMenuDesc("Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode.") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_WEIGHT, NULL, "CW Keyer Weight", UiMenuDesc("Keyer Dit/Pause ratio for the automatic keyer modes. Higher values increase length of dit, decreases length of pause so that the total time is still according to the set WpM value.") },
     { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN, NULL, "CW Sidetone Gain", UiMenuDesc("Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode.") },
     { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY, NULL, "CW Side/Offset Freq", UiMenuDesc("Sidetone Frequency (also Offset frequency, see CW Freq. Offset below)") },
     { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE, NULL, "CW Paddle Reverse", UiMenuDesc("Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles.") },

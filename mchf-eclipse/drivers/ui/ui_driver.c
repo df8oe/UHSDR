@@ -2869,21 +2869,21 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
         switch(ts.cw_offset_mode)
         {
         case CW_OFFSET_LSB_RX:	// Yes - In an LSB mode with display offset?
-            dial_freq -= ts.sidetone_freq;
+            dial_freq -= ts.cw_sidetone_freq;
             // yes, lower display freq. by sidetone amount
             break;
         case CW_OFFSET_USB_RX:	// In a USB mode with display offset?
-            dial_freq += ts.sidetone_freq;
+            dial_freq += ts.cw_sidetone_freq;
             // yes, raise display freq. by sidetone amount
             break;
         case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
             if(ts.cw_lsb)
             {
-                dial_freq -= ts.sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
+                dial_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
             }
             else
             {
-                dial_freq += ts.sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+                dial_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
             }
             break;
         }
@@ -3952,7 +3952,7 @@ static void UiDriver_CheckEncoderThree()
                 if(ts.dmod_mode == DEMOD_CW)	 		// in CW mode, adjust keyer speed
                 {
                     // Convert to Audio Gain incr/decr
-                    ts.keyer_speed = change_and_limit_int(ts.keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
+                    ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
                     CwGen_SetSpeed();
                     UiDriver_DisplayKeyerSpeed(1);
                 }
@@ -4372,7 +4372,7 @@ static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
         color = White;
 
     txt = "WPM";
-    snprintf(txt_buf,5,"%3d",ts.keyer_speed);
+    snprintf(txt_buf,5,"%3d",ts.cw_keyer_speed);
 
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }

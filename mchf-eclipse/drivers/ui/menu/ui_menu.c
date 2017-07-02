@@ -1634,14 +1634,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case MENU_KEYER_MODE:   // Keyer mode
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_mode,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_mode,
                                               0,
                                               CW_MODE_ULTIMATE,
                                               CW_MODE_IAM_B,
                                               1
                                              );
 
-        switch(ts.keyer_mode)
+        switch(ts.cw_keyer_mode)
         {
         case CW_MODE_IAM_B:
             txt_ptr = "IAM_B";
@@ -1659,7 +1659,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_KEYER_SPEED:  // keyer speed
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_speed,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_speed,
                                               MIN_KEYER_SPEED,
                                               MAX_KEYER_SPEED,
                                               DEFAULT_KEYER_SPEED,
@@ -1671,8 +1671,25 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             CwGen_SetSpeed(); // make sure keyerspeed is being used
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u", ts.keyer_speed);
+        snprintf(options,32, "  %u.%02u", ts.cw_keyer_speed/100,ts.cw_keyer_speed%100);
         break;
+
+    case MENU_KEYER_WEIGHT:  // keyer weight
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_weight,
+                                              CW_KEYER_WEIGHT_MIN,
+                                              CW_KEYER_WEIGHT_MAX,
+                                              CW_KEYER_WEIGHT_DEFAULT,
+                                              1
+                                             );
+
+        if(var_change && ts.dmod_mode == DEMOD_CW)         // did it change?
+        {
+            CwGen_SetSpeed(); // make sure keyerspeed is being used
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
+        }
+        snprintf(options,32, "  %u", ts.cw_keyer_weight);
+        break;
+
     case MENU_SIDETONE_GAIN:    // sidetone gain
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.st_gain,
                                               0,
@@ -1687,7 +1704,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.st_gain);
         break;
     case MENU_SIDETONE_FREQUENCY:   // sidetone frequency
-        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.sidetone_freq,
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.cw_sidetone_freq,
                                                CW_SIDETONE_FREQ_MIN,
                                                CW_SIDETONE_FREQ_MAX*10,
                                                CW_SIDETONE_FREQ_DEFAULT,
@@ -1696,16 +1713,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         if(var_change && ts.dmod_mode == DEMOD_CW)         // did it change?
         {
-            float freq[2] = { ts.sidetone_freq, 0.0 };
+            float freq[2] = { ts.cw_sidetone_freq, 0.0 };
 
             softdds_setfreq_dbl(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
-        snprintf(options,32, "  %uHz", (uint)ts.sidetone_freq);
+        snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);
         break;
 
     case MENU_PADDLE_REVERSE:   // CW Paddle reverse
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.paddle_reverse,0,options,&clr);
+        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cw_paddle_reverse,0,options,&clr);
         break;
     case MENU_CW_TX_RX_DELAY:   // CW TX->RX delay
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_rx_delay,
