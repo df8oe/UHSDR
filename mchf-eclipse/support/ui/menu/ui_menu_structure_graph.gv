@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-01T07:32:01  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-02T15:57:07  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v2.5.3 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v2.5.6 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.5.3 - Menus Overview\ngenerated at  2017-07-01T07:32:01  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.5.6 - Menus Overview\ngenerated at  2017-07-02T15:57:07  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -424,6 +424,11 @@
         
         "MENU_KEYER_SPEED" [
              label = "MENU_KEYER_SPEED | CW Keyer Speed"
+             shape = record
+             ];
+        
+        "MENU_KEYER_WEIGHT" [
+             label = "MENU_KEYER_WEIGHT | CW Keyer Weight"
              shape = record
              ];
         
@@ -1372,6 +1377,8 @@
             MENU_CW -> MENU_KEYER_MODE
             
             MENU_CW -> MENU_KEYER_SPEED
+            
+            MENU_CW -> MENU_KEYER_WEIGHT
             
             MENU_CW -> MENU_SIDETONE_GAIN
             

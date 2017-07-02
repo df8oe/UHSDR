@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-07-01T07:32:05  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-07-02T15:57:10  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.5.3 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.5.6 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v2.5.3 - UI Menu Overview
+# mcHF FW v2.5.6 - UI Menu Overview
 
-generated at  2017-07-01T07:32:05  by "./ui_menu_structure_mdtable.py"
+generated at  2017-07-02T15:57:10  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -151,6 +151,7 @@ generated at  2017-07-01T07:32:05  by "./ui_menu_structure_mdtable.py"
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **CW Keyer Mode**             (                            MENU_KEYER_MODE) | Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM) | 
 | **CW Keyer Speed**            (                           MENU_KEYER_SPEED) | Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode. | 
+| **CW Keyer Weight**           (                          MENU_KEYER_WEIGHT) | Keyer Dit/Pause ratio for the automatic keyer modes. Higher values increase length of dit, decreases length of pause so that the total time is still according to the set WpM value. | 
 | **CW Sidetone Gain**          (                         MENU_SIDETONE_GAIN) | Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode. | 
 | **CW Side/Offset Freq**       (                    MENU_SIDETONE_FREQUENCY) | Sidetone Frequency (also Offset frequency, see CW Freq. Offset below) | 
 | **CW Paddle Reverse**         (                        MENU_PADDLE_REVERSE) | Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles. | 
