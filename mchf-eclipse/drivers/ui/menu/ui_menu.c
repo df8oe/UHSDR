@@ -1671,7 +1671,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             CwGen_SetSpeed(); // make sure keyerspeed is being used
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u.%02u", ts.cw_keyer_speed/100,ts.cw_keyer_speed%100);
+        snprintf(options,32, "  %u", ts.cw_keyer_speed);
         break;
 
     case MENU_KEYER_WEIGHT:  // keyer weight
@@ -1687,7 +1687,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             CwGen_SetSpeed(); // make sure keyerspeed is being used
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u", ts.cw_keyer_weight);
+        snprintf(options,32, "  %u.%02u", ts.cw_keyer_weight/100,ts.cw_keyer_weight%100);
         break;
 
     case MENU_SIDETONE_GAIN:    // sidetone gain

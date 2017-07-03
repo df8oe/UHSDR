@@ -237,12 +237,12 @@ void CwGen_SetSpeed()
     int32_t dah_time         = 3*180000/ts.cw_keyer_speed + CW_SMOOTH_STEPS*100;  // +9 =  6ms * 1/1500 =  0,006*1500
     int32_t pause_time       = 180000/ts.cw_keyer_speed - CW_SMOOTH_STEPS*100;  // -9 = -6ms * 1/1500 = -0,006*1500
 
-    int32_t weight_corr = (100 - (int32_t)ts.cw_keyer_weight) * dit_time;
+    int32_t weight_corr = ((int32_t)ts.cw_keyer_weight-100) * dit_time/100;
 
     // we add the correction value to both dit and dah and subtract from pause. dah gets less change proportionally because of this
     ps.dit_time = (dit_time + weight_corr)/100;
     ps.dah_time = (dah_time + weight_corr)/100;
-    ps.pause_time = (pause_time + weight_corr)/100;
+    ps.pause_time = (pause_time - weight_corr)/100;
 }
 
 static void CwGen_SetBreakTime()
