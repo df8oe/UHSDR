@@ -1,6 +1,6 @@
 <div align="center"><h1><b>The UHSDR Project</b></h1></div>
 
-UHSDR stands for **U**niversa**H**am**S**oftware **D**efined **R**adio.
+UHSDR stands for **U**niversal**H**am**S**oftware **D**efined **R**adio.
 The project provides  the firmware to run standalone HAM transceivers.
 It currently supports STM32F4 and STM32F7 MCU based QSD designs. The
 current firmware provides receive and transmit for various analog modes
