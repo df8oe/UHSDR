@@ -14,7 +14,7 @@
 
 #define 	TRX4M_VER_MAJOR			"2"
 #define 	TRX4M_VER_MINOR			"5"
-#define 	TRX4M_VER_RELEASE		"6"
+#define 	TRX4M_VER_RELEASE		"7"
 
 #define		TRX4M_BOOT_VER			"3.4.1"
 
