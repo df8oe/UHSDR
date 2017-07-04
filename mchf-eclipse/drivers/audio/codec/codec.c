@@ -392,7 +392,7 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
     if(txrx_mode == TRX_MODE_TX)  		// bail out if not in transmit mode
     {
         float vcalc = 0;
-        if(ts.st_gain)	 	// calculate if the sidetone gain is non-zero
+        if(ts.cw_sidetone_gain)	 	// calculate if the sidetone gain is non-zero
         {
             vcalc = (float)ts.tx_power_factor;	// get TX scaling power factor
             vcalc *= vcalc;
@@ -400,7 +400,7 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
             vcalc = log10f(vcalc);	// get the log
             vcalc *= 10;			// convert to deciBels and calibrate for the per-step value of the codec
 
-            float vcalc1 = 6.0 *((float)ts.st_gain-5);
+            float vcalc1 = 6.0 *((float)ts.cw_sidetone_gain-5);
             // get the sidetone gain (level) setting
             // offset by # of dB the desired sidetone gain
 

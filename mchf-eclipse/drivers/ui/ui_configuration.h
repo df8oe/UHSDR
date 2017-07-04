@@ -50,9 +50,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define SIDETONE_MAX_GAIN   15      // Maximum sidetone gain
 #define DEFAULT_SIDETONE_GAIN   5   // Default sidetone gain
 //
-#define MIN_KEYER_SPEED     5       // Minimum keyer speed
-#define MAX_KEYER_SPEED     48      // Maximum keyer speed
-#define DEFAULT_KEYER_SPEED 20      // Default keyer speed
+#define CW_KEYER_SPEED_MIN     5       // Minimum keyer speed
+#define CW_KEYER_SPEED_MAX     48      // Maximum keyer speed
+#define CW_KEYER_SPEED_DEFAULT 20      // Default keyer speed
 //
 
 //
@@ -162,9 +162,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_MAX_VOLUME					10
 #define EEPROM_POWER_STATE					11
 #define EEPROM_TX_POWER_LEVEL				12
-#define EEPROM_KEYER_SPEED					13
-#define EEPROM_KEYER_MODE					14
-#define EEPROM_SIDETONE_GAIN				15
+#define EEPROM_CW_KEYER_SPEED				13
+#define EEPROM_CW_KEYER_MODE				14
+#define EEPROM_CW_SIDETONE_GAIN				15
 #define EEPROM_MIC_BOOST					16
 #define EEPROM_TX_IQ_80M_GAIN_BALANCE		17      // TX gain balance
 #define EEPROM_TX_IQ_80M_PHASE_BALANCE		18      // TX phase balance
@@ -552,8 +552,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_AGC_WDSP_TAU_DECAY_4         386
 
 #define EEPROM_LOW_POWER_CONFIG          387
+#define EEPROM_CW_KEYER_WEIGHT           388
 
-#define EEPROM_FIRST_UNUSED 				388		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				389		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

@@ -1637,13 +1637,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_mode,
                                               0,
                                               CW_MODE_ULTIMATE,
-                                              CW_MODE_IAM_B,
+                                              CW_KEYER_MODE_IAM_B,
                                               1
                                              );
 
         switch(ts.cw_keyer_mode)
         {
-        case CW_MODE_IAM_B:
+        case CW_KEYER_MODE_IAM_B:
             txt_ptr = "IAM_B";
             break;
         case CW_MODE_IAM_A:
@@ -1660,9 +1660,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
     case MENU_KEYER_SPEED:  // keyer speed
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_speed,
-                                              MIN_KEYER_SPEED,
-                                              MAX_KEYER_SPEED,
-                                              DEFAULT_KEYER_SPEED,
+                                              CW_KEYER_SPEED_MIN,
+                                              CW_KEYER_SPEED_MAX,
+                                              CW_KEYER_SPEED_DEFAULT,
                                               1
                                              );
 
@@ -1691,7 +1691,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_SIDETONE_GAIN:    // sidetone gain
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.st_gain,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_sidetone_gain,
                                               0,
                                               SIDETONE_MAX_GAIN,
                                               DEFAULT_SIDETONE_GAIN,
@@ -1701,7 +1701,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u", ts.st_gain);
+        snprintf(options,32, "  %u", ts.cw_sidetone_gain);
         break;
     case MENU_SIDETONE_FREQUENCY:   // sidetone frequency
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.cw_sidetone_freq,

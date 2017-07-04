@@ -3646,7 +3646,7 @@ static void UiDriver_CheckEncoderOne()
             if(ts.dmod_mode == DEMOD_CW)	 	// In CW mode - adjust sidetone gain
             {
                 // Convert to Audio Gain incr/decr
-                ts.st_gain = change_and_limit_uint(ts.st_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
+                ts.cw_sidetone_gain = change_and_limit_uint(ts.cw_sidetone_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
                 Codec_TxSidetoneSetgain(ts.txrx_mode);
                 UiDriver_DisplaySidetoneGain(true);
             }
@@ -3952,7 +3952,7 @@ static void UiDriver_CheckEncoderThree()
                 if(ts.dmod_mode == DEMOD_CW)	 		// in CW mode, adjust keyer speed
                 {
                     // Convert to Audio Gain incr/decr
-                    ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
+                    ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,CW_KEYER_SPEED_MIN,CW_KEYER_SPEED_MAX);
                     CwGen_SetSpeed();
                     UiDriver_DisplayKeyerSpeed(1);
                 }
@@ -4153,7 +4153,7 @@ static void UiDriver_DisplayAfGain(bool encoder_active)
 //*----------------------------------------------------------------------------
 static void UiDriver_DisplaySidetoneGain(bool encoder_active)
 {
-    UiDriver_EncoderDisplaySimple(1,0,"STG", encoder_active, ts.st_gain);
+    UiDriver_EncoderDisplaySimple(1,0,"STG", encoder_active, ts.cw_sidetone_gain);
 }
 
 //*----------------------------------------------------------------------------

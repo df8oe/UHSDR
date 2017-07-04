@@ -314,11 +314,11 @@ typedef enum {
 
 //
 //
-#define CW_MODE_IAM_B				0
+#define CW_KEYER_MODE_IAM_B				0
 #define CW_MODE_IAM_A				1
 #define CW_MODE_STRAIGHT			2
 #define CW_MODE_ULTIMATE			3
-#define CW_MAX_MODE					3
+#define CW_KEYER_MAX_MODE					3
 
 // PA power level setting enumeration
 typedef enum
@@ -518,7 +518,7 @@ typedef struct TransceiverState
 
     uchar	rf_codec_gain;		// gain for codec (A/D converter) in receive mode
     uchar 	nb_setting;
-    uchar	st_gain;
+    uchar	cw_sidetone_gain;
     uchar	pa_bias;
     uchar	pa_cw_bias;
 
