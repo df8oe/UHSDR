@@ -36,7 +36,7 @@ If you want to see the recent progress of the project, have a look [at
 the commits here](https://github.com/df8oe/mchf-github/commits/active-devel).
 
 
-All this is bundled in [startup page](http://df8oe.github.io/mchf-github/).
+All this is bundled in [startup page](http://df8oe.github.io/UHSDR/).
 
 Have fun - Open-Source opens possibilities!
 
