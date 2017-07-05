@@ -268,7 +268,7 @@ void CwGen_Init(void)
 
     switch(ts.cw_keyer_mode)
     {
-    case CW_MODE_IAM_B:
+    case CW_KEYER_MODE_IAM_B:
         ps.port_state = CW_IAMBIC_B;
         break;
     case CW_MODE_IAM_A:
@@ -612,7 +612,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                     CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
                 }
 
-                if(ts.cw_keyer_mode == CW_MODE_IAM_B)
+                if(ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
                 {
                     CwGen_CheckKeyerState();
                 }
@@ -627,7 +627,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             ps.key_timer--;
             if(ps.key_timer == 0)
             {
-                if (ts.cw_keyer_mode == CW_MODE_IAM_A || ts.cw_keyer_mode == CW_MODE_IAM_B)
+                if (ts.cw_keyer_mode == CW_MODE_IAM_A || ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
                 {
                     if (ps.port_state & CW_DIT_PROC)
                     {
