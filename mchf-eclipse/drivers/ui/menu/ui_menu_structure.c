@@ -37,6 +37,7 @@ enum MENU_GROUP_ITEM
     MENU_CW,
     MENU_DISPLAY,
     MENU_DEBUG,
+    MENU_HALL_OF_FAME,
 };
 
 
@@ -50,6 +51,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_POW, NULL, "PA Configuration", UiMenuDesc("Menu for power amplifier parameter and tune function adjustments") },
     { MENU_TOP, MENU_GROUP, MENU_SYSINFO, NULL, "System Info", UiMenuDesc("Lists various system info values") },
     { MENU_TOP, MENU_GROUP, MENU_DEBUG, NULL, "Debug/Exper. Settings", UiMenuDesc("As the name says, contains debug or expert settings usually not relevant for operating the mcHF") },
+    { MENU_TOP, MENU_GROUP, MENU_HALL_OF_FAME, NULL, "Hall of Fame", UiMenuDesc("Thanks to all who contributed to the project") },
     { MENU_TOP, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -362,6 +364,21 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
+const MenuDescriptor hall_of_fameGroup[] =
+{
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"M0NKA  (Chris) founder of mcHF", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"KA7OEI (Clint) 1st great work", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DF8OE  (Andreas)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DL4SAI (Harald)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DB4PLE (Danilo)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DD4WH  (Frank)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DL2FW  (Michael)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"HB9OCQ (Stephan)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"       (Asbjorn Pettersen)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"PA7N   (Erwin)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+};
+
 
 MenuGroupState topGroupState;
 MenuGroupState baseGroupState;
@@ -372,6 +389,7 @@ MenuGroupState infoGroupState;
 MenuGroupState cwGroupState;
 MenuGroupState displayGroupState;
 MenuGroupState debugGroupState;
+MenuGroupState hall_of_fameGroupState;
 
 
 const MenuGroupDescriptor groups[] =
@@ -385,4 +403,5 @@ const MenuGroupDescriptor groups[] =
     { cwGroup, &cwGroupState, topGroup },  // Group 7
     { displayGroup, &displayGroupState, topGroup },  // Group 8
     { debugGroup, &debugGroupState, topGroup },  // Group 9
+    { hall_of_fameGroup, &hall_of_fameGroupState, topGroup },  // Group 10
 };

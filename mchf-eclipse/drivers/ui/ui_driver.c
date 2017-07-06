@@ -5922,6 +5922,9 @@ void UiDriver_ShowStartUpScreen(uint32_t hold_time)
 
 	// show important error status
 
+    ushort adc2, adc3;
+    adc2 = HAL_ADC_GetValue(&hadc2);
+    adc3 = HAL_ADC_GetValue(&hadc3);
     ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  		// get setting of frequency translation mode
 
     if(!(i & 0xff))													// no translation used
@@ -5932,17 +5935,12 @@ void UiDriver_ShowStartUpScreen(uint32_t hold_time)
         UiLcdHy28_PrintTextCentered(0,135,320,txp,Black,Red3,0);
         error = 1;
     }
-
     if(ts.ee_init_stat != HAL_OK)        							// problem with EEPROM init
     {
         snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
         UiLcdHy28_PrintTextCentered(0,180,320,tx,Black,Red3,0);
         error = 1;
     }
-
-    ushort adc2, adc3;
-    adc2 = HAL_ADC_GetValue(&hadc2);
-    adc3 = HAL_ADC_GetValue(&hadc3);
     if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))	// SWR bridge mod not done
     {
         txp = "SWR Bridge resistor mod NOT completed!";
@@ -5955,6 +5953,11 @@ void UiDriver_ShowStartUpScreen(uint32_t hold_time)
   		snprintf(tx,100, "Errors occured. Booting delayed for 15 seconds...");
   		UiLcdHy28_PrintTextCentered(0,200,320,tx,Black,Red3,0);
   		hold_time *= 4;
+	}
+	else
+	{
+  		snprintf(tx,100, "...starting up normally...");
+  		UiLcdHy28_PrintTextCentered(0,200,320,tx,Green,Black,0);
 	}
 
     UiLcdHy28_BacklightEnable(true);

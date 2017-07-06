@@ -242,7 +242,8 @@ enum MENU_KIND
     MENU_GROUP, // menu group entry
     MENU_INFO, // just like a normal entry (read-only) but just for display purposes.
     MENU_SEP, // separator line
-    MENU_BLANK // blank
+    MENU_BLANK, // blank
+    MENU_TEXT,	// text output only
 };
 
 
