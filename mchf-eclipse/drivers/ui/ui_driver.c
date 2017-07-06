@@ -5901,94 +5901,62 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
  */
 void UiDriver_ShowStartUpScreen(uint32_t hold_time)
 {
-    uint16_t    i;
+    uint16_t    i, error;
     char   tx[100];
-    char   temp_buf[32];
     const char* txp;
     uint32_t clr;
-    const char* info_out;
+
+	error = 0;
 
     // Clear all
     UiLcdHy28_LcdClear(Black);
 
     non_os_delay();
-    // Show first line
+
+    snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
+    UiLcdHy28_PrintTextCentered(0,30,320,tx,Yellow,Black,1);
+    snprintf(tx,100,"%s","running on");
+    UiLcdHy28_PrintTextCentered(0,60,320,tx,White,Black,0);
     snprintf(tx,100,"%s",DEVICE_STRING);
-    UiLcdHy28_PrintTextCentered(0,30,320,tx,Cyan,Black,1);       // Position with original text size:  78,40
+    UiLcdHy28_PrintTextCentered(0,90,320,tx,Cyan,Black,1);
 
-    // Show second line
-    snprintf(tx,100,"%s",AUTHOR_STRING);
-    UiLcdHy28_PrintTextCentered(0,60,320,tx,White,Black,0);     // 60,60
+	// show important error status
 
-	// looking for bootloader version, only works or DF8OE bootloader
-    // Show third line
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION);
-    strncpy(temp_buf, info_out, 32);
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
+    ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  		// get setting of frequency translation mode
 
-    snprintf(tx,100,"FW: %s / BL: %s", temp_buf, info_out);
-    UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
-
-    // Show fourth line
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_BUILD);
-    snprintf(tx,100,"Build on %s CET",info_out);
-    UiLcdHy28_PrintTextCentered(0,100,320,tx,Yellow,Black,0);
-
-    ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
-
-    if(!(i & 0xff))
+    if(!(i & 0xff))													// no translation used
     {
         txp = "WARNING:  Freq. Translation is OFF!!!";
         UiLcdHy28_PrintTextCentered(0,120,320,txp,Black,Red3,0);
         txp ="Translation is STRONGLY recommended!!";
         UiLcdHy28_PrintTextCentered(0,135,320,txp,Black,Red3,0);
-    }
-    else
-    {
-        txp = " Freq. Translate On ";
-        UiLcdHy28_PrintTextCentered(0,120,320,txp,Grey3,Black,0);
+        error = 1;
     }
 
-    // Display the mode of the display interface
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_DISPLAY);
-    snprintf(tx,100,"LCD: %s",info_out);
-    UiLcdHy28_PrintTextCentered(0,150,320,tx,Grey1,Black,0);
-
-    txp = ts.tp->present?"Touchscreen: Yes":"Touchscreen: No";
-    UiLcdHy28_PrintTextCentered(0,180,320,txp,Grey1,Black,0);
-
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_SI570);
-    snprintf(tx,100,"Si570: %s",info_out);
-    UiLcdHy28_PrintTextCentered(0, 165,320, tx, clr, Black, 0);
-    //
-
-    if(ts.ee_init_stat != HAL_OK)        // Show error code if problem with EEPROM init
+    if(ts.ee_init_stat != HAL_OK)        							// problem with EEPROM init
     {
         snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
-        UiLcdHy28_PrintTextCentered(0,180,320,tx,White,Black,0);
+        UiLcdHy28_PrintTextCentered(0,180,320,tx,Black,Red3,0);
+        error = 1;
     }
-    else
+
+    ushort adc2, adc3;
+    adc2 = HAL_ADC_GetValue(&hadc2);
+    adc3 = HAL_ADC_GetValue(&hadc3);
+    if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))	// SWR bridge mod not done
     {
-        ushort adc2, adc3;
-        adc2 = HAL_ADC_GetValue(&hadc2);
-        adc3 = HAL_ADC_GetValue(&hadc3);
-        if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
-        {
-            txp = "SWR Bridge resistor mod NOT completed!";
-            UiLcdHy28_PrintTextCentered(0,180,320,txp,Red3,Black,0);
-        }
+        txp = "SWR Bridge resistor mod NOT completed!";
+        UiLcdHy28_PrintTextCentered(0,190,320,txp,Black,Red3,0);
+		error = 1;
     }
 
-    // Additional Attrib line 1
-    UiLcdHy28_PrintTextCentered(0,195,320,ATTRIB_STRING1 "\n" ATTRIB_STRING2 "\n" ATTRIB_STRING3 ,Grey1,Black,0);
+	if(error == 1)
+	{
+  		snprintf(tx,100, "Errors occured. Booting delayed for 15 seconds...");
+  		UiLcdHy28_PrintTextCentered(0,200,320,tx,Black,Red3,0);
+  		hold_time *= 4;
+	}
 
-    // Additional Attrib line 2
-    // UiLcdHy28_PrintTextCentered(0,210,320,ATTRIB_STRING2,Grey1,Black,0);
-
-    // Additional Attrib line 3
-    // UiLcdHy28_PrintTextCentered(0,225,320,ATTRIB_STRING3,Grey1,Black,0);
-
-    // Backlight on
     UiLcdHy28_BacklightEnable(true);
 
     // On screen delay - decrease if drivers init takes longer
