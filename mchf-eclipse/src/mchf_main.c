@@ -457,7 +457,7 @@ int mchfMain(void)
 
 
     // Show logo & HW Info
-    UiDriver_ShowStartUpScreen(100);
+    UiDriver_ShowStartUpScreen(2000);
 
 
     // Extra init

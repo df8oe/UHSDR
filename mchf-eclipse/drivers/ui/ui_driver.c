@@ -5895,7 +5895,11 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 }
 
 
-void UiDriver_ShowStartUpScreen(ulong hold_time)
+/**
+ * @brief show initial splash screen
+ * @param hold_time how long the screen to be shown before proceeding (in ms)
+ */
+void UiDriver_ShowStartUpScreen(uint32_t hold_time)
 {
     uint16_t    i, error;
     char   tx[100];
@@ -5956,8 +5960,7 @@ void UiDriver_ShowStartUpScreen(ulong hold_time)
     UiLcdHy28_BacklightEnable(true);
 
     // On screen delay - decrease if drivers init takes longer
-    for(i = 0; i < hold_time; i++)
-        non_os_delay();
+    HAL_Delay(hold_time);
 }
 
 typedef enum {
