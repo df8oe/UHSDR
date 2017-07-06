@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-06T16:03:30  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-06T18:07:29  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v2.5.10 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.5.10 - Menus Overview\ngenerated at  2017-07-06T16:03:30  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.5.10 - Menus Overview\ngenerated at  2017-07-06T18:07:29  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1063,6 +1063,11 @@
              ];
         
         "0" [
+             label = "0 | YL3AKE (Eriks Dobelis)"
+             shape = record
+             ];
+        
+        "0" [
              label = "0 | PA7N   (Erwin)"
              shape = record
              ];
@@ -1477,6 +1482,8 @@
             label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
 
     
+            MENU_HALL_OF_FAME -> 0
+            
             MENU_HALL_OF_FAME -> 0
             
             MENU_HALL_OF_FAME -> 0
