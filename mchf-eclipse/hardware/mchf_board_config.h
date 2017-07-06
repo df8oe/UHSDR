@@ -712,7 +712,7 @@
 //
 #define     ATTRIB_STRING1          "Additional Contributions by"
 #define     ATTRIB_STRING2          "KA7OEI, DF8OE and others."
-#define     ATTRIB_STRING3          "Licensed under "TRX4M_LICENCE"      "
+#define     ATTRIB_STRING3          "Licensed under "TRX4M_LICENCE""
 //
 // -----------------------------------------------------------------------------
 

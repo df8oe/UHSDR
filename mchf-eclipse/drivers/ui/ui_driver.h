@@ -286,7 +286,7 @@ void	UiDriver_LcdBlankingStartTimer(void);
 void	UiDriver_ShowDebugText(const char*);
 void 	UiDriver_ChangeTuningStep(uchar is_up);
 void	UiDriver_UpdateDisplayAfterParamChange();
-void    UiDriver_ShowStartUpScreen(ulong hold_time);
+void    UiDriver_ShowStartUpScreen(uint32_t hold_time);
 void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 void    UiDriver_ToggleVfoAB();
 void    UiDriver_SetSplitMode(bool mode_active);
