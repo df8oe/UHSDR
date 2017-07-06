@@ -481,7 +481,6 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
             UiMenu_UpdateHWInfoLines(entry->number,mode,pos);
             break;
         case MENU_TEXT:
-  //          UiMenu_UpdateHWInfoLines(entry->number,mode,pos);
             break;
         case MENU_GROUP:
             if (mode == MENU_PROCESS_VALUE_CHANGE)
