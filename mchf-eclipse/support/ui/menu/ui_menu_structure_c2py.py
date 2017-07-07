@@ -25,12 +25,12 @@ import subprocess
 
 # this points from HERE to the 'mchf-eclipse' directory of our project
 MCHF_BASEDIR = r"../../../"
-MCHF_VERSIONFILE = MCHF_BASEDIR + r'src/mchf_version.h'
+MCHF_VERSIONFILE = MCHF_BASEDIR + r'src/uhsdr_version.h'
 
 # the ONLY C-source we do read AND understand
 INPUT_C_SRC = MCHF_BASEDIR + r"drivers/ui/menu/ui_menu_structure.c"
 
-# reading version from mchf_version.h
+# reading version from uhsdr_version.h
 MAJ = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "MAJOR" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)
 MIN = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "MINOR" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)
 REL = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "RELEASE" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)

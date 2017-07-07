@@ -6,7 +6,7 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name: mchf_version.h                                                      **
+**  File name: uhsdr_version.h                                                      **
 **  Description: this file carries version number                                  **
 **  Last Modified:                                                                 **
 **  Licence:		GNU GPLv3                                                      **

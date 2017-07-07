@@ -78,7 +78,7 @@ LIBS := -lm -lc -lnosys
 # ------------- nothing to change below this line ---------------------- 
 
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := $(ROOTLOC)/src/mchf_version.h
+PROJECT_VERSION_FILE := $(ROOTLOC)/src/uhsdr_version.h
 
 ifdef MSYSTEM
 $(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))

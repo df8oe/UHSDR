@@ -14,7 +14,7 @@
 ************************************************************************************/
 // Common
 //
-#include <src/mchf_version.h>
+#include <src/uhsdr_version.h>
 #include "mchf_board.h"
 #include "ui_menu.h"
 #include "ui_menu_internal.h"

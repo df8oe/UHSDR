@@ -29,7 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "flash_if.h"
-#include "mchf_version.h"
+#include "uhsdr_version.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {

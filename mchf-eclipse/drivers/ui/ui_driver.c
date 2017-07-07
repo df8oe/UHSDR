@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <src/mchf_version.h>
+#include <src/uhsdr_version.h>
 #include "ui_menu.h"
 #include "mchf_rtc.h"
 #include "adc.h"
