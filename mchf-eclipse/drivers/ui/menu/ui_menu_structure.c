@@ -374,7 +374,7 @@ const MenuDescriptor hall_of_fameGroup[] =
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DD4WH  (Frank)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DL2FW  (Michael)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"HB9OCQ (Stephan)", UiMenuDesc("") },
-    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"       (Asbjorn Pettersen)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"       (Asbjorn)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"YL3AKE (Eriks)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"PA7N   (Erwin)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }

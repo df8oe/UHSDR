@@ -495,6 +495,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             if (tx_pa_disabled == false)
             {
                 MchfBoard_RedLed(LED_STATE_ON); // TX
+                MchfBoard_GreenLed(LED_STATE_OFF);
                 MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
             }
         }
@@ -526,6 +527,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
+            MchfBoard_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
             CwGen_PrepareTx();
             // make sure the keyer is set correctly for next round
