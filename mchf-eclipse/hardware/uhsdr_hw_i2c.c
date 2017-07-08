@@ -14,7 +14,7 @@
 
 // Common
 #include "uhsdr_board.h"
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 #include "i2c.h"
 
 uint16_t MCHF_I2C_WriteRegister(I2C_HandleTypeDef* hi2c, uchar I2CAddr,uint16_t addr,uint16_t addr_size, uchar RegisterValue)

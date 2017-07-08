@@ -21,7 +21,7 @@
 #include <math.h>
 #include <src/uhsdr_version.h>
 #include "ui_menu.h"
-#include "mchf_rtc.h"
+#include "uhsdr_rtc.h"
 #include "adc.h"
 //
 //
@@ -30,7 +30,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_spectrum.h"
 
-#include "freedv_mchf.h"
+#include "freedv_uhsdr.h"
 
 // Encoders
 #include "ui_rotary.h"

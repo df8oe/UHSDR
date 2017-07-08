@@ -8,7 +8,7 @@
 #ifndef DRIVERS_UI_UI_MENU_INTERNAL_H_
 #define DRIVERS_UI_UI_MENU_INTERNAL_H_
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 #define UiMenuDesc(a)
 
 //

@@ -1,6 +1,0 @@
-07/07/17:
-src/mchf_version.h
-07/08/17:
-hardware/mchf_board.h
-hardware/mchf_board_config.h
-hardware/mchf_board.c

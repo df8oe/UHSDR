@@ -17,8 +17,8 @@
 #include "ui_lcd_hy28.h"
 #include <stdio.h>
 
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "uhsdr_hw_i2c.h"
+#include "uhsdr_rtc.h"
 
 #include "ui_driver.h"
 

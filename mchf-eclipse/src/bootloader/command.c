@@ -21,9 +21,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "command.h"
-#include "mchf_mcu.h"
+#include "uhsdr_mcu.h"
 #include "fatfs.h"
-#include "mchf_boot_hw.h"
+#include "uhsdr_boot_hw.h"
 #include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
 

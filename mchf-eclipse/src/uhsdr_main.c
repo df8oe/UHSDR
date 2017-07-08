@@ -15,21 +15,21 @@
 // Common
 #include "uhsdr_board.h"
 #include <stdio.h>
-#include "mchf_rtc.h"
+#include "uhsdr_rtc.h"
 #include "ui_spectrum.h"
 
 #include "ui_configuration.h"
 #include "config_storage.h"
 
 // serial EEPROM driver
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 
 // Audio Driver
 #include "drivers/audio/audio_driver.h"
 #include "drivers/audio/audio_management.h"
 #include "drivers/audio/cw/cw_gen.h"
 
-#include "drivers/audio/freedv_mchf.h"
+#include "drivers/audio/freedv_uhsdr.h"
 // UI Driver
 #include "drivers/ui/ui_driver.h"
 #include "drivers/ui/lcd/ui_lcd_hy28.h"

@@ -13,7 +13,7 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
-#include "mchf_mcu.h"
+#include "uhsdr_mcu.h"
 // some special switches
 //#define 	DEBUG_BUILD
 
@@ -42,7 +42,7 @@
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
 #define USE_RTC_LSE
 
-#include "mchf_mcu.h"
+#include "uhsdr_mcu.h"
 // HW libs
 #ifdef STM32F7
 #include "stm32f7xx_hal_rcc.h"
@@ -75,7 +75,7 @@
 
 #include "freedv_api.h"
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 #include "audio_filter.h"
 #include "ui_si570.h"
 #include "ui_lcd_hy28.h"

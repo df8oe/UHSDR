@@ -28,7 +28,7 @@
 // for each Si570, but the values below appear to approximately follow typical AT-cut
 // temperature-frequency curves.
 //
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 
 // LO temperature compensation
 typedef struct LoTcxo

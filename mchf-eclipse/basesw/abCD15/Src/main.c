@@ -84,7 +84,7 @@ void MX_USB_HOST_Process(void);
 #include "bootloader/bootloader_main.h"
 #else
 
-#include "mchf_main.h"
+#include "uhsdr_main.h"
 
 #endif
 /* USER CODE END 0 */

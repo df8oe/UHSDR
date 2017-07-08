@@ -78,8 +78,8 @@ void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, 
 // LCD
 #include "ui_lcd_hy28.h" // for colors!
 
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "uhsdr_hw_i2c.h"
+#include "uhsdr_rtc.h"
 
 // Codec control
 #include "codec.h"

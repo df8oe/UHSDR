@@ -14,8 +14,8 @@
 #ifndef __MCHF_BOARD_CONFIG_H
 #define __MCHF_BOARD_CONFIG_H
 
-#include "mchf_types.h"
-#include "mchf_mcu.h"
+#include "uhsdr_types.h"
+#include "uhsdr_mcu.h"
 
 
 

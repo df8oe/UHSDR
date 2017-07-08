@@ -15,7 +15,7 @@
 // Common
 #include "uhsdr_board.h"
 #include "profiling.h"
-#include "mchf_hw_i2s.h"
+#include "uhsdr_hw_i2s.h"
 
 #include "audio_driver.h"
 

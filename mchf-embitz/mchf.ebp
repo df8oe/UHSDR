@@ -295,7 +295,7 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\codec\codec.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\codec\mchf_hw_i2s.c">
+		<Unit filename="..\mchf-eclipse\drivers\audio\codec\uhsdr_hw_i2s.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_gen.c">
@@ -433,7 +433,7 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iq_tx_filter.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_mchf.c">
+		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_uhsdr.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_test_data.c">
@@ -628,10 +628,10 @@
 		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\mchf_hw_i2c.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_hw_i2c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\mchf_rtc.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_rtc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\Makefile" />
@@ -650,7 +650,7 @@
 		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\src\mchf_main.c">
+		<Unit filename="..\mchf-eclipse\src\uhsdr_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />

@@ -25,8 +25,8 @@
 
 // Virtual eeprom
 #include "eeprom.h"
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "uhsdr_hw_i2c.h"
+#include "uhsdr_rtc.h"
 
 // If more EEPROM variables are added, make sure that you add to this table - and the index to it in "eeprom.h"
 // and correct MAX_VAR_ADDR in uhsdr_board.h

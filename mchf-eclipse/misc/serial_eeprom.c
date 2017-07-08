@@ -14,7 +14,7 @@
 
 // Common
 #include "uhsdr_board.h"
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 
 #include "serial_eeprom.h"
 

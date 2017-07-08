@@ -1,7 +1,7 @@
 BLSRC := \
 src/bootloader/command.c \
 src/bootloader/flash_if.c \
-src/bootloader/mchf_boot_hw.c \
+src/bootloader/uhsdr_boot_hw.c \
 src/bootloader/bootloader_main.c \
 drivers/ui/lcd/ui_lcd_hy28.c \
 drivers/ui/lcd/ui_lcd_hy28_fonts.c \

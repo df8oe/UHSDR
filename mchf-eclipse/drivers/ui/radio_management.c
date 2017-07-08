@@ -23,9 +23,9 @@
 #include <math.h>
 #include <soft_tcxo.h>
 
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 
-#include "freedv_mchf.h"
+#include "freedv_uhsdr.h"
 // SI570 control
 #include "ui_si570.h"
 #include "codec.h"

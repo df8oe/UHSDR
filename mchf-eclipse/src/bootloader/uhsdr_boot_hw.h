@@ -3,7 +3,7 @@
 #define __MCHF_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "mchf_mcu.h"
+#include "uhsdr_mcu.h"
 #include "uhsdr_board_config.h"
 
 typedef enum

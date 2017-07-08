@@ -13,7 +13,7 @@
 ************************************************************************************/
 
 #include "flash_if.h"
-#include "mchf_boot_hw.h"
+#include "uhsdr_boot_hw.h"
 #include "hardware/uhsdr_board.h"
 #include "command.h"
 #include "fatfs.h"

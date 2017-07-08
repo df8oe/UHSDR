@@ -15,7 +15,7 @@
 #ifndef __UI_LCD_HY28_H
 #define __UI_LCD_HY28_H
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 
 #define MAX_X  320
 #define MAX_Y  240

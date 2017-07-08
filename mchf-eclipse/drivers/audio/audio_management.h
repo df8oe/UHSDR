@@ -15,7 +15,7 @@
 #ifndef DRIVERS_AUDIO_AUDIO_MANAGEMENT_H_
 #define DRIVERS_AUDIO_AUDIO_MANAGEMENT_H_
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 
 void    AudioManagement_CalcIqPhaseGainAdjust(float32_t freq);
 
