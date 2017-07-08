@@ -201,7 +201,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\Makefile" />
-		<Unit filename="..\mchf-eclipse\hardware\mchf_board.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\src\bootloader\mchf_boot_hw.c">

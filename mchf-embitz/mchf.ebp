@@ -625,7 +625,7 @@
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\composite\usbd_composite_desc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\mchf_board.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\hardware\mchf_hw_i2c.c">
