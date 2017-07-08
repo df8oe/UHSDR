@@ -293,7 +293,7 @@ handbook-test:
 
 handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
