@@ -3,14 +3,14 @@
 	<Workspace title="mchf-embitz workspace">
 		<Project filename="stm32f4xx_hal.ebp" />
 		<Project filename="cmsis_dsp.ebp" />
-		<Project filename="mchf.ebp">
+		<Project filename="uhsdr.ebp">
 			<Depends filename="stm32f4xx_hal.ebp" />
 			<Depends filename="cmsis_dsp.ebp" />
 		</Project>
 		<Project filename="bootloader.ebp">
 			<Depends filename="stm32f4xx_hal.ebp" />
 		</Project>
-		<Project filename="mchf_f7.ebp" active="1">
+		<Project filename="uhsdr_f7.ebp" active="1">
 			<Depends filename="cmsis_dsp_f7.ebp" />
 			<Depends filename="stm32f7xx_hal.ebp" />
 		</Project>

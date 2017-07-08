@@ -20,3 +20,6 @@ drivers/audio/freedv_mchf.c
 drivers/audio/freedv_mchf.h
 support/mchf2codec2.sh
 support/codec2mchf.sh
+../mchf-embitz/mchf-embitz.eworkspace
+../mchf-embitz/mchf.ebp
+../mchf-embitz/mchf_f7.ebp
