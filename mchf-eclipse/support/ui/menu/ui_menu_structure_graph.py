@@ -58,7 +58,7 @@ OUTPUT += r"""
 OUTPUT += """
         "MENU_TOP" [
             shape = none
-            image = "mcHF-logo.png"
+            image = "uhsdr-logo.png"
             label = ""
         ];
 

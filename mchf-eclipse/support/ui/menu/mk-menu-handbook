@@ -10,7 +10,7 @@ fi
 
 if [ "$1" == "test" ]; then
   mkdir ../handbook-test 2>/dev/null
-	cp -v mcHF-logo.png support/ui/menu > /dev/zero
+	cp -v uhsdr-logo.png support/ui/menu > /dev/zero
 	(cd support/ui/menu  \
 		&&  ./ui_menu_structure_c2py.py | python -  \
 		&&  ./ui_menu_structure_graph.py > ../../../../handbook-test/ui_menu_structure_graph.gv  \
@@ -29,7 +29,7 @@ if [ "$(cat support/ui/menu/menu-handbook-build.timestamp 2>/dev/null)" == "$(st
 else
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
 	echo "building menu-handbook..."
-	cp -v mcHF-logo.png support/ui/menu > /dev/zero
+	cp -v uhsdr-logo.png support/ui/menu > /dev/zero
 	(cd support/ui/menu  \
 		&&  ./ui_menu_structure_c2py.py | python -  \
 		&&  ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \

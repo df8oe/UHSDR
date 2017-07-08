@@ -297,7 +297,7 @@ handbook-ui-menu:
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
-	$(RM) $(ROOTLOC)/support/ui/menu/mcHF-logo.png
+	$(RM) $(ROOTLOC)/support/ui/menu/uhsdr-logo.png
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure.py*
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.gv
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.svg
