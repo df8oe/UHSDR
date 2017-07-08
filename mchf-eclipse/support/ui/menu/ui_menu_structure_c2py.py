@@ -2,7 +2,7 @@
 
 """
 
-2016-12-30 HB9ocq - extract mcHF LCD-menu definition data from C-cource
+2016-12-30 HB9ocq - extract uhsdr LCD-menu definition data from C-cource
                     and transform to Python, showing on stdout
 
 WARNING: THIS BASES HEAVILY UPON (UN-)DISCIPLINE IN C SYNTAX ! ! !

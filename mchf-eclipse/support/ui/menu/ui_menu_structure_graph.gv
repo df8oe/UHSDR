@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-08T14:23:48  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-08T16:17:11  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v2.5.11 - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.5.11 - Menus Overview\ngenerated at  2017-07-08T14:23:48  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.5.11 - Menus Overview\ngenerated at  2017-07-08T16:17:11  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
