@@ -5,7 +5,7 @@ misc/config_storage.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \
 misc/serial_eeprom.c \
-hardware/mchf_board.c \
+hardware/uhsdr_board.c \
 hardware/mchf_hw_i2c.c \
 hardware/mchf_rtc.c \
 drivers/usb/device/class/composite/usbd_composite.c \

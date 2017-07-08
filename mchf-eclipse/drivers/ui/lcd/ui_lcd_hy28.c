@@ -13,7 +13,7 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board_config.h"
+#include "uhsdr_board_config.h"
 
 #ifdef UI_BRD_MCHF
     #define USE_DISPLAY_SPI

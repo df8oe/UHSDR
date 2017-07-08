@@ -15,7 +15,7 @@
 // Common
 //
 #include <src/uhsdr_version.h>
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
 #include "ui_configuration.h"

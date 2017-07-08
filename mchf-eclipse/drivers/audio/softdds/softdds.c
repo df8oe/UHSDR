@@ -15,7 +15,7 @@
 // Credits - SDR cube!!!
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "dds_table.h"
 #include "softdds.h"
 

@@ -15,7 +15,7 @@
 #ifndef __UI_DRIVER_H
 #define __UI_DRIVER_H
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 // used by UpdateFrequency* family of functions
 enum UpdateFrequencyMode_t

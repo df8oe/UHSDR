@@ -1,6 +1,6 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 #include "audio_management.h"
 #include "math.h"

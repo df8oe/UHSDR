@@ -16,7 +16,7 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 
 #endif

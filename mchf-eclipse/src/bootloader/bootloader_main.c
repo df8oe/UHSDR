@@ -14,7 +14,7 @@
 
 #include "flash_if.h"
 #include "mchf_boot_hw.h"
-#include "hardware/mchf_board.h"
+#include "hardware/uhsdr_board.h"
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
@@ -362,7 +362,7 @@ void mchfBl_CheckAndGoForDfuBoot()
     }
 }
 
-#include "mchf_board_config.h"
+#include "uhsdr_board_config.h"
 
 static uint8_t current_line;
 

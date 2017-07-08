@@ -26,7 +26,7 @@
 
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #ifdef STM32F7
 #include "stm32f7xx_hal_flash_ex.h"
 #else

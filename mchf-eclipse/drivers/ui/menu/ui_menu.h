@@ -15,7 +15,7 @@
 #ifndef __UI_MENU_H
 #define __UI_MENU_H
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 //
 // Exports
 //

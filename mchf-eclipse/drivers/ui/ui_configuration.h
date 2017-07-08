@@ -13,7 +13,7 @@
 ************************************************************************************/
 #ifndef DRIVERS_UI_UI_CONFIGURATION_H_
 #define DRIVERS_UI_UI_CONFIGURATION_H_
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "eeprom.h"
 
 enum

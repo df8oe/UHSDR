@@ -13,7 +13,7 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 #include "mchf_hw_i2s.h"
 

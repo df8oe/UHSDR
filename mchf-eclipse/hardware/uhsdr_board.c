@@ -12,7 +12,7 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "ui_configuration.h"
 #include "ui_lcd_hy28.h"
 #include <stdio.h>

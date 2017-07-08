@@ -14,7 +14,7 @@
 
 // Common
 #include "radio_management.h"
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 #include "adc.h"
 

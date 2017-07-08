@@ -84,7 +84,7 @@
 #include "dac.h"
 //
 
-#include "mchf_board_config.h"
+#include "uhsdr_board_config.h"
 
 // Buttons map structure
 typedef struct ButtonMap

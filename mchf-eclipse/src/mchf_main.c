@@ -13,7 +13,7 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include <stdio.h>
 #include "mchf_rtc.h"
 #include "ui_spectrum.h"
@@ -186,7 +186,7 @@ void TransceiverStateInit(void)
     ts.pa_bias			= DEFAULT_PA_BIAS;		// Use lowest possible voltage as default
     ts.pa_cw_bias		= DEFAULT_PA_BIAS;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
-    ts.power_level		= PA_LEVEL_DEFAULT;			// See mchf_board.h for setting
+    ts.power_level		= PA_LEVEL_DEFAULT;			// See uhsdr_board.h for setting
     //
     //	ts.codec_vol		= 0;					// Holder for codec volume
     //	ts.codec_mute_state	= 0;					// Holder for codec mute state

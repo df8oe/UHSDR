@@ -8,7 +8,7 @@
 #ifndef DRIVERS_UI_RADIO_MANAGEMENT_H_
 #define DRIVERS_UI_RADIO_MANAGEMENT_H_
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 // Frequency public structure
 typedef struct DialFrequency
 {

@@ -36,7 +36,7 @@
 // ----------------------------------------------------------------------------
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "softdds.h"
 #include "cw_gen.h"
 #include "cat_driver.h"

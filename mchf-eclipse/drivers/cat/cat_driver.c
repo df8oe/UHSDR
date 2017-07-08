@@ -13,7 +13,7 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "cat_driver.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
@@ -432,7 +432,7 @@ struct FT817
 };
 
 #include "ui_driver.h"
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 // FT817 Emulation
 #if 0

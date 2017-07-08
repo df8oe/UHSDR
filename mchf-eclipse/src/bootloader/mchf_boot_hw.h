@@ -4,7 +4,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "mchf_mcu.h"
-#include "mchf_board_config.h"
+#include "uhsdr_board_config.h"
 
 typedef enum
 {
