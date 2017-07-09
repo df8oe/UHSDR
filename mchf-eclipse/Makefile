@@ -227,19 +227,19 @@ help:
 
 
 all:  $(FIRMWARE) $(TRX_ID).handbook
-	# compile the ARM-executables .bin / .elf and .dfu for uhsdr SDR TRx, generate .map 
+	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
 bootloader: $(BOOTLOADER)
-	# compile the ARM-executables .bin / .elf and .dfu for uhsdr SDR TRx, generate .map 
+	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
 $(FIRMWARE): $(FIRMWARE).elf $(FIRMWARE).dfu $(FIRMWARE).bin
 
 $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
-	# compile the bootloader ARM-executables .bin / .elf and .dfu for uhsdr SDR TRx, generate .map and .dmp
+	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
 $(FIRMWARE).elf:  $(OBJS) 
