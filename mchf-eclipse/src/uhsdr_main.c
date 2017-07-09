@@ -225,7 +225,7 @@ void TransceiverStateInit(void)
     }
 
     ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
-    ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mdoe
+    ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mode
     ts.demod_mode_disable			= 0;		// TRUE if AM mode is to be disabled
     //
     ts.tx_meter_mode	= METER_SWR;
