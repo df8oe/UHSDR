@@ -286,10 +286,15 @@ void	UiDriver_LcdBlankingStartTimer(void);
 void	UiDriver_ShowDebugText(const char*);
 void 	UiDriver_ChangeTuningStep(uchar is_up);
 void	UiDriver_UpdateDisplayAfterParamChange();
-void    UiDriver_ShowStartUpScreen(uint32_t hold_time);
+
+void    UiDriver_StartUpScreenInit();
+void    UiDriver_StartUpScreenFinish();
+
 void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 void    UiDriver_ToggleVfoAB();
 void    UiDriver_SetSplitMode(bool mode_active);
+
+void UiDriver_StartupScreen_LogIfProblem(bool isError, const char* txt);
 
 void    UiDriver_BacklightDimHandler();
 //

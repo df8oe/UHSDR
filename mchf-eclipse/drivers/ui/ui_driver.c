@@ -880,6 +880,9 @@ void UiDriver_Init()
     // Load stored data from eeprom or calibrate touchscreen
     bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
 
+    UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
+            "WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
+
     // now run all inits which need to be done BEFORE going into test screen mode
     UiLcdHy28_TouchscreenInit((ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)?true:false);
 
@@ -913,8 +916,6 @@ void UiDriver_Init()
     // Extra HW init
     mchf_board_post_init();
 
-    // Create desktop screen
-    UiDriver_CreateDesktop();
 
     UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
     ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
@@ -5894,24 +5895,34 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
     non_os_delay_multi(10);
 }
 
+static uint16_t startUpScreen_nextLineY;
+static bool startUpError = false;
 
 /**
- * @brief show initial splash screen
+ * @brief use this method to report initialization problems on splash screen, may only be used during splash screen presence (!)
+ *
+ * @param isProblem if set to true, the problem is reported on screen, otherwise nothing is done
+ * @param txt pointer to a text string characterizing the problem detected
+ *
+ */
+void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
+{
+    if (isProblem)
+    {
+        startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY,320,txt,Black,Red3,0);
+    }
+}
+
+/**
+ * @brief show initial splash screen, we run AFTER the configuration storage has been initialized!
  * @param hold_time how long the screen to be shown before proceeding (in ms)
  */
-void UiDriver_ShowStartUpScreen(uint32_t hold_time)
+void UiDriver_StartUpScreenInit()
 {
-    uint16_t    i, error;
     char   tx[100];
-    const char* txp;
     uint32_t clr;
-
-	error = 0;
-
     // Clear all
     UiLcdHy28_LcdClear(Black);
-
-    non_os_delay();
 
     snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
     UiLcdHy28_PrintTextCentered(0,30,320,tx,Yellow,Black,1);
@@ -5921,50 +5932,55 @@ void UiDriver_ShowStartUpScreen(uint32_t hold_time)
     UiLcdHy28_PrintTextCentered(0,90,320,tx,Cyan,Black,1);
 
 	// show important error status
-
-    ushort adc2, adc3;
-    adc2 = HAL_ADC_GetValue(&hadc2);
-    adc3 = HAL_ADC_GetValue(&hadc3);
-    ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  		// get setting of frequency translation mode
-
-    if(!(i & 0xff))													// no translation used
-    {
-        txp = "WARNING:  Freq. Translation is OFF!!!";
-        UiLcdHy28_PrintTextCentered(0,120,320,txp,Black,Red3,0);
-        txp ="Translation is STRONGLY recommended!!";
-        UiLcdHy28_PrintTextCentered(0,135,320,txp,Black,Red3,0);
-        error = 1;
-    }
-    if(ts.ee_init_stat != HAL_OK)        							// problem with EEPROM init
-    {
-        snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
-        UiLcdHy28_PrintTextCentered(0,180,320,tx,Black,Red3,0);
-        error = 1;
-    }
-    if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))	// SWR bridge mod not done
-    {
-        txp = "SWR Bridge resistor mod NOT completed!";
-        UiLcdHy28_PrintTextCentered(0,190,320,txp,Black,Red3,0);
-		error = 1;
-    }
-
-	if(error == 1)
-	{
-  		snprintf(tx,100, "Errors occured. Booting delayed for 15 seconds...");
-  		UiLcdHy28_PrintTextCentered(0,200,320,tx,Black,Red3,0);
-  		hold_time *= 4;
-	}
-	else
-	{
-  		snprintf(tx,100, "...starting up normally...");
-  		UiLcdHy28_PrintTextCentered(0,200,320,tx,Green,Black,0);
-	}
+    startUpScreen_nextLineY = 120; // reset y coord to first line of error messages
 
     UiLcdHy28_BacklightEnable(true);
 
-    // On screen delay - decrease if drivers init takes longer
-    HAL_Delay(hold_time);
 }
+
+void UiDriver_StartUpScreenFinish()
+{
+    const char* txp;
+    char   tx[100];
+    uint32_t clr, fg_clr;
+
+    uint32_t hold_time;
+
+    UiDriver_StartupScreen_LogIfProblem(Si570_IsPresent() == false, "Si570 Oscillator NOT Detected!");
+    UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
+
+    if(ts.ee_init_stat != HAL_OK)                                   // problem with EEPROM init
+    {
+        snprintf(tx,100, "EEPROM Init Error Code: %d", ts.ee_init_stat);
+        UiDriver_StartupScreen_LogIfProblem(true, tx);
+    }
+
+    UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
+                "SWR Bridge resistor mod NOT completed!");
+
+    if(startUpError == true)
+    {
+        hold_time = 15000; // 15s
+        txp = "Errors or warnings occurred. Booting delayed...";
+        clr = Red3;
+        fg_clr = Black;
+    }
+    else
+    {
+        hold_time = 3000; // 3s
+        txp = "...starting up normally...";
+        clr =  Black;
+        fg_clr = Green;
+    }
+
+    UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
+
+    HAL_Delay(hold_time);
+
+    UiDriver_CreateDesktop();
+    UiDriver_UpdateDisplayAfterParamChange();
+}
+
 
 typedef enum {
     SCTimer_ENCODER_KEYS =0, // 10ms

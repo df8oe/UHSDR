@@ -443,9 +443,17 @@ int mchfMain(void)
 #endif
 
     // HW init
-    mchf_board_init();
-    MchfBoard_GreenLed(LED_STATE_ON);
+    mchf_board_init_minimal();
+    // Show logo & HW Info
+    UiDriver_StartUpScreenInit(2000);
 
+    if (ts.display != DISPLAY_NONE)
+    {
+        // TODO: Better indication of non-detected display
+        MchfBoard_GreenLed(LED_STATE_ON);
+    }
+
+    mchf_board_init_full();
 
     // MchfRtc_FullReset();
     ConfigStorage_Init();
@@ -456,8 +464,6 @@ int mchfMain(void)
     UiLcdHy28_TouchscreenInit(false);
 
 
-    // Show logo & HW Info
-    UiDriver_ShowStartUpScreen(2000);
 
 
     // Extra init
@@ -494,6 +500,9 @@ int mchfMain(void)
     // Audio HW init
     AudioDriver_Init();
 
+    UiDriver_StartupScreen_LogIfProblem(ts.codec_present == false,
+            "Audiocodec WM8371 NOT detected!");
+
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
     AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
@@ -501,13 +510,14 @@ int mchfMain(void)
 
     AudioFilter_SetDefaultMemories();
 
-    UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
 #endif
+
+    UiDriver_StartUpScreenFinish(2000);
 
     MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop

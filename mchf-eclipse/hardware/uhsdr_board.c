@@ -497,7 +497,7 @@ void mchf_board_touchscreen_init()
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
-void mchf_board_init(void)
+void mchf_board_init_minimal()
 {
     // Enable clock on all ports
     __GPIOA_CLK_ENABLE();
@@ -509,9 +509,16 @@ void mchf_board_init(void)
     // LED init
     mchf_board_led_init();
     MchfBoard_RedLed(LED_STATE_ON);
-
     // Power up hardware
     mchf_board_power_down_init();
+
+    // LCD Init
+    UiLcdHy28_Init();
+}
+
+void mchf_board_init_full()
+{
+
 
     // Filter control lines
     mchf_board_band_cntr_init();
@@ -534,11 +541,6 @@ void mchf_board_init(void)
     // Codec control interface
     mchf_hw_i2c2_init();
 
-    // LCD Init
-    // TODO: remove cast, once volatile is gone for DeviceCode
-    UiLcdHy28_Init();
-    // we could now implement some error strategy if no display is present
-    // i.e. 0 is returned
 
 #ifdef STM32F4
     // on a STM32F4 we can have the internal RTC only if there is an SPI display.
