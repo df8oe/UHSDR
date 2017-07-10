@@ -590,7 +590,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
       	  snprintf(out,32, "D%s", TRX4M_VERSION+4);
 		#else
     	  snprintf(out,32, "%s", TRX4M_VERSION+4);
-      	#endif
+    	#endif
     }
     break;
     case INFO_BUILD:

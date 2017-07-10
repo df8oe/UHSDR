@@ -62,7 +62,7 @@ endif
 ifeq (,$(wildcard DF8OE))
   OFFICIAL_BUILD=1
 else
-  undefine OFFICIAL_BUILD
+  OFFICIAL_BUILD=''
 endif
 
 # compilation options
