@@ -1113,8 +1113,9 @@ void MchfBoard_HandlePowerDown();
 
 void MchfBoard_SelectLpfBpf(uint8_t group);
 
-void mchf_board_init(void);
-void mchf_board_post_init(void);
+void mchf_board_init_minimal();
+void mchf_board_init_full();
+void mchf_board_post_init();
 void mchf_reboot();
 void mchf_powerdown();
 

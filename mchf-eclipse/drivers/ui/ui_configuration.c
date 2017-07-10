@@ -56,6 +56,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_TX_POWER_LEVEL,&ts.power_level,PA_LEVEL_DEFAULT,0,PA_LEVEL_TUNE_KEEP_CURRENT},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_SPEED,&ts.cw_keyer_speed,CW_KEYER_SPEED_DEFAULT,CW_KEYER_SPEED_MIN, CW_KEYER_SPEED_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_MODE,&ts.cw_keyer_mode,CW_KEYER_MODE_IAM_B, 0, CW_KEYER_MAX_MODE},
+    { ConfigEntry_UInt8, EEPROM_CW_KEYER_WEIGHT,&ts.cw_keyer_weight,CW_KEYER_WEIGHT_DEFAULT, CW_KEYER_WEIGHT_MIN, CW_KEYER_WEIGHT_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_SIDETONE_GAIN,&ts.cw_sidetone_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN},
     { ConfigEntry_Int32_16, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL},
     { ConfigEntry_UInt8, EEPROM_AGC_MODE,&ts.agc_mode,AGC_DEFAULT,0,AGC_MAX_MODE},
