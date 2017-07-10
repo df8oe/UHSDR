@@ -3323,7 +3323,7 @@ static void UiDriver_TimeScheduler()
 
 
     // This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
-    // and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
+    // and stop working.
 
     /*** ONCE AFTER STARTUP DELAY ***/
     if( startup_done_flag == false && (ts.sysclock > DSP_STARTUP_DELAY))       // has it been long enough after startup?
@@ -3341,25 +3341,8 @@ static void UiDriver_TimeScheduler()
 
 
 
-        audio_spkr_volume_update_request = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
+        audio_spkr_volume_update_request = 1;      // set unmute flag to force audio to be un-muted - just in case it starts up muted!
         Codec_MuteDAC(false);                      // make sure that audio is un-muted
-
-
-        if((ts.version_number_major != atoi(TRX4M_VER_MAJOR)) || (ts.version_number_release != atoi(TRX4M_VER_RELEASE)) || (ts.version_number_minor != atoi(TRX4M_VER_MINOR)))        // Yes - check for new version
-        {
-
-            ts.version_number_major = atoi(TRX4M_VER_MAJOR);    // save new F/W version
-            ts.version_number_release = atoi(TRX4M_VER_RELEASE);
-            ts.version_number_minor = atoi(TRX4M_VER_MINOR);
-
-            UiSpectrum_ClearDisplay();         // clear display under spectrum scope
-            UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
-            UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
-
-            non_os_delay_multi(6);
-            UiSpectrum_InitSpectrumDisplay();          // init spectrum scope
-        }
-
     }
 }
 
@@ -5913,6 +5896,38 @@ void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
     }
 }
 
+static uint16_t fw_version_number_major = 0;    // save new F/W version
+static uint16_t fw_version_number_release = 0;
+static uint16_t fw_version_number_minor = 0;
+
+/**
+ * @returns true if the firmware version is different from version in loaded configuraton settings.
+ */
+static bool UiDriver_FirmwareVersionCheck()
+{
+
+    fw_version_number_major = atoi(TRX4M_VER_MAJOR);    // save new F/W version
+    fw_version_number_release = atoi(TRX4M_VER_RELEASE);
+    fw_version_number_minor = atoi(TRX4M_VER_MINOR);
+
+    return ((ts.version_number_major != fw_version_number_major) || (ts.version_number_release != fw_version_number_release) || (ts.version_number_minor != fw_version_number_minor));        // Yes - check for new version
+}
+/**
+ * @brief basically does nothing but settiSng the firmware number of configuration to number of running fw
+ */
+static void UiDriver_FirmwareVersionUpdateConfig()
+{
+
+    if (UiDriver_FirmwareVersionCheck())
+    {
+        ts.version_number_major = fw_version_number_major;    // save new F/W version
+        ts.version_number_release = fw_version_number_release;
+        ts.version_number_minor = fw_version_number_minor;
+
+    }
+}
+
+
 /**
  * @brief show initial splash screen, we run AFTER the configuration storage has been initialized!
  * @param hold_time how long the screen to be shown before proceeding (in ms)
@@ -5957,6 +5972,15 @@ void UiDriver_StartUpScreenFinish()
 
     UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
                 "SWR Bridge resistor mod NOT completed!");
+
+    if (UiDriver_FirmwareVersionCheck())
+    {
+        hold_time = 10000; // 15s
+        txp = "Firmware change detected!\nPlease review settings!";
+        startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
+
+        UiDriver_FirmwareVersionUpdateConfig();
+    }
 
     if(startUpError == true)
     {
