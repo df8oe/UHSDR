@@ -460,7 +460,6 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="hardware"/>
 						<entry excluding="test_fdmdv.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="misc"/>
 						<entry excluding="bootloader|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1464,7 +1463,6 @@
 						<entry excluding="usbd_cdc_if.c|usbd_audio_if.c|usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/mcHF/Src"/>
 						<entry excluding="ui_spectrum.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="drivers/ui/lcd"/>
 						<entry excluding="uhsdr_main.c|main.c|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1997,7 +1995,6 @@
 						<entry excluding="usbd_dfu_if.c|system_stm32f7xx.c|usbd_cdc_if.c|usbd_audio_if.c|usbd_storage_if.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="basesw/ovi40/Src"/>
 						<entry excluding="ui_spectrum.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="drivers/ui/lcd"/>
 						<entry excluding="uhsdr_main.c|main.c|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -2929,7 +2926,6 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="hardware"/>
 						<entry excluding="test_fdmdv.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="misc"/>
 						<entry excluding="bootloader|misc" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="syscalls"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

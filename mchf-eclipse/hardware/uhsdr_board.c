@@ -512,6 +512,10 @@ void mchf_board_init_minimal()
     // Power up hardware
     mchf_board_power_down_init();
 
+    // Touchscreen SPI Control Signals Init
+    // TODO: Move to CubeMX Config
+    mchf_board_touchscreen_init();
+
     // LCD Init
     UiLcdHy28_Init();
 }
@@ -527,8 +531,6 @@ void mchf_board_init_full()
     mchf_board_debug_init();
 
 
-    // Touchscreen Init
-    mchf_board_touchscreen_init();
 
     // I2C init
     mchf_hw_i2c1_init();
