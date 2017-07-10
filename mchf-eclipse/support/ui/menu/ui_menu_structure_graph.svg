@@ -9,8 +9,8 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 9744)">
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9744 752,-9744 752,4 -4,4"/>
-<text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v2.5.11 &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;08T16:17:11 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v2.5.12 &#45; Menus Overview</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;10T11:23:17 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3259.5"/>
