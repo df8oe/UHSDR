@@ -1,3 +1,14 @@
+# Author: Harald Baumgart DL4SAI
+# everybody may  copy, use or modify this file
+# there is no guarantee for anything by the author
+#
+# HB 20.8.2015
+#
+# Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
+# Rev. 2016-04-06 cleanup - Stephan HB9ocq
+# Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
+# Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
+
 #  -*- makefile -*-
 # if you want to build in a different directory than this one
 # go to the directory, figure out the path from the new diretory you are in to this one and call make like this
@@ -13,17 +24,6 @@ endif
 
 ROOTLOC=.
 VPATH=$(ROOTLOC)
-# Author: Harald Baumgart DL4SAI
-# everybody may  copy, use or modify this file
-# there is no guarantee for anything by the author
-#
-# HB 20.8.2015
-#
-# Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
-# Rev. 2016-04-06 cleanup - Stephan HB9ocq
-# Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
-# Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
-
 
 # you can set these environment to your individual values here or via environment variables
 # TRX_ID maximum lenght is 5 characters!!
@@ -58,12 +58,19 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
+# identifying of "official builds by DF8OE"
+ifeq (,$(wildcard DF8OE))
+  OFFICIAL_BUILD=1
+else
+  undefine OFFICIAL_BUILD
+endif
+
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
 MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
 
 COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" \
+	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"$(OFFICIAL_BUILD)\" \
           -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
