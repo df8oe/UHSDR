@@ -512,24 +512,16 @@ void mchf_board_init_minimal()
     // Power up hardware
     mchf_board_power_down_init();
 
-    // Touchscreen SPI Control Signals Init
-    // TODO: Move to CubeMX Config
-    mchf_board_touchscreen_init();
-
-    // LCD Init
-    UiLcdHy28_Init();
-}
-
-void mchf_board_init_full()
-{
-
-
+  // FROM HERE
     // Filter control lines
     mchf_board_band_cntr_init();
 
     // Debugging on
     mchf_board_debug_init();
 
+    // Touchscreen SPI Control Signals Init
+    // TODO: Move to CubeMX Config
+    mchf_board_touchscreen_init();
 
 
     // I2C init
@@ -543,6 +535,14 @@ void mchf_board_init_full()
     // Codec control interface
     mchf_hw_i2c2_init();
 
+    // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
+
+    // LCD Init
+    UiLcdHy28_Init();
+}
+
+void mchf_board_init_full()
+{
 
 #ifdef STM32F4
     // on a STM32F4 we can have the internal RTC only if there is an SPI display.
