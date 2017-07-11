@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <src/uhsdr_version.h>
+#include "hardware/uhsdr_board_config.h"
 #include "ui_menu.h"
 #include "uhsdr_rtc.h"
 #include "adc.h"
@@ -5939,12 +5940,14 @@ void UiDriver_StartUpScreenInit()
     // Clear all
     UiLcdHy28_LcdClear(Black);
 
-    snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
-    UiLcdHy28_PrintTextCentered(0,30,320,tx,Yellow,Black,1);
-    snprintf(tx,100,"%s","running on");
-    UiLcdHy28_PrintTextCentered(0,60,320,tx,White,Black,0);
     snprintf(tx,100,"%s",DEVICE_STRING);
-    UiLcdHy28_PrintTextCentered(0,90,320,tx,Cyan,Black,1);
+    UiLcdHy28_PrintTextCentered(0,20,320,tx,Cyan,Black,1);
+    snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
+    UiLcdHy28_PrintTextCentered(0,50,320,tx,Cyan,Black,0);
+    snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
+    UiLcdHy28_PrintTextCentered(0,80,320,tx,Yellow,Black,1);
+    snprintf(tx,100,"Firmware License: %s",TRX4M_LICENCE);
+    UiLcdHy28_PrintTextCentered(0,110,320,tx,White,Black,0);
 
 	// show important error status
     startUpScreen_nextLineY = 120; // reset y coord to first line of error messages

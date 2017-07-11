@@ -22,11 +22,14 @@
 #ifdef STM32F4
 
 #ifndef TRX_NAME
-#define TRX_NAME "mcHF QRP"
+  #define TRX_NAME "mcHF QRP"
+  #define TRX_HW_LIC "CC BY-NC-SA 3.0"
 #endif
 #ifndef TRX_ID
-#define TRX_ID "mchf"
+  #define TRX_ID "mchf"
 #endif
+
+#define TRX_HW_LIC "CC BY-NC-SA 3.0"
 
 #define UI_BRD_MCHF
 #define RF_BRD_MCHF
@@ -338,6 +341,8 @@
 #ifndef TRX_ID
 #define TRX_ID "ovi40"
 #endif
+
+#define TRX_HW_LIC " "
 
 #define UI_BRD_OVI40
 #define RF_BRD_MCHF

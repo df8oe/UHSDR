@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-07-10T11:23:20  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.5.12 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v2.5.15 - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# uhsdr firmware v2.5.12 - UI Menu Overview
+# uhsdr firmware v2.5.15 - UI Menu Overview
 
-generated at  2017-07-10T11:23:20  by "./ui_menu_structure_mdtable.py"
+generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -237,7 +237,8 @@ generated at  2017-07-10T11:23:20  by "./ui_menu_structure_mdtable.py"
 | **Audio Codec Presence**      (                                 INFO_CODEC) | Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec. | 
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
-| **FW licensed under **        (                               INFO_LICENCE) | Display license of firmware                    | 
+| **FW license**                (                               INFO_LICENCE) | Display license of firmware                    | 
+| **HW license**                (                             INFO_HWLICENCE) | Display license of hardware                    | 
 
 
 ## Debug/Exper. Settings (`MENU_DEBUG`)

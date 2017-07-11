@@ -2,9 +2,9 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-10T11:23:17  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-11T12:48:45  by "./ui_menu_structure_graph.py"
 #  
-#  mcHF SDR TRX v2.5.12 - Menu Structure Diagram in DOT-language
+#  mcHF SDR TRX v2.5.15 - Menu Structure Diagram in DOT-language
 #  
 #  (see <http://www.graphviz.org/content/dot-language> )
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v2.5.12 - Menus Overview\ngenerated at  2017-07-10T11:23:17  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v2.5.15 - Menus Overview\ngenerated at  2017-07-11T12:48:45  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -983,7 +983,12 @@
              ];
         
         "INFO_LICENCE" [
-             label = "INFO_LICENCE | FW licensed under "
+             label = "INFO_LICENCE | FW license"
+             shape = record
+             ];
+        
+        "INFO_HWLICENCE" [
+             label = "INFO_HWLICENCE | HW license"
              shape = record
              ];
         
@@ -1427,6 +1432,8 @@
             MENU_SYSINFO -> INFO_RTC
             
             MENU_SYSINFO -> INFO_LICENCE
+            
+            MENU_SYSINFO -> INFO_HWLICENCE
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

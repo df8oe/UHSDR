@@ -342,7 +342,8 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_CODEC, NULL,"Audio Codec Presence", UiMenuDesc("Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec.") },
     { MENU_SYSINFO, MENU_INFO, INFO_VBAT, NULL,"Backup RAM Battery", UiMenuDesc("Battery Support for Backup RAM present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
-    { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW licensed under ", UiMenuDesc("Display license of firmware") },
+    { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },
+    { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"HW license", UiMenuDesc("Display license of hardware") },
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

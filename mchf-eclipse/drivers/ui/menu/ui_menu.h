@@ -58,6 +58,7 @@ enum MENU_INFO_ITEM
     INFO_RTC,
     INFO_VBAT,
     INFO_LICENCE,
+    INFO_HWLICENCE,
     INFO_CODEC,
 };
 

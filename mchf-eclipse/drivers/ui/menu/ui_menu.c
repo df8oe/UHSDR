@@ -618,6 +618,11 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         snprintf(out,32, "%s", TRX4M_LICENCE);
     }
     break;
+    case INFO_HWLICENCE:
+    {
+        snprintf(out,32, "%s", TRX_HW_LIC);
+    }
+    break;
     default:
         outs = "NO INFO";
     }
