@@ -23,13 +23,15 @@
 
 #ifndef TRX_NAME
   #define TRX_NAME "mcHF QRP"
-  #define TRX_HW_LIC "CC BY-NC-SA 3.0"
 #endif
 #ifndef TRX_ID
   #define TRX_ID "mchf"
 #endif
 
+#ifndef TRX_HW_LIC
 #define TRX_HW_LIC "CC BY-NC-SA 3.0"
+#define TRX_HW_CREATOR "K. Atanassov, M0NKA, www.m0nka.co.uk"
+#endif
 
 #define UI_BRD_MCHF
 #define RF_BRD_MCHF
@@ -342,7 +344,11 @@
 #define TRX_ID "ovi40"
 #endif
 
-#define TRX_HW_LIC " "
+#ifndef TRX_HW_LIC
+// #define TRX_HW_LIC "???"
+// #define TRX_HW_CREATOR "???"
+#endif
+
 
 #define UI_BRD_OVI40
 #define RF_BRD_MCHF
@@ -713,11 +719,6 @@
 //
 // -----------------------------------------------------------------------------
 #define     DEVICE_STRING           TRX_NAME " Transceiver"
-#define     AUTHOR_STRING           "K. Atanassov - M\x60NKA 2014-2017"
-//
-#define     ATTRIB_STRING1          "Additional Contributions by"
-#define     ATTRIB_STRING2          "KA7OEI, DF8OE and others."
-#define     ATTRIB_STRING3          "Licensed under "TRX4M_LICENCE""
 //
 // -----------------------------------------------------------------------------
 

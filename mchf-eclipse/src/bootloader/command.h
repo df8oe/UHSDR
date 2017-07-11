@@ -53,7 +53,7 @@ typedef enum {
 #define DOWNLOAD_FILE              BASE_FILE  ".bin"
 #define UPLOAD_FILENAME            "0:"  UPLOAD_FILE
 #define DOWNLOAD_FILENAME          "0:"  DOWNLOAD_FILE
-#define VERSION                    "Version: "TRX4M_BOOT_VER
+#define VERSION                    "Version: "UHSDR_BOOT_VER
 #define AUTHOR                     "Author: DF8OE"
 /* Exported functions ------------------------------------------------------- */
 void COMMAND_UPLOAD(void);
