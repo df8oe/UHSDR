@@ -5894,6 +5894,7 @@ void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
     if (isProblem)
     {
         startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY,320,txt,Black,Red3,0);
+        startUpError = true;
     }
 }
 
@@ -5943,11 +5944,11 @@ void UiDriver_StartUpScreenInit()
     snprintf(tx,100,"%s",DEVICE_STRING);
     UiLcdHy28_PrintTextCentered(0,20,320,tx,Cyan,Black,1);
     snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
-    UiLcdHy28_PrintTextCentered(0,50,320,tx,Cyan,Black,0);
+    UiLcdHy28_PrintTextCentered(0,40,320,tx,Cyan,Black,0);
     snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
-    UiLcdHy28_PrintTextCentered(0,80,320,tx,Yellow,Black,1);
+    UiLcdHy28_PrintTextCentered(0,60,320,tx,Yellow,Black,1);
     snprintf(tx,100,"Firmware License: %s",TRX4M_LICENCE);
-    UiLcdHy28_PrintTextCentered(0,110,320,tx,White,Black,0);
+    UiLcdHy28_PrintTextCentered(0,80,320,tx,White,Black,0);
 
 	// show important error status
     startUpScreen_nextLineY = 120; // reset y coord to first line of error messages
@@ -5988,7 +5989,7 @@ void UiDriver_StartUpScreenFinish()
     if(startUpError == true)
     {
         hold_time = 15000; // 15s
-        txp = "Errors or warnings occurred. Booting delayed...";
+        txp = "Boot Delay because of Errors or Warnings";
         clr = Red3;
         fg_clr = Black;
     }
