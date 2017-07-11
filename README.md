@@ -16,8 +16,8 @@ Open Source Approach (now with the GPLv3 license) the mcHF firmware has
 been extended in this project with new functionality and also with
 support for use on different transceiver hardware.
 
-The intent of this project is to give full support for mcHF (and all
-other known and listed hardware platforms) as long as there are
+The intent of this project is to give full support for mcHF [(and all
+other known and listed hardware platforms)](https://github.com/df8oe/UHSDR/wiki/Supported-Hardware) as long as there are
 contributors willing to support the given hardware.
 
 So this is the best place to start with up-2-date developed firmware and
