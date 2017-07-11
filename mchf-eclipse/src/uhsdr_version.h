@@ -16,7 +16,16 @@
 #define 	TRX4M_VER_MINOR			"5"
 #define 	TRX4M_VER_RELEASE		"14"
 
-#define		TRX4M_BOOT_VER			"3.4.1"
+#define		TRX4M_BOOT_VERS			"3.4.1"
+
+
+#ifdef SBLA									// Bootloader enables additional rf bands PCB
+  #define	TRX4M_BOOT_VER			TRX4M_BOOT_VERS"a"
+#elif SBLS									// Bootloader enables special debug capabilities
+  #define	TRX4M_BOOT_VER			TRX4M_BOOT_VERS"s"
+#else										// Standard Bootloader
+  #define	TRX4M_BOOT_VER			TRX4M_BOOT_VERS
+#endif
 
 // trailing characters are needed for identifying version and building date+time in binary
 #define		TRX4M_VERSION			"fwv-"TRX4M_VER_MAJOR"."TRX4M_VER_MINOR"."TRX4M_VER_RELEASE
