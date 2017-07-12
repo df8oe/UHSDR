@@ -463,9 +463,6 @@ int mchfMain(void)
     // here, so we simply set reverse to false
     UiLcdHy28_TouchscreenInit(false);
 
-
-
-
     // Extra init
     MiscInit();
 

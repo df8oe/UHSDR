@@ -5908,9 +5908,9 @@ static uint16_t fw_version_number_minor = 0;
 static bool UiDriver_FirmwareVersionCheck()
 {
 
-    fw_version_number_major = atoi(TRX4M_VER_MAJOR);    // save new F/W version
-    fw_version_number_release = atoi(TRX4M_VER_RELEASE);
-    fw_version_number_minor = atoi(TRX4M_VER_MINOR);
+    fw_version_number_major = atoi(UHSDR_VER_MAJOR);    // save new F/W version
+    fw_version_number_release = atoi(UHSDR_VER_RELEASE);
+    fw_version_number_minor = atoi(UHSDR_VER_MINOR);
 
     return ((ts.version_number_major != fw_version_number_major) || (ts.version_number_release != fw_version_number_release) || (ts.version_number_minor != fw_version_number_minor));        // Yes - check for new version
 }
@@ -5940,18 +5940,25 @@ void UiDriver_StartUpScreenInit()
     uint32_t clr;
     // Clear all
     UiLcdHy28_LcdClear(Black);
-
+    uint16_t nextY = 10;
     snprintf(tx,100,"%s",DEVICE_STRING);
-    UiLcdHy28_PrintTextCentered(0,20,320,tx,Cyan,Black,1);
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, tx, Cyan, Black, 1);
+
+#ifdef TRX_HW_LIC
     snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
-    UiLcdHy28_PrintTextCentered(0,40,320,tx,Cyan,Black,0);
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, tx, White,Black, 0);
+#endif
+#ifdef TRX_HW_CREATOR
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
+#endif
+
     snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
-    UiLcdHy28_PrintTextCentered(0,60,320,tx,Yellow,Black,1);
-    snprintf(tx,100,"Firmware License: %s",TRX4M_LICENCE);
-    UiLcdHy28_PrintTextCentered(0,80,320,tx,White,Black,0);
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 8, 320, tx, Yellow, Black, 1);
+
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
 
 	// show important error status
-    startUpScreen_nextLineY = 120; // reset y coord to first line of error messages
+    startUpScreen_nextLineY = nextY + 8; // reset y coord to first line of error messages
 
     UiLcdHy28_BacklightEnable(true);
 

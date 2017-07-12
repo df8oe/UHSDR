@@ -587,15 +587,15 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_FW_VERSION:
     {
   		#ifdef OFFICIAL_BUILD
-      	  snprintf(out,32, "D%s", TRX4M_VERSION+4);
+      	  snprintf(out,32, "D%s", UHSDR_VERSION+4);
 		#else
-    	  snprintf(out,32, "%s", TRX4M_VERSION+4);
+    	  snprintf(out,32, "%s", UHSDR_VERSION+4);
     	#endif
     }
     break;
     case INFO_BUILD:
     {
-        snprintf(out,32, "%s", TRX4M_BUILD_DAT+4);
+        snprintf(out,32, "%s", UHSDR_BUILD_DAT+4);
     }
     break;
     case INFO_RTC:
@@ -615,14 +615,17 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_LICENCE:
     {
-        snprintf(out,32, "%s", TRX4M_LICENCE);
+        snprintf(out,32, "%s", UHSDR_LICENCE);
     }
     break;
+
+#ifdef TRX_HW_LIC
     case INFO_HWLICENCE:
     {
         snprintf(out,32, "%s", TRX_HW_LIC);
     }
     break;
+#endif
     default:
         outs = "NO INFO";
     }
