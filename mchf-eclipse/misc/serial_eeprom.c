@@ -150,7 +150,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
                 .size = 128 * 1024,
                 .supported = true,
                 .pagesize = 128,
-                .name = "24xx1026/24CM01"
+                .name = "24xx1026/CM01"
         },
         // 19
         {
