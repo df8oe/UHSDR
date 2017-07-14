@@ -436,14 +436,13 @@ static uint16_t UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mod
 
 static uint16_t UiWriteSettingEEPROM_Filter()
 {
-    int idx, mem_idx;
     uint16_t retval = HAL_OK;
 
-    for (idx = 0; retval == HAL_OK && idx < FILTER_MODE_MAX; idx++)
+    for (uint16_t idx = 0; retval == HAL_OK && idx < FILTER_MODE_MAX; idx++)
     {
-        for (mem_idx = 0; mem_idx < FILTER_PATH_MEM_MAX; mem_idx++)
+        for (uint16_t mem_idx = 0; retval == HAL_OK && mem_idx < FILTER_PATH_MEM_MAX; mem_idx++)
         {
-            retval = retval == HAL_OK && UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+            retval = UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
         }
     }
     return retval;
