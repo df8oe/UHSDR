@@ -304,7 +304,7 @@ void TransceiverStateInit(void)
     ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;			// loudness of keyboard/CW sidetone test beep
     ts.load_freq_mode_defaults = 0;					// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
     ts.ser_eeprom_type = 0;						// serial eeprom not present
-    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
+    ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;					// serial eeprom not in use
 
     ts.tp = &mchf_touchscreen;
     ts.display = &mchf_display;

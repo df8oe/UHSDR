@@ -670,7 +670,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         // because we then can bulk write the data into the I2C later.
         // we don't do this for flash, since we cannot gain anything here.
 
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+        if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
             ConfigStorage_CopySerial2RAMCache();
         }
@@ -728,7 +728,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             retval = UiWriteSettingEEPROM_Filter();
         }
 
-        if(retval == HAL_OK && ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_RAMCACHE)
+        if(retval == HAL_OK && ts.configstore_in_use == CONFIGSTORE_IN_USE_RAMCACHE)
         {
             retval = ConfigStorage_CopyRAMCache2Serial();
             // write ram cache to EEPROM and switch back to I2C EEPROM use

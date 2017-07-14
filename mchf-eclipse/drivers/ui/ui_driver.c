@@ -4970,17 +4970,16 @@ static bool UiDriver_SaveConfiguration()
     const char* txp;
     uint16_t txc;
 
-    switch (ts.ser_eeprom_in_use)
+    switch (ts.configstore_in_use)
     {
-    case SER_EEPROM_IN_USE_NO:
-    case SER_EEPROM_IN_USE_TOO_SMALL:
+    case CONFIGSTORE_IN_USE_FLASH:
         txp = "Saving settings to Flash Memory";
         break;
-    case SER_EEPROM_IN_USE_I2C:
+    case CONFIGSTORE_IN_USE_I2C:
         txp = "Saving settings to I2C EEPROM";
         break;
     default:
-        txp = "Detected I2C problems: Not saving";
+        txp = "Detected problems: Not saving";
         savedConfiguration = false;
     }
     UiLcdHy28_PrintTextCentered(60,176,260,txp,Blue,Black,0);
