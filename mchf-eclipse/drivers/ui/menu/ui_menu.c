@@ -515,32 +515,34 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_EEPROM:
     {
         const char* label = "";
-        switch(ts.ser_eeprom_in_use)
+        switch(ts.configstore_in_use)
          {
-         case SER_EEPROM_IN_USE_I2C:
+         case CONFIGSTORE_IN_USE_I2C:
              label = " [used]";
              *m_clr_ptr = Green;
              break; // in use & ok
-         case SER_EEPROM_IN_USE_ERROR: // not ok
+         case CONFIGSTORE_IN_USE_ERROR: // not ok
              label = " [error]";
              *m_clr_ptr = Red;
              break;
-         case SER_EEPROM_IN_USE_TOO_SMALL: // too small
-             label = " [too small]";
-             *m_clr_ptr = Red;
-			 break;
 		 default:
-             label = " [not used]";
+            label = " [not used]";
+            if (ts.ser_eeprom_type >= SERIAL_EEPROM_DESC_REAL &&
+                    SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size < SERIAL_EEPROM_MIN_USEABLE_SIZE)
+            {
+                label = " [too small]";
+            }
+
              *m_clr_ptr = Red;
          }
 
         const char* i2c_size_unit = "K";
         uint i2c_size = 0;
 
-		if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < 20)
-		  {
-      	  i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
-		  }
+        if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < SERIAL_EEPROM_DESC_NUM)
+        {
+            i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
+        }
 
         // in case we have no or very small eeprom (less than 1K)
         if (i2c_size == 0)
@@ -2281,7 +2283,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_BACKUP_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+        if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
             txt_ptr = " Do it!";
             clr = White;
@@ -2296,7 +2298,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_RESTORE_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+        if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
             txt_ptr = "Do it!";
             clr = White;
@@ -3337,7 +3339,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case CONFIG_RESET_SER_EEPROM:
-        if(SerialEEPROM_Exists() == false)
+        if(SerialEEPROM_24xx_Exists() == false)
         {
             txt_ptr = "   n/a";
             clr = Red;
@@ -3350,7 +3352,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
                 // clear EEPROM
                 UiMenu_DisplayValue("Working",Red,pos);
-                SerialEEPROM_Clear();
+                SerialEEPROM_Clear_Signature();
                 Si570_ResetConfiguration();     // restore SI570 to factory default
                 *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
                 NVIC_SystemReset();         // restart mcHF
