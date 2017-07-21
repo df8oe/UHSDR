@@ -14,7 +14,7 @@
 #ifndef __CONFIG_STORAGE_H
 #define __CONFIG_STORAGE_H
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 
 void ConfigStorage_Init();

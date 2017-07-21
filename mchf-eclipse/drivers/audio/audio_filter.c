@@ -12,7 +12,7 @@
 **  Licence:        GNU GPLv3                                                      **
 ************************************************************************************/
 #include <iq_tx_filter.h>
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "audio_filter.h"
 #include "audio_driver.h"
 #include "filters.h"

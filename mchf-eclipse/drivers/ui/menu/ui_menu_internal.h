@@ -8,7 +8,7 @@
 #ifndef DRIVERS_UI_UI_MENU_INTERNAL_H_
 #define DRIVERS_UI_UI_MENU_INTERNAL_H_
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 #define UiMenuDesc(a)
 
 //
@@ -49,6 +49,7 @@ enum
     MENU_TX_COMPRESSION_LEVEL,
     MENU_KEYER_MODE,
     MENU_KEYER_SPEED,
+    MENU_KEYER_WEIGHT,
     MENU_SIDETONE_GAIN,
     MENU_SIDETONE_FREQUENCY,
     MENU_PADDLE_REVERSE,
@@ -241,7 +242,8 @@ enum MENU_KIND
     MENU_GROUP, // menu group entry
     MENU_INFO, // just like a normal entry (read-only) but just for display purposes.
     MENU_SEP, // separator line
-    MENU_BLANK // blank
+    MENU_BLANK, // blank
+    MENU_TEXT,	// text output only
 };
 
 

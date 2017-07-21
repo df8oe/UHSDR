@@ -13,7 +13,7 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 #include "ui_lcd_hy28_fonts.h"
 

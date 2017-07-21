@@ -8,8 +8,8 @@
 **                                                                                 **
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
-#include "mchf_board.h"
-#include "mchf_rtc.h"
+#include "uhsdr_board.h"
+#include "uhsdr_rtc.h"
 
 #ifdef STM32F4
 #include "stm32f4xx_hal_rtc.h"

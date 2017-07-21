@@ -13,10 +13,22 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
-#include "mchf_hw_i2c.h"
+#include "uhsdr_board.h"
+#include "uhsdr_hw_i2c.h"
 
 #include "serial_eeprom.h"
+
+// for MAX_VAR_ADDR only
+#include "ui_configuration.h"
+
+typedef struct SerialEEPROM_Configuration
+{
+    uint8_t device_type;
+    uint8_t use_type;
+    bool    detection;
+} SerialEEPROM_Configuration_t;
+
+// static SerialEEPROM_Configuration_t ser_eeprom_config;
 
 const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPROM_DESC_NUM] = {
         // 0
@@ -150,7 +162,7 @@ const SerialEEPROM_EEPROMTypeDescriptor SerialEEPROM_eepromTypeDescs[SERIAL_EEPR
                 .size = 128 * 1024,
                 .supported = true,
                 .pagesize = 128,
-                .name = "24xx1026/24CM01"
+                .name = "24xx1026/CM01"
         },
         // 19
         {
@@ -285,7 +297,7 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
     return retVal;
 }
 
-uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
+uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, const uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
     uint16_t retVal = 0;
     if (Mem_Type < SERIAL_EEPROM_DESC_NUM) {
@@ -313,42 +325,183 @@ uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, uint8_t *buffer, uint16_t l
     return retVal;
 }
 
-uint8_t SerialEEPROM_24Cxx_Detect() {
-
+/**
+ * @brief in general a non-destructive probing to identify the used EEPROM, in some cases devices are written (and changed data restored)
+ * this code uses hardware properties to identify the connected I2C eeprom, no previously signature etc. used or required
+ * @returns identified eeprom chip type or EEPROM_SER_UNKNOWN
+ */
+static uint8_t SerialEEPROM_24Cxx_DetectProbeHardware()
+{
     uint8_t ser_eeprom_type = EEPROM_SER_UNKNOWN;
 
+    const uint8_t testsignatureA = 0x66;
+    const uint8_t testsignatureB = 0x77; // has to be different from testsignature 1
+
+    const uint16_t testaddr1 = 0x0001;
+    const uint16_t testaddr1plus128 = testaddr1 + 0x80;
+
+    // 8 Bit Test First
+    uint16_t test8Byte1 = SerialEEPROM_24Cxx_Read(testaddr1,8);
+
+
+    // first decide if 8 or 16 bit addressable eeprom by trying to read with 8 or 16 bit algorithm
+    // if an algorithm succeeds we know the address width
+    if(test8Byte1 < 0x100)
+    {
+        // 8 bit addressing
+        uint16_t test8Byte2 = SerialEEPROM_24Cxx_Read(testaddr1plus128,8);
+
+        SerialEEPROM_24Cxx_Write(testaddr1,testsignatureB,8);
+        SerialEEPROM_24Cxx_Write(testaddr1plus128,testsignatureB,8);
+
+        if (SerialEEPROM_24Cxx_Read(testaddr1,8) == testsignatureB)
+        {
+            SerialEEPROM_24Cxx_Write(testaddr1,testsignatureA,8);              // write test signature
+            ser_eeprom_type = 7;             // smallest possible 8 bit EEPROM (128Bytes)
+            if(SerialEEPROM_24Cxx_Read(testaddr1plus128,8) == testsignatureB)
+            {
+                ser_eeprom_type = 8;
+            }
+        }
+        SerialEEPROM_24Cxx_Write(testaddr1,test8Byte1,8);         // write back old data
+        SerialEEPROM_24Cxx_Write(testaddr1plus128,test8Byte2,8);
+    }
+    if (ser_eeprom_type == EEPROM_SER_UNKNOWN)
+    {
+        // 16 bit addressing check
+        // the other banks are mapped to different I2C
+        // device addresses. We simply try to read from them
+        // and if it succeeds we know the device type
+        // We need to check unique addresses for each EEPROM type
+        // 0xA0 + 0x10000: 0xA8
+        if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
+        {
+            ser_eeprom_type = 17;            // 24LC1025
+        }
+        // 0xA0 + 0x10000: 0xA2
+        if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
+        {
+            ser_eeprom_type = 18;            // 24LC1026
+        }
+        // 0xA0 + 0x10000: 0xA2 + 0x20000: 0xA4 + 0x30000: 0xA6
+        if(SerialEEPROM_24Cxx_Read(0x20000,19) < 0x100)
+        {
+            ser_eeprom_type = 19;            // 24CM02
+        }
+
+        // it is not a large EEPROM (i.e. >64KB Data)
+        //
+        // the following test requires writing to EEPROM,
+        // we remember content of test locations
+        // and write them back later
+        if(ser_eeprom_type == EEPROM_SER_UNKNOWN)
+        {
+            const uint16_t testaddr1plus256 = 0x0100 + testaddr1; // same as before but 0x100 == 256 byte spacing
+            uint16_t testByte1 = SerialEEPROM_24Cxx_Read(testaddr1,16);         // read old content
+            uint16_t testByte2 = SerialEEPROM_24Cxx_Read(testaddr1plus256,16);     // of test bytes
+
+            if (testByte1 < 0x100 && testByte2 < 0x100) {
+
+                // successful read from both locations, let us start
+                SerialEEPROM_24Cxx_Write(testaddr1, testsignatureA,16);         // write testsignature 1
+                SerialEEPROM_24Cxx_Write(testaddr1plus256, testsignatureB,16);         // write testsignature 2
+                if(SerialEEPROM_24Cxx_Read(testaddr1,16) == testsignatureA && SerialEEPROM_24Cxx_Read(testaddr1plus256,16) == testsignatureB)
+                {
+                    // 16 bit addressing
+                    ser_eeprom_type = 9;         // smallest possible 16 bit EEPROM
+
+                    // we look for the "looping" in data, i.e. we read back 0x66
+                    // which we wrote to address  0x0003
+                    // from a address we did not wrote it to
+                    // once it occurs, we know the  size of the EEPROM
+                    // since all of these EEPROMS  are ignoring the unused bits in  the address
+                    for (int shift = 0; shift < 8; shift++) {
+                        uint16_t shift_test_addr = (0x200 << shift)+testaddr1;
+                        if(SerialEEPROM_24Cxx_Read(shift_test_addr,16) == testsignatureA) {
+                            // now we write test signature 2 to make sure the match was no accident
+                            // i.e. match with same content in EEPROM
+                            SerialEEPROM_24Cxx_Write(shift_test_addr,testsignatureB,16);
+                            if(SerialEEPROM_24Cxx_Read(testaddr1,16) == testsignatureB) {
+                                // we found the looping,
+                                // now stop checking and set EEPROM type
+                                ser_eeprom_type = 9 + shift;
+                                break;
+                            }
+                            else
+                            {
+                                // oops: just an accident, so we write back old content and continue
+                                SerialEEPROM_24Cxx_Write(shift_test_addr,testsignatureA,16);
+                            }
+                        }
+                    }
+
+                }
+                SerialEEPROM_24Cxx_Write(testaddr1,testByte1,16);         // write back old data
+                SerialEEPROM_24Cxx_Write(testaddr1plus256,testByte2,16);
+            }
+        }
+    }
+    return ser_eeprom_type;
+}
+
+static void SerialEEPROM_Read_Signature(uint8_t ser_eeprom_type, uint16_t* type_p, uint16_t* state_p)
+{
+    *type_p = SerialEEPROM_24Cxx_Read(0,ser_eeprom_type);
+    *state_p = SerialEEPROM_24Cxx_Read(1,ser_eeprom_type);
+}
+
+uint16_t SerialEEPROM_Set_UseStateInSignature(uint8_t state)
+{
+    return SerialEEPROM_24Cxx_Write(1,SER_EEPROM_IN_USE,ts.ser_eeprom_type);
+}
+
+uint16_t SerialEEPROM_Get_UseStateInSignature()
+{
+    return SerialEEPROM_24Cxx_Read(1,ts.ser_eeprom_type);
+}
+
+uint8_t SerialEEPROM_Detect() {
+
+    uint16_t ser_eeprom_type = EEPROM_SER_UNKNOWN;
+
     // serial EEPROM init
-    if(SerialEEPROM_24Cxx_DeviceConnected() != HAL_OK || SerialEEPROM_Exists() == false)  // Issue with Ser EEPROM, either not available or other problems
-	{
-		ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM available
-		// mchf_hw_i2c2_reset();
-	}
+    if(SerialEEPROM_24Cxx_DeviceConnected() != HAL_OK || SerialEEPROM_24xx_Exists() == false)  // Issue with Ser EEPROM, either not available or other problems
+    {
+        ser_eeprom_type = EEPROM_SER_NONE;             // no serial EEPROM available
+
+    }
     else
     {
-        if(SerialEEPROM_24Cxx_Read(0,16) != 0xFF)
+
+        // this initial read will bring us the first byte of any eeprom (8 or 16bits)
+        // if we read anything but the 0xff == SER_EERPM_NOT_IN_USE value which indicates empty eeprom
+        // we assume some configuration information tells us what EEPROM we have and how it is used
+        if(SerialEEPROM_24Cxx_Read(0,16) != SER_EEPROM_NOT_IN_USE)
         {
             ser_eeprom_type = EEPROM_SER_WRONG_SIG;
+
             // unless we find a correct signature, we have to assume the EEPROM has incorrect/corrupted data
 
-            uint16_t ser_eeprom_type_read = SerialEEPROM_24Cxx_Read(0,8);
-            uint16_t ser_eeprom_sig = SerialEEPROM_24Cxx_Read(1,8);
+            uint16_t ser_eeprom_type_read;
+            uint16_t ser_eeprom_sig;
+
+            SerialEEPROM_Read_Signature(8, &ser_eeprom_type_read, &ser_eeprom_sig);
 
             // all 8 bit (i.e. 256 or 128 Byte) EEPROMS are marked as "too small" during detection
-            if(ser_eeprom_sig == SER_EEPROM_IN_USE_TOO_SMALL && ser_eeprom_type_read > 6 && ser_eeprom_type_read < 9)
+            if(ser_eeprom_sig == SER_EEPROM_TOO_SMALL && ser_eeprom_type_read >= SERIAL_EEPROM_DESC_REAL && ser_eeprom_type_read < 9)
             {
                 ser_eeprom_type = ser_eeprom_type_read;
             }
             else
             {
-                ser_eeprom_type_read = SerialEEPROM_24Cxx_Read(0,16);
-                ser_eeprom_sig = SerialEEPROM_24Cxx_Read(1,16);
+                SerialEEPROM_Read_Signature(16, &ser_eeprom_type_read, &ser_eeprom_sig);
 
-                // we either have a new EEPROM, just being initialized  ( ser_eeprom_sig = SER_EEPROM_IN_USE_NO && valid type) or
-                // we have an used EEPROM (ser_eeprom_sig = SER_EEPROM_IN_USE_I2C && valid type)
+                // we either have a new EEPROM, just being initialized  ( ser_eeprom_sig = SER_EEPROM_NOT_IN_USE && valid type) or
+                // we have an used EEPROM (ser_eeprom_sig = SER_EEPROM_IN_USE && valid type)
                 // please note, that even though no 16 bit EEPROM gets the "too small" signature written in, these may still be
                 // consider too small by the later code. Only EEPROMS which have the "supported" flag set in the descriptor will
                 // be consider of sufficient size for actual use
-                if((ser_eeprom_sig == SER_EEPROM_IN_USE_I2C || ser_eeprom_sig == SER_EEPROM_IN_USE_NO) && ser_eeprom_type_read < SERIAL_EEPROM_DESC_NUM && ser_eeprom_type_read > 8)
+                if((ser_eeprom_sig == SER_EEPROM_IN_USE || ser_eeprom_sig == SER_EEPROM_NOT_IN_USE) && ser_eeprom_type_read < SERIAL_EEPROM_DESC_NUM && ser_eeprom_type_read > 8)
                 {
                     ser_eeprom_type = ser_eeprom_type_read;
                 }
@@ -356,123 +509,40 @@ uint8_t SerialEEPROM_24Cxx_Detect() {
         }
         else
         {
-            const uint8_t testsignature1 = 0x66;
-            const uint16_t testaddr1 = 0x0001;
+            ser_eeprom_type = SerialEEPROM_24Cxx_DetectProbeHardware();
 
-            const uint8_t testsignature2 = 0x77; // has to be different from testsignature 1
-            const uint16_t testaddr2 = 0x0100 + testaddr1; // same as before but 0x100 == 256 byte spacing
-
-            uint16_t testbyte0 = SerialEEPROM_24Cxx_Read(testaddr1,8);
-            SerialEEPROM_24Cxx_Write(testaddr1,testsignature2,8);
-
-            // first decide if 8 or 16 bit addressable eeprom by trying to read with 8 or 16 bit algorithm
-            // if an algorithm succeeds we know the address width
-            if(testbyte0 < 0x100 && SerialEEPROM_24Cxx_Read(testaddr1,8) == testsignature2)
+            if (ser_eeprom_type >= SERIAL_EEPROM_DESC_REAL && ser_eeprom_type < SERIAL_EEPROM_DESC_NUM)
             {
-                // 8 bit addressing
-                SerialEEPROM_24Cxx_Write(testaddr1,testsignature1,8);              // write test signature
-                ser_eeprom_type = 7;             // smallest possible 8 bit EEPROM (128Bytes)
-                if(SerialEEPROM_24Cxx_Read(testaddr1 + 0x80,8) != testsignature1)
+                SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,ser_eeprom_type);
+                if (SerialEEPROM_eepromTypeDescs[ser_eeprom_type].supported == false)
                 {
-                    ser_eeprom_type = 8;
-                }
-                SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,8);
-                SerialEEPROM_24Cxx_Write(1,SER_EEPROM_IN_USE_TOO_SMALL,8);
-            }
-            else
-            {
-                // 16 bit addressing check
-                // the other banks are mapped to different I2C
-                // device addresses. We simply try to read from them
-                // and if it succeeds we know the device type
-                // We need to check unique addresses for each EEPROM type
-                // 0xA0 + 0x10000: 0xA8
-                if(SerialEEPROM_24Cxx_Read(0x10000,17) < 0x100)
-                {
-                    ser_eeprom_type = 17;            // 24LC1025
-                }
-                // 0xA0 + 0x10000: 0xA2
-                if(SerialEEPROM_24Cxx_Read(0x10000,18) < 0x100)
-                {
-                    ser_eeprom_type = 18;            // 24LC1026
-                }
-                // 0xA0 + 0x10000: 0xA2 + 0x20000: 0xA4 + 0x30000: 0xA6
-                if(SerialEEPROM_24Cxx_Read(0x20000,19) < 0x100)
-                {
-                    ser_eeprom_type = 19;            // 24CM02
-                }
-
-                // it is not a large EEPROM (i.e. >64KB Data)
-                //
-                // the following test requires writing to EEPROM,
-                // we remember content of test locations
-                // and write them back later
-                if(ser_eeprom_type == EEPROM_SER_UNKNOWN)
-                {
-
-                    uint16_t testByte1 = SerialEEPROM_24Cxx_Read(testaddr1,16);         // read old content
-                    uint16_t testByte2 = SerialEEPROM_24Cxx_Read(testaddr2,16);     // of test bytes
-
-                    if (testByte1 < 0x100 && testByte2 < 0x100) {
-
-                        // successful read from both locations, let us start
-                        SerialEEPROM_24Cxx_Write(testaddr1, testsignature1,16);         // write testsignature 1
-                        SerialEEPROM_24Cxx_Write(testaddr2, testsignature2,16);         // write testsignature 2
-                        if(SerialEEPROM_24Cxx_Read(testaddr1,16) == testsignature1 && SerialEEPROM_24Cxx_Read(testaddr2,16) == testsignature2)
-                        {
-                            // 16 bit addressing
-                            ser_eeprom_type = 9;         // smallest possible 16 bit EEPROM
-
-                            // we look for the "looping" in data, i.e. we read back 0x66
-                            // which we wrote to address  0x0003
-                            // from a address we did not wrote it to
-                            // once it occurs, we know the  size of the EEPROM
-                            // since all of these EEPROMS  are ignoring the unused bits in  the address
-                            for (int shift = 0; shift < 8; shift++) {
-                                uint16_t shift_test_addr = (0x200 << shift)+testaddr1;
-                                if(SerialEEPROM_24Cxx_Read(shift_test_addr,16) == testsignature1) {
-                                    // now we write test signature 2 to make sure the match was no accident
-                                    // i.e. match with same content in EEPROM
-                                    SerialEEPROM_24Cxx_Write(shift_test_addr,testsignature2,16);
-                                    if(SerialEEPROM_24Cxx_Read(testaddr1,16) == testsignature2) {
-                                        // we found the looping,
-                                        // now stop checking and set EEPROM type
-                                        ser_eeprom_type = 9 + shift;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        // oops: just an accident, so we write back old content and continue
-                                        SerialEEPROM_24Cxx_Write(shift_test_addr,testsignature1,16);
-                                    }
-                                }
-                            }
-
-                        }
-                        SerialEEPROM_24Cxx_Write(testaddr1,testByte1,16);         // write back old data
-                        SerialEEPROM_24Cxx_Write(testaddr2,testByte2,16);
-                    }
-                }
-                if (ser_eeprom_type != EEPROM_SER_UNKNOWN) {
-                    SerialEEPROM_24Cxx_Write(0,ser_eeprom_type,ser_eeprom_type);
+                    SerialEEPROM_24Cxx_Write(1,SER_EEPROM_TOO_SMALL,ser_eeprom_type);
                 }
             }
         }
+        // just to be save. Never ever deliver a type id outside the array boundaries.
+        if (ser_eeprom_type >= SERIAL_EEPROM_DESC_NUM)
+        {
+            ser_eeprom_type = EEPROM_SER_UNKNOWN;
+        }
     }
-    // just to be save. Never ever deliver a type id outside the array boundaries.
-    if (ser_eeprom_type >= SERIAL_EEPROM_DESC_NUM)
-    {
-        ser_eeprom_type = EEPROM_SER_UNKNOWN;
-    }
+
     return ser_eeprom_type;
-}
-void  SerialEEPROM_Clear()
-{
-    SerialEEPROM_24Cxx_Write(0,0xFF,16);
-    SerialEEPROM_24Cxx_Write(1,0xFF,16);
+
 }
 
-bool SerialEEPROM_Exists()
+void  SerialEEPROM_Clear_Signature()
+{
+    for(uint16_t count=0; count <= MAX_VAR_ADDR; count++)
+    {
+        const uint8_t empty_var[2] = { 0xff, 0xff };
+        SerialEEPROM_24Cxx_WriteBulk(count*2, empty_var,2, 16);
+    }
+
+}
+
+
+bool SerialEEPROM_24xx_Exists()
 {
     return SerialEEPROM_24Cxx_Read(0,8)  < 0x100;
 }
@@ -483,35 +553,37 @@ bool SerialEEPROM_Exists()
 //
 uint16_t SerialEEPROM_ReadVariable(uint16_t addr, uint16_t *value)      // reference to serial EEPROM read function
 {
-    uint16_t data;
+    uint8_t bytes[2];
 
-    data = (uint16_t)(SerialEEPROM_24Cxx_Read(addr*2, ts.ser_eeprom_type)<<8);
-    data = data + (uint8_t)(SerialEEPROM_24Cxx_Read(addr*2+1, ts.ser_eeprom_type));
-    *value = data;
 
-    return 0;
+    uint16_t retval = SerialEEPROM_24Cxx_ReadBulk(addr*2,bytes, 2, ts.ser_eeprom_type);
+
+    if (retval == HAL_OK)
+    {
+        *value =  ((uint16_t)bytes[0])<<8;
+        *value |= bytes[1];
+    }
+
+    return retval;
 }
 
 uint16_t SerialEEPROM_UpdateVariable(uint16_t addr, uint16_t value)
 {
         uint16_t value_read = 0;
-        uint16_t status = SerialEEPROM_ReadVariable(addr,&value_read);
-        if  (status != 0 || value_read != value )
+        uint16_t retval = SerialEEPROM_ReadVariable(addr,&value_read);
+        if  (retval != 0 || value_read != value )
         {
-            SerialEEPROM_WriteVariable(addr,value);
+            retval = SerialEEPROM_WriteVariable(addr,value);
         }
-        return 0;
+        return retval;
 }
 
 uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value)      // reference to serial EEPROM write function, writing unsigned 16 bit
 {
-    uint8_t lowbyte, highbyte;
+    uint8_t bytes[2];
 
-    lowbyte = (uint8_t)(value&(0x00FF));
-    highbyte = (uint8_t)((value&(0xFF00))>>8);
+    bytes[0] = (uint8_t)((value&(0xFF00))>>8);
+    bytes[1] = (uint8_t)(value&(0x00FF));
 
-    SerialEEPROM_24Cxx_Write(addr*2, highbyte, ts.ser_eeprom_type);
-    SerialEEPROM_24Cxx_Write(addr*2+1, lowbyte, ts.ser_eeprom_type);
-
-    return 0;
+    return SerialEEPROM_24Cxx_WriteBulk(addr*2, bytes, 2, ts.ser_eeprom_type);
 }

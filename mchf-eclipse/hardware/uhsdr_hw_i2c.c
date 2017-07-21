@@ -13,8 +13,8 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
-#include "mchf_hw_i2c.h"
+#include "uhsdr_board.h"
+#include "uhsdr_hw_i2c.h"
 #include "i2c.h"
 
 uint16_t MCHF_I2C_WriteRegister(I2C_HandleTypeDef* hi2c, uchar I2CAddr,uint16_t addr,uint16_t addr_size, uchar RegisterValue)
@@ -24,9 +24,9 @@ uint16_t MCHF_I2C_WriteRegister(I2C_HandleTypeDef* hi2c, uchar I2CAddr,uint16_t 
     return  i2cRet != HAL_OK?0xFF00:0;
 }
 
-uint16_t MCHF_I2C_WriteBlock(I2C_HandleTypeDef* hi2c, uchar I2CAddr, uint16_t addr, uint16_t addr_size, uint8_t* data, uint32_t size)
+uint16_t MCHF_I2C_WriteBlock(I2C_HandleTypeDef* hi2c, uchar I2CAddr, uint16_t addr, uint16_t addr_size, const uint8_t* data, uint32_t size)
 {
-    HAL_StatusTypeDef i2cRet = HAL_I2C_Mem_Write(hi2c,I2CAddr,addr,addr_size,data,size,100);
+    HAL_StatusTypeDef i2cRet = HAL_I2C_Mem_Write(hi2c,I2CAddr,addr,addr_size,(uint8_t*)data,size,100);
 
     return  i2cRet != HAL_OK?0xFF00:0;
 }

@@ -8,7 +8,7 @@
 #ifndef DRIVERS_UI_RADIO_MANAGEMENT_H_
 #define DRIVERS_UI_RADIO_MANAGEMENT_H_
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 // Frequency public structure
 typedef struct DialFrequency
 {
@@ -192,6 +192,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
 void RadioManagement_SetBandPowerFactor(uchar band);
 bool RadioManagement_LSBActive(uint16_t dmod_mode);
+bool RadioManagement_USBActive(uint16_t dmod_mode);
 void RadioManagement_SetBandPowerFactor(uchar band);
 void RadioManagement_SetPaBias();
 bool RadioManagement_CalculateCWSidebandMode(void);

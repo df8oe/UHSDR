@@ -13,14 +13,14 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "codec.h"
 //
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 #include "ui_si570.h"
 
 // -------------------------------------------------------------------------------------

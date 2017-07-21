@@ -15,7 +15,7 @@
 #ifndef __UI_MENU_H
 #define __UI_MENU_H
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 //
 // Exports
 //
@@ -58,6 +58,7 @@ enum MENU_INFO_ITEM
     INFO_RTC,
     INFO_VBAT,
     INFO_LICENCE,
+    INFO_HWLICENCE,
     INFO_CODEC,
 };
 

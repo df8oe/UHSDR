@@ -13,8 +13,8 @@
 ************************************************************************************/
 
 #include "flash_if.h"
-#include "mchf_boot_hw.h"
-#include "hardware/mchf_board.h"
+#include "uhsdr_boot_hw.h"
+#include "hardware/uhsdr_board.h"
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
@@ -261,8 +261,12 @@ int bootloader_main()
     /* initialization */
     BSP_Init();
 
-//   *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
-//    *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+	#ifdef SBLA
+	  *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
+	#endif
+	#ifdef SBLS
+	  *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+	#endif
 
 #if 0
     mcHF_PowerHoldOff();
@@ -362,7 +366,7 @@ void mchfBl_CheckAndGoForDfuBoot()
     }
 }
 
-#include "mchf_board_config.h"
+#include "uhsdr_board_config.h"
 
 static uint8_t current_line;
 

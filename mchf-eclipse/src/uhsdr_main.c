@@ -13,23 +13,23 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include <stdio.h>
-#include "mchf_rtc.h"
+#include "uhsdr_rtc.h"
 #include "ui_spectrum.h"
 
 #include "ui_configuration.h"
 #include "config_storage.h"
 
 // serial EEPROM driver
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 
 // Audio Driver
 #include "drivers/audio/audio_driver.h"
 #include "drivers/audio/audio_management.h"
 #include "drivers/audio/cw/cw_gen.h"
 
-#include "drivers/audio/freedv_mchf.h"
+#include "drivers/audio/freedv_uhsdr.h"
 // UI Driver
 #include "drivers/ui/ui_driver.h"
 #include "drivers/ui/lcd/ui_lcd_hy28.h"
@@ -136,12 +136,15 @@ void TransceiverStateInit(void)
     ts.agc_mode			= AGC_DEFAULT;			// AGC setting
     ts.agc_custom_decay	= AGC_CUSTOM_DEFAULT;			// Default setting for AGC custom setting - higher = slower
 
-    ts.st_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
-    ts.keyer_mode		= CW_MODE_IAM_B;			// CW keyer mode
-    ts.keyer_speed		= DEFAULT_KEYER_SPEED;			// CW keyer speed
-    ts.sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
-    ts.paddle_reverse	= 0;					// Paddle defaults to NOT reversed
+    ts.cw_sidetone_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
+
+    ts.cw_keyer_mode		= CW_KEYER_MODE_IAM_B;			// CW keyer mode
+    ts.cw_keyer_speed		= CW_KEYER_SPEED_DEFAULT;			// CW keyer speed
+    ts.cw_sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
+    ts.cw_paddle_reverse	= 0;					// Paddle defaults to NOT reversed
     ts.cw_rx_delay		= CW_RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
+    ts.cw_keyer_weight        = CW_KEYER_WEIGHT_DEFAULT;
+
     ts.audio_spkr_unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
 
     ts.nb_setting		= 0;					// Noise Blanker setting
@@ -183,7 +186,7 @@ void TransceiverStateInit(void)
     ts.pa_bias			= DEFAULT_PA_BIAS;		// Use lowest possible voltage as default
     ts.pa_cw_bias		= DEFAULT_PA_BIAS;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
-    ts.power_level		= PA_LEVEL_DEFAULT;			// See mchf_board.h for setting
+    ts.power_level		= PA_LEVEL_DEFAULT;			// See uhsdr_board.h for setting
     //
     //	ts.codec_vol		= 0;					// Holder for codec volume
     //	ts.codec_mute_state	= 0;					// Holder for codec mute state
@@ -222,7 +225,7 @@ void TransceiverStateInit(void)
     }
 
     ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
-    ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mdoe
+    ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mode
     ts.demod_mode_disable			= 0;		// TRUE if AM mode is to be disabled
     //
     ts.tx_meter_mode	= METER_SWR;
@@ -301,7 +304,7 @@ void TransceiverStateInit(void)
     ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;			// loudness of keyboard/CW sidetone test beep
     ts.load_freq_mode_defaults = 0;					// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
     ts.ser_eeprom_type = 0;						// serial eeprom not present
-    ts.ser_eeprom_in_use = SER_EEPROM_IN_USE_NO;					// serial eeprom not in use
+    ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;					// serial eeprom not in use
 
     ts.tp = &mchf_touchscreen;
     ts.display = &mchf_display;
@@ -440,9 +443,17 @@ int mchfMain(void)
 #endif
 
     // HW init
-    mchf_board_init();
-    MchfBoard_GreenLed(LED_STATE_ON);
+    mchf_board_init_minimal();
+    // Show logo & HW Info
+    UiDriver_StartUpScreenInit(2000);
 
+    if (ts.display != DISPLAY_NONE)
+    {
+        // TODO: Better indication of non-detected display
+        MchfBoard_GreenLed(LED_STATE_ON);
+    }
+
+    mchf_board_init_full();
 
     // MchfRtc_FullReset();
     ConfigStorage_Init();
@@ -451,11 +462,6 @@ int mchfMain(void)
     // we don't care about the screen being reverse or not
     // here, so we simply set reverse to false
     UiLcdHy28_TouchscreenInit(false);
-
-
-    // Show logo & HW Info
-    UiDriver_ShowStartUpScreen(100);
-
 
     // Extra init
     MiscInit();
@@ -491,6 +497,9 @@ int mchfMain(void)
     // Audio HW init
     AudioDriver_Init();
 
+    UiDriver_StartupScreen_LogIfProblem(ts.codec_present == false,
+            "Audiocodec WM8371 NOT detected!");
+
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
     AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
@@ -498,13 +507,14 @@ int mchfMain(void)
 
     AudioFilter_SetDefaultMemories();
 
-    UiDriver_UpdateDisplayAfterParamChange();
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
 #endif
+
+    UiDriver_StartUpScreenFinish(2000);
 
     MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop

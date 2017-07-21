@@ -26,7 +26,7 @@
 #define __EEPROM_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "mchf_mcu.h"
+#include "uhsdr_mcu.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* Define the size of the sectors to be used */

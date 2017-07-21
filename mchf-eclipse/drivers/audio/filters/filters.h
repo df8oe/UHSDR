@@ -2,7 +2,7 @@
 #ifndef _filters_h_
 #define _filters_h_
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "arm_math.h"
 
 #define I_BLOCK_SIZE		IQ_BUFSZ

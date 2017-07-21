@@ -450,7 +450,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
     char out[40];
     const char blank[34] = "                               ";
 
-    if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP ||entry->kind == MENU_INFO) )
+    if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP || entry->kind == MENU_INFO || entry->kind == MENU_TEXT) )
     {
         if (mode == MENU_RENDER_ONLY)
         {
@@ -479,6 +479,8 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
             break;
         case MENU_INFO:
             UiMenu_UpdateHWInfoLines(entry->number,mode,pos);
+            break;
+        case MENU_TEXT:
             break;
         case MENU_GROUP:
             if (mode == MENU_PROCESS_VALUE_CHANGE)

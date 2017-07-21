@@ -13,8 +13,8 @@
 **  Last Modified:                                                                 **
 **  Licence:      GNU GPLv3                                                      **
 ************************************************************************************/
-#include "mchf_board.h"
-#include "mchf_types.h"
+#include "uhsdr_board.h"
+#include "uhsdr_types.h"
 #include "audio_driver.h"
 #include "arm_const_structs.h"
 

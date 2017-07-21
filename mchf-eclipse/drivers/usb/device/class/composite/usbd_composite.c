@@ -31,7 +31,7 @@
 #include <drivers/usb/device/class/composite/usbd_composite.h>
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY

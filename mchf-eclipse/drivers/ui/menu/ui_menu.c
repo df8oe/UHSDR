@@ -14,8 +14,8 @@
 ************************************************************************************/
 // Common
 //
-#include <src/mchf_version.h>
-#include "mchf_board.h"
+#include <src/uhsdr_version.h>
+#include "uhsdr_board.h"
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
 #include "ui_configuration.h"
@@ -78,8 +78,8 @@ void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, 
 // LCD
 #include "ui_lcd_hy28.h" // for colors!
 
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "uhsdr_hw_i2c.h"
+#include "uhsdr_rtc.h"
 
 // Codec control
 #include "codec.h"
@@ -515,32 +515,34 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_EEPROM:
     {
         const char* label = "";
-        switch(ts.ser_eeprom_in_use)
+        switch(ts.configstore_in_use)
          {
-         case SER_EEPROM_IN_USE_I2C:
+         case CONFIGSTORE_IN_USE_I2C:
              label = " [used]";
              *m_clr_ptr = Green;
              break; // in use & ok
-         case SER_EEPROM_IN_USE_ERROR: // not ok
+         case CONFIGSTORE_IN_USE_ERROR: // not ok
              label = " [error]";
              *m_clr_ptr = Red;
              break;
-         case SER_EEPROM_IN_USE_TOO_SMALL: // too small
-             label = " [too small]";
-             *m_clr_ptr = Red;
-			 break;
 		 default:
-             label = " [not used]";
+            label = " [not used]";
+            if (ts.ser_eeprom_type >= SERIAL_EEPROM_DESC_REAL &&
+                    SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size < SERIAL_EEPROM_MIN_USEABLE_SIZE)
+            {
+                label = " [too small]";
+            }
+
              *m_clr_ptr = Red;
          }
 
         const char* i2c_size_unit = "K";
         uint i2c_size = 0;
 
-		if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < 20)
-		  {
-      	  i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
-		  }
+        if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < SERIAL_EEPROM_DESC_NUM)
+        {
+            i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
+        }
 
         // in case we have no or very small eeprom (less than 1K)
         if (i2c_size == 0)
@@ -586,12 +588,16 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_FW_VERSION:
     {
-        snprintf(out,32, "%s", TRX4M_VERSION+4);
+  		#ifdef OFFICIAL_BUILD
+      	  snprintf(out,32, "D%s", UHSDR_VERSION+4);
+		#else
+    	  snprintf(out,32, "%s", UHSDR_VERSION+4);
+    	#endif
     }
     break;
     case INFO_BUILD:
     {
-        snprintf(out,32, "%s", TRX4M_BUILD_DAT+4);
+        snprintf(out,32, "%s", UHSDR_BUILD_DAT+4);
     }
     break;
     case INFO_RTC:
@@ -611,9 +617,17 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_LICENCE:
     {
-        snprintf(out,32, "%s", TRX4M_LICENCE);
+        snprintf(out,32, "%s", UHSDR_LICENCE);
     }
     break;
+
+#ifdef TRX_HW_LIC
+    case INFO_HWLICENCE:
+    {
+        snprintf(out,32, "%s", TRX_HW_LIC);
+    }
+    break;
+#endif
     default:
         outs = "NO INFO";
     }
@@ -1634,16 +1648,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case MENU_KEYER_MODE:   // Keyer mode
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_mode,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_mode,
                                               0,
                                               CW_MODE_ULTIMATE,
-                                              CW_MODE_IAM_B,
+                                              CW_KEYER_MODE_IAM_B,
                                               1
                                              );
 
-        switch(ts.keyer_mode)
+        switch(ts.cw_keyer_mode)
         {
-        case CW_MODE_IAM_B:
+        case CW_KEYER_MODE_IAM_B:
             txt_ptr = "IAM_B";
             break;
         case CW_MODE_IAM_A:
@@ -1659,10 +1673,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_KEYER_SPEED:  // keyer speed
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.keyer_speed,
-                                              MIN_KEYER_SPEED,
-                                              MAX_KEYER_SPEED,
-                                              DEFAULT_KEYER_SPEED,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_speed,
+                                              CW_KEYER_SPEED_MIN,
+                                              CW_KEYER_SPEED_MAX,
+                                              CW_KEYER_SPEED_DEFAULT,
                                               1
                                              );
 
@@ -1671,10 +1685,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             CwGen_SetSpeed(); // make sure keyerspeed is being used
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u", ts.keyer_speed);
+        snprintf(options,32, "  %u", ts.cw_keyer_speed);
         break;
+
+    case MENU_KEYER_WEIGHT:  // keyer weight
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_weight,
+                                              CW_KEYER_WEIGHT_MIN,
+                                              CW_KEYER_WEIGHT_MAX,
+                                              CW_KEYER_WEIGHT_DEFAULT,
+                                              1
+                                             );
+
+        if(var_change && ts.dmod_mode == DEMOD_CW)         // did it change?
+        {
+            CwGen_SetSpeed(); // make sure keyerspeed is being used
+            UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
+        }
+        snprintf(options,32, "  %u.%02u", ts.cw_keyer_weight/100,ts.cw_keyer_weight%100);
+        break;
+
     case MENU_SIDETONE_GAIN:    // sidetone gain
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.st_gain,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_sidetone_gain,
                                               0,
                                               SIDETONE_MAX_GAIN,
                                               DEFAULT_SIDETONE_GAIN,
@@ -1684,10 +1715,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
         }
-        snprintf(options,32, "  %u", ts.st_gain);
+        snprintf(options,32, "  %u", ts.cw_sidetone_gain);
         break;
     case MENU_SIDETONE_FREQUENCY:   // sidetone frequency
-        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.sidetone_freq,
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.cw_sidetone_freq,
                                                CW_SIDETONE_FREQ_MIN,
                                                CW_SIDETONE_FREQ_MAX*10,
                                                CW_SIDETONE_FREQ_DEFAULT,
@@ -1696,16 +1727,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         if(var_change && ts.dmod_mode == DEMOD_CW)         // did it change?
         {
-            float freq[2] = { ts.sidetone_freq, 0.0 };
+            float freq[2] = { ts.cw_sidetone_freq, 0.0 };
 
             softdds_setfreq_dbl(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
-        snprintf(options,32, "  %uHz", (uint)ts.sidetone_freq);
+        snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);
         break;
 
     case MENU_PADDLE_REVERSE:   // CW Paddle reverse
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.paddle_reverse,0,options,&clr);
+        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cw_paddle_reverse,0,options,&clr);
         break;
     case MENU_CW_TX_RX_DELAY:   // CW TX->RX delay
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_rx_delay,
@@ -2252,7 +2283,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_BACKUP_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+        if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
             txt_ptr = " Do it!";
             clr = White;
@@ -2267,7 +2298,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_RESTORE_CONFIG:
         txt_ptr = "n/a";
-        if(ts.ser_eeprom_in_use == SER_EEPROM_IN_USE_I2C)
+        if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
             txt_ptr = "Do it!";
             clr = White;
@@ -3308,7 +3339,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case CONFIG_RESET_SER_EEPROM:
-        if(SerialEEPROM_Exists() == false)
+        if(SerialEEPROM_24xx_Exists() == false)
         {
             txt_ptr = "   n/a";
             clr = Red;
@@ -3321,7 +3352,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
                 // clear EEPROM
                 UiMenu_DisplayValue("Working",Red,pos);
-                SerialEEPROM_Clear();
+                SerialEEPROM_Clear_Signature();
                 Si570_ResetConfiguration();     // restore SI570 to factory default
                 *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
                 NVIC_SystemReset();         // restart mcHF

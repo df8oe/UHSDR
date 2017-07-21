@@ -36,7 +36,7 @@
 // ----------------------------------------------------------------------------
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "softdds.h"
 #include "cw_gen.h"
 #include "cat_driver.h"
@@ -69,9 +69,9 @@ typedef struct PaddleState
     ulong   cw_state;
 
     // Element duration
-    ulong   dit_time;
-    ulong   dah_time;
-    ulong   pause_time;
+    int32_t   dit_time;
+    int32_t   dah_time;
+    int32_t   pause_time;
 
     // Timers
     ulong   key_timer;
@@ -89,7 +89,7 @@ __IO PaddleState                ps;
 
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
-static void    CwGen_TestFirstPaddle();
+static void   CwGen_TestFirstPaddle();
 
 // Blackman-Harris function to keep CW signal bandwidth narrow
 #define CW_SMOOTH_TBL_SIZE  128
@@ -228,9 +228,21 @@ static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 
 void CwGen_SetSpeed()
 {
-    ps.dit_time         = 1800/ts.keyer_speed + CW_SMOOTH_STEPS;  // +9 =  6ms * 1/1500 =  0,006*1500
-    ps.dah_time         = 3*1800/ts.keyer_speed + CW_SMOOTH_STEPS;  // +9 =  6ms * 1/1500 =  0,006*1500
-    ps.pause_time       = 1800/ts.keyer_speed - CW_SMOOTH_STEPS;  // -9 = -6ms * 1/1500 = -0,006*1500
+    // 1800000 = 1.2s per dit == 1WPM ; 1500 impulse per second audio irq = 1800 ticks per 1 WPM dit
+    // we scale with 100 for better precision and easier use of the weight value which is scaled by 100.
+    // so 1800 * 100 = 180000
+
+    // weight 1.00
+    int32_t dit_time         = 180000/ts.cw_keyer_speed + CW_SMOOTH_STEPS*100;  // +9 =  6ms * 1/1500 =  0,006*1500
+    int32_t dah_time         = 3*180000/ts.cw_keyer_speed + CW_SMOOTH_STEPS*100;  // +9 =  6ms * 1/1500 =  0,006*1500
+    int32_t pause_time       = 180000/ts.cw_keyer_speed - CW_SMOOTH_STEPS*100;  // -9 = -6ms * 1/1500 = -0,006*1500
+
+    int32_t weight_corr = ((int32_t)ts.cw_keyer_weight-100) * dit_time/100;
+
+    // we add the correction value to both dit and dah and subtract from pause. dah gets less change proportionally because of this
+    ps.dit_time = (dit_time + weight_corr)/100;
+    ps.dah_time = (dah_time + weight_corr)/100;
+    ps.pause_time = (pause_time - weight_corr)/100;
 }
 
 static void CwGen_SetBreakTime()
@@ -254,9 +266,9 @@ void CwGen_Init(void)
         ps.key_timer		= 0;
     }
 
-    switch(ts.keyer_mode)
+    switch(ts.cw_keyer_mode)
     {
-    case CW_MODE_IAM_B:
+    case CW_KEYER_MODE_IAM_B:
         ps.port_state = CW_IAMBIC_B;
         break;
     case CW_MODE_IAM_A:
@@ -335,7 +347,7 @@ static void CwGen_RemoveClickOnFallingEdge(float *i_buffer,float *q_buffer,ulong
  */
 static bool CwGen_DitRequested() {
     bool retval;
-    if(ts.paddle_reverse)      // Paddles ARE reversed
+    if(ts.cw_paddle_reverse)      // Paddles ARE reversed
     {
         retval =  mchf_ptt_dah_line_pressed();
     }
@@ -351,7 +363,7 @@ static bool CwGen_DitRequested() {
  */
 static bool CwGen_DahRequested() {
     bool retval;
-    if(!ts.paddle_reverse)      // Paddles NOT reversed
+    if(!ts.cw_paddle_reverse)      // Paddles NOT reversed
     {
         retval =  mchf_ptt_dah_line_pressed();
     }
@@ -381,15 +393,15 @@ bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
     bool retval;
 
 
-    if(ts.keyer_mode == CW_MODE_STRAIGHT || CatDriver_CatPttActive())
+    if(ts.cw_keyer_mode == CW_MODE_STRAIGHT || CatDriver_CatPttActive())
     {
         // we make sure the remaining code will see the "right" keyer mode
         // since we are running in an interrupt, none will change that outside
         // and we can safely restore after we're done
-        uint8_t keyer_mode = ts.keyer_mode;
-        ts.keyer_mode = CW_MODE_STRAIGHT;
+        uint8_t keyer_mode = ts.cw_keyer_mode;
+        ts.cw_keyer_mode = CW_MODE_STRAIGHT;
         retval = CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
-        ts.keyer_mode = keyer_mode;
+        ts.cw_keyer_mode = keyer_mode;
     }
     else
     {
@@ -600,7 +612,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                     CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
                 }
 
-                if(ts.keyer_mode == CW_MODE_IAM_B)
+                if(ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
                 {
                     CwGen_CheckKeyerState();
                 }
@@ -615,7 +627,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             ps.key_timer--;
             if(ps.key_timer == 0)
             {
-                if (ts.keyer_mode == CW_MODE_IAM_A || ts.keyer_mode == CW_MODE_IAM_B)
+                if (ts.cw_keyer_mode == CW_MODE_IAM_A || ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
                 {
                     if (ps.port_state & CW_DIT_PROC)
                     {
@@ -660,7 +672,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 
 static void CwGen_TestFirstPaddle()
 {
-  if(ts.keyer_mode == CW_MODE_ULTIMATE)
+  if(ts.cw_keyer_mode == CW_MODE_ULTIMATE)
   {
     if(!CwGen_DitRequested() && CwGen_DahRequested())
     {
@@ -681,7 +693,7 @@ void CwGen_DahIRQ(void)
 {
     ts.ptt_req = true;
 
-    if(ts.keyer_mode == CW_MODE_STRAIGHT)
+    if(ts.cw_keyer_mode == CW_MODE_STRAIGHT)
     {
         // Reset publics, but only when previous is sent
         if(ps.key_timer == 0)
@@ -703,7 +715,7 @@ void CwGen_DahIRQ(void)
 void CwGen_DitIRQ(void)
 {
     // CW mode handler - no dit interrupt in straight key mode
-    if(ts.keyer_mode != CW_MODE_STRAIGHT)
+    if(ts.cw_keyer_mode != CW_MODE_STRAIGHT)
     {
         ts.ptt_req = true;
   		CwGen_TestFirstPaddle();

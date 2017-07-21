@@ -13,7 +13,7 @@
  ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 
 #include <stdio.h>
@@ -35,7 +35,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_configuration.h"
 #include "ui_driver.h"
-#include "mchf_hw_i2s.h"
+#include "uhsdr_hw_i2s.h"
 
 typedef struct {
     __packed int16_t l;

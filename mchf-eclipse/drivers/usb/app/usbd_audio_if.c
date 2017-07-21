@@ -44,7 +44,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_audio_if.h"
 /* USER CODE BEGIN INCLUDE */
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY

@@ -1,13 +1,13 @@
 SRC := \
-src/mchf_main.c \
+src/uhsdr_main.c \
 misc/v_eprom/eeprom.c \
 misc/config_storage.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \
 misc/serial_eeprom.c \
-hardware/mchf_board.c \
-hardware/mchf_hw_i2c.c \
-hardware/mchf_rtc.c \
+hardware/uhsdr_board.c \
+hardware/uhsdr_hw_i2c.c \
+hardware/uhsdr_rtc.c \
 drivers/usb/device/class/composite/usbd_composite.c \
 drivers/usb/device/class/composite/usbd_composite_desc.c \
 drivers/usb/device/class/CDC/Src/usbd_cdc.c \
@@ -116,11 +116,11 @@ drivers/audio/filters/iq_rx_filter_am.c \
 drivers/audio/filters/iq_tx_filter.c \
 drivers/audio/cw/cw_gen.c \
 drivers/audio/codec/codec.c \
-drivers/audio/codec/mchf_hw_i2s.c \
+drivers/audio/codec/uhsdr_hw_i2s.c \
 drivers/audio/audio_driver.c \
 drivers/audio/audio_filter.c \
 drivers/audio/audio_management.c \
-drivers/audio/freedv_mchf.c \
+drivers/audio/freedv_uhsdr.c \
 drivers/audio/freedv_test_data.c \
 basesw/mcHF/Src/adc.c \
 basesw/mcHF/Src/dac.c \

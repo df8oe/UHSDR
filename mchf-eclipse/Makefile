@@ -1,3 +1,14 @@
+# Author: Harald Baumgart DL4SAI
+# everybody may  copy, use or modify this file
+# there is no guarantee for anything by the author
+#
+# HB 20.8.2015
+#
+# Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
+# Rev. 2016-04-06 cleanup - Stephan HB9ocq
+# Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
+# Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
+
 #  -*- makefile -*-
 # if you want to build in a different directory than this one
 # go to the directory, figure out the path from the new diretory you are in to this one and call make like this
@@ -13,17 +24,6 @@ endif
 
 ROOTLOC=.
 VPATH=$(ROOTLOC)
-# Author: Harald Baumgart DL4SAI
-# everybody may  copy, use or modify this file
-# there is no guarantee for anything by the author
-#
-# HB 20.8.2015
-#
-# Rev. 09/08/2015 corrected by Andreas Richter DF8OE 
-# Rev. 2016-04-06 cleanup - Stephan HB9ocq
-# Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
-# Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
-
 
 # you can set these environment to your individual values here or via environment variables
 # TRX_ID maximum lenght is 5 characters!!
@@ -58,13 +58,25 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
+
+# identifying of "official builds by DF8OE"
+ifneq (,$(wildcard ../DF8OE))
+  COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
+	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"1\" \
+	-ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function
+else
+  COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
+	  -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" \
+	  -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function
+endif
+
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
 MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
 
-COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" \
-          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
+#COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
+#	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"$(OFFICIAL_BUILD)\" \
+#          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
 
@@ -78,19 +90,19 @@ LIBS := -lm -lc -lnosys
 # ------------- nothing to change below this line ---------------------- 
 
 # propagate version info from source to environment variables
-PROJECT_VERSION_FILE := $(ROOTLOC)/src/mchf_version.h
+PROJECT_VERSION_FILE := $(ROOTLOC)/src/uhsdr_version.h
 
 ifdef MSYSTEM
-$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]TRX4M_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_MINOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]TRX4M_VER_RELEASE/{s!\#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^-]UHSDR_VER_MAJOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]UHSDR_VER_MINOR/{s!\#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e \'s/\"//g\' -e '/[^.]UHSDR_VER_RELEASE/{s!\#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 else
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
-$(eval  $(shell $(SED) -n -e 's/"//g' -e '/TRX4M_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/UHSDR_VER_MAJOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/UHSDR_VER_MINOR/{s!#define\s*!!;   s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
+$(eval  $(shell $(SED) -n -e 's/"//g' -e '/UHSDR_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 endif
 
-TRX4M_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
+UHSDR_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
 
 BOOTLOADER=bl-$(TRX_ID)
 FIRMWARE=fw-$(TRX_ID)
@@ -257,7 +269,7 @@ $(TRX_ID).handbook:
 
 $(TRX_ID).version:
 	# the build artifacts SHOULD identify as
-	@printf "Version %s.%s.%s%s\n" $(TRX4M_VER_MAJOR) $(TRX4M_VER_MINOR) $(TRX4M_VER_RELEASE) $(TRX4M_VER_TAINT)
+	@printf "Version %s.%s.%s%s\n" $(UHSDR_VER_MAJOR) $(UHSDR_VER_MINOR) $(UHSDR_VER_RELEASE) $(UHSDR_VER_TAINT)
 
 # cleaning rule
 clean:  
@@ -293,11 +305,11 @@ handbook-test:
 
 handbook-ui-menu:  
 	# extract UI Menu Descriptor data from source code and generate graph + table for handbook
-	@$(ROOTLOC)support/ui/menu/mk-menu-handbook
+	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook
 
 handbook-ui-menu-clean:  
 	# remove generated UI Menu files
-	$(RM) $(ROOTLOC)/support/ui/menu/mcHF-logo.png
+	$(RM) $(ROOTLOC)/support/ui/menu/uhsdr-logo.png
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure.py*
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.gv
 	$(RM) $(ROOTLOC)/support/ui/menu/ui_menu_structure_graph.svg

@@ -66,7 +66,7 @@
 #include <drivers/usb/device/class/composite/usbd_composite_desc.h>
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "usbd_cdc.h"
 #include "usbd_audio_cdc_comp.h"
 #include "usbd_audio_if.h"

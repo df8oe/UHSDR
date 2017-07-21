@@ -13,15 +13,16 @@
 ************************************************************************************/
 
 // Common
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <src/mchf_version.h>
+#include <src/uhsdr_version.h>
+#include "hardware/uhsdr_board_config.h"
 #include "ui_menu.h"
-#include "mchf_rtc.h"
+#include "uhsdr_rtc.h"
 #include "adc.h"
 //
 //
@@ -30,7 +31,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_spectrum.h"
 
-#include "freedv_mchf.h"
+#include "freedv_uhsdr.h"
 
 // Encoders
 #include "ui_rotary.h"
@@ -241,10 +242,11 @@ const ulong tune_steps[T_STEP_MAX_STEPS] =
     T_STEP_1HZ,
     T_STEP_10HZ,
     T_STEP_100HZ,
+    T_STEP_500HZ,
     T_STEP_1KHZ,
     T_STEP_5KHZ,
     T_STEP_9KHZ,
-	T_STEP_10KHZ,
+    T_STEP_10KHZ,
     T_STEP_100KHZ,
     T_STEP_1MHZ,
     T_STEP_10MHZ
@@ -879,6 +881,9 @@ void UiDriver_Init()
     // Load stored data from eeprom or calibrate touchscreen
     bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
 
+    UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
+            "WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
+
     // now run all inits which need to be done BEFORE going into test screen mode
     UiLcdHy28_TouchscreenInit((ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)?true:false);
 
@@ -912,8 +917,6 @@ void UiDriver_Init()
     // Extra HW init
     mchf_board_post_init();
 
-    // Create desktop screen
-    UiDriver_CreateDesktop();
 
     UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
     ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
@@ -2868,21 +2871,21 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
         switch(ts.cw_offset_mode)
         {
         case CW_OFFSET_LSB_RX:	// Yes - In an LSB mode with display offset?
-            dial_freq -= ts.sidetone_freq;
+            dial_freq -= ts.cw_sidetone_freq;
             // yes, lower display freq. by sidetone amount
             break;
         case CW_OFFSET_USB_RX:	// In a USB mode with display offset?
-            dial_freq += ts.sidetone_freq;
+            dial_freq += ts.cw_sidetone_freq;
             // yes, raise display freq. by sidetone amount
             break;
         case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
             if(ts.cw_lsb)
             {
-                dial_freq -= ts.sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
+                dial_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
             }
             else
             {
-                dial_freq += ts.sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+                dial_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
             }
             break;
         }
@@ -3321,7 +3324,7 @@ static void UiDriver_TimeScheduler()
 
 
     // This delays the start-up of the DSP for several seconds to minimize the likelihood that the LMS function will get "jammed"
-    // and stop working.  It also does a delayed detection - and action - on the presence of a new version of firmware being installed.
+    // and stop working.
 
     /*** ONCE AFTER STARTUP DELAY ***/
     if( startup_done_flag == false && (ts.sysclock > DSP_STARTUP_DELAY))       // has it been long enough after startup?
@@ -3339,25 +3342,8 @@ static void UiDriver_TimeScheduler()
 
 
 
-        audio_spkr_volume_update_request = 1;                    // set unmute flag to force audio to be un-muted - just in case it starts up muted!
+        audio_spkr_volume_update_request = 1;      // set unmute flag to force audio to be un-muted - just in case it starts up muted!
         Codec_MuteDAC(false);                      // make sure that audio is un-muted
-
-
-        if((ts.version_number_major != atoi(TRX4M_VER_MAJOR)) || (ts.version_number_release != atoi(TRX4M_VER_RELEASE)) || (ts.version_number_minor != atoi(TRX4M_VER_MINOR)))        // Yes - check for new version
-        {
-
-            ts.version_number_major = atoi(TRX4M_VER_MAJOR);    // save new F/W version
-            ts.version_number_release = atoi(TRX4M_VER_RELEASE);
-            ts.version_number_minor = atoi(TRX4M_VER_MINOR);
-
-            UiSpectrum_ClearDisplay();         // clear display under spectrum scope
-            UiLcdHy28_PrintText(110,156,"- New F/W detected -",Cyan,Black,0);
-            UiLcdHy28_PrintText(110,168,"  Settings adjusted ",Cyan,Black,0);
-
-            non_os_delay_multi(6);
-            UiSpectrum_InitSpectrumDisplay();          // init spectrum scope
-        }
-
     }
 }
 
@@ -3645,7 +3631,7 @@ static void UiDriver_CheckEncoderOne()
             if(ts.dmod_mode == DEMOD_CW)	 	// In CW mode - adjust sidetone gain
             {
                 // Convert to Audio Gain incr/decr
-                ts.st_gain = change_and_limit_uint(ts.st_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
+                ts.cw_sidetone_gain = change_and_limit_uint(ts.cw_sidetone_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
                 Codec_TxSidetoneSetgain(ts.txrx_mode);
                 UiDriver_DisplaySidetoneGain(true);
             }
@@ -3951,7 +3937,7 @@ static void UiDriver_CheckEncoderThree()
                 if(ts.dmod_mode == DEMOD_CW)	 		// in CW mode, adjust keyer speed
                 {
                     // Convert to Audio Gain incr/decr
-                    ts.keyer_speed = change_and_limit_int(ts.keyer_speed,pot_diff_step,MIN_KEYER_SPEED,MAX_KEYER_SPEED);
+                    ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,CW_KEYER_SPEED_MIN,CW_KEYER_SPEED_MAX);
                     CwGen_SetSpeed();
                     UiDriver_DisplayKeyerSpeed(1);
                 }
@@ -4152,7 +4138,7 @@ static void UiDriver_DisplayAfGain(bool encoder_active)
 //*----------------------------------------------------------------------------
 static void UiDriver_DisplaySidetoneGain(bool encoder_active)
 {
-    UiDriver_EncoderDisplaySimple(1,0,"STG", encoder_active, ts.st_gain);
+    UiDriver_EncoderDisplaySimple(1,0,"STG", encoder_active, ts.cw_sidetone_gain);
 }
 
 //*----------------------------------------------------------------------------
@@ -4371,7 +4357,7 @@ static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
         color = White;
 
     txt = "WPM";
-    snprintf(txt_buf,5,"%3d",ts.keyer_speed);
+    snprintf(txt_buf,5,"%3d",ts.cw_keyer_speed);
 
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
@@ -4984,17 +4970,16 @@ static bool UiDriver_SaveConfiguration()
     const char* txp;
     uint16_t txc;
 
-    switch (ts.ser_eeprom_in_use)
+    switch (ts.configstore_in_use)
     {
-    case SER_EEPROM_IN_USE_NO:
-    case SER_EEPROM_IN_USE_TOO_SMALL:
+    case CONFIGSTORE_IN_USE_FLASH:
         txp = "Saving settings to Flash Memory";
         break;
-    case SER_EEPROM_IN_USE_I2C:
+    case CONFIGSTORE_IN_USE_I2C:
         txp = "Saving settings to I2C EEPROM";
         break;
     default:
-        txp = "Detected I2C problems: Not saving";
+        txp = "Detected problems: Not saving";
         savedConfiguration = false;
     }
     UiLcdHy28_PrintTextCentered(60,176,260,txp,Blue,Black,0);
@@ -5893,103 +5878,143 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
     non_os_delay_multi(10);
 }
 
+static uint16_t startUpScreen_nextLineY;
+static bool startUpError = false;
 
-void UiDriver_ShowStartUpScreen(ulong hold_time)
+/**
+ * @brief use this method to report initialization problems on splash screen, may only be used during splash screen presence (!)
+ *
+ * @param isProblem if set to true, the problem is reported on screen, otherwise nothing is done
+ * @param txt pointer to a text string characterizing the problem detected
+ *
+ */
+void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
 {
-    uint16_t    i;
-    char   tx[100];
-    char   temp_buf[32];
-    const char* txp;
-    uint32_t clr;
-    const char* info_out;
+    if (isProblem)
+    {
+        startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY,320,txt,Black,Red3,0);
+        startUpError = true;
+    }
+}
 
+static uint16_t fw_version_number_major = 0;    // save new F/W version
+static uint16_t fw_version_number_release = 0;
+static uint16_t fw_version_number_minor = 0;
+
+/**
+ * @returns true if the firmware version is different from version in loaded configuraton settings.
+ */
+static bool UiDriver_FirmwareVersionCheck()
+{
+
+    fw_version_number_major = atoi(UHSDR_VER_MAJOR);    // save new F/W version
+    fw_version_number_release = atoi(UHSDR_VER_RELEASE);
+    fw_version_number_minor = atoi(UHSDR_VER_MINOR);
+
+    return ((ts.version_number_major != fw_version_number_major) || (ts.version_number_release != fw_version_number_release) || (ts.version_number_minor != fw_version_number_minor));        // Yes - check for new version
+}
+/**
+ * @brief basically does nothing but settiSng the firmware number of configuration to number of running fw
+ */
+static void UiDriver_FirmwareVersionUpdateConfig()
+{
+
+    if (UiDriver_FirmwareVersionCheck())
+    {
+        ts.version_number_major = fw_version_number_major;    // save new F/W version
+        ts.version_number_release = fw_version_number_release;
+        ts.version_number_minor = fw_version_number_minor;
+
+    }
+}
+
+
+/**
+ * @brief show initial splash screen, we run AFTER the configuration storage has been initialized!
+ * @param hold_time how long the screen to be shown before proceeding (in ms)
+ */
+void UiDriver_StartUpScreenInit()
+{
+    char   tx[100];
+    uint32_t clr;
     // Clear all
     UiLcdHy28_LcdClear(Black);
-
-    non_os_delay();
-    // Show first line
+    uint16_t nextY = 10;
     snprintf(tx,100,"%s",DEVICE_STRING);
-    UiLcdHy28_PrintTextCentered(0,30,320,tx,Cyan,Black,1);       // Position with original text size:  78,40
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, tx, Cyan, Black, 1);
 
-    // Show second line
-    snprintf(tx,100,"%s",AUTHOR_STRING);
-    UiLcdHy28_PrintTextCentered(0,60,320,tx,White,Black,0);     // 60,60
+#ifdef TRX_HW_LIC
+    snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, tx, White,Black, 0);
+#endif
+#ifdef TRX_HW_CREATOR
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
+#endif
 
-	// looking for bootloader version, only works or DF8OE bootloader
-    // Show third line
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION);
-    strncpy(temp_buf, info_out, 32);
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_BL_VERSION);
+    snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 8, 320, tx, Yellow, Black, 1);
 
-    snprintf(tx,100,"FW: %s / BL: %s", temp_buf, info_out);
-    UiLcdHy28_PrintTextCentered(0,80,320,tx,Grey3,Black,0);
+    nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
 
-    // Show fourth line
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_BUILD);
-    snprintf(tx,100,"Build on %s CET",info_out);
-    UiLcdHy28_PrintTextCentered(0,100,320,tx,Yellow,Black,0);
+	// show important error status
+    startUpScreen_nextLineY = nextY + 8; // reset y coord to first line of error messages
 
-    ConfigStorage_ReadVariable(EEPROM_FREQ_CONV_MODE, &i);  // get setting of frequency translation mode
-
-    if(!(i & 0xff))
-    {
-        txp = "WARNING:  Freq. Translation is OFF!!!";
-        UiLcdHy28_PrintTextCentered(0,120,320,txp,Black,Red3,0);
-        txp ="Translation is STRONGLY recommended!!";
-        UiLcdHy28_PrintTextCentered(0,135,320,txp,Black,Red3,0);
-    }
-    else
-    {
-        txp = " Freq. Translate On ";
-        UiLcdHy28_PrintTextCentered(0,120,320,txp,Grey3,Black,0);
-    }
-
-    // Display the mode of the display interface
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_DISPLAY);
-    snprintf(tx,100,"LCD: %s",info_out);
-    UiLcdHy28_PrintTextCentered(0,150,320,tx,Grey1,Black,0);
-
-    txp = ts.tp->present?"Touchscreen: Yes":"Touchscreen: No";
-    UiLcdHy28_PrintTextCentered(0,180,320,txp,Grey1,Black,0);
-
-    info_out = UiMenu_GetSystemInfo(&clr,INFO_SI570);
-    snprintf(tx,100,"Si570: %s",info_out);
-    UiLcdHy28_PrintTextCentered(0, 165,320, tx, clr, Black, 0);
-    //
-
-    if(ts.ee_init_stat != HAL_OK)        // Show error code if problem with EEPROM init
-    {
-        snprintf(tx,100, "EEPROM Init Error Code:  %d", ts.ee_init_stat);
-        UiLcdHy28_PrintTextCentered(0,180,320,tx,White,Black,0);
-    }
-    else
-    {
-        ushort adc2, adc3;
-        adc2 = HAL_ADC_GetValue(&hadc2);
-        adc3 = HAL_ADC_GetValue(&hadc3);
-        if((adc2 > MAX_VSWR_MOD_VALUE) && (adc3 > MAX_VSWR_MOD_VALUE))
-        {
-            txp = "SWR Bridge resistor mod NOT completed!";
-            UiLcdHy28_PrintTextCentered(0,180,320,txp,Red3,Black,0);
-        }
-    }
-
-    // Additional Attrib line 1
-    UiLcdHy28_PrintTextCentered(0,195,320,ATTRIB_STRING1,Grey1,Black,0);
-
-    // Additional Attrib line 2
-    UiLcdHy28_PrintTextCentered(0,210,320,ATTRIB_STRING2,Grey1,Black,0);
-
-    // Additional Attrib line 3
-    UiLcdHy28_PrintTextCentered(0,225,320,ATTRIB_STRING3,Grey1,Black,0);
-
-    // Backlight on
     UiLcdHy28_BacklightEnable(true);
 
-    // On screen delay - decrease if drivers init takes longer
-    for(i = 0; i < hold_time; i++)
-        non_os_delay();
 }
+
+void UiDriver_StartUpScreenFinish()
+{
+    const char* txp;
+    char   tx[100];
+    uint32_t clr, fg_clr;
+
+    uint32_t hold_time;
+
+    UiDriver_StartupScreen_LogIfProblem(Si570_IsPresent() == false, "Si570 Oscillator NOT Detected!");
+    UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
+
+    if(ts.ee_init_stat != HAL_OK)                                   // problem with EEPROM init
+    {
+        snprintf(tx,100, "EEPROM Init Error Code: %d", ts.ee_init_stat);
+        UiDriver_StartupScreen_LogIfProblem(true, tx);
+    }
+
+    UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
+                "SWR Bridge resistor mod NOT completed!");
+
+    if (UiDriver_FirmwareVersionCheck())
+    {
+        hold_time = 10000; // 15s
+        txp = "Firmware change detected!\nPlease review settings!";
+        startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
+
+        UiDriver_FirmwareVersionUpdateConfig();
+    }
+
+    if(startUpError == true)
+    {
+        hold_time = 15000; // 15s
+        txp = "Boot Delay because of Errors or Warnings";
+        clr = Red3;
+        fg_clr = Black;
+    }
+    else
+    {
+        hold_time = 3000; // 3s
+        txp = "...starting up normally...";
+        clr =  Black;
+        fg_clr = Green;
+    }
+
+    UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
+
+    HAL_Delay(hold_time);
+
+    UiDriver_CreateDesktop();
+    UiDriver_UpdateDisplayAfterParamChange();
+}
+
 
 typedef enum {
     SCTimer_ENCODER_KEYS =0, // 10ms

@@ -3,13 +3,13 @@
 	<EmBitzVersion release="1.11" revision="0" />
 	<FileVersion major="1" minor="0" />
 	<Project>
-		<Option title="mchfF7" />
+		<Option title="mchf" />
 		<Option pch_mode="2" />
 		<Option compiler="armgcc_eb" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\F7\Debug\fw-mchf.elf" />
-				<Option object_output="obj\F7\Debug\" />
+				<Option output="bin\Debug\fw-mchf.elf" />
+				<Option object_output="obj\Debug\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
 				<Option projectDeviceOptionsRelation="0" />
@@ -29,13 +29,13 @@
 				</Assembler>
 				<Linker>
 					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
-					<Add library="bin\F7\Debug\libstm32f7xxhal.a" />
-					<Add library="bin\F7\Debug\libcmsisdsp.a" />
+					<Add library="bin\Debug\libstm32f4xxhal.a" />
+					<Add library="bin\Debug\libcmsisdsp.a" />
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\F7\Release\fw-mchf.elf" />
-				<Option object_output="obj\F7\Release\" />
+				<Option output="bin\Release\fw-mchf.elf" />
+				<Option object_output="obj\Release\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
 				<Option projectDeviceOptionsRelation="0" />
@@ -50,8 +50,8 @@
 				<Linker>
 					<Add option="-eb_lib=n" />
 					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
-					<Add library="bin\F7\Release\libstm32f7xxhal.a" />
-					<Add library="bin\F7\Release\libcmsisdsp.a" />
+					<Add library="bin\Release\libstm32f4xxhal.a" />
+					<Add library="bin\Release\libcmsisdsp.a" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="arm-none-eabi-objcopy -O binary $(TARGET_OUTPUT_DIR)/$(TARGET_OUTPUT_BASENAME).elf $(TARGET_OUTPUT_DIR)/$(TARGET_OUTPUT_BASENAME).bin" />
@@ -61,8 +61,8 @@
 				</ExtraCommands>
 			</Target>
 			<Target title="ReleaseSmall">
-				<Option output="bin\F7\ReleaseSmall\fw-mchf.elf" />
-				<Option object_output="obj\F7\ReleaseSmall\" />
+				<Option output="bin\ReleaseSmall\fw-mchf.elf" />
+				<Option object_output="obj\ReleaseSmall\" />
 				<Option type="0" />
 				<Option compiler="armgcc_eb" />
 				<Option projectDeviceOptionsRelation="0" />
@@ -76,9 +76,9 @@
 				</Cpp>
 				<Linker>
 					<Add option="-eb_lib=n" />
-					<Add option="-T..\mchf-eclipse\arm-gcc-link_f7.ld" />
-					<Add library="bin\F7\ReleaseSmall\libstm32f7xxhal.a" />
-					<Add library="bin\F7\ReleaseSmall\libcmsisdsp.a" />
+					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
+					<Add library="bin\ReleaseSmall\libstm32f4xxhal.a" />
+					<Add library="bin\ReleaseSmall\libcmsisdsp.a" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="arm-none-eabi-objcopy -O binary $(TARGET_OUTPUT_DIR)/$(TARGET_OUTPUT_BASENAME).elf $(TARGET_OUTPUT_DIR)/$(TARGET_OUTPUT_BASENAME).bin" />
@@ -92,8 +92,8 @@
 			<Add alias="All" targets="Release;ReleaseSmall;" />
 		</VirtualTargets>
 		<Device>
-			<Add option="$device=cortex-m7" />
-			<Add option="$fpu=fpv5-d16" />
+			<Add option="$device=cortex-m4" />
+			<Add option="$fpu=fpv4-sp-d16" />
 		</Device>
 		<Compiler>
 			<Add option="-mfloat-abi=hard" />
@@ -102,31 +102,31 @@
 			<Add option="-fdata-sections" />
 			<Add option="-ffunction-sections" />
 			<Add option="-Wno-unused-function" />
-			<Add symbol="ARM_MATH_CM7" />
+			<Add symbol="ARM_MATH_CM4" />
 			<Add symbol="_GNU_SOURCE" />
-			<Add symbol="CORTEX_M7" />
-			<Add symbol="STM32F767xx" />
+			<Add symbol="CORTEX_M4" />
+			<Add symbol="STM32F407xx" />
 			<Add symbol="USE_HAL_DRIVER" />
 			<Add symbol="DEBUG" />
 			<Add symbol="USE_FULL_ASSERT" />
 			<Add symbol="TRACE" />
-			<Add symbol="__FPU_PRESENT=1" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Drivers\STM32F7xx_HAL_Driver\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Drivers\CMSIS\Include" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Drivers\CMSIS\Device\ST\STM32F7xx\Include" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Core\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Core\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\AUDIO\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\CDC\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\MTP\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\Third_Party\FatFs\src" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\Third_Party\FatFs\src\drivers" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Inc" />
-			<Add directory="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Inc" />
+			<Add symbol="__FPU_PRESENT=1U" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Include" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\AUDIO\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\CDC\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MTP\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\drivers" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Inc" />
+			<Add directory="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Class\CDC\Inc" />
 			<Add directory="..\mchf-eclipse" />
 			<Add directory="..\mchf-eclipse\src" />
 			<Add directory="..\mchf-eclipse\src\bootloader" />
@@ -170,11 +170,119 @@
 			<Add option="--gc-sections" />
 			<Add option="-Llibs" />
 		</Linker>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\adc.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\mchf-eclipse\arm-gcc-link-1024k.ld" />
 		<Unit filename="..\mchf-eclipse\arm-gcc-link.ld" />
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\gcc\startup_stm32f407xx.S">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\system_stm32f4xx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\AUDIO\Src\usbh_audio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\CDC\Src\usbh_cdc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid_keybd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid_mouse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid_parser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc_bot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc_scsi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MTP\Src\usbh_mtp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MTP\Src\usbh_mtp_ptp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_core.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ctlreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ioreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_pipes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\adc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\fsmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\gpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\i2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\i2s.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\spi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_hal_msp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_it.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\tim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usb_host.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usbd_conf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usbh_conf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\user_diskio.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\audio_driver.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -184,79 +292,13 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\audio_management.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\cat\cat_driver.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebook.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookd.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookdt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookge.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookjnd.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookjvm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebooklspmelvq.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookmel.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookres.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookvq.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookvqanssi.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\codec\codec.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codec2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\codec2_fft.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\cohpsk.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\config_storage.c">
+		<Unit filename="..\mchf-eclipse\drivers\audio\codec\uhsdr_hw_i2s.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_gen.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\dac.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\softdds\dds_table.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\dma.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\dump.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\fdmdv.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\fifo.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\fir_rx_decimate_4.c">
@@ -269,43 +311,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\fir_rx_interpolate_16_10kHz.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\fm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\fmc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\fmfsk.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_api.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_data_channel.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_mchf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_test_data.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_vhf_framing.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\fsk.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\golay23.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\gpio.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\i2c.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iir_10k.c">
@@ -419,9 +424,6 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iir_antialias.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\interp.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iq_rx_filter.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -429,6 +431,96 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iq_tx_filter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_uhsdr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_test_data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\softdds\dds_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\softdds\softdds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\cat\cat_driver.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookdt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookge.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookjnd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookjvm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebooklspmelvq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookmel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookres.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookvq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codebookvqanssi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codec2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\codec2_fft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\cohpsk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\dump.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\fdmdv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\fifo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\fm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\fmfsk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_api.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_data_channel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\freedv_vhf_framing.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\fsk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\golay23.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\freedv\interp.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\freedv\kiss_fft.c">
@@ -444,25 +536,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\freedv\lsp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\Makefile" />
-		<Unit filename="..\mchf-eclipse\hardware\mchf_board.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\mchf_hw_i2c.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\codec\mchf_hw_i2s.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\src\mchf_main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\mchf_rtc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\freedv\modem_stats.c">
@@ -483,65 +556,25 @@
 		<Unit filename="..\mchf-eclipse\drivers\freedv\postfilter.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\profiling.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\freedv\quantise.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\radio_management.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Readme.md" />
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\rtc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\sai.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\serial_eeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\freedv\sine.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\soft_tcxo.c">
+		<Unit filename="..\mchf-eclipse\drivers\freedv\varicode.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\softdds\softdds.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\spi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\gcc\startup_stm32f767xx.S">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\stm32f7xx_hal_msp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\stm32f7xx_it.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\system_stm32f7xx.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\TestCPlusPlusBuild.cpp">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\tim.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\ui_configuration.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\ui_driver.c">
+		<Unit filename="..\mchf-eclipse\drivers\ui\encoder\ui_rotary.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28_fonts.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_spectrum.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\menu\ui_menu.c">
@@ -553,31 +586,37 @@
 		<Unit filename="..\mchf-eclipse\drivers\ui\menu\ui_menu_structure.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\encoder\ui_rotary.c">
+		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\soft_tcxo.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\ui_si570.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_spectrum.c">
+		<Unit filename="..\mchf-eclipse\drivers\ui\radio_management.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\ui_configuration.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\ui_driver.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\usb\app\usb_device.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\usb_host.c">
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_audio_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_cdc_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_desc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\AUDIO\Src\usbd_audio_cdc_comp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_audio_if.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\CDC\Src\usbd_cdc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_cdc_if.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\composite\usbd_composite.c">
@@ -586,48 +625,36 @@
 		<Unit filename="..\mchf-eclipse\drivers\usb\device\class\composite\usbd_composite_desc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\usbd_conf.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_hw_i2c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c">
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_rtc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_desc.c">
+		<Unit filename="..\mchf-eclipse\Makefile" />
+		<Unit filename="..\mchf-eclipse\misc\config_storage.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c">
+		<Unit filename="..\mchf-eclipse\misc\profiling.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Src\usbh_conf.c">
+		<Unit filename="..\mchf-eclipse\misc\serial_eeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_core.c">
+		<Unit filename="..\mchf-eclipse\misc\TestCPlusPlusBuild.cpp">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ctlreq.c">
+		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ioreq.c">
+		<Unit filename="..\mchf-eclipse\src\uhsdr_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc_bot.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc_scsi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\abCD15\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_pipes.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\freedv\varicode.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />
+		<Unit filename="Readme.md" />
 		<Extensions>
 			<code_completion />
 			<debugger>
@@ -636,7 +663,7 @@
 						<family_options family_id="All">
 							<option opt_id="ID_BOARD_CH" opt_value="" />
 							<option opt_id="ID_INTERFACE_CH" opt_value="stlink-v2" />
-							<option opt_id="ID_TARGET_CH" opt_value="stm32f7x" />
+							<option opt_id="ID_TARGET_CH" opt_value="stm32f4x" />
 							<option opt_id="ID_TEXTCTRL1" opt_value="1800" />
 							<option opt_id="ID_HW_BKP_LIMIT" opt_value="" />
 							<option opt_id="ID_RESET_CH" opt_value="halt" />

@@ -15,7 +15,7 @@
 #ifndef __CAT_DRIVER_H
 #define __CAT_DRIVER_H
 
-#include "mchf_types.h"
+#include "uhsdr_types.h"
 
 typedef enum
 {

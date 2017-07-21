@@ -15,7 +15,7 @@
 #ifndef __UI_DRIVER_H
 #define __UI_DRIVER_H
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 // used by UpdateFrequency* family of functions
 enum UpdateFrequencyMode_t
@@ -36,6 +36,7 @@ enum UpdateFrequencyMode_t
 #define 	T_STEP_1HZ					1
 #define 	T_STEP_10HZ					10
 #define 	T_STEP_100HZ					100
+#define 	T_STEP_500HZ					500
 #define 	T_STEP_1KHZ					1000
 #define 	T_STEP_5KHZ					5000
 #define 	T_STEP_9KHZ					9000
@@ -49,6 +50,7 @@ enum
     T_STEP_1HZ_IDX = 0,
     T_STEP_10HZ_IDX,
     T_STEP_100HZ_IDX,
+    T_STEP_500HZ_IDX,
     T_STEP_1KHZ_IDX,
     T_STEP_5KHZ_IDX,
     T_STEP_9KHZ_IDX,
@@ -284,10 +286,15 @@ void	UiDriver_LcdBlankingStartTimer(void);
 void	UiDriver_ShowDebugText(const char*);
 void 	UiDriver_ChangeTuningStep(uchar is_up);
 void	UiDriver_UpdateDisplayAfterParamChange();
-void    UiDriver_ShowStartUpScreen(ulong hold_time);
+
+void    UiDriver_StartUpScreenInit();
+void    UiDriver_StartUpScreenFinish();
+
 void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
 void    UiDriver_ToggleVfoAB();
 void    UiDriver_SetSplitMode(bool mode_active);
+
+void UiDriver_StartupScreen_LogIfProblem(bool isError, const char* txt);
 
 void    UiDriver_BacklightDimHandler();
 //

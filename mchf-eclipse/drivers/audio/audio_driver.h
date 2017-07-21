@@ -18,7 +18,7 @@
 
 #include "arm_math.h"
 #include "softdds.h"
-#include "mchf_hw_i2s.h"
+#include "uhsdr_hw_i2s.h"
 
 // 16 or 24 bits from Codec
 // 24 bits are not supported anywhere in the recent code!

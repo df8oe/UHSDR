@@ -14,7 +14,7 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 
 #ifdef DEBUG_FREEDV
     #define  FREEDV_TEST_BUFFER_FRAME_COUNT 50

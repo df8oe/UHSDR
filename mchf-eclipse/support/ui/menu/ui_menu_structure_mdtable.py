@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-2016-12-24 HB9ocq, DB4ple - support program to document the menu structure of mcHF amateur radio SDR TRX
+2016-12-24 HB9ocq, DB4ple - support program to document the menu structure of uhsdr amateur radio firmware
 2017-01-01 HB9ocq - refinement
 2017-01-06 HB9ocq - following change in definition of MenuDescriptor
 
@@ -59,7 +59,7 @@ OUTPUT += r"""
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# mcHF FW v{BUILD_ID} - UI Menu Overview
+# uhsdr firmware v{BUILD_ID} - UI Menu Overview
 
 {GEN_SENTENCE}
 

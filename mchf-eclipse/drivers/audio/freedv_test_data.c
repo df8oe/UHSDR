@@ -11,7 +11,7 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-#include "freedv_mchf.h"
+#include "freedv_uhsdr.h"
 
 #ifdef DEBUG_FREEDV
     // these are 100x320 byte FreeDV IQ sample data (8Khz) for testing FreeDV

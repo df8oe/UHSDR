@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-2017-01-01 HB9ocq - support program to document the menu structure of mcHF amateur radio SDR TRX
+2017-01-01 HB9ocq - support program to document the menu structure of uhsdr amateur radio firmware
 2017-01-06 HB9ocq - following change in definition of MenuDescriptor
 
 relies upon module  ui_menu_structure_c2py.py  in the same directory
@@ -58,7 +58,7 @@ OUTPUT += r"""
 OUTPUT += """
         "MENU_TOP" [
             shape = none
-            image = "mcHF-logo.png"
+            image = "uhsdr-logo.png"
             label = ""
         ];
 

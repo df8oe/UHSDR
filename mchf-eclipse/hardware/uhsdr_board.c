@@ -12,13 +12,13 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "ui_configuration.h"
 #include "ui_lcd_hy28.h"
 #include <stdio.h>
 
-#include "mchf_hw_i2c.h"
-#include "mchf_rtc.h"
+#include "uhsdr_hw_i2c.h"
+#include "uhsdr_rtc.h"
 
 #include "ui_driver.h"
 
@@ -51,13 +51,12 @@ static void mchf_board_led_init(void)
     HAL_GPIO_Init(RED_LED_PIO, &GPIO_InitStructure);
 }
 
+#if 0
 // DO NOT ENABLE UNLESS ALL TOUCHSCREEN SETUP CODE IS DISABLED
 // TOUCHSCREEN AND USART SHARE PA9 Pin
 static void mchf_board_debug_init(void)
 {
 #ifdef DEBUG_BUILD
-
-#if 0
     // disabled the USART since it is used by the touch screen code
     // as well which renders it unusable
     #error "Debug Build No Longer Supported, needs alternative way of communication"
@@ -96,8 +95,8 @@ static void mchf_board_debug_init(void)
     while (USART_GetFlagStatus(DEBUG_COM, USART_FLAG_TC) == RESET);
 #endif
 
-#endif
 }
+#endif
 
 // -------------------------------------------------------
 // Constant declaration of the buttons map across ports
@@ -260,166 +259,28 @@ static void mchf_board_dac_init(void)
     HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,0);
 
 }
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief ADC init for Input Voltage readings
+ */
 static void mchf_board_adc1_init(void)
 {
     HAL_ADC_Start(&hadc1);
-
-#if 0
-    ADC_InitTypeDef 		ADC_InitStructure;
-    ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
-    GPIO_InitTypeDef 		GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // Enable ADC3 clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-
-    // Configure ADC Channel 6 as analog input
-    GPIO_InitStructure.GPIO_Pin 					= ADC1_PWR;
-    GPIO_InitStructure.GPIO_Mode 					= GPIO_Mode_AIN;
-    GPIO_InitStructure.GPIO_PuPd 					= GPIO_PuPd_NOPULL ;
-    GPIO_Init(ADC1_PWR_PIO, &GPIO_InitStructure);
-
-    // Common Init
-    ADC_CommonInitStructure.ADC_Mode 				= ADC_Mode_Independent;
-    ADC_CommonInitStructure.ADC_Prescaler 			= ADC_Prescaler_Div8;
-    ADC_CommonInitStructure.ADC_DMAAccessMode 		= ADC_DMAAccessMode_Disabled;
-    ADC_CommonInitStructure.ADC_TwoSamplingDelay	= ADC_TwoSamplingDelay_5Cycles;
-    ADC_CommonInit(&ADC_CommonInitStructure);
-
-    // Configuration
-    ADC_StructInit(&ADC_InitStructure);
-    ADC_InitStructure.ADC_Resolution 				= ADC_Resolution_12b;
-    ADC_InitStructure.ADC_ScanConvMode 				= DISABLE;
-    ADC_InitStructure.ADC_ContinuousConvMode 		= ENABLE;
-    ADC_InitStructure.ADC_ExternalTrigConvEdge 		= ADC_ExternalTrigConvEdge_None;
-    ADC_InitStructure.ADC_DataAlign 				= ADC_DataAlign_Right;
-    ADC_InitStructure.ADC_NbrOfConversion 			= 1;
-    ADC_Init(ADC1,&ADC_InitStructure);
-
-    // Regular Channel Config
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_6, 1, ADC_SampleTime_3Cycles);
-
-    // Enable
-    ADC_Cmd(ADC1, ENABLE);
-
-    // ADC2 regular Software Start Conv
-    ADC_SoftwareStartConv(ADC1);
-#endif
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_adc2_init
-//* Object              : ADC2 used for forward antenna power
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief ADC init for antenna forward power readings
+ */
 static void mchf_board_adc2_init(void)
 {
     HAL_ADC_Start(&hadc2);
-#if 0
-    ADC_InitTypeDef 		ADC_InitStructure;
-    ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
-    GPIO_InitTypeDef 		GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // Enable ADC3 clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
-
-    // Configure ADC Channel 6 as analog input
-    GPIO_InitStructure.GPIO_Pin 					= ADC2_RET;
-    GPIO_InitStructure.GPIO_Mode 					= GPIO_Mode_AIN;
-    GPIO_InitStructure.GPIO_PuPd 					= GPIO_PuPd_NOPULL ;
-    GPIO_Init(ADC2_RET_PIO, &GPIO_InitStructure);
-
-    // Common Init
-    ADC_CommonInitStructure.ADC_Mode 				= ADC_Mode_Independent;
-    ADC_CommonInitStructure.ADC_Prescaler 			= ADC_Prescaler_Div8;
-    ADC_CommonInitStructure.ADC_DMAAccessMode 		= ADC_DMAAccessMode_Disabled;
-    ADC_CommonInitStructure.ADC_TwoSamplingDelay	= ADC_TwoSamplingDelay_5Cycles;
-    ADC_CommonInit(&ADC_CommonInitStructure);
-
-    // Configuration
-    ADC_StructInit(&ADC_InitStructure);
-    ADC_InitStructure.ADC_Resolution 				= ADC_Resolution_12b;
-    ADC_InitStructure.ADC_ScanConvMode 				= DISABLE;
-    ADC_InitStructure.ADC_ContinuousConvMode 		= ENABLE;
-    ADC_InitStructure.ADC_ExternalTrigConvEdge 		= ADC_ExternalTrigConvEdge_None;
-    ADC_InitStructure.ADC_DataAlign 				= ADC_DataAlign_Right;
-    ADC_InitStructure.ADC_NbrOfConversion 			= 1;
-    ADC_Init(ADC2,&ADC_InitStructure);
-
-    // Regular Channel Config
-    ADC_RegularChannelConfig(ADC2, ADC_Channel_3, 1, ADC_SampleTime_3Cycles);
-
-    // Enable
-    ADC_Cmd(ADC2, ENABLE);
-
-    // ADC2 regular Software Start Conv
-    ADC_SoftwareStartConv(ADC2);
-#endif
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_adc3_init
-//* Object              : ADC3 used for return antenna power
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+/**
+ * @brief ADC init for antenna return power readings
+ */
 static void mchf_board_adc3_init(void)
 {
     HAL_ADC_Start(&hadc3);
-#if 0
-    ADC_InitTypeDef 		ADC_InitStructure;
-    ADC_CommonInitTypeDef 	ADC_CommonInitStructure;
-    GPIO_InitTypeDef 		GPIO_InitStructure;
-
-    GPIO_StructInit(&GPIO_InitStructure);
-
-
-    // Enable ADC3 clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
-
-    // Configure ADC Channel 6 as analog input
-    GPIO_InitStructure.GPIO_Pin 					= ADC3_FWD;
-    GPIO_InitStructure.GPIO_Mode 					= GPIO_Mode_AIN;
-    GPIO_InitStructure.GPIO_PuPd 					= GPIO_PuPd_NOPULL ;
-    GPIO_Init(ADC3_FWD_PIO, &GPIO_InitStructure);
-
-    // Common Init
-    ADC_CommonInitStructure.ADC_Mode 				= ADC_Mode_Independent;
-    ADC_CommonInitStructure.ADC_Prescaler 			= ADC_Prescaler_Div8;
-    ADC_CommonInitStructure.ADC_DMAAccessMode 		= ADC_DMAAccessMode_Disabled;
-    ADC_CommonInitStructure.ADC_TwoSamplingDelay	= ADC_TwoSamplingDelay_5Cycles;
-    ADC_CommonInit(&ADC_CommonInitStructure);
-
-    // Configuration
-    ADC_StructInit(&ADC_InitStructure);
-    ADC_InitStructure.ADC_Resolution 				= ADC_Resolution_12b;
-    ADC_InitStructure.ADC_ScanConvMode 				= DISABLE;
-    ADC_InitStructure.ADC_ContinuousConvMode 		= ENABLE;
-    ADC_InitStructure.ADC_ExternalTrigConvEdge 		= ADC_ExternalTrigConvEdge_None;
-    ADC_InitStructure.ADC_DataAlign 				= ADC_DataAlign_Right;
-    ADC_InitStructure.ADC_NbrOfConversion 			= 1;
-    ADC_Init(ADC3,&ADC_InitStructure);
-
-    // Regular Channel Config
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_2, 1, ADC_SampleTime_3Cycles);
-
-    // Enable
-    ADC_Cmd(ADC3, ENABLE);
-
-    // ADC3 regular Software Start Conv
-    ADC_SoftwareStartConv(ADC3);
-#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -497,7 +358,7 @@ void mchf_board_touchscreen_init()
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
-void mchf_board_init(void)
+void mchf_board_init_minimal()
 {
     // Enable clock on all ports
     __GPIOA_CLK_ENABLE();
@@ -509,18 +370,15 @@ void mchf_board_init(void)
     // LED init
     mchf_board_led_init();
     MchfBoard_RedLed(LED_STATE_ON);
-
     // Power up hardware
     mchf_board_power_down_init();
 
+  // FROM HERE
     // Filter control lines
     mchf_board_band_cntr_init();
 
-    // Debugging on
-    mchf_board_debug_init();
-
-
-    // Touchscreen Init
+    // Touchscreen SPI Control Signals Init
+    // TODO: Move to CubeMX Config
     mchf_board_touchscreen_init();
 
     // I2C init
@@ -534,11 +392,15 @@ void mchf_board_init(void)
     // Codec control interface
     mchf_hw_i2c2_init();
 
+    // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
+
+    // TODO: It seems that some SPI display need some time to get started...
     // LCD Init
-    // TODO: remove cast, once volatile is gone for DeviceCode
     UiLcdHy28_Init();
-    // we could now implement some error strategy if no display is present
-    // i.e. 0 is returned
+}
+
+void mchf_board_init_full()
+{
 
 #ifdef STM32F4
     // on a STM32F4 we can have the internal RTC only if there is an SPI display.

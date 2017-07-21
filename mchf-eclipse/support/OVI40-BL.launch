@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="ilg.gnuarmeclipse.debug.gdbjtag.openocd.launchConfigurationType">
 <stringAttribute key="bad_container_name" value="\mchf-eclipse\supp"/>
-<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;DMA1&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;SPI2&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;I2C2&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
+<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;RTC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;GPIOC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;PWR&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;RCC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;NVIC&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_DEVICE&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_GLOBAL&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doContinue" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doDebugInRam" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doFirstReset" value="true"/>
@@ -9,7 +9,7 @@
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doGdbServerAllocateTelnetConsole" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doSecondReset" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.doStartGdbServer" value="true"/>
-<booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.enableSemihosting" value="true"/>
+<booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.enableSemihosting" value="false"/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.firstResetType" value="init"/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbClientOtherCommands" value="set mem inaccessible-by-default off"/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbClientOtherOptions" value=""/>
@@ -17,7 +17,7 @@
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerExecutable" value="${openocd_path}/${openocd_executable}"/>
 <intAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerGdbPortNumber" value="3333"/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerLog" value=""/>
-<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerOther" value="-f support/MCHF.cfg"/>
+<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerOther" value="-f support/ovi40.cfg"/>
 <intAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.gdbServerTelnetPortNumber" value="4444"/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.otherInitCommands" value=""/>
 <stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.openocd.otherRunCommands" value=""/>
@@ -32,7 +32,7 @@
 <intAttribute key="org.eclipse.cdt.debug.gdbjtag.core.portNumber" value="3333"/>
 <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setPcRegister" value="false"/>
 <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setResume" value="false"/>
-<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="true"/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="main"/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsFileName" value=""/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsOffset" value=""/>
@@ -49,17 +49,17 @@
 <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
 <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="DebugSemihosting\mchf-eclipse.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="DebugBootloaderOVI40/bl-i40.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="mchf-eclipse"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1988579444.812079502"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/mchf-eclipse"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;/&gt;&#13;&#10;"/>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134283264&quot; label=&quot;0x8010000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134217728&quot; label=&quot;0x8000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134250496&quot; label=&quot;0x8008000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;1610629120&quot; label=&quot;0x60004000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;1610612736&quot; label=&quot;0x60000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;1610620928&quot; label=&quot;0x60002000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;1610616832&quot; label=&quot;0x60001000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;1610625024&quot; label=&quot;0x60003000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536836642&quot; label=&quot;0x1FFF7A22&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537378816&quot; label=&quot;0x2007C000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;3758157056&quot; label=&quot;0xE000ED00&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
-<stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x2000000,0x200000000,0x2000000000,0x20000000000,0x20000,0x200000,0x20010000,0x20011000,0x20001000,0x20002000,0x2001A000,0x2001D000,0x2002D000,0x2003D000,0x20030000"/>
+<stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x20000000000,0x20000,0x200000,0x20010000,0x20011000,0x20001000,0x20002000,0x2001A000,0x2001D000,0x2002D000,0x2003D000,0x20030000,0x80008000,0x8008000,0x800C000"/>
 </launchConfiguration>

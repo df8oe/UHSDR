@@ -14,7 +14,7 @@
 
 // Common
 #include "radio_management.h"
-#include "mchf_board.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 #include "adc.h"
 
@@ -23,9 +23,9 @@
 #include <math.h>
 #include <soft_tcxo.h>
 
-#include "mchf_hw_i2c.h"
+#include "uhsdr_hw_i2c.h"
 
-#include "freedv_mchf.h"
+#include "freedv_uhsdr.h"
 // SI570 control
 #include "ui_si570.h"
 #include "codec.h"
@@ -216,18 +216,18 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
         switch(ts.cw_offset_mode)
         {
         case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            tune_freq -= ts.sidetone_freq;
+            tune_freq -= ts.cw_sidetone_freq;
             // lower LO by sidetone amount
             break;
         case CW_OFFSET_LSB_SHIFT:   // LSB?
-            tune_freq += ts.sidetone_freq;
+            tune_freq += ts.cw_sidetone_freq;
             // raise LO by sidetone amount
             break;
         case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
             if(ts.cw_lsb)
-                tune_freq += ts.sidetone_freq;          // it was LSB - raise by sidetone amount
+                tune_freq += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
             else
-                tune_freq -= ts.sidetone_freq;          // it was USB - lower by sidetone amount
+                tune_freq -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
         }
     }
 
@@ -495,6 +495,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             if (tx_pa_disabled == false)
             {
                 MchfBoard_RedLed(LED_STATE_ON); // TX
+                MchfBoard_GreenLed(LED_STATE_OFF);
                 MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
             }
         }
@@ -526,6 +527,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
+            MchfBoard_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
             CwGen_PrepareTx();
             // make sure the keyer is set correctly for next round
@@ -1063,6 +1065,12 @@ bool RadioManagement_LSBActive(uint16_t dmod_mode)
 
     return is_lsb;
 }
+
+bool RadioManagement_USBActive(uint16_t dmod_mode)
+{
+    return RadioManagement_UsesBothSidebands(dmod_mode) == false && RadioManagement_LSBActive(dmod_mode) == false;
+}
+
 
 static void RadioManagement_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
