@@ -1484,12 +1484,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 UiDriver_RefreshEncoderDisplay(); // maybe shown on encoder boxes
             }
         }
-
-        if((!(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)) && (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ) )
-        {
-            // RED if CAT is not enabled and  digital input is selected
-            clr = Red;
-        }
         break;
     case MENU_MIC_GAIN: // Mic Gain setting
 
@@ -2583,31 +2577,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             AudioManagement_KeyBeep();      // make beep to demonstrate loudness
         }
         snprintf(options,32, "    %u", ts.beep_loudness);
-        break;
-    //
-    //
-    // *****************  WARNING *********************
-    // If you change CAT mode, THINGS MAY GET "BROKEN" - for example, you may not be able to reliably save to EEPROM!
-    // This needs to be investigated!
-    //
-    case CONFIG_CAT_ENABLE:
-        temp_var_u8 = (ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if (temp_var_u8)
-            ts.flags1 |= FLAGS1_CAT_MODE_ACTIVE;
-        else
-            ts.flags1 &= ~FLAGS1_CAT_MODE_ACTIVE;
-        if (var_change)
-        {
-            if(ts.flags1 & FLAGS1_CAT_MODE_ACTIVE)
-            {
-                CatDriver_InitInterface();
-            }
-            else
-            {
-                CatDriver_StopInterface();
-            }
-        }
         break;
     case CONFIG_FREQUENCY_CALIBRATE:        // Frequency Calibration
         if(var >= 1)        // setting increase?
