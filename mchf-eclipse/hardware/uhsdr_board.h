@@ -756,7 +756,7 @@ typedef struct TransceiverState
 #define FLAGS1_FREQ_LIMIT_RELAX			0x20    // if Frequency tuning is to be relaxed
 #define FLAGS1_SSB_TX_FILTER_DISABLE	0x40    // if SSB TX has transmit filter DISABLED
 #define FLAGS1_WFALL_SCOPE_TOGGLE		0x80    // 0 = Spectrum Scope (analyzer), 1 = Waterfall display
-#define FLAGS1_YET_NOT_USED				0x100
+#define FLAGS1_PREVIOUSLY_CAT_ENABLE	0x100
 #define FLAGS1_DYN_TUNE_ENABLE			0x200   // 0 = dynamic tune is disabled, 1 = dynamic tune is enabled
 #define FLAGS1_SAM_ENABLE				0x400   // 0 = SAM mode is disabled, 1 = SAM mode is enabled
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox

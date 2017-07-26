@@ -513,7 +513,6 @@ int mchfMain(void)
     FreeDV_mcHF_init();
 #endif
 
-	CatDriver_InitInterface();
     UiDriver_StartUpScreenFinish(2000);
     MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop

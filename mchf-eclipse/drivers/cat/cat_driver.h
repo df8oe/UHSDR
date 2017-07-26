@@ -31,8 +31,6 @@ typedef enum
 
 
 // Exports
-void CatDriver_InitInterface(void);
-void CatDriver_StopInterface(void);
 
 CatInterfaceState CatDriver_GetInterfaceState();
 

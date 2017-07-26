@@ -52,15 +52,6 @@ bool CatDriver_CWKeyPressed()
     return cdcvcp_ctrllines.dtr != 0;
 }
 
-void CatDriver_InitInterface(void)
-{
-}
-
-void CatDriver_StopInterface(void)
-{
-}
-
-
 CatInterfaceState CatDriver_GetInterfaceState()
 {
     return hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED?CAT_CONNECTED:CAT_DISCONNECTED;
