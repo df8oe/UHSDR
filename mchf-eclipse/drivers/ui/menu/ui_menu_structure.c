@@ -189,7 +189,6 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP, NULL, "Band+/- Button Swap", UiMenuDesc("If ON, Band- behaves like Band+ and vice versa.") },
 
     // mcHF Setup Calibration (Initial Setup, never to be changed unless HW changes)
-
     { MENU_CONF, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN, NULL, "Reverse Touchscreen", UiMenuDesc("Some touchscreens have the touch coordiantes reversed. In this case, select ON") },
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION, NULL, "Voltmeter Cal.", UiMenuDesc("Adjusts the displayed value of the voltmeter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_LOW_POWER_THRESHOLD, NULL, "Low Voltage Threshold", UiMenuDesc("Voltage threshold for voltage warning colors and auto shutdown.") },
@@ -197,7 +196,15 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP, NULL, "Pwr. Display mW", UiMenuDesc("Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL, NULL, "Pwr. Det. Null", UiMenuDesc(" Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP, NULL, "SWR/PWR Meter FWD/REV Swap", UiMenuDesc("Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX.") },
-
+    { MENU_CONF, MENU_ITEM, CONFIG_I2C1_SPEED, NULL,"I2C1 Bus Speed", UiMenuDesc("Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_I2C2_SPEED, NULL,"I2C2 Bus Speed", UiMenuDesc("Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
+    
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_START, &ts.vbat_present,"RTC Start", UiMenuDesc("Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_HOUR, &ts.rtc_present,"RTC Hour", UiMenuDesc("Sets the Real Time Clock Hour. Needs HW Modifications.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_MIN, &ts.rtc_present,"RTC Min", UiMenuDesc("Sets the Real Time Clock Minutes. Needs HW Modifications.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_SEC, &ts.rtc_present,"RTC Seconds", UiMenuDesc("Sets the Real Time Clock Seconds. Needs HW Modifications.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_RESET, &ts.vbat_present,"RTC Reset", UiMenuDesc("Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RTC_CALIB, &ts.rtc_present,"RTC Calibration", UiMenuDesc("Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation") },
     { MENU_CONF, MENU_ITEM, CONFIG_IQ_AUTO_CORRECTION, NULL, "RX IQ Auto Correction", UiMenuDesc("Receive IQ phase and amplitude imbalance can be automatically adjusted by the mcHF. Switch ON/OFF here. If OFF, it takes the following menu values for compensating the imbalance. The automatic algorithm achieves up to 60dB mirror rejection. See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_GAIN_BAL, &ts.display_rx_iq, "RX IQ Balance (80m)", UiMenuDesc("IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_80M_RX_IQ_PHASE_BAL, &ts.display_rx_iq, "RX IQ Phase   (80m)", UiMenuDesc("IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration.") },
@@ -349,14 +356,6 @@ const MenuDescriptor infoGroup[] =
 const MenuDescriptor debugGroup[] =
 {
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_I2C1_SPEED, NULL,"I2C1 Bus Speed", UiMenuDesc("Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_I2C2_SPEED, NULL,"I2C2 Bus Speed", UiMenuDesc("Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_START, &ts.vbat_present,"RTC Start", UiMenuDesc("Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected.") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_HOUR, &ts.rtc_present,"RTC Hour", UiMenuDesc("Sets the Real Time Clock Hour. Needs HW Modifications.") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_MIN, &ts.rtc_present,"RTC Min", UiMenuDesc("Sets the Real Time Clock Minutes. Needs HW Modifications.") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_SEC, &ts.rtc_present,"RTC Seconds", UiMenuDesc("Sets the Real Time Clock Seconds. Needs HW Modifications.") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_RESET, &ts.vbat_present,"RTC Reset", UiMenuDesc("Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_RTC_CALIB, &ts.rtc_present,"RTC Calibration", UiMenuDesc("Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"new Noiseblanker", UiMenuDesc("toggle new noiseblanker for testing purposes") },

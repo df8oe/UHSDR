@@ -3403,7 +3403,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
-    case MENU_DEBUG_I2C1_SPEED:      //
+    case CONFIG_I2C1_SPEED:      //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_1],
                 1,
                 20,
@@ -3416,7 +3416,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, " %3dkHz",(unsigned int)(ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 );
         break;
-    case MENU_DEBUG_I2C2_SPEED:      //
+    case CONFIG_I2C2_SPEED:      //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_2],
                 1,
                 20,

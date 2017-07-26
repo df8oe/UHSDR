@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-25T07:50:41  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-26T11:01:49  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-25T07:50:41  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-26T11:01:49  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -592,6 +592,16 @@
              shape = record
              ];
         
+        "CONFIG_I2C1_SPEED" [
+             label = "CONFIG_I2C1_SPEED | I2C1 Bus Speed"
+             shape = record
+             ];
+        
+        "CONFIG_I2C2_SPEED" [
+             label = "CONFIG_I2C2_SPEED | I2C2 Bus Speed"
+             shape = record
+             ];
+        
         "CONFIG_IQ_AUTO_CORRECTION" [
              label = "CONFIG_IQ_AUTO_CORRECTION | RX IQ Auto Correction"
              shape = record
@@ -997,16 +1007,6 @@
              shape = record
              ];
         
-        "MENU_DEBUG_I2C1_SPEED" [
-             label = "MENU_DEBUG_I2C1_SPEED | I2C1 Bus Speed"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_I2C2_SPEED" [
-             label = "MENU_DEBUG_I2C2_SPEED | I2C2 Bus Speed"
-             shape = record
-             ];
-        
         "MENU_DEBUG_CLONEOUT" [
              label = "MENU_DEBUG_CLONEOUT | FT817 Clone Transmit"
              shape = record
@@ -1132,6 +1132,10 @@
             MENU_CONF -> CONFIG_RF_FWD_PWR_NULL
             
             MENU_CONF -> CONFIG_FWD_REV_SENSE_SWAP
+            
+            MENU_CONF -> CONFIG_I2C1_SPEED
+            
+            MENU_CONF -> CONFIG_I2C2_SPEED
             
             MENU_CONF -> CONFIG_IQ_AUTO_CORRECTION
             
@@ -1470,10 +1474,6 @@
 
     
             MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
-            
-            MENU_DEBUG -> MENU_DEBUG_I2C1_SPEED
-            
-            MENU_DEBUG -> MENU_DEBUG_I2C2_SPEED
             
             MENU_DEBUG -> MENU_DEBUG_CLONEOUT
             
