@@ -148,7 +148,7 @@ static bool UiDriver_SaveConfiguration();
 #define POS_TUNE_FREQ_X             116
 #define POS_TUNE_FREQ_Y             100
 //
-#define POS_TUNE_SPLIT_FREQ_X           POS_TUNE_FREQ_X+72
+#define POS_TUNE_SPLIT_FREQ_X           POS_TUNE_FREQ_X+80//Shift with a small split to the right to close the frequency digits.
 #define POS_TUNE_SPLIT_MARKER_X         POS_TUNE_FREQ_X+40
 #define POS_TUNE_SPLIT_FREQ_Y_TX        POS_TUNE_FREQ_Y+12
 
@@ -2038,7 +2038,7 @@ static void UiDriver_CreateMainFreqDisplay()
     UiDriver_FButton_F3MemSplit();
     if((is_splitmode()))	 	// are we in SPLIT mode?
     {
-        UiLcdHy28_PrintText(POS_TUNE_FREQ_X,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
+        UiLcdHy28_PrintText(POS_TUNE_FREQ_X-16,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
         UiDriver_DisplaySplitFreqLabels();
     }
     UiDriver_ShowStep(df.selected_idx);
@@ -6241,7 +6241,7 @@ void UiDriver_MainHandler()
                         txt = "AGC";
                     }
                 }
-                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y+16,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
+                UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
             }
             break;
         default:
