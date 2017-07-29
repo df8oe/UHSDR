@@ -1537,7 +1537,7 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 			// actually known LCDs:
 			// mode 0: old HY28A and old HY28B
 			// mode 1: HY32D and 3.2" SPI LCD
-			// mode 5: new HY28B (?) reported by some OMs with soldered newer LCDs, cannot look on backside of LCD to verify type of LCD
+			// mode 6: new HY28B (?) reported by some OMs with soldered newer LCDs, cannot look on backside of LCD to verify type of LCD
 			// all other modes not used at the moment
 
             if(mchf_touchscreen.mirrored == 0 || mchf_touchscreen.mirrored == 4)
