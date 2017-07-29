@@ -189,7 +189,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_BAND_BUTTON_SWAP, NULL, "Band+/- Button Swap", UiMenuDesc("If ON, Band- behaves like Band+ and vice versa.") },
 
     // mcHF Setup Calibration (Initial Setup, never to be changed unless HW changes)
-    { MENU_CONF, MENU_ITEM, MENU_REVERSE_TOUCHSCREEN, NULL, "Reverse Touchscreen", UiMenuDesc("Some touchscreens have the touch coordiantes reversed. In this case, select ON") },
+    { MENU_CONF, MENU_ITEM, CONFIG_TOUCHSCREEN_MIRROR, NULL, "Touchscreen", UiMenuDesc("Some touchscreens have the touch coordinates reversed or x and y flipped. Select regarding your touchscreen.") },
     { MENU_CONF, MENU_ITEM, CONFIG_VOLTMETER_CALIBRATION, NULL, "Voltmeter Cal.", UiMenuDesc("Adjusts the displayed value of the voltmeter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_LOW_POWER_THRESHOLD, NULL, "Low Voltage Threshold", UiMenuDesc("Voltage threshold for voltage warning colors and auto shutdown.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FREQUENCY_CALIBRATE, NULL, "Freq. Calibrate", UiMenuDesc("Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki.") },

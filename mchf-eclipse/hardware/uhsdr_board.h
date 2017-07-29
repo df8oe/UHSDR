@@ -762,15 +762,18 @@ typedef struct TransceiverState
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox
 #define FLAGS1_SCOPE_LIGHT_ENABLE		0x1000  // 0 = Spectrum normal, 1 = Spectrum light
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
-#define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
+#define FLAGS1_REVERSE_X_TOUCHSCREEN	0x4000  // 1 = X direcction of touchscreen is mirrored
+#define FLAGS1_REVERSE_Y_TOUCHSCREEN	0x8000  // 1 = Y direcction of touchscreen is mirrored
 
 #ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
 #define FLAGS1_CONFIG_DEFAULT (0x0000)
+#define TOUCHSCREEN_DF_MIRROR	TOUCHSCREEN_NO_MIRROR_NOFLIP
 #endif
 #ifdef UI_BRD_OVI40
-    // the default screen needs reversed touch
-#define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_TOUCHSCREEN)
+    // the default screen needs reversed x axis touch
+#define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_X_TOUCHSCREEN)
+#define TOUCHSCREEN_DF_MIRROR	TOUCHSCREEN_X_MIRROR_NOFLIP
 #endif
 
 
@@ -780,6 +783,7 @@ typedef struct TransceiverState
 #define FLAGS2_KEY_BEEP_ENABLE 			0x04    // 1 if key/button beep is enabled
 #define FLAGS2_LOW_BAND_BIAS_REDUCE 	0x08    // 1 if bias values for lower bands  below 8Mhz have lower influence factor
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
+#define FLAGS2_TOUCHSCREEN_FLIP_XY	 	0x20    // 1 if touchscreen x and y are flipped
 #define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
 
 #define FLAGS2_CONFIG_DEFAULT (FLAGS2_HIGH_BAND_BIAS_REDUCE|FLAGS2_LOW_BAND_BIAS_REDUCE)

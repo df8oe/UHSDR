@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-9795 752,-9795 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;27T10:46:04 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;29T13:47:56 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3208.5"/>
@@ -843,17 +843,17 @@
 <path fill="none" stroke="black" d="M248.234,-6526.52C259.229,-6573.65 291.225,-6680.9 363,-6731.5 384.292,-6746.51 410.267,-6754.9 436.133,-6759.31"/>
 <polygon fill="black" stroke="black" points="435.619,-6762.77 446.03,-6760.81 436.667,-6755.85 435.619,-6762.77"/>
 </g>
-<!-- MENU_REVERSE_TOUCHSCREEN -->
-<g id="node108" class="node"><title>MENU_REVERSE_TOUCHSCREEN</title>
-<polygon fill="none" stroke="black" points="441,-6684.5 441,-6730.5 670,-6730.5 670,-6684.5 441,-6684.5"/>
-<text text-anchor="middle" x="555.5" y="-6715.3" font-family="Times,serif" font-size="14.00">MENU_REVERSE_TOUCHSCREEN</text>
-<polyline fill="none" stroke="black" points="441,-6707.5 670,-6707.5 "/>
-<text text-anchor="middle" x="555.5" y="-6692.3" font-family="Times,serif" font-size="14.00">Reverse Touchscreen</text>
+<!-- CONFIG_TOUCHSCREEN_MIRROR -->
+<g id="node108" class="node"><title>CONFIG_TOUCHSCREEN_MIRROR</title>
+<polygon fill="none" stroke="black" points="439,-6684.5 439,-6730.5 672,-6730.5 672,-6684.5 439,-6684.5"/>
+<text text-anchor="middle" x="555.5" y="-6715.3" font-family="Times,serif" font-size="14.00">CONFIG_TOUCHSCREEN_MIRROR</text>
+<polyline fill="none" stroke="black" points="439,-6707.5 672,-6707.5 "/>
+<text text-anchor="middle" x="555.5" y="-6692.3" font-family="Times,serif" font-size="14.00">Touchscreen</text>
 </g>
-<!-- MENU_CONF&#45;&gt;MENU_REVERSE_TOUCHSCREEN -->
-<g id="edge19" class="edge"><title>MENU_CONF&#45;&gt;MENU_REVERSE_TOUCHSCREEN</title>
-<path fill="none" stroke="black" d="M251.803,-6526.51C267.149,-6565.42 303.887,-6643.56 363,-6680.5 383.333,-6693.21 407.224,-6700.92 431.105,-6705.45"/>
-<polygon fill="black" stroke="black" points="430.518,-6708.9 440.966,-6707.14 431.702,-6702 430.518,-6708.9"/>
+<!-- MENU_CONF&#45;&gt;CONFIG_TOUCHSCREEN_MIRROR -->
+<g id="edge19" class="edge"><title>MENU_CONF&#45;&gt;CONFIG_TOUCHSCREEN_MIRROR</title>
+<path fill="none" stroke="black" d="M251.803,-6526.51C267.149,-6565.42 303.887,-6643.56 363,-6680.5 382.745,-6692.84 405.843,-6700.47 429.031,-6705.05"/>
+<polygon fill="black" stroke="black" points="428.504,-6708.51 438.964,-6706.83 429.737,-6701.62 428.504,-6708.51"/>
 </g>
 <!-- CONFIG_VOLTMETER_CALIBRATION -->
 <g id="node109" class="node"><title>CONFIG_VOLTMETER_CALIBRATION</title>

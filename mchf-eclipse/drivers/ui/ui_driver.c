@@ -885,7 +885,21 @@ void UiDriver_Init()
             "WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
 
     // now run all inits which need to be done BEFORE going into test screen mode
-    UiLcdHy28_TouchscreenInit((ts.flags1 & FLAGS1_REVERSE_TOUCHSCREEN)?true:false);
+	uint8_t mirtemp;
+	if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
+	{
+	mirtemp = 1;
+	}
+	else
+	{
+	mirtemp = 0;
+	}
+	if(ts.flags1 & FLAGS1_REVERSE_Y_TOUCHSCREEN)
+	{
+	mirtemp += 2;
+	}
+
+    UiLcdHy28_TouchscreenInit(mirtemp);
 
     if (run_keytest)
     {

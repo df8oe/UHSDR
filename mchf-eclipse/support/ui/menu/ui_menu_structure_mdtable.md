@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-07-27T10:46:07  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-07-29T13:47:59  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-07-27T10:46:07  by "./ui_menu_structure_mdtable.py"
+generated at  2017-07-29T13:47:59  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -85,7 +85,7 @@ generated at  2017-07-27T10:46:07  by "./ui_menu_structure_mdtable.py"
 | **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
-| **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
+| **Touchscreen**               (                  CONFIG_TOUCHSCREEN_MIRROR) | Some touchscreens have the touch coordinates reversed or x and y flipped. Select regarding your touchscreen. | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Low Voltage Threshold**     (                 CONFIG_LOW_POWER_THRESHOLD) | Voltage threshold for voltage warning colors and auto shutdown. | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 

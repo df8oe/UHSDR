@@ -55,6 +55,7 @@
 
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
+#include "uhsdr_board.h"
 
 mchf_display_t mchf_display;
 
@@ -1533,22 +1534,32 @@ void UiLcdHy28_TouchscreenReadCoordinates()
             uint8_t xraw = mchf_touchscreen.xraw >> 5;
             uint8_t yraw = mchf_touchscreen.yraw >> 5;
 
-            if(mchf_touchscreen.reversed == false)
+			// actually known LCDs:
+			// mode 0: old HY28A and old HY28B
+			// mode 1: HY32D and 3.2" SPI LCD
+			// mode 5: new HY28B (?) reported by some OMs with soldered newer LCDs, cannot look on backside of LCD to verify type of LCD
+			// all other modes not used at the moment
+
+            if(mchf_touchscreen.mirrored == 0 || mchf_touchscreen.mirrored == 4)
             {
                 uint8_t i;
                 for(i=0; touchscreentable[i] < xraw && i < 60; i++);
                 x = 60-i;
+          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+          		y = i--;
             }
-            else
-            {					// correction of unlinearity because of mirrored x
-                uint8_t k = 0;
-
+            if(mchf_touchscreen.mirrored == 1 || mchf_touchscreen.mirrored == 5)
+            {
                 uint8_t i;
                 for(i=60; touchscreentable[i] > xraw && i > 0; i--);
-
                 x = i--;
-
-
+          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+          		y = i--;
+			}
+            if(mchf_touchscreen.mirrored == 1)
+            {
+				// correction of reversed x unlinearity only for HY32D
+                uint8_t k = 0;
                 if(x == 57 || (x < 7 && x > 1))	k=2;
                 if(x == 56 || (x == 8 || x == 7))	k=3;
                 if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
@@ -1559,10 +1570,29 @@ void UiLcdHy28_TouchscreenReadCoordinates()
                 if(x < 31 && x > 26)	k=10;
                 x = x - k;
             }
+            if(mchf_touchscreen.mirrored == 2 || mchf_touchscreen.mirrored == 6)
+            {
+                uint8_t i;
+                for(i=0; touchscreentable[i] < xraw && i < 60; i++);
+                x = 60-i;
+          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+                y = 60-i;
+			}
+            if(mchf_touchscreen.mirrored == 3 || mchf_touchscreen.mirrored == 7)
+            {
+                uint8_t i;
+                for(i=60; touchscreentable[i] > xraw && i > 0; i--);
+                x = i--;
+          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
+                y = 60-i;
+			}
 
-            uint8_t i;
-            for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-            y = i--;
+			if(ts.flags2 & FLAGS2_TOUCHSCREEN_FLIP_XY)
+			{
+			  uint8_t temp = x;
+			  x = y;
+			  y = temp;
+			}
 
             if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
             {
@@ -1600,13 +1630,13 @@ bool UiLcdHy28_TouchscreenPresenceDetection()
     return retval;
 }
 
-void UiLcdHy28_TouchscreenInit(bool is_reversed)
+void UiLcdHy28_TouchscreenInit(uint8_t mirror)
 {
     mchf_touchscreen.xraw = 0;
     mchf_touchscreen.yraw = 0;
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
-    mchf_touchscreen.reversed = is_reversed;
+    mchf_touchscreen.mirrored = mirror;
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
 

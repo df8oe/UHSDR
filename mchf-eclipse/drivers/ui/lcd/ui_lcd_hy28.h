@@ -71,6 +71,15 @@
 
 #define GRADIENT_STEP			8
 
+#define TOUCHSCREEN_NO_MIRROR_NOFLIP	0
+#define TOUCHSCREEN_X_MIRROR_NOFLIP		1
+#define TOUCHSCREEN_Y_MIRROR_NOFLIP		2
+#define TOUCHSCREEN_XY_MIRROR_NOFLIP	3
+#define TOUCHSCREEN_NO_MIRROR_FLIPXY	4
+#define TOUCHSCREEN_X_MIRROR_FLIPXY		5
+#define TOUCHSCREEN_Y_MIRROR_FLIPXY		6
+#define TOUCHSCREEN_XY_MIRROR_FLIPXY	7
+
 
 // ----------------------------------------------------------
 
@@ -136,7 +145,7 @@ typedef struct
     uint8_t y;
 
     bool present;
-    bool reversed;
+    uint8_t mirrored;
 } mchf_touchscreen_t;
 
 
@@ -150,6 +159,6 @@ extern mchf_touchscreen_t mchf_touchscreen;
 void    UiLcdHy28_TouchscreenDetectPress();
 void 	UiLcdHy28_TouchscreenReadCoordinates();
 bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
-void    UiLcdHy28_TouchscreenInit(bool is_reversed);
+void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
 
 #endif

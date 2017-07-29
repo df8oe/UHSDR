@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-27T10:46:04  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-29T13:47:56  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-27T10:46:04  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-29T13:47:56  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -557,8 +557,8 @@
              shape = record
              ];
         
-        "MENU_REVERSE_TOUCHSCREEN" [
-             label = "MENU_REVERSE_TOUCHSCREEN | Reverse Touchscreen"
+        "CONFIG_TOUCHSCREEN_MIRROR" [
+             label = "CONFIG_TOUCHSCREEN_MIRROR | Touchscreen"
              shape = record
              ];
         
@@ -1124,7 +1124,7 @@
             
             MENU_CONF -> CONFIG_BAND_BUTTON_SWAP
             
-            MENU_CONF -> MENU_REVERSE_TOUCHSCREEN
+            MENU_CONF -> CONFIG_TOUCHSCREEN_MIRROR
             
             MENU_CONF -> CONFIG_VOLTMETER_CALIBRATION
             
