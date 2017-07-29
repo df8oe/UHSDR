@@ -3135,17 +3135,15 @@ static void UiDriver_TimeScheduler()
 
             ts.rx_gain[RX_AUDIO_SPKR].value_old = ts.rx_gain[RX_AUDIO_SPKR].value;
             ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;		// software gain not active - set to unity
-            if(ts.rx_gain[RX_AUDIO_SPKR].value <= 16)  				// Note:  Gain > 16 adjusted in audio_driver.c via software
+            if(ts.rx_gain[RX_AUDIO_SPKR].value <= CODEC_SPEAKER_MAX_VOLUME)  				// Note:  Gain > 16 adjusted in audio_driver.c via software
             {
-                Codec_VolumeSpkr((ts.rx_gain[RX_AUDIO_SPKR].value*5));
+                Codec_VolumeSpkr((ts.rx_gain[RX_AUDIO_SPKR].value));
 
             }
             else  	// are we in the "software amplification" range?
             {
-                Codec_VolumeSpkr(16*5);		// set to fixed "maximum" gain
-                ts.rx_gain[RX_AUDIO_SPKR].active_value = (float)ts.rx_gain[RX_AUDIO_SPKR].value;	// to float
-                ts.rx_gain[RX_AUDIO_SPKR].active_value /= 2.5;	// rescale to reasonable step size
-                ts.rx_gain[RX_AUDIO_SPKR].active_value -= 5.35;	// offset to get gain multiplier value
+                Codec_VolumeSpkr(CODEC_SPEAKER_MAX_VOLUME);		// set to fixed "maximum" gain
+                ts.rx_gain[RX_AUDIO_SPKR].active_value = (((float32_t)ts.rx_gain[RX_AUDIO_SPKR].value)/2.5)-5.35;	// to float
             }
 
             audio_spkr_volume_update_request = false;

@@ -66,35 +66,36 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MAX_RF_GAIN         50      // Maximum RF gain setting
 #define DEFAULT_RF_GAIN     50      // Default RF gain setting
 
-#define MAX_RF_GAIN         50      // Maximum RF gain setting
 
 #define LINEOUT_GAIN_DEFAULT    0x49    // Default lineout gain setting in dB steps
 #define LINEOUT_GAIN_MIN        1       //  min lineout gain setting in dB steps
 #define LINEOUT_GAIN_MAX        0x50    //  max lineout gain setting in dB steps
 
-#define MAX_AUDIO_GAIN      30      // Maximum audio gain setting
-#define MAX_DIG_GAIN        31      // Maximum audio gain setting
-#define DEFAULT_AUDIO_GAIN  16      // Default audio gain
-#define DEFAULT_DIG_GAIN    16      // Default audio gain
 
-#define MAGNIFY_MIN 				0
-#define MAGNIFY_MAX					5
-#define MAGNIFY_DEFAULT				0
+#define AUDIO_GAIN_DEFAULT  16      // Default audio gain
+#define AUDIO_GAIN_MAX      30      // Maximum audio gain setting
+
+#define DIG_GAIN_MAX        31      // Maximum audio gain setting
+#define DIG_GAIN_DEFAULT    16      // Default audio gain
 
 //
 // The following are used in the max volume setting in the menu system
 //
 #define MAX_VOLUME_MIN              8       // Minimum setting for maximum volume
-#define MAX_VOLUME_MAX              MAX_AUDIO_GAIN      // Maximum setting for maximum volume
-#define MAX_VOLUME_DEFAULT          DEFAULT_AUDIO_GAIN
+#define MAX_VOLUME_MAX              AUDIO_GAIN_MAX      // Maximum setting for maximum volume
+#define MAX_VOLUME_DEFAULT          AUDIO_GAIN_DEFAULT
 //
-#define MAX_VOL_RED_THRESH  10      // "MAX VOLUME" setting at or below which number will be RED to warn user
-#define MAX_VOLT_YELLOW_THRESH  16  // "MAX VOLUME" setting at or below which number will be YELLOW to warn user
+#define MAX_VOLUME_RED_THRESH  10      // "MAX VOLUME" setting at or below which number will be RED to warn user
+#define MAX_VOLUME_YELLOW_THRESH  16  // "MAX VOLUME" setting at or below which number will be YELLOW to warn user
+
+#define MAGNIFY_MIN                 0
+#define MAGNIFY_MAX                 5
+#define MAGNIFY_DEFAULT             0
+
 //
-//
-#define MAX_PA_BIAS         115     // Maximum PA Bias Setting
-#define DEFAULT_PA_BIAS     0       // Default PA Bias setting
-#define MIN_BIAS_SETTING    20      // Minimum bias setting.  (Below this, number is red)
+#define PA_BIAS_MAX         115     // Maximum PA Bias Setting
+#define PA_BIAS_DEFAULT     0       // Default PA Bias setting
+#define PA_BIAS_LOW_LIMIT   20      // Minimum bias setting.  (Below this, number is red)
 //
 #define BIAS_OFFSET         25      // Offset value to be added to bias setting
 //  DA value = (OFFSET + (2*setting))  where DA value is 0-255

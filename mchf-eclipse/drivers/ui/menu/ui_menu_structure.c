@@ -148,9 +148,11 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_PWR_DISP, NULL, "Pwr. Display mW", UiMenuDesc("Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RF_FWD_PWR_NULL, NULL, "Pwr. Det. Null", UiMenuDesc(" Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration.") },
     { MENU_CONF, MENU_ITEM, CONFIG_FWD_REV_SENSE_SWAP, NULL, "SWR/PWR Meter FWD/REV Swap", UiMenuDesc("Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_I2C1_SPEED, NULL,"I2C1 Bus Speed", UiMenuDesc("Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_I2C2_SPEED, NULL,"I2C2 Bus Speed", UiMenuDesc("Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future.") },
-    
+#ifdef UI_BRD_MCHF
+    // Not supported on STM32F7 HAL
+    { MENU_CONF, MENU_ITEM, CONFIG_I2C1_SPEED, NULL,"I2C1 Bus Speed", UiMenuDesc("Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_I2C2_SPEED, NULL,"I2C2 Bus Speed", UiMenuDesc("Sets speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Speeds above 200 kHz are not recommended for unmodified mcHF. Many modified mcHF seem to run with 300kHz without problems.") },
+#endif
     { MENU_CONF, MENU_ITEM, CONFIG_RTC_START, &ts.vbat_present,"RTC Start", UiMenuDesc("Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RTC_HOUR, &ts.rtc_present,"RTC Hour", UiMenuDesc("Sets the Real Time Clock Hour. Needs HW Modifications.") },
     { MENU_CONF, MENU_ITEM, CONFIG_RTC_MIN, &ts.rtc_present,"RTC Min", UiMenuDesc("Sets the Real Time Clock Minutes. Needs HW Modifications.") },

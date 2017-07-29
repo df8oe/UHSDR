@@ -2594,9 +2594,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "    %u", ts.rx_gain[RX_AUDIO_SPKR].max);
         //
-        if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOL_RED_THRESH)         // Indicate that gain has been reduced by changing color
+        if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOLUME_RED_THRESH)         // Indicate that gain has been reduced by changing color
             clr = Red;
-        else if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOLT_YELLOW_THRESH)
+        else if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOLUME_YELLOW_THRESH)
             clr = Orange;
         break;
     case CONFIG_MAX_RX_GAIN:    // maximum RX gain setting
@@ -2781,7 +2781,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.pa_cw_bias,
                                                   0,
-                                                  MAX_PA_BIAS,
+                                                  PA_BIAS_MAX,
                                                   0,
                                                   1);
 
@@ -2789,7 +2789,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
                 RadioManagement_SetPaBias();
             }
-            if(ts.pa_cw_bias < MIN_BIAS_SETTING)
+            if(ts.pa_cw_bias < PA_BIAS_LOW_LIMIT)
             {
                 clr = Yellow;
             }
@@ -2805,7 +2805,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.pa_bias,
                                                   0,
-                                                  MAX_PA_BIAS,
+                                                  PA_BIAS_MAX,
                                                   0,
                                                   1);
 
@@ -2813,7 +2813,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
                 RadioManagement_SetPaBias();
             }
-            if(ts.pa_bias < MIN_BIAS_SETTING)
+            if(ts.pa_bias < PA_BIAS_LOW_LIMIT)
             {
                 clr = Yellow;
             }
