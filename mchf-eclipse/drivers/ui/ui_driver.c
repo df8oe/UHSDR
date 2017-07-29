@@ -234,8 +234,12 @@ static bool UiDriver_SaveConfiguration();
 // Temperature Indicator
 #define POS_TEMP_IND_X              0
 #define POS_TEMP_IND_Y              0
-//
-//
+
+// RTC
+#define POS_RTC						79
+
+#define POS_LOADANDDEBUG			95
+
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
 {
@@ -643,7 +647,7 @@ void UiDriver_HandleTouchScreen()
     {
         char text[10];
         snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
-        UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,text,White,Black,0);
+        UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,text,White,Black,0);
     }
     if(!ts.menu_mode)						// normal operational screen
     {
@@ -807,7 +811,7 @@ void UiDriver_HandleTouchScreen()
         if(UiDriver_CheckTouchCoordinates(54,57,55,57))			// enable tp coordinates show S-meter "dB"
         {
             ts.show_tp_coordinates = !ts.show_tp_coordinates;
-            UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
+            UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
         }
         if(UiDriver_CheckTouchCoordinates(46,49,55,57))  			// rf bands mod S-meter "40"
         {
@@ -6187,8 +6191,11 @@ void UiDriver_MainHandler()
                 uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
-                snprintf(str,20,"L%3u%%",(unsigned int)load);
-                UiLcdHy28_PrintText(0,79,str,White,Black,0);
+                if(!ts.show_tp_coordinates)
+                {
+              	  snprintf(str,20,"L%3u%%",(unsigned int)load);
+              	  UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,str,White,Black,0);
+              	}
 #endif
             }
             if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,100))
@@ -6202,7 +6209,7 @@ void UiDriver_MainHandler()
 
                     char str[20];
                     snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
-                    UiLcdHy28_PrintText(6*8,79,str,White,Black,0);
+                    UiLcdHy28_PrintText(0,POS_RTC,str,White,Black,0);
                 }
             }
             break;
