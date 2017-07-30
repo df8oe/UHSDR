@@ -308,9 +308,9 @@ void TransceiverStateInit(void)
     ts.tp = &mchf_touchscreen;
     ts.display = &mchf_display;
 
-    ts.show_tp_coordinates = 0;					// dont show coordinates on LCD
-    ts.rfmod_present = 0;						// rfmod not present
-    ts.vhfuhfmod_present = 0;					// VHF/UHF mod not present
+    ts.show_debug_info = false;					// dont show coordinates on LCD
+    ts.rfmod_present = false;						// rfmod not present
+    ts.vhfuhfmod_present = false;					// VHF/UHF mod not present
     ts.multi = 0;							// non-translate
     ts.tune_power_level = 0;					// Tune with FULL POWER
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;

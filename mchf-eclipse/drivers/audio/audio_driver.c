@@ -4837,7 +4837,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
     static ulong tcount = 0;
     bool muted = false;
 
-    if(ts.show_tp_coordinates)
+    if(ts.show_debug_info)
     {
         MchfBoard_GreenLed(LED_STATE_ON);
     }
@@ -4940,7 +4940,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         ts.spectrum_scheduler--;
     }
 
-    if(ts.show_tp_coordinates)
+    if(ts.show_debug_info)
     {
         MchfBoard_GreenLed(LED_STATE_OFF);
     }

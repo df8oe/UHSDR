@@ -850,7 +850,7 @@ typedef struct TransceiverState
 
     mchf_touchscreen_t *tp;
 
-    bool	show_tp_coordinates;	// show coordinates on LCD
+    bool	show_debug_info;	// show coordinates on LCD
     bool	rfmod_present;			// 0 = not present
     bool	vhfuhfmod_present;		// 0 = not present
     uint8_t	multi;					// actual translate factor

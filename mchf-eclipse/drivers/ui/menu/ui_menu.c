@@ -2390,11 +2390,15 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var_change)          // something changed?
         {
             if(temp_var_u8)     // yes, is line to be enabled?
+            {
                 ts.freq_step_config |= 0x0f;    // yes, set lower nybble
-            else            // line disabled?
+            }
+            else
+            {
+                // line disabled?
                 ts.freq_step_config &= 0xf0;    // no, clear lower nybble
-            //
-            UiDriver_ShowStep(df.tuning_step);  // update screen
+            }
+            UiDriver_ShowStep();  // update screen
         }
         break;
     case CONFIG_STEP_SIZE_BUTTON_SWAP:  // Step size button swap on/off
@@ -2409,26 +2413,21 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case MENU_DYNAMICTUNE:  // Dynamic Tune on/off
-        if(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)
-        {
-      	  temp_var_u8 = true;
-      	}
-      	else
-      	{
-      	  temp_var_u8 = false;
-      	}
+        temp_var_u8 = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE) == true;
+
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+
         if(var_change)
         {
-		  if(!temp_var_u8)
-		  {
-		  ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;
-		  }
-		  else
-		  {
-		  ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;
-		  }
-		UiDriver_ShowStep(df.selected_idx);
+            if(temp_var_u8)
+            {
+                ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;
+            }
+            else
+            {
+                ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;
+            }
+            UiDriver_ShowStep();
         }
         break;
     case CONFIG_BAND_BUTTON_SWAP:   // Swap position of Band+ and Band- buttons
@@ -2437,9 +2436,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var_change)
         {
             if(temp_var_u8) // band up/down swap is to be enabled
+            {
                 ts.flags1 |= FLAGS1_SWAP_BAND_BTN;      // set LSB
+            }
             else            // band up/down swap is to be disabled
+            {
                 ts.flags1 &= ~FLAGS1_SWAP_BAND_BTN;     // clear LSB
+            }
         }
         break;
     case CONFIG_TX_DISABLE: // Step size button swap on/off
@@ -3642,28 +3645,15 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
-    case MENU_DEBUG_ENABLE:  // Debug infos on LCD on/off
-        if(ts.show_tp_coordinates)
-        {
-      	  temp_var_u8 = true;
-      	}
-      	else
-      	{
-      	  temp_var_u8 = false;
-      	}
+    case MENU_DEBUG_ENABLE_INFO:  // Debug infos on LCD on/off
+
+        temp_var_u8 = ts.show_debug_info;
+
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+
         if(var_change)
         {
-		  if(temp_var_u8)
-		  {
-		  ts.show_tp_coordinates = true;
-		  }
-		  else
-		  {
-		  ts.show_tp_coordinates = false;
-		  UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"       ",White,Black,0); // clears debug text
-		  UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,"     ",White,Black,5); //  "    "    "     "
-		  }
+            UiDriver_DebugInfo_DisplayEnable(temp_var_u8);
         }
         break;
 #ifdef USE_USB

@@ -365,7 +365,7 @@ const MenuDescriptor infoGroup[] =
 
 const MenuDescriptor debugGroup[] =
 {
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE, NULL,"enable Debug Display", UiMenuDesc("enable some debug outputs on LCD for testing purposes") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_INFO, NULL,"Enable Debug Info Display", UiMenuDesc("Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },

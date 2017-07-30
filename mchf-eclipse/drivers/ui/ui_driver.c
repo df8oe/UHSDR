@@ -540,9 +540,26 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
     ts.refresh_freq_disp = 0;           // update ALL digits
 }
 
+void UiDriver_DebugInfo_DisplayEnable(bool enable)
+{
+
+    ts.show_debug_info = enable;
+    UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,ts.show_debug_info?"enabled":"       ",Green,Black,0);
+
+    if (ts.show_debug_info == true)
+    {
+        UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"enabled",Green,Black,0);
+    }
+    else
+    {
+        UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"       ",White,Black,0); // clears debug text
+        UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,"     ",White,Black,5); //  "    "    "     "
+    }
+}
+
 void UiDriver_HandleTouchScreen()
 {
-    if (ts.show_tp_coordinates)					// show coordinates for coding purposes
+    if (ts.show_debug_info)					// show coordinates for coding purposes
     {
         char text[10];
         snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
@@ -702,15 +719,14 @@ void UiDriver_HandleTouchScreen()
                 ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it off
             }
 
-            UiDriver_ShowStep(df.selected_idx);
+            UiDriver_ShowStep();
         }
     }
     else								// menu screen functions
     {
         if(UiDriver_CheckTouchCoordinates(54,57,55,57))			// enable tp coordinates show S-meter "dB"
         {
-            ts.show_tp_coordinates = !ts.show_tp_coordinates;
-            UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,ts.show_tp_coordinates?"enabled":"       ",Green,Black,0);
+            UiDriver_DebugInfo_DisplayEnable(!ts.show_debug_info);
         }
         if(UiDriver_CheckTouchCoordinates(46,49,55,57))  			// rf bands mod S-meter "40"
         {
@@ -1556,7 +1572,7 @@ static void UiDriver_PressHoldStep(uchar is_up)
         df.selected_idx = plus_idx;
     }
     //
-    UiDriver_ShowStep(df.selected_idx);		// update display
+    UiDriver_ShowStep();		// update display
 }
 
 //*----------------------------------------------------------------------------
@@ -1784,14 +1800,7 @@ void UiDriver_ShowMode()
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverShowStep
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void UiDriver_ShowStep(ulong step)
+void UiDriver_ShowStep()
 {
 
     int	line_loc;
@@ -1841,7 +1850,6 @@ void UiDriver_ShowStep(ulong step)
     }
     else	// marker line not enabled
         step_line = 0;	// we don't need to erase "step size" marker line in the future
-
 }
 
 
@@ -1958,7 +1966,7 @@ static void UiDriver_CreateMainFreqDisplay()
         UiLcdHy28_PrintText(POS_TUNE_FREQ_X-16,POS_TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
         UiDriver_DisplaySplitFreqLabels();
     }
-    UiDriver_ShowStep(df.selected_idx);
+    UiDriver_ShowStep();
 }
 
 //*----------------------------------------------------------------------------
@@ -2892,7 +2900,7 @@ void UiDriver_ChangeTuningStep(uchar is_up)
     df.selected_idx = idx;
 
     // Update step on screen
-    UiDriver_ShowStep(idx);
+    UiDriver_ShowStep();
 
 }
 
@@ -2997,7 +3005,7 @@ void UiDriver_KeyboardProcessOldClicks()
             ts.tune_step = STEP_PRESS_OFF;                        // yes, cancel offset
             df.selected_idx = ts.tune_step_idx_holder;            // restore previous setting
             df.tuning_step    = tune_steps[df.selected_idx];
-            UiDriver_ShowStep(df.selected_idx);
+            UiDriver_ShowStep();
         }
     }
 }
@@ -6089,7 +6097,7 @@ void UiDriver_MainHandler()
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
               	snprintf(str,20,"L%3u%%",(unsigned int)load);
-				if(ts.show_tp_coordinates)
+				if(ts.show_debug_info)
 				{
               	  UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,str,White,Black,5);
               	}
