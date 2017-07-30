@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-29T13:47:56  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-30T12:39:26  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-29T13:47:56  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-30T12:39:26  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -54,6 +54,11 @@
         
         "MENU_POW" [
              label = "MENU_POW | PA Configuration"
+             shape = record
+             ];
+        
+        "MENU_MEN2TOUCH" [
+             label = "MENU_MEN2TOUCH | Touchscreen via Menu"
              shape = record
              ];
         
@@ -212,11 +217,6 @@
              shape = record
              ];
         
-        "MENU_MIC_LINE_MODE" [
-             label = "MENU_MIC_LINE_MODE | Mic/Line Select"
-             shape = record
-             ];
-        
         "MENU_MIC_GAIN" [
              label = "MENU_MIC_GAIN | Mic Input Gain"
              shape = record
@@ -274,196 +274,6 @@
         
         "MENU_RESTORE_CONFIG" [
              label = "MENU_RESTORE_CONFIG | Restore Config"
-             shape = record
-             ];
-        
-        "MENU_RESTART_CODEC" [
-             label = "MENU_RESTART_CODEC | Restart Codec"
-             shape = record
-             ];
-        
-        "CONFIG_LCD_AUTO_OFF_MODE" [
-             label = "CONFIG_LCD_AUTO_OFF_MODE | LCD Auto Blank"
-             shape = record
-             ];
-        
-        "CONFIG_FREQ_STEP_MARKER_LINE" [
-             label = "CONFIG_FREQ_STEP_MARKER_LINE | Step Size Marker"
-             shape = record
-             ];
-        
-        "CONFIG_DISP_FILTER_BANDWIDTH" [
-             label = "CONFIG_DISP_FILTER_BANDWIDTH | Filter BW Display"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_MODE" [
-             label = "MENU_SPECTRUM_MODE | Spectrum Type"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_MAGNIFY" [
-             label = "MENU_SPECTRUM_MAGNIFY | Spectrum Magnify"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_SIZE" [
-             label = "MENU_SPECTRUM_SIZE | Spectrum Size"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_FILTER_STRENGTH" [
-             label = "MENU_SPECTRUM_FILTER_STRENGTH | Spectrum Filter"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_FREQSCALE_COLOUR" [
-             label = "MENU_SPECTRUM_FREQSCALE_COLOUR | Spec FreqScale Colour"
-             shape = record
-             ];
-        
-        "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
-             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | Spec Line Colour"
-             shape = record
-             ];
-        
-        "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
-             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE | Spectrum FFT Wind."
-             shape = record
-             ];
-        
-        "MENU_SCOPE_LIGHT_ENABLE" [
-             label = "MENU_SCOPE_LIGHT_ENABLE | Scope Light"
-             shape = record
-             ];
-        
-        "MENU_SCOPE_SPEED" [
-             label = "MENU_SCOPE_SPEED | Scope 1/Speed"
-             shape = record
-             ];
-        
-        "MENU_SCOPE_AGC_ADJUST" [
-             label = "MENU_SCOPE_AGC_ADJUST | Scope AGC Adj."
-             shape = record
-             ];
-        
-        "MENU_SCOPE_TRACE_COLOUR" [
-             label = "MENU_SCOPE_TRACE_COLOUR | Scope Trace Colour"
-             shape = record
-             ];
-        
-        "MENU_SCOPE_GRID_COLOUR" [
-             label = "MENU_SCOPE_GRID_COLOUR | Scope Grid Colour"
-             shape = record
-             ];
-        
-        "MENU_SCOPE_DB_DIVISION" [
-             label = "MENU_SCOPE_DB_DIVISION | Scope Div."
-             shape = record
-             ];
-        
-        "MENU_SCOPE_NOSIG_ADJUST" [
-             label = "MENU_SCOPE_NOSIG_ADJUST | Scope NoSig Adj."
-             shape = record
-             ];
-        
-        "MENU_WFALL_SPEED" [
-             label = "MENU_WFALL_SPEED | Wfall 1/Speed"
-             shape = record
-             ];
-        
-        "MENU_WFALL_COLOR_SCHEME" [
-             label = "MENU_WFALL_COLOR_SCHEME | Wfall Colours"
-             shape = record
-             ];
-        
-        "MENU_WFALL_STEP_SIZE" [
-             label = "MENU_WFALL_STEP_SIZE | Wfall Step Size"
-             shape = record
-             ];
-        
-        "MENU_WFALL_OFFSET" [
-             label = "MENU_WFALL_OFFSET | Wfall Brightness"
-             shape = record
-             ];
-        
-        "MENU_WFALL_CONTRAST" [
-             label = "MENU_WFALL_CONTRAST | Wfall Contrast"
-             shape = record
-             ];
-        
-        "MENU_WFALL_NOSIG_ADJUST" [
-             label = "MENU_WFALL_NOSIG_ADJUST | Wfall NoSig Adj."
-             shape = record
-             ];
-        
-        "MENU_METER_COLOUR_UP" [
-             label = "MENU_METER_COLOUR_UP | Upper Meter Colour"
-             shape = record
-             ];
-        
-        "MENU_METER_COLOUR_DOWN" [
-             label = "MENU_METER_COLOUR_DOWN | Lower Meter Colour"
-             shape = record
-             ];
-        
-        "MENU_DBM_DISPLAY" [
-             label = "MENU_DBM_DISPLAY | dBm display"
-             shape = record
-             ];
-        
-        "MENU_DBM_CALIBRATE" [
-             label = "MENU_DBM_CALIBRATE | dBm calibrate"
-             shape = record
-             ];
-        
-        "MENU_S_METER" [
-             label = "MENU_S_METER | S-Meter"
-             shape = record
-             ];
-        
-        "MENU_KEYER_MODE" [
-             label = "MENU_KEYER_MODE | CW Keyer Mode"
-             shape = record
-             ];
-        
-        "MENU_KEYER_SPEED" [
-             label = "MENU_KEYER_SPEED | CW Keyer Speed"
-             shape = record
-             ];
-        
-        "MENU_KEYER_WEIGHT" [
-             label = "MENU_KEYER_WEIGHT | CW Keyer Weight"
-             shape = record
-             ];
-        
-        "MENU_SIDETONE_GAIN" [
-             label = "MENU_SIDETONE_GAIN | CW Sidetone Gain"
-             shape = record
-             ];
-        
-        "MENU_SIDETONE_FREQUENCY" [
-             label = "MENU_SIDETONE_FREQUENCY | CW Side/Offset Freq"
-             shape = record
-             ];
-        
-        "MENU_PADDLE_REVERSE" [
-             label = "MENU_PADDLE_REVERSE | CW Paddle Reverse"
-             shape = record
-             ];
-        
-        "MENU_CW_TX_RX_DELAY" [
-             label = "MENU_CW_TX_RX_DELAY | CW TX-\>RX Delay"
-             shape = record
-             ];
-        
-        "MENU_CW_OFFSET_MODE" [
-             label = "MENU_CW_OFFSET_MODE | CW Freq. Offset"
-             shape = record
-             ];
-        
-        "MENU_CW_AUTO_MODE_SELECT" [
-             label = "MENU_CW_AUTO_MODE_SELECT | CW LSB/USB Select"
              shape = record
              ];
         
@@ -687,6 +497,251 @@
              shape = record
              ];
         
+        "CONFIG_LCD_AUTO_OFF_MODE" [
+             label = "CONFIG_LCD_AUTO_OFF_MODE | LCD Auto Blank"
+             shape = record
+             ];
+        
+        "CONFIG_FREQ_STEP_MARKER_LINE" [
+             label = "CONFIG_FREQ_STEP_MARKER_LINE | Step Size Marker"
+             shape = record
+             ];
+        
+        "CONFIG_DISP_FILTER_BANDWIDTH" [
+             label = "CONFIG_DISP_FILTER_BANDWIDTH | Filter BW Display"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_SIZE" [
+             label = "MENU_SPECTRUM_SIZE | Spectrum Size"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_FILTER_STRENGTH" [
+             label = "MENU_SPECTRUM_FILTER_STRENGTH | Spectrum Filter"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_FREQSCALE_COLOUR" [
+             label = "MENU_SPECTRUM_FREQSCALE_COLOUR | Spec FreqScale Colour"
+             shape = record
+             ];
+        
+        "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
+             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | Spec Line Colour"
+             shape = record
+             ];
+        
+        "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
+             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE | Spectrum FFT Wind."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_LIGHT_ENABLE" [
+             label = "MENU_SCOPE_LIGHT_ENABLE | Scope Light"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_SPEED" [
+             label = "MENU_SCOPE_SPEED | Scope 1/Speed"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_AGC_ADJUST" [
+             label = "MENU_SCOPE_AGC_ADJUST | Scope AGC Adj."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_TRACE_COLOUR" [
+             label = "MENU_SCOPE_TRACE_COLOUR | Scope Trace Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_GRID_COLOUR" [
+             label = "MENU_SCOPE_GRID_COLOUR | Scope Grid Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_DB_DIVISION" [
+             label = "MENU_SCOPE_DB_DIVISION | Scope Div."
+             shape = record
+             ];
+        
+        "MENU_SCOPE_NOSIG_ADJUST" [
+             label = "MENU_SCOPE_NOSIG_ADJUST | Scope NoSig Adj."
+             shape = record
+             ];
+        
+        "MENU_WFALL_SPEED" [
+             label = "MENU_WFALL_SPEED | Wfall 1/Speed"
+             shape = record
+             ];
+        
+        "MENU_WFALL_COLOR_SCHEME" [
+             label = "MENU_WFALL_COLOR_SCHEME | Wfall Colours"
+             shape = record
+             ];
+        
+        "MENU_WFALL_STEP_SIZE" [
+             label = "MENU_WFALL_STEP_SIZE | Wfall Step Size"
+             shape = record
+             ];
+        
+        "MENU_WFALL_OFFSET" [
+             label = "MENU_WFALL_OFFSET | Wfall Brightness"
+             shape = record
+             ];
+        
+        "MENU_WFALL_CONTRAST" [
+             label = "MENU_WFALL_CONTRAST | Wfall Contrast"
+             shape = record
+             ];
+        
+        "MENU_WFALL_NOSIG_ADJUST" [
+             label = "MENU_WFALL_NOSIG_ADJUST | Wfall NoSig Adj."
+             shape = record
+             ];
+        
+        "MENU_METER_COLOUR_UP" [
+             label = "MENU_METER_COLOUR_UP | Upper Meter Colour"
+             shape = record
+             ];
+        
+        "MENU_METER_COLOUR_DOWN" [
+             label = "MENU_METER_COLOUR_DOWN | Lower Meter Colour"
+             shape = record
+             ];
+        
+        "MENU_DBM_DISPLAY" [
+             label = "MENU_DBM_DISPLAY | dBm display"
+             shape = record
+             ];
+        
+        "MENU_DBM_CALIBRATE" [
+             label = "MENU_DBM_CALIBRATE | dBm calibrate"
+             shape = record
+             ];
+        
+        "MENU_S_METER" [
+             label = "MENU_S_METER | S-Meter"
+             shape = record
+             ];
+        
+        "MENU_KEYER_MODE" [
+             label = "MENU_KEYER_MODE | CW Keyer Mode"
+             shape = record
+             ];
+        
+        "MENU_KEYER_SPEED" [
+             label = "MENU_KEYER_SPEED | CW Keyer Speed"
+             shape = record
+             ];
+        
+        "MENU_KEYER_WEIGHT" [
+             label = "MENU_KEYER_WEIGHT | CW Keyer Weight"
+             shape = record
+             ];
+        
+        "MENU_SIDETONE_GAIN" [
+             label = "MENU_SIDETONE_GAIN | CW Sidetone Gain"
+             shape = record
+             ];
+        
+        "MENU_SIDETONE_FREQUENCY" [
+             label = "MENU_SIDETONE_FREQUENCY | CW Side/Offset Freq"
+             shape = record
+             ];
+        
+        "MENU_PADDLE_REVERSE" [
+             label = "MENU_PADDLE_REVERSE | CW Paddle Reverse"
+             shape = record
+             ];
+        
+        "MENU_CW_TX_RX_DELAY" [
+             label = "MENU_CW_TX_RX_DELAY | CW TX-\>RX Delay"
+             shape = record
+             ];
+        
+        "MENU_CW_OFFSET_MODE" [
+             label = "MENU_CW_OFFSET_MODE | CW Freq. Offset"
+             shape = record
+             ];
+        
+        "MENU_CW_AUTO_MODE_SELECT" [
+             label = "MENU_CW_AUTO_MODE_SELECT | CW LSB/USB Select"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_01" [
+             label = "MENU_FP_SSB_01 | SSB Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_02" [
+             label = "MENU_FP_SSB_02 | SSB Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_03" [
+             label = "MENU_FP_SSB_03 | SSB Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_SSB_04" [
+             label = "MENU_FP_SSB_04 | SSB Filter 4"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_01" [
+             label = "MENU_FP_CW_01 | CW Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_02" [
+             label = "MENU_FP_CW_02 | CW Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_03" [
+             label = "MENU_FP_CW_03 | CW Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_CW_04" [
+             label = "MENU_FP_CW_04 | CW Filter 4"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_01" [
+             label = "MENU_FP_AM_01 | AM/SAM Filter 1"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_02" [
+             label = "MENU_FP_AM_02 | AM/SAM Filter 2"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_03" [
+             label = "MENU_FP_AM_03 | AM/SAM Filter 3"
+             shape = record
+             ];
+        
+        "MENU_FP_AM_04" [
+             label = "MENU_FP_AM_04 | AM/SAM Filter 4"
+             shape = record
+             ];
+        
+        "CONFIG_AM_TX_FILTER_DISABLE" [
+             label = "CONFIG_AM_TX_FILTER_DISABLE | AM  TX Audio Filter"
+             shape = record
+             ];
+        
+        "CONFIG_SSB_TX_FILTER" [
+             label = "CONFIG_SSB_TX_FILTER | SSB TX Audio Filter2"
+             shape = record
+             ];
+        
         "CONFIG_TUNE_POWER_LEVEL" [
              label = "CONFIG_TUNE_POWER_LEVEL | Tune Power Level"
              shape = record
@@ -842,73 +897,28 @@
              shape = record
              ];
         
-        "MENU_FP_SSB_01" [
-             label = "MENU_FP_SSB_01 | SSB Filter 1"
+        "MENU_DYNAMICTUNE" [
+             label = "MENU_DYNAMICTUNE | Dynamic Tune"
              shape = record
              ];
         
-        "MENU_FP_SSB_02" [
-             label = "MENU_FP_SSB_02 | SSB Filter 2"
+        "MENU_MIC_LINE_MODE" [
+             label = "MENU_MIC_LINE_MODE | Mic/Line Select"
              shape = record
              ];
         
-        "MENU_FP_SSB_03" [
-             label = "MENU_FP_SSB_03 | SSB Filter 3"
+        "MENU_SPECTRUM_MODE" [
+             label = "MENU_SPECTRUM_MODE | Spectrum Type"
              shape = record
              ];
         
-        "MENU_FP_SSB_04" [
-             label = "MENU_FP_SSB_04 | SSB Filter 4"
+        "MENU_SPECTRUM_MAGNIFY" [
+             label = "MENU_SPECTRUM_MAGNIFY | Spectrum Magnify"
              shape = record
              ];
         
-        "MENU_FP_CW_01" [
-             label = "MENU_FP_CW_01 | CW Filter 1"
-             shape = record
-             ];
-        
-        "MENU_FP_CW_02" [
-             label = "MENU_FP_CW_02 | CW Filter 2"
-             shape = record
-             ];
-        
-        "MENU_FP_CW_03" [
-             label = "MENU_FP_CW_03 | CW Filter 3"
-             shape = record
-             ];
-        
-        "MENU_FP_CW_04" [
-             label = "MENU_FP_CW_04 | CW Filter 4"
-             shape = record
-             ];
-        
-        "MENU_FP_AM_01" [
-             label = "MENU_FP_AM_01 | AM/SAM Filter 1"
-             shape = record
-             ];
-        
-        "MENU_FP_AM_02" [
-             label = "MENU_FP_AM_02 | AM/SAM Filter 2"
-             shape = record
-             ];
-        
-        "MENU_FP_AM_03" [
-             label = "MENU_FP_AM_03 | AM/SAM Filter 3"
-             shape = record
-             ];
-        
-        "MENU_FP_AM_04" [
-             label = "MENU_FP_AM_04 | AM/SAM Filter 4"
-             shape = record
-             ];
-        
-        "CONFIG_AM_TX_FILTER_DISABLE" [
-             label = "CONFIG_AM_TX_FILTER_DISABLE | AM  TX Audio Filter"
-             shape = record
-             ];
-        
-        "CONFIG_SSB_TX_FILTER" [
-             label = "CONFIG_SSB_TX_FILTER | SSB TX Audio Filter2"
+        "MENU_RESTART_CODEC" [
+             label = "MENU_RESTART_CODEC | Restart Codec"
              shape = record
              ];
         
@@ -999,6 +1009,11 @@
         
         "INFO_HWLICENCE" [
              label = "INFO_HWLICENCE | HW license"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_ENABLE" [
+             label = "MENU_DEBUG_ENABLE | enable Debug Display"
              shape = record
              ];
         
@@ -1276,8 +1291,6 @@
             
             MENU_BASE -> MENU_RX_FREQ_CONV
             
-            MENU_BASE -> MENU_MIC_LINE_MODE
-            
             MENU_BASE -> MENU_MIC_GAIN
             
             MENU_BASE -> MENU_LINE_GAIN
@@ -1302,8 +1315,6 @@
             
             MENU_BASE -> MENU_RESTORE_CONFIG
             
-            MENU_BASE -> MENU_RESTART_CODEC
-            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -1323,6 +1334,8 @@
             MENU_TOP -> MENU_FILTER
             
             MENU_TOP -> MENU_POW
+            
+            MENU_TOP -> MENU_MEN2TOUCH
             
             MENU_TOP -> MENU_SYSINFO
             
@@ -1404,6 +1417,24 @@
     
         #  -  -  -  -
 
+        subgraph "MENU_MEN2TOUCH" {
+            label = "MENU_MEN2TOUCH beef.0f.dead.e5e1"
+
+    
+            MENU_MEN2TOUCH -> MENU_DYNAMICTUNE
+            
+            MENU_MEN2TOUCH -> MENU_MIC_LINE_MODE
+            
+            MENU_MEN2TOUCH -> MENU_SPECTRUM_MODE
+            
+            MENU_MEN2TOUCH -> MENU_SPECTRUM_MAGNIFY
+            
+            MENU_MEN2TOUCH -> MENU_RESTART_CODEC
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
         subgraph "MENU_SYSINFO" {
             label = "MENU_SYSINFO beef.0f.dead.e5e1"
 
@@ -1478,6 +1509,8 @@
             label = "MENU_DEBUG beef.0f.dead.e5e1"
 
     
+            MENU_DEBUG -> MENU_DEBUG_ENABLE
+            
             MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
             
             MENU_DEBUG -> MENU_DEBUG_CLONEOUT
@@ -1531,10 +1564,6 @@
             MENU_DISPLAY -> CONFIG_FREQ_STEP_MARKER_LINE
             
             MENU_DISPLAY -> CONFIG_DISP_FILTER_BANDWIDTH
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_MODE
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_MAGNIFY
             
             MENU_DISPLAY -> MENU_SPECTRUM_SIZE
             

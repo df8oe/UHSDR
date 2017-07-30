@@ -31,11 +31,12 @@ enum MENU_GROUP_ITEM
     MENU_TOP  = 0,
     MENU_BASE,
     MENU_CONF,
-    MENU_POW,
-    MENU_FILTER,
-    MENU_SYSINFO,
-    MENU_CW,
     MENU_DISPLAY,
+    MENU_CW,
+    MENU_FILTER,
+    MENU_POW,
+    MENU_MEN2TOUCH,
+    MENU_SYSINFO,
     MENU_DEBUG,
     MENU_HALL_OF_FAME,
 };
@@ -49,6 +50,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_CW, NULL, "CW Mode Settings", UiMenuDesc("Everything related to CW Mode operation (except CW PA Bias)") },
     { MENU_TOP, MENU_GROUP, MENU_FILTER, NULL, "Filter Selection", UiMenuDesc("Select the filters for filter button by mode. Each mode can have up to 4 filters for quick selection via short press Filter button G4.") },
     { MENU_TOP, MENU_GROUP, MENU_POW, NULL, "PA Configuration", UiMenuDesc("Menu for power amplifier parameter and tune function adjustments") },
+    { MENU_TOP, MENU_GROUP, MENU_MEN2TOUCH, NULL, "Touchscreen via Menu", UiMenuDesc("All functions which are available by touchscreen here are available as menu selectables") },
     { MENU_TOP, MENU_GROUP, MENU_SYSINFO, NULL, "System Info", UiMenuDesc("Lists various system info values") },
     { MENU_TOP, MENU_GROUP, MENU_DEBUG, NULL, "Debug/Exper. Settings", UiMenuDesc("As the name says, contains debug or expert settings usually not relevant for operating the mcHF") },
     { MENU_TOP, MENU_GROUP, MENU_HALL_OF_FAME, NULL, "Hall of Fame", UiMenuDesc("Thanks to all who contributed to the project") },
@@ -87,7 +89,6 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used.") },
 
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV, NULL, "RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },
-    { MENU_BASE, MENU_ITEM, MENU_MIC_LINE_MODE, NULL, "Mic/Line Select", UiMenuDesc("Select the required signal input for transmit (except in CW). Also changeable via long press on M3") },
     { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN, NULL, "Mic Input Gain", UiMenuDesc("Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input") },
     { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN, NULL, "Line Input Gain", UiMenuDesc("LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input") },
 
@@ -104,56 +105,7 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low Voltage Shutdown", UiMenuDesc("Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX).") },
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG, NULL, "Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
-    { MENU_BASE, MENU_ITEM, MENU_RESTART_CODEC, NULL, "Restart Codec", UiMenuDesc("Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help.") },
     { MENU_BASE, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
-};
-
-const MenuDescriptor displayGroup[] =
-{
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc("After x seconds LCD turns dark and LCD data sections stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen.") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE, NULL, "Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected tuning step size") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH, NULL, "Filter BW Display", UiMenuDesc("Colour of the horizontal Filter Bandwidth indicator bar.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MODE, NULL, "Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_MAGNIFY, NULL, "Spectrum Magnify", UiMenuDesc("Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE, NULL, "Spectrum Size", UiMenuDesc("Change height of spectrum display") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH, NULL, "Spectrum Filter", UiMenuDesc("Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR, NULL, "Spec FreqScale Colour", UiMenuDesc("Colour of the small frequency digits under the spectrum display.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR, NULL, "Spec Line Colour", UiMenuDesc("Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display.") },
-    { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE, NULL, "Spectrum FFT Wind.", UiMenuDesc("Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE, NULL, "Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc("Adjusting of scope / waterfall AGC for fitting graphs to screen") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set colour of scope") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set colour of scope grid") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc("Set rf range for scope") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc("Set scope line corresponding to NO SIGNAL") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED, NULL, "Wfall 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME, NULL, "Wfall Colours", UiMenuDesc("Select colour scheme for waterfall display.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE, NULL, "Wfall Step Size", UiMenuDesc("How many lines are moved in a single screen update") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET, NULL, "Wfall Brightness", UiMenuDesc("Set to input level which waterfall uses for lowest level") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST, NULL, "Wfall Contrast", UiMenuDesc("Adjust to fit your personal input level range to displayable colour range for waterfall") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST, NULL, "Wfall NoSig Adj.", UiMenuDesc("Set NO SIGNAL state for waterfall") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP, NULL, "Upper Meter Colour", UiMenuDesc("Set the colour of the scale of combined S/Power-Meter") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY, NULL, "dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals.")},
-    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_CALIBRATE, NULL, "dBm calibrate", UiMenuDesc("dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value.")},
-    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER, NULL, "S-Meter", UiMenuDesc("Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength.")},
-    { MENU_DISPLAY, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
-};
-
-const MenuDescriptor cwGroup[] =
-{
-//    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode", UiMenuDesc(":soon:") },
-    { MENU_CW, MENU_ITEM, MENU_KEYER_MODE, NULL, "CW Keyer Mode", UiMenuDesc("Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM)") },
-    { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED, NULL, "CW Keyer Speed", UiMenuDesc("Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode.") },
-    { MENU_CW, MENU_ITEM, MENU_KEYER_WEIGHT, NULL, "CW Keyer Weight", UiMenuDesc("Keyer Dit/Pause ratio for the automatic keyer modes. Higher values increase length of dit, decreases length of pause so that the total time is still according to the set WpM value.") },
-    { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN, NULL, "CW Sidetone Gain", UiMenuDesc("Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode.") },
-    { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY, NULL, "CW Side/Offset Freq", UiMenuDesc("Sidetone Frequency (also Offset frequency, see CW Freq. Offset below)") },
-    { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE, NULL, "CW Paddle Reverse", UiMenuDesc("Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles.") },
-    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW TX mode after stop sending a signal.") },
-    { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE, NULL, "CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone.") },
-    { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
-    { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
 const MenuDescriptor confGroup[] =
@@ -243,6 +195,81 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_STOP, 0, NULL , NULL, UiMenuDesc("") }
 };
 
+const MenuDescriptor displayGroup[] =
+{
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_LCD_AUTO_OFF_MODE, NULL, "LCD Auto Blank", UiMenuDesc("After x seconds LCD turns dark and LCD data sections stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen.") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_FREQ_STEP_MARKER_LINE, NULL, "Step Size Marker", UiMenuDesc("If enabled, you'll see a line under the digit which is currently representing the selected tuning step size") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_DISP_FILTER_BANDWIDTH, NULL, "Filter BW Display", UiMenuDesc("Colour of the horizontal Filter Bandwidth indicator bar.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE, NULL, "Spectrum Size", UiMenuDesc("Change height of spectrum display") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH, NULL, "Spectrum Filter", UiMenuDesc("Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR, NULL, "Spec FreqScale Colour", UiMenuDesc("Colour of the small frequency digits under the spectrum display.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR, NULL, "Spec Line Colour", UiMenuDesc("Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display.") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE, NULL, "Spectrum FFT Wind.", UiMenuDesc("Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE, NULL, "Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc("Adjusting of scope / waterfall AGC for fitting graphs to screen") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set colour of scope") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set colour of scope grid") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc("Set rf range for scope") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc("Set scope line corresponding to NO SIGNAL") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_SPEED, NULL, "Wfall 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_COLOR_SCHEME, NULL, "Wfall Colours", UiMenuDesc("Select colour scheme for waterfall display.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_STEP_SIZE, NULL, "Wfall Step Size", UiMenuDesc("How many lines are moved in a single screen update") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_OFFSET, NULL, "Wfall Brightness", UiMenuDesc("Set to input level which waterfall uses for lowest level") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_CONTRAST, NULL, "Wfall Contrast", UiMenuDesc("Adjust to fit your personal input level range to displayable colour range for waterfall") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_WFALL_NOSIG_ADJUST, NULL, "Wfall NoSig Adj.", UiMenuDesc("Set NO SIGNAL state for waterfall") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_UP, NULL, "Upper Meter Colour", UiMenuDesc("Set the colour of the scale of combined S/Power-Meter") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY, NULL, "dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals.")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_DBM_CALIBRATE, NULL, "dBm calibrate", UiMenuDesc("dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value.")},
+    { MENU_DISPLAY, MENU_ITEM, MENU_S_METER, NULL, "S-Meter", UiMenuDesc("Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength.")},
+    { MENU_DISPLAY, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+};
+
+const MenuDescriptor cwGroup[] =
+{
+//    { MENU_CW, MENU_ITEM, MENU_CW_WIDE_FILT,"028","Wide Filt in CW Mode", UiMenuDesc(":soon:") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_MODE, NULL, "CW Keyer Mode", UiMenuDesc("Select how the mcHF interprets the connected keyer signals. Supported modes: Iambic A and B Keyer (IAM A/B), Straight Key (STR_K), and Ultimatic Keyer (ULTIM)") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_SPEED, NULL, "CW Keyer Speed", UiMenuDesc("Keyer Speed for the automatic keyer modes in WpM. Also changeable via Encoder 3 if in CW Mode.") },
+    { MENU_CW, MENU_ITEM, MENU_KEYER_WEIGHT, NULL, "CW Keyer Weight", UiMenuDesc("Keyer Dit/Pause ratio for the automatic keyer modes. Higher values increase length of dit, decreases length of pause so that the total time is still according to the set WpM value.") },
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_GAIN, NULL, "CW Sidetone Gain", UiMenuDesc("Audio volume for the monitor sidetone in CW TX. Also changeable via Encoder 1 if in CW Mode.") },
+    { MENU_CW, MENU_ITEM, MENU_SIDETONE_FREQUENCY, NULL, "CW Side/Offset Freq", UiMenuDesc("Sidetone Frequency (also Offset frequency, see CW Freq. Offset below)") },
+    { MENU_CW, MENU_ITEM, MENU_PADDLE_REVERSE, NULL, "CW Paddle Reverse", UiMenuDesc("Dit is Dah and Dah is Dit. Use if your keyer needs reverse meaning of the paddles.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW TX mode after stop sending a signal.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE, NULL, "CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone.") },
+    { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
+    { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+};
+
+const MenuDescriptor filterGroup[] =
+{
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01, NULL, "SSB Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02, NULL, "SSB Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03, NULL, "SSB Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in LSB or USB.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04, NULL, "SSB Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in LSB or USB.") },
+
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01, NULL, "CW Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02, NULL, "CW Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03, NULL, "CW Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in CW.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04, NULL, "CW Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in CW.") },
+
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01, NULL, "AM/SAM Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02, NULL, "AM/SAM Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03, NULL, "AM/SAM Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in AM & SAM.") },
+    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04, NULL, "AM/SAM Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in AM & SAM.") },
+
+    // not needed any more: AM & SAM use exactly the same filters
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
+//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4", UiMenuDesc(":soon:") },
+
+    { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE, NULL,"AM  TX Audio Filter", UiMenuDesc("Select if AM-TX signal is filtered (strongly recommended to agree to regulations)") },
+//    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE, NULL,"SSB TX Audio Filter", UiMenuDesc(":soon:") },
+    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER, NULL,"SSB TX Audio Filter2", UiMenuDesc("Select if SSB-TX signal is filtered (strongly recommended to agree to regulations)") },
+    { MENU_FILTER, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+};
+
 const MenuDescriptor powGroup[] =
 {
     { MENU_POW, MENU_ITEM, CONFIG_TUNE_POWER_LEVEL, NULL, "Tune Power Level", UiMenuDesc("Select the power level for TUNE operation. May be set using the selected power level or have a fixed power level.") },
@@ -300,35 +327,16 @@ const MenuDescriptor powGroup[] =
     { MENU_POW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
-const MenuDescriptor filterGroup[] =
+const MenuDescriptor men2touchGroup[] =
 {
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_01, NULL, "SSB Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_02, NULL, "SSB Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_03, NULL, "SSB Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in LSB or USB.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_SSB_04, NULL, "SSB Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in LSB or USB.") },
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_DYNAMICTUNE, NULL, "Dynamic Tune", UiMenuDesc("Toggles dynamic tune mode") },
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_MIC_LINE_MODE, NULL, "Mic/Line Select", UiMenuDesc("Select the required signal input for transmit (except in CW). Also changeable via long press on M3") },
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_SPECTRUM_MODE, NULL, "Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_SPECTRUM_MAGNIFY, NULL, "Spectrum Magnify", UiMenuDesc("Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting.") },
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_RESTART_CODEC, NULL, "Restart Codec", UiMenuDesc("Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help.") },
 
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_01, NULL, "CW Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_02, NULL, "CW Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_03, NULL, "CW Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in CW.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_CW_04, NULL, "CW Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in CW.") },
-
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_01, NULL, "AM/SAM Filter 1", UiMenuDesc("Filter bandwidth #1 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_02, NULL, "AM/SAM Filter 2", UiMenuDesc("Filter bandwidth #2 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_03, NULL, "AM/SAM Filter 3", UiMenuDesc("Filter bandwidth #3 when toggling with filter select button in AM & SAM.") },
-    { MENU_FILTER, MENU_ITEM, MENU_FP_AM_04, NULL, "AM/SAM Filter 4", UiMenuDesc("Filter bandwidth #4 when toggling with filter select button in AM & SAM.") },
-
-    // not needed any more: AM & SAM use exactly the same filters
-//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_01,"600", "SAM Filter 1", UiMenuDesc(":soon:") },
-//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_02,"600", "SAM Filter 2", UiMenuDesc(":soon:") },
-//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_03,"600", "SAM Filter 3", UiMenuDesc(":soon:") },
-//    { MENU_FILTER, MENU_ITEM, MENU_FP_SAM_04,"600", "SAM Filter 4", UiMenuDesc(":soon:") },
-
-    { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE, NULL,"AM  TX Audio Filter", UiMenuDesc("Select if AM-TX signal is filtered (strongly recommended to agree to regulations)") },
-//    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE, NULL,"SSB TX Audio Filter", UiMenuDesc(":soon:") },
-    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER, NULL,"SSB TX Audio Filter2", UiMenuDesc("Select if SSB-TX signal is filtered (strongly recommended to agree to regulations)") },
-    { MENU_FILTER, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+    { MENU_MEN2TOUCH, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
-
 
 const MenuDescriptor infoGroup[] =
 {
@@ -355,6 +363,7 @@ const MenuDescriptor infoGroup[] =
 
 const MenuDescriptor debugGroup[] =
 {
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE, NULL,"enable Debug Display", UiMenuDesc("enable some debug outputs on LCD for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
@@ -377,6 +386,7 @@ const MenuDescriptor hall_of_fameGroup[] =
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"YL3AKE (Eriks)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"PA7N   (Erwin)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"UA9OLB (Dmitri)", UiMenuDesc("") },
+
     { MENU_HALL_OF_FAME, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -384,11 +394,12 @@ const MenuDescriptor hall_of_fameGroup[] =
 MenuGroupState topGroupState;
 MenuGroupState baseGroupState;
 MenuGroupState confGroupState;
-MenuGroupState powGroupState;
-MenuGroupState filterGroupState;
-MenuGroupState infoGroupState;
-MenuGroupState cwGroupState;
 MenuGroupState displayGroupState;
+MenuGroupState cwGroupState;
+MenuGroupState filterGroupState;
+MenuGroupState powGroupState;
+MenuGroupState men2touchState;
+MenuGroupState infoGroupState;
 MenuGroupState debugGroupState;
 MenuGroupState hall_of_fameGroupState;
 
@@ -397,12 +408,13 @@ const MenuGroupDescriptor groups[] =
 {
     { topGroup, &topGroupState, NULL},  // Group 0
     { baseGroup, &baseGroupState, topGroup},  // Group 1
-    { confGroup, &confGroupState, topGroup},  // Group 3
-    { powGroup, &powGroupState, topGroup },  // Group 4
+    { confGroup, &confGroupState, topGroup},  // Group 2
+    { displayGroup, &displayGroupState, topGroup },  // Group 3
+    { cwGroup, &cwGroupState, topGroup },  // Group 4
     { filterGroup, &filterGroupState, topGroup },  // Group 5
-    { infoGroup, &infoGroupState, topGroup },  // Group 6
-    { cwGroup, &cwGroupState, topGroup },  // Group 7
-    { displayGroup, &displayGroupState, topGroup },  // Group 8
+    { powGroup, &powGroupState, topGroup },  // Group 6
+    { men2touchGroup, &men2touchState, topGroup },  // Group 7
+    { infoGroup, &infoGroupState, topGroup },  // Group 8
     { debugGroup, &debugGroupState, topGroup },  // Group 9
     { hall_of_fameGroup, &hall_of_fameGroupState, topGroup },  // Group 10
 };

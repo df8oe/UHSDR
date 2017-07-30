@@ -2408,6 +2408,29 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 ts.freq_step_config &= 0x0f;    // clear upper nybble
         }
         break;
+    case MENU_DYNAMICTUNE:  // Dynamic Tune on/off
+        if(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)
+        {
+      	  temp_var_u8 = true;
+      	}
+      	else
+      	{
+      	  temp_var_u8 = false;
+      	}
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+		  if(!temp_var_u8)
+		  {
+		  ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;
+		  }
+		  else
+		  {
+		  ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;
+		  }
+		UiDriver_ShowStep(df.selected_idx);
+        }
+        break;
     case CONFIG_BAND_BUTTON_SWAP:   // Swap position of Band+ and Band- buttons
         temp_var_u8 = ts.flags1 & FLAGS1_SWAP_BAND_BTN;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
@@ -3483,6 +3506,18 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             mchf_hw_i2c1_init();
         }
         snprintf(options, 32, " %3dkHz",(unsigned int)(ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 );
+		if((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 250)
+		{
+		  clr = Red;
+		}
+		if(((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 50 && (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 90) || ((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 210 && (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 250))
+		{
+		  clr = Yellow;
+		}
+		if((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 90 && (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 210)
+		{
+		  clr = Green;
+		}
         break;
     case CONFIG_I2C2_SPEED:      //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_2],
@@ -3496,6 +3531,18 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             mchf_hw_i2c2_init();
         }
         snprintf(options, 32, " %3ukHz",(unsigned int)(ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 );
+		if((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 250)
+		{
+		  clr = Red;
+		}
+		if(((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 50 && (ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 < 90) || ((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 210 && (ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 < 250))
+		{
+		  clr = Yellow;
+		}
+		if((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 90 && (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 210)
+		{
+		  clr = Green;
+		}
         break;
 
     case CONFIG_RTC_HOUR:
@@ -3593,6 +3640,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
             txt_ptr = " Done!";
             clr = Green;
+        }
+        break;
+    case MENU_DEBUG_ENABLE:  // Debug infos on LCD on/off
+        if(ts.show_tp_coordinates)
+        {
+      	  temp_var_u8 = true;
+      	}
+      	else
+      	{
+      	  temp_var_u8 = false;
+      	}
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        if(var_change)
+        {
+		  if(temp_var_u8)
+		  {
+		  ts.show_tp_coordinates = true;
+		  }
+		  else
+		  {
+		  ts.show_tp_coordinates = false;
+		  UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"       ",White,Black,0); // clears debug text
+		  UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,"     ",White,Black,5); //  "    "    "     "
+		  }
         }
         break;
 #ifdef USE_USB

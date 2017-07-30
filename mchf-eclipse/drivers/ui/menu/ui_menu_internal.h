@@ -220,6 +220,7 @@ enum
     MENU_DEBUG_TX_AUDIO,
     CONFIG_I2C1_SPEED,
     CONFIG_I2C2_SPEED,
+	MENU_DEBUG_ENABLE,
     MENU_DEBUG_CLONEOUT,
     MENU_DEBUG_CLONEIN,
     MENU_DEBUG_NEW_NB,
@@ -230,6 +231,7 @@ enum
     CONFIG_RTC_SEC,
     CONFIG_RTC_RESET,
     CONFIG_RTC_CALIB,
+    MENU_DYNAMICTUNE,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 
