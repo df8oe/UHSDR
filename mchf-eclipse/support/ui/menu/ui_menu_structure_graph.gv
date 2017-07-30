@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-30T12:39:26  by "./ui_menu_structure_graph.py"
+#  generated at  2017-07-30T14:56:25  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-30T12:39:26  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-30T14:56:25  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -412,8 +412,58 @@
              shape = record
              ];
         
+        "CONFIG_RTC_START" [
+             label = "CONFIG_RTC_START | RTC Start"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_HOUR" [
+             label = "CONFIG_RTC_HOUR | RTC Hour"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_MIN" [
+             label = "CONFIG_RTC_MIN | RTC Min"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_SEC" [
+             label = "CONFIG_RTC_SEC | RTC Seconds"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_RESET" [
+             label = "CONFIG_RTC_RESET | RTC Reset"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_CALIB" [
+             label = "CONFIG_RTC_CALIB | RTC Calibration"
+             shape = record
+             ];
+        
         "CONFIG_IQ_AUTO_CORRECTION" [
              label = "CONFIG_IQ_AUTO_CORRECTION | RX IQ Auto Correction"
+             shape = record
+             ];
+        
+        "CONFIG_80M_RX_IQ_GAIN_BAL" [
+             label = "CONFIG_80M_RX_IQ_GAIN_BAL | RX IQ Balance (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_80M_RX_IQ_PHASE_BAL" [
+             label = "CONFIG_80M_RX_IQ_PHASE_BAL | RX IQ Phase   (80m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_RX_IQ_GAIN_BAL" [
+             label = "CONFIG_10M_RX_IQ_GAIN_BAL | RX IQ Balance (10m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_RX_IQ_PHASE_BAL" [
+             label = "CONFIG_10M_RX_IQ_PHASE_BAL | RX IQ Phase   (10m)"
              shape = record
              ];
         
@@ -772,6 +822,16 @@
              shape = record
              ];
         
+        "CONFIG_2200M_5W_ADJUST" [
+             label = "CONFIG_2200M_5W_ADJUST | 2200m 5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_630M_5W_ADJUST" [
+             label = "CONFIG_630M_5W_ADJUST | 630m  5W PWR Adjust"
+             shape = record
+             ];
+        
         "CONFIG_160M_5W_ADJUST" [
              label = "CONFIG_160M_5W_ADJUST | 160m  5W PWR Adjust"
              shape = record
@@ -819,6 +879,41 @@
         
         "CONFIG_10M_5W_ADJUST" [
              label = "CONFIG_10M_5W_ADJUST | 10m   5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_6M_5W_ADJUST" [
+             label = "CONFIG_6M_5W_ADJUST | 6m    5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_4M_5W_ADJUST" [
+             label = "CONFIG_4M_5W_ADJUST | 4m    5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_2M_5W_ADJUST" [
+             label = "CONFIG_2M_5W_ADJUST | 2m    5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_70CM_5W_ADJUST" [
+             label = "CONFIG_70CM_5W_ADJUST | 70cm  5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_23CM_5W_ADJUST" [
+             label = "CONFIG_23CM_5W_ADJUST | 23cm  5W PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_2200M_FULL_POWER_ADJUST" [
+             label = "CONFIG_2200M_FULL_POWER_ADJUST | 2200m Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_630M_FULL_POWER_ADJUST" [
+             label = "CONFIG_630M_FULL_POWER_ADJUST | 630m  Full PWR Adjust"
              shape = record
              ];
         
@@ -872,6 +967,41 @@
              shape = record
              ];
         
+        "CONFIG_6M_FULL_POWER_ADJUST" [
+             label = "CONFIG_6M_FULL_POWER_ADJUST | 6m    Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_4M_FULL_POWER_ADJUST" [
+             label = "CONFIG_4M_FULL_POWER_ADJUST | 4m    Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_2M_FULL_POWER_ADJUST" [
+             label = "CONFIG_2M_FULL_POWER_ADJUST | 2m    Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_70CM_FULL_POWER_ADJUST" [
+             label = "CONFIG_70CM_FULL_POWER_ADJUST | 70cm  Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_23CM_FULL_POWER_ADJUST" [
+             label = "CONFIG_23CM_FULL_POWER_ADJUST | 23cm  Full PWR Adjust"
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_2200M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_2200M_ADJ | 2200m Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_630M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_630M_ADJ | 630m Coupling Adj."
+             shape = record
+             ];
+        
         "CONFIG_FWD_REV_COUPLING_160M_ADJ" [
              label = "CONFIG_FWD_REV_COUPLING_160M_ADJ | 160m Coupling Adj."
              shape = record
@@ -894,6 +1024,26 @@
         
         "CONFIG_FWD_REV_COUPLING_15M_ADJ" [
              label = "CONFIG_FWD_REV_COUPLING_15M_ADJ | 15m  Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_6M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_6M_ADJ | 6m   Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_2M_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_2M_ADJ | 2m   Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_70CM_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_70CM_ADJ | 70cm Coupling Adj."
+             shape = record
+             ];
+        
+        "CONFIG_FWD_REV_COUPLING_23CM_ADJ" [
+             label = "CONFIG_FWD_REV_COUPLING_23CM_ADJ | 23cm Coupling Adj."
              shape = record
              ];
         
@@ -1157,7 +1307,27 @@
             
             MENU_CONF -> CONFIG_I2C2_SPEED
             
+            MENU_CONF -> CONFIG_RTC_START
+            
+            MENU_CONF -> CONFIG_RTC_HOUR
+            
+            MENU_CONF -> CONFIG_RTC_MIN
+            
+            MENU_CONF -> CONFIG_RTC_SEC
+            
+            MENU_CONF -> CONFIG_RTC_RESET
+            
+            MENU_CONF -> CONFIG_RTC_CALIB
+            
             MENU_CONF -> CONFIG_IQ_AUTO_CORRECTION
+            
+            MENU_CONF -> CONFIG_80M_RX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_80M_RX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_10M_RX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_10M_RX_IQ_PHASE_BAL
             
             MENU_CONF -> CONFIG_80M_TX_IQ_GAIN_BAL
             
@@ -1363,6 +1533,10 @@
             
             MENU_POW -> CONFIG_PA_BIAS
             
+            MENU_POW -> CONFIG_2200M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_630M_5W_ADJUST
+            
             MENU_POW -> CONFIG_160M_5W_ADJUST
             
             MENU_POW -> CONFIG_80M_5W_ADJUST
@@ -1382,6 +1556,20 @@
             MENU_POW -> CONFIG_12M_5W_ADJUST
             
             MENU_POW -> CONFIG_10M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_6M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_4M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_2M_5W_ADJUST
+            
+            MENU_POW -> CONFIG_70CM_5W_ADJUST
+            
+            MENU_POW -> CONFIG_23CM_5W_ADJUST
+            
+            MENU_POW -> CONFIG_2200M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_630M_FULL_POWER_ADJUST
             
             MENU_POW -> CONFIG_160M_FULL_POWER_ADJUST
             
@@ -1403,6 +1591,20 @@
             
             MENU_POW -> CONFIG_10M_FULL_POWER_ADJUST
             
+            MENU_POW -> CONFIG_6M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_4M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_2M_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_70CM_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_23CM_FULL_POWER_ADJUST
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_2200M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_630M_ADJ
+            
             MENU_POW -> CONFIG_FWD_REV_COUPLING_160M_ADJ
             
             MENU_POW -> CONFIG_FWD_REV_COUPLING_80M_ADJ
@@ -1412,6 +1614,14 @@
             MENU_POW -> CONFIG_FWD_REV_COUPLING_20M_ADJ
             
             MENU_POW -> CONFIG_FWD_REV_COUPLING_15M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_6M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_2M_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_70CM_ADJ
+            
+            MENU_POW -> CONFIG_FWD_REV_COUPLING_23CM_ADJ
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
