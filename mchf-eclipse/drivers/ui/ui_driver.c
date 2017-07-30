@@ -6191,10 +6191,10 @@ void UiDriver_MainHandler()
                 uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
                 profileTimedEventReset(ProfileAudioInterrupt);
                 char str[20];
-                if(!ts.show_tp_coordinates)
-                {
-              	  snprintf(str,20,"L%3u%%",(unsigned int)load);
-              	  UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,str,White,Black,0);
+              	snprintf(str,20,"L%3u%%",(unsigned int)load);
+				if(ts.show_tp_coordinates)
+				{
+              	  UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,str,White,Black,5);
               	}
 #endif
             }
