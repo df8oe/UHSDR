@@ -114,7 +114,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_METER_MODE,&ts.tx_meter_mode,METER_SWR,0,METER_MAX},
     { ConfigEntry_UInt32_16, EEPROM_ALC_DECAY_TIME,&ts.alc_decay,ALC_DECAY_DEFAULT,0,ALC_DECAY_MAX },
     { ConfigEntry_UInt32_16, EEPROM_ALC_POSTFILT_TX_GAIN,&ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT, ALC_POSTFILT_GAIN_MIN, ALC_POSTFILT_GAIN_MAX},
-    { ConfigEntry_UInt8, EEPROM_STEP_SIZE_CONFIG,&ts.freq_step_config,0,0,255},
+    { ConfigEntry_UInt16, EEPROM_STEP_SIZE_CONFIG,&ts.freq_step_config,0,0,255},
     { ConfigEntry_UInt8, EEPROM_DSP_MODE,&ts.dsp_active,0,0,255},
     { ConfigEntry_UInt8, EEPROM_DSP_NR_STRENGTH,&ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX},
     { ConfigEntry_UInt32_16, EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX},
