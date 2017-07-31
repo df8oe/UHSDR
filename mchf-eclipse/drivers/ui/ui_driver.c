@@ -1225,16 +1225,10 @@ static void UiDriver_ProcessKeyboard()
                 UiDriver_ChangeEncoderThreeMode();
                 break;
             case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
-                if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	// button swap NOT enabled
-                    UiDriver_ChangeTuningStep(0);	// decrease step size
-                else		// button swap enabled
-                    UiDriver_ChangeTuningStep(1);	// increase step size
+                UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? true: false);
                 break;
             case BUTTON_STEPP_PRESSED:		// BUTTON_STEPP
-                if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	// button swap NOT enabled
-                    UiDriver_ChangeTuningStep(1);	// increase step size
-                else
-                    UiDriver_ChangeTuningStep(0);	// decrease step size
+                UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? false: true);
                 break;
             case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
                 UiDriver_HandleBandButtons(BUTTON_BNDM);
@@ -1840,16 +1834,22 @@ void UiDriver_ShowStep()
         UiLcdHy28_PrintTextCentered(POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,step_name,color,stepsize_background,0);
     }
     //
-    if((ts.freq_step_config & 0x0f) && line_loc > 0)	 		// is frequency step marker line enabled?
+    if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && line_loc > 0)	 		// is frequency step marker line enabled?
     {
         if(is_splitmode())
+        {
             UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+        }
         else
+        {
             UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+        }
         step_line = 1;	// indicate that a line under the step size had been drawn
     }
     else	// marker line not enabled
+    {
         step_line = 0;	// we don't need to erase "step size" marker line in the future
+    }
 }
 
 
@@ -5368,12 +5368,12 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
         case CONFIG_DEFAULTS_LOAD_ALL:
             clr_bg = Red;
             clr_fg = White;
-            top_line = "    ALL DEFAULTS";
+            top_line = "ALL DEFAULTS";
             break;
         case CONFIG_DEFAULTS_LOAD_FREQ:
             clr_bg = Yellow;
             clr_fg = Black;
-            top_line = " FREQ/MODE DEFAULTS";
+            top_line = "FREQ/MODE DEFAULTS";
             break;
         default:
             break;
@@ -5382,44 +5382,52 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 
         UiLcdHy28_LcdClear(clr_bg);							// clear the screen
         // now do all of the warnings, blah, blah...
-        UiLcdHy28_PrintText(2,05,top_line,clr_fg,clr_bg,1);
-        UiLcdHy28_PrintText(2,35," -> LOAD REQUEST <-",clr_fg,clr_bg,1);
-        UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,85," press POWER button to start normally.",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,120," If you want to load default settings",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,135,"    press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
-        //
+        UiLcdHy28_PrintTextCentered(2,05, 316, top_line,clr_fg,clr_bg,1);
+        UiLcdHy28_PrintTextCentered(2,35, 316, "-> LOAD REQUEST <-",clr_fg,clr_bg,1);
+
+        UiLcdHy28_PrintTextCentered(2,70, 316,
+                "If you don't want to do this\n"
+                "press POWER button to start normally.",clr_fg,clr_bg,0);
+
+        UiLcdHy28_PrintTextCentered(2,120, 316,
+                "If you want to load default settings\n"
+                "press and hold BAND+ AND BAND-.\n"
+                "Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
+
         // On screen delay									// delay a bit...
-        non_os_delay_multi(20);
+        HAL_Delay(5000);
 
         // add this for emphasis
-        UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,207,"           to confirm loading    ",clr_fg,clr_bg,0);
+        UiLcdHy28_PrintTextCentered(2,195, 316,
+                "Press BAND+ and BAND-\n"
+                "to confirm loading",clr_fg,clr_bg,0);
 
         while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
         {
-            non_os_delay();
+            HAL_Delay(10);
         }
 
+        const char* txp;
 
         if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
         {
-            UiLcdHy28_LcdClear(Black);							// clear the screen
-            UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-            non_os_delay_multi(100);
+            clr_bg = Black;							// clear the screen
+            clr_fg = White;
+            txp = "...performing normal start...";
+
             load_mode = CONFIG_DEFAULTS_KEEP;
             retval = false;
         }
         else
         {
-            UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-            UiLcdHy28_PrintText(2,108,"     loading defaults in progress...",clr_fg,clr_bg,0);
-            non_os_delay_multi(100);
+            txp = "...loading defaults in progress...";
             // call function to load values - default instead of EEPROM
             retval = true;
             ts.menu_var_changed = true;
         }
+        UiLcdHy28_LcdClear(clr_bg);                         // clear the screen
+        UiLcdHy28_PrintTextCentered(2,108,316,txp,clr_fg,clr_bg,0);
+        HAL_Delay(5000);
     }
 
     switch (load_mode)
@@ -5638,7 +5646,6 @@ static bool UiDriver_TouchscreenCalibration()
         uint32_t clr_fg, clr_bg;
         clr_bg = Magenta;
         clr_fg = White;
-//    char txt_buf[40];
 
         char cross1[2] = {3,55};
         char cross2[2] = {56,55};
@@ -5655,22 +5662,22 @@ static bool UiDriver_TouchscreenCalibration()
         UiLcdHy28_LcdClear(clr_bg);							// clear the screen
         //											// now do all of the warnings, blah, blah...
         UiLcdHy28_PrintText(0,05,"  TOUCH CALIBRATION",clr_fg,clr_bg,1);
-        UiLcdHy28_PrintText(2,70,"      If you don't want to do this",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,85," press POWER button to start normally.",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,120," If you want to calibrate touchscreen",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,135,"    press and hold BAND+ AND BAND-.",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,150,"  Settings will be saved at POWEROFF",clr_fg,clr_bg,0);
+        UiLcdHy28_PrintTextCentered(2, 70, 316, "If you don't want to do this\n"
+                                                "press POWER button to start normally.\n"
+                                                "press and hold BAND+ AND BAND-.\n"
+                                                " Settings will be saved at POWEROFF"
+                ,clr_fg,clr_bg,0);
         //
         // On screen delay									// delay a bit...
-        non_os_delay_multi(20);
+        HAL_Delay(5000);
 
         // add this for emphasis
-        UiLcdHy28_PrintText(2,195,"          Press BAND+ and BAND-  ",clr_fg,clr_bg,0);
-        UiLcdHy28_PrintText(2,207,"          to start calibration   ",clr_fg,clr_bg,0);
+        UiLcdHy28_PrintTextCentered(2, 195, 316, "Press BAND+ and BAND-\n"
+                                                 "to start calibration",clr_fg,clr_bg,0);
 
         while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
         {
-            non_os_delay();
+            HAL_Delay(10);
         }
 
 
@@ -5685,12 +5692,14 @@ static bool UiDriver_TouchscreenCalibration()
         else
         {
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-            UiLcdHy28_PrintText(2,70,"On the next screen crosses will appear.",clr_fg,clr_bg,0);
-            UiLcdHy28_PrintText(2,82,"Touch as exact as you can on the middle",clr_fg,clr_bg,0);
-            UiLcdHy28_PrintText(2,94,"    of each cross. After three valid",clr_fg,clr_bg,0);
-            UiLcdHy28_PrintText(2,106,"  samples position of cross changes.",clr_fg,clr_bg,0);
-            UiLcdHy28_PrintText(2,118," Repeat until the five test positions",clr_fg,clr_bg,0);
-            UiLcdHy28_PrintText(2,130,"             are finished.",clr_fg,clr_bg,0);
+            UiLcdHy28_PrintTextCentered(2,70, 316,
+                    "On the next screen crosses will appear.\n"
+                    "Touch as exact as you can on the middle\n"
+                    "of each cross. After three valid\n"
+                    "samples position of cross changes.\n"
+                    "Repeat until the five test positions\n"
+                    "are finished.",clr_fg,clr_bg,0);
+
             UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
 
             while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
@@ -5702,6 +5711,8 @@ static bool UiDriver_TouchscreenCalibration()
 
             UiLcdHy28_LcdClear(clr_bg);							// clear the screen
             UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
+
+
             UiDriver_DoCrossCheck(cross1, x_corr, y_corr);
 
             UiLcdHy28_LcdClear(clr_bg);
@@ -6200,23 +6211,15 @@ void UiDriver_BacklightDimHandler()
 
     if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
     {
-
         if(!lcd_dim_prescale)       // Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
         {
-            if(lcd_dim < ts.lcd_backlight_brightness)
-            {
-                UiLcdHy28_BacklightEnable(false);   // LCD backlight off
-            }
-            else
-            {
-                UiLcdHy28_BacklightEnable(true);   // LCD backlight on
-            }
-            //
+            UiLcdHy28_BacklightEnable(lcd_dim >= ts.lcd_backlight_brightness);   // LCD backlight off or on
+
             lcd_dim++;
-            lcd_dim &= 3;   // limit brightness PWM count to 0-3
+            lcd_dim %= 4;   // limit brightness PWM count to 0-3
         }
         lcd_dim_prescale++;
-        lcd_dim_prescale &= 3;  // limit prescale count to 0-3
+        lcd_dim_prescale %= 4;  // limit prescale count to 0-3
     }
     else if(!ts.menu_mode)
     { // LCD is to be blanked - if NOT in menu mode
