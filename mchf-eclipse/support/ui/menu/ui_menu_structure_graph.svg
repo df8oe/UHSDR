@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-11427 752,-11427 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;07&#45;30T17:06:32 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;08&#45;01T10:11:55 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3705.5"/>
@@ -2739,17 +2739,17 @@
 <path fill="none" stroke="black" d="M246.558,-819.355C257.805,-737.873 299.552,-466.204 363,-410.5 393.805,-383.455 438.783,-376.065 477.409,-375.734"/>
 <polygon fill="black" stroke="black" points="477.573,-379.235 487.598,-375.806 477.623,-372.236 477.573,-379.235"/>
 </g>
-<!-- MENU_DEBUG_ENABLE -->
-<g id="node229" class="node"><title>MENU_DEBUG_ENABLE</title>
-<polygon fill="none" stroke="black" points="470.5,-309.5 470.5,-355.5 640.5,-355.5 640.5,-309.5 470.5,-309.5"/>
-<text text-anchor="middle" x="555.5" y="-340.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_ENABLE</text>
-<polyline fill="none" stroke="black" points="470.5,-332.5 640.5,-332.5 "/>
-<text text-anchor="middle" x="555.5" y="-317.3" font-family="Times,serif" font-size="14.00">enable Debug Display</text>
+<!-- MENU_DEBUG_ENABLE_INFO -->
+<g id="node229" class="node"><title>MENU_DEBUG_ENABLE_INFO</title>
+<polygon fill="none" stroke="black" points="451,-309.5 451,-355.5 660,-355.5 660,-309.5 451,-309.5"/>
+<text text-anchor="middle" x="555.5" y="-340.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_ENABLE_INFO</text>
+<polyline fill="none" stroke="black" points="451,-332.5 660,-332.5 "/>
+<text text-anchor="middle" x="555.5" y="-317.3" font-family="Times,serif" font-size="14.00">Enable Debug Info Display</text>
 </g>
-<!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_ENABLE -->
-<g id="edge202" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_ENABLE</title>
-<path fill="none" stroke="black" d="M293.182,-279.524C314.315,-288.507 339.472,-298.151 363,-304.5 394.174,-312.912 428.929,-318.954 460.184,-323.221"/>
-<polygon fill="black" stroke="black" points="459.827,-326.704 470.199,-324.544 460.744,-319.764 459.827,-326.704"/>
+<!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_ENABLE_INFO -->
+<g id="edge202" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_ENABLE_INFO</title>
+<path fill="none" stroke="black" d="M293.182,-279.524C314.315,-288.507 339.472,-298.151 363,-304.5 387.772,-311.185 414.805,-316.373 440.546,-320.362"/>
+<polygon fill="black" stroke="black" points="440.311,-323.866 450.72,-321.888 441.35,-316.944 440.311,-323.866"/>
 </g>
 <!-- MENU_DEBUG_TX_AUDIO -->
 <g id="node230" class="node"><title>MENU_DEBUG_TX_AUDIO</title>

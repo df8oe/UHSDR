@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-07-30T17:06:35  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-08-01T10:11:59  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-07-30T17:06:35  by "./ui_menu_structure_mdtable.py"
+generated at  2017-08-01T10:11:59  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -90,8 +90,8 @@ generated at  2017-07-30T17:06:35  by "./ui_menu_structure_mdtable.py"
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
 | **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
-| **I2C1 Bus Speed**            (                          CONFIG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
-| **I2C2 Bus Speed**            (                          CONFIG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
+| **I2C1 Bus Speed**            (                          CONFIG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. | 
+| **I2C2 Bus Speed**            (                          CONFIG_I2C2_SPEED) | Sets speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Speeds above 200 kHz are not recommended for unmodified mcHF. Many modified mcHF seem to run with 300kHz without problems. | 
 | **RTC Start**                 (                           CONFIG_RTC_START) | Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected. | 
 | **RTC Hour**                  (                            CONFIG_RTC_HOUR) | Sets the Real Time Clock Hour. Needs HW Modifications. | 
 | **RTC Min**                   (                             CONFIG_RTC_MIN) | Sets the Real Time Clock Minutes. Needs HW Modifications. | 
@@ -273,7 +273,7 @@ generated at  2017-07-30T17:06:35  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
-| **enable Debug Display**      (                          MENU_DEBUG_ENABLE) | enable some debug outputs on LCD for testing purposes | 
+| **Enable Debug Info Display** (                     MENU_DEBUG_ENABLE_INFO) | Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 

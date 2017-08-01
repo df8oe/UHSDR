@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-07-30T17:06:32  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-01T10:11:55  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-07-30T17:06:32  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-01T10:11:55  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1162,8 +1162,8 @@
              shape = record
              ];
         
-        "MENU_DEBUG_ENABLE" [
-             label = "MENU_DEBUG_ENABLE | enable Debug Display"
+        "MENU_DEBUG_ENABLE_INFO" [
+             label = "MENU_DEBUG_ENABLE_INFO | Enable Debug Info Display"
              shape = record
              ];
         
@@ -1719,7 +1719,7 @@
             label = "MENU_DEBUG beef.0f.dead.e5e1"
 
     
-            MENU_DEBUG -> MENU_DEBUG_ENABLE
+            MENU_DEBUG -> MENU_DEBUG_ENABLE_INFO
             
             MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
             
