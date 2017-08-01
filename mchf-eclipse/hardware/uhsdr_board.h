@@ -687,9 +687,11 @@ typedef struct TransceiverState
     ulong	alc_decay_var;				// adjustable ALC release time - working variable version
     ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
     ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
-    //
-#define FREQ_STEP_SWAP_BTN	0xf0
-    uint8_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
+
+// we can use AT least the upper 8 bits of freq_step_config for other purpose since these have not been used and are all initialized with 0)
+#define FREQ_STEP_SWAP_BTN	    0x10
+#define FREQ_STEP_SHOW_MARKER   0x01
+    uint16_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 
 #define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
 #define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
@@ -850,7 +852,7 @@ typedef struct TransceiverState
 
     mchf_touchscreen_t *tp;
 
-    bool	show_tp_coordinates;	// show coordinates on LCD
+    bool	show_debug_info;	// show coordinates on LCD
     bool	rfmod_present;			// 0 = not present
     bool	vhfuhfmod_present;		// 0 = not present
     uint8_t	multi;					// actual translate factor
