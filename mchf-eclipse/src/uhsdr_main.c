@@ -119,11 +119,11 @@ void TransceiverStateInit(void)
     ts.rx_temp_mute		= false;					// used in muting audio during band change
     ts.filter_band		= 0;					// used to indicate the bpf filter selection for power detector coefficient selection
     ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
-    ts.rx_gain[RX_AUDIO_SPKR].value = DEFAULT_AUDIO_GAIN;
-    ts.rx_gain[RX_AUDIO_DIG].value		= DEFAULT_DIG_GAIN;
+    ts.rx_gain[RX_AUDIO_SPKR].value = AUDIO_GAIN_DEFAULT;
+    ts.rx_gain[RX_AUDIO_DIG].value		= DIG_GAIN_DEFAULT;
 
     ts.rx_gain[RX_AUDIO_SPKR].max	= MAX_VOLUME_DEFAULT;		// Set max volume default
-    ts.rx_gain[RX_AUDIO_DIG].max   =  MAX_DIG_GAIN;			// Set max volume default
+    ts.rx_gain[RX_AUDIO_DIG].max   =  DIG_GAIN_MAX;			// Set max volume default
 
     ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;			// this variable is used in the active RX audio processing function
     ts.rx_gain[RX_AUDIO_DIG].active_value = 1;			// this variable is used in the active RX audio processing function
@@ -182,8 +182,8 @@ void TransceiverStateInit(void)
 
     ts.tx_power_factor	= 0.50;					// TX power factor
 
-    ts.pa_bias			= DEFAULT_PA_BIAS;		// Use lowest possible voltage as default
-    ts.pa_cw_bias		= DEFAULT_PA_BIAS;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
+    ts.pa_bias			= PA_BIAS_DEFAULT;		// Use lowest possible voltage as default
+    ts.pa_cw_bias		= PA_BIAS_DEFAULT;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
     ts.power_level		= PA_LEVEL_DEFAULT;			// See uhsdr_board.h for setting
     //
@@ -308,9 +308,9 @@ void TransceiverStateInit(void)
     ts.tp = &mchf_touchscreen;
     ts.display = &mchf_display;
 
-    ts.show_tp_coordinates = 0;					// dont show coordinates on LCD
-    ts.rfmod_present = 0;						// rfmod not present
-    ts.vhfuhfmod_present = 0;					// VHF/UHF mod not present
+    ts.show_debug_info = false;					// dont show coordinates on LCD
+    ts.rfmod_present = false;						// rfmod not present
+    ts.vhfuhfmod_present = false;					// VHF/UHF mod not present
     ts.multi = 0;							// non-translate
     ts.tune_power_level = 0;					// Tune with FULL POWER
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
