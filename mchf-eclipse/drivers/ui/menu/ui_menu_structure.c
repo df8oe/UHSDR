@@ -54,6 +54,7 @@ const MenuDescriptor topGroup[] =
     { MENU_TOP, MENU_GROUP, MENU_SYSINFO, NULL, "System Info", UiMenuDesc("Lists various system info values") },
     { MENU_TOP, MENU_GROUP, MENU_DEBUG, NULL, "Debug/Exper. Settings", UiMenuDesc("As the name says, contains debug or expert settings usually not relevant for operating the mcHF") },
     { MENU_TOP, MENU_GROUP, MENU_HALL_OF_FAME, NULL, "Hall of Fame", UiMenuDesc("Thanks to all who contributed to the project") },
+
     { MENU_TOP, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -87,24 +88,20 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_HANG_THRESH, NULL, "AGC WDSP Hang threshold", UiMenuDesc("´Threshold´ for the Hang AGC: Hang AGC is useful for medium to strong signals. The Hang threshold determines the signal strength a signal has to exceed for Hang AGC to take place.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_TAU_HANG_DECAY, NULL, "AGC WDSP Hang Decay", UiMenuDesc("Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds.") },
     { MENU_BASE, MENU_ITEM, MENU_CODEC_GAIN_MODE, NULL, "RX Codec Gain", UiMenuDesc("Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used.") },
-
     { MENU_BASE, MENU_ITEM, MENU_RX_FREQ_CONV, NULL, "RX/TX Freq Xlate", UiMenuDesc("Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features.") },
     { MENU_BASE, MENU_ITEM, MENU_MIC_GAIN, NULL, "Mic Input Gain", UiMenuDesc("Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input") },
     { MENU_BASE, MENU_ITEM, MENU_LINE_GAIN, NULL, "Line Input Gain", UiMenuDesc("LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input") },
-
     { MENU_BASE, MENU_ITEM, MENU_TX_COMPRESSION_LEVEL, NULL, "TX Audio Compress", UiMenuDesc("Control the TX audio compressor. Higher values give more compression. Set to CUSTOM for user defined compression parameters. See below. Also changeable via Encoder 1 (CMP).") },
     { MENU_BASE, MENU_ITEM, MENU_ALC_RELEASE, NULL, "TX ALC Release Time", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the Audio Compressor Release time. Otherwise shows predefined value of selected compression level.") },
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN, NULL, "TX ALC Input Gain", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level.") },
-
     { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING, NULL, "RX NB Setting", UiMenuDesc("Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active.") },
-
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, NULL, "DSP NR Strength", UiMenuDesc("Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active.") }, // via knob
-
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, NULL, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, NULL, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
     { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low Voltage Shutdown", UiMenuDesc("Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX).") },
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG, NULL, "Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
+
     { MENU_BASE, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -192,6 +189,7 @@ const MenuDescriptor confGroup[] =
 
     // Reset I2C Config EEPROM to empty state
     { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM, NULL, "Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
+
     { MENU_CONF, MENU_STOP, 0, NULL , NULL, UiMenuDesc("") }
 };
 
@@ -238,6 +236,7 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW TX mode after stop sending a signal.") },
     { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE, NULL, "CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone.") },
     { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
+
     { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -267,6 +266,7 @@ const MenuDescriptor filterGroup[] =
     { MENU_FILTER, MENU_ITEM, CONFIG_AM_TX_FILTER_DISABLE, NULL,"AM  TX Audio Filter", UiMenuDesc("Select if AM-TX signal is filtered (strongly recommended to agree to regulations)") },
 //    { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER_DISABLE, NULL,"SSB TX Audio Filter", UiMenuDesc(":soon:") },
     { MENU_FILTER, MENU_ITEM, CONFIG_SSB_TX_FILTER, NULL,"SSB TX Audio Filter2", UiMenuDesc("Select if SSB-TX signal is filtered (strongly recommended to agree to regulations)") },
+
     { MENU_FILTER, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -358,6 +358,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },
     { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"HW license", UiMenuDesc("Display license of hardware") },
+
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

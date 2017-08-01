@@ -80,8 +80,8 @@ MENULN_REO = re.compile(  # pattern for lines..
     + r'[,\s]+'
     + r'(?P<NR>[\w]+)'                       # ..a 3rd rather long id 'yy...zz', we call it NR
     + r'[,\s]+'
-	+ r'.*'									 # ..show conditional entries, too
-#    + r'NULL'                                # ..an initial value for a pointer: not relevant for handbook
+	+ r'.*[^,]'								 # ..show conditional entries, too
+#    + r'NULL'                               # .. this would show only non-conditional entries
     + r'[,\s]+'
     + r'"(?P<LABEL>[^"]*)"'                  # ..n chars in quotes, we call this LABEL
     + r'[,\s]+'
