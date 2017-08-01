@@ -40,6 +40,24 @@ typedef struct CatDriver
 CatDriver                  cat_driver;
 
 
+static void CatDriver_CatEnableTX(bool enable)
+{
+    if (enable)
+    {
+        if(RadioManagement_IsTxDisabled() == false)
+        {
+            ts.ptt_req = true;
+            cat_driver.cat_ptt_active = true;
+        }
+    }
+    else
+    {
+        ts.ptt_req = false;
+        cat_driver.cat_ptt_active = false;
+    }
+}
+
+
 /**
  * @brief returns true if the current TX state has been initiated by a CAT PTT command
  */
@@ -47,10 +65,28 @@ bool CatDriver_CatPttActive()
 {
     return cat_driver.cat_ptt_active;
 }
+
 bool CatDriver_CWKeyPressed()
 {
     return cdcvcp_ctrllines.dtr != 0;
 }
+
+bool CatDriver_PTTKeyPressed()
+{
+    return cdcvcp_ctrllines.rts != 0;
+}
+
+bool CatDriver_PTTKeyChangedState()
+{
+    static bool ptt_key_last_state;
+
+    bool curval = CatDriver_PTTKeyPressed();
+    bool retval = ptt_key_last_state != curval;
+    ptt_key_last_state = curval;
+
+    return retval;
+}
+
 
 CatInterfaceState CatDriver_GetInterfaceState()
 {
@@ -1125,11 +1161,7 @@ static void CatDriver_HandleCommands()
             resp[0] = cat_driver.cat_ptt_active?0xF0:0x00;
             /* 0xF0 if PTT was already on */
 
-            if(RadioManagement_IsTxDisabled() == false)
-            {
-                ts.ptt_req = true;
-                cat_driver.cat_ptt_active = true;
-            }
+            CatDriver_CatEnableTX(true);
 
             bc = 1;
             break;
@@ -1154,9 +1186,8 @@ static void CatDriver_HandleCommands()
             break;
         case FT817_PTT_OFF:
             resp[0] = cat_driver.cat_ptt_active?0x00:0xF0; /* 0xF0 if PTT was already off */
-            ts.ptt_req = false;
-            cat_driver.cat_ptt_active = false;
             bc = 1;
+            CatDriver_CatEnableTX(false);
             break;
         case FT817_A7: /* A7 */
             resp[0]=0xA7;
@@ -1275,4 +1306,26 @@ void CatDriver_HandleProtocol()
             break;
         }
     }
+
+#if 1
+    // TODO: factor out
+    // handle emulated serial PTT Pin Handling
+    if (CatDriver_PTTKeyChangedState())
+    {
+        if (CatDriver_PTTKeyPressed())
+        {
+            if (CatDriver_CatPttActive())
+            {
+                CatDriver_CatEnableTX(true);
+            }
+        }
+        else
+        {
+            if (CatDriver_CatPttActive() == true)
+            {
+                CatDriver_CatEnableTX(false);
+            }
+        }
+    }
+#endif
 }
