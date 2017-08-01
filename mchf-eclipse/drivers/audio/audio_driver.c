@@ -4020,7 +4020,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         // 17 - 20: soft gain after decoder
         //
 #ifdef UI_BRD_MCHF
-        if(ts.rx_gain[RX_AUDIO_SPKR].value > RX_AUDIO_HW_AMP_MAX_GAIN)    // is volume control above highest hardware setting?
+        if(ts.rx_gain[RX_AUDIO_SPKR].value > CODEC_SPEAKER_MAX_VOLUME)    // is volume control above highest hardware setting?
         {
             arm_scale_f32(adb.b_buffer, (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, adb.b_buffer, blockSize);    // yes, do software volume control adjust on "b" buffer
         }
@@ -4085,20 +4085,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 }
 
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_tx_compressor (look-ahead type) by KA7OEI
-//* Object              :
-//* Object              : speech compressor/processor for TX audio
-//* Input Parameters    : size of buffer to processes, gain scaling factor
-//* Input Parameters    : also processes/compresses audio in "adb.i_buffer" and "adb.q_buffer" - it looks only at data in "i" buffer
-//*                       reads adb.a_buffer as well.
-//* Output Parameters   : data via "adb.i_buffer" and "adb.q_buffer"
-//* Functions called    : none
-//*----------------------------------------------------------------------------
+/**
+ * @brief audio speech compressor (look-ahead type) by KA7OEI
+ * @param buffer input (and output) buffer for audio samples
+ * @param blockSize number of samples to process
+ * @param gain_scaling scaling applied to buffer
+ *
+ */
 static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float gain_scaling)
 {
-    static uint32_t		alc_delay_inbuf = 0, alc_delay_outbuf;
+    static uint32_t	alc_delay_inbuf = 0, alc_delay_outbuf;
 
     if (ts.tx_comp_level > -1)
     {
@@ -4106,17 +4102,13 @@ static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float
         {
             // perform post-filter gain operation
             // this is part of the compression
-            //
             float32_t gain_calc = ((float32_t)ts.alc_tx_postfilt_gain_var)/2.0 +0.5 ;
+
             // get post-filter gain setting
             // offset it so that 2 = unity
-
             arm_scale_f32(buffer, gain_calc, buffer, blockSize);      // use optimized function to apply scaling to I/Q buffers
         }
 
-
-
-        // ------------------------
         // Do ALC processing on audio buffer - look-ahead type by KA7OEI
         if (false)
         {
@@ -4180,8 +4172,18 @@ static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float
     }
 }
 
-// Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
-static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
+/**
+ * @brief Equalize based on band and simultaneously apply I/Q gain AND phase adjustments
+ * The input is IQ data in the adb.i_buffer and adb.q_buffer
+ *
+ * @param dst output buffer for generated IQ audio samples
+ * @param blockSize number of samples (input/output)
+ * @param swap i and q buffers meaning
+ * @param scaling gain applied to the samples before conversion to integer data
+ *
+ */
+
+static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
 {
     int16_t trans_idx;
 
@@ -4196,9 +4198,9 @@ static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSampl
 
     float32_t *final_i_buffer, *final_q_buffer;
 
-    float32_t final_i_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling);
-    float32_t final_q_gain = (float32_t)(ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling);
-    // ------------------------
+    float32_t final_i_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling;
+    float32_t final_q_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling;
+
     // Output I and Q as stereo data
     if(swap == false)	 			// if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
     {
@@ -4207,13 +4209,14 @@ static void AudioDriver_TxIqProcessingFinal(float scaling, bool swap, AudioSampl
     }
     else	 	// it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
     {
-        // this is the IQ gain / amplitude adjustment
         final_i_buffer = adb.q_buffer;
         final_q_buffer = adb.i_buffer;
     }
+
     // this is the IQ gain / amplitude adjustment
     arm_scale_f32(final_i_buffer, final_i_gain, final_i_buffer, blockSize);
     arm_scale_f32(final_q_buffer, final_q_gain, final_q_buffer, blockSize);
+
     // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
     for(int i = 0; i < blockSize; i++)
@@ -4351,7 +4354,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
         AudioDriver_TxFilterAudio(true,ts.tx_audio_source != TX_AUDIO_DIG,adb.a_buffer,adb.a_buffer, blockSize);
     }
 
-    AudioDriver_TxCompressor(adb.b_buffer, blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
+    AudioDriver_TxCompressor(adb.a_buffer, blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
 
     // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "a" and puts it into "a".
     for(int i = 0; i < blockSize; i++)
