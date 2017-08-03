@@ -2047,14 +2047,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_SPECTRUM_MODE:
         temp_var_u8 = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
 
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
 
-        if (temp_var_u8)
+        if (var_change)
         {
             CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_WFALL_SCOPE_TOGGLE);
         }
-        CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_WFALL_SCOPE_TOGGLE);
-
 
         txt_ptr = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?"WFALL":"SCOPE";
         // is waterfall mode active?
