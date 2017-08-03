@@ -2053,6 +2053,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_WFALL_SCOPE_TOGGLE);
         }
+        CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_WFALL_SCOPE_TOGGLE);
 
 
         txt_ptr = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?"WFALL":"SCOPE";
