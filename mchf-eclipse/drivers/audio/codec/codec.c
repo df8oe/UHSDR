@@ -415,7 +415,7 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
                 vcalc = 0;
             }
         }
-        Codec_VolumeSpkr(vcalc);
+        Codec_VolumeSpkr(vcalc/5); // divide by 5 to convert decibel to volume control steps
         Codec_VolumeLineOut(txrx_mode);		// set the calculated sidetone volume
     }
 }
