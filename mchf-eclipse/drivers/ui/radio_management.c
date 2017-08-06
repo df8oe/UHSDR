@@ -205,6 +205,38 @@ bool RadioManagement_Tune(bool tune)
     return retval;
 }
 
+/**
+ * @returns offset of tuned frequency to dial frequency in CW mode, in Hz
+ */
+int32_t RadioManagement_GetCWDialOffset()
+{
+
+    int32_t retval = 0;
+
+    switch(ts.cw_offset_mode)
+    {
+    case CW_OFFSET_USB_SHIFT:    // Yes - USB?
+        retval -= ts.cw_sidetone_freq;
+        // lower LO by sidetone amount
+        break;
+    case CW_OFFSET_LSB_SHIFT:   // LSB?
+        retval += ts.cw_sidetone_freq;
+        // raise LO by sidetone amount
+        break;
+    case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
+        if(ts.cw_lsb)
+        {
+            retval += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
+        }
+        else
+        {
+            retval -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
+        }
+    }
+
+    return retval * TUNE_MULT;
+}
+
 uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode)
 {
     uint32_t tune_freq = dial_freq;
@@ -213,26 +245,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
-        switch(ts.cw_offset_mode)
-        {
-        case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            tune_freq -= ts.cw_sidetone_freq;
-            // lower LO by sidetone amount
-            break;
-        case CW_OFFSET_LSB_SHIFT:   // LSB?
-            tune_freq += ts.cw_sidetone_freq;
-            // raise LO by sidetone amount
-            break;
-        case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
-            if(ts.cw_lsb)
-            {
-                tune_freq += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
-            }
-            else
-            {
-                tune_freq -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
-            }
-        }
+        tune_freq += RadioManagement_GetCWDialOffset() / TUNE_MULT;
     }
 
 

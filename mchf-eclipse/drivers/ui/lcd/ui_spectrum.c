@@ -1173,7 +1173,7 @@ static void UiSpectrum_FrequencyBarText()
         UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
 
-        float32_t freq_calc = RadioManagement_GetRXDialFrequency()/TUNE_MULT;      // get current tune frequency in Hz
+        float32_t freq_calc = (RadioManagement_GetRXDialFrequency() + (ts.dmod_mode == DEMOD_CW?RadioManagement_GetCWDialOffset():0))/TUNE_MULT;      // get current tune frequency in Hz
 
         if (sd.magnify == 0)
         {
