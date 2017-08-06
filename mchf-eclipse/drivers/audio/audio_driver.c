@@ -2988,7 +2988,8 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
             arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, y_buffer, y_buffer, blockSize);
             // collect samples for spectrum display 256-point-FFT
 
-            for(int i = 0; i < blockSize/ (1<<sd.magnify); i++)
+            int16_t blockSizeDecim = blockSize/ (1<<sd.magnify);
+            for(int16_t i = 0; i < blockSizeDecim; i++)
             {
                 sd.FFT_Samples[sd.samp_ptr] = y_buffer[i];   // get floating point data for FFT for spectrum scope/waterfall display
                 sd.samp_ptr++;

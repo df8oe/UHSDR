@@ -431,8 +431,6 @@ enum
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
 #define LOW_POWER_SHUTDOWN_DELAY_TIME   6000        // number of DECISECONDS after power-up before low power auto shutdown is checked
 
-#define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
-
 
 
 // Enumeration of transmit tune  modes
@@ -907,7 +905,6 @@ typedef struct TransceiverState
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
     bool encoder3state;
     int bc_band;
-    uint8_t c_line;					// position of center line
 
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 

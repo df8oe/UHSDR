@@ -21,10 +21,11 @@
 void UiSpectrum_InitSpectrumDisplay();
 void UiSpectrum_ClearDisplay();
 void UiSpectrum_RedrawSpectrumDisplay();
-void UiSpectrumCreateDrawArea(void);
+void UiSpectrumCreateDrawArea();
 void UiGet_Wfscope_Bar_Text(char*);
 void UiSpectrum_ClearWaterfallData();
-
+void UiSpectrum_UpdateSpectrumPixelParameters();
+void UiSpectrum_DisplayFilterBW();
 
 // Spectrum scope operational constants
 //
@@ -173,6 +174,10 @@ typedef struct SpectrumDisplay
     uchar   wfall_height;
     uchar   wfall_ystart;
 
+    float32_t pixel_per_hz;        // how many Hertz is one pixel in the spectrum
+    float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)
+    float32_t tx_carrier_offset;   // how is the current transmitting frequency carrier offset from rx carrier (in pixels)
+    float32_t tx_carrier_pos;      // where is the current transmitting frequency carrier (in pixels)
 
 } SpectrumDisplay;
 

@@ -203,7 +203,7 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_SIZE, NULL, "Spectrum Size", UiMenuDesc("Change height of spectrum display") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FILTER_STRENGTH, NULL, "Spectrum Filter", UiMenuDesc("Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_FREQSCALE_COLOUR, NULL, "Spec FreqScale Colour", UiMenuDesc("Colour of the small frequency digits under the spectrum display.") },
-    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR, NULL, "Spec Line Colour", UiMenuDesc("Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display.") },
+    { MENU_DISPLAY, MENU_ITEM, MENU_SPECTRUM_CENTER_LINE_COLOUR, NULL, "TX Carrier Colour", UiMenuDesc("Colour of the vertical line indicating the TX carrier frequency in the spectrum or waterdall display.") },
     { MENU_DISPLAY, MENU_ITEM, CONFIG_SPECTRUM_FFT_WINDOW_TYPE, NULL, "Spectrum FFT Wind.", UiMenuDesc("Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_LIGHT_ENABLE, NULL, "Scope Light", UiMenuDesc("The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate") },

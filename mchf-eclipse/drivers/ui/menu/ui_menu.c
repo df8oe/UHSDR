@@ -298,6 +298,24 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8
 
     return res;
 }
+bool UiDriverMenuItemChangeEnableOnOffBool(int var, uint8_t mode, volatile bool* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
+{
+    uint8_t temp = *val_ptr;
+
+    bool res = UiDriverMenuItemChangeOnOff(var, mode, &temp, val_default);
+    *val_ptr = temp;
+    return res;
+}
+bool UiDriverMenuItemChangeEnableOnOffFlag(int var, uint8_t mode, volatile uint16_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr, uint16_t mask)
+{
+    uint8_t temp = (*val_ptr & mask)?1:0;
+
+    bool res = UiDriverMenuItemChangeOnOff(var, mode, &temp, val_default);
+
+    CLR_OR_SET_BITMASK(temp,*val_ptr,mask);
+
+    return res;
+}
 
 
 bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t filter_mode,uint8_t memory_idx)
@@ -774,12 +792,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiMenu_HandleDemodModeDisable(var, mode, options, &clr, DEMOD_CW_DISABLE);
         break;
     case MENU_DEMOD_SAM:    // Enable demodulation mode SAM
-        temp_var_u8 = (ts.flags1 & FLAGS1_SAM_ENABLE)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_SAM_ENABLE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_SAM_ENABLE);
         break;
     case MENU_SSB_AUTO_MODE_SELECT:     // Enable/Disable auto LSB/USB select
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.lsb_usb_auto_select,
@@ -800,25 +813,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         txt_ptr = "    OFF";        // no (obviously!)
         }
         break;
-    case MENU_FM_MODE_ENABLE:   // Enable/Disable FM
-        if(ts.iq_freq_mode)
-        {
-            temp_var_u8 = ts.flags2 & FLAGS2_FM_MODE_ENABLE;
-            var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-
-            if(var_change)
-            {
-                CLR_OR_SET_BITMASK(temp_var_u8, ts.flags2, FLAGS2_FM_MODE_ENABLE);
-            }
-
-        }
-        else        // translate mode is off - NO FM!!!
-        {
-            strcpy(options, "OFF");     // Say that it is OFF!
-            clr = Red;
-        }
-        break;
-    case MENU_FM_GEN_SUBAUDIBLE_TONE:   // Selection of subaudible tone for FM transmission
+        case MENU_FM_MODE_ENABLE:   // Enable/Disable FM
+            var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_FM_MODE_ENABLE);
+            break;
+        case MENU_FM_GEN_SUBAUDIBLE_TONE:   // Selection of subaudible tone for FM transmission
         UiDriverMenuItemChangeUInt32(var, mode, &ts.fm_subaudible_tone_gen_select,
                                      0,
                                      NUM_SUBAUDIBLE_TONES,
@@ -1721,7 +1719,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_PADDLE_REVERSE:   // CW Paddle reverse
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cw_paddle_reverse,0,options,&clr);
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.cw_paddle_reverse,0,options,&clr);
         break;
     case MENU_CW_TX_RX_DELAY:   // CW TX->RX delay
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_rx_delay,
@@ -2037,22 +2035,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiMenu_MapColors(ts.spectrum_centre_line_colour,options,&clr);
         break;
     case MENU_SCOPE_LIGHT_ENABLE:   // Spectrum light: no grid, larger, only points, no bars
-        temp_var_u8 = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_SCOPE_LIGHT_ENABLE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr,FLAGS1_SCOPE_LIGHT_ENABLE);
         break;
     case MENU_SPECTRUM_MODE:
-        temp_var_u8 = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?1:0;
-
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-
-        if (var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_WFALL_SCOPE_TOGGLE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_WFALL_SCOPE_TOGGLE);
 
         txt_ptr = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?"WFALL":"SCOPE";
         // is waterfall mode active?
@@ -2364,84 +2350,46 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case CONFIG_FREQ_STEP_MARKER_LINE:  // Frequency step marker line on/off
-        temp_var_u8 = ts.freq_step_config & FREQ_STEP_SHOW_MARKER? true : false;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.freq_step_config,0,options,&clr, FREQ_STEP_SHOW_MARKER);
         if(var_change)          // something changed?
         {
-            if(temp_var_u8)     // yes, is line to be enabled?
-            {
-                ts.freq_step_config |= FREQ_STEP_SHOW_MARKER;    // yes, set
-            }
-            else
-            {
-                // line disabled?
-                ts.freq_step_config &= ~FREQ_STEP_SHOW_MARKER;    // no, clear
-            }
             UiDriver_ShowStep();  // update screen
         }
         break;
     case CONFIG_STEP_SIZE_BUTTON_SWAP:  // Step size button swap on/off
-        temp_var_u8 = ts.freq_step_config & FREQ_STEP_SWAP_BTN? true: false;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.freq_step_config, FREQ_STEP_SWAP_BTN);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.freq_step_config,0,options,&clr, FREQ_STEP_SWAP_BTN);
         break;
     case MENU_DYNAMICTUNE:  // Dynamic Tune on/off
-        temp_var_u8 = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)? true: false;
-
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_DYN_TUNE_ENABLE);
         if(var_change)
         {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_DYN_TUNE_ENABLE);
             UiDriver_ShowStep();
         }
         break;
     case CONFIG_BAND_BUTTON_SWAP:   // Swap position of Band+ and Band- buttons
-        temp_var_u8 = ts.flags1 & FLAGS1_SWAP_BAND_BTN;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_SWAP_BAND_BTN);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_SWAP_BAND_BTN);
         break;
     case CONFIG_TX_DISABLE: // Step size button swap on/off
-        temp_var_u8 = ts.tx_disable & TX_DISABLE_ALWAYS;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+    {
+        uint16_t flag = ts.tx_disable;
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &flag,0,options,&clr, TX_DISABLE_ALWAYS);
+        ts.tx_disable = flag;
         if(var_change)
         {
             // FIXME: Call "abstract" function to update status of tune,
             // do not redraw menu button here directly
-            UiDriver_FButtonLabel(5,"TUNE",temp_var_u8?Grey1:White);
-            ts.tx_disable = temp_var_u8;
+            UiDriver_FButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);
         }
+    }
         break;
     case CONFIG_TX_OUT_ENABLE:      // Enable transmitting outside HAM bands
-        temp_var_u8 = (ts.flags1 & FLAGS1_TX_OUTSIDE_BANDS)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_TX_OUTSIDE_BANDS);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_TX_OUTSIDE_BANDS);
         break;
     case CONFIG_AUDIO_MAIN_SCREEN_MENU_SWITCH:  // AFG/(STG/CMP) and RIT/(WPM/MIC/LIN) are to change automatically with TX/RX
-        temp_var_u8 = ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_TX_AUTOSWITCH_UI_DISABLE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_TX_AUTOSWITCH_UI_DISABLE);
         break;
     case CONFIG_MUTE_LINE_OUT_TX:   // Enable/disable MUTE of TX audio on LINE OUT
-        temp_var_u8 = ts.flags1 & FLAGS1_MUTE_LINEOUT_TX;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if((var_change) && (!ts.iq_freq_mode))          // did the status change and is translate mode NOT active?
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_MUTE_LINEOUT_TX);
-        }
-
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_MUTE_LINEOUT_TX);
         if(ts.iq_freq_mode) // Mark RED if translate mode is active
         {
             clr = Red;
@@ -2578,11 +2526,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "%3u", ts.lineout_gain);
         break;
     case CONFIG_BEEP_ENABLE:    //
-        temp_var_u8 = ts.flags2 & FLAGS2_KEY_BEEP_ENABLE;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr,FLAGS2_KEY_BEEP_ENABLE);
         if(var_change)
         {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags2, FLAGS2_KEY_BEEP_ENABLE);
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
         break;
@@ -2659,27 +2605,15 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     //
     case CONFIG_FREQ_LIMIT_RELAX:   // Enable/disable Frequency tuning limits
-        temp_var_u8 = ts.flags1 & FLAGS1_FREQ_LIMIT_RELAX;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)          // did the status change and is translate mode NOT active?
-        {
-            if(temp_var_u8) // tuning limit is disabled
-                ts.flags1 |= FLAGS1_FREQ_LIMIT_RELAX;       // set bit
-            else            // tuning limit is enabled
-                ts.flags1 &= ~FLAGS1_FREQ_LIMIT_RELAX;      // clear bit
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_FREQ_LIMIT_RELAX);
+
         if(ts.flags1 & FLAGS1_FREQ_LIMIT_RELAX)             // tuning limit is disabled
         {
             clr = Orange;                   // warn user!
         }
         break;
     case CONFIG_FREQ_MEM_LIMIT_RELAX:   // Enable/disable Frequency memory limits
-        temp_var_u8 = ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)          // did the status change?
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags2, FLAGS2_FREQ_MEM_LIMIT_RELAX);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_FREQ_MEM_LIMIT_RELAX);
 
         if(ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX)             // frequency/memory limit is disabled
         {
@@ -2772,9 +2706,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.pa_bias);
         break;
     case CONFIG_FWD_REV_PWR_DISP:   // Enable/disable display of FWD/REV A/D inputs on power sensor
-        temp_var_u8 = swrm.pwr_meter_disp;
-        UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        swrm.pwr_meter_disp = temp_var_u8;
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &swrm.pwr_meter_disp,0,options,&clr);
         break;
     case CONFIG_RF_FWD_PWR_NULL:        // RF power FWD power meter calibrate
         if(swrm.pwr_meter_disp)
@@ -2829,12 +2761,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiDriverMenuBandRevCouplingAdjust(var, mode, COUPLING_23CM, options, &clr);
         break;
     case CONFIG_FWD_REV_SENSE_SWAP: // Enable/disable swap of FWD/REV A/D inputs on power sensor
-        temp_var_u8 = ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)          // did the status change and is translate mode NOT active?
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags1, FLAGS1_SWAP_FWDREV_SENSE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_SWAP_FWDREV_SENSE);
 
         if(ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE)                // Display status FWD/REV swapping
         {
@@ -3010,20 +2937,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_FULL, options, &clr);
         break;
     case CONFIG_REDUCE_POWER_ON_LOW_BANDS:
-        temp_var_u8 = ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags2, FLAGS2_LOW_BAND_BIAS_REDUCE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_LOW_BAND_BIAS_REDUCE);
         break;
     case CONFIG_REDUCE_POWER_ON_HIGH_BANDS:
-        temp_var_u8 = ts.flags2 & FLAGS2_HIGH_BAND_BIAS_REDUCE;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.flags2, FLAGS2_HIGH_BAND_BIAS_REDUCE);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_HIGH_BAND_BIAS_REDUCE);
         break;
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
         ts.dsp_nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
@@ -3375,12 +3292,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 //        UiMenu_ChangeFilterPathMemory(var, mode, options, &clr, FILTER_MODE_SAM,(select - MENU_FP_SAM_01)+1);
 //        break;
     case CONFIG_CAT_IN_SANDBOX:
-        temp_var_u8 = (ts.flags1 & FLAGS1_CAT_IN_SANDBOX)? 1 : 0;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            CLR_OR_SET_BITMASK(temp_var_u8,  ts.flags1, FLAGS1_CAT_IN_SANDBOX);
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_CAT_IN_SANDBOX);
 
         if(!(ts.flags1 & FLAGS1_CAT_IN_SANDBOX))
         {
@@ -3388,12 +3300,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case CONFIG_CAT_XLAT:   // CAT xlat reporting
-        temp_var_u8 = ts.xlat;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-            ts.xlat = temp_var_u8;
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.xlat,0,options,&clr);
         break;
     case MENU_DEBUG_TX_AUDIO:  // Step size button swap on/off
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.stream_tx_audio,
@@ -3568,13 +3475,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_DEBUG_ENABLE_INFO:  // Debug infos on LCD on/off
 
-        temp_var_u8 = ts.show_debug_info;
-
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.show_debug_info,0,options,&clr);
         if(var_change)
         {
-            UiDriver_DebugInfo_DisplayEnable(temp_var_u8);
+            UiDriver_DebugInfo_DisplayEnable(ts.show_debug_info);
         }
         break;
 #ifdef USE_USB
@@ -3602,12 +3506,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 #endif
     case MENU_DEBUG_NEW_NB:
-        temp_var_u8 = ts.new_nb;
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
-        if(var_change)
-        {
-		  ts.new_nb = temp_var_u8;
-        }
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
         break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";

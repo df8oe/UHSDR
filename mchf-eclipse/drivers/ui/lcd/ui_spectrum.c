@@ -44,6 +44,53 @@ float32_t m_DecayAlpha  = 0.05; //0.3297;
 static void     UiSpectrum_FrequencyBarText();
 static void		UiSpectrum_CalculateDBm();
 
+void UiSpectrum_UpdateSpectrumPixelParameters()
+{
+    static uint16_t old_magnify = 0xFF;
+    static bool old_cw_lsb = false;
+    static uint8_t old_dmod_mode = 0xFF;
+    static uint8_t old_iq_freq_mode = 0xFF;
+    static uint16_t old_cw_sidetone_freq = 0;
+
+    static bool force_update = true;
+
+    if (sd.magnify != old_magnify || force_update)
+    {
+        old_magnify = sd.magnify;
+        sd.pixel_per_hz = IQ_SAMPLE_RATE_F/((1 << old_magnify) * SPECTRUM_WIDTH);     // magnify mode is on
+        force_update = true;
+    }
+
+    if (ts.iq_freq_mode != old_iq_freq_mode  || force_update)
+    {
+        old_iq_freq_mode = ts.dmod_mode;
+        force_update = true;
+
+        if(!sd.magnify)     // is magnify mode on?
+        {
+            sd.rx_carrier_pos = SPECTRUM_WIDTH/2 - 0.5 - (AudioDriver_GetTranslateFreq()/sd.pixel_per_hz);
+        }
+        else        // magnify mode is on
+        {
+            sd.rx_carrier_pos = SPECTRUM_WIDTH/2 -0.5;                                // line is always in center in "magnify" mode
+        }
+    }
+    if (ts.cw_lsb != old_cw_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || force_update)
+    {
+        old_cw_lsb = ts.cw_lsb;
+        old_cw_sidetone_freq = ts.cw_sidetone_freq;
+        old_dmod_mode = ts.dmod_mode;
+
+        // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
+        sd.tx_carrier_offset =
+                ts.dmod_mode == DEMOD_CW ?
+                        (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
+                        :
+                        0.0;
+        sd.tx_carrier_pos = sd.rx_carrier_pos + sd.tx_carrier_offset;
+    }
+}
+
 static void UiSpectrum_FFTWindowFunction(char mode)
 {
     float32_t gcalc = 1/ads.codec_gain_calc;				// Get gain setting of codec and convert to multiplier factor
@@ -51,11 +98,9 @@ static void UiSpectrum_FFTWindowFunction(char mode)
     // Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
     // KA7OEI - 20150602
 
-
     switch(mode)
     {
-    case FFT_WINDOW_RECTANGULAR:	// No processing at all - copy from "Samples" buffer to "Windat" buffer
-//			arm_copy_f32(sd.FFT_Windat, sd.FFT_Samples,FFT_IQ_BUFF_LEN);	// use FFT data as-is
+    case FFT_WINDOW_RECTANGULAR:	// No processing at all
         break;
     case FFT_WINDOW_COSINE:			// Sine window function (a.k.a. "Cosine Window").  Kind of wide...
         for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
@@ -84,7 +129,7 @@ static void UiSpectrum_FFTWindowFunction(char mode)
     case FFT_WINDOW_HAMMING:		// Another Raised Cosine window - This is the narrowest with reasonably good sidelobe rejection.
         for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
         {
-            sd.FFT_Samples[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+            sd.FFT_Samples[i] = (0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_BLACKMAN:		// Approx. same "narrowness" as Hamming but not as good sidelobe rejection - probably best for "default" use.
@@ -105,43 +150,6 @@ static void UiSpectrum_FFTWindowFunction(char mode)
 
 }
 
-
-static int8_t UiSpectrum_GetGridCenterLine(int8_t reference) {
-    int8_t c = 0;
-    if (sd.magnify)
-    {
-        c = 0;
-    }
-    else
-    {
-        switch (ts.iq_freq_mode)
-        {
-        case FREQ_IQ_CONV_P12KHZ:
-            c = -2;
-            break;
-        case FREQ_IQ_CONV_P6KHZ:
-            c = -1;
-            break;
-        case FREQ_IQ_CONV_M6KHZ:
-            c = 1;
-            break;
-        case FREQ_IQ_CONV_M12KHZ:
-            c = 2;
-            break;
-        }
-    }
-
-    return c + reference;
-}
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiSpectrumCreateDrawArea
-//* Object              : draw the spectrum scope control
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiSpectrum_CreateDrawArea()
 {
     uint32_t clr;
@@ -168,6 +176,8 @@ void UiSpectrum_CreateDrawArea()
         UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &ts.scope_centre_grid_colour_active);
     }
 
+    UiSpectrum_UpdateSpectrumPixelParameters();
+
     // Clear screen where frequency information will be under graticule
     //
     UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
@@ -179,11 +189,11 @@ void UiSpectrum_CreateDrawArea()
     ts.dial_moved = 1; // TODO: HACK: always print frequency bar under spectrum display
     UiSpectrum_FrequencyBarText();
 
-    // draw centre line indicating the receive frequency
+    // draw center line indicating the tx carrier frequency
 
-    ts.c_line = UiSpectrum_GetGridCenterLine(4);
+    uint16_t c_line = sd.tx_carrier_pos;
 
-    UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + 32*ts.c_line + 1, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
+    UiLcdHy28_DrawStraightLine (POS_SPECTRUM_IND_X + c_line, (POS_SPECTRUM_IND_Y - 4 - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H - 15) + SPEC_LIGHT_MORE_POINTS, LCD_DIR_VERTICAL, ts.scope_centre_grid_colour_active);
 
     if(!ts.spectrum_size)		//don't draw text bar when size is BIG
     {
@@ -256,21 +266,13 @@ void UiSpectrum_CreateDrawArea()
                     ts.scope_grid_colour_active);
         }
 
-//        ts.c_line = UiSpectrum_GetGridCenterLine(4);
         // Vertical grid lines
         for(int i = 1; i < 8; i++)
         {
 
-            if (i == ts.c_line)
-            {
-                clr = ts.scope_centre_grid_colour_active;
-            }
-            else
-            {
-                clr = ts.scope_grid_colour_active;								// normal color if other lines
-            }
+            clr = ts.scope_grid_colour_active;
             // Save x position for repaint
-            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_IND_X + 32*i + 1);
+            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_IND_X + 32*i - 1);
 
             // Draw
             UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
@@ -278,7 +280,6 @@ void UiSpectrum_CreateDrawArea()
                     (POS_SPECTRUM_IND_H - 15 + y_add/2),
                     LCD_DIR_VERTICAL,
                     clr);
-
         }
 
         if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall.speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
@@ -293,14 +294,6 @@ void UiSpectrum_CreateDrawArea()
     }
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverClearSpectrumDisplay
-//* Object              : Clears the spectrum display
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiSpectrum_ClearDisplay()
 {
     UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
@@ -346,28 +339,7 @@ static inline bool UiSpectrum_Draw_IsVgrid(const uint16_t x, const uint16_t colo
     return repaint_v_grid;
 }
 
-static uint16_t UiSpectrum_Draw_GetCenterLineX()
-{
-    static uint16_t idx;
-
-    static const uint16_t  center[FREQ_IQ_CONV_MODE_MAX+1] = { 3,2,4,1,5 };
-    // list the idx for the different modes (which are numbered from 0)
-    // the list static const in order to have it in flash
-    // it would be faster in ram but this is not necessary
-
-    if(sd.magnify)
-    {
-        idx = 3;
-    }
-    else
-    {
-        idx = center[ts.iq_freq_mode];
-    }
-    return sd.vert_grid_id[idx];
-}
-
-
-void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
+void    UiSpectrum_DrawScope(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
 {
 
     int spec_height = SPECTRUM_HEIGHT; //x
@@ -388,8 +360,7 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
     bool      repaint_v_grid = false;
     clr = color_new;
 
-    uint16_t x_center_line = UiSpectrum_Draw_GetCenterLineX();
-
+    UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
 
     if(shift)
     {
@@ -477,14 +448,12 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
                 y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[SPEC_BUFF_LEN-1];
             }
 
-            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
+            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + sd.tx_carrier_pos))
             {
                 // x position is not on vertical centre line (the one that indicates the receive frequency)
 
                 // here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
                 // makes the spectrum display look more complete . . .
-                //
-
 
                 if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
                 { // plot line upwards
@@ -542,7 +511,7 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
                     // but during spectrum clear instead of masking
                     // grid lines with black - they are repainted
                     // TODO: This code is  always executed, since this function is always called with color_old == Black
-                    repaint_v_grid = UiSpectrum_Draw_IsVgrid(x, color_new, &clr, x_center_line);
+                    repaint_v_grid = UiSpectrum_Draw_IsVgrid(x, color_new, &clr, sd.tx_carrier_pos);
 
                     UiLcdHy28_BulkPixel_OpenWrite(x, 1, y1_old, len_old);
                     idx = 0;
@@ -586,8 +555,10 @@ void    UiSpectrum_DrawSpectrum(q15_t *fft_old, q15_t *fft_new, const ushort col
                     UiLcdHy28_BulkPixel_CloseWrite();
                     // Reset flag
                     if(repaint_v_grid)
+                    {
                         repaint_v_grid = 0;
-                    UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[ts.c_line - 1],
+                    }
+                    UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X + sd.tx_carrier_pos,
                                                 (POS_SPECTRUM_IND_Y -  4),
                                                 (POS_SPECTRUM_IND_H - 15),
                                                 LCD_DIR_VERTICAL,
@@ -808,9 +779,9 @@ void UiSpectrum_RedrawScopeDisplay()
             if(ts.dial_moved)
             {
                 ts.dial_moved = 0;	// Dial moved - reset indicator
-                //
+
                 UiSpectrum_FrequencyBarText();	// redraw frequency bar on the bottom of the display
-                //
+
             }
             // as I understand this, this calculates an IIR filter first order
             // AVGData = filt_factor * Sample[t] + (1 - filt_factor) * Sample [t - 1]
@@ -906,9 +877,9 @@ void UiSpectrum_RedrawScopeDisplay()
             uint32_t	clr;
             UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
             // Left part of screen(mask and update in one operation to minimize flicker)
-            UiSpectrum_DrawSpectrum(sd.FFT_BkpData + SPEC_BUFF_LEN/2, sd.FFT_DspData + SPEC_BUFF_LEN/2, Black, clr,0);
+            UiSpectrum_DrawScope(sd.FFT_BkpData + SPEC_BUFF_LEN/2, sd.FFT_DspData + SPEC_BUFF_LEN/2, Black, clr,0);
             // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
-            UiSpectrum_DrawSpectrum(sd.FFT_BkpData, sd.FFT_DspData, Black, clr,1);
+            UiSpectrum_DrawScope(sd.FFT_BkpData, sd.FFT_DspData, Black, clr,1);
 
             sd.state = 0;   // Stage 0 - collection of data by the Audio driver
             break;
@@ -919,23 +890,11 @@ void UiSpectrum_RedrawScopeDisplay()
         }
     }
 }
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverReDrawWaterfallDisplay
-//* Object              : state machine implementation
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
+
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch" - which is to say that I did not borrow any of it
 // from anywhere else, aside from keeping some of the general functions found in "Case 1".
-//
 void UiSpectrum_RedrawWaterfall()
 {
-    ulong i;
-
     if((ts.spectrum_scheduler == 0 ) && (ts.waterfall.speed > 0))	// is it time to update the scan, or is this scope to be disabled?
     {
         ts.spectrum_scheduler = (ts.waterfall.speed-1)*2;
@@ -1000,17 +959,15 @@ void UiSpectrum_RedrawWaterfall()
             sd.state++;
             break;
         }
-        //
+
         // De-linearize and normalize display data and do AGC processing
-        //
         case 4:
         {
             float32_t	min1=100000;
+
             float32_t	sig;
-            //
             // De-linearize data with dB/division
-            //
-            for(i = 0; i < (SPEC_BUFF_LEN); i++)
+            for(uint16_t i = 0; i < (SPEC_BUFF_LEN); i++)
             {
                 sig = log10f_fast(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
                 sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
@@ -1020,117 +977,77 @@ void UiSpectrum_RedrawWaterfall()
                 else
                     sd.FFT_DspData[i] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
             }
-            //
-            // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
-            //
 
-            for(i = 0; i < (SPEC_BUFF_LEN); i++)
+            // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
+            for(uint16_t i = 0; i < (SPEC_BUFF_LEN); i++)
             {
                 if(i < (SPEC_BUFF_LEN/2))	 		// build left half of spectrum data
                 {
-                    //					sd.FFT_Samples[i] = sd.FFT_DspData[i + FFT_IQ_BUFF_LEN/4];	// get data
                     sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i + SPEC_BUFF_LEN/2];	// get data
                 }
                 else	 							// build right half of spectrum data
                 {
-                    //					sd.FFT_Samples[i] = sd.FFT_DspData[i - FFT_IQ_BUFF_LEN/4];	// get data
                     sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i - SPEC_BUFF_LEN/2];	// get data
                 }
             }
 
-            //
             // Adjust the sliding window so that the lowest signal is always black
-            //
             sd.display_offset -= sd.agc_rate*min1/5;
-
-            //                         char txt[32];
-            //                         uint32_t    max_ptr;        // throw-away pointer for ARM maxval AND minval functions
-            //                         sprintf(txt, " %d,%d,%d ", (int)sd.agc_rate*1000, (int)(min1), (int)sd.display_offset*100);
-            //                         UiDriver_ShowDebugText(txt);
 
             sd.state++;
             break;
         }
         case 5:	// rescale waterfall horizontally, apply brightness/contrast, process pallate and put vertical line on screen, if enabled.
         {
-            //
             sd.wfall_line %= sd.wfall_size;	// make sure that the circular buffer is clipped to the size of the display area
-            //
-            //
+
             // Contrast:  100 = 1.00 multiply factor:  125 = multiply by 1.25 - "sd.wfall_contrast" already converted to 100=1.00
-            //
             arm_scale_f32(sd.FFT_Samples, sd.wfall_contrast, sd.FFT_Samples, SPEC_BUFF_LEN);
 
-            uint16_t center_pixel_pos;
-            // determine the pixel location for center line
 
-            if (sd.magnify)
-            {
-                center_pixel_pos = (SPEC_BUFF_LEN*4)/8;
-                // position of center is always in the middle if
-                // in magnify mode, so we fix that position here
-            }
-            else
-            {
+            UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
 
-                switch (ts.iq_freq_mode) {
-                case FREQ_IQ_CONV_P6KHZ:
-                    center_pixel_pos = (SPEC_BUFF_LEN*3)/8;
-                    break;
-                case FREQ_IQ_CONV_M6KHZ:
-                    center_pixel_pos = (SPEC_BUFF_LEN*5)/8;
-                    break;
-                case FREQ_IQ_CONV_P12KHZ:
-                    center_pixel_pos = (SPEC_BUFF_LEN*2)/8;
-                    break;
-                case FREQ_IQ_CONV_M12KHZ:
-                    center_pixel_pos = (SPEC_BUFF_LEN*6)/8;
-                    break;
-                default:
-                    center_pixel_pos = (SPEC_BUFF_LEN*4)/8;
-                    break;
-                }
-            }
+
+            const uint16_t tx_line_pixel_pos = sd.tx_carrier_pos;
 
             // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-            for(i = 0; i < SPEC_BUFF_LEN; i++)
+            for(uint16_t i = 0; i < SPEC_BUFF_LEN; i++)
             {
                 if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)	// is there an illegal color value?
                 {
                     sd.FFT_Samples[i] = NUMBER_WATERFALL_COLOURS - 1;	// yes - clip it
                 }
 
-                sd.waterfall[sd.wfall_line][i] = (ushort)sd.FFT_Samples[i];	// save the manipulated value in the circular waterfall buffer
+                sd.waterfall[sd.wfall_line][i] = sd.FFT_Samples[i];	// save the manipulated value in the circular waterfall buffer
             }
 
             // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
-            sd.waterfall[sd.wfall_line][center_pixel_pos] = NUMBER_WATERFALL_COLOURS;
+            if (tx_line_pixel_pos < SPECTRUM_WIDTH)
+            sd.waterfall[sd.wfall_line][tx_line_pixel_pos] = NUMBER_WATERFALL_COLOURS;
 
             sd.wfall_line++;		// bump to the next line in the circular buffer for next go-around
 
             sd.state++;
             break;
         }
-        //
+
         //  update LCD control
-        //
         case 6:
         {
             uchar lptr = sd.wfall_line;		// get current line of "bottom" of waterfall in circular buffer
 
-            sd.wfall_line_update++;									// update waterfall line count
+            sd.wfall_line_update++;								    // update waterfall line count
             sd.wfall_line_update %= ts.waterfall.vert_step_size;	// clip it to number of lines per iteration
 
             if(!sd.wfall_line_update)	 							// if it's count is zero, it's time to move the waterfall up
             {
-                //
+
                 lptr %= sd.wfall_size;		// do modulus limit of spectrum high
-                //
+
                 // set up LCD for bulk write, limited only to area of screen with waterfall display.  This allow data to start from the
                 // bottom-left corner and advance to the right and up to the next line automatically without ever needing to address
                 // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
                 // line and the number of lines.
-                //
 
                 UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_height);
 
@@ -1138,7 +1055,7 @@ void UiSpectrum_RedrawWaterfall()
 
                 for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)	 				// set up counter for number of lines defining height of waterfall
                 {
-                    for(i = 0; i < (SPECTRUM_WIDTH); i++)	 	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
+                    for(uint16_t i = 0; i < (SPECTRUM_WIDTH); i++)	 	// scan to copy one line of spectral data - "unroll" to optimize for ARM processor
                     {
                         spectrum_pixel_buf[i] = sd.waterfall_colours[sd.waterfall[lptr][i]];	// write to memory using waterfall color from palette
                     }
@@ -1168,7 +1085,66 @@ void UiSpectrum_InitSpectrumDisplay()
         UiSpectrum_ClearDisplay();			// clear display under spectrum scope
         UiSpectrum_CreateDrawArea();
         UiSpectrum_InitSpectrumDisplayData();
-        UiDriver_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+        UiSpectrum_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+}
+
+/**
+ * @brief Show a small horizontal line below the spectrum to indicate the rx passband of the currently active filter
+ */
+void UiSpectrum_DisplayFilterBW()
+{
+
+    if(ts.menu_mode == 0)
+    {// bail out if in menu mode
+        // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
+
+        const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
+        const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
+        const float32_t width = filter_p->width;
+        const float32_t offset = path_p->offset!=0 ? path_p->offset : width/2;
+
+        UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
+
+
+        float32_t width_pixel = width/sd.pixel_per_hz;                          // calculate width of line in pixels
+
+        float32_t offset_pixel = offset/sd.pixel_per_hz;                            // calculate filter center frequency offset in pixels
+
+        float32_t left_filter_border_pos;
+
+        if(RadioManagement_UsesBothSidebands(ts.dmod_mode))     // special cases - AM, SAM and FM, which are double-sidebanded
+        {
+            left_filter_border_pos = sd.rx_carrier_pos - width_pixel;                   // line starts "width" below center
+            width_pixel *= 2;                       // the width is double in AM & SAM, above and below center
+        }
+        else if(RadioManagement_LSBActive(ts.dmod_mode))    // not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
+        {
+            left_filter_border_pos = sd.rx_carrier_pos - (offset_pixel + (width_pixel/2));  // if LSB it will be below zero Hz
+        }
+        else                // USB mode
+        {
+            left_filter_border_pos = sd.rx_carrier_pos + (offset_pixel - (width_pixel/2));          // if USB it will be above zero Hz
+        }
+
+        uint32_t clr;
+        // get color for line
+        UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
+        //  erase old line by clearing whole area
+        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), SPECTRUM_WIDTH, LCD_DIR_HORIZONTAL, Black);
+
+        if(left_filter_border_pos < 0)          // prevents line to leave left border
+        {
+            width_pixel = width_pixel + left_filter_border_pos;
+            left_filter_border_pos = 0;
+        }
+        if(left_filter_border_pos + width_pixel > SPECTRUM_WIDTH)                                       // prevents line to leave right border
+        {
+            width_pixel = (float32_t)SPECTRUM_WIDTH - left_filter_border_pos;
+        }
+
+        // draw line
+        UiLcdHy28_DrawStraightLineDouble(((float32_t)POS_SPECTRUM_IND_X + roundf(left_filter_border_pos)), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
+    }
 }
 
 /**
@@ -1176,51 +1152,43 @@ void UiSpectrum_InitSpectrumDisplay()
  */
 static void UiSpectrum_FrequencyBarText()
 {
-    float   freq_calc;
-    ulong   i, clr;
-    char    txt[16], *c;
-    float   grat;
-    int centerIdx;
 
-    if(ts.spectrum_freqscale_colour == SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
-        return;
-
-    grat = (float)6 / (1 << sd.magnify);
-
-    //
-    // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
-    // (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)
-    //
-    // get color for frequency scale
-    //
-    UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
+    char    txt[16];
 
 
-    freq_calc = (float)(df.tune_new/TUNE_MULT);      // get current frequency in Hz
-
-    if(!sd.magnify)         // if magnify is off, way *may* have the graticule shifted.  (If it is on, it is NEVER shifted from center.)
+    if (ts.spectrum_freqscale_colour != SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
     {
-        freq_calc += AudioDriver_GetTranslateFreq();
-    }
+        float32_t grat = 6.0f / (float32_t)(1 << sd.magnify);
 
-    if(sd.magnify < 3)
-    {
-        freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz
-    }
-    if(sd.magnify > 2 && sd.magnify < 5)
-    {
-        freq_calc = roundf(freq_calc/100) / 10; // round graticule frequency to the nearest 100Hz
-    }
-    if(sd.magnify == 5)
-    {
-        freq_calc = roundf(freq_calc/50) / 20; // round graticule frequency to the nearest 50Hz
-    }
+        // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
+        // (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)
 
-    centerIdx = UiSpectrum_GetGridCenterLine(0);
+        // get color for frequency scale
+        uint32_t  clr;
+        UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
-    {
+
+        float32_t freq_calc = df.tune_new/TUNE_MULT;      // get current tune frequency in Hz
+
+        if(sd.magnify < 3)
+        {
+            freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz
+        }
+        else if (sd.magnify < 5)
+        {
+            freq_calc = roundf(freq_calc/100) / 10; // round graticule frequency to the nearest 100Hz
+        }
+        else if(sd.magnify == 5)
+        {
+            freq_calc = roundf(freq_calc/50) / 20; // round graticule frequency to the nearest 50Hz
+        }
+
+
+        int16_t centerIdx = -100; // UiSpectrum_GetGridCenterLine(0);
+
         // remainder of frequency/graticule markings
         const static int idx2pos[2][9] = {{0,26,58,90,122,154,186,218, 242},{0,26,58,90,122,154,186,209, 229} };
+#if 0
         const static int centerIdx2pos[] = {62,94,130,160,192};
 
         if(sd.magnify < 3)
@@ -1229,40 +1197,38 @@ static void UiSpectrum_FrequencyBarText()
         }
         else
         {
-            float disp_freq = freq_calc+(centerIdx*grat);
-            int bignum = (int)disp_freq;
-            int smallnum = (int)roundf((disp_freq-bignum)*100);
+            float32_t disp_freq = freq_calc+(centerIdx*grat);
+            int bignum = disp_freq;
+            int smallnum = roundf((disp_freq-bignum)*100);
             snprintf(txt,16, "  %u.%02u  ", bignum,smallnum); // build string for center frequency precision 100Hz/10Hz
         }
-
-        i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
+        uint32_t i = centerIdx2pos[centerIdx+2] -((strlen(txt)-2)*4);    // calculate position of center frequency text
         UiLcdHy28_PrintText((POS_SPECTRUM_IND_X + i),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),txt,clr,Black,4);
+#endif
 
 
-        for (int idx = -4; idx < 5; idx++)
+        for (int idx = -4; idx < 5; idx += (sd.magnify < 2) ? 1 : 2 )
         {
-            int pos = idx2pos[sd.magnify < 3? 0 : 1][idx+4];
+            int pos = idx2pos[sd.magnify < 2? 0 : 1][idx+4];
+
             if (idx != centerIdx)
             {
+                char *c;
                 if(sd.magnify < 3)
                 {
-                    snprintf(txt,16, " %lu ", (ulong)(freq_calc+(idx*grat)));   // build string for middle-left frequency (1khz precision)
-                    c = &txt[strlen(txt)-3];  // point at 2nd character from the end
+                    snprintf(txt,16, "%02lu", ((uint32_t)(freq_calc+(idx*grat)))%100);   // build string for middle-left frequency (1khz precision)
+                    c = txt;  // point at 2nd character from the end
                 }
                 else
                 {
-                    float disp_freq = freq_calc+(idx*grat);
-                    int bignum = (int)disp_freq;
-                    int smallnum = (int)roundf((disp_freq-bignum)*100);
+                    float32_t disp_freq = freq_calc+(idx*grat);
+                    int bignum = disp_freq;
+                    int smallnum = roundf((disp_freq-bignum)*100);
                     snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
                     c = &txt[strlen(txt)-5];  // point at 5th character from the end
                 }
 
                 UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-            }
-            if(sd.magnify > 2)
-            {
-                idx++;
             }
         }
     }
@@ -1342,53 +1308,19 @@ static void UiSpectrum_CalculateDBm()
     {
         if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
         {
-            float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
+            const float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
+            const float32_t cons = ts.dbm_constant - 225; // -225; //- 227.0;
+            const int buff_len_int = FFT_IQ_BUFF_LEN;
+            const float32_t buff_len = buff_len_int;
 
-            float32_t cons = (float32_t)ts.dbm_constant - 225; // -225; //- 227.0;
-            float32_t  Lbin, Ubin;
-            float32_t bw_LOWER = 0.0;
-            float32_t bw_UPPER = 0.0;
-            float32_t sum_db = 0.0;
-            int posbin = 0;
-            float32_t buff_len = (float32_t) FFT_IQ_BUFF_LEN;
-
-
-            float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / buff_len);
             // width of a 256 tap FFT bin = 187.5Hz
             // we have to take into account the magnify mode
             // --> recalculation of bin_BW
-            bin_BW = bin_BW / (1 << sd.magnify); // correct bin bandwidth is determined by the Zoom FFT display setting
+            // correct bin bandwidth is determined by the Zoom FFT display setting
+            const float32_t bin_BW = IQ_SAMPLE_RATE_F * 2.0 / (buff_len * (1 << sd.magnify)) ;
 
-            int buff_len_int = FFT_IQ_BUFF_LEN;
-
-            //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
-
-            // frequency translation off, IF = 0 Hz OR
-            // in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
-
-            if(!ts.iq_freq_mode || sd.magnify != 0)
-            {
-                posbin = buff_len_int / 4; // right in the middle!
-            } // frequency translation ON
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-            {
-                posbin = (buff_len_int / 4) - (buff_len_int / 16);
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-            {
-                posbin = (buff_len_int / 4) + (buff_len_int / 16);
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)	 	// we are in RF LO HIGH mode (tuning is below center of screen)
-            {
-                posbin = (buff_len_int / 4) - (buff_len_int / 8);
-            }
-            else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)	 	// we are in RF LO LOW mode (tuning is above center of screen)
-            {
-                posbin = (buff_len_int / 4) + (buff_len_int / 8);
-            }
-
-            float32_t width = (float32_t)FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-            float32_t offset = (float32_t)FilterPathInfo[ts.filter_path].offset;
+            float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+            float32_t offset = FilterPathInfo[ts.filter_path].offset;
 
             if (offset == 0)
             {
@@ -1400,6 +1332,9 @@ static void UiSpectrum_CalculateDBm()
 
             //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
             //	= determine bandwith separately for lower and upper sideband
+
+            float32_t bw_LOWER = 0.0;
+            float32_t bw_UPPER = 0.0;
 
             if (RadioManagement_UsesBothSidebands(ts.dmod_mode) == true)
             {
@@ -1418,10 +1353,41 @@ static void UiSpectrum_CalculateDBm()
             }
 
 
+            //  determine posbin (where we receive at the moment) from ts.iq_freq_mode
+
+            // frequency translation off, IF = 0 Hz OR
+            // in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
+
+            int bin_offset = 0;
+
+
+            if(sd.magnify == 0)
+            {
+                if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)       // we are in RF LO HIGH mode (tuning is below center of screen)
+                {
+                    bin_offset = - (buff_len_int / 16);
+                }
+                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)      // we are in RF LO LOW mode (tuning is above center of screen)
+                {
+                    bin_offset = (buff_len_int / 16);
+                }
+                else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)     // we are in RF LO HIGH mode (tuning is below center of screen)
+                {
+                    bin_offset =  - (buff_len_int / 8);
+                }
+                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)     // we are in RF LO LOW mode (tuning is above center of screen)
+                {
+                    bin_offset =  (buff_len_int / 8);
+                }
+            }
+
+            int posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
+
+
             // calculate upper and lower limit for determination of signal strength
             // = filter passband is between the lower bin Lbin and the upper bin Ubin
-            Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
-            Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
+            float32_t Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
+            float32_t Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
 
             // take care of filter bandwidths that are larger than the displayed FFT bins
             if(Lbin < 0)
@@ -1433,20 +1399,18 @@ static void UiSpectrum_CalculateDBm()
                 Ubin = 255;
             }
 
-            for(int32_t i = 0; i < (buff_len_int/2); i++)
+            for(int32_t i = 0; i < (buff_len_int/4); i++)
             {
-                if(i < (buff_len_int/4))	 		// build left half of magnitude data
-                {
-                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
-                }
-                else	 							// build right half of magnitude data
-                {
-                    sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
-                }
+                sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
+            }
+            for(int32_t i = buff_len_int/4; i < (buff_len_int/2); i++)
+            {
+                sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
             }
 
+            float32_t sum_db = 0.0;
             // determine the sum of all the bin values in the passband
-            for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+            for (int c = Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
             {
                 sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
             }
@@ -1503,7 +1467,7 @@ static void UiSpectrum_CalculateDBm()
             sm.dbm = m_AverageMagdbm; // write average into variable for S-meter display
             sm.dbmhz = m_AverageMagdbmhz; // write average into variable for S-meter display
         }
-//        ts.dBm_count = ts.sysclock;				// reset timer
+
         UiSpectrum_DisplayDbm();
     }
 }
