@@ -225,9 +225,13 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
             break;
         case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
             if(ts.cw_lsb)
+            {
                 tune_freq += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
+            }
             else
+            {
                 tune_freq -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
+            }
         }
     }
 
@@ -390,6 +394,73 @@ Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
     return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
 }
 
+/**
+ * @brief returns the current LO Tune Frequency for TX
+ * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ */
+uint32_t RadioManagement_GetTXDialFrequency()
+{
+    uint32_t retval;
+    if (ts.dmod_mode != TRX_MODE_TX)
+    {
+        if(is_splitmode())                  // is SPLIT mode active and?
+        {
+            uint8_t vfo_tx;
+            if (is_vfo_b())
+            {
+                vfo_tx = VFO_A;
+            }
+            else
+            {
+                vfo_tx = VFO_B;
+            }
+            retval = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+        }
+        else
+        {
+            retval = df.tune_new;
+        }
+    }
+    else
+    {
+        retval = df.tune_new;
+    }
+    return retval;
+}
+/**
+ * @brief returns the current LO Dial Frequency for RX
+ * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ */
+uint32_t RadioManagement_GetRXDialFrequency()
+{
+    uint32_t baseval;
+    if (ts.dmod_mode != TRX_MODE_RX)
+    {
+        if(is_splitmode())                  // is SPLIT mode active?
+        {
+            uint8_t vfo_rx;
+            if (is_vfo_b())
+            {
+                vfo_rx = VFO_B;
+            }
+            else
+            {
+                vfo_rx = VFO_A;
+            }
+            baseval = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-A frequency
+        }
+        else
+        {
+            baseval = df.tune_new;
+        }
+    }
+    else
+    {
+        baseval = df.tune_new;
+    }
+
+    return baseval + (ts.rit_value*20)*TUNE_MULT;
+}
 
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
@@ -416,13 +487,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             if(ts.txrx_mode == TRX_MODE_RX)                         // did we want to enter TX mode?
             {
-                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in VFO location (B)
+                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in RX VFO location
             }
-            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with TX VFO frequency
         }
         else                    // we are in RX mode
         {
-            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-B frequency
+            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with RX VFO frequency
         }
     }
     else

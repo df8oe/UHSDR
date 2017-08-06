@@ -2618,10 +2618,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
     if(mode == UFM_SMALL_TX)
     // are we updating the TX frequency (small, lower display)?
     {
-        uint8_t tx_vfo = is_vfo_b()?VFO_A:VFO_B;
-
-        // TX uses the other VFO; RX == A -> TX == B and vice versa
-        dial_freq = vfo[tx_vfo].band[ts.band].dial_value / TUNE_MULT;
+        dial_freq = RadioManagement_GetTXDialFrequency() / TUNE_MULT;
 
         // we check with the si570 code if the frequency is tunable, we do not tune to it.
         lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
@@ -2638,9 +2635,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
     if (mode == UFM_SMALL_RX && ts.txrx_mode == TRX_MODE_TX )
     // we are not going to show the tx frequency here (aka dial_freq) so we cannot use dial_freq
     {
-        uint8_t rx_vfo = is_vfo_b()?VFO_B:VFO_A;
-
-        dial_freq = vfo[rx_vfo].band[ts.band].dial_value / TUNE_MULT;
+        dial_freq = RadioManagement_GetRXDialFrequency() / TUNE_MULT;
 
         // we check with the si570 code if the frequency is tunable, we do not tune to it.
         // lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
@@ -2658,7 +2653,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
                 UiDriver_DisplayBandForFreq(dial_freq);
                 // check which band in which we are currently tuning and update the display
 
-                UiDriver_UpdateLcdFreq(dial_freq + ((ts.txrx_mode == TRX_MODE_RX)?(ts.rit_value*20):0) ,White, UFM_SECONDARY);
+                UiDriver_UpdateLcdFreq(RadioManagement_GetRXDialFrequency() / TUNE_MULT ,White, UFM_SECONDARY);
                 // set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
                 // color argument is not being used by secondary display
             }
@@ -3848,7 +3843,11 @@ static void UiDriver_CheckEncoderThree()
             case ENC_THREE_MODE_RIT:
                 if(ts.txrx_mode == TRX_MODE_RX)
                 {
+                    int16_t old_rit_value =ts.rit_value;
                     ts.rit_value = change_and_limit_int(ts.rit_value,pot_diff_step,MIN_RIT_VALUE,MAX_RIT_VALUE);
+
+                    ts.dial_moved = ts.rit_value != old_rit_value;
+
                     // Update RIT
                     UiDriver_DisplayRit(1);
                     // Change frequency
