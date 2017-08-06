@@ -302,7 +302,7 @@ bool UiDriverMenuItemChangeEnableOnOffBool(int var, uint8_t mode, volatile bool*
 {
     uint8_t temp = *val_ptr;
 
-    bool res = UiDriverMenuItemChangeOnOff(var, mode, &temp, val_default);
+    bool res = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp, val_default, options, clr_ptr);
     *val_ptr = temp;
     return res;
 }
@@ -310,7 +310,7 @@ bool UiDriverMenuItemChangeEnableOnOffFlag(int var, uint8_t mode, volatile uint1
 {
     uint8_t temp = (*val_ptr & mask)?1:0;
 
-    bool res = UiDriverMenuItemChangeOnOff(var, mode, &temp, val_default);
+    bool res = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp, val_default, options, clr_ptr);
 
     CLR_OR_SET_BITMASK(temp,*val_ptr,mask);
 

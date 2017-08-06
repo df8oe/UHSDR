@@ -81,12 +81,16 @@ void UiSpectrum_UpdateSpectrumPixelParameters()
         old_cw_sidetone_freq = ts.cw_sidetone_freq;
         old_dmod_mode = ts.dmod_mode;
 
+        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
-        sd.tx_carrier_offset =
-                ts.dmod_mode == DEMOD_CW ?
-                        (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
-                        :
-                        0.0;
+                sd.tx_carrier_offset =
+                        tx_vfo_offset +
+                        (
+                                ts.dmod_mode == DEMOD_CW ?
+                                        (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
+                                        :
+                                        0.0
+                        );
         sd.tx_carrier_pos = sd.rx_carrier_pos + sd.tx_carrier_offset;
     }
 }
@@ -1155,6 +1159,7 @@ static void UiSpectrum_FrequencyBarText()
 
     char    txt[16];
 
+    UiSpectrum_UpdateSpectrumPixelParameters();
 
     if (ts.spectrum_freqscale_colour != SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
     {
@@ -1168,8 +1173,13 @@ static void UiSpectrum_FrequencyBarText()
         UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
 
-        float32_t freq_calc = df.tune_new/TUNE_MULT;      // get current tune frequency in Hz
+        float32_t freq_calc = RadioManagement_GetRXDialFrequency()/TUNE_MULT;      // get current tune frequency in Hz
 
+        if (sd.magnify == 0)
+        {
+            freq_calc += AudioDriver_GetTranslateFreq();
+            // correct for display center not being RX center frequency location
+        }
         if(sd.magnify < 3)
         {
             freq_calc = roundf(freq_calc/1000); // round graticule frequency to the nearest kHz

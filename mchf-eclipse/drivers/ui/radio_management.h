@@ -181,7 +181,7 @@ uint8_t RadioManagement_GetBand(ulong freq);
 bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level);
 bool RadioManagement_Tune(bool tune);
 bool RadioManagement_UpdatePowerAndVSWR();
-void    RadioManagement_SetHWFiltersForFrequency(ulong freq);
+void RadioManagement_SetHWFiltersForFrequency(ulong freq);
 void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
 void RadioManagement_HandlePttOnOff();
@@ -206,6 +206,10 @@ void RadioManagement_ToggleVfoAB();
 
 bool RadioManagement_FmDevIs5khz();
 void RadioManagement_FmDevSet5khz(bool is5khz);
+
+uint32_t RadioManagement_GetTXDialFrequency();
+uint32_t RadioManagement_GetRXDialFrequency();
+
 
 inline void RadioManagement_ToggleVfoMem()
 {
