@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-01T10:11:55  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-06T10:01:21  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-01T10:11:55  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-06T10:01:21  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -578,7 +578,7 @@
              ];
         
         "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
-             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | Spec Line Colour"
+             label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | TX Carrier Colour"
              shape = record
              ];
         

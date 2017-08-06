@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-11427 752,-11427 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;08&#45;01T10:11:55 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;08&#45;06T10:01:21 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3705.5"/>
@@ -1340,7 +1340,7 @@
 <polygon fill="none" stroke="black" points="408,-6276.5 408,-6322.5 703,-6322.5 703,-6276.5 408,-6276.5"/>
 <text text-anchor="middle" x="555.5" y="-6307.3" font-family="Times,serif" font-size="14.00">MENU_SPECTRUM_CENTER_LINE_COLOUR</text>
 <polyline fill="none" stroke="black" points="408,-6299.5 703,-6299.5 "/>
-<text text-anchor="middle" x="555.5" y="-6284.3" font-family="Times,serif" font-size="14.00">Spec Line Colour</text>
+<text text-anchor="middle" x="555.5" y="-6284.3" font-family="Times,serif" font-size="14.00">TX Carrier Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_CENTER_LINE_COLOUR -->
 <g id="edge225" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_CENTER_LINE_COLOUR</title>

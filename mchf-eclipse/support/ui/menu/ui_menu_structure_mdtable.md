@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-08-01T10:11:59  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-08-06T10:01:25  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-08-01T10:11:59  by "./ui_menu_structure_mdtable.py"
+generated at  2017-08-06T10:01:25  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -131,7 +131,7 @@ generated at  2017-08-01T10:11:59  by "./ui_menu_structure_mdtable.py"
 | **Spectrum Size**             (                         MENU_SPECTRUM_SIZE) | Change height of spectrum display              | 
 | **Spectrum Filter**           (              MENU_SPECTRUM_FILTER_STRENGTH) | Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum. | 
 | **Spec FreqScale Colour**     (             MENU_SPECTRUM_FREQSCALE_COLOUR) | Colour of the small frequency digits under the spectrum display. | 
-| **Spec Line Colour**          (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display. | 
+| **TX Carrier Colour**         (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the TX carrier frequency in the spectrum or waterdall display. | 
 | **Spectrum FFT Wind.**        (            CONFIG_SPECTRUM_FFT_WINDOW_TYPE) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
 | **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
 | **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
