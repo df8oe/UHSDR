@@ -680,29 +680,17 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 bool RadioManagement_CalculateCWSidebandMode()
 {
     bool retval = false;
-    switch(ts.cw_offset_mode)
+    switch(RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode)->sideband_mode)
     {
-    case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
-    case CW_OFFSET_AUTO_RX:
-    case CW_OFFSET_AUTO_SHIFT:
+    case CW_SB_AUTO:                     // For "auto" modes determine if we are above or below threshold frequency
         // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        if (df.tune_new/TUNE_MULT > USB_FREQ_THRESHOLD || RadioManagement_GetBand(df.tune_new/TUNE_MULT) == BAND_MODE_60)   // is the current frequency above the USB threshold or is it 60m?
-        {
-            retval = false;                      // yes - indicate that it is USB
-        }
-        else
-        {
-            retval = true;                      // no - LSB
-        }
+        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60)
+        // is the current frequency below the USB threshold AND is it not 60m? -> LSB
         break;
-    case CW_OFFSET_LSB_TX:
-    case CW_OFFSET_LSB_RX:
-    case CW_OFFSET_LSB_SHIFT:
-        retval = true;              // It is LSB
+    case CW_SB_LSB:
+        retval = true;
         break;
-    case CW_OFFSET_USB_TX:
-    case CW_OFFSET_USB_RX:
-    case CW_OFFSET_USB_SHIFT:
+    case CW_SB_USB:
     default:
         retval = false;
         break;

@@ -263,9 +263,9 @@ void TransceiverStateInit(void)
     ts.version_number_release	= 0;			// version release - used to detect firmware change
     ts.version_number_major = 0;				// version build - used to detect firmware change
     ts.nb_agc_time_const	= 0;				// used to calculate the AGC time constant
-    ts.cw_offset_mode	= 0;					// CW offset mode (USB, LSB, etc.)
-    ts.cw_lsb			= 0;					// Flag that indicates CW operates in LSB mode when TRUE
-    ts.iq_freq_mode		= 0;					// used to set/configure the I/Q frequency/conversion mode
+    ts.cw_offset_mode	= CW_OFFSET_USB_RX;		// CW offset mode (USB, LSB, etc.)
+    ts.cw_lsb			= false;				// Flag that indicates CW operates in LSB mode when TRUE
+    ts.iq_freq_mode		= FREQ_IQ_CONV_MODE_DEFAULT;					// used to set/configure the I/Q frequency/conversion mode
     ts.conv_sine_flag	= 0;					// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
     ts.lsb_usb_auto_select	= 0;				// holds setting of LSB/USB auto-select above/below 10 MHz
     ts.last_tuning		= 0;					// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
