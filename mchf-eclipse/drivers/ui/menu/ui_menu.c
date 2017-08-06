@@ -353,16 +353,24 @@ bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t m
 
 void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t demod_mode_disable)
 {
-    uint8_t mode_disable = (ts.demod_mode_disable & demod_mode_disable) > 0;
-    UiDriverMenuItemChangeDisableOnOff(var, mode, &mode_disable,0,options,clr_ptr);
-    if(mode_disable == true)
+	uint8_t var_change;
+    uint8_t mode_disable = 1;
+    if (ts.demod_mode_disable & demod_mode_disable)
     {
+  	  mode_disable = 0;
+    }
+    var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &mode_disable,0,options,clr_ptr);
+	if (var_change)
+	{
+  	  if(mode_disable == false)
+  	  {
         ts.demod_mode_disable |= demod_mode_disable;
-    }
-    else
-    {
+  	  }
+  	  else
+  	  {
         ts.demod_mode_disable &= ~demod_mode_disable;
-    }
+  	  }
+  	}
 }
 
 void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile iq_balance_data_t* val_ptr, const uint16_t txrx_mode, int32_t min, int32_t max, iq_trans_idx_t valid_for)
@@ -3100,11 +3108,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.nb_agc_time_const);
         break;
     case CONFIG_AM_TX_FILTER_DISABLE:   // Enable/disable AM TX audio filter
-        temp_var_u8 = ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE;
-        var_change = UiDriverMenuItemChangeDisableOnOff(var, mode, &temp_var_u8,0,options,&clr);
+        temp_var_u8 = !(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE);
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
         if(var_change)          // did the status change and is translate mode NOT active?
         {
-            CLR_OR_SET_BITMASK(temp_var_u8,  ts.flags1, FLAGS1_AM_TX_FILTER_DISABLE);
+            CLR_OR_SET_BITMASK(!temp_var_u8,  ts.flags1, FLAGS1_AM_TX_FILTER_DISABLE);
         }
         if(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE)             // Display status of TX audio filter
         {
