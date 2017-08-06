@@ -209,6 +209,7 @@ void RadioManagement_FmDevSet5khz(bool is5khz);
 
 uint32_t RadioManagement_GetTXDialFrequency();
 uint32_t RadioManagement_GetRXDialFrequency();
+int32_t  RadioManagement_GetCWDialOffset();
 
 
 inline void RadioManagement_ToggleVfoMem()
