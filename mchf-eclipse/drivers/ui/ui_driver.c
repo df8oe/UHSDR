@@ -1186,6 +1186,10 @@ static void UiDriver_ProcessKeyboard()
                 if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
                 {
                     UiDriver_ChangeToNextDemodMode(0);
+                    if (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE))	// redraw scope display due to RX/TX marker line position changes
+                    {
+                  	  UiSpectrum_InitSpectrumDisplay();
+                  	}
                 }
                 break;
             case BUTTON_G2_PRESSED:		// BUTTON_G2
