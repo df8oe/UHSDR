@@ -126,7 +126,8 @@ enum
     DB_DIV_20,
     S_1_DIV,
     S_2_DIV,
-    S_3_DIV
+    S_3_DIV,
+    SCOPE_SCALE_NUM
 };
 //
 #define	DB_DIV_ADJUST_MIN					DB_DIV_DEFAULT

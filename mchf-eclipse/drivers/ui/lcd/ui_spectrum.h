@@ -141,6 +141,7 @@ typedef struct SpectrumDisplay
 
     // Addresses of horizontal grid lines on x axis
     ushort  horz_grid_id[5];
+    uint8_t upper_horiz_gridline;  // how many grid lines to use
 
     // State machine current state
     uchar   state;
@@ -166,13 +167,15 @@ typedef struct SpectrumDisplay
     ushort  wfall_line_update;  // used to set the number of lines per update on the waterfall
     float   wfall_contrast; // used to adjust the contrast of the waterfall display
 
-    ushort  waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
+    uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
     uint8_t  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][SPEC_BUFF_LEN];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
 
-    uchar   wfall_line;                                     // pointer to current line of waterfall data
-    uchar   wfall_size;                 // vertical size of the waterfall
-    uchar   wfall_height;
-    uchar   wfall_ystart;
+    uint16_t wfall_line;                                     // pointer to current line of waterfall data
+    uint16_t wfall_size;                 // vertical size of the waterfall
+    uint16_t wfall_ystart;
+
+    uint16_t scope_size;
+    uint16_t scope_ystart;
 
     float32_t pixel_per_hz;        // how many Hertz is one pixel in the spectrum
     float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)

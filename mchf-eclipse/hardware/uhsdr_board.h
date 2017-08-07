@@ -865,7 +865,6 @@ typedef struct TransceiverState
     int		tx_bass_gain;			// gain of the TX low shelf EQ filter
     int		tx_treble_gain;			// gain of the TX high shelf EQ filter
 
-    bool	AM_experiment;			// for AM demodulation experiments, not for "public" use
 //    bool	dBm_Hz_Test;			// for testing only
 //    ulong	dBm_count;				// timer for calculating RX dBm
     uint8_t 	display_dbm;			// display dbm or dbm/Hz or OFF

@@ -1355,15 +1355,8 @@ static void UiDriver_ProcessKeyboard()
                 break;
             case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
             {
-                UiDriver_UpdateDisplayAfterParamChange();			// generate "reference" for sidetone frequency
-                if(ts.AM_experiment)
-                {
-                    ts.AM_experiment = 0;
-                }
-                else
-                {
-                    ts.AM_experiment = 1;
-                }
+                UiDriver_UpdateDisplayAfterParamChange();
+                // formerly generate "reference" for sidetone frequency
                 break;
             }
             case BUTTON_G4_PRESSED:		 	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
