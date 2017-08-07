@@ -83,14 +83,14 @@ void UiSpectrum_UpdateSpectrumPixelParameters()
 
         float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
-                sd.tx_carrier_offset =
-                        tx_vfo_offset +
-                        (
-                                ts.dmod_mode == DEMOD_CW ?
-                                        (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
-                                        :
-                                        0.0
-                        );
+        sd.tx_carrier_offset =
+                tx_vfo_offset +
+                (
+                        ts.dmod_mode == DEMOD_CW ?
+                                (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
+                                :
+                                0.0
+                );
         sd.tx_carrier_pos = sd.rx_carrier_pos + sd.tx_carrier_offset;
     }
 }
@@ -160,30 +160,13 @@ void UiSpectrum_CreateDrawArea()
 
     // get grid colour of all but center line
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
-    if(ts.scope_grid_colour == SPEC_GREY)
-    {
-        ts.scope_grid_colour_active = Grid;
-    }
-    else
-    {
-        UiMenu_MapColors(ts.scope_grid_colour,NULL, &ts.scope_grid_colour_active);
-    }
 
     // Get color of center vertical line of spectrum scope
-    //
-    if(ts.spectrum_centre_line_colour == SPEC_GREY)
-    {
-        ts.scope_centre_grid_colour_active = Grid;
-    }
-    else
-    {
-        UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &ts.scope_centre_grid_colour_active);
-    }
+    UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &ts.scope_centre_grid_colour_active);
 
     UiSpectrum_UpdateSpectrumPixelParameters();
 
     // Clear screen where frequency information will be under graticule
-    //
     UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
 
     // Frequency bar separator
@@ -207,45 +190,41 @@ void UiSpectrum_CreateDrawArea()
             UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
         }
 
-		char bartext[34];
+        char bartext[34];
 
         // Top band text - middle caption
         UiGet_Wfscope_Bar_Text(bartext);
         UiLcdHy28_PrintTextCentered(
-                    POS_SPECTRUM_IND_X,
-                    (POS_SPECTRUM_IND_Y - 18),
-                    POS_SPECTRUM_IND_W,
-                    bartext,
-                    White,
-                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+                POS_SPECTRUM_IND_X,
+                (POS_SPECTRUM_IND_Y - 18),
+                POS_SPECTRUM_IND_W,
+                bartext,
+                White,
+                RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
 
         // Draw control left and right border
-        for(int i = 0; i < 2; i++)
-        {
-            UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X - 2 + i),
-                    (POS_SPECTRUM_IND_Y - 20),
-                    (POS_SPECTRUM_IND_H + 12),
-                    LCD_DIR_VERTICAL,
-                    //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                    ts.scope_grid_colour_active);
+        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X - 2),
+                (POS_SPECTRUM_IND_Y - 20),
+                (POS_SPECTRUM_IND_H + 12),
+                LCD_DIR_VERTICAL,
+                //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+                ts.scope_grid_colour_active);
 
-            UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2 + i),
-                    (POS_SPECTRUM_IND_Y - 20),
-                    (POS_SPECTRUM_IND_H + 12),
-                    LCD_DIR_VERTICAL,
-                    //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                    ts.scope_grid_colour_active);
-        }
-
+        UiLcdHy28_DrawStraightLineDouble(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2),
+                (POS_SPECTRUM_IND_Y - 20),
+                (POS_SPECTRUM_IND_H + 12),
+                LCD_DIR_VERTICAL,
+                //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+                ts.scope_grid_colour_active);
     }
+
     /////////////////////////////// was here /////////////////////////////////////
     // Is (scope enabled AND NOT scope light) or Waterfall?
     if (!((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) || (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)))
     { // if spectrum display light enabled, bail out here!
 
-
         // Horizontal grid lines
-        char upperline, y_add;
+        uint8_t upperline, y_add;
         if(ts.spectrum_size)		//set range big/normal
         {
             upperline = 6;
@@ -281,21 +260,22 @@ void UiSpectrum_CreateDrawArea()
             // Draw
             UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
                     (POS_SPECTRUM_IND_Y -  4 - y_add/2),
-                    (POS_SPECTRUM_IND_H - 15 + y_add/2),
+                    (POS_SPECTRUM_IND_H - 16 + y_add/2),
                     LCD_DIR_VERTICAL,
                     clr);
         }
-
-        if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall.speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
-        {
-            // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-            UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 72),
-                    (POS_SPECTRUM_IND_Y + 18),
-                    "   DISABLED   ",
-                    Grey,
-                    RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-        }
     }
+
+    if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall.speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
+    {
+        // print "disabled" in the middle of the screen if the waterfall or scope was disabled
+        UiLcdHy28_PrintText(            (POS_SPECTRUM_IND_X + 72),
+                (POS_SPECTRUM_IND_Y + 18),
+                "   DISABLED   ",
+                Grey,
+                RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+    }
+
 }
 
 void UiSpectrum_ClearDisplay()
@@ -343,11 +323,31 @@ static inline bool UiSpectrum_Draw_IsVgrid(const uint16_t x, const uint16_t colo
     return repaint_v_grid;
 }
 
-void    UiSpectrum_DrawScope(q15_t *fft_old, q15_t *fft_new, const ushort color_old, const ushort color_new, const ushort shift)
+
+void UiSpectrum_DrawLine(uint16_t x, uint16_t y_pos_prev, uint16_t y_pos, uint16_t clr)
 {
 
-    int spec_height = SPECTRUM_HEIGHT; //x
+    if(y_pos - y_pos_prev > 1) // && x !=(SPECTRUM_START_X + x_offset))
+    { // plot line upwards
+        UiLcdHy28_DrawStraightLine(x, y_pos_prev + 1, y_pos -  y_pos_prev,LCD_DIR_VERTICAL, clr);
+    }
+    else if (y_pos - y_pos_prev < -1) // && x !=(SPECTRUM_START_X + x_offset))
+    { // plot line downwards
+        UiLcdHy28_DrawStraightLine(x, y_pos, y_pos_prev - y_pos,LCD_DIR_VERTICAL, clr);
+    }
+    else
+    {
+        UiLcdHy28_DrawStraightLine(x, y_pos,1,LCD_DIR_VERTICAL, clr);
+    }
+
+}
+
+void    UiSpectrum_DrawScope(q15_t *fft_old, q15_t *fft_new, const uint16_t clr_scope, const bool shift)
+{
+
+    int spec_height = SPECTRUM_HEIGHT;
     int spec_start_y = SPECTRUM_START_Y;
+    static uint16_t tx_carrier_line_pos_prev = 0xffff;
 
     //    if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && ts.spectrum_size == SPECTRUM_BIG)
     if (ts.spectrum_size == SPECTRUM_BIG)
@@ -356,55 +356,71 @@ void    UiSpectrum_DrawScope(q15_t *fft_old, q15_t *fft_new, const ushort color_
         spec_start_y = spec_start_y - SPEC_LIGHT_MORE_POINTS;
     }
 
-
-    uint16_t      i, k, x, y_old , y_new, y1_old, y1_new, len_old, sh, clr;
-	uint16_t 	  y1_new_minus = 0;
-	uint16_t	  y1_old_minus = 0;
-    uint16_t 	  idx = 0;
-    bool      repaint_v_grid = false;
-    clr = color_new;
+    const uint16_t spec_height_limit = spec_height - 7;
+    const uint16_t spec_top_y = spec_start_y + spec_height;
+    const uint16_t x_offset = shift ? (SPECTRUM_WIDTH/2) : 0;
 
     UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
 
-    if(shift)
+    if (sd.first_run > 0)
     {
-    	sh = (SPECTRUM_WIDTH/2) + 1;   // Shift to fill gap in center
-    }
-    else
-    {
-        sh = 1;                  // Shift to fill gap in center
-    }
+        tx_carrier_line_pos_prev = 0xffff; // out of screen location, demands redraw of tx carrier line
 
-    if (sd.first_run>0)
-    {
-        idx = 0;
-        for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
+        if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
         {
-            y_new = fft_new[idx++];
+            for(uint16_t x = (SPECTRUM_START_X + x_offset), idx = 0; idx < SPECTRUM_WIDTH/2 ; x++, idx++)
+            {
+                uint16_t y_new = fft_new[idx];
 
-            if(y_new > (spec_height - 7))
-            {
-                y_new = (spec_height - 7);
-            }
-            y1_new  = (spec_start_y + spec_height - 1) - y_new;
-            if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
-            {
-                UiLcdHy28_DrawStraightLine(x,y1_new,y_new,LCD_DIR_VERTICAL,color_new);
+                if(y_new > spec_height_limit)
+                {
+                    y_new = spec_height_limit;
+                }
+
+                UiLcdHy28_DrawStraightLine(x, spec_top_y - y_new, y_new, LCD_DIR_VERTICAL, clr_scope);
             }
         }
         sd.first_run--;
     }
     else
     {
+        const uint8_t upper_horiz_gridline = ts.spectrum_size ? 5 : 3;
+        const uint16_t tx_carrier_line_pos = SPECTRUM_START_X + sd.tx_carrier_pos;
+        //set range big/normal for redraw
 
-        idx = 0;
+        uint16_t      y_old, y_new; // (averaged) FFT data scaled to height
+        uint16_t      y_old_pos, y_new_pos; // pixel position on screen
+        static uint16_t      y_new_pos_prev = 0, y_old_pos_prev = 0; // pixel values from the previous column left to the current x position
+        // these are static so that when we do the right half of the spectrum, we get the previous value from the left side of the screen
 
-        for(x = (SPECTRUM_START_X + sh + 0); x < (POS_SPECTRUM_IND_X + SPECTRUM_WIDTH/2 + sh); x++)
+        // this is the tx carrier line
+        // for simplicity we redraw it all the time
+        // FIXME: changing the sd.tx_carrier_pos will leave the the old location partially deleted (grid is not repainted)
+
+        if (tx_carrier_line_pos != tx_carrier_line_pos_prev)
+        {
+            if (tx_carrier_line_pos >= SPECTRUM_START_X + x_offset &&  tx_carrier_line_pos < SPECTRUM_START_X + x_offset + SPECTRUM_WIDTH/2)
+            {
+                UiLcdHy28_DrawStraightLine( tx_carrier_line_pos_prev,
+                                        (POS_SPECTRUM_IND_Y -  4),
+                                        (POS_SPECTRUM_IND_H - 16),
+                                        LCD_DIR_VERTICAL,
+                                        Black);
+
+                UiLcdHy28_DrawStraightLine( tx_carrier_line_pos,
+                        (POS_SPECTRUM_IND_Y -  4),
+                        (POS_SPECTRUM_IND_H - 16),
+                        LCD_DIR_VERTICAL,
+                        ts.scope_centre_grid_colour_active);
+                tx_carrier_line_pos_prev = tx_carrier_line_pos;
+            }
+        }
+
+        for(uint16_t x = (SPECTRUM_START_X + x_offset), idx = 0; idx < SPECTRUM_WIDTH/2; x++, idx++)
         {
             if (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
-
             {
-                if ((idx > 1) && (idx < 126)) //
+                if ((idx > 1) && (idx < 126))
                 {
                     // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
                     // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
@@ -416,162 +432,100 @@ void    UiSpectrum_DrawScope(q15_t *fft_old, q15_t *fft_new, const ushort color_
                     y_old = fft_old[idx];
                     y_new = fft_new[idx];
                 }
-
-                idx++;
-
             }
             else
             {
-                y_old = *fft_old++;
-                y_new = *fft_new++;
+                y_old = fft_old[idx];
+                y_new = fft_new[idx];
             }
 
             // Limit vertical
-            if(y_old > (spec_height - 7))
-                y_old = (spec_height - 7);
+            if(y_old > spec_height_limit)
+            {
+                y_old = spec_height_limit;
+            }
 
-            if(y_new > (spec_height - 7))
-                y_new = (spec_height - 7);
+            if(y_new > spec_height_limit)
+            {
+                y_new = spec_height_limit;
+            }
 
             // Data to y position and length
-            y1_old  = (spec_start_y + spec_height - 1) - y_old;
-            len_old = y_old;
+            y_old_pos  = spec_top_y - y_old;
 
-            y1_new  = (spec_start_y + spec_height - 1) - y_new;
+            y_new_pos  = spec_top_y - y_new;
 
-            //            if (y1_old != y1_new && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + 32*ts.c_line + 1))
-
-            if (x == SPECTRUM_START_X + 1) // special case of first x position of spectrum
+            if (shift == false && idx == 0) // special case of first x position of spectrum
             {
-                y1_old_minus = y1_old;
-                y1_new_minus = y1_new;
-            }
-            else if (x == SPECTRUM_START_X + (SPECTRUM_WIDTH/2) + 1) // special case of first line of right part of spectrum
-            {
-                y1_old_minus = (spec_start_y + spec_height - 1) - sd.FFT_BkpData[SPEC_BUFF_LEN-1];
-                y1_new_minus = (spec_start_y + spec_height - 1) - sd.FFT_DspData[SPEC_BUFF_LEN-1];
+                y_old_pos_prev = y_old_pos;
+                y_new_pos_prev = y_new_pos;
             }
 
-            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && x != (POS_SPECTRUM_IND_X + sd.tx_carrier_pos))
+            // TODO: Decide if we want to have the scope overlap the center line or not
+            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
             {
-                // x position is not on vertical centre line (the one that indicates the receive frequency)
-
+                // x position is not on vertical center line (the one that indicates the tx carrier frequency)
                 // here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
                 // makes the spectrum display look more complete . . .
-
-                if(y1_old - y1_old_minus > 1) // && x !=(SPECTRUM_START_X + sh))
-                { // plot line upwards
-                    UiLcdHy28_DrawStraightLine(x,y1_old_minus + 1,y1_old - y1_old_minus,LCD_DIR_VERTICAL,color_old);
-                }
-                else if (y1_old - y1_old_minus < -1) // && x !=(SPECTRUM_START_X + sh))
-                { // plot line downwards
-                    UiLcdHy28_DrawStraightLine(x,y1_old,y1_old_minus-y1_old,LCD_DIR_VERTICAL,color_old);
-                }
-                else
-                {
-                    UiLcdHy28_DrawStraightLine(x,y1_old,1,LCD_DIR_VERTICAL,color_old);
-                    // UiLcdHy28_DrawColorPoint (x, y1_old, color_old);
-                }
-
-                if(y1_new - y1_new_minus > 1) // && x !=(SPECTRUM_START_X + sh))
-                { // plot line upwards
-                    UiLcdHy28_DrawStraightLine(x,y1_new_minus + 1,y1_new - y1_new_minus,LCD_DIR_VERTICAL,color_new);
-
-                }
-                else if (y1_new - y1_new_minus < -1) // && x !=(SPECTRUM_START_X + sh))
-                { // plot line downwards
-                    UiLcdHy28_DrawStraightLine(x,y1_new,y1_new_minus - y1_new,LCD_DIR_VERTICAL,color_new);
-                }
-                else
-                {
-                    UiLcdHy28_DrawStraightLine(x,y1_new,1,LCD_DIR_VERTICAL,color_new);
-                    // UiLcdHy28_DrawColorPoint (x, y1_new, color_new);
-                }
-
+                uint16_t clr_bg =  x != tx_carrier_line_pos ? Black: ts.scope_centre_grid_colour_active;
+                UiSpectrum_DrawLine(x,y_old_pos_prev, y_old_pos, clr_bg);
+                UiSpectrum_DrawLine(x,y_new_pos_prev, y_new_pos, clr_scope);
             }
-            y1_new_minus = y1_new;
-            y1_old_minus = y1_old;
+
+            y_new_pos_prev = y_new_pos;
+            y_old_pos_prev = y_old_pos;
 
 
-            if (!(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
+            // normal scope
+            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
             {
-                if(y_old <= y_new)
+
+                if(y_old < y_new)
                 {
                     // is old line going to be overwritten by new line, anyway?
-                    // ----------------------------------------------------------
-                    //
-                    if (y_old != y_new)
-                    {
-                        UiLcdHy28_DrawStraightLine(x,y1_new,y_new-y_old,LCD_DIR_VERTICAL,color_new);
-                    }
+                    UiLcdHy28_DrawStraightLine(x,y_new_pos,y_new-y_old,LCD_DIR_VERTICAL,clr_scope);
                 }
-                else
+                else if (y_old > y_new )
                 {
+                    // is old line is longer than the new line?
 
-                    uint16_t spectrum_pixel_buf[SPECTRUM_HEIGHT+SPEC_LIGHT_MORE_POINTS];
+                    // clear and repaint the grid
+                    uint16_t      clr_dummy;
+                    bool repaint_v_grid = UiSpectrum_Draw_IsVgrid(x, clr_scope, &clr_dummy, 0xffff);
+                    // FIXME: Remove unused (dummy) parameters
 
-                    // Repaint vertical grid on clear
-                    // Basically paint over the grid is allowed
-                    // but during spectrum clear instead of masking
-                    // grid lines with black - they are repainted
-                    // TODO: This code is  always executed, since this function is always called with color_old == Black
-                    repaint_v_grid = UiSpectrum_Draw_IsVgrid(x, color_new, &clr, sd.tx_carrier_pos);
+                    // we need to delete by overwriting with background color or grid color if we are on a vertical grid line
+                    uint16_t clr_bg =
+                                    x == tx_carrier_line_pos?
+                                    ts.scope_centre_grid_colour_active
+                                    :
+                                    (
+                                      repaint_v_grid ? ts.scope_grid_colour_active : Black
+                                    )
+                                    ;
 
-                    UiLcdHy28_BulkPixel_OpenWrite(x, 1, y1_old, len_old);
-                    idx = 0;
+                    UiLcdHy28_DrawStraightLine(x,y_old_pos,y_old-y_new,LCD_DIR_VERTICAL,clr_bg);
 
-                    // Draw vertical line, starting only with position of where new line would be!
-                    for(i = y_new; i < len_old; i++)
+                    if (!repaint_v_grid && x != tx_carrier_line_pos)
                     {
-                        // Do not check for horizontal grid when we have vertical masking
-                        if(!repaint_v_grid)
+                        // now we repaint the deleted points of the horizontal grid lines
+                        // but only if we are not on a vertical grid line, we already painted that in this case
+                        for(uint16_t k = 0; k < upper_horiz_gridline; k++)
                         {
-                            clr = color_old;
-
-                            // Are we trying to paint over horizontal grid line ?
-                            // prevent that by changing this points color to the grid color
-                            // TODO: This code is  always executed, since this function is always called with color_old == Black
-                            // This code does not make sense to me: it should check if the CURRENT y value (stored in i) is a horizontal
-                            // grid, not the y1_old.
-                            // Enumerate all saved y positions
-                            char upperline;
-                            if(ts.spectrum_size)		//set range big/normal for redraw
-                                upperline = 5;
-                            else
-                                upperline = 3;
-
-                            for(k = 0; k < upperline; k++)
+                            if(y_old_pos <= sd.horz_grid_id[k] && sd.horz_grid_id[k] < y_new_pos )
                             {
-                                if(y1_old == sd.horz_grid_id[k])
-                                {
-                                    clr = ts.scope_grid_colour_active;
-                                    break;
-                                }
+                                UiLcdHy28_DrawStraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, ts.scope_grid_colour_active);
                             }
-
                         }
-
-                        spectrum_pixel_buf[idx++] = clr;
-                        // Track absolute position
-                        y1_old++;
                     }
-                    UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf,len_old-y_new);
-                    UiLcdHy28_BulkPixel_CloseWrite();
-                    // Reset flag
-                    if(repaint_v_grid)
-                    {
-                        repaint_v_grid = 0;
-                    }
-                    UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X + sd.tx_carrier_pos,
-                                                (POS_SPECTRUM_IND_Y -  4),
-                                                (POS_SPECTRUM_IND_H - 15),
-                                                LCD_DIR_VERTICAL,
-                                                ts.scope_centre_grid_colour_active);
                 }
             }
         }
     }
+
 }
+
+
 
 #if 0
 static inline const uint32_t FftIdx2BufMap(const uint32_t idx)
@@ -651,7 +605,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     		k %= SPECTRUM_HEIGHT;	// limit to modulus count of circular buffer size
     	}
     	//
-    */
+     */
 
     switch(ts.spectrum_db_scale)
     {
@@ -873,17 +827,17 @@ void UiSpectrum_RedrawScopeDisplay()
             break;
 
         }
-        //
+
         //  update LCD control
-        //
         case 5:
         {
             uint32_t	clr;
             UiMenu_MapColors(ts.scope_trace_colour,NULL, &clr);
+            // it is important to have the two following calls in that order
             // Left part of screen(mask and update in one operation to minimize flicker)
-            UiSpectrum_DrawScope(sd.FFT_BkpData + SPEC_BUFF_LEN/2, sd.FFT_DspData + SPEC_BUFF_LEN/2, Black, clr,0);
+            UiSpectrum_DrawScope(sd.FFT_BkpData + SPEC_BUFF_LEN/2, sd.FFT_DspData + SPEC_BUFF_LEN/2, clr, false);
             // Right part of the screen (mask and update) left part of screen is stored in the first quarter [0...127]
-            UiSpectrum_DrawScope(sd.FFT_BkpData, sd.FFT_DspData, Black, clr,1);
+            UiSpectrum_DrawScope(sd.FFT_BkpData, sd.FFT_DspData, clr, true);
 
             sd.state = 0;   // Stage 0 - collection of data by the Audio driver
             break;
@@ -1027,7 +981,7 @@ void UiSpectrum_RedrawWaterfall()
 
             // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
             if (tx_line_pixel_pos < SPECTRUM_WIDTH)
-            sd.waterfall[sd.wfall_line][tx_line_pixel_pos] = NUMBER_WATERFALL_COLOURS;
+                sd.waterfall[sd.wfall_line][tx_line_pixel_pos] = NUMBER_WATERFALL_COLOURS;
 
             sd.wfall_line++;		// bump to the next line in the circular buffer for next go-around
 
@@ -1086,10 +1040,10 @@ void UiSpectrum_RedrawWaterfall()
  */
 void UiSpectrum_InitSpectrumDisplay()
 {
-        UiSpectrum_ClearDisplay();			// clear display under spectrum scope
-        UiSpectrum_CreateDrawArea();
-        UiSpectrum_InitSpectrumDisplayData();
-        UiSpectrum_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+    UiSpectrum_ClearDisplay();			// clear display under spectrum scope
+    UiSpectrum_CreateDrawArea();
+    UiSpectrum_InitSpectrumDisplayData();
+    UiSpectrum_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }
 
 /**
@@ -1334,7 +1288,7 @@ static void UiSpectrum_CalculateDBm()
 
             if (offset == 0)
             {
-                        offset = width/2;
+                offset = width/2;
             }
 
             float32_t lf_freq = offset - width/2;
@@ -1428,8 +1382,8 @@ static void UiSpectrum_CalculateDBm()
             // magnifications
             // for example: if we have 34 bins to sum up for sd.magnify == 1, we sum up 68 bins for sd.magnify == 2
 
-//            sum_db /= (float32_t)sd.magnify + 1;
-//            cons = cons - 3.0 * (sd.magnify);
+            //            sum_db /= (float32_t)sd.magnify + 1;
+            //            cons = cons - 3.0 * (sd.magnify);
 
             if (sum_db > 0)
             {

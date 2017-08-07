@@ -130,9 +130,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 
 
 #define SPEC_COLOUR_TRACE_DEFAULT   SPEC_WHITE
-#define SPEC_COLOUR_GRID_DEFAULT    SPEC_GREY
-#define SPEC_COLOUR_SCALE_DEFAULT   SPEC_GREY
-#define FILTER_DISP_COLOUR_DEFAULT  SPEC_GREY
+#define SPEC_COLOUR_GRID_DEFAULT    SPEC_GREY4
+#define SPEC_COLOUR_SCALE_DEFAULT   SPEC_GREY4
+#define FILTER_DISP_COLOUR_DEFAULT  SPEC_GREY4
 
 //
 // *************************************************************************************************************************

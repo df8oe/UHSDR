@@ -684,7 +684,7 @@ bool RadioManagement_CalculateCWSidebandMode()
     {
     case CW_SB_AUTO:                     // For "auto" modes determine if we are above or below threshold frequency
         // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60)
+        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60);
         // is the current frequency below the USB threshold AND is it not 60m? -> LSB
         break;
     case CW_SB_LSB:
