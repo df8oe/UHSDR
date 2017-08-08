@@ -121,7 +121,6 @@ typedef struct SpectrumDisplay
 
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
-    q15_t       FFT_DspData[SPEC_BUFF_LEN];       // Rescaled and de-linearized display data
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
 
     uint16_t    Old_PosData[SPECTRUM_WIDTH];
