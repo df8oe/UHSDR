@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-06T10:01:21  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-08T10:00:02  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-06T10:01:21  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-08T10:00:02  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -637,18 +637,8 @@
              shape = record
              ];
         
-        "MENU_WFALL_OFFSET" [
-             label = "MENU_WFALL_OFFSET | Wfall Brightness"
-             shape = record
-             ];
-        
         "MENU_WFALL_CONTRAST" [
              label = "MENU_WFALL_CONTRAST | Wfall Contrast"
-             shape = record
-             ];
-        
-        "MENU_WFALL_NOSIG_ADJUST" [
-             label = "MENU_WFALL_NOSIG_ADJUST | Wfall NoSig Adj."
              shape = record
              ];
         
@@ -1805,11 +1795,7 @@
             
             MENU_DISPLAY -> MENU_WFALL_STEP_SIZE
             
-            MENU_DISPLAY -> MENU_WFALL_OFFSET
-            
             MENU_DISPLAY -> MENU_WFALL_CONTRAST
-            
-            MENU_DISPLAY -> MENU_WFALL_NOSIG_ADJUST
             
             MENU_DISPLAY -> MENU_METER_COLOUR_UP
             
