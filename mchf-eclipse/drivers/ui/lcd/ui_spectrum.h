@@ -18,13 +18,10 @@
 #include "audio_driver.h"
 #include "arm_const_structs.h"
 
-void UiSpectrum_InitSpectrumDisplay();
-void UiSpectrum_ClearDisplay();
-void UiSpectrum_RedrawSpectrumDisplay();
-void UiSpectrumCreateDrawArea();
-void UiGet_Wfscope_Bar_Text(char*);
-void UiSpectrum_ClearWaterfallData();
-void UiSpectrum_UpdateSpectrumPixelParameters();
+void UiSpectrum_Init();
+void UiSpectrum_Clear();
+void UiSpectrum_Redraw();
+void UiSpectrum_WaterfallClearData();
 void UiSpectrum_DisplayFilterBW();
 
 // Spectrum scope operational constants
@@ -123,18 +120,15 @@ typedef struct SpectrumDisplay
     // Samples buffer
 
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
-//    float32_t   FFT_Windat[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
-    q15_t       FFT_BkpData[SPEC_BUFF_LEN];
     q15_t       FFT_DspData[SPEC_BUFF_LEN];       // Rescaled and de-linearized display data
     q15_t       FFT_TempData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
 
+    uint16_t    Old_PosData[SPECTRUM_WIDTH];
+
     // Current data ptr
     ulong   samp_ptr;
-
-    // Skip flag for FFT processing
-    ulong   skip_process;
 
     // Addresses of vertical grid lines on x axis
     ushort  vert_grid_id[7];
@@ -149,29 +143,26 @@ typedef struct SpectrumDisplay
     // Init done flag
     uchar   enabled;
 
-    // There is no data on screen;
-    uint8_t     first_run;
-
-
     // Variables used in spectrum display AGC
-    //
-    //
-    float mag_calc;     // spectrum display rescale control
+    float mag_calc;             // spectrum display rescale control
 
-    uchar   magnify;    // TRUE if in magnify mode
+    uchar   magnify;            // TRUE if in magnify mode
 
-    float   rescale_rate;   // this holds the rate at which the rescaling happens when the signal appears/disappears
-    float   display_offset;                                 // "vertical" offset for spectral scope, gain adjust for waterfall
-    float   agc_rate;       // this holds AGC rate for the Spectrum Display
-    float   db_scale;       // scaling factor for dB/division
+    float   rescale_rate;       // this holds the rate at which the rescaling happens when the signal appears/disappears
+    float   display_offset;     // "vertical" offset for spectral scope, gain adjust for waterfall
+    float   agc_rate;           // this holds AGC rate for the Spectrum Display
+    float   db_scale;           // scaling factor for dB/division
+
     ushort  wfall_line_update;  // used to set the number of lines per update on the waterfall
-    float   wfall_contrast; // used to adjust the contrast of the waterfall display
+    float   wfall_contrast;     // used to adjust the contrast of the waterfall display
 
     uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
-    uint8_t  waterfall[SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL +16][SPEC_BUFF_LEN];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
 
-    uint16_t wfall_line;                                     // pointer to current line of waterfall data
-    uint16_t wfall_size;                 // vertical size of the waterfall
+    #define WATERFALL_MAX_SIZE (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL)
+    uint8_t  waterfall[WATERFALL_MAX_SIZE][SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+
+    uint16_t wfall_line;        // pointer to current line of waterfall data
+    uint16_t wfall_size;        // vertical size of the waterfall
     uint16_t wfall_ystart;
 
     uint16_t scope_size;
@@ -181,6 +172,11 @@ typedef struct SpectrumDisplay
     float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)
     float32_t tx_carrier_offset;   // how is the current transmitting frequency carrier offset from rx carrier (in pixels)
     float32_t tx_carrier_pos;      // where is the current transmitting frequency carrier (in pixels)
+
+    uint16_t tx_carrier_line_pos_prev; // previous x-axis location of carrier line in screen coordinates, 0xffff indicates off screen
+
+    uint32_t   scope_centre_grid_colour_active;    // active colour of the spectrum scope center grid line
+    uint32_t   scope_grid_colour_active;   // active color of spectrum scope grid;
 
 } SpectrumDisplay;
 

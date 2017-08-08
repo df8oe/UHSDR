@@ -385,6 +385,7 @@ void    UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t la
 void 	UiDriver_ShowStep();
 void 	UiDriver_ShowMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
+void    UiDriver_SpectrumZoomChangeLevel();
 
 void	UiDriver_ShowDebugText(const char*);
 void UiDriver_DebugInfo_DisplayEnable(bool enable);

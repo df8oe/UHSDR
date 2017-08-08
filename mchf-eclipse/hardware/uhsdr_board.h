@@ -134,10 +134,10 @@ struct mchf_waterfall
 {
     uint8_t	color_scheme;			// stores waterfall color scheme
     uint8_t	vert_step_size;		// vertical step size in waterfall mode
-    int32_t	offset;			// offset for waterfall display
+    // int32_t	offset;			// offset for waterfall display
     ulong	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
-	uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
+	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 };
 
 // -----------------------------------------------------------------------------
@@ -660,9 +660,7 @@ typedef struct TransceiverState
 
     uint8_t	scope_trace_colour;	// color of spectrum scope trace;
     uint8_t	scope_grid_colour;	// saved color of spectrum scope grid;
-    ulong	scope_grid_colour_active;	// active color of spectrum scope grid;
     uint8_t	spectrum_centre_line_colour;	// color of center line of scope grid
-    ulong	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
     uint8_t	spectrum_freqscale_colour;	// color of spectrum scope frequency scale
     uint8_t	scope_rescale_rate;	// rescale rate on the 'scope
     uint8_t	scope_agc_rate;		// agc rate on the 'scope
