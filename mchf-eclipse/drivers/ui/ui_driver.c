@@ -393,7 +393,7 @@ static void UiDriver_ToggleWaterfallScopeDisplay()
         // waterfall mode was turned off
         ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
     }
-    UiSpectrum_InitSpectrumDisplay();   // init spectrum display
+    UiSpectrum_Init();   // init spectrum display
 }
 //
 //
@@ -557,6 +557,18 @@ void UiDriver_DebugInfo_DisplayEnable(bool enable)
     }
 }
 
+void UiDriver_SpectrumZoomChangeLevel()
+{
+    UiSpectrum_WaterfallClearData();
+    AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+
+
+    if (ts.menu_mode == false)
+    {
+        UiSpectrum_Init();      // init spectrum scope
+    }
+}
+
 void UiDriver_HandleTouchScreen()
 {
     if (ts.show_debug_info)					// show coordinates for coding purposes
@@ -582,18 +594,15 @@ void UiDriver_HandleTouchScreen()
             ts.menu_var_changed = 1;
       		decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
-            UiSpectrum_ClearWaterfallData();
-            UiSpectrum_InitSpectrumDisplay();		// init spectrum scope
-            AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+      		UiDriver_SpectrumZoomChangeLevel();
         }
         if(UiDriver_CheckTouchCoordinates(52,60,26,32))			// wf/scope bar magnify up
         {
             ts.menu_var_changed = 1;
       		incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
-            UiSpectrum_ClearWaterfallData();
-            UiSpectrum_InitSpectrumDisplay();		// init spectrum scope
-            AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+            UiDriver_SpectrumZoomChangeLevel();
+
         }
         if(UiDriver_CheckTouchCoordinates(43,60,00,04))			// TUNE button
         {
@@ -1106,10 +1115,10 @@ void UiDriver_CopyVfoAB()
 
         if (ts.menu_mode == false)
         {
-            UiSpectrum_ClearDisplay();          // clear display under spectrum scope
+            UiSpectrum_Clear();          // clear display under spectrum scope
             UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
             non_os_delay_multi(18);
-            UiSpectrum_InitSpectrumDisplay();           // init spectrum scope
+            UiSpectrum_Init();           // init spectrum scope
         }
 }
 
@@ -1186,10 +1195,6 @@ static void UiDriver_ProcessKeyboard()
                 if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
                 {
                     UiDriver_ChangeToNextDemodMode(0);
-                    if (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE))	// redraw scope display due to RX/TX marker line position changes
-                    {
-                  	  UiSpectrum_InitSpectrumDisplay();
-                  	}
                 }
                 break;
             case BUTTON_G2_PRESSED:		// BUTTON_G2
@@ -1259,7 +1264,7 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
                 if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
                 {
-                    UiSpectrum_ClearDisplay();
+                    UiSpectrum_Clear();
                     UiDriver_SaveConfiguration();
                     HAL_Delay(3000);
 
@@ -1272,7 +1277,7 @@ static void UiDriver_ProcessKeyboard()
                     }
                     else
                     {
-                        UiSpectrum_InitSpectrumDisplay();          // not in menu mode, redraw spectrum scope
+                        UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
                     }
                 }
                 break;
@@ -1501,6 +1506,7 @@ void UiDriver_UpdateDisplayAfterParamChange()
     UiDriver_DisplayMemoryLabel();
 
     UiDriver_DisplayFilter();    // make certain that numerical on-screen bandwidth indicator is updated
+
     UiSpectrum_DisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
     UiDriver_RefreshEncoderDisplay();
@@ -1590,7 +1596,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 ts.encoder3state = filter_path_change;
                 filter_path_change = false;			// deactivate while in menu mode
                 UiDriver_DisplayFilter();
-                UiSpectrum_ClearDisplay();
+                UiSpectrum_Clear();
                 UiDriver_FButton_F1MenuExit();
                 UiDriver_FButtonLabel(2,"PREV",Yellow);
                 UiDriver_FButtonLabel(3,"NEXT",Yellow);
@@ -1611,7 +1617,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 ts.menu_mode = 0;
                 filter_path_change = ts.encoder3state;
                 UiDriver_DisplayFilter();
-                UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
+                UiSpectrum_Init();			// init spectrum scope
                 //
                 // Restore encoder displays to previous modes
                 UiDriver_RefreshEncoderDisplay();
@@ -1664,7 +1670,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
             }
             else	 		// in memory mode
             {
-                UiSpectrum_ClearDisplay();		// always clear displayclear display
+                UiSpectrum_Clear();		// always clear displayclear display
                 if(!ts.mem_disp)	 	// are we NOT in memory display mode at this moment?
                 {
                     ts.mem_disp = 1;	// we are not - turn it on
@@ -1672,7 +1678,7 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
                 else	 				// we are in memory display mode
                 {
                     ts.mem_disp = 0;	// turn it off
-                    UiSpectrum_InitSpectrumDisplay();			// init spectrum scope
+                    UiSpectrum_Init();			// init spectrum scope
                 }
             }
         }
@@ -1994,7 +2000,7 @@ static void UiDriver_CreateDesktop()
     UiDriver_CreateMeters();
 
     // Spectrum scope
-    UiSpectrum_InitSpectrumDisplay();
+    UiSpectrum_Init();
 
     UiDriver_RefreshEncoderDisplay();
 
@@ -4866,7 +4872,7 @@ static void UiDriver_PowerDownCleanup(bool saveConfiguration)
 
     ts.powering_down = 1;   // indicate that we should be powering down
 
-    UiSpectrum_ClearDisplay();   // clear display under spectrum scope
+    UiSpectrum_Clear();   // clear display under spectrum scope
 
     // hardware based mute
     Codec_MuteDAC(true);  // mute audio when powering down
@@ -5984,7 +5990,7 @@ void UiDriver_MainHandler()
             RadioManagement_HandlePttOnOff();
     }
 
-    UiSpectrum_RedrawSpectrumDisplay();
+    UiSpectrum_Redraw();
 
     // Expect the code below to be executed around every 40 - 80ms.
     // The exact time between two calls is unknown and varies with different

@@ -1979,7 +1979,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             txt_ptr = " x1";
             break;
         }
-        AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+        UiDriver_SpectrumZoomChangeLevel();
         break;
     case MENU_SCOPE_AGC_ADJUST: // Spectrum scope AGC adjust
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
@@ -2236,6 +2236,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                    );
         snprintf(options,32, "  %u", ts.waterfall.vert_step_size);
         break;
+#if 0
     case MENU_WFALL_OFFSET: // set step size of of waterfall display?
         UiDriverMenuItemChangeInt32(var, mode, &ts.waterfall.offset,
                                      WATERFALL_OFFSET_MIN,
@@ -2245,6 +2246,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                     );
         snprintf(options,32, "  %u", (unsigned int)ts.waterfall.offset);
         break;
+#endif
     case MENU_WFALL_CONTRAST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt32(var, mode, &ts.waterfall.contrast,
                                      WATERFALL_CONTRAST_MIN,
@@ -2288,6 +2290,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                    );
         snprintf(options,32, "  %u", ts.spectrum_scope_nosig_adjust);
         break;
+#if 0
     case MENU_WFALL_NOSIG_ADJUST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.nosig_adjust,
                                     WATERFALL_NOSIG_ADJUST_MIN,
@@ -2297,6 +2300,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                    );
         snprintf(options,32, "  %u", ts.waterfall.nosig_adjust);
         break;
+#endif
     case MENU_SPECTRUM_SIZE:    // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_size,
                                     0,

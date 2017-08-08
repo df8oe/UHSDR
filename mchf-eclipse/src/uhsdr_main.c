@@ -200,9 +200,7 @@ void TransceiverStateInit(void)
     ts.spectrum_filter		= SPECTRUM_FILTER_DEFAULT;	// default filter strength for spectrum scope
     ts.scope_trace_colour	= SPEC_COLOUR_TRACE_DEFAULT;		// default colour for the spectrum scope trace
     ts.scope_grid_colour	= SPEC_COLOUR_GRID_DEFAULT;		// default colour for the spectrum scope grid
-    ts.scope_grid_colour_active = Grid;
     ts.spectrum_centre_line_colour = SPEC_COLOUR_GRID_DEFAULT;		// color of center line of scope grid
-    ts.scope_centre_grid_colour_active = Grid;
     ts.spectrum_freqscale_colour	= SPEC_COLOUR_SCALE_DEFAULT;		// default colour for the spectrum scope frequency scale at the bottom
     ts.scope_agc_rate	= SPECTRUM_SCOPE_AGC_DEFAULT;		// load default spectrum scope AGC rate
     ts.spectrum_db_scale = DB_DIV_10;				// default to 10dB/division
@@ -276,11 +274,15 @@ void TransceiverStateInit(void)
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
     ts.waterfall.color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
     ts.waterfall.vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
+#if 0
     ts.waterfall.offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
+#endif
     ts.waterfall.contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
     ts.spectrum_scheduler = 0;				// timer for scheduling the next update of the spectrum update
     ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
+#if 0
     ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
+#endif
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
