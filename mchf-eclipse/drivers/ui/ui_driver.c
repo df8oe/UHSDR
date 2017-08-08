@@ -1882,13 +1882,17 @@ const BandGenInfo bandGenInfo[] =
 //*----------------------------------------------------------------------------
 static void UiDriver_DisplayMemoryLabel()
 {
-     if (ts.band < MAX_BAND_NUM)
+  	char txt[12];
+    uint32_t col = White;
+    if (ts.band < MAX_BAND_NUM && ts.cat_band_index == 255)
     {
-        char txt[12];
-        uint32_t col = White;
-        snprintf(txt,12,"Bnd%s ", bandInfo[ts.band].name);
-        UiLcdHy28_PrintText(161+(SMALL_FONT_WIDTH * 11)+4,  64,txt,col,Black,0);
+      snprintf(txt,12,"Bnd%s ", bandInfo[ts.band].name);
     }
+    if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
+    {
+      snprintf(txt,12,"  CAT  ");
+    }
+    UiLcdHy28_PrintText(161+(SMALL_FONT_WIDTH * 11)+4,  64,txt,col,Black,0);
  }
 
 
@@ -6069,6 +6073,7 @@ void UiDriver_MainHandler()
             if((df.tune_old != df.tune_new))
             {
                 UiDriver_FrequencyUpdateLOandDisplay(false);
+                UiDriver_DisplayMemoryLabel();				// this is because a frequency dialing via CAT must be indicated if "CAT in sandbox" is active
             }
             else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
             {
