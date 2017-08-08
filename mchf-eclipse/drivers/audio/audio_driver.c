@@ -3605,7 +3605,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         for(uint32_t i = 0; i < blockSize; i++)
         {
-
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             audio_in_put_buffer(src[i].l);

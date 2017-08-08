@@ -758,6 +758,11 @@ static void UiSpectrum_DrawWaterfall()
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch"
 // - which is to say that I did not borrow any of it
 // from anywhere else, aside from keeping some of the general functions found in "Case 1".
+/**
+ * @briefs implement a staged calculation and drawing of the spectrum scope / waterfall
+ * should not be called directly, go through UiSpectrum_Redraw which implements a rate limiter
+ * it relies on the audio driver implementing the first stage of data collection.
+ */
 static void UiSpectrum_RedrawSpectrum()
 {
     // Process implemented as state machine

@@ -414,7 +414,7 @@ Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 uint32_t RadioManagement_GetTXDialFrequency()
 {
     uint32_t retval;
-    if (ts.dmod_mode != TRX_MODE_TX)
+    if (ts.txrx_mode != TRX_MODE_TX)
     {
         if(is_splitmode())                  // is SPLIT mode active and?
         {
@@ -447,7 +447,7 @@ uint32_t RadioManagement_GetTXDialFrequency()
 uint32_t RadioManagement_GetRXDialFrequency()
 {
     uint32_t baseval;
-    if (ts.dmod_mode != TRX_MODE_RX)
+    if (ts.txrx_mode != TRX_MODE_RX)
     {
         if(is_splitmode())                  // is SPLIT mode active?
         {
