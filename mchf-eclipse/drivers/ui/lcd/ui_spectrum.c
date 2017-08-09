@@ -434,7 +434,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 //
 //  This should reduce the amount of CGRAM access - especially via SPI mode - to a minimum.
 
-static void    UiSpectrum_DrawScope(uint16_t *old_pos, q15_t *fft_new)
+static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 {
 
     uint32_t clr_scope;
@@ -714,7 +714,9 @@ static void UiSpectrum_DrawWaterfall()
 
     // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
     if (tx_line_pixel_pos < SPECTRUM_WIDTH)
+    {
         sd.waterfall[sd.wfall_line][tx_line_pixel_pos] = NUMBER_WATERFALL_COLOURS;
+    }
 
     sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
 
@@ -739,7 +741,7 @@ static void UiSpectrum_DrawWaterfall()
 
         for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
         {
-            for(uint16_t i = 0; i < (SPECTRUM_WIDTH); i++)      // scan to copy one line of spectral data - "unroll" to optimize for ARM processor
+            for(uint16_t i = 0; i < SPECTRUM_WIDTH; i++)      // scan to copy one line of spectral data - "unroll" to optimize for ARM processor
             {
                 spectrum_pixel_buf[i] = sd.waterfall_colours[sd.waterfall[lptr][i]];    // write to memory using waterfall color from palette
             }
@@ -758,6 +760,11 @@ static void UiSpectrum_DrawWaterfall()
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch"
 // - which is to say that I did not borrow any of it
 // from anywhere else, aside from keeping some of the general functions found in "Case 1".
+/**
+ * @briefs implement a staged calculation and drawing of the spectrum scope / waterfall
+ * should not be called directly, go through UiSpectrum_Redraw which implements a rate limiter
+ * it relies on the audio driver implementing the first stage of data collection.
+ */
 static void UiSpectrum_RedrawSpectrum()
 {
     // Process implemented as state machine
@@ -825,39 +832,35 @@ static void UiSpectrum_RedrawSpectrum()
     {
         float32_t	min1=100000;
 
-        float32_t	sig;
         // De-linearize data with dB/division
-        for(uint16_t i = 0; i < (SPEC_BUFF_LEN); i++)
+         // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
+        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
         {
-            sig = log10f_fast(sd.FFT_AVGData[i]) * DB_SCALING_10;		// take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            sig += sd.display_offset;							// apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2]) * DB_SCALING_10;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
 
             if (sig < min1)
             {
                 min1 = sig;
             }
 
-            if(sig > 1)
-            {    // is the value greater than 1?
-                sd.FFT_DspData[i] = (q15_t)sig;					// it was a useful value - save it
-            }
-            else
-            {
-                sd.FFT_DspData[i] = 1;							// not greater than 1 - assign it to a base value of 1 for sanity's sake
-            }
+            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] =  (sig < 1)? 1 : sig;
         }
 
-        // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
-        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
-        {
-            // build left half of spectrum data
-                sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i + SPEC_BUFF_LEN/2];	// get data
-        }
-
+        // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
+        // we could let it run as soon as last FFT_Samples read has been done here
         for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
         {
             // build right half of spectrum data
-            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_DspData[i - SPEC_BUFF_LEN/2];	// get data
+            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2]) * DB_SCALING_10;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+             // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+
+             if (sig < min1)
+             {
+                 min1 = sig;
+             }
+
+             sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = (sig < 1)? 1 : sig;
         }
 
 
@@ -876,7 +879,7 @@ static void UiSpectrum_RedrawSpectrum()
         else
         {
             // it is important to have the two following calls in that exact order (pixels from left to right)
-            UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_DspData);
+            UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
         }
         sd.state = 0;
         break;
