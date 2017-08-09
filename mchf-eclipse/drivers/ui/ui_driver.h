@@ -118,7 +118,7 @@ typedef struct KeypadState
 //
 enum
 {
-    DB_DIV_DEFAULT = 0,
+    DB_DIV_UNUSED = 0,
     DB_DIV_5,
     DB_DIV_7,
     DB_DIV_10,
@@ -130,7 +130,7 @@ enum
     SCOPE_SCALE_NUM
 };
 //
-#define	DB_DIV_ADJUST_MIN					DB_DIV_DEFAULT
+#define	DB_DIV_ADJUST_MIN					DB_DIV_5
 #define	DB_DIV_ADJUST_MAX					S_3_DIV
 #define	DB_DIV_ADJUST_DEFAULT				DB_DIV_10
 //
@@ -175,23 +175,17 @@ enum
 //
 #define	WATERFALL_SPEED_MIN					1
 #define	WATERFALL_SPEED_MAX					30
-#define	WATERFALL_SPEED_DEFAULT_PARALLEL	10
+#define	WATERFALL_SPEED_DEFAULT	10
 //
 #define WATERFALL_NOSIG_ADJUST_MIN			10
 #define WATERFALL_NOSIG_ADJUST_MAX			30
 #define	WATERFALL_NOSIG_ADJUST_DEFAULT		20
 //
-// The following include warnings and settings for SPI interfaces, which needs less frequent updates or else the screen update will make button/dial response very sluggish!
-//
-#define WATERFALL_SPEED_DEFAULT_SPI			15
-//
-#define	WATERFALL_SPEED_WARN_SPI			10
-#define	WATERFALL_SPEED_WARN1_SPI			14
 //
 // "faster" than this can make knobs/buttons sluggish with parallel
 //
-#define	WATERFALL_SPEED_WARN_PARALLEL		5
-#define WATERFALL_SPEED_WARN1_PARALLEL		9
+#define	WATERFALL_SPEED_WARN		5
+#define WATERFALL_SPEED_WARN1		9
 //
 // Constants for waterfall size settings
 //

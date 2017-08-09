@@ -383,7 +383,7 @@ void UiDriver_ShowDebugText(const char* text)
 
 static void UiDriver_ToggleWaterfallScopeDisplay()
 {
-    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)
+    if(is_waterfallmode())
     {
         // is the waterfall mode active?
         ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off

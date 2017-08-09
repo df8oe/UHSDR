@@ -195,7 +195,7 @@ void TransceiverStateInit(void)
     //
     ts.scope_speed		= SPECTRUM_SCOPE_SPEED_DEFAULT;		// default rate of spectrum scope update
 
-    ts.waterfall.speed	= WATERFALL_SPEED_DEFAULT_SPI;		// default speed of update of the waterfall for parallel displays
+    ts.waterfall.speed	= WATERFALL_SPEED_DEFAULT;		// default speed of update of the waterfall
     //
     ts.spectrum_filter		= SPECTRUM_FILTER_DEFAULT;	// default filter strength for spectrum scope
     ts.scope_trace_colour	= SPEC_COLOUR_TRACE_DEFAULT;		// default colour for the spectrum scope trace
