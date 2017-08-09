@@ -40,6 +40,27 @@ float32_t m_AverageMagdbmhz = 0.0;
 float32_t m_AttackAlpha = 0.5; //0.8647;
 float32_t m_DecayAlpha  = 0.05; //0.3297;
 
+typedef struct
+{
+    float32_t value;
+    const char* label;
+} scope_scaling_info_t;
+
+static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
+{
+    // scaling factors for the various dB/division settings
+    { 0,                        "Waterfall      " }, // just a small trick, the scope will never use scaling index 0
+    { DB_SCALING_5,             "SC(5dB/div)    " },
+    { DB_SCALING_7,             "SC(7.5dB/div)  " },
+    { DB_SCALING_10,            "SC(10dB/div)   " },
+    { DB_SCALING_15,            "SC(15dB/div)   " },
+    { DB_SCALING_20,            "SC(20dB/div)   " },
+    { DB_SCALING_S1,            "SC(1S-Unit/div)" },
+    { DB_SCALING_S2,            "SC(2S-Unit/div)" },
+    { DB_SCALING_S3,            "SC(3S-Unit/div)" }
+};
+
+
 
 static void     UiSpectrum_FrequencyBarText();
 static void		UiSpectrum_CalculateDBm();
@@ -153,71 +174,21 @@ static void UiSpectrum_FFTWindowFunction(char mode)
 
 }
 
-static void UiSpectrum_Get_Wfscope_Bar_Text(char* wfbartext)
+static void UiSpectrum_Get_SpectrumTopBar_Text(char* wfbartext)
 {
-    char* lefttext;
-    char* righttext;
+    const char* lefttext;
 
-    if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)           //waterfall
+    if(is_waterfallmode())           //waterfall
     {
-        lefttext = "WATERFALL      ";
+        lefttext = scope_scaling_factors[0].label; // a small trick, we use the empty location of index 0 in the table
     }
     else                                                // scope
     {
-        switch(ts.spectrum_db_scale)        // convert variable to setting
-        {
-        case DB_DIV_5:
-            lefttext = "SC(5dB/div)    ";
-            break;
-        case DB_DIV_7:
-            lefttext = "SC(7.5dB/div)  ";
-            break;
-        case DB_DIV_15:
-            lefttext = "SC(15dB/div)   ";
-            break;
-        case DB_DIV_20:
-            lefttext = "SC(20dB/div)   ";
-            break;
-        case S_1_DIV:
-            lefttext = "SC(1S-Unit/div)";
-            break;
-        case S_2_DIV:
-            lefttext = "SC(2S-Unit/div)";
-            break;
-        case S_3_DIV:
-            lefttext = "SC(3S-Unit/div)";
-            break;
-        case DB_DIV_10:
-        default:
-            lefttext = "SC(10dB/div)   ";
-            break;
-        }
+        lefttext = scope_scaling_factors[ts.spectrum_db_scale].label;
     }
 
-    switch(sd.magnify)
-    {
-    case 1:
-        righttext = "2  ";
-        break;
-    case 2:
-        righttext = "4  ";
-        break;
-    case 3:
-        righttext = "8  ";
-        break;
-    case 4:
-        righttext = "16 ";
-        break;
-    case 5:
-        righttext = "32 ";
-        break;
-    case 0:
-    default:
-        righttext = "1  ";
-        break;
-    }
 
-    sprintf(wfbartext,"%s < Magnify x%s>",lefttext,righttext);
+    sprintf(wfbartext,"%s < Magnify %2ux >",lefttext, (1<<sd.magnify));
 }
 
 
@@ -244,7 +215,7 @@ static void UiSpectrum_CreateDrawArea()
 
     UiSpectrum_FrequencyBarText();
 
-    if(!ts.spectrum_size)		//don't draw text bar when size is BIG
+    if(ts.spectrum_size == SPECTRUM_NORMAL)		//don't draw text bar when size is BIG
     {
         // Draw top band = grey box in which text is printed
         for(int i = 0; i < 16; i++)
@@ -255,7 +226,7 @@ static void UiSpectrum_CreateDrawArea()
         char bartext[34];
 
         // Top band text - middle caption
-        UiSpectrum_Get_Wfscope_Bar_Text(bartext);
+        UiSpectrum_Get_SpectrumTopBar_Text(bartext);
         UiLcdHy28_PrintTextCentered(
                 POS_SPECTRUM_IND_X,
                 (POS_SPECTRUM_IND_Y - 18),
@@ -263,33 +234,40 @@ static void UiSpectrum_CreateDrawArea()
                 bartext,
                 White,
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-
-        // Draw control left and right border
-        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X - 2),
-                (POS_SPECTRUM_IND_Y - 20),
-                (POS_SPECTRUM_IND_H + 12),
-                LCD_DIR_VERTICAL,
-                //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                sd.scope_grid_colour_active);
-
-        UiLcdHy28_DrawStraightLineDouble(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2),
-                (POS_SPECTRUM_IND_Y - 20),
-                (POS_SPECTRUM_IND_H + 12),
-                LCD_DIR_VERTICAL,
-                //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-                sd.scope_grid_colour_active);
     }
+    // Draw control left and right border
+    UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X - 2),
+            (POS_SPECTRUM_IND_Y - 20),
+            (POS_SPECTRUM_IND_H + 12),
+            LCD_DIR_VERTICAL,
+            //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+            sd.scope_grid_colour_active);
+
+    UiLcdHy28_DrawStraightLineDouble(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2),
+            (POS_SPECTRUM_IND_Y - 20),
+            (POS_SPECTRUM_IND_H + 12),
+            LCD_DIR_VERTICAL,
+            //									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
+            sd.scope_grid_colour_active);
+
+
+#define     SPECTRUM_SCOPE_GRID_HORIZ 16
+#define     SPECTRUM_SCOPE_GRID_VERT  32
+#define     POS_SPECTRUM_GRID_VERT_START (POS_SPECTRUM_IND_X-1)
+#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32)
 
     // Is (scope enabled AND NOT scope light)
     // draw grid
-    if ( (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) == false && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
+    if ( is_waterfallmode() == false && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
     {
         // Horizontal grid lines
         uint8_t y_add;
         if(ts.spectrum_size)		//set range big/normal
         {
             sd.upper_horiz_gridline = 5;
-            y_add = 32;
+            y_add = SPECTRUM_SCOPE_GRID_HORIZ;
+            // 16 lines is the actual added space, which is one more segment,
+            // but in order to generate also a upper closing bar, we add two grid lines
         }
         else
         {
@@ -297,39 +275,44 @@ static void UiSpectrum_CreateDrawArea()
             y_add = 0;
         }
 
+        // array must be filled from higher to the y coordinates
+        // the lookup code for a match counts on this.
         for(int i = 0; i < sd.upper_horiz_gridline; i++)
         {
             // Save y position for repaint
-            sd.horz_grid_id[i] = (POS_SPECTRUM_IND_Y + 11 - y_add + i*16);
+            sd.horz_grid_id[i] = (POS_SPECTRUM_GRID_HORIZ_START - i * SPECTRUM_SCOPE_GRID_HORIZ);
 
             // Draw
             UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X,
                     sd.horz_grid_id[i],
-                    POS_SPECTRUM_IND_W,
+                    SPECTRUM_WIDTH,
                     LCD_DIR_HORIZONTAL,
                     sd.scope_grid_colour_active);
         }
 
         // Vertical grid lines
+        // array must be filled from low to higher x coordinates
+        // the lookup code for a match counts on this.
         for(int i = 1; i < 8; i++)
         {
             clr = sd.scope_grid_colour_active;
             // Save x position for repaint
-            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_IND_X + 32*i - 1);
+            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_GRID_VERT_START + i*SPECTRUM_SCOPE_GRID_VERT);
 
             // Draw
             UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
-                    (POS_SPECTRUM_IND_Y -  4 - y_add/2),
-                    (POS_SPECTRUM_IND_H - 16 + y_add/2),
+                    (POS_SPECTRUM_IND_Y -  4 - y_add),
+                    (POS_SPECTRUM_IND_H - 16 + y_add),
                     LCD_DIR_VERTICAL,
                     clr);
         }
     }
 
-    if (((ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.waterfall.speed)) || (!(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) && (!ts.scope_speed)))
+    if ((is_waterfallmode() && (!ts.waterfall.speed)) || (is_waterfallmode() == false && (!ts.scope_speed)))
     {
         // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-        UiLcdHy28_PrintText(            (POS_SPECTRUM_IND_X + 72),
+        UiLcdHy28_PrintText(
+                (POS_SPECTRUM_IND_X + 72),
                 (POS_SPECTRUM_IND_Y + 18),
                 "   DISABLED   ",
                 Grey,
@@ -343,10 +326,14 @@ void UiSpectrum_Clear()
     UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 
-static bool UiSpectrum_Draw_IsVgrid(const uint16_t x)
+/**
+ * tells us if x is on a vertical grid line. Called for all SPECTRUM_WIDTH lines
+ */
+static bool UiSpectrum_Draw_XposIsOnVertGrid(const uint16_t x)
 {
     bool repaint_v_grid = false;
 
+#if 0
     int k;
     // Enumerate all saved x positions
     for(k = 0; k < 7; k++)
@@ -358,7 +345,19 @@ static bool UiSpectrum_Draw_IsVgrid(const uint16_t x)
             break;
             // leave loop, found match
         }
+        else if (sd.vert_grid_id[k]>x)
+        {
+            // leave loop, no need to look further, we passed the area where x could have hit a vertical grid line.
+            // assume low to high order in sd.vert_grid_id
+            break;
+        }
     }
+#else
+    // this should be faster in case of power of 2 vert grid distance than the generic lookup code above
+    // since the compiler should detect that module power 2 means just masking the higher bits
+    // we have special check if we are on the rightmost pixel, this one is not a vertical line.
+    return ((x - POS_SPECTRUM_GRID_VERT_START) % SPECTRUM_SCOPE_GRID_VERT == 0) && (x != (POS_SPECTRUM_GRID_VERT_START + SPECTRUM_WIDTH)) ;
+#endif
     return repaint_v_grid;
 }
 
@@ -395,7 +394,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
         // is old line is longer than the new line?
 
         // repaint the vertical grid
-        bool repaint_v_grid = UiSpectrum_Draw_IsVgrid(x);
+        bool repaint_v_grid = UiSpectrum_Draw_XposIsOnVertGrid(x);
 
         // we need to delete by overwriting with background color or grid color if we are on a vertical grid line
         uint16_t clr_bg =
@@ -413,8 +412,9 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
         {
             // now we repaint the deleted points of the horizontal grid lines
             // but only if we are not on a vertical grid line, we already painted that in this case
-            for(uint16_t k = 0; k < sd.upper_horiz_gridline; k++)
-            {
+            for(uint16_t k = 0; k < sd.upper_horiz_gridline && y_old_pos <= sd.horz_grid_id[k]; k++)
+            { // we run if pixel positions are inside of deleted area (i.e. not lower than y_old_pos) or if there are no more lines
+
                 if(y_old_pos <= sd.horz_grid_id[k] && sd.horz_grid_id[k] < y_new_pos )
                 {
                     UiLcdHy28_DrawStraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, sd.scope_grid_colour_active);
@@ -436,6 +436,8 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 
 static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 {
+
+    const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
 
     uint32_t clr_scope;
     UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope);
@@ -460,7 +462,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         {
             // delete old line if previously inside screen limits
 
-            if(ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE)
+            if(is_scope_light)
             {
                 UiLcdHy28_DrawStraightLine( sd.tx_carrier_line_pos_prev,
                         spec_top_y - spec_height_limit,
@@ -491,7 +493,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                     LCD_DIR_VERTICAL,
                     sd.scope_centre_grid_colour_active);
 
-            if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
+            if (is_scope_light == false)
             {
                 // we erase the memory for this location, so that it is fully redrawn
                 if (tx_carrier_line_pos < SPECTRUM_START_X + SPECTRUM_WIDTH)
@@ -509,11 +511,18 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     {
         uint16_t      y_new; // (averaged) FFT data scaled to height
 
-        if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) && (idx > 1) && (idx < (SPECTRUM_WIDTH-2)))
+        if (is_scope_light && (idx > 1) && (idx < (SPECTRUM_WIDTH-2)))
         {
             // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
             // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
-            y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
+
+            // original code, has 2 more multiplications in it
+            // y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
+
+            // with float we can use the code below since we will not exceed our number range easily
+            // with uint16_t a little more care has to be taken but since we are talking logarithmic scales here, we should be good too
+            y_new = fft_new[idx] *0.5 + (fft_new[idx-1] + fft_new[idx+1]) *0.18 + (fft_new[idx-2] + fft_new[idx+2])*0.07;
+
         }
         else
         {
@@ -539,7 +548,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
             y_new_pos_prev = y_new_pos;
         }
 
-        if ((ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE))
+        if (is_scope_light)
         {
             // x position is not on vertical center line (the one that indicates the tx carrier frequency)
             // here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
@@ -559,19 +568,10 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     }
 }
 
-static const float32_t scope_scaling_factors[SCOPE_SCALE_NUM] =
-{
-    // scaling factors for the various dB/division settings
-    DB_DIV_ADJUST_DEFAULT,
-    DB_SCALING_5,
-    DB_SCALING_7,
-    DB_SCALING_10,
-    DB_SCALING_15,
-    DB_SCALING_20,
-    DB_SCALING_S1,
-    DB_SCALING_S2,
-    DB_SCALING_S3
-};
+
+
+
+
 
 /**
  * @brief init data strctures for both "Scope Display" and "Waterfall" Display
@@ -640,12 +640,20 @@ static void UiSpectrum_InitSpectrumDisplayData()
     	//
      */
 
-    if (ts.spectrum_db_scale >= SCOPE_SCALE_NUM)
-    {
-        ts.spectrum_db_scale = DB_DIV_DEFAULT;
-    }
-    sd.db_scale = scope_scaling_factors[ts.spectrum_db_scale];
 
+    if (is_waterfallmode())
+    {
+        sd.db_scale = scope_scaling_factors[DB_DIV_10].value;
+        // waterfall has fixed 10db scaling
+    }
+    else
+    {
+        if (ts.spectrum_db_scale >= SCOPE_SCALE_NUM)
+        {
+            ts.spectrum_db_scale = DB_DIV_ADJUST_DEFAULT;
+        }
+        sd.db_scale = scope_scaling_factors[ts.spectrum_db_scale].value;
+    }
 
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
@@ -852,7 +860,7 @@ static void UiSpectrum_RedrawSpectrum()
         for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
         {
             // build right half of spectrum data
-            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2]) * DB_SCALING_10;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2]) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
              // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
 
              if (sig < min1)
@@ -872,7 +880,7 @@ static void UiSpectrum_RedrawSpectrum()
     }
     case 5:	// rescale waterfall horizontally, apply brightness/contrast, process pallate and put vertical line on screen, if enabled.
     {
-        if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)
+        if(is_waterfallmode())
         {
             UiSpectrum_DrawWaterfall();
         }
@@ -1068,7 +1076,7 @@ void UiSpectrum_Redraw()
             && (ts.lcd_blanking_flag == false)
     )
     {
-        if(ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)   // is waterfall mode enabled?
+        if(is_waterfallmode())   // is waterfall mode enabled?
         {
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {

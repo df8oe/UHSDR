@@ -2048,7 +2048,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_SPECTRUM_MODE:
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_WFALL_SCOPE_TOGGLE);
 
-        txt_ptr = (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE)?"WFALL":"SCOPE";
+        txt_ptr = (is_waterfallmode())?"WFALL":"SCOPE";
         // is waterfall mode active?
         // yes - indicate waterfall mode
 
@@ -2258,28 +2258,29 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_WFALL_SPEED:  // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.speed,
-                                    WATERFALL_SPEED_MIN,
-                                    WATERFALL_SPEED_MAX,
-                                    ts.display->display_type!=DISPLAY_HY28B_PARALLEL?WATERFALL_SPEED_DEFAULT_SPI:WATERFALL_SPEED_DEFAULT_PARALLEL,
-                                    1
-                                   );
-        //
-        if(ts.display->display_type != DISPLAY_HY28B_PARALLEL)
+                WATERFALL_SPEED_MIN,
+                WATERFALL_SPEED_MAX,
+                WATERFALL_SPEED_DEFAULT,
+                1
+        );
+
+        if(ts.waterfall.speed <= WATERFALL_SPEED_WARN)
         {
-            if(ts.waterfall.speed <= WATERFALL_SPEED_WARN_SPI)
-                clr = Red;
-            else if(ts.waterfall.speed <= WATERFALL_SPEED_WARN1_SPI)
-                clr = Yellow;
+            clr = Red;
+        }
+        else if(ts.waterfall.speed <= WATERFALL_SPEED_WARN1)
+        {
+            clr = Yellow;
+        }
+
+        if (ts.waterfall.speed > 0)
+        {
+            snprintf(options,32, "  %u", ts.waterfall.speed);
         }
         else
         {
-            if(ts.waterfall.speed <= WATERFALL_SPEED_WARN_PARALLEL)
-                clr = Red;
-            else if(ts.waterfall.speed <= WATERFALL_SPEED_WARN1_PARALLEL)
-                clr = Yellow;
+            txt_ptr = "OFF";
         }
-
-        snprintf(options,32, "  %u", ts.waterfall.speed);
         break;
     case MENU_SCOPE_NOSIG_ADJUST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_scope_nosig_adjust,

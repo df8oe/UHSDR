@@ -1155,6 +1155,11 @@ inline bool is_splitmode()
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
+inline bool is_waterfallmode()
+{
+    return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) != 0;
+}
+
 
 #define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
 #define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
