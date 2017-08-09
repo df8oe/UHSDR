@@ -662,7 +662,6 @@ typedef struct TransceiverState
     uint8_t	scope_grid_colour;	// saved color of spectrum scope grid;
     uint8_t	spectrum_centre_line_colour;	// color of center line of scope grid
     uint8_t	spectrum_freqscale_colour;	// color of spectrum scope frequency scale
-    uint8_t	scope_rescale_rate;	// rescale rate on the 'scope
     uint8_t	scope_agc_rate;		// agc rate on the 'scope
     uint8_t	spectrum_db_scale;	// db/Division scale setting on spectrum scope
     //
