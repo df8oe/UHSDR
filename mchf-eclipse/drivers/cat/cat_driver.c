@@ -1314,7 +1314,7 @@ void CatDriver_HandleProtocol()
     {
         if (CatDriver_PTTKeyPressed())
         {
-            if (CatDriver_CatPttActive())
+            if (CatDriver_CatPttActive() == false)
             {
                 CatDriver_CatEnableTX(true);
             }
