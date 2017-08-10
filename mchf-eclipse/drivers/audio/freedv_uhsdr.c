@@ -75,19 +75,6 @@ const float32_t NR_test_sinus_samp[128] = {
 
 
 
-
-
-
-void fdv_clear_display()
-{ char clr_string[freedv_rx_buffer_max];
-
-  snprintf(clr_string,freedv_rx_buffer_max,"                                                                           ");
-  UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
-  UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
-  UiLcdHy28_PrintText(5,92,clr_string,Yellow,Black,4);
-
-}
-
 #ifdef USE_FREEDV
 
 #include "freedv_api.h"
@@ -105,7 +92,6 @@ FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
 FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
 
-char freedv_rx_buffer[freedv_rx_buffer_max];
 
 __IO int32_t fdv_iq_head = 0;
 __IO int32_t fdv_iq_tail = 0;
@@ -252,41 +238,49 @@ typedef struct {
     int32_t count;
 } flex_buffer;
 
+char freedv_rx_buffer[freedv_rx_buffer_max+1]; // we need to be able store the '\0' as well.
+const char fdv_rx_empty_line[freedv_rx_buffer_max+1] = "                                              ";
+static int fdv_rx_txt_idx= 0;
+
+
+void fdv_clear_display()
+{
+    UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
+    UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
+    UiLcdHy28_PrintText(5,92, fdv_rx_empty_line,Yellow,Black,4);
+    fdv_rx_txt_idx = 0;
+}
 
 void fdv_print_txt_msg()
 {
-  char txt_out[freedv_rx_buffer_max];
-
-  snprintf(txt_out,freedv_rx_buffer_max,freedv_rx_buffer);
-
-  UiLcdHy28_PrintText(5,92,txt_out,Yellow,Black,4);
-
+    const char* txt_ptr = fdv_rx_txt_idx == 0? fdv_rx_empty_line:freedv_rx_buffer;
+    UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
 }
 
 void fdv_print_ber()
 {
-  int ber = 0;
-  char ber_string[12];
+    int ber = 0;
+    char ber_string[12];
 
-  ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
-  snprintf(ber_string,12,"BER=0.%03d",ber);  //calculate and display the bit error rate
-  UiLcdHy28_PrintText(5,104,ber_string,Yellow,Black,4);
+    ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
+    snprintf(ber_string,12,"BER=0.%03d",ber);  //calculate and display the bit error rate
+    UiLcdHy28_PrintText(5,104,ber_string,Yellow,Black,4);
 
 }
 
 void fdv_print_SNR()
 {
-  static float SNR = 1;
-  float SNR_est;
-  char SNR_string[12];
-  int sync;
+    static float SNR = 1;
+    float SNR_est;
+    char SNR_string[12];
+    int sync;
 
-  freedv_get_modem_stats(f_FREEDV,&sync,&SNR_est);
+    freedv_get_modem_stats(f_FREEDV,&sync,&SNR_est);
 
-  SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
-  if (SNR<0) SNR=0.0;
-  snprintf(SNR_string,12,"SNR=%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
-  UiLcdHy28_PrintText(5,116,SNR_string,Yellow,Black,4);
+    SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
+    if (SNR<0) SNR=0.0;
+    snprintf(SNR_string,12,"SNR=%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
+    UiLcdHy28_PrintText(5,116,SNR_string,Yellow,Black,4);
 
 }
 
@@ -354,9 +348,9 @@ void FreeDV_mcHF_HandleFreeDV()
             // these are larger than the FDV_BUFFER_SIZE since some more bytes may be asked for.
 
             if (!rx_was_here) {
-        	freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
-        	freedv_set_total_bits(f_FREEDV,0);
-        	fdv_clear_display();
+                freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
+                freedv_set_total_bits(f_FREEDV,0);
+                fdv_clear_display();
             }
 
 
@@ -365,8 +359,8 @@ void FreeDV_mcHF_HandleFreeDV()
             // while makes this highest prio
             // if may give more responsiveness but can cause interrupted reception
             while (fdv_iq_has_data() && fdv_audio_has_room())
-            // while (fdv_audio_has_room())
-            // if (fdv_iq_has_data() && fdv_audio_has_room())
+                // while (fdv_audio_has_room())
+                // if (fdv_iq_has_data() && fdv_audio_has_room())
             {
                 // MchfBoard_GreenLed(LED_STATE_OFF);
 
@@ -392,7 +386,7 @@ void FreeDV_mcHF_HandleFreeDV()
                         memcpy(inBuf->samples,
                                 &test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE],
                                 FREEDV_TEST_BUFFER_FRAME_SIZE*sizeof(COMP));
-                                */
+                         */
                         inBuf = (FDV_IQ_Buffer*)&test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE];
 
 #endif
@@ -508,47 +502,44 @@ char my_get_next_tx_char(void *callback_state) {
     return c;
 }
 
-void my_put_next_rx_char(void *callback_state, char c) {
-    short ch = (short)c;
-    static int idx_rx=0;
-
-    if (ch==13) idx_rx=0;
-
-    else if (idx_rx < (freedv_rx_buffer_max))
-      {
-	freedv_rx_buffer[idx_rx]=c; //fill from left to right
-	idx_rx++;
-      }
-	 else
-	   {
-	   for (int shift_count = 0;shift_count < (freedv_rx_buffer_max-1);shift_count++)
-	     {
-	       freedv_rx_buffer[shift_count]=freedv_rx_buffer[shift_count+1];
-	     }
-	    freedv_rx_buffer[freedv_rx_buffer_max-1]=c;
-	   }
+void my_put_next_rx_char(void *callback_state, char ch) {
 
 
 
+    if (ch=='\n' || ch == '\r')
+    {
+        fdv_rx_txt_idx=0;
+    }
+    else if (fdv_rx_txt_idx < (freedv_rx_buffer_max))
+    {
+        freedv_rx_buffer[fdv_rx_txt_idx]=ch; //fill from left to right
+        fdv_rx_txt_idx++;
+    }
+    else
+    {
+        for (int shift_count = 0;shift_count < (freedv_rx_buffer_max-1);shift_count++)
+        {
+            freedv_rx_buffer[shift_count]=freedv_rx_buffer[shift_count+1];
+        }
+        freedv_rx_buffer[freedv_rx_buffer_max-1]=ch;
+    }
+    freedv_rx_buffer[fdv_rx_txt_idx] = '\0'; // this is the end of the string
 }
 
-
-
 // FreeDV txt test - will be out of here
-
 void  FreeDV_mcHF_init()
 {
     // Freedv Test DL2FW
 
     f_FREEDV = freedv_open(FREEDV_MODE_1600);
-	if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
-	{
-  	  sprintf(my_cb_state.tx_str, FREEDV_TX_DF8OE_MESSAGE);
-  	}
-  	else
-	{
-  	  sprintf(my_cb_state.tx_str, FREEDV_TX_MESSAGE);
-  	}
+    if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
+    {
+        sprintf(my_cb_state.tx_str, FREEDV_TX_DF8OE_MESSAGE);
+    }
+    else
+    {
+        sprintf(my_cb_state.tx_str, FREEDV_TX_MESSAGE);
+    }
     my_cb_state.ptx_str = my_cb_state.tx_str;
     freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
     // freedv_set_squelch_en(f_FREEDV,0);
@@ -706,41 +697,41 @@ int32_t NR_out_has_room()
 
 void alternateNR_handle()
 {
-        static uint16_t NR_current_buffer_idx = 0;
-        static bool NR_was_here = false;
+    static uint16_t NR_current_buffer_idx = 0;
+    static bool NR_was_here = false;
 
-        if (NR_was_here == false)
-        {
-            NR_was_here = true;
-            NR_current_buffer_idx = 0;
-            NR_in_buffer_reset();
-            NR_out_buffer_reset();
-        }
+    if (NR_was_here == false)
+    {
+        NR_was_here = true;
+        NR_current_buffer_idx = 0;
+        NR_in_buffer_reset();
+        NR_out_buffer_reset();
+    }
 
-        if ( NR_in_has_data() && NR_out_has_room())
-        {   // audio data is ready to be processed
+    if ( NR_in_has_data() && NR_out_has_room())
+    {   // audio data is ready to be processed
 
-                NR_current_buffer_idx %= FDV_BUFFER_IQ_NUM;
+        NR_current_buffer_idx %= FDV_BUFFER_IQ_NUM;
 
-                FDV_IQ_Buffer* input_buf = NULL;
-                NR_in_buffer_remove(&input_buf); //&input_buffer points to the current valid audio data
+        FDV_IQ_Buffer* input_buf = NULL;
+        NR_in_buffer_remove(&input_buf); //&input_buffer points to the current valid audio data
 
-      // inside here do all the necessary noise reduction stuff!!!!!
-      // here are the current input samples:  input_buf->samples
-      // NR_output samples have to be placed here: fdv_iq_buff[NR_current_buffer_idx].samples
-      // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
-      // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
+        // inside here do all the necessary noise reduction stuff!!!!!
+        // here are the current input samples:  input_buf->samples
+        // NR_output samples have to be placed here: fdv_iq_buff[NR_current_buffer_idx].samples
+        // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
+        // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
 
-                profileTimedEventStart(ProfileTP8);
+        profileTimedEventStart(ProfileTP8);
 
-                do_alternate_NR(&input_buf->samples[0].real,&fdv_iq_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
+        do_alternate_NR(&input_buf->samples[0].real,&fdv_iq_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
 
-                profileTimedEventStop(ProfileTP8);
+        profileTimedEventStop(ProfileTP8);
 
-                NR_out_buffer_add(&fdv_iq_buff[NR_current_buffer_idx]);
-                NR_current_buffer_idx++;
+        NR_out_buffer_add(&fdv_iq_buff[NR_current_buffer_idx]);
+        NR_current_buffer_idx++;
 
-        }
+    }
 
 }
 
@@ -757,9 +748,9 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
     alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
-                                    {
-                                        outputsamples[k] = inputsamples[k];
-                                    }
+    {
+        outputsamples[k] = inputsamples[k];
+    }
 
 }
 
@@ -813,71 +804,71 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     float32_t s;
 
 #ifdef debug_alternate_NR  // generate test frames to test the noise blanker function
-                           // using the NR-setting (0..55) to select the test frame
-                           // 00 = noise blanker active on orig. audio; threshold factor=3
-                           // 01 = frame of vocal "a" undistorted
-                           // 02 .. 05 = frame of vocal "a" with different impulse distortion levels
-                           // 06 .. 09 = frame of vocal "a" with different impulse distortion levels
-                           //            noise blanker operating!!
-                           //************
-                           // 01..09 are now using the original received audio and applying a rythmic "click" distortion
-                           // 06..09 is detecting and removing the click by restoring the predicted audio!!!
-                           //************
-                           // 5 / 9 is the biggest "click" and it is slightly noticeable in the restored audio (9)
-                           // 10 = noise blanker active on orig. audio threshold factor=3
-                           // 11  = sinusoidal signal undistorted
-                           // 12 ..15 = sinusoidal signal with different impulse distortion levels
-                           // 16 ..19 = sinusoidal signal with different impulse distortion levels
-                           //            noise blanker operating!!
-                           // 20 ..50   noise blanker active on orig. audio; threshold factor varying between 3 and 0.26
+    // using the NR-setting (0..55) to select the test frame
+    // 00 = noise blanker active on orig. audio; threshold factor=3
+    // 01 = frame of vocal "a" undistorted
+    // 02 .. 05 = frame of vocal "a" with different impulse distortion levels
+    // 06 .. 09 = frame of vocal "a" with different impulse distortion levels
+    //            noise blanker operating!!
+    //************
+    // 01..09 are now using the original received audio and applying a rythmic "click" distortion
+    // 06..09 is detecting and removing the click by restoring the predicted audio!!!
+    //************
+    // 5 / 9 is the biggest "click" and it is slightly noticeable in the restored audio (9)
+    // 10 = noise blanker active on orig. audio threshold factor=3
+    // 11  = sinusoidal signal undistorted
+    // 12 ..15 = sinusoidal signal with different impulse distortion levels
+    // 16 ..19 = sinusoidal signal with different impulse distortion levels
+    //            noise blanker operating!!
+    // 20 ..50   noise blanker active on orig. audio; threshold factor varying between 3 and 0.26
 
     nr_setting = (int)ts.dsp_nr_strength;
-//*********************************from here just debug impulse / signal generation
+    //*********************************from here just debug impulse / signal generation
     if ((nr_setting > 0) && (nr_setting < 10)) // we use the vocal "a" frame
+    {
+        //for (int i=0; i<128;i++)          // not using vocal "a" but the original signal
+        //    insamp[i]=NR_test_samp[i];
+
+        if ((frame_count > 19) && (nr_setting > 1))    // insert a distorting pulse
         {
-            //for (int i=0; i<128;i++)          // not using vocal "a" but the original signal
-            //    insamp[i]=NR_test_samp[i];
-
-            if ((frame_count > 19) && (nr_setting > 1))    // insert a distorting pulse
-                {
-                   dist_level=nr_setting;
-                   if (dist_level > 5) dist_level=dist_level-4; // distortion level is 1...5
-                   insamp[4]=insamp[4] + dist_level*3000; // overlaying a short  distortion pulse +/-
-                   insamp[5]=insamp[5] - dist_level*1000;
-                }
-
+            dist_level=nr_setting;
+            if (dist_level > 5) dist_level=dist_level-4; // distortion level is 1...5
+            insamp[4]=insamp[4] + dist_level*3000; // overlaying a short  distortion pulse +/-
+            insamp[5]=insamp[5] - dist_level*1000;
         }
+
+    }
 
     if ((nr_setting > 10) && (nr_setting < 20)) // we use the sinus frame
+    {
+        for (int i=0; i<128;i++)
+            insamp[i]=NR_test_sinus_samp[i];
+
+        if ((frame_count > 19) && (nr_setting > 11))    // insert a distorting pulse
         {
-            for (int i=0; i<128;i++)
-                insamp[i]=NR_test_sinus_samp[i];
-
-            if ((frame_count > 19) && (nr_setting > 11))    // insert a distorting pulse
-                {
-                   dist_level=nr_setting-10;
-                   if (dist_level > 5) dist_level=dist_level-4;
-                   insamp[24]=insamp[24] + dist_level*1000; // overlaying a short  distortion pulse +/-
-                   insamp[25]=insamp[25] + dist_level*500;
-                   insamp[26]=insamp[26] - dist_level*200; // overlaying a short  distortion pulse +/-
-                   insamp[27]=insamp[27] - dist_level*100;
-
-
-                }
-
+            dist_level=nr_setting-10;
+            if (dist_level > 5) dist_level=dist_level-4;
+            insamp[24]=insamp[24] + dist_level*1000; // overlaying a short  distortion pulse +/-
+            insamp[25]=insamp[25] + dist_level*500;
+            insamp[26]=insamp[26] - dist_level*200; // overlaying a short  distortion pulse +/-
+            insamp[27]=insamp[27] - dist_level*100;
 
 
         }
 
 
-frame_count++;
-if (frame_count > 20) frame_count=0;
 
-    #endif
+    }
 
-//*****************************end of debug impulse generation
 
-//  start of test timing zone
+    frame_count++;
+    if (frame_count > 20) frame_count=0;
+
+#endif
+
+    //*****************************end of debug impulse generation
+
+    //  start of test timing zone
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
     {                                     // will be a constant window later!
@@ -886,42 +877,42 @@ if (frame_count > 20) frame_count=0;
     }
 
     // calculate the autocorrelation of insamp (moving by max. of #order# samples)
-      for(int i=0; i < (order+1); i++)
-      {
-          arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
-      }
+    for(int i=0; i < (order+1); i++)
+    {
+        arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
+    }
     // end of autocorrelation
 
 
 
-//alternative levinson durben algorithm to calculate the lpc coefficients from the crosscorrelation
+    //alternative levinson durben algorithm to calculate the lpc coefficients from the crosscorrelation
 
-  R[0] = R[0] * (1.0 + 1.0e-9);
+    R[0] = R[0] * (1.0 + 1.0e-9);
 
-  lpcs[0] = 1;   //set lpc 0 to 1
+    lpcs[0] = 1;   //set lpc 0 to 1
 
-  for (int i=1; i < order+1; i++)
-      lpcs[i]=0;                      // fill rest of array with zeros - could be done by memfill
+    for (int i=1; i < order+1; i++)
+        lpcs[i]=0;                      // fill rest of array with zeros - could be done by memfill
 
-  alfa = R[0];
+    alfa = R[0];
 
-  for (int m = 1; m <= order; m++)
-   {
-     s = 0.0;
-     for (int u = 1; u < m; u++)
-        s = s + lpcs[u] * R[m-u];
+    for (int m = 1; m <= order; m++)
+    {
+        s = 0.0;
+        for (int u = 1; u < m; u++)
+            s = s + lpcs[u] * R[m-u];
 
-     k = -(R[m] + s) / alfa;
+        k = -(R[m] + s) / alfa;
 
-     for (int v = 1;v < m; v++)
-         any[v] = lpcs[v] + k * lpcs[m-v];
+        for (int v = 1;v < m; v++)
+            any[v] = lpcs[v] + k * lpcs[m-v];
 
-     for (int w = 1; w < m; w++)
-         lpcs[w] = any[w];
+        for (int w = 1; w < m; w++)
+            lpcs[w] = any[w];
 
-    lpcs[m] = k;
-    alfa = alfa * (1 - k * k);
-  }
+        lpcs[m] = k;
+        alfa = alfa * (1 - k * k);
+    }
 
     // end of levinson durben algorithm
 
@@ -952,85 +943,85 @@ if (frame_count > 20) frame_count=0;
     do {        //going through the filtered samples to find an impulse larger than the threshold
 
         if ((tempsamp[search_pos] > impulse_threshold)||(tempsamp[search_pos] < (-impulse_threshold)))
-            {
+        {
             impulse_positions[impulse_count]=search_pos - order;  // save the impulse positions and correct it by the filter delay
             impulse_count++;
             search_pos+=PL;   //  set search_pos a bit away, cause we are already repairing this area later
-                              //  and the next impulse should not be that close
-            }
+            //  and the next impulse should not be that close
+        }
 
         search_pos++;
 
-        } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));// avoid upper boundary
+    } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));// avoid upper boundary
 
-                        //boundary handling has to be fixed later
-                        //as a result we now will not find any impulse in these areas
+    //boundary handling has to be fixed later
+    //as a result we now will not find any impulse in these areas
 
-// from here: reconstruction of the impulse-distorted audio part:
+    // from here: reconstruction of the impulse-distorted audio part:
 
-// first we form the forward and backward prediction transfer functions from the lpcs
-// that is easy, as they are just the negated coefficients  without the leading "1"
-// we can do this in place of the lpcs, as they are not used here anymore and being recalculated in the next frame!
+    // first we form the forward and backward prediction transfer functions from the lpcs
+    // that is easy, as they are just the negated coefficients  without the leading "1"
+    // we can do this in place of the lpcs, as they are not used here anymore and being recalculated in the next frame!
 
     arm_negate_f32(&lpcs[1],&lpcs[1],order);
     arm_negate_f32(&reverse_lpcs[0],&reverse_lpcs[0],order);
 
 
     for (int j=0; j<impulse_count; j++)
-        {
+    {
         for (int k = 0; k<order; k++)   // we have to copy some samples from the original signal as
-            {                           // basis for the reconstructions - could be done by memcopy
+        {                           // basis for the reconstructions - could be done by memcopy
 
-               if ((impulse_positions[j]-PL-order+k) < 0)// this solves the prediction problem at the left boundary
-               {
-                   Rfw[k]=last_frame_end[impulse_positions[j]+k];//take the sample from the last frame
-               }
-               else
-               {
-                   Rfw[k]=insamp[impulse_positions[j]-PL-order+k];//take the sample from this frame as we are away from the boundary
-               }
+            if ((impulse_positions[j]-PL-order+k) < 0)// this solves the prediction problem at the left boundary
+            {
+                Rfw[k]=last_frame_end[impulse_positions[j]+k];//take the sample from the last frame
+            }
+            else
+            {
+                Rfw[k]=insamp[impulse_positions[j]-PL-order+k];//take the sample from this frame as we are away from the boundary
+            }
 
-               Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
+            Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
 
 
 
-            }     //bis hier alles ok
+        }     //bis hier alles ok
 
-            for (int i = 0; i < impulse_length; i++) //now we calculate the forward and backward predictions
-                {
-                    arm_dot_prod_f32(&reverse_lpcs[0],&Rfw[i],order,&Rfw[i+order]);
-                    arm_dot_prod_f32(&lpcs[1],&Rbw[impulse_length-i],order,&Rbw[impulse_length-i-1]);
+        for (int i = 0; i < impulse_length; i++) //now we calculate the forward and backward predictions
+        {
+            arm_dot_prod_f32(&reverse_lpcs[0],&Rfw[i],order,&Rfw[i+order]);
+            arm_dot_prod_f32(&lpcs[1],&Rbw[impulse_length-i],order,&Rbw[impulse_length-i-1]);
 
-                }
+        }
 
-                arm_mult_f32(&Wfw[0],&Rfw[order],&Rfw[order],impulse_length); // do the windowing, or better: weighing
-                arm_mult_f32(&Wbw[0],&Rbw[0],&Rbw[0],impulse_length);
+        arm_mult_f32(&Wfw[0],&Rfw[order],&Rfw[order],impulse_length); // do the windowing, or better: weighing
+        arm_mult_f32(&Wbw[0],&Rbw[0],&Rbw[0],impulse_length);
 
 
 
 #ifdef debug_alternate_NR
-                    // in debug mode do the restoration only in some cases
-if (((ts.dsp_nr_strength > 0) && (ts.dsp_nr_strength < 6))||((ts.dsp_nr_strength > 10) && (ts.dsp_nr_strength < 16)))
-{
-    // just let the distortion pass at setting 1...5 and 11...15
-    //    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
-}
-else
-{
-    //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
-    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
-}
+        // in debug mode do the restoration only in some cases
+        if (((ts.dsp_nr_strength > 0) && (ts.dsp_nr_strength < 6))||((ts.dsp_nr_strength > 10) && (ts.dsp_nr_strength < 16)))
+        {
+            // just let the distortion pass at setting 1...5 and 11...15
+            //    arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+        }
+        else
+        {
+            //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
+            arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+        }
 #else
-    //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
-                arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+        //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
+        arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
 
 #endif
-        }
+    }
 
- for (int p=0; p<(order+PL); p++)
- {
-     last_frame_end[p]=insamp[NR_FFT_SIZE-1-order-PL+p];// store 13 samples from the current frame to use at the next frame
- }
+    for (int p=0; p<(order+PL); p++)
+    {
+        last_frame_end[p]=insamp[NR_FFT_SIZE-1-order-PL+p];// store 13 samples from the current frame to use at the next frame
+    }
     //end of test timing zone
 }
 
