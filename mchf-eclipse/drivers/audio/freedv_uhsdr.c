@@ -238,10 +238,10 @@ typedef struct {
     int32_t count;
 } flex_buffer;
 
-char freedv_rx_buffer[freedv_rx_buffer_max+1]; // we need to be able store the '\0' as well.
-const char fdv_rx_empty_line[freedv_rx_buffer_max+1] = "                                              ";
+static char freedv_rx_buffer[freedv_rx_buffer_max+1]; // we need to be able store the '\0' as well.
+static const char fdv_rx_empty_line[freedv_rx_buffer_max+1] = "                                             ";
 static int fdv_rx_txt_idx= 0;
-
+static bool fdv_rx_txt_update = false;
 
 void fdv_clear_display()
 {
@@ -249,12 +249,18 @@ void fdv_clear_display()
     UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
     UiLcdHy28_PrintText(5,92, fdv_rx_empty_line,Yellow,Black,4);
     fdv_rx_txt_idx = 0;
+    fdv_rx_txt_update = true;
 }
+
 
 void fdv_print_txt_msg()
 {
-    const char* txt_ptr = fdv_rx_txt_idx == 0? fdv_rx_empty_line:freedv_rx_buffer;
-    UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
+    if (fdv_rx_txt_update == true)
+    {
+        fdv_rx_txt_update = false;
+        const char* txt_ptr = fdv_rx_txt_idx == 0? fdv_rx_empty_line:freedv_rx_buffer;
+        UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
+    }
 }
 
 void fdv_print_ber()
@@ -524,6 +530,7 @@ void my_put_next_rx_char(void *callback_state, char ch) {
         freedv_rx_buffer[freedv_rx_buffer_max-1]=ch;
     }
     freedv_rx_buffer[fdv_rx_txt_idx] = '\0'; // this is the end of the string
+    fdv_rx_txt_update = true;
 }
 
 // FreeDV txt test - will be out of here
