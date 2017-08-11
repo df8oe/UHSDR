@@ -345,7 +345,7 @@ void AudioManagement_KeyBeep()
     ts.beep_active = 1;                                 // activate tone
 }
 
-void AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode)
+void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 {
     float tonefreq[2] = {0.0, 0.0};
     switch(dmod_mode)

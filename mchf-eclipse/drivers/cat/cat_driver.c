@@ -1105,8 +1105,8 @@ static void CatDriver_HandleCommands()
             resp[0] = 0; // ACK
             bc = 1;
 
-            uint32_t new_mode = ts.dmod_mode;
-            uint32_t new_cwlsb = ts.cw_lsb;
+            uint8_t new_mode = ts.dmod_mode;
+            bool new_cwlsb = ts.cw_lsb;
             uint32_t new_fmdev5khz = RadioManagement_FmDevIs5khz();
             switch (ft817.req[0])
             {

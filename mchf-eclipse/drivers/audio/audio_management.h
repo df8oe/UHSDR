@@ -25,7 +25,7 @@ void    AudioManagement_CalcAGCVals(void);
 void    AudioManagement_CalcRFGain(void);
 void    AudioManagement_CalcALCDecay(void);
 void    AudioManagement_CalcAGCDecay(void);
-void    AudioManagement_SetSidetoneForDemodMode(uint16_t dmod_mode, bool tune_mode);
+void    AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode);
 
 void    AudioManagement_LoadToneBurstMode(void);
 void    AudioManagement_CalcSubaudibleGenFreq(void);        // load/set current FM subaudible tone settings for generation

@@ -864,7 +864,7 @@ void RadioManagement_SetBandPowerFactor(uchar band)
  * @param freq  frequency to get band for. Unit is Hertz. This value is used without any further adjustments and should be the intended RX/TX frequency and NOT the IQ center frequency
  *
  */
-void RadioManagement_SetDemodMode(uint32_t new_mode)
+void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
 
 
