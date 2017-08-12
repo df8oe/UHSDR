@@ -27,18 +27,6 @@ SpectrumDisplay  __MCHF_SPECIALMEM       sd;
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
 
-// Variables for dbm display --> void calculate_dBm
-float32_t m_AttackAvedbm = 0.0;
-float32_t m_DecayAvedbm = 0.0;
-float32_t m_AverageMagdbm = 0.0;
-float32_t m_AttackAvedbmhz = 0.0;
-float32_t m_DecayAvedbmhz = 0.0;
-float32_t m_AverageMagdbmhz = 0.0;
-// ALPHA = 1 - e^(-T/Tau)
-float32_t m_AttackAlpha = 0.5; //0.8647;
-float32_t m_DecayAlpha  = 0.05; //0.3297;
-
-
 //
 // scaling factors for the various dB/division settings
 //
@@ -438,21 +426,19 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 {
 
+    // before accessing pixel parameters, request update according to configuration
+    UiSpectrum_UpdateSpectrumPixelParameters();
+
     const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
+    const uint16_t spec_height_limit = sd.scope_size - 7;
+    const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
+    const uint16_t tx_carrier_line_pos = SPECTRUM_START_X + sd.tx_carrier_pos;
+
+
 
     uint32_t clr_scope;
     UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope);
 
-
-    const uint16_t spec_height_limit = sd.scope_size - 7;
-    const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
-
-    UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
-
-    const uint16_t tx_carrier_line_pos = SPECTRUM_START_X + sd.tx_carrier_pos;
-
-    static uint16_t      y_new_pos_prev = 0, y_old_pos_prev = 0; // pixel values from the previous column left to the current x position
-    // these are static so that when we do the right half of the spectrum, we get the previous value from the left side of the screen
 
     // this is the tx carrier line, we redraw only if line changes place around,
     // init code must take care to reset prev position to 0xffff in order to get initialization done after clean start
@@ -473,7 +459,12 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
             }
             else
             {
-                UiSpectrum_ScopeStandard_UpdateVerticalDataLine(sd.tx_carrier_line_pos_prev, spec_top_y - spec_height_limit /* old = max pos */ , spec_top_y /* new = min pos */, clr_scope, false);
+                UiSpectrum_ScopeStandard_UpdateVerticalDataLine(
+                        sd.tx_carrier_line_pos_prev,
+                        spec_top_y - spec_height_limit /* old = max pos */ ,
+                        spec_top_y /* new = min pos */,
+                        clr_scope,
+                        false);
 
                 // we erase the memory for this location, so that it is fully redrawn
                 if (sd.tx_carrier_line_pos_prev < SPECTRUM_START_X + SPECTRUM_WIDTH)
@@ -510,62 +501,52 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
     for(uint16_t x = SPECTRUM_START_X, idx = 0; idx < SPECTRUM_WIDTH; x++, idx++)
     {
-        uint16_t      y_new; // (averaged) FFT data scaled to height
+        // averaged FFT data scaled to height and (if necessary) limited here to current max height
+        uint16_t y_height = (fft_new[idx] < spec_height_limit ? fft_new[idx] : spec_height_limit);
 
-        if (is_scope_light && (idx > 1) && (idx < (SPECTRUM_WIDTH-2)))
-        {
-            // moving window - weighted average of 5 points of the spectrum to smooth spectrum in the frequency domain
-            // weights:  x: 50% , x-1/x+1: 36%, x+2/x-2: 14%
+        // Data to y position by subtraction from the lowest spectrum y,
+        // since scope y goes from high to low coordinates if y goes from low to high
+        // due to screen 0,0 reference being the top left corner.
+        uint16_t y_new_pos  = spec_top_y - y_height;
 
-            // original code, has 2 more multiplications in it
-            // y_new = fft_new[idx] *0.5 + fft_new[idx-1]*0.18 + fft_new[idx-2]*0.07 + fft_new[idx+1]*0.18 + fft_new[idx+2]*0.07;
-
-            // with float we can use the code below since we will not exceed our number range easily
-            // with uint16_t a little more care has to be taken but since we are talking logarithmic scales here, we should be good too
-            y_new = fft_new[idx] *0.5 + (fft_new[idx-1] + fft_new[idx+1]) *0.18 + (fft_new[idx-2] + fft_new[idx+2])*0.07;
-
-        }
-        else
-        {
-            y_new = fft_new[idx];
-        }
-
-        // Limit vertical
-        if(y_new > spec_height_limit)
-        {
-            y_new = spec_height_limit;
-        }
-
-        // Data to y position and length
-        uint16_t y_new_pos  = spec_top_y - y_new;
-
-        // we get old value and remember the new value for next round
+        // we get the old y position value of last scope draw run
+        // and remember the new position value for next round in same place
         uint16_t y_old_pos  = old_pos[idx];
         old_pos[idx] = y_new_pos;
 
-        if (idx == 0) // special case of first x position of spectrum
-        {
-            y_old_pos_prev = y_old_pos;
-            y_new_pos_prev = y_new_pos;
-        }
 
         if (is_scope_light)
         {
-            // x position is not on vertical center line (the one that indicates the tx carrier frequency)
-            // here I would like to draw a line if y1_new and the last drawn pixel (y1_new_minus) are more than 1 pixel apart in the vertical axis
-            // makes the spectrum display look more complete . . .
+            static uint16_t      y_new_pos_prev = 0, y_old_pos_prev = 0;
+            // ATTENTION: CODE ONLY UPDATES THESE IF IN LIGHT SCOPE MODE !!!
+            // pixel values from the previous column left to the current x position
+            // these are static so that when we do the right half of the spectrum, we get the previous value from the left side of the screen
 
+            // special case of first x position of spectrum, we don't have a left side neighbor
+            if (idx == 0)
+            {
+                y_old_pos_prev = y_old_pos;
+                y_new_pos_prev = y_new_pos;
+            }
+
+            // x position is not on vertical center line (the one that indicates the tx carrier frequency)
+            // we draw a line if y_new_pos and the last drawn pixel (y_old_pos) are more than 1 pixel apart in the vertical axis
+            // makes the spectrum display look more complete . . .
             uint16_t clr_bg =  x != tx_carrier_line_pos ? Black: sd.scope_centre_grid_colour_active;
             UiSpectrum_DrawLine(x, y_old_pos_prev, y_old_pos, clr_bg);
             UiSpectrum_DrawLine(x, y_new_pos_prev, y_new_pos, clr_scope);
+
+            // we are done, lets remember this information for next round
+            y_new_pos_prev = y_new_pos;
+            y_old_pos_prev = y_old_pos;
+
         }
         else
         {
+            // we just draw our vertical line in a optimized fashion here
+            // handles also the grid (re)drawing if necessary
             UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, y_old_pos, y_new_pos, clr_scope, x == tx_carrier_line_pos);
         }
-
-        y_new_pos_prev = y_new_pos;
-        y_old_pos_prev = y_old_pos;
     }
 }
 
@@ -760,6 +741,18 @@ static void UiSpectrum_DrawWaterfall()
     }
 }
 
+static float32_t  UiSpectrum_ScaleFFT(const float32_t value, float32_t* min_p)
+{
+    float32_t sig = sd.display_offset + log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+    // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+
+    if (sig < *min_p)
+    {
+        *min_p = sig;
+    }
+
+    return  (sig < 1)? 1 : sig;
+}
 
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch"
@@ -833,36 +826,23 @@ static void UiSpectrum_RedrawSpectrum()
         float32_t	min1=100000;
 
         // De-linearize data with dB/division
-         // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
-        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
-        {
-            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2]) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-
-            if (sig < min1)
-            {
-                min1 = sig;
-            }
-
-            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] =  (sig < 1)? 1 : sig;
-        }
-
+        // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
         // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
         // we could let it run as soon as last FFT_Samples read has been done here
+        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
+        {
+            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2], &min1);
+            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+        }
+
         for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
         {
             // build right half of spectrum data
-            float32_t sig = sd.display_offset + log10f_fast(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2]) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2], &min1);
+            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
              // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-
-             if (sig < min1)
-             {
-                 min1 = sig;
-             }
-
-             sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = (sig < 1)? 1 : sig;
         }
-
 
         // Adjust the sliding window so that the lowest signal is always black
         sd.display_offset -= sd.agc_rate*min1/5;
@@ -1108,6 +1088,17 @@ static void UiSpectrum_DisplayDbm()
 
 static void UiSpectrum_CalculateDBm()
 {
+    // Variables for dbm display --> void calculate_dBm
+    static float32_t m_AttackAvedbm = 0.0;
+    static float32_t m_DecayAvedbm = 0.0;
+    static float32_t m_AverageMagdbm = 0.0;
+    static float32_t m_AttackAvedbmhz = 0.0;
+    static float32_t m_DecayAvedbmhz = 0.0;
+    static float32_t m_AverageMagdbmhz = 0.0;
+    // ALPHA = 1 - e^(-T/Tau)
+    static float32_t m_AttackAlpha = 0.5; //0.8647;
+    static float32_t m_DecayAlpha  = 0.05; //0.3297;
+
     //###########################################################################################################################################
     //###########################################################################################################################################
     // dBm/Hz-display DD4WH June, 9th 2016

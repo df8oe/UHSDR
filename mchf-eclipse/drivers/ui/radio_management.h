@@ -196,7 +196,7 @@ bool RadioManagement_USBActive(uint16_t dmod_mode);
 void RadioManagement_SetBandPowerFactor(uchar band);
 void RadioManagement_SetPaBias();
 bool RadioManagement_CalculateCWSidebandMode(void);
-void RadioManagement_SetDemodMode(uint32_t new_mode);
+void RadioManagement_SetDemodMode(uint8_t new_mode);
 void RadioManagement_HandleRxIQSignalCodecGain();
 const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_offset_mode);
 uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry);
