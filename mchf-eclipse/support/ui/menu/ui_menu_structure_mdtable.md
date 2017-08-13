@@ -2,16 +2,16 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
-[//]: # ( mcHF SDR TRX v2.5.15 - Menu Structure Diagram as MarkDown-Table )
+[//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
 [//]: # ( see <https://help.github.com/categories/writing-on-github/>                  )
 [//]: # (                                                                              )
 
-# uhsdr firmware v2.5.15 - UI Menu Overview
+# uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
+generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -47,7 +47,6 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **AGC WDSP Hang Decay**       (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
 | **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
-| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select the required signal input for transmit (except in CW). Also changeable via long press on M3 | 
 | **Mic Input Gain**            (                              MENU_MIC_GAIN) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
 | **Line Input Gain**           (                             MENU_LINE_GAIN) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
 | **TX Audio Compress**         (                  MENU_TX_COMPRESSION_LEVEL) | Control the TX audio compressor. Higher values give more compression. Set to CUSTOM for user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
@@ -60,7 +59,6 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **Low Voltage Shutdown**      (                    MENU_LOW_POWER_SHUTDOWN) | Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX). | 
 | **Backup Config**             (                         MENU_BACKUP_CONFIG) | Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
 | **Restore Config**            (                        MENU_RESTORE_CONFIG) | Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available. | 
-| **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
 
 
 ## Configuration Menu (`MENU_CONF`)
@@ -85,14 +83,26 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
-| **Reverse Touchscreen**       (                   MENU_REVERSE_TOUCHSCREEN) | Some touchscreens have the touch coordiantes reversed. In this case, select ON | 
+| **Touchscreen**               (                  CONFIG_TOUCHSCREEN_MIRROR) | Some touchscreens have the touch coordinates reversed or x and y flipped. Select regarding your touchscreen. | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Low Voltage Threshold**     (                 CONFIG_LOW_POWER_THRESHOLD) | Voltage threshold for voltage warning colors and auto shutdown. | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
 | **Pwr. Display mW**           (                    CONFIG_FWD_REV_PWR_DISP) | Shows the forward and reverse power values in mW, can be used to calibrate the SWR meter. | 
 | **Pwr. Det. Null**            (                     CONFIG_RF_FWD_PWR_NULL) |  Set the forward and reverse power sensors ADC zero power offset. This setting is enabled ONLY when Disp. Pwr (mW), is enabled. Needs SWR meter hardware modification to work. See Wiki Adjustment and Calibration. | 
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
+| **I2C1 Bus Speed**            (                          CONFIG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. | 
+| **I2C2 Bus Speed**            (                          CONFIG_I2C2_SPEED) | Sets speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Speeds above 200 kHz are not recommended for unmodified mcHF. Many modified mcHF seem to run with 300kHz without problems. | 
+| **RTC Start**                 (                           CONFIG_RTC_START) | Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected. | 
+| **RTC Hour**                  (                            CONFIG_RTC_HOUR) | Sets the Real Time Clock Hour. Needs HW Modifications. | 
+| **RTC Min**                   (                             CONFIG_RTC_MIN) | Sets the Real Time Clock Minutes. Needs HW Modifications. | 
+| **RTC Seconds**               (                             CONFIG_RTC_SEC) | Sets the Real Time Clock Seconds. Needs HW Modifications. | 
+| **RTC Reset**                 (                           CONFIG_RTC_RESET) | Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed | 
+| **RTC Calibration**           (                           CONFIG_RTC_CALIB) | Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation | 
 | **RX IQ Auto Correction**     (                  CONFIG_IQ_AUTO_CORRECTION) | Receive IQ phase and amplitude imbalance can be automatically adjusted by the mcHF. Switch ON/OFF here. If OFF, it takes the following menu values for compensating the imbalance. The automatic algorithm achieves up to 60dB mirror rejection. See Wiki Adjustments and Calibration. | 
+| **RX IQ Balance (80m)**       (                  CONFIG_80M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (80m)**       (                 CONFIG_80M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Balance (10m)**       (                  CONFIG_10M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
+| **RX IQ Phase   (10m)**       (                 CONFIG_10M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable. See Wiki Adjustments and Calibration. | 
 | **TX IQ Balance (80m)**       (                  CONFIG_80M_TX_IQ_GAIN_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
 | **TX IQ Phase   (80m)**       (                 CONFIG_80M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
 | **TX IQ Balance (10m)**       (                  CONFIG_10M_TX_IQ_GAIN_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Requires USB or LSB mode to be changeable. See Wiki Adjustments and Calibration. | 
@@ -118,12 +128,10 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **LCD Auto Blank**            (                   CONFIG_LCD_AUTO_OFF_MODE) | After x seconds LCD turns dark and LCD data sections stop. So power consumption is decreased and RX hum is decreased, too. LCD operation starts when using any button or the touchscreen. | 
 | **Step Size Marker**          (               CONFIG_FREQ_STEP_MARKER_LINE) | If enabled, you'll see a line under the digit which is currently representing the selected tuning step size | 
 | **Filter BW Display**         (               CONFIG_DISP_FILTER_BANDWIDTH) | Colour of the horizontal Filter Bandwidth indicator bar. | 
-| **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
-| **Spectrum Magnify**          (                      MENU_SPECTRUM_MAGNIFY) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
 | **Spectrum Size**             (                         MENU_SPECTRUM_SIZE) | Change height of spectrum display              | 
 | **Spectrum Filter**           (              MENU_SPECTRUM_FILTER_STRENGTH) | Lowpass filter for the spectrum FFT. Low values: fast and nervous spectrum; High values: slow and calm spectrum. | 
 | **Spec FreqScale Colour**     (             MENU_SPECTRUM_FREQSCALE_COLOUR) | Colour of the small frequency digits under the spectrum display. | 
-| **Spec Line Colour**          (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the Receive frequency in the spectrum or waterdall display. | 
+| **TX Carrier Colour**         (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the TX carrier frequency in the spectrum or waterdall display. | 
 | **Spectrum FFT Wind.**        (            CONFIG_SPECTRUM_FFT_WINDOW_TYPE) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
 | **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
 | **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
@@ -135,9 +143,7 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
-| **Wfall Brightness**          (                          MENU_WFALL_OFFSET) | Set to input level which waterfall uses for lowest level | 
 | **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | Adjust to fit your personal input level range to displayable colour range for waterfall | 
-| **Wfall NoSig Adj.**          (                    MENU_WFALL_NOSIG_ADJUST) | Set NO SIGNAL state for waterfall              | 
 | **Upper Meter Colour**        (                       MENU_METER_COLOUR_UP) | Set the colour of the scale of combined S/Power-Meter | 
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals. | 
@@ -190,6 +196,8 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
 | **Reduce Power on High Bands** (          CONFIG_REDUCE_POWER_ON_HIGH_BANDS) | If set frequencies above 8Mhz (30m or higher) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
 | **PA Bias**                   (                             CONFIG_PA_BIAS) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
+| **2200m 5W PWR Adjust**       (                     CONFIG_2200M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **630m  5W PWR Adjust**       (                      CONFIG_630M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **160m  5W PWR Adjust**       (                      CONFIG_160M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **80m   5W PWR Adjust**       (                       CONFIG_80M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **60m   5W PWR Adjust**       (                       CONFIG_60M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
@@ -200,6 +208,13 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **15m   5W PWR Adjust**       (                       CONFIG_15M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **12m   5W PWR Adjust**       (                       CONFIG_12M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **10m   5W PWR Adjust**       (                       CONFIG_10M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **6m    5W PWR Adjust**       (                        CONFIG_6M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **4m    5W PWR Adjust**       (                        CONFIG_4M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **2m    5W PWR Adjust**       (                        CONFIG_2M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **70cm  5W PWR Adjust**       (                      CONFIG_70CM_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **23cm  5W PWR Adjust**       (                      CONFIG_23CM_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **2200m Full PWR Adjust**     (             CONFIG_2200M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **630m  Full PWR Adjust**     (              CONFIG_630M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **160m  Full PWR Adjust**     (              CONFIG_160M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **80m   Full PWR Adjust**     (               CONFIG_80M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **60m   Full PWR Adjust**     (               CONFIG_60M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
@@ -210,11 +225,22 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
 | **15m   Full PWR Adjust**     (               CONFIG_15M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **12m   Full PWR Adjust**     (               CONFIG_12M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **10m   Full PWR Adjust**     (               CONFIG_10M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **6m    Full PWR Adjust**     (                CONFIG_6M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **4m    Full PWR Adjust**     (                CONFIG_4M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **2m    Full PWR Adjust**     (                CONFIG_2M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **70cm  Full PWR Adjust**     (              CONFIG_70CM_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **23cm  Full PWR Adjust**     (              CONFIG_23CM_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
+| **2200m Coupling Adj.**       (          CONFIG_FWD_REV_COUPLING_2200M_ADJ) | Power Meter Adjustment factor for the 2200m band power values. See Wiki. | 
+| **630m Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_630M_ADJ) | Power Adjustment factor for the 630m band power values. See Wiki. | 
 | **160m Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_160M_ADJ) | Power Meter Adjustment factor for the 160m band power values. See Wiki. | 
 | **80m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_80M_ADJ) | Power Meter Adjustment factor for the 80m band power values. See Wiki. | 
 | **40m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_40M_ADJ) | Power Meter Adjustment factor for the 40m and 60m band power values. See Wiki. | 
 | **20m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_20M_ADJ) | Power Meter Adjustment factor for the 20m and 30m band power values. See Wiki. | 
 | **15m  Coupling Adj.**        (            CONFIG_FWD_REV_COUPLING_15M_ADJ) | Power Meter Adjustment factor for the 10m - 17m bands power values. See Wiki. | 
+| **6m   Coupling Adj.**        (             CONFIG_FWD_REV_COUPLING_6M_ADJ) | Power Meter Adjustment factor for the 6m band power values. See Wiki. | 
+| **2m   Coupling Adj.**        (             CONFIG_FWD_REV_COUPLING_2M_ADJ) | Power Meter Adjustment factor for the 2m band power values. See Wiki. | 
+| **70cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_70CM_ADJ) | Power Meter Adjustment factor for the 70cm band power values. See Wiki. | 
+| **23cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_23CM_ADJ) | Power Meter Adjustment factor for the 23cm band power values. See Wiki. | 
 
 
 ## System Info (`MENU_SYSINFO`)
@@ -245,9 +271,8 @@ generated at  2017-07-11T12:48:48  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Enable Debug Info Display** (                     MENU_DEBUG_ENABLE_INFO) | Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
-| **I2C1 Bus Speed**            (                      MENU_DEBUG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
-| **I2C2 Bus Speed**            (                      MENU_DEBUG_I2C2_SPEED) | Sets operation speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Many mcHF seem to run with 400kHz without problems. Be careful with speeds above 100 kHz. Stored permanently. Will be moved to Configuration menu in future. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **new Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | toggle new noiseblanker for testing purposes   | 

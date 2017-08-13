@@ -65,7 +65,7 @@ enum MENU_INFO_ITEM
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
 
 //
-#define	MENUSIZE	6				// number of menu items per page/screen
+#define	MENUSIZE							6		// number of menu items per page/screen
 
 //
 // Starting position of configuration menu

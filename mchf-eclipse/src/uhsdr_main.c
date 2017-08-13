@@ -28,8 +28,11 @@
 #include "drivers/audio/audio_driver.h"
 #include "drivers/audio/audio_management.h"
 #include "drivers/audio/cw/cw_gen.h"
-
 #include "drivers/audio/freedv_uhsdr.h"
+
+//cat
+#include "drivers/cat/cat_driver.h"
+
 // UI Driver
 #include "drivers/ui/ui_driver.h"
 #include "drivers/ui/lcd/ui_lcd_hy28.h"
@@ -46,12 +49,8 @@
 // Eeprom
 #include "misc/v_eprom/eeprom.h"
 //
+#include "drivers/ui/radio_management.h"
 //
-//
-
-#include "cat_driver.h"
-
-
 
 #include "misc/TestCPlusPlusInterface.h"
 // ----------------------------------------------------
@@ -120,11 +119,11 @@ void TransceiverStateInit(void)
     ts.rx_temp_mute		= false;					// used in muting audio during band change
     ts.filter_band		= 0;					// used to indicate the bpf filter selection for power detector coefficient selection
     ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
-    ts.rx_gain[RX_AUDIO_SPKR].value = DEFAULT_AUDIO_GAIN;
-    ts.rx_gain[RX_AUDIO_DIG].value		= DEFAULT_DIG_GAIN;
+    ts.rx_gain[RX_AUDIO_SPKR].value = AUDIO_GAIN_DEFAULT;
+    ts.rx_gain[RX_AUDIO_DIG].value		= DIG_GAIN_DEFAULT;
 
     ts.rx_gain[RX_AUDIO_SPKR].max	= MAX_VOLUME_DEFAULT;		// Set max volume default
-    ts.rx_gain[RX_AUDIO_DIG].max   =  MAX_DIG_GAIN;			// Set max volume default
+    ts.rx_gain[RX_AUDIO_DIG].max   =  DIG_GAIN_MAX;			// Set max volume default
 
     ts.rx_gain[RX_AUDIO_SPKR].active_value = 1;			// this variable is used in the active RX audio processing function
     ts.rx_gain[RX_AUDIO_DIG].active_value = 1;			// this variable is used in the active RX audio processing function
@@ -183,8 +182,8 @@ void TransceiverStateInit(void)
 
     ts.tx_power_factor	= 0.50;					// TX power factor
 
-    ts.pa_bias			= DEFAULT_PA_BIAS;		// Use lowest possible voltage as default
-    ts.pa_cw_bias		= DEFAULT_PA_BIAS;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
+    ts.pa_bias			= PA_BIAS_DEFAULT;		// Use lowest possible voltage as default
+    ts.pa_cw_bias		= PA_BIAS_DEFAULT;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
     ts.power_level		= PA_LEVEL_DEFAULT;			// See uhsdr_board.h for setting
     //
@@ -196,14 +195,12 @@ void TransceiverStateInit(void)
     //
     ts.scope_speed		= SPECTRUM_SCOPE_SPEED_DEFAULT;		// default rate of spectrum scope update
 
-    ts.waterfall.speed	= WATERFALL_SPEED_DEFAULT_SPI;		// default speed of update of the waterfall for parallel displays
+    ts.waterfall.speed	= WATERFALL_SPEED_DEFAULT;		// default speed of update of the waterfall
     //
     ts.spectrum_filter		= SPECTRUM_FILTER_DEFAULT;	// default filter strength for spectrum scope
     ts.scope_trace_colour	= SPEC_COLOUR_TRACE_DEFAULT;		// default colour for the spectrum scope trace
     ts.scope_grid_colour	= SPEC_COLOUR_GRID_DEFAULT;		// default colour for the spectrum scope grid
-    ts.scope_grid_colour_active = Grid;
     ts.spectrum_centre_line_colour = SPEC_COLOUR_GRID_DEFAULT;		// color of center line of scope grid
-    ts.scope_centre_grid_colour_active = Grid;
     ts.spectrum_freqscale_colour	= SPEC_COLOUR_SCALE_DEFAULT;		// default colour for the spectrum scope frequency scale at the bottom
     ts.scope_agc_rate	= SPECTRUM_SCOPE_AGC_DEFAULT;		// load default spectrum scope AGC rate
     ts.spectrum_db_scale = DB_DIV_10;				// default to 10dB/division
@@ -264,9 +261,9 @@ void TransceiverStateInit(void)
     ts.version_number_release	= 0;			// version release - used to detect firmware change
     ts.version_number_major = 0;				// version build - used to detect firmware change
     ts.nb_agc_time_const	= 0;				// used to calculate the AGC time constant
-    ts.cw_offset_mode	= 0;					// CW offset mode (USB, LSB, etc.)
-    ts.cw_lsb			= 0;					// Flag that indicates CW operates in LSB mode when TRUE
-    ts.iq_freq_mode		= 0;					// used to set/configure the I/Q frequency/conversion mode
+    ts.cw_offset_mode	= CW_OFFSET_USB_RX;		// CW offset mode (USB, LSB, etc.)
+    ts.cw_lsb			= false;				// Flag that indicates CW operates in LSB mode when TRUE
+    ts.iq_freq_mode		= FREQ_IQ_CONV_MODE_DEFAULT;					// used to set/configure the I/Q frequency/conversion mode
     ts.conv_sine_flag	= 0;					// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
     ts.lsb_usb_auto_select	= 0;				// holds setting of LSB/USB auto-select above/below 10 MHz
     ts.last_tuning		= 0;					// this is a timer used to hold off updates of the spectrum scope when an SPI LCD display interface is used
@@ -277,11 +274,15 @@ void TransceiverStateInit(void)
     ts.voltmeter_calibrate	= POWER_VOLTMETER_CALIBRATE_DEFAULT;	// Voltmeter calibration constant
     ts.waterfall.color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
     ts.waterfall.vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
+#if 0
     ts.waterfall.offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
+#endif
     ts.waterfall.contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
     ts.spectrum_scheduler = 0;				// timer for scheduling the next update of the spectrum update
     ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
+#if 0
     ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
+#endif
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
@@ -309,9 +310,9 @@ void TransceiverStateInit(void)
     ts.tp = &mchf_touchscreen;
     ts.display = &mchf_display;
 
-    ts.show_tp_coordinates = 0;					// dont show coordinates on LCD
-    ts.rfmod_present = 0;						// rfmod not present
-    ts.vhfuhfmod_present = 0;					// VHF/UHF mod not present
+    ts.show_debug_info = false;					// dont show coordinates on LCD
+    ts.rfmod_present = false;						// rfmod not present
+    ts.vhfuhfmod_present = false;					// VHF/UHF mod not present
     ts.multi = 0;							// non-translate
     ts.tune_power_level = 0;					// Tune with FULL POWER
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
@@ -323,7 +324,6 @@ void TransceiverStateInit(void)
     ts.treble_gain = 0;						// gain of the high shelf EQ filter
     ts.tx_bass_gain = 4;					// gain of the TX low shelf EQ filter
     ts.tx_treble_gain = 4;					// gain of the TX high shelf EQ filter
-    ts.AM_experiment = 1;					// for AM demodulation experiments, not for "public" use
     ts.s_meter = 0;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
 //    ts.dBm_count = 0;						// timer start
@@ -461,7 +461,7 @@ int mchfMain(void)
     // init mchf_touchscreen to see if it is present
     // we don't care about the screen being reverse or not
     // here, so we simply set reverse to false
-    UiLcdHy28_TouchscreenInit(false);
+    UiLcdHy28_TouchscreenInit(0);
 
     // Extra init
     MiscInit();
@@ -515,7 +515,6 @@ int mchfMain(void)
 #endif
 
     UiDriver_StartUpScreenFinish(2000);
-
     MchfBoard_RedLed(LED_STATE_OFF);
     // Transceiver main loop
     for(;;)

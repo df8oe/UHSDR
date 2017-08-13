@@ -730,6 +730,12 @@
 #define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
 #define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 
+// WE DO SET SOME CHOICES BASED ON THE UI BOARD
+#ifdef UI_BRD_OVI40
+#define USE_TWO_CHANNEL_AUDIO
+#endif
+
+
 /* CONFIGURATION LOGIC CHECKS */
 
 #if defined(UI_BRD_MCHF) && defined(UI_BRD_OVI40)
@@ -746,6 +752,8 @@
 #error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
 #endif
 
-
+#if defined(UI_BRD_MCHF) && defined(USE_TWO_CHANNEL_AUDIO)
+#error UI_BRD_MCHF does not permit USE_TWO_CHANNEL_AUDIO
+#endif
 
 #endif

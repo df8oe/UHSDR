@@ -205,6 +205,38 @@ bool RadioManagement_Tune(bool tune)
     return retval;
 }
 
+/**
+ * @returns offset of tuned frequency to dial frequency in CW mode, in Hz
+ */
+int32_t RadioManagement_GetCWDialOffset()
+{
+
+    int32_t retval = 0;
+
+    switch(ts.cw_offset_mode)
+    {
+    case CW_OFFSET_USB_SHIFT:    // Yes - USB?
+        retval -= ts.cw_sidetone_freq;
+        // lower LO by sidetone amount
+        break;
+    case CW_OFFSET_LSB_SHIFT:   // LSB?
+        retval += ts.cw_sidetone_freq;
+        // raise LO by sidetone amount
+        break;
+    case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
+        if(ts.cw_lsb)
+        {
+            retval += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
+        }
+        else
+        {
+            retval -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
+        }
+    }
+
+    return retval * TUNE_MULT;
+}
+
 uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode)
 {
     uint32_t tune_freq = dial_freq;
@@ -213,22 +245,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
-        switch(ts.cw_offset_mode)
-        {
-        case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-            tune_freq -= ts.cw_sidetone_freq;
-            // lower LO by sidetone amount
-            break;
-        case CW_OFFSET_LSB_SHIFT:   // LSB?
-            tune_freq += ts.cw_sidetone_freq;
-            // raise LO by sidetone amount
-            break;
-        case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
-            if(ts.cw_lsb)
-                tune_freq += ts.cw_sidetone_freq;          // it was LSB - raise by sidetone amount
-            else
-                tune_freq -= ts.cw_sidetone_freq;          // it was USB - lower by sidetone amount
-        }
+        tune_freq += RadioManagement_GetCWDialOffset() / TUNE_MULT;
     }
 
 
@@ -390,6 +407,73 @@ Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
     return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
 }
 
+/**
+ * @brief returns the current LO Tune Frequency for TX
+ * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ */
+uint32_t RadioManagement_GetTXDialFrequency()
+{
+    uint32_t retval;
+    if (ts.txrx_mode != TRX_MODE_TX)
+    {
+        if(is_splitmode())                  // is SPLIT mode active and?
+        {
+            uint8_t vfo_tx;
+            if (is_vfo_b())
+            {
+                vfo_tx = VFO_A;
+            }
+            else
+            {
+                vfo_tx = VFO_B;
+            }
+            retval = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+        }
+        else
+        {
+            retval = df.tune_new;
+        }
+    }
+    else
+    {
+        retval = df.tune_new;
+    }
+    return retval;
+}
+/**
+ * @brief returns the current LO Dial Frequency for RX
+ * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ */
+uint32_t RadioManagement_GetRXDialFrequency()
+{
+    uint32_t baseval;
+    if (ts.txrx_mode != TRX_MODE_RX)
+    {
+        if(is_splitmode())                  // is SPLIT mode active?
+        {
+            uint8_t vfo_rx;
+            if (is_vfo_b())
+            {
+                vfo_rx = VFO_B;
+            }
+            else
+            {
+                vfo_rx = VFO_A;
+            }
+            baseval = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-A frequency
+        }
+        else
+        {
+            baseval = df.tune_new;
+        }
+    }
+    else
+    {
+        baseval = df.tune_new;
+    }
+
+    return baseval + (ts.rit_value*20)*TUNE_MULT;
+}
 
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
@@ -416,13 +500,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             if(ts.txrx_mode == TRX_MODE_RX)                         // did we want to enter TX mode?
             {
-                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in VFO location (B)
+                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in RX VFO location
             }
-            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with TX VFO frequency
         }
         else                    // we are in RX mode
         {
-            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-B frequency
+            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with RX VFO frequency
         }
     }
     else
@@ -596,29 +680,17 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 bool RadioManagement_CalculateCWSidebandMode()
 {
     bool retval = false;
-    switch(ts.cw_offset_mode)
+    switch(RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode)->sideband_mode)
     {
-    case CW_OFFSET_AUTO_TX:                     // For "auto" modes determine if we are above or below threshold frequency
-    case CW_OFFSET_AUTO_RX:
-    case CW_OFFSET_AUTO_SHIFT:
+    case CW_SB_AUTO:                     // For "auto" modes determine if we are above or below threshold frequency
         // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        if (df.tune_new/TUNE_MULT > USB_FREQ_THRESHOLD || RadioManagement_GetBand(df.tune_new/TUNE_MULT) == BAND_MODE_60)   // is the current frequency above the USB threshold or is it 60m?
-        {
-            retval = false;                      // yes - indicate that it is USB
-        }
-        else
-        {
-            retval = true;                      // no - LSB
-        }
+        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60);
+        // is the current frequency below the USB threshold AND is it not 60m? -> LSB
         break;
-    case CW_OFFSET_LSB_TX:
-    case CW_OFFSET_LSB_RX:
-    case CW_OFFSET_LSB_SHIFT:
-        retval = true;              // It is LSB
+    case CW_SB_LSB:
+        retval = true;
         break;
-    case CW_OFFSET_USB_TX:
-    case CW_OFFSET_USB_RX:
-    case CW_OFFSET_USB_SHIFT:
+    case CW_SB_USB:
     default:
         retval = false;
         break;
@@ -792,7 +864,7 @@ void RadioManagement_SetBandPowerFactor(uchar band)
  * @param freq  frequency to get band for. Unit is Hertz. This value is used without any further adjustments and should be the intended RX/TX frequency and NOT the IQ center frequency
  *
  */
-void RadioManagement_SetDemodMode(uint32_t new_mode)
+void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
 
 

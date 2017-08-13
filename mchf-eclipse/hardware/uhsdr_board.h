@@ -134,10 +134,10 @@ struct mchf_waterfall
 {
     uint8_t	color_scheme;			// stores waterfall color scheme
     uint8_t	vert_step_size;		// vertical step size in waterfall mode
-    int32_t	offset;			// offset for waterfall display
+    // int32_t	offset;			// offset for waterfall display
     ulong	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
-	uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
+	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 };
 
 // -----------------------------------------------------------------------------
@@ -431,8 +431,6 @@ enum
 #define LCD_STARTUP_BLANKING_TIME	3000		// number of DECISECONDS (e.g. SECONDS * 100) after power-up before LCD blanking occurs if no buttons are pressed/knobs turned
 #define LOW_POWER_SHUTDOWN_DELAY_TIME   6000        // number of DECISECONDS after power-up before low power auto shutdown is checked
 
-#define FILT_DISPLAY_WIDTH      256     // width, in pixels, of the spectral display on the screen - this value used to calculate Hz/pixel for indicating width of filter
-
 
 
 // Enumeration of transmit tune  modes
@@ -662,11 +660,8 @@ typedef struct TransceiverState
 
     uint8_t	scope_trace_colour;	// color of spectrum scope trace;
     uint8_t	scope_grid_colour;	// saved color of spectrum scope grid;
-    ulong	scope_grid_colour_active;	// active color of spectrum scope grid;
     uint8_t	spectrum_centre_line_colour;	// color of center line of scope grid
-    ulong	scope_centre_grid_colour_active;	// active colour of the spectrum scope center grid line
     uint8_t	spectrum_freqscale_colour;	// color of spectrum scope frequency scale
-    uint8_t	scope_rescale_rate;	// rescale rate on the 'scope
     uint8_t	scope_agc_rate;		// agc rate on the 'scope
     uint8_t	spectrum_db_scale;	// db/Division scale setting on spectrum scope
     //
@@ -687,9 +682,11 @@ typedef struct TransceiverState
     ulong	alc_decay_var;				// adjustable ALC release time - working variable version
     ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
     ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
-    //
-#define FREQ_STEP_SWAP_BTN	0xf0
-    uint8_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
+
+// we can use AT least the upper 8 bits of freq_step_config for other purpose since these have not been used and are all initialized with 0)
+#define FREQ_STEP_SWAP_BTN	    0x10
+#define FREQ_STEP_SHOW_MARKER   0x01
+    uint16_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 
 #define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
 #define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
@@ -756,21 +753,24 @@ typedef struct TransceiverState
 #define FLAGS1_FREQ_LIMIT_RELAX			0x20    // if Frequency tuning is to be relaxed
 #define FLAGS1_SSB_TX_FILTER_DISABLE	0x40    // if SSB TX has transmit filter DISABLED
 #define FLAGS1_WFALL_SCOPE_TOGGLE		0x80    // 0 = Spectrum Scope (analyzer), 1 = Waterfall display
-#define FLAGS1_CAT_MODE_ACTIVE			0x100   // 0 = CAT is disabled, 1 = CAT is enabled
+#define FLAGS1_PREVIOUSLY_CAT_ENABLE	0x100
 #define FLAGS1_DYN_TUNE_ENABLE			0x200   // 0 = dynamic tune is disabled, 1 = dynamic tune is enabled
 #define FLAGS1_SAM_ENABLE				0x400   // 0 = SAM mode is disabled, 1 = SAM mode is enabled
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox
 #define FLAGS1_SCOPE_LIGHT_ENABLE		0x1000  // 0 = Spectrum normal, 1 = Spectrum light
 #define FLAGS1_TX_OUTSIDE_BANDS			0x2000  // 1 = TX outside bands enabled
-#define FLAGS1_REVERSE_TOUCHSCREEN		0x4000  // 1 = X direcction of touchscreen is mirrored
+#define FLAGS1_REVERSE_X_TOUCHSCREEN	0x4000  // 1 = X direcction of touchscreen is mirrored
+#define FLAGS1_REVERSE_Y_TOUCHSCREEN	0x8000  // 1 = Y direcction of touchscreen is mirrored
 
 #ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
 #define FLAGS1_CONFIG_DEFAULT (0x0000)
+#define TOUCHSCREEN_DF_MIRROR	TOUCHSCREEN_NO_MIRROR_NOFLIP
 #endif
 #ifdef UI_BRD_OVI40
-    // the default screen needs reversed touch
-#define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_TOUCHSCREEN)
+    // the default screen needs reversed x axis touch
+#define FLAGS1_CONFIG_DEFAULT (FLAGS1_REVERSE_X_TOUCHSCREEN)
+#define TOUCHSCREEN_DF_MIRROR	TOUCHSCREEN_X_MIRROR_NOFLIP
 #endif
 
 
@@ -780,6 +780,7 @@ typedef struct TransceiverState
 #define FLAGS2_KEY_BEEP_ENABLE 			0x04    // 1 if key/button beep is enabled
 #define FLAGS2_LOW_BAND_BIAS_REDUCE 	0x08    // 1 if bias values for lower bands  below 8Mhz have lower influence factor
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
+#define FLAGS2_TOUCHSCREEN_FLIP_XY	 	0x20    // 1 if touchscreen x and y are flipped
 #define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
 
 #define FLAGS2_CONFIG_DEFAULT (FLAGS2_HIGH_BAND_BIAS_REDUCE|FLAGS2_LOW_BAND_BIAS_REDUCE)
@@ -846,7 +847,7 @@ typedef struct TransceiverState
 
     mchf_touchscreen_t *tp;
 
-    bool	show_tp_coordinates;	// show coordinates on LCD
+    bool	show_debug_info;	// show coordinates on LCD
     bool	rfmod_present;			// 0 = not present
     bool	vhfuhfmod_present;		// 0 = not present
     uint8_t	multi;					// actual translate factor
@@ -861,7 +862,6 @@ typedef struct TransceiverState
     int		tx_bass_gain;			// gain of the TX low shelf EQ filter
     int		tx_treble_gain;			// gain of the TX high shelf EQ filter
 
-    bool	AM_experiment;			// for AM demodulation experiments, not for "public" use
 //    bool	dBm_Hz_Test;			// for testing only
 //    ulong	dBm_count;				// timer for calculating RX dBm
     uint8_t 	display_dbm;			// display dbm or dbm/Hz or OFF
@@ -901,7 +901,6 @@ typedef struct TransceiverState
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
     bool encoder3state;
     int bc_band;
-    uint8_t c_line;					// position of center line
 
     Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
 
@@ -1153,6 +1152,11 @@ inline bool is_ssb(const uint32_t dmod_mode) {
 inline bool is_splitmode()
 {
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
+}
+
+inline bool is_waterfallmode()
+{
+    return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) != 0;
 }
 
 
