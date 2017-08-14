@@ -564,6 +564,9 @@ int32_t AudioDriver_GetTranslateFreq();
 void AudioDriver_SetSamPllParameters (void);
 void AudioDriver_SetupAGC(void);
 float log10f_fast(float X);
+
+void RttyDecoder_Init();
+
 //float log10f_fast
 //uchar audio_check_nr_dsp_state(void);
 

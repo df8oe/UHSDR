@@ -370,8 +370,10 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"new Noiseblanker", UiMenuDesc("toggle new noiseblanker for testing purposes") },
-
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
+#ifdef USE_RTTY_PROCESSOR
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_DECODE, NULL,"Rtty Decoder (exp)", UiMenuDesc("Enable Rtty Decoder (45.45 Baud, 170 Hz shift, 2 stopbits). 1Khz Center frequency.") },
+#endif
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

@@ -278,23 +278,30 @@ void 	UiDriver_ShowMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
 void    UiDriver_SpectrumZoomChangeLevel();
 
-void	UiDriver_ShowDebugText(const char*);
+void UiDriver_ShowDebugText(const char*);
 void UiDriver_DebugInfo_DisplayEnable(bool enable);
 
-void 	UiDriver_ChangeTuningStep(uchar is_up);
-void	UiDriver_UpdateDisplayAfterParamChange();
+void UiDriver_ChangeTuningStep(uchar is_up);
+void UiDriver_UpdateDisplayAfterParamChange();
 
-void    UiDriver_StartUpScreenInit();
-void    UiDriver_StartUpScreenFinish();
+void UiDriver_StartUpScreenInit();
+void UiDriver_StartUpScreenFinish();
 
-void    UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
-void    UiDriver_ToggleVfoAB();
-void    UiDriver_SetSplitMode(bool mode_active);
+void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
+void UiDriver_ToggleVfoAB();
+void UiDriver_SetSplitMode(bool mode_active);
 
 
 void UiDriver_StartupScreen_LogIfProblem(bool isError, const char* txt);
 
-void    UiDriver_BacklightDimHandler();
+void UiDriver_BacklightDimHandler();
+
+void UiDriver_TextMsgPutChar(char ch);
+void UiDriver_TextMsgDisplay();
+void UiDriver_TextMsgClear();
+
+
+
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
