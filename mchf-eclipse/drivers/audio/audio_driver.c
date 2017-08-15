@@ -515,6 +515,8 @@ void AudioDriver_Init(void)
     // CW module init
     CwGen_Init();
 
+    RttyDecoder_Init();
+
     // Audio filter disabled
     ts.dsp_inhibit = 1;
     ads.af_disabled = 1;
@@ -1758,6 +1760,276 @@ float32_t hang_level;
 float32_t hang_backmult;
 float32_t onemhang_backmult;
 float32_t hang_decay_mult;
+
+
+// RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
+// Used with permission from Norbert Varga, HA2NON under GPLv3 license
+
+/*
+ * The decoder below needs 2 stop bits to work properly right now and is quite CPU intensive. Proper decimation to 12 or 8khz and filtering
+ * should fix that easily.
+ */
+#ifdef USE_RTTY_PROCESSOR
+
+const static int SAMPLERATE = 48000;
+const static float32_t BITSPERSEC = 45.45;
+
+
+typedef enum {
+    RTTY_RUN_STATE_WAIT_START = 0,
+    RTTY_RUN_STATE_BIT,
+} rtty_run_state_t;
+
+typedef enum {
+    RTTY_MODE_LETTERS = 0,
+    RTTY_MODE_SYMBOLS
+} rtty_mode_t;
+
+
+
+
+typedef struct {
+    float32_t xvBP0[5];
+    float32_t yvBP0[5];
+    float32_t xvBP1[5];
+    float32_t yvBP1[5];
+    float32_t xvLP[3];
+    float32_t yvLP[3];
+
+    uint16_t oneBitSampleCount;
+    int32_t DPLLOldVal;
+    int32_t DPLLBitPhase;
+
+    uint8_t byteResult;
+    uint16_t byteResultp;
+
+    rtty_mode_t mode;
+
+    rtty_run_state_t state;
+
+} rtty_decoder_data_t;
+
+static rtty_decoder_data_t rttyDecoderData;
+
+
+void RttyDecoder_Init()
+{
+    rttyDecoderData.oneBitSampleCount = roundf(SAMPLERATE/BITSPERSEC);
+    rttyDecoderData.mode = RTTY_MODE_LETTERS;
+    rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
+
+}
+
+
+// for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
+// order 2 Butterworth, freqs: 865-965 Hz
+static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
+    rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
+    rttyDecoderData.xvBP0[4] = sampleIn / 2.356080041e+04;
+    rttyDecoderData.yvBP0[0] = rttyDecoderData.yvBP0[1]; rttyDecoderData.yvBP0[1] = rttyDecoderData.yvBP0[2]; rttyDecoderData.yvBP0[2] = rttyDecoderData.yvBP0[3]; rttyDecoderData.yvBP0[3] = rttyDecoderData.yvBP0[4];
+    rttyDecoderData.yvBP0[4] = (rttyDecoderData.xvBP0[0] + rttyDecoderData.xvBP0[4]) - 2 * rttyDecoderData.xvBP0[2]
+                                                 + (-0.9816582826 * rttyDecoderData.yvBP0[0]) + (3.9166274264 * rttyDecoderData.yvBP0[1])
+                                                 + (-5.8882201843 * rttyDecoderData.yvBP0[2]) + (3.9530488323 * rttyDecoderData.yvBP0[3]);
+    return rttyDecoderData.yvBP0[4];
+}
+
+// order 2 Butterworth, freqs: 1035-1135 Hz
+static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
+    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
+    rttyDecoderData.xvBP1[4] = sampleIn / 2.356080365e+04;
+    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
+    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
+                                                 + (-0.9816582826 * rttyDecoderData.yvBP1[0]) + (3.9051693660 * rttyDecoderData.yvBP1[1])
+                                                 + (-5.8653953990 * rttyDecoderData.yvBP1[2]) + (3.9414842213 * rttyDecoderData.yvBP1[3]);
+    return rttyDecoderData.yvBP1[4];
+}
+
+// order 2 Butterworth, freq: 50 Hz
+static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
+    rttyDecoderData.xvLP[0] = rttyDecoderData.xvLP[1]; rttyDecoderData.xvLP[1] = rttyDecoderData.xvLP[2];
+    rttyDecoderData.xvLP[2] = sampleIn / 9.381008646e+04;
+    rttyDecoderData.yvLP[0] = rttyDecoderData.yvLP[1]; rttyDecoderData.yvLP[1] = rttyDecoderData.yvLP[2];
+    rttyDecoderData.yvLP[2] = (rttyDecoderData.xvLP[0] + rttyDecoderData.xvLP[2]) + 2 * rttyDecoderData.xvLP[1]
+                                             + (-0.9907866988 * rttyDecoderData.yvLP[0]) + (1.9907440595 * rttyDecoderData.yvLP[1]);
+    return rttyDecoderData.yvLP[2];
+}
+
+// this function returns the bit value of the current sample
+static int RttyDecoder_demodulator(float32_t sample) {
+    float32_t line1 = RttyDecoder_bandPassFreq0(sample);
+    float32_t line0 = RttyDecoder_bandPassFreq1(sample);
+    // calculating the RMS of the two lines (squaring them)
+    line0 *= line0;
+    line1 *= line1;
+
+    // inverting line 1
+    line1 *= -1;
+
+    // summing the two lines
+    line0 += line1;
+
+    // lowpass filtering the summed line
+    line0 = RttyDecoder_lowPass(line0);
+
+    return (line0 > 0)?0:1;
+}
+
+// this function returns true once at the half of a bit with the bit's value
+static bool RttyDecoder_getBitDPLL(float32_t sample, bool* val_p) {
+    static bool phaseChanged = false;
+    bool retval = false;
+
+
+    if (rttyDecoderData.DPLLBitPhase < rttyDecoderData.oneBitSampleCount)
+    {
+        *val_p = RttyDecoder_demodulator(sample);
+
+        if (!phaseChanged && *val_p != rttyDecoderData.DPLLOldVal) {
+            if (rttyDecoderData.DPLLBitPhase < rttyDecoderData.oneBitSampleCount/2)
+            {
+                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
+            }
+            else
+            {
+                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
+            }
+            phaseChanged = true;
+        }
+        rttyDecoderData.DPLLOldVal = *val_p;
+        rttyDecoderData.DPLLBitPhase++;
+    }
+
+    if (rttyDecoderData.DPLLBitPhase >= rttyDecoderData.oneBitSampleCount)
+    {
+        rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount;
+        retval = true;
+    }
+
+    return retval;
+}
+
+// this function returns only true when the start bit is successfully received
+static bool RttyDecoder_waitForStartBit(float32_t sample) {
+    bool retval = false;
+    int bitResult;
+    static int16_t wait_for_start_state = 0;
+    static int16_t wait_for_half = 0;
+
+    bitResult = RttyDecoder_demodulator(sample);
+    switch (wait_for_start_state)
+    {
+    case 0:
+        // waiting for a falling edge
+        if (bitResult != 0)
+        {
+            wait_for_start_state++;
+        }
+        break;
+    case 1:
+        if (bitResult != 1)
+        {
+            wait_for_start_state++;
+        }
+        break;
+    case 2:
+        wait_for_half = rttyDecoderData.oneBitSampleCount/2;
+        wait_for_start_state ++;
+        /* no break */
+    case 3:
+        wait_for_half--;
+        if (wait_for_half == 0)
+        {
+            retval = (bitResult == 0);
+            wait_for_start_state = 0;
+        }
+        break;
+    }
+    return retval;
+}
+
+
+
+static const char RTTYLetters[] = "<E\nA SIU\nDRJNFCKTZLWHYPQOBG^MXV^";
+static const char RTTYSymbols[] = "<3\n- ,87\n$4#,.:(5+)2.60197.^./=^";
+
+
+static void RttyDecoder_ProcessSample(float32_t sample) {
+
+    switch(rttyDecoderData.state)
+    {
+    case RTTY_RUN_STATE_WAIT_START:
+        if (RttyDecoder_waitForStartBit(sample))
+        {
+            rttyDecoderData.state = RTTY_RUN_STATE_BIT;
+            rttyDecoderData.byteResultp = 1;
+            rttyDecoderData.byteResult = 0;
+        }
+        break;
+    case RTTY_RUN_STATE_BIT:
+        // reading 7 more bits
+        if (rttyDecoderData.byteResultp < 8)
+        {
+            bool bitResult;
+            if (RttyDecoder_getBitDPLL(sample, &bitResult))
+            {
+
+                switch (rttyDecoderData.byteResultp)
+                {
+                case 6: // stop bit 1
+                case 7: // stop bit 2
+                    if (bitResult == false)
+                    {
+                        // not in sync
+                        rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
+                    }
+                    break;
+                default:
+                    // System.out.print(bitResult);
+                    rttyDecoderData.byteResult |= (bitResult?1:0) << (rttyDecoderData.byteResultp-1);
+                }
+                rttyDecoderData.byteResultp++;
+            }
+        }
+
+        if (rttyDecoderData.byteResultp == 8 && rttyDecoderData.state == RTTY_RUN_STATE_BIT)
+        {
+            char charResult;
+
+            switch (rttyDecoderData.byteResult) {
+            case 31:
+                rttyDecoderData.mode = RTTY_MODE_LETTERS;
+                // System.out.println(" ^L^");
+                break;
+            case 27:
+                rttyDecoderData.mode = RTTY_MODE_SYMBOLS;
+                // System.out.println(" ^F^");
+                break;
+            default:
+                switch (rttyDecoderData.mode)
+                {
+                case RTTY_MODE_LETTERS:
+                    charResult = RTTYLetters[rttyDecoderData.byteResult];
+                    break;
+                case RTTY_MODE_SYMBOLS:
+                    charResult = RTTYSymbols[rttyDecoderData.byteResult];
+                    break;
+                }
+                UiDriver_TextMsgPutChar(charResult);
+            }
+            rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
+        }
+    }
+}
+
+static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSize) {
+
+    for (uint16_t idx = 0; idx < blockSize; idx++)
+    {
+        RttyDecoder_ProcessSample(src[idx]);
+    }
+}
+// END RTTY Experiment
+#endif
 
 void AudioDriver_SetupAGC()
 {
@@ -3805,14 +4077,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                 if (ts.dsp_inhibit == false)
                 {
-                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
+                    if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
                         AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
-                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
+                    if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
                         AudioDriver_NoiseReduction(blockSizeDecim);
                     }
@@ -3851,7 +4123,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
                 // This is the post-filter, post-AGC instance
                 //
-                if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(ts.dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
+                if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
                     AudioDriver_NoiseReduction(blockSizeDecim);
                 }
@@ -3974,7 +4246,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
 
             } // end NOT in FM mode
-            else if(ts.dmod_mode == DEMOD_FM)           // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
+            else if(dmod_mode == DEMOD_FM)           // it is FM - we don't do any decimation, interpolation, filtering or any other processing - just rescale audio amplitude
             {
                 arm_scale_f32(
                         adb.a_buffer,
@@ -4069,6 +4341,15 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             audio_in_put_buffer(val);
         }
     }
+
+#ifdef USE_RTTY_PROCESSOR
+    if (ts.enable_rtty_decode == true)
+    {
+        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSize);
+    }
+#endif
+
+
     // calculate the first index we read so that we are not loosing
     // values.
     // For 1 and 2,4 we do not need to shift modulus

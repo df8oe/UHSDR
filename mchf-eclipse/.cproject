@@ -2952,6 +2952,9 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="DebugLibOVI40"/>
+		<configuration configurationName="DebugBootloaderOVI40"/>
+		<configuration configurationName="DebugLibMCHF"/>
 		<configuration configurationName="DebugBootloaderF7"/>
 		<configuration configurationName="DebugLib">
 			<resource resourceType="PROJECT" workspacePath="/mchf-eclipse"/>
@@ -2962,7 +2965,13 @@
 		</configuration>
 		<configuration configurationName="DebugSemihosting"/>
 		<configuration configurationName="ReleaseBootloader"/>
+		<configuration configurationName="DebugBootloaderMCHF"/>
 		<configuration configurationName="DebugF7"/>
+		<configuration configurationName="DebugOVI40">
+			<resource resourceType="PROJECT" workspacePath="/mchf-eclipse"/>
+			<resource resourceType="PROJECT" workspacePath="/RemoteSystemsTempFiles"/>
+		</configuration>
+		<configuration configurationName="DebugMCHF"/>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/mchf-eclipse"/>
 		</configuration>

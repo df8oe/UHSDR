@@ -24,6 +24,8 @@
 #define NR_FFT_SIZE 128
 #endif
 
+#define USE_RTTY_PROCESSOR
+
 #define USE_FREEDV //uncomment to use freedv instead of SNAP function
 // #define DEBUG_FREEDV
 // hardware specific switches
@@ -936,6 +938,8 @@ typedef struct TransceiverState
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
 	bool new_nb; // new noise blanker
+
+	bool enable_rtty_decode; // new rtty encoder (experimental)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

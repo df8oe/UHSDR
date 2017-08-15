@@ -5929,7 +5929,6 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 
 
 
-
 void UiDriver_MainHandler()
 {
 
@@ -6011,6 +6010,7 @@ void UiDriver_MainHandler()
                         MchfBoard_GreenLed(LED_STATE_TOGGLE);
                     }
                 }
+                UiDriver_TextMsgDisplay();
             }
             break;
         case STATE_LO_TEMPERATURE:
