@@ -4233,6 +4233,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
+#ifdef USE_RTTY_PROCESSOR
+    if (ts.enable_rtty_decode == true)
+    {
+        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
+    }
+#endif
+
                 // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
                 if (INTERPOLATE_RX.phaseLength > 0)
                 {
@@ -4342,12 +4349,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-#ifdef USE_RTTY_PROCESSOR
-    if (ts.enable_rtty_decode == true)
-    {
-        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSize);
-    }
-#endif
+// RTTY decoder was here!
 
 
     // calculate the first index we read so that we are not loosing
