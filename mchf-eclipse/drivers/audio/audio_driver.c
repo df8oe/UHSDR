@@ -4275,7 +4275,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
 #ifdef USE_RTTY_PROCESSOR
-    if (ts.enable_rtty_decode == true)
+    if (ts.enable_rtty_decode == true && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
     {
         AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
     }
