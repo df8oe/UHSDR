@@ -141,10 +141,10 @@ void TransceiverStateInit(void)
     ts.cw_keyer_speed		= CW_KEYER_SPEED_DEFAULT;			// CW keyer speed
     ts.cw_sidetone_freq	= CW_SIDETONE_FREQ_DEFAULT;		// CW sidetone and TX offset frequency
     ts.cw_paddle_reverse	= 0;					// Paddle defaults to NOT reversed
-    ts.cw_rx_delay		= CW_RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
+    ts.cw_rx_delay		= CW_TX2RX_DELAY_DEFAULT;			// Delay of TX->RX turnaround
     ts.cw_keyer_weight        = CW_KEYER_WEIGHT_DEFAULT;
 
-    ts.audio_spkr_unmute_delay_count		= SSB_RX_DELAY;			// Used to time TX->RX delay turnaround
+    ts.audio_spkr_unmute_delay_count		= VOICE_TX2RX_DELAY_DEFAULT;			// TX->RX delay turnaround
 
     ts.nb_setting		= 0;					// Noise Blanker setting
 

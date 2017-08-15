@@ -337,7 +337,7 @@ typedef enum
 
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
-#define SSB_RX_DELAY			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
+#define VOICE_TX2RX_DELAY_DEFAULT			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
 //
 
 // Audio sources for TX modulation
@@ -630,7 +630,7 @@ typedef struct TransceiverState
 #define CW_KEYER_WEIGHT_MIN      (50)
 
     uint8_t cw_rx_delay; // break time
-#define CW_RX_DELAY_DEFAULT     8
+#define CW_TX2RX_DELAY_DEFAULT     8
 #define CW_RX_DELAY_MAX         50  // Maximum TX to RX turnaround setting
 
     uint32_t cw_sidetone_freq;
@@ -940,6 +940,7 @@ typedef struct TransceiverState
 	bool new_nb; // new noise blanker
 
 	bool enable_rtty_decode; // new rtty encoder (experimental)
+	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

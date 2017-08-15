@@ -1733,7 +1733,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_rx_delay,
                                               0,
                                               CW_RX_DELAY_MAX,
-                                              CW_RX_DELAY_DEFAULT,
+                                              CW_TX2RX_DELAY_DEFAULT,
                                               1
                                              );
 
@@ -3527,6 +3527,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
         break;
 #endif
+    case CONFIG_CAT_PTT_RTS:
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
+        break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
