@@ -1761,6 +1761,7 @@ float32_t hang_backmult;
 float32_t onemhang_backmult;
 float32_t hang_decay_mult;
 
+//#define DWD_STANDARD
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
@@ -1771,9 +1772,12 @@ float32_t hang_decay_mult;
  */
 #ifdef USE_RTTY_PROCESSOR
 
-const static int SAMPLERATE = 12000;
+const static int SAMPLERATE = 12000; // this was 48000 and with decimation-by-4 should now be 12000 ???
+#ifdef DWD_STANDARD
+const static float32_t BITSPERSEC = 50.0;
+#else
 const static float32_t BITSPERSEC = 45.45;
-
+#endif
 
 typedef enum {
     RTTY_RUN_STATE_WAIT_START = 0,
@@ -1860,7 +1864,7 @@ static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
 
 // this is for 12ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
-// order 2 Butterworth, freqs: 865-965 Hz
+// order 2 Butterworth, freqs: 865-965 Hz, centre: 915 Hz
 static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
     rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
     rttyDecoderData.xvBP0[4] = sampleIn / 1.513364755e+03; // gain at centre
@@ -1872,7 +1876,20 @@ static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
     return rttyDecoderData.yvBP0[4];
 }
 
-// order 2 Butterworth, freqs: 1035-1135 Hz
+#ifdef DWD_STANDARD
+// order 2 Butterworth, freqs: 1315-1415 Hz, centre 1365Hz
+static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
+    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
+    rttyDecoderData.xvBP1[4] = sampleIn / 1.513365019e+03; // gain at centre
+    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
+    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
+    // ( -0.9286270861 * yv[0]) + (  2.8583904591 * yv[1]) + ( -4.1263569881 * yv[2]) + (  2.9662407442 * yv[3])
+                                                 + (-0.9286270861 * rttyDecoderData.yvBP1[0]) + (2.8583904591 * rttyDecoderData.yvBP1[1])
+                                                 + (-4.1263569881 * rttyDecoderData.yvBP1[2]) + (2.9662407442 * rttyDecoderData.yvBP1[3]);
+    return rttyDecoderData.yvBP1[4];
+}
+#else
+// order 2 Butterworth, freqs: 1035-1135 Hz, centre: 1085Hz
 static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
     rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
     rttyDecoderData.xvBP1[4] = sampleIn / 1.513364927e+03; // gain at centre
@@ -1883,6 +1900,7 @@ static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
                                                  + (-4.6666321298 * rttyDecoderData.yvBP1[2]) + (3.3104336142 * rttyDecoderData.yvBP1[3]);
     return rttyDecoderData.yvBP1[4];
 }
+#endif
 
 // order 2 Butterworth, freq: 50 Hz
 static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
@@ -1928,11 +1946,13 @@ static bool RttyDecoder_getBitDPLL(float32_t sample, bool* val_p) {
         if (!phaseChanged && *val_p != rttyDecoderData.DPLLOldVal) {
             if (rttyDecoderData.DPLLBitPhase < rttyDecoderData.oneBitSampleCount/2)
             {
-                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
+                //                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
+                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/32; // early
             }
             else
             {
-                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
+//                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
+                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/32; // late
             }
             phaseChanged = true;
         }
