@@ -73,7 +73,7 @@ bool CatDriver_CWKeyPressed()
 
 bool CatDriver_PTTKeyPressed()
 {
-    return cdcvcp_ctrllines.rts != 0;
+    return ts.enable_ptt_rts? (cdcvcp_ctrllines.rts != 0) : false;
 }
 
 bool CatDriver_PTTKeyChangedState()

@@ -4032,6 +4032,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         if (dvmode_signal == false)
         {
+            bool use_decimatedIQ = FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs  && dmod_mode != DEMOD_FM;
+            uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
+
             // ------------------------
             // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
             // In AM and SAM, the FIR below does ONLY low-pass filtering appropriate for the filter bandwidth selected, in
@@ -4042,7 +4045,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {   // FilterPathInfo[ts.filter_path].FIR_I_coeff_file == &i_rx_new_coeffs
 
                 //                if(ts.filter_path < 48 && dmod_mode != DEMOD_FM)
-                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs && dmod_mode != DEMOD_FM)
+                if(use_decimatedIQ)
                 {
                     // TODO HILBERT
                     //    FilterPathInfo[ts.filter_path].id >= 12
@@ -4062,24 +4065,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             switch(dmod_mode)
             {
             case DEMOD_LSB:
-                //                if(ts.filter_path < 48)
-                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)
-                {
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
-                }
-                else
-                {
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
-                }
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // difference of I and Q - LSB
                 break;
             case DEMOD_CW:
                 if(!ts.cw_lsb)  // is this USB RX mode?  (LSB of mode byte was zero)
                 {
-                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 else    // No, it is LSB RX mode
                 {
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // difference of I and Q - LSB
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // difference of I and Q - LSB
                 }
                 break;
 
@@ -4102,24 +4097,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // using analog demodulation in the respective sideband
                 if (ts.digi_lsb)
                 {
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // difference of I and Q - LSB
+                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // difference of I and Q - LSB
                 }
                 else
                 {
-                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
+                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 break;
             case DEMOD_USB:
             default:
-                //                if(ts.filter_path < 48)
-                if(FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)
-                {
-                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeDecim);   // sum of I and Q - USB
-                }
-                else
-                {
-                    arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize);   // sum of I and Q - USB
-                }
+                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 break;
             }
 
@@ -4127,7 +4114,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             {
                 // Do decimation down to lower rate to reduce processor load
                 if (DECIMATE_RX.numTaps > 0 && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM &&
-                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
+                        !((dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB || dmod_mode == DEMOD_CW) && use_decimatedIQ)) // in SAM mode, the decimation is done in both I & Q path --> AudioDriver_Demod_SAM
                 {
                     // TODO HILBERT
 
