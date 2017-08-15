@@ -1946,13 +1946,13 @@ static bool RttyDecoder_getBitDPLL(float32_t sample, bool* val_p) {
         if (!phaseChanged && *val_p != rttyDecoderData.DPLLOldVal) {
             if (rttyDecoderData.DPLLBitPhase < rttyDecoderData.oneBitSampleCount/2)
             {
-                //                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
-                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/32; // early
+                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
+//                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/32; // early
             }
             else
             {
-//                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
-                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/32; // late
+                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
+//                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/32; // late
             }
             phaseChanged = true;
         }
