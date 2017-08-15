@@ -1771,7 +1771,7 @@ float32_t hang_decay_mult;
  */
 #ifdef USE_RTTY_PROCESSOR
 
-const static int SAMPLERATE = 48000;
+const static int SAMPLERATE = 12000;
 const static float32_t BITSPERSEC = 45.45;
 
 
