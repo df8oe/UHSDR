@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-08T10:00:02  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-15T08:38:44  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-08T10:00:02  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-15T08:38:44  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1173,7 +1173,12 @@
              ];
         
         "MENU_DEBUG_NEW_NB" [
-             label = "MENU_DEBUG_NEW_NB | new Noiseblanker"
+             label = "MENU_DEBUG_NEW_NB | New Noiseblanker"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_RTTY_DECODE" [
+             label = "MENU_DEBUG_RTTY_DECODE | Rtty Decoder (exp)"
              shape = record
              ];
         
@@ -1718,6 +1723,8 @@
             MENU_DEBUG -> MENU_DEBUG_CLONEIN
             
             MENU_DEBUG -> MENU_DEBUG_NEW_NB
+            
+            MENU_DEBUG -> MENU_DEBUG_RTTY_DECODE
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
