@@ -1771,7 +1771,7 @@ float32_t hang_decay_mult;
  */
 #ifdef USE_RTTY_PROCESSOR
 
-const static int SAMPLERATE = 48000;
+const static int SAMPLERATE = 12000;
 const static float32_t BITSPERSEC = 45.45;
 
 
@@ -1821,13 +1821,16 @@ void RttyDecoder_Init()
 }
 
 
+/*
+// this is for 48ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
 // order 2 Butterworth, freqs: 865-965 Hz
 static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
     rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
-    rttyDecoderData.xvBP0[4] = sampleIn / 2.356080041e+04;
+    rttyDecoderData.xvBP0[4] = sampleIn / 2.356080041e+04; // gain at centre
     rttyDecoderData.yvBP0[0] = rttyDecoderData.yvBP0[1]; rttyDecoderData.yvBP0[1] = rttyDecoderData.yvBP0[2]; rttyDecoderData.yvBP0[2] = rttyDecoderData.yvBP0[3]; rttyDecoderData.yvBP0[3] = rttyDecoderData.yvBP0[4];
     rttyDecoderData.yvBP0[4] = (rttyDecoderData.xvBP0[0] + rttyDecoderData.xvBP0[4]) - 2 * rttyDecoderData.xvBP0[2]
+                                                 //
                                                  + (-0.9816582826 * rttyDecoderData.yvBP0[0]) + (3.9166274264 * rttyDecoderData.yvBP0[1])
                                                  + (-5.8882201843 * rttyDecoderData.yvBP0[2]) + (3.9530488323 * rttyDecoderData.yvBP0[3]);
     return rttyDecoderData.yvBP0[4];
@@ -1853,6 +1856,44 @@ static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
                                              + (-0.9907866988 * rttyDecoderData.yvLP[0]) + (1.9907440595 * rttyDecoderData.yvLP[1]);
     return rttyDecoderData.yvLP[2];
 }
+*/
+
+// this is for 12ksps sample rate
+// for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
+// order 2 Butterworth, freqs: 865-965 Hz
+static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
+    rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
+    rttyDecoderData.xvBP0[4] = sampleIn / 1.513364755e+03; // gain at centre
+    rttyDecoderData.yvBP0[0] = rttyDecoderData.yvBP0[1]; rttyDecoderData.yvBP0[1] = rttyDecoderData.yvBP0[2]; rttyDecoderData.yvBP0[2] = rttyDecoderData.yvBP0[3]; rttyDecoderData.yvBP0[3] = rttyDecoderData.yvBP0[4];
+    rttyDecoderData.yvBP0[4] = (rttyDecoderData.xvBP0[0] + rttyDecoderData.xvBP0[4]) - 2 * rttyDecoderData.xvBP0[2]
+                                                 // + ( -0.9286270861 * yv[0]) + (  3.3584472566 * yv[1])+ ( -4.9635817596 * yv[2]) + (  3.4851652468 * yv[3]);
+                                                 + (-0.9286270861 * rttyDecoderData.yvBP0[0]) + (3.3584472566 * rttyDecoderData.yvBP0[1])
+                                                 + (-4.9635817596 * rttyDecoderData.yvBP0[2]) + (3.4851652468 * rttyDecoderData.yvBP0[3]);
+    return rttyDecoderData.yvBP0[4];
+}
+
+// order 2 Butterworth, freqs: 1035-1135 Hz
+static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
+    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
+    rttyDecoderData.xvBP1[4] = sampleIn / 1.513364927e+03; // gain at centre
+    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
+    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
+    // ( -0.9286270861 * yv[0]) + (  3.1900687350 * yv[1]) + ( -4.6666321298 * yv[2]) + (  3.3104336142 * yv[3])
+                                                 + (-0.9286270861 * rttyDecoderData.yvBP1[0]) + (3.1900687350 * rttyDecoderData.yvBP1[1])
+                                                 + (-4.6666321298 * rttyDecoderData.yvBP1[2]) + (3.3104336142 * rttyDecoderData.yvBP1[3]);
+    return rttyDecoderData.yvBP1[4];
+}
+
+// order 2 Butterworth, freq: 50 Hz
+static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
+    rttyDecoderData.xvLP[0] = rttyDecoderData.xvLP[1]; rttyDecoderData.xvLP[1] = rttyDecoderData.xvLP[2];
+    rttyDecoderData.xvLP[2] = sampleIn / 5.944465310e+03; // gain at DC
+    rttyDecoderData.yvLP[0] = rttyDecoderData.yvLP[1]; rttyDecoderData.yvLP[1] = rttyDecoderData.yvLP[2];
+    rttyDecoderData.yvLP[2] = (rttyDecoderData.xvLP[0] + rttyDecoderData.xvLP[2]) + 2 * rttyDecoderData.xvLP[1]
+                                             + (-0.9636529842 * rttyDecoderData.yvLP[0]) + (1.9629800894 * rttyDecoderData.yvLP[1]);
+    return rttyDecoderData.yvLP[2];
+}
+
 
 // this function returns the bit value of the current sample
 static int RttyDecoder_demodulator(float32_t sample) {
@@ -4233,6 +4274,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
+#ifdef USE_RTTY_PROCESSOR
+    if (ts.enable_rtty_decode == true && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
+    {
+        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
+    }
+#endif
+
                 // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
                 if (INTERPOLATE_RX.phaseLength > 0)
                 {
@@ -4342,12 +4390,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
     }
 
-#ifdef USE_RTTY_PROCESSOR
-    if (ts.enable_rtty_decode == true)
-    {
-        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSize);
-    }
-#endif
+// RTTY decoder was here!
 
 
     // calculate the first index we read so that we are not loosing
