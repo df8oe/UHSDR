@@ -1923,27 +1923,36 @@ const rtty_mode_config_t  ham170 =
     .speed = 45.45,
     .stopbits = RTTY_STOP_2,
     .shift = 170,
-    .samplerate = 12000
+    .samplerate = 12000.0
 };
 
 const rtty_mode_config_t  dwd450 =
 {
-    .speed = 50,
+    .speed = 50.0,
     .stopbits = RTTY_STOP_1_5,
     .shift = 450,
-    .samplerate = 12000
+    .samplerate = 12000.0
 };
 
 
 void RttyDecoder_Init()
 {
     // TODO: pass config as parameter and make it changeable via menu
-    rttyDecoderData.config_p = &ham170;
-    // rttyDecoderData.config_p = &dwd450;
-
+    switch(ts.enable_rtty_decode)
+    {
+                    case 1:
+                        rttyDecoderData.config_p = &ham170;
+                    break;
+                    case 2:
+                        rttyDecoderData.config_p = &dwd450;
+                    break;
+                    default:
+                        rttyDecoderData.config_p = &ham170;
+                    break;
+    }
 
     // common config to all supported modes
-    rttyDecoderData.oneBitSampleCount = roundf(rttyDecoderData.config_p->samplerate/rttyDecoderData.config_p->speed);
+    rttyDecoderData.oneBitSampleCount = (uint16_t)roundf(rttyDecoderData.config_p->samplerate/rttyDecoderData.config_p->speed);
     rttyDecoderData.charSetMode = RTTY_MODE_LETTERS;
     rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
 
@@ -4343,7 +4352,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
 #ifdef USE_RTTY_PROCESSOR
-                if (ts.enable_rtty_decode == true && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
+                if (ts.enable_rtty_decode && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
                 {
                     AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
                 }
@@ -4460,7 +4469,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
 // RTTY decoder was here!
 #ifdef XUSE_RTTY_PROCESSOR
-    if (ts.enable_rtty_decode == true)
+    if (ts.enable_rtty_decode)
     {
         AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSize);
     }
