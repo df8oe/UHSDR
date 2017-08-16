@@ -939,7 +939,7 @@ typedef struct TransceiverState
     bool codec_present; // we detected a working codec
 	bool new_nb; // new noise blanker
 
-	bool enable_rtty_decode; // new rtty encoder (experimental)
+	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 } TransceiverState;
 //

@@ -3524,9 +3524,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
 #ifdef USE_RTTY_PROCESSOR
     case MENU_DEBUG_RTTY_DECODE:
-        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
+//        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.enable_rtty_decode,
+                0,
+                2,
+                0,
+                1);
+        switch(ts.enable_rtty_decode)
+        {
+        case 0:
+            txt_ptr = "     OFF";
+            break;
+        case 1:
+            txt_ptr = "HamRadio";
+            break;
+        case 2:
+            txt_ptr = "     DWD";
+            break;
+        }
         break;
 #endif
+
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;
