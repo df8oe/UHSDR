@@ -1758,8 +1758,7 @@ float32_t hang_decay_mult;
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
 
 /*
- * The decoder below needs 2 stop bits to work properly right now and is quite CPU intensive. Proper decimation to 12 or 8khz and filtering
- * should fix that easily.
+ * Experimental Code
  */
 #ifdef USE_RTTY_PROCESSOR
 
@@ -1768,29 +1767,29 @@ typedef struct
 {
     float32_t gain;
     float32_t coeffs[4];
-} rtty_bp_t;
+} rtty_bpf_config_t;
 
 typedef struct
 {
     float32_t gain;
     float32_t coeffs[2];
-} rtty_lp_t;
+} rtty_lpf_config_t;
 
 typedef struct
 {
     float32_t xv[5];
     float32_t yv[5];
-} rtty_bp_data_t;
+} rtty_bpf_data_t;
 
 typedef struct
 {
     float32_t xv[3];
     float32_t yv[3];
-} rtty_lp_data_t;
+} rtty_lpf_data_t;
 
 
 
-static float32_t RttyDecoder_bandPassFreq(float32_t sampleIn, const rtty_bp_t* coeffs, rtty_bp_data_t* data) {
+static float32_t RttyDecoder_bandPassFreq(float32_t sampleIn, const rtty_bpf_config_t* coeffs, rtty_bpf_data_t* data) {
     data->xv[0] = data->xv[1]; data->xv[1] = data->xv[2]; data->xv[2] = data->xv[3]; data->xv[3] = data->xv[4];
     data->xv[4] = sampleIn / coeffs->gain; // gain at centre
     data->yv[0] = data->yv[1]; data->yv[1] = data->yv[2]; data->yv[2] = data->yv[3]; data->yv[3] = data->yv[4];
@@ -1800,7 +1799,7 @@ static float32_t RttyDecoder_bandPassFreq(float32_t sampleIn, const rtty_bp_t* c
     return data->yv[4];
 }
 
-static float32_t RttyDecoder_lowPass(float32_t sampleIn, const rtty_lp_t* coeffs, rtty_lp_data_t* data) {
+static float32_t RttyDecoder_lowPass(float32_t sampleIn, const rtty_lpf_config_t* coeffs, rtty_lpf_data_t* data) {
     data->xv[0] = data->xv[1]; data->xv[1] = data->xv[2];
     data->xv[2] = sampleIn / coeffs->gain; // gain at DC
     data->yv[0] = data->yv[1]; data->yv[1] = data->yv[2];
@@ -1819,7 +1818,7 @@ typedef enum {
 typedef enum {
     RTTY_MODE_LETTERS = 0,
     RTTY_MODE_SYMBOLS
-} rtty_mode_t;
+} rtty_charSetMode_t;
 
 typedef enum {
     RTTY_STOP_1 = 0,
@@ -1839,12 +1838,12 @@ typedef struct
 
 
 typedef struct {
-    rtty_bp_data_t BP0;
-    rtty_bp_data_t BP1;
-    rtty_lp_data_t LP;
-    rtty_bp_t *BP0_coeffs;
-    rtty_bp_t *BP1_coeffs;
-    rtty_lp_t *LP_coeffs;
+    rtty_bpf_data_t bpfSpaceData;
+    rtty_bpf_data_t bpfMarkData;
+    rtty_lpf_data_t lpfData;
+    rtty_bpf_config_t *bpfSpaceConfig;
+    rtty_bpf_config_t *bpfMarkConfig;
+    rtty_lpf_config_t *lpfConfig;
 
     uint16_t oneBitSampleCount;
     int32_t DPLLOldVal;
@@ -1853,9 +1852,11 @@ typedef struct {
     uint8_t byteResult;
     uint16_t byteResultp;
 
-    rtty_mode_t mode;
+    rtty_charSetMode_t charSetMode;
 
     rtty_run_state_t state;
+
+    const rtty_mode_config_t* config_p;
 
 } rtty_decoder_data_t;
 
@@ -1868,21 +1869,21 @@ static rtty_decoder_data_t rttyDecoderData;
 // this is for 48ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
 // order 2 Butterworth, freqs: 865-965 Hz
-rtty_bp_t rtty_bp_48khz_915 =
+rtty_bpf_config_t rtty_bp_48khz_915 =
 {
     .gain = 2.356080041e+04,  // gain at centre
     .coeffs = {-0.9816582826, 3.9166274264, -5.8882201843, 3.9530488323 }
 };
 
 // order 2 Butterworth, freqs: 1035-1135 Hz
-rtty_bp_t rtty_bp_48khz_1085 =
+rtty_bpf_config_t rtty_bp_48khz_1085 =
 {
 .gain = 2.356080365e+04,
 .coeffs = {-0.9816582826, 3.9051693660, -5.8653953990, 3.9414842213 }
 };
 
 // order 2 Butterworth, freq: 50 Hz
-rtty_lp_t rtty_lp_48khz_50 =
+rtty_lpf_config_t rtty_lp_48khz_50 =
 {
     .gain = 9.381008646e+04,
     .coeffs = {-0.9907866988, 1.9907440595 }
@@ -1892,26 +1893,26 @@ rtty_lp_t rtty_lp_48khz_50 =
 // this is for 12ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
 // order 2 Butterworth, freqs: 865-965 Hz, centre: 915 Hz
-rtty_bp_t rtty_bp_12khz_915 =
+rtty_bpf_config_t rtty_bp_12khz_915 =
 {
         .gain = 1.513364755e+03,
         .coeffs = { -0.9286270861, 3.3584472566, -4.9635817596, 3.4851652468 }
 };
 
 // order 2 Butterworth, freqs: 1315-1415 Hz, centre 1365Hz
-rtty_bp_t rtty_bp_12khz_1365 =
+rtty_bpf_config_t rtty_bp_12khz_1365 =
 {
         .gain = 1.513365019e+03,
         .coeffs = { -0.9286270861, 2.8583904591, -4.1263569881, 2.9662407442 }
 };
 // order 2 Butterworth, freqs: 1035-1135 Hz, centre: 1085Hz
-rtty_bp_t rtty_bp_12khz_1085 =
+rtty_bpf_config_t rtty_bp_12khz_1085 =
 {
         .gain = 1.513364927e+03,
         .coeffs = { -0.9286270861, 3.1900687350, -4.6666321298, 3.3104336142 }
 };
 
-rtty_lp_t rtty_lp_12khz_50 =
+rtty_lpf_config_t rtty_lp_12khz_50 =
 {
         .gain = 5.944465310e+03,
         .coeffs = { -0.9636529842, 1.9629800894 }
@@ -1937,35 +1938,35 @@ const rtty_mode_config_t  dwd450 =
 void RttyDecoder_Init()
 {
     // TODO: pass config as parameter and make it changeable via menu
-    const rtty_mode_config_t* rtty_config = &ham170;
-    // const rtty_mode_config_t* rtty_config = &dwd450;
+    rttyDecoderData.config_p = &ham170;
+    // rttyDecoderData.config_p = &dwd450;
 
 
     // common config to all supported modes
-    rttyDecoderData.oneBitSampleCount = roundf(rtty_config->samplerate/rtty_config->speed);
-    rttyDecoderData.mode = RTTY_MODE_LETTERS;
+    rttyDecoderData.oneBitSampleCount = roundf(rttyDecoderData.config_p->samplerate/rttyDecoderData.config_p->speed);
+    rttyDecoderData.charSetMode = RTTY_MODE_LETTERS;
     rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
 
-    rttyDecoderData.BP1_coeffs = &rtty_bp_12khz_915; // this is mark, or '1'
-    rttyDecoderData.LP_coeffs = &rtty_lp_12khz_50;
+    rttyDecoderData.bpfMarkConfig = &rtty_bp_12khz_915; // this is mark, or '1'
+    rttyDecoderData.lpfConfig = &rtty_lp_12khz_50;
 
     // now we handled the specifics
-    switch (rtty_config->shift)
+    switch (rttyDecoderData.config_p->shift)
     {
     case 450:
-        rttyDecoderData.BP0_coeffs = &rtty_bp_12khz_1365; // this is space or '0'
+        rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1365; // this is space or '0'
         break;
     case 170:
     default:
         // all unsupported shifts are mapped to 170
-        rttyDecoderData.BP0_coeffs = &rtty_bp_12khz_1085; // this is space or '0'
+        rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1085; // this is space or '0'
     }
 }
 
 // this function returns the bit value of the current sample
 static int RttyDecoder_demodulator(float32_t sample) {
-    float32_t line0 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.BP0_coeffs, &rttyDecoderData.BP0);
-    float32_t line1 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.BP1_coeffs, &rttyDecoderData.BP1);
+    float32_t line0 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfSpaceConfig, &rttyDecoderData.bpfSpaceData);
+    float32_t line1 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfMarkConfig, &rttyDecoderData.bpfMarkData);
     // calculating the RMS of the two lines (squaring them)
     line0 *= line0;
     line1 *= line1;
@@ -1977,7 +1978,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
     line0 += line1;
 
     // lowpass filtering the summed line
-    line0 = RttyDecoder_lowPass(line0, rttyDecoderData.LP_coeffs, &rttyDecoderData.LP);
+    line0 = RttyDecoder_lowPass(line0, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 
     // MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
     return (line0 > 0)?0:1;
@@ -2087,12 +2088,22 @@ static void RttyDecoder_ProcessSample(float32_t sample) {
                 switch (rttyDecoderData.byteResultp)
                 {
                 case 6: // stop bit 1
+
                 case 7: // stop bit 2
                     if (bitResult == false)
                     {
                         // not in sync
                         rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
                     }
+                    if (rttyDecoderData.config_p->stopbits != RTTY_STOP_2 && rttyDecoderData.byteResultp == 6)
+                    {
+                        // we pretend to be at the 7th bit after receiving the first stop bit if we have less than 2 stop bits
+                        // this omits check for 1.5 bit condition but we should be more or less safe here, may cause
+                        // a little more unaligned receive but without that shortcut we simply cannot receive these configurations
+                        // so it is worth it
+                        rttyDecoderData.byteResultp = 7;
+                    }
+
                     break;
                 default:
                     // System.out.print(bitResult);
@@ -2108,15 +2119,15 @@ static void RttyDecoder_ProcessSample(float32_t sample) {
 
             switch (rttyDecoderData.byteResult) {
             case 31:
-                rttyDecoderData.mode = RTTY_MODE_LETTERS;
+                rttyDecoderData.charSetMode = RTTY_MODE_LETTERS;
                 // System.out.println(" ^L^");
                 break;
             case 27:
-                rttyDecoderData.mode = RTTY_MODE_SYMBOLS;
+                rttyDecoderData.charSetMode = RTTY_MODE_SYMBOLS;
                 // System.out.println(" ^F^");
                 break;
             default:
-                switch (rttyDecoderData.mode)
+                switch (rttyDecoderData.charSetMode)
                 {
                 case RTTY_MODE_LETTERS:
                     charResult = RTTYLetters[rttyDecoderData.byteResult];
