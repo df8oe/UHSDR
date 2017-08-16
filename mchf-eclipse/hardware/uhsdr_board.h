@@ -936,6 +936,9 @@ typedef struct TransceiverState
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
 	bool new_nb; // new noise blanker
+#define CW_CHAR_LEN 5
+    char    cw_chars[CW_CHAR_LEN + 1];
+
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

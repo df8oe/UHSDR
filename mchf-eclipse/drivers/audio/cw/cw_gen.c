@@ -54,14 +54,14 @@
 #define CW_DIT_L            0x01
 #define CW_DAH_L            0x02
 #define CW_DIT_PROC         0x04
+#define CW_END_PROC         0x10
 
 #define CW_IAMBIC_A         0x00
 #define CW_IAMBIC_B         0x10
 
 #define CW_SMOOTH_LEN       2	// with sm_table size of 128 ~5.3ms for edges, ~ 9 steps of 0.6 ms
 #define CW_SMOOTH_STEPS		  9	// 1 step = 0.6ms; 13 for 8ms, 9 for 5.4 ms, for internal keyer
-//
-//
+
 typedef struct PaddleState
 {
     // State machine and port states
@@ -72,6 +72,7 @@ typedef struct PaddleState
     int32_t   dit_time;
     int32_t   dah_time;
     int32_t   pause_time;
+    int32_t   space_time;
 
     // Timers
     ulong   key_timer;
@@ -82,6 +83,9 @@ typedef struct PaddleState
 
     ulong	ultim;
 
+    ulong   cw_char;
+    ulong   space_timer;
+
 } PaddleState;
 
 // Public paddle state
@@ -91,9 +95,12 @@ static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,u
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
 
+#define CW_CHAR_CODES   27
+const int cw_char_codes[] = {0, 2, 3, 10, 11, 14, 15, 42, 43, 46, 47, 58, 59, 62, 63, 170, 171, 174, 186, 190, 191, 234, 235, 238, 239, 250, 251};
+const char cw_char_chars[] = {' ', 'E', 'T', 'I', 'A', 'N', 'M', 'S', 'U', 'R', 'W', 'D', 'K', 'G', 'O', 'H', 'V', 'F', 'L', 'P', 'J', 'B', 'X', 'C', 'Y', 'Z', 'Q'};
+
 // Blackman-Harris function to keep CW signal bandwidth narrow
 #define CW_SMOOTH_TBL_SIZE  128
-
 static const float sm_table[CW_SMOOTH_TBL_SIZE] =
 {
     0.0,
@@ -236,6 +243,7 @@ void CwGen_SetSpeed()
     int32_t dit_time         = 180000/ts.cw_keyer_speed + CW_SMOOTH_STEPS*100;  // +9 =  6ms * 1/1500 =  0,006*1500
     int32_t dah_time         = 3*180000/ts.cw_keyer_speed + CW_SMOOTH_STEPS*100;  // +9 =  6ms * 1/1500 =  0,006*1500
     int32_t pause_time       = 180000/ts.cw_keyer_speed - CW_SMOOTH_STEPS*100;  // -9 = -6ms * 1/1500 = -0,006*1500
+    int32_t space_time       = 6*180000/ts.cw_keyer_speed;
 
     int32_t weight_corr = ((int32_t)ts.cw_keyer_weight-100) * dit_time/100;
 
@@ -243,6 +251,7 @@ void CwGen_SetSpeed()
     ps.dit_time = (dit_time + weight_corr)/100;
     ps.dah_time = (dah_time + weight_corr)/100;
     ps.pause_time = (pause_time - weight_corr)/100;
+    ps.space_time = space_time / 100;
 }
 
 static void CwGen_SetBreakTime()
@@ -277,6 +286,12 @@ void CwGen_Init(void)
     default:
         break;
     }
+
+    for (int i = 0; i<CW_CHAR_LEN; i++)
+        ts.cw_chars[i] = ' ';
+    ts.cw_chars[CW_CHAR_LEN] = '\0';
+    ps.cw_char = 0;
+    ps.space_timer = 0;
 }
 
 /**
@@ -501,6 +516,21 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
     return retval;
 }
 
+void CwGen_AddChar(ulong c) {
+    int i;
+    for (i = CW_CHAR_LEN - 1; i>=1; i--) {
+        ts.cw_chars[i] = ts.cw_chars[i-1];
+    }
+    for (i = 0; i<CW_CHAR_CODES; i++) {
+        if (cw_char_codes[i] == c) {
+            ts.cw_chars[0] = cw_char_chars[i];
+            return;
+        }
+    }
+
+    ts.cw_chars[0] = '*';
+}
+
 static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
     uint32_t retval = false;
@@ -526,6 +556,13 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             }
             else
             {
+                if (ps.port_state & CW_END_PROC) {
+                    CwGen_AddChar(ps.cw_char);
+                    ps.cw_char = 0;
+                    ps.port_state &= ~CW_END_PROC;
+                    ps.space_timer = ps.space_time;
+                }
+
                 if(ps.break_timer == 0)
                 {
                     ts.tx_stop_req = true;
@@ -533,6 +570,13 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                 else
                 {
                     ps.break_timer--;
+                }
+
+                if(ps.space_timer)
+                {
+                    ps.space_timer--;
+                } else {
+                    CwGen_AddChar(0);
                 }
                 retval = false;
             }
@@ -552,6 +596,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                 ps.port_state |= CW_DIT_PROC;
                 ps.key_timer   = ps.dit_time;
                 ps.cw_state    = CW_KEY_DOWN;
+                ps.cw_char = ps.cw_char * 4 + 2;
             }
             else
             {
@@ -565,11 +610,13 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             if (ps.port_state & CW_DAH_L)
             {
                 ps.key_timer = ps.dah_time;
+                ps.cw_char = ps.cw_char * 4 + 3;
                 ps.cw_state  = CW_KEY_DOWN;
             }
             else
             {
                 ps.cw_state  = CW_IDLE;
+
                 CwGen_SetBreakTime();
             }
             rerunStateMachine = true;
@@ -627,6 +674,14 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             ps.key_timer--;
             if(ps.key_timer == 0)
             {
+                if(ps.cw_char > 255) { //TESTING
+                        CwGen_AddChar(-1);
+                        ps.cw_char = 0;
+                        ps.port_state &= ~CW_END_PROC;
+                } else {
+                    ps.port_state |= CW_END_PROC;
+                }
+
                 if (ts.cw_keyer_mode == CW_MODE_IAM_A || ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
                 {
                     if (ps.port_state & CW_DIT_PROC)
@@ -648,12 +703,15 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                     if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
                     {
                         ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
-                        ps.cw_state    = CW_DAH_CHECK;
+                        ps.cw_state   |= CW_END_PROC;
                     }
                     else
                     {
                         ps.port_state &= ~(CW_DAH_L);
                         ps.cw_state    = CW_IDLE;
+                        ps.space_timer = ps.space_time;
+                        CwGen_AddChar(ps.cw_char);
+                        ps.cw_char = 0;
                         CwGen_SetBreakTime();
                     }
                 }

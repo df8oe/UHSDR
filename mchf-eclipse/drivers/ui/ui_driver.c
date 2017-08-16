@@ -5097,7 +5097,8 @@ static void UiDriver_DisplayTemperature(int temp)
     static int last_disp_temp = -100;
     uint32_t clr =  RadioManagement_TcxoGetMode() ==TCXO_ON ? Blue:Red;
 
-    UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1),"*",clr,Black,0);
+    //UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1),"*",clr,Black,0); // TESTING CW!!!
+    UiLcdHy28_PrintText(POS_TEMP_IND_X_DATA,(POS_TEMP_IND_Y + 1),ts.cw_chars,clr,Black,0);
 
     if (temp != last_disp_temp)
     {
@@ -6006,6 +6007,7 @@ void UiDriver_MainHandler()
                 {
                     UiDriver_DisplayVoltage();
                 }
+
                 if (pwmt.undervoltage_detected == true) {
                     if (UiDriver_TimerExpireAndRewind(SCTimer_LEDBLINK, now, 64)) {
                         MchfBoard_GreenLed(LED_STATE_TOGGLE);
