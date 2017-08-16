@@ -499,15 +499,6 @@ void audio_driver_config_nco(void)
 //
  */
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void AudioDriver_Init(void)
 {
     const uint32_t word_size = WORD_SIZE_16;
@@ -1772,12 +1763,53 @@ float32_t hang_decay_mult;
  */
 #ifdef USE_RTTY_PROCESSOR
 
-const static int SAMPLERATE = 12000; // this was 48000 and with decimation-by-4 should now be 12000 ???
-#ifdef DWD_STANDARD
-const static float32_t BITSPERSEC = 50.0;
-#else
-const static float32_t BITSPERSEC = 45.45;
-#endif
+
+typedef struct
+{
+    float32_t gain;
+    float32_t coeffs[4];
+} rtty_bp_t;
+
+typedef struct
+{
+    float32_t gain;
+    float32_t coeffs[2];
+} rtty_lp_t;
+
+typedef struct
+{
+    float32_t xv[5];
+    float32_t yv[5];
+} rtty_bp_data_t;
+
+typedef struct
+{
+    float32_t xv[3];
+    float32_t yv[3];
+} rtty_lp_data_t;
+
+
+
+static float32_t RttyDecoder_bandPassFreq(float32_t sampleIn, const rtty_bp_t* coeffs, rtty_bp_data_t* data) {
+    data->xv[0] = data->xv[1]; data->xv[1] = data->xv[2]; data->xv[2] = data->xv[3]; data->xv[3] = data->xv[4];
+    data->xv[4] = sampleIn / coeffs->gain; // gain at centre
+    data->yv[0] = data->yv[1]; data->yv[1] = data->yv[2]; data->yv[2] = data->yv[3]; data->yv[3] = data->yv[4];
+    data->yv[4] = (data->xv[0] + data->xv[4]) - 2 * data->xv[2]
+                                                 + (coeffs->coeffs[0] * data->yv[0]) + (coeffs->coeffs[1] * data->yv[1])
+                                                 + (coeffs->coeffs[2] * data->yv[2]) + (coeffs->coeffs[3] * data->yv[3]);
+    return data->yv[4];
+}
+
+static float32_t RttyDecoder_lowPass(float32_t sampleIn, const rtty_lp_t* coeffs, rtty_lp_data_t* data) {
+    data->xv[0] = data->xv[1]; data->xv[1] = data->xv[2];
+    data->xv[2] = sampleIn / coeffs->gain; // gain at DC
+    data->yv[0] = data->yv[1]; data->yv[1] = data->yv[2];
+    data->yv[2] = (data->xv[0] + data->xv[2]) + 2 * data->xv[1]
+                                             + (coeffs->coeffs[0] * data->yv[0]) + (coeffs->coeffs[1] * data->yv[1]);
+    return data->yv[2];
+}
+
+
 
 typedef enum {
     RTTY_RUN_STATE_WAIT_START = 0,
@@ -1789,16 +1821,30 @@ typedef enum {
     RTTY_MODE_SYMBOLS
 } rtty_mode_t;
 
+typedef enum {
+    RTTY_STOP_1 = 0,
+    RTTY_STOP_1_5,
+    RTTY_STOP_2
+} rtty_stop_t;
+
+
+typedef struct
+{
+    float32_t speed;
+    rtty_stop_t stopbits;
+    uint16_t shift;
+    float32_t samplerate;
+} rtty_mode_config_t;
 
 
 
 typedef struct {
-    float32_t xvBP0[5];
-    float32_t yvBP0[5];
-    float32_t xvBP1[5];
-    float32_t yvBP1[5];
-    float32_t xvLP[3];
-    float32_t yvLP[3];
+    rtty_bp_data_t BP0;
+    rtty_bp_data_t BP1;
+    rtty_lp_data_t LP;
+    rtty_bp_t *BP0_coeffs;
+    rtty_bp_t *BP1_coeffs;
+    rtty_lp_t *LP_coeffs;
 
     uint16_t oneBitSampleCount;
     int32_t DPLLOldVal;
@@ -1816,107 +1862,110 @@ typedef struct {
 static rtty_decoder_data_t rttyDecoderData;
 
 
-void RttyDecoder_Init()
-{
-    rttyDecoderData.oneBitSampleCount = roundf(SAMPLERATE/BITSPERSEC);
-    rttyDecoderData.mode = RTTY_MODE_LETTERS;
-    rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
-
-}
 
 
-/*
+#if 0 // 48Khz filters, not needed
 // this is for 48ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
 // order 2 Butterworth, freqs: 865-965 Hz
-static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
-    rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
-    rttyDecoderData.xvBP0[4] = sampleIn / 2.356080041e+04; // gain at centre
-    rttyDecoderData.yvBP0[0] = rttyDecoderData.yvBP0[1]; rttyDecoderData.yvBP0[1] = rttyDecoderData.yvBP0[2]; rttyDecoderData.yvBP0[2] = rttyDecoderData.yvBP0[3]; rttyDecoderData.yvBP0[3] = rttyDecoderData.yvBP0[4];
-    rttyDecoderData.yvBP0[4] = (rttyDecoderData.xvBP0[0] + rttyDecoderData.xvBP0[4]) - 2 * rttyDecoderData.xvBP0[2]
-                                                 //
-                                                 + (-0.9816582826 * rttyDecoderData.yvBP0[0]) + (3.9166274264 * rttyDecoderData.yvBP0[1])
-                                                 + (-5.8882201843 * rttyDecoderData.yvBP0[2]) + (3.9530488323 * rttyDecoderData.yvBP0[3]);
-    return rttyDecoderData.yvBP0[4];
-}
+rtty_bp_t rtty_bp_48khz_915 =
+{
+    .gain = 2.356080041e+04,  // gain at centre
+    .coeffs = {-0.9816582826, 3.9166274264, -5.8882201843, 3.9530488323 }
+};
 
 // order 2 Butterworth, freqs: 1035-1135 Hz
-static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
-    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
-    rttyDecoderData.xvBP1[4] = sampleIn / 2.356080365e+04;
-    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
-    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
-                                                 + (-0.9816582826 * rttyDecoderData.yvBP1[0]) + (3.9051693660 * rttyDecoderData.yvBP1[1])
-                                                 + (-5.8653953990 * rttyDecoderData.yvBP1[2]) + (3.9414842213 * rttyDecoderData.yvBP1[3]);
-    return rttyDecoderData.yvBP1[4];
-}
+rtty_bp_t rtty_bp_48khz_1085 =
+{
+.gain = 2.356080365e+04,
+.coeffs = {-0.9816582826, 3.9051693660, -5.8653953990, 3.9414842213 }
+};
 
 // order 2 Butterworth, freq: 50 Hz
-static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
-    rttyDecoderData.xvLP[0] = rttyDecoderData.xvLP[1]; rttyDecoderData.xvLP[1] = rttyDecoderData.xvLP[2];
-    rttyDecoderData.xvLP[2] = sampleIn / 9.381008646e+04;
-    rttyDecoderData.yvLP[0] = rttyDecoderData.yvLP[1]; rttyDecoderData.yvLP[1] = rttyDecoderData.yvLP[2];
-    rttyDecoderData.yvLP[2] = (rttyDecoderData.xvLP[0] + rttyDecoderData.xvLP[2]) + 2 * rttyDecoderData.xvLP[1]
-                                             + (-0.9907866988 * rttyDecoderData.yvLP[0]) + (1.9907440595 * rttyDecoderData.yvLP[1]);
-    return rttyDecoderData.yvLP[2];
-}
-*/
+rtty_lp_t rtty_lp_48khz_50 =
+{
+    .gain = 9.381008646e+04,
+    .coeffs = {-0.9907866988, 1.9907440595 }
+};
+#endif
 
 // this is for 12ksps sample rate
 // for filter designing, see http://www-users.cs.york.ac.uk/~fisher/mkfilter/
 // order 2 Butterworth, freqs: 865-965 Hz, centre: 915 Hz
-static float32_t RttyDecoder_bandPassFreq0(float32_t sampleIn) {
-    rttyDecoderData.xvBP0[0] = rttyDecoderData.xvBP0[1]; rttyDecoderData.xvBP0[1] = rttyDecoderData.xvBP0[2]; rttyDecoderData.xvBP0[2] = rttyDecoderData.xvBP0[3]; rttyDecoderData.xvBP0[3] = rttyDecoderData.xvBP0[4];
-    rttyDecoderData.xvBP0[4] = sampleIn / 1.513364755e+03; // gain at centre
-    rttyDecoderData.yvBP0[0] = rttyDecoderData.yvBP0[1]; rttyDecoderData.yvBP0[1] = rttyDecoderData.yvBP0[2]; rttyDecoderData.yvBP0[2] = rttyDecoderData.yvBP0[3]; rttyDecoderData.yvBP0[3] = rttyDecoderData.yvBP0[4];
-    rttyDecoderData.yvBP0[4] = (rttyDecoderData.xvBP0[0] + rttyDecoderData.xvBP0[4]) - 2 * rttyDecoderData.xvBP0[2]
-                                                 // + ( -0.9286270861 * yv[0]) + (  3.3584472566 * yv[1])+ ( -4.9635817596 * yv[2]) + (  3.4851652468 * yv[3]);
-                                                 + (-0.9286270861 * rttyDecoderData.yvBP0[0]) + (3.3584472566 * rttyDecoderData.yvBP0[1])
-                                                 + (-4.9635817596 * rttyDecoderData.yvBP0[2]) + (3.4851652468 * rttyDecoderData.yvBP0[3]);
-    return rttyDecoderData.yvBP0[4];
-}
+rtty_bp_t rtty_bp_12khz_915 =
+{
+        .gain = 1.513364755e+03,
+        .coeffs = { -0.9286270861, 3.3584472566, -4.9635817596, 3.4851652468 }
+};
 
-#ifdef DWD_STANDARD
 // order 2 Butterworth, freqs: 1315-1415 Hz, centre 1365Hz
-static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
-    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
-    rttyDecoderData.xvBP1[4] = sampleIn / 1.513365019e+03; // gain at centre
-    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
-    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
-    // ( -0.9286270861 * yv[0]) + (  2.8583904591 * yv[1]) + ( -4.1263569881 * yv[2]) + (  2.9662407442 * yv[3])
-                                                 + (-0.9286270861 * rttyDecoderData.yvBP1[0]) + (2.8583904591 * rttyDecoderData.yvBP1[1])
-                                                 + (-4.1263569881 * rttyDecoderData.yvBP1[2]) + (2.9662407442 * rttyDecoderData.yvBP1[3]);
-    return rttyDecoderData.yvBP1[4];
-}
-#else
+rtty_bp_t rtty_bp_12khz_1365 =
+{
+        .gain = 1.513365019e+03,
+        .coeffs = { -0.9286270861, 2.8583904591, -4.1263569881, 2.9662407442 }
+};
 // order 2 Butterworth, freqs: 1035-1135 Hz, centre: 1085Hz
-static float32_t RttyDecoder_bandPassFreq1(float32_t sampleIn) {
-    rttyDecoderData.xvBP1[0] = rttyDecoderData.xvBP1[1]; rttyDecoderData.xvBP1[1] = rttyDecoderData.xvBP1[2]; rttyDecoderData.xvBP1[2] = rttyDecoderData.xvBP1[3]; rttyDecoderData.xvBP1[3] = rttyDecoderData.xvBP1[4];
-    rttyDecoderData.xvBP1[4] = sampleIn / 1.513364927e+03; // gain at centre
-    rttyDecoderData.yvBP1[0] = rttyDecoderData.yvBP1[1]; rttyDecoderData.yvBP1[1] = rttyDecoderData.yvBP1[2]; rttyDecoderData.yvBP1[2] = rttyDecoderData.yvBP1[3]; rttyDecoderData.yvBP1[3] = rttyDecoderData.yvBP1[4];
-    rttyDecoderData.yvBP1[4] = (rttyDecoderData.xvBP1[0] + rttyDecoderData.xvBP1[4]) - 2 * rttyDecoderData.xvBP1[2]
-    // ( -0.9286270861 * yv[0]) + (  3.1900687350 * yv[1]) + ( -4.6666321298 * yv[2]) + (  3.3104336142 * yv[3])
-                                                 + (-0.9286270861 * rttyDecoderData.yvBP1[0]) + (3.1900687350 * rttyDecoderData.yvBP1[1])
-                                                 + (-4.6666321298 * rttyDecoderData.yvBP1[2]) + (3.3104336142 * rttyDecoderData.yvBP1[3]);
-    return rttyDecoderData.yvBP1[4];
-}
-#endif
+rtty_bp_t rtty_bp_12khz_1085 =
+{
+        .gain = 1.513364927e+03,
+        .coeffs = { -0.9286270861, 3.1900687350, -4.6666321298, 3.3104336142 }
+};
 
-// order 2 Butterworth, freq: 50 Hz
-static float32_t RttyDecoder_lowPass(float32_t sampleIn) {
-    rttyDecoderData.xvLP[0] = rttyDecoderData.xvLP[1]; rttyDecoderData.xvLP[1] = rttyDecoderData.xvLP[2];
-    rttyDecoderData.xvLP[2] = sampleIn / 5.944465310e+03; // gain at DC
-    rttyDecoderData.yvLP[0] = rttyDecoderData.yvLP[1]; rttyDecoderData.yvLP[1] = rttyDecoderData.yvLP[2];
-    rttyDecoderData.yvLP[2] = (rttyDecoderData.xvLP[0] + rttyDecoderData.xvLP[2]) + 2 * rttyDecoderData.xvLP[1]
-                                             + (-0.9636529842 * rttyDecoderData.yvLP[0]) + (1.9629800894 * rttyDecoderData.yvLP[1]);
-    return rttyDecoderData.yvLP[2];
-}
+rtty_lp_t rtty_lp_12khz_50 =
+{
+        .gain = 5.944465310e+03,
+        .coeffs = { -0.9636529842, 1.9629800894 }
+};
 
+const rtty_mode_config_t  ham170 =
+{
+    .speed = 45.45,
+    .stopbits = RTTY_STOP_2,
+    .shift = 170,
+    .samplerate = 12000
+};
+
+const rtty_mode_config_t  dwd450 =
+{
+    .speed = 50,
+    .stopbits = RTTY_STOP_1_5,
+    .shift = 450,
+    .samplerate = 12000
+};
+
+
+void RttyDecoder_Init()
+{
+    // TODO: pass config as parameter and make it changeable via menu
+    const rtty_mode_config_t* rtty_config = &ham170;
+    // const rtty_mode_config_t* rtty_config = &dwd450;
+
+
+    // common config to all supported modes
+    rttyDecoderData.oneBitSampleCount = roundf(rtty_config->samplerate/rtty_config->speed);
+    rttyDecoderData.mode = RTTY_MODE_LETTERS;
+    rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
+
+    rttyDecoderData.BP1_coeffs = &rtty_bp_12khz_915; // this is mark, or '1'
+    rttyDecoderData.LP_coeffs = &rtty_lp_12khz_50;
+
+    // now we handled the specifics
+    switch (rtty_config->shift)
+    {
+    case 450:
+        rttyDecoderData.BP0_coeffs = &rtty_bp_12khz_1365; // this is space or '0'
+        break;
+    case 170:
+    default:
+        // all unsupported shifts are mapped to 170
+        rttyDecoderData.BP0_coeffs = &rtty_bp_12khz_1085; // this is space or '0'
+    }
+}
 
 // this function returns the bit value of the current sample
 static int RttyDecoder_demodulator(float32_t sample) {
-    float32_t line1 = RttyDecoder_bandPassFreq0(sample);
-    float32_t line0 = RttyDecoder_bandPassFreq1(sample);
+    float32_t line0 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.BP0_coeffs, &rttyDecoderData.BP0);
+    float32_t line1 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.BP1_coeffs, &rttyDecoderData.BP1);
     // calculating the RMS of the two lines (squaring them)
     line0 *= line0;
     line1 *= line1;
@@ -1928,8 +1977,9 @@ static int RttyDecoder_demodulator(float32_t sample) {
     line0 += line1;
 
     // lowpass filtering the summed line
-    line0 = RttyDecoder_lowPass(line0);
+    line0 = RttyDecoder_lowPass(line0, rttyDecoderData.LP_coeffs, &rttyDecoderData.LP);
 
+    // MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
     return (line0 > 0)?0:1;
 }
 
@@ -1946,13 +1996,13 @@ static bool RttyDecoder_getBitDPLL(float32_t sample, bool* val_p) {
         if (!phaseChanged && *val_p != rttyDecoderData.DPLLOldVal) {
             if (rttyDecoderData.DPLLBitPhase < rttyDecoderData.oneBitSampleCount/2)
             {
-                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
-//                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/32; // early
+                // rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/8; // early
+                rttyDecoderData.DPLLBitPhase += rttyDecoderData.oneBitSampleCount/32; // early
             }
             else
             {
-                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
-//                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/32; // late
+                //rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/8; // late
+                rttyDecoderData.DPLLBitPhase -= rttyDecoderData.oneBitSampleCount/32; // late
             }
             phaseChanged = true;
         }
@@ -2018,7 +2068,7 @@ static void RttyDecoder_ProcessSample(float32_t sample) {
 
     switch(rttyDecoderData.state)
     {
-    case RTTY_RUN_STATE_WAIT_START:
+    case RTTY_RUN_STATE_WAIT_START: // not synchronized, need to wait for start bit
         if (RttyDecoder_waitForStartBit(sample))
         {
             rttyDecoderData.state = RTTY_RUN_STATE_BIT;
@@ -3156,7 +3206,7 @@ static void AudioDriver_SnapCarrier (void)
 
         for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
         {
-            if (maximum < sc.FFT_Samples[c])
+            if (maximum < sc.FFT_Samples[])
             {
                 maximum = sc.FFT_Samples[c];
                 maxbin = c;
@@ -4065,7 +4115,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             switch(dmod_mode)
             {
             case DEMOD_LSB:
-                    arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // difference of I and Q - LSB
+                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // difference of I and Q - LSB
                 break;
             case DEMOD_CW:
                 if(!ts.cw_lsb)  // is this USB RX mode?  (LSB of mode byte was zero)
@@ -4282,10 +4332,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
 #ifdef USE_RTTY_PROCESSOR
-    if (ts.enable_rtty_decode == true && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
-    {
-        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
-    }
+                if (ts.enable_rtty_decode == true && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
+                {
+                    AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
+                }
 #endif
 
                 // resample back to original sample rate while doing low-pass filtering to minimize audible aliasing effects
@@ -4398,6 +4448,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     }
 
 // RTTY decoder was here!
+#ifdef XUSE_RTTY_PROCESSOR
+    if (ts.enable_rtty_decode == true)
+    {
+        AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSize);
+    }
+#endif
 
 
     // calculate the first index we read so that we are not loosing
