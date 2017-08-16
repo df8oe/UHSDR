@@ -3217,7 +3217,7 @@ static void AudioDriver_SnapCarrier (void)
 
         for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
         {
-            if (maximum < sc.FFT_Samples[])
+            if (maximum < sc.FFT_Samples[c])
             {
                 maximum = sc.FFT_Samples[c];
                 maxbin = c;
