@@ -40,6 +40,7 @@
 #include "softdds.h"
 #include "cw_gen.h"
 #include "cat_driver.h"
+#include "ui_driver.h"
 
 
 // States
@@ -95,9 +96,9 @@ static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,u
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
 
-#define CW_CHAR_CODES   27
-const int cw_char_codes[] = {0, 2, 3, 10, 11, 14, 15, 42, 43, 46, 47, 58, 59, 62, 63, 170, 171, 174, 186, 190, 191, 234, 235, 238, 239, 250, 251};
-const char cw_char_chars[] = {' ', 'E', 'T', 'I', 'A', 'N', 'M', 'S', 'U', 'R', 'W', 'D', 'K', 'G', 'O', 'H', 'V', 'F', 'L', 'P', 'J', 'B', 'X', 'C', 'Y', 'Z', 'Q'};
+#define CW_CHAR_CODES   47
+const int cw_char_codes[] = {0, 2, 3, 10, 11, 14, 15, 42, 43, 46, 47, 58, 59, 62, 63, 170, 171, 174, 186, 190, 191, 234, 235, 238, 239, 250, 251, 682, 683, 687, 703, 767, 938, 939, 942, 1002, 1018, 1022, 1023, 2810, 2990, 3003, 3054, 3070, 3755, 4015, 4074};
+const char cw_char_chars[] = {' ', 'E', 'T', 'I', 'A', 'N', 'M', 'S', 'U', 'R', 'W', 'D', 'K', 'G', 'O', 'H', 'V', 'F', 'L', 'P', 'J', 'B', 'X', 'C', 'Y', 'Z', 'Q', '5', '4', '3', '2', '1', '6', '=', '/', '7', '8', '9', '0', '?', '"', '.', '@', '\'', '-', ',', ':'};
 
 // Blackman-Harris function to keep CW signal bandwidth narrow
 #define CW_SMOOTH_TBL_SIZE  128
@@ -287,9 +288,6 @@ void CwGen_Init(void)
         break;
     }
 
-    for (int i = 0; i<CW_CHAR_LEN; i++)
-        ts.cw_chars[i] = ' ';
-    ts.cw_chars[CW_CHAR_LEN] = '\0';
     ps.cw_char = 0;
     ps.space_timer = 0;
 }
@@ -517,18 +515,13 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 }
 
 void CwGen_AddChar(ulong c) {
-    int i;
-    for (i = CW_CHAR_LEN - 1; i>=1; i--) {
-        ts.cw_chars[i] = ts.cw_chars[i-1];
-    }
-    for (i = 0; i<CW_CHAR_CODES; i++) {
+    for (int i = 0; i<CW_CHAR_CODES; i++) {
         if (cw_char_codes[i] == c) {
-            ts.cw_chars[0] = cw_char_chars[i];
+            UiDriver_TextMsgPutChar(cw_char_chars[i]);
             return;
         }
     }
-
-    ts.cw_chars[0] = '*';
+    UiDriver_TextMsgPutChar('*');
 }
 
 static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
@@ -674,7 +667,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             ps.key_timer--;
             if(ps.key_timer == 0)
             {
-                if(ps.cw_char > 255) { //TESTING
+                if(ps.cw_char > 5000) {
                         CwGen_AddChar(-1);
                         ps.cw_char = 0;
                         ps.port_state &= ~CW_END_PROC;
