@@ -6005,6 +6005,7 @@ void UiDriver_MainHandler()
                 {
                     UiDriver_DisplayVoltage();
                 }
+
                 if (pwmt.undervoltage_detected == true) {
                     if (UiDriver_TimerExpireAndRewind(SCTimer_LEDBLINK, now, 64)) {
                         MchfBoard_GreenLed(LED_STATE_TOGGLE);
