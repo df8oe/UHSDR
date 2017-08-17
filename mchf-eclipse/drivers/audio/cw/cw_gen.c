@@ -696,7 +696,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                     if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
                     {
                         ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
-                        ps.cw_state   |= CW_END_PROC;
+                        ps.cw_state   = CW_DAH_CHECK;
                     }
                     else
                     {
