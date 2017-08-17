@@ -78,6 +78,7 @@ typedef struct PaddleState
     // Timers
     ulong   key_timer;
     ulong   break_timer;
+    ulong   space_timer;
 
     // Key clicks smoothing table current ptr
     ulong   sm_tbl_ptr;
@@ -85,7 +86,6 @@ typedef struct PaddleState
     ulong	ultim;
 
     ulong   cw_char;
-    ulong   space_timer;
 
 } PaddleState;
 
@@ -565,12 +565,11 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
                     ps.break_timer--;
                 }
 
-                if(ps.space_timer)
+                if (ps.space_timer == 0)
                 {
-                    ps.space_timer--;
-                } else {
                     CwGen_AddChar(0);
                 }
+                ps.space_timer--;
 
                 retval = false;
             }
