@@ -625,11 +625,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             {
                 // Assure that TX->RX timer gets reset at the end of an element
                 // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
+#if 0
                 if (ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW))
                 {
                     ts.audio_spkr_unmute_delay_count = VOICE_TX2RX_DELAY_DEFAULT;  // set time delay in SSB mode with MIC
                     ts.audio_processor_input_mute_counter = VOICE_TX2RX_DELAY_DEFAULT;
                 }
+#endif
 
             }
             else
@@ -954,9 +956,10 @@ uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
 
 const int32_t ptt_debounce_time = 3; // n*10ms, delay for debouncing manually started TX (using the PTT button / input line)
 
+#define PTT_BREAK_IDLE (-1)
 void RadioManagement_HandlePttOnOff()
 {
-    static int64_t ptt_break_timer = ptt_debounce_time;
+    static int64_t ptt_break_timer = PTT_BREAK_IDLE;
 
     // not when tuning, in this case we are TXing already anyway until tune is being stopped
     if(ts.tune == false)
@@ -987,7 +990,7 @@ void RadioManagement_HandlePttOnOff()
                     if(mchf_ptt_dah_line_pressed() == false)
                     {
                         // ... we start the break timer if not started already!
-                        if (ptt_break_timer == -1)
+                        if (ptt_break_timer == PTT_BREAK_IDLE)
                         {
                             ptt_break_timer = ts.sysclock + ptt_debounce_time;
                         }
@@ -995,15 +998,15 @@ void RadioManagement_HandlePttOnOff()
                     else
                     {
                         // ... but if not released we stop the break timer
-                        ptt_break_timer = -1;
+                        ptt_break_timer = PTT_BREAK_IDLE;
                     }
 
                     // ... if break time is over or we are forced to leave TX immediately ...
-                    if(ptt_break_timer >= ts.sysclock || ts.tx_stop_req == true) {
+                    if((ptt_break_timer < ts.sysclock && ptt_break_timer != PTT_BREAK_IDLE) || ts.tx_stop_req == true) {
                         // ... go back to RX and ...
                         RadioManagement_SwitchTxRx(TRX_MODE_RX,false);
                         // ... stop the timer
-                        ptt_break_timer = -1;
+                        ptt_break_timer = PTT_BREAK_IDLE;
                     }
                 }
                 // if we are here a stop request has been processed completely
